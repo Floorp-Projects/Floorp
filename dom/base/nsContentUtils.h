@@ -2351,11 +2351,6 @@ class nsContentUtils {
   }
 
   /**
-   * Returns true if the browser should show busy cursor when loading page.
-   */
-  static bool UseActivityCursor() { return sUseActivityCursor; }
-
-  /**
    * Returns true if the DOM Animations API should be enabled.
    */
   static bool AnimationsAPICoreEnabled() { return sAnimationsAPICoreEnabled; }
@@ -3448,7 +3443,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sUseActivityCursor;
   static bool sAnimationsAPICoreEnabled;
   static bool sGetBoxQuadsEnabled;
   static bool sSkipCursorMoveForSameValueSet;
