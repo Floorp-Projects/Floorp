@@ -168,9 +168,6 @@ pub struct TextureCacheUpdate {
 /// important to allow coalescing of certain allocation operations.
 #[derive(Default)]
 pub struct TextureUpdateList {
-    /// Indicates that there was some kind of cleanup clear operation. Used for
-    /// sanity checks.
-    pub clears_shared_cache: bool,
     /// Commands to alloc/realloc/free the textures. Processed first.
     pub allocations: Vec<TextureCacheAllocation>,
     /// Commands to update the contents of the textures. Processed second.
@@ -181,16 +178,9 @@ impl TextureUpdateList {
     /// Mints a new `TextureUpdateList`.
     pub fn new() -> Self {
         TextureUpdateList {
-            clears_shared_cache: false,
             allocations: Vec::new(),
             updates: Vec::new(),
         }
-    }
-
-    /// Sets the clears_shared_cache flag for renderer-side sanity checks.
-    #[inline]
-    pub fn note_clear(&mut self) {
-        self.clears_shared_cache = true;
     }
 
     /// Pushes an update operation onto the list.
