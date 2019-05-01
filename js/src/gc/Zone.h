@@ -447,10 +447,14 @@ class Zone : public JS::shadow::Zone,
  private:
   js::ZoneData<JS::WeakCache<TypeDescrObjectSet>> typeDescrObjects_;
 
-  // Malloc counter to measure memory pressure for GC scheduling. This
-  // counter should be used only when it's not possible to know the size of
-  // a free.
+  // Malloc counter to measure memory pressure for GC scheduling. This counter
+  // is used for allocations where the size of the allocation is not known on
+  // free. Currently this is used for all internal malloc allocations.
   js::gc::MemoryCounter gcMallocCounter;
+
+  // Malloc counter used for allocations where size information is
+  // available. Currently this is used for external allocations only.
+  js::gc::MemoryTracker gcMallocSize;
 
   // Counter of JIT code executable memory for GC scheduling. Also imprecise,
   // since wasm can generate code that outlives a zone.
@@ -491,6 +495,7 @@ class Zone : public JS::shadow::Zone,
   }
   void adoptMallocBytes(Zone* other) {
     gcMallocCounter.adopt(other->gcMallocCounter);
+    gcMallocSize.adopt(other->gcMallocSize);
   }
   size_t GCMaxMallocBytes() const { return gcMallocCounter.maxBytes(); }
   size_t GCMallocBytes() const { return gcMallocCounter.bytes(); }
@@ -502,6 +507,18 @@ class Zone : public JS::shadow::Zone,
   void updateAllGCMallocCountersOnGCStart();
   void updateAllGCMallocCountersOnGCEnd(const js::AutoLockGC& lock);
   js::gc::TriggerKind shouldTriggerGCForTooMuchMalloc();
+
+  // Memory accounting APIs for memory owned by GC cells.
+  void addCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use) {
+    gcMallocSize.addMemory(cell, nbytes, use);
+  }
+  void removeCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use) {
+    gcMallocSize.removeMemory(cell, nbytes, use);
+  }
+
+  size_t totalBytes() const {
+    return zoneSize.gcBytes() + gcMallocSize.bytes();
+  }
 
   void keepAtoms() { keepAtomsCount++; }
   void releaseAtoms();

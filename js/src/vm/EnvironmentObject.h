@@ -950,7 +950,7 @@ class DebugEnvironments {
    * The map from live frames which have optimized-away environments to the
    * corresponding debug environments.
    */
-  typedef HashMap<MissingEnvironmentKey, ReadBarrieredDebugEnvironmentProxy,
+  typedef HashMap<MissingEnvironmentKey, WeakHeapPtrDebugEnvironmentProxy,
                   MissingEnvironmentKey, ZoneAllocPolicy>
       MissingEnvironmentMap;
   MissingEnvironmentMap missingEnvs;
@@ -963,8 +963,8 @@ class DebugEnvironments {
    * debugger lazy updates of liveEnvs need only fill in the new
    * environments.
    */
-  typedef GCHashMap<ReadBarriered<JSObject*>, LiveEnvironmentVal,
-                    MovableCellHasher<ReadBarriered<JSObject*>>,
+  typedef GCHashMap<WeakHeapPtr<JSObject*>, LiveEnvironmentVal,
+                    MovableCellHasher<WeakHeapPtr<JSObject*>>,
                     ZoneAllocPolicy>
       LiveEnvironmentMap;
   LiveEnvironmentMap liveEnvs;

@@ -357,6 +357,7 @@ nsresult TypedArrayResult::GetCacheableResult(
   const ArrayBufferContents& contents = mContents.get();
   MOZ_ASSERT(contents.data);
 
+  // This takes ownership of the buffer and notes the memory allocation.
   JS::Rooted<JSObject*> arrayBuffer(
       cx, JS::NewArrayBufferWithContents(cx, contents.nbytes, contents.data));
   if (!arrayBuffer) {
@@ -368,10 +369,6 @@ nsresult TypedArrayResult::GetCacheableResult(
   if (!result) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  // The memory of contents has been allocated on a thread that
-  // doesn't have a JSRuntime, hence without a context. Now that we
-  // have a context, attach the memory to where it belongs.
-  JS_updateMallocCounter(cx, contents.nbytes);
   mContents.forget();
 
   aResult.setObject(*result);

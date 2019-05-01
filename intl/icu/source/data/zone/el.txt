@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 el{
-    Version{"2.1.49.26"}
+    Version{"2.1.49.82"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Αμπιτζάν"}

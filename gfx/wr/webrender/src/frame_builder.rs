@@ -28,7 +28,7 @@ use scene_builder::DocumentStats;
 use segment::SegmentBuilder;
 use std::{f32, mem};
 use std::sync::Arc;
-use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext, RenderTarget};
+use tiling::{Frame, RenderPassKind, RenderTargetContext, RenderTarget};
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -558,7 +558,7 @@ impl FrameBuilder {
                                                            texture_cache_profile);
         }
 
-        let mut passes = vec![];
+        let mut passes;
         let mut deferred_resolves = vec![];
         let mut has_texture_cache_tasks = false;
         let mut prim_headers = PrimitiveHeaders::new();
@@ -566,33 +566,11 @@ impl FrameBuilder {
         {
             profile_marker!("Batching");
 
-            // Add passes as required for our cached render tasks.
-            if !render_tasks.cacheable_render_tasks.is_empty() {
-                passes.push(RenderPass::new_off_screen(output_size, self.config.gpu_supports_fast_clears));
-                for cacheable_render_task in &render_tasks.cacheable_render_tasks {
-                    render_tasks.assign_to_passes(
-                        *cacheable_render_task,
-                        0,
-                        output_size,
-                        &mut passes,
-                        self.config.gpu_supports_fast_clears,
-                    );
-                }
-                passes.reverse();
-            }
-
-            if let Some(main_render_task_id) = main_render_task_id {
-                let passes_start = passes.len();
-                passes.push(RenderPass::new_main_framebuffer(output_size, self.config.gpu_supports_fast_clears));
-                render_tasks.assign_to_passes(
-                    main_render_task_id,
-                    passes_start,
-                    output_size,
-                    &mut passes,
-                    self.config.gpu_supports_fast_clears,
-                );
-                passes[passes_start..].reverse();
-            }
+            passes = render_tasks.generate_passes(
+                main_render_task_id,
+                output_size,
+                self.config.gpu_supports_fast_clears,
+            );
 
             // Used to generated a unique z-buffer value per primitive.
             let mut z_generator = ZBufferIdGenerator::new(layer);

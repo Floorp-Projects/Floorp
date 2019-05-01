@@ -196,11 +196,21 @@ nsStringInputStream::ShareData(const char* aData, int32_t aDataLen) {
 }
 
 NS_IMETHODIMP_(size_t)
-nsStringInputStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
+nsStringInputStream::SizeOfIncludingThisIfUnshared(MallocSizeOf aMallocSizeOf) {
   ReentrantMonitorAutoEnter lock(mMon);
 
   size_t n = aMallocSizeOf(this);
   n += mData.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  return n;
+}
+
+NS_IMETHODIMP_(size_t)
+nsStringInputStream::SizeOfIncludingThisEvenIfShared(
+    MallocSizeOf aMallocSizeOf) {
+  ReentrantMonitorAutoEnter lock(mMon);
+
+  size_t n = aMallocSizeOf(this);
+  n += mData.SizeOfExcludingThisEvenIfShared(aMallocSizeOf);
   return n;
 }
 

@@ -3392,7 +3392,7 @@ nb{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
-                    "Qqqq",
+                    "Reiwa",
                 }
                 wide{
                     "Taika (645–650)",
@@ -3631,7 +3631,7 @@ nb{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
-                    "Qqqq",
+                    "Reiwa",
                 }
             }
             intervalFormats{

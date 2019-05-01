@@ -536,7 +536,7 @@ sd{
             tibt{"تبتي عدد"}
         }
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} — سڀئي"}
         category-list{"{0}: {1}"}

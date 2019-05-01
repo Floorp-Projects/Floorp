@@ -57,7 +57,7 @@ mi{
             latn{"Ngā Mati Pākehā"}
         }
     }
-    Version{"2.1.47.85"}
+    Version{"2.1.49.82"}
     codePatterns{
         language{"{0}"}
         script{"{0}"}

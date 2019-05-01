@@ -2903,11 +2903,6 @@ static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
     bytesAllocated = *len * sizeof(char16_t);
   }
 
-  // Historically this method used JS_malloc() which updates the GC memory
-  // accounting.  Since ConvertToUTF16() and js::MakeUnique now use js_malloc()
-  // instead we update the accounting manually after the fact.
-  JS_updateMallocCounter(cx, bytesAllocated);
-
   return NS_OK;
 }
 

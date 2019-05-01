@@ -191,7 +191,7 @@ ko{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             availableFormats{
@@ -2004,7 +2004,7 @@ ko{
                     "다이쇼",
                     "쇼와",
                     "헤이세이",
-                    "Qqqq",
+                    "레이와",
                 }
             }
         }
