@@ -37,6 +37,8 @@ class BookmarkUIView(
 
     var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
         private set
+    var tree: BookmarkNode? = null
+        private set
 
     private var canGoBack = false
 
@@ -56,11 +58,14 @@ class BookmarkUIView(
 
     override fun updateView() = Consumer<BookmarkState> {
         canGoBack = !(listOf(null, BookmarkRoot.Root.id).contains(it.tree?.guid))
-        bookmarkAdapter.updateData(it.tree, it.mode)
+        if (it.tree != tree) {
+            tree = it.tree
+        }
         if (it.mode != mode) {
             mode = it.mode
             actionEmitter.onNext(BookmarkAction.ModeChanged)
         }
+        bookmarkAdapter.updateData(it.tree, it.mode)
         when (val modeCopy = mode) {
             is BookmarkState.Mode.Normal -> setUIForNormalMode(it.tree)
             is BookmarkState.Mode.Selecting -> setUIForSelectingMode(modeCopy)
@@ -68,10 +73,20 @@ class BookmarkUIView(
     }
 
     override fun onBackPressed(): Boolean {
-        return if (canGoBack) {
-            actionEmitter.onNext(BookmarkAction.BackPressed)
-            true
-        } else false
+        return when {
+            mode is BookmarkState.Mode.Selecting -> {
+                mode = BookmarkState.Mode.Normal
+                bookmarkAdapter.updateData(tree, mode)
+                setUIForNormalMode(tree)
+                actionEmitter.onNext(BookmarkAction.ModeChanged)
+                true
+            }
+            canGoBack -> {
+                actionEmitter.onNext(BookmarkAction.BackPressed)
+                true
+            }
+            else -> false
+        }
     }
 
     fun getSelected(): Set<BookmarkNode> = bookmarkAdapter.selected
