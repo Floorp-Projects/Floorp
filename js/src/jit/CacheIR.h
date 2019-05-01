@@ -368,7 +368,6 @@ extern const uint32_t ArgLengths[];
   _(LoadValueResult, Field)                                                    \
   _(LoadNewObjectFromTemplateResult, Field, UInt32, UInt32)                    \
                                                                                \
-  _(CallStringSplitResult, Id, Id, Field)                                      \
   _(CallConstStringSplitResult, Field)                                         \
   _(CallStringConcatResult, Id, Id)                                            \
   _(CallStringObjectConcatResult, Id, Id)                                      \
@@ -1733,12 +1732,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::CallStringObjectConcatResult, lhs);
     writeOperandId(rhs);
   }
-  void callStringSplitResult(StringOperandId str, StringOperandId sep,
-                             ObjectGroup* group) {
-    writeOpWithOperandId(CacheOp::CallStringSplitResult, str);
-    writeOperandId(sep);
-    addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
-  }
   FieldOffset callConstStringSplitResult(ArrayObject* resultTemplate) {
     writeOp(CacheOp::CallConstStringSplitResult);
     return addStubField(uintptr_t(resultTemplate), StubField::Type::JSObject);
@@ -2391,7 +2384,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                      MutableHandleObject result);
 
   // Regular stubs
-  AttachDecision tryAttachStringSplit();
   AttachDecision tryAttachArrayPush();
   AttachDecision tryAttachArrayJoin();
   AttachDecision tryAttachIsSuspendedGenerator();

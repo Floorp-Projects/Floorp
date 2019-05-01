@@ -445,18 +445,6 @@ template bool StringsCompare<ComparisonKind::LessThan>(JSContext* cx,
 template bool StringsCompare<ComparisonKind::GreaterThanOrEqual>(
     JSContext* cx, HandleString lhs, HandleString rhs, bool* res);
 
-bool StringSplitHelper(JSContext* cx, HandleString str, HandleString sep,
-                       HandleObjectGroup group, uint32_t limit,
-                       MutableHandleValue result) {
-  JSObject* resultObj = StringSplitString(cx, group, str, sep, limit);
-  if (!resultObj) {
-    return false;
-  }
-
-  result.setObject(*resultObj);
-  return true;
-}
-
 bool ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval) {
   MOZ_ASSERT(obj->is<ArrayObject>());
 
