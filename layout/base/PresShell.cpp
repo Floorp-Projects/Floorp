@@ -766,15 +766,33 @@ bool PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell) {
   return false;
 }
 
-nsIPresShell::nsIPresShell()
+PresShell::PresShell()
     : mViewManager(nullptr),
       mFrameManager(nullptr),
-      mPaintCount(0),
       mAutoWeakFrames(nullptr),
+#ifdef ACCESSIBILITY
+      mDocAccessible(nullptr),
+#endif  // #ifdef ACCESSIBILITY
+      mCurrentEventFrame(nullptr),
+      mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
+      mPaintCount(0),
+      mAPZFocusSequenceNumber(0),
       mCanvasBackgroundColor(NS_RGBA(0, 0, 0, 0)),
-      mSelectionFlags(0),
+      mActiveSuppressDisplayport(0),
+      mPresShellId(sNextPresShellId++),
+      mFontSizeInflationEmPerLine(0),
+      mFontSizeInflationMinTwips(0),
+      mFontSizeInflationLineThreshold(0),
+      mSelectionFlags(nsISelectionDisplay::DISPLAY_TEXT |
+                      nsISelectionDisplay::DISPLAY_IMAGES),
       mChangeNestCount(0),
-      mRenderFlags(0),
+      mRenderingStateFlags(RenderingStateFlags::None),
+      mInFlush(false),
+      mCaretEnabled(false),
+      mNeedLayoutFlush(true),
+      mNeedStyleFlush(true),
+      mNeedThrottledAnimationFlush(true),
+      mVisualViewportSizeSet(false),
       mDidInitialize(false),
       mIsDestroying(false),
       mIsReflowing(false),
@@ -786,9 +804,9 @@ nsIPresShell::nsIPresShell()
       mLastRootReflowHadUnconstrainedBSize(false),
       mShouldUnsuppressPainting(false),
       mIgnoreFrameDestruction(false),
-      mIsActive(false),
+      mIsActive(true),
       mFrozen(false),
-      mIsFirstPaint(false),
+      mIsFirstPaint(true),  // FIXME/bug 735029: find a better solution
       mObservesMutationsForPrint(false),
       mWasLastReflowInterrupted(false),
       mObservingStyleFlushes(false),
@@ -801,32 +819,12 @@ nsIPresShell::nsIPresShell()
       mIsNeverPainting(false),
       mResolutionUpdated(false),
       mResolutionUpdatedByApz(false),
-      mPresShellId(0),
-      mFontSizeInflationEmPerLine(0),
-      mFontSizeInflationMinTwips(0),
-      mFontSizeInflationLineThreshold(0),
-      mInFlush(false),
-      mCurrentEventFrame(nullptr) {
-}
-
-PresShell::PresShell()
-    : mCaretEnabled(false),
-      mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
-#ifdef ACCESSIBILITY
-      mDocAccessible(nullptr),
-#endif  // #ifdef ACCESSIBILITY
-      mAPZFocusSequenceNumber(0),
-      mActiveSuppressDisplayport(0),
-      mNeedLayoutFlush(true),
-      mNeedStyleFlush(true),
-      mNeedThrottledAnimationFlush(true),
-      mVisualViewportSizeSet(false),
       mDocumentLoading(false),
       mNoDelayedMouseEvents(false),
       mNoDelayedKeyEvents(false),
       mApproximateFrameVisibilityVisited(false),
       mNextPaintCompressed(false),
-      mHasCSSBackgroundColor(false),
+      mHasCSSBackgroundColor(true),
       mIsLastChromeOnlyEscapeKeyConsumed(false),
       mHasReceivedPaintMessage(false),
       mIsLastKeyDownCanceled(false),
@@ -845,15 +843,6 @@ PresShell::PresShell()
 #endif
   mLastOSWake = mLoadBegin = TimeStamp::Now();
 
-  mSelectionFlags =
-      nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
-  mIsActive = true;
-  // FIXME/bug 735029: find a better solution to this problem
-  mIsFirstPaint = true;
-  mPresShellId = sNextPresShellId++;
-  mFrozen = false;
-  mRenderFlags = 0;
-
   static bool addedSynthMouseMove = false;
   if (!addedSynthMouseMove) {
     Preferences::AddBoolVarCache(&sSynthMouseMove,
@@ -861,10 +850,6 @@ PresShell::PresShell()
     addedSynthMouseMove = true;
   }
   PointerEventHandler::Initialize();
-  mPaintingIsFrozen = false;
-  mHasCSSBackgroundColor = true;
-  mIsLastChromeOnlyEscapeKeyConsumed = false;
-  mHasReceivedPaintMessage = false;
 }
 
 NS_INTERFACE_TABLE_HEAD(PresShell)
@@ -4513,12 +4498,10 @@ nsresult PresShell::RenderDocument(const nsRect& aRect,
   }
   if (aFlags & RenderDocumentFlags::IgnoreViewportScrolling) {
     wouldFlushRetainedLayers = !IgnoringViewportScrolling();
-    mRenderFlags =
-        ChangeFlag(mRenderFlags, true, STATE_IGNORING_VIEWPORT_SCROLLING);
+    mRenderingStateFlags |= RenderingStateFlags::IgnoringViewportScrolling;
   }
   if (aFlags & RenderDocumentFlags::DrawWindowNotFlushing) {
-    mRenderFlags =
-        ChangeFlag(mRenderFlags, true, STATE_DRAWWINDOW_NOT_FLUSHING);
+    mRenderingStateFlags |= RenderingStateFlags::DrawWindowNotFlushing;
   }
   if (aFlags & RenderDocumentFlags::DocumentRelative) {
     // XXX be smarter about this ... drawWindow might want a rect
@@ -5194,8 +5177,13 @@ void PresShell::SetIgnoreViewportScrolling(bool aIgnore) {
     return;
   }
   RenderingState state(this);
-  state.mRenderFlags = ChangeFlag(state.mRenderFlags, aIgnore,
-                                  STATE_IGNORING_VIEWPORT_SCROLLING);
+  if (aIgnore) {
+    state.mRenderingStateFlags |=
+        RenderingStateFlags::IgnoringViewportScrolling;
+  } else {
+    state.mRenderingStateFlags &=
+        ~RenderingStateFlags::IgnoringViewportScrolling;
+  }
   SetRenderingState(state);
 }
 
@@ -5262,7 +5250,7 @@ void PresShell::SetRestoreResolution(float aResolution,
 }
 
 void PresShell::SetRenderingState(const RenderingState& aState) {
-  if (mRenderFlags != aState.mRenderFlags) {
+  if (mRenderingStateFlags != aState.mRenderingStateFlags) {
     // Rendering state changed in a way that forces us to flush any
     // retained layers we might already have.
     LayerManager* manager = GetLayerManager();
@@ -5286,7 +5274,7 @@ void PresShell::SetRenderingState(const RenderingState& aState) {
     }
   }
 
-  mRenderFlags = aState.mRenderFlags;
+  mRenderingStateFlags = aState.mRenderingStateFlags;
   mResolution = aState.mResolution;
 }
 

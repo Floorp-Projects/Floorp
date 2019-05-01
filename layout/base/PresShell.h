@@ -66,8 +66,12 @@ class PresShell final : public nsIPresShell,
                         public nsISelectionController,
                         public nsIObserver,
                         public nsSupportsWeakReference {
-  typedef layers::FocusTarget FocusTarget;
+  typedef dom::Document Document;
   typedef dom::Element Element;
+  typedef gfx::SourceSurface SourceSurface;
+  typedef layers::FocusTarget FocusTarget;
+  typedef layers::FrameMetrics FrameMetrics;
+  typedef layers::LayerManager LayerManager;
 
   // A set type for tracking visible frames, for use by the visibility code in
   // PresShell. The set contains nsIFrame* pointers.
@@ -863,7 +867,8 @@ class PresShell final : public nsIPresShell,
    */
   void SetIgnoreViewportScrolling(bool aIgnore);
   bool IgnoringViewportScrolling() const {
-    return mRenderFlags & STATE_IGNORING_VIEWPORT_SCROLLING;
+    return !!(mRenderingStateFlags &
+              RenderingStateFlags::IgnoringViewportScrolling);
   }
 
   float GetResolution() const { return mResolution.valueOr(1.0); }
@@ -899,7 +904,8 @@ class PresShell final : public nsIPresShell,
    * DRAWWINDOW_DO_NOT_FLUSH flag.
    */
   bool InDrawWindowNotFlushing() const {
-    return mRenderFlags & STATE_DRAWWINDOW_NOT_FLUSHING;
+    return !!(mRenderingStateFlags &
+              RenderingStateFlags::DrawWindowNotFlushing);
   }
 
   /**
@@ -1695,9 +1701,9 @@ class PresShell final : public nsIPresShell,
   struct RenderingState {
     explicit RenderingState(PresShell* aPresShell)
         : mResolution(aPresShell->mResolution),
-          mRenderFlags(aPresShell->mRenderFlags) {}
+          mRenderingStateFlags(aPresShell->mRenderingStateFlags) {}
     Maybe<float> mResolution;
-    RenderFlags mRenderFlags;
+    RenderingStateFlags mRenderingStateFlags;
   };
 
   struct AutoSaveRestoreRenderingState {
@@ -1705,23 +1711,16 @@ class PresShell final : public nsIPresShell,
         : mPresShell(aPresShell), mOldState(aPresShell) {}
 
     ~AutoSaveRestoreRenderingState() {
-      mPresShell->mRenderFlags = mOldState.mRenderFlags;
+      mPresShell->mRenderingStateFlags = mOldState.mRenderingStateFlags;
       mPresShell->mResolution = mOldState.mResolution;
     }
 
     PresShell* mPresShell;
     RenderingState mOldState;
   };
-  static RenderFlags ChangeFlag(RenderFlags aFlags, bool aOnOff,
-                                eRenderFlag aFlag) {
-    return aOnOff ? (aFlags | aFlag) : (aFlag & ~aFlag);
-  }
-
   void SetRenderingState(const RenderingState& aState);
 
   friend class ::nsPresShellEventCB;
-
-  bool mCaretEnabled;
 
   // methods for painting a range to an offscreen buffer
 
@@ -2671,23 +2670,105 @@ class PresShell final : public nsIPresShell,
   nsIFrame* mDrawEventTargetFrame = nullptr;
 #endif  // #ifdef DEBUG
 
-  // This is used for synthetic mouse events that are sent when what is under
-  // the mouse pointer may have changed without the mouse moving (eg scrolling,
-  // change to the document contents).
-  // It is set only on a presshell for a root document, this value represents
-  // the last observed location of the mouse relative to that root document. It
-  // is set to (NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if the mouse isn't
-  // over our window or there is no last observed mouse location for some
-  // reason.
-  nsPoint mMouseLocation;
-  // This is an APZ state variable that tracks the target guid for the last
-  // mouse event that was processed (corresponding to mMouseLocation). This is
-  // needed for the synthetic mouse events.
-  layers::ScrollableLayerGuid mMouseEventTargetGuid;
+ private:
+  // IMPORTANT: The ownership implicit in the following member variables
+  // has been explicitly checked.  If you add any members to this class,
+  // please make the ownership explicit (pinkerton, scc).
+
+  // These are the same Document and PresContext owned by the DocViewer.
+  // we must share ownership.
+  RefPtr<Document> mDocument;
+  RefPtr<nsPresContext> mPresContext;
+  // The document's style set owns it but we maintain a ref, may be null.
+  RefPtr<StyleSheet> mPrefStyleSheet;
+  UniquePtr<nsCSSFrameConstructor> mFrameConstructor;
+  nsViewManager* mViewManager;  // [WEAK] docViewer owns it so I don't have to
+  RefPtr<nsFrameSelection> mSelection;
+  RefPtr<nsCaret> mCaret;
+  RefPtr<nsCaret> mOriginalCaret;
+  RefPtr<AccessibleCaretEventHub> mAccessibleCaretEventHub;
+  // Pointer into mFrameConstructor - this is purely so that GetRootFrame() can
+  // be inlined:
+  nsFrameManager* mFrameManager;
+  WeakPtr<nsDocShell> mForwardingContainer;
+
+  // The `performance.now()` value when we last started to process reflows.
+  DOMHighResTimeStamp mLastReflowStart{0.0};
+
+  // At least on Win32 and Mac after interupting a reflow we need to post
+  // the resume reflow event off a timer to avoid event starvation because
+  // posted messages are processed before other messages when the modal
+  // moving/sizing loop is running, see bug 491700 for details.
+  nsCOMPtr<nsITimer> mReflowContinueTimer;
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  // We track allocated pointers in a debug-only hashtable to assert against
+  // missing/double frees.
+  nsTHashtable<nsPtrHashKey<void>> mAllocatedPointers;
+#endif
+
+  // A list of stack weak frames. This is a pointer to the last item in the
+  // list.
+  AutoWeakFrame* mAutoWeakFrames;
+
+  // A hash table of heap allocated weak frames.
+  nsTHashtable<nsPtrHashKey<WeakFrame>> mWeakFrames;
+
+  class DirtyRootsList {
+   public:
+    // Add a dirty root.
+    void Add(nsIFrame* aFrame);
+    // Remove this frame if present.
+    void Remove(nsIFrame* aFrame);
+    // Remove and return one of the shallowest dirty roots from the list.
+    // (If two roots are at the same depth, order is indeterminate.)
+    nsIFrame* PopShallowestRoot();
+    // Remove all dirty roots.
+    void Clear();
+    // Is this frame one of the dirty roots?
+    bool Contains(nsIFrame* aFrame) const;
+    // Are there no dirty roots?
+    bool IsEmpty() const;
+    // Is the given frame an ancestor of any dirty root?
+    bool FrameIsAncestorOfDirtyRoot(nsIFrame* aFrame) const;
+
+   private:
+    struct FrameAndDepth {
+      nsIFrame* mFrame;
+      const uint32_t mDepth;
+
+      // Easy conversion to nsIFrame*, as it's the most likely need.
+      operator nsIFrame*() const { return mFrame; }
+
+      // Used to sort by reverse depths, i.e., deeper < shallower.
+      class CompareByReverseDepth {
+       public:
+        bool Equals(const FrameAndDepth& aA, const FrameAndDepth& aB) const {
+          return aA.mDepth == aB.mDepth;
+        }
+        bool LessThan(const FrameAndDepth& aA, const FrameAndDepth& aB) const {
+          // Reverse depth! So '>' instead of '<'.
+          return aA.mDepth > aB.mDepth;
+        }
+      };
+    };
+    // List of all known dirty roots, sorted by decreasing depths.
+    nsTArray<FrameAndDepth> mList;
+  };
+
+  // Reflow roots that need to be reflowed.
+  DirtyRootsList mDirtyRoots;
+
+#ifdef MOZ_GECKO_PROFILER
+  // These two fields capture call stacks of any changes that require a restyle
+  // or a reflow. Only the first change per restyle / reflow is recorded (the
+  // one that caused a call to SetNeedStyleFlush() / SetNeedLayoutFlush()).
+  UniqueProfilerBacktrace mStyleCause;
+  UniqueProfilerBacktrace mReflowCause;
+#endif
 
   nsTArray<UniquePtr<DelayedEvent>> mDelayedEvents;
 
- private:
   nsRevocableEventPtr<nsSynthMouseMoveEvent> mSynthMouseMoveEvent;
 
   TouchManager mTouchManager;
@@ -2702,8 +2783,6 @@ class PresShell final : public nsIPresShell,
   nsCOMPtr<nsITimer> mPaintSuppressionTimer;
 
   nsCOMPtr<nsITimer> mDelayedPaintTimer;
-
-  TimeStamp mLoadBegin;  // used to time loads
 
   // Information about live content (which still stay in DOM tree).
   // Used in case we need re-dispatch event after sending pointer event,
@@ -2723,7 +2802,39 @@ class PresShell final : public nsIPresShell,
   a11y::DocAccessible* mDocAccessible;
 #endif  // #ifdef ACCESSIBILITY
 
+  nsIFrame* mCurrentEventFrame;
+  nsCOMPtr<nsIContent> mCurrentEventContent;
+  nsTArray<nsIFrame*> mCurrentEventFrameStack;
+  nsCOMArray<nsIContent> mCurrentEventContentStack;
+  // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
+  // we finish reflowing mCurrentReflowRoot.
+  nsTHashtable<nsPtrHashKey<nsIFrame>> mFramesToDirty;
+  nsTHashtable<nsPtrHashKey<nsIScrollableFrame>> mPendingScrollAnchorSelection;
+  nsTHashtable<nsPtrHashKey<nsIScrollableFrame>> mPendingScrollAnchorAdjustment;
+
+  nsCallbackEventRequest* mFirstCallbackEventRequest = nullptr;
+  nsCallbackEventRequest* mLastCallbackEventRequest = nullptr;
+
+  // This is used for synthetic mouse events that are sent when what is under
+  // the mouse pointer may have changed without the mouse moving (eg scrolling,
+  // change to the document contents).
+  // It is set only on a presshell for a root document, this value represents
+  // the last observed location of the mouse relative to that root document. It
+  // is set to (NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if the mouse isn't
+  // over our window or there is no last observed mouse location for some
+  // reason.
+  nsPoint mMouseLocation;
+  // This is an APZ state variable that tracks the target guid for the last
+  // mouse event that was processed (corresponding to mMouseLocation). This is
+  // needed for the synthetic mouse events.
+  layers::ScrollableLayerGuid mMouseEventTargetGuid;
+
   nsSize mVisualViewportSize;
+
+  // The focus information needed for async keyboard scrolling
+  FocusTarget mAPZFocusTarget;
+
+  nsPresArena<8192> mFrameArena;
 
   Maybe<nsPoint> mVisualViewportOffset;
 
@@ -2732,16 +2843,56 @@ class PresShell final : public nsIPresShell,
   // Only applicable to the RCD pres shell.
   Maybe<VisualScrollUpdate> mPendingVisualScrollUpdate;
 
+  // Used to force allocation and rendering of proportionally more or
+  // less pixels in both dimensions.
+  Maybe<float> mResolution;
+
+  TimeStamp mLoadBegin;  // used to time loads
+
   TimeStamp mLastOSWake;
+
+  // Count of the number of times this presshell has been painted to a window.
+  uint64_t mPaintCount;
 
   // The focus sequence number of the last processed input event
   uint64_t mAPZFocusSequenceNumber;
-  // The focus information needed for async keyboard scrolling
-  FocusTarget mAPZFocusTarget;
 
   nscoord mLastAnchorScrollPositionY = 0;
 
+  // Most recent canvas background color.
+  nscolor mCanvasBackgroundColor;
+
   int32_t mActiveSuppressDisplayport;
+
+  uint32_t mPresShellId;
+
+  // Cached font inflation values. This is done to prevent changing of font
+  // inflation until a page is reloaded.
+  uint32_t mFontSizeInflationEmPerLine;
+  uint32_t mFontSizeInflationMinTwips;
+  uint32_t mFontSizeInflationLineThreshold;
+
+  int16_t mSelectionFlags;
+
+  // This is used to protect ourselves from triggering reflow while in the
+  // middle of frame construction and the like... it really shouldn't be
+  // needed, one hopes, but it is for now.
+  uint16_t mChangeNestCount;
+
+  // Flags controlling how our document is rendered.  These persist
+  // between paints and so are tied with retained layer pixels.
+  // PresShell flushes retained layers when the rendering state
+  // changes in a way that prevents us from being able to (usefully)
+  // re-use old pixels.
+  RenderingStateFlags mRenderingStateFlags;
+
+  // Whether we're currently under a FlushPendingNotifications.
+  // This is used to handle flush reentry correctly.
+  // NOTE: This can't be a bitfield since AutoRestore has a reference to this
+  // variable.
+  bool mInFlush;
+
+  bool mCaretEnabled : 1;
 
   // True if a layout flush might not be a no-op
   bool mNeedLayoutFlush : 1;
@@ -2754,6 +2905,70 @@ class PresShell final : public nsIPresShell,
   bool mNeedThrottledAnimationFlush : 1;
 
   bool mVisualViewportSizeSet : 1;
+
+  bool mDidInitialize : 1;
+  bool mIsDestroying : 1;
+  bool mIsReflowing : 1;
+  bool mIsObservingDocument : 1;
+
+  // Whether we shouldn't ever get to FlushPendingNotifications. This flag is
+  // meant only to sanity-check / assert that FlushPendingNotifications doesn't
+  // happen during certain periods of time. It shouldn't be made public nor used
+  // for other purposes.
+  bool mForbiddenToFlush : 1;
+
+  // We've been disconnected from the document.  We will refuse to paint the
+  // document until either our timer fires or all frames are constructed.
+  bool mIsDocumentGone : 1;
+  bool mHaveShutDown : 1;
+
+  // For all documents we initially lock down painting.
+  bool mPaintingSuppressed : 1;
+
+  bool mLastRootReflowHadUnconstrainedBSize : 1;
+
+  // Indicates that it is safe to unlock painting once all pending reflows
+  // have been processed.
+  bool mShouldUnsuppressPainting : 1;
+
+  bool mIgnoreFrameDestruction : 1;
+
+  bool mIsActive : 1;
+  bool mFrozen : 1;
+  bool mIsFirstPaint : 1;
+  bool mObservesMutationsForPrint : 1;
+
+  // Whether the most recent interruptible reflow was actually interrupted:
+  bool mWasLastReflowInterrupted : 1;
+
+  // True if we're observing the refresh driver for style flushes.
+  bool mObservingStyleFlushes : 1;
+
+  // True if we're observing the refresh driver for layout flushes, that is, if
+  // we have a reflow scheduled.
+  //
+  // Guaranteed to be false if mReflowContinueTimer is non-null.
+  bool mObservingLayoutFlushes : 1;
+
+  bool mResizeEventPending : 1;
+
+  bool mFontSizeInflationForceEnabled : 1;
+  bool mFontSizeInflationDisabledInMasterProcess : 1;
+  bool mFontSizeInflationEnabled : 1;
+
+  bool mPaintingIsFrozen : 1;
+
+  // If a document belongs to an invisible DocShell, this flag must be set
+  // to true, so we can avoid any paint calls for widget related to this
+  // presshell.
+  bool mIsNeverPainting : 1;
+
+  // Whether the most recent change to the pres shell resolution was
+  // originated by the main thread.
+  bool mResolutionUpdated : 1;
+
+  // True if the resolution has been ever changed by APZ.
+  bool mResolutionUpdatedByApz : 1;
 
   bool mDocumentLoading : 1;
   bool mNoDelayedMouseEvents : 1;
