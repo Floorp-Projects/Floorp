@@ -97,10 +97,7 @@ class ReaderViewFeature(
         }
 
         if (portConnected()) {
-            checkReaderable()
-            if (activeSession?.readerMode == true) {
-                showReaderView()
-            }
+            updateReaderViewState()
         }
 
         controlsInteractor.start()
@@ -122,9 +119,12 @@ class ReaderViewFeature(
     }
 
     override fun onSessionSelected(session: Session) {
-        registerContentMessageHandler(activeSession)
-        checkReaderable()
         super.onSessionSelected(session)
+        updateReaderViewState(session)
+    }
+
+    override fun onSessionAdded(session: Session) {
+        registerContentMessageHandler(session)
     }
 
     override fun onSessionRemoved(session: Session) {
@@ -144,8 +144,8 @@ class ReaderViewFeature(
     /**
      * Shows the reader view UI.
      */
-    fun showReaderView() {
-        activeSession?.let {
+    fun showReaderView(session: Session? = activeSession) {
+        session?.let {
             val config = JSONObject()
                 .put(ACTION_VALUE_SHOW_FONT_SIZE, config.fontSize)
                 .put(ACTION_VALUE_SHOW_FONT_TYPE, config.fontType.name.toLowerCase())
@@ -186,8 +186,8 @@ class ReaderViewFeature(
         controlsPresenter.hide()
     }
 
-    internal fun checkReaderable() {
-        activeSession?.let {
+    internal fun checkReaderable(session: Session? = activeSession) {
+        session?.let {
             if (portConnected()) {
                 sendContentMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READERABLE), it)
             }
@@ -202,10 +202,7 @@ class ReaderViewFeature(
         val messageHandler = object : MessageHandler {
             override fun onPortConnected(port: Port) {
                 ports[port.engineSession] = port
-                checkReaderable()
-                if (activeSession?.readerMode == true) {
-                    showReaderView()
-                }
+                updateReaderViewState(session)
             }
 
             override fun onPortDisconnected(port: Port) {
@@ -214,7 +211,7 @@ class ReaderViewFeature(
 
             override fun onPortMessage(message: Any, port: Port) {
                 if (message is JSONObject) {
-                    activeSession?.readerable = message.optBoolean(READERABLE_RESPONSE_MESSAGE_KEY, false)
+                    session.readerable = message.optBoolean(READERABLE_RESPONSE_MESSAGE_KEY, false)
                 }
             }
         }
@@ -226,6 +223,18 @@ class ReaderViewFeature(
         session?.let {
             val port = ports[sessionManager.getEngineSession(session)]
             port?.postMessage(msg) ?: logger.error("No port connected for provided session. Message $msg not sent.")
+        }
+    }
+
+    @VisibleForTesting
+    internal fun updateReaderViewState(session: Session? = activeSession) {
+        if (session == null) {
+            return
+        }
+
+        checkReaderable(session)
+        if (session.readerMode) {
+            showReaderView(session)
         }
     }
 

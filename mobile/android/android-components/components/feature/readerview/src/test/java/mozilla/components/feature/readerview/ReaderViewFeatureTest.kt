@@ -119,12 +119,7 @@ class ReaderViewFeatureTest {
 
         messageHandler.value.onPortConnected(port)
         assertTrue(ReaderViewFeature.ports.containsValue(port))
-        verify(readerViewFeature).checkReaderable()
-        verify(readerViewFeature, never()).showReaderView()
-
-        `when`(session.readerMode).thenReturn(true)
-        messageHandler.value.onPortConnected(port)
-        verify(readerViewFeature).showReaderView()
+        verify(readerViewFeature).updateReaderViewState(eq(session))
 
         val readerableMessage = JSONObject().put("readerable", true)
         messageHandler.value.onPortMessage(readerableMessage, port)
@@ -202,19 +197,46 @@ class ReaderViewFeatureTest {
         `when`(readerViewFeature.portConnected()).thenReturn(true)
         readerViewFeature.start()
 
-        verify(readerViewFeature).checkReaderable()
+        verify(readerViewFeature).updateReaderViewState(any())
     }
 
     @Test
-    fun `check readerable when session is selected`() {
+    fun `update reader view state when session is selected`() {
         val engine = mock(Engine::class.java)
         val sessionManager: SessionManager = mock()
         val view: ReaderViewControlsView = mock()
+        val selectedSession: Session = mock()
 
         val readerViewFeature = spy(ReaderViewFeature(context, engine, sessionManager, view))
-        readerViewFeature.onSessionSelected(mock())
+        readerViewFeature.onSessionSelected(selectedSession)
 
-        verify(readerViewFeature).checkReaderable()
+        verify(readerViewFeature).updateReaderViewState(eq(selectedSession))
+    }
+
+    @Test
+    fun `register content message handler for added session`() {
+        val engine = mock(Engine::class.java)
+        val sessionManager: SessionManager = mock()
+        val view: ReaderViewControlsView = mock()
+        val session: Session = mock()
+        val engineSession: EngineSession = mock()
+        val ext: WebExtension = mock()
+        val messageHandler = argumentCaptor<MessageHandler>()
+
+        ReaderViewFeature.installedWebExt = ext
+
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        val readerViewFeature = spy(ReaderViewFeature(context, engine, sessionManager, view))
+
+        readerViewFeature.onSessionAdded(session)
+        verify(ext).registerContentMessageHandler(eq(engineSession), eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID), messageHandler.capture())
+
+        val port: Port = mock()
+        `when`(port.engineSession).thenReturn(engineSession)
+
+        messageHandler.value.onPortConnected(port)
+        assertTrue(ReaderViewFeature.ports.containsValue(port))
+        verify(readerViewFeature).updateReaderViewState(eq(session))
     }
 
     @Test
@@ -347,6 +369,37 @@ class ReaderViewFeatureTest {
         // Setting to the same value should not cause another message to be sent
         readerViewFeature.config.fontSize = 4
         verify(port, times(1)).postMessage(message.capture())
+    }
+
+    @Test
+    fun `update state checks readerable and shows reader mode`() {
+        val engine = mock(Engine::class.java)
+        val sessionManager: SessionManager = mock()
+        val view: ReaderViewControlsView = mock()
+        val session: Session = mock()
+
+        val readerViewFeature = spy(ReaderViewFeature(context, engine, sessionManager, view))
+
+        readerViewFeature.updateReaderViewState(null)
+        verify(readerViewFeature, never()).checkReaderable(any())
+        verify(readerViewFeature, never()).showReaderView(any())
+
+        readerViewFeature.updateReaderViewState(session)
+        verify(readerViewFeature).checkReaderable(eq(session))
+        verify(readerViewFeature, never()).showReaderView(any())
+
+        `when`(session.readerMode).thenReturn(true)
+        readerViewFeature.updateReaderViewState(session)
+        verify(readerViewFeature, times(2)).checkReaderable(eq(session))
+        verify(readerViewFeature).showReaderView(eq(session))
+
+        val selectedSession: Session = mock()
+        `when`(selectedSession.readerMode).thenReturn(true)
+        `when`(sessionManager.selectedSession).thenReturn(selectedSession)
+        readerViewFeature.observeSelected()
+        readerViewFeature.updateReaderViewState(selectedSession)
+        verify(readerViewFeature).checkReaderable(eq(selectedSession))
+        verify(readerViewFeature).showReaderView(eq(selectedSession))
     }
 
     private fun prepareFeatureForTest(port: Port, session: Session = mock()): ReaderViewFeature {
