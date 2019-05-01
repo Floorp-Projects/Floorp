@@ -32,9 +32,10 @@ class BookmarkComponent(
             is BookmarkChange.Change -> {
                 val mode =
                     if (state.mode is BookmarkState.Mode.Selecting) {
-                        BookmarkState.Mode.Selecting(state.mode.selectedItems.filter {
+                        val items = state.mode.selectedItems.filter {
                             it in change.tree
-                        }.toSet())
+                        }.toSet()
+                        if (items.isEmpty()) BookmarkState.Mode.Normal else BookmarkState.Mode.Selecting(items)
                     } else state.mode
                 state.copy(tree = change.tree, mode = mode)
             }

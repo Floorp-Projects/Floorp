@@ -22,7 +22,7 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 
 class BookmarkComponentTest {
 
-    private lateinit var bookmarkComponent: BookmarkComponentTest.TestBookmarkComponent
+    private lateinit var bookmarkComponent: TestBookmarkComponent
     private lateinit var bookmarkObserver: TestObserver<BookmarkState>
     private lateinit var emitter: Observer<BookmarkChange>
 
@@ -32,7 +32,7 @@ class BookmarkComponentTest {
         TestUtils.setRxSchedulers()
 
         bookmarkComponent = spyk(
-            BookmarkComponentTest.TestBookmarkComponent(mockk(), TestUtils.bus),
+            TestBookmarkComponent(mockk(), TestUtils.bus),
             recordPrivateCalls = true
         )
         bookmarkObserver = bookmarkComponent.internalRender(bookmarkComponent.reducer).test()
@@ -59,6 +59,29 @@ class BookmarkComponentTest {
                 BookmarkState(tree, BookmarkState.Mode.Normal),
                 BookmarkState(tree, BookmarkState.Mode.Selecting(setOf(itemToSelect))),
                 BookmarkState(tree, BookmarkState.Mode.Normal)
+            )
+    }
+
+    @Test
+    fun `select and delete a bookmark`() {
+        val itemToSelect = BookmarkNode(BookmarkNodeType.ITEM, "234", "123", 0, "Mozilla", "http://mozilla.org", null)
+        val separator = BookmarkNode(BookmarkNodeType.SEPARATOR, "345", "123", 1, null, null, null)
+        val innerFolder = BookmarkNode(BookmarkNodeType.FOLDER, "456", "123", 2, "Web Browsers", null, null)
+        val tree = BookmarkNode(
+            BookmarkNodeType.FOLDER, "123", BookmarkRoot.Mobile.id, 0, "Best Sites", null,
+            listOf(itemToSelect, separator, innerFolder)
+        )
+
+        emitter.onNext(BookmarkChange.Change(tree))
+        emitter.onNext(BookmarkChange.IsSelected(itemToSelect))
+        emitter.onNext(BookmarkChange.Change(tree - itemToSelect.guid))
+
+        bookmarkObserver.assertSubscribed().awaitCount(2).assertNoErrors()
+            .assertValues(
+                BookmarkState(null, BookmarkState.Mode.Normal),
+                BookmarkState(tree, BookmarkState.Mode.Normal),
+                BookmarkState(tree, BookmarkState.Mode.Selecting(setOf(itemToSelect))),
+                BookmarkState(tree - itemToSelect.guid, BookmarkState.Mode.Normal)
             )
     }
 
