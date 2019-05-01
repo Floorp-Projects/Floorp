@@ -34,13 +34,13 @@ static int8_t ParseStyleValue(nsAtom* aAttribute,
                               const nsAString& aAttributeValue) {
   if (aAttribute == nsGkAtoms::rowalign_) {
     if (aAttributeValue.EqualsLiteral("top"))
-      return NS_STYLE_VERTICAL_ALIGN_TOP;
+      return static_cast<int8_t>(StyleVerticalAlignKeyword::Top);
     else if (aAttributeValue.EqualsLiteral("bottom"))
-      return NS_STYLE_VERTICAL_ALIGN_BOTTOM;
+      return static_cast<int8_t>(StyleVerticalAlignKeyword::Bottom);
     else if (aAttributeValue.EqualsLiteral("center"))
-      return NS_STYLE_VERTICAL_ALIGN_MIDDLE;
+      return static_cast<int8_t>(StyleVerticalAlignKeyword::Middle);
     else
-      return NS_STYLE_VERTICAL_ALIGN_BASELINE;
+      return static_cast<int8_t>(StyleVerticalAlignKeyword::Baseline);
   } else if (aAttribute == nsGkAtoms::columnalign_) {
     if (aAttributeValue.EqualsLiteral("left"))
       return NS_STYLE_TEXT_ALIGN_LEFT;
@@ -1124,9 +1124,9 @@ nsresult nsMathMLmtdFrame::AttributeChanged(int32_t aNameSpaceID,
   return NS_OK;
 }
 
-uint8_t nsMathMLmtdFrame::GetVerticalAlign() const {
+StyleVerticalAlignKeyword nsMathMLmtdFrame::GetVerticalAlign() const {
   // Set the default alignment in case no alignment was specified
-  uint8_t alignment = nsTableCellFrame::GetVerticalAlign();
+  auto alignment = nsTableCellFrame::GetVerticalAlign();
 
   nsTArray<int8_t>* alignmentList = FindCellProperty(this, RowAlignProperty());
 
@@ -1135,10 +1135,10 @@ uint8_t nsMathMLmtdFrame::GetVerticalAlign() const {
 
     // If the row number is greater than the number of provided rowalign values,
     // we simply repeat the last value.
-    if (rowIndex < alignmentList->Length())
-      alignment = alignmentList->ElementAt(rowIndex);
-    else
-      alignment = alignmentList->ElementAt(alignmentList->Length() - 1);
+    return static_cast<StyleVerticalAlignKeyword>(
+        (rowIndex < alignmentList->Length())
+            ? alignmentList->ElementAt(rowIndex)
+            : alignmentList->LastElement());
   }
 
   return alignment;

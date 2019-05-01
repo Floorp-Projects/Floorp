@@ -381,19 +381,6 @@ const KTableEntry nsCSSProps::kTextOverflowKTable[] = {
     {eCSSKeyword_ellipsis, NS_STYLE_TEXT_OVERFLOW_ELLIPSIS},
     {eCSSKeyword_UNKNOWN, -1}};
 
-const KTableEntry nsCSSProps::kVerticalAlignKTable[] = {
-    {eCSSKeyword_baseline, NS_STYLE_VERTICAL_ALIGN_BASELINE},
-    {eCSSKeyword_sub, NS_STYLE_VERTICAL_ALIGN_SUB},
-    {eCSSKeyword_super, NS_STYLE_VERTICAL_ALIGN_SUPER},
-    {eCSSKeyword_top, NS_STYLE_VERTICAL_ALIGN_TOP},
-    {eCSSKeyword_text_top, NS_STYLE_VERTICAL_ALIGN_TEXT_TOP},
-    {eCSSKeyword_middle, NS_STYLE_VERTICAL_ALIGN_MIDDLE},
-    {eCSSKeyword__moz_middle_with_baseline,
-     NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE},
-    {eCSSKeyword_bottom, NS_STYLE_VERTICAL_ALIGN_BOTTOM},
-    {eCSSKeyword_text_bottom, NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM},
-    {eCSSKeyword_UNKNOWN, -1}};
-
 // keyword tables for SVG properties
 
 const KTableEntry nsCSSProps::kShapeRadiusKTable[] = {

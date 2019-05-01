@@ -2965,7 +2965,8 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
                        {0.}},
       mChildPerspective(StylePerspective::None()),
       mPerspectiveOrigin(Position::FromPercentage(0.5f)),
-      mVerticalAlign(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated),
+      mVerticalAlign(
+          StyleVerticalAlign::Keyword(StyleVerticalAlignKeyword::Baseline)),
       mTransitions(
           nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT),
       mTransitionTimingFunctionCount(1),
