@@ -3044,7 +3044,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
   }
 
   // It'd be bad!
-  nsIPresShell::AutoAssertNoFlush noReentrantFlush(*presShell);
+  PresShell::AutoAssertNoFlush noReentrantFlush(*presShell);
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
   // stop animations and transitions on elements that have no frame at the end

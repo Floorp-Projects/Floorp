@@ -72,7 +72,7 @@ class nsQueryFrame {
 
     // This marker allows mozilla::ArenaObjectID to "extend" this enum
     // with additional sequential values for use in nsPresArena and
-    // nsIPresShell::{Allocate,Free}ByObjectId
+    // PresShell::{Allocate,Free}ByObjectId
     NON_FRAME_MARKER
   };
 
