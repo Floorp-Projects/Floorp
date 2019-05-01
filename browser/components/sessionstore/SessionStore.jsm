@@ -1044,7 +1044,9 @@ var SessionStoreInternal = {
         this.saveStateDelayed(win);
         break;
       case "oop-browser-crashed":
-        this.onBrowserCrashed(target);
+        if (aEvent.isTopFrame) {
+          this.onBrowserCrashed(target);
+        }
         break;
       case "XULFrameLoaderCreated":
         if (target.namespaceURI == NS_XUL &&

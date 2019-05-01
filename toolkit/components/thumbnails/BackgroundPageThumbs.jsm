@@ -288,7 +288,12 @@ const BackgroundPageThumbs = {
 
     // an event that is sent if the remote process crashes - no need to remove
     // it as we want it to be there as long as the browser itself lives.
-    browser.addEventListener("oop-browser-crashed", () => {
+    browser.addEventListener("oop-browser-crashed", event => {
+      if (!event.isTopFrame) {
+        // It was a subframe that crashed. We'll ignore this.
+        return;
+      }
+
       Cu.reportError("BackgroundThumbnails remote process crashed - recovering");
       this._destroyBrowser();
       let curCapture = this._captureQueue.length ? this._captureQueue[0] : null;
