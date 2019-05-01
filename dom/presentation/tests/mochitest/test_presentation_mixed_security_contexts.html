@@ -23,7 +23,6 @@ function setup() {
   SpecialPowers.addPermission("presentation",
                               true, { url: "https://example.com/tests/dom/presentation/tests/mochitest/file_presentation_mixed_security_contexts.html",
                                       originAttributes: {
-                                        appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
                                         inIsolatedMozBrowser: false }});
 
   return new Promise(function(aResolve, aReject) {

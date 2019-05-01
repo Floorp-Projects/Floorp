@@ -26,9 +26,6 @@
         sendAsyncMessage("test:result", "is nsIPrincipal: " +
                          (message.data instanceof Ci.nsIPrincipal ? "OK" : "KO"));
 
-        sendAsyncMessage("test:result", "principal.appId: " +
-                         ("appId" in message.data ? "OK" : "KO"));
-
         sendAsyncMessage("test:result", "principal.origin: " +
                          ("origin" in message.data ? "OK" : "KO"));
 
