@@ -1234,6 +1234,19 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for GeometryUtils.getBoxQuads enabled?
+#ifdef RELEASE_OR_BETA
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "layout.css.getBoxQuads.enabled",
+   layout_css_getBoxQuads_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 // Pref to control whether arrow-panel animations are enabled or not.
 // Transitions are currently disabled on Linux due to rendering issues on
 // certain configurations.
