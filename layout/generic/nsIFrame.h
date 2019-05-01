@@ -3939,10 +3939,9 @@ class nsIFrame : public nsQueryFrame {
    * of the enumerated values.  If this is an SVG text frame, it returns a value
    * that corresponds to the value of dominant-baseline.  If the
    * vertical-align property has length or percentage value, this returns
-   * eInvalidVerticalAlign.
+   * Nothing().
    */
-  uint8_t VerticalAlignEnum() const;
-  enum { eInvalidVerticalAlign = 0xFF };
+  Maybe<mozilla::StyleVerticalAlignKeyword> VerticalAlignEnum() const;
 
   void CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
                               nsDisplayList* aList,

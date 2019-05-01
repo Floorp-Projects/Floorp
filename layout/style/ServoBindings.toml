@@ -470,6 +470,8 @@ cbindgen-types = [
     { gecko = "StyleRGBA", servo = "cssparser::RGBA" },
     { gecko = "StyleOrigin", servo = "stylesheets::Origin" },
     { gecko = "StyleGenericGradientItem", servo = "values::generics::image::GradientItem" },
+    { gecko = "StyleGenericVerticalAlign", servo = "values::generics::box_::VerticalAlign" },
+    { gecko = "StyleVerticalAlignKeyword", servo = "values::generics::box_::VerticalAlignKeyword" },
 ]
 
 mapped-generic-types = [

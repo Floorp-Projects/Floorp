@@ -460,12 +460,9 @@ uint8_t nsTableWrapperFrame::GetCaptionSide() {
   }
 }
 
-uint8_t nsTableWrapperFrame::GetCaptionVerticalAlign() {
-  const nsStyleCoord& va =
-      mCaptionFrames.FirstChild()->StyleDisplay()->mVerticalAlign;
-
-  return (va.GetUnit() == eStyleUnit_Enumerated) ? va.GetIntValue()
-                                                 : NS_STYLE_VERTICAL_ALIGN_TOP;
+StyleVerticalAlignKeyword nsTableWrapperFrame::GetCaptionVerticalAlign() const {
+  const auto& va = mCaptionFrames.FirstChild()->StyleDisplay()->mVerticalAlign;
+  return va.IsKeyword() ? va.AsKeyword() : StyleVerticalAlignKeyword::Top;
 }
 
 void nsTableWrapperFrame::SetDesiredSize(uint8_t aCaptionSide,
@@ -588,12 +585,12 @@ nsresult nsTableWrapperFrame::GetCaptionOrigin(
     case NS_STYLE_CAPTION_SIDE_LEFT:
       aOrigin.B(aWM) = aInnerMargin.BStart(aWM);
       switch (GetCaptionVerticalAlign()) {
-        case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
+        case StyleVerticalAlignKeyword::Middle:
           aOrigin.B(aWM) = std::max(
               0, aInnerMargin.BStart(aWM) +
                      ((aInnerSize.BSize(aWM) - aCaptionSize.BSize(aWM)) / 2));
           break;
-        case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+        case StyleVerticalAlignKeyword::Bottom:
           aOrigin.B(aWM) =
               std::max(0, aInnerMargin.BStart(aWM) + aInnerSize.BSize(aWM) -
                               aCaptionSize.BSize(aWM));
@@ -677,12 +674,12 @@ nsresult nsTableWrapperFrame::GetInnerOrigin(
     case NS_STYLE_CAPTION_SIDE_RIGHT:
       aOrigin.B(aWM) = aInnerMargin.BStart(aWM);
       switch (GetCaptionVerticalAlign()) {
-        case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
+        case StyleVerticalAlignKeyword::Middle:
           aOrigin.B(aWM) =
               std::max(aInnerMargin.BStart(aWM),
                        (aCaptionSize.BSize(aWM) - aInnerSize.BSize(aWM)) / 2);
           break;
-        case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+        case StyleVerticalAlignKeyword::Bottom:
           aOrigin.B(aWM) =
               std::max(aInnerMargin.BStart(aWM),
                        aCaptionSize.BSize(aWM) - aInnerSize.BSize(aWM));

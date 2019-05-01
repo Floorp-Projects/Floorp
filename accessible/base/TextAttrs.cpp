@@ -717,58 +717,37 @@ void TextAttrsMgr::TextPosTextAttr::ExposeValue(
 
 TextAttrsMgr::TextPosValue TextAttrsMgr::TextPosTextAttr::GetTextPosValue(
     nsIFrame* aFrame) const {
-  const nsStyleCoord& styleCoord = aFrame->StyleDisplay()->mVerticalAlign;
-  switch (styleCoord.GetUnit()) {
-    case eStyleUnit_Enumerated:
-      switch (styleCoord.GetIntValue()) {
-        case NS_STYLE_VERTICAL_ALIGN_BASELINE:
-          return eTextPosBaseline;
-        case NS_STYLE_VERTICAL_ALIGN_SUB:
-          return eTextPosSub;
-        case NS_STYLE_VERTICAL_ALIGN_SUPER:
-          return eTextPosSuper;
-
-          // No good guess for these:
-          //   NS_STYLE_VERTICAL_ALIGN_TOP
-          //   NS_STYLE_VERTICAL_ALIGN_TEXT_TOP
-          //   NS_STYLE_VERTICAL_ALIGN_MIDDLE
-          //   NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM
-          //   NS_STYLE_VERTICAL_ALIGN_BOTTOM
-          //   NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE
-          // Do not expose value of text-position attribute.
-
-        default:
-          break;
-      }
-      return eTextPosNone;
-
-    case eStyleUnit_Percent: {
-      float percentValue = styleCoord.GetPercentValue();
-      return percentValue > 0
-                 ? eTextPosSuper
-                 : (percentValue < 0 ? eTextPosSub : eTextPosBaseline);
+  const auto& verticalAlign = aFrame->StyleDisplay()->mVerticalAlign;
+  if (verticalAlign.IsKeyword()) {
+    switch (verticalAlign.AsKeyword()) {
+      case StyleVerticalAlignKeyword::Baseline:
+        return eTextPosBaseline;
+      case StyleVerticalAlignKeyword::Sub:
+        return eTextPosSub;
+      case StyleVerticalAlignKeyword::Super:
+        return eTextPosSuper;
+      // No good guess for the rest, so do not expose value of text-position
+      // attribute.
+      default:
+        return eTextPosNone;
     }
-
-    case eStyleUnit_Coord: {
-      nscoord coordValue = styleCoord.GetCoordValue();
-      return coordValue > 0 ? eTextPosSuper
-                            : (coordValue < 0 ? eTextPosSub : eTextPosBaseline);
-    }
-
-    case eStyleUnit_Null:
-    case eStyleUnit_Normal:
-    case eStyleUnit_Auto:
-    case eStyleUnit_None:
-    case eStyleUnit_Factor:
-    case eStyleUnit_Degree:
-    case eStyleUnit_FlexFraction:
-    case eStyleUnit_Integer:
-    case eStyleUnit_Calc:
-      break;
   }
 
-  const nsIContent* content = aFrame->GetContent();
-  if (content) {
+  const auto& length = verticalAlign.AsLength();
+  if (length.ConvertsToPercentage()) {
+    float percentValue = length.ToPercentage();
+    return percentValue > 0
+               ? eTextPosSuper
+               : (percentValue < 0 ? eTextPosSub : eTextPosBaseline);
+  }
+
+  if (length.ConvertsToLength()) {
+    nscoord coordValue = length.ToLength();
+    return coordValue > 0 ? eTextPosSuper
+                          : (coordValue < 0 ? eTextPosSub : eTextPosBaseline);
+  }
+
+  if (const nsIContent* content = aFrame->GetContent()) {
     if (content->IsHTMLElement(nsGkAtoms::sup)) return eTextPosSuper;
     if (content->IsHTMLElement(nsGkAtoms::sub)) return eTextPosSub;
   }
