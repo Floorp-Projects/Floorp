@@ -82,6 +82,12 @@ class PictureInPictureToggleChild extends ActorChild {
   }
 
   handleEvent(event) {
+    if (!event.isTrusted) {
+      // We don't care about synthesized events that might be coming from
+      // content JS.
+      return;
+    }
+
     switch (event.type) {
       case "canplay": {
         if (this.toggleEnabled &&
