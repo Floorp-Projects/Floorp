@@ -42,6 +42,7 @@ class nsIconChannel final : public nsIChannel, public nsIStreamListener {
 
  protected:
   class IconAsyncOpenTask;
+  class IconSyncOpenTask;
 
   void OnAsyncError(nsresult aStatus);
   void FinishAsyncOpen(HICON aIcon, nsresult aStatus);
