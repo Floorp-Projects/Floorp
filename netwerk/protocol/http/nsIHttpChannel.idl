@@ -6,6 +6,7 @@
 #include "nsIChannel.idl"
 
 interface nsIHttpHeaderVisitor;
+interface nsIReferrerInfo;
 
 /**
  * nsIHttpChannel
@@ -39,11 +40,13 @@ interface nsIHttpChannel : nsIChannel
     [must_use] attribute ACString requestMethod;
 
     /**
-     * Get/set the HTTP referrer URI.  This is the address (URI) of the
+     * Get/set the referrer information.  This contains the referrer (URI) of the
      * resource from which this channel's URI was obtained (see RFC2616 section
-     * 14.36).
+     * 14.36) and the referrer policy applied to the referrer.
      *
      * This attribute may only be set before the channel is opened.
+     *
+     * Setting this attribute will clone new referrerInfo object by default.
      *
      * NOTE: The channel may silently refuse to set the Referer header if the
      * URI does not pass certain security checks (e.g., a "https://" URL will
@@ -55,12 +58,22 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_FAILURE if used for setting referrer during
      *         visitRequestHeaders. Getting the value will not throw.
      */
-    [must_use] attribute nsIURI referrer;
+    [must_use, infallible] attribute nsIReferrerInfo referrerInfo;
+
+    /**
+     * Set referrer Info without clone new object.
+     * Use this api only when you are passing a referrerInfo to the channel with
+     * 1-1 relationship. Don't use this api if you will reuse the referrer info
+     * object later. For example when to use:
+     * channel.setReferrerInfoWithoutClone(new ReferrerInfo());
+     *
+     */
+    [must_use, noscript]
+    void setReferrerInfoWithoutClone(in nsIReferrerInfo aReferrerInfo);
 
     /**
      * Referrer policies. See ReferrerPolicy.h for more details.
      */
-
 
     /*   The undefined state, or no referrer policy, usually causing a fallback
          to a referrer policy definded elsewhere */
@@ -85,20 +98,6 @@ interface nsIHttpChannel : nsIChannel
          Send origin when cross-origin from https->https or http->http(s)
          No referrer when request from https->http. */
     const unsigned long REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN = 8;
-
-    /**
-     * Get the HTTP referrer policy.  The policy is retrieved from the meta
-     * referrer tag, which can be one of many values (see ReferrerPolicy.h for
-     * more details).
-     */
-    [must_use] readonly attribute unsigned long referrerPolicy;
-
-    /**
-     * Set the HTTP referrer URI with a referrer policy.
-     * @throws NS_ERROR_FAILURE if called during visitRequestHeaders.
-     */
-    [must_use]
-    void setReferrerWithPolicy(in nsIURI referrer, in unsigned long referrerPolicy);
 
     /**
      * Returns the network protocol used to fetch the resource as identified

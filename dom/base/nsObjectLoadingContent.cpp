@@ -94,6 +94,7 @@
 #include "mozilla/PresShell.h"
 #include "nsChannelClassifier.h"
 #include "nsFocusManager.h"
+#include "ReferrerInfo.h"
 
 #ifdef XP_WIN
 // Thanks so much, Microsoft! :(
@@ -2328,8 +2329,9 @@ nsresult nsObjectLoadingContent::OpenChannel() {
   // Referrer
   nsCOMPtr<nsIHttpChannel> httpChan(do_QueryInterface(chan));
   if (httpChan) {
-    rv = httpChan->SetReferrerWithPolicy(doc->GetDocumentURI(),
-                                         doc->GetReferrerPolicy());
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        new ReferrerInfo(doc->GetDocumentURI(), doc->GetReferrerPolicy());
+    rv = httpChan->SetReferrerInfoWithoutClone(referrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // Set the initiator type

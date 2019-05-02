@@ -2252,8 +2252,7 @@ void PeerConnectionImpl::ShutdownMedia() {
 void PeerConnectionImpl::SetSignalingState_m(
     PCImplSignalingState aSignalingState, bool rollback) {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  if (mSignalingState == aSignalingState ||
-      mSignalingState == PCImplSignalingState::SignalingClosed) {
+  if (mSignalingState == PCImplSignalingState::SignalingClosed) {
     return;
   }
 
@@ -2262,6 +2261,10 @@ void PeerConnectionImpl::SetSignalingState_m(
        mSignalingState == PCImplSignalingState::SignalingHaveRemoteOffer &&
        !rollback)) {
     mMedia->EnsureTransports(*mJsepSession);
+  }
+
+  if (mSignalingState == aSignalingState) {
+    return;
   }
 
   mSignalingState = aSignalingState;

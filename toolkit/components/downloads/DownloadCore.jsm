@@ -1912,9 +1912,14 @@ this.DownloadCopySaver.prototype = {
         // download (eg. user clicks on "Save Link As"). We use
         // REFERRER_POLICY_UNSAFE_URL to keep the referrer header the same
         // here.
-        channel.setReferrerWithPolicy(
-          NetUtil.newURI(download.source.referrer),
-          Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL);
+        let ReferrerInfo = Components.Constructor(
+          "@mozilla.org/referrer-info;1",
+          "nsIReferrerInfo",
+          "init");
+        channel.referrerInfo = new ReferrerInfo(
+          Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+          true,
+          NetUtil.newURI(download.source.referrer));
       }
 
       // This makes the channel be corretly throttled during page loads
@@ -2354,8 +2359,11 @@ this.DownloadLegacySaver.prototype = {
     }
 
     // For legacy downloads, we must update the referrer at this time.
-    if (aRequest instanceof Ci.nsIHttpChannel && aRequest.referrer) {
-      this.download.source.referrer = aRequest.referrer.spec;
+    if (aRequest instanceof Ci.nsIHttpChannel) {
+      let referrerInfo = aRequest.referrerInfo;
+      if (referrerInfo && referrerInfo.originalReferrer) {
+        this.download.source.referrer = referrerInfo.originalReferrer.spec;
+      }
     }
 
     this.addToHistory();

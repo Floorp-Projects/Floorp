@@ -95,6 +95,7 @@
 #include "nsIImageLoadingContent.h"
 #include "mozilla/Preferences.h"
 #include "nsVersionComparator.h"
+#include "ReferrerInfo.h"
 
 #include "mozilla/dom/Promise.h"
 
@@ -3135,8 +3136,9 @@ nsresult nsPluginHost::NewPluginURLStream(
         referer = doc->GetDocumentURI();
         referrerPolicy = doc->GetReferrerPolicy();
       }
-
-      rv = httpChannel->SetReferrerWithPolicy(referer, referrerPolicy);
+      nsCOMPtr<nsIReferrerInfo> referrerInfo =
+          new mozilla::dom::ReferrerInfo(referer, referrerPolicy);
+      rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 

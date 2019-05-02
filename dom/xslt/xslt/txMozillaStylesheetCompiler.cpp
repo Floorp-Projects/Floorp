@@ -38,6 +38,7 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/UniquePtr.h"
+#include "ReferrerInfo.h"
 
 using namespace mozilla;
 using mozilla::net::ReferrerPolicy;
@@ -415,7 +416,9 @@ nsresult txCompileObserver::startLoad(nsIURI* aUri,
     aReferrerPrincipal->GetURI(getter_AddRefs(referrerURI));
     if (referrerURI) {
       DebugOnly<nsresult> rv;
-      rv = httpChannel->SetReferrerWithPolicy(referrerURI, aReferrerPolicy);
+      nsCOMPtr<nsIReferrerInfo> referrerInfo =
+          new dom::ReferrerInfo(referrerURI, aReferrerPolicy);
+      rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
