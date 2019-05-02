@@ -887,7 +887,7 @@ void nsPermissionManager::Startup() {
 // nsPermissionManager Implementation
 
 #define PERMISSIONS_FILE_NAME "permissions.sqlite"
-#define HOSTS_SCHEMA_VERSION 9
+#define HOSTS_SCHEMA_VERSION 10
 
 #define HOSTPERM_FILE_NAME "hostperm.1"
 
@@ -1303,7 +1303,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
           rv = mDBConn->CreateStatement(
               NS_LITERAL_CSTRING(
                   "SELECT host, type, permission, expireType, expireTime, "
-                  "modificationTime, appId, isInBrowserElement FROM moz_hosts"),
+                  "modificationTime, isInBrowserElement FROM moz_hosts"),
               getter_AddRefs(stmt));
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1313,7 +1313,6 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
           uint32_t expireType;
           int64_t expireTime;
           int64_t modificationTime;
-          uint32_t deprecatedAppId;
           bool isInBrowserElement;
           bool hasResult;
 
@@ -1333,12 +1332,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
             expireType = stmt->AsInt32(3);
             expireTime = stmt->AsInt64(4);
             modificationTime = stmt->AsInt64(5);
-            if (NS_WARN_IF(stmt->AsInt64(6) < 0)) {
-              migrationError = true;
-              continue;
-            }
-            deprecatedAppId = static_cast<uint32_t>(stmt->AsInt64(6));  // TODO
-            isInBrowserElement = static_cast<bool>(stmt->AsInt32(7));
+            isInBrowserElement = static_cast<bool>(stmt->AsInt32(6));
 
             // Perform the meat of the migration by deferring to the
             // UpgradeHostToOriginAndInsert function.
@@ -1482,7 +1476,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
           rv = mDBConn->CreateStatement(
               NS_LITERAL_CSTRING(
                   "SELECT host, type, permission, expireType, expireTime, "
-                  "modificationTime, appId, isInBrowserElement FROM moz_hosts"),
+                  "modificationTime, isInBrowserElement FROM moz_hosts"),
               getter_AddRefs(stmt));
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1502,7 +1496,6 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
           uint32_t expireType;
           int64_t expireTime;
           int64_t modificationTime;
-          uint32_t deprecatedAppId;
           bool isInBrowserElement;
 
           while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
@@ -1528,11 +1521,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
             expireType = stmt->AsInt32(3);
             expireTime = stmt->AsInt64(4);
             modificationTime = stmt->AsInt64(5);
-            if (NS_WARN_IF(stmt->AsInt64(6) < 0)) {
-              continue;
-            }
-            deprecatedAppId = static_cast<uint32_t>(stmt->AsInt64(6));  // TODO
-            isInBrowserElement = static_cast<bool>(stmt->AsInt32(7));
+            isInBrowserElement = static_cast<bool>(stmt->AsInt32(6));
 
             // Perform the meat of the migration by deferring to the
             // UpgradeHostToOriginAndInsert function.
@@ -1580,6 +1569,64 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
         }
 
         rv = mDBConn->SetSchemaVersion(9);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+        // fall through to the next upgrade
+        MOZ_FALLTHROUGH;
+
+      // Version 10 removes appId from moz_hosts. SQLite doesn't support the
+      // dropping of columns from existing tables. We need to create a temporary
+      // table, copy the data, drop the old table, rename the new one.
+      case 9: {
+        rv = mDBConn->BeginTransaction();
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        bool tableExists = false;
+        mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts_v9"), &tableExists);
+        if (tableExists) {
+          NS_WARNING(
+              "The temporary database moz_hosts_v9 already exists, dropping "
+              "it.");
+          rv = mDBConn->ExecuteSimpleSQL(
+              NS_LITERAL_CSTRING("DROP TABLE moz_hosts_v9"));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        rv = mDBConn->ExecuteSimpleSQL(
+            NS_LITERAL_CSTRING("CREATE TABLE moz_hosts_v9 ("
+                               " id INTEGER PRIMARY KEY"
+                               ",host TEXT"
+                               ",type TEXT"
+                               ",permission INTEGER"
+                               ",expireType INTEGER"
+                               ",expireTime INTEGER"
+                               ",modificationTime INTEGER"
+                               ",isInBrowserElement INTEGER"
+                               ")"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "INSERT INTO moz_hosts_v9 "
+            "(id, host, type, permission, expireType, "
+            "expireTime, modificationTime, isInBrowserElement) "
+            "SELECT id, host, type, permission, expireType, expireTime, "
+            "modificationTime, isInBrowserElement FROM moz_hosts WHERE appId = "
+            "0"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->ExecuteSimpleSQL(
+            NS_LITERAL_CSTRING("DROP TABLE moz_hosts"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->ExecuteSimpleSQL(
+            NS_LITERAL_CSTRING("ALTER TABLE moz_hosts_v9 RENAME TO moz_hosts"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->SetSchemaVersion(10);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->CommitTransaction();
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -1678,7 +1725,6 @@ nsresult nsPermissionManager::CreateTable() {
                          ",expireType INTEGER"
                          ",expireTime INTEGER"
                          ",modificationTime INTEGER"
-                         ",appId INTEGER"
                          ",isInBrowserElement INTEGER"
                          ")"));
 }
@@ -2414,7 +2460,7 @@ nsresult nsPermissionManager::CommonTestPermissionInternal(
   return NS_OK;
 }
 
-// Returns PermissionHashKey for a given { host, appId, isInBrowserElement }
+// Returns PermissionHashKey for a given { host, isInBrowserElement }
 // tuple. This is not simply using PermissionKey because we will walk-up domains
 // in case of |host| contains sub-domains. Returns null if nothing found. Also
 // accepts host on the format "<foo>". This will perform an exact match lookup
@@ -2467,7 +2513,7 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
   return nullptr;
 }
 
-// Returns PermissionHashKey for a given { host, appId, isInBrowserElement }
+// Returns PermissionHashKey for a given { host, isInBrowserElement }
 // tuple. This is not simply using PermissionKey because we will walk-up domains
 // in case of |host| contains sub-domains. Returns null if nothing found. Also
 // accepts host on the format "<foo>". This will perform an exact match lookup
