@@ -1574,9 +1574,7 @@ nsIScriptContext* nsGlobalWindowInner::GetScriptContext() {
   return outer->GetScriptContext();
 }
 
-JSObject* nsGlobalWindowInner::GetGlobalJSObject() {
-  return FastGetGlobalJSObject();
-}
+JSObject* nsGlobalWindowInner::GetGlobalJSObject() { return GetWrapper(); }
 
 JSObject* nsGlobalWindowInner::GetGlobalJSObjectPreserveColor() const {
   return FastGetGlobalJSObject();

@@ -235,6 +235,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   JSObject* GetGlobalJSObjectPreserveColor() const override;
 
   // nsIScriptGlobalObject
+  // If this ever starts exposing to active JS, we can remove various
+  // ExposeObjectToActiveJS calls.
   JSObject* FastGetGlobalJSObject() const { return GetWrapperPreserveColor(); }
 
   virtual nsresult EnsureScriptEnvironment() override;

@@ -74,12 +74,13 @@ class nsIGlobalObject : public nsISupports,
    */
   bool IsDying() const { return mIsDying; }
 
-  // GetGlobalJSObject may return a gray object.  If this ever changes so that
-  // it stops doing that, please simplify the code in FindAssociatedGlobal in
-  // BindingUtils.h that does JS::ExposeObjectToActiveJS on the return value of
-  // GetGlobalJSObject.  Also, in that case the JS::ExposeObjectToActiveJS in
-  // AutoJSAPI::InitInternal can probably be removed.  And also the similar
-  // calls in XrayWrapper and nsGlobalWindow.
+  /**
+   * Return the JSObject for this global, if it still has one.  Otherwise return
+   * null.
+   *
+   * If non-null is returned, then the returned object will have been already
+   * exposed to active JS, so callers do not need to do it.
+   */
   virtual JSObject* GetGlobalJSObject() = 0;
 
   /**

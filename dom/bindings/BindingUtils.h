@@ -1670,9 +1670,7 @@ inline JSObject* FindAssociatedGlobal(JSContext* cx,
   }
 
   MOZ_ASSERT(JS_IsGlobalObject(global));
-  // This object could be gray if the nsIGlobalObject is the only thing keeping
-  // it alive.
-  JS::ExposeObjectToActiveJS(global);
+  JS::AssertObjectIsNotGray(global);
   return global;
 }
 
