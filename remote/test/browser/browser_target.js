@@ -3,28 +3,9 @@
 
 "use strict";
 
-/* global getCDP */
-
-const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
-const {RemoteAgentError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
-
 // Test the Target domain
 
 add_task(async function() {
-  try {
-    await testCDP();
-  } catch (e) {
-    // Display better error message with the server side stacktrace
-    // if an error happened on the server side:
-    if (e.response) {
-      throw RemoteAgentError.fromJSON(e.response);
-    } else {
-      throw e;
-    }
-  }
-});
-
-async function testCDP() {
   // Start the CDP server
   await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
 
@@ -88,4 +69,4 @@ async function testCDP() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await RemoteAgent.close();
-}
+});
