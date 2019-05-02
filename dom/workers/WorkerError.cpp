@@ -199,20 +199,8 @@ void WorkerErrorNote::AssignErrorNote(JSErrorNotes::Note* aNote) {
   xpc::ErrorNote::ErrorNoteToMessageString(aNote, mMessage);
 }
 
-WorkerErrorReport::WorkerErrorReport(WorkerPrivate* aWorkerPrivate)
-    : StructuredCloneHolder(CloningSupported, TransferringNotSupported,
-                            StructuredCloneScope::SameProcessDifferentThread),
-      mFlags(0),
-      mExnType(JSEXN_ERR),
-      mMutedError(false) {
-  if (aWorkerPrivate) {
-    RefPtr<StrongWorkerRef> workerRef =
-        StrongWorkerRef::Create(aWorkerPrivate, "WorkerErrorReport");
-    if (workerRef) {
-      mWorkerRef = new ThreadSafeWorkerRef(workerRef);
-    }
-  }
-}
+WorkerErrorReport::WorkerErrorReport()
+    : mFlags(0), mExnType(JSEXN_ERR), mMutedError(false) {}
 
 void WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport) {
   WorkerErrorBase::AssignErrorBase(aReport);
@@ -371,21 +359,8 @@ void WorkerErrorReport::LogErrorToConsole(JSContext* aCx,
                                       note.mMessage, note.mFilename));
   }
 
-  // Read any stack associated with the report.
-  JS::RootedValue stackValue(aCx);
-  if (aReport.HasData() && aReport.mWorkerRef) {
-    nsIPrincipal* principal = aReport.mWorkerRef->Private()->GetPrincipal();
-    nsJSPrincipals::AutoSetActiveWorkerPrincipal set(principal);
-    aReport.Read(xpc::CurrentNativeGlobal(aCx), aCx, &stackValue,
-                 IgnoreErrors());
-  }
-  JS::RootedObject stack(aCx);
-  JS::RootedObject stackGlobal(aCx);
-  if (stackValue.isObject()) {
-    stack = &stackValue.toObject();
-    stackGlobal = JS::CurrentGlobalOrNull(aCx);
-    MOZ_ASSERT(stackGlobal);
-  }
+  JS::RootedObject stack(aCx, aReport.ReadStack(aCx));
+  JS::RootedObject stackGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
 
   ErrorData errorData(aReport.mLineNumber, aReport.mColumnNumber,
                       aReport.mFlags, aReport.mMessage, aReport.mFilename,
