@@ -525,7 +525,7 @@ class Compositor : public TextureSourceProvider {
   /**
    * Request the compositor to allow recording its frames.
    *
-   * For all compositors except |BasicCompositor|, this is a noop.
+   * This is a noop on |CompositorOGL|.
    */
   virtual void RequestAllowFrameRecording(bool aWillRecord) {}
 
