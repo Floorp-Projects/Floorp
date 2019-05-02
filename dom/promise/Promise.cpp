@@ -575,14 +575,6 @@ void Promise::MaybeRejectWithClone(JSContext* aCx,
   MaybeReject(aCx, value);
 }
 
-JSObject* Promise::GlobalJSObject() const {
-  return mGlobal->GetGlobalJSObject();
-}
-
-JS::Compartment* Promise::Compartment() const {
-  return js::GetObjectCompartment(GlobalJSObject());
-}
-
 // A WorkerRunnable to resolve/reject the Promise on the worker thread.
 // Calling thread MUST hold PromiseWorkerProxy's mutex before creating this.
 class PromiseWorkerProxyRunnable : public WorkerRunnable {

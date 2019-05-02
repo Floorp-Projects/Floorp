@@ -259,7 +259,7 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
           GetMainThreadSerialEventTarget(), __func__,
           [promise](nsCString aResult) {
             AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GlobalJSObject()))) {
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
               // We're really hosed if we can't get a JS context for some
               // reason.
               promise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
@@ -325,7 +325,7 @@ nsProfiler::GetProfileDataAsArrayBuffer(double aSinceTime, JSContext* aCx,
           GetMainThreadSerialEventTarget(), __func__,
           [promise](nsCString aResult) {
             AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GlobalJSObject()))) {
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
               // We're really hosed if we can't get a JS context for some
               // reason.
               promise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
@@ -429,7 +429,7 @@ nsProfiler::GetSymbolTable(const nsACString& aDebugPath,
           GetMainThreadSerialEventTarget(), __func__,
           [promise](const SymbolTable& aSymbolTable) {
             AutoJSAPI jsapi;
-            if (NS_WARN_IF(!jsapi.Init(promise->GlobalJSObject()))) {
+            if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
               // We're really hosed if we can't get a JS context for some
               // reason.
               promise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);

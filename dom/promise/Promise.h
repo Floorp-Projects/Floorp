@@ -120,7 +120,7 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
 
   // WebIDL
 
-  nsIGlobalObject* GetParentObject() const { return mGlobal; }
+  nsIGlobalObject* GetParentObject() const { return GetGlobalObject(); }
 
   // Do the equivalent of Promise.resolve in the compartment of aGlobal.  The
   // compartment of aCx is ignored.  Errors are reported on the ErrorResult; if
@@ -200,9 +200,7 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
 
   void AppendNativeHandler(PromiseNativeHandler* aRunnable);
 
-  JSObject* GlobalJSObject() const;
-
-  JS::Compartment* Compartment() const;
+  nsIGlobalObject* GetGlobalObject() const { return mGlobal; }
 
   // Create a dom::Promise from a given SpiderMonkey Promise object.
   // aPromiseObj MUST be in the compartment of aGlobal's global JS object.
