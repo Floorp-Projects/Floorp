@@ -548,7 +548,7 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   bool IsIsolated();
 
-  const nsCString& GetTopWindowOrigin();
+  const nsCString &GetTopWindowOrigin();
 
   already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();
 
