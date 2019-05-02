@@ -25,6 +25,8 @@ function runTest() {
   // remoteTab was not null, but remoteTab was always null.
 
   iframe.addEventListener("mozbrowserloadend", function onloadend(e) {
+    // Ensure we lay out the iframe before sending mouse events.
+    iframe.getBoundingClientRect();
     iframe.sendMouseEvent("mousedown", x, y, 0, 1, 0);
   });
 
