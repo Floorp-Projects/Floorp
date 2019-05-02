@@ -531,8 +531,10 @@ NetworkObserver.prototype = {
     event.fromCache = fromCache;
     event.fromServiceWorker = fromServiceWorker;
     event.isThirdPartyTrackingResource = channel.isThirdPartyTrackingResource();
+    const referrerInfo = channel.referrerInfo;
     event.referrerPolicy =
-      Services.netUtils.getReferrerPolicyString(channel.referrerPolicy);
+      Services.netUtils.getReferrerPolicyString(referrerInfo ?
+          referrerInfo.referrerPolicy : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
     httpActivity.fromServiceWorker = fromServiceWorker;
 
     if (extraStringData) {

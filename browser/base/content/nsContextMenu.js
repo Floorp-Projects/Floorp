@@ -20,6 +20,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
+  Components.Constructor("@mozilla.org/referrer-info;1",
+                         "nsIReferrerInfo",
+                         "init"));
+
 var gContextMenuContentData = null;
 
 function setContextMenuContentData(data) {
@@ -45,9 +50,6 @@ function openContextMenu(aMessage) {
   let documentURIObject = makeURI(data.docLocation,
                                   data.charSet,
                                   makeURI(data.baseURI));
-  let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
-                                        "nsIReferrerInfo",
-                                        "init");
   let referrerInfo = new ReferrerInfo(
     data.referrerPolicy,
     !data.context.linkHasNoReferrer,
@@ -812,7 +814,8 @@ nsContextMenu.prototype = {
     if (("userContextId" in params &&
         params.userContextId != gContextMenuContentData.userContextId) ||
       this.onPlainTextLink) {
-      referrerInfo.sendReferrer = false;
+      referrerInfo = new ReferrerInfo(referrerInfo.referrerPolicy, false,
+        referrerInfo.originalReferrer);
     }
 
     params.referrerInfo = referrerInfo;
@@ -1238,7 +1241,12 @@ nsContextMenu.prototype = {
     channel.loadFlags |= flags;
 
     if (channel instanceof Ci.nsIHttpChannel) {
-      channel.referrer = docURI;
+      let referrerInfo = new ReferrerInfo(
+        Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+        true,
+        docURI);
+
+      channel.referrerInfo = referrerInfo;
       if (channel instanceof Ci.nsIHttpChannelInternal)
         channel.forceAllowThirdPartyCookie = true;
     }
