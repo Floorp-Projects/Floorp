@@ -97,7 +97,11 @@ class Core(private val context: Context) {
                 // There's an active bundle with a snapshot: Feed it into the SessionManager.
                 snapshot.await()?.let {
                     try {
+                        val selected = sessionManager.selectedSession
                         sessionManager.restore(it)
+                        selected?.let {
+                            sessionManager.select(selected)
+                        }
                     } catch (_: IllegalArgumentException) {
                         return@let
                     }
