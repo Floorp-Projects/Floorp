@@ -385,8 +385,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
       mHasLoadedNonBlankURI(false),
       mBlankTiming(false),
       mTitleValidForCurrentURI(false),
-      mIsFrame(false),
-      mIsNavigating(false) {
+      mIsFrame(false) {
   mHistoryID.m0 = 0;
   mHistoryID.m1 = 0;
   mHistoryID.m2 = 0;
@@ -3725,12 +3724,6 @@ nsDocShell::GetContentBlockingLog(Promise** aPromise) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetIsNavigating(bool* aOut) {
-  *aOut = mIsNavigating;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::SetDeviceSizeIsPageSize(bool aValue) {
   if (mDeviceSizeIsPageSize != aValue) {
     mDeviceSizeIsPageSize = aValue;
@@ -3831,10 +3824,6 @@ nsDocShell::GoBack() {
   if (!IsNavigationAllowed()) {
     return NS_OK;  // JS may not handle returning of an error code
   }
-
-  auto cleanupIsNavigating = MakeScopeExit([&]() { mIsNavigating = false; });
-  mIsNavigating = true;
-
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
   ErrorResult rv;
@@ -3847,10 +3836,6 @@ nsDocShell::GoForward() {
   if (!IsNavigationAllowed()) {
     return NS_OK;  // JS may not handle returning of an error code
   }
-
-  auto cleanupIsNavigating = MakeScopeExit([&]() { mIsNavigating = false; });
-  mIsNavigating = true;
-
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
   ErrorResult rv;
@@ -3865,10 +3850,6 @@ nsDocShell::GotoIndex(int32_t aIndex) {
   if (!IsNavigationAllowed()) {
     return NS_OK;  // JS may not handle returning of an error code
   }
-
-  auto cleanupIsNavigating = MakeScopeExit([&]() { mIsNavigating = false; });
-  mIsNavigating = true;
-
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   NS_ENSURE_TRUE(rootSH, NS_ERROR_FAILURE);
   return rootSH->LegacySHistory()->GotoIndex(aIndex);
@@ -3884,10 +3865,6 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
   if (!IsNavigationAllowed()) {
     return NS_OK;  // JS may not handle returning of an error code
   }
-
-  auto cleanupIsNavigating = MakeScopeExit([&]() { mIsNavigating = false; });
-  mIsNavigating = true;
-
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIInputStream> postData(aLoadURIOptions.mPostData);
   nsresult rv = NS_OK;

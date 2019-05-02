@@ -2273,54 +2273,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvRegisterProtocolHandler(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
-    const Maybe<WebProgressData>& aWebProgressData,
-    const RequestData& aRequestData, const uint32_t aStateFlags,
-    const nsresult aStatus,
-    const Maybe<WebProgressStateChangeData>& aStateChangeData) {
-  nsCOMPtr<nsIBrowser> browser =
-      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
-
-  if (!browser) {
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIWebProgress> manager;
-  nsresult rv = browser->GetRemoteWebProgressManager(getter_AddRefs(manager));
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
-
-  nsCOMPtr<nsIWebProgressListener> managerAsListener =
-      do_QueryInterface(manager);
-
-  if (!managerAsListener) {
-    // We are no longer remote, so we cannot propagate this message.
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIWebProgress> webProgress;
-  nsCOMPtr<nsIRequest> request;
-  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
-                                   webProgress, request);
-
-  if (aWebProgressData && aWebProgressData->isTopLevel()) {
-    Unused << browser->SetIsNavigating(aStateChangeData->isNavigating());
-    Unused << browser->SetMayEnableCharacterEncodingMenu(
-        aStateChangeData->mayEnableCharacterEncodingMenu());
-    Unused << browser->UpdateForStateChange(aStateChangeData->charset(),
-                                            aStateChangeData->documentURI(),
-                                            aStateChangeData->contentType());
-  } else if (aStateChangeData.isSome()) {
-    return IPC_FAIL(
-        this,
-        "Unexpected WebProgressStateChangeData for non-top-level WebProgress");
-  }
-
-  Unused << managerAsListener->OnStateChange(webProgress, request, aStateFlags,
-                                             aStatus);
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvOnProgressChange(
     const Maybe<WebProgressData>& aWebProgressData,
     const RequestData& aRequestData, const int32_t aCurSelfProgress,
