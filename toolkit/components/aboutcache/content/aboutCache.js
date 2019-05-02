@@ -11,10 +11,7 @@ var cacheContext = searchParams.get("context");
 
 // The context is in a format as used by the HTTP cache v2 back end
 if (cacheContext)
-  var [context, isAnon, isInBrowser, appId, isPrivate] = cacheContext.match(/(a,)?(b,)?(i\d+,)?(p,)?/);
-if (appId)
-  appId = appId.match(/i(\d+),/)[1];
-
+  var [context, isAnon, isInBrowser, isPrivate] = cacheContext.match(/(a,)?(b,)?(p,)?/);
 
 function $(id) { return document.getElementById(id) || {}; }
 
@@ -22,7 +19,6 @@ function $(id) { return document.getElementById(id) || {}; }
 addEventListener("DOMContentLoaded", function() {
   $("anon").checked = !!isAnon;
   $("inbrowser").checked = !!isInBrowser;
-  $("appid").value = appId || "";
   $("priv").checked = !!isPrivate;
 }, false);
 
@@ -34,8 +30,6 @@ function navigate() {
     context += "a,";
   if ($("inbrowser").checked)
     context += "b,";
-  if ($("appid").value)
-    context += "i" + $("appid").value + ",";
   if ($("priv").checked)
     context += "p,";
 
