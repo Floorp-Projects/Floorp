@@ -114,13 +114,16 @@ MAX_CACHED_ARTIFACTS_SIZE = 1024 * 1024 * 1024
 # separate archive for fast re-installation.
 PROCESSED_SUFFIX = '.processed.jar'
 
-CANDIDATE_TREES = (
-    'mozilla-central',
-    'integration/mozilla-inbound',
-    'releases/mozilla-beta'
-)
 
 class ArtifactJob(object):
+    trust_domain = 'gecko'
+    candidate_trees = [
+        'mozilla-central',
+        'integration/mozilla-inbound',
+        'releases/mozilla-beta',
+    ]
+    try_tree = 'try'
+
     # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
     # Each item is a pair of (pattern, (src_prefix, dest_prefix), where src_prefix
     # is the prefix of the pattern relevant to its location in the archive, and
@@ -373,19 +376,25 @@ class LinuxArtifactJob(ArtifactJob):
     package_re = r'public/build/target\.tar\.bz2'
     product = 'firefox'
 
-    package_artifact_patterns = {
-        'firefox/application.ini',
-        'firefox/crashreporter',
-        'firefox/dependentlibs.list',
-        'firefox/firefox',
-        'firefox/firefox-bin',
-        'firefox/minidump-analyzer',
-        'firefox/pingsender',
-        'firefox/platform.ini',
-        'firefox/plugin-container',
-        'firefox/updater',
-        'firefox/**/*.so',
+    _package_artifact_patterns = {
+        '{product}/application.ini',
+        '{product}/crashreporter',
+        '{product}/dependentlibs.list',
+        '{product}/{product}',
+        '{product}/{product}-bin',
+        '{product}/minidump-analyzer',
+        '{product}/pingsender',
+        '{product}/platform.ini',
+        '{product}/plugin-container',
+        '{product}/updater',
+        '{product}/**/*.so',
     }
+
+    @property
+    def package_artifact_patterns(self):
+        return {
+            p.format(product=self.product) for p in self._package_artifact_patterns
+        }
 
     def process_package_artifact(self, filename, processed_filename):
         added_entry = False
@@ -399,7 +408,7 @@ class LinuxArtifactJob(ArtifactJob):
                     # We strip off the relative "firefox/" bit from the path,
                     # but otherwise preserve it.
                     destpath = mozpath.join('bin',
-                                            mozpath.relpath(p, "firefox"))
+                                            mozpath.relpath(p, self.product))
                     self.log(logging.INFO, 'artifact',
                              {'destpath': destpath},
                              'Adding {destpath} to processed archive')
@@ -415,6 +424,36 @@ class LinuxArtifactJob(ArtifactJob):
 class MacArtifactJob(ArtifactJob):
     package_re = r'public/build/target\.dmg'
     product = 'firefox'
+
+    # These get copied into dist/bin without the path, so "root/a/b/c" -> "dist/bin/c".
+    _paths_no_keep_path = ('Contents/MacOS', [
+        'crashreporter.app/Contents/MacOS/crashreporter',
+        '{product}',
+        '{product}-bin',
+        'libfreebl3.dylib',
+        'liblgpllibs.dylib',
+        # 'liblogalloc.dylib',
+        'libmozglue.dylib',
+        'libnss3.dylib',
+        'libnssckbi.dylib',
+        'libnssdbm3.dylib',
+        'libplugin_child_interpose.dylib',
+        # 'libreplace_jemalloc.dylib',
+        # 'libreplace_malloc.dylib',
+        'libmozavutil.dylib',
+        'libmozavcodec.dylib',
+        'libsoftokn3.dylib',
+        'pingsender',
+        'plugin-container.app/Contents/MacOS/plugin-container',
+        'updater.app/Contents/MacOS/org.mozilla.updater',
+        # 'xpcshell',
+        'XUL',
+    ])
+
+    @property
+    def paths_no_keep_path(self):
+        root, paths = self._paths_no_keep_path
+        return (root, [p.format(product=self.product) for p in paths])
 
     def process_package_artifact(self, filename, processed_filename):
         tempdir = tempfile.mkdtemp()
@@ -446,31 +485,6 @@ class MacArtifactJob(ArtifactJob):
                 raise ValueError('Expected one source bundle, found: {}'.format(bundle_dirs))
             [source] = bundle_dirs
 
-            # These get copied into dist/bin without the path, so "root/a/b/c" -> "dist/bin/c".
-            paths_no_keep_path = ('Contents/MacOS', [
-                'crashreporter.app/Contents/MacOS/crashreporter',
-                'firefox',
-                'firefox-bin',
-                'libfreebl3.dylib',
-                'liblgpllibs.dylib',
-                # 'liblogalloc.dylib',
-                'libmozglue.dylib',
-                'libnss3.dylib',
-                'libnssckbi.dylib',
-                'libnssdbm3.dylib',
-                'libplugin_child_interpose.dylib',
-                # 'libreplace_jemalloc.dylib',
-                # 'libreplace_malloc.dylib',
-                'libmozavutil.dylib',
-                'libmozavcodec.dylib',
-                'libsoftokn3.dylib',
-                'pingsender',
-                'plugin-container.app/Contents/MacOS/plugin-container',
-                'updater.app/Contents/MacOS/org.mozilla.updater',
-                # 'xpcshell',
-                'XUL',
-            ])
-
             # These get copied into dist/bin with the path, so "root/a/b/c" -> "dist/bin/a/b/c".
             paths_keep_path = [
                 ('Contents/MacOS', [
@@ -487,7 +501,7 @@ class MacArtifactJob(ArtifactJob):
             ]
 
             with JarWriter(file=processed_filename, compress_level=5) as writer:
-                root, paths = paths_no_keep_path
+                root, paths = self.paths_no_keep_path
                 finder = UnpackFinder(mozpath.join(source, root))
                 for path in paths:
                     for p, f in finder.find(path):
@@ -520,16 +534,22 @@ class MacArtifactJob(ArtifactJob):
 
 class WinArtifactJob(ArtifactJob):
     package_re = r'public/build/target\.(zip|tar\.gz)'
-    package_artifact_patterns = {
-        'firefox/dependentlibs.list',
-        'firefox/platform.ini',
-        'firefox/application.ini',
-        'firefox/**/*.dll',
-        'firefox/*.exe',
-        'firefox/*.tlb',
+    product = 'firefox'
+
+    _package_artifact_patterns = {
+        '{product}/dependentlibs.list',
+        '{product}/platform.ini',
+        '{product}/application.ini',
+        '{product}/**/*.dll',
+        '{product}/*.exe',
+        '{product}/*.tlb',
     }
 
-    product = 'firefox'
+    @property
+    def package_artifact_patterns(self):
+        return {
+            p.format(product=self.product) for p in self._package_artifact_patterns
+        }
 
     # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
     test_artifact_patterns = {
@@ -558,7 +578,7 @@ class WinArtifactJob(ArtifactJob):
                     continue
 
                 # strip off the relative "firefox/" bit from the path:
-                basename = mozpath.relpath(p, "firefox")
+                basename = mozpath.relpath(p, self.product)
                 basename = mozpath.join('bin', basename)
                 self.log(logging.INFO, 'artifact',
                     {'basename': basename},
@@ -572,13 +592,39 @@ class WinArtifactJob(ArtifactJob):
                                  patterns=self.artifact_patterns))
 
 
+class ThunderbirdMixin(object):
+    trust_domain = 'comm'
+    product = 'thunderbird'
+    candidate_trees = [
+        'comm-central',
+    ]
+    try_tree = 'try-comm-central'
+
+
+class LinuxThunderbirdArtifactJob(ThunderbirdMixin, LinuxArtifactJob):
+    pass
+
+
+class MacThunderbirdArtifactJob(ThunderbirdMixin, MacArtifactJob):
+    _paths_no_keep_path = MacArtifactJob._paths_no_keep_path
+    _paths_no_keep_path[1].extend([
+        'libldap60.dylib',
+        'libldif60.dylib',
+        'libprldap60.dylib',
+    ])
+
+
+class WinThunderbirdArtifactJob(ThunderbirdMixin, WinArtifactJob):
+    pass
+
+
 def startswithwhich(s, prefixes):
     for prefix in prefixes:
         if s.startswith(prefix):
             return prefix
 
 
-JOB_DETAILS = {
+MOZ_JOB_DETAILS = {
     j: {
         'android': AndroidArtifactJob,
         'linux': LinuxArtifactJob,
@@ -587,7 +633,15 @@ JOB_DETAILS = {
     }[startswithwhich(j, ('android', 'linux', 'macosx', 'win'))]
     for j in JOB_CHOICES
 }
-
+COMM_JOB_DETAILS = {
+    j: {
+        'android': None,
+        'linux': LinuxThunderbirdArtifactJob,
+        'macosx': MacThunderbirdArtifactJob,
+        'win': WinThunderbirdArtifactJob,
+    }[startswithwhich(j, ('android', 'linux', 'macosx', 'win'))]
+    for j in JOB_CHOICES
+}
 
 
 def cachedmethod(cachefunc):
@@ -716,15 +770,7 @@ class TaskCache(CacheManager):
         CacheManager.__init__(self, cache_dir, 'artifact_url', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
 
     @cachedmethod(operator.attrgetter('_cache'))
-    def artifacts(self, tree, job, rev):
-        try:
-            artifact_job_class = JOB_DETAILS[job]
-        except KeyError:
-            self.log(logging.INFO, 'artifact',
-                {'job': job},
-                'Unknown job {job}')
-            raise KeyError("Unknown job")
-
+    def artifacts(self, tree, job, artifact_job_class, rev):
         # Grab the second part of the repo name, which is generally how things
         # are indexed. Eg: 'integration/mozilla-inbound' is indexed as
         # 'mozilla-inbound'
@@ -739,7 +785,8 @@ class TaskCache(CacheManager):
             if job.endswith('-pgo'):
                 job = job.replace('-pgo', '-opt')
 
-        namespace = 'gecko.v2.{tree}.revision.{rev}.{product}.{job}'.format(
+        namespace = '{trust_domain}.v2.{tree}.revision.{rev}.{product}.{job}'.format(
+            trust_domain=artifact_job_class.trust_domain,
             rev=rev,
             tree=tree,
             product=artifact_job_class.product,
@@ -952,8 +999,11 @@ class Artifacts(object):
         self._skip_cache = skip_cache
         self._topsrcdir = topsrcdir
 
+        app = self._substs.get('MOZ_BUILD_APP')
+        job_details = COMM_JOB_DETAILS if app == 'comm/mail' else MOZ_JOB_DETAILS
+
         try:
-            cls = JOB_DETAILS[self._job]
+            cls = job_details[self._job]
             self._artifact_job = cls(log=self._log,
                                      download_tests=download_tests,
                                      download_symbols=download_symbols,
@@ -1019,7 +1069,7 @@ class Artifacts(object):
         with self._pushhead_cache as pushhead_cache:
             found_pushids = {}
 
-            search_trees = list(CANDIDATE_TREES)
+            search_trees = self._artifact_job.candidate_trees
             for tree in search_trees:
                 self.log(logging.INFO, 'artifact',
                          {'tree': tree,
@@ -1143,7 +1193,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
 
     def find_pushhead_artifacts(self, task_cache, job, tree, pushhead):
         try:
-            taskId, artifacts = task_cache.artifacts(tree, job, pushhead)
+            taskId, artifacts = task_cache.artifacts(tree, job, self._artifact_job.__class__, pushhead)
         except ValueError:
             return None
 
@@ -1289,7 +1339,10 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
                  'Will only accept artifacts from a pushhead at {revision} '
                  '(matched revset "{revset}").')
         # Include try in our search to allow pulling from a specific push.
-        pushheads = [(list(CANDIDATE_TREES) + ['try'], revision)]
+        pushheads = [(
+            self._artifact_job.candidate_trees + [self._artifact_job.try_tree],
+            revision
+        )]
         return self._install_from_hg_pushheads(pushheads, distdir)
 
     def install_from_task(self, taskId, distdir):
