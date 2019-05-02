@@ -22,5 +22,5 @@ sample_metrics:
     data_reviews:
       - N/A
     notification_emails:
-      - CHANGE-ME@test-only.com
+      - CHANGE-ME@example.com
     expires: 2100-01-01 
