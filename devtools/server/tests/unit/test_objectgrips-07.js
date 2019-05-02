@@ -32,7 +32,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
       Assert.ok(e.extensible);
       Assert.ok(eClient.isExtensible);
 
-      threadClient.resume(resolve);
+      threadClient.resume().then(resolve);
     });
 
     debuggee.eval(function stopMe(arg1) {

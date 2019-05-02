@@ -48,7 +48,7 @@ function test_source() {
   DebuggerServer.LONG_STRING_LENGTH = 200;
 
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    gThreadClient.getSources(async function(response) {
+    gThreadClient.getSources().then(async function(response) {
       Assert.ok(!!response);
       Assert.ok(!!response.sources);
 

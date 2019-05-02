@@ -42,18 +42,18 @@ var frameFixtures = [
   { type: "eval", displayName: "(eval)" },
 ];
 
-function test_frame_packet() {
-  gThreadClient.getFrames(0, 1000, function(response) {
-    for (let i = 0; i < response.frames.length; i++) {
-      const expected = frameFixtures[i];
-      const actual = response.frames[i];
+async function test_frame_packet() {
+  const response = await gThreadClient.getFrames(0, 1000);
+  for (let i = 0; i < response.frames.length; i++) {
+    const expected = frameFixtures[i];
+    const actual = response.frames[i];
 
-      Assert.equal(expected.displayname, actual.displayname, "Frame displayname");
-      Assert.equal(expected.type, actual.type, "Frame displayname");
-    }
+    Assert.equal(expected.displayname, actual.displayname, "Frame displayname");
+    Assert.equal(expected.type, actual.type, "Frame displayname");
+  }
 
-    gThreadClient.resume(() => finishClient(gClient));
-  });
+  await gThreadClient.resume();
+  await finishClient(gClient);
 }
 
 function test_pause_frame() {

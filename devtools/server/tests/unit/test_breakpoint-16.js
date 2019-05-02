@@ -39,7 +39,7 @@ add_task(threadClientTest(({ threadClient, debuggee, client }) => {
         if (++timesBreakpointHit === 3) {
           threadClient.removeListener("paused", onPaused);
           threadClient.removeBreakpoint(location);
-          threadClient.resume(resolve);
+          threadClient.resume().then(resolve);
         } else {
           threadClient.resume();
         }

@@ -52,7 +52,7 @@ function test_pause_frame() {
       Assert.equal(response.ownProperties.Object.value.class, "Function");
       Assert.ok(!!response.ownProperties.Object.value.actor);
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
       });
     });

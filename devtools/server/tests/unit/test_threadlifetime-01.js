@@ -45,7 +45,7 @@ function test_thread_lifetime() {
         // promoted grip.
         gClient.request({to: pauseGrip.actor, type: "bogusRequest"}, function(response) {
           Assert.equal(response.error, "unrecognizedPacketType");
-          gThreadClient.resume(function() {
+          gThreadClient.resume().then(function() {
             finishClient(gClient);
           });
         });

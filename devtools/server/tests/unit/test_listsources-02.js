@@ -35,7 +35,7 @@ function run_test() {
 }
 
 function test_listing_zero_sources() {
-  gThreadClient.getSources(function(packet) {
+  gThreadClient.getSources().then(function(packet) {
     Assert.ok(!packet.error);
     Assert.ok(!!packet.sources);
     Assert.equal(packet.sources.length, 0);

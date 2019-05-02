@@ -199,9 +199,9 @@ function debugTab() {
  */
 function onTab() {
   // Detach from the previous thread.
-  client.activeThread.detach(() => {
+  client.activeThread.detach().then(() => {
     // Detach from the previous tab.
-    client.detach(() => {
+    client.detach().then(() => {
       // Start debugging the new tab.
       debugTab();
     });

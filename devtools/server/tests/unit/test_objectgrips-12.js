@@ -157,7 +157,7 @@ function test_display_string() {
         if (args.length) {
           loop();
         } else {
-          gThreadClient.resume(function() {
+          gThreadClient.resume().then(function() {
             finishClient(gClient);
           });
         }

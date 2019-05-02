@@ -43,7 +43,7 @@ function test_thread_lifetime() {
 
       gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(response) {
         Assert.equal(threadGrip1, response.from);
-        gThreadClient.resume(function() {
+        gThreadClient.resume().then(function() {
           finishClient(gClient);
         });
       });
