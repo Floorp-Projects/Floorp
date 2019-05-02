@@ -1506,9 +1506,7 @@ nsresult nsGlobalWindowOuter::EnsureScriptEnvironment() {
 
 nsIScriptContext* nsGlobalWindowOuter::GetScriptContext() { return mContext; }
 
-JSObject* nsGlobalWindowOuter::GetGlobalJSObject() {
-  return FastGetGlobalJSObject();
-}
+JSObject* nsGlobalWindowOuter::GetGlobalJSObject() { return GetWrapper(); }
 
 JSObject* nsGlobalWindowOuter::GetGlobalJSObjectPreserveColor() const {
   return FastGetGlobalJSObject();
