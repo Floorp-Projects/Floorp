@@ -455,7 +455,7 @@ void WorkerDebugger::ReportErrorToDebuggerOnMainThread(
   DebugOnly<bool> ok = jsapi.Init(xpc::UnprivilegedJunkScope());
   MOZ_ASSERT(ok, "UnprivilegedJunkScope should exist");
 
-  WorkerErrorReport report(nullptr);
+  WorkerErrorReport report;
   report.mMessage = aMessage;
   report.mFilename = aFilename;
   WorkerErrorReport::LogErrorToConsole(jsapi.cx(), report, 0);
