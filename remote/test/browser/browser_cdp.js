@@ -3,31 +3,11 @@
 
 "use strict";
 
-/* global getCDP */
-
-const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
-const {RemoteAgentError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
-
-
 // Test very basic CDP features.
 
 const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
 
-add_task(async function() {
-  try {
-    await testCDP();
-  } catch (e) {
-    // Display better error message with the server side stacktrace
-    // if an error happened on the server side:
-    if (e.response) {
-      throw RemoteAgentError.fromJSON(e.response);
-    } else {
-      throw e;
-    }
-  }
-});
-
-async function testCDP() {
+add_task(async function testCDP() {
   // Open a test page, to prevent debugging the random default page
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
 
@@ -91,4 +71,4 @@ async function testCDP() {
   BrowserTestUtils.removeTab(tab);
 
   await RemoteAgent.close();
-}
+});
