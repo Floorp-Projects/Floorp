@@ -470,16 +470,17 @@ nsRect nsImageBoxFrame::GetDestRect(const nsPoint& aOffset,
     // Determine dest rect based on intrinsic size & ratio, along with
     // 'object-fit' & 'object-position' properties:
     IntrinsicSize intrinsicSize;
-    nsSize intrinsicRatio;
+    AspectRatio intrinsicRatio;
     if (mIntrinsicSize.width > 0 && mIntrinsicSize.height > 0) {
       // Image has a valid size; use it as intrinsic size & ratio.
       intrinsicSize =
           IntrinsicSize(mIntrinsicSize.width, mIntrinsicSize.height);
-      intrinsicRatio = mIntrinsicSize;
+      intrinsicRatio =
+          AspectRatio::FromSize(mIntrinsicSize.width, mIntrinsicSize.height);
     } else {
       // Image doesn't have a (valid) intrinsic size.
       // Try to look up intrinsic ratio and use that at least.
-      imgCon->GetIntrinsicRatio(&intrinsicRatio);
+      intrinsicRatio = imgCon->GetIntrinsicRatio().valueOr(AspectRatio());
     }
     aAnchorPoint.emplace();
     dest = nsLayoutUtils::ComputeObjectDestRect(clientRect, intrinsicSize,

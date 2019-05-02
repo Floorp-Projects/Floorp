@@ -723,7 +723,7 @@ IntrinsicSize nsSubDocumentFrame::GetIntrinsicSize() {
 }
 
 /* virtual */
-nsSize nsSubDocumentFrame::GetIntrinsicRatio() {
+AspectRatio nsSubDocumentFrame::GetIntrinsicRatio() {
   nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
   if (subDocRoot) {
     return subDocRoot->GetIntrinsicRatio();
@@ -805,7 +805,7 @@ void nsSubDocumentFrame::Reflow(nsPresContext* aPresContext,
     // Size & position the view according to 'object-fit' & 'object-position'.
     nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
     IntrinsicSize intrinsSize;
-    nsSize intrinsRatio;
+    AspectRatio intrinsRatio;
     if (subDocRoot) {
       intrinsSize = subDocRoot->GetIntrinsicSize();
       intrinsRatio = subDocRoot->GetIntrinsicRatio();

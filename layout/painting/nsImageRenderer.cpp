@@ -38,15 +38,11 @@ nsSize CSSSizeOrRatio::ComputeConcreteSize() const {
     return nsSize(mWidth, mHeight);
   }
   if (mHasWidth) {
-    nscoord height = NSCoordSaturatingNonnegativeMultiply(
-        mWidth, double(mRatio.height) / mRatio.width);
-    return nsSize(mWidth, height);
+    return nsSize(mWidth, mRatio.Inverted().ApplyTo(mWidth));
   }
 
   MOZ_ASSERT(mHasHeight);
-  nscoord width = NSCoordSaturatingNonnegativeMultiply(
-      mHeight, double(mRatio.width) / mRatio.height);
-  return nsSize(width, mHeight);
+  return nsSize(mRatio.ApplyTo(mHeight), mHeight);
 }
 
 nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame,
@@ -228,15 +224,12 @@ CSSSizeOrRatio nsImageRenderer::ComputeIntrinsicSize() {
 
       // If we know the aspect ratio and one of the dimensions,
       // we can compute the other missing width or height.
-      if (!haveHeight && haveWidth && result.mRatio.width != 0) {
-        nscoord intrinsicHeight = NSCoordSaturatingNonnegativeMultiply(
-            imageIntSize.width,
-            float(result.mRatio.height) / float(result.mRatio.width));
+      if (!haveHeight && haveWidth && result.mRatio) {
+        nscoord intrinsicHeight =
+            result.mRatio.Inverted().ApplyTo(imageIntSize.width);
         result.SetHeight(nsPresContext::CSSPixelsToAppUnits(intrinsicHeight));
-      } else if (haveHeight && !haveWidth && result.mRatio.height != 0) {
-        nscoord intrinsicWidth = NSCoordSaturatingNonnegativeMultiply(
-            imageIntSize.height,
-            float(result.mRatio.width) / float(result.mRatio.height));
+      } else if (haveHeight && !haveWidth && result.mRatio) {
+        nscoord intrinsicWidth = result.mRatio.ApplyTo(imageIntSize.height);
         result.SetWidth(nsPresContext::CSSPixelsToAppUnits(intrinsicWidth));
       }
 
@@ -317,9 +310,7 @@ nsSize nsImageRenderer::ComputeConcreteSize(
   if (aSpecifiedSize.mHasWidth) {
     nscoord height;
     if (aIntrinsicSize.HasRatio()) {
-      height = NSCoordSaturatingNonnegativeMultiply(
-          aSpecifiedSize.mWidth,
-          double(aIntrinsicSize.mRatio.height) / aIntrinsicSize.mRatio.width);
+      height = aIntrinsicSize.mRatio.Inverted().ApplyTo(aSpecifiedSize.mWidth);
     } else if (aIntrinsicSize.mHasHeight) {
       height = aIntrinsicSize.mHeight;
     } else {
@@ -331,9 +322,7 @@ nsSize nsImageRenderer::ComputeConcreteSize(
   MOZ_ASSERT(aSpecifiedSize.mHasHeight);
   nscoord width;
   if (aIntrinsicSize.HasRatio()) {
-    width = NSCoordSaturatingNonnegativeMultiply(
-        aSpecifiedSize.mHeight,
-        double(aIntrinsicSize.mRatio.width) / aIntrinsicSize.mRatio.height);
+    width = aIntrinsicSize.mRatio.ApplyTo(aSpecifiedSize.mHeight);
   } else if (aIntrinsicSize.mHasWidth) {
     width = aIntrinsicSize.mWidth;
   } else {
@@ -343,20 +332,19 @@ nsSize nsImageRenderer::ComputeConcreteSize(
 }
 
 /* static */
-nsSize nsImageRenderer::ComputeConstrainedSize(const nsSize& aConstrainingSize,
-                                               const nsSize& aIntrinsicRatio,
-                                               FitType aFitType) {
-  if (aIntrinsicRatio.width <= 0 && aIntrinsicRatio.height <= 0) {
+nsSize nsImageRenderer::ComputeConstrainedSize(
+    const nsSize& aConstrainingSize, const AspectRatio& aIntrinsicRatio,
+    FitType aFitType) {
+  if (!aIntrinsicRatio) {
     return aConstrainingSize;
   }
 
-  float scaleX = double(aConstrainingSize.width) / aIntrinsicRatio.width;
-  float scaleY = double(aConstrainingSize.height) / aIntrinsicRatio.height;
+  auto constrainingRatio =
+      AspectRatio::FromSize(aConstrainingSize.width, aConstrainingSize.height);
   nsSize size;
-  if ((aFitType == CONTAIN) == (scaleX < scaleY)) {
+  if ((aFitType == CONTAIN) == (constrainingRatio < aIntrinsicRatio)) {
     size.width = aConstrainingSize.width;
-    size.height =
-        NSCoordSaturatingNonnegativeMultiply(aIntrinsicRatio.height, scaleX);
+    size.height = aIntrinsicRatio.Inverted().ApplyTo(aConstrainingSize.width);
     // If we're reducing the size by less than one css pixel, then just use the
     // constraining size.
     if (aFitType == CONTAIN &&
@@ -364,13 +352,12 @@ nsSize nsImageRenderer::ComputeConstrainedSize(const nsSize& aConstrainingSize,
       size.height = aConstrainingSize.height;
     }
   } else {
-    size.width =
-        NSCoordSaturatingNonnegativeMultiply(aIntrinsicRatio.width, scaleY);
+    size.height = aConstrainingSize.height;
+    size.width = aIntrinsicRatio.ApplyTo(aConstrainingSize.height);
     if (aFitType == CONTAIN &&
         aConstrainingSize.width - size.width < AppUnitsPerCSSPixel()) {
       size.width = aConstrainingSize.width;
     }
-    size.height = aConstrainingSize.height;
   }
   return size;
 }

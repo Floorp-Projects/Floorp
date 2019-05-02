@@ -189,9 +189,11 @@ already_AddRefed<Layer> nsVideoFrame::BuildLayer(
   // Convert video size from pixel units into app units, to get an aspect-ratio
   // (which has to be represented as a nsSize) and an IntrinsicSize that we
   // can pass to ComputeObjectRenderRect.
-  nsSize aspectRatio(nsPresContext::CSSPixelsToAppUnits(videoSizeInPx.width),
-                     nsPresContext::CSSPixelsToAppUnits(videoSizeInPx.height));
-  IntrinsicSize intrinsicSize(aspectRatio.width, aspectRatio.height);
+  auto aspectRatio =
+      AspectRatio::FromSize(videoSizeInPx.width, videoSizeInPx.height);
+  IntrinsicSize intrinsicSize(
+      nsPresContext::CSSPixelsToAppUnits(videoSizeInPx.width),
+      nsPresContext::CSSPixelsToAppUnits(videoSizeInPx.height));
 
   nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
       area, intrinsicSize, aspectRatio, StylePosition());
@@ -434,10 +436,11 @@ class nsDisplayVideo : public nsDisplayItem {
     // Convert video size from pixel units into app units, to get an
     // aspect-ratio (which has to be represented as a nsSize) and an
     // IntrinsicSize that we can pass to ComputeObjectRenderRect.
-    nsSize aspectRatio(
+    IntrinsicSize intrinsicSize(
         nsPresContext::CSSPixelsToAppUnits(videoSizeInPx.width),
         nsPresContext::CSSPixelsToAppUnits(videoSizeInPx.height));
-    IntrinsicSize intrinsicSize(aspectRatio.width, aspectRatio.height);
+    auto aspectRatio =
+        AspectRatio::FromSize(videoSizeInPx.width, videoSizeInPx.height);
 
     nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
         area, intrinsicSize, aspectRatio, Frame()->StylePosition());
@@ -576,7 +579,9 @@ LogicalSize nsVideoFrame::ComputeSize(
   IntrinsicSize intrinsicSize(size.width, size.height);
 
   // Only video elements have an intrinsic ratio.
-  nsSize intrinsicRatio = HasVideoElement() ? size : nsSize(0, 0);
+  auto intrinsicRatio = HasVideoElement()
+                            ? AspectRatio::FromSize(size.width, size.height)
+                            : AspectRatio();
 
   return ComputeSizeWithIntrinsicDimensions(
       aRenderingContext, aWM, intrinsicSize, intrinsicRatio, aCBSize, aMargin,
@@ -627,13 +632,14 @@ nscoord nsVideoFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return result;
 }
 
-nsSize nsVideoFrame::GetIntrinsicRatio() {
+AspectRatio nsVideoFrame::GetIntrinsicRatio() {
   if (!HasVideoElement()) {
     // Audio elements have no intrinsic ratio.
-    return nsSize(0, 0);
+    return AspectRatio();
   }
 
-  return GetVideoIntrinsicSize(nullptr);
+  nsSize size = GetVideoIntrinsicSize(nullptr);
+  return AspectRatio::FromSize(size.width, size.height);
 }
 
 bool nsVideoFrame::ShouldDisplayPoster() {
