@@ -1243,8 +1243,8 @@ void nsPrintJob::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify) {
         }
 
         if (printData->mPrintProgressParams) {
-          SetDocAndURLIntoProgress(printData->mPrintObject,
-                                   printData->mPrintProgressParams);
+          SetURLAndTitleOnProgressParams(printData->mPrintObject,
+                                         printData->mPrintProgressParams);
         }
       }
     }
@@ -2486,7 +2486,7 @@ nsresult nsPrintJob::DoPrint(const UniquePtr<nsPrintObject>& aPO) {
   RefPtr<nsPrintData> printData = mPrt;
 
   if (printData->mPrintProgressParams) {
-    SetDocAndURLIntoProgress(aPO, printData->mPrintProgressParams);
+    SetURLAndTitleOnProgressParams(aPO, printData->mPrintProgressParams);
   }
 
   {
@@ -2538,8 +2538,8 @@ nsresult nsPrintJob::DoPrint(const UniquePtr<nsPrintObject>& aPO) {
 }
 
 //---------------------------------------------------------------------
-void nsPrintJob::SetDocAndURLIntoProgress(const UniquePtr<nsPrintObject>& aPO,
-                                          nsIPrintProgressParams* aParams) {
+void nsPrintJob::SetURLAndTitleOnProgressParams(
+    const UniquePtr<nsPrintObject>& aPO, nsIPrintProgressParams* aParams) {
   NS_ASSERTION(aPO, "Must have valid nsPrintObject");
   NS_ASSERTION(aParams, "Must have valid nsIPrintProgressParams");
 
