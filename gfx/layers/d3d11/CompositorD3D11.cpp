@@ -449,12 +449,17 @@ CompositorD3D11::CreateRenderTargetFromSource(
   return rt.forget();
 }
 
+bool CompositorD3D11::ShouldAllowFrameRecording() const {
+#ifdef MOZ_GECKO_PROFILER
+  return mAllowFrameRecording || profiler_feature_active(ProfilerFeature::Screenshots);
+#else
+  return mAllowFrameRecording;
+#endif
+}
+
 already_AddRefed<CompositingRenderTarget>
 CompositorD3D11::GetWindowRenderTarget() const {
-#ifndef MOZ_GECKO_PROFILER
-  return nullptr;
-#else
-  if (!profiler_feature_active(ProfilerFeature::Screenshots)) {
+  if (!ShouldAllowFrameRecording()) {
     return nullptr;
   }
 
@@ -495,7 +500,6 @@ CompositorD3D11::GetWindowRenderTarget() const {
   return RefPtr<CompositingRenderTarget>(
              static_cast<CompositingRenderTarget*>(mWindowRTCopy))
       .forget();
-#endif
 }
 
 bool CompositorD3D11::ReadbackRenderTarget(CompositingRenderTarget* aSource,
