@@ -238,8 +238,8 @@ jobs:
                 - 'taskcluster/scripts/misc/tooltool-download.sh'
                 - 'taskcluster/scripts/misc/wrench-windows-tests.sh'
 
-    wrench-android-build:
-        description: Build wrench for Android
+    wrench-android-debug:
+        description: Debug build of wrench for Android
         worker-type: b-linux
         worker:
             max-run-time: 5400
@@ -250,7 +250,7 @@ jobs:
                   path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/app/build/outputs/apk/app-debug.apk
         run:
             using: run-task
-            command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh'
+            command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh debug'
         toolchains:
             - android-gradle-dependencies
             - android-ndk-linux
@@ -263,3 +263,32 @@ jobs:
         when:
             files-changed:
                 - 'gfx/wr/**'
+                - 'taskcluster/scripts/misc/wrench-android-build.sh'
+
+    wrench-android-release:
+        description: Release build of wrench for Android
+        worker-type: b-linux
+        worker:
+            max-run-time: 5400
+            docker-image: {in-tree: webrender}
+            artifacts:
+                - type: file
+                  name: public/build/wrench-release.apk
+                  path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/app/build/outputs/apk/release/app-release-unsigned.apk
+        run:
+            using: run-task
+            command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh release'
+        toolchains:
+            - android-gradle-dependencies
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-rust-android
+            - wrench-deps
+        treeherder:
+            platform: android-4-0-armv7-api16/opt
+            symbol: WR(B)
+        when:
+            files-changed:
+                - 'gfx/wr/**'
+                - 'taskcluster/scripts/misc/wrench-android-build.sh'
+                - 'mobile/android/debug_sign_tool.py'
