@@ -162,9 +162,6 @@ class AndroidXPCShellRunner(MozbuildObject):
         if not kwargs["objdir"]:
             kwargs["objdir"] = self.topobjdir
 
-        if not kwargs["localLib"]:
-            kwargs["localLib"] = os.path.join(self.topobjdir, 'dist/fennec')
-
         if not kwargs["localBin"]:
             kwargs["localBin"] = os.path.join(self.topobjdir, 'dist/bin')
 
