@@ -609,6 +609,27 @@ var Policies = {
     },
   },
 
+  "FirefoxHome": {
+    onBeforeAddons(manager, param) {
+      let locked = param.Locked || false;
+      if ("Search" in param) {
+        setDefaultPref("browser.newtabpage.activity-stream.showSearch", param.Search, locked);
+      }
+      if ("TopSites" in param) {
+        setDefaultPref("browser.newtabpage.activity-stream.feeds.topsites", param.TopSites, locked);
+      }
+      if ("Highlights" in param) {
+        setDefaultPref("browser.newtabpage.activity-stream.feeds.section.highlights", param.Highlights, locked);
+      }
+      if ("Pocket" in param) {
+        setDefaultPref("browser.newtabpage.activity-stream.feeds.section.topstories", param.Pocket, locked);
+      }
+      if ("Snippets" in param) {
+        setDefaultPref("browser.newtabpage.activity-stream.feeds.snippets", param.Snippets, locked);
+      }
+    },
+  },
+
   "FlashPlugin": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("plugin:flash", param.Allow, param.Block);
