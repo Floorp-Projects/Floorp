@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix
 
-import android.preference.PreferenceManager
+import org.mozilla.fenix.utils.Settings
 
 interface BrowsingModeManager {
     enum class Mode {
@@ -20,8 +20,8 @@ class DefaultBrowsingModeManager(private val homeActivity: HomeActivity) : Brows
         get() = temporaryModeStorage!!
         set(value) {
             temporaryModeStorage = value
-            updateTheme(value)
             setPreference()
+            updateTheme(value)
         }
 
     private fun updateTheme(mode: BrowsingModeManager.Mode) {
@@ -35,14 +35,12 @@ class DefaultBrowsingModeManager(private val homeActivity: HomeActivity) : Brows
     }
 
     private fun setPreference() {
-        PreferenceManager.getDefaultSharedPreferences(homeActivity)
-            .edit().putBoolean(homeActivity.getString(R.string.pref_key_private_mode), isPrivate).apply()
+        Settings.getInstance(homeActivity).setPrivateMode(isPrivate)
     }
 
     init {
         if (temporaryModeStorage == null) {
-            mode = when (PreferenceManager.getDefaultSharedPreferences(homeActivity)
-                .getBoolean(homeActivity.getString(R.string.pref_key_private_mode), false)) {
+            mode = when (Settings.getInstance(homeActivity).usePrivateMode) {
                 true -> BrowsingModeManager.Mode.Private
                 false -> BrowsingModeManager.Mode.Normal
             }

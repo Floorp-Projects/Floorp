@@ -4,13 +4,14 @@
 
 package org.mozilla.fenix.settings.quicksettings
 
+import android.content.Context
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.preference.PreferenceManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.feature.sitepermissions.SitePermissions
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
@@ -25,9 +27,8 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
-import androidx.appcompat.view.ContextThemeWrapper
-import org.mozilla.fenix.R
 
 private const val KEY_URL = "KEY_URL"
 private const val KEY_IS_SECURED = "KEY_IS_SECURED"
@@ -133,6 +134,23 @@ class QuickSettingsSheetDialogFragment : BottomSheetDialogFragment(), CoroutineS
     private fun arePermissionsGranted(requestCode: Int, grantResults: IntArray) =
         requestCode == REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS && grantResults.all { it == PERMISSION_GRANTED }
 
+    private fun toggleTrackingProtection(trackingEnabled: Boolean, context: Context) {
+        with(requireComponents.core) {
+            val policy =
+                createTrackingProtectionPolicy(trackingEnabled)
+            Settings.getInstance(context).setTrackingProtection(trackingEnabled)
+            engine.settings.trackingProtectionPolicy = policy
+
+            with(sessionManager) {
+                sessions.forEach {
+                    getEngineSession(it)?.enableTrackingProtection(
+                        policy
+                    )
+                }
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         getAutoDisposeObservable<QuickSettingsAction>()
@@ -150,24 +168,7 @@ class QuickSettingsSheetDialogFragment : BottomSheetDialogFragment(), CoroutineS
                     }
                     is QuickSettingsAction.ToggleTrackingProtection -> {
                         val trackingEnabled = it.trackingProtection
-                        with(requireComponents.core) {
-                            val policy =
-                                createTrackingProtectionPolicy(trackingEnabled)
-                            PreferenceManager.getDefaultSharedPreferences(context).edit()
-                                .putBoolean(
-                                    context!!.getString(R.string.pref_key_tracking_protection),
-                                    trackingEnabled
-                                ).apply()
-                            engine.settings.trackingProtectionPolicy = policy
-
-                            with(sessionManager) {
-                                sessions.forEach {
-                                    getEngineSession(it)?.enableTrackingProtection(
-                                        policy
-                                    )
-                                }
-                            }
-                        }
+                        context?.let { toggleTrackingProtection(trackingEnabled, it) }
                         launch(Dispatchers.Main) {
                             getManagedEmitter<QuickSettingsChange>().onNext(
                                 QuickSettingsChange.Change(

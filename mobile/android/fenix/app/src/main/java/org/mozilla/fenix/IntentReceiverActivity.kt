@@ -7,11 +7,11 @@ package org.mozilla.fenix
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.preference.PreferenceManager
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.utils.Settings
 
 class IntentReceiverActivity : Activity() {
 
@@ -23,8 +23,7 @@ class IntentReceiverActivity : Activity() {
         // the HomeActivity.
         val intent = intent?.let { Intent(intent) } ?: Intent()
 
-        val isPrivate = PreferenceManager
-            .getDefaultSharedPreferences(this).getBoolean(getString(R.string.pref_key_private_mode), false)
+        val isPrivate = Settings.getInstance(this).usePrivateMode
 
         if (isPrivate) {
             components.utils.privateIntentProcessor.process(intent)

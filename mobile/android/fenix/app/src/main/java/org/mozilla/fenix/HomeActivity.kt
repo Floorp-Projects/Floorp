@@ -7,7 +7,6 @@ package org.mozilla.fenix
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.util.AttributeSet
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -33,6 +32,7 @@ import org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderFrag
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
+import org.mozilla.fenix.utils.Settings
 
 @SuppressWarnings("TooManyFunctions")
 open class HomeActivity : AppCompatActivity() {
@@ -56,8 +56,7 @@ open class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         themeManager.temporaryThemeManagerStorage =
-            when (PreferenceManager.getDefaultSharedPreferences(this)
-                .getBoolean(this.getString(R.string.pref_key_private_mode), false)) {
+            when (Settings.getInstance(this).usePrivateMode) {
                 true -> ThemeManager.Theme.Private
                 false -> ThemeManager.Theme.Normal
             }

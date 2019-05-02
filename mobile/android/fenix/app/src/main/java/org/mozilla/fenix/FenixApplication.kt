@@ -7,12 +7,11 @@ package org.mozilla.fenix
 import android.annotation.SuppressLint
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.preference.PreferenceManager
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.Deferred
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fretboard.Fretboard
@@ -212,14 +211,12 @@ open class FenixApplication : Application() {
                     AppCompatDelegate.setDefaultNightMode(
                         AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                     )
-                    PreferenceManager.getDefaultSharedPreferences(this).edit()
-                        .putBoolean(getString(R.string.pref_key_follow_device_theme), true).apply()
+                    Settings.getInstance(this).setFollowDeviceTheme(true)
                 } else {
                     AppCompatDelegate.setDefaultNightMode(
                         AppCompatDelegate.MODE_NIGHT_NO
                     )
-                    PreferenceManager.getDefaultSharedPreferences(this).edit()
-                        .putBoolean(getString(R.string.pref_key_light_theme), true).apply()
+                    Settings.getInstance(this).setLightTheme(true)
                 }
             }
         }
