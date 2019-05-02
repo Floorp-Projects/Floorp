@@ -20,7 +20,7 @@ class TestProjectPaths(Rooted, unittest.TestCase):
     def test_l10n_path(self):
         cfg = ProjectConfig(None)
         cfg.add_environment(l10n_base=self.root)
-        cfg.locales.append('de')
+        cfg.set_locales(['de'])
         cfg.add_paths({
             'l10n': '{l10n_base}/{locale}/*'
         })
@@ -65,7 +65,7 @@ class TestProjectPaths(Rooted, unittest.TestCase):
     def test_single_reference_path(self):
         cfg = ProjectConfig(None)
         cfg.add_environment(l10n_base=self.path('/l10n'))
-        cfg.locales.append('de')
+        cfg.set_locales(['de'])
         cfg.add_paths({
             'l10n': '{l10n_base}/{locale}/good.ftl',
             'reference': self.path('/reference/good.ftl')
@@ -101,7 +101,7 @@ class TestProjectPaths(Rooted, unittest.TestCase):
     def test_reference_path(self):
         cfg = ProjectConfig(None)
         cfg.add_environment(l10n_base=self.path('/l10n'))
-        cfg.locales.append('de')
+        cfg.set_locales(['de'])
         cfg.add_paths({
             'l10n': '{l10n_base}/{locale}/*',
             'reference': self.path('/reference/*')
@@ -175,7 +175,7 @@ class TestProjectPaths(Rooted, unittest.TestCase):
 
     def test_partial_l10n(self):
         cfg = ProjectConfig(None)
-        cfg.locales.extend(['de', 'fr'])
+        cfg.set_locales(['de', 'fr'])
         cfg.add_paths({
             'l10n': self.path('/{locale}/major/*')
         }, {
@@ -216,7 +216,7 @@ class TestProjectPaths(Rooted, unittest.TestCase):
     def test_validation_mode(self):
         cfg = ProjectConfig(None)
         cfg.add_environment(l10n_base=self.path('/l10n'))
-        cfg.locales.append('de')
+        cfg.set_locales(['de'])
         cfg.add_paths({
             'l10n': '{l10n_base}/{locale}/*',
             'reference': self.path('/reference/*')

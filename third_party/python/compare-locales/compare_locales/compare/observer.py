@@ -158,11 +158,13 @@ class ObserverList(Observer):
         }
         for observer in self.observers:
             for loc, lst in summaries.items():
-                lst.append(observer.summary.get(loc))
+                # Not all locales are on all projects,
+                # default to empty summary
+                lst.append(observer.summary.get(loc, {}))
         if len(self.observers) > 1:
             # add ourselves if there's more than one project
             for loc, lst in summaries.items():
-                lst.append(self.summary.get(loc))
+                lst.append(self.summary.get(loc, {}))
         # normalize missing and missingInFiles -> missing
         for summarylist in summaries.values():
             for summary in summarylist:
