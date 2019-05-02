@@ -8,7 +8,7 @@ use border::create_border_segments;
 use border::NormalBorderAu;
 use display_list_flattener::{CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState};
-use gpu_cache::GpuDataRequest;
+use gpu_cache::{GpuCache, GpuDataRequest};
 use intern;
 use internal_types::LayoutPrimitiveInfo;
 use prim_store::{
@@ -17,7 +17,7 @@ use prim_store::{
     PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData,
     PrimitiveStore, InternablePrimitive,
 };
-use resource_cache::ImageRequest;
+use resource_cache::{ImageRequest, ResourceCache};
 use storage;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -248,16 +248,23 @@ impl ImageBorderData {
             .get_image_properties(self.request.key);
 
         common.opacity = if let Some(image_properties) = image_properties {
-            frame_state.resource_cache.request_image(
-                self.request,
-                frame_state.gpu_cache,
-            );
             PrimitiveOpacity {
                 is_opaque: image_properties.descriptor.is_opaque,
             }
         } else {
             PrimitiveOpacity::opaque()
         }
+    }
+
+    pub fn request_resources(
+        &mut self,
+        resource_cache: &mut ResourceCache,
+        gpu_cache: &mut GpuCache,
+    ) {
+        resource_cache.request_image(
+            self.request,
+            gpu_cache,
+        );
     }
 
     fn write_prim_gpu_blocks(

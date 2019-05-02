@@ -1931,6 +1931,7 @@ impl PrimitiveStore {
                         surface.device_pixel_scale,
                         &frame_context.screen_world_rect,
                         &mut frame_state.data_stores.clip,
+                        true,
                     );
 
                 // Ensure the primitive clip is popped
@@ -2009,17 +2010,17 @@ impl PrimitiveStore {
                     }
                 );
 
+                prim_instance.visibility_info = vis_index;
+
                 self.request_resources_for_prim(
                     prim_instance,
                     surface,
                     raster_space,
+                    &map_local_to_surface,
                     frame_context,
                     frame_state,
                 );
-
-                prim_instance.visibility_info = vis_index;
             }
-
         }
 
         let pic = &mut self.pictures[pic_index.0];
@@ -2043,9 +2044,10 @@ impl PrimitiveStore {
 
     fn request_resources_for_prim(
         &mut self,
-        prim_instance: &PrimitiveInstance,
+        prim_instance: &mut PrimitiveInstance,
         surface: &SurfaceInfo,
         raster_space: RasterSpace,
+        map_local_to_surface: &SpaceMapper<LayoutPixel, PicturePixel>,
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) {
@@ -2074,6 +2076,113 @@ impl PrimitiveStore {
                     frame_state.gpu_cache,
                     frame_state.render_tasks,
                     frame_state.scratch,
+                );
+            }
+            PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
+                let prim_data = &mut frame_state.data_stores.image[data_handle];
+                let common_data = &mut prim_data.common;
+                let image_data = &mut prim_data.kind;
+                let image_instance = &mut self.images[image_instance_index];
+
+                let image_properties = frame_state
+                    .resource_cache
+                    .get_image_properties(image_data.key);
+
+                let request = ImageRequest {
+                    key: image_data.key,
+                    rendering: image_data.image_rendering,
+                    tile: None,
+                };
+
+                match image_properties {
+                    Some(ImageProperties { tiling: None, .. }) => {
+                        frame_state.resource_cache.request_image(
+                            request,
+                            frame_state.gpu_cache,
+                        );
+                    }
+                    Some(ImageProperties { descriptor, tiling: Some(tile_size), .. }) => {
+                        image_instance.visible_tiles.clear();
+                        let device_image_rect = DeviceIntRect::from_size(descriptor.size);
+
+                        // Tighten the clip rect because decomposing the repeated image can
+                        // produce primitives that are partially covering the original image
+                        // rect and we want to clip these extra parts out.
+                        let prim_info = &frame_state.scratch.prim_info[prim_instance.visibility_info.0 as usize];
+                        let prim_rect = LayoutRect::new(
+                            prim_instance.prim_origin,
+                            common_data.prim_size,
+                        );
+                        let tight_clip_rect = prim_info
+                            .combined_local_clip_rect
+                            .intersection(&prim_rect).unwrap();
+                        image_instance.tight_local_clip_rect = tight_clip_rect;
+
+                        let visible_rect = compute_conservative_visible_rect(
+                            &tight_clip_rect,
+                            map_local_to_surface,
+                        );
+
+                        let base_edge_flags = edge_flags_for_tile_spacing(&image_data.tile_spacing);
+
+                        let stride = image_data.stretch_size + image_data.tile_spacing;
+
+                        let repetitions = ::image::repetitions(
+                            &prim_rect,
+                            &visible_rect,
+                            stride,
+                        );
+
+                        for Repetition { origin, edge_flags } in repetitions {
+                            let edge_flags = base_edge_flags | edge_flags;
+
+                            let layout_image_rect = LayoutRect {
+                                origin,
+                                size: image_data.stretch_size,
+                            };
+
+                            let tiles = ::image::tiles(
+                                &layout_image_rect,
+                                &visible_rect,
+                                &device_image_rect,
+                                tile_size as i32,
+                            );
+
+                            for tile in tiles {
+                                frame_state.resource_cache.request_image(
+                                    request.with_tile(tile.offset),
+                                    frame_state.gpu_cache,
+                                );
+
+                                image_instance.visible_tiles.push(VisibleImageTile {
+                                    tile_offset: tile.offset,
+                                    edge_flags: tile.edge_flags & edge_flags,
+                                    local_rect: tile.rect,
+                                    local_clip_rect: tight_clip_rect,
+                                });
+                            }
+                        }
+
+                        if image_instance.visible_tiles.is_empty() {
+                            // Mark as invisible
+                            prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                        }
+                    }
+                    None => {}
+                }
+            }
+            PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
+                let prim_data = &mut frame_state.data_stores.image_border[data_handle];
+                prim_data.kind.request_resources(
+                    frame_state.resource_cache,
+                    frame_state.gpu_cache,
+                );
+            }
+            PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
+                let prim_data = &mut frame_state.data_stores.yuv_image[data_handle];
+                prim_data.kind.request_resources(
+                    frame_state.resource_cache,
+                    frame_state.gpu_cache,
                 );
             }
             _ => {}
@@ -2708,85 +2817,6 @@ impl PrimitiveStore {
                     image_instance.opacity_binding_index,
                     frame_context.scene_properties,
                 );
-
-                image_instance.visible_tiles.clear();
-
-                let image_properties = frame_state
-                    .resource_cache
-                    .get_image_properties(image_data.key);
-
-                if let Some(ImageProperties { descriptor, tiling: Some(tile_size), .. }) = image_properties {
-                    let device_image_rect = DeviceIntRect::from_size(descriptor.size);
-
-                    // Tighten the clip rect because decomposing the repeated image can
-                    // produce primitives that are partially covering the original image
-                    // rect and we want to clip these extra parts out.
-                    let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
-                    let prim_rect = LayoutRect::new(
-                        prim_instance.prim_origin,
-                        common_data.prim_size,
-                    );
-                    let tight_clip_rect = prim_info
-                        .combined_local_clip_rect
-                        .intersection(&prim_rect).unwrap();
-                    image_instance.tight_local_clip_rect = tight_clip_rect;
-
-                    let visible_rect = compute_conservative_visible_rect(
-                        &tight_clip_rect,
-                        &pic_state.map_local_to_pic,
-                    );
-
-                    let base_edge_flags = edge_flags_for_tile_spacing(&image_data.tile_spacing);
-
-                    let stride = image_data.stretch_size + image_data.tile_spacing;
-
-                    let repetitions = ::image::repetitions(
-                        &prim_rect,
-                        &visible_rect,
-                        stride,
-                    );
-
-                    let request = ImageRequest {
-                        key: image_data.key,
-                        rendering: image_data.image_rendering,
-                        tile: None,
-                    };
-
-                    for Repetition { origin, edge_flags } in repetitions {
-                        let edge_flags = base_edge_flags | edge_flags;
-
-                        let layout_image_rect = LayoutRect {
-                            origin,
-                            size: image_data.stretch_size,
-                        };
-
-                        let tiles = ::image::tiles(
-                            &layout_image_rect,
-                            &visible_rect,
-                            &device_image_rect,
-                            tile_size as i32,
-                        );
-
-                        for tile in tiles {
-                            frame_state.resource_cache.request_image(
-                                request.with_tile(tile.offset),
-                                frame_state.gpu_cache,
-                            );
-
-                            image_instance.visible_tiles.push(VisibleImageTile {
-                                tile_offset: tile.offset,
-                                edge_flags: tile.edge_flags & edge_flags,
-                                local_rect: tile.rect,
-                                local_clip_rect: tight_clip_rect,
-                            });
-                        }
-                    }
-
-                    if image_instance.visible_tiles.is_empty() {
-                        // Mark as invisible
-                        prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
-                    }
-                }
 
                 write_segment(
                     image_instance.segment_instance_index,
@@ -3482,6 +3512,7 @@ impl PrimitiveInstance {
                         device_pixel_scale,
                         &dirty_world_rect,
                         &mut data_stores.clip,
+                        false,
                     );
 
                 let clip_mask_kind = segment.update_clip_task(

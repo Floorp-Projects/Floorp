@@ -271,6 +271,7 @@ impl ClipNodeInfo {
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
         clip_scroll_tree: &ClipScrollTree,
+        request_resources: bool,
     ) -> ClipNodeInstance {
         // Calculate some flags that are required for the segment
         // building logic.
@@ -341,10 +342,12 @@ impl ClipNodeInfo {
                             tile_size as i32,
                         );
                         for tile in tiles {
-                            resource_cache.request_image(
-                                request.with_tile(tile.offset),
-                                gpu_cache,
-                            );
+                            if request_resources {
+                                resource_cache.request_image(
+                                    request.with_tile(tile.offset),
+                                    gpu_cache,
+                                );
+                            }
                             mask_tiles.push(VisibleMaskImageTile {
                                 tile_offset: tile.offset,
                                 tile_rect: tile.rect,
@@ -352,7 +355,7 @@ impl ClipNodeInfo {
                         }
                     }
                     visible_tiles = Some(mask_tiles);
-                } else {
+                } else if request_resources {
                     resource_cache.request_image(request, gpu_cache);
                 }
             }
@@ -589,6 +592,7 @@ impl ClipStore {
         device_pixel_scale: DevicePixelScale,
         world_rect: &WorldRect,
         clip_data_store: &mut ClipDataStore,
+        request_resources: bool,
     ) -> Option<ClipChainInstance> {
         let mut local_clip_rect = local_prim_clip_rect;
 
@@ -680,6 +684,7 @@ impl ClipStore {
                         gpu_cache,
                         resource_cache,
                         clip_scroll_tree,
+                        request_resources,
                     );
 
                     // As a special case, a partial accept of a clip rect that is
