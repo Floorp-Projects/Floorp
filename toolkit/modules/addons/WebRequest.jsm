@@ -31,7 +31,8 @@ function parseFilter(filter) {
   }
 
   // FIXME: Support windowId filtering.
-  return {urls: filter.urls || null, types: filter.types || null};
+  return {urls: filter.urls || null, types: filter.types || null,
+          incognito: filter.incognito !== undefined ? filter.incognito : null};
 }
 
 function parseExtra(extra, allowed = [], optionsObj = {}) {
