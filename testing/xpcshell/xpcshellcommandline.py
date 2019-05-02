@@ -159,9 +159,6 @@ def add_remote_arguments(parser):
                         help="Do not copy any files to device (to be used only if "
                              "device is already setup).")
 
-    parser.add_argument("--local-lib-dir", action="store", type=str, dest="localLib",
-                        help="Local path to library directory.")
-
     parser.add_argument("--local-bin-dir", action="store", type=str, dest="localBin",
                         help="Local path to bin directory.")
 
