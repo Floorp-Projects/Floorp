@@ -147,7 +147,11 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
   MOZ_DIAGNOSTIC_ASSERT(aOriginProcess || XRE_IsContentProcess());
   MOZ_DIAGNOSTIC_ASSERT(aGroup);
 
-  uint64_t originId = aOriginProcess ? aOriginProcess->ChildID() : 0;
+  uint64_t originId = 0;
+  if (aOriginProcess) {
+    originId = aOriginProcess->ChildID();
+    aGroup->EnsureSubscribed(aOriginProcess);
+  }
 
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("Creating 0x%08" PRIx64 " from IPC (origin=0x%08" PRIx64 ")",
