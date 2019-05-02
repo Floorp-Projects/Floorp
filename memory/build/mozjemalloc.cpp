@@ -487,9 +487,10 @@ gChunkHeaderNumPages =
      ~gPageSizeMask) >>
     gPageSize2Pow;
 
-// Max size class for arenas.
+// One chunk, minus the header, minus a guard page
 DEFINE_GLOBAL(size_t)
-gMaxLargeClass = kChunkSize - (gChunkHeaderNumPages << gPageSize2Pow);
+gMaxLargeClass =
+    kChunkSize - gPageSize - (gChunkHeaderNumPages << gPageSize2Pow);
 
 // Various sanity checks that regard configuration.
 GLOBAL_ASSERT(1ULL << gPageSize2Pow == gPageSize,
@@ -2284,15 +2285,21 @@ void arena_t::InitChunk(arena_chunk_t* aChunk, bool aZeroed) {
     aChunk->map[i].bits = 0;
   }
   aChunk->map[i].bits = gMaxLargeClass | flags;
-  for (i++; i < gChunkNumPages - 1; i++) {
+  for (i++; i < gChunkNumPages - 2; i++) {
     aChunk->map[i].bits = flags;
   }
-  aChunk->map[gChunkNumPages - 1].bits = gMaxLargeClass | flags;
+  aChunk->map[gChunkNumPages - 2].bits = gMaxLargeClass | flags;
+  // Mark the guard page as decommited.
+  aChunk->map[gChunkNumPages - 1].bits = CHUNK_MAP_DECOMMITTED;
 
 #ifdef MALLOC_DECOMMIT
   // Start out decommitted, in order to force a closer correspondence
   // between dirty pages and committed untouched pages.
-  pages_decommit(run, gMaxLargeClass);
+  pages_decommit(run, gMaxLargeClass + gPageSize);
+#else
+  // Only decommit the last page as a guard.
+  pages_decommit((void*)(uintptr_t(aChunk) + kChunkSize - gPageSize),
+                 gPageSize);
 #endif
   mStats.committed += gChunkHeaderNumPages;
 
@@ -2398,8 +2405,10 @@ void arena_t::Purge(bool aAll) {
 #endif
     chunk = mChunksDirty.Last();
     MOZ_DIAGNOSTIC_ASSERT(chunk);
-
-    for (i = gChunkNumPages - 1; chunk->ndirty > 0; i--) {
+    // Last page is DECOMMITTED as a guard page.
+    MOZ_ASSERT((chunk->map[gChunkNumPages - 1].bits & CHUNK_MAP_DECOMMITTED) !=
+               0);
+    for (i = gChunkNumPages - 2; chunk->ndirty > 0; i--) {
       MOZ_DIAGNOSTIC_ASSERT(i >= gChunkHeaderNumPages);
 
       if (chunk->map[i].bits & CHUNK_MAP_DIRTY) {
@@ -2470,7 +2479,7 @@ void arena_t::DallocRun(arena_run_t* aRun, bool aDirty) {
   chunk = GetChunkForPtr(aRun);
   run_ind = (size_t)((uintptr_t(aRun) - uintptr_t(chunk)) >> gPageSize2Pow);
   MOZ_DIAGNOSTIC_ASSERT(run_ind >= gChunkHeaderNumPages);
-  MOZ_DIAGNOSTIC_ASSERT(run_ind < gChunkNumPages);
+  MOZ_RELEASE_ASSERT(run_ind < gChunkNumPages - 1);
   if ((chunk->map[run_ind].bits & CHUNK_MAP_LARGE) != 0) {
     size = chunk->map[run_ind].bits & ~gPageSizeMask;
   } else {
@@ -2505,7 +2514,7 @@ void arena_t::DallocRun(arena_run_t* aRun, bool aDirty) {
       size | (chunk->map[run_ind + run_pages - 1].bits & gPageSizeMask);
 
   // Try to coalesce forward.
-  if (run_ind + run_pages < gChunkNumPages &&
+  if (run_ind + run_pages < gChunkNumPages - 1 &&
       (chunk->map[run_ind + run_pages].bits & CHUNK_MAP_ALLOCATED) == 0) {
     size_t nrun_size = chunk->map[run_ind + run_pages].bits & ~gPageSizeMask;
 
@@ -3279,6 +3288,8 @@ static inline void arena_dalloc(void* aPtr, size_t aOffset, arena_t* aArena) {
   MutexAutoLock lock(arena->mLock);
   size_t pageind = aOffset >> gPageSize2Pow;
   arena_chunk_map_t* mapelm = &chunk->map[pageind];
+  MOZ_RELEASE_ASSERT((mapelm->bits & CHUNK_MAP_DECOMMITTED) == 0,
+                     "Freeing in decommitted page.");
   MOZ_RELEASE_ASSERT((mapelm->bits & CHUNK_MAP_ALLOCATED) != 0, "Double-free?");
   if ((mapelm->bits & CHUNK_MAP_LARGE) == 0) {
     // Small allocation.
@@ -3325,7 +3336,7 @@ bool arena_t::RallocGrowLarge(arena_chunk_t* aChunk, void* aPtr, size_t aSize,
 
   // Try to extend the run.
   MOZ_ASSERT(aSize > aOldSize);
-  if (pageind + npages < gChunkNumPages &&
+  if (pageind + npages < gChunkNumPages - 1 &&
       (aChunk->map[pageind + npages].bits & CHUNK_MAP_ALLOCATED) == 0 &&
       (aChunk->map[pageind + npages].bits & ~gPageSizeMask) >=
           aSize - aOldSize) {
