@@ -258,6 +258,8 @@ fuzzy-if(OSX,0-11,0-20) css-multicol/multicol-rule-000.xht
 fuzzy(0-135,0-1584) css-multicol/multicol-rule-001.xht
 fails-if(!OSX) random-if(OSX) css-multicol/multicol-rule-002.xht
 css-multicol/multicol-rule-003.xht
+# Bug 1548100
+pref(layout.css.column-span.enabled,true) fails css-multicol/multicol-rule-004.xht
 css-multicol/multicol-rule-color-001.xht
 fuzzy(0-106,0-354) css-multicol/multicol-rule-dashed-000.xht
 fuzzy(0-106,0-354) css-multicol/multicol-rule-dotted-000.xht

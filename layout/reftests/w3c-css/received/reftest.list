@@ -125,7 +125,7 @@ fuzzy-if(OSX,0-11,0-20) == css-multicol/multicol-rule-000.xht css-multicol/multi
 fuzzy(0-135,0-1584) == css-multicol/multicol-rule-001.xht css-multicol/multicol-rule-001-ref.xht
 fails-if(!OSX) random-if(OSX) == css-multicol/multicol-rule-002.xht css-multicol/multicol-rule-ref.xht
 == css-multicol/multicol-rule-003.xht css-multicol/multicol-rule-003-ref.xht
-== css-multicol/multicol-rule-004.xht css-multicol/multicol-rule-004-ref.xht
+pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-rule-004.xht css-multicol/multicol-rule-004-ref.xht
 == css-multicol/multicol-rule-color-001.xht css-multicol/multicol-rule-color-001-ref.xht
 == css-multicol/multicol-rule-color-inherit-001.xht css-multicol/multicol-rule-color-inherit-001-ref.xht
 == css-multicol/multicol-rule-color-inherit-002.xht css-multicol/multicol-rule-color-inherit-001-ref.xht
