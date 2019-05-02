@@ -235,10 +235,15 @@ void WorkerGlobalScope::SetOnerror(OnErrorEventHandlerNonNull* aHandler) {
   }
 }
 
-void WorkerGlobalScope::ImportScripts(const Sequence<nsString>& aScriptURLs,
+void WorkerGlobalScope::ImportScripts(JSContext* aCx,
+                                      const Sequence<nsString>& aScriptURLs,
                                       ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
-  workerinternals::Load(mWorkerPrivate, aScriptURLs, WorkerScript, aRv);
+
+  UniquePtr<SerializedStackHolder> stack = GetCurrentStackForNetMonitor(aCx);
+
+  workerinternals::Load(mWorkerPrivate, std::move(stack), aScriptURLs,
+                        WorkerScript, aRv);
 }
 
 int32_t WorkerGlobalScope::SetTimeout(JSContext* aCx, Function& aHandler,
@@ -906,7 +911,7 @@ void WorkerDebuggerGlobalScope::LoadSubScript(
 
   nsTArray<nsString> urls;
   urls.AppendElement(aURL);
-  workerinternals::Load(mWorkerPrivate, urls, DebuggerScript, aRv);
+  workerinternals::Load(mWorkerPrivate, nullptr, urls, DebuggerScript, aRv);
 }
 
 void WorkerDebuggerGlobalScope::EnterEventLoop() {
