@@ -301,6 +301,7 @@ extern const uint32_t ArgLengths[];
                                                                                \
   /* Meta ops generate no code, but contain data for BaselineInspector */      \
   _(MetaTwoByte, Byte, Field, Field)                                           \
+  _(MetaThreeByte, Byte, Field, Field, Field)                                  \
                                                                                \
   /* The *Result ops load a value into the cache's result register. */         \
   _(LoadFixedSlotResult, Id, Field)                                            \
@@ -534,12 +535,12 @@ enum class AttachDecision {
 
 // If the input expression evaluates to an AttachDecision other than NoAction,
 // return that AttachDecision. If it is NoAction, do nothing.
-#define TRY_ATTACH(expr)                      \
-  do {                                        \
-    AttachDecision result = expr;             \
-    if (result != AttachDecision::NoAction) { \
-      return result;                          \
-    }                                         \
+#define TRY_ATTACH(expr)                                    \
+  do {                                                      \
+    AttachDecision tryAttachTempResult_ = expr;             \
+    if (tryAttachTempResult_ != AttachDecision::NoAction) { \
+      return tryAttachTempResult_;                          \
+    }                                                       \
   } while (0)
 
 // Set of arguments supported by GetIndexOfArgument.
@@ -631,6 +632,10 @@ enum class MetaTwoByteKind : uint8_t {
   NativeTemplateObject,
   ScriptedTemplateObject,
   ClassTemplateObject,
+};
+
+enum class MetaThreeByteKind : uint8_t {
+  ConstStringSplitData,
 };
 
 #ifdef JS_SIMULATOR
@@ -965,9 +970,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
     return addStubField(uintptr_t(expected), StubField::Type::JSObject);
   }
-  void guardSpecificAtom(StringOperandId str, JSAtom* expected) {
+  FieldOffset guardSpecificAtom(StringOperandId str, JSAtom* expected) {
     writeOpWithOperandId(CacheOp::GuardSpecificAtom, str);
-    addStubField(uintptr_t(expected), StubField::Type::String);
+    return addStubField(uintptr_t(expected), StubField::Type::String);
   }
   void guardSpecificSymbol(SymbolOperandId sym, JS::Symbol* expected) {
     writeOpWithOperandId(CacheOp::GuardSpecificSymbol, sym);
@@ -1429,6 +1434,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     reuseStubField(classOffset);
     addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
   }
+  void metaConstStringSplitData(FieldOffset strOffset, FieldOffset sepOffset,
+                                FieldOffset templateOffset) {
+    writeOp(CacheOp::MetaThreeByte);
+    buffer_.writeByte(uint32_t(MetaThreeByteKind::ConstStringSplitData));
+    reuseStubField(strOffset);
+    reuseStubField(sepOffset);
+    reuseStubField(templateOffset);
+  }
 
   void megamorphicLoadSlotResult(ObjOperandId obj, PropertyName* name,
                                  bool handleMissing) {
@@ -1726,9 +1739,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(sep);
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
-  void callConstStringSplitResult(ArrayObject* resultTemplate) {
+  FieldOffset callConstStringSplitResult(ArrayObject* resultTemplate) {
     writeOp(CacheOp::CallConstStringSplitResult);
-    addStubField(uintptr_t(resultTemplate), StubField::Type::JSObject);
+    return addStubField(uintptr_t(resultTemplate), StubField::Type::JSObject);
   }
 
   void compareStringResult(uint32_t op, StringOperandId lhs,
@@ -2384,13 +2397,15 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachIsSuspendedGenerator();
   AttachDecision tryAttachFunCall();
   AttachDecision tryAttachFunApply();
+  AttachDecision tryAttachSelfHosted(HandleFunction calleeFunc);
   AttachDecision tryAttachCallScripted(HandleFunction calleeFunc);
   AttachDecision tryAttachSpecialCaseCallNative(HandleFunction calleeFunc);
   AttachDecision tryAttachCallNative(HandleFunction calleeFunc);
   AttachDecision tryAttachCallHook(HandleObject calleeObj);
 
   // Deferred stubs
-  AttachDecision tryAttachConstStringSplit(HandleValue result);
+  AttachDecision tryAttachConstStringSplit(HandleValue result,
+                                           HandleFunction calleeFunc);
 
   void trackAttached(const char* name);
 
@@ -2402,7 +2417,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
 
   AttachDecision tryAttachStub();
 
-  bool isOptimizableConstStringSplit();
+  bool isOptimizableConstStringSplit(HandleFunction calleeFunc);
   AttachDecision tryAttachDeferredStub(HandleValue result);
 
   BaselineCacheIRStubKind cacheIRStubKind() const { return cacheIRStubKind_; }
