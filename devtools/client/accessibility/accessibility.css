@@ -167,6 +167,15 @@ body {
   box-shadow: none;
 }
 
+.devtools-toolbar .accessibility-tree-filters {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  align-items: center;
+  white-space: nowrap;
+  margin-inline-end: 5px;
+}
+
 /* Description */
 .description {
   color: var(--theme-toolbar-color);
