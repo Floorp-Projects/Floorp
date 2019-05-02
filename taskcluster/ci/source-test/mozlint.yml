@@ -174,3 +174,18 @@ shellcheck:
     when:
         files-changed:
             - '**/*.sh'
+
+
+localization:
+    description: l10n tests for strings with errors and conflicts with cross-channel
+    platform: lint/opt
+    treeherder:
+        symbol: l1nt
+    run:
+        mach: lint -l l10n -f treeherder
+    when:
+        files-changed:
+            - '**/locales/en-US/**'
+            - '**/l10n.toml'
+            - 'third_party/python/compare-locales/**'
+            - 'third_party/python/fluent/**'
