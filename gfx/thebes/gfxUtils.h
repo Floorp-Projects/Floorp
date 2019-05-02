@@ -24,7 +24,6 @@ class gfxDrawable;
 struct gfxQuad;
 class nsIInputStream;
 class nsIGfxInfo;
-class nsIPresShell;
 
 namespace mozilla {
 namespace dom {
@@ -267,7 +266,6 @@ class gfxUtils {
   static void WriteAsPNG(SourceSurface* aSurface, const char* aFile);
   static void WriteAsPNG(DrawTarget* aDT, const nsAString& aFile);
   static void WriteAsPNG(DrawTarget* aDT, const char* aFile);
-  static void WriteAsPNG(nsIPresShell* aShell, const char* aFile);
 
   /**
    * Dump as a PNG encoded Data URL to a FILE stream (using stdout by
