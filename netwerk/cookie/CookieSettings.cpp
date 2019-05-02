@@ -150,8 +150,6 @@ CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
   } else         // Note the tricky `else` which controls the call below.
 #endif
 
-    // Note that when compiled for Thunderbird/SeaMonkey, the following
-    // statement is controlled by the `else` in the `#ifdef` block above.
     rv = pm->TestPermissionFromPrincipal(
         aPrincipal, NS_LITERAL_CSTRING("cookie"), aCookiePermission);
   if (NS_WARN_IF(NS_FAILED(rv))) {
