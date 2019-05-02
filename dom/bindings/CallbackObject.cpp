@@ -204,7 +204,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   }
 
   // Bail out if there's no useful global.
-  if (!globalObject->GetGlobalJSObject()) {
+  if (!globalObject->HasJSGlobal()) {
     aRv.ThrowDOMException(
         NS_ERROR_DOM_NOT_SUPPORTED_ERR,
         NS_LITERAL_CSTRING("Refusing to execute function from global which is "
@@ -221,7 +221,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     // of the same IPC global weirdness described above, wherein the
     // nsIGlobalObject has severed its reference to the JS global. Let's just
     // be safe here, so that nobody has to waste a day debugging gaia-ui tests.
-    if (!incumbent->GetGlobalJSObject()) {
+    if (!incumbent->HasJSGlobal()) {
       aRv.ThrowDOMException(
           NS_ERROR_DOM_NOT_SUPPORTED_ERR,
           NS_LITERAL_CSTRING("Refusing to execute function because our "

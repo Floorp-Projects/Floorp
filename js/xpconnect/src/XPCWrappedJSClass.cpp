@@ -329,7 +329,7 @@ nsresult nsXPCWrappedJS::DelegatedQueryInterface(REFNSIID aIID,
   RootedObject obj(RootingCx(), GetJSObject());
   nsIGlobalObject* nativeGlobal = NativeGlobal(js::UncheckedUnwrap(obj));
   NS_ENSURE_TRUE(nativeGlobal, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(nativeGlobal->GetGlobalJSObject(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(nativeGlobal->HasJSGlobal(), NS_ERROR_FAILURE);
   AutoEntryScript aes(nativeGlobal, "XPCWrappedJS QueryInterface",
                       /* aIsMainThread = */ true);
   XPCCallContext ccx(aes.cx());
