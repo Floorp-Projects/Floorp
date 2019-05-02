@@ -314,4 +314,9 @@ interface nsISocketTransport : nsITransport
      * The value is set after PR_Connect is called.
      */
    readonly attribute boolean esniUsed;
+
+    /**
+     * IP address resolved using TRR.
+     */
+    bool resolvedByTRR();
 };

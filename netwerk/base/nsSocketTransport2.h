@@ -328,6 +328,7 @@ class nsSocketTransport final : public nsASocketHandler,
 
   nsCOMPtr<nsICancelable> mDNSRequest;
   nsCOMPtr<nsIDNSRecord> mDNSRecord;
+  bool mResolvedByTRR;
 
   nsresult mDNSLookupStatus;
   PRIntervalTime mDNSARequestFinished;
