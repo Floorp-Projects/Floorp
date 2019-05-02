@@ -62,6 +62,7 @@ struct nsStyleFont;
 struct nsOverflowAreas;
 
 namespace mozilla {
+struct AspectRatio;
 class ComputedStyle;
 class PresShell;
 enum class PseudoStyleType : uint8_t;
@@ -146,6 +147,7 @@ enum class ReparentingDirection {
  * is not to define multiple copies of the same static helper.
  */
 class nsLayoutUtils {
+  typedef mozilla::AspectRatio AspectRatio;
   typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::LengthPercentage LengthPercentage;
   typedef mozilla::LengthPercentageOrAuto LengthPercentageOrAuto;
@@ -1326,7 +1328,7 @@ class nsLayoutUtils {
    */
   static nsRect ComputeObjectDestRect(const nsRect& aConstraintRect,
                                       const IntrinsicSize& aIntrinsicSize,
-                                      const nsSize& aIntrinsicRatio,
+                                      const AspectRatio& aIntrinsicRatio,
                                       const nsStylePosition* aStylePos,
                                       nsPoint* aAnchorPoint = nullptr);
 
@@ -1926,8 +1928,8 @@ class nsLayoutUtils {
    */
   static void ComputeSizeForDrawing(imgIContainer* aImage,
                                     CSSIntSize& aImageSize,
-                                    nsSize& aIntrinsicRatio, bool& aGotWidth,
-                                    bool& aGotHeight);
+                                    AspectRatio& aIntrinsicRatio,
+                                    bool& aGotWidth, bool& aGotHeight);
 
   /**
    * Given an imgIContainer, this method attempts to obtain an intrinsic

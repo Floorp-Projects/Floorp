@@ -14,6 +14,7 @@ webidl Document;
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/AspectRatio.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "nsRect.h"
@@ -45,6 +46,7 @@ struct Orientation;
 
 %}
 
+native MaybeAspectRatio(mozilla::Maybe<mozilla::AspectRatio>);
 native ImgDrawResult(mozilla::image::ImgDrawResult);
 [ptr] native gfxContext(gfxContext);
 [ref] native gfxMatrix(gfxMatrix);
@@ -99,9 +101,9 @@ interface imgIContainer : nsISupports
 
   /**
    * The (dimensionless) intrinsic ratio of this image. In the case of any
-   * error, an exception will be thrown.
+   * error, Nothing() will be returned.
    */
-  [noscript] readonly attribute nsSize intrinsicRatio;
+  [notxpcom, nostdcall] readonly attribute MaybeAspectRatio intrinsicRatio;
 
   /**
    * Given a size at which this image will be displayed, and the drawing
