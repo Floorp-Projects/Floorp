@@ -42,7 +42,7 @@ add_task(async function testUsbRuntimeUpdates() {
   const telemetryRuntimeId = runtimeAddedEvent.extras.runtime_id;
 
   info("Click on the toggle button and wait until the text is updated");
-  const promptButton = document.querySelector(".js-connection-prompt-toggle-button");
+  const promptButton = document.querySelector(".qa-connection-prompt-toggle-button");
   promptButton.click();
   await waitUntil(() => promptButton.textContent.includes("Enable"));
 

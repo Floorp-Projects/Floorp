@@ -23,7 +23,7 @@ add_task(async function() {
 
   info("Navigate to 'Connect' page");
   document.location.hash = "#/connect";
-  await waitUntil(() => document.querySelector(".js-connect-page"));
+  await waitUntil(() => document.querySelector(".qa-connect-page"));
   checkSelectPageEvent("connect", sessionId);
 
   info("Navigate to 'USB device runtime' page");
@@ -51,5 +51,5 @@ async function navigateToUSBRuntime(mocks, doc) {
   await connectToRuntime("Fancy Phone", doc);
   // navigate to it via URL
   doc.location.hash = "#/runtime/1337id";
-  await waitUntil(() => doc.querySelector(".js-runtime-page"));
+  await waitUntil(() => doc.querySelector(".qa-runtime-page"));
 }

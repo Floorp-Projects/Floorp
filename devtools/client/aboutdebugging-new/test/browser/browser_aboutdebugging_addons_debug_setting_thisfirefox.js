@@ -59,7 +59,7 @@ async function testState({ chromeEnabled, debuggerRemoteEnable, isEnabledAtIniti
   await installExtensions(document);
 
   info("Check the status of extension debug setting checkbox and inspect buttons");
-  const checkbox = document.querySelector(".js-extension-debug-checkbox");
+  const checkbox = document.querySelector(".qa-extension-debug-checkbox");
   ok(checkbox, "Extension debug setting checkbox exists");
   is(checkbox.checked, isEnabledAtInitial, "The state of checkbox is correct");
   assertInspectButtons(isEnabledAtInitial, document);
@@ -90,7 +90,7 @@ function assertInspectButtons(shouldBeEnabled, document) {
 
 function assertInspectButtonsOnCategory(shouldBeEnabled, category, document) {
   const pane = getDebugTargetPane(category, document);
-  const buttons = pane.querySelectorAll(".js-debug-target-inspect-button");
+  const buttons = pane.querySelectorAll(".qa-debug-target-inspect-button");
   ok([...buttons].every(b => b.disabled !== shouldBeEnabled),
      `disabled attribute should be ${ !shouldBeEnabled } on ${ category }`);
 }

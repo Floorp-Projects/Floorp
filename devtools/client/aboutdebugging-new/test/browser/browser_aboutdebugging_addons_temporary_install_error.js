@@ -31,7 +31,7 @@ add_task(async function testInvalidJsonExtension() {
   await installTemporaryExtension(EXTENSION_PATH, EXTENSION_NAME, document);
 
   info("Wait until the error message disappears");
-  await waitUntil(() => !document.querySelector(".js-tmp-extension-install-error"));
+  await waitUntil(() => !document.querySelector(".qa-tmp-extension-install-error"));
 
   info("Wait for the temporary addon to be displayed as a debug target");
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, document));
@@ -62,9 +62,9 @@ async function installBadExtension(path, document) {
   info("Install a bad extension at path: " + path);
   // Do not use installTemporaryAddon here since the install will fail.
   prepareMockFilePicker(path);
-  document.querySelector(".js-temporary-extension-install-button").click();
+  document.querySelector(".qa-temporary-extension-install-button").click();
 
   info("Wait until the install error message appears");
-  await waitUntil(() => document.querySelector(".js-tmp-extension-install-error"));
-  return document.querySelector(".js-tmp-extension-install-error");
+  await waitUntil(() => document.querySelector(".qa-tmp-extension-install-error"));
+  return document.querySelector(".qa-tmp-extension-install-error");
 }

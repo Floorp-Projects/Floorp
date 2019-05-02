@@ -32,7 +32,7 @@ class ServiceWorkersWarning extends PureComponent {
         },
         dom.p(
           {
-            className: "js-service-workers-warning",
+            className: "qa-service-workers-warning",
           },
           "about-debugging-runtime-service-workers-not-compatible",
         ),

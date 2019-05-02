@@ -32,9 +32,9 @@ add_task(async function() {
   info("Check the status of extension debug setting checkbox and inspect buttons");
   await connectToRuntime("Fancy Phone", document);
   await selectRuntime("Fancy Phone", "Lorem ipsum", document);
-  ok(!document.querySelector(".js-extension-debug-checkbox"),
+  ok(!document.querySelector(".qa-extension-debug-checkbox"),
      "Extension debug setting checkbox should not exist");
-  const buttons = document.querySelectorAll(".js-debug-target-inspect-button");
+  const buttons = document.querySelectorAll(".qa-debug-target-inspect-button");
   ok([...buttons].every(b => !b.disabled), "All inspect buttons should be enabled");
 
   await removeTab(tab);

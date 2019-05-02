@@ -47,7 +47,7 @@ add_task(async function() {
 async function testAddonsOnMockedRemoteClient(remoteClient, firefoxClient, document) {
   const extensionPane = getDebugTargetPane("Extensions", document);
   info("Check an empty target pane message is displayed");
-  ok(extensionPane.querySelector(".js-debug-target-list-empty"),
+  ok(extensionPane.querySelector(".qa-debug-target-list-empty"),
     "Extensions list is empty");
 
   info("Add an extension to the remote client");
@@ -56,7 +56,7 @@ async function testAddonsOnMockedRemoteClient(remoteClient, firefoxClient, docum
   remoteClient._eventEmitter.emit("addonListChanged");
 
   info("Wait until the extension appears");
-  await waitUntil(() => !extensionPane.querySelector(".js-debug-target-list-empty"));
+  await waitUntil(() => !extensionPane.querySelector(".qa-debug-target-list-empty"));
 
   const extensionTarget = findDebugTargetByText("Test extension name", document);
   ok(extensionTarget, "Extension target appeared for the remote runtime");

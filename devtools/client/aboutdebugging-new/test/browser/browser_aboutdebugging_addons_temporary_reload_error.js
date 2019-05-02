@@ -27,7 +27,7 @@ add_task(async function() {
   info("Click on the reload button for the invalid temporary extension");
   const waitForError =
     waitForDispatch(window.AboutDebugging.store, "TEMPORARY_EXTENSION_RELOAD_FAILURE");
-  const reloadButton = target.querySelector(".js-temporary-extension-reload-button");
+  const reloadButton = target.querySelector(".qa-temporary-extension-reload-button");
   reloadButton.click();
   await waitForError;
   ok(target.querySelector(".qa-temporary-extension-reload-error"),
@@ -43,7 +43,7 @@ add_task(async function() {
      "The error message of reloading disappears");
 
   info("Click on the remove button for the temporary extension");
-  const removeButton = target.querySelector(".js-temporary-extension-remove-button");
+  const removeButton = target.querySelector(".qa-temporary-extension-remove-button");
   removeButton.click();
 
   info("Wait until the debug target with the extension disappears");

@@ -61,7 +61,7 @@ add_task(async function testUsbClientDisconnected() {
   info("Wait until the connect button for this runtime appears");
   await waitUntil(() => {
     const item = findSidebarItemByText(USB_DEVICE_NAME, document);
-    return item && item.querySelector(".js-connect-button");
+    return item && item.querySelector(".qa-connect-button");
   });
 
   is(document.location.hash, `#/runtime/this-firefox`,
@@ -91,7 +91,7 @@ add_task(async function testNetworkClientDisconnected() {
   info("Wait until the connect button for this runtime appears");
   await waitUntil(() => {
     const item = findSidebarItemByText(NETWORK_RUNTIME_HOST, document);
-    return item && item.querySelector(".js-connect-button");
+    return item && item.querySelector(".qa-connect-button");
   });
 
   is(document.location.hash, `#/runtime/this-firefox`,

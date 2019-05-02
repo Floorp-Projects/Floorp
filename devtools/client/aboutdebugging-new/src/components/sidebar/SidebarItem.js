@@ -45,7 +45,7 @@ class SidebarItem extends PureComponent {
         )
         : Link(
           {
-            className: "sidebar-item__link js-sidebar-link",
+            className: "sidebar-item__link qa-sidebar-link",
             to,
           },
           children,
@@ -60,10 +60,10 @@ class SidebarItem extends PureComponent {
 
     return dom.li(
       {
-        className: "sidebar-item js-sidebar-item" +
+        className: "sidebar-item qa-sidebar-item" +
                    (className ? ` ${className}` : "") +
                    (isSelected ?
-                      " sidebar-item--selected js-sidebar-item-selected" :
+                      " sidebar-item--selected qa-sidebar-item-selected" :
                       ""
                    ) +
                    (to ? " sidebar-item--selectable" : ""),

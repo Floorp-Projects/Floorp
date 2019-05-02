@@ -90,10 +90,10 @@ add_task(async function() {
 
 function getStartButton(workerText, doc) {
   const target = findDebugTargetByText(workerText, doc);
-  return target ? target.querySelector(".js-start-button") : null;
+  return target ? target.querySelector(".qa-start-button") : null;
 }
 
 function getInspectButton(workerText, doc) {
   const target = findDebugTargetByText(workerText, doc);
-  return target ? target.querySelector(".js-debug-target-inspect-button") : null;
+  return target ? target.querySelector(".qa-debug-target-inspect-button") : null;
 }

@@ -25,7 +25,7 @@ class DebugTargetErrorPage extends PureComponent {
 
     return dom.article(
       {
-        className: "error-page js-error-page",
+        className: "error-page qa-error-page",
       },
       dom.h1(
         {

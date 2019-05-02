@@ -18,7 +18,7 @@ add_task(async function() {
   info("Wait until the USB sidebar item appears");
   await waitUntil(() => findSidebarItemByText(RUNTIME_DEVICE_NAME, document));
   const sidebarItem = findSidebarItemByText(RUNTIME_DEVICE_NAME, document);
-  const connectButton = sidebarItem.querySelector(".js-connect-button");
+  const connectButton = sidebarItem.querySelector(".qa-connect-button");
   ok(connectButton, "Connect button is displayed for the USB runtime");
 
   info("Click on the connect button and wait until the sidebar displays a link");

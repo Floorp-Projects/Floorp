@@ -60,7 +60,7 @@ add_task(async function() {
 
 function clickInspectButton(inspectionTarget, doc) {
   const target = findDebugTargetByText(inspectionTarget, doc);
-  const button = target.querySelector(".js-debug-target-inspect-button");
+  const button = target.querySelector(".qa-debug-target-inspect-button");
   button.click();
 }
 

@@ -67,7 +67,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
 
   _renderPushButton() {
     return this._renderButton({
-      className: "default-button default-button--micro js-push-button",
+      className: "default-button default-button--micro qa-push-button",
       disabled: this.props.runtimeDetails.isMultiE10s,
       key: "service-worker-push-button",
       labelId: "about-debugging-worker-action-push",
@@ -77,7 +77,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
 
   _renderStartButton() {
     return this._renderButton({
-      className: "default-button default-button--micro js-start-button",
+      className: "default-button default-button--micro qa-start-button",
       disabled: this.props.runtimeDetails.isMultiE10s,
       key: "service-worker-start-button",
       labelId: "about-debugging-worker-action-start",
@@ -87,7 +87,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
 
   _renderUnregisterButton() {
     return this._renderButton({
-      className: "default-button default-button--micro js-unregister-button",
+      className: "default-button default-button--micro qa-unregister-button",
       key: "service-worker-unregister-button",
       labelId: "about-debugging-worker-action-unregister",
       onClick: this.unregister.bind(this),

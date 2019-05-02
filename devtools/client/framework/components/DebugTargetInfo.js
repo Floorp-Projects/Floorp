@@ -135,7 +135,7 @@ class DebugTargetInfo extends PureComponent {
 
     return dom.span(
       {
-        className: "iconized-label js-connection-info",
+        className: "iconized-label qa-connection-info",
       },
       dom.img({ src: image, alt: `${connectionType} icon`}),
       this.props.L10N.getStr(l10nId),
@@ -171,7 +171,7 @@ class DebugTargetInfo extends PureComponent {
         className: "iconized-label",
       },
       dom.img({ src: image, alt: this.props.L10N.getStr(l10nId)}),
-      title ? dom.b({ className: "devtools-ellipsis-text js-target-title"}, title) : null,
+      title ? dom.b({ className: "devtools-ellipsis-text qa-target-title"}, title) : null,
       dom.span({ className: "devtools-ellipsis-text" }, url),
     );
   }
@@ -179,7 +179,7 @@ class DebugTargetInfo extends PureComponent {
   render() {
     return dom.header(
       {
-        className: "debug-target-info js-debug-target-info",
+        className: "debug-target-info qa-debug-target-info",
       },
       this.shallRenderConnection() ? this.renderConnection() : null,
       this.renderRuntime(),

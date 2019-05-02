@@ -37,7 +37,7 @@ class DebugTargetList extends PureComponent {
       },
       dom.p(
         {
-          className: "js-debug-target-list-empty",
+          className: "qa-debug-target-list-empty",
         },
         "Nothing yet."
       )
@@ -57,7 +57,7 @@ class DebugTargetList extends PureComponent {
       ? this.renderEmptyList()
       : dom.ul(
         {
-          className: "debug-target-list js-debug-target-list",
+          className: "debug-target-list qa-debug-target-list",
         },
         targets.map((target, key) =>
           DebugTargetItem({
