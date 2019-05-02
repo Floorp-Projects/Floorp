@@ -1,5 +1,6 @@
 "use strict";
 
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
@@ -7,7 +8,9 @@ function run_test() {
   run_next_test();
 }
 
-add_task(async function test_create_old_datastore() {
+add_task({
+  skip_if: () => !AppConstants.MOZ_NEW_XULSTORE,
+}, async function test_create_old_datastore() {
   const path = OS.Path.join(OS.Constants.Path.profileDir, "xulstore.json");
 
   const xulstoreJSON = {
@@ -33,8 +36,10 @@ add_task(async function test_create_old_datastore() {
   await OS.File.writeAtomic(path, JSON.stringify(xulstoreJSON));
 });
 
-add_task(async function test_get_values() {
-  // We wait until now to import XULStore.jsm to ensure we've created
+add_task({
+  skip_if: () => !AppConstants.MOZ_NEW_XULSTORE,
+}, async function test_get_values() {
+  // We wait until now to import XULStore to ensure we've created
   // the old datastore, as importing that module will initiate the attempt
   // to migrate the old datastore to the new one.
   const {XULStore} = ChromeUtils.import("resource://gre/modules/XULStore.jsm");

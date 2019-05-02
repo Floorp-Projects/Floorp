@@ -24,6 +24,7 @@ cranelift_none = ["gkrust-shared/cranelift_none"]
 gecko_profiler = ["gkrust-shared/gecko_profiler"]
 gecko_profiler_parse_elf = ["gkrust-shared/gecko_profiler_parse_elf"]
 bitsdownload = ["gkrust-shared/bitsdownload"]
+new_xulstore = ["gkrust-shared/new_xulstore"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }

@@ -12,6 +12,11 @@
 
 const EXPORTED_SYMBOLS = ["XULStore"];
 
+// Services.xulStore loads this module and returns its `XULStore` symbol
+// when this implementation of XULStore is enabled, so using it here
+// would loop infinitely.  But the mozilla/use-services rule is a good
+// requiremnt for every other consumer of XULStore.
+// eslint-disable-next-line mozilla/use-services
 const xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
 
 // Enables logging.

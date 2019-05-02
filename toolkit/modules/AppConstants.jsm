@@ -350,4 +350,11 @@ this.AppConstants = Object.freeze({
 #endif
 
   TELEMETRY_PING_FORMAT_VERSION: @TELEMETRY_PING_FORMAT_VERSION@,
+
+  MOZ_NEW_XULSTORE:
+#ifdef MOZ_NEW_XULSTORE
+    true,
+#else
+    false,
+#endif
 });
