@@ -292,13 +292,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
      "getInt8", "getUint8", "getInt16", "getUint16",
      "getInt32", "getUint32", "getFloat32", "getFloat64",
      "setInt8", "setUint8", "setInt16", "setUint16",
-     "setInt32", "setUint32", "setFloat32", "setFloat64"];
-  if (isNightlyBuild) {
-    for (const p of ["getBigInt64", "getBigUint64",
-                     "setBigInt64", "setBigUint64"]) {
-      gPrototypeProperties['DataView'].push(p)
-    }
-  }
+     "setInt32", "setUint32", "setFloat32", "setFloat64",
+     "getBigInt64", "getBigUint64", "setBigInt64", "setBigUint64"]
   gConstructorProperties['DataView'] = constructorProps([]);
 
   // Sort an array that may contain symbols as well as strings.
@@ -1089,18 +1084,10 @@ for (var prop of props) {
         is(typeof x, 'number', `typeof ${f} is number for "${constructor}"`);
       }
 
-      if (isNightlyBuild) {
-        for (const f of ["getBigInt64", "getBigUint64"]) {
-          let x = t[f](0);
-          is(x, BigInt(0), `${f} is 0n for "${constructor}"`);
-          is(typeof x, 'bigint', `typeof ${f} is bigint for "${constructor}"`);
-        }
-      } else {
-        for (const f of ["getBigInt64", "getBigUint64",
-                         "setBigInt64", "setBugUint64"]) {
-          is(t[f], undefined, `${constructor} has no "${f}"`);
-          ok(!(f in t), `no "${f}" in ${constructor}`);
-        }
+      for (const f of ["getBigInt64", "getBigUint64"]) {
+        let x = t[f](0);
+        is(x, BigInt(0), `${f} is 0n for "${constructor}"`);
+        is(typeof x, 'bigint', `typeof ${f} is bigint for "${constructor}"`);
       }
 
       for (let i = 0; i < set.length; i++) {
@@ -1108,11 +1095,9 @@ for (var prop of props) {
         is(t[get[i]](0), 13, `${get[i]}(0) afer ${set[i]}(0, 13) is 13 for "${constructor}"`);
       }
 
-      if (isNightlyBuild) {
-        for (const k of ["BigInt64", "BigUint64"]) {
-          t["set" + k](0, BigInt(13));
-          is(t["get" + k](0), BigInt(13), `get${k}(0) afer set${k}(0, 13n) is 13n for "${constructor}"`);
-        }
+      for (const k of ["BigInt64", "BigUint64"]) {
+        t["set" + k](0, BigInt(13));
+        is(t["get" + k](0), BigInt(13), `get${k}(0) afer set${k}(0, 13n) is 13n for "${constructor}"`);
       }
     }
   }
