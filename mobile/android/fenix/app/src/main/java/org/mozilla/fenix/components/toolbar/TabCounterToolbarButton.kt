@@ -24,7 +24,7 @@ class TabCounterToolbarButton(
     private var reference: WeakReference<TabCounter> = WeakReference<TabCounter>(null)
 
     override fun createView(parent: ViewGroup): View {
-        sessionManager.register(sessionManagerObserver)
+        sessionManager.register(sessionManagerObserver, view = parent)
 
         val view = TabCounter(parent.context).apply {
             reference = WeakReference(this)
