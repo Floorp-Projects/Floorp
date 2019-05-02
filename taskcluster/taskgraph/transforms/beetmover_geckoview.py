@@ -27,6 +27,10 @@ _ARTIFACT_ID_PER_PLATFORM = {
     'android-api-16': 'geckoview{update_channel}-armeabi-v7a',
     'android-x86': 'geckoview{update_channel}-x86',
     'android-x86_64': 'geckoview{update_channel}-x86_64',
+    'android-aarch64-beta': 'geckoview-beta-arm64-v8a',
+    'android-api-16-beta': 'geckoview-beta-armeabi-v7a',
+    'android-x86-beta': 'geckoview-beta-x86',
+    'android-x86_64-beta': 'geckoview-beta-x86_64',
 }
 
 _MOZ_UPDATE_CHANNEL_PER_BRANCH = {

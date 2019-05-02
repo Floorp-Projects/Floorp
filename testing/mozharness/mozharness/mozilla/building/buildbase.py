@@ -379,6 +379,7 @@ class BuildOptionParser(object):
         'aarch64-beta': 'builds/releng_sub_%s_configs/%s_aarch64_beta.py',
         'aarch64-beta-debug': 'builds/releng_sub_%s_configs/%s_aarch64_beta_debug.py',
         'aarch64-pgo': 'builds/releng_sub_%s_configs/%s_aarch64_pgo.py',
+        'aarch64-beta-pgo': 'builds/releng_sub_%s_configs/%s_aarch64_beta_pgo.py',
         'aarch64-debug': 'builds/releng_sub_%s_configs/%s_aarch64_debug.py',
         'android-test': 'builds/releng_sub_%s_configs/%s_test.py',
         'android-test-ccov': 'builds/releng_sub_%s_configs/%s_test_ccov.py',
