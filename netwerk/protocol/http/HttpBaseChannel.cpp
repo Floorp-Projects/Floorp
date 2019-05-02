@@ -77,6 +77,8 @@
 #include "nsHttpChannel.h"
 #include "nsRedirectHistoryEntry.h"
 #include "nsServerTiming.h"
+#include "nsIURIMutator.h"
+#include "mozilla/Tokenizer.h"
 
 #include <algorithm>
 #include "HttpBaseChannel.h"
@@ -211,8 +213,6 @@ HttpBaseChannel::HttpBaseChannel()
       mInitialRwin(0),
       mProxyResolveFlags(0),
       mContentDispositionHint(UINT32_MAX),
-      mOriginalReferrerPolicy(NS_GetDefaultReferrerPolicy()),
-      mReferrerPolicy(mOriginalReferrerPolicy),
       mCorsMode(nsIHttpChannelInternal::CORS_MODE_NO_CORS),
       mRedirectMode(nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW),
       mLastRedirectFlags(0),
@@ -291,7 +291,6 @@ void HttpBaseChannel::ReleaseMainThreadOnlyReferences() {
   arrayToRelease.AppendElement(mLoadInfo.forget());
   arrayToRelease.AppendElement(mCallbacks.forget());
   arrayToRelease.AppendElement(mProgressSink.forget());
-  arrayToRelease.AppendElement(mReferrer.forget());
   arrayToRelease.AppendElement(mApplicationCache.forget());
   arrayToRelease.AppendElement(mAPIRedirectToURI.forget());
   arrayToRelease.AppendElement(mProxyURI.forget());
@@ -1570,351 +1569,70 @@ HttpBaseChannel::SetRequestMethod(const nsACString& aMethod) {
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetReferrer(nsIURI** referrer) {
-  NS_ENSURE_ARG_POINTER(referrer);
-  *referrer = mReferrer;
-  NS_IF_ADDREF(*referrer);
+HttpBaseChannel::GetReferrerInfo(nsIReferrerInfo** aReferrerInfo) {
+  NS_ENSURE_ARG_POINTER(aReferrerInfo);
+  *aReferrerInfo = do_AddRef(mReferrerInfo).take();
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HttpBaseChannel::SetReferrer(nsIURI* referrer) {
-  bool isPrivate = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  return SetReferrerWithPolicy(
-      referrer, NS_GetDefaultReferrerPolicy(this, mURI, isPrivate));
-}
-
-NS_IMETHODIMP
-HttpBaseChannel::GetReferrerPolicy(uint32_t* referrerPolicy) {
-  NS_ENSURE_ARG_POINTER(referrerPolicy);
-  *referrerPolicy = mReferrerPolicy;
-  return NS_OK;
-}
-
-/* Computing whether our URI is cross-origin may be expensive, so please do
- * that in cases where we're going to use this information later on.
- */
-bool HttpBaseChannel::IsCrossOriginWithReferrer() {
-  nsresult rv;
-  nsCOMPtr<nsIURI> triggeringURI;
-  if (mLoadInfo) {
-    nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-        mLoadInfo->TriggeringPrincipal();
-    if (triggeringPrincipal) {
-      triggeringPrincipal->GetURI(getter_AddRefs(triggeringURI));
-    }
-  }
-  if (triggeringURI) {
-    if (LOG_ENABLED()) {
-      nsAutoCString triggeringURISpec;
-      triggeringURI->GetAsciiSpec(triggeringURISpec);
-      LOG(("triggeringURI=%s\n", triggeringURISpec.get()));
-    }
-    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-    bool isPrivateWin = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-    rv = ssm->CheckSameOriginURI(triggeringURI, mURI, false, isPrivateWin);
-    return (NS_FAILED(rv));
-  }
-
-  LOG(
-      ("no triggering principal available via loadInfo, assuming load is "
-       "cross-origin"));
-  return true;
-}
-
-NS_IMETHODIMP
-HttpBaseChannel::SetReferrerWithPolicy(nsIURI* referrer,
-                                       uint32_t referrerPolicy) {
+nsresult HttpBaseChannel::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo,
+                                          bool aClone, bool aCompute) {
   ENSURE_CALLED_BEFORE_CONNECT();
 
-  nsIURI* originalReferrer = referrer;
-  uint32_t originalReferrerPolicy = referrerPolicy;
-
-  mReferrerPolicy = referrerPolicy;
+  mReferrerInfo = aReferrerInfo;
 
   // clear existing referrer, if any
-  mReferrer = nullptr;
-  nsresult rv = mRequestHead.ClearHeader(nsHttp::Referer);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (mReferrerPolicy == REFERRER_POLICY_UNSET) {
-    bool isPrivate = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-    mReferrerPolicy = NS_GetDefaultReferrerPolicy(this, mURI, isPrivate);
-  }
-
-  if (!referrer) {
-    return NS_OK;
-  }
-
-  // Don't send referrer at all when the meta referrer setting is "no-referrer"
-  if (mReferrerPolicy == REFERRER_POLICY_NO_REFERRER) {
-    return NS_OK;
-  }
-
-  // 0: never send referer
-  // 1: send referer for direct user action
-  // 2: always send referer
-  uint32_t userReferrerLevel = gHttpHandler->ReferrerLevel();
-
-  // false: use real referrer
-  // true: spoof with URI of the current request
-  bool userSpoofReferrerSource = gHttpHandler->SpoofReferrerSource();
-
-  // false: use real referrer when leaving .onion
-  // true: use an empty referrer
-  bool userHideOnionReferrerSource = gHttpHandler->HideOnionReferrerSource();
-
-  // 0: send referer no matter what
-  // 1: send referer ONLY when base domains match
-  // 2: send referer ONLY when hosts match
-  int userReferrerXOriginPolicy = gHttpHandler->ReferrerXOriginPolicy();
-
-  // check referrer blocking pref
-  uint32_t referrerLevel;
-  if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
-    referrerLevel = 1;  // user action
-  } else {
-    referrerLevel = 2;  // inline content
-  }
-  if (userReferrerLevel < referrerLevel) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> referrerGrip;
-  bool match;
-
-  // Enforce Referrer whitelist
-  if (!IsReferrerSchemeAllowed(referrer)) {
-    return NS_OK;  // kick out....
-  }
-
-  //
-  // Handle secure referrals.
-  //
-  // Support referrals from a secure server if this is a secure site
-  // and (optionally) if the host names are the same.
-  //
-  rv = referrer->SchemeIs("https", &match);
-  if (NS_FAILED(rv)) return rv;
-
-  if (match) {
-    rv = mURI->SchemeIs("https", &match);
-    if (NS_FAILED(rv)) return rv;
-
-    // It's ok to send referrer for https-to-http scenarios if the referrer
-    // policy is "unsafe-url", "origin", or "origin-when-cross-origin".
-    if (mReferrerPolicy != REFERRER_POLICY_UNSAFE_URL &&
-        mReferrerPolicy != REFERRER_POLICY_ORIGIN_WHEN_XORIGIN &&
-        mReferrerPolicy != REFERRER_POLICY_ORIGIN) {
-      // in other referrer policies, https->http is not allowed...
-      if (!match) return NS_OK;
-    }
-  }
-
-  nsCOMPtr<nsIURI> clone;
-  //
-  // we need to clone the referrer, so we can:
-  //  (1) modify it
-  //  (2) keep a reference to it after returning from this function
-  //
-  // Strip away any fragment per RFC 2616 section 14.36
-  // and Referrer Policy section 6.3.5.
-  rv = NS_GetURIWithoutRef(referrer, getter_AddRefs(clone));
-  if (NS_FAILED(rv)) return rv;
-
-  nsAutoCString currentHost;
-  nsAutoCString referrerHost;
-
-  rv = mURI->GetAsciiHost(currentHost);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = clone->GetAsciiHost(referrerHost);
-  if (NS_FAILED(rv)) return rv;
-
-  // Send an empty referrer if leaving a .onion domain.
-  if (userHideOnionReferrerSource && !currentHost.Equals(referrerHost) &&
-      StringEndsWith(referrerHost, NS_LITERAL_CSTRING(".onion"))) {
-    return NS_OK;
-  }
-
-  // check policy for sending ref only when hosts match
-  if (userReferrerXOriginPolicy == 2 && !currentHost.Equals(referrerHost))
-    return NS_OK;
-
-  if (userReferrerXOriginPolicy == 1) {
-    nsAutoCString currentDomain = currentHost;
-    nsAutoCString referrerDomain = referrerHost;
-    uint32_t extraDomains = 0;
-    nsCOMPtr<nsIEffectiveTLDService> eTLDService =
-        do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-    if (eTLDService) {
-      rv = eTLDService->GetBaseDomain(mURI, extraDomains, currentDomain);
-      if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
-          rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
-        // mURI is either an IP address, an alias such as 'localhost', an eTLD
-        // such as 'co.uk', or the empty string. Uses the normalized host in
-        // such cases.
-        rv = mURI->GetAsciiHost(currentDomain);
-      }
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      rv = eTLDService->GetBaseDomain(clone, extraDomains, referrerDomain);
-      if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
-          rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
-        // clone is either an IP address, an alias such as 'localhost', an eTLD
-        // such as 'co.uk', or the empty string. Uses the normalized host in
-        // such cases.
-        rv = clone->GetAsciiHost(referrerDomain);
-      }
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-
-    // check policy for sending only when effective top level domain matches.
-    // this falls back on using host if eTLDService does not work
-    if (!currentDomain.Equals(referrerDomain)) return NS_OK;
-  }
-
-  // send spoofed referrer if desired
-  if (userSpoofReferrerSource) {
-    nsCOMPtr<nsIURI> mURIclone;
-    rv = NS_GetURIWithoutRef(mURI, getter_AddRefs(mURIclone));
-    if (NS_FAILED(rv)) return rv;
-    clone = mURIclone;
-    currentHost = referrerHost;
-  }
-
-  // strip away any userpass; we don't want to be giving out passwords ;-)
-  // This is required by Referrer Policy stripping algorithm.
-  nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
-  if (NS_WARN_IF(!urifixup)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIURI> exposableURI;
-  rv = urifixup->CreateExposableURI(clone, getter_AddRefs(exposableURI));
+  nsresult rv = ClearReferrerHeader();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  clone = exposableURI;
+  if (!mReferrerInfo) {
+    return NS_OK;
+  }
 
-  // 0: full URI
-  // 1: scheme+host+port+path
-  // 2: scheme+host+port
-  int userReferrerTrimmingPolicy = gHttpHandler->ReferrerTrimmingPolicy();
-  int userReferrerXOriginTrimmingPolicy =
-      gHttpHandler->ReferrerXOriginTrimmingPolicy();
+  if (aClone) {
+    mReferrerInfo = static_cast<dom::ReferrerInfo*>(aReferrerInfo)->Clone();
+  }
 
-  switch (mReferrerPolicy) {
-    case REFERRER_POLICY_SAME_ORIGIN:
-      // Don't send referrer when the request is cross-origin and policy is
-      // "same-origin".
-      if (IsCrossOriginWithReferrer()) {
-        return NS_OK;
-      }
-      break;
+  dom::ReferrerInfo* referrerInfo =
+      static_cast<dom::ReferrerInfo*>(mReferrerInfo.get());
 
-    case REFERRER_POLICY_ORIGIN:
-    case REFERRER_POLICY_STRICT_ORIGIN:
-      userReferrerTrimmingPolicy = 2;
-      break;
+  // Don't set referrerInfo if it has not been initialized.
+  if (!referrerInfo->IsInitialized()) {
+    mReferrerInfo = nullptr;
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
-    case REFERRER_POLICY_ORIGIN_WHEN_XORIGIN:
-    case REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN:
-      if (userReferrerTrimmingPolicy != 2 && IsCrossOriginWithReferrer()) {
-        // Ignore set userReferrerTrimmingPolicy if it is already the strictest
-        // policy.
-        userReferrerTrimmingPolicy = 2;
-      }
-      break;
+  if (aCompute) {
+    rv = referrerInfo->ComputeReferrer(this);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
 
-    case REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE:
-    case REFERRER_POLICY_UNSAFE_URL:
-      if (userReferrerTrimmingPolicy != 2) {
-        // Ignore set userReferrerTrimmingPolicy if it is already the strictest
-        // policy. Apply the user cross-origin trimming policy if it's more
-        // restrictive than the general one.
-        if (userReferrerXOriginTrimmingPolicy != 0 &&
-            IsCrossOriginWithReferrer()) {
-          userReferrerTrimmingPolicy = std::max(
-              userReferrerTrimmingPolicy, userReferrerXOriginTrimmingPolicy);
-        }
-      }
-
-      break;
-
-    case REFERRER_POLICY_NO_REFERRER:
-    case REFERRER_POLICY_UNSET:
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected value");
-      break;
+  nsCOMPtr<nsIURI> computedReferrer = mReferrerInfo->GetComputedReferrer();
+  if (!computedReferrer) {
+    return NS_OK;
   }
 
   nsAutoCString spec;
-  // check how much referer to send
-  if (userReferrerTrimmingPolicy) {
-    // All output strings start with: scheme+host+port
-    // We want the IDN-normalized PrePath.  That's not something currently
-    // available and there doesn't yet seem to be justification for adding it to
-    // the interfaces, so just build it up ourselves from scheme+AsciiHostPort
-    nsAutoCString scheme, asciiHostPort;
-    rv = clone->GetScheme(scheme);
-    if (NS_FAILED(rv)) return rv;
-    spec = scheme;
-    spec.AppendLiteral("://");
-    // Note we explicitly cleared UserPass above, so do not need to build it.
-    rv = clone->GetAsciiHostPort(asciiHostPort);
-    if (NS_FAILED(rv)) return rv;
-    spec.Append(asciiHostPort);
-
-    switch (userReferrerTrimmingPolicy) {
-      case 1: {  // scheme+host+port+path
-        nsCOMPtr<nsIURL> url(do_QueryInterface(clone));
-        if (url) {
-          nsAutoCString path;
-          rv = url->GetFilePath(path);
-          if (NS_FAILED(rv)) return rv;
-          spec.Append(path);
-          rv = NS_MutateURI(url)
-                   .SetQuery(EmptyCString())
-                   .SetRef(EmptyCString())
-                   .Finalize(clone);
-          if (NS_FAILED(rv)) return rv;
-          break;
-        }
-        // No URL, so fall through to truncating the path and any query/ref off
-        // as well.
-      }
-        MOZ_FALLTHROUGH;
-      default
-          :    // (Pref limited to [0,2] enforced by clamp, MOZ_CRASH overkill.)
-      case 2:  // scheme+host+port+/
-        spec.AppendLiteral("/");
-        // This nukes any query/ref present as well in the case of nsStandardURL
-        rv =
-            NS_MutateURI(clone).SetPathQueryRef(EmptyCString()).Finalize(clone);
-        if (NS_FAILED(rv)) return rv;
-        break;
-    }
-  } else {
-    // use the full URI
-    rv = clone->GetAsciiSpec(spec);
-    if (NS_FAILED(rv)) return rv;
+  rv = computedReferrer->GetSpec(spec);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  // finally, remember the referrer URI and set the Referer header.
-  rv = SetRequestHeader(NS_LITERAL_CSTRING("Referer"), spec, false);
-  if (NS_FAILED(rv)) return rv;
+  return SetReferrerHeader(spec);
+}
 
-  mOriginalReferrerPolicy = originalReferrerPolicy;
-  mOriginalReferrer = originalReferrer;
-  mReferrer = clone;
-  return NS_OK;
+NS_IMETHODIMP
+HttpBaseChannel::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
+  return SetReferrerInfo(aReferrerInfo, true, true);
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetReferrerInfoWithoutClone(nsIReferrerInfo* aReferrerInfo) {
+  return SetReferrerInfo(aReferrerInfo, false, true);
 }
 
 // Return the channel's proxy URI, or if it doesn't exist, the
@@ -3203,8 +2921,13 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
 
   nsCString remoteAddress;
   Unused << GetRemoteAddress(remoteAddress);
+  nsCOMPtr<nsIURI> referrer;
+  if (mReferrerInfo) {
+    referrer = mReferrerInfo->GetComputedReferrer();
+  }
+
   nsCOMPtr<nsIRedirectHistoryEntry> entry =
-      new nsRedirectHistoryEntry(GetURIPrincipal(), mReferrer, remoteAddress);
+      new nsRedirectHistoryEntry(GetURIPrincipal(), referrer, remoteAddress);
 
   newLoadInfo->AppendRedirectHistoryEntry(entry, isInternalRedirect);
 
@@ -3331,21 +3054,6 @@ void HttpBaseChannel::AddCookiesToRequest() {
   // If we are in the child process, we want the parent seeing any
   // cookie headers that might have been set by SetRequestHeader()
   SetRequestHeader(nsDependentCString(nsHttp::Cookie), cookie, false);
-}
-
-/* static */
-bool HttpBaseChannel::IsReferrerSchemeAllowed(nsIURI* aReferrer) {
-  NS_ENSURE_TRUE(aReferrer, false);
-
-  nsAutoCString scheme;
-  nsresult rv = aReferrer->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (scheme.EqualsIgnoreCase("https") || scheme.EqualsIgnoreCase("http") ||
-      scheme.EqualsIgnoreCase("ftp")) {
-    return true;
-  }
-  return false;
 }
 
 /* static */
@@ -3507,11 +3215,12 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     rv = httpChannel->SetRequestMethod(method);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
-  // convey the referrer if one was used for this channel to the next one
-  if (mReferrer) {
-    rv = httpChannel->SetReferrerWithPolicy(mReferrer, mReferrerPolicy);
+
+  if (mReferrerInfo) {
+    rv = httpChannel->SetReferrerInfo(mReferrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
+
   // convey the mAllowSTS flags
   rv = httpChannel->SetAllowSTS(mAllowSTS);
   MOZ_ASSERT(NS_SUCCEEDED(rv));

@@ -15,6 +15,7 @@
 #include "nsIInputStreamChannel.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/NullPrincipal.h"
+#include "nsIReferrerInfo.h"
 
 NS_IMPL_ADDREF(nsViewSourceChannel)
 NS_IMPL_RELEASE(nsViewSourceChannel)
@@ -759,29 +760,22 @@ nsViewSourceChannel::SetRequestMethod(const nsACString& aRequestMethod) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetReferrer(nsIURI** aReferrer) {
+nsViewSourceChannel::GetReferrerInfo(nsIReferrerInfo** aReferrerInfo) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->GetReferrer(aReferrer);
+                       : mHttpChannel->GetReferrerInfo(aReferrerInfo);
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::SetReferrer(nsIURI* aReferrer) {
+nsViewSourceChannel::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->SetReferrer(aReferrer);
+                       : mHttpChannel->SetReferrerInfo(aReferrerInfo);
 }
 
-NS_IMETHODIMP
-nsViewSourceChannel::GetReferrerPolicy(uint32_t* aReferrerPolicy) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->GetReferrerPolicy(aReferrerPolicy);
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::SetReferrerWithPolicy(nsIURI* aReferrer,
-                                           uint32_t aReferrerPolicy) {
+NS_IMETHODIMP nsViewSourceChannel::SetReferrerInfoWithoutClone(
+    nsIReferrerInfo* aReferrerInfo) {
   return !mHttpChannel
              ? NS_ERROR_NULL_POINTER
-             : mHttpChannel->SetReferrerWithPolicy(aReferrer, aReferrerPolicy);
+             : mHttpChannel->SetReferrerInfoWithoutClone(aReferrerInfo);
 }
 
 NS_IMETHODIMP

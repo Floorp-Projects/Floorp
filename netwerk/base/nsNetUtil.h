@@ -376,8 +376,7 @@ nsresult NS_NewStreamLoaderInternal(
     nsIPrincipal* aLoadingPrincipal, nsSecurityFlags aSecurityFlags,
     nsContentPolicyType aContentPolicyType, nsILoadGroup* aLoadGroup = nullptr,
     nsIInterfaceRequestor* aCallbacks = nullptr,
-    nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL,
-    nsIURI* aReferrer = nullptr);
+    nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL);
 
 nsresult NS_NewStreamLoader(nsIStreamLoader** outStream, nsIURI* aUri,
                             nsIStreamLoaderObserver* aObserver,
@@ -386,8 +385,7 @@ nsresult NS_NewStreamLoader(nsIStreamLoader** outStream, nsIURI* aUri,
                             nsContentPolicyType aContentPolicyType,
                             nsILoadGroup* aLoadGroup = nullptr,
                             nsIInterfaceRequestor* aCallbacks = nullptr,
-                            nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL,
-                            nsIURI* aReferrer = nullptr);
+                            nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL);
 
 nsresult NS_NewStreamLoader(nsIStreamLoader** outStream, nsIURI* aUri,
                             nsIStreamLoaderObserver* aObserver,
@@ -396,8 +394,7 @@ nsresult NS_NewStreamLoader(nsIStreamLoader** outStream, nsIURI* aUri,
                             nsContentPolicyType aContentPolicyType,
                             nsILoadGroup* aLoadGroup = nullptr,
                             nsIInterfaceRequestor* aCallbacks = nullptr,
-                            nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL,
-                            nsIURI* aReferrer = nullptr);
+                            nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL);
 
 nsresult NS_NewSyncStreamListener(nsIStreamListener** result,
                                   nsIInputStream** stream);
@@ -462,9 +459,8 @@ nsresult NS_GetURLSpecFromDir(nsIFile* file, nsACString& url,
  * referrer from the property docshell.internalReferrer, and if that doesn't
  * work and the channel is an nsIHTTPChannel, we check it's referrer property.
  *
- * @returns NS_ERROR_NOT_AVAILABLE if no referrer is available.
  */
-nsresult NS_GetReferrerFromChannel(nsIChannel* channel, nsIURI** referrer);
+void NS_GetReferrerFromChannel(nsIChannel* channel, nsIURI** referrer);
 
 nsresult NS_ParseRequestContentType(const nsACString& rawContentType,
                                     nsCString& contentType,
@@ -924,20 +920,6 @@ nsresult NS_ShouldSecureUpgrade(
 nsresult NS_GetSecureUpgradedURI(nsIURI* aURI, nsIURI** aUpgradedURI);
 
 nsresult NS_CompareLoadInfoAndLoadContext(nsIChannel* aChannel);
-
-/**
- * Return default referrer policy which is controlled by user
- * prefs:
- * network.http.referer.defaultPolicy for regular mode
- * network.http.referer.defaultPolicy.trackers for third-party trackers
- * in regular mode
- * network.http.referer.defaultPolicy.pbmode for private mode
- * network.http.referer.defaultPolicy.trackers.pbmode for third-party trackers
- * in private mode
- */
-uint32_t NS_GetDefaultReferrerPolicy(nsIHttpChannel* aChannel = nullptr,
-                                     nsIURI* aURI = nullptr,
-                                     bool privateBrowsing = false);
 
 /**
  * Return true if this channel should be classified by the URL classifier.
