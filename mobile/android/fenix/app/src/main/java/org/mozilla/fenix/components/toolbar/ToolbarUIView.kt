@@ -43,8 +43,9 @@ class ToolbarUIView(
         .inflate(R.layout.layout_url_background, container, false)
 
     init {
-        val session = sessionId?.let { view.context.components.core.sessionManager.findSessionById(sessionId) }
-            ?: view.context.components.core.sessionManager.selectedSession
+        val sessionManager = view.context.components.core.sessionManager
+        val session = sessionId?.let { sessionManager.findSessionById(it) }
+                ?: sessionManager.selectedSession
 
         view.apply {
             setOnUrlCommitListener {
@@ -88,7 +89,10 @@ class ToolbarUIView(
             val isCustom = session?.isCustomTabSession() ?: false
 
             val menuToolbar = if (isCustom) {
-                CustomTabToolbarMenu(this,
+                CustomTabToolbarMenu(
+                    this,
+                    sessionManager,
+                    sessionId,
                     onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
                 )
             } else {

@@ -37,6 +37,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
+import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionFeature
@@ -121,7 +122,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         savedInstanceState: Bundle?
     ): View? {
         require(arguments != null)
-        customTabSessionId = BrowserFragmentArgs.fromBundle(arguments!!).customTabSessionId
+        customTabSessionId = arguments?.getString(IntentProcessor.ACTIVE_SESSION_ID)
 
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
@@ -515,10 +516,10 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     private fun handleToolbarItemInteraction(action: SearchAction.ToolbarMenuItemTapped) {
         val sessionUseCases = requireComponents.useCases.sessionUseCases
         Do exhaustive when (action.item) {
-            ToolbarMenu.Item.Back -> sessionUseCases.goBack.invoke()
-            ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke()
-            ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke()
-            ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading.invoke()
+            ToolbarMenu.Item.Back -> sessionUseCases.goBack.invoke(getSessionById())
+            ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke(getSessionById())
+            ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke(getSessionById())
+            ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading.invoke(getSessionById())
             ToolbarMenu.Item.Settings -> Navigation.findNavController(toolbarComponent.getView())
                 .navigate(BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment())
             ToolbarMenu.Item.Library -> Navigation.findNavController(toolbarComponent.getView())

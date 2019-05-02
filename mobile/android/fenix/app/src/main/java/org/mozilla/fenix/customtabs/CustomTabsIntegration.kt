@@ -25,6 +25,8 @@ class CustomTabsIntegration(
     private val customTabToolbarMenu by lazy {
         CustomTabToolbarMenu(
             context,
+            sessionManager,
+            sessionId,
             onItemTapped = onItemTapped
         )
     }

@@ -10,6 +10,8 @@ import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
@@ -17,9 +19,14 @@ import org.mozilla.fenix.ext.components
 
 class CustomTabToolbarMenu(
     private val context: Context,
+    private val sessionManager: SessionManager,
+    private val sessionId: String?,
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : ToolbarMenu {
     override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
+
+    private val session: Session?
+        get() = sessionId?.let { sessionManager.findSessionById(it) }
 
     override val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.TwoStateButton(
@@ -30,7 +37,7 @@ class CustomTabToolbarMenu(
                 context
             ),
             isInPrimaryState = {
-                context.components.core.sessionManager.selectedSession?.canGoBack ?: true
+                session?.canGoBack ?: true
             },
             secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
                 R.attr.neutral,
@@ -49,7 +56,7 @@ class CustomTabToolbarMenu(
                 context
             ),
             isInPrimaryState = {
-                context.components.core.sessionManager.selectedSession?.canGoForward ?: true
+                session?.canGoForward ?: true
             },
             secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
                 R.attr.neutral,
@@ -68,7 +75,7 @@ class CustomTabToolbarMenu(
                 context
             ),
             isInPrimaryState = {
-                val loading = context.components.core.sessionManager.selectedSession?.loading
+                val loading = session?.loading
                 loading == false
             },
             secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
@@ -79,7 +86,7 @@ class CustomTabToolbarMenu(
             ),
             disableInSecondaryState = false
         ) {
-            if (context.components.core.sessionManager.selectedSession?.loading == true) {
+            if (session?.loading == true) {
                 onItemTapped.invoke(ToolbarMenu.Item.Stop)
             } else {
                 onItemTapped.invoke(ToolbarMenu.Item.Reload)

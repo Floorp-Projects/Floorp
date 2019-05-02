@@ -104,7 +104,7 @@
             android:id="@+id/action_browserFragment_to_searchFragment"
             app:destination="@id/searchFragment" />
         <argument
-            android:name="custom_tab_session_id"
+            android:name="activeSessionId"
             app:argType="string"
             app:nullable="true" />
         <action
