@@ -1820,6 +1820,13 @@ class EditorBase : public nsIEditor,
       // this case.
       case NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE:
         return NS_OK;
+      // If the editing action is canceled by event listeners, editor needs
+      // to stop handling it.  However, editor shouldn't return error for
+      // the callers but they should be able to distinguish whether it's
+      // canceled or not.  Although it's DOM specific code, let's return
+      // DOM_SUCCESS_DOM_NO_OPERATION here.
+      case NS_ERROR_EDITOR_ACTION_CANCELED:
+        return NS_SUCCESS_DOM_NO_OPERATION;
       default:
         return aRv;
     }
