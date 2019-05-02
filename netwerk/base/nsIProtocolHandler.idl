@@ -330,4 +330,10 @@ interface nsIProtocolHandler : nsISupports
      * The URIs for this protocol can not be loaded into private contexts.
      */
     const unsigned long URI_DISALLOW_IN_PRIVATE_CONTEXT = (1 << 22);
+
+    /**
+     * This protocol handler forbids accessing cookies e.g. for mail related
+     * protocols. Only used in Mailnews (comm-central).
+     */
+    const unsigned long URI_FORBIDS_COOKIE_ACCESS = (1 << 23);
 };
