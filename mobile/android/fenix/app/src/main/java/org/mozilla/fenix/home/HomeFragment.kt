@@ -179,7 +179,6 @@ class HomeFragment : Fragment(), CoroutineScope {
         }
 
         sessionObserver = subscribeToSessions()
-        sessionObserver?.onSessionsRestored()
     }
 
     override fun onStop() {
