@@ -759,11 +759,11 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
   _wrapURIChangeCall(fn) {
     if (!this.isRemoteBrowser) {
-      this.inLoadURI = true;
+      this.isNavigating = true;
       try {
         fn();
       } finally {
-        this.inLoadURI = false;
+        this.isNavigating = false;
       }
     } else {
       fn();
@@ -1022,7 +1022,7 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   }
 
   didStartLoadSinceLastUserTyping() {
-    return !this.inLoadURI &&
+    return !this.isNavigating &&
       this.urlbarChangeTracker._startedLoadSinceLastUserTyping;
   }
 
