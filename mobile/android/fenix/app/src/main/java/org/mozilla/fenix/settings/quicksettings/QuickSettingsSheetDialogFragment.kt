@@ -165,6 +165,7 @@ class QuickSettingsSheetDialogFragment : BottomSheetDialogFragment(), CoroutineS
                                 String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, it.url)
                             requireComponents.useCases.sessionUseCases.loadUrl.invoke(reportUrl)
                         }
+                        dismiss()
                     }
                     is QuickSettingsAction.ToggleTrackingProtection -> {
                         val trackingEnabled = it.trackingProtection
