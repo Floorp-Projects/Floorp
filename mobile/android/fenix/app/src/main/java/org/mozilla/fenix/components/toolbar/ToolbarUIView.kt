@@ -48,9 +48,11 @@ class ToolbarUIView(
                 ?: sessionManager.selectedSession
 
         view.apply {
+            elevation = resources.pxToDp(TOOLBAR_ELEVATION).toFloat()
+
             setOnUrlCommitListener {
                 actionEmitter.onNext(SearchAction.UrlCommitted(it, sessionId, state?.engine))
-            false
+                false
             }
             onUrlClicked = {
                 actionEmitter.onNext(SearchAction.ToolbarClicked)
@@ -61,8 +63,12 @@ class ToolbarUIView(
 
             val isCustomTabSession = (session?.isCustomTabSession() == true)
 
-            urlBoxView = if (isCustomTabSession) { null } else urlBackground
-            progressBarGravity = if (isCustomTabSession) { PROGRESS_BOTTOM } else PROGRESS_TOP
+            urlBoxView = if (isCustomTabSession) {
+                null
+            } else urlBackground
+            progressBarGravity = if (isCustomTabSession) {
+                PROGRESS_BOTTOM
+            } else PROGRESS_TOP
 
             textColor = ContextCompat.getColor(context, R.color.photonGrey30)
 
@@ -73,6 +79,7 @@ class ToolbarUIView(
                     actionEmitter.onNext(SearchAction.EditingCanceled)
                     return false
                 }
+
                 override fun onTextChanged(text: String) {
                     url = text
                     actionEmitter.onNext(SearchAction.TextChanged(text))
@@ -186,6 +193,7 @@ class ToolbarUIView(
     }
 
     companion object {
+        private const val TOOLBAR_ELEVATION = 16
         private const val PROGRESS_BOTTOM = 0
         private const val PROGRESS_TOP = 1
         const val browserActionMarginDp = 8

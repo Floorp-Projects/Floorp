@@ -4,21 +4,21 @@
 
 package org.mozilla.fenix.quickactionsheet
 
+import android.animation.ValueAnimator
 import android.content.Context
+import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
-import android.widget.LinearLayout
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.widget.NestedScrollView
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import mozilla.components.browser.toolbar.BrowserToolbar
-import org.mozilla.fenix.R
-import android.animation.ValueAnimator
-import android.os.Bundle
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageButton
+import android.widget.LinearLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.widget.NestedScrollView
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import mozilla.components.browser.toolbar.BrowserToolbar
+import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.Settings
 
 const val POSITION_SNAP_BUFFER = 1f
@@ -69,8 +69,10 @@ class QuickActionSheet @JvmOverloads constructor(
         val peakHeightMultiplier = if (duration == demoBounceAnimationLength)
             demoBounceAnimationPeekHeightMultiplier else bounceAnimationPeekHeightMultiplier
 
-        ValueAnimator.ofFloat(normalPeekHeight.toFloat(),
-            normalPeekHeight * peakHeightMultiplier)?.let {
+        ValueAnimator.ofFloat(
+            normalPeekHeight.toFloat(),
+            normalPeekHeight * peakHeightMultiplier
+        )?.let {
 
             it.addUpdateListener {
                 quickActionSheetBehavior.peekHeight = (it.animatedValue as Float).toInt()
@@ -88,18 +90,18 @@ class QuickActionSheet @JvmOverloads constructor(
         private val quickActionSheetBehavior: QuickActionSheetBehavior
     ) : View.AccessibilityDelegate() {
         private var finalState = BottomSheetBehavior.STATE_COLLAPSED
-        get() = when (quickActionSheetBehavior.state) {
-            BottomSheetBehavior.STATE_EXPANDED,
-            BottomSheetBehavior.STATE_HIDDEN,
-            BottomSheetBehavior.STATE_COLLAPSED -> {
-                quickActionSheetBehavior.state
+            get() = when (quickActionSheetBehavior.state) {
+                BottomSheetBehavior.STATE_EXPANDED,
+                BottomSheetBehavior.STATE_HIDDEN,
+                BottomSheetBehavior.STATE_COLLAPSED -> {
+                    quickActionSheetBehavior.state
+                }
+                else -> field
             }
-            else -> field
-        }
-        set(value) {
-            field = value
-            quickActionSheetBehavior.state = value
-        }
+            set(value) {
+                field = value
+                quickActionSheetBehavior.state = value
+            }
 
         override fun performAccessibilityAction(host: View?, action: Int, args: Bundle?): Boolean {
             when (action) {
@@ -123,11 +125,13 @@ class QuickActionSheet @JvmOverloads constructor(
 
         override fun onInitializeAccessibilityNodeInfo(host: View?, info: AccessibilityNodeInfo?) {
             super.onInitializeAccessibilityNodeInfo(host, info)
-            info?.addAction(when (finalState) {
-                BottomSheetBehavior.STATE_COLLAPSED,
-                BottomSheetBehavior.STATE_HIDDEN -> AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND
-                else -> AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE
-            })
+            info?.addAction(
+                when (finalState) {
+                    BottomSheetBehavior.STATE_COLLAPSED,
+                    BottomSheetBehavior.STATE_HIDDEN -> AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND
+                    else -> AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE
+                }
+            )
         }
     }
 
@@ -167,9 +171,12 @@ class QuickActionSheetBehavior(
     }
 
     private fun repositionQuickActionSheet(quickActionSheetContainer: NestedScrollView, toolbar: BrowserToolbar) {
+        val handleHeight = quickActionSheetContainer.findViewById<ImageButton>(R.id.quick_action_sheet_handle).height
         if (toolbar.translationY >= toolbar.height.toFloat() - POSITION_SNAP_BUFFER) {
-            state = STATE_HIDDEN
+            peekHeight = handleHeight
+            state = STATE_COLLAPSED
         } else if (state == STATE_HIDDEN || state == STATE_SETTLING) {
+            peekHeight = handleHeight
             state = STATE_COLLAPSED
         }
 
