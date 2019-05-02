@@ -33,6 +33,7 @@ struct ParamTraits<mozilla::OriginAttributesPattern> {
   typedef mozilla::OriginAttributesPattern paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mAppId);
     WriteParam(aMsg, aParam.mFirstPartyDomain);
     WriteParam(aMsg, aParam.mInIsolatedMozBrowser);
     WriteParam(aMsg, aParam.mPrivateBrowsingId);
@@ -41,7 +42,8 @@ struct ParamTraits<mozilla::OriginAttributesPattern> {
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mFirstPartyDomain) &&
+    return ReadParam(aMsg, aIter, &aResult->mAppId) &&
+           ReadParam(aMsg, aIter, &aResult->mFirstPartyDomain) &&
            ReadParam(aMsg, aIter, &aResult->mInIsolatedMozBrowser) &&
            ReadParam(aMsg, aIter, &aResult->mPrivateBrowsingId) &&
            ReadParam(aMsg, aIter, &aResult->mUserContextId);
