@@ -33,7 +33,7 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
   NS_DECL_NSILOADCONTEXT
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  // inIsolatedMozBrowser argumentsoverrides that in
+  // appId/inIsolatedMozBrowser arguments override those in
   // SerializedLoadContext provided by child process.
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
               dom::Element* aTopFrameElement, OriginAttributes& aAttrs)
@@ -49,7 +49,7 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
         mOriginAttributes(aAttrs) {
   }
 
-  // inIsolatedMozBrowser argument overrides that in
+  // appId/inIsolatedMozBrowser arguments override those in
   // SerializedLoadContext provided by child process.
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
               uint64_t aNestedFrameId, OriginAttributes& aAttrs)
@@ -97,7 +97,8 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
         mOriginAttributes(aAttrs) {
   }
 
-  // Constructor for creating a LoadContext with a given browser flag.
+  // Constructor for creating a LoadContext with a given principal's appId and
+  // browser flag.
   explicit LoadContext(nsIPrincipal* aPrincipal,
                        nsILoadContext* aOptionalBase = nullptr);
 

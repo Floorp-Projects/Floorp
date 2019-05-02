@@ -31,6 +31,7 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   // from our Manager().
   OriginAttributes attrs;
   attrs.mInIsolatedMozBrowser = false;
+  attrs.mAppId = nsIScriptSecurityManager::NO_APP_ID;
   attrs.SyncAttributesWithPrivateBrowsing(false);
   MutableTabContext tabContext;
   tabContext.SetTabContext(false, 0, UIStateChangeType_Set,
