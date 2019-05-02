@@ -95,8 +95,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   NS_IMETHOD AsyncOpen(nsIStreamListener* aListener) override;
 
   // HttpBaseChannel::nsIHttpChannel
-  NS_IMETHOD SetReferrerWithPolicy(nsIURI* referrer,
-                                   uint32_t referrerPolicy) override;
   NS_IMETHOD SetRequestHeader(const nsACString& aHeader,
                               const nsACString& aValue, bool aMerge) override;
   NS_IMETHOD SetEmptyRequestHeader(const nsACString& aHeader) override;
@@ -119,6 +117,8 @@ class HttpChannelChild final : public PHttpChannelChild,
   // which call NeckoChild::DeallocPHttpChannelChild()).
   void AddIPDLReference();
   void ReleaseIPDLReference();
+
+  nsresult SetReferrerHeader(const nsACString& aReferrer) override;
 
   MOZ_MUST_USE bool IsSuspended();
 

@@ -53,6 +53,7 @@
 #include "mozilla/ClearOnShutdown.h"
 
 #include "CacheControlParser.h"
+#include "ReferrerInfo.h"
 
 using namespace mozilla;
 
@@ -1275,7 +1276,8 @@ nsresult Predictor::Prefetch(nsIURI* uri, nsIURI* referrer,
     return NS_ERROR_UNEXPECTED;
   }
 
-  rv = httpChannel->SetReferrer(referrer);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(referrer);
+  rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
   NS_ENSURE_SUCCESS(rv, rv);
   // XXX - set a header here to indicate this is a prefetch?
 

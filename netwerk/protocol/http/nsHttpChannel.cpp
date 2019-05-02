@@ -2442,14 +2442,12 @@ nsresult nsHttpChannel::ProcessResponse() {
   // Let the predictor know whether this was a cacheable response or not so
   // that it knows whether or not to possibly prefetch this resource in the
   // future.
-  // We use GetReferringPage because mReferrer may not be set at all, or may
-  // not be a full URI (HttpBaseChannel::SetReferrer has the gorey details).
-  // If that's null, though, we'll fall back to mReferrer just in case (this
-  // is especially useful in xpcshell tests, where we don't have an actual
-  // pageload to get a referrer from).
+  // We use GetReferringPage because mReferrerInfo may not be set at all(this is
+  // especially useful in xpcshell tests, where we don't have an actual pageload
+  // to get a referrer from).
   nsCOMPtr<nsIURI> referrer = GetReferringPage();
-  if (!referrer) {
-    referrer = mReferrer;
+  if (!referrer && mReferrerInfo) {
+    referrer = mReferrerInfo->GetOriginalReferrer();
   }
 
   if (referrer) {
@@ -9607,7 +9605,7 @@ void nsHttpChannel::SetOriginHeader() {
   mLoadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(referrer));
 
   nsAutoCString origin("null");
-  if (referrer && IsReferrerSchemeAllowed(referrer)) {
+  if (referrer && dom::ReferrerInfo::IsReferrerSchemeAllowed(referrer)) {
     nsContentUtils::GetASCIIOrigin(referrer, origin);
   }
 
@@ -9620,7 +9618,7 @@ void nsHttpChannel::SetOriginHeader() {
       // Origin header suppressed by user setting
       return;
     }
-  } else if (gHttpHandler->HideOnionReferrerSource()) {
+  } else if (dom::ReferrerInfo::HideOnionReferrerSource()) {
     nsAutoCString host;
     if (referrer && NS_SUCCEEDED(referrer->GetAsciiHost(host)) &&
         StringEndsWith(host, NS_LITERAL_CSTRING(".onion"))) {
@@ -10223,18 +10221,24 @@ nsresult nsHttpChannel::RedirectToInterceptedChannel() {
 void nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown() {
   if (StaticPrefs::network_cookie_cookieBehavior() ==
       nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    // If our referrer has been set before, the JS/DOM caller did not
-    // previously provide us with an explicit referrer policy value and our
-    // current referrer policy is equal to the default policy if we thought the
-    // channel wasn't a third-party tracking channel, we may need to set our
-    // referrer with referrer policy once again to ensure our defaults properly
-    // take effect now.
     bool isPrivate =
         mLoadInfo && mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-    if (mOriginalReferrer && mOriginalReferrerPolicy == REFERRER_POLICY_UNSET &&
-        mReferrerPolicy ==
-            NS_GetDefaultReferrerPolicy(nullptr, nullptr, isPrivate)) {
-      SetReferrer(mOriginalReferrer);
+    // If our referrer has been set before, and our referrer policy is unset
+    // (default policy) if we thought the channel wasn't a third-party
+    // tracking channel, we may need to set our referrer with referrer policy
+    // once again to ensure our defaults properly take effect now.
+    if (mReferrerInfo) {
+      dom::ReferrerInfo* referrerInfo =
+          static_cast<dom::ReferrerInfo*>(mReferrerInfo.get());
+
+      if (referrerInfo->IsPolicyOverrided() &&
+          referrerInfo->GetReferrerPolicy() ==
+              ReferrerInfo::GetDefaultReferrerPolicy(nullptr, nullptr,
+                                                     isPrivate)) {
+        nsCOMPtr<nsIReferrerInfo> newReferrerInfo =
+            referrerInfo->CloneWithNewPolicy(RP_Unset);
+        SetReferrerInfo(newReferrerInfo, false, true);
+      }
     }
   }
 }
