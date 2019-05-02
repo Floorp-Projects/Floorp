@@ -105,7 +105,8 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   OnErrorEventHandlerNonNull* GetOnerror();
   void SetOnerror(OnErrorEventHandlerNonNull* aHandler);
 
-  void ImportScripts(const Sequence<nsString>& aScriptURLs, ErrorResult& aRv);
+  void ImportScripts(JSContext* aCx, const Sequence<nsString>& aScriptURLs,
+                     ErrorResult& aRv);
 
   int32_t SetTimeout(JSContext* aCx, Function& aHandler, const int32_t aTimeout,
                      const Sequence<JS::Value>& aArguments, ErrorResult& aRv);
