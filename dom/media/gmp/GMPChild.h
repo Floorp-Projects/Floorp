@@ -35,7 +35,7 @@ class GMPChild : public PGMPChild {
   GMPStorageChild* GetGMPStorage();
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  bool SetMacSandboxInfo(MacSandboxPluginType aPluginType);
+  bool SetMacSandboxInfo(bool aAllowWindowServer);
 #endif
 
  private:
