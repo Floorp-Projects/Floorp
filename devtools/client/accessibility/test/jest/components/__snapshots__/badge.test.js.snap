@@ -1,7 +1,3 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Badge component: basic render active 1`] = `"<button aria-pressed=\\"true\\" class=\\"audit-badge badge toggle-button checked\\">Contrast</button>"`;
-
-exports[`Badge component: basic render inactive 1`] = `"<button aria-pressed=\\"false\\" class=\\"audit-badge badge toggle-button\\">Contrast</button>"`;
-
-exports[`Badge component: toggle filter 1`] = `"<button aria-pressed=\\"false\\" class=\\"audit-badge badge toggle-button\\">Contrast</button>"`;
+exports[`Badge component: basic render 1`] = `"<span class=\\"audit-badge badge\\" title=\\"Does not meet WCAG standards for accessible text.\\" aria-label=\\"Contrast\\">Contrast</span>"`;

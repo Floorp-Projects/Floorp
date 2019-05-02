@@ -134,12 +134,7 @@ class AccessibilityTree extends Component {
   }
 
   renderValue(props) {
-    const { walker } = this.props;
-
-    return AccessibilityRowValue({
-      ...props,
-      walker,
-    });
+    return AccessibilityRowValue(props);
   }
 
   /**
