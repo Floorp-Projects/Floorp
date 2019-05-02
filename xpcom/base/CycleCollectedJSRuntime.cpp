@@ -1444,7 +1444,7 @@ void CycleCollectedJSRuntime::EnvironmentPreparer::invoke(
   nsIGlobalObject* nativeGlobal = xpc::NativeGlobal(global);
 
   // Not much we can do if we simply don't have a usable global here...
-  NS_ENSURE_TRUE_VOID(nativeGlobal && nativeGlobal->GetGlobalJSObject());
+  NS_ENSURE_TRUE_VOID(nativeGlobal && nativeGlobal->HasJSGlobal());
 
   AutoEntryScript aes(nativeGlobal, "JS-engine-initiated execution");
 
