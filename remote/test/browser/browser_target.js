@@ -26,9 +26,7 @@ add_task(async function() {
 
 async function testCDP() {
   // Start the CDP server
-  RemoteAgent.init();
-  RemoteAgent.tabs.start();
-  RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
+  await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
 
   // Retrieve the chrome-remote-interface library object
   const CDP = await getCDP();
