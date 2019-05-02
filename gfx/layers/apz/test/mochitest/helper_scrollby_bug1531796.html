@@ -10,11 +10,6 @@
   <script type="application/javascript">
 
 function* test(testDriver) {
-  if (getPlatform() == "android") {
-    ok(true, "Skipping test on Android (bug 1547435)");
-    return;
-  }
-
   const maxSteps = 20;
   let scrollPerStep = 40;
   for (let step = 0; step < maxSteps; step++) {
