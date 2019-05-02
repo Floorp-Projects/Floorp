@@ -27,7 +27,7 @@ add_task(async function() {
   await waitUntil(() => findDebugTargetByText("TEST_TAB", document));
 
   const tabTarget = findDebugTargetByText("TEST_TAB", document);
-  const inspectButton = tabTarget.querySelector(".js-debug-target-inspect-button");
+  const inspectButton = tabTarget.querySelector(".qa-debug-target-inspect-button");
   ok(inspectButton, "Inspect button for the tab is available");
 
   info("Click on the inspect button for the test tab");

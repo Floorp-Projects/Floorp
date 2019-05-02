@@ -18,7 +18,7 @@ add_task(async function() {
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   const connectSidebarItem = findSidebarItemByText("Setup", document);
-  const connectLink = connectSidebarItem.querySelector(".js-sidebar-link");
+  const connectLink = connectSidebarItem.querySelector(".qa-sidebar-link");
   ok(connectSidebarItem, "Found the Connect sidebar item");
 
   info("Open devtools on the current about:debugging tab");
@@ -34,7 +34,7 @@ add_task(async function() {
   await waitForDispatch(store, "UNWATCH_RUNTIME_SUCCESS");
 
   info("Wait until Connect page is displayed");
-  await waitUntil(() => document.querySelector(".js-connect-page"));
+  await waitUntil(() => document.querySelector(".qa-connect-page"));
 
   const markupViewElement = inspector.panelDoc.getElementById("markup-box");
   ok(markupViewElement, "Inspector is still rendered");

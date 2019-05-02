@@ -66,7 +66,7 @@ class RuntimeActions extends PureComponent {
            },
            dom.button(
              {
-               className: "default-button js-profile-runtime-button",
+               className: "default-button qa-profile-runtime-button",
                onClick: () => this.onProfilerButtonClick(),
              },
              "about-debugging-runtime-profile-button2"

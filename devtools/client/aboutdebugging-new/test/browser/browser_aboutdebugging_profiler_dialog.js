@@ -25,9 +25,9 @@ add_task(async function() {
   assertDialogVisible(document);
 
   info("Click on the close button and wait until the dialog disappears");
-  const closeDialogButton = document.querySelector(".js-profiler-dialog-close");
+  const closeDialogButton = document.querySelector(".qa-profiler-dialog-close");
   closeDialogButton.click();
-  await waitUntil(() => !document.querySelector(".js-profiler-dialog"));
+  await waitUntil(() => !document.querySelector(".qa-profiler-dialog"));
   assertDialogHidden(document);
 
   info("Open the profiler dialog again");
@@ -35,9 +35,9 @@ add_task(async function() {
   assertDialogVisible(document);
 
   info("Click on the mask element and wait until the dialog disappears");
-  const mask = document.querySelector(".js-profiler-dialog-mask");
+  const mask = document.querySelector(".qa-profiler-dialog-mask");
   EventUtils.synthesizeMouse(mask, 5, 5, {}, window);
-  await waitUntil(() => !document.querySelector(".js-profiler-dialog"));
+  await waitUntil(() => !document.querySelector(".qa-profiler-dialog"));
   assertDialogHidden(document);
 
   info("Open the profiler dialog again");
@@ -46,7 +46,7 @@ add_task(async function() {
 
   info("Navigate to this-firefox and wait until the dialog disappears");
   document.location.hash = "#/runtime/this-firefox";
-  await waitUntil(() => !document.querySelector(".js-profiler-dialog"));
+  await waitUntil(() => !document.querySelector(".qa-profiler-dialog"));
   assertDialogHidden(document);
 
   info("Select the remote runtime again, check the dialog is still hidden");
@@ -57,11 +57,11 @@ add_task(async function() {
 });
 
 function assertDialogVisible(doc) {
-  ok(doc.querySelector(".js-profiler-dialog"), "Dialog is displayed");
-  ok(doc.querySelector(".js-profiler-dialog-mask"), "Dialog mask is displayed");
+  ok(doc.querySelector(".qa-profiler-dialog"), "Dialog is displayed");
+  ok(doc.querySelector(".qa-profiler-dialog-mask"), "Dialog mask is displayed");
 }
 
 function assertDialogHidden(doc) {
-  ok(!document.querySelector(".js-profiler-dialog"), "Dialog is removed");
-  ok(!document.querySelector(".js-profiler-dialog-mask"), "Dialog mask is removed");
+  ok(!document.querySelector(".qa-profiler-dialog"), "Dialog is removed");
+  ok(!document.querySelector(".qa-profiler-dialog-mask"), "Dialog mask is removed");
 }

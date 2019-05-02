@@ -41,8 +41,8 @@ add_task(async function() {
   });
 
   info("Wait until the push service appears");
-  await waitUntil(() => targetElement.querySelector(".js-worker-push-service-value"));
-  const pushUrl = targetElement.querySelector(".js-worker-push-service-value");
+  await waitUntil(() => targetElement.querySelector(".qa-worker-push-service-value"));
+  const pushUrl = targetElement.querySelector(".qa-worker-push-service-value");
 
   ok(!!pushUrl, "Push URL is displayed for the serviceworker");
   is(pushUrl.textContent, FAKE_ENDPOINT, "Push URL shows the expected content");
@@ -53,7 +53,7 @@ add_task(async function() {
   });
 
   info("Wait until the push service disappears");
-  await waitUntil(() => !targetElement.querySelector(".js-worker-push-service-value"));
+  await waitUntil(() => !targetElement.querySelector(".qa-worker-push-service-value"));
 
   info("Unregister the service worker");
   await unregisterServiceWorker(swTab);

@@ -28,10 +28,10 @@ add_task(async function() {
   ok(usbRuntimeSidebarItem.querySelector(".qa-runtime-item-waiting-for-browser"),
     "Sidebar item shows as `Waiting for browser`");
 
-  const hasConnectButton = usbRuntimeSidebarItem.querySelector(".js-connect-button");
+  const hasConnectButton = usbRuntimeSidebarItem.querySelector(".qa-connect-button");
   ok(!hasConnectButton, "Connect button is not displayed");
 
-  const hasLink = usbRuntimeSidebarItem.querySelector(".js-sidebar-link");
+  const hasLink = usbRuntimeSidebarItem.querySelector(".qa-sidebar-link");
   ok(!hasLink, "Unavailable runtime is not selectable");
 
   info("Add a valid runtime for the same device id and emit update event");
@@ -47,7 +47,7 @@ add_task(async function() {
   let updatedSidebarItem = null;
   await waitUntil(() => {
     updatedSidebarItem = findSidebarItemByText(DEVICE_NAME, document);
-    return updatedSidebarItem && updatedSidebarItem.querySelector(".js-connect-button");
+    return updatedSidebarItem && updatedSidebarItem.querySelector(".qa-connect-button");
   });
 
   ok(updatedSidebarItem.querySelector(".qa-runtime-item-standard"),

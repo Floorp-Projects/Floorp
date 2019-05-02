@@ -19,7 +19,7 @@ add_task(async function() {
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const usbStatusElement = document.querySelector(".js-sidebar-usb-status");
+  const usbStatusElement = document.querySelector(".qa-sidebar-usb-status");
 
   info("Install ADB");
   adbAddon.install("internal");
@@ -30,7 +30,7 @@ add_task(async function() {
   await waitUntil(() => findDebugTargetByText(ABD_ADDON_NAME, document));
   const adbExtensionItem = findDebugTargetByText(ABD_ADDON_NAME, document);
 
-  const manifestUrlElement = adbExtensionItem.querySelector(".js-manifest-url");
+  const manifestUrlElement = adbExtensionItem.querySelector(".qa-manifest-url");
   ok(manifestUrlElement, "A link to the manifest is displayed");
 
   info("Click on the manifest URL and wait for the new tab to open");

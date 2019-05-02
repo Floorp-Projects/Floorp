@@ -38,8 +38,8 @@ async function testServiceWorkerFetchStatus(doc, url, workerUrl, isListening) {
   const targetElement = await waitForServiceWorkerRunning(workerUrl, doc);
 
   const expectedClassName = isListening ?
-    ".js-worker-fetch-listening" :
-    ".js-worker-fetch-not-listening";
+    ".qa-worker-fetch-listening" :
+    ".qa-worker-fetch-not-listening";
   const fetchStatus = targetElement.querySelector(expectedClassName);
   ok(!!fetchStatus, "Found the expected fetch status: " + expectedClassName);
 

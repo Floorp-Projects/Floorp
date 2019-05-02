@@ -74,7 +74,7 @@ class ServiceWorkerAction extends PureComponent {
       dom.span(
         {
           className:
-            `service-worker-action__status js-worker-status ${ statusClassName }`,
+            `service-worker-action__status qa-worker-status ${ statusClassName }`,
         },
         status
       )

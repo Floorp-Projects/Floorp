@@ -27,7 +27,7 @@ add_task(async function() {
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, document));
   const target = findDebugTargetByText(EXTENSION_NAME, document);
 
-  const warningMessage = target.querySelector(".js-message");
+  const warningMessage = target.querySelector(".qa-message");
   ok(!!warningMessage, "A warning message is displayed for the installed addon");
 
   const button = warningMessage.querySelector(".qa-message-button-close");
@@ -36,7 +36,7 @@ add_task(async function() {
   info("Closing the message and waiting for it to disappear");
   button.click();
   await waitUntil(() => {
-    return target.querySelector(".js-message") === null;
+    return target.querySelector(".qa-message") === null;
   });
 
   await removeTemporaryExtension(EXTENSION_NAME, document);

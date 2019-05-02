@@ -31,7 +31,7 @@ add_task(async function() {
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   info("Check that the 'This Firefox' mock is properly displayed");
-  const thisFirefoxRuntimeInfo = document.querySelector(".js-runtime-name");
+  const thisFirefoxRuntimeInfo = document.querySelector(".qa-runtime-name");
   ok(thisFirefoxRuntimeInfo, "Runtime info for this-firefox runtime is displayed");
   const runtimeInfoText = thisFirefoxRuntimeInfo.textContent;
   ok(runtimeInfoText.includes("Firefox"),
