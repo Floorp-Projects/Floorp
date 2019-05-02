@@ -16,7 +16,11 @@ export function findPosition(
     return null;
   }
 
-  return positions.find(pos =>
+  const lineBps = positions[location.line];
+  if (!lineBps) {
+    return null;
+  }
+  return lineBps.find(pos =>
     comparePosition(getSelectedLocation(pos, location), location)
   );
 }

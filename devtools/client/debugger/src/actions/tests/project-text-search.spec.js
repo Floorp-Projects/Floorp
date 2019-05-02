@@ -39,7 +39,8 @@ const sources = {
 
 const threadClient = {
   sourceContents: async ({ source }) => sources[source],
-  getBreakpointPositions: async () => ({})
+  getBreakpointPositions: async () => ({}),
+  getBreakableLines: async () => []
 };
 
 describe("project text search", () => {

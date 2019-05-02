@@ -16,12 +16,12 @@ add_task(async function() {
   await selectSource(dbg, "simple2");
   is(countTabs(dbg), 2);
 
-  // Test reloading the debugger
+  info("Test reloading the debugger");
   await reload(dbg, "simple1", "simple2");
   is(countTabs(dbg), 2);
   await waitForSelectedSource(dbg);
 
-  // Test reloading the debuggee a second time
+  info("Test reloading the debuggee a second time");
   await reload(dbg, "simple1", "simple2");
   is(countTabs(dbg), 2);
   await waitForSelectedSource(dbg);
@@ -35,7 +35,7 @@ add_task(async function() {
   await closeTab(dbg, "simple1");
   await closeTab(dbg, "simple2");
 
-  // Test reloading the debugger
+  info("Test reloading the debugger");
   await reload(dbg, "simple1", "simple2");
   is(countTabs(dbg), 0);
 });

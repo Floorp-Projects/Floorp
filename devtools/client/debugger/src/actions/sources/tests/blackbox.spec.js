@@ -13,7 +13,10 @@ import {
 
 describe("blackbox", () => {
   it("should blackbox a source", async () => {
-    const store = createStore({ blackBox: async () => true });
+    const store = createStore({
+      blackBox: async () => true,
+      getBreakableLines: async () => []
+    });
     const { dispatch, getState, cx } = store;
 
     const foo1Source = await dispatch(

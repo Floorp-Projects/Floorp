@@ -49,7 +49,8 @@ function mockClient(bpPos = {}) {
   return {
     ...simpleMockThreadClient,
 
-    getBreakpointPositions: async () => bpPos
+    getBreakpointPositions: async () => bpPos,
+    getBreakableLines: async () => []
   };
 }
 

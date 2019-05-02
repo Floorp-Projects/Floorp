@@ -108,7 +108,7 @@ function filterByBreakpoints(positions, selectedSource, breakpointMap) {
 }
 
 function formatPositions(
-  positions: BreakpointPositions,
+  positions: BreakpointPosition[],
   selectedSource,
   breakpointMap
 ) {
@@ -119,6 +119,12 @@ function formatPositions(
       breakpoint: findBreakpoint(location, breakpointMap)
     };
   });
+}
+
+function convertToList(
+  breakpointPositions: BreakpointPositions
+): BreakpointPosition[] {
+  return ([].concat(...Object.values(breakpointPositions)): any);
 }
 
 export function getColumnBreakpoints(
@@ -137,12 +143,16 @@ export function getColumnBreakpoints(
   // - there is atleast one other breakpoint on that line
   // - there is a breakpoint on that line
   const breakpointMap = groupBreakpoints(breakpoints, selectedSource);
+  let newPositions = convertToList(positions);
+  newPositions = filterByLineCount(newPositions, selectedSource);
+  newPositions = filterVisible(newPositions, selectedSource, viewport);
+  newPositions = filterByBreakpoints(
+    newPositions,
+    selectedSource,
+    breakpointMap
+  );
 
-  positions = filterByLineCount(positions, selectedSource);
-  positions = filterVisible(positions, selectedSource, viewport);
-  positions = filterByBreakpoints(positions, selectedSource, breakpointMap);
-
-  return formatPositions(positions, selectedSource, breakpointMap);
+  return formatPositions(newPositions, selectedSource, breakpointMap);
 }
 
 const getVisibleBreakpointPositions = createSelector(
@@ -172,7 +182,7 @@ export function getFirstBreakpointPosition(
     return;
   }
 
-  return sortSelectedLocations(positions, source).find(
+  return sortSelectedLocations(convertToList(positions), source).find(
     position => getSelectedLocation(position, source).line == line
   );
 }

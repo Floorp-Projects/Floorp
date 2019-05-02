@@ -21,7 +21,13 @@ export { isMinified } from "./isMinified";
 import { getURL, getFileExtension } from "./sources-tree";
 import { prefs, features } from "./prefs";
 
-import type { SourceId, Source, SourceContent, SourceLocation } from "../types";
+import type {
+  SourceId,
+  Source,
+  SourceActor,
+  SourceContent,
+  SourceLocation
+} from "../types";
 import { isFulfilled, type AsyncValue } from "./async-value";
 import type { Symbols } from "../reducers/types";
 
@@ -397,7 +403,7 @@ export function getMode(
   return { name: "text" };
 }
 
-export function isInlineScript(source: Source): boolean {
+export function isInlineScript(source: SourceActor): boolean {
   return source.introductionType === "scriptElement";
 }
 
