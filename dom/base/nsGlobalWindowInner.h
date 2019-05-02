@@ -243,8 +243,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
     return GetWrapper();
   }
 
-  // nsIGlobalJSObjectHolder
-  virtual JSObject* GetGlobalJSObject() override;
+  // nsIGlobalObject
+  JSObject* GetGlobalJSObject() override;
+  JSObject* GetGlobalJSObjectPreserveColor() const override;
 
   // nsIScriptGlobalObject
   JSObject* FastGetGlobalJSObject() const { return GetWrapperPreserveColor(); }
