@@ -6,7 +6,7 @@ use api::{BorderRadius, ClipMode, ColorF};
 use api::{FilterOp, ImageRendering, RepeatMode};
 use api::{PremultipliedColorF, PropertyBinding, Shadow, GradientStop};
 use api::{BoxShadowClipMode, LineStyle, LineOrientation};
-use api::PrimitiveKeyKind;
+use api::{PrimitiveKeyKind, RasterSpace};
 use api::units::*;
 use border::{get_max_scale_for_border, build_border_instances};
 use border::BorderSegmentCacheKey;
@@ -26,7 +26,7 @@ use gpu_types::{BrushFlags, SnapOffsets};
 use image::{Repetition};
 use intern;
 use malloc_size_of::MallocSizeOf;
-use picture::{PictureCompositeMode, PicturePrimitive};
+use picture::{PictureCompositeMode, PicturePrimitive, SurfaceInfo};
 use picture::{ClusterIndex, PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedTiles, RasterConfig};
 use prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
 use prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
@@ -1723,7 +1723,7 @@ impl PrimitiveStore {
         frame_context: &FrameVisibilityContext,
         frame_state: &mut FrameVisibilityState,
     ) {
-        let (mut prim_list, surface_index, apply_local_clip_rect) = {
+        let (mut prim_list, surface_index, apply_local_clip_rect, raster_space) = {
             let pic = &mut self.pictures[pic_index.0];
 
             let prim_list = mem::replace(&mut pic.prim_list, PrimitiveList::empty());
@@ -1748,7 +1748,7 @@ impl PrimitiveStore {
                 frame_state.tile_cache = Some(tile_cache);
             }
 
-            (prim_list, surface_index, pic.apply_local_clip_rect)
+            (prim_list, surface_index, pic.apply_local_clip_rect, pic.requested_raster_space)
         };
 
         let surface = &frame_context.surfaces[surface_index.0 as usize];
@@ -2009,6 +2009,14 @@ impl PrimitiveStore {
                     }
                 );
 
+                self.request_resources_for_prim(
+                    prim_instance,
+                    surface,
+                    raster_space,
+                    frame_context,
+                    frame_state,
+                );
+
                 prim_instance.visibility_info = vis_index;
             }
 
@@ -2031,6 +2039,45 @@ impl PrimitiveStore {
         }
 
         pic.prim_list = prim_list;
+    }
+
+    fn request_resources_for_prim(
+        &mut self,
+        prim_instance: &PrimitiveInstance,
+        surface: &SurfaceInfo,
+        raster_space: RasterSpace,
+        frame_context: &FrameVisibilityContext,
+        frame_state: &mut FrameVisibilityState,
+    ) {
+        match prim_instance.kind {
+            PrimitiveInstanceKind::TextRun { data_handle, run_index, .. } => {
+                let prim_data = &mut frame_state.data_stores.text_run[data_handle];
+                let run = &mut self.text_runs[run_index];
+
+                // The transform only makes sense for screen space rasterization
+                let relative_transform = frame_context
+                    .clip_scroll_tree
+                    .get_relative_transform(
+                        prim_instance.spatial_node_index,
+                        ROOT_SPATIAL_NODE_INDEX,
+                    );
+                let prim_offset = prim_instance.prim_origin.to_vector() - run.reference_frame_relative_offset;
+
+                run.request_resources(
+                    prim_offset,
+                    &prim_data.font,
+                    &prim_data.glyphs,
+                    &relative_transform.flattened.with_destination::<WorldPixel>(),
+                    surface,
+                    raster_space,
+                    frame_state.resource_cache,
+                    frame_state.gpu_cache,
+                    frame_state.render_tasks,
+                    frame_state.scratch,
+                );
+            }
+            _ => {}
+        }
     }
 
     pub fn get_opacity_binding(
@@ -2184,7 +2231,6 @@ impl PrimitiveStore {
                         pic_context.surface_spatial_node_index,
                         pic_context.raster_spatial_node_index,
                         pic_context.surface_index,
-                        pic_context.allow_subpixel_aa,
                         frame_state,
                         frame_context,
                     ) {
@@ -2507,39 +2553,12 @@ impl PrimitiveStore {
                     ));
                 }
             }
-            PrimitiveInstanceKind::TextRun { data_handle, run_index, .. } => {
+            PrimitiveInstanceKind::TextRun { data_handle, .. } => {
                 let prim_data = &mut data_stores.text_run[*data_handle];
-                let run = &mut self.text_runs[*run_index];
 
                 // Update the template this instane references, which may refresh the GPU
                 // cache with any shared template data.
                 prim_data.update(frame_state);
-
-                // The transform only makes sense for screen space rasterization
-                let relative_transform = frame_context
-                    .clip_scroll_tree
-                    .get_relative_transform(
-                        prim_instance.spatial_node_index,
-                        ROOT_SPATIAL_NODE_INDEX,
-                    );
-                let prim_offset = prim_instance.prim_origin.to_vector() - run.reference_frame_relative_offset;
-
-                // TODO(gw): This match is a bit untidy, but it should disappear completely
-                //           once the prepare_prims and batching are unified. When that
-                //           happens, we can use the cache handle immediately, and not need
-                //           to temporarily store it in the primitive instance.
-                run.prepare_for_render(
-                    prim_offset,
-                    &prim_data.font,
-                    &prim_data.glyphs,
-                    device_pixel_scale,
-                    &relative_transform.flattened.with_destination::<WorldPixel>(),
-                    pic_context,
-                    frame_state.resource_cache,
-                    frame_state.gpu_cache,
-                    frame_state.render_tasks,
-                    scratch,
-                );
             }
             PrimitiveInstanceKind::Clear { data_handle, .. } => {
                 let prim_data = &mut data_stores.prim[*data_handle];

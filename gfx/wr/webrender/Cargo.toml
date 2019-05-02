@@ -30,7 +30,7 @@ byteorder = "1.0"
 cfg-if = "0.1.2"
 cstr = "0.1.2"
 fxhash = "0.2.1"
-gleam = "0.6.16"
+gleam = "0.6.17"
 image = { optional = true, version = "0.21", default-features = false, features = ["png_codec"] }
 lazy_static = "1"
 log = "0.4"

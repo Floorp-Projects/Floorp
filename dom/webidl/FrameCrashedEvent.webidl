@@ -11,9 +11,15 @@ interface FrameCrashedEvent : Event
    * The browsingContextId of the frame that crashed.
    */
   readonly attribute unsigned long long browsingContextId;
+
+  /**
+   * True if the top-most frame crashed.
+   */
+  readonly attribute boolean isTopFrame;
 };
 
 dictionary FrameCrashedEventInit : EventInit
 {
   unsigned long long browsingContextId = 0;
+  boolean isTopFrame = false;
 };

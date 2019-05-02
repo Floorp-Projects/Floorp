@@ -2,7 +2,7 @@
 == multiply-2.yaml multiply-2-ref.yaml
 == color_targets(3) alpha_targets(0) multiply-3.yaml multiply-2-ref.yaml
 == difference.yaml difference-ref.yaml
-fuzzy(1,10000) == difference-transparent.yaml difference-transparent-ref.yaml
+fuzzy(1,30000) == difference-transparent.yaml difference-transparent-ref.yaml
 == darken.yaml darken-ref.yaml
 == lighten.yaml lighten-ref.yaml
 
