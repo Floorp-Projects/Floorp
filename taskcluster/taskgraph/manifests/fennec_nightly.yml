@@ -14,16 +14,16 @@ tasktype_map:  # Map task reference to task type.
 platform_names:
     path_platform:
         by-platform:
-            android-x86-nightly: 'android-x86'
-            android-x86_64-nightly: 'android-x86_64'
-            android-api-16-nightly: 'android-api-16'
-            android-aarch64-nightly: 'android-aarch64'
+            android-x86-(nightly|beta): 'android-x86'
+            android-x86_64-(nightly|beta): 'android-x86_64'
+            android-api-16-(nightly|beta): 'android-api-16'
+            android-aarch64-(nightly|beta): 'android-aarch64'
     filename_platform:
         by-platform:
-            android-x86-nightly: 'android-i386'
-            android-x86_64-nightly: 'android-x86_64'
-            android-api-16-nightly: 'android-arm'
-            android-aarch64-nightly: 'android-aarch64'
+            android-x86-(nightly|beta): 'android-i386'
+            android-x86_64-(nightly|beta): 'android-x86_64'
+            android-api-16-(nightly|beta): 'android-arm'
+            android-aarch64-(nightly|beta): 'android-aarch64'
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
