@@ -15,6 +15,7 @@ job-defaults:
             windows10-aarch64/opt: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             android-hw-.*-api-16/opt: ['try']
+            android-hw-.*-aarch64/opt: ['try']
             macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['try', 'trunk', 'mozilla-beta']
     tier:
@@ -349,7 +350,6 @@ raptor-tp6m-3-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw.*/pgo: ['try', 'mozilla-central']
-            android-hw.*aarch64/opt: ['try', 'mozilla-central']
             default: ['try']
     tier: 2
     mozharness:
@@ -381,7 +381,6 @@ raptor-tp6m-4-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw.*/pgo: ['try', 'mozilla-central']
-            android-hw.*aarch64/opt: ['try', 'mozilla-central']
             default: ['try']
     tier: 2
     mozharness:
@@ -479,7 +478,6 @@ raptor-tp6m-7-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw.*/pgo: ['try', 'mozilla-central']
-            android-hw.*aarch64/opt: ['try', 'mozilla-central']
             default: ['try']
     target: geckoview_example.apk
     tier: 2
@@ -546,7 +544,6 @@ raptor-tp6m-9-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw.*/pgo: ['try', 'mozilla-central']
-            android-hw.*aarch64/opt: ['try', 'mozilla-central']
             default: ['try']
     tier: 2
     mozharness:
@@ -579,7 +576,6 @@ raptor-tp6m-10-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw.*/pgo: ['try', 'mozilla-central']
-            android-hw.*aarch64/opt: ['try', 'mozilla-central']
             default: ['try']
     tier: 2
     mozharness:
@@ -1018,8 +1014,7 @@ raptor-speedometer-geckoview-power:
     run-on-projects:
         by-test-platform:
             android-hw.*/pgo: ['try', 'mozilla-central']
-            android-hw-.*-aarch64/opt: ['try', 'mozilla-central']
-            android-hw-.*-api-16/opt: ['try']
+            default: ['try']
     max-run-time: 1800
     mozharness:
         extra-options:
