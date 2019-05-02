@@ -48,9 +48,9 @@ android {
             applicationIdSuffix ".debug"
             manifestPlaceholders.isRaptorEnabled = "true"
         }
-        // "releaseRaptor" is only used for performance testing, and isn't a real "release" type
-        releaseRaptor releaseTemplate >> { // the ">>" concatenates the releaseRaptor-specific options with the template
+        raptor releaseTemplate >> { // the ">>" concatenates the raptor-specific options with the template
             manifestPlaceholders.isRaptorEnabled = "true"
+            applicationIdSuffix ".raptor"
         }
         nightly releaseTemplate >> {
             buildConfigField "boolean", "IS_RELEASED", "true"

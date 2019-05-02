@@ -72,12 +72,12 @@ def pr_or_push(is_push):
         # autophone only supports arm and aarch64, so only sign/perftest those builds
         if (
             is_push and
-            build_type == 'releaseRaptor' and
+            build_type == 'raptor' and
             architecture in ('arm', 'aarch64') and
             SHORT_HEAD_BRANCH == 'master'
         ):
             signing_task_id = taskcluster.slugId()
-            signing_tasks[signing_task_id] = BUILDER.craft_master_commit_signing_task(assemble_task_id, variant)
+            signing_tasks[signing_task_id] = BUILDER.craft_raptor_signing_task(assemble_task_id, variant)
 
             ALL_RAPTOR_CRAFT_FUNCTIONS = [
                 BUILDER.craft_raptor_tp6m_cold_task(for_suite=i)
