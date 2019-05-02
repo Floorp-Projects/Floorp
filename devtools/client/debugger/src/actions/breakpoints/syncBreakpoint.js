@@ -36,8 +36,9 @@ async function findBreakpointPosition(
   { getState, dispatch },
   location: SourceLocation
 ) {
+  const { sourceId, line } = location;
   const positions: BreakpointPositions = await dispatch(
-    setBreakpointPositions({ cx, sourceId: location.sourceId })
+    setBreakpointPositions({ cx, sourceId, line })
   );
 
   const position = findPosition(positions, location);
