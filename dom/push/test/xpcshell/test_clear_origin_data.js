@@ -50,12 +50,32 @@ add_task(async function test_webapps_cleardata() {
 
   let testRecords = [{
     scope: "https://example.org/1",
-    originAttributes: {},
-    clearIf: { inIsolatedMozBrowser: false },
+    originAttributes: { appId: 1 },
+    clearIf: { appId: 1, inIsolatedMozBrowser: false },
   }, {
     scope: "https://example.org/1",
-    originAttributes: { inIsolatedMozBrowser: true },
-    clearIf: {},
+    originAttributes: { appId: 1, inIsolatedMozBrowser: true },
+    clearIf: { appId: 1 },
+  }, {
+    scope: "https://example.org/1",
+    originAttributes: { appId: 2, inIsolatedMozBrowser: true },
+    clearIf: { appId: 2, inIsolatedMozBrowser: true },
+  }, {
+    scope: "https://example.org/2",
+    originAttributes: { appId: 1 },
+    clearIf: { appId: 1, inIsolatedMozBrowser: false },
+  }, {
+    scope: "https://example.org/2",
+    originAttributes: { appId: 2, inIsolatedMozBrowser: true },
+    clearIf: { appId: 2, inIsolatedMozBrowser: true },
+  }, {
+    scope: "https://example.org/3",
+    originAttributes: { appId: 3, inIsolatedMozBrowser: true },
+    clearIf: { inIsolatedMozBrowser: true },
+  }, {
+    scope: "https://example.org/3",
+    originAttributes: { appId: 4, inIsolatedMozBrowser: true },
+    clearIf: { inIsolatedMozBrowser: true },
   }];
 
   let unregisterDone;
@@ -102,11 +122,19 @@ add_task(async function test_webapps_cleardata() {
     })
   ));
 
-  // Removes all the records, Excluding where `inIsolatedMozBrowser` is true.
-  await clearForPattern(testRecords, { inIsolatedMozBrowser: false });
+  // Removes records for all scopes with the same app ID. Excludes records
+  // where `inIsolatedMozBrowser` is true.
+  await clearForPattern(testRecords, { appId: 1, inIsolatedMozBrowser: false });
 
-  // Removes the all the remaining records where `inIsolatedMozBrowser` is true.
-  await clearForPattern(testRecords, {});
+  // Removes the remaining record for app ID 1, where `inIsolatedMozBrowser` is true.
+  await clearForPattern(testRecords, { appId: 1 });
+
+  // Removes all records for all scopes with the same app ID, where
+  // `inIsolatedMozBrowser` is true.
+  await clearForPattern(testRecords, { appId: 2, inIsolatedMozBrowser: true });
+
+  // Removes all records where `inIsolatedMozBrowser` is true.
+  await clearForPattern(testRecords, { inIsolatedMozBrowser: true });
 
   equal(testRecords.length, 0, "Should remove all test records");
   await unregisterPromise;
