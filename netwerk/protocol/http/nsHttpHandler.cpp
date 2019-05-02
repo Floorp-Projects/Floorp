@@ -201,13 +201,6 @@ nsHttpHandler::nsHttpHandler()
     : mHttpVersion(HttpVersion::v1_1),
       mProxyHttpVersion(HttpVersion::v1_1),
       mCapabilities(NS_HTTP_ALLOW_KEEPALIVE),
-      mReferrerLevel(0xff)  // by default we always send a referrer
-      ,
-      mSpoofReferrerSource(false),
-      mHideOnionReferrerSource(false),
-      mReferrerTrimmingPolicy(0),
-      mReferrerXOriginTrimmingPolicy(0),
-      mReferrerXOriginPolicy(0),
       mFastFallbackToIPv4(false),
       mIdleTimeout(PR_SecondsToInterval(10)),
       mSpdyTimeout(PR_SecondsToInterval(180)),
@@ -1304,38 +1297,6 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
         }
       }
     }
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("sendRefererHeader"))) {
-    rv = Preferences::GetInt(HTTP_PREF("sendRefererHeader"), &val);
-    if (NS_SUCCEEDED(rv)) mReferrerLevel = (uint8_t)clamped(val, 0, 0xff);
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("referer.spoofSource"))) {
-    rv = Preferences::GetBool(HTTP_PREF("referer.spoofSource"), &cVar);
-    if (NS_SUCCEEDED(rv)) mSpoofReferrerSource = cVar;
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("referer.hideOnionSource"))) {
-    rv = Preferences::GetBool(HTTP_PREF("referer.hideOnionSource"), &cVar);
-    if (NS_SUCCEEDED(rv)) mHideOnionReferrerSource = cVar;
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("referer.trimmingPolicy"))) {
-    rv = Preferences::GetInt(HTTP_PREF("referer.trimmingPolicy"), &val);
-    if (NS_SUCCEEDED(rv)) mReferrerTrimmingPolicy = (uint8_t)clamped(val, 0, 2);
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("referer.XOriginTrimmingPolicy"))) {
-    rv = Preferences::GetInt(HTTP_PREF("referer.XOriginTrimmingPolicy"), &val);
-    if (NS_SUCCEEDED(rv))
-      mReferrerXOriginTrimmingPolicy = (uint8_t)clamped(val, 0, 2);
-  }
-
-  if (PREF_CHANGED(HTTP_PREF("referer.XOriginPolicy"))) {
-    rv = Preferences::GetInt(HTTP_PREF("referer.XOriginPolicy"), &val);
-    if (NS_SUCCEEDED(rv))
-      mReferrerXOriginPolicy = (uint8_t)clamped(val, 0, 0xff);
   }
 
   if (PREF_CHANGED(HTTP_PREF("redirection-limit"))) {

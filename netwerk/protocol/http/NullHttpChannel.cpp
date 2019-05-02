@@ -137,23 +137,17 @@ NullHttpChannel::SetRequestMethod(const nsACString& aRequestMethod) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetReferrer(nsIURI** aReferrer) {
+NullHttpChannel::GetReferrerInfo(nsIReferrerInfo** aReferrerInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetReferrer(nsIURI* aReferrer) {
+NullHttpChannel::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetReferrerPolicy(uint32_t* aReferrerPolicy) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NullHttpChannel::SetReferrerWithPolicy(nsIURI* referrer,
-                                       uint32_t referrerPolicy) {
+NullHttpChannel::SetReferrerInfoWithoutClone(nsIReferrerInfo* aReferrerInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

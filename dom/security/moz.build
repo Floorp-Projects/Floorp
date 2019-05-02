@@ -55,6 +55,7 @@ LOCAL_INCLUDES += [
     '/docshell/base',  # for nsDocShell.h
     '/netwerk/base',
     '/netwerk/protocol/data', # for nsDataHandler.h
+    '/netwerk/protocol/http', # for HttpBaseChannel.h
 ]
 
 include('/tools/fuzzing/libfuzzer-config.mozbuild')

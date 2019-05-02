@@ -216,6 +216,7 @@ struct HttpChannelOpenArgs
   // chrome channel would ever need to know.  Get rid of next arg?
   URIParams?                  original;
   URIParams?                  doc;
+  nsIReferrerInfo             referrerInfo;
   URIParams?                  originalReferrer;
   uint32_t                    originalReferrerPolicy;
   uint32_t                    referrerPolicy;

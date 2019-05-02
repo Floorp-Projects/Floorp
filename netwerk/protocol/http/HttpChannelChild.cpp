@@ -2019,8 +2019,13 @@ void HttpChannelChild::CleanupRedirectingChannel(nsresult rv) {
     if (mLoadInfo) {
       nsCString remoteAddress;
       Unused << GetRemoteAddress(remoteAddress);
+      nsCOMPtr<nsIURI> referrer;
+      if (mReferrerInfo) {
+        referrer = mReferrerInfo->GetComputedReferrer();
+      }
+
       nsCOMPtr<nsIRedirectHistoryEntry> entry = new nsRedirectHistoryEntry(
-          GetURIPrincipal(), mReferrer, remoteAddress);
+          GetURIPrincipal(), referrer, remoteAddress);
 
       mLoadInfo->AppendRedirectHistoryEntry(entry, false);
     }
@@ -2185,10 +2190,6 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result) {
   Maybe<URIParams> redirectURI;
   nsresult rv;
 
-  uint32_t referrerPolicy = REFERRER_POLICY_UNSET;
-  Maybe<URIParams> referrerURI;
-  SerializeURI(nullptr, referrerURI);
-
   nsCOMPtr<nsIHttpChannel> newHttpChannel =
       do_QueryInterface(mRedirectChannelChild);
 
@@ -2203,17 +2204,11 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result) {
     result = NS_ERROR_DOM_BAD_URI;
   }
 
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
   if (newHttpChannel) {
     // Must not be called until after redirect observers called.
     newHttpChannel->SetOriginalURI(mOriginalURI);
-
-    rv = newHttpChannel->GetReferrerPolicy(&referrerPolicy);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsCOMPtr<nsIURI> newChannelReferrerURI;
-    rv = newHttpChannel->GetReferrer(getter_AddRefs(newChannelReferrerURI));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    SerializeURI(newChannelReferrerURI, referrerURI);
+    referrerInfo = newHttpChannel->GetReferrerInfo();
   }
 
   if (mRedirectingForSubsequentSynthesizedResponse) {
@@ -2308,8 +2303,8 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result) {
 
   if (mIPCOpen)
     SendRedirect2Verify(result, *headerTuples, loadInfoForwarder, loadFlags,
-                        referrerPolicy, referrerURI, redirectURI,
-                        corsPreflightArgs, chooseAppcache);
+                        referrerInfo, redirectURI, corsPreflightArgs,
+                        chooseAppcache);
 
   return NS_OK;
 }
@@ -2710,14 +2705,12 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   SerializeURI(mURI, openArgs.uri());
   SerializeURI(mOriginalURI, openArgs.original());
   SerializeURI(mDocumentURI, openArgs.doc());
-  SerializeURI(mOriginalReferrer, openArgs.originalReferrer());
-  openArgs.originalReferrerPolicy() = mOriginalReferrerPolicy;
-  openArgs.referrerPolicy() = mReferrerPolicy;
   SerializeURI(mAPIRedirectToURI, openArgs.apiRedirectTo());
   openArgs.loadFlags() = mLoadFlags;
   openArgs.requestHeaders() = mClientSetRequestHeaders;
   mRequestHead.Method(openArgs.requestMethod());
   openArgs.preferredAlternativeTypes() = mPreferredCachedAltDataTypes;
+  openArgs.referrerInfo() = mReferrerInfo;
 
   AutoIPCStream autoStream(openArgs.uploadStream());
   if (mUploadStream) {
@@ -2878,24 +2871,6 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
 // HttpChannelChild::nsIHttpChannel
 //-----------------------------------------------------------------------------
 
-NS_IMETHODIMP
-HttpChannelChild::SetReferrerWithPolicy(nsIURI* referrer,
-                                        uint32_t referrerPolicy) {
-  ENSURE_CALLED_BEFORE_CONNECT();
-
-  // remove old referrer if any, loop backwards
-  for (int i = mClientSetRequestHeaders.Length() - 1; i >= 0; --i) {
-    if (NS_LITERAL_CSTRING("Referer").Equals(
-            mClientSetRequestHeaders[i].mHeader)) {
-      mClientSetRequestHeaders.RemoveElementAt(i);
-    }
-  }
-
-  nsresult rv =
-      HttpBaseChannel::SetReferrerWithPolicy(referrer, referrerPolicy);
-  if (NS_FAILED(rv)) return rv;
-  return NS_OK;
-}
 NS_IMETHODIMP
 HttpChannelChild::SetRequestHeader(const nsACString& aHeader,
                                    const nsACString& aValue, bool aMerge) {
@@ -3654,6 +3629,20 @@ nsresult HttpChannelChild::AsyncCallImpl(
   }
 
   return rv;
+}
+
+nsresult HttpChannelChild::SetReferrerHeader(const nsACString& aReferrer) {
+  ENSURE_CALLED_BEFORE_CONNECT();
+
+  // remove old referrer if any, loop backwards
+  for (int i = mClientSetRequestHeaders.Length() - 1; i >= 0; --i) {
+    if (NS_LITERAL_CSTRING("Referer").Equals(
+            mClientSetRequestHeaders[i].mHeader)) {
+      mClientSetRequestHeaders.RemoveElementAt(i);
+    }
+  }
+
+  return HttpBaseChannel::SetReferrerHeader(aReferrer);
 }
 
 class CancelEvent final : public NeckoTargetChannelEvent<HttpChannelChild> {

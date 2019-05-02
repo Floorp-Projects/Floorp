@@ -5,6 +5,9 @@
 // Note: sets Cc and Ci variables
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
+                                            "nsIReferrerInfo",
+                                            "init");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -16,7 +19,7 @@ var httpbody = "0123456789";
 var channel;
 var ios;
 
-var dbg=0
+var dbg = 0;
 if (dbg) { print("============== START =========="); }
 
 function run_test() {
@@ -64,13 +67,12 @@ function setup_test() {
   Assert.equal(setOK, "foo");
 
   var uri = NetUtil.newURI("http://foo1.invalid:80");
-  channel.referrer = uri;
-  Assert.ok(channel.referrer.equals(uri));
+  channel.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
   setOK = channel.getRequestHeader("Referer");
   Assert.equal(setOK, "http://foo1.invalid/");
 
   uri = NetUtil.newURI("http://foo2.invalid:90/bar");
-  channel.referrer = uri;
+  channel.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
   setOK = channel.getRequestHeader("Referer");
   Assert.equal(setOK, "http://foo2.invalid:90/bar");
 
@@ -83,7 +85,7 @@ function setup_test() {
 function setupChannel(path) {
   var chan = NetUtil.newChannel({
     uri: URL + path,
-    loadUsingSystemPrincipal: true
+    loadUsingSystemPrincipal: true,
   });
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
@@ -108,7 +110,7 @@ function serverHandler(metadata, response) {
 
   response.setHeader("Content-Type", "text/plain", false);
   response.setStatusLine("1.1", 200, "OK");
-  
+
   // note: httpd.js' "Response" class uses ',' (no space) for merge.
   response.setHeader("httpdMerge", "bar1", false);
   response.setHeader("httpdMerge", "bar2", true);
