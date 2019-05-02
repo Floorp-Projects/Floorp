@@ -481,12 +481,19 @@
 
 .event-tooltip-debugger-icon {
   -moz-context-properties: stroke;
-  stroke: currentColor;
-  background: url(resource://devtools/client/shared/components/reps/images/jump-definition.svg);
+  stroke: var(--theme-icon-color);
+  background-image: url("resource://devtools/client/shared/components/reps/images/jump-definition.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 20px;
+  height: 18px;
+  border-radius: 2px;
+  margin-inline-end: 4px;
+  flex-shrink: 0;
 }
 
-.theme-dark .event-tooltip-debugger-icon {
-  filter: invert(70%);
+.event-tooltip-debugger-icon:hover {
+  background-color: var(--toolbarbutton-hover-background);
 }
 
 .devtools-tooltip-events-container {
@@ -516,19 +523,6 @@
   text-overflow: ellipsis;
   /* Force ellipsis to be displayed on the left */
   direction: rtl;
-}
-
-.event-tooltip-debugger-icon,
-.event-tooltip-debugger-spacer {
-  width: 16px;
-  height: 16px;
-  margin-inline-end: 4px;
-  opacity: 0.6;
-  flex-shrink: 0;
-}
-
-.event-tooltip-debugger-icon:hover {
-  opacity: 1;
 }
 
 .event-tooltip-content-box {
