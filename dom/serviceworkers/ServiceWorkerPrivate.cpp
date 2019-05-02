@@ -44,6 +44,7 @@
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
+#include "nsIReferrerInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1254,21 +1255,17 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     MOZ_ASSERT(httpChannel, "How come we don't have an HTTP channel?");
 
-    nsAutoCString referrer;
-    // Ignore the return value since the Referer header may not exist.
-    Unused << httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Referer"),
-                                            referrer);
-    if (!referrer.IsEmpty()) {
-      mReferrer = referrer;
-    } else {
-      // If there's no referrer Header, means the header was omitted for
-      // security/privacy reason.
-      mReferrer = EmptyCString();
-    }
-
+    mReferrer = EmptyCString();
     uint32_t referrerPolicy = 0;
-    rv = httpChannel->GetReferrerPolicy(&referrerPolicy);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
+    if (referrerInfo) {
+      referrerPolicy = referrerInfo->GetReferrerPolicy();
+      nsCOMPtr<nsIURI> computedReferrer = referrerInfo->GetComputedReferrer();
+      if (computedReferrer) {
+        rv = computedReferrer->GetSpec(mReferrer);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
     switch (referrerPolicy) {
       case nsIHttpChannel::REFERRER_POLICY_UNSET:
         mReferrerPolicy = ReferrerPolicy::_empty;

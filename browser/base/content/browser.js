@@ -5755,12 +5755,12 @@ nsBrowserAccess.prototype = {
     if (aFlags & Ci.nsIBrowserDOMWindow.OPEN_NO_REFERRER) {
       referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, false, null);
     } else {
-      referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true,
+      referrerInfo = new ReferrerInfo((aOpener && aOpener.document) ?
+        aOpener.document.referrerPolicy : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+        true,
         aOpener ? makeURI(aOpener.location.href) : null);
     }
-    if (aOpener && aOpener.document) {
-      referrerInfo.referrerPolicy = aOpener.document.referrerPolicy;
-    }
+
     let isPrivate = aOpener
                   ? PrivateBrowsingUtils.isContentWindowPrivate(aOpener)
                   : PrivateBrowsingUtils.isWindowPrivate(window);

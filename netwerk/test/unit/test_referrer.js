@@ -1,3 +1,6 @@
+const ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
+                                            "nsIReferrerInfo",
+                                            "init");
 
 function getTestReferrer(server_uri, referer_uri, isPrivate=false) {
   var uri = NetUtil.newURI(server_uri)
@@ -11,7 +14,7 @@ function getTestReferrer(server_uri, referer_uri, isPrivate=false) {
   });
 
   chan.QueryInterface(Ci.nsIHttpChannel);
-  chan.referrer = referrer;
+  chan.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, referrer);
   var header = null;
   try {
     header = chan.getRequestHeader("Referer");

@@ -133,8 +133,7 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
     case HttpChannelCreationArgs::THttpChannelOpenArgs: {
       const HttpChannelOpenArgs& a = aArgs.get_HttpChannelOpenArgs();
       return DoAsyncOpen(
-          a.uri(), a.original(), a.doc(), a.originalReferrer(),
-          a.originalReferrerPolicy(), a.referrerPolicy(), a.apiRedirectTo(),
+          a.uri(), a.original(), a.doc(), a.referrerInfo(), a.apiRedirectTo(),
           a.topWindowURI(), a.loadFlags(), a.requestHeaders(),
           a.requestMethod(), a.uploadStream(), a.uploadStreamHasHeaders(),
           a.priority(), a.classOfService(), a.redirectionLimit(), a.allowSTS(),
@@ -377,9 +376,7 @@ void HttpChannelParent::InvokeAsyncOpen(nsresult rv) {
 
 bool HttpChannelParent::DoAsyncOpen(
     const URIParams& aURI, const Maybe<URIParams>& aOriginalURI,
-    const Maybe<URIParams>& aDocURI,
-    const Maybe<URIParams>& aOriginalReferrerURI,
-    const uint32_t& aOriginalReferrerPolicy, const uint32_t& aReferrerPolicy,
+    const Maybe<URIParams>& aDocURI, nsIReferrerInfo* aReferrerInfo,
     const Maybe<URIParams>& aAPIRedirectToURI,
     const Maybe<URIParams>& aTopWindowURI, const uint32_t& aLoadFlags,
     const RequestHeaderTuples& requestHeaders, const nsCString& requestMethod,
@@ -420,7 +417,6 @@ bool HttpChannelParent::DoAsyncOpen(
   }
   nsCOMPtr<nsIURI> originalUri = DeserializeURI(aOriginalURI);
   nsCOMPtr<nsIURI> docUri = DeserializeURI(aDocURI);
-  nsCOMPtr<nsIURI> referrerUri = DeserializeURI(aOriginalReferrerURI);
   nsCOMPtr<nsIURI> apiRedirectToUri = DeserializeURI(aAPIRedirectToURI);
   nsCOMPtr<nsIURI> topWindowUri = DeserializeURI(aTopWindowURI);
 
@@ -477,11 +473,12 @@ bool HttpChannelParent::DoAsyncOpen(
 
   if (originalUri) httpChannel->SetOriginalURI(originalUri);
   if (docUri) httpChannel->SetDocumentURI(docUri);
-  if (referrerUri) {
-    rv = httpChannel->SetReferrerWithPolicyInternal(
-        referrerUri, aOriginalReferrerPolicy, aReferrerPolicy);
+  if (aReferrerInfo) {
+    // Referrer header is computed in child no need to recompute here
+    rv = httpChannel->SetReferrerInfo(aReferrerInfo, false, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
+
   if (apiRedirectToUri) httpChannel->RedirectTo(apiRedirectToUri);
   if (topWindowUri) {
     rv = httpChannel->SetTopWindowURI(topWindowUri);
@@ -837,8 +834,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvSetCacheTokenCachedCharset(
 mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
     const nsresult& aResult, const RequestHeaderTuples& changedHeaders,
     const ChildLoadInfoForwarderArgs& aLoadInfoForwarder,
-    const uint32_t& loadFlags, const uint32_t& referrerPolicy,
-    const Maybe<URIParams>& aReferrerURI,
+    const uint32_t& loadFlags, nsIReferrerInfo* aReferrerInfo,
     const Maybe<URIParams>& aAPIRedirectURI,
     const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
     const bool& aChooseAppcache) {
@@ -889,9 +885,15 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
         newInternalChannel->SetCorsPreflightParameters(args.unsafeHeaders());
       }
 
-      nsCOMPtr<nsIURI> referrerUri = DeserializeURI(aReferrerURI);
-      rv = newHttpChannel->SetReferrerWithPolicy(referrerUri, referrerPolicy);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      if (aReferrerInfo) {
+        RefPtr<HttpBaseChannel> baseChannel = do_QueryObject(newHttpChannel);
+        MOZ_ASSERT(baseChannel);
+        if (baseChannel) {
+          // Referrer header is computed in child no need to recompute here
+          rv = baseChannel->SetReferrerInfo(aReferrerInfo, false, false);
+          MOZ_ASSERT(NS_SUCCEEDED(rv));
+        }
+      }
 
       nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
           do_QueryInterface(newHttpChannel);

@@ -57,6 +57,7 @@
 #include "Image.h"
 #include "gfxPrefs.h"
 #include "prtime.h"
+#include "ReferrerInfo.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -884,7 +885,9 @@ static nsresult NewImageChannel(
     NS_ENSURE_TRUE(httpChannelInternal, NS_ERROR_UNEXPECTED);
     rv = httpChannelInternal->SetDocumentURI(aInitialDocumentURI);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = newHttpChannel->SetReferrerWithPolicy(aReferringURI, aReferrerPolicy);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        new ReferrerInfo(aReferringURI, aReferrerPolicy);
+    rv = newHttpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 

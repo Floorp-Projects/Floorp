@@ -969,7 +969,7 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   NS_ENSURE_TRUE(http, NS_ERROR_FAILURE);
 
   // hide the Origin header when requesting from .onion and requesting CORS
-  if (gHttpHandler->HideOnionReferrerSource()) {
+  if (dom::ReferrerInfo::HideOnionReferrerSource()) {
     nsCOMPtr<nsIURI> potentialOnionUri;  // the candidate uri in header Origin:
     rv = mOriginHeaderPrincipal->GetURI(getter_AddRefs(potentialOnionUri));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1537,14 +1537,15 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
 
   // Per https://fetch.spec.whatwg.org/#cors-preflight-fetch step 1, the
   // request's referrer and referrer policy should match the original request.
-  uint32_t referrerPolicy = nsIHttpChannel::REFERRER_POLICY_UNSET;
-  rv = reqCh->GetReferrerPolicy(&referrerPolicy);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+  rv = reqCh->GetReferrerInfo(getter_AddRefs(referrerInfo));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIURI> requestReferrerURI;
-  rv = reqCh->GetReferrer(getter_AddRefs(requestReferrerURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = preCh->SetReferrerWithPolicy(requestReferrerURI, referrerPolicy);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (referrerInfo) {
+    nsCOMPtr<nsIReferrerInfo> newReferrerInfo =
+        static_cast<dom::ReferrerInfo*>(referrerInfo.get())->Clone();
+    rv = preCh->SetReferrerInfo(newReferrerInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Start preflight
   rv = preflightChannel->AsyncOpen(preflightListener);

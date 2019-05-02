@@ -139,9 +139,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   MOZ_MUST_USE bool DoAsyncOpen(
       const URIParams& uri, const Maybe<URIParams>& originalUri,
-      const Maybe<URIParams>& docUri,
-      const Maybe<URIParams>& originalReferrerUri,
-      const uint32_t& originalReferrerPolicy, const uint32_t& referrerPolicy,
+      const Maybe<URIParams>& docUri, nsIReferrerInfo* aReferrerInfo,
       const Maybe<URIParams>& internalRedirectUri,
       const Maybe<URIParams>& topWindowUri, const uint32_t& loadFlags,
       const RequestHeaderTuples& requestHeaders, const nsCString& requestMethod,
@@ -188,8 +186,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   virtual mozilla::ipc::IPCResult RecvRedirect2Verify(
       const nsresult& result, const RequestHeaderTuples& changedHeaders,
       const ChildLoadInfoForwarderArgs& aLoadInfoForwarder,
-      const uint32_t& loadFlags, const uint32_t& referrerPolicy,
-      const Maybe<URIParams>& aReferrerURI,
+      const uint32_t& loadFlags, nsIReferrerInfo* aReferrerInfo,
       const Maybe<URIParams>& apiRedirectUri,
       const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
       const bool& aChooseAppcache) override;
