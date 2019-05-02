@@ -249,6 +249,7 @@
 #include "mozilla/RecordReplay.h"
 #include "nsThreadManager.h"
 #include "nsIBidiKeyboard.h"
+#include "ReferrerInfo.h"
 
 #if defined(XP_WIN)
 // Undefine LoadImage to prevent naming conflict with Windows.
@@ -7980,8 +7981,10 @@ nsresult nsContentUtils::SetFetchReferrerURIWithPolicy(
 
   aPrincipal->GetURI(getter_AddRefs(principalURI));
 
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
   if (!aDoc) {
-    return aChannel->SetReferrerWithPolicy(principalURI, aReferrerPolicy);
+    referrerInfo = new ReferrerInfo(principalURI, aReferrerPolicy);
+    return aChannel->SetReferrerInfoWithoutClone(referrerInfo);
   }
 
   // If it weren't for history.push/replaceState, we could just use the
@@ -8010,7 +8013,8 @@ nsresult nsContentUtils::SetFetchReferrerURIWithPolicy(
     referrerURI = principalURI;
   }
 
-  return aChannel->SetReferrerWithPolicy(referrerURI, aReferrerPolicy);
+  referrerInfo = new ReferrerInfo(referrerURI, aReferrerPolicy);
+  return aChannel->SetReferrerInfoWithoutClone(referrerInfo);
 }
 
 // static
@@ -9782,8 +9786,12 @@ bool nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel) {
   NS_ENSURE_TRUE(uri, false);
 
   nsCOMPtr<nsIURI> referrer;
-  rv = aChannel->GetReferrer(getter_AddRefs(referrer));
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+  rv = aChannel->GetReferrerInfo(getter_AddRefs(referrerInfo));
   NS_ENSURE_SUCCESS(rv, false);
+  if (referrerInfo) {
+    referrer = referrerInfo->GetComputedReferrer();
+  }
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo->TriggeringPrincipal();

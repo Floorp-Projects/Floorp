@@ -122,6 +122,7 @@
 #include "nsThreadUtils.h"
 #include "nsURIHashKey.h"
 #include "nsVideoFrame.h"
+#include "ReferrerInfo.h"
 #include "xpcpublic.h"
 #include <algorithm>
 #include <cmath>
@@ -6211,8 +6212,9 @@ void HTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel) {
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Set the Referer header
-  rv = aChannel->SetReferrerWithPolicy(OwnerDoc()->GetDocumentURI(),
-                                       OwnerDoc()->GetReferrerPolicy());
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(
+      OwnerDoc()->GetDocumentURI(), OwnerDoc()->GetReferrerPolicy());
+  rv = aChannel->SetReferrerInfoWithoutClone(referrerInfo);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
