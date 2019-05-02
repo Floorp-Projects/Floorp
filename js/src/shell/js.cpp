@@ -9432,30 +9432,12 @@ static FILE* ErrorFilePointer() {
   return stderr;
 }
 
-static bool PrintStackTrace(JSContext* cx, HandleValue exn) {
-  if (!exn.isObject()) {
-    return false;
-  }
-
-  Maybe<JSAutoRealm> ar;
-  RootedObject exnObj(cx, &exn.toObject());
-  if (IsCrossCompartmentWrapper(exnObj)) {
-    exnObj = UncheckedUnwrap(exnObj);
-    ar.emplace(cx, exnObj);
-  }
-
-  // Ignore non-ErrorObject thrown by |throw| statement.
-  if (!exnObj->is<ErrorObject>()) {
+static bool PrintStackTrace(JSContext* cx, HandleObject stackObj) {
+  if (!stackObj || !stackObj->is<SavedFrame>()) {
     return true;
   }
 
-  // Exceptions thrown while compiling top-level script have no stack.
-  RootedObject stackObj(cx, exnObj->as<ErrorObject>().stack());
-  if (!stackObj) {
-    return true;
-  }
-
-  JSPrincipals* principals = exnObj->as<ErrorObject>().realm()->principals();
+  JSPrincipals* principals = stackObj->nonCCWRealm()->principals();
   RootedString stackStr(cx);
   if (!BuildStackString(cx, principals, stackObj, &stackStr, 2)) {
     return false;
@@ -9478,9 +9460,10 @@ js::shell::AutoReportException::~AutoReportException() {
     return;
   }
 
-  // Get exception object before printing and clearing exception.
+  // Get exception object and stack before printing and clearing exception.
   RootedValue exn(cx);
   (void)JS_GetPendingException(cx, &exn);
+  RootedObject stack(cx, GetPendingExceptionStack(cx));
 
   JS_ClearPendingException(cx);
 
@@ -9498,15 +9481,10 @@ js::shell::AutoReportException::~AutoReportException() {
   FILE* fp = ErrorFilePointer();
   PrintError(cx, fp, report.toStringResult(), report.report(), reportWarnings);
 
-  {
-    JS::AutoSaveExceptionState savedExc(cx);
-    if (!PrintStackTrace(cx, exn)) {
-      fputs("(Unable to print stack trace)\n", fp);
-    }
-    savedExc.restore();
+  if (!PrintStackTrace(cx, stack)) {
+    fputs("(Unable to print stack trace)\n", fp);
+    JS_ClearPendingException(cx);
   }
-
-  JS_ClearPendingException(cx);
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
   // Don't quit the shell if an unhandled exception is reported during OOM
