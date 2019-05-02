@@ -4053,7 +4053,7 @@ void WorkerPrivate::ReportError(JSContext* aCx,
   JS::RootedObject exnStack(aCx, JS::GetPendingExceptionStack(aCx));
   JS_ClearPendingException(aCx);
 
-  UniquePtr<WorkerErrorReport> report = MakeUnique<WorkerErrorReport>(this);
+  UniquePtr<WorkerErrorReport> report = MakeUnique<WorkerErrorReport>();
   if (aReport) {
     report->AssignErrorReport(aReport);
   } else {
@@ -4065,8 +4065,7 @@ void WorkerPrivate::ReportError(JSContext* aCx,
                                           &stackGlobal);
 
   if (stack) {
-    JS::RootedValue stackValue(aCx, JS::ObjectValue(*stack));
-    report->Write(aCx, stackValue, IgnoreErrors());
+    report->SerializeWorkerStack(aCx, this, stack);
   }
 
   if (report->mMessage.IsEmpty() && aToStringResult) {
