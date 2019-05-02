@@ -7,4 +7,4 @@ restart-required = false
 type = "boolean"
 bug-numbers = [1519276]
 is-public = true
-default-value = false
+default-value = true
