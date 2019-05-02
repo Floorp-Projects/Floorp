@@ -636,7 +636,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_sync_service_not_priva
     return false;
   };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("sync", mockSendingContext);
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("sync", mockSendingContext, false);
   Assert.ok(shouldAllowFxaStatus);
   Assert.ok(wasCalled.isPrivateBrowsingMode);
 });
@@ -653,7 +653,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_oauth_service_not_priv
     return false;
   };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext);
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext, false);
   Assert.ok(shouldAllowFxaStatus);
   Assert.ok(wasCalled.isPrivateBrowsingMode);
 });
@@ -670,7 +670,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_no_service_not_private
     return false;
   };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("", mockSendingContext);
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("", mockSendingContext, false);
   Assert.ok(shouldAllowFxaStatus);
   Assert.ok(wasCalled.isPrivateBrowsingMode);
 });
@@ -687,7 +687,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_sync_service_private_b
     return true;
   };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("sync", mockSendingContext);
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("sync", mockSendingContext, false);
   Assert.ok(shouldAllowFxaStatus);
   Assert.ok(wasCalled.isPrivateBrowsingMode);
 });
@@ -704,8 +704,25 @@ add_task(async function test_helpers_shouldAllowFxaStatus_oauth_service_private_
     return true;
   };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext);
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext, false);
   Assert.ok(!shouldAllowFxaStatus);
+  Assert.ok(wasCalled.isPrivateBrowsingMode);
+});
+
+add_task(async function test_helpers_shouldAllowFxaStatus_oauth_service_pairing_private_browsing() {
+  let wasCalled = {
+    isPrivateBrowsingMode: false,
+  };
+  let helpers = new FxAccountsWebChannelHelpers({});
+
+  helpers.isPrivateBrowsingMode = (sendingContext) => {
+    wasCalled.isPrivateBrowsingMode = true;
+    Assert.equal(sendingContext, mockSendingContext);
+    return true;
+  };
+
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext, true);
+  Assert.ok(shouldAllowFxaStatus);
   Assert.ok(wasCalled.isPrivateBrowsingMode);
 });
 
@@ -721,7 +738,7 @@ add_task(async function test_helpers_shouldAllowFxaStatus_no_service_private_bro
     return true;
   };
 
-  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("", mockSendingContext);
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("", mockSendingContext, false);
   Assert.ok(!shouldAllowFxaStatus);
   Assert.ok(wasCalled.isPrivateBrowsingMode);
 });
