@@ -65,9 +65,8 @@ class nsThread : public nsIThreadInternal,
   nsThread();
 
  public:
-  // Initialize this as a wrapper for a new PRThread, and optionally give it a
-  // name.
-  nsresult Init(const nsACString& aName = NS_LITERAL_CSTRING(""));
+  // Initialize this as a named wrapper for a new PRThread.
+  nsresult Init(const nsACString& aName);
 
   // Initialize this as a wrapper for the current PRThread.
   nsresult InitCurrentThread();
