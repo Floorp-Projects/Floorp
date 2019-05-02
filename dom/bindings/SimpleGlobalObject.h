@@ -61,7 +61,10 @@ class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
   // Oherwise, returns GlobalType::NotSimpleGlobal.
   static GlobalType SimpleGlobalType(JSObject* obj);
 
-  virtual JSObject* GetGlobalJSObject() override { return GetWrapper(); }
+  JSObject* GetGlobalJSObject() override { return GetWrapper(); }
+  JSObject* GetGlobalJSObjectPreserveColor() const override {
+    return GetWrapperPreserveColor();
+  }
 
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override {

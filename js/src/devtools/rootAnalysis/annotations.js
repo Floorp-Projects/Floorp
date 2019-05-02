@@ -407,6 +407,8 @@ function isOverridableField(initialCSU, csu, field)
         return false;
     if (field == "GetGlobalJSObject")
         return false;
+    if (field == "GetGlobalJSObjectPreserveColor")
+        return false;
     if (field == "GetIsMainThread")
         return false;
     if (field == "GetThreadFromPRThread")

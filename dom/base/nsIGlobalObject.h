@@ -82,6 +82,20 @@ class nsIGlobalObject : public nsISupports,
   // calls in XrayWrapper and nsGlobalWindow.
   virtual JSObject* GetGlobalJSObject() = 0;
 
+  /**
+   * Return the JSObject for this global _without_ exposing it to active JS.
+   * This may return a gray object.
+   *
+   * This method is appropriate to use in assertions (so there is less of a
+   * difference in GC/CC marking between debug and optimized builds) and in
+   * situations where we are sure no CC activity can happen while the return
+   * value is used and the return value does not end up escaping to the heap in
+   * any way.  In all other cases, and in particular in cases where the return
+   * value is held in a JS::Rooted or passed to the JSAutoRealm constructor, use
+   * GetGlobalJSObject.
+   */
+  virtual JSObject* GetGlobalJSObjectPreserveColor() const = 0;
+
   // This method is not meant to be overridden.
   nsIPrincipal* PrincipalOrNull();
 
