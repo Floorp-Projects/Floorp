@@ -386,7 +386,7 @@ void TCPSocket::NotifyCopyComplete(nsresult aStatus) {
   }
   mBufferedAmount = bufferedAmount;
 
-  if (mSocketBridgeParent) {
+  if (mSocketBridgeParent && mSocketBridgeParent->IPCOpen()) {
     mozilla::Unused << mSocketBridgeParent->SendUpdateBufferedAmount(
         BufferedAmount(), mTrackingNumber);
   }
@@ -1006,6 +1006,8 @@ TCPSocket::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
 }
 
 void TCPSocket::SetSocketBridgeParent(TCPSocketParent* aBridgeParent) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   mSocketBridgeParent = aBridgeParent;
 }
 

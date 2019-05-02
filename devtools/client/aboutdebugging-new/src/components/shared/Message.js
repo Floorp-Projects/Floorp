@@ -79,7 +79,7 @@ class Message extends PureComponent {
 
     return dom.aside(
       {
-        className: `message message--level-${level}  js-message` +
+        className: `message message--level-${level}  qa-message` +
                    (className ? ` ${ className }` : ""),
       },
       dom.img(

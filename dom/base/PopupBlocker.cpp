@@ -185,7 +185,7 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
     case eBasicEventClass:
       // For these following events only allow popups if they're
       // triggered while handling user input. See
-      // nsPresShell::HandleEventInternal() for details.
+      // PresShell::EventHandler::PrepareToDispatchEvent() for details.
       if (EventStateManager::IsHandlingUserInput()) {
         abuse = PopupBlocker::openBlocked;
         switch (aEvent->mMessage) {
@@ -207,7 +207,7 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
     case eEditorInputEventClass:
       // For this following event only allow popups if it's triggered
       // while handling user input. See
-      // nsPresShell::HandleEventInternal() for details.
+      // PresShell::EventHandler::PrepareToDispatchEvent() for details.
       if (EventStateManager::IsHandlingUserInput()) {
         abuse = PopupBlocker::openBlocked;
         switch (aEvent->mMessage) {
@@ -224,7 +224,7 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
     case eInputEventClass:
       // For this following event only allow popups if it's triggered
       // while handling user input. See
-      // nsPresShell::HandleEventInternal() for details.
+      // PresShell::EventHandler::PrepareToDispatchEvent() for details.
       if (EventStateManager::IsHandlingUserInput()) {
         abuse = PopupBlocker::openBlocked;
         switch (aEvent->mMessage) {
@@ -370,7 +370,7 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
     case eFormEventClass:
       // For these following events only allow popups if they're
       // triggered while handling user input. See
-      // nsPresShell::HandleEventInternal() for details.
+      // PresShell::EventHandler::PrepareToDispatchEvent() for details.
       if (EventStateManager::IsHandlingUserInput()) {
         abuse = PopupBlocker::openBlocked;
         switch (aEvent->mMessage) {

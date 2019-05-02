@@ -2238,7 +2238,7 @@ nsPoint nsLayoutUtils::GetEventCoordinatesRelativeTo(
   PresShell* presShell = aFrame->PresShell();
 
   // XXX Bug 1224748 - Update nsLayoutUtils functions to correctly handle
-  // nsPresShell resolution
+  // PresShell resolution
   widgetToView =
       widgetToView.RemoveResolution(GetCurrentAPZResolutionScale(presShell));
 
@@ -8935,7 +8935,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
                                   FrameMetrics::eRestore, ScrollMode::Instant);
       }
 
-      if (const Maybe<nsIPresShell::VisualScrollUpdate>& visualUpdate =
+      if (const Maybe<PresShell::VisualScrollUpdate>& visualUpdate =
               presShell->GetPendingVisualScrollUpdate()) {
         metrics.SetVisualViewportOffset(
             CSSPoint::FromAppUnits(visualUpdate->mVisualScrollOffset));

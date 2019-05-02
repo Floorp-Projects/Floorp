@@ -1,0 +1,39 @@
+L10n
+====
+
+The l10n linter checks for mistakes and problems in the localizable files.
+Most of the code lives inside the
+`compare-locales <https://pypi.org/project/compare-locales/>`_
+package, and is shipping as the ``moz-l10n-lint`` command.
+
+The linter checks for fundamental issues like parsing errors, but it also
+finds more subtle mistakes like duplicated messages. It also warns if you're
+trying to change a string without changing the ID, or to add a string that's
+still in use in a stable channel with a different value.
+
+The warnings on string ID changes get reported on phabricator, but they're
+not making the build fail. To find out when to change IDs and when not to,
+read the :doc:`Lifecycle & Workflow </intl/localization>` section in the
+localization documentation.
+
+Run Locally
+-----------
+
+The can be run using mach:
+
+.. parsed-literal::
+
+    $ mach lint --linter l10n <file paths>
+
+Alternatively, omit the ``--linter l10n`` and run all configured linters, which
+will include the l10n linter.
+
+
+Updating the Reference
+----------------------
+
+The linter checks out the cross-channel localization files into your
+``.mozbuild`` state directory. By default this is updated automatically after
+48 hours. There might be new strings anyway, if you want to ensure an
+updated clone, remove the marker file in
+``~/.mozbuild/gecko-strings/.hg/l10n_pull_marker``.

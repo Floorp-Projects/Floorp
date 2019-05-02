@@ -53,7 +53,7 @@ class TemporaryExtensionInstallSection extends PureComponent {
     return Message(
       {
         level: MESSAGE_LEVEL.ERROR,
-        className: "js-tmp-extension-install-error",
+        className: "qa-tmp-extension-install-error",
         isCloseable: true,
       },
       Localized(

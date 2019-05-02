@@ -55,7 +55,7 @@ class Sidebar extends PureComponent {
         },
         dom.span(
           {
-            className: "js-sidebar-usb-status",
+            className: "qa-sidebar-usb-status",
           },
           localizationId
         )
@@ -72,7 +72,7 @@ class Sidebar extends PureComponent {
         },
         dom.aside(
           {
-            className: "sidebar__label js-sidebar-no-devices",
+            className: "sidebar__label qa-sidebar-no-devices",
           },
           "No devices discovered"
         )

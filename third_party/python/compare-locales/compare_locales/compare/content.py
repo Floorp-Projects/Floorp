@@ -195,11 +195,9 @@ class ContentComparer:
                 if isinstance(l10n_entities[entity_id],
                               parser.Junk):
                     junk = l10n_entities[entity_id]
-                    params = (junk.val,) + junk.position() + junk.position(-1)
                     self.observers.notify(
                         'error', l10n,
-                        'Unparsed content "%s" from line %d column %d'
-                        ' to line %d column %d' % params
+                        junk.error_message()
                     )
                     if merge_file is not None:
                         skips.append(junk)

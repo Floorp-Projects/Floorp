@@ -303,7 +303,7 @@ class EventChainPostVisitor : public mozilla::EventChainVisitor {
  * If an EventDispatchingCallback object is passed to Dispatch,
  * its HandleEvent method is called after handling the default event group,
  * before handling the system event group.
- * This is used in nsPresShell.
+ * This is used in PresShell.
  */
 class MOZ_STACK_CLASS EventDispatchingCallback {
  public:

@@ -68,7 +68,7 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
           dom.button(
             {
               className: "default-button default-button--micro " +
-                         "js-temporary-extension-reload-button",
+                         "qa-temporary-extension-reload-button",
               onClick: e => this.reload(),
             },
             "Reload",
@@ -81,7 +81,7 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
           dom.button(
             {
               className: "default-button default-button--micro " +
-                         "js-temporary-extension-remove-button",
+                         "qa-temporary-extension-remove-button",
               onClick: e => this.remove(),
             },
             "Remove",

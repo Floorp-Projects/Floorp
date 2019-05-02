@@ -38,7 +38,6 @@
 #include "nsIClipboardHelper.h"
 #include "nsIFile.h"
 #include "nsIGfxInfo.h"
-#include "nsIPresShell.h"
 #include "nsMimeTypes.h"
 #include "nsPresContext.h"
 #include "nsRegion.h"
@@ -1226,24 +1225,6 @@ void gfxUtils::WriteAsPNG(DrawTarget* aDT, const char* aFile) {
   } else {
     NS_WARNING("Failed to get surface!");
   }
-}
-
-/* static */
-void gfxUtils::WriteAsPNG(nsIPresShell* aShell, const char* aFile) {
-  int32_t width = 1000, height = 1000;
-  nsRect r(0, 0, aShell->GetPresContext()->DevPixelsToAppUnits(width),
-           aShell->GetPresContext()->DevPixelsToAppUnits(height));
-
-  RefPtr<mozilla::gfx::DrawTarget> dt =
-      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-          IntSize(width, height), SurfaceFormat::B8G8R8A8);
-  NS_ENSURE_TRUE(dt && dt->IsValid(), /*void*/);
-
-  RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
-  MOZ_ASSERT(context);  // already checked the draw target above
-  aShell->RenderDocument(r, RenderDocumentFlags::None, NS_RGB(255, 255, 0),
-                         context);
-  WriteAsPNG(dt.get(), aFile);
 }
 
 /* static */

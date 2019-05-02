@@ -32,7 +32,7 @@ add_task(async function() {
   info("Wait until the USB sidebar item appears");
   await waitUntil(() => findSidebarItemByText(RUNTIME_DEVICE_NAME, document));
   const usbRuntimeSidebarItem = findSidebarItemByText(RUNTIME_DEVICE_NAME, document);
-  const connectButton = usbRuntimeSidebarItem.querySelector(".js-connect-button");
+  const connectButton = usbRuntimeSidebarItem.querySelector(".qa-connect-button");
 
   info("Simulate to happen connection error");
   mocks.runtimeClientFactoryMock.createClientForRuntime = async (runtime) => {
@@ -67,7 +67,7 @@ add_task(async function() {
 
   info("Unblock the connection and check the message and connect button disappear");
   resumeConnection();
-  await waitUntil(() => !usbRuntimeSidebarItem.querySelector(".js-connect-button"));
+  await waitUntil(() => !usbRuntimeSidebarItem.querySelector(".qa-connect-button"));
   ok(!document.querySelector(".qa-connection-error"), "Error disappears");
   ok(!document.querySelector(".qa-connection-not-responding"), "Warning disappears");
 
@@ -98,7 +98,7 @@ add_task(async function() {
   info("Wait until the USB sidebar item appears");
   await waitUntil(() => findSidebarItemByText(RUNTIME_DEVICE_NAME, document));
   const usbRuntimeSidebarItem = findSidebarItemByText(RUNTIME_DEVICE_NAME, document);
-  const connectButton = usbRuntimeSidebarItem.querySelector(".js-connect-button");
+  const connectButton = usbRuntimeSidebarItem.querySelector(".qa-connect-button");
 
   let resumeConnection;
   const resumeConnectionPromise = new Promise(r => {

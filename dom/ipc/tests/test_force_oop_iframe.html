@@ -13,7 +13,9 @@
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [["fission.oopif.attribute", true],
-                                           ["dom.ipc.processCount", 10000]]});
+                                           ["dom.ipc.processCount", 10000],
+                                           // Temporarily allow use of eval() in ChromeTask.js.
+                                           ["security.allow_eval_with_system_principal", true]]});
 
   // This iframe should be loaded out of process. Unfortunately as of the time
   // of this test's creation, many different events which we could use to detect

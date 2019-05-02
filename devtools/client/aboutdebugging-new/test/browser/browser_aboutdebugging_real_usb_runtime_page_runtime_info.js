@@ -35,7 +35,7 @@ add_task(async function() {
   await selectRuntime(sidebarInfo.deviceName, runtimeDetails.info.name, document);
 
   info("Check that runtime info is properly displayed");
-  const runtimeInfo = document.querySelector(".js-runtime-name");
+  const runtimeInfo = document.querySelector(".qa-runtime-name");
   ok(runtimeInfo, "Runtime info is displayed");
   const runtimeInfoText = runtimeInfo.textContent;
   ok(runtimeInfoText.includes(runtimeDetails.info.name),

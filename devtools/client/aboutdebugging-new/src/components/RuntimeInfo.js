@@ -49,7 +49,7 @@ class RuntimeInfo extends PureComponent {
         },
         dom.label(
           {
-            className: "js-runtime-name runtime-info__title",
+            className: "qa-runtime-name runtime-info__title",
           },
           `${ name } (${ version })`
         )

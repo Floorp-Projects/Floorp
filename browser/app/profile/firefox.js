@@ -336,8 +336,13 @@ pref("browser.urlbar.openintab", false);
 pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 
-// Toggle the new work in progress Address Bar code.
+// Toggle the new work in progress Address Bar code. Enable it on Nightly and Beta,
+// not on Release yet.
+#ifdef EARLY_BETA_OR_EARLIER
+pref("browser.urlbar.quantumbar", true);
+#else
 pref("browser.urlbar.quantumbar", false);
+#endif
 
 pref("browser.altClickSave", false);
 

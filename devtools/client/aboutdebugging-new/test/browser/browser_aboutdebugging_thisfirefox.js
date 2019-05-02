@@ -44,14 +44,14 @@ add_task(async function testThisFirefoxWithoutLocalTab() {
 async function checkThisFirefoxTargetPanes(doc, expectedTargetPanes) {
   const win = doc.ownerGlobal;
   // Check that the selected sidebar item is "This Firefox"/"This Nightly"/...
-  const selectedSidebarItem = doc.querySelector(".js-sidebar-item-selected");
+  const selectedSidebarItem = doc.querySelector(".qa-sidebar-item-selected");
   ok(selectedSidebarItem, "An item is selected in the sidebar");
 
   const thisFirefoxString = getThisFirefoxString(win);
   is(selectedSidebarItem.textContent, thisFirefoxString,
     "The selected sidebar item is " + thisFirefoxString);
 
-  const paneTitlesEls = doc.querySelectorAll(".js-debug-target-pane-title");
+  const paneTitlesEls = doc.querySelectorAll(".qa-debug-target-pane-title");
   is(paneTitlesEls.length, expectedTargetPanes.length,
     "This Firefox has the expected number of debug target categories");
 
