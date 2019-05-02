@@ -2533,7 +2533,7 @@ bool nsHTMLDocument::QueryCommandSupported(const nsAString& commandID,
     if (commandID.LowerCaseEqualsLiteral("paste")) {
       return false;
     }
-    if (nsContentUtils::IsCutCopyRestricted()) {
+    if (!StaticPrefs::dom_allow_cut_copy()) {
       // XXXbz should we worry about correctly reporting "true" in the
       // "restricted, but we're an addon with clipboardWrite permissions" case?
       // See also nsContentUtils::IsCutCopyAllowed.

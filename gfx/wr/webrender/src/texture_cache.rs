@@ -624,6 +624,8 @@ impl TextureCache {
                 self.free(&entry);
             }
         }
+
+        self.pending_updates.note_clear();
         self.per_doc_data = per_doc_data;
         self.require_frame_build = true;
     }
@@ -637,7 +639,7 @@ impl TextureCache {
         self.clear_kind(EntryKind::Picture);
         if let Some(ref mut picture_texture) = self.picture_texture {
             if let Some(texture_id) = picture_texture.reset(PICTURE_TEXTURE_ADD_SLICES) {
-                self.pending_updates.push_realloc(texture_id, picture_texture.to_info());
+                self.pending_updates.push_reset(texture_id, picture_texture.to_info());
             }
         }
     }

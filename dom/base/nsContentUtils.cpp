@@ -310,49 +310,19 @@ nsString* nsContentUtils::sAltText = nullptr;
 nsString* nsContentUtils::sModifierSeparator = nullptr;
 
 bool nsContentUtils::sInitialized = false;
-bool nsContentUtils::sIsFullscreenApiEnabled = false;
-bool nsContentUtils::sIsUnprefixedFullscreenApiEnabled = false;
-bool nsContentUtils::sTrustedFullscreenOnly = true;
-bool nsContentUtils::sIsCutCopyAllowed = true;
-bool nsContentUtils::sIsUpgradableDisplayContentPrefEnabled = false;
-bool nsContentUtils::sIsFrameTimingPrefEnabled = false;
-bool nsContentUtils::sIsPerformanceTimingEnabled = false;
-bool nsContentUtils::sIsResourceTimingEnabled = false;
-bool nsContentUtils::sIsPerformanceNavigationTimingEnabled = false;
-bool nsContentUtils::sIsFormAutofillAutocompleteEnabled = false;
-bool nsContentUtils::sSendPerformanceTimingNotifications = false;
-bool nsContentUtils::sUseActivityCursor = false;
-bool nsContentUtils::sAnimationsAPICoreEnabled = false;
-bool nsContentUtils::sGetBoxQuadsEnabled = false;
-bool nsContentUtils::sSkipCursorMoveForSameValueSet = false;
-bool nsContentUtils::sRequestIdleCallbackEnabled = false;
-bool nsContentUtils::sTailingEnabled = false;
-bool nsContentUtils::sShowInputPlaceholderOnFocus = true;
-bool nsContentUtils::sAutoFocusEnabled = true;
 #ifndef RELEASE_OR_BETA
 bool nsContentUtils::sBypassCSSOMOriginCheck = false;
 #endif
 
-bool nsContentUtils::sIsBytecodeCacheEnabled = false;
-int32_t nsContentUtils::sBytecodeCacheStrategy = 0;
 nsCString* nsContentUtils::sJSBytecodeMimeType = nullptr;
-
-int32_t nsContentUtils::sPrivacyMaxInnerWidth = 1000;
-int32_t nsContentUtils::sPrivacyMaxInnerHeight = 1000;
 
 nsContentUtils::UserInteractionObserver*
     nsContentUtils::sUserInteractionObserver = nullptr;
-
-uint32_t nsContentUtils::sHandlingInputTimeout = 1000;
 
 nsHtml5StringParser* nsContentUtils::sHTMLFragmentParser = nullptr;
 nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
-
-bool nsContentUtils::sDoNotTrackEnabled = false;
-
-bool nsContentUtils::sAntiTrackingControlCenterUIEnabled = false;
 
 mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
 
@@ -563,7 +533,8 @@ class nsContentUtils::UserInteractionObserver final
 
 /* static */
 TimeDuration nsContentUtils::HandlingUserInputTimeout() {
-  return TimeDuration::FromMilliseconds(sHandlingInputTimeout);
+  return TimeDuration::FromMilliseconds(
+      StaticPrefs::dom_event_handling_user_input_time_limit());
 }
 
 // static
@@ -633,92 +604,9 @@ nsresult nsContentUtils::Init() {
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
 
-  Preferences::AddBoolVarCache(&sIsFullscreenApiEnabled,
-                               "full-screen-api.enabled");
-
-  Preferences::AddBoolVarCache(&sIsUnprefixedFullscreenApiEnabled,
-                               "full-screen-api.unprefix.enabled");
-
-  Preferences::AddBoolVarCache(&sTrustedFullscreenOnly,
-                               "full-screen-api.allow-trusted-requests-only");
-
-  Preferences::AddBoolVarCache(&sIsCutCopyAllowed, "dom.allow_cut_copy", true);
-
-  Preferences::AddBoolVarCache(&sIsPerformanceTimingEnabled,
-                               "dom.enable_performance", true);
-
-  Preferences::AddBoolVarCache(&sIsResourceTimingEnabled,
-                               "dom.enable_resource_timing", true);
-
-  Preferences::AddBoolVarCache(&sIsPerformanceNavigationTimingEnabled,
-                               "dom.enable_performance_navigation_timing",
-                               true);
-
-  Preferences::AddBoolVarCache(&sIsUpgradableDisplayContentPrefEnabled,
-                               "security.mixed_content.upgrade_display_content",
-                               false);
-
-  Preferences::AddBoolVarCache(&sIsFrameTimingPrefEnabled,
-                               "dom.enable_frame_timing", false);
-
-  Preferences::AddBoolVarCache(&sIsFormAutofillAutocompleteEnabled,
-                               "dom.forms.autocomplete.formautofill", false);
-
-  Preferences::AddIntVarCache(&sPrivacyMaxInnerWidth,
-                              "privacy.window.maxInnerWidth", 1000);
-
-  Preferences::AddIntVarCache(&sPrivacyMaxInnerHeight,
-                              "privacy.window.maxInnerHeight", 1000);
-
-  Preferences::AddUintVarCache(
-      &sHandlingInputTimeout, "dom.event.handling-user-input-time-limit", 1000);
-
-  Preferences::AddBoolVarCache(
-      &sSendPerformanceTimingNotifications,
-      "dom.performance.enable_notify_performance_timing", false);
-
-  Preferences::AddBoolVarCache(&sDoNotTrackEnabled,
-                               "privacy.donottrackheader.enabled", false);
-
-  Preferences::AddBoolVarCache(&sUseActivityCursor, "ui.use_activity_cursor",
-                               false);
-
-  Preferences::AddBoolVarCache(&sAnimationsAPICoreEnabled,
-                               "dom.animations-api.core.enabled", false);
-
-  Preferences::AddBoolVarCache(&sGetBoxQuadsEnabled,
-                               "layout.css.getBoxQuads.enabled", false);
-
-  Preferences::AddBoolVarCache(&sSkipCursorMoveForSameValueSet,
-                               "dom.input.skip_cursor_move_for_same_value_set",
-                               true);
-
-  Preferences::AddBoolVarCache(&sRequestIdleCallbackEnabled,
-                               "dom.requestIdleCallback.enabled", false);
-
 #ifndef RELEASE_OR_BETA
   sBypassCSSOMOriginCheck = getenv("MOZ_BYPASS_CSSOM_ORIGIN_CHECK");
 #endif
-
-  Preferences::AddBoolVarCache(&sTailingEnabled, "network.http.tailing.enabled",
-                               true);
-
-  Preferences::AddBoolVarCache(&sShowInputPlaceholderOnFocus,
-                               "dom.placeholder.show_on_focus", true);
-
-  Preferences::AddBoolVarCache(&sAutoFocusEnabled, "browser.autofocus", true);
-
-  Preferences::AddBoolVarCache(&sIsBytecodeCacheEnabled,
-                               "dom.script_loader.bytecode_cache.enabled",
-                               false);
-
-  Preferences::AddBoolVarCache(
-      &sAntiTrackingControlCenterUIEnabled,
-      "browser.contentblocking.rejecttrackers.control-center.ui.enabled",
-      false);
-
-  Preferences::AddIntVarCache(&sBytecodeCacheStrategy,
-                              "dom.script_loader.bytecode_cache.strategy", 0);
 
   nsDependentCString buildID(mozilla::PlatformBuildID());
   sJSBytecodeMimeType =
@@ -1125,7 +1013,8 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
 
     // Only allow on/off if form autofill @autocomplete values aren't enabled
     // and it doesn't grant all valid values.
-    if (!sIsFormAutofillAutocompleteEnabled && !aGrantAllValidValue) {
+    if (!StaticPrefs::dom_forms_autocomplete_formautofill() &&
+        !aGrantAllValidValue) {
       return eAutocompleteAttrState_Invalid;
     }
 
@@ -1137,7 +1026,8 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
   } else {  // Check if the last token is of the contact category instead.
     // Only allow on/off if form autofill @autocomplete values aren't enabled
     // and it doesn't grant all valid values.
-    if (!sIsFormAutofillAutocompleteEnabled && !aGrantAllValidValue) {
+    if (!StaticPrefs::dom_forms_autocomplete_formautofill() &&
+        !aGrantAllValidValue) {
       return eAutocompleteAttrState_Invalid;
     }
 
@@ -2106,19 +1996,19 @@ void nsContentUtils::CalcRoundedWindowSizeForResistingFingerprinting(
   int32_t availContentWidth = 0;
   int32_t availContentHeight = 0;
 
-  availContentWidth =
-      std::min(sPrivacyMaxInnerWidth, aScreenWidth - aChromeWidth);
+  availContentWidth = std::min(StaticPrefs::privacy_window_maxInnerWidth(),
+                               aScreenWidth - aChromeWidth);
 #ifdef MOZ_WIDGET_GTK
   // In the GTK window, it will not report outside system decorations
   // when we get available window size, see Bug 581863. So, we leave a
   // 40 pixels space for them when calculating the available content
   // height. It is not necessary for the width since the content width
   // is usually pretty much the same as the chrome width.
-  availContentHeight =
-      std::min(sPrivacyMaxInnerHeight, (-40 + aScreenHeight) - aChromeHeight);
+  availContentHeight = std::min(StaticPrefs::privacy_window_maxInnerHeight(),
+                                (-40 + aScreenHeight) - aChromeHeight);
 #else
-  availContentHeight =
-      std::min(sPrivacyMaxInnerHeight, aScreenHeight - aChromeHeight);
+  availContentHeight = std::min(StaticPrefs::privacy_window_maxInnerHeight(),
+                                aScreenHeight - aChromeHeight);
 #endif
 
   // Ideally, we'd like to round window size to 1000x1000, but the
@@ -6668,17 +6558,13 @@ bool nsContentUtils::ChannelShouldInheritPrincipal(
 }
 
 /* static */
-bool nsContentUtils::IsFullscreenApiEnabled() {
-  return sIsFullscreenApiEnabled;
-}
-
-/* static */
 bool nsContentUtils::IsRequestFullscreenAllowed(CallerType aCallerType) {
   // If more time has elapsed since the user input than is specified by the
   // dom.event.handling-user-input-time-limit pref (default 1 second), this
   // function also returns false.
 
-  if (!sTrustedFullscreenOnly || aCallerType == CallerType::System) {
+  if (!StaticPrefs::full_screen_api_allow_trusted_requests_only() ||
+      aCallerType == CallerType::System) {
     return true;
   }
 
@@ -6694,16 +6580,12 @@ bool nsContentUtils::IsRequestFullscreenAllowed(CallerType aCallerType) {
 
 /* static */
 bool nsContentUtils::IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal) {
-  if (!IsCutCopyRestricted() && EventStateManager::IsHandlingUserInput()) {
+  if (StaticPrefs::dom_allow_cut_copy() &&
+      EventStateManager::IsHandlingUserInput()) {
     return true;
   }
 
   return PrincipalHasPermission(aSubjectPrincipal, nsGkAtoms::clipboardWrite);
-}
-
-/* static */
-bool nsContentUtils::IsFrameTimingEnabled() {
-  return sIsFrameTimingPrefEnabled;
 }
 
 /* static */
@@ -7036,10 +6918,6 @@ bool nsContentUtils::IsCORSSafelistedRequestHeader(const nsACString& aName,
           nsContentUtils::IsAllowedNonCorsLanguage(aValue)) ||
          (aName.LowerCaseEqualsLiteral("content-type") &&
           nsContentUtils::IsAllowedNonCorsContentType(aValue));
-}
-
-bool nsContentUtils::DoNotTrackEnabled() {
-  return nsContentUtils::sDoNotTrackEnabled;
 }
 
 mozilla::LogModule* nsContentUtils::DOMDumpLog() { return sDOMDumpLog; }
@@ -8473,7 +8351,8 @@ bool nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   }
   bool disabled = StorageDisabledByAntiTrackingInternal(
       aWindow, aChannel, aPrincipal, aURI, cookieSettings, aRejectedReason);
-  if (sAntiTrackingControlCenterUIEnabled) {
+  if (StaticPrefs::
+          browser_contentblocking_rejecttrackers_control_center_ui_enabled()) {
     if (aWindow) {
       AntiTrackingCommon::NotifyBlockingDecision(
           aWindow,
@@ -9277,7 +9156,7 @@ void nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell,
   MOZ_ASSERT(aDocShell);
 
   // Simulate receiver context for web platform test
-  if (Preferences::GetBool("dom.presentation.testing.simulate-receiver")) {
+  if (StaticPrefs::dom_presentation_testing_simulate_receiver()) {
     RefPtr<Document> doc;
 
     nsCOMPtr<nsPIDOMWindowOuter> docShellWin =
@@ -9869,20 +9748,13 @@ bool nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel) {
   const bool isWin32 = false;
 #endif
 
-  static bool sLargeAllocForceEnable = false;
-  static bool sCachedLargeAllocForceEnable = false;
-  if (!sCachedLargeAllocForceEnable) {
-    sCachedLargeAllocForceEnable = true;
-    mozilla::Preferences::AddBoolVarCache(&sLargeAllocForceEnable,
-                                          "dom.largeAllocation.forceEnable");
-  }
-
   // We want to enable the large allocation header on 32-bit windows machines,
   // and disable it on other machines, while still printing diagnostic messages.
   // dom.largeAllocation.forceEnable can allow you to enable the process
   // switching behavior of the Large-Allocation header on non 32-bit windows
   // machines.
-  bool largeAllocEnabled = isWin32 || sLargeAllocForceEnable;
+  bool largeAllocEnabled =
+      isWin32 || StaticPrefs::dom_largeAllocation_forceEnable();
   if (!largeAllocEnabled) {
     NS_WARNING(
         "dom.largeAllocation.forceEnable not set - "

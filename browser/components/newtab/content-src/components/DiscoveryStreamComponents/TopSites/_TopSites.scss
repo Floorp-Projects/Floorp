@@ -8,6 +8,10 @@
 
     .top-site-outer {
       padding: 0 12px;
+
+      .top-site-inner > a:-moz-any(.active, :focus) .tile {
+        @include ds-fade-in;
+      }
     }
 
     .top-sites-list {

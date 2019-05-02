@@ -29,6 +29,7 @@
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "ContentEventHandler.h"
 #include "IMEContentObserver.h"
@@ -3849,7 +3850,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     hotspot = Some(customCursor.mHotspot);
   }
 
-  if (nsContentUtils::UseActivityCursor()) {
+  if (StaticPrefs::ui_use_activity_cursor()) {
     // Check whether or not to show the busy cursor
     nsCOMPtr<nsIDocShell> docShell(aPresContext->GetDocShell());
     if (!docShell) return;

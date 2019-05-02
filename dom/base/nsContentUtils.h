@@ -2326,30 +2326,12 @@ class nsContentUtils {
   static bool IsFocusedContent(const nsIContent* aContent);
 
   /**
-   * Returns true if the DOM fullscreen API is enabled.
-   */
-  static bool IsFullscreenApiEnabled();
-
-  /**
-   * Returns true if the unprefixed fullscreen API is enabled.
-   */
-  static bool IsUnprefixedFullscreenApiEnabled() {
-    return sIsUnprefixedFullscreenApiEnabled;
-  }
-
-  /**
    * Returns true if requests for fullscreen are allowed in the current
    * context. Requests are only allowed if the user initiated them (like with
    * a mouse-click or key press), unless this check has been disabled by
    * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
    */
   static bool IsRequestFullscreenAllowed(mozilla::dom::CallerType aCallerType);
-
-  /**
-   * Returns true if calling execCommand with 'cut' or 'copy' arguments
-   * is restricted to chrome code.
-   */
-  static bool IsCutCopyRestricted() { return !sIsCutCopyAllowed; }
 
   /**
    * Returns true if calling execCommand with 'cut' or 'copy' arguments is
@@ -2359,37 +2341,6 @@ class nsContentUtils {
   static bool IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal);
 
   /*
-   * Returns true if the performance timing APIs are enabled.
-   */
-  static bool IsPerformanceTimingEnabled() {
-    return sIsPerformanceTimingEnabled;
-  }
-
-  /*
-   * Returns true if the performance timing APIs are enabled.
-   */
-  static bool IsResourceTimingEnabled() { return sIsResourceTimingEnabled; }
-
-  /*
-   * Returns true if the performance timing APIs are enabled.
-   */
-  static bool IsPerformanceNavigationTimingEnabled() {
-    return sIsPerformanceNavigationTimingEnabled;
-  }
-
-  /*
-   * Returns true if notification should be sent for peformance timing events.
-   */
-  static bool SendPerformanceTimingNotifications() {
-    return sSendPerformanceTimingNotifications;
-  }
-
-  /*
-   * Returns true if the frame timing APIs are enabled.
-   */
-  static bool IsFrameTimingEnabled();
-
-  /*
    * Returns true if the browser should attempt to prevent the given caller type
    * from collecting distinctive information about the browser that could
    * be used to "fingerprint" and track the user across websites.
@@ -2397,28 +2348,6 @@ class nsContentUtils {
   static bool ResistFingerprinting(mozilla::dom::CallerType aCallerType) {
     return aCallerType != mozilla::dom::CallerType::System &&
            ShouldResistFingerprinting();
-  }
-
-  /**
-   * Returns true if the browser should show busy cursor when loading page.
-   */
-  static bool UseActivityCursor() { return sUseActivityCursor; }
-
-  /**
-   * Returns true if the DOM Animations API should be enabled.
-   */
-  static bool AnimationsAPICoreEnabled() { return sAnimationsAPICoreEnabled; }
-
-  /**
-   * Returns true if the getBoxQuads API should be enabled.
-   */
-  static bool GetBoxQuadsEnabled() { return sGetBoxQuadsEnabled; }
-
-  /**
-   * Returns true if the requestIdleCallback API should be enabled.
-   */
-  static bool RequestIdleCallbackEnabled() {
-    return sRequestIdleCallbackEnabled;
   }
 
   /**
@@ -2718,11 +2647,6 @@ class nsContentUtils {
    * is not in designMode, this returns nullptr.
    */
   static mozilla::HTMLEditor* GetHTMLEditor(nsPresContext* aPresContext);
-
-  /**
-   * Returns true if the privacy.donottrackheader.enabled pref is set.
-   */
-  static bool DoNotTrackEnabled();
 
   /**
    * Returns a LogModule that dump calls from content script are logged to.
@@ -3259,40 +3183,10 @@ class nsContentUtils {
   static uint64_t GenerateBrowsingContextId();
 
   /**
-   * Check whether we should skip moving the cursor for a same-value .value set
-   * on a text input or textarea.
-   */
-  static bool SkipCursorMoveForSameValueSet() {
-    return sSkipCursorMoveForSameValueSet;
-  }
-
-  /**
    * Determine whether or not the user is currently interacting with the web
    * browser. This method is safe to call from off of the main thread.
    */
   static bool GetUserIsInteracting();
-
-  // Whether tracker tailing is turned on - "network.http.tailing.enabled".
-  static bool IsTailingEnabled() { return sTailingEnabled; }
-
-  // Check pref "dom.placeholder.show_on_focus" to see
-  // if we want to show the placeholder inside input elements
-  // when they have focus.
-  static bool ShowInputPlaceholderOnFocus() {
-    return sShowInputPlaceholderOnFocus;
-  }
-
-  // Check pref "browser.autofocus" to see if we want to enable autofocusing
-  // elements when the page requests it.
-  static bool AutoFocusEnabled() { return sAutoFocusEnabled; }
-
-  // Check pref "dom.script_loader.bytecode_cache.enabled" to see
-  // if we want to cache JS bytecode on the cache entry.
-  static bool IsBytecodeCacheEnabled() { return sIsBytecodeCacheEnabled; }
-
-  // Check pref "dom.script_loader.bytecode_cache.strategy" to see which
-  // heuristic strategy should be used to trigger the caching of the bytecode.
-  static int32_t BytecodeCacheStrategy() { return sBytecodeCacheStrategy; }
 
   // Alternate data MIME type used by the ScriptLoader to register and read
   // bytecode out of the nsCacheInfoChannel.
@@ -3502,35 +3396,9 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sIsFullscreenApiEnabled;
-  static bool sIsUnprefixedFullscreenApiEnabled;
-  static bool sTrustedFullscreenOnly;
-  static bool sIsCutCopyAllowed;
-  static uint32_t sHandlingInputTimeout;
-  static bool sIsPerformanceTimingEnabled;
-  static bool sIsResourceTimingEnabled;
-  static bool sIsPerformanceNavigationTimingEnabled;
-  static bool sIsUpgradableDisplayContentPrefEnabled;
-  static bool sIsFrameTimingPrefEnabled;
-  static bool sIsFormAutofillAutocompleteEnabled;
-  static bool sSendPerformanceTimingNotifications;
-  static bool sUseActivityCursor;
-  static bool sAnimationsAPICoreEnabled;
-  static bool sGetBoxQuadsEnabled;
-  static bool sSkipCursorMoveForSameValueSet;
-  static bool sRequestIdleCallbackEnabled;
-  static bool sTailingEnabled;
-  static bool sShowInputPlaceholderOnFocus;
-  static bool sAutoFocusEnabled;
 #ifndef RELEASE_OR_BETA
   static bool sBypassCSSOMOriginCheck;
 #endif
-  static bool sIsBytecodeCacheEnabled;
-  static int32_t sBytecodeCacheStrategy;
-  static bool sAntiTrackingControlCenterUIEnabled;
-
-  static int32_t sPrivacyMaxInnerWidth;
-  static int32_t sPrivacyMaxInnerHeight;
 
   class UserInteractionObserver;
   static UserInteractionObserver* sUserInteractionObserver;
@@ -3555,7 +3423,6 @@ class nsContentUtils {
   // bytecode out of the nsCacheInfoChannel.
   static nsCString* sJSBytecodeMimeType;
 
-  static bool sDoNotTrackEnabled;
   static mozilla::LazyLogModule sDOMDumpLog;
 
   static int32_t sInnerOrOuterWindowCount;

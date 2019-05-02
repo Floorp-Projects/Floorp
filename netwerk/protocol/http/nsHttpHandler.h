@@ -573,9 +573,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // Persistent HTTPS caching flag
   bool mEnablePersistentHttpsCaching;
 
-  // For broadcasting tracking preference
-  bool mDoNotTrackEnabled;
-
   // for broadcasting safe hint;
   bool mSafeHintEnabled;
   bool mParentalControlEnabled;

@@ -496,12 +496,8 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 // Turn on HTTP response process selection.
 pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
 
-// Unload tabs on low-memory on nightly and beta.
-#ifdef EARLY_BETA_OR_EARLIER
+// Unload tabs when available memory is running low
 pref("browser.tabs.unloadOnLowMemory", true);
-#else
-pref("browser.tabs.unloadOnLowMemory", false);
-#endif
 
 pref("browser.ctrlTab.recentlyUsedOrder", true);
 
@@ -1318,6 +1314,12 @@ pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", true);
 #else
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
+#endif
+
+#ifdef NIGHTLY_BUILD
+pref("trailhead.firstrun.cohort", 1);
+#else
+pref("trailhead.firstrun.cohort", 0);
 #endif
 
 // Enable the DOM fullscreen API.

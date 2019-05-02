@@ -855,6 +855,32 @@ This reports all the loaded content (a list of `id`s and positions) when the use
 }
 ```
 
+### Discovery Stream SPOCS Fill ping
+
+This reports the internal status of Pocket SPOCS (Sponsored Contents).
+
+```js
+{
+  // both "client_id" and "session_id" are set to "n/a" in this ping.
+  "client_id": "n/a",
+  "session_id": "n/a",
+  "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "version": "68",
+  "release_channel": "release",
+  "spoc_fills": [
+    {"id": 10000, displayed: 0, reason: "frequency_cap", full_recalc: 1},
+    {"id": 10001, displayed: 0, reason: "blocked_by_user", full_recalc: 1},
+    {"id": 10002, displayed: 0, reason: "below_min_score", full_recalc: 1},
+    {"id": 10003, displayed: 0, reason: "campaign_duplicate", full_recalc: 1},
+    {"id": 10004, displayed: 0, reason: "probability_selection", full_recalc: 0},
+    {"id": 10004, displayed: 0, reason: "out_of_position", full_recalc: 0},
+    {"id": 10005, displayed: 1, reason: "n/a", full_recalc: 0}
+  ]
+}
+```
+
 ## Undesired event pings
 
 These pings record the undesired events happen in the addon for further investigation.

@@ -269,7 +269,7 @@ void PerformanceMainThread::InsertUserEntry(PerformanceEntry* aEntry) {
   uint64_t markCreationEpoch = 0;
 
   if (StaticPrefs::dom_performance_enable_user_timing_logging() ||
-      nsContentUtils::SendPerformanceTimingNotifications()) {
+      StaticPrefs::dom_performance_enable_notify_performance_timing()) {
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
     if (owner && owner->GetDocumentURI()) {
@@ -287,7 +287,7 @@ void PerformanceMainThread::InsertUserEntry(PerformanceEntry* aEntry) {
     }
   }
 
-  if (nsContentUtils::SendPerformanceTimingNotifications()) {
+  if (StaticPrefs::dom_performance_enable_notify_performance_timing()) {
     TimingNotification(aEntry, uri, markCreationEpoch);
   }
 
@@ -305,7 +305,7 @@ DOMHighResTimeStamp PerformanceMainThread::CreationTime() const {
 void PerformanceMainThread::CreateNavigationTimingEntry() {
   MOZ_ASSERT(!mDocEntry, "mDocEntry should be null.");
 
-  if (!nsContentUtils::IsPerformanceNavigationTimingEnabled()) {
+  if (!StaticPrefs::dom_enable_performance_navigation_timing()) {
     return;
   }
 

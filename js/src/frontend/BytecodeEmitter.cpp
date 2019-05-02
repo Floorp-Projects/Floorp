@@ -8755,9 +8755,7 @@ bool BytecodeEmitter::emitClass(
   }
 
   if (!classNode->isEmptyScope()) {
-    if (!ce.emitScope(classNode->scopeBindings(),
-                      classNode->names() ? ClassEmitter::HasName::Yes
-                                         : ClassEmitter::HasName::No)) {
+    if (!ce.emitScope(classNode->scopeBindings())) {
       //            [stack]
       return false;
     }

@@ -384,7 +384,7 @@ describe("DiscoveryStreamFeed", () => {
       const fakeCache = {};
       sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
       sandbox.stub(feed, "rotate").callsFake(val => val);
-      sandbox.stub(feed, "scoreItems").callsFake(val => val);
+      sandbox.stub(feed, "scoreItems").callsFake(val => ({data: val, filtered: []}));
       sandbox.stub(feed, "fetchFromEndpoint").resolves({
         recommendations: "data",
         settings: {
@@ -406,7 +406,7 @@ describe("DiscoveryStreamFeed", () => {
         },
       });
       sandbox.stub(feed, "rotate").callsFake(val => val);
-      sandbox.stub(feed, "scoreItems").callsFake(val => val);
+      sandbox.stub(feed, "scoreItems").callsFake(val => ({data: val, filtered: []}));
       clock.tick(THIRTY_MINUTES + 1);
 
       const feedResp = await feed.getComponentFeed("foo.com");
@@ -566,41 +566,44 @@ describe("DiscoveryStreamFeed", () => {
 
   describe("#transform", () => {
     it("should return initial data if spocs are empty", () => {
-      const result = feed.transform({spocs: []});
+      const {data: result} = feed.transform({spocs: []});
 
       assert.equal(result.spocs.length, 0);
     });
     it("should sort based on item_score", () => {
-      const result = feed.transform({
+      const {data: result} = feed.transform({
         spocs: [
-          {campaign_id: 2, item_score: 0.8, min_score: 0.1},
-          {campaign_id: 3, item_score: 0.7, min_score: 0.1},
-          {campaign_id: 1, item_score: 0.9, min_score: 0.1},
+          {id: 2, campaign_id: 2, item_score: 0.8, min_score: 0.1},
+          {id: 3, campaign_id: 3, item_score: 0.7, min_score: 0.1},
+          {id: 1, campaign_id: 1, item_score: 0.9, min_score: 0.1},
         ],
       });
 
       assert.deepEqual(result.spocs, [
-        {campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.1},
-        {campaign_id: 2, item_score: 0.8, score: 0.8, min_score: 0.1},
-        {campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
+        {id: 1, campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.1},
+        {id: 2, campaign_id: 2, item_score: 0.8, score: 0.8, min_score: 0.1},
+        {id: 3, campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
       ]);
     });
     it("should remove items with scores lower than min_score", () => {
-      const result = feed.transform({
+      const {data: result, filtered} = feed.transform({
         spocs: [
-          {campaign_id: 2, item_score: 0.8, min_score: 0.9},
-          {campaign_id: 3, item_score: 0.7, min_score: 0.7},
-          {campaign_id: 1, item_score: 0.9, min_score: 0.8},
+          {id: 2, campaign_id: 2, item_score: 0.8, min_score: 0.9},
+          {id: 3, campaign_id: 3, item_score: 0.7, min_score: 0.7},
+          {id: 1, campaign_id: 1, item_score: 0.9, min_score: 0.8},
         ],
       });
 
       assert.deepEqual(result.spocs, [
-        {campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.8},
-        {campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.7},
+        {id: 1, campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.8},
+        {id: 3, campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.7},
       ]);
+
+      assert.deepEqual(filtered.below_min_score,
+        [{id: 2, campaign_id: 2, item_score: 0.8, min_score: 0.9, score: 0.8}]);
     });
     it("should add a score prop to spocs", () => {
-      const result = feed.transform({
+      const {data: result} = feed.transform({
         spocs: [
           {campaign_id: 1, item_score: 0.9, min_score: 0.1},
         ],
@@ -609,20 +612,25 @@ describe("DiscoveryStreamFeed", () => {
       assert.equal(result.spocs[0].score, 0.9);
     });
     it("should filter out duplicate campigns", () => {
-      const result = feed.transform({
+      const {data: result, filtered} = feed.transform({
         spocs: [
-          {campaign_id: 2, item_score: 0.8, min_score: 0.1},
-          {campaign_id: 3, item_score: 0.6, min_score: 0.1},
-          {campaign_id: 1, item_score: 0.9, min_score: 0.1},
-          {campaign_id: 3, item_score: 0.7, min_score: 0.1},
-          {campaign_id: 1, item_score: 0.9, min_score: 0.1},
+          {id: 1, campaign_id: 2, item_score: 0.8, min_score: 0.1},
+          {id: 2, campaign_id: 3, item_score: 0.6, min_score: 0.1},
+          {id: 3, campaign_id: 1, item_score: 0.9, min_score: 0.1},
+          {id: 4, campaign_id: 3, item_score: 0.7, min_score: 0.1},
+          {id: 5, campaign_id: 1, item_score: 0.9, min_score: 0.1},
         ],
       });
 
       assert.deepEqual(result.spocs, [
-        {campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.1},
-        {campaign_id: 2, item_score: 0.8, score: 0.8, min_score: 0.1},
-        {campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
+        {id: 3, campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.1},
+        {id: 1, campaign_id: 2, item_score: 0.8, score: 0.8, min_score: 0.1},
+        {id: 4, campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
+      ]);
+
+      assert.deepEqual(filtered.campaign_duplicate, [
+        {id: 5, campaign_id: 1, item_score: 0.9, min_score: 0.1, score: 0.9},
+        {id: 2, campaign_id: 3, item_score: 0.6, min_score: 0.1, score: 0.6},
       ]);
     });
     it("should filter out duplicate campigns while using spocs_per_domain", () => {
@@ -632,40 +640,47 @@ describe("DiscoveryStreamFeed", () => {
         },
       });
 
-      const result = feed.transform({
+      const {data: result, filtered} = feed.transform({
         spocs: [
-          {campaign_id: 2, item_score: 0.8, min_score: 0.1},
-          {campaign_id: 3, item_score: 0.6, min_score: 0.1},
-          {campaign_id: 1, item_score: 0.6, min_score: 0.1},
-          {campaign_id: 3, item_score: 0.7, min_score: 0.1},
-          {campaign_id: 1, item_score: 0.9, min_score: 0.1},
-          {campaign_id: 2, item_score: 0.6, min_score: 0.1},
-          {campaign_id: 3, item_score: 0.7, min_score: 0.1},
-          {campaign_id: 1, item_score: 0.8, min_score: 0.1},
-          {campaign_id: 3, item_score: 0.7, min_score: 0.1},
-          {campaign_id: 1, item_score: 0.8, min_score: 0.1},
+          {id: 1, campaign_id: 2, item_score: 0.8, min_score: 0.1},
+          {id: 2, campaign_id: 3, item_score: 0.6, min_score: 0.1},
+          {id: 3, campaign_id: 1, item_score: 0.6, min_score: 0.1},
+          {id: 4, campaign_id: 3, item_score: 0.7, min_score: 0.1},
+          {id: 5, campaign_id: 1, item_score: 0.9, min_score: 0.1},
+          {id: 6, campaign_id: 2, item_score: 0.6, min_score: 0.1},
+          {id: 7, campaign_id: 3, item_score: 0.7, min_score: 0.1},
+          {id: 8, campaign_id: 1, item_score: 0.8, min_score: 0.1},
+          {id: 9, campaign_id: 3, item_score: 0.7, min_score: 0.1},
+          {id: 10, campaign_id: 1, item_score: 0.8, min_score: 0.1},
         ],
       });
 
       assert.deepEqual(result.spocs, [
-        {campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.1},
-        {campaign_id: 2, item_score: 0.8, score: 0.8, min_score: 0.1},
-        {campaign_id: 1, item_score: 0.8, score: 0.8, min_score: 0.1},
-        {campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
-        {campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
-        {campaign_id: 2, item_score: 0.6, score: 0.6, min_score: 0.1},
+        {id: 5, campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.1},
+        {id: 1, campaign_id: 2, item_score: 0.8, score: 0.8, min_score: 0.1},
+        {id: 8, campaign_id: 1, item_score: 0.8, score: 0.8, min_score: 0.1},
+        {id: 4, campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
+        {id: 7, campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
+        {id: 6, campaign_id: 2, item_score: 0.6, score: 0.6, min_score: 0.1},
+      ]);
+
+      assert.deepEqual(filtered.campaign_duplicate, [
+        {id: 10, campaign_id: 1, item_score: 0.8, min_score: 0.1, score: 0.8},
+        {id: 9, campaign_id: 3, item_score: 0.7, min_score: 0.1, score: 0.7},
+        {id: 2, campaign_id: 3, item_score: 0.6, min_score: 0.1, score: 0.6},
+        {id: 3, campaign_id: 1, item_score: 0.6, min_score: 0.1, score: 0.6},
       ]);
     });
   });
 
   describe("#filterBlocked", () => {
     it("should return initial data if spocs are empty", () => {
-      const result = feed.filterBlocked({spocs: []});
+      const {data: result} = feed.filterBlocked({spocs: []});
 
       assert.equal(result.spocs.length, 0);
     });
     it("should return initial spocs data if links are not blocked", () => {
-      const result = feed.filterBlocked({
+      const {data: result} = feed.filterBlocked({
         spocs: [
           {url: "https://foo.com"},
           {url: "test.com"},
@@ -677,19 +692,20 @@ describe("DiscoveryStreamFeed", () => {
       fakeNewTabUtils.blockedLinks.links = [{url: "https://foo.com"}];
       fakeNewTabUtils.blockedLinks.isBlocked = site => (fakeNewTabUtils.blockedLinks.links[0].url === site.url);
 
-      const result = feed.filterBlocked({
+      const {data: result, filtered} = feed.filterBlocked({
         spocs: [
-          {url: "https://foo.com"},
-          {url: "test.com"},
+          {id: 1, url: "https://foo.com"},
+          {id: 2, url: "test.com"},
         ],
       }, "spocs");
 
       assert.lengthOf(result.spocs, 1);
       assert.equal(result.spocs[0].url, "test.com");
       assert.notInclude(result.spocs, fakeNewTabUtils.blockedLinks.links[0]);
+      assert.deepEqual(filtered, [{id: 1, url: "https://foo.com"}]);
     });
     it("should return initial recommendations data if links are not blocked", () => {
-      const result = feed.filterBlocked({
+      const {data: result} = feed.filterBlocked({
         recommendations: [
           {url: "https://foo.com"},
           {url: "test.com"},
@@ -701,7 +717,7 @@ describe("DiscoveryStreamFeed", () => {
       fakeNewTabUtils.blockedLinks.links = [{url: "https://foo.com"}];
       fakeNewTabUtils.blockedLinks.isBlocked = site => (fakeNewTabUtils.blockedLinks.links[0].url === site.url);
 
-      const result = feed.filterBlocked({
+      const {data: result} = feed.filterBlocked({
         recommendations: [
           {url: "https://foo.com"},
           {url: "test.com"},
@@ -738,6 +754,7 @@ describe("DiscoveryStreamFeed", () => {
       const fakeSpocs = {
         spocs: [
           {
+            id: 1,
             campaign_id: "seen",
             caps: {
               lifetime: 3,
@@ -748,6 +765,7 @@ describe("DiscoveryStreamFeed", () => {
             },
           },
           {
+            id: 2,
             campaign_id: "not-seen",
             caps: {
               lifetime: 3,
@@ -764,10 +782,11 @@ describe("DiscoveryStreamFeed", () => {
       };
       sandbox.stub(feed, "readImpressionsPref").returns(fakeImpressions);
 
-      const result = feed.frequencyCapSpocs(fakeSpocs);
+      const {data: result, filtered} = feed.frequencyCapSpocs(fakeSpocs);
 
       assert.equal(result.spocs.length, 1);
       assert.equal(result.spocs[0].campaign_id, "not-seen");
+      assert.deepEqual(filtered, [fakeSpocs.spocs[0]]);
     });
   });
 
@@ -1007,6 +1026,7 @@ describe("DiscoveryStreamFeed", () => {
       const data = {
         spocs: [
           {
+            id: 1,
             campaign_id: "seen",
             caps: {
               lifetime: 3,
@@ -1017,6 +1037,7 @@ describe("DiscoveryStreamFeed", () => {
             },
           },
           {
+            id: 2,
             campaign_id: "not-seen",
             caps: {
               lifetime: 3,
@@ -1046,6 +1067,7 @@ describe("DiscoveryStreamFeed", () => {
       const result = {
         spocs: [
           {
+            id: 2,
             campaign_id: "not-seen",
             caps: {
               lifetime: 3,
@@ -1057,6 +1079,13 @@ describe("DiscoveryStreamFeed", () => {
           },
         ],
       };
+      const spocFillResult = [{
+        id: 1,
+        reason: "frequency_cap",
+        displayed: 0,
+        full_recalc: 0,
+      }];
+
       sandbox.stub(feed, "recordCampaignImpression").returns();
       sandbox.stub(feed, "readImpressionsPref").returns(fakeImpressions);
       sandbox.spy(feed.store, "dispatch");
@@ -1064,6 +1093,7 @@ describe("DiscoveryStreamFeed", () => {
       await feed.onAction({type: at.DISCOVERY_STREAM_SPOC_IMPRESSION, data: {campaign_id: "seen"}});
 
       assert.deepEqual(feed.store.dispatch.secondCall.args[0].data.spocs, result);
+      assert.deepEqual(feed.store.dispatch.thirdCall.args[0].data.spoc_fills, spocFillResult);
     });
     it("should not call dispatch to ac.AlsoToPreloaded if spocs were not changed by frequency capping", async () => {
       Object.defineProperty(feed, "showSpocs", {get: () => true});
@@ -1075,6 +1105,56 @@ describe("DiscoveryStreamFeed", () => {
       await feed.onAction({type: at.DISCOVERY_STREAM_SPOC_IMPRESSION, data: {campaign_id: "seen"}});
 
       assert.notCalled(feed.store.dispatch);
+    });
+  });
+
+  describe("#onAction: PLACES_LINK_BLOCKED", () => {
+    beforeEach(() => {
+      const data = {
+        spocs: [
+          {
+            id: 1,
+            campaign_id: "foo",
+            url: "foo.com",
+          },
+          {
+            id: 2,
+            campaign_id: "bar",
+            url: "bar.com",
+          },
+        ],
+      };
+      sandbox.stub(feed.store, "getState").returns({
+        DiscoveryStream: {
+          spocs: {data},
+        },
+      });
+    });
+
+    it("should call dispatch with the SPOCS Fill if found a blocked spoc", async () => {
+      Object.defineProperty(feed, "showSpocs", {get: () => true});
+      const spocFillResult = [{
+        id: 1,
+        reason: "blocked_by_user",
+        displayed: 0,
+        full_recalc: 0,
+      }];
+
+      sandbox.spy(feed.store, "dispatch");
+
+      await feed.onAction({type: at.PLACES_LINK_BLOCKED, data: {url: "foo.com"}});
+
+      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data.spoc_fills, spocFillResult);
+      assert.deepEqual(feed.store.dispatch.secondCall.args[0].data.url, "foo.com");
+    });
+    it("should not call dispatch with the SPOCS Fill if the blocked is not a SPOC", async () => {
+      Object.defineProperty(feed, "showSpocs", {get: () => true});
+      sandbox.spy(feed.store, "dispatch");
+
+      await feed.onAction({type: at.PLACES_LINK_BLOCKED, data: {url: "not_a_spoc.com"}});
+
+      assert.calledOnce(feed.store.dispatch);
+      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data.url, "not_a_spoc.com");
     });
   });
 
@@ -1653,7 +1733,7 @@ describe("DiscoveryStreamFeed", () => {
   });
   describe("#scoreItems", () => {
     it("should score items using item_score and min_score", () => {
-      const result = feed.scoreItems([
+      const {data: result, filtered} = feed.scoreItems([
         {item_score: 0.8, min_score: 0.1},
         {item_score: 0.5, min_score: 0.6},
         {item_score: 0.7, min_score: 0.1},
@@ -1663,6 +1743,9 @@ describe("DiscoveryStreamFeed", () => {
         {item_score: 0.9, score: 0.9, min_score: 0.1},
         {item_score: 0.8, score: 0.8, min_score: 0.1},
         {item_score: 0.7, score: 0.7, min_score: 0.1},
+      ]);
+      assert.deepEqual(filtered, [
+        {item_score: 0.5, min_score: 0.6, score: 0.5},
       ]);
     });
   });
@@ -1702,6 +1785,62 @@ describe("DiscoveryStreamFeed", () => {
       };
       const result = feed.scoreItem(item);
       assert.equal(result.min_score, 0);
+    });
+  });
+
+  describe("#_sendSpocsFill", () => {
+    it("should send out all the SPOCS Fill pings", () => {
+      sandbox.spy(feed.store, "dispatch");
+      const expected = [
+        {id: 1, reason: "frequency_cap", displayed: 0, full_recalc: 1},
+        {id: 2, reason: "frequency_cap", displayed: 0, full_recalc: 1},
+        {id: 3, reason: "blocked_by_user", displayed: 0, full_recalc: 1},
+        {id: 4, reason: "blocked_by_user", displayed: 0, full_recalc: 1},
+        {id: 5, reason: "campaign_duplicate", displayed: 0, full_recalc: 1},
+        {id: 6, reason: "campaign_duplicate", displayed: 0, full_recalc: 1},
+        {id: 7, reason: "below_min_score", displayed: 0, full_recalc: 1},
+        {id: 8, reason: "below_min_score", displayed: 0, full_recalc: 1},
+      ];
+      const filtered = {
+        frequency_cap: [{id: 1, campaign_id: 1}, {id: 2, campaign_id: 2}],
+        blocked_by_user: [{id: 3, campaign_id: 3}, {id: 4, campaign_id: 4}],
+        campaign_duplicate: [{id: 5, campaign_id: 5}, {id: 6, campaign_id: 6}],
+        below_min_score: [{id: 7, campaign_id: 7}, {id: 8, campaign_id: 8}],
+      };
+      feed._sendSpocsFill(filtered, true);
+
+      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data.spoc_fills, expected);
+    });
+    it("should send SPOCS Fill ping with the correct full_recalc", () => {
+      sandbox.spy(feed.store, "dispatch");
+      const expected = [
+        {id: 1, reason: "frequency_cap", displayed: 0, full_recalc: 0},
+        {id: 2, reason: "frequency_cap", displayed: 0, full_recalc: 0},
+      ];
+      const filtered = {
+        frequency_cap: [{id: 1, campaign_id: 1}, {id: 2, campaign_id: 2}],
+      };
+      feed._sendSpocsFill(filtered, false);
+
+      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data.spoc_fills, expected);
+    });
+    it("should not send non-SPOCS Fill pings", () => {
+      sandbox.spy(feed.store, "dispatch");
+      const expected = [
+        {id: 1, reason: "frequency_cap", displayed: 0, full_recalc: 1},
+        {id: 3, reason: "blocked_by_user", displayed: 0, full_recalc: 1},
+        {id: 5, reason: "campaign_duplicate", displayed: 0, full_recalc: 1},
+        {id: 7, reason: "below_min_score", displayed: 0, full_recalc: 1},
+      ];
+      const filtered = {
+        frequency_cap: [{id: 1, campaign_id: 1}, {id: 2}],
+        blocked_by_user: [{id: 3, campaign_id: 3}, {id: 4}],
+        campaign_duplicate: [{id: 5, campaign_id: 5}, {id: 6}],
+        below_min_score: [{id: 7, campaign_id: 7}, {id: 8}],
+      };
+      feed._sendSpocsFill(filtered, true);
+
+      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data.spoc_fills, expected);
     });
   });
 });

@@ -86,6 +86,10 @@ $item-line-height: 20;
   }
 }
 
+.ds-list-item-link:focus {
+  @include ds-fade-in;
+}
+
 .ds-list-numbers {
   $counter-whitespace: ($item-line-height - $item-font-size) * 1px;
   $counter-size: 32px;
