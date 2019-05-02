@@ -28,8 +28,14 @@ const PLATFORM: &str = "win";
 const PLATFORM: &str = "linux";
 #[cfg(target_os = "macos")]
 const PLATFORM: &str = "mac";
-#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+#[cfg(target_os = "android")]
+const PLATFORM: &str = "android";
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows", target_os = "android")))]
 const PLATFORM: &str = "other";
+#[cfg(debug)]
+const MODE: &str = "debug";
+#[cfg(not(debug))]
+const MODE: &str = "release";
 
 const OPTION_DISABLE_SUBPX: &str = "disable-subpixel";
 const OPTION_DISABLE_AA: &str = "disable-aa";
@@ -238,6 +244,14 @@ impl ReftestManifest {
                         );
 
                         break;
+                    }
+                    platform if platform.starts_with("skip_on") => {
+                        // e.g. skip_on(android,debug) will skip only when
+                        // running on a debug android build.
+                        let (_, args, _) = parse_function(platform);
+                        if args.iter().all(|arg| arg == &PLATFORM || arg == &MODE) {
+                            break;
+                        }
                     }
                     platform if platform.starts_with("platform") => {
                         let (_, args, _) = parse_function(platform);
