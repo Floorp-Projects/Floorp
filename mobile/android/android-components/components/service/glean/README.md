@@ -192,7 +192,7 @@ Further documentation for pings that Glean can send out of the box is available 
 
 To contact us you can:
 - Find us on the Mozilla Slack in *#glean*, on [Mozilla IRC](https://wiki.mozilla.org/IRC) in *#telemetry*.
-- To report issues or request changes, file a bug in [Bugzilla in Toolkit::Telemetry](https://bugzilla.mozilla.org/enter_bug.cgi?product=Toolkit&component=Telemetry&status_whiteboard=%5Btelemetry%3Amobilesdk%3Am%3F%5D) and mention Glean in the title.
+- To report issues or request changes, file a bug in [Bugzilla in Data Platform & Tools :: Glean: SDK](https://bugzilla.mozilla.org/enter_bug.cgi?product=Data%20Platform%20and%20Tools&component=Glean%3A%20SDK).
 - Send an email to *glean-team@mozilla.com*.
 - The Glean Android team is: *:dexter*, *:travis*, *:mdroettboom*, *:gfritzsche*
 
