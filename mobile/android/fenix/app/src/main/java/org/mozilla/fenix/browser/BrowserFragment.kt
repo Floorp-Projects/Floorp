@@ -690,13 +690,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             // Stop toolbar from collapsing if TalkBack is enabled or page is loading
             val accessibilityManager = context
                 ?.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
-            if (accessibilityManager?.isTouchExplorationEnabled == false) {
-                if (!loading) {
-                    behavior = BrowserToolbarBottomBehavior(context, null)
-                } else {
-                    (behavior as? BrowserToolbarBottomBehavior)?.forceExpand(toolbarView)
-                    behavior = null
-                }
+            if (loading || accessibilityManager?.isTouchExplorationEnabled == true) {
+                (behavior as? BrowserToolbarBottomBehavior)?.forceExpand(toolbarView)
+                behavior = null
+            } else {
+                behavior = BrowserToolbarBottomBehavior(context, null)
             }
         }
     }
