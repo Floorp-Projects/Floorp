@@ -548,7 +548,7 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   bool IsIsolated();
 
-  const nsCString &GetTopWindowOrigin();
+  const nsCString& GetTopWindowOrigin();
 
   already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();
 
@@ -721,6 +721,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   // True only when we are between Resume and async fire of mCallOnResume.
   // Used to suspend any newly created pumps in mCallOnResume handler.
   uint32_t mAsyncResumePending : 1;
+
+  // If the request was performed to a TRR resolved IP address.
+  // Will be false if loaded from the cache.
+  uint32_t mResolvedByTRR : 1;
 
   // True only when we have checked whether this channel has been isolated for
   // anti-tracking purposes.
