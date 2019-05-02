@@ -1411,7 +1411,9 @@ var PanelView = class extends AssociatedToNode {
   _isNavigableWithTabOnly(element) {
     let tag = element.localName;
     return tag == "menulist" || tag == "textbox" || tag == "input"
-           || tag == "textarea";
+           || tag == "textarea"
+           // Allow tab to reach embedded documents in extension panels.
+           || tag == "browser";
   }
 
   /**
@@ -1565,6 +1567,24 @@ var PanelView = class extends AssociatedToNode {
       return;
     }
 
+    let focus = this.document.activeElement;
+    // Make sure the focus is actually inside the panel. (It might not be if
+    // the panel was opened with the mouse.) If it isn't, we don't care
+    // about it for our purposes.
+    // We use Node.compareDocumentPosition because Node.contains doesn't
+    // behave as expected for anonymous content; e.g. the input inside a
+    // textbox.
+    if (focus && !(this.node.compareDocumentPosition(focus)
+                   & Node.DOCUMENT_POSITION_CONTAINED_BY)) {
+      focus = null;
+    }
+
+    // Extension panels contain embedded documents. We can't manage
+    // keyboard navigation within those.
+    if (focus && focus.tagName == "browser") {
+      return;
+    }
+
     let stop = () => {
       event.stopPropagation();
       event.preventDefault();
@@ -1578,20 +1598,7 @@ var PanelView = class extends AssociatedToNode {
       // We use the real focus rather than this.selectedElement because focus
       // might have been moved without keyboard navigation (e.g. mouse click)
       // and this.selectedElement is only updated for keyboard navigation.
-      let focus = this.document.activeElement;
-      if (!focus) {
-        return false;
-      }
-      // Make sure the focus is actually inside the panel.
-      // (It might not be if the panel was opened with the mouse.)
-      // We use Node.compareDocumentPosition because Node.contains doesn't
-      // behave as expected for anonymous content; e.g. the input inside a
-      // textbox.
-      if (!(this.node.compareDocumentPosition(focus)
-            & Node.DOCUMENT_POSITION_CONTAINED_BY)) {
-        return false;
-      }
-      return this._isNavigableWithTabOnly(focus);
+      return focus && this._isNavigableWithTabOnly(focus);
     };
 
     let keyCode = event.code;
