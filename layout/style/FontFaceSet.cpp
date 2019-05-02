@@ -55,6 +55,7 @@
 #include "nsPrintfCString.h"
 #include "nsUTF8Utils.h"
 #include "nsDOMNavigationTiming.h"
+#include "ReferrerInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -618,8 +619,9 @@ nsresult FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    rv = httpChannel->SetReferrerWithPolicy(aFontFaceSrc->mReferrer,
-                                            aFontFaceSrc->mReferrerPolicy);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = new mozilla::dom::ReferrerInfo(
+        aFontFaceSrc->mReferrer, aFontFaceSrc->mReferrerPolicy);
+    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     Unused << NS_WARN_IF(NS_FAILED(rv));
 
     nsAutoCString accept("application/font-woff;q=0.9,*/*;q=0.8");

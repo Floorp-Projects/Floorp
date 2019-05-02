@@ -47,6 +47,7 @@
 #include "mozilla/Attributes.h"
 #include "nsError.h"
 #include "mozilla/Encoding.h"
+#include "ReferrerInfo.h"
 
 namespace mozilla {
 namespace dom {
@@ -94,7 +95,7 @@ class EventSourceImpl final : public nsIObserver,
   nsresult GetBaseURI(nsIURI** aBaseURI);
 
   void SetupHttpChannel();
-  nsresult SetupReferrerPolicy();
+  nsresult SetupReferrerInfo();
   nsresult InitChannelAndRequestEventSource();
   nsresult ResetConnection();
   void ResetDecoder();
@@ -809,8 +810,8 @@ EventSourceImpl::AsyncOnChannelRedirect(
   NS_ENSURE_STATE(mHttpChannel);
 
   SetupHttpChannel();
-  // The HTTP impl already copies over the referrer and referrer policy on
-  // redirects, so we don't need to SetupReferrerPolicy().
+  // The HTTP impl already copies over the referrer info on
+  // redirects, so we don't need to SetupReferrerInfo().
 
   if ((aFlags & nsIChannelEventSink::REDIRECT_PERMANENT) != 0) {
     rv = NS_GetFinalChannelURI(mHttpChannel, getter_AddRefs(mSrc));
@@ -929,13 +930,14 @@ void EventSourceImpl::SetupHttpChannel() {
   Unused << rv;
 }
 
-nsresult EventSourceImpl::SetupReferrerPolicy() {
+nsresult EventSourceImpl::SetupReferrerInfo() {
   AssertIsOnMainThread();
   MOZ_ASSERT(!IsShutDown());
   nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent();
   if (doc) {
-    nsresult rv = mHttpChannel->SetReferrerWithPolicy(doc->GetDocumentURI(),
-                                                      doc->GetReferrerPolicy());
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        new ReferrerInfo(doc->GetDocumentURI(), doc->GetReferrerPolicy());
+    nsresult rv = mHttpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1001,7 +1003,7 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
   NS_ENSURE_TRUE(mHttpChannel, NS_ERROR_NO_INTERFACE);
 
   SetupHttpChannel();
-  rv = SetupReferrerPolicy();
+  rv = SetupReferrerInfo();
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG

@@ -560,13 +560,15 @@ static nsresult AddThreatSourceFromChannel(ThreatHit& aHit,
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
-    nsCOMPtr<nsIURI> referrer;
-    rv = httpChannel->GetReferrer(getter_AddRefs(referrer));
-    if (NS_SUCCEEDED(rv) && referrer) {
-      nsCString referrerSpec;
-      rv = GetSpecWithoutSensitiveData(referrer, referrerSpec);
-      NS_ENSURE_SUCCESS(rv, rv);
-      matchingSource->set_referrer(referrerSpec.get());
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
+    if (referrerInfo) {
+      nsAutoCString referrerSpec;
+      nsCOMPtr<nsIURI> referrer = referrerInfo->GetComputedReferrer();
+      if (referrer) {
+        rv = GetSpecWithoutSensitiveData(referrer, referrerSpec);
+        NS_ENSURE_SUCCESS(rv, rv);
+        matchingSource->set_referrer(referrerSpec.get());
+      }
     }
   }
 

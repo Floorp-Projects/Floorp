@@ -64,6 +64,7 @@
 #include "nsMimeTypes.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/LoadInfo.h"
+#include "ReferrerInfo.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
@@ -1354,8 +1355,9 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
                                        acceptTypes, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-    rv = httpChannel->SetReferrerWithPolicy(aRequest->mReferrer,
-                                            aRequest->ReferrerPolicy());
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        new ReferrerInfo(aRequest->mReferrer, aRequest->ReferrerPolicy());
+    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     nsCOMPtr<nsIHttpChannelInternal> internalChannel(

@@ -27,6 +27,7 @@
 #include "nsNetUtil.h"  // for NS_NewURI, NS_NewChannel, NS_NewStreamLoader
 
 #include "InetAddress.h"  // for java::sdk::InetAddress and java::sdk::UnknownHostException
+#include "ReferrerInfo.h"
 
 namespace mozilla {
 using namespace net;
@@ -493,7 +494,8 @@ nsresult WebExecutorSupport::CreateStreamLoader(
     NS_ENSURE_SUCCESS(rv, NS_ERROR_MALFORMED_URI);
   }
 
-  rv = httpChannel->SetReferrer(referrerUri);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new dom::ReferrerInfo(referrerUri);
+  rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Cache mode
