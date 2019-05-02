@@ -1213,8 +1213,6 @@ class ContentParent final : public PContentParent,
   void OnBrowsingContextGroupSubscribe(BrowsingContextGroup* aGroup);
   void OnBrowsingContextGroupUnsubscribe(BrowsingContextGroup* aGroup);
 
-  void UpdateNetworkLinkType();
-
  private:
   // Released in ActorDestroy; deliberately not exposed to the CC.
   RefPtr<ContentParent> mSelfRef;
