@@ -316,8 +316,6 @@ class AudioContext final : public DOMEventTargetHelper,
   void Mute() const;
   void Unmute() const;
 
-  JSObject* GetGlobalJSObject() const;
-
   void RegisterNode(AudioNode* aNode);
   void UnregisterNode(AudioNode* aNode);
 

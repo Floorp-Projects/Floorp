@@ -1157,16 +1157,6 @@ void AudioContext::UnregisterNode(AudioNode* aNode) {
   mAllNodes.RemoveEntry(aNode);
 }
 
-JSObject* AudioContext::GetGlobalJSObject() const {
-  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
-  if (!parentObject) {
-    return nullptr;
-  }
-
-  // This can also return null.
-  return parentObject->GetGlobalJSObject();
-}
-
 already_AddRefed<Promise> AudioContext::StartRendering(ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
 
