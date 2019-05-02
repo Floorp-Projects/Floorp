@@ -13,5 +13,6 @@ import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
  * @property httpClient The HTTP client implementation to use for uploading pings.
  */
 data class Configuration(
-    val httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() }
+    val httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() },
+    val kintoEndpoint: String = ExperimentsUpdater.KINTO_ENDPOINT_DEV
 )

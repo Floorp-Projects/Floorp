@@ -20,7 +20,7 @@ import org.json.JSONObject
  * validated, defaults to false.
  */
 internal class KintoExperimentSource(
-    private val baseUrl: String,
+    internal val baseUrl: String,
     private val bucketName: String,
     private val collectionName: String,
     private val httpClient: Client,

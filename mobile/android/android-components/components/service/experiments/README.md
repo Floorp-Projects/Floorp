@@ -73,12 +73,15 @@ In the above:
     |key|type|description|
     |---|----|-----------|
     | updateExperiments | boolean (--ez) | forces the experiments updater to run and fetch experiments immediately |
+    | setKintoInstance | string (--es) | sets the Kinto instance to the specified instance ("dev", "staging", "prod" only) |
 
-For example, to direct a release build of the Glean sample application to update experiments immediately, the following command
-can be used:
+For example, to direct a release build of the Glean sample application to (1) update experiments immediately and 
+(2) change the Kinto instance to the staging instance, the following command can be used:
 
 ```
-adb shell am start -n org.mozilla.samples.glean.debug/mozilla.components.service.experiments.debug.ExperimentsDebugActivity --ez updateExperiments true
+adb shell am start -n org.mozilla.samples.glean.debug/mozilla.components.service.experiments.debug.ExperimentsDebugActivity \
+  --ez updateExperiments true \
+  --es setKintoInstance staging
 ```
 
 ## Experiments format for Kinto

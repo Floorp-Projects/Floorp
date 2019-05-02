@@ -43,7 +43,6 @@ internal class ExperimentsUpdater(
 ) {
     private val logger: Logger = Logger(LOG_TAG)
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal lateinit var source: KintoExperimentSource
 
     internal fun initialize(configuration: Configuration) {
@@ -100,10 +99,9 @@ internal class ExperimentsUpdater(
      *
      * @return [KintoExperimentSource]
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getExperimentSource(configuration: Configuration): KintoExperimentSource {
         return KintoExperimentSource(
-                EXPERIMENTS_BASE_URL,
+                configuration.kintoEndpoint,
                 EXPERIMENTS_BUCKET_NAME,
                 EXPERIMENTS_COLLECTION_NAME,
                 configuration.httpClient.value
@@ -141,10 +139,10 @@ internal class ExperimentsUpdater(
         // Where to access the experiments data in Kinto.
         // Live example: https://firefox.settings.services.mozilla.com/v1/buckets/fennec/collections/experiments/records
         // There are different base URIs to use:
-        // - dev: https://kinto.dev.mozaws.net/v1
-        // - stage: https://settings-writer.stage.mozaws.net/v1
-        // - prod: https://firefox.settings.services.mozilla.com/v1
-        private const val EXPERIMENTS_BASE_URL = "https://kinto.dev.mozaws.net/v1"
+        const val KINTO_ENDPOINT_DEV = "https://kinto.dev.mozaws.net/v1"
+        const val KINTO_ENDPOINT_STAGING = "https://settings-writer.stage.mozaws.net/v1"
+        const val KINTO_ENDPOINT_PROD = "https://firefox.settings.services.mozilla.com/v1"
+
         private const val EXPERIMENTS_BUCKET_NAME = "main"
         private const val EXPERIMENTS_COLLECTION_NAME = "mobile-experiments"
     }
