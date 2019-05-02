@@ -56,6 +56,8 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub prim_store: &'a PrimitiveStore,
     pub resource_cache: &'rc mut ResourceCache,
     pub use_dual_source_blending: bool,
+    pub use_advanced_blending: bool,
+    pub break_advanced_blend_batches: bool,
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub data_stores: &'a DataStores,
     pub surfaces: &'a [SurfaceInfo],
@@ -432,6 +434,7 @@ impl RenderTarget for ColorRenderTarget {
                     let mut batch_builder = AlphaBatchBuilder::new(
                         self.screen_size,
                         scisor_rect,
+                        ctx.break_advanced_blend_batches,
                     );
 
                     batch_builder.add_pic_to_batch(

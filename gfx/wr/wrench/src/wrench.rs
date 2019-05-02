@@ -218,11 +218,12 @@ impl Wrench {
             max_recorded_profiles: 16,
             precache_flags,
             blob_image_handler: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
-            disable_dual_source_blending,
             chase_primitive,
             enable_picture_caching: true,
             testing: true,
             max_texture_size: Some(8196), // Needed for rawtest::test_resize_image.
+            allow_dual_source_blending: !disable_dual_source_blending,
+            allow_advanced_blend_equation: true,
             ..Default::default()
         };
 
@@ -286,11 +287,13 @@ impl Wrench {
     }
 
     pub fn set_page_zoom(&mut self, zoom_factor: ZoomFactor) {
-        self.page_zoom_factor = zoom_factor;
-        let mut txn = Transaction::new();
-        txn.set_page_zoom(self.page_zoom_factor);
-        self.api.send_transaction(self.document_id, txn);
-        self.set_title("");
+        if self.page_zoom_factor.get() != zoom_factor.get() {
+            self.page_zoom_factor = zoom_factor;
+            let mut txn = Transaction::new();
+            txn.set_page_zoom(self.page_zoom_factor);
+            self.api.send_transaction(self.document_id, txn);
+            self.set_title("");
+        }
     }
 
     pub fn layout_simple_ascii(

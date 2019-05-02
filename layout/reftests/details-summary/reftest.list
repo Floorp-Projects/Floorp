@@ -77,7 +77,7 @@
 == mouse-click-open-second-summary.html open-multiple-summary.html
 == mouse-click-overflow-hidden-details.html overflow-hidden-open-details.html
 == mouse-click-twice-overflow-hidden-details.html overflow-hidden-details.html
-fuzzy-if(gtkWidget||OSX,0-1,0-20) == mouse-click-overflow-auto-details.html overflow-auto-open-details.html #Bug 1294278
+fuzzy-if(gtkWidget||OSX,0-1,0-20) fuzzy-if(webrender,0-1,0-172) == mouse-click-overflow-auto-details.html overflow-auto-open-details.html #Bug 1294278
 == mouse-click-twice-overflow-auto-details.html overflow-auto-details.html
 == mouse-click-display-none-details.html open-single-summary.html
 == mouse-click-change-details-to-display-none.html open-single-summary.html

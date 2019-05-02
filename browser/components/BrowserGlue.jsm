@@ -16,6 +16,20 @@ ChromeUtils.defineModuleGetter(this, "ActorManagerParent",
 const PREF_PDFJS_ENABLED_CACHE_STATE = "pdfjs.enabledCache.state";
 
 let ACTORS = {
+  SubframeCrash: {
+    parent: {
+      moduleURI: "resource:///actors/SubframeCrashParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource:///actors/SubframeCrashChild.jsm",
+    },
+
+    allFrames: true,
+  },
+};
+
+let LEGACY_ACTORS = {
   AboutReader: {
     child: {
       module: "resource:///actors/AboutReaderChild.jsm",
@@ -942,6 +956,7 @@ BrowserGlue.prototype = {
     os.addObserver(this, "shield-init-complete");
 
     ActorManagerParent.addActors(ACTORS);
+    ActorManagerParent.addLegacyActors(LEGACY_ACTORS);
     ActorManagerParent.flush();
 
     this._flashHangCount = 0;

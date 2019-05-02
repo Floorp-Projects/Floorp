@@ -1801,6 +1801,8 @@ pub struct SurfaceInfo {
     pub inflation_factor: f32,
     /// The device pixel ratio specific to this surface.
     pub device_pixel_scale: DevicePixelScale,
+    /// If true, subpixel AA rendering can be used on this surface.
+    pub allow_subpixel_aa: bool,
 }
 
 impl SurfaceInfo {
@@ -1811,6 +1813,7 @@ impl SurfaceInfo {
         world_rect: WorldRect,
         clip_scroll_tree: &ClipScrollTree,
         device_pixel_scale: DevicePixelScale,
+        allow_subpixel_aa: bool,
     ) -> Self {
         let map_surface_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
@@ -1837,6 +1840,7 @@ impl SurfaceInfo {
             tasks: Vec::new(),
             inflation_factor,
             device_pixel_scale,
+            allow_subpixel_aa,
         }
     }
 
@@ -2345,7 +2349,6 @@ impl PicturePrimitive {
         surface_spatial_node_index: SpatialNodeIndex,
         raster_spatial_node_index: SpatialNodeIndex,
         surface_index: SurfaceIndex,
-        parent_allows_subpixel_aa: bool,
         frame_state: &mut FrameBuildingState,
         frame_context: &FrameBuildingContext,
     ) -> Option<(PictureContext, PictureState, PrimitiveList)> {
@@ -2420,23 +2423,17 @@ impl PicturePrimitive {
             plane_splitter,
         };
 
-        // Disallow subpixel AA if an intermediate surface is needed.
-        // TODO(lsalzman): allow overriding parent if intermediate surface is opaque
-        let (allow_subpixel_aa, is_composite, is_passthrough) = match self.raster_config {
-            Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { clear_color, .. }, .. }) => {
-                // If the tile cache has an opaque background, then it's fine to use
-                // subpixel rendering (this is the common case).
-                (clear_color.a >= 1.0, false, false)
+        let (is_composite, is_passthrough) = match self.raster_config {
+            Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { .. }, .. }) => {
+                (false, false)
             },
             Some(_) => {
-                (false, true, false)
+                (true, false)
             }
             None => {
-                (true, false, true)
+                (false, true)
             }
         };
-        // Still disable subpixel AA if parent forbids it
-        let allow_subpixel_aa = parent_allows_subpixel_aa && allow_subpixel_aa;
 
         let mut dirty_region_count = 0;
 
@@ -2460,7 +2457,6 @@ impl PicturePrimitive {
         let context = PictureContext {
             pic_index,
             apply_local_clip_rect: self.apply_local_clip_rect,
-            allow_subpixel_aa,
             is_composite,
             is_passthrough,
             raster_space: self.requested_raster_space,
@@ -2685,7 +2681,10 @@ impl PicturePrimitive {
 
         if let Some(composite_mode) = actual_composite_mode {
             // Retrieve the positioning node information for the parent surface.
-            let parent_raster_node_index = state.current_surface().raster_spatial_node_index;
+            let (parent_raster_node_index, parent_allows_subpixel_aa)= {
+                let parent_surface = state.current_surface();
+                (parent_surface.raster_spatial_node_index, parent_surface.allow_subpixel_aa)
+            };
             let surface_spatial_node_index = self.spatial_node_index;
 
             // This inflation factor is to be applied to all primitives within the surface.
@@ -2712,6 +2711,24 @@ impl PicturePrimitive {
                 .get_relative_transform(surface_spatial_node_index, parent_raster_node_index)
                 .is_perspective;
 
+            // Disallow subpixel AA if an intermediate surface is needed.
+            // TODO(lsalzman): allow overriding parent if intermediate surface is opaque
+            let allow_subpixel_aa = match composite_mode {
+                PictureCompositeMode::TileCache { clear_color, .. } => {
+                    // If the tile cache has an opaque background, then it's fine to use
+                    // subpixel rendering (this is the common case).
+                    clear_color.a >= 1.0
+                }
+                PictureCompositeMode::Blit(..) |
+                PictureCompositeMode::ComponentTransferFilter(..) |
+                PictureCompositeMode::Filter(..) |
+                PictureCompositeMode::MixBlend(..) => {
+                    false
+                }
+            };
+            // Still disable subpixel AA if parent forbids it
+            let allow_subpixel_aa = parent_allows_subpixel_aa && allow_subpixel_aa;
+
             let surface = SurfaceInfo::new(
                 surface_spatial_node_index,
                 if establishes_raster_root {
@@ -2723,6 +2740,7 @@ impl PicturePrimitive {
                 frame_context.screen_world_rect,
                 &frame_context.clip_scroll_tree,
                 frame_context.global_device_pixel_scale,
+                allow_subpixel_aa,
             );
 
             self.raster_config = Some(RasterConfig {
@@ -3085,7 +3103,7 @@ impl PicturePrimitive {
 
                 PictureSurface::RenderTask(render_task_id)
             }
-            PictureCompositeMode::MixBlend(..) => {
+            PictureCompositeMode::MixBlend(..) if !frame_context.fb_config.gpu_supports_advanced_blend => {
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &pic_rect,
                     &transform,
@@ -3175,6 +3193,7 @@ impl PicturePrimitive {
                 frame_state.surfaces[surface_index.0].tasks.push(render_task_id);
                 PictureSurface::RenderTask(render_task_id)
             }
+            PictureCompositeMode::MixBlend(..) |
             PictureCompositeMode::Blit(_) => {
                 // The SplitComposite shader used for 3d contexts doesn't snap
                 // to pixels, so we shouldn't snap our uv coordinates either.

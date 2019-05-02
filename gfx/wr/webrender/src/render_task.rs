@@ -267,12 +267,6 @@ impl RenderTaskTree {
         }
     }
 
-    pub fn prepare_for_render(&mut self) {
-        for task in &mut self.tasks {
-            task.prepare_for_render();
-        }
-    }
-
     pub fn get_task_address(&self, id: RenderTaskId) -> RenderTaskAddress {
         #[cfg(debug_assertions)]
         debug_assert_eq!(self.frame_id, id.frame_id);
@@ -1210,13 +1204,6 @@ impl RenderTask {
         }
     }
 
-    // Optionally, prepare the render task for drawing. This is executed
-    // after all resource cache items (textures and glyphs) have been
-    // resolved and can be queried. It also allows certain render tasks
-    // to defer calculating an exact size until now, if desired.
-    pub fn prepare_for_render(&mut self) {
-    }
-
     pub fn write_gpu_blocks(
         &mut self,
         gpu_cache: &mut GpuCache,
@@ -1357,7 +1344,6 @@ pub struct RenderTaskCacheKey {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskCacheEntry {
-    pending_render_task_id: Option<RenderTaskId>,
     user_data: Option<[f32; 3]>,
     is_opaque: bool,
     pub handle: TextureCacheHandle,
@@ -1423,82 +1409,74 @@ impl RenderTaskCache {
         });
     }
 
-    pub fn update(
-        &mut self,
+    fn alloc_render_task(
+        entry: &mut RenderTaskCacheEntry,
+        render_task_id: RenderTaskId,
         gpu_cache: &mut GpuCache,
         texture_cache: &mut TextureCache,
         render_tasks: &mut RenderTaskTree,
     ) {
-        // Iterate the list of render task cache entries,
-        // and allocate / update the texture cache location
-        // if the entry has been evicted or not yet allocated.
-        for (_, handle) in &self.map {
-            let entry = self.cache_entries.get_mut(handle);
+        let render_task = &mut render_tasks[render_task_id];
+        let target_kind = render_task.target_kind();
 
-            if let Some(pending_render_task_id) = entry.pending_render_task_id.take() {
-                let render_task = &mut render_tasks[pending_render_task_id];
-                let target_kind = render_task.target_kind();
-
-                // Find out what size to alloc in the texture cache.
-                let size = match render_task.location {
-                    RenderTaskLocation::Fixed(..) |
-                    RenderTaskLocation::TextureCache { .. } => {
-                        panic!("BUG: dynamic task was expected");
-                    }
-                    RenderTaskLocation::Dynamic(_, size) => size,
-                };
-
-                // Select the right texture page to allocate from.
-                let image_format = match target_kind {
-                    RenderTargetKind::Color => ImageFormat::BGRA8,
-                    RenderTargetKind::Alpha => ImageFormat::R8,
-                };
-
-                let descriptor = ImageDescriptor::new(
-                    size.width,
-                    size.height,
-                    image_format,
-                    entry.is_opaque,
-                    false,
-                );
-
-                // Allocate space in the texture cache, but don't supply
-                // and CPU-side data to be uploaded.
-                //
-                // Note that we currently use Eager eviction for cached render
-                // tasks, which means that any cached item not used in the last
-                // frame is discarded. There's room to be a lot smarter here,
-                // especially by considering the relative costs of re-rendering
-                // each type of item (box shadow blurs are an order of magnitude
-                // more expensive than borders, for example). Telemetry could
-                // inform our decisions here as well.
-                texture_cache.update(
-                    &mut entry.handle,
-                    descriptor,
-                    TextureFilter::Linear,
-                    None,
-                    entry.user_data.unwrap_or([0.0; 3]),
-                    DirtyRect::All,
-                    gpu_cache,
-                    None,
-                    render_task.uv_rect_kind(),
-                    Eviction::Eager,
-                );
-
-                // Get the allocation details in the texture cache, and store
-                // this in the render task. The renderer will draw this
-                // task into the appropriate layer and rect of the texture
-                // cache on this frame.
-                let (texture_id, texture_layer, uv_rect, _) =
-                    texture_cache.get_cache_location(&entry.handle);
-
-                render_task.location = RenderTaskLocation::TextureCache {
-                    texture: texture_id,
-                    layer: texture_layer,
-                    rect: uv_rect.to_i32(),
-                };
+        // Find out what size to alloc in the texture cache.
+        let size = match render_task.location {
+            RenderTaskLocation::Fixed(..) |
+            RenderTaskLocation::TextureCache { .. } => {
+                panic!("BUG: dynamic task was expected");
             }
-        }
+            RenderTaskLocation::Dynamic(_, size) => size,
+        };
+
+        // Select the right texture page to allocate from.
+        let image_format = match target_kind {
+            RenderTargetKind::Color => ImageFormat::BGRA8,
+            RenderTargetKind::Alpha => ImageFormat::R8,
+        };
+
+        let descriptor = ImageDescriptor::new(
+            size.width,
+            size.height,
+            image_format,
+            entry.is_opaque,
+            false,
+        );
+
+        // Allocate space in the texture cache, but don't supply
+        // and CPU-side data to be uploaded.
+        //
+        // Note that we currently use Eager eviction for cached render
+        // tasks, which means that any cached item not used in the last
+        // frame is discarded. There's room to be a lot smarter here,
+        // especially by considering the relative costs of re-rendering
+        // each type of item (box shadow blurs are an order of magnitude
+        // more expensive than borders, for example). Telemetry could
+        // inform our decisions here as well.
+        texture_cache.update(
+            &mut entry.handle,
+            descriptor,
+            TextureFilter::Linear,
+            None,
+            entry.user_data.unwrap_or([0.0; 3]),
+            DirtyRect::All,
+            gpu_cache,
+            None,
+            render_task.uv_rect_kind(),
+            Eviction::Eager,
+        );
+
+        // Get the allocation details in the texture cache, and store
+        // this in the render task. The renderer will draw this
+        // task into the appropriate layer and rect of the texture
+        // cache on this frame.
+        let (texture_id, texture_layer, uv_rect, _) =
+            texture_cache.get_cache_location(&entry.handle);
+
+        render_task.location = RenderTaskLocation::TextureCache {
+            texture: texture_id,
+            layer: texture_layer,
+            rect: uv_rect.to_i32(),
+        };
     }
 
     pub fn request_render_task<F>(
@@ -1520,7 +1498,6 @@ impl RenderTaskCache {
         let entry_handle = self.map.entry(key).or_insert_with(|| {
             let entry = RenderTaskCacheEntry {
                 handle: TextureCacheHandle::invalid(),
-                pending_render_task_id: None,
                 user_data,
                 is_opaque,
             };
@@ -1528,18 +1505,23 @@ impl RenderTaskCache {
         });
         let cache_entry = cache_entries.get_mut(entry_handle);
 
-        if cache_entry.pending_render_task_id.is_none() {
-            // Check if this texture cache handle is valid.
-            if texture_cache.request(&cache_entry.handle, gpu_cache) {
-                // Invoke user closure to get render task chain
-                // to draw this into the texture cache.
-                let render_task_id = f(render_tasks)?;
-                render_tasks.cacheable_render_tasks.push(render_task_id);
+        // Check if this texture cache handle is valid.
+        if texture_cache.request(&cache_entry.handle, gpu_cache) {
+            // Invoke user closure to get render task chain
+            // to draw this into the texture cache.
+            let render_task_id = f(render_tasks)?;
+            render_tasks.cacheable_render_tasks.push(render_task_id);
 
-                cache_entry.pending_render_task_id = Some(render_task_id);
-                cache_entry.user_data = user_data;
-                cache_entry.is_opaque = is_opaque;
-            }
+            cache_entry.user_data = user_data;
+            cache_entry.is_opaque = is_opaque;
+
+            RenderTaskCache::alloc_render_task(
+                cache_entry,
+                render_task_id,
+                gpu_cache,
+                texture_cache,
+                render_tasks,
+            );
         }
 
         Ok(entry_handle.weak())

@@ -431,7 +431,7 @@ class MitmproxyAndroid(Mitmproxy):
 
             # the production bitbar container host is always linux
             self.certutil = glob.glob(
-                os.path.join(self.mozproxy_dir, "host-utils*[!z]")
+                os.path.join(self.mozproxy_dir, "host-utils*[!z|checksum]")
             )[0]
 
             # must add hostutils/certutil to the path
