@@ -13,6 +13,7 @@
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/Preferences.h"
+#include "ReferrerInfo.h"
 
 #include "nsICacheEntry.h"
 #include "nsIServiceManager.h"
@@ -138,7 +139,9 @@ nsresult nsPrefetchNode::OpenChannel() {
   // configure HTTP specific stuff
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
   if (httpChannel) {
-    rv = httpChannel->SetReferrerWithPolicy(mReferrerURI, referrerPolicy);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        new mozilla::dom::ReferrerInfo(mReferrerURI, referrerPolicy);
+    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
                                        NS_LITERAL_CSTRING("prefetch"), false);

@@ -216,6 +216,7 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/TouchEvent.h"
+#include "ReferrerInfo.h"
 
 #include "mozilla/Preferences.h"
 
@@ -995,7 +996,9 @@ nsresult ExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    rv = httpChannel->SetReferrerWithPolicy(aReferrer, aReferrerPolicy);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        new ReferrerInfo(aReferrer, aReferrerPolicy);
+    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 

@@ -73,6 +73,7 @@
 #include "WidgetUtils.h"
 #include "nsIPresentationService.h"
 #include "nsIScriptError.h"
+#include "ReferrerInfo.h"
 
 #include "nsIExternalProtocolHandler.h"
 #include "BrowserChild.h"
@@ -1151,8 +1152,10 @@ bool Navigator::SendBeaconInternal(const nsAString& aUrl,
     aRv.Throw(NS_ERROR_DOM_BAD_URI);
     return false;
   }
-  mozilla::net::ReferrerPolicy referrerPolicy = doc->GetReferrerPolicy();
-  rv = httpChannel->SetReferrerWithPolicy(documentURI, referrerPolicy);
+
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      new ReferrerInfo(doc->GetDocumentURI(), doc->GetReferrerPolicy());
+  rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsIInputStream> in;

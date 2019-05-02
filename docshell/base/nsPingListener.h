@@ -8,7 +8,7 @@
 #define nsPingListener_h__
 
 #include "nsIStreamListener.h"
-
+#include "nsIReferrerInfo.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {
@@ -36,8 +36,7 @@ class nsPingListener final : public nsIStreamListener {
   nsresult StartTimeout(mozilla::dom::DocGroup* aDocGroup);
 
   static void DispatchPings(nsIDocShell* aDocShell, nsIContent* aContent,
-                            nsIURI* aTarget, nsIURI* aReferrer,
-                            uint32_t aReferrerPolicy);
+                            nsIURI* aTarget, nsIReferrerInfo* aReferrerInfo);
 
  private:
   ~nsPingListener();

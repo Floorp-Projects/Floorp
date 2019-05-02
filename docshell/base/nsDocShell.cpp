@@ -10083,11 +10083,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(
       do_QueryInterface(channel));
   nsCOMPtr<nsIURI> referrer;
-  uint32_t referrerPolicy = RP_Unset;
   nsIReferrerInfo* referrerInfo = aLoadState->GetReferrerInfo();
   if (referrerInfo) {
     referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
-    referrerInfo->GetReferrerPolicy(&referrerPolicy);
   }
   if (httpChannelInternal) {
     if (aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_FORCE_ALLOW_COOKIES)) {
@@ -10185,10 +10183,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       rv = AddHeadersToChannel(aLoadState->HeadersStream(), httpChannel);
     }
     // Set the referrer explicitly
-    if (referrer &&
-        !(aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER))) {
-      // Referrer is currenly only set for link clicks here.
-      rv = httpChannel->SetReferrerWithPolicy(referrer, referrerPolicy);
+    // Referrer is currenly only set for link clicks here.
+    if (referrerInfo) {
+      rv = httpChannel->SetReferrerInfo(referrerInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -10579,15 +10576,8 @@ nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
 void nsDocShell::SetupReferrerInfoFromChannel(nsIChannel* aChannel) {
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
   if (httpChannel) {
-    nsCOMPtr<nsIURI> referrer;
-    nsresult rv = httpChannel->GetReferrer(getter_AddRefs(referrer));
-    if (NS_SUCCEEDED(rv)) {
-      uint32_t referrerPolicy;
-      rv = httpChannel->GetReferrerPolicy(&referrerPolicy);
-      if (NS_SUCCEEDED(rv)) {
-        SetReferrerInfo(new ReferrerInfo(referrer, referrerPolicy));
-      }
-    }
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
+    SetReferrerInfo(referrerInfo);
   }
 }
 
@@ -11355,8 +11345,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
   nsCOMPtr<nsIURI> originalURI;
   nsCOMPtr<nsIURI> resultPrincipalURI;
   bool loadReplace = false;
-  nsCOMPtr<nsIURI> referrerURI;
-  uint32_t referrerPolicy = RP_Unset;
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
   uint32_t cacheKey = 0;
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> principalToInherit = aPrincipalToInherit;
@@ -11388,9 +11377,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
       uint32_t loadFlags;
       aChannel->GetLoadFlags(&loadFlags);
       loadReplace = loadFlags & nsIChannel::LOAD_REPLACE;
-      rv = httpChannel->GetReferrer(getter_AddRefs(referrerURI));
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      rv = httpChannel->GetReferrerPolicy(&referrerPolicy);
+      rv = httpChannel->GetReferrerInfo(getter_AddRefs(referrerInfo));
       MOZ_ASSERT(NS_SUCCEEDED(rv));
 
       discardLayoutState = ShouldDiscardLayoutState(httpChannel);
@@ -11442,7 +11429,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
   entry->SetOriginalURI(originalURI);
   entry->SetResultPrincipalURI(resultPrincipalURI);
   entry->SetLoadReplace(loadReplace);
-  entry->SetReferrerInfo(new ReferrerInfo(referrerURI, referrerPolicy));
+  entry->SetReferrerInfo(referrerInfo);
   nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(aChannel);
   if (inStrmChan) {
     bool isSrcdocChannel;
@@ -12620,10 +12607,11 @@ nsDocShell::OnLinkClickSync(
   uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
   if (IsElementAnchorOrArea(aContent)) {
     MOZ_ASSERT(aContent->IsHTMLElement());
-    nsAutoString referrer;
-    aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, referrer);
+    nsAutoString relString;
+    aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::rel,
+                                   relString);
     nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(
-        referrer);
+        relString);
 
     bool targetBlank = aTargetSpec.LowerCaseEqualsLiteral("_blank");
     bool explicitOpenerSet = false;
@@ -12669,22 +12657,22 @@ nsDocShell::OnLinkClickSync(
   // link was in. From that document, we'll get the URI to use as the
   // referrer, since the current URI in this docshell may be a
   // new document that we're in the process of loading.
-  RefPtr<Document> refererDoc = aContent->OwnerDoc();
-  NS_ENSURE_TRUE(refererDoc, NS_ERROR_UNEXPECTED);
+  RefPtr<Document> referrerDoc = aContent->OwnerDoc();
+  NS_ENSURE_TRUE(referrerDoc, NS_ERROR_UNEXPECTED);
 
-  // Now check that the refererDoc's inner window is the current inner
+  // Now check that the referrerDoc's inner window is the current inner
   // window for mScriptGlobal.  If it's not, then we don't want to
   // follow this link.
-  nsPIDOMWindowInner* refererInner = refererDoc->GetInnerWindow();
-  NS_ENSURE_TRUE(refererInner, NS_ERROR_UNEXPECTED);
+  nsPIDOMWindowInner* referrerInner = referrerDoc->GetInnerWindow();
+  NS_ENSURE_TRUE(referrerInner, NS_ERROR_UNEXPECTED);
   if (!mScriptGlobal ||
-      mScriptGlobal->GetCurrentInnerWindow() != refererInner) {
+      mScriptGlobal->GetCurrentInnerWindow() != referrerInner) {
     // We're no longer the current inner window
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> referrer = refererDoc->GetDocumentURI();
-  uint32_t refererPolicy = refererDoc->GetReferrerPolicy();
+  nsCOMPtr<nsIURI> referrer = referrerDoc->GetDocumentURI();
+  uint32_t referrerPolicy = referrerDoc->GetReferrerPolicy();
 
   // get referrer attribute from clicked link and parse it
   // if per element referrer is enabled, the element referrer overrules
@@ -12693,7 +12681,7 @@ nsDocShell::OnLinkClickSync(
     net::ReferrerPolicy refPolEnum =
         aContent->AsElement()->GetReferrerPolicyAsEnum();
     if (refPolEnum != RP_Unset) {
-      refererPolicy = refPolEnum;
+      referrerPolicy = refPolEnum;
     }
   }
 
@@ -12723,7 +12711,7 @@ nsDocShell::OnLinkClickSync(
 
   bool sendReferrer = !(flags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER);
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      new ReferrerInfo(referrer, refererPolicy, sendReferrer);
+      new ReferrerInfo(referrer, referrerPolicy, sendReferrer);
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
   loadState->SetReferrerInfo(referrerInfo);
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
@@ -12741,8 +12729,7 @@ nsDocShell::OnLinkClickSync(
   nsresult rv = InternalLoad(loadState, aDocShell, aRequest);
 
   if (NS_SUCCEEDED(rv)) {
-    nsPingListener::DispatchPings(this, aContent, aURI, referrer,
-                                  refererPolicy);
+    nsPingListener::DispatchPings(this, aContent, aURI, referrerInfo);
   }
   return rv;
 }

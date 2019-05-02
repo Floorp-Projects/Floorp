@@ -24,6 +24,7 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
+#include "ReferrerInfo.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -137,7 +138,9 @@ nsresult nsSyncLoader::LoadDocument(nsIChannel* aChannel, bool aChannelIsSync,
     nsCOMPtr<nsIURI> loaderUri;
     loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(loaderUri));
     if (loaderUri) {
-      rv = http->SetReferrerWithPolicy(loaderUri, aReferrerPolicy);
+      nsCOMPtr<nsIReferrerInfo> referrerInfo =
+          new ReferrerInfo(loaderUri, aReferrerPolicy);
+      rv = http->SetReferrerInfoWithoutClone(referrerInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
