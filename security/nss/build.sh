@@ -94,7 +94,8 @@ while [ $# -gt 0 ]; do
         --sancov=?*) enable_sancov "${1#*=}" ;;
         --emit-llvm) gyp_params+=(-Demit_llvm=1 -Dsign_libs=0) ;;
         --no-zdefs) gyp_params+=(-Dno_zdefs=1) ;;
-        --test) gyp_params+=(-Dtest_build=1) ;;
+        --test) gyp_params+=(-Dtest_build=1 -Dstatic_libs=1) ;;
+        --static) gyp_params+=(-Dstatic_libs=1) ;;
         --ct-verif) gyp_params+=(-Dct_verif=1) ;;
         --nspr) nspr_clean; rebuild_nspr=1 ;;
         --with-nspr=?*) set_nspr_path "${1#*=}"; no_local_nspr=1 ;;

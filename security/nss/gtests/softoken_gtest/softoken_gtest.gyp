@@ -19,7 +19,7 @@
         '<(DEPTH)/gtests/google_test/google_test.gyp:gtest',
       ],
       'conditions': [
-        [ 'test_build==1', {
+        [ 'static_libs==1', {
           'dependencies': [
             '<(DEPTH)/lib/nss/nss.gyp:nss_static',
             '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap_static',
