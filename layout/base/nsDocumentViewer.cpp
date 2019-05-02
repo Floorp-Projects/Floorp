@@ -133,6 +133,8 @@ using namespace mozilla::dom;
 #include "LayoutLogging.h"
 #include "mozilla/Logging.h"
 
+extern mozilla::LazyLogModule gPageCacheLog;
+
 #ifdef NS_PRINTING
 static mozilla::LazyLogModule gPrintingLog("printing");
 
@@ -2109,10 +2111,9 @@ nsDocumentViewer::Show(void) {
         nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
         docShell->GetPreviousEntryIndex(&prevIndex);
         docShell->GetLoadedEntryIndex(&loadedIndex);
-#ifdef DEBUG_PAGE_CACHE
-        printf("About to evict content viewers: prev=%d, loaded=%d\n",
-               prevIndex, loadedIndex);
-#endif
+        MOZ_LOG(gPageCacheLog, LogLevel::Verbose,
+                ("About to evict content viewers: prev=%d, loaded=%d",
+                 prevIndex, loadedIndex));
         history->LegacySHistory()->EvictOutOfRangeContentViewers(loadedIndex);
       }
     }
