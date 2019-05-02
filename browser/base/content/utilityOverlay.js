@@ -20,6 +20,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
+XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
+  Components.Constructor("@mozilla.org/referrer-info;1",
+                         "nsIReferrerInfo",
+                         "init"));
+
 Object.defineProperty(this, "BROWSER_NEW_TAB_URL", {
   enumerable: true,
   get() {
@@ -295,9 +300,6 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerInf
 function openLinkIn(url, where, params) {
   if (!where || !url)
     return;
-  let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
-                                            "nsIReferrerInfo",
-                                            "init");
 
   var aFromChrome           = params.fromChrome;
   var aAllowThirdPartyFixup = params.allowThirdPartyFixup;
@@ -384,7 +386,8 @@ function openLinkIn(url, where, params) {
       features += ",private";
       // To prevent regular browsing data from leaking to private browsing sites,
       // strip the referrer when opening a new private window. (See Bug: 1409226)
-      aReferrerInfo.sendReferrer = false;
+      aReferrerInfo = new ReferrerInfo(aReferrerInfo.referrerPolicy, false,
+        aReferrerInfo.originalReferrer);
     }
 
     // This propagates to window.arguments.
