@@ -1139,7 +1139,11 @@ var ContentBlocking = {
 
       if (!isBrowserPrivate) {
         let introCount = Services.prefs.getIntPref(this.prefIntroCount);
-        if (introCount < this.MAX_INTROS && !this.anyOtherWindowHasTour()) {
+        let installStamp = Services.prefs.getIntPref(
+          "browser.laterrun.bookkeeping.profileCreationTime", Date.now() / 1000);
+        let delayLength = Services.prefs.getIntPref("browser.contentblocking.introDelaySeconds");
+        let delayFulfilled = delayLength < (Date.now() / 1000 - installStamp);
+        if (introCount < this.MAX_INTROS && !this.anyOtherWindowHasTour() && delayFulfilled) {
           Services.prefs.setIntPref(this.prefIntroCount, ++introCount);
           Services.prefs.savePrefFile(null);
           this.showIntroPanel();
