@@ -177,66 +177,6 @@ function compareBadges(badges, expected = []) {
 }
 
 /**
- * Find an ancestor that is scrolled for a given DOMNode.
- *
- * @param {DOMNode} node
- *        DOMNode that to find an ancestor for that is scrolled.
- */
-function closestScrolledParent(node) {
-  if (node == null) {
-    return null;
-  }
-
-  if (node.scrollHeight > node.clientHeight) {
-    return node;
-  }
-
-  return closestScrolledParent(node.parentNode);
-}
-
-/**
- * Check if a given element is visible to the user and is not scrolled off
- * because of the overflow.
- *
- * @param   {Element} element
- *          Element to be checked whether it is visible and is not scrolled off.
- *
- * @returns {Boolean}
- *          True if the element is visible.
- */
-function isVisible(element) {
-  const { top, bottom } = element.getBoundingClientRect();
-  const scrolledParent = closestScrolledParent(element.parentNode);
-  const scrolledParentRect = scrolledParent ? scrolledParent.getBoundingClientRect() :
-                                              null;
-  return !scrolledParent ||
-         (top >= scrolledParentRect.top && bottom <= scrolledParentRect.bottom);
-}
-
-/**
- * Check selected styling and visibility for a given row in the accessibility
- * tree.
- * @param   {DOMNode} row
- *          DOMNode for a given accessibility row.
- * @param   {Boolean} expected
- *          Expected selected state.
- *
- * @returns {Boolean}
- *          True if visibility and styling matches expected selected state.
- */
-function checkSelected(row, expected) {
-  if (!expected) {
-    return true;
-  }
-
-  if (row.classList.contains("selected") !== expected) {
-    return false;
-  }
-
-  return isVisible(row);
-}
-
-/**
  * Check the state of the accessibility tree.
  * @param  {document} doc       panel documnent.
  * @param  {Array}    expected  an array that represents an expected row list.
@@ -244,13 +184,11 @@ function checkSelected(row, expected) {
 async function checkTreeState(doc, expected) {
   info("Checking tree state.");
   const hasExpectedStructure = await BrowserTestUtils.waitForCondition(() =>
-    [...doc.querySelectorAll(".treeRow")].every((row, i) => {
-      const { role, name, badges, selected } = expected[i];
-      return row.querySelector(".treeLabelCell").textContent === role &&
-        row.querySelector(".treeValueCell").textContent === name &&
-        compareBadges(row.querySelector(".badges"), badges) &&
-        checkSelected(row, selected);
-    }), "Wait for the right tree update.");
+    [...doc.querySelectorAll(".treeRow")].every((row, i) =>
+      row.querySelector(".treeLabelCell").textContent === expected[i].role &&
+      row.querySelector(".treeValueCell").textContent === expected[i].name &&
+      compareBadges(row.querySelector(".badges"), expected[i].badges)),
+    "Wait for the right tree update.");
 
   ok(hasExpectedStructure, "Tree structure is correct.");
 }
