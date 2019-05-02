@@ -30,12 +30,6 @@ var firstTests = [
   [false, 0, 1], [true, 0, 1], [false, 1, 1], [true, 1, 1],
 ];
 var secondTests = [
-  [false, 0, 0], [true, 0, 0], [false, 1, 0], [true, 1, 0],
-];
-var thirdTests = [
-  [false, 0, 0], [true, 0, 0], [false, 1, 0], [true, 1, 0],
-];
-var fourthTests = [
   [false, 0, 0], [true, 0, 0], [false, 1, 1], [true, 1, 0],
 ];
 
@@ -51,27 +45,9 @@ async function run_all_tests() {
   if (procType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
     return;
 
-  let attrs_inBrowser = { inIsolatedMozBrowser:true };
-  let attrs_notInBrowser = { };
-
-  Services.clearData.deleteDataFromOriginAttributesPattern(attrs_inBrowser);
-
-  for (let test of secondTests) {
-    handlers_called = 0;
-    await test_channel(...test);
-  }
-
-  Services.clearData.deleteDataFromOriginAttributesPattern(attrs_notInBrowser);
-  Services.clearData.deleteDataFromOriginAttributesPattern(attrs_inBrowser);
-
-  for (let test of thirdTests) {
-    handlers_called = 0;
-    await test_channel(...test);
-  }
-
   Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId: 1 });
 
-  for (let test of fourthTests) {
+  for (let test of secondTests) {
     handlers_called = 0;
     await test_channel(...test);
   }
