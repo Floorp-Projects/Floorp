@@ -173,13 +173,15 @@ class QuickActionSheetBehavior(
     private fun repositionQuickActionSheet(quickActionSheetContainer: NestedScrollView, toolbar: BrowserToolbar) {
         val handleHeight = quickActionSheetContainer.findViewById<ImageButton>(R.id.quick_action_sheet_handle).height
         if (toolbar.translationY >= toolbar.height.toFloat() - POSITION_SNAP_BUFFER) {
+            quickActionSheetContainer.translationY = toolbar.translationY + toolbar.height * -1.0f + handleHeight
             peekHeight = handleHeight
             state = STATE_COLLAPSED
+            return
         } else if (state == STATE_HIDDEN || state == STATE_SETTLING) {
             peekHeight = handleHeight
             state = STATE_COLLAPSED
         }
 
-        quickActionSheetContainer.translationY = (toolbar.translationY + toolbar.height * -1.0).toFloat()
+        quickActionSheetContainer.translationY = toolbar.translationY + toolbar.height * -1.0f
     }
 }
