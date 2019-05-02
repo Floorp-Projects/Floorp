@@ -1328,11 +1328,14 @@ class PackageFrontend(MachCommandBase):
         if conditions.is_git(self):
             git = self.substs['GIT']
 
+        # If we're building Thunderbird, we should be checking for comm-central artifacts.
+        topsrcdir = self.substs.get('commtopsrcdir', self.topsrcdir)
+
         from mozbuild.artifacts import Artifacts
         artifacts = Artifacts(tree, self.substs, self.defines, job,
                               log=self.log, cache_dir=cache_dir,
                               skip_cache=skip_cache, hg=hg, git=git,
-                              topsrcdir=self.topsrcdir,
+                              topsrcdir=topsrcdir,
                               download_tests=download_tests,
                               download_symbols=download_symbols,
                               download_host_bins=download_host_bins)
