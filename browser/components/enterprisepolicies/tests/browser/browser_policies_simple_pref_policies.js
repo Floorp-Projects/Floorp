@@ -427,6 +427,21 @@ const POLICIES_TESTS = [
       "browser.urlbar.suggest.searches": false,
     },
   },
+
+  // POLICY: FirefoxHome
+  {
+    policies: {
+      "FirefoxHome": {
+        "Pocket": false,
+        "Snippets": false,
+        "Locked": true,
+      },
+    },
+    lockedPrefs: {
+      "browser.newtabpage.activity-stream.feeds.snippets": false,
+      "browser.newtabpage.activity-stream.feeds.section.topstories": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {
