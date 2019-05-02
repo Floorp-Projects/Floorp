@@ -921,7 +921,7 @@ class nsPresContext : public nsISupports,
    * until ReflowStarted is called. In all cases where this returns true,
    * the passed-in frame (which should be the frame whose reflow will be
    * interrupted if true is returned) will be passed to
-   * nsIPresShell::FrameNeedsToContinueReflow.
+   * PresShell::FrameNeedsToContinueReflow.
    */
   bool CheckForInterrupt(nsIFrame* aFrame);
   /**

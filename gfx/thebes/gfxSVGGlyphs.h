@@ -17,10 +17,10 @@
 #include "nsRefreshDriver.h"
 
 class nsIContentViewer;
-class nsIPresShell;
 class gfxSVGGlyphs;
 
 namespace mozilla {
+class PresShell;
 class SVGContextPaint;
 namespace dom {
 class Document;

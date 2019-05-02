@@ -29,7 +29,7 @@ add_task(async function() {
   const targetElement = await waitForServiceWorkerRunning(SW_URL, document);
 
   // Retrieve the Start button for the worker.
-  const unregisterButton = targetElement.querySelector(".js-unregister-button");
+  const unregisterButton = targetElement.querySelector(".qa-unregister-button");
   ok(unregisterButton, "Found its unregister button");
 
   info("Click on the unregister button and wait for the service worker to disappear");

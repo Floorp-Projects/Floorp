@@ -57,6 +57,13 @@ def getParser(path):
     raise UserWarning("Cannot find Parser")
 
 
+def hasParser(path):
+    try:
+        return bool(getParser(path))
+    except UserWarning:
+        return False
+
+
 __constructors = [
     ('strings.*\\.xml$', AndroidParser()),
     ('\\.dtd$', DTDParser()),

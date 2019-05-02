@@ -21,13 +21,13 @@ add_task(async function() {
   await selectConnectPage(document);
 
   info("Wait until Connect page is displayed");
-  await waitUntil(() => document.querySelector(".js-connect-page"));
+  await waitUntil(() => document.querySelector(".qa-connect-page"));
 
   info("Check that by default USB devices are disabled");
-  const usbDisabledMessage = document.querySelector(".js-connect-usb-disabled-message");
+  const usbDisabledMessage = document.querySelector(".qa-connect-usb-disabled-message");
   ok(usbDisabledMessage, "A message about enabling USB devices is rendered");
 
-  const usbToggleButton = document.querySelector(".js-connect-usb-toggle-button");
+  const usbToggleButton = document.querySelector(".qa-connect-usb-toggle-button");
   ok(usbToggleButton, "The button to toggle USB devices debugging is rendered");
   ok(usbToggleButton.textContent.includes("Enable"),
     "The text of the toggle USB button is correct");
@@ -37,7 +37,7 @@ add_task(async function() {
 
   info("Wait until the toggle button text is updated");
   await waitUntil(() => usbToggleButton.textContent.includes("Disable"));
-  ok(!document.querySelector(".js-connect-usb-disabled-message"),
+  ok(!document.querySelector(".qa-connect-usb-disabled-message"),
     "The message about enabling USB devices is no longer rendered");
 
   info("Check that the addon was installed with the proper source");
@@ -57,7 +57,7 @@ add_task(async function() {
 
   info("Wait until the toggle button text is updated");
   await waitUntil(() => usbToggleButton.textContent.includes("Enable"));
-  ok(document.querySelector(".js-connect-usb-disabled-message"),
+  ok(document.querySelector(".qa-connect-usb-disabled-message"),
     "The message about enabling USB devices is rendered again");
 
   await stopAdbProcess();

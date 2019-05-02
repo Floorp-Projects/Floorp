@@ -23,6 +23,8 @@ let gMainArrowOrder;
 let gSubView;
 let gSubButton;
 let gSubTextarea;
+let gDocView;
+let gDocBrowser;
 
 async function openPopup() {
   let shown = BrowserTestUtils.waitForEvent(gMainView, "ViewShown");
@@ -36,9 +38,10 @@ async function hidePopup() {
   await hidden;
 }
 
-async function showSubView() {
-  let shown = BrowserTestUtils.waitForEvent(gSubView, "ViewShown");
-  gPanelMultiView.showSubView(gSubView);
+async function showSubView(view = gSubView) {
+  let shown = BrowserTestUtils.waitForEvent(view, "ViewShown");
+  // We must show with an anchor so the Back button is generated.
+  gPanelMultiView.showSubView(view, gMainButton1);
   await shown;
 }
 
@@ -74,6 +77,8 @@ add_task(async function setup() {
   gMainButton1 = document.createXULElement("button");
   gMainButton1.id = "gMainButton1";
   gMainView.appendChild(gMainButton1);
+  // We use this for anchoring subviews, so it must have a label.
+  gMainButton1.setAttribute("label", "gMainButton1");
   gMainMenulist = document.createXULElement("menulist");
   gMainMenulist.id = "gMainMenulist";
   gMainView.appendChild(gMainMenulist);
@@ -110,6 +115,18 @@ add_task(async function setup() {
   gSubTextarea.id = "gSubTextarea";
   gSubView.appendChild(gSubTextarea);
   gSubTextarea.value = "value";
+
+  gDocView = document.createXULElement("panelview");
+  gDocView.id = "testDocView";
+  gPanelMultiView.appendChild(gDocView);
+  gDocBrowser = document.createXULElement("browser");
+  gDocBrowser.id = "gDocBrowser";
+  gDocBrowser.setAttribute("type", "content");
+  gDocBrowser.setAttribute("src",
+    'data:text/html,<textarea id="docTextarea">value</textarea><button id="docButton"></button>');
+  gDocBrowser.setAttribute("width", 100);
+  gDocBrowser.setAttribute("height", 100);
+  gDocView.appendChild(gDocBrowser);
 
   registerCleanupFunction(() => {
     gAnchor.remove();
@@ -268,5 +285,51 @@ add_task(async function testActivation() {
   checkActivated(gMainButton1, () => EventUtils.synthesizeKey("KEY_Enter"), "pressing enter");
   checkActivated(gMainButton1, () => EventUtils.synthesizeKey(" "), "pressing space");
   checkActivated(gMainButton1, () => EventUtils.synthesizeKey("KEY_Enter", {code: "NumpadEnter"}), "pressing numpad enter");
+  await hidePopup();
+});
+
+// Test that keyboard activation works for buttons responding to mousedown
+// events (instead of command or click). The Library button does this, for
+// example.
+add_task(async function testActivationMousedown() {
+  await openPopup();
+  await expectFocusAfterKey("ArrowDown", gMainButton1);
+  let activated = false;
+  gMainButton1.onmousedown = function() { activated = true; };
+  EventUtils.synthesizeKey(" ");
+  ok(activated, "mousedown activated after space");
+  gMainButton1.onmousedown = null;
+  await hidePopup();
+});
+
+// Test that tab and the arrow keys aren't overridden in embedded documents.
+add_task(async function testTabArrowsBrowser() {
+  await openPopup();
+  await showSubView(gDocView);
+  let backButton = gDocView.querySelector(".subviewbutton-back");
+  backButton.id = "docBack";
+  await expectFocusAfterKey("Tab", backButton);
+  let doc = gDocBrowser.contentDocument;
+  // Documents don't have an id property, but expectFocusAfterKey wants one.
+  doc.id = "doc";
+  await expectFocusAfterKey("Tab", doc);
+  // Make sure tab/arrows aren't overridden within the embedded document.
+  let textarea = doc.getElementById("docTextarea");
+  // Tab should really focus the textarea, but default tab handling seems to
+  // skip everything inside the browser element when run in this test. This
+  // behaves as expected in real panels, though. Force focus to the textarea
+  // and then test from there.
+  textarea.focus();
+  is(doc.activeElement, textarea, "textarea focused");
+  is(textarea.selectionStart, 0, "selectionStart initially 0");
+  EventUtils.synthesizeKey("KEY_ArrowRight");
+  is(textarea.selectionStart, 1, "selectionStart 1 after ArrowRight");
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
+  is(textarea.selectionStart, 0, "selectionStart 0 after ArrowLeft");
+  is(doc.activeElement, textarea, "textarea still focused");
+  let docButton = doc.getElementById("docButton");
+  expectFocusAfterKey("Tab", docButton);
+  // Make sure tab leaves the document and reaches the Back button.
+  expectFocusAfterKey("Tab", backButton);
   await hidePopup();
 });

@@ -1,0 +1,41 @@
+---
+l10n:
+    description: Localization linter
+    # list of include directories of both
+    # browser and mobile/android l10n.tomls
+    include:
+        - browser/branding/official/locales/en-US
+        - browser/extensions/formautofill/locales/en-US
+        - browser/extensions/fxmonitor/locales/en-US
+        - browser/extensions/report-site-issue/locales/en-US
+        - browser/locales/en-US
+        - devtools/client/locales/en-US
+        - devtools/shared/locales/en-US
+        - devtools/startup/locales/en-US
+        - dom/locales/en-US
+        - mobile/android/base/locales/en-US
+        - mobile/android/locales/en-US
+        - mobile/locales/en-US
+        - netwerk/locales/en-US
+        - security/manager/locales/en-US
+        - services/sync/locales/en-US
+        - toolkit/locales/en-US
+        - tools/lint/l10n.yml
+    # files not supported by compare-locales,
+    # and also not relevant to this linter
+    exclude:
+        - browser/locales/en-US/firefox-l10n.js
+        - mobile/android/locales/en-US/mobile-l10n.js
+        - toolkit/locales/en-US/chrome/global/intl.css
+    l10n_configs:
+        - browser/locales/l10n.toml
+        - mobile/android/locales/l10n.toml
+    type: external
+    payload: python.l10n_lint:lint
+    setup: python.l10n_lint:gecko_strings_setup
+    support-files:
+        - '**/l10n.toml'
+        - 'third_party/python/compare-locales/**'
+        - 'third_party/python/fluent/**'
+        - 'tools/lint/python/l10n_lint.py'
+        - 'tools/lint/l10n.yml'

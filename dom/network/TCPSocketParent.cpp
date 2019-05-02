@@ -43,8 +43,10 @@ using namespace net;
 
 namespace dom {
 
-static void FireInteralError(mozilla::net::PTCPSocketParent* aActor,
+static void FireInteralError(TCPSocketParent* aActor,
                              uint32_t aLineNo) {
+  MOZ_ASSERT(aActor->IPCOpen());
+
   mozilla::Unused << aActor->SendCallback(
       NS_LITERAL_STRING("onerror"),
       TCPError(NS_LITERAL_STRING("InvalidStateError"),

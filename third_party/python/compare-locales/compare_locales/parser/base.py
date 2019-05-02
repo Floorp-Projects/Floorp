@@ -266,6 +266,13 @@ class Junk(object):
     def val(self):
         return self.all
 
+    def error_message(self):
+        params = (self.val,) + self.position() + self.position(-1)
+        return (
+            'Unparsed content "%s" from line %d column %d'
+            ' to line %d column %d' % params
+        )
+
     def __repr__(self):
         return self.key
 

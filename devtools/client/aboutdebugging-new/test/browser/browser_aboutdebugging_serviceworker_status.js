@@ -58,10 +58,10 @@ add_task(async function() {
 function checkButtons({ inspect, push, start, unregister }, workerText, document) {
   const targetElement = findDebugTargetByText(SW_URL, document);
 
-  const inspectButton = targetElement.querySelector(".js-debug-target-inspect-button");
-  const pushButton = targetElement.querySelector(".js-push-button");
-  const startButton = targetElement.querySelector(".js-start-button");
-  const unregisterButton = targetElement.querySelector(".js-unregister-button");
+  const inspectButton = targetElement.querySelector(".qa-debug-target-inspect-button");
+  const pushButton = targetElement.querySelector(".qa-push-button");
+  const startButton = targetElement.querySelector(".qa-start-button");
+  const unregisterButton = targetElement.querySelector(".qa-unregister-button");
 
   is(!!inspectButton, inspect,
     "Inspect button should be " + (inspect ? "visible" : "hidden"));

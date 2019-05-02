@@ -62,7 +62,7 @@ async function openAboutDebugging({ enableWorkerUpdates, enableLocalTabs = true 
   const window = browser.contentWindow;
 
   info("Wait until Connect page is displayed");
-  await waitUntil(() => document.querySelector(".js-connect-page"));
+  await waitUntil(() => document.querySelector(".qa-connect-page"));
 
   return { tab, document, window };
 }
@@ -72,7 +72,7 @@ async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debug
   info("Open about:devtools-toolbox page");
   const target = findDebugTargetByText(targetText, doc);
   ok(target, `${ targetText } tab target appeared`);
-  const inspectButton = target.querySelector(".js-debug-target-inspect-button");
+  const inspectButton = target.querySelector(".qa-debug-target-inspect-button");
   ok(inspectButton, `Inspect button for ${ targetText } appeared`);
   inspectButton.click();
   await Promise.all([
@@ -91,7 +91,7 @@ async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debug
   if (!shouldWaitToolboxReady) {
     // Wait for show error page.
     await waitUntil(() =>
-      devtoolsBrowser.contentDocument.querySelector(".js-error-page"));
+      devtoolsBrowser.contentDocument.querySelector(".qa-error-page"));
   }
 
   return {
@@ -206,26 +206,26 @@ async function selectThisFirefoxPage(doc, store) {
   info("Wait for requests to be complete");
   await onRequestSuccess;
   info("Wait for runtime page to be rendered");
-  await waitUntil(() => doc.querySelector(".js-runtime-page"));
+  await waitUntil(() => doc.querySelector(".qa-runtime-page"));
 }
 
 /**
  * Navigate to the Connect page. Resolves when the Connect page is rendered.
  */
 async function selectConnectPage(doc) {
-  const sidebarItems = doc.querySelectorAll(".js-sidebar-item");
+  const sidebarItems = doc.querySelectorAll(".qa-sidebar-item");
   const connectSidebarItem = [...sidebarItems].find(element => {
     return element.textContent === "Setup";
   });
   ok(connectSidebarItem, "Sidebar contains a Connect item");
-  const connectLink = connectSidebarItem.querySelector(".js-sidebar-link");
+  const connectLink = connectSidebarItem.querySelector(".qa-sidebar-link");
   ok(connectLink, "Sidebar contains a Connect link");
 
   info("Click on the Connect link in the sidebar");
   connectLink.click();
 
   info("Wait until Connect page is displayed");
-  await waitUntil(() => doc.querySelector(".js-connect-page"));
+  await waitUntil(() => doc.querySelector(".qa-connect-page"));
 }
 
 function getDebugTargetPane(title, document) {
@@ -235,31 +235,31 @@ function getDebugTargetPane(title, document) {
   };
 
   const targetTitle = sanitizeTitle(title);
-  for (const titleEl of document.querySelectorAll(".js-debug-target-pane-title")) {
+  for (const titleEl of document.querySelectorAll(".qa-debug-target-pane-title")) {
     if (sanitizeTitle(titleEl.textContent) !== targetTitle) {
       continue;
     }
 
-    return titleEl.closest(".js-debug-target-pane");
+    return titleEl.closest(".qa-debug-target-pane");
   }
 
   return null;
 }
 
 function findDebugTargetByText(text, document) {
-  const targets = [...document.querySelectorAll(".js-debug-target-item")];
+  const targets = [...document.querySelectorAll(".qa-debug-target-item")];
   return targets.find(target => target.textContent.includes(text));
 }
 
 function findSidebarItemByText(text, document) {
-  const sidebarItems = document.querySelectorAll(".js-sidebar-item");
+  const sidebarItems = document.querySelectorAll(".qa-sidebar-item");
   return [...sidebarItems].find(element => {
     return element.textContent.includes(text);
   });
 }
 
 function findSidebarItemLinkByText(text, document) {
-  const links = document.querySelectorAll(".js-sidebar-link");
+  const links = document.querySelectorAll(".qa-sidebar-link");
   return [...links].find(element => {
     return element.textContent.includes(text);
   });
@@ -269,20 +269,20 @@ async function connectToRuntime(deviceName, document) {
   info(`Wait until the sidebar item for ${deviceName} appears`);
   await waitUntil(() => findSidebarItemByText(deviceName, document));
   const sidebarItem = findSidebarItemByText(deviceName, document);
-  const connectButton = sidebarItem.querySelector(".js-connect-button");
+  const connectButton = sidebarItem.querySelector(".qa-connect-button");
   ok(connectButton, `Connect button is displayed for the runtime ${deviceName}`);
 
   info("Click on the connect button and wait until it disappears");
   connectButton.click();
-  await waitUntil(() => !sidebarItem.querySelector(".js-connect-button"));
+  await waitUntil(() => !sidebarItem.querySelector(".qa-connect-button"));
 }
 
 async function selectRuntime(deviceName, name, document) {
   const sidebarItem = findSidebarItemByText(deviceName, document);
-  sidebarItem.querySelector(".js-sidebar-link").click();
+  sidebarItem.querySelector(".qa-sidebar-link").click();
 
   await waitUntil(() => {
-    const runtimeInfo = document.querySelector(".js-runtime-name");
+    const runtimeInfo = document.querySelector(".qa-runtime-name");
     return runtimeInfo && runtimeInfo.textContent.includes(name);
   });
 }
@@ -301,7 +301,7 @@ async function openProfilerDialog(client, doc) {
   });
 
   info("Click on the Profile Runtime button");
-  const profileButton = doc.querySelector(".js-profile-runtime-button");
+  const profileButton = doc.querySelector(".qa-profile-runtime-button");
   profileButton.click();
 
   info("Wait for the loadPerformanceProfiler callback to be executed on client-wrapper");

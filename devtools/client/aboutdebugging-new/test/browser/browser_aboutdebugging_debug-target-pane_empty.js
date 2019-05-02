@@ -24,35 +24,35 @@ add_task(async function() {
 
   info("Check that the temporary extensions pane is empty");
   const temporaryExtensionPane = getDebugTargetPane("Temporary Extensions", document);
-  ok(!temporaryExtensionPane.querySelector(".js-debug-target-item"),
+  ok(!temporaryExtensionPane.querySelector(".qa-debug-target-item"),
     "Temporary Extensions pane contains no debug target");
 
   info("Check an empty target pane message is displayed");
-  ok(temporaryExtensionPane.querySelector(".js-debug-target-list-empty"),
+  ok(temporaryExtensionPane.querySelector(".qa-debug-target-list-empty"),
     "An empty target list message is displayed");
 
   info("Install a temporary extension");
   await installTemporaryExtension(EXTENSION_PATH, EXTENSION_NAME, document);
 
   info("Wait until a debug target item appears");
-  await waitUntil(() => temporaryExtensionPane.querySelector(".js-debug-target-item"));
+  await waitUntil(() => temporaryExtensionPane.querySelector(".qa-debug-target-item"));
 
   info("Check the empty target pane message is no longer displayed");
-  ok(!temporaryExtensionPane.querySelector(".js-debug-target-list-empty"),
+  ok(!temporaryExtensionPane.querySelector(".qa-debug-target-list-empty"),
     "The empty target list message is no longer displayed");
 
   const temporaryExtensionItem =
-    temporaryExtensionPane.querySelector(".js-debug-target-item");
+    temporaryExtensionPane.querySelector(".qa-debug-target-item");
   ok(temporaryExtensionItem, "Temporary Extensions pane now shows debug target");
 
   info("Remove the temporary extension");
-  temporaryExtensionItem.querySelector(".js-temporary-extension-remove-button").click();
+  temporaryExtensionItem.querySelector(".qa-temporary-extension-remove-button").click();
 
   info("Wait until the debug target item disappears");
-  await waitUntil(() => !temporaryExtensionPane.querySelector(".js-debug-target-item"));
+  await waitUntil(() => !temporaryExtensionPane.querySelector(".qa-debug-target-item"));
 
   info("Check the empty target pane message is displayed again");
-  ok(temporaryExtensionPane.querySelector(".js-debug-target-list-empty"),
+  ok(temporaryExtensionPane.querySelector(".qa-debug-target-list-empty"),
     "An empty target list message is displayed again");
 
   await removeTab(tab);

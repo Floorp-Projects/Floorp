@@ -88,12 +88,12 @@ class DebugTargetPane extends PureComponent {
 
     return dom.section(
       {
-        className: "js-debug-target-pane",
+        className: "qa-debug-target-pane",
       },
       dom.a(
         {
           className: "undecorated-link debug-target-pane__title " +
-                     "js-debug-target-pane-title",
+                     "qa-debug-target-pane-title",
           title,
           onClick: e => this.toggleCollapsibility(),
         },
@@ -117,7 +117,7 @@ class DebugTargetPane extends PureComponent {
       ),
       dom.div(
         {
-          className: "debug-target-pane__collapsable js-debug-target-pane__collapsable" +
+          className: "debug-target-pane__collapsable qa-debug-target-pane__collapsable" +
                      (isCollapsed ? " debug-target-pane__collapsable--collapsed" : ""),
           ref: this.collapsableRef,
         },

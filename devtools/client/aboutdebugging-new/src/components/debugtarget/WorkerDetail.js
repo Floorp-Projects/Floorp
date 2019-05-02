@@ -49,7 +49,7 @@ class WorkerDetail extends PureComponent {
       FieldPair(
         {
           className: isListening ?
-            "js-worker-fetch-listening" : "js-worker-fetch-not-listening",
+            "qa-worker-fetch-listening" : "qa-worker-fetch-not-listening",
           label: "Fetch",
           slug: "fetch",
           value: "about-debugging-worker-fetch-value",
@@ -72,7 +72,7 @@ class WorkerDetail extends PureComponent {
           label: "Push Service",
           value: dom.span(
             {
-              className: "js-worker-push-service-value",
+              className: "qa-worker-push-service-value",
             },
             pushServiceEndpoint,
           ),

@@ -303,10 +303,7 @@ void AudioBuffer::CopyFromChannel(const Float32Array& aDestination,
   aDestination.ComputeLengthAndData();
 
   uint32_t length = aDestination.Length();
-  CheckedInt<uint32_t> end = aStartInChannel;
-  end += length;
-  if (aChannelNumber >= NumberOfChannels() || !end.isValid() ||
-      end.value() > Length()) {
+  if (aChannelNumber >= NumberOfChannels() || aStartInChannel > Length()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
@@ -326,7 +323,8 @@ void AudioBuffer::CopyFromChannel(const Float32Array& aDestination,
     // The sourceData arrays should all have originated in
     // RestoreJSChannelData, where they are created unshared.
     MOZ_ASSERT(!isShared);
-    PodMove(aDestination.Data(), sourceData + aStartInChannel, length);
+    PodMove(aDestination.Data(), sourceData + aStartInChannel,
+            std::min(Length() - aStartInChannel, length));
     return;
   }
 
@@ -346,10 +344,7 @@ void AudioBuffer::CopyToChannel(JSContext* aJSContext,
   aSource.ComputeLengthAndData();
 
   uint32_t length = aSource.Length();
-  CheckedInt<uint32_t> end = aStartInChannel;
-  end += length;
-  if (aChannelNumber >= NumberOfChannels() || !end.isValid() ||
-      end.value() > Length()) {
+  if (aChannelNumber >= NumberOfChannels() || aStartInChannel > Length()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
@@ -372,7 +367,8 @@ void AudioBuffer::CopyToChannel(JSContext* aJSContext,
   // The channelData arrays should all have originated in
   // RestoreJSChannelData, where they are created unshared.
   MOZ_ASSERT(!isShared);
-  PodMove(channelData + aStartInChannel, aSource.Data(), length);
+  PodMove(channelData + aStartInChannel, aSource.Data(),
+          std::min(Length() - aStartInChannel, length));
 }
 
 void AudioBuffer::GetChannelData(JSContext* aJSContext, uint32_t aChannel,

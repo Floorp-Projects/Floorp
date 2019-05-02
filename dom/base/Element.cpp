@@ -3452,11 +3452,7 @@ already_AddRefed<Animation> Element::Animate(
 
   // Animation constructor follows the standard Xray calling convention and
   // needs to be called in the target element's realm.
-  Maybe<JSAutoRealm> ar;
-  if (js::GetContextCompartment(aContext) !=
-      js::GetObjectCompartment(ownerGlobal->GetGlobalJSObject())) {
-    ar.emplace(aContext, ownerGlobal->GetGlobalJSObject());
-  }
+  JSAutoRealm ar(aContext, global.Get());
 
   AnimationTimeline* timeline = referenceElement->OwnerDoc()->Timeline();
   RefPtr<Animation> animation = Animation::Constructor(

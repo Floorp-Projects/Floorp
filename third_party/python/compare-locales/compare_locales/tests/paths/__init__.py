@@ -33,6 +33,7 @@ class SetupMixin(object):
             '/tmp/somedir/de/toolkit/two/one/file.ftl',
             'file.ftl',
             module='toolkit', locale='de')
+        self.cfg.set_locales(['de'])
 
 
 class MockNode(object):

@@ -27,7 +27,7 @@ add_task(async function() {
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, document));
   const target = findDebugTargetByText(EXTENSION_NAME, document);
 
-  const warningMessage = target.querySelector(".js-message");
+  const warningMessage = target.querySelector(".qa-message");
   ok(!!warningMessage, "A warning message is displayed for the installed addon");
 
   const warningText = warningMessage.textContent;
