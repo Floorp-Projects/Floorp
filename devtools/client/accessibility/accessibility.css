@@ -12,6 +12,7 @@
   --accessibility-horizontal-padding: 5px;
   --accessibility-horizontal-indent: 20px;
   --accessibility-properties-item-width: calc(100% - var(--accessibility-horizontal-indent));
+  --accessibility-tree-height: calc(100vh - var(--accessibility-toolbar-height) * 2 - 1px);
   --accessibility-arrow-horizontal-padding: 4px;
   --accessibility-tree-row-height: 21px;
   --accessibility-unfocused-tree-focused-node-background: var(--grey-20);
@@ -71,14 +72,14 @@ body {
   fill: var(--theme-selection-color);
 }
 
-.mainFrame .main-panel {
-  flex: 1 1 auto;
-  overflow: auto;
-}
-
 .mainFrame {
   height: 100%;
   color: var(--theme-toolbar-color);
+}
+
+.main-panel {
+  /* To compenstate for 1px splitter between the tree and sidebar. */
+  width: var(--accessibility-full-length-minus-splitter);
 }
 
 .devtools-button,
@@ -225,24 +226,30 @@ body {
 }
 
 /* TreeView Customization */
-.split-box:not(.horz) .main-panel {
-  height: calc(100vh - var(--accessibility-toolbar-height));
+.treeTable thead, .treeTable tbody {
+  display: block;
 }
 
-.treeTable > thead {
-  position: sticky;
-  top: 0;
-  /* Bug 1466806 - fix expander arrow for expanding treeview rows rendering over the
-     thead */
-  z-index: 1;
+.treeTable tr {
+  width: 100%;
+  display: table;
 }
 
-.split-box:not(.horz) .treeTable {
-  /* To compenstate for 1px splitter between the tree and sidebar. */
-  width: var(--accessibility-full-length-minus-splitter);
+.treeTable tbody {
+  overflow-y: auto;
 }
 
-.split-box.horz .treeTable {
+.split-box:not(.horz) .treeTable tbody {
+  height: var(--accessibility-tree-height);
+}
+
+.split-box.horz .treeTable tbody {
+  /* Accessibility tree height depends on the height of the controlled panel
+     (sidebar) when in horz mode and also has an additional separator. */
+  height: calc(var(--accessibility-tree-height) - var(--split-box-controlled-panel-size) - 1px);
+}
+
+.treeTable {
   width: 100%;
 }
 
@@ -318,6 +325,7 @@ body {
 }
 
 .mainFrame .treeTable .treeHeaderCell {
+  width: 50%;
   border-bottom: 1px solid var(--theme-splitter-color);
   background: var(--theme-toolbar-background);
   font: message-box;
