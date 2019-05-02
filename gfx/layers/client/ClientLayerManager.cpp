@@ -301,7 +301,7 @@ bool ClientLayerManager::EndTransactionInternal(
 
   // Apply pending tree updates before recomputing effective
   // properties.
-  GetRoot()->ApplyPendingUpdatesToSubtree();
+  auto scrollIdsUpdated = GetRoot()->ApplyPendingUpdatesToSubtree();
 
   mPaintedLayerCallback = aCallback;
   mPaintedLayerCallbackData = aCallbackData;
@@ -319,6 +319,14 @@ bool ClientLayerManager::EndTransactionInternal(
     }
   } else {
     gfxCriticalNote << "LayerManager::EndTransaction skip RenderLayer().";
+  }
+
+  // Once we're sure we're not going to fall back to a full paint,
+  // notify the scroll frames which had pending updates.
+  if (!mTransactionIncomplete) {
+    for (ScrollableLayerGuid::ViewID scrollId : scrollIdsUpdated) {
+      nsLayoutUtils::NotifyPaintSkipTransaction(scrollId);
+    }
   }
 
   if (!mRepeatTransaction && !GetRoot()->GetInvalidRegion().IsEmpty()) {
