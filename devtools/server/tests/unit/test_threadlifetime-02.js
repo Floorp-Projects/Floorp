@@ -46,7 +46,7 @@ function test_thread_lifetime() {
           gClient.request(
             {to: pauseGrip.actor, type: "bogusRequest"}, function(response) {
               Assert.equal(response.error, "noSuchActor");
-              gThreadClient.resume(function(response) {
+              gThreadClient.resume().then(function() {
                 finishClient(gClient);
               });
             });

@@ -38,7 +38,7 @@ function test_pause_frame() {
     gThreadClient.addOneTimeListener("paused", function(event, packet) {
       Assert.equal(packet.why.type, "exception");
       Assert.equal(packet.why.exception, 42);
-      gThreadClient.resume(() => finishClient(gClient));
+      gThreadClient.resume().then(() => finishClient(gClient));
     });
 
     gThreadClient.pauseOnExceptions(true, false);

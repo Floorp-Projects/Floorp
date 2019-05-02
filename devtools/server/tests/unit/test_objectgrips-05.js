@@ -28,7 +28,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
       const obj2Client = threadClient.pauseGrip(obj2);
       Assert.ok(!obj2Client.isFrozen);
 
-      threadClient.resume(resolve);
+      threadClient.resume().then(resolve);
     });
 
     debuggee.eval(function stopMe(arg1) {
