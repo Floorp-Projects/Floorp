@@ -39,6 +39,7 @@ class TestAndroidParser(ParserTestMixin, unittest.TestCase):
             source,
             (
                 (DocumentWrapper, '<?xml'),
+                (DocumentWrapper, '>'),
                 (Whitespace, '\n  '),
                 ('foo', 'value', 'bar'),
                 (Whitespace, '\n'),
@@ -79,6 +80,7 @@ class TestAndroidParser(ParserTestMixin, unittest.TestCase):
             source,
             (
                 (DocumentWrapper, '<?xml'),
+                (DocumentWrapper, '>'),
                 (Whitespace, '\n  '),
                 ('first', 'value'),
                 (Whitespace, '\n  '),
@@ -115,6 +117,7 @@ class TestAndroidParser(ParserTestMixin, unittest.TestCase):
             source,
             (
                 (DocumentWrapper, '<?xml'),
+                (DocumentWrapper, '>'),
                 (Whitespace, '\n  '),
                 ('one', ''),
                 (Whitespace, '\n  '),

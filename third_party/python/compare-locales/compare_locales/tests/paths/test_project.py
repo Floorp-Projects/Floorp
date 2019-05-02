@@ -171,6 +171,32 @@ class TestProjectConfig(unittest.TestCase):
         pc.add_child(child)
         self.assertListEqual([pc, child], list(pc.configs))
 
+    def test_locales_in_children(self):
+        pc = ProjectConfig(None)
+        child = ProjectConfig(None)
+        child.add_paths({
+            'l10n': '/tmp/somedir/{locale}/toolkit/**',
+        })
+        child.set_locales([])
+        pc.add_child(child)
+        self.assertListEqual(pc.all_locales, [])
+        pc.set_locales(['de', 'fr'])
+        self.assertListEqual(child.locales, [])
+        self.assertListEqual(pc.all_locales, ['de', 'fr'])
+
+    def test_locales_in_paths(self):
+        pc = ProjectConfig(None)
+        child = ProjectConfig(None)
+        child.add_paths({
+            'l10n': '/tmp/somedir/{locale}/toolkit/**',
+            'locales': ['it']
+        })
+        child.set_locales([])
+        pc.add_child(child)
+        self.assertListEqual(pc.all_locales, ['it'])
+        pc.set_locales(['de', 'fr'])
+        self.assertListEqual(pc.all_locales, ['de', 'fr', 'it'])
+
 
 class TestSameConfig(unittest.TestCase):
 
