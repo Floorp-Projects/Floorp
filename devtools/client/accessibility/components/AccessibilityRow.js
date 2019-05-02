@@ -30,8 +30,6 @@ const { L10N } = require("../utils/l10n");
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
 
-const { scrollIntoView } = require("devtools/client/shared/scroll");
-
 const JSON_URL_PREFIX = "data:application/json;charset=UTF-8,";
 
 const TELEMETRY_ACCESSIBLE_CONTEXT_MENU_OPENED =
@@ -73,7 +71,7 @@ class AccessibilityRow extends Component {
     const { selected, object } = this.props.member;
     if (selected) {
       this.unhighlight();
-      this.update();
+      this.updateAndScrollIntoViewIfNeeded();
       this.highlight(object, { duration: VALUE_HIGHLIGHT_DURATION });
     }
 
@@ -91,7 +89,7 @@ class AccessibilityRow extends Component {
     // If row is selected, update corresponding accessible details.
     if (!prevProps.member.selected && selected) {
       this.unhighlight();
-      this.update();
+      this.updateAndScrollIntoViewIfNeeded();
       this.highlight(object, { duration: VALUE_HIGHLIGHT_DURATION });
     }
 
@@ -112,16 +110,17 @@ class AccessibilityRow extends Component {
       return;
     }
 
-    scrollIntoView(row, { container: document.querySelector(".treeTable > tbody") });
+    row.scrollIntoView({ block: "center" });
   }
 
-  update() {
+  updateAndScrollIntoViewIfNeeded() {
     const { dispatch, member: { object }, supports } = this.props;
     if (!gToolbox || !object.actorID) {
       return;
     }
 
     dispatch(updateDetails(gToolbox.walker, object, supports));
+    this.scrollIntoView();
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED, object);
   }
 

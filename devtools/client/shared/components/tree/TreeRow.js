@@ -21,6 +21,8 @@ define(function(require, exports, module) {
   const TreeCell = createFactory(require("./TreeCell"));
   const LabelCell = createFactory(require("./LabelCell"));
 
+  // Scroll
+  const { scrollIntoViewIfNeeded } = require("devtools/client/shared/scroll");
   const { focusableSelector } = require("devtools/client/shared/focus");
 
   const UPDATE_ON_PROPS = [
@@ -119,6 +121,17 @@ define(function(require, exports, module) {
       }
 
       return false;
+    }
+
+    componentDidUpdate() {
+      if (this.props.member.selected) {
+        const row = findDOMNode(this);
+        // Because this is called asynchronously, context window might be
+        // already gone.
+        if (row.ownerDocument.defaultView) {
+          scrollIntoViewIfNeeded(row);
+        }
+      }
     }
 
     componentWillUnmount() {
