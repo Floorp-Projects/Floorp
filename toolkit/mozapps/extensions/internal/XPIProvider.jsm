@@ -293,7 +293,7 @@ function canRunInSafeMode(aAddon) {
 
   // TODO product should make the call about temporary add-ons running
   // in safe mode. assuming for now that they are.
-  return location.isTemporary || location.isSystem;
+  return location.isTemporary || location.isSystem || location.isBuiltin;
 }
 
 /**
