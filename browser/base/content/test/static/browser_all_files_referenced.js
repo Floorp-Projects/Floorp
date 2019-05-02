@@ -177,6 +177,12 @@ var whitelist = [
   {file: "resource://gre/localization/en-US/toolkit/about/aboutCompat.ftl"},
 ];
 
+if (!AppConstants.MOZ_NEW_NOTIFICATION_STORE) {
+  // kvstore.jsm wraps the API in nsIKeyValue.idl in a more ergonomic API
+  // It landed in bug 1490496, and we expect to start using it shortly.
+  whitelist.push({file: "resource://gre/modules/kvstore.jsm"});
+}
+
 whitelist = new Set(whitelist.filter(item =>
   ("isFromDevTools" in item) == isDevtools &&
   (!item.skipUnofficial || !AppConstants.MOZILLA_OFFICIAL) &&

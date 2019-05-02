@@ -1,5 +1,6 @@
 "use strict";
 
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const fooNotification =
@@ -15,7 +16,14 @@ const OLD_STORE_PATH =
 
 let nextRequestID = 0;
 
-async function createOldDatastore() {
+// Create the old datastore and populate it with data before we initialize
+// the notification database so it has data to migrate.  This is a setup step,
+// not a test, but it seems like we need to do it in a test function
+// rather than in run_test() because the test runner doesn't handle async steps
+// in run_test().
+add_task({
+  skip_if: () => !AppConstants.MOZ_NEW_NOTIFICATION_STORE,
+}, async function test_create_old_datastore() {
   const notifications = {
     [fooNotification.origin]: {
       [fooNotification.id]: fooNotification,
@@ -26,19 +34,13 @@ async function createOldDatastore() {
   };
 
   await OS.File.writeAtomic(OLD_STORE_PATH, JSON.stringify(notifications));
-}
 
-// Create the old datastore and populate it with data before we initialize
-// the notification database so it has data to migrate.  This is a setup step,
-// not a test, but it seems like we need to do it in a test function
-// rather than in run_test() because the test runner doesn't handle async steps
-// in run_test().
-add_task(async function test_create_old_datastore() {
-  await createOldDatastore();
   startNotificationDB();
 });
 
-add_test(function test_get_system_notification() {
+add_test({
+  skip_if: () => !AppConstants.MOZ_NEW_NOTIFICATION_STORE,
+}, function test_get_system_notification() {
   const requestID = nextRequestID++;
   const msgHandler = function(message) {
     Assert.equal(requestID, message.data.requestID);
@@ -51,7 +53,9 @@ add_test(function test_get_system_notification() {
   });
 });
 
-add_test(function test_get_foo_notification() {
+add_test({
+  skip_if: () => !AppConstants.MOZ_NEW_NOTIFICATION_STORE,
+}, function test_get_foo_notification() {
   const requestID = nextRequestID++;
   const msgHandler = function(message) {
     Assert.equal(requestID, message.data.requestID);
@@ -66,7 +70,9 @@ add_test(function test_get_foo_notification() {
   });
 });
 
-add_test(function test_get_bar_notification() {
+add_test({
+  skip_if: () => !AppConstants.MOZ_NEW_NOTIFICATION_STORE,
+}, function test_get_bar_notification() {
   const requestID = nextRequestID++;
   const msgHandler = function(message) {
     Assert.equal(requestID, message.data.requestID);
@@ -81,7 +87,9 @@ add_test(function test_get_bar_notification() {
   });
 });
 
-add_task(async function test_old_datastore_deleted() {
+add_task({
+  skip_if: () => !AppConstants.MOZ_NEW_NOTIFICATION_STORE,
+}, async function test_old_datastore_deleted() {
     Assert.ok(!await OS.File.exists(OLD_STORE_PATH),
       "old datastore no longer exists");
 });
