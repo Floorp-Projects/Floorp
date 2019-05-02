@@ -16,6 +16,7 @@ import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -51,6 +52,7 @@ class ToolbarIntegration(
                 val tabsAction = TabCounterToolbarButton(
                     sessionManager,
                     {
+                        toolbar.hideKeyboard()
                         Navigation.findNavController(toolbar)
                             .navigate(BrowserFragmentDirections.actionBrowserFragmentToHomeFragment())
                     },

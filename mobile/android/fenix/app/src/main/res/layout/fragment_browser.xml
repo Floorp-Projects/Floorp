@@ -32,9 +32,10 @@
         android:layout_height="56dp"
         android:layout_gravity="bottom"
         android:background="?foundation"
-        mozac:findInPageResultCountTextColor="?primaryText"
-        mozac:findInPageButtonsTint="?primaryText"
+        android:clickable="true"
         android:visibility="gone"
-        app:layout_behavior="org.mozilla.fenix.components.FindInPageBarBehavior" />
+        app:layout_behavior="org.mozilla.fenix.components.FindInPageBarBehavior"
+        mozac:findInPageButtonsTint="?primaryText"
+        mozac:findInPageResultCountTextColor="?primaryText" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
