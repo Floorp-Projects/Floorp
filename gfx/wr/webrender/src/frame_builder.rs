@@ -311,6 +311,7 @@ impl FrameBuilder {
         surfaces: &mut Vec<SurfaceInfo>,
         scratch: &mut PrimitiveScratchBuffer,
         debug_flags: DebugFlags,
+        texture_cache_profile: &mut TextureCacheProfileCounters,
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
@@ -404,6 +405,14 @@ impl FrameBuilder {
                 &visibility_context,
                 &mut visibility_state,
             );
+        }
+
+        {
+            profile_marker!("BlockOnResources");
+
+            resource_cache.block_until_all_resources_added(gpu_cache,
+                                                           render_tasks,
+                                                           texture_cache_profile);
         }
 
         let mut frame_state = FrameBuildingState {
@@ -553,15 +562,8 @@ impl FrameBuilder {
             &mut surfaces,
             scratch,
             debug_flags,
+            texture_cache_profile,
         );
-
-        {
-            profile_marker!("BlockOnResources");
-
-            resource_cache.block_until_all_resources_added(gpu_cache,
-                                                           &mut render_tasks,
-                                                           texture_cache_profile);
-        }
 
         let mut passes;
         let mut deferred_resolves = vec![];
