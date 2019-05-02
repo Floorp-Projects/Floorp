@@ -208,7 +208,7 @@ nsresult AppEncodeTo(const StaticMutexAutoLock& lock,
         }
       }
       auto& lastArray = metricData[metricData.Length() - 1];
-      lastArray.SetLength(gOriginHashesList->Length() %
+      lastArray.SetLength((gOriginHashesList->Length() + kNumMetaOrigins) %
                           PrioEncoder::gNumBooleans);
       for (auto& metricDatum : lastArray) {
         metricDatum = false;
@@ -225,7 +225,7 @@ nsresult AppEncodeTo(const StaticMutexAutoLock& lock,
           if (!gOriginToIndexMap->Get(origin, &index)) {
             return NS_ERROR_FAILURE;
           }
-          MOZ_ASSERT(index < gOriginHashesList->Length());
+          MOZ_ASSERT(index < (gOriginHashesList->Length() + kNumMetaOrigins));
           size_t shardIndex = index / PrioEncoder::gNumBooleans;
           MOZ_ASSERT(shardIndex < metricData.Length());
           MOZ_ASSERT(index % PrioEncoder::gNumBooleans <
