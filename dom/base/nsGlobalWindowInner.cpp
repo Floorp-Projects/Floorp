@@ -1578,6 +1578,10 @@ JSObject* nsGlobalWindowInner::GetGlobalJSObject() {
   return FastGetGlobalJSObject();
 }
 
+JSObject* nsGlobalWindowInner::GetGlobalJSObjectPreserveColor() const {
+  return FastGetGlobalJSObject();
+}
+
 void nsGlobalWindowInner::TraceGlobalJSObject(JSTracer* aTrc) {
   TraceWrapper(aTrc, "active window global");
 }

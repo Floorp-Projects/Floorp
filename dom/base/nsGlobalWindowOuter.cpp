@@ -1510,6 +1510,10 @@ JSObject* nsGlobalWindowOuter::GetGlobalJSObject() {
   return FastGetGlobalJSObject();
 }
 
+JSObject* nsGlobalWindowOuter::GetGlobalJSObjectPreserveColor() const {
+  return FastGetGlobalJSObject();
+}
+
 bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
   // We reuse the inner window when:
   // a. We are currently at our original document.
