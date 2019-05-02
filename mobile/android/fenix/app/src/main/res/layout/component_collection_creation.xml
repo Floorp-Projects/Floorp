@@ -157,6 +157,7 @@
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/save_button"
             app:layout_constraintStart_toEndOf="@id/close_icon"
             app:layout_constraintTop_toTopOf="parent" />
 

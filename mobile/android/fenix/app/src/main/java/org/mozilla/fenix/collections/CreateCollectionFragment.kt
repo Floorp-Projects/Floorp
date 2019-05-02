@@ -100,7 +100,9 @@ class CreateCollectionFragment : DialogFragment() {
         context?.let { context: Context ->
             val rootView = context.getRootView()
             rootView?.let { view: View ->
-                val string = context.resources.getQuantityString(R.plurals.create_collection_tabs_saved, tabSize)
+                val string =
+                    if (tabSize > 1) context.getString(R.string.create_collection_tabs_saved) else
+                        context.getString(R.string.create_collection_tab_saved)
                 FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
                     .show()
             }
