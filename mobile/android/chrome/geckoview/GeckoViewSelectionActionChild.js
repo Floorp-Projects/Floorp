@@ -34,7 +34,7 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
       predicate: e => e.selectionEditable &&
                       Services.clipboard.hasDataMatchingFlavors(
                           ["text/unicode"], 1, Ci.nsIClipboard.kGlobalClipboard),
-      perform: _ => docShell.doCommand("cmd_paste"),
+      perform: _ => this._performPaste(),
     }, {
       id: "org.mozilla.geckoview.DELETE",
       predicate: e => !e.collapsed && e.selectionEditable,
@@ -56,6 +56,11 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
       predicate: e => e.reason !== "longpressonemptycontent",
       perform: e => docShell.doCommand("cmd_selectAll"),
     }];
+  }
+
+  _performPaste() {
+    this.handleEvent({type: "pagehide"});
+    docShell.doCommand("cmd_paste");
   }
 
   _isPasswordField(aEvent) {
@@ -190,8 +195,6 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
       this._isActive = true;
       this._previousMessage = JSON.stringify(msg);
 
-      // This event goes to GeckoViewSelectionAction.jsm, where the data is
-      // further transformed and then sent to GeckoSession.
       this.eventDispatcher.sendRequest(msg, {
         onSuccess: response => {
           if (response.seqNo !== this._seqNo) {
