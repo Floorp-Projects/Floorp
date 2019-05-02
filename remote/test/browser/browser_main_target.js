@@ -5,8 +5,6 @@
 
 // Test very basic CDP features.
 
-const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
-
 const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
 
 add_task(async function() {
