@@ -5027,8 +5027,8 @@ class TabProgressListener {
 
           this.mBrowser.userTypedValue = null;
 
-          let isNavigating = this.mBrowser.isNavigating;
-          if (this.mTab.selected && gURLBar && !isNavigating) {
+          let inLoadURI = this.mBrowser.inLoadURI;
+          if (this.mTab.selected && gURLBar && !inLoadURI) {
             URLBarSetURI();
           }
         } else if (isSuccessful) {
