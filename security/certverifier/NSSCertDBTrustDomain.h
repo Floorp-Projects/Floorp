@@ -11,7 +11,11 @@
 #include "ScopedNSSTypes.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/TimeStamp.h"
-#include "nsICertStorage.h"
+#ifdef MOZ_NEW_CERT_STORAGE
+#  include "nsICertStorage.h"
+#else
+#  include "nsICertBlocklist.h"
+#endif
 #include "nsString.h"
 #include "mozpkix/pkixtypes.h"
 #include "secmodt.h"
@@ -59,6 +63,7 @@ void UnloadLoadableRoots();
 nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
                                       /*out*/ nsCString& nickname);
 
+#ifdef MOZ_NEW_CERT_STORAGE
 /**
  * Build nsTArray<uint8_t>s out of the issuer, serial, subject and public key
  * data from the supplied certificate for use in revocation checks.
@@ -82,6 +87,31 @@ nsresult BuildRevocationCheckArrays(const UniqueCERTCertificate& cert,
                                     /*out*/ nsTArray<uint8_t>& serialBytes,
                                     /*out*/ nsTArray<uint8_t>& subjectBytes,
                                     /*out*/ nsTArray<uint8_t>& pubKeyBytes);
+#else
+/**
+ * Build strings of base64 encoded issuer, serial, subject and public key data
+ * from the supplied certificate for use in revocation checks.
+ *
+ * @param cert
+ *        The CERTCertificate* from which to extract the data.
+ * @param out encIssuer
+ *        The string to populate with base64 encoded issuer data.
+ * @param out encSerial
+ *        The string to populate with base64 encoded serial number data.
+ * @param out encSubject
+ *        The string to populate with base64 encoded subject data.
+ * @param out encPubKey
+ *        The string to populate with base64 encoded public key data.
+ * @return
+ *        NS_OK, unless there's a Base64 encoding problem, in which case
+ *        NS_ERROR_FAILURE.
+ */
+nsresult BuildRevocationCheckStrings(const CERTCertificate* cert,
+                                     /*out*/ nsCString& encIssuer,
+                                     /*out*/ nsCString& encSerial,
+                                     /*out*/ nsCString& encSubject,
+                                     /*out*/ nsCString& encPubKey);
+#endif
 
 void SaveIntermediateCerts(const UniqueCERTCertList& certList);
 
@@ -232,7 +262,11 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   UniqueCERTCertList& mBuiltChain;    // non-owning
   PinningTelemetryInfo* mPinningTelemetryInfo;
   const char* mHostname;  // non-owning - only used for pinning checks
+#ifdef MOZ_NEW_CERT_STORAGE
   nsCOMPtr<nsICertStorage> mCertStorage;
+#else
+  nsCOMPtr<nsICertBlocklist> mCertBlocklist;
+#endif
   CertVerifier::OCSPStaplingStatus mOCSPStaplingStatus;
   // Certificate Transparency data extracted during certificate verification
   UniqueSECItem mSCTListFromCertificate;
