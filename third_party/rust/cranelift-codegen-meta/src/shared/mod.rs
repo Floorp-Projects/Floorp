@@ -4,7 +4,6 @@ pub mod entities;
 pub mod formats;
 pub mod immediates;
 pub mod instructions;
-pub mod legalize;
 pub mod settings;
 pub mod types;
 
@@ -12,14 +11,12 @@ use crate::cdsl::formats::FormatRegistry;
 use crate::cdsl::inst::InstructionGroup;
 use crate::cdsl::operands::OperandKind;
 use crate::cdsl::settings::SettingGroup;
-use crate::cdsl::xform::TransformGroups;
 
 pub struct Definitions {
     pub settings: SettingGroup,
     pub instructions: InstructionGroup,
     pub operand_kinds: OperandKinds,
     pub format_registry: FormatRegistry,
-    pub transform_groups: TransformGroups,
 }
 
 pub struct OperandKinds(Vec<OperandKind>);
@@ -53,14 +50,10 @@ pub fn define() -> Definitions {
     let immediates = OperandKinds(immediates::define());
     let entities = OperandKinds(entities::define());
     let format_registry = formats::define(&immediates, &entities);
-    let instructions = instructions::define(&format_registry, &immediates, &entities);
-    let transform_groups = legalize::define(&instructions, &immediates);
-
     Definitions {
         settings: settings::define(),
-        instructions,
+        instructions: instructions::define(&format_registry, &immediates, &entities),
         operand_kinds: immediates,
         format_registry,
-        transform_groups,
     }
 }
