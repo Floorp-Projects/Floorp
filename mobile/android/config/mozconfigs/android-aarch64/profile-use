@@ -1,0 +1,10 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/android-aarch64/nightly"
+
+export LLVM_PROFDATA="$topsrcdir/clang/bin/llvm-profdata"
+
+ac_add_options --enable-profile-use
+
+# This is disabled because jarlog re-ordering breaks apk publishing tasks,
+# see bug 1539933.
+# ac_add_options --with-pgo-jarlog=/builds/worker/fetches/en-US.log
+ac_add_options --with-pgo-profile-path=/builds/worker/fetches/default.profraw
