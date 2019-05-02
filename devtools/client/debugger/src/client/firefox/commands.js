@@ -125,51 +125,35 @@ function forEachWorkerThread(iteratee) {
 }
 
 function resume(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).resume(resolve);
-  });
+  return lookupThreadClient(thread).resume();
 }
 
 function stepIn(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).stepIn(resolve);
-  });
+  return lookupThreadClient(thread).stepIn();
 }
 
 function stepOver(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).stepOver(resolve);
-  });
+  return lookupThreadClient(thread).stepOver();
 }
 
 function stepOut(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).stepOut(resolve);
-  });
+  return lookupThreadClient(thread).stepOut();
 }
 
 function rewind(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).rewind(resolve);
-  });
+  return lookupThreadClient(thread).rewind();
 }
 
 function reverseStepIn(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).reverseStepIn(resolve);
-  });
+  return lookupThreadClient(thread).reverseStepIn();
 }
 
 function reverseStepOver(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).reverseStepOver(resolve);
-  });
+  return lookupThreadClient(thread).reverseStepOver();
 }
 
 function reverseStepOut(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).reverseStepOut(resolve);
-  });
+  return lookupThreadClient(thread).reverseStepOut();
 }
 
 function breakOnNext(thread: string): Promise<*> {

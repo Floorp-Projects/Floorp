@@ -31,7 +31,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee }) => {
           testPropertyType(g, "BigInt");
         }
 
-        threadClient.resume(resolve);
+        threadClient.resume().then(resolve);
       });
     });
 

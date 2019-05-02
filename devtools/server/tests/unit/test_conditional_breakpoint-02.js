@@ -44,7 +44,7 @@ function test_simple_breakpoint() {
       // Remove the breakpoint.
       gThreadClient.removeBreakpoint(location2);
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
       });
     });

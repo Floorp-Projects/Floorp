@@ -103,7 +103,7 @@ function test_remove_one(first, second, threadClient, debuggee, client) {
         Assert.ok(false, "Should never get here");
       });
 
-      threadClient.resume(() => debuggee.foo());
+      threadClient.resume().then(() => debuggee.foo());
     });
   });
 }

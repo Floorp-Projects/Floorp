@@ -47,7 +47,7 @@ function test_object_grip() {
       Assert.equal(opn[2], "lineNumber");
       Assert.equal(opn[3], "message");
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
       });
     });

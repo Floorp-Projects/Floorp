@@ -35,10 +35,10 @@ function test_pause_frame() {
     const args = packet.frame.arguments;
     const objActor1 = args[0].actor;
 
-    gThreadClient.getFrames(0, 1, function(response) {
+    gThreadClient.getFrames(0, 1).then(function(response) {
       const frame = response.frames[0];
       Assert.equal(objActor1, frame.arguments[0].actor);
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
       });
     });

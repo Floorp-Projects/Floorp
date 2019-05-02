@@ -36,7 +36,7 @@ add_task(async function() {
       threadClient.addOneTimeListener("paused", (event, packet) => {
         equal(packet.why.type, "debuggerStatement",
               "yay - hit the 'debugger' statement in our script");
-        threadClient.resume(resolve);
+        threadClient.resume().then(resolve);
       });
       threadClient.resume();
     });
@@ -44,7 +44,7 @@ add_task(async function() {
 
   // tell the thread to do the initial resume.  This would cause the
   // xpcshell test harness to resume and load the file under test.
-  threadClient.resume(() => {
+  threadClient.resume().then(() => {
     // should have been told to resume the test itself.
     ok(testResumed);
     // Now load our test script.

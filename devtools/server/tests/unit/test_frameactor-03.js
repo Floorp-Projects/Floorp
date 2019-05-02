@@ -36,7 +36,7 @@ function test_pause_frame() {
       const poppedFrames = packet2.poppedFrames;
       Assert.equal(typeof (poppedFrames), typeof ([]));
       Assert.ok(poppedFrames.includes(packet1.frame.actor));
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
       });
     });

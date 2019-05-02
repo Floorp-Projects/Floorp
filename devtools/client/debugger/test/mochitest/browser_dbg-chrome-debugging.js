@@ -33,10 +33,9 @@ function onNewSource(event, packet) {
   }
 }
 
-function resumeAndCloseConnection() {
-  return new Promise(resolve => {
-    gThreadClient.resume(() => resolve(gClient.close()));
-  });
+async function resumeAndCloseConnection() {
+  await gThreadClient.resume();
+  return gClient.close();
 }
 
 registerCleanupFunction(function() {

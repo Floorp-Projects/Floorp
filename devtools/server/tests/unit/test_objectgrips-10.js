@@ -57,7 +57,7 @@ function test_object_grip() {
           getFooClient.getScope(response => {
             Assert.equal(response.scope.bindings.variables.foo.value, 10);
 
-            gThreadClient.resume(() => finishClient(gClient));
+            gThreadClient.resume().then(() => finishClient(gClient));
           });
         });
       });

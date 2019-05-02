@@ -37,7 +37,7 @@ function run_test() {
 
 function test_simple_listsources() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    gThreadClient.getSources(function(response) {
+    gThreadClient.getSources().then(function(response) {
       Assert.ok(response.sources.some(function(s) {
         return s.url && s.url.match(/test_listsources-01.js/);
       }));
@@ -46,7 +46,7 @@ function test_simple_listsources() {
                 "Should only send one sources request at most, even though we"
                 + " might have had to send one to determine feature support.");
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
       });
     });

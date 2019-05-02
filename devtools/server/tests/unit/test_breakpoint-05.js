@@ -36,7 +36,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
 
           // Remove the breakpoint.
           bpClient.remove(function(response) {
-            threadClient.resume(resolve);
+            threadClient.resume().then(resolve);
           });
         });
 
