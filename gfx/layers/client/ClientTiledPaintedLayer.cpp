@@ -457,6 +457,11 @@ void ClientTiledPaintedLayer::EndPaint() {
 }
 
 void ClientTiledPaintedLayer::RenderLayer() {
+  if (!ClientManager()->IsRepeatTransaction()) {
+    // Only paint the mask layers on the first transaction.
+    RenderMaskLayers(this);
+  }
+
   LayerManager::DrawPaintedLayerCallback callback =
       ClientManager()->GetPaintedLayerCallback();
   void* data = ClientManager()->GetPaintedLayerCallbackData();
@@ -540,9 +545,6 @@ void ClientTiledPaintedLayer::RenderLayer() {
   }
 
   if (!ClientManager()->IsRepeatTransaction()) {
-    // Only paint the mask layers on the first transaction.
-    RenderMaskLayers(this);
-
     // For more complex cases we need to calculate a bunch of metrics before we
     // can do the paint.
     BeginPaint();
