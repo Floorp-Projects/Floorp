@@ -35,7 +35,6 @@ const tests = [{
     tree: [{
       role: "document",
       name: `"Accessibility Panel Test"`,
-      selected: true,
     }],
   },
 }, {
@@ -48,7 +47,6 @@ const tests = [{
       role: "text leaf",
       name: `"Top level header "contrast`,
       badges: [ "contrast" ],
-      selected: true,
     }, {
       role: "text leaf",
       name: `"Second level header "contrast`,
@@ -64,7 +62,6 @@ const tests = [{
     tree: [{
       role: "document",
       name: `"Accessibility Panel Test"`,
-      selected: true,
     }, {
       role: "heading",
       name: `"Top level header"`,
