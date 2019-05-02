@@ -10,6 +10,10 @@ use cranelift_entity::{entity_impl, PrimaryMap};
 ///
 /// This corresponds to a single member of a variant of the `InstructionData`
 /// data type.
+///
+/// :param iform: Parent `InstructionFormat`.
+/// :param kind: Immediate Operand kind.
+/// :param member: Member name in `InstructionData` variant.
 #[derive(Debug)]
 pub struct FormatField {
     /// Immediate operand number in parent.
@@ -18,36 +22,39 @@ pub struct FormatField {
     /// Immediate operand kind.
     pub kind: OperandKind,
 
-    /// Member name in InstructionData variant.
+    /// Member name in InstructionDate variant.
     pub member: &'static str,
 }
 
-/// Every instruction opcode has a corresponding instruction format which determines the number of
-/// operands and their kinds. Instruction formats are identified structurally, i.e., the format of
-/// an instruction is derived from the kinds of operands used in its declaration.
+/// Every instruction opcode has a corresponding instruction format which
+/// determines the number of operands and their kinds. Instruction formats are
+/// identified structurally, i.e., the format of an instruction is derived from
+/// the kinds of operands used in its declaration.
 ///
-/// The instruction format stores two separate lists of operands: Immediates and values. Immediate
-/// operands (including entity references) are represented as explicit members in the
-/// `InstructionData` variants. The value operands are stored differently, depending on how many
-/// there are.  Beyond a certain point, instruction formats switch to an external value list for
-/// storing value arguments. Value lists can hold an arbitrary number of values.
+/// The instruction format stores two separate lists of operands: Immediates
+/// and values. Immediate operands (including entity references) are
+/// represented as explicit members in the `InstructionData` variants. The
+/// value operands are stored differently, depending on how many there are.
+/// Beyond a certain point, instruction formats switch to an external value
+/// list for storing value arguments. Value lists can hold an arbitrary number
+/// of values.
 ///
-/// All instruction formats must be predefined in the meta shared/formats.rs module.
+/// All instruction formats must be predefined in the meta shared/formats module.
+///
+/// :param kinds: List of `OperandKind` objects describing the operands.
+/// :param name: Instruction format name in CamelCase. This is used as a Rust
+///     variant name in both the `InstructionData` and `InstructionFormat`
+///     enums.
+/// :param typevar_operand: Index of the value input operand that is used to
+///     infer the controlling type variable. By default, this is `0`, the first
+///     `value` operand. The index is relative to the values only, ignoring
+///     immediate operands.
 #[derive(Debug)]
 pub struct InstructionFormat {
-    /// Instruction format name in CamelCase. This is used as a Rust variant name in both the
-    /// `InstructionData` and `InstructionFormat` enums.
     pub name: &'static str,
-
     pub num_value_operands: usize,
-
     pub has_value_list: bool,
-
     pub imm_fields: Vec<FormatField>,
-
-    /// Index of the value input operand that is used to infer the controlling type variable. By
-    /// default, this is `0`, the first `value` operand. The index is relative to the values only,
-    /// ignoring immediate operands.
     pub typevar_operand: Option<usize>,
 }
 
@@ -155,7 +162,7 @@ impl InstructionFormatBuilder {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct InstructionFormatIndex(u32);
 entity_impl!(InstructionFormatIndex);
 

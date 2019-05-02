@@ -38,16 +38,9 @@ extern crate alloc as std;
 extern crate std;
 
 #[cfg(not(feature = "std"))]
-use hashmap_core::{
-    hash_map::Entry::{Occupied, Vacant},
-    map as hash_map, HashMap,
-};
+use hashmap_core::{map as hash_map, HashMap};
 #[cfg(feature = "std")]
-use std::collections::{
-    hash_map,
-    hash_map::Entry::{Occupied, Vacant},
-    HashMap,
-};
+use std::collections::{hash_map, HashMap};
 
 mod code_translator;
 mod environ;
