@@ -38,6 +38,7 @@
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
 #include "nsDiskCacheDeviceSQL.h"
+#include "ReferrerInfo.h"
 
 #include "nsXULAppAPI.h"
 
@@ -177,7 +178,9 @@ nsresult nsManifestCheck::Begin() {
   // configure HTTP specific stuff
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
   if (httpChannel) {
-    rv = httpChannel->SetReferrer(mReferrerURI);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        new mozilla::dom::ReferrerInfo(mReferrerURI);
+    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
                                        NS_LITERAL_CSTRING("offline-resource"),
@@ -357,7 +360,9 @@ nsresult nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate* aUpdate) {
   // configure HTTP specific stuff
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
   if (httpChannel) {
-    rv = httpChannel->SetReferrer(mReferrerURI);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        new mozilla::dom::ReferrerInfo(mReferrerURI);
+    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
                                        NS_LITERAL_CSTRING("offline-resource"),

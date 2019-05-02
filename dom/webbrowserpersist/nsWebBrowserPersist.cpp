@@ -64,6 +64,7 @@
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/Printf.h"
+#include "ReferrerInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1273,7 +1274,9 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
   if (httpChannel) {
     // Referrer
     if (aReferrer) {
-      rv = httpChannel->SetReferrerWithPolicy(aReferrer, aReferrerPolicy);
+      nsCOMPtr<nsIReferrerInfo> referrerInfo =
+          new ReferrerInfo(aReferrer, aReferrerPolicy);
+      rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 

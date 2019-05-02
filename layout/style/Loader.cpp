@@ -54,6 +54,7 @@
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/css/StreamLoader.h"
+#include "ReferrerInfo.h"
 
 #ifdef MOZ_XUL
 #  include "nsXULPrototypeCache.h"
@@ -1454,8 +1455,9 @@ nsresult Loader::LoadSheet(SheetLoadData* aLoadData,
   if (httpChannel) {
     nsCOMPtr<nsIURI> referrerURI = aLoadData->GetReferrerURI();
     if (referrerURI) {
-      rv = httpChannel->SetReferrerWithPolicy(
+      nsCOMPtr<nsIReferrerInfo> referrerInfo = new mozilla::dom::ReferrerInfo(
           referrerURI, aLoadData->mSheet->GetReferrerPolicy());
+      rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
       Unused << NS_WARN_IF(NS_FAILED(rv));
     }
 

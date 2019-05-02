@@ -19,6 +19,7 @@ include "mozilla/net/NeckoMessageUtils.h";
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h";
+using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -44,8 +45,8 @@ parent:
   // Reports approval/veto of redirect by child process redirect observers
   async Redirect2Verify(nsresult result, RequestHeaderTuples changedHeaders,
                         ChildLoadInfoForwarderArgs loadInfoForwarder,
-                        uint32_t loadFlags, uint32_t referrerPolicy,
-                        URIParams? referrerUri, URIParams? apiRedirectTo,
+                        uint32_t loadFlags, nsIReferrerInfo referrerInfo,
+                        URIParams? apiRedirectTo,
                         CorsPreflightArgs? corsPreflightArgs,
                         bool chooseAppcache);
 

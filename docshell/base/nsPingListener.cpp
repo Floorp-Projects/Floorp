@@ -79,9 +79,8 @@ struct MOZ_STACK_CLASS SendPingInfo {
   int32_t maxPings;
   bool requireSameHost;
   nsIURI* target;
-  nsIURI* referrer;
+  nsIReferrerInfo* referrerInfo;
   nsIDocShell* docShell;
-  uint32_t referrerPolicy;
 };
 
 static void SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
@@ -151,10 +150,13 @@ static void SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
   nsCOMPtr<nsIScriptSecurityManager> sm =
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
 
-  if (sm && info->referrer) {
-    bool referrerIsSecure;
+  if (sm && info->referrerInfo) {
+    nsCOMPtr<nsIURI> referrer = info->referrerInfo->GetOriginalReferrer();
+    bool referrerIsSecure = false;
     uint32_t flags = nsIProtocolHandler::URI_IS_POTENTIALLY_TRUSTWORTHY;
-    rv = NS_URIChainHasFlags(info->referrer, flags, &referrerIsSecure);
+    if (referrer) {
+      rv = NS_URIChainHasFlags(referrer, flags, &referrerIsSecure);
+    }
 
     // Default to sending less data if NS_URIChainHasFlags() fails.
     referrerIsSecure = NS_FAILED(rv) || referrerIsSecure;
@@ -166,7 +168,7 @@ static void SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     }
 
     bool sameOrigin = NS_SUCCEEDED(
-        sm->CheckSameOriginURI(info->referrer, aURI, false, isPrivateWin));
+        sm->CheckSameOriginURI(referrer, aURI, false, isPrivateWin));
 
     // If both the address of the document containing the hyperlink being
     // audited and "ping URL" have the same origin or the document containing
@@ -174,7 +176,7 @@ static void SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     // connection, send a Ping-From header.
     if (sameOrigin || !referrerIsSecure) {
       nsAutoCString pingFrom;
-      if (NS_SUCCEEDED(info->referrer->GetSpec(pingFrom))) {
+      if (NS_SUCCEEDED(referrer->GetSpec(pingFrom))) {
         rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Ping-From"),
                                         pingFrom, false);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -184,9 +186,8 @@ static void SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     // If the document containing the hyperlink being audited was not retrieved
     // over an encrypted connection and its address does not have the same
     // origin as "ping URL", send a referrer.
-    if (!sameOrigin && !referrerIsSecure) {
-      rv =
-          httpChan->SetReferrerWithPolicy(info->referrer, info->referrerPolicy);
+    if (!sameOrigin && !referrerIsSecure && info->referrerInfo) {
+      rv = httpChan->SetReferrerInfo(info->referrerInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -287,10 +288,10 @@ static void ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback,
 }
 
 // Spec: http://whatwg.org/specs/web-apps/current-work/#ping
-/*static*/
-void nsPingListener::DispatchPings(nsIDocShell* aDocShell, nsIContent* aContent,
-                                   nsIURI* aTarget, nsIURI* aReferrer,
-                                   uint32_t aReferrerPolicy) {
+/*static*/ void nsPingListener::DispatchPings(nsIDocShell* aDocShell,
+                                              nsIContent* aContent,
+                                              nsIURI* aTarget,
+                                              nsIReferrerInfo* aReferrerInfo) {
   SendPingInfo info;
 
   if (!PingsEnabled(&info.maxPings, &info.requireSameHost)) {
@@ -302,8 +303,7 @@ void nsPingListener::DispatchPings(nsIDocShell* aDocShell, nsIContent* aContent,
 
   info.numPings = 0;
   info.target = aTarget;
-  info.referrer = aReferrer;
-  info.referrerPolicy = aReferrerPolicy;
+  info.referrerInfo = aReferrerInfo;
   info.docShell = aDocShell;
 
   ForEachPing(aContent, SendPing, &info);

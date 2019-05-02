@@ -7,6 +7,8 @@
 
 interface nsIURI;
 
+native URIRef(already_AddRefed<nsIURI>);
+
 [scriptable, builtinclass, uuid(081cdc36-f2e2-4f94-87bf-78578f06f1eb)]
 interface nsIReferrerInfo : nsISerializable
 {
@@ -19,12 +21,21 @@ interface nsIReferrerInfo : nsISerializable
   /**
   * Referrer policy which is applied to the referrer
   */
-  [infallible] attribute unsigned long referrerPolicy;
+  [infallible] readonly attribute unsigned long referrerPolicy;
 
   /**
   * Indicates if the referrer should not be sent or not even when it's available.
   */
-  [infallible] attribute boolean sendReferrer;
+  [infallible] readonly attribute boolean sendReferrer;
+
+  /**
+   * Get the computed referrer, if one has been set.  The computed referrer is
+   * the original referrer manipulated by the referrer-policy. Use the result of
+   * this function as the actual referrer value for the channel.
+   */
+
+  [must_use, noscript, nostdcall, notxpcom]
+  URIRef GetComputedReferrer();
 
   /**
    * Initialize method.

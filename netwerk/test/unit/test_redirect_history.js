@@ -1,4 +1,7 @@
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
+const ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
+                                            "nsIReferrerInfo",
+                                            "init");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -62,7 +65,7 @@ function run_test()
   var chan = make_channel(URL + redirects[0]);
   var uri = NetUtil.newURI("http://test.com");
   httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
-  httpChan.referrer = uri;
+  httpChan.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
   chan.asyncOpen(new ChannelListener(finish_test, null));
   do_test_pending();
 }

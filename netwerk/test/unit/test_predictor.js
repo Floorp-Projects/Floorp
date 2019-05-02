@@ -1,5 +1,8 @@
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 var {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
+const ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
+                                            "nsIReferrerInfo",
+                                            "init");
 
 var running_single_process = false;
 
@@ -499,10 +502,10 @@ function test_prefetch_prime() {
     // This runs in the parent or only process
     var channel = NetUtil.newChannel({
       uri: prefetch_sruri.asciiSpec,
-      loadUsingSystemPrincipal: true
+      loadUsingSystemPrincipal: true,
     }).QueryInterface(Ci.nsIHttpChannel);
     channel.requestMethod = "GET";
-    channel.referrer = prefetch_tluri;
+    channel.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, prefetch_tluri);
     channel.asyncOpen(prefetchListener);
   });
 }

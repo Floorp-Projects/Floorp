@@ -8,6 +8,9 @@ const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
+var ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
+                                          "nsIReferrerInfo",
+                                          "init");
 var observer = {
   QueryInterface: function eventsink_qi(iid) {
     if (iid.equals(Ci.nsISupports) ||
@@ -26,7 +29,7 @@ var observer = {
       currentReferrer = subject.getRequestHeader("Referer");
       Assert.equal(currentReferrer, "http://site1.com/");
       var uri = ios.newURI("http://site2.com");
-      subject.referrer = uri;
+      subject.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
     } catch (ex) {
       do_throw("Exception: " + ex);
     }
@@ -34,7 +37,7 @@ var observer = {
     var obs = Cc["@mozilla.org/observer-service;1"].getService();
     obs = obs.QueryInterface(Ci.nsIObserverService);
     obs.removeObserver(observer, "http-on-modify-request");
-  }
+  },
 };
 
 var listener = {
@@ -54,9 +57,9 @@ var listener = {
       env.set("NECKO_ERRORS_ARE_FATAL", "0");
       // we expect setting referrer to fail
       try {
-        request.referrer = uri;
+        request.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
         do_throw("Error should have been thrown before getting here");
-      } catch (ex) { } 
+      } catch (ex) { }
     } catch (ex) {
       do_throw("Exception: " + ex);
     }
@@ -68,7 +71,7 @@ var listener = {
 
   onStopRequest: function test_onStopR(request, status) {
     httpserv.stop(do_test_finished);
-  }
+  },
 };
 
 function makeChan(url) {
@@ -77,8 +80,7 @@ function makeChan(url) {
 
   // ENSURE_CALLED_BEFORE_CONNECT: set original value
   var uri = ios.newURI("http://site1.com");
-  chan.referrer = uri;
-
+  chan.referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, uri);
   return chan;
 }
 
