@@ -131,7 +131,7 @@ ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject* aGlobal,
                                                    Type aType)
     : mGlobalObject(aGlobal), mType(aType), mOlder(nullptr) {
   MOZ_ASSERT_IF(IsIncumbentCandidate() && !NoJSAPI(), mGlobalObject);
-  MOZ_ASSERT(!mGlobalObject || mGlobalObject->GetGlobalJSObject(),
+  MOZ_ASSERT(!mGlobalObject || mGlobalObject->HasJSGlobal(),
              "Must have an actual JS global for the duration on the stack");
   MOZ_ASSERT(
       !mGlobalObject || JS_IsGlobalObject(mGlobalObject->GetGlobalJSObject()),
@@ -140,7 +140,7 @@ ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject* aGlobal,
 
 ScriptSettingsStackEntry::~ScriptSettingsStackEntry() {
   // We must have an actual JS global for the entire time this is on the stack.
-  MOZ_ASSERT_IF(mGlobalObject, mGlobalObject->GetGlobalJSObject());
+  MOZ_ASSERT_IF(mGlobalObject, mGlobalObject->HasJSGlobal());
 }
 
 // If the entry or incumbent global ends up being something that the subject
@@ -383,7 +383,7 @@ AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread,
     : ScriptSettingsStackEntry(aGlobalObject, aType),
       mIsMainThread(aIsMainThread) {
   MOZ_ASSERT(aGlobalObject);
-  MOZ_ASSERT(aGlobalObject->GetGlobalJSObject(), "Must have a JS global");
+  MOZ_ASSERT(aGlobalObject->HasJSGlobal(), "Must have a JS global");
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
 
   InitInternal(aGlobalObject, aGlobalObject->GetGlobalJSObject(),

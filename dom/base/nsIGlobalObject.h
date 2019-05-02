@@ -96,6 +96,12 @@ class nsIGlobalObject : public nsISupports,
    */
   virtual JSObject* GetGlobalJSObjectPreserveColor() const = 0;
 
+  /**
+   * Check whether this nsIGlobalObject still has a JSObject associated with it,
+   * or whether it's torn-down enough that the JSObject is gone.
+   */
+  bool HasJSGlobal() const { return GetGlobalJSObjectPreserveColor(); }
+
   // This method is not meant to be overridden.
   nsIPrincipal* PrincipalOrNull();
 

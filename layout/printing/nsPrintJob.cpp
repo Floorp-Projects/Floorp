@@ -3219,14 +3219,14 @@ void nsPrintJob::TurnScriptingOn(bool aDoTurnOn) {
 
     if (nsCOMPtr<nsPIDOMWindowInner> window = doc->GetInnerWindow()) {
       nsCOMPtr<nsIGlobalObject> go = window->AsGlobal();
-      NS_WARNING_ASSERTION(go->GetGlobalJSObject(), "Can't get global");
+      NS_WARNING_ASSERTION(go->HasJSGlobal(), "Window has no global");
       nsresult propThere = NS_PROPTABLE_PROP_NOT_THERE;
       doc->GetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
                        &propThere);
       if (aDoTurnOn) {
         if (propThere != NS_PROPTABLE_PROP_NOT_THERE) {
           doc->DeleteProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview);
-          if (go->GetGlobalJSObject()) {
+          if (go->HasJSGlobal()) {
             xpc::Scriptability::Get(go->GetGlobalJSObject()).Unblock();
           }
           window->Resume();
@@ -3240,7 +3240,7 @@ void nsPrintJob::TurnScriptingOn(bool aDoTurnOn) {
           // that layout code running in print preview doesn't get confused.
           doc->SetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
                            NS_INT32_TO_PTR(doc->IsScriptEnabled()));
-          if (go && go->GetGlobalJSObject()) {
+          if (go && go->HasJSGlobal()) {
             xpc::Scriptability::Get(go->GetGlobalJSObject()).Block();
           }
           window->Suspend();
