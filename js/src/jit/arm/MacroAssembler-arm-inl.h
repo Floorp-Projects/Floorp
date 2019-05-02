@@ -85,6 +85,8 @@ void MacroAssembler::load32SignExtendToPtr(const Address& src, Register dest) {
   load32(src, dest);
 }
 
+void MacroAssembler::loadAbiReturnAddress(Register dest) { movePtr(lr, dest); }
+
 // ===============================================================
 // Logical instructions
 

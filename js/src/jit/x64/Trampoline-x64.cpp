@@ -16,8 +16,6 @@
 #include "vtune/VTuneWrapper.h"
 
 #include "jit/MacroAssembler-inl.h"
-#include "jit/SharedICHelpers-inl.h"
-#include "jit/VMFunctionList-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -818,81 +816,6 @@ uint32_t JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm,
   masm.ret();
 
   return offset;
-}
-
-JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx) {
-  StackMacroAssembler masm;
-#ifndef JS_USE_LINK_REGISTER
-  // The first value contains the return addres,
-  // which we pull into ICTailCallReg for tail calls.
-  masm.setFramePushed(sizeof(intptr_t));
-#endif
-
-  Register scratch1 = rax;
-  Register scratch2 = rcx;
-  Register scratch3 = rdx;
-
-  // Load the return address in scratch1.
-  masm.loadPtr(Address(rsp, 0), scratch1);
-
-  // Load BaselineFrame pointer in scratch2.
-  masm.mov(rbp, scratch2);
-  masm.subPtr(Imm32(BaselineFrame::Size()), scratch2);
-
-  // Enter a stub frame and call the HandleDebugTrap VM function. Ensure
-  // the stub frame has a nullptr ICStub pointer, since this pointer is marked
-  // during GC.
-  masm.movePtr(ImmPtr(nullptr), ICStubReg);
-  EmitBaselineEnterStubFrame(masm, scratch3);
-
-  using Fn = bool (*)(JSContext*, BaselineFrame*, uint8_t*, bool*);
-  VMFunctionId id = VMFunctionToId<Fn, jit::HandleDebugTrap>::id;
-  TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
-
-  masm.push(scratch1);
-  masm.push(scratch2);
-  EmitBaselineCallVM(code, masm);
-
-  EmitBaselineLeaveStubFrame(masm);
-
-  // If the stub returns |true|, we have to perform a forced return
-  // (return from the JS frame). If the stub returns |false|, just return
-  // from the trap stub so that execution continues at the current pc.
-  Label forcedReturn;
-  masm.branchTest32(Assembler::NonZero, ReturnReg, ReturnReg, &forcedReturn);
-  masm.ret();
-
-  masm.bind(&forcedReturn);
-  masm.loadValue(Address(ebp, BaselineFrame::reverseOffsetOfReturnValue()),
-                 JSReturnOperand);
-  masm.mov(rbp, rsp);
-  masm.pop(rbp);
-
-  // Before returning, if profiling is turned on, make sure that
-  // lastProfilingFrame is set to the correct caller frame.
-  {
-    Label skipProfilingInstrumentation;
-    AbsoluteAddress addressOfEnabled(
-        cx->runtime()->geckoProfiler().addressOfEnabled());
-    masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0),
-                  &skipProfilingInstrumentation);
-    masm.profilerExitFrame();
-    masm.bind(&skipProfilingInstrumentation);
-  }
-
-  masm.ret();
-
-  Linker linker(masm, "DebugTrapHandler");
-  JitCode* codeDbg = linker.newCode(cx, CodeKind::Other);
-
-#ifdef JS_ION_PERF
-  writePerfSpewerJitCodeProfile(codeDbg, "DebugTrapHandler");
-#endif
-#ifdef MOZ_VTUNE
-  vtune::MarkStub(codeDbg, "DebugTrapHandler");
-#endif
-
-  return codeDbg;
 }
 
 void JitRuntime::generateExceptionTailStub(MacroAssembler& masm, void* handler,
