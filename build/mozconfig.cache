@@ -14,15 +14,30 @@ if test -z "$bucket" -a -z "$SCCACHE_DISABLE" -a -z "$MOZ_PGO"; then
             # stick an extra character on to make the already-convoluted logic
             # here simpler.
             availability_zone="${TASKCLUSTER_WORKER_GROUP}x"
+        elif [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
+            # gcp availability_zone is of the form <region>-<letter> where region is e.g. us-west2, and az is us-west2-a
+            gcp_zone=$(wget -T 1 -t 1 -q -O - http://169.254.169.254/computeMetadata/v1beta1/instance/zone || true)
+            availability_zone=${gcp_zone##*/}
         else
             # timeout after 1 second, and don't retry (failure indicates instance is not in ec2 or network issue)
-            # availability_zone is of the form <region><letter> where region is e.g. us-west-2, and az is us-west-2a
+            # ec2 availability_zone is of the form <region><letter> where region is e.g. us-west-2, and az is us-west-2a
             availability_zone=$(wget -T 1 -t 1 -q -O - http://169.254.169.254/latest/meta-data/placement/availability-zone || true)
         fi
         if test -z "$availability_zone" -o "$availability_zone" = "not-ec2"; then
             availability_zone=not-ec2
+        elif [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
+            # gcp region is az with last two letters trimmed
+            region=${availability_zone::${#availability_zone}-2}
+            case "${GECKO_HEAD_REPOSITORY}" in
+            *hg.mozilla.org/try*)
+                bucket=taskcluster-level-1-sccache-${region}
+                ;;
+            *hg.mozilla.org/integration/autoland*|*hg.mozilla.org/integration/mozilla-inbound*)
+                bucket=taskcluster-level-3-sccache-${region}
+                ;;
+            esac
         else
-            # region is az with last letter trimmed
+            # ec2 region is az with last letter trimmed
             region=${availability_zone%?}
             # set S3 bucket according to tree (level)
             case "${GECKO_HEAD_REPOSITORY}" in
@@ -38,7 +53,11 @@ if test -z "$bucket" -a -z "$SCCACHE_DISABLE" -a -z "$MOZ_PGO"; then
 fi
 
 if test -n "$bucket"; then
-    mk_add_options "export SCCACHE_BUCKET=$bucket"
+    if [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
+        mk_add_options "export SCCACHE_GCS_BUCKET=$bucket"
+    else
+        mk_add_options "export SCCACHE_BUCKET=$bucket"
+    fi
     export CCACHE="$topsrcdir/sccache2/sccache"
     export SCCACHE_VERBOSE_STATS=1
     mk_add_options MOZBUILD_MANAGE_SCCACHE_DAEMON=${topsrcdir}/sccache2/sccache
