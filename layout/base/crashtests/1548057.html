@@ -1,0 +1,42 @@
+<!doctype html>
+<html class="reftest-wait">
+<body>
+<script>
+  let parentDoc = `
+    <!doctype html>
+    <script>
+    onload = function() {
+      let observer = new ResizeObserver(_ => {
+        let parentFrame = window.parent.document.querySelector("iframe");
+        parentFrame.getBoundingClientRect();
+        parentFrame.style.display = "none";
+        parentFrame.getBoundingClientRect();
+        parentFrame.srcdoc = ""; // Navigate ourselves away.
+      });
+
+      setTimeout(() => observer.observe(document.documentElement), 0);
+    }
+  </` + 'script>';
+  let iframe = document.createElement("iframe");
+  iframe.srcdoc = parentDoc;
+  iframe.onload = function() {
+    if (this.srcdoc !== "") // We're only interested on the second load.
+      return;
+    SpecialPowers.forceGC();
+    SpecialPowers.forceCC();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        SpecialPowers.forceGC();
+        SpecialPowers.forceCC();
+        iframe.style.display = "";
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            // If we haven't crashed by now, we should be fine.
+            document.documentElement.className = "";
+          })
+        })
+      })
+    });
+  };
+  document.body.appendChild(iframe);
+</script>
