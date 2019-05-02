@@ -66,10 +66,18 @@ EOF
 
     # We don't need to set OPENSSL_STATIC here, because we only have static
     # libraries in the directory we are passing.
-    env "OPENSSL_DIR=$OPENSSL_BUILD_DIRECTORY" cargo build --features "all dist-server" --verbose --release
+    if [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
+        env "OPENSSL_DIR=$OPENSSL_BUILD_DIRECTORY" cargo build --features "all dist-server gcs" --verbose --release
+    else
+        env "OPENSSL_DIR=$OPENSSL_BUILD_DIRECTORY" cargo build --features "all dist-server" --verbose --release
+    fi
     ;;
 MINGW*)
-    cargo build --verbose --release
+    if [ -n "${SCCACHE_GCS_KEY_PATH}" ]; then
+        cargo build --verbose --release --features=gcs
+    else
+        cargo build --verbose --release
+    fi
     ;;
 esac
 
