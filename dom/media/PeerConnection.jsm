@@ -2199,13 +2199,13 @@ class RTCRtpReceiver {
   _getRtpSourcesByType(type) {
     this._fetchRtpSources();
     // Only return the values from within the last 10 seconds as per the spec
-    let cutoffTime = this._rtpSourcesJsTimestamp - 10 * 1000;
-    let sources = [...this._rtpSources.values()].filter(
+    const cutoffTime = this._rtpSourcesJsTimestamp - 10 * 1000;
+    return [...this._rtpSources.values()].filter(
       (entry) => {
         return entry.sourceType == type &&
             (entry.timestamp + entry.sourceClockOffset) >= cutoffTime;
       }).map(e => {
-        let newEntry = {
+        const newEntry = {
           source: e.source,
           timestamp: e.timestamp + e.sourceClockOffset,
           audioLevel: e.audioLevel,
@@ -2214,8 +2214,7 @@ class RTCRtpReceiver {
           Object.assign(newEntry, {voiceActivityFlag: e.voiceActivityFlag});
         }
         return newEntry;
-      });
-      return sources;
+      }).sort((a, b) => b.timestamp - a.timestamp);
   }
 
   getContributingSources() {
