@@ -103,8 +103,8 @@ class CompileDebuggerScriptRunnable final : public WorkerDebuggerRunnable {
 
     ErrorResult rv;
     JSAutoRealm ar(aCx, global);
-    workerinternals::LoadMainScript(aWorkerPrivate, mScriptURL, DebuggerScript,
-                                    rv);
+    workerinternals::LoadMainScript(aWorkerPrivate, nullptr, mScriptURL,
+                                    DebuggerScript, rv);
     rv.WouldReportJSException();
     // Explicitly ignore NS_BINDING_ABORTED on rv.  Or more precisely, still
     // return false and don't SetWorkerScriptExecutedSuccessfully() in that
