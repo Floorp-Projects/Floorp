@@ -16,6 +16,47 @@
 
 namespace js {
 
+class StringBufferAllocPolicy {
+  TempAllocPolicy impl_;
+
+  const arena_id_t& arenaId_;
+
+ public:
+  StringBufferAllocPolicy(JSContext* cx, const arena_id_t& arenaId)
+      : impl_(cx), arenaId_(arenaId) {}
+
+  template <typename T>
+  T* maybe_pod_malloc(size_t numElems) {
+    return impl_.maybe_pod_arena_malloc<T>(arenaId_, numElems);
+  }
+  template <typename T>
+  T* maybe_pod_calloc(size_t numElems) {
+    return impl_.maybe_pod_arena_calloc<T>(arenaId_, numElems);
+  }
+  template <typename T>
+  T* maybe_pod_realloc(T* p, size_t oldSize, size_t newSize) {
+    return impl_.maybe_pod_arena_realloc<T>(arenaId_, p, oldSize, newSize);
+  }
+  template <typename T>
+  T* pod_malloc(size_t numElems) {
+    return impl_.pod_arena_malloc<T>(arenaId_, numElems);
+  }
+  template <typename T>
+  T* pod_calloc(size_t numElems) {
+    return impl_.pod_arena_calloc<T>(arenaId_, numElems);
+  }
+  template <typename T>
+  T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
+    return impl_.pod_arena_realloc<T>(arenaId_, p, oldSize, newSize);
+  }
+  template <typename T>
+  void free_(T* p, size_t numElems = 0) {
+    impl_.free_(p, numElems);
+  }
+  void reportAllocOverflow() const { impl_.reportAllocOverflow(); }
+  bool checkSimulatedOOM() const { return impl_.checkSimulatedOOM(); }
+};
+
 /*
  * String builder that eagerly checks for over-allocation past the maximum
  * string length.
@@ -30,7 +71,7 @@ namespace js {
 class StringBuffer {
  protected:
   template <typename CharT>
-  using BufferType = Vector<CharT, 64 / sizeof(CharT)>;
+  using BufferType = Vector<CharT, 64 / sizeof(CharT), StringBufferAllocPolicy>;
 
   /*
    * The Vector's buffer may be either stolen or copied, so we need to use
@@ -101,7 +142,7 @@ class StringBuffer {
   explicit StringBuffer(JSContext* cx,
                         const arena_id_t& arenaId = js::MallocArena)
       : cx_(cx), arenaId_(arenaId), reserved_(0) {
-    cb.construct<Latin1CharBuffer>(TempAllocPolicy{cx_, arenaId_});
+    cb.construct<Latin1CharBuffer>(StringBufferAllocPolicy{cx_, arenaId_});
   }
 
   void clear() {

@@ -10,9 +10,10 @@
 
 using namespace js;
 
-void* TempAllocPolicy::onOutOfMemory(AllocFunction allocFunc, size_t nbytes,
+void* TempAllocPolicy::onOutOfMemory(arena_id_t arenaId,
+                                     AllocFunction allocFunc, size_t nbytes,
                                      void* reallocPtr) {
-  return cx_->onOutOfMemory(allocFunc, this->getArenaId(), nbytes, reallocPtr);
+  return cx_->onOutOfMemory(allocFunc, arenaId, nbytes, reallocPtr);
 }
 
 void TempAllocPolicy::reportAllocOverflow() const {
