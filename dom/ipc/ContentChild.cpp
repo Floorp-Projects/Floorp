@@ -3579,7 +3579,8 @@ mozilla::ipc::IPCResult ContentChild::RecvSaveRecording(
 mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
     const Maybe<LoadInfoArgs>& aLoadInfo, const uint64_t& aChannelId,
-    nsIURI* aOriginalURI, const uint64_t& aIdentifier) {
+    nsIURI* aOriginalURI, const uint64_t& aIdentifier,
+    const uint32_t& aRedirectMode) {
   nsCOMPtr<nsILoadInfo> loadInfo;
   nsresult rv =
       mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfo, getter_AddRefs(loadInfo));
@@ -3614,6 +3615,11 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   }
 
   rv = httpChild->SetOriginalURI(aOriginalURI);
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
+
+  rv = httpChild->SetRedirectMode(aRedirectMode);
   if (NS_FAILED(rv)) {
     return IPC_OK();
   }

@@ -192,10 +192,17 @@ nsresult HttpChannelParentListener::TriggerCrossProcessRedirect(
         uint64_t channelId;
         MOZ_ALWAYS_SUCCEEDS(httpChannel->GetChannelId(&channelId));
 
+        uint32_t redirectMode = nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW;
+        nsCOMPtr<nsIHttpChannelInternal> internalChannel =
+            do_QueryInterface(channel);
+        if (internalChannel) {
+          MOZ_ALWAYS_SUCCEEDS(internalChannel->GetRedirectMode(&redirectMode));
+        }
+
         dom::TabParent* tabParent = dom::TabParent::GetFrom(tp);
         auto result = tabParent->Manager()->SendCrossProcessRedirect(
             self->mRedirectChannelId, uri, newLoadFlags, loadInfoArgs,
-            channelId, originalURI, aIdentifier);
+            channelId, originalURI, aIdentifier, redirectMode);
 
         MOZ_ASSERT(result, "SendCrossProcessRedirect failed");
 
