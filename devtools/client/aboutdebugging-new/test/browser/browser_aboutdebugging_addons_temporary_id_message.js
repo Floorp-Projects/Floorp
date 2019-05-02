@@ -24,10 +24,10 @@ add_task(async function() {
 
   const target = findDebugTargetByText(EXTENSION_NAME, document);
 
-  const message = target.querySelector(".js-temporary-id-message");
+  const message = target.querySelector(".qa-temporary-id-message");
   ok(!!message, "Temporary id message is displayed for temporary extensions");
 
-  const link = target.querySelector(".js-temporary-id-link");
+  const link = target.querySelector(".qa-temporary-id-link");
   ok(!!link, "Temporary id link is displayed for temporary extensions");
 
   await removeTemporaryExtension(EXTENSION_NAME, document);
@@ -48,7 +48,7 @@ add_task(async function() {
   await waitUntil(() => findDebugTargetByText(PACKAGED_EXTENSION_NAME, document));
   const target = findDebugTargetByText(PACKAGED_EXTENSION_NAME, document);
 
-  const tmpIdMessage = target.querySelector(".js-temporary-id-message");
+  const tmpIdMessage = target.querySelector(".qa-temporary-id-message");
   ok(!tmpIdMessage, "No temporary id message is displayed for a regular extension");
 
   await removeExtension(PACKAGED_EXTENSION_ID, PACKAGED_EXTENSION_NAME, document);

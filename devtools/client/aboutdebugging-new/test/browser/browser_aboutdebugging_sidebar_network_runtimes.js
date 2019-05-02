@@ -17,14 +17,14 @@ add_task(async function() {
 
   const { document, tab } = await openAboutDebugging();
 
-  const noDevicesElement = document.querySelector(".js-sidebar-no-devices");
+  const noDevicesElement = document.querySelector(".qa-sidebar-no-devices");
   ok(noDevicesElement, "Sidebar shows the 'no devices' element");
 
   info("Add a network location");
   networkLocationsModule.addNetworkLocation("localhost:6080");
 
   info("Wait for 'no devices' element to disappear");
-  waitUntil(() => !document.querySelector(".js-sidebar-no-devices"));
+  waitUntil(() => !document.querySelector(".qa-sidebar-no-devices"));
   ok(findSidebarItemByText("localhost:6080", document),
     "Found a sidebar item for localhost:6080");
 
@@ -32,7 +32,7 @@ add_task(async function() {
   networkLocationsModule.removeNetworkLocation("localhost:6080");
 
   info("Wait for 'no devices' element to reappear");
-  waitUntil(() => document.querySelector(".js-sidebar-no-devices"));
+  waitUntil(() => document.querySelector(".qa-sidebar-no-devices"));
   ok(!findSidebarItemByText("localhost:6080", document),
     "Sidebar item for localhost:6080 removed");
 

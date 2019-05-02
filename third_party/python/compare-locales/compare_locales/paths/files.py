@@ -23,9 +23,13 @@ class ProjectFiles(object):
         self.mergebase = mergebase
         configs = []
         for project in projects:
+            # Only add this project if we're not in validation mode,
+            # and the given locale is enabled for the project.
+            if locale is not None and locale not in project.all_locales:
+                continue
             configs.extend(project.configs)
         for pc in configs:
-            if locale and locale not in pc.locales:
+            if locale and pc.locales is not None and locale not in pc.locales:
                 continue
             for paths in pc.paths:
                 if (

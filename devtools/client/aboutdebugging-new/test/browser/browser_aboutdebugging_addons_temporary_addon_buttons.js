@@ -27,7 +27,7 @@ add_task(async function() {
 
   info("Click on the reload button for the temporary extension");
   const reloadButton =
-    originalTarget.querySelector(".js-temporary-extension-reload-button");
+    originalTarget.querySelector(".qa-temporary-extension-reload-button");
   reloadButton.click();
 
   info("Wait until the debug target with the original extension name disappears");
@@ -41,7 +41,7 @@ add_task(async function() {
 
   info("Click on the remove button for the temporary extension");
   const removeButton =
-    updatedTarget.querySelector(".js-temporary-extension-remove-button");
+    updatedTarget.querySelector(".qa-temporary-extension-remove-button");
   removeButton.click();
 
   info("Wait until the debug target with the updated extension name disappears");
@@ -63,10 +63,10 @@ add_task(async function() {
   await waitUntil(() => findDebugTargetByText(PACKAGED_EXTENSION_NAME, document));
   const target = findDebugTargetByText(PACKAGED_EXTENSION_NAME, document);
 
-  const reloadButton = target.querySelector(".js-temporary-extension-reload-button");
+  const reloadButton = target.querySelector(".qa-temporary-extension-reload-button");
   ok(!reloadButton, "No reload button displayed for a regularly installed extension");
 
-  const removeButton = target.querySelector(".js-temporary-extension-remove-button");
+  const removeButton = target.querySelector(".qa-temporary-extension-remove-button");
   ok(!removeButton, "No remove button displayed for a regularly installed extension");
 
   await removeExtension(PACKAGED_EXTENSION_ID, PACKAGED_EXTENSION_NAME, document);

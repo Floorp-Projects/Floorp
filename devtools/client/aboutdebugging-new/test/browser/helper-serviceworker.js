@@ -43,7 +43,7 @@ function onTabMessage(tab, message) {
 async function _waitForServiceWorkerStatus(workerText, status, document) {
   await waitUntil(() => {
     const target = findDebugTargetByText(workerText, document);
-    const statusElement = target && target.querySelector(".js-worker-status");
+    const statusElement = target && target.querySelector(".qa-worker-status");
     return statusElement && statusElement.textContent === status;
   });
 

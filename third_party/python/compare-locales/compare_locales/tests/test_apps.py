@@ -81,7 +81,7 @@ class TestApp(unittest.TestCase):
         app = EnumerateApp(
             mozpath.join(self.stage, 'comm', 'mail', 'locales', 'l10n.ini'),
             mozpath.join(self.stage, 'l10n-central'))
-        self.assertListEqual(app.locales, ['af', 'de', 'fr'])
+        self.assertListEqual(app.config.allLocales(), ['af', 'de', 'fr'])
         self.assertEqual(len(app.config.children), 1)
         projectconfig = app.asConfig()
         self.assertListEqual(projectconfig.locales, ['af', 'de', 'fr'])

@@ -81,7 +81,7 @@ async function testWorkerOnMockedRemoteClient(testData, remoteClient, firefoxCli
 
   const workersPane = getDebugTargetPane(category, document);
   info("Check an empty target pane message is displayed");
-  ok(workersPane.querySelector(".js-debug-target-list-empty"),
+  ok(workersPane.querySelector(".qa-debug-target-list-empty"),
     "Workers list is empty");
 
   info(`Add a worker of type [${propertyName}] to the remote client`);
@@ -97,7 +97,7 @@ async function testWorkerOnMockedRemoteClient(testData, remoteClient, firefoxCli
   remoteClient._eventEmitter.emit("workersUpdated");
 
   info("Wait until the worker appears");
-  await waitUntil(() => !workersPane.querySelector(".js-debug-target-list-empty"));
+  await waitUntil(() => !workersPane.querySelector(".qa-debug-target-list-empty"));
 
   const workerTarget = findDebugTargetByText(workerName, document);
   ok(workerTarget, "Worker target appeared for the remote runtime");

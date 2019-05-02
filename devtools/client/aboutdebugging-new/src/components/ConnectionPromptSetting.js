@@ -40,7 +40,7 @@ class ConnectionPromptSetting extends PureComponent {
       },
       dom.button(
         {
-          className: `${ className } default-button js-connection-prompt-toggle-button`,
+          className: `${ className } default-button qa-connection-prompt-toggle-button`,
           onClick: () => this.onToggleClick(),
         },
         localizedState

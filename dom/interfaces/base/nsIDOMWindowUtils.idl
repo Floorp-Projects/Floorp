@@ -841,7 +841,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * Note: this does not take effect right away. Rather, the visual scroll
    *       request is sent to APZ with the next transaction, and will be
    *       reflected in the main thread with the subsequent APZ repaint request.
-   * Please see the caveats mentioned at nsIPresShell::ScrollToVisual(), and
+   * Please see the caveats mentioned at PresShell::ScrollToVisual(), and
    * request APZ review if adding a new call to this.
    */
   const long UPDATE_TYPE_RESTORE = 0;

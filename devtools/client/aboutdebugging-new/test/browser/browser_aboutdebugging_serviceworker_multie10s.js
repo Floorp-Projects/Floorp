@@ -55,14 +55,14 @@ async function testDebuggingSW(enableMultiE10sFn, disableMultiE10sFn) {
   info("Wait until the service worker appears and is running");
   await waitUntil(() => {
     const target = findDebugTargetByText(SERVICE_WORKER, document);
-    const status = target && target.querySelector(".js-worker-status");
+    const status = target && target.querySelector(".qa-worker-status");
     return status && status.textContent === "Running";
   });
 
   let targetElement = findDebugTargetByText(SERVICE_WORKER, document);
-  let pushButton = targetElement.querySelector(".js-push-button");
+  let pushButton = targetElement.querySelector(".qa-push-button");
   ok(!pushButton.disabled, "Push button is not disabled");
-  let inspectButton = targetElement.querySelector(".js-debug-target-inspect-button");
+  let inspectButton = targetElement.querySelector(".qa-debug-target-inspect-button");
   ok(!inspectButton.disabled, "Inspect button is not disabled");
 
   // enable multi e10s
@@ -72,12 +72,12 @@ async function testDebuggingSW(enableMultiE10sFn, disableMultiE10sFn) {
   info("Wait for debug target to re-render");
   await waitUntil(() => {
     targetElement = findDebugTargetByText(SERVICE_WORKER, document);
-    pushButton = targetElement.querySelector(".js-push-button");
+    pushButton = targetElement.querySelector(".qa-push-button");
     return pushButton.disabled;
   });
 
   ok(pushButton.disabled, "Push button is disabled");
-  inspectButton = targetElement.querySelector(".js-debug-target-inspect-button");
+  inspectButton = targetElement.querySelector(".qa-debug-target-inspect-button");
   ok(inspectButton.disabled, "Inspect button is disabled");
 
   info("Unregister the service worker");

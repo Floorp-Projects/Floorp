@@ -16,7 +16,7 @@ add_task(async function() {
                  CHROME_URL_ROOT + "resources/test-adb-extension/adb-extension-#OS#.xpi");
   const { document, tab } = await openAboutDebugging();
 
-  const usbStatusElement = document.querySelector(".js-sidebar-usb-status");
+  const usbStatusElement = document.querySelector(".qa-sidebar-usb-status");
   ok(usbStatusElement, "Sidebar shows the USB status element");
   ok(usbStatusElement.textContent.includes("USB disabled"),
     "USB status element has 'disabled' content");
@@ -29,14 +29,14 @@ add_task(async function() {
 
   info("Wait till the USB status element has 'enabled' content");
   await waitUntil(() => {
-    const el = document.querySelector(".js-sidebar-usb-status");
+    const el = document.querySelector(".qa-sidebar-usb-status");
     return el.textContent.includes("USB enabled");
   });
 
   info("Uninstall the adb extension and wait for USB status element to update");
   adbAddon.uninstall();
   await waitUntil(() => {
-    const el = document.querySelector(".js-sidebar-usb-status");
+    const el = document.querySelector(".qa-sidebar-usb-status");
     return el.textContent.includes("USB disabled");
   });
 

@@ -1140,7 +1140,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // All accesses to this field should be guarded by a check of mIsChrome.
   struct ChromeFields {
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
-    // A weak pointer to the nsPresShell that we are doing fullscreen for.
+    // A weak pointer to the PresShell that we are doing fullscreen for.
     // The pointer being set indicates we've set the IsInFullscreenChange
     // flag on this pres shell.
     nsWeakPtr mFullscreenPresShell;
