@@ -16,7 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsIDocShell.h"
-#include "nsILoginAutoCompleteSearch.h"
+#include "nsILoginManager.h"
 #include "nsIMutationObserver.h"
 #include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
@@ -110,7 +110,7 @@ class nsFormFillController final : public nsIFormFillController,
   // members //////////////////////////////////////////
 
   nsCOMPtr<nsIAutoCompleteController> mController;
-  nsCOMPtr<nsILoginAutoCompleteSearch> mLoginManagerAC;
+  nsCOMPtr<nsILoginManager> mLoginManager;
   nsCOMPtr<nsILoginReputationService> mLoginReputationService;
   mozilla::dom::HTMLInputElement* mFocusedInput;
 

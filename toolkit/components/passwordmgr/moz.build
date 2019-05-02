@@ -18,7 +18,6 @@ TESTING_JS_MODULES += [
 ]
 
 XPIDL_SOURCES += [
-    'nsILoginAutoCompleteSearch.idl',
     'nsILoginInfo.idl',
     'nsILoginManager.idl',
     'nsILoginManagerCrypto.idl',
