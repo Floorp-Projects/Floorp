@@ -143,7 +143,6 @@ nsHttpTransaction::nsHttpTransaction()
       mPassedRatePacing(false),
       mSynchronousRatePaceRequest(false),
       mClassOfService(0),
-      mResolvedByTRR(false),
       m0RTTInProgress(false),
       mDoNotTryEarlyData(false),
       mEarlyDataDisposition(EARLY_NONE),
@@ -594,7 +593,6 @@ void nsHttpTransaction::OnTransportStatus(nsITransport* transport,
       MutexAutoLock lock(mLock);
       socketTransport->GetSelfAddr(&mSelfAddr);
       socketTransport->GetPeerAddr(&mPeerAddr);
-      socketTransport->ResolvedByTRR(&mResolvedByTRR);
     }
   }
 
