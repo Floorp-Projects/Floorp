@@ -619,7 +619,7 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
     }
   }
 
-  if (mTRR) {
+  if (mIsTRRServiceChannel) {
     mCaps |= NS_HTTP_LARGE_KEEPALIVE | NS_HTTP_DISABLE_TRR;
   }
 
@@ -635,7 +635,7 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   mConnectionInfo->SetBeConservative((mCaps & NS_HTTP_BE_CONSERVATIVE) ||
                                      mBeConservative);
   mConnectionInfo->SetTlsFlags(mTlsFlags);
-  mConnectionInfo->SetTrrUsed(mTRR);
+  mConnectionInfo->SetIsTrrServiceChannel(mIsTRRServiceChannel);
   mConnectionInfo->SetTrrDisabled(mCaps & NS_HTTP_DISABLE_TRR);
   mConnectionInfo->SetIPv4Disabled(mCaps & NS_HTTP_DISABLE_IPV4);
   mConnectionInfo->SetIPv6Disabled(mCaps & NS_HTTP_DISABLE_IPV6);
@@ -4044,7 +4044,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   if (mPostID) {
     extension.Append(nsPrintfCString("%d", mPostID));
   }
-  if (mTRR) {
+  if (mIsTRRServiceChannel) {
     extension.Append("TRR");
   }
 
