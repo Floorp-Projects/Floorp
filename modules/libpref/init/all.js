@@ -154,18 +154,6 @@ pref("dom.serviceWorkers.update_delay", 1000);
 // Enable test for 24 hours update, service workers will always treat last update check time is over 24 hours
 pref("dom.serviceWorkers.testUpdateOverOneDay", false);
 
-// Whether nonzero values can be returned from performance.timing.*
-pref("dom.enable_performance", true);
-
-// Whether resource timing will be gathered and returned by performance.GetEntries*
-pref("dom.enable_resource_timing", true);
-
-// Whether performance.GetEntries* will contain an entry for the active document
-pref("dom.enable_performance_navigation_timing", true);
-
-// Enable notification of performance timing
-pref("dom.performance.enable_notify_performance_timing", false);
-
 // Enable collecting of docgroup activity in the scheduler
 pref("dom.performance.enable_scheduler_timing", true);
 
@@ -183,9 +171,6 @@ pref("dom.performance.time_to_dom_content_flushed.enabled", false);
 
 // Enable exposing timeToFirstInteractive
 pref("dom.performance.time_to_first_interactive.enabled", false);
-
-// Enable requestIdleCallback API
-pref("dom.requestIdleCallback.enabled", true);
 
 // Enable Pointer Lock API
 // This is added for accessibility purpose. When user has no way to exit
@@ -247,29 +232,6 @@ pref("dom.inputevent.inputtype.enabled", true);
 // Whether the WebMIDI API is enabled
 pref("dom.webmidi.enabled", false);
 
-// Whether to enable the JavaScript start-up cache. This causes one of the first
-// execution to record the bytecode of the JavaScript function used, and save it
-// in the existing cache entry. On the following loads of the same script, the
-// bytecode would be loaded from the cache instead of being generated once more.
-pref("dom.script_loader.bytecode_cache.enabled", true);
-
-// Ignore the heuristics of the bytecode cache, and always record on the first
-// visit. (used for testing purposes).
-
-// Choose one strategy to use to decide when the bytecode should be encoded and
-// saved. The following strategies are available right now:
-//   * -2 : (reader mode) The bytecode cache would be read, but it would never
-//          be saved.
-//   * -1 : (eager mode) The bytecode would be saved as soon as the script is
-//          seen for the first time, independently of the size or last access
-//          time.
-//   *  0 : (default) The bytecode would be saved in order to minimize the
-//          page-load time.
-//
-// Other values might lead to experimental strategies. For more details, have a
-// look at: ScriptLoader::ShouldCacheBytecode function.
-pref("dom.script_loader.bytecode_cache.strategy", 0);
-
 #ifdef JS_BUILD_BINAST
 pref("dom.script_loader.binast_encoding.enabled", false);
 pref("dom.script_loader.binast_encoding.domain.restrict.list", "*.facebook.com,static.xx.fbcdn.net");
@@ -323,9 +285,6 @@ pref("browser.visited_color",               "#551A8B");
 pref("browser.underline_anchors",           true);
 pref("browser.enable_automatic_image_resizing", false);
 pref("browser.enable_click_image_resizing", true);
-
-// See http://dev.w3.org/html5/spec/forms.html#attr-fe-autofocus
-pref("browser.autofocus", true);
 
 // See http://whatwg.org/specs/web-apps/current-work/#ping
 pref("browser.send_pings", false);
@@ -1374,9 +1333,6 @@ pref("dom.forms.datetime.others", false);
 // Enable time picker UI. By default, disabled.
 pref("dom.forms.datetime.timepicker", false);
 
-// Support @autocomplete values for form autofill feature.
-pref("dom.forms.autocomplete.formautofill", false);
-
 // Enable search in <select> dropdowns (more than 40 options)
 pref("dom.forms.selectSearch", false);
 // Allow for webpages to provide custom styling for <select>
@@ -1390,10 +1346,6 @@ pref("dom.select_popup_in_parent.enabled", false);
 
 // Enable Directory API. By default, disabled.
 pref("dom.input.dirpicker", false);
-
-// Enable not moving the cursor to end when a text input or textarea has .value
-// set to the value it already has.  By default, enabled.
-pref("dom.input.skip_cursor_move_for_same_value_set", true);
 
 pref("dom.cycle_collector.incremental", true);
 
@@ -1432,8 +1384,6 @@ pref("privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "");
 // opened more than this number of popups.
 pref("privacy.popups.maxReported", 100);
 
-// send "do not track" HTTP header, disabled by default
-pref("privacy.donottrackheader.enabled",    false);
 // Enforce tracking protection in all modes
 // In Firefox Desktop this pref is set by browser.contentblocking.features.[standard, strict] see firefox.js for details.
 pref("privacy.trackingprotection.enabled",  false);
@@ -2368,10 +2318,6 @@ pref("network.http.throttle.max-time-ms", 500);
 // like click-to-play, image fancy-box zoom, navigation.
 pref("network.http.on_click_priority", true);
 
-// Some requests during a page load are marked as "tail", mainly trackers, but not only.
-// This pref controls whether such requests are put to the tail, behind other requests
-// emerging during page loading process.
-pref("network.http.tailing.enabled", true);
 // When the page load has not yet reached DOMContentLoaded point, tail requestes are delayed
 // by (non-tailed requests count + 1) * delay-quantum milliseconds.
 pref("network.http.tailing.delay-quantum", 600);
@@ -2830,9 +2776,6 @@ pref("ui.key.contentAccess", 5);
 
 pref("ui.key.menuAccessKeyFocuses", false); // overridden below
 
-// Disable page loading activity cursor by default.
-pref("ui.use_activity_cursor", false);
-
 // Middle-mouse handling
 pref("middlemouse.paste", false);
 pref("middlemouse.contentLoadURL", false);
@@ -3116,13 +3059,6 @@ pref("layout.css.DOMQuad.enabled", true);
 // Is support for DOMMatrix enabled?
 pref("layout.css.DOMMatrix.enabled", true);
 
-// Is support for GeometryUtils.getBoxQuads enabled?
-#ifdef RELEASE_OR_BETA
-pref("layout.css.getBoxQuads.enabled", false);
-#else
-pref("layout.css.getBoxQuads.enabled", true);
-#endif
-
 // Is support for GeometryUtils.convert*FromNode enabled?
 #ifdef RELEASE_OR_BETA
 pref("layout.css.convertFromNode.enabled", false);
@@ -3245,9 +3181,6 @@ pref("layout.idle_period.required_quiescent_frames", 2);
 // The amount of time (milliseconds) needed between an idle period's
 // end and the start of the next tick to avoid jank.
 pref("layout.idle_period.time_limit", 1);
-
-// Is support for the core interfaces of Web Animations API enabled?
-pref("dom.animations-api.core.enabled", true);
 
 // Pref to throttle offsreen animations
 pref("dom.animations.offscreen-throttling", true);
@@ -5287,8 +5220,6 @@ pref("alerts.useSystemBackend", true);
 #endif
 
 // DOM full-screen API.
-pref("full-screen-api.enabled", false);
-pref("full-screen-api.allow-trusted-requests-only", true);
 // whether to prevent the top level widget from going fullscreen
 pref("full-screen-api.ignore-widgets", false);
 pref("full-screen-api.pointer-lock.enabled", true);
@@ -5310,10 +5241,6 @@ pref("full-screen-api.warning.delay", 500);
 // DOM pointerlock API
 // time for the warning box stays on the screen before sliding out, unit: ms
 pref("pointer-lock-api.warning.timeout", 3000);
-
-// Time limit, in milliseconds, for EventStateManager::IsHandlingUserInput().
-// Used to detect long running handlers of user-generated events.
-pref("dom.event.handling-user-input-time-limit", 1000);
 
 // Whether we should layerize all animated images (if otherwise possible).
 pref("layout.animated-image-layers.enabled", false);
@@ -5425,9 +5352,6 @@ pref("io.activity.enabled", false);
 // for the scripts to interfere with each other.  A restart is required for this
 // to take effect.
 pref("jsloader.shareGlobal", true);
-
-// Whether we should show the placeholder when the element is focused but empty.
-pref("dom.placeholder.show_on_focus", true);
 
 // WebVR is enabled by default in beta and release for Windows and for all
 // platforms in nightly and aurora.

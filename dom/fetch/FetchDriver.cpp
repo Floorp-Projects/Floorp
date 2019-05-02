@@ -692,7 +692,7 @@ nsresult FetchDriver::HttpFetch(
     loadInfo->SetCorsPreflightInfo(unsafeHeaders, false);
   }
 
-  if (mIsTrackingFetch && nsContentUtils::IsTailingEnabled() && cos) {
+  if (mIsTrackingFetch && StaticPrefs::network_http_tailing_enabled() && cos) {
     cos->AddClassFlags(nsIClassOfService::Throttleable |
                        nsIClassOfService::Tail);
   }

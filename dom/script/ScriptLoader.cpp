@@ -29,6 +29,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsGkAtoms.h"
 #include "nsNetUtil.h"
 #include "nsGlobalWindowInner.h"
@@ -1284,7 +1285,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   // constant.
   aRequest->mCacheInfo = nullptr;
   nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(channel));
-  if (cic && nsContentUtils::IsBytecodeCacheEnabled() &&
+  if (cic && StaticPrefs::dom_script_loader_bytecode_cache_enabled() &&
       // Bug 1436400: no bytecode cache support for modules yet.
       !aRequest->IsModuleRequest()) {
     if (!aRequest->IsLoadingSource()) {
@@ -1316,11 +1317,11 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
       // content such as images, Leader implicitely disallows tailing
       cos->AddClassFlags(nsIClassOfService::Leader);
     } else if (aRequest->IsDeferredScript() &&
-               !nsContentUtils::IsTailingEnabled()) {
-      // Bug 1395525 and the !nsContentUtils::IsTailingEnabled() bit:
-      // We want to make sure that turing tailing off by the pref makes
-      // the browser behave exactly the same way as before landing
-      // the tailing patch.
+               !StaticPrefs::network_http_tailing_enabled()) {
+      // Bug 1395525 and the !StaticPrefs::network_http_tailing_enabled() bit:
+      // We want to make sure that turing tailing off by the pref makes the
+      // browser behave exactly the same way as before landing the tailing
+      // patch.
 
       // head/body deferred scripts are blocked by leaders but are not
       // allowed tailing because they block DOMContentLoaded
@@ -2385,7 +2386,7 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
 
   // Look at the preference to know which strategy (parameters) should be used
   // when the bytecode cache is enabled.
-  int32_t strategy = nsContentUtils::BytecodeCacheStrategy();
+  int32_t strategy = StaticPrefs::dom_script_loader_bytecode_cache_strategy();
 
   // List of parameters used by the strategies.
   bool hasSourceLengthMin = false;

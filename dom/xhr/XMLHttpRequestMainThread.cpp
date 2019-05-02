@@ -2428,7 +2428,7 @@ void XMLHttpRequestMainThread::MaybeLowerChannelPriority() {
     return;
   }
 
-  if (nsContentUtils::IsTailingEnabled()) {
+  if (StaticPrefs::network_http_tailing_enabled()) {
     nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(mChannel);
     if (cos) {
       // Adding TailAllowed to overrule the Unblocked flag, but to preserve

@@ -15,6 +15,7 @@ static const char SandboxPolicyGMP[] = R"SANDBOX_LITERAL(
   (define plugin-binary-path (param "PLUGIN_BINARY_PATH"))
   (define app-path (param "APP_PATH"))
   (define app-binary-path (param "APP_BINARY_PATH"))
+  (define hasWindowServer (param "HAS_WINDOW_SERVER"))
 
   (define (moz-deny feature)
     (if (string=? should-log "TRUE")
@@ -56,7 +57,8 @@ static const char SandboxPolicyGMP[] = R"SANDBOX_LITERAL(
       (subpath "/System/Library/Displays/Overrides")
       (subpath "/System/Library/CoreServices/CoreTypes.bundle"))
 
-  (allow mach-lookup (global-name "com.apple.windowserver.active"))
+  (if (string=? hasWindowServer "TRUE")
+    (allow mach-lookup (global-name "com.apple.windowserver.active")))
 )SANDBOX_LITERAL";
 
 }  // namespace mozilla

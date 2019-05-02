@@ -146,6 +146,8 @@ pub enum TextureCacheAllocationKind {
     /// will be deallocated and its contents blitted over. The new size must
     /// be greater than the old size.
     Realloc(TextureCacheAllocInfo),
+    /// Reallocates the texture without preserving its contents.
+    Reset(TextureCacheAllocInfo),
     /// Frees the texture and the corresponding cache ID.
     Free,
 }
@@ -168,6 +170,9 @@ pub struct TextureCacheUpdate {
 /// important to allow coalescing of certain allocation operations.
 #[derive(Default)]
 pub struct TextureUpdateList {
+    /// Indicates that there was some kind of cleanup clear operation. Used for
+    /// sanity checks.
+    pub clears_shared_cache: bool,
     /// Commands to alloc/realloc/free the textures. Processed first.
     pub allocations: Vec<TextureCacheAllocation>,
     /// Commands to update the contents of the textures. Processed second.
@@ -178,9 +183,16 @@ impl TextureUpdateList {
     /// Mints a new `TextureUpdateList`.
     pub fn new() -> Self {
         TextureUpdateList {
+            clears_shared_cache: false,
             allocations: Vec::new(),
             updates: Vec::new(),
         }
+    }
+
+    /// Sets the clears_shared_cache flag for renderer-side sanity checks.
+    #[inline]
+    pub fn note_clear(&mut self) {
+        self.clears_shared_cache = true;
     }
 
     /// Pushes an update operation onto the list.
@@ -232,15 +244,40 @@ impl TextureUpdateList {
             match cur.kind {
                 TextureCacheAllocationKind::Alloc(ref mut i) => *i = info,
                 TextureCacheAllocationKind::Realloc(ref mut i) => *i = info,
+                TextureCacheAllocationKind::Reset(ref mut i) => *i = info,
                 TextureCacheAllocationKind::Free => panic!("Reallocating freed texture"),
             }
-
-            return;
+            return
         }
 
         self.allocations.push(TextureCacheAllocation {
             id,
             kind: TextureCacheAllocationKind::Realloc(info),
+        });
+    }
+
+    /// Pushes a reallocation operation onto the list, potentially coalescing
+    /// with previous operations.
+    pub fn push_reset(&mut self, id: CacheTextureId, info: TextureCacheAllocInfo) {
+        self.debug_assert_coalesced(id);
+
+        // Coallesce this realloc into a previous alloc or realloc, if available.
+        if let Some(cur) = self.allocations.iter_mut().find(|x| x.id == id) {
+            match cur.kind {
+                TextureCacheAllocationKind::Alloc(ref mut i) => *i = info,
+                TextureCacheAllocationKind::Reset(ref mut i) => *i = info,
+                TextureCacheAllocationKind::Free => panic!("Resetting freed texture"),
+                TextureCacheAllocationKind::Realloc(_) => {
+                    // Reset takes precedence over realloc
+                    cur.kind = TextureCacheAllocationKind::Reset(info);
+                }
+            }
+            return
+        }
+
+        self.allocations.push(TextureCacheAllocation {
+            id,
+            kind: TextureCacheAllocationKind::Reset(info),
         });
     }
 
@@ -259,7 +296,9 @@ impl TextureUpdateList {
         match removed_kind {
             Some(TextureCacheAllocationKind::Alloc(..)) => { /* no-op! */ },
             Some(TextureCacheAllocationKind::Free) => panic!("Double free"),
-            Some(TextureCacheAllocationKind::Realloc(..)) | None => {
+            Some(TextureCacheAllocationKind::Realloc(..)) |
+            Some(TextureCacheAllocationKind::Reset(..)) |
+            None => {
                 self.allocations.push(TextureCacheAllocation {
                     id,
                     kind: TextureCacheAllocationKind::Free,

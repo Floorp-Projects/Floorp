@@ -37,7 +37,7 @@ void BitWriter::WriteBits(uint64_t aValue, size_t aBits) {
       mBuffer->AppendElement(0);
     }
 
-    const uint8_t clearMask = ~(~0 << (8 - mBitIndex));
+    const uint8_t clearMask = ~(~0u << (8 - mBitIndex));
     uint8_t mask = 0;
 
     if (mBitIndex + aBits > 8) {

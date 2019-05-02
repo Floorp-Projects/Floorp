@@ -437,7 +437,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //
 //   `class {}`
 //     ClassEmitter ce(this);
-//     ce.emitScope(scopeBindings, HasName::No);
+//     ce.emitScope(scopeBindings);
 //     ce.emitClass(nullptr, nullptr, false);
 //
 //     ce.emitInitDefaultConstructor(Some(offset_of_class),
@@ -447,7 +447,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //
 //   `class { constructor() { ... } }`
 //     ClassEmitter ce(this);
-//     ce.emitScope(scopeBindings, HasName::No);
+//     ce.emitScope(scopeBindings);
 //     ce.emitClass(nullptr, nullptr, false);
 //
 //     emit(function_for_constructor);
@@ -457,7 +457,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //
 //   `class X { constructor() { ... } }`
 //     ClassEmitter ce(this);
-//     ce.emitScope(scopeBindings, HasName::Yes);
+//     ce.emitScope(scopeBindings);
 //     ce.emitClass(atom_of_X, nullptr, false);
 //
 //     ce.emitInitDefaultConstructor(Some(offset_of_class),
@@ -467,7 +467,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //
 //   `class X { constructor() { ... } }`
 //     ClassEmitter ce(this);
-//     ce.emitScope(scopeBindings, HasName::Yes);
+//     ce.emitScope(scopeBindings);
 //     ce.emitClass(atom_of_X, nullptr, false);
 //
 //     emit(function_for_constructor);
@@ -477,7 +477,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //
 //   `class X extends Y { constructor() { ... } }`
 //     ClassEmitter ce(this);
-//     ce.emitScope(scopeBindings, HasName::Yes);
+//     ce.emitScope(scopeBindings);
 //
 //     emit(Y);
 //     ce.emitDerivedClass(atom_of_X, nullptr, false);
@@ -489,7 +489,7 @@ class MOZ_RAII AutoSaveLocalStrictMode {
 //
 //   `class X extends Y { constructor() { ... super.f(); ... } }`
 //     ClassEmitter ce(this);
-//     ce.emitScope(scopeBindings, HasName::Yes);
+//     ce.emitScope(scopeBindings);
 //
 //     emit(Y);
 //     ce.emitDerivedClass(atom_of_X, nullptr, false);
@@ -602,7 +602,7 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
 
   bool isDerived_ = false;
 
-  mozilla::Maybe<TDZCheckCache> tdzCacheForInnerName_;
+  mozilla::Maybe<TDZCheckCache> tdzCache_;
   mozilla::Maybe<EmitterScope> innerScope_;
   AutoSaveLocalStrictMode strictMode_;
 
@@ -665,9 +665,7 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
  public:
   explicit ClassEmitter(BytecodeEmitter* bce);
 
-  enum class HasName : bool { No, Yes };
-  bool emitScope(JS::Handle<LexicalScope::Data*> scopeBindings,
-                 HasName hasName);
+  bool emitScope(JS::Handle<LexicalScope::Data*> scopeBindings);
 
   // @param name
   //        Name of the class (nullptr if this is anonymous class)

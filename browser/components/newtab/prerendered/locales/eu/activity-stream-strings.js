@@ -94,7 +94,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_move_down": "Eraman behera",
   "section_menu_action_privacy_notice": "Pribatutasun-oharra",
   "firstrun_title": "Eraman Firefox aldean",
-  "firstrun_content": "Izan laster-markak, historia, pasahitzak eta beste ezarpenak eskura zure gailu guztietatik.",
+  "firstrun_content": "Izan laster-markak, historia, pasahitzak eta beste ezarpenak eskura zure gailu guztietan.",
   "firstrun_learn_more_link": "Firefox kontuei buruzko argibide gehiago",
   "firstrun_form_header": "Idatzi zure helbide elektronikoa",
   "firstrun_form_sub_header": "Firefox Sync-ekin jarraitzeko.",

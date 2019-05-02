@@ -6,6 +6,7 @@ import {
   ImpressionStatsPing,
   PerfPing,
   SessionPing,
+  SpocsFillPing,
   UndesiredPing,
   UserEventPing,
 } from "test/schemas/pings";
@@ -632,6 +633,20 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "tiles", tiles);
     });
   });
+  describe("#createSpocsFillPing", () => {
+    it("should create a valid SPOCS Fill ping", async () => {
+      const spocFills = [
+        {id: 10001, displayed: 0, reason: "frequency_cap", full_recalc: 1},
+        {id: 10002, displayed: 0, reason: "blocked_by_user", full_recalc: 1},
+        {id: 10003, displayed: 1, reason: "n/a", full_recalc: 1},
+      ];
+      const action = ac.DiscoveryStreamSpocsFill({spoc_fills: spocFills});
+      const ping = await instance.createSpocsFillPing(action.data);
+
+      assert.validate(ping, SpocsFillPing);
+      assert.propertyVal(ping, "spoc_fills", spocFills);
+    });
+  });
   describe("#applyCFRPolicy", () => {
     it("should use client_id and message_id in prerelease", () => {
       globals.set("UpdateUtils", {getUpdateChannel() { return "nightly"; }});
@@ -1099,6 +1114,21 @@ describe("TelemetryFeed", () => {
       instance.onAction(ac.AlsoToMain(action, "port123"));
 
       assert.calledWith(instance.handleDiscoveryStreamLoadedContent, "port123", data);
+    });
+    it("should send an event on a DISCOVERY_STREAM_SPOCS_FILL action", () => {
+      const sendEvent = sandbox.stub(instance, "sendStructuredIngestionEvent");
+      const eventCreator = sandbox.stub(instance, "createSpocsFillPing");
+      const spocFills = [
+        {id: 10001, displayed: 0, reason: "frequency_cap", full_recalc: 1},
+        {id: 10002, displayed: 0, reason: "blocked_by_user", full_recalc: 1},
+        {id: 10003, displayed: 1, reason: "n/a", full_recalc: 1},
+      ];
+      const action = ac.DiscoveryStreamSpocsFill({spoc_fills: spocFills});
+
+      instance.onAction(action);
+
+      assert.calledWith(eventCreator, action.data);
+      assert.calledWith(sendEvent, eventCreator.returnValue);
     });
   });
   describe("#handlePagePrerendered", () => {

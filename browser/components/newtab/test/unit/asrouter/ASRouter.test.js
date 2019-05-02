@@ -872,6 +872,26 @@ describe("ASRouter", () => {
       });
     });
 
+    describe(".includeBundle", () => {
+      it("should send a message with .includeBundle property with specified length and template", async () => {
+        let messages = [
+          {id: "trailhead", template: "trailhead", includeBundle: {length: 2, template: "foo", trigger: {id: "foo"}}, trigger: {id: "firstRun"}, content: {}},
+          {id: "foo2", template: "foo", bundled: 2, trigger: {id: "foo"}, content: {title: "Foo2", body: "Foo123-2"}},
+          {id: "foo3", template: "foo", bundled: 2, trigger: {id: "foo"}, content: {title: "Foo3", body: "Foo123-3"}},
+        ];
+        sandbox.stub(Router, "_findProvider").returns(null);
+        await Router.setState({messages});
+
+        const msg = fakeAsyncMessage({type: "TRIGGER", data: {trigger: {id: "firstRun"}}});
+        await Router.onMessage(msg);
+
+        const [, resp] = msg.target.sendAsyncMessage.firstCall.args;
+        assert.propertyVal(resp, "type", "SET_MESSAGE");
+        assert.isArray(resp.data.bundle, "resp.data.bundle");
+        assert.lengthOf(resp.data.bundle, 2, "resp.data.bundle");
+      });
+    });
+
     describe("#onMessage: OVERRIDE_MESSAGE", () => {
       it("should broadcast a SET_MESSAGE message to all clients with a particular id", async () => {
         const [testMessage] = Router.state.messages;

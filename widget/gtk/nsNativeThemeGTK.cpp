@@ -13,7 +13,6 @@
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsIFrame.h"
-#include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsViewManager.h"
 #include "nsNameSpaceManager.h"
@@ -41,6 +40,7 @@
 #include "mozilla/gfx/HelpersCairo.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsWindow.h"
@@ -131,12 +131,13 @@ nsNativeThemeGTK::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void nsNativeThemeGTK::RefreshWidgetWindow(nsIFrame* aFrame) {
-  nsIPresShell* shell = GetPresShell(aFrame);
-  if (!shell) return;
+  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aFrame->PresShell());
 
-  nsViewManager* vm = shell->GetViewManager();
-  if (!vm) return;
-
+  nsViewManager* vm = aFrame->PresShell()->GetViewManager();
+  if (!vm) {
+    return;
+  }
   vm->InvalidateAllViews();
 }
 

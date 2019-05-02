@@ -3666,6 +3666,16 @@ uint32_t SVGTextFrame::GetNumberOfChars(nsIContent* aContent) {
  * text child element.
  */
 float SVGTextFrame::GetComputedTextLength(nsIContent* aContent) {
+  nsIFrame* kid = PrincipalChildList().FirstChild();
+  if (NS_SUBTREE_DIRTY(kid)) {
+    // We're never reflowed if we're under a non-SVG element that is
+    // never reflowed (such as the HTML 'caption' element).
+    //
+    // If we ever decide that we need to return accurate values here,
+    // we could do similar work to GetSubStringLength.
+    return 0;
+  }
+
   UpdateGlyphPositioning();
 
   float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(
