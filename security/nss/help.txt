@@ -40,6 +40,7 @@ NSS build tool options:
                      (requires the gold linker, use clang-3.8 for SAW)
     --no-zdefs       don't set -Wl,-z,defs
     --test           ignore map files and export everything we have
+    --static         create static libraries and use static linking
     --ct-verif       build with valgrind for ct-verif
     --nspr           force a rebuild of NSPR
     --with-nspr      use the NSPR build at the given locations
