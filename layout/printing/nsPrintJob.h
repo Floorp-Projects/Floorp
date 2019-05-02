@@ -139,7 +139,6 @@ class nsPrintJob final : public nsIObserver,
       const mozilla::UniquePtr<nsPrintObject>& aPO,
       nsIPrintProgressParams* aParams);
   void EllipseLongString(nsAString& aStr, const uint32_t aLen, bool aDoFront);
-  nsresult CheckForPrinters(nsIPrintSettings* aPrintSettings);
   void CleanupDocTitleArray(char16_t**& aArray, int32_t& aCount);
 
   bool IsThereARangeSelection(nsPIDOMWindowOuter* aDOMWin);
