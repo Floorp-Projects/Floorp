@@ -896,7 +896,7 @@ void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     return;
   }
 
-  mCompositor->RequestRecordFrames(!!mCompositionRecorder);
+  mCompositor->RequestAllowFrameRecording(!!mCompositionRecorder);
 
   ClearLayerFlags(mRoot);
 
