@@ -79,7 +79,7 @@ add_task(async function test_unregister_invalid_json() {
     PushService.unregister({
       scope: "https://example.net/page/1",
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+        { inIsolatedMozBrowser: false }),
     }),
     /Request timed out/,
     "Expected error for second invalid JSON response"

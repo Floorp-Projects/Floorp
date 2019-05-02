@@ -144,25 +144,21 @@ add_task(function test() {
   let expected = [
     ["http://foo.com", "A", 1, 0, 0],
     ["http://foo.com", "C", 1, 0, 0],
-    ["http://foo.com^appId=1000", "A", 1, 0, 0],
-    ["http://foo.com^appId=2000&inBrowser=1", "A", 1, 0, 0],
+    ["http://foo.com^inBrowser=1", "A", 1, 0, 0],
     ["http://sub.foo.com", "B", 1, 0, 0],
     ["http://subber.sub.foo.com", "B", 1, 0, 0],
 
     ["https://foo.com", "A", 1, 0, 0],
     ["https://foo.com", "C", 1, 0, 0],
-    ["https://foo.com^appId=1000", "A", 1, 0, 0],
-    ["https://foo.com^appId=2000&inBrowser=1", "A", 1, 0, 0],
+    ["https://foo.com^inBrowser=1", "A", 1, 0, 0],
     ["https://sub.foo.com", "B", 1, 0, 0],
     ["https://subber.sub.foo.com", "B", 1, 0, 0],
 
     // bar.ca will have both http:// and https:// for all entries, because there are no associated history entries
     ["http://bar.ca", "B", 1, 0, 0],
     ["https://bar.ca", "B", 1, 0, 0],
-    ["http://bar.ca^appId=1000", "B", 1, 0, 0],
-    ["https://bar.ca^appId=1000", "B", 1, 0, 0],
-    ["http://bar.ca^appId=1000&inBrowser=1", "A", 1, 0, 0],
-    ["https://bar.ca^appId=1000&inBrowser=1", "A", 1, 0, 0],
+    ["http://bar.ca^inBrowser=1", "A", 1, 0, 0],
+    ["https://bar.ca^inBrowser=1", "A", 1, 0, 0],
     ["file:///some/path/to/file.html", "A", 1, 0, 0],
     ["file:///another/file.html", "A", 1, 0, 0],
 

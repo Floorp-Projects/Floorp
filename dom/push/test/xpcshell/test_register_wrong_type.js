@@ -52,7 +52,7 @@ add_task(async function test_register_wrong_type() {
     PushService.register({
       scope: "https://example.com/mistyped",
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+        { inIsolatedMozBrowser: false }),
     }),
     /Registration error/,
     "Expected error for non-string channel ID"

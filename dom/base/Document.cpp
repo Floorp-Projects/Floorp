@@ -2590,10 +2590,6 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
              uri ? uri->GetSpecOrDefault().get() : ""));
   }
 
-  MOZ_ASSERT(
-      NodePrincipal()->GetAppId() != nsIScriptSecurityManager::UNKNOWN_APP_ID,
-      "Document should never have UNKNOWN_APP_ID");
-
   MOZ_ASSERT(GetReadyStateEnum() == Document::READYSTATE_UNINITIALIZED,
              "Bad readyState");
   SetReadyStateInternal(READYSTATE_LOADING);
