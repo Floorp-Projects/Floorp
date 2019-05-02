@@ -229,7 +229,7 @@ TEST(Jemalloc, PtrInfo)
   UniquePtr<int> p = MakeUnique<int>();
   size_t chunksizeMask = stats.chunksize - 1;
   char* chunk = (char*)(uintptr_t(p.get()) & ~chunksizeMask);
-  size_t chunkHeaderSize = stats.chunksize - stats.large_max;
+  size_t chunkHeaderSize = stats.chunksize - stats.large_max - stats.page_size;
   for (size_t i = 0; i < chunkHeaderSize; i += 64) {
     jemalloc_ptr_info(&chunk[i], &info);
     ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
