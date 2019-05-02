@@ -16,6 +16,7 @@ import androidx.core.content.res.TypedArrayUtils
 import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
 import org.mozilla.fenix.R
+import org.mozilla.fenix.utils.Settings
 
 class RadioButtonPreference : Preference {
     private val radioGroups = mutableListOf<RadioButtonPreference>()
@@ -68,6 +69,8 @@ class RadioButtonPreference : Preference {
     private fun updateRadioValue(isChecked: Boolean) {
         persistBoolean(isChecked)
         radioButton.isChecked = isChecked
+        Settings.getInstance(summaryView.context).preferences.edit().putBoolean(key, isChecked)
+            .apply()
     }
 
     private fun bindRadioButton(holder: PreferenceViewHolder) {
@@ -77,9 +80,15 @@ class RadioButtonPreference : Preference {
 
     private fun initDefaultValue(typedArray: TypedArray) {
         if (typedArray.hasValue(androidx.preference.R.styleable.Preference_defaultValue)) {
-            defaultValue = typedArray.getBoolean(androidx.preference.R.styleable.Preference_defaultValue, false)
+            defaultValue = typedArray.getBoolean(
+                androidx.preference.R.styleable.Preference_defaultValue,
+                false
+            )
         } else if (typedArray.hasValue(androidx.preference.R.styleable.Preference_android_defaultValue)) {
-            defaultValue = typedArray.getBoolean(androidx.preference.R.styleable.Preference_android_defaultValue, false)
+            defaultValue = typedArray.getBoolean(
+                androidx.preference.R.styleable.Preference_android_defaultValue,
+                false
+            )
         }
     }
 
@@ -101,7 +110,8 @@ class RadioButtonPreference : Preference {
         summaryView = holder.findViewById(R.id.widget_summary) as TextView
         if (!TextUtils.isEmpty(summary)) {
             if (shouldSummaryBeParsedAsHtmlContent) {
-                summaryView.text = HtmlCompat.fromHtml(summary.toString(), HtmlCompat.FROM_HTML_MODE_COMPACT)
+                summaryView.text =
+                    HtmlCompat.fromHtml(summary.toString(), HtmlCompat.FROM_HTML_MODE_COMPACT)
             } else {
                 summaryView.text = summary
             }
