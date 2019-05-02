@@ -1,0 +1,64 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIX509Cert;
+
+%{C++
+#define NS_CERTBLOCKLIST_CONTRACTID "@mozilla.org/security/certblocklist;1"
+%}
+
+/**
+ * Represents a service to add certificates as explicitly blocked/distrusted.
+ */
+[scriptable, uuid(e0654480-f433-11e4-b939-0800200c9a66)]
+interface nsICertBlocklist : nsISupports {
+  /**
+   * Add details of a revoked certificate :
+   * issuer name (base-64 encoded DER) and serial number (base-64 encoded DER).
+   */
+  [must_use]
+  void revokeCertByIssuerAndSerial(in ACString issuer,
+                                   in ACString serialNumber);
+
+  /**
+   * Add details of a revoked certificate :
+   * subject name (base-64 encoded DER) and hash of public key (base-64 encoded
+   * sha-256 hash of the public key).
+   */
+  [must_use]
+  void revokeCertBySubjectAndPubKey(in ACString subject,
+                                    in ACString pubKeyHash);
+
+  /**
+   * Persist (fresh) blocklist entries to the profile (if a profile directory is
+   * available). Note: calling this will result in synchronous I/O.
+   */
+  [must_use]
+  void saveEntries();
+
+  /**
+   * Check if a certificate is blocked.
+   * issuer - issuer name, DER, Base64 encoded
+   * serial - serial number, DER, BAse64 encoded
+   * subject - subject name, DER, Base64 encoded
+   * pubkey - public key, DER, Base64 encoded
+   */
+  [must_use]
+  boolean isCertRevoked(in ACString issuer,
+                        in ACString serial,
+                        in ACString subject,
+                        in ACString pubkey);
+
+   /**
+    * Check that the blocklist data is current. Specifically, that the current
+    * time is no more than security.onecrl.maximum_staleness_in_seconds seconds
+    * after the last blocklist update (as stored in the
+    * app.update.lastUpdateTime.blocklist-background-update-timer pref)
+    */
+  [must_use]
+  boolean isBlocklistFresh();
+};
