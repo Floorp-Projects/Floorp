@@ -410,7 +410,8 @@ ChannelMediaDecoder::ComputePlaybackRate(const MediaChannelStatistics& aStats,
   MOZ_ASSERT(!NS_IsMainThread());
 
   int64_t length = aResource->GetLength();
-  if (mozilla::IsFinite<double>(aDuration) && aDuration > 0 && length >= 0) {
+  if (mozilla::IsFinite<double>(aDuration) && aDuration > 0 && length >= 0 &&
+      length / aDuration < UINT32_MAX) {
     return {uint32_t(length / aDuration), true};
   }
 

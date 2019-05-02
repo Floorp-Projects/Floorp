@@ -67,7 +67,11 @@ body {
   --newtab-card-placeholder-color: #D7D7DB;
   --newtab-card-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1);
   --newtab-snippets-background-color: #FFF;
-  --newtab-snippets-hairline-color: transparent; }
+  --newtab-snippets-hairline-color: transparent;
+  --trailhead-header-text-color: #2B2156;
+  --trailhead-cards-background-color: #EDEDF0;
+  --trailhead-card-button-background-color: rgba(12, 12, 13, 0.1);
+  --trailhead-card-button-background-hover-color: rgba(12, 12, 13, 0.2); }
   body[lwt-newtab-brighttext] {
     --newtab-background-color: #2A2A2E;
     --newtab-border-primary-color: rgba(249, 249, 250, 0.8);
@@ -111,7 +115,11 @@ body {
     --newtab-card-placeholder-color: #4A4A4F;
     --newtab-card-shadow: 0 1px 8px 0 rgba(12, 12, 13, 0.2);
     --newtab-snippets-background-color: #38383D;
-    --newtab-snippets-hairline-color: rgba(255, 255, 255, 0.1); }
+    --newtab-snippets-hairline-color: rgba(255, 255, 255, 0.1);
+    --trailhead-header-text-color: rgba(255, 255, 255, 0.6);
+    --trailhead-cards-background-color: rgba(12, 12, 13, 0.1);
+    --trailhead-card-button-background-color: rgba(12, 12, 13, 0.3);
+    --trailhead-card-button-background-hover-color: rgba(12, 12, 13, 0.4); }
 
 .icon {
   background-position: center center;
@@ -1139,9 +1147,9 @@ main {
     visibility: hidden; } }
 
 @media (min-height: 701px) {
-  .fixed-search main {
+  body:not(.inline-onboarding) .fixed-search main {
     padding-top: 146px; }
-  .fixed-search .search-wrapper {
+  body:not(.inline-onboarding) .fixed-search .search-wrapper {
     background-color: var(--newtab-search-header-background-color);
     border-bottom: solid 1px var(--newtab-border-secondary-color);
     height: 95px;
@@ -1151,19 +1159,19 @@ main {
     top: 0;
     width: 100%;
     z-index: 9; }
-    .fixed-search .search-wrapper .search-inner-wrapper {
+    body:not(.inline-onboarding) .fixed-search .search-wrapper .search-inner-wrapper {
       height: 35px; }
-    .fixed-search .search-wrapper input {
+    body:not(.inline-onboarding) .fixed-search .search-wrapper input {
       background-position-x: 16px;
       background-size: 16px; }
-      .fixed-search .search-wrapper input:dir(rtl) {
+      body:not(.inline-onboarding) .fixed-search .search-wrapper input:dir(rtl) {
         background-position-x: right 16px; }
-  .fixed-search .search-handoff-button {
+  body:not(.inline-onboarding) .fixed-search .search-handoff-button {
     background-position-x: 12px;
     background-size: 24px; }
-    .fixed-search .search-handoff-button:dir(rtl) {
+    body:not(.inline-onboarding) .fixed-search .search-handoff-button:dir(rtl) {
       background-position-x: right 12px; }
-    .fixed-search .search-handoff-button .fake-caret {
+    body:not(.inline-onboarding) .fixed-search .search-handoff-button .fake-caret {
       top: 10px; } }
 
 .contentSearchSuggestionTable {
@@ -1876,6 +1884,11 @@ main {
     border-radius: 4px; }
     [lwt-newtab-brighttext] .ds-card-grid .ds-card {
       background: none; }
+  .ds-card-grid .ds-card-link:focus {
+    box-shadow: 0 0 0 1px #0A84FF inset, 0 0 0 1px #0A84FF, 0 0 0 5px rgba(10, 132, 255, 0.3);
+    transition: box-shadow 150ms;
+    border-radius: 4px;
+    outline: none; }
   .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) {
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1); }
     [lwt-newtab-brighttext] .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) {
@@ -1969,6 +1982,11 @@ main {
       border-top: 1px solid #4A4A4F; }
     [lwt-newtab-brighttext] .ds-hero .wrapper {
       color: #D7D7DB; }
+    .ds-hero .wrapper:focus {
+      box-shadow: 0 0 0 1px #0A84FF inset, 0 0 0 1px #0A84FF, 0 0 0 5px rgba(10, 132, 255, 0.3);
+      transition: box-shadow 150ms;
+      border-radius: 4px;
+      outline: none; }
     .ds-hero-no-border .ds-hero-item .wrapper {
       border-top: 0;
       border-bottom: 0;
@@ -2204,6 +2222,12 @@ main {
     [lwt-newtab-brighttext] .ds-list a {
       color: #F9F9FA; }
 
+.ds-list-item-link:focus {
+  box-shadow: 0 0 0 1px #0A84FF inset, 0 0 0 1px #0A84FF, 0 0 0 5px rgba(10, 132, 255, 0.3);
+  transition: box-shadow 150ms;
+  border-radius: 4px;
+  outline: none; }
+
 .ds-list-numbers .ds-list-item {
   counter-increment: list; }
 
@@ -2403,6 +2427,11 @@ main {
   margin: 0 -25px; }
   .ds-top-sites .top-sites .top-site-outer {
     padding: 0 12px; }
+    .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:-moz-any(.active, :focus) .tile {
+      box-shadow: 0 0 0 1px #0A84FF inset, 0 0 0 1px #0A84FF, 0 0 0 5px rgba(10, 132, 255, 0.3);
+      transition: box-shadow 150ms;
+      border-radius: 4px;
+      outline: none; }
   .ds-top-sites .top-sites .top-sites-list {
     margin: 0 -12px; }
 
@@ -2572,6 +2601,11 @@ main {
     flex-direction: column;
     justify-content: space-between;
     height: 100%; }
+    .ds-card .ds-card-link:focus {
+      box-shadow: 0 0 0 1px #0A84FF inset, 0 0 0 1px #0A84FF, 0 0 0 5px rgba(10, 132, 255, 0.3);
+      transition: box-shadow 150ms;
+      border-radius: 4px;
+      outline: none; }
   .ds-card .meta {
     display: flex;
     flex-direction: column;
@@ -2799,8 +2833,7 @@ main {
   overflow: hidden; }
 
 .modalOverlayOuter {
-  background: #FFF;
-  opacity: 0.93;
+  background: var(--newtab-overlay-color);
   height: 100%;
   position: fixed;
   top: 0;
@@ -3264,29 +3297,6 @@ main {
   @media (max-width: 650px) {
     .onboardingMessage {
       height: 250px; } }
-  .onboardingMessage .onboardingMessageImage {
-    height: 100px;
-    width: 120px;
-    background-size: 120px;
-    background-position: center center;
-    background-repeat: no-repeat;
-    display: inline-block;
-    vertical-align: middle; }
-    @media (max-width: 850px) {
-      .onboardingMessage .onboardingMessageImage {
-        height: 75px;
-        min-width: 80px;
-        background-size: 80px; } }
-    .onboardingMessage .onboardingMessageImage.addons {
-      background-image: url("resource://activity-stream/data/content/assets/illustration-addons@2x.png"); }
-    .onboardingMessage .onboardingMessageImage.privatebrowsing {
-      background-image: url("resource://activity-stream/data/content/assets/illustration-privatebrowsing@2x.png"); }
-    .onboardingMessage .onboardingMessageImage.screenshots {
-      background-image: url("resource://activity-stream/data/content/assets/illustration-screenshots@2x.png"); }
-    .onboardingMessage .onboardingMessageImage.gift {
-      background-image: url("resource://activity-stream/data/content/assets/illustration-gift@2x.png"); }
-    .onboardingMessage .onboardingMessageImage.sync {
-      background-image: url("resource://activity-stream/data/content/assets/illustration-sync@2x.png"); }
   .onboardingMessage .onboardingContent {
     height: 175px; }
     .onboardingMessage .onboardingContent > span > h3 {
@@ -3336,6 +3346,52 @@ main {
         content: none; } }
   .onboardingMessage:last-child::before {
     content: none; }
+
+.onboardingMessageImage {
+  height: 100px;
+  width: 120px;
+  background-size: 120px;
+  background-position: center center;
+  background-repeat: no-repeat;
+  display: inline-block;
+  vertical-align: middle; }
+  @media (max-width: 850px) {
+    .onboardingMessageImage {
+      height: 75px;
+      min-width: 80px;
+      background-size: 80px; } }
+  .onboardingMessageImage.addons {
+    background-image: url("../data/content/assets/illustration-addons@2x.png"); }
+  .onboardingMessageImage.privatebrowsing {
+    background-image: url("../data/content/assets/illustration-privatebrowsing@2x.png"); }
+  .onboardingMessageImage.screenshots {
+    background-image: url("../data/content/assets/illustration-screenshots@2x.png"); }
+  .onboardingMessageImage.gift {
+    background-image: url("../data/content/assets/illustration-gift@2x.png"); }
+  .onboardingMessageImage.sync {
+    background-image: url("../data/content/assets/illustration-sync@2x.png"); }
+  .onboardingMessageImage.devices {
+    background-image: url("../data/content/assets/trailhead/card-illo-devices.png"); }
+  .onboardingMessageImage.fbcont {
+    background-image: url("../data/content/assets/trailhead/card-illo-fbcont.png"); }
+  .onboardingMessageImage.ffmonitor {
+    background-image: url("../data/content/assets/trailhead/card-illo-ffmonitor.png"); }
+  .onboardingMessageImage.ffsend {
+    background-image: url("../data/content/assets/trailhead/card-illo-ffsend.png"); }
+  .onboardingMessageImage.lockwise {
+    background-image: url("../data/content/assets/trailhead/card-illo-lockwise.png"); }
+  .onboardingMessageImage.mobile {
+    background-image: url("../data/content/assets/trailhead/card-illo-mobile.png"); }
+  .onboardingMessageImage.pledge {
+    background-image: url("../data/content/assets/trailhead/card-illo-pledge.png"); }
+  .onboardingMessageImage.pocket {
+    background-image: url("../data/content/assets/trailhead/card-illo-pocket.png"); }
+  .onboardingMessageImage.private {
+    background-image: url("../data/content/assets/trailhead/card-illo-private.png"); }
+  .onboardingMessageImage.sendtab {
+    background-image: url("../data/content/assets/trailhead/card-illo-sendtab.png"); }
+  .onboardingMessageImage.tracking {
+    background-image: url("../data/content/assets/trailhead/card-illo-tracking.png"); }
 
 .EOYSnippetForm {
   margin: 10px 0 8px;
@@ -3631,3 +3687,224 @@ a.firstrun-link {
   100% {
     opacity: 1;
     transform: translateY(0); } }
+
+.trailhead {
+  background: url("../data/content/assets/trailhead/accounts-form-bg.jpg") bottom/cover;
+  color: #FFF;
+  height: auto;
+  top: 100px; }
+  @media (max-height: 700px) {
+    .trailhead {
+      position: absolute;
+      top: 20px; } }
+  .trailhead a {
+    color: #FFF;
+    text-decoration: underline; }
+  .trailhead input,
+  .trailhead button {
+    border-radius: 4px;
+    padding: 10px; }
+  .trailhead .trailheadInner {
+    display: grid;
+    grid-column-gap: 40px;
+    grid-template-columns: 5fr 3fr;
+    padding: 40px 60px; }
+  .trailhead .trailheadContent h1 {
+    font-size: 36px;
+    font-weight: 200;
+    line-height: 46px;
+    margin: 0; }
+  .trailhead .trailheadContent .trailheadLearn {
+    display: block;
+    margin-top: 30px;
+    margin-inline-start: 74px; }
+  .trailhead.syncCohort {
+    left: calc(50% - 430px);
+    width: 860px; }
+    @media (max-width: 860px) {
+      .trailhead.syncCohort {
+        left: 0;
+        width: 100%; } }
+    .trailhead.syncCohort .trailheadInner {
+      grid-template-columns: 4fr 3fr; }
+    .trailhead.syncCohort .trailheadContent .trailheadBenefits {
+      background: url("../data/content/assets/sync-devices.svg");
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: contain;
+      height: 200px;
+      margin-inline-end: 60px; }
+    .trailhead.syncCohort .trailheadContent .trailheadLearn {
+      margin-inline-start: 0; }
+  .trailhead .trailheadBenefits {
+    padding: 0; }
+    .trailhead .trailheadBenefits li {
+      background-position: left 4px;
+      background-repeat: no-repeat;
+      background-size: 62px;
+      -moz-context-properties: fill;
+      fill: #0A84FF;
+      list-style: none;
+      padding-inline-start: 74px; }
+      .trailhead .trailheadBenefits li:dir(rtl) {
+        background-position-x: right; }
+      .trailhead .trailheadBenefits li.knowledge {
+        background-image: url("../data/content/assets/trailhead/benefit-knowledge.png"); }
+      .trailhead .trailheadBenefits li.privacy {
+        background-image: url("../data/content/assets/trailhead/benefit-privacy.png"); }
+      .trailhead .trailheadBenefits li.products {
+        background-image: url("../data/content/assets/trailhead/benefit-products.png"); }
+    .trailhead .trailheadBenefits h3 {
+      color: #CB9EFF;
+      font-size: 22px;
+      font-weight: 400;
+      margin-bottom: 4px; }
+    .trailhead .trailheadBenefits p {
+      color: #FFF;
+      font-size: 15px;
+      line-height: 22px;
+      margin: 4px 0 15px;
+      margin-inline-end: 60px; }
+  .trailhead .trailheadForm {
+    background: url("../data/content/assets/trailhead/firefox-logo.png") top center/100px no-repeat;
+    min-width: 260px;
+    padding-top: 100px;
+    text-align: center; }
+    .trailhead .trailheadForm h3 {
+      font-size: 36px;
+      font-weight: 200;
+      line-height: 46px;
+      margin: 12px 0 4px; }
+    .trailhead .trailheadForm p {
+      color: #FFF;
+      font-size: 15px;
+      line-height: 22px;
+      margin: 0 0 20px; }
+    .trailhead .trailheadForm .trailheadTerms {
+      margin: 4px 30px 20px; }
+      .trailhead .trailheadForm .trailheadTerms a, .trailhead .trailheadForm .trailheadTerms {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        line-height: 20px; }
+    .trailhead .trailheadForm form {
+      position: relative; }
+      .trailhead .trailheadForm form .error.active {
+        inset-inline-start: 0;
+        z-index: 0; }
+    .trailhead .trailheadForm button,
+    .trailhead .trailheadForm input {
+      border: 0;
+      width: 100%; }
+    .trailhead .trailheadForm input {
+      background-color: #FFF;
+      color: #38383D;
+      font-size: 15px; }
+    .trailhead .trailheadForm button {
+      background-color: #0060DF;
+      cursor: pointer;
+      display: block;
+      font-size: 15px;
+      font-weight: 400;
+      padding: 14px; }
+      .trailhead .trailheadForm button:hover, .trailhead .trailheadForm button:focus {
+        background-color: #0250BB; }
+      .trailhead .trailheadForm button:focus {
+        outline: dotted 1px; }
+  .trailhead .trailheadStart {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    display: block;
+    font-size: 15px;
+    font-weight: 400;
+    margin: 0 auto 40px;
+    min-width: 300px;
+    padding: 14px; }
+    .trailhead .trailheadStart:hover, .trailhead .trailheadStart:focus {
+      background-color: #0250BB;
+      border-color: transparent; }
+    .trailhead .trailheadStart:focus {
+      outline: dotted 1px; }
+
+.trailheadCards {
+  background: var(--trailhead-cards-background-color);
+  text-align: center; }
+  .trailheadCards h1 {
+    font-size: 36px;
+    font-weight: 200;
+    margin: 0 0 40px;
+    color: var(--trailhead-header-text-color); }
+
+.trailheadCardsInner {
+  margin: auto;
+  padding: 40px 25px; }
+  @media (min-width: 610px) {
+    .trailheadCardsInner {
+      width: 530px; } }
+  @media (min-width: 866px) {
+    .trailheadCardsInner {
+      width: 786px; } }
+  @media (min-width: 1122px) {
+    .trailheadCardsInner {
+      width: 1042px; } }
+
+.trailheadCardGrid {
+  display: grid;
+  grid-gap: 32px;
+  margin: 0; }
+  @media (min-width: 610px) {
+    .trailheadCardGrid {
+      grid-template-columns: repeat(auto-fit, 224px); } }
+  @media (min-width: 1122px) {
+    .trailheadCardGrid {
+      grid-template-columns: repeat(auto-fit, 309px); } }
+
+.trailheadCard {
+  position: relative;
+  background: var(--newtab-card-background-color);
+  border-radius: 4px;
+  box-shadow: var(--newtab-card-shadow);
+  font-size: 13px;
+  padding: 20px; }
+  @media (min-width: 1122px) {
+    .trailheadCard {
+      font-size: 15px;
+      padding: 40px; } }
+  .trailheadCard .onboardingTitle {
+    font-weight: normal;
+    color: var(--newtab-text-primary-color);
+    margin: 10px 0 4px;
+    font-size: 15px; }
+    @media (min-width: 1122px) {
+      .trailheadCard .onboardingTitle {
+        font-size: 18px; } }
+  .trailheadCard .onboardingText {
+    margin: 0 0 60px;
+    color: var(--newtab-text-conditional-color);
+    line-height: 1.5;
+    font-weight: 200; }
+  .trailheadCard .onboardingButton {
+    color: var(--newtab-text-conditional-color);
+    background: var(--trailhead-card-button-background-color);
+    border: 0;
+    height: 30px;
+    min-width: 70%;
+    padding: 0 14px; }
+    .trailheadCard .onboardingButton:focus, .trailheadCard .onboardingButton:hover {
+      box-shadow: none;
+      background: var(--trailhead-card-button-background-hover-color); }
+  .trailheadCard .onboardingButtonContainer {
+    height: 60px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center; }
+
+.inline-onboarding .outer-wrapper {
+  position: relative; }
+  .inline-onboarding .outer-wrapper .prefs-button button {
+    position: absolute; }
+
+@media (max-height: 700px) {
+  .activity-stream.welcome.inline-onboarding {
+    overflow: auto; } }

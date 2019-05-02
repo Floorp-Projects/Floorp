@@ -241,7 +241,7 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
   // stay in scope until sandbox_init_with_parameters is called.
   std::string flashCacheDir, flashTempDir, flashPath;
 
-  if (aInfo.type == MacSandboxType_Plugin && aInfo.pluginInfo.type == MacSandboxPluginType_Flash) {
+  if (aInfo.type == MacSandboxType_Flash) {
     profile = SandboxPolicyFlash;
 
     params.push_back("SHOULD_LOG");
@@ -259,7 +259,7 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
     params.push_back(getenv("HOME"));
 
     params.push_back("PLUGIN_BINARY_PATH");
-    if (!GetRealPath(flashPath, aInfo.pluginInfo.pluginBinaryPath.c_str())) {
+    if (!GetRealPath(flashPath, aInfo.pluginBinaryPath.c_str())) {
       return false;
     }
     params.push_back(flashPath.c_str());
@@ -294,16 +294,18 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
       params.push_back("CRASH_PORT");
       params.push_back(aInfo.crashServerPort.c_str());
     }
-  } else if (aInfo.type == MacSandboxType_Plugin) {
+  } else if (aInfo.type == MacSandboxType_GMP) {
     profile = const_cast<char*>(SandboxPolicyGMP);
     params.push_back("SHOULD_LOG");
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
     params.push_back("PLUGIN_BINARY_PATH");
-    params.push_back(aInfo.pluginInfo.pluginBinaryPath.c_str());
+    params.push_back(aInfo.pluginBinaryPath.c_str());
     params.push_back("APP_PATH");
     params.push_back(aInfo.appPath.c_str());
     params.push_back("APP_BINARY_PATH");
     params.push_back(aInfo.appBinaryPath.c_str());
+    params.push_back("HAS_WINDOW_SERVER");
+    params.push_back(aInfo.hasWindowServer ? "TRUE" : "FALSE");
   } else if (aInfo.type == MacSandboxType_Content) {
     MOZ_ASSERT(aInfo.level >= 1);
     if (aInfo.level >= 1) {

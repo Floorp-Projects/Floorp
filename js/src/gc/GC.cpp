@@ -309,7 +309,7 @@ static const float MallocThresholdShrinkFactor = 0.9f;
 /* no parameter */
 static const size_t MallocThresholdLimit = 1024 * 1024 * 1024;
 
-/* no parameter */
+/* JSGC_ZONE_ALLOC_DELAY_KB */
 static const size_t ZoneAllocDelayBytes = 1024 * 1024;
 
 /* JSGC_DYNAMIC_HEAP_GROWTH */
@@ -1529,6 +1529,9 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_MIN_LAST_DITCH_GC_PERIOD:
       minLastDitchGCPeriod_ = TimeDuration::FromSeconds(value);
       break;
+    case JSGC_ZONE_ALLOC_DELAY_KB:
+      zoneAllocDelayBytes_ = value * 1024;
+      break;
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
@@ -1720,6 +1723,9 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
     case JSGC_MIN_LAST_DITCH_GC_PERIOD:
       minLastDitchGCPeriod_ = TuningDefaults::MinLastDitchGCPeriod;
       break;
+    case JSGC_ZONE_ALLOC_DELAY_KB:
+      zoneAllocDelayBytes_ = TuningDefaults::ZoneAllocDelayBytes;
+      break;
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
@@ -1797,6 +1803,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return tunables.pretenureGroupThreshold();
     case JSGC_MIN_LAST_DITCH_GC_PERIOD:
       return tunables.minLastDitchGCPeriod().ToSeconds();
+    case JSGC_ZONE_ALLOC_DELAY_KB:
+      return tunables.zoneAllocDelayBytes() / 1024;
     default:
       MOZ_CRASH("Unknown parameter key");
   }

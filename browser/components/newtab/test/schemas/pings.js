@@ -139,6 +139,20 @@ export const ImpressionStatsPing = Joi.object().keys(Object.assign({}, baseKeys,
   pocket: Joi.number().integer(),
 }));
 
+export const SpocsFillEntrySchema = Joi.object().keys({
+  id: Joi.number().integer().required(),
+  displayed: Joi.number().integer().required(),
+  reason: Joi.string().required(),
+  full_recalc: Joi.number().integer().required(),
+});
+
+export const SpocsFillPing = Joi.object().keys(Object.assign({}, baseKeys, {
+  impression_id: Joi.string().required(),
+  client_id: Joi.valid("n/a").required(),
+  session_id: Joi.valid("n/a").required(),
+  spoc_fills: Joi.array().items(SpocsFillEntrySchema).required(),
+}));
+
 export const PerfPing = Joi.object().keys(Object.assign({}, baseKeys, {
   source: Joi.string(),
   event: Joi.string().required(),

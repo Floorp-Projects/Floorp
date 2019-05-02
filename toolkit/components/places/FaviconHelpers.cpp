@@ -16,13 +16,13 @@
 #include "nsFaviconService.h"
 #include "mozilla/storage.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsISupportsPriority.h"
-#include "nsContentUtils.h"
 #include <algorithm>
 #include <deque>
 #include "mozilla/gfx/2D.h"
@@ -592,7 +592,7 @@ nsresult AsyncFetchAndSetIconForPage::FetchFromNetwork() {
     priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_LOWEST);
   }
 
-  if (nsContentUtils::IsTailingEnabled()) {
+  if (StaticPrefs::network_http_tailing_enabled()) {
     nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(channel);
     if (cos) {
       cos->AddClassFlags(nsIClassOfService::Tail |

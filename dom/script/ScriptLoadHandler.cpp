@@ -14,6 +14,7 @@
 #include "nsMimeTypes.h"
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 namespace dom {
@@ -407,7 +408,7 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   // Everything went well, keep the CacheInfoChannel alive such that we can
   // later save the bytecode on the cache entry.
   if (NS_SUCCEEDED(rv) && mRequest->IsSource() &&
-      nsContentUtils::IsBytecodeCacheEnabled()) {
+      StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
     mRequest->mCacheInfo = do_QueryInterface(channelRequest);
     LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p", mRequest.get(),
          mRequest->mCacheInfo.get()));

@@ -47,7 +47,7 @@ describe("OnboardingMessage", () => {
   it("should validate all messages from OnboardingMessageProvider", async () => {
     const messages = await OnboardingMessageProvider.getUntranslatedMessages();
     // FXA_1 doesn't have content - so filter it out
-    messages.filter(msg => msg.content).forEach(msg => assert.jsonSchema(msg.content, schema));
+    messages.filter(msg => msg.template in ["onboarding", "return_to_amo_overlay"]).forEach(msg => assert.jsonSchema(msg.content, schema));
   });
   it("should decode the content field (double decoding)", async () => {
     const fakeContent = "foo%2540bar.org";

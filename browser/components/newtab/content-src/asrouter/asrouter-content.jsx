@@ -11,9 +11,11 @@ import ReactDOM from "react-dom";
 import {ReturnToAMO} from "./templates/ReturnToAMO/ReturnToAMO";
 import {SnippetsTemplates} from "./templates/template-manifest";
 import {StartupOverlay} from "./templates/StartupOverlay/StartupOverlay";
+import {Trailhead} from "./templates/Trailhead/Trailhead";
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
+const TEMPLATES_ABOVE_PAGE = ["trailhead"];
 const TEMPLATES_BELOW_SEARCH = ["simple_below_search_snippet"];
 
 export const ASRouterUtils = {
@@ -96,7 +98,8 @@ export class ASRouterUISurface extends React.PureComponent {
     this.sendUserActionTelemetry = this.sendUserActionTelemetry.bind(this);
     this.state = {message: {}, bundle: {}};
     if (props.document) {
-      this.portalContainer = props.document.getElementById("footer-snippets-container");
+      this.headerPortal = props.document.getElementById("header-asrouter-container");
+      this.footerPortal = props.document.getElementById("footer-asrouter-container");
     }
   }
 
@@ -221,7 +224,8 @@ export class ASRouterUISurface extends React.PureComponent {
   renderSnippets() {
     if (this.state.bundle.template === "onboarding" ||
         this.state.message.template === "fxa_overlay" ||
-        this.state.message.template === "return_to_amo_overlay") {
+        this.state.message.template === "return_to_amo_overlay" ||
+        this.state.message.template === "trailhead") {
       return null;
     }
     const SnippetComponent = SnippetsTemplates[this.state.message.template];
@@ -288,6 +292,20 @@ export class ASRouterUISurface extends React.PureComponent {
     return null;
   }
 
+  renderTrailhead() {
+    const {message} = this.state;
+    if (message.template === "trailhead") {
+      return (<Trailhead
+        message={message}
+        onAction={ASRouterUtils.executeAction}
+        onDoneButton={this.dismissBundle(this.state.bundle.bundle)}
+        sendUserActionTelemetry={this.sendUserActionTelemetry}
+        dispatch={this.props.dispatch}
+        fxaEndpoint={this.props.fxaEndpoint} />);
+    }
+    return null;
+  }
+
   renderPreviewBanner() {
     if (this.state.message.provider !== "preview") {
       return null;
@@ -305,6 +323,7 @@ export class ASRouterUISurface extends React.PureComponent {
     const {message, bundle} = this.state;
     if (!message.id && !bundle.template) { return null; }
     const shouldRenderBelowSearch = TEMPLATES_BELOW_SEARCH.includes(message.template);
+    const shouldRenderInHeader = TEMPLATES_ABOVE_PAGE.includes(message.template);
 
     return shouldRenderBelowSearch ?
       // Render special below search snippets in place;
@@ -314,11 +333,12 @@ export class ASRouterUISurface extends React.PureComponent {
       ReactDOM.createPortal(
         <>
           {this.renderPreviewBanner()}
+          {this.renderTrailhead()}
           {this.renderFirstRunOverlay()}
           {this.renderOnboarding()}
           {this.renderSnippets()}
         </>,
-        this.portalContainer
+        shouldRenderInHeader ? this.headerPortal : this.footerPortal
       );
   }
 }

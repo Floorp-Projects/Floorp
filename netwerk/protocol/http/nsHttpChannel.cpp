@@ -9646,7 +9646,7 @@ void nsHttpChannel::SetDoNotTrack() {
   NS_QueryNotificationCallbacks(this, loadContext);
 
   if ((loadContext && loadContext->UseTrackingProtection()) ||
-      nsContentUtils::DoNotTrackEnabled()) {
+      StaticPrefs::privacy_donottrackheader_enabled()) {
     DebugOnly<nsresult> rv = mRequestHead.SetHeader(
         nsHttp::DoNotTrack, NS_LITERAL_CSTRING("1"), false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));

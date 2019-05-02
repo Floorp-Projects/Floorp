@@ -313,9 +313,8 @@ bool PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   if (mFlashSandboxLevel > 0) {
     MacSandboxInfo flashSandboxInfo;
-    flashSandboxInfo.type = MacSandboxType_Plugin;
-    flashSandboxInfo.pluginInfo.type = MacSandboxPluginType_Flash;
-    flashSandboxInfo.pluginInfo.pluginBinaryPath = aPluginFilename;
+    flashSandboxInfo.type = MacSandboxType_Flash;
+    flashSandboxInfo.pluginBinaryPath = aPluginFilename;
     flashSandboxInfo.level = mFlashSandboxLevel;
     flashSandboxInfo.shouldLog = mEnableFlashSandboxLogging;
 

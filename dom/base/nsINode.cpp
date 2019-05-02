@@ -36,6 +36,7 @@
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/l10n/DOMOverlays.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsAttrValueOrString.h"
 #include "nsBindingManager.h"
 #include "nsCCUncollectableMarker.h"
@@ -2661,7 +2662,7 @@ Element* nsINode::GetParentElementCrossingShadowRoot() const {
 
 bool nsINode::HasBoxQuadsSupport(JSContext* aCx, JSObject* /* unused */) {
   return xpc::AccessCheck::isChrome(js::GetContextCompartment(aCx)) ||
-         nsContentUtils::GetBoxQuadsEnabled();
+         StaticPrefs::layout_css_getBoxQuads_enabled();
 }
 
 nsINode* nsINode::GetScopeChainParent() const { return nullptr; }

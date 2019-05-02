@@ -41,6 +41,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsNumberControlFrame.h"
 #include "nsFrameSelection.h"
 #include "mozilla/ErrorResult.h"
@@ -2431,7 +2432,7 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
     // We can't just early-return here if mValue->Equals(newValue), because
     // ValueWasChanged and OnValueChanged below still need to be called.
     if (!mValue->Equals(newValue) ||
-        !nsContentUtils::SkipCursorMoveForSameValueSet()) {
+        !StaticPrefs::dom_input_skip_cursor_move_for_same_value_set()) {
       if (!mValue->Assign(newValue, fallible)) {
         return false;
       }
@@ -2575,8 +2576,7 @@ void nsTextEditorState::UpdateOverlayTextVisibility(bool aNotify) {
   mPreviewVisibility = valueIsEmpty && !previewValue.IsEmpty();
   mPlaceholderVisibility = valueIsEmpty && previewValue.IsEmpty();
 
-  if (mPlaceholderVisibility &&
-      !nsContentUtils::ShowInputPlaceholderOnFocus()) {
+  if (mPlaceholderVisibility && !StaticPrefs::dom_placeholder_show_on_focus()) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
     mPlaceholderVisibility = !nsContentUtils::IsFocusedContent(content);
   }

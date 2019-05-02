@@ -2,6 +2,9 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
   const {layout, feeds, spocs} = state;
   let spocIndex = 0;
   let bufferRollCache = [];
+  // Records the chosen and unchosen spocs by the probability selection.
+  let chosenSpocs = new Set();
+  let unchosenSpocs = new Set();
 
   // rickRollCache stores random probability values for each spoc position. This cache is empty
   // on page refresh and gets filled with random values on first render inside maybeInjectSpocs.
@@ -13,6 +16,11 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
         spocs.data.spocs && spocs.data.spocs.length) {
       const recommendations = [...data.recommendations];
       for (let position of spocsConfig.positions) {
+        const spoc = spocs.data.spocs[spocIndex];
+        if (!spoc) {
+          break;
+        }
+
         // Cache random number for a position
         let rickRoll;
         if (isFirstRun) {
@@ -23,8 +31,12 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
           bufferRollCache.push(rickRoll);
         }
 
-        if (spocs.data.spocs[spocIndex] && rickRoll <= spocsConfig.probability) {
-          recommendations.splice(position.index, 0, spocs.data.spocs[spocIndex++]);
+        if (rickRoll <= spocsConfig.probability) {
+          spocIndex++;
+          recommendations.splice(position.index, 0, spoc);
+          chosenSpocs.add(spoc);
+        } else {
+          unchosenSpocs.add(spoc);
         }
       }
 
@@ -51,7 +63,7 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
     filterArray.push(...DS_COMPONENTS);
   }
 
-  return layout.map(row => ({
+  const layoutRender = layout.map(row => ({
     ...row,
 
     // Loops through desired components and adds a .data property
@@ -94,4 +106,28 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
       return {...component, data};
     }),
   })).filter(row => row.components.length);
+
+  // Generate the payload for the SPOCS Fill ping. Note that a SPOC could be rejected
+  // by the `probability_selection` first, then gets chosen for the next position. For
+  // all other SPOCS that never went through the probabilistic selection, its reason will
+  // be "out_of_position".
+  let spocsFill = [];
+  if (spocs.data && spocs.data.spocs) {
+    const chosenSpocsFill = [...chosenSpocs]
+      .map(spoc => ({id: spoc.id, reason: "n/a", displayed: 1, full_recalc: 0}));
+    const unchosenSpocsFill = [...unchosenSpocs]
+      .filter(spoc => !chosenSpocs.has(spoc))
+      .map(spoc => ({id: spoc.id, reason: "probability_selection", displayed: 0, full_recalc: 0}));
+    const outOfPositionSpocsFill = spocs.data.spocs.slice(spocIndex)
+      .filter(spoc => !unchosenSpocs.has(spoc))
+      .map(spoc => ({id: spoc.id, reason: "out_of_position", displayed: 0, full_recalc: 0}));
+
+    spocsFill = [
+      ...chosenSpocsFill,
+      ...unchosenSpocsFill,
+      ...outOfPositionSpocsFill,
+    ];
+  }
+
+  return {spocsFill, layoutRender};
 };

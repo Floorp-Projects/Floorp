@@ -15,6 +15,10 @@ $col4-header-font-size: 14;
     border-radius: 4px;
   }
 
+  .ds-card-link:focus {
+    @include ds-fade-in;
+  }
+
   &.ds-card-grid-border {
     .ds-card:not(.placeholder) {
       @include dark-theme-only {

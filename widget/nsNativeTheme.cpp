@@ -39,13 +39,6 @@ nsNativeTheme::nsNativeTheme() : mAnimatedContentTimeout(UINT32_MAX) {}
 
 NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
 
-nsIPresShell* nsNativeTheme::GetPresShell(nsIFrame* aFrame) {
-  if (!aFrame) return nullptr;
-
-  nsPresContext* context = aFrame->PresContext();
-  return context ? context->GetPresShell() : nullptr;
-}
-
 EventStates nsNativeTheme::GetContentState(nsIFrame* aFrame,
                                            StyleAppearance aAppearance) {
   if (!aFrame) return EventStates();
@@ -56,9 +49,6 @@ EventStates nsNativeTheme::GetContentState(nsIFrame* aFrame,
   if (isXULCheckboxRadio) aFrame = aFrame->GetParent();
 
   if (!aFrame->GetContent()) return EventStates();
-
-  nsIPresShell* shell = GetPresShell(aFrame);
-  if (!shell) return EventStates();
 
   nsIContent* frameContent = aFrame->GetContent();
   EventStates flags;
