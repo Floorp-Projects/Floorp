@@ -111,6 +111,24 @@
     is(JSON.stringify(contributingSources),
        JSON.stringify(remoteReceiver.getContributingSources()),
        "getContributingSources is cached");
+    // Check that sources are sorted in descending order by time stamp
+    const timestamp3 = SpWrap(test.pcLocal).mozGetNowInRtpSourceReferenceTime();
+    // Larger offsets are further back in time
+    const testOffsets = [3, 7, 5, 6, 1, 4];
+    for (const offset of testOffsets) {
+      SpWrap(test.pcLocal).mozInsertAudioLevelForContributingSource(
+          localReceiver,
+          offset, // Using offset for SSRC for convenience
+          timestamp3 - offset,
+          true,
+          offset);
+    }
+    const sources = localReceiver.getContributingSources();
+    const sourceOffsets = sources.map(s => s.source);
+    is(JSON.stringify(sourceOffsets),
+       JSON.stringify([...testOffsets].sort((a, b) => a - b)),
+          `Contributing sources are sorted in descending order by timestamp:`
+          + ` ${JSON.stringify(sources)}`);
   };
 
   var test;
