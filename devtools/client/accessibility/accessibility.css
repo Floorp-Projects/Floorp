@@ -89,8 +89,10 @@ body {
 .mainFrame .toggle-button.devtools-throbber::before {
   /* Default for .devtools-throbber is set to 1em which is too big for the
      devtools toolbar. */
-  height: 9px;
-  width: 9px;
+  height: 8px;
+  width: 8px;
+  margin-block-end: 1px;
+  margin-inline-end: 2px;
 }
 
 .split-box.horz {
