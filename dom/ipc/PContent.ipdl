@@ -775,7 +775,8 @@ child:
                                LoadInfoArgs? aLoadInfo,
                                uint64_t aChannelId,
                                nsIURI aOriginalURI,
-                               uint64_t aIdentifier);
+                               uint64_t aIdentifier,
+                               uint32_t aRedirectMode);
 
     // Begin subscribing to a new BrowsingContextGroup, sending down the current
     // value for every individual BrowsingContext.
