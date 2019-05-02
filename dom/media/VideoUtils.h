@@ -545,10 +545,6 @@ inline void AppendStringIfNotEmpty(nsACString& aDest, nsACString&& aSrc) {
   }
 }
 
-// Returns true if we're running on a cellular connection; 2G, 3G, etc.
-// Main thread only.
-bool OnCellularConnection();
-
 }  // end namespace mozilla
 
 #endif
