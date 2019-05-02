@@ -185,7 +185,8 @@ this.FxAccountsWebChannel.prototype = {
         log.debug("fxa_status received");
 
         const service = data && data.service;
-        this._helpers.getFxaStatus(service, sendingContext)
+        const isPairing = data && data.isPairing;
+        this._helpers.getFxaStatus(service, sendingContext, isPairing)
           .then(fxaStatus => {
             let response = {
               command,
@@ -381,9 +382,10 @@ this.FxAccountsWebChannelHelpers.prototype = {
   /**
    * Check whether sending fxa_status data should be allowed.
    */
-  shouldAllowFxaStatus(service, sendingContext) {
+  shouldAllowFxaStatus(service, sendingContext, isPairing) {
     // Return user data for any service in non-PB mode. In PB mode,
-    // only return user data if service==="sync".
+    // only return user data if service==="sync" or is in pairing mode
+    // (as service will be equal to the OAuth client ID and not "sync").
     //
     // This behaviour allows users to click the "Manage Account"
     // link from about:preferences#sync while in PB mode and things
@@ -398,7 +400,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
     // Sync is broken in PB mode, users will think Firefox is broken.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1323853
     log.debug("service", service);
-    return !this.isPrivateBrowsingMode(sendingContext) || service === "sync";
+    return !this.isPrivateBrowsingMode(sendingContext) || service === "sync" || isPairing;
   },
 
   /**
@@ -406,10 +408,10 @@ this.FxAccountsWebChannelHelpers.prototype = {
    * If returning status information is not allowed or no user is signed into
    * Sync, `user_data` will be null.
    */
-  async getFxaStatus(service, sendingContext) {
+  async getFxaStatus(service, sendingContext, isPairing) {
     let signedInUser = null;
 
-    if (this.shouldAllowFxaStatus(service, sendingContext)) {
+    if (this.shouldAllowFxaStatus(service, sendingContext, isPairing)) {
       const userData = await this._fxAccounts.getSignedInUser();
       if (userData) {
         signedInUser = {
