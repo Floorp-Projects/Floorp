@@ -178,6 +178,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                 }
         }
 
+        emitSessionChanges()
         sessionObserver = subscribeToSessions()
     }
 
