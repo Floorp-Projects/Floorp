@@ -467,9 +467,6 @@ public class GeckoPreferences
                     iterator.remove();
                 } else if (header.id == R.id.pref_header_notifications
                         && !haveNotificationsPreferences(this)) {
-                      iterator.remove();
-                } else if (header.id == R.id.pref_header_default_browser
-                        && PackageUtil.isDefaultBrowser(this)) {
                     iterator.remove();
                 }
             }
@@ -553,9 +550,6 @@ public class GeckoPreferences
         if (isMultiPane()) {
             SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
             prefs.registerOnSharedPreferenceChangeListener(this);
-            if (!PackageUtil.isDefaultBrowser(this)) {
-                invalidateHeaders();
-            }
         }
     }
 
