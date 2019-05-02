@@ -1,15 +1,10 @@
 use crate::cdsl::camel_case;
-use crate::cdsl::formats::{
-    FormatField, FormatRegistry, InstructionFormat, InstructionFormatIndex,
-};
+use crate::cdsl::formats::{FormatRegistry, InstructionFormat, InstructionFormatIndex};
 use crate::cdsl::operands::Operand;
 use crate::cdsl::type_inference::Constraint;
-use crate::cdsl::types::ValueType;
 use crate::cdsl::typevar::TypeVar;
 
 use std::fmt;
-use std::ops;
-use std::rc::Rc;
 use std::slice;
 
 /// Every instruction must belong to exactly one instruction group. A given
@@ -37,13 +32,6 @@ impl InstructionGroup {
     pub fn iter(&self) -> slice::Iter<Instruction> {
         self.instructions.iter()
     }
-
-    pub fn by_name(&self, name: &'static str) -> &Instruction {
-        self.instructions
-            .iter()
-            .find(|inst| inst.name == name)
-            .expect(&format!("unexisting instruction with name {}", name))
-    }
 }
 
 pub struct PolymorphicInfo {
@@ -52,7 +40,7 @@ pub struct PolymorphicInfo {
     pub other_typevars: Vec<TypeVar>,
 }
 
-pub struct InstructionContent {
+pub struct Instruction {
     /// Instruction mnemonic, also becomes opcode name.
     pub name: &'static str,
     pub camel_name: String,
@@ -65,7 +53,7 @@ pub struct InstructionContent {
     /// Output operands. The output operands must be SSA values or `variable_args`.
     pub operands_out: Vec<Operand>,
     /// Instruction-specific TypeConstraints.
-    pub constraints: Vec<Constraint>,
+    _constraints: Vec<Constraint>,
 
     /// Instruction format, automatically derived from the input operands.
     pub format: InstructionFormatIndex,
@@ -102,18 +90,6 @@ pub struct InstructionContent {
     pub writes_cpu_flags: bool,
 }
 
-#[derive(Clone)]
-pub struct Instruction {
-    content: Rc<InstructionContent>,
-}
-
-impl ops::Deref for Instruction {
-    type Target = InstructionContent;
-    fn deref(&self) -> &Self::Target {
-        &*self.content
-    }
-}
-
 impl Instruction {
     pub fn snake_name(&self) -> &'static str {
         if self.name == "return" {
@@ -131,17 +107,6 @@ impl Instruction {
             }
         }
         ""
-    }
-
-    pub fn all_typevars(&self) -> Vec<&TypeVar> {
-        match &self.polymorphic_info {
-            Some(poly) => {
-                let mut result = vec![&poly.ctrl_typevar];
-                result.extend(&poly.other_typevars);
-                result
-            }
-            None => Vec::new(),
-        }
     }
 }
 
@@ -307,38 +272,30 @@ impl InstructionBuilder {
         let writes_cpu_flags = operands_out.iter().any(|op| op.is_cpu_flags());
 
         Instruction {
-            content: Rc::new(InstructionContent {
-                name: self.name,
-                camel_name: camel_case(self.name),
-                doc: self.doc,
-                operands_in,
-                operands_out,
-                constraints: self.constraints.unwrap_or_else(Vec::new),
-                format: format_index,
-                polymorphic_info,
-                value_opnums,
-                value_results,
-                imm_opnums,
-                is_terminator: self.is_terminator,
-                is_branch: self.is_branch,
-                is_indirect_branch: self.is_indirect_branch,
-                is_call: self.is_call,
-                is_return: self.is_return,
-                is_ghost: self.is_ghost,
-                can_load: self.can_load,
-                can_store: self.can_store,
-                can_trap: self.can_trap,
-                other_side_effects: self.other_side_effects,
-                writes_cpu_flags,
-            }),
+            name: self.name,
+            camel_name: camel_case(self.name),
+            doc: self.doc,
+            operands_in,
+            operands_out,
+            _constraints: self.constraints.unwrap_or_else(Vec::new),
+            format: format_index,
+            polymorphic_info,
+            value_opnums,
+            value_results,
+            imm_opnums,
+            is_terminator: self.is_terminator,
+            is_branch: self.is_branch,
+            is_indirect_branch: self.is_indirect_branch,
+            is_call: self.is_call,
+            is_return: self.is_return,
+            is_ghost: self.is_ghost,
+            can_load: self.can_load,
+            can_store: self.can_store,
+            can_trap: self.can_trap,
+            other_side_effects: self.other_side_effects,
+            writes_cpu_flags,
         }
     }
-}
-
-#[derive(Clone)]
-pub struct BoundInstruction {
-    pub inst: Instruction,
-    pub value_types: Vec<ValueType>,
 }
 
 /// Check if this instruction is polymorphic, and verify its use of type variables.
@@ -498,103 +455,4 @@ fn verify_ctrl_typevar(
     }
 
     Ok(other_typevars)
-}
-
-/// A basic node in an instruction predicate: either an atom, or an AND of two conditions.
-pub enum InstructionPredicateNode {
-    /// Is the field member (first member) equal to the actual argument (which name is the second
-    /// field)?
-    IsFieldEqual(String, String),
-
-    /// Is the value argument (at the index designated by the first member) the same type as the
-    /// type name (second member)?
-    TypeVarCheck(usize, String),
-
-    /// Is the controlling type variable the same type as the one designated by the type name
-    /// (only member)?
-    CtrlTypeVarCheck(String),
-
-    /// A combination of two other predicates.
-    And(Vec<InstructionPredicateNode>),
-}
-
-impl InstructionPredicateNode {
-    fn rust_predicate(&self) -> String {
-        match self {
-            InstructionPredicateNode::IsFieldEqual(field_name, arg) => {
-                let new_args = vec![field_name.clone(), arg.clone()];
-                format!("crate::predicates::is_equal({})", new_args.join(", "))
-            }
-            InstructionPredicateNode::TypeVarCheck(index, value_type_name) => format!(
-                "func.dfg.value_type(args[{}]) == {}",
-                index, value_type_name
-            ),
-            InstructionPredicateNode::CtrlTypeVarCheck(value_type_name) => {
-                format!("func.dfg.ctrl_typevar(inst) == {}", value_type_name)
-            }
-            InstructionPredicateNode::And(nodes) => nodes
-                .iter()
-                .map(|x| x.rust_predicate())
-                .collect::<Vec<_>>()
-                .join(" &&\n"),
-        }
-    }
-}
-
-pub struct InstructionPredicate {
-    node: Option<InstructionPredicateNode>,
-}
-
-impl InstructionPredicate {
-    pub fn new() -> Self {
-        Self { node: None }
-    }
-
-    pub fn new_typevar_check(
-        inst: &Instruction,
-        type_var: &TypeVar,
-        value_type: &ValueType,
-    ) -> InstructionPredicateNode {
-        let index = inst
-            .value_opnums
-            .iter()
-            .enumerate()
-            .filter(|(_, &op_num)| inst.operands_in[op_num].type_var().unwrap() == type_var)
-            .next()
-            .unwrap()
-            .0;
-        InstructionPredicateNode::TypeVarCheck(index, value_type.rust_name())
-    }
-
-    pub fn new_is_field_equal(
-        format_field: &FormatField,
-        imm_value: String,
-    ) -> InstructionPredicateNode {
-        InstructionPredicateNode::IsFieldEqual(format_field.member.into(), imm_value)
-    }
-
-    pub fn new_ctrl_typevar_check(value_type: &ValueType) -> InstructionPredicateNode {
-        InstructionPredicateNode::CtrlTypeVarCheck(value_type.rust_name())
-    }
-
-    pub fn and(mut self, new_node: InstructionPredicateNode) -> Self {
-        let node = self.node;
-        let mut and_nodes = match node {
-            Some(node) => match node {
-                InstructionPredicateNode::And(nodes) => nodes,
-                _ => vec![node],
-            },
-            _ => Vec::new(),
-        };
-        and_nodes.push(new_node);
-        self.node = Some(InstructionPredicateNode::And(and_nodes));
-        self
-    }
-
-    pub fn rust_predicate(&self) -> String {
-        match &self.node {
-            Some(root) => root.rust_predicate(),
-            None => "true".into(),
-        }
-    }
 }
