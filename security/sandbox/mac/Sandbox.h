@@ -10,32 +10,12 @@
 
 enum MacSandboxType {
   MacSandboxType_Default = 0,
-  MacSandboxType_Plugin,
   MacSandboxType_Content,
+  MacSandboxType_Flash,
+  MacSandboxType_GMP,
   MacSandboxType_Utility,
   MacSandboxType_Invalid
 };
-
-enum MacSandboxPluginType {
-  MacSandboxPluginType_Default = 0,
-  MacSandboxPluginType_GMPlugin_Default,       // Any Gecko Media Plugin
-  MacSandboxPluginType_GMPlugin_OpenH264,      // Gecko Media Plugin, OpenH264
-  MacSandboxPluginType_GMPlugin_EME,           // Gecko Media Plugin, EME
-  MacSandboxPluginType_GMPlugin_EME_Widevine,  // Gecko Media Plugin, Widevine
-  MacSandboxPluginType_Flash,                  // Flash
-  MacSandboxPluginType_Invalid
-};
-
-typedef struct _MacSandboxPluginInfo {
-  _MacSandboxPluginInfo() : type(MacSandboxPluginType_Default) {}
-  _MacSandboxPluginInfo(const struct _MacSandboxPluginInfo& other)
-      : type(other.type),
-        pluginPath(other.pluginPath),
-        pluginBinaryPath(other.pluginBinaryPath) {}
-  MacSandboxPluginType type;
-  std::string pluginPath;
-  std::string pluginBinaryPath;
-} MacSandboxPluginInfo;
 
 typedef struct _MacSandboxInfo {
   _MacSandboxInfo()
@@ -71,12 +51,15 @@ typedef struct _MacSandboxInfo {
   bool hasSandboxedProfile;
   bool hasAudio;
   bool hasWindowServer;
-  MacSandboxPluginInfo pluginInfo;
+
   std::string appPath;
   std::string appBinaryPath;
   std::string appDir;
   std::string profileDir;
   std::string debugWriteDir;
+
+  std::string pluginPath;
+  std::string pluginBinaryPath;
 
   std::string testingReadPath1;
   std::string testingReadPath2;

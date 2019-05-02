@@ -192,7 +192,7 @@ static bool GetAppPaths(nsCString& aAppPath, nsCString& aAppBinaryPath) {
   return true;
 }
 
-bool GMPChild::SetMacSandboxInfo(MacSandboxPluginType aPluginType) {
+bool GMPChild::SetMacSandboxInfo(bool aAllowWindowServer) {
   if (!mGMPLoader) {
     return false;
   }
@@ -206,12 +206,12 @@ bool GMPChild::SetMacSandboxInfo(MacSandboxPluginType aPluginType) {
   }
 
   MacSandboxInfo info;
-  info.type = MacSandboxType_Plugin;
+  info.type = MacSandboxType_GMP;
   info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
                    PR_GetEnv("MOZ_SANDBOX_LOGGING");
-  info.pluginInfo.type = aPluginType;
-  info.pluginInfo.pluginPath.assign(pluginDirectoryPath.get());
-  info.pluginInfo.pluginBinaryPath.assign(pluginFilePath.get());
+  info.hasWindowServer = aAllowWindowServer;
+  info.pluginPath.assign(pluginDirectoryPath.get());
+  info.pluginBinaryPath.assign(pluginFilePath.get());
   info.appPath.assign(appPath.get());
   info.appBinaryPath.assign(appBinaryPath.get());
 
@@ -562,18 +562,14 @@ mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
 #endif
   bool isChromium = aAdapter.EqualsLiteral("chromium");
 #if defined(MOZ_SANDBOX) && defined(XP_MACOSX)
-  MacSandboxPluginType pluginType = MacSandboxPluginType_GMPlugin_Default;
-  if (isChromium) {
-    pluginType = MacSandboxPluginType_GMPlugin_EME_Widevine;
-  }
-  if (!SetMacSandboxInfo(pluginType)) {
+  // Use of the chromium adapter indicates we are going to be
+  // running the Widevine plugin which requires access to the
+  // WindowServer in the Mac GMP sandbox policy.
+  if (!SetMacSandboxInfo(isChromium /* allow-window-server */)) {
     NS_WARNING("Failed to set Mac GMP sandbox info");
     delete platformAPI;
     return IPC_FAIL(
-        this, nsPrintfCString(
-                  "Failed to set Mac GMP sandbox info with plugin type %d.",
-                  pluginType)
-                  .get());
+        this, nsPrintfCString("Failed to set Mac GMP sandbox info.").get());
   }
 #endif
 
