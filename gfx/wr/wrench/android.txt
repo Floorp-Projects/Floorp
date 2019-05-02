@@ -5,13 +5,14 @@ Setting up the environment:
 ---------------------------
 
 Follow the steps at https://github.com/tomaka/android-rs-glue#setting-up-your-environment, with exceptions:
-    - Instead of downloading the NDK and SDK, reference the ones downloaded by Gecko in ~/.mozbuild/
+    - No need to download the Android NDK and SDK, we will use the ones downloaded by Gecko in ~/.mozbuild/
 
-    - Don't install cargo-apk (currently published version has a bug related to SDK versions, hopefully 0.4.2+ will be published soon).
-      Instead, build it from source:
-        git clone https://github.com/tomaka/android-rs-glue
-        cd android-rs-glue/cargo-apk
-        cargo build
+    - Install both the i686-linux-android and armv7-linux-androideabi rust
+      targets, as the APK will include native libraries with both architectures.
+
+    - Don't install currently published version of cargo-apk (it has a bug related to SDK versions).
+      Instead, install the patched version like so:
+        cargo install --git https://github.com/staktrace/android-rs-glue --branch mozilla_master cargo-apk
 
     - Consider adding ~/.mozbuild/android-sdk-linux/platform-tools to your path, for the adb commands below.
 
@@ -20,15 +21,22 @@ Compiling and running:
 
     Compile wrench:
         cd wrench
-        <cargo-apk dir>/target/cargo-apk build
+        export ANDROID_HOME=$HOME/.mozbuild/android-sdk-linux # exact path may vary
+        export NDK_HOME=$HOME/.mozbuild/android-ndk-r17b      # exact path may vary
+        export CARGO_APK_GRADLE_COMMAND=$PWD/../../../gradlew
+        cargo-apk build
 
     Install the APK:
         adb install -r ../target/android-artifacts/app/build/outputs/apk/app-debug.apk
 
     Set command line arguments:
         adb shell
-        echo "load reftests/aa/rounded-rects.yaml" >/sdcard/wrench_args
+        mkdir /sdcard/wrench
+        echo "load reftests/aa/rounded-rects.yaml" >/sdcard/wrench/args
         exit
+
+    Push reftests (if you need these files for what you're doing):
+        adb push reftests /sdcard/wrench/
 
     Run the application:
         adb shell am start -n org.mozilla.wrench/rust.wrench.MainActivity
@@ -37,15 +45,14 @@ Compiling and running:
 Release mode:
 -------------
 
-    Building in release does work, but you need to sign and align the APK manually. We will automate this in future. For now,
+    Building in release does work as well. Use the following steps to compile wrench:
+        cd wrench
+        export ANDROID_HOME=$HOME/.mozbuild/android-sdk-linux # exact path may vary
+        export NDK_HOME=$HOME/.mozbuild/android-ndk           # exact path may vary
+        export CARGO_APK_GRADLE_COMMAND=$PWD/../../../gradlew
+        cargo-apk build --release
+        ../../../mobile/android/debug_sign_tool.py ../target/android-artifacts/app/build/outputs/apk/app-release-unsigned.apk
 
-    Generate a signing key (once):
-        keytool -genkey -v -keystore wrench-release-key.keystore -alias wrench_key -keyalg RSA -keysize 2048 -validity 10000
-
-    Sign the APK:
-        jarsigner -verbose -keystore wrench-release-key.keystore <apk path>/app-release-unsigned.apk wrench_key
-
-    Align the APK:
-        zipalign -f -v 4 <apk path>/app-release-unsigned.apk <apk path>/app-release.apk
-
-    Now the signed APK can be installed - you will probably need to uninstall the debug APK if you have that installed first.
+    Now the APK at ../target/android-artifacts/app/build/outputs/apk/app-release-unsigned.apk
+    should be signed and installable (you may need to uninstall the debug APK first if you
+    have that installed).
