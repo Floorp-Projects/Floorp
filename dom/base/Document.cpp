@@ -6750,7 +6750,6 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
       // false, and documents should always insist on being wrapped in an
       // canonical scope. But we try to pass something sane anyway.
       JSObject* globalObject = GetScopeObject()->GetGlobalJSObject();
-      JS::ExposeObjectToActiveJS(globalObject);
       JSAutoRealm ar(cx, globalObject);
       JS::Rooted<JS::Value> v(cx);
       rv = nsContentUtils::WrapNative(cx, ToSupports(this), this, &v,
