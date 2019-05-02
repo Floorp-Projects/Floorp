@@ -969,9 +969,6 @@ Protocol* LoneManagedOrNullAsserts(
   return aManagees.ConstIter().Get()->GetKey();
 }
 
-// appId's are for B2G only currently, where managees.Count() == 1. This is
-// not guaranteed currently in Desktop, so for paths used for desktop,
-// don't assert there's one managee.
 template <typename Protocol>
 Protocol* SingleManagedOrNull(const ManagedContainer<Protocol>& aManagees) {
   if (aManagees.Count() != 1) {

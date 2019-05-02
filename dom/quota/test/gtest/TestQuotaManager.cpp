@@ -49,13 +49,6 @@ TEST(QuotaManager, OriginScope)
   }
 
   {
-    NS_NAMED_LITERAL_STRING(pattern, "{\"appId\":1007}");
-    originScope.SetFromJSONPattern(pattern);
-    EXPECT_TRUE(originScope.IsPattern());
-    EXPECT_TRUE(originScope.GetJSONPattern().Equals(pattern));
-  }
-
-  {
     originScope.SetFromNull();
     EXPECT_TRUE(originScope.IsNull());
   }
@@ -90,29 +83,12 @@ TEST(QuotaManager, OriginScope)
   }
 
   {
-    originScope.SetFromJSONPattern(NS_LITERAL_STRING("{\"appId\":1007}"));
-
-    static const OriginTest tests[] = {
-        {"http+++www.mozilla.org^appId=1007", true},
-        {"http+++www.example.org^appId=1007", true},
-        {"http+++www.example.org^appId=1008", false},
-    };
-
-    for (const auto& test : tests) {
-      CheckOriginScopeMatchesOrigin(originScope, test.mOrigin, test.mMatch);
-    }
-  }
-
-  {
     originScope.SetFromNull();
 
     static const OriginTest tests[] = {
         {"http://www.mozilla.org", true},
         {"http://www.mozilla.org^userContextId=1", true},
         {"http://www.example.org^userContextId=1", true},
-        {"http+++www.mozilla.org^appId=1007", true},
-        {"http+++www.example.org^appId=1007", true},
-        {"http+++www.example.org^appId=1008", true},
     };
 
     for (const auto& test : tests) {

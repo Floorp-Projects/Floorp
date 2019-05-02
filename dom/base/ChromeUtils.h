@@ -100,8 +100,7 @@ class ChromeUtils {
   static bool IsOriginAttributesEqualIgnoringFPD(
       const dom::OriginAttributesDictionary& aA,
       const dom::OriginAttributesDictionary& aB) {
-    return aA.mAppId == aB.mAppId &&
-           aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
+    return aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
            aA.mUserContextId == aB.mUserContextId &&
            aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
   }

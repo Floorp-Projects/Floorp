@@ -57,7 +57,7 @@ add_task(async function test_reconnect_retry() {
   let registration = await PushService.register({
     scope: "https://example.com/page/1",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
   });
   let retryEndpoint = "https://example.org/push/" + channelID;
   equal(registration.endpoint, retryEndpoint, "Wrong endpoint for retried request");
@@ -65,7 +65,7 @@ add_task(async function test_reconnect_retry() {
   registration = await PushService.register({
     scope: "https://example.com/page/2",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
   });
   notEqual(registration.endpoint, retryEndpoint, "Wrong endpoint for new request");
 
