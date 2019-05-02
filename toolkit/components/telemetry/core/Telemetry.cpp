@@ -745,7 +745,7 @@ class GetLoadedModulesResultRunnable final : public Runnable {
     mWorkerThread->Shutdown();
 
     AutoJSAPI jsapi;
-    if (NS_WARN_IF(!jsapi.Init(mPromise->GlobalJSObject()))) {
+    if (NS_WARN_IF(!jsapi.Init(mPromise->GetGlobalObject()))) {
       mPromise->MaybeReject(NS_ERROR_FAILURE);
       return NS_OK;
     }
