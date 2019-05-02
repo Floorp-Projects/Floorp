@@ -10,11 +10,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProviders
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
@@ -40,11 +42,16 @@ class CreateCollectionFragment : DialogFragment() {
         }
         val tabs = viewModel!!.tabs
         val selectedTabs = viewModel.selectedTabs
+        val step = viewModel.saveCollectionStep
 
         collectionCreationComponent = CollectionCreationComponent(
             view.create_collection_wrapper,
             ActionBusFactory.get(this),
-            CollectionCreationState(tabs = tabs, selectedTabs = selectedTabs)
+            CollectionCreationState(
+                tabs = tabs,
+                selectedTabs = selectedTabs,
+                saveCollectionStep = step
+            )
         )
         return view
     }
@@ -59,6 +66,7 @@ class CreateCollectionFragment : DialogFragment() {
 
     override fun onResume() {
         super.onResume()
+        (collectionCreationComponent.uiView as CollectionCreationUIView).onResumed()
         subscribeToActions()
     }
 
@@ -80,6 +88,21 @@ class CreateCollectionFragment : DialogFragment() {
                     CollectionCreationChange.StepChanged(SaveCollectionStep.NameCollection)
                 )
                 is CollectionCreationAction.BackPressed -> handleBackPress(backPressFrom = it.backPressFrom)
+                is CollectionCreationAction.SaveCollectionName -> {
+                    showSavedSnackbar(it.tabs.size)
+                    dismiss()
+                }
+            }
+        }
+    }
+
+    private fun showSavedSnackbar(tabSize: Int) {
+        context?.let { context: Context ->
+            val rootView = context.getRootView()
+            rootView?.let { view: View ->
+                val string = context.resources.getQuantityString(R.plurals.create_collection_tabs_saved, tabSize)
+                FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
+                    .show()
             }
         }
     }
@@ -91,9 +114,6 @@ class CreateCollectionFragment : DialogFragment() {
                 CollectionCreationChange.StepChanged(SaveCollectionStep.SelectTabs)
             )
             SaveCollectionStep.NameCollection -> {
-                val imm =
-                    view?.context?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-                imm?.hideSoftInputFromWindow(view?.windowToken, 0)
                 getManagedEmitter<CollectionCreationChange>().onNext(
                     CollectionCreationChange.StepChanged(SaveCollectionStep.SelectCollection)
                 )

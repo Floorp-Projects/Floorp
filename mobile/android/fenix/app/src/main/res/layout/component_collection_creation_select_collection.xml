@@ -19,7 +19,7 @@
         android:drawableStart="@drawable/mozac_ic_back"
         android:drawablePadding="8dp"
         android:drawableTint="@color/neutral_text"
-        android:text="@string/create_collection_select_tabs"
+        android:text="@string/create_collection_select_collection"
         android:textAppearance="@style/HeaderTextStyle"
         android:textColor="@color/neutral_text"
         android:textSize="20sp"
@@ -31,11 +31,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:alpha="0"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:text="@string/create_collection_select_all"
         android:textAllCaps="false"
         android:textColor="@color/neutral_text"
         android:textSize="16sp"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -43,13 +45,15 @@
         android:id="@+id/collections_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
+        android:alpha="1"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/add_collection_button" />
 
     <TextView
         android:id="@+id/add_collection_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:alpha="1"
         android:background="?foundation"
         android:drawableStart="@drawable/ic_new"
         android:drawablePadding="14dp"
@@ -60,7 +64,7 @@
         android:text="@string/create_collection_add_new_collection"
         android:textColor="?primaryText"
         android:textSize="16sp"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/divider"
         tools:targetApi="m" />
 
@@ -68,8 +72,9 @@
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:alpha="1"
         android:background="?neutralFaded"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent" />
 
     <EditText
@@ -77,6 +82,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
+        android:alpha="0"
         android:autofillHints="false"
         android:background="?foundation"
         android:focusedByDefault="true"
@@ -103,7 +109,7 @@
         android:layout_marginEnd="16dp"
         android:fadingEdgeLength="30dp"
         android:requiresFadingEdge="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/add_tabs_layout"
+        app:layout_constraintBottom_toTopOf="@+id/collections_list"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/back_button" />
@@ -112,9 +118,9 @@
         android:id="@+id/tab_list_dim"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:alpha="0"
+        android:alpha="0.5"
         android:background="@drawable/scrim_background"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/tab_list"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -125,8 +131,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:alpha="0"
         android:background="@drawable/add_tabs_to_collection_background"
         android:clipToPadding="false"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">

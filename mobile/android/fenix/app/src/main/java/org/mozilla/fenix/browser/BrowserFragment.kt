@@ -18,6 +18,7 @@ import android.view.accessibility.AccessibilityManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
@@ -54,6 +55,10 @@ import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.collections.CreateCollectionFragment
+import org.mozilla.fenix.collections.CreateCollectionViewModel
+import org.mozilla.fenix.collections.SaveCollectionStep
+import org.mozilla.fenix.collections.Tab
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.metrics.Event
@@ -68,6 +73,7 @@ import org.mozilla.fenix.customtabs.CustomTabsIntegration
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
+import org.mozilla.fenix.ext.urlToHost
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -547,18 +553,34 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 val directions = BrowserFragmentDirections
                     .actionBrowserFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
-                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
+                (activity as HomeActivity).browsingModeManager.mode =
+                    BrowsingModeManager.Mode.Normal
             }
-            ToolbarMenu.Item.SaveToCollection -> {
-                ItsNotBrokenSnack(requireContext())
-                    .showSnackbar("1843")
-            }
+            ToolbarMenu.Item.SaveToCollection -> showSaveToCollection()
             ToolbarMenu.Item.OpenInFenix -> {
                 val intent = Intent(context, IntentReceiverActivity::class.java)
                 intent.action = Intent.ACTION_VIEW
                 intent.data = Uri.parse(getSessionById()?.url)
                 startActivity(intent)
             }
+        }
+    }
+
+    private fun showSaveToCollection() {
+        getSessionById()?.let {
+            val tabs = Tab(it.id, it.url, it.url.urlToHost(), it.title)
+            val viewModel = activity?.run {
+                ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
+            }
+            viewModel?.tabs = listOf(tabs)
+            val selectedSet = setOf(tabs)
+            viewModel?.selectedTabs = selectedSet
+            viewModel?.saveCollectionStep = SaveCollectionStep.SelectCollection
+            CreateCollectionFragment()
+                .show(
+                    requireActivity().supportFragmentManager,
+                    CreateCollectionFragment.createCollectionTag
+                )
         }
     }
 

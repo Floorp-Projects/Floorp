@@ -9,4 +9,5 @@ import androidx.lifecycle.ViewModel
 class CreateCollectionViewModel : ViewModel() {
     var selectedTabs = setOf<Tab>()
     var tabs = listOf<Tab>()
+    var saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs
 }

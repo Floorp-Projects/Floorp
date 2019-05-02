@@ -5,24 +5,24 @@
 package org.mozilla.fenix.utils
 
 import android.content.Context
-import android.view.View
-import android.view.ViewGroup
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getRootView
 
 class ItsNotBrokenSnack(val context: Context) {
     fun showSnackbar(issueNumber: String) {
         val rootView =
-            context.asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content) as ViewGroup
+            context.getRootView()
 
-        FenixSnackbar.make(rootView, FenixSnackbar.LENGTH_SHORT)
-            .setText(message.replace("%", issueNumber))
-            .setAction("Add Tab to Issue") {
-                context.components.useCases.tabsUseCases.addTab
-                    .invoke(issues + issueNumber)
-            }
-            .show()
+        rootView?.let {
+            FenixSnackbar.make(it, FenixSnackbar.LENGTH_SHORT)
+                .setText(message.replace("%", issueNumber))
+                .setAction("Add Tab to Issue") {
+                    context.components.useCases.tabsUseCases.addTab
+                        .invoke(issues + issueNumber)
+                }
+                .show()
+        }
     }
 
     companion object {

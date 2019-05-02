@@ -47,6 +47,7 @@ sealed class CollectionCreationChange : Change {
 sealed class CollectionCreationAction : Action {
     object Close : CollectionCreationAction()
     object SelectAllTapped : CollectionCreationAction()
+    object AddNewCollection : CollectionCreationAction()
     data class AddTabToSelection(val tab: Tab) : CollectionCreationAction()
     data class RemoveTabFromSelection(val tab: Tab) : CollectionCreationAction()
     data class SaveTabsToCollection(val tabs: List<Tab>) : CollectionCreationAction()
@@ -56,8 +57,6 @@ sealed class CollectionCreationAction : Action {
 
     data class SelectCollection(val collection: Collection) :
         CollectionCreationAction()
-
-    data class AddNewCollection(val tabs: List<Tab>) : CollectionCreationAction()
 }
 
 class CollectionCreationComponent(

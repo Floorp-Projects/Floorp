@@ -37,6 +37,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.collections.CreateCollectionFragment
 import org.mozilla.fenix.collections.CreateCollectionViewModel
+import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.collections.Tab
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
@@ -75,7 +76,8 @@ class HomeFragment : Fragment(), CoroutineScope {
     ): View? {
         job = Job()
         val view = inflater.inflate(R.layout.fragment_home, container, false)
-        val mode = if ((activity as HomeActivity).browsingModeManager.isPrivate) Mode.Private else Mode.Normal
+        val mode =
+            if ((activity as HomeActivity).browsingModeManager.isPrivate) Mode.Private else Mode.Normal
         sessionControlComponent = SessionControlComponent(
             view.homeLayout,
             bus,
@@ -126,7 +128,8 @@ class HomeFragment : Fragment(), CoroutineScope {
                 orientation = BrowserMenu.Orientation.DOWN
             )
         }
-        val roundToInt = (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
+        val roundToInt =
+            (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
         view.toolbar.compoundDrawablePadding = roundToInt
         view.toolbar.setOnClickListener {
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
@@ -137,7 +140,8 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
 
-        privateBrowsingButton.contentDescription = contentDescriptionForPrivateBrowsingButton(isPrivate)
+        privateBrowsingButton.contentDescription =
+            contentDescriptionForPrivateBrowsingButton(isPrivate)
 
         privateBrowsingButton.setOnClickListener {
             val browsingModeManager = (activity as HomeActivity).browsingModeManager
@@ -189,39 +193,25 @@ class HomeFragment : Fragment(), CoroutineScope {
     private fun handleTabAction(action: TabAction) {
         Do exhaustive when (action) {
             is TabAction.SaveTabGroup -> {
-                val tabs = requireComponents.core.sessionManager.sessions
-                    .map { Tab(it.id, it.url, it.url.urlToHost(), it.title) }
-
-                activity?.run {
-                    ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
-                }!!.tabs = tabs
-
-                val selectedTabs = tabs.find { tab -> tab.sessionId == action.selectedTabSessionId }
-                val selectedSet = if (selectedTabs == null) setOf() else setOf(selectedTabs)
-                activity?.run {
-                    ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
-                }!!.selectedTabs = selectedSet
-
-                CreateCollectionFragment()
-                    .show(
-                        requireActivity().supportFragmentManager,
-                        CreateCollectionFragment.createCollectionTag
-                    )
+                showCollectionCreationFragment(action.selectedTabSessionId)
             }
             is TabAction.Select -> {
-                val session = requireComponents.core.sessionManager.findSessionById(action.sessionId)
+                val session =
+                    requireComponents.core.sessionManager.findSessionById(action.sessionId)
                 requireComponents.core.sessionManager.select(session!!)
                 (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
             }
             is TabAction.Close -> {
-                requireComponents.core.sessionManager.findSessionById(action.sessionId)?.let { session ->
-                    requireComponents.core.sessionManager.remove(session)
-                }
+                requireComponents.core.sessionManager.findSessionById(action.sessionId)
+                    ?.let { session ->
+                        requireComponents.core.sessionManager.remove(session)
+                    }
             }
             is TabAction.Share -> {
-                requireComponents.core.sessionManager.findSessionById(action.sessionId)?.let { session ->
-                    requireContext().share(session.url)
-                }
+                requireComponents.core.sessionManager.findSessionById(action.sessionId)
+                    ?.let { session ->
+                        requireContext().share(session.url)
+                    }
             }
             is TabAction.CloseAll -> {
                 requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(action.private)
@@ -231,7 +221,8 @@ class HomeFragment : Fragment(), CoroutineScope {
                     searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
                         (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS),
                     newTab = true,
-                    from = BrowserDirection.FromHome)
+                    from = BrowserDirection.FromHome
+                )
             }
             is TabAction.Add -> {
                 val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
@@ -333,16 +324,24 @@ class HomeFragment : Fragment(), CoroutineScope {
         )
     }
 
-    private fun openSessionMenu(sessionType: SessionBottomSheetFragment.SessionType) {
-        SessionBottomSheetFragment
-            .create(sessionType)
-            .apply {
-                onDelete = {
-                    val isPrivate = sessionType is SessionBottomSheetFragment.SessionType.Private
-                    requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(isPrivate)
-                }
-            }
-            .show(requireActivity().supportFragmentManager, SessionBottomSheetFragment.overflowFragmentTag)
+    private fun showCollectionCreationFragment(selectedTabId: String?) {
+        val tabs = requireComponents.core.sessionManager.sessions
+            .map { Tab(it.id, it.url, it.url.urlToHost(), it.title) }
+
+        val viewModel = activity?.run {
+            ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
+        }
+        viewModel?.tabs = tabs
+        val selectedTabs = tabs.find { tab -> tab.sessionId == selectedTabId }
+        val selectedSet = if (selectedTabs == null) setOf() else setOf(selectedTabs)
+        viewModel?.selectedTabs = selectedSet
+        viewModel?.saveCollectionStep = SaveCollectionStep.SelectTabs
+
+        CreateCollectionFragment()
+            .show(
+                requireActivity().supportFragmentManager,
+                CreateCollectionFragment.createCollectionTag
+            )
     }
 
     companion object {
