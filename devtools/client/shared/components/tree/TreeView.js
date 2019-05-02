@@ -22,6 +22,8 @@ define(function(require, exports, module) {
   const TreeRow = createFactory(require("./TreeRow"));
   const TreeHeader = createFactory(require("./TreeHeader"));
 
+  const { scrollIntoView } = require("devtools/client/shared/scroll");
+
   const SUPPORTED_KEYS = [
     "ArrowUp",
     "ArrowDown",
@@ -240,7 +242,10 @@ define(function(require, exports, module) {
       const selected = this.getSelectedRow();
       if (!selected && this.rows.length > 0) {
         this.selectRow(this.rows[
-          Math.min(this.state.lastSelectedIndex, this.rows.length - 1)]);
+          Math.min(this.state.lastSelectedIndex, this.rows.length - 1)
+        ], { alignTo: "top" });
+      } else {
+        this._scrollIntoView(this.getSelectedRow());
       }
     }
 
@@ -291,39 +296,34 @@ define(function(require, exports, module) {
             const parentRow = this.rows.slice(0, index).reverse().find(
               r => r.props.member.level < row.props.member.level);
             if (parentRow) {
-              this.selectRow(parentRow);
+              this.selectRow(parentRow, { alignTo: "top" });
             }
           }
           break;
         case "ArrowDown":
           const nextRow = this.rows[index + 1];
           if (nextRow) {
-            this.selectRow(nextRow);
+            this.selectRow(nextRow, { alignTo: "bottom" });
           }
           break;
         case "ArrowUp":
           const previousRow = this.rows[index - 1];
           if (previousRow) {
-            this.selectRow(previousRow);
+            this.selectRow(previousRow, { alignTo: "top" });
           }
           break;
         case "Home":
           const firstRow = this.rows[0];
 
           if (firstRow) {
-            // Due to the styling, the first row is sometimes overlapped by
-            // the table head. So we want to force the tree to scroll to the very top.
-            this.selectRow(firstRow, {
-              block: "end",
-              inline: "nearest",
-            });
+            this.selectRow(firstRow, { alignTo: "top" });
           }
           break;
 
         case "End":
           const lastRow = this.rows[this.rows.length - 1];
           if (lastRow) {
-            this.selectRow(lastRow);
+            this.selectRow(lastRow, { alignTo: "bottom" });
           }
           break;
 
@@ -367,7 +367,10 @@ define(function(require, exports, module) {
       if (cell && cell.classList.contains("treeLabelCell")) {
         this.toggle(nodePath);
       }
-      this.selectRow(event.currentTarget);
+
+      this.selectRow(
+        this.rows.find(row => row.props.member.path === nodePath),
+        { preventAutoScroll: true });
     }
 
     onContextMenu(member, event) {
@@ -394,11 +397,30 @@ define(function(require, exports, module) {
       return this.rows.indexOf(row);
     }
 
-    selectRow(row, scrollOptions = {block: "nearest"}) {
-      row = findDOMNode(row);
+    _scrollIntoView(row, options = {}) {
+      if (!this.treeRef.current || !row) {
+        return;
+      }
 
-      if (this.state.selected === row.id) {
-        row.scrollIntoView(scrollOptions);
+      const { props: { member: { path } = {} } = {} } = row;
+      if (!path) {
+        return;
+      }
+
+      const element = document.getElementById(path);
+      if (!element) {
+        return;
+      }
+
+      // For usability/accessibility purposes we do not want to scroll the
+      // thead. TreeView will scroll relative to the tbody.
+      const container = this.treeRef.current.tBodies[0];
+      scrollIntoView(element, { ...options, container });
+    }
+
+    selectRow(row, options) {
+      const { props: { member: { path } = {} } = {} } = row;
+      if (this.isSelected(path)) {
         return;
       }
 
@@ -408,13 +430,15 @@ define(function(require, exports, module) {
         }
       }
 
+      if (!options.preventAutoScroll) {
+        this._scrollIntoView(row, options);
+      }
+
       this.setState({
         ...this.state,
-        selected: row.id,
+        selected: path,
         active: null,
       });
-
-      row.scrollIntoView(scrollOptions);
     }
 
     activateRow(active) {
