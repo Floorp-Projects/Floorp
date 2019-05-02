@@ -304,6 +304,8 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
     params.push_back(aInfo.appPath.c_str());
     params.push_back("APP_BINARY_PATH");
     params.push_back(aInfo.appBinaryPath.c_str());
+    params.push_back("HAS_WINDOW_SERVER");
+    params.push_back(aInfo.hasWindowServer ? "TRUE" : "FALSE");
   } else if (aInfo.type == MacSandboxType_Content) {
     MOZ_ASSERT(aInfo.level >= 1);
     if (aInfo.level >= 1) {
