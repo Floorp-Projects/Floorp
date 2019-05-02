@@ -3187,11 +3187,10 @@ AbortReasonOr<Ok> IonBuilder::visitTry(CFGTry* try_) {
   // Try-catch within inline frames is not yet supported.
   MOZ_ASSERT(!isInlineBuilder());
 
-  // Try-catch during the arguments usage analysis is not yet supported. Code
-  // accessing the arguments within the 'catch' block is not accounted for.
-  if (info().analysisMode() == Analysis_ArgumentsUsage) {
-    return abort(AbortReason::Disable,
-                 "Try-catch during arguments usage analysis");
+  // Try-catch during analyses is not yet supported. Code within the 'catch'
+  // block is not accounted for.
+  if (info().isAnalysis()) {
+    return abort(AbortReason::Disable, "Try-catch during analysis");
   }
 
   graph().setHasTryBlock();
