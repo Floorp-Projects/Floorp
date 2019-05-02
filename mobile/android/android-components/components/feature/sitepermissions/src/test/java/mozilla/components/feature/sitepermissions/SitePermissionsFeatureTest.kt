@@ -5,9 +5,11 @@
 package mozilla.components.feature.sitepermissions
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.view.View
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
@@ -43,29 +45,32 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.times
 import org.robolectric.RobolectricTestRunner
 import java.security.InvalidParameterException
+import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
 class SitePermissionsFeatureTest {
 
-    private lateinit var anchorView: View
     private lateinit var mockSessionManager: SessionManager
     private lateinit var sitePermissionFeature: SitePermissionsFeature
     private lateinit var mockOnNeedToRequestPermissions: OnNeedToRequestPermissions
     private lateinit var mockStorage: SitePermissionsStorage
+    private lateinit var mockFragmentManager: FragmentManager
+    private val context = ApplicationProvider.getApplicationContext<Context>()
 
     @Before
     fun setup() {
         val engine = Mockito.mock(Engine::class.java)
-        anchorView = View(ApplicationProvider.getApplicationContext())
         mockSessionManager = Mockito.spy(SessionManager(engine))
         mockOnNeedToRequestPermissions = mock()
         mockStorage = mock()
+        mockFragmentManager = mockFragmentManager()
 
         sitePermissionFeature = SitePermissionsFeature(
-            anchorView = anchorView,
+            context = context,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
-            storage = mockStorage
+            storage = mockStorage,
+            fragmentManager = mockFragmentManager
         )
     }
 
@@ -77,11 +82,13 @@ class SitePermissionsFeatureTest {
         var wasCalled = false
 
         sitePermissionFeature = SitePermissionsFeature(
-            anchorView = anchorView,
+            context = context,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = {
                 wasCalled = true
-            })
+            },
+            fragmentManager = mockFragmentManager
+        )
 
         sitePermissionFeature.start()
 
@@ -96,10 +103,12 @@ class SitePermissionsFeatureTest {
         val session = getSelectedSession()
 
         sitePermissionFeature = SitePermissionsFeature(
-            anchorView = anchorView,
+            context = context,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = {
-            })
+            },
+            fragmentManager = mockFragmentManager
+        )
 
         sitePermissionFeature.start()
 
@@ -118,11 +127,13 @@ class SitePermissionsFeatureTest {
         var wasCalled = false
 
         sitePermissionFeature = SitePermissionsFeature(
-            anchorView = anchorView,
+            context = context,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = {
                 wasCalled = true
-            })
+            },
+            fragmentManager = mockFragmentManager
+        )
 
         sitePermissionFeature.start()
 
@@ -173,18 +184,10 @@ class SitePermissionsFeatureTest {
             grantPermission(Manifest.permission.RECORD_AUDIO)
             runBlocking {
                 val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-                val positiveButton = prompt!!.buttons.find { it.positive }
-                positiveButton!!.onClick.invoke()
+                assertNotNull(prompt)
+                sitePermissionFeature.onPositiveButtonPress(session.id, false)
                 assertTrue(grantWasCalled)
                 assertTrue(session.contentPermissionRequest.isConsumed())
-
-                if (permissionRequest.shouldIncludeDoNotAskAgainCheckBox()) {
-                    val checkBox = sitePermissionFeature.findDoNotAskAgainCheckBox(
-                        prompt.controlGroups.first().controls
-                    )
-
-                    assertNotNull(checkBox)
-                }
             }
         }
     }
@@ -305,8 +308,9 @@ class SitePermissionsFeatureTest {
             doReturn(permissions).`when`(mockRequest).permissions
 
             val feature = SitePermissionsFeature(
-                anchorView = anchorView,
+                context = context,
                 sessionManager = mockSessionManager,
+                fragmentManager = mockFragmentManager,
                 onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
                 storage = mockStorage
             )
@@ -380,7 +384,7 @@ class SitePermissionsFeatureTest {
         doReturn(NO_DECISION).`when`(sitePermissionFromStorage).location
 
         runBlocking {
-            val prompt = sitePermissionFeature.onContentPermissionRequested(mock(), request)
+            val prompt = sitePermissionFeature.onContentPermissionRequested(getSelectedSession(), request)
             verify(mockStorage).findSitePermissionsBy(anyString())
             verify(request, times(0)).grant(permissionList)
             assertNotNull(prompt)
@@ -479,9 +483,10 @@ class SitePermissionsFeatureTest {
 
             runBlocking {
                 val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-                val negativeButton = prompt!!.buttons.find { !it.positive }
-                negativeButton!!.onClick.invoke()
 
+                sitePermissionFeature.onNegativeButtonPress(session.id, false)
+
+                assertNotNull(prompt)
                 assertTrue(rejectWasCalled)
                 assertTrue(session.contentPermissionRequest.isConsumed())
             }
@@ -519,9 +524,10 @@ class SitePermissionsFeatureTest {
 
             runBlocking {
                 val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-                val negativeButton = prompt!!.buttons.find { !it.positive }
-                negativeButton!!.onClick.invoke()
 
+                sitePermissionFeature.onNegativeButtonPress(session.id, false)
+
+                assertNotNull(prompt)
                 assertTrue(rejectWasCalled)
                 assertTrue(session.contentPermissionRequest.isConsumed())
             }
@@ -557,9 +563,9 @@ class SitePermissionsFeatureTest {
         runBlocking {
             val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
 
-            val positiveButton = prompt!!.buttons.find { it.positive }
-            positiveButton!!.onClick.invoke()
+            sitePermissionFeature.onPositiveButtonPress(session.id, false)
 
+            assertNotNull(prompt)
             assertTrue(grantWasCalled)
             assertTrue(session.contentPermissionRequest.isConsumed())
         }
@@ -593,9 +599,9 @@ class SitePermissionsFeatureTest {
 
         runBlocking {
             val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
-            val positiveButton = prompt!!.buttons.find { !it.positive }
-            positiveButton?.onClick?.invoke()
+            sitePermissionFeature.onNegativeButtonPress(session.id, false)
 
+            assertNotNull(prompt)
             assertTrue(rejectWasCalled)
             assertTrue(session.contentPermissionRequest.isConsumed())
         }
@@ -629,6 +635,64 @@ class SitePermissionsFeatureTest {
 
         verify(mockPermissionRequest).reject()
         assertTrue(session.appPermissionRequest.isConsumed())
+    }
+
+    @Test
+    fun `feature will re-attach to already existing fragment`() {
+        val mockPermissionRequest: PermissionRequest = mock()
+        val session = getSelectedSession().apply {
+            appPermissionRequest = Consumable.from(mockPermissionRequest)
+        }
+
+        val fragment: SitePermissionsDialogFragment = mock()
+        doReturn(session.id).`when`(fragment).sessionId
+
+        doReturn(fragment).`when`(mockFragmentManager).findFragmentByTag(any())
+
+        sitePermissionFeature.start()
+        verify(fragment).feature = sitePermissionFeature
+    }
+
+    @Test
+    fun `already existing fragment will be removed if session has none permissions request set anymore`() {
+        val session = getSelectedSession()
+
+        val fragment: SitePermissionsDialogFragment = mock()
+
+        doReturn(session.id).`when`(fragment).sessionId
+
+        val transaction: FragmentTransaction = mock()
+
+        doReturn(fragment).`when`(mockFragmentManager).findFragmentByTag(any())
+        doReturn(transaction).`when`(mockFragmentManager).beginTransaction()
+        doReturn(transaction).`when`(transaction).remove(fragment)
+
+        sitePermissionFeature.start()
+        verify(mockFragmentManager).beginTransaction()
+        verify(transaction).remove(fragment)
+    }
+
+    @Test
+    fun `already existing fragment will be removed if session does not exist anymore`() {
+        val fragment: SitePermissionsDialogFragment = mock()
+        doReturn(UUID.randomUUID().toString()).`when`(fragment).sessionId
+
+        val transaction: FragmentTransaction = mock()
+
+        doReturn(fragment).`when`(mockFragmentManager).findFragmentByTag(any())
+        doReturn(transaction).`when`(mockFragmentManager).beginTransaction()
+        doReturn(transaction).`when`(transaction).remove(fragment)
+
+        sitePermissionFeature.start()
+        verify(mockFragmentManager).beginTransaction()
+        verify(transaction).remove(fragment)
+    }
+
+    private fun mockFragmentManager(): FragmentManager {
+        val fragmentManager: FragmentManager = mock()
+        val transaction: FragmentTransaction = mock()
+        doReturn(transaction).`when`(fragmentManager).beginTransaction()
+        return fragmentManager
     }
 
     private fun getSelectedSession(): Session {

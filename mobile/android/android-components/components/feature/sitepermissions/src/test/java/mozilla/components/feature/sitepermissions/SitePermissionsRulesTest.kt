@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.sitepermissions
 
+import android.content.Context
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.SessionManager
@@ -33,6 +34,7 @@ class SitePermissionsRulesTest {
     private lateinit var rules: SitePermissionsFeature
     private lateinit var mockOnNeedToRequestPermissions: OnNeedToRequestPermissions
     private lateinit var mockStorage: SitePermissionsStorage
+    private val context = ApplicationProvider.getApplicationContext<Context>()
 
     @Before
     fun setup() {
@@ -43,10 +45,11 @@ class SitePermissionsRulesTest {
         mockStorage = mock()
 
         rules = SitePermissionsFeature(
-            anchorView = anchorView,
+            context = context,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
-            storage = mockStorage
+            storage = mockStorage,
+            fragmentManager = mock()
         )
     }
 

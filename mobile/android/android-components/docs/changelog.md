@@ -42,8 +42,20 @@ permalink: /changelog/
  * Fix disappearing title in Custom Tab toolbar.
 
 * **feature-sitepermissions**
+  * ⚠️ **This is a breaking API change**: ``anchorView`` property has been removed if you want to change the position of the prompts use the ``promptsStyling`` property.
+  * Added new property ``context``. It must be provided in the constructor.
   * Do not save new site permissions in private sessions.
-
+  * Allow prompts styling via ``PromptsStyling``
+  ```kotlin
+    data class PromptsStyling(
+        val gravity: Int,
+        val shouldWidthMatchParent: Boolean = false,
+        @ColorRes
+        val positiveButtonBackgroundColor: Int? = null,
+        @ColorRes
+        val positiveButtonTextColor: Int? = null
+    )
+  ```
 * **service-glean**
    * ⚠️ **This is a breaking API change**: Custom pings must be explicitly
      registered with Glean at startup time. See

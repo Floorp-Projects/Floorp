@@ -1,0 +1,79 @@
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:windowBackground"
+        android:orientation="vertical">
+
+    <ImageView
+            android:id="@+id/icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="16dp"
+            android:scaleType="center"
+            tools:src="@android:drawable/ic_menu_camera"
+            android:importantForAccessibility="no"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="16dp"
+            android:tint="?android:attr/textColorPrimary"
+            tools:tint="#000000"/>
+
+    <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="11dp"
+            android:layout_marginStart="3dp"
+            tools:textColor="#000000"
+            android:textColor="?android:attr/textColorPrimary"
+            android:paddingTop="4dp"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="16dp"
+            android:layout_toEndOf="@id/icon"
+            android:layout_alignBaseline="@id/icon"
+            tools:text="Allow wikipedia.org to use your camera?"/>
+
+    <CheckBox
+            android:id="@+id/do_not_ask_again"
+            android:layout_marginTop="16dp"
+            android:layout_below="@id/title"
+            android:layout_alignStart="@id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="4dp"
+            android:visibility="gone"
+            android:textColor="?android:attr/textColorPrimary"
+            tools:visibility="visible"
+            android:text="@string/mozac_feature_sitepermissions_do_not_ask_again_on_this_site2"
+            android:checked="true"/>
+
+    <Button
+            android:id="@+id/deny_button"
+            android:layout_below="@id/do_not_ask_again"
+            android:layout_toStartOf="@id/allow_button"
+            android:layout_marginTop="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:text="@string/mozac_feature_sitepermissions_not_allow"
+            style="?android:attr/borderlessButtonStyle"/>
+
+    <Button
+            android:id="@+id/allow_button"
+            android:layout_alignParentEnd="true"
+            android:layout_below="@id/do_not_ask_again"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginStart="8dp"
+            android:textAllCaps="false"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/mozac_feature_sitepermissions_allow"/>
+
+</RelativeLayout>
