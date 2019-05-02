@@ -328,7 +328,6 @@ function testCut2(e) {
 var principal = SpecialPowers.wrap(document).nodePrincipal;
 var context = { url: SpecialPowers.wrap(principal.URI).spec,
                 originAttributes: {
-                  appId: principal.appId,
                   inIsolatedMozBrowser: true }};
 
 addEventListener("testready", function() {

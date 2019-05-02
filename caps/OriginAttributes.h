@@ -17,8 +17,7 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
  public:
   OriginAttributes() {}
 
-  OriginAttributes(uint32_t aAppId, bool aInIsolatedMozBrowser) {
-    mAppId = aAppId;
+  explicit OriginAttributes(bool aInIsolatedMozBrowser) {
     mInIsolatedMozBrowser = aInIsolatedMozBrowser;
   }
 
@@ -46,8 +45,7 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   }
 
   bool operator==(const OriginAttributes& aOther) const {
-    return mAppId == aOther.mAppId &&
-           mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
+    return mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
            mUserContextId == aOther.mUserContextId &&
            mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
            mFirstPartyDomain == aOther.mFirstPartyDomain;
@@ -58,8 +56,7 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   }
 
   MOZ_MUST_USE bool EqualsIgnoringFPD(const OriginAttributes& aOther) const {
-    return mAppId == aOther.mAppId &&
-           mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
+    return mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
            mUserContextId == aOther.mUserContextId &&
            mPrivateBrowsingId == aOther.mPrivateBrowsingId;
   }
@@ -129,10 +126,6 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
 
   // Performs a match of |aAttrs| against this pattern.
   bool Matches(const OriginAttributes& aAttrs) const {
-    if (mAppId.WasPassed() && mAppId.Value() != aAttrs.mAppId) {
-      return false;
-    }
-
     if (mInIsolatedMozBrowser.WasPassed() &&
         mInIsolatedMozBrowser.Value() != aAttrs.mInIsolatedMozBrowser) {
       return false;
@@ -157,11 +150,6 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
   }
 
   bool Overlaps(const OriginAttributesPattern& aOther) const {
-    if (mAppId.WasPassed() && aOther.mAppId.WasPassed() &&
-        mAppId.Value() != aOther.mAppId.Value()) {
-      return false;
-    }
-
     if (mInIsolatedMozBrowser.WasPassed() &&
         aOther.mInIsolatedMozBrowser.WasPassed() &&
         mInIsolatedMozBrowser.Value() != aOther.mInIsolatedMozBrowser.Value()) {

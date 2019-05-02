@@ -39,7 +39,7 @@ add_task(async function do_test() {
   conv.writeString("host\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN.host + "\n");
   conv.writeString("host\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN_2.host + "\n");
   conv.writeString("origin\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN_3.spec + "\n");
-  conv.writeString("origin\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN.spec + "^appId=1000&inBrowser=1\n");
+  conv.writeString("origin\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN.spec + "^inBrowser=1\n");
   ostream.close();
 
   // Set the preference used by the permission manager so the file is read.
@@ -57,7 +57,7 @@ add_task(async function do_test() {
   let principal2 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_2, {});
   let principal3 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_3, {});
 
-  let attrs = {appId: 1000, inIsolatedMozBrowser: true};
+  let attrs = {inIsolatedMozBrowser: true};
   let principal4 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN, attrs);
   let principal5 = Services.scriptSecurityManager.createCodebasePrincipal(TEST_ORIGIN_3, attrs);
 

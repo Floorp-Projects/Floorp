@@ -109,12 +109,14 @@ interface nsIQuotaManagerService : nsISupports
 
   /**
    * Removes all storages stored for the given pattern. The files may not be
-   * deleted immediately depending on prohibitive concurrent operations.
-   * In terms of locks, it will get an exclusive multi directory lock for given
-   * pattern.  For example, given pattern {"appId":1007} and set of 3 origins
-   * ["http://www.mozilla.org^appId=1007", "http://www.example.org^appId=1007",
-   * "http://www.example.org^appId=1008"], the method will only lock 2 origins
-   * ["http://www.mozilla.org^appId=1007", "http://www.example.org^appId=1007"].
+   * deleted immediately depending on prohibitive concurrent operations.  In
+   * terms of locks, it will get an exclusive multi directory lock for given
+   * pattern.  For example, given pattern {"userContextId":1007} and set of 3
+   * origins ["http://www.mozilla.org^userContextId=1007",
+   * "http://www.example.org^userContextId=1007",
+   * "http://www.example.org^userContextId=1008"], the method will only lock 2
+   * origins ["http://www.mozilla.org^userContextId=1007",
+   * "http://www.example.org^userContextId=1007"].
    *
    * @param aPattern
    *        A pattern for the origins whose storages are to be cleared.

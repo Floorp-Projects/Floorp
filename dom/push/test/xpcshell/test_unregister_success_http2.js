@@ -44,7 +44,7 @@ add_task(async function test_pushUnsubscriptionSuccess() {
     pushReceiptEndpoint: serverURL + "/receiptPushEndpointUnsubscriptionSuccess",
     scope: "https://example.com/page/unregister-success",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
     quota: Infinity,
   });
 
@@ -56,7 +56,7 @@ add_task(async function test_pushUnsubscriptionSuccess() {
   await PushService.unregister({
     scope: "https://example.com/page/unregister-success",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
   });
   let record = await db.getByKeyID(serverURL + "/subscriptionUnsubscriptionSuccess");
   ok(!record, "Unregister did not remove record");

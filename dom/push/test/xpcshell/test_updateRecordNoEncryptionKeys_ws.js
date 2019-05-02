@@ -70,7 +70,7 @@ add_task(async function test_with_data_enabled() {
   let newRecord = await PushService.register({
     scope: "https://example.com/page/3",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
   });
   ok(newRecord.p256dhKey, "Should generate public keys for new records");
 
