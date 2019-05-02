@@ -6,10 +6,13 @@
 
 package mozilla.components.feature.readerview.internal
 
+import android.view.View
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
@@ -31,6 +34,20 @@ class ReaderViewControlsPresenterTest {
         verify(view).setFontSize(5)
         verify(view).setFont(any())
         verify(view).showControls()
+    }
+
+    @Test
+    fun `are controls visible`() {
+        val controlsView: ReaderViewControlsView = mock()
+        val view: View = mock()
+        `when`(controlsView.asView()).thenReturn(view)
+        val presenter = ReaderViewControlsPresenter(controlsView, mock())
+
+        `when`(view.visibility).thenReturn(View.GONE)
+        assertFalse(presenter.areControlsVisible())
+
+        `when`(view.visibility).thenReturn(View.VISIBLE)
+        assertTrue(presenter.areControlsVisible())
     }
 
     @Test

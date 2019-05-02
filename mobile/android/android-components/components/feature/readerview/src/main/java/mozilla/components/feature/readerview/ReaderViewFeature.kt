@@ -111,7 +111,11 @@ class ReaderViewFeature(
     override fun onBackPressed(): Boolean {
         activeSession?.let {
             if (it.readerMode) {
-                hideReaderView()
+                if (controlsPresenter.areControlsVisible()) {
+                    hideControls()
+                } else {
+                    hideReaderView()
+                }
                 return true
             }
         }

@@ -5,6 +5,7 @@
 package mozilla.components.feature.readerview
 
 import android.content.Context
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -400,6 +401,35 @@ class ReaderViewFeatureTest {
         readerViewFeature.updateReaderViewState(selectedSession)
         verify(readerViewFeature).checkReaderable(eq(selectedSession))
         verify(readerViewFeature).showReaderView(eq(selectedSession))
+    }
+
+    @Test
+    fun `on back pressed closes controls then reader view`() {
+        val engine: Engine = mock()
+        val session: Session = mock()
+        val sessionManager: SessionManager = mock()
+        `when`(sessionManager.selectedSession).thenReturn(session)
+
+        val controlsView: ReaderViewControlsView = mock()
+        val view: View = mock()
+        `when`(controlsView.asView()).thenReturn(view)
+
+        val readerViewFeature = spy(ReaderViewFeature(context, engine, sessionManager, controlsView))
+        assertFalse(readerViewFeature.onBackPressed())
+
+        readerViewFeature.observeSelected()
+        assertFalse(readerViewFeature.onBackPressed())
+
+        `when`(session.readerMode).thenReturn(true)
+        `when`(view.visibility).thenReturn(View.VISIBLE)
+        assertTrue(readerViewFeature.onBackPressed())
+        verify(readerViewFeature, never()).hideReaderView()
+        verify(readerViewFeature, times(1)).hideControls()
+
+        `when`(view.visibility).thenReturn(View.GONE)
+        assertTrue(readerViewFeature.onBackPressed())
+        verify(readerViewFeature, times(1)).hideReaderView()
+        verify(readerViewFeature, times(1)).hideControls()
     }
 
     private fun prepareFeatureForTest(port: Port, session: Session = mock()): ReaderViewFeature {
