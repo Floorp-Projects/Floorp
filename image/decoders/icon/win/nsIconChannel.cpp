@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Monitor.h"
 
 #include "nsIconChannel.h"
 #include "nsIIconURI.h"
@@ -96,6 +97,61 @@ NS_IMETHODIMP nsIconChannel::IconAsyncOpenTask::Run() {
       "nsIconChannel::FinishAsyncOpen", mChannel,
       &nsIconChannel::FinishAsyncOpen, hIcon, rv);
   mTarget->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
+  return NS_OK;
+}
+
+class nsIconChannel::IconSyncOpenTask final : public Runnable {
+ public:
+  IconSyncOpenTask(nsIconChannel* aChannel, nsIEventTarget* aTarget,
+                   nsCOMPtr<nsIFile>&& aLocalFile, nsAutoString& aPath,
+                   UINT aInfoFlags)
+      : Runnable("IconSyncOpenTask"),
+        mMonitor("IconSyncOpenTask"),
+        mDone(false),
+        mChannel(aChannel),
+        mTarget(aTarget),
+        mLocalFile(std::move(aLocalFile)),
+        mPath(aPath),
+        mInfoFlags(aInfoFlags),
+        mHIcon(nullptr),
+        mRv(NS_OK) {}
+
+  NS_IMETHOD Run() override;
+
+  Monitor& GetMonitor() { return mMonitor; }
+  bool Done() const {
+    mMonitor.AssertCurrentThreadOwns();
+    return mDone;
+  }
+  HICON GetHIcon() const {
+    mMonitor.AssertCurrentThreadOwns();
+    return mHIcon;
+  }
+  nsresult GetRv() const {
+    mMonitor.AssertCurrentThreadOwns();
+    return mRv;
+  }
+
+ private:
+  Monitor mMonitor;
+  bool mDone;
+  // Parameters in
+  RefPtr<nsIconChannel> mChannel;
+  nsCOMPtr<nsIEventTarget> mTarget;
+  nsCOMPtr<nsIFile> mLocalFile;
+  nsAutoString mPath;
+  UINT mInfoFlags;
+  // Return values
+  HICON mHIcon;
+  nsresult mRv;
+};
+
+NS_IMETHODIMP
+nsIconChannel::IconSyncOpenTask::Run() {
+  MonitorAutoLock lock(mMonitor);
+  mRv = mChannel->GetHIconFromFile(mLocalFile, mPath, mInfoFlags, &mHIcon);
+  mDone = true;
+  mMonitor.NotifyAll();
   return NS_OK;
 }
 
@@ -425,7 +481,19 @@ nsresult nsIconChannel::GetHIconFromFile(bool aNonBlocking, HICON* hIcon) {
     return NS_OK;
   }
 
-  return GetHIconFromFile(localFile, filePath, infoFlags, hIcon);
+  // We cannot call SHGetFileInfo on more than one thread (at a time), so it
+  // must be called on the same thread every time, even now when we need sync
+  // behaviour. So we synchronously wait on the other thread to finish.
+  RefPtr<nsIEventTarget> target = DecodePool::Singleton()->GetIOEventTarget();
+  RefPtr<IconSyncOpenTask> task = new IconSyncOpenTask(
+      this, mListenerTarget, std::move(localFile), filePath, infoFlags);
+  MonitorAutoLock lock(task->GetMonitor());
+  target->Dispatch(task, NS_DISPATCH_NORMAL);
+  do {
+    task->GetMonitor().Wait();
+  } while (!task->Done());
+  *hIcon = task->GetHIcon();
+  return task->GetRv();
 }
 
 nsresult nsIconChannel::GetHIconFromFile(nsIFile* aLocalFile,
