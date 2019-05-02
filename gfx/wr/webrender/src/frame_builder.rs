@@ -46,7 +46,7 @@ impl Default for ChasePrimitive {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameBuilderConfig {
@@ -58,6 +58,8 @@ pub struct FrameBuilderConfig {
     /// True if we're running tests (i.e. via wrench).
     pub testing: bool,
     pub gpu_supports_fast_clears: bool,
+    pub gpu_supports_advanced_blend: bool,
+    pub advanced_blend_is_coherent: bool,
 }
 
 /// A set of common / global resources that are retained between
@@ -130,6 +132,7 @@ pub struct FrameVisibilityState<'a> {
     pub retained_tiles: &'a mut RetainedTiles,
     pub data_stores: &'a mut DataStores,
     pub clip_chain_stack: ClipChainStack,
+    pub render_tasks: &'a mut RenderTaskTree,
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -178,7 +181,6 @@ impl<'a> FrameBuildingState<'a> {
 pub struct PictureContext {
     pub pic_index: PictureIndex,
     pub apply_local_clip_rect: bool,
-    pub allow_subpixel_aa: bool,
     pub is_passthrough: bool,
     pub is_composite: bool,
     pub raster_space: RasterSpace,
@@ -221,6 +223,8 @@ impl FrameBuilder {
                 enable_picture_caching: false,
                 testing: false,
                 gpu_supports_fast_clears: false,
+                gpu_supports_advanced_blend: false,
+                advanced_blend_is_coherent: false,
             },
         }
     }
@@ -343,6 +347,7 @@ impl FrameBuilder {
             screen_world_rect,
             clip_scroll_tree,
             global_device_pixel_scale,
+            true,
         );
         surfaces.push(root_surface);
 
@@ -390,6 +395,7 @@ impl FrameBuilder {
                 retained_tiles: &mut retained_tiles,
                 data_stores,
                 clip_chain_stack: ClipChainStack::new(),
+                render_tasks,
             };
 
             self.prim_store.update_visibility(
@@ -430,7 +436,6 @@ impl FrameBuilder {
                 root_spatial_node_index,
                 root_spatial_node_index,
                 ROOT_SURFACE_INDEX,
-                true,
                 &mut frame_state,
                 &frame_context,
             )
@@ -583,6 +588,8 @@ impl FrameBuilder {
                     prim_store: &self.prim_store,
                     resource_cache,
                     use_dual_source_blending,
+                    use_advanced_blending: self.config.gpu_supports_advanced_blend,
+                    break_advanced_blend_batches: !self.config.advanced_blend_is_coherent,
                     clip_scroll_tree,
                     data_stores,
                     surfaces: &surfaces,

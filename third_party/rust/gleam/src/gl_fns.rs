@@ -2144,4 +2144,13 @@ impl Gl for GlFns {
     fn provoking_vertex_angle(&self, _mode: GLenum) {
         unimplemented!("This extension is GLES only");
     }
+
+    // GL_KHR_blend_equation_advanced
+    fn blend_barrier_khr(&self) {
+        if self.ffi_gl_.BlendBarrierKHR.is_loaded() {
+            unsafe {
+                self.ffi_gl_.BlendBarrierKHR();
+            }
+        }
+    }
 }

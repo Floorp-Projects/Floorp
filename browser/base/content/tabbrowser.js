@@ -4627,8 +4627,15 @@ window._gBrowser = {
     });
 
     this.addEventListener("oop-browser-crashed", (event) => {
-      if (!event.isTrusted)
+      if (!event.isTrusted) {
         return;
+      }
+
+      if (!event.isTopFrame) {
+        let bc = BrowsingContext.get(event.browsingContextId);
+        SubframeCrashHandler.onSubframeCrash(bc);
+        return;
+      }
 
       let browser = event.originalTarget;
 
