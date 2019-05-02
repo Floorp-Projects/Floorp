@@ -199,9 +199,9 @@ this.FirefoxMonitor = {
     }
 
     if (l10nManifest) {
-      Components.manager.addBootstrappedManifestLocation(l10nManifest);
-
       XPCOMUtils.defineLazyGetter(this, "strings", () => {
+        Components.manager.addBootstrappedManifestLocation(l10nManifest);
+
         return Services.strings.createBundle(
           "chrome://fxmonitor/locale/fxmonitor.properties");
       });
