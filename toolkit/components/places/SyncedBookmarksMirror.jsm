@@ -122,7 +122,7 @@ const SQLITE_MAX_VARIABLE_NUMBER = 999;
 
 // The current mirror database schema version. Bump for migrations, then add
 // migration code to `migrateMirrorSchema`.
-const MIRROR_SCHEMA_VERSION = 4;
+const MIRROR_SCHEMA_VERSION = 5;
 
 const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
 
@@ -1355,8 +1355,8 @@ async function attachAndInitMirrorDatabase(db, path) {
  *        The current mirror database schema version.
  */
 async function migrateMirrorSchema(db, currentSchemaVersion) {
-  if (currentSchemaVersion < 4) {
-    // The mirror was pref'd off by default for schema versions 1-3.
+  if (currentSchemaVersion < 5) {
+    // The mirror was pref'd off by default for schema versions 1-4.
     throw new DatabaseCorruptError(`Can't migrate from schema version ${
       currentSchemaVersion}; too old`);
   }

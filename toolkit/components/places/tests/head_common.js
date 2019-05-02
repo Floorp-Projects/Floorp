@@ -952,6 +952,19 @@ function getItemsWithAnnotation(name) {
 }
 
 /**
+ * Sets an annotation for an item.
+ *
+ * @param {String} guid The GUID of the item.
+ * @param {String} name The name of the annotation.
+ * @param {Number|String} value The value of the annotation.
+ */
+async function setItemAnnotation(guid, name, value) {
+  let id = await PlacesUtils.promiseItemId(guid);
+  PlacesUtils.annotations.setItemAnnotation(id, name, value, 0,
+                                            PlacesUtils.annotations.EXPIRE_NEVER);
+}
+
+/**
  * Checks there are no orphan page annotations in the database, and no
  * orphan anno attribute names.
  */

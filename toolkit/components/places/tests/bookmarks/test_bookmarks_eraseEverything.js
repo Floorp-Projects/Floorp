@@ -33,8 +33,7 @@ add_task(async function test_eraseEverything() {
                                          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                          url: "http://mozilla.org/" });
   checkBookmarkObject(unfiledBookmarkInFolder);
-  PlacesUtils.annotations.setItemAnnotation((await PlacesUtils.promiseItemId(unfiledBookmarkInFolder.guid)),
-                                            "testanno1", "testvalue1", 0, PlacesUtils.annotations.EXPIRE_NEVER);
+  await setItemAnnotation(unfiledBookmarkInFolder.guid, "testanno1", "testvalue1");
 
   let menuFolder = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
                                                         type: PlacesUtils.bookmarks.TYPE_FOLDER });
@@ -48,8 +47,7 @@ add_task(async function test_eraseEverything() {
                                          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                          url: "http://mozilla.org/" });
   checkBookmarkObject(menuBookmarkInFolder);
-  PlacesUtils.annotations.setItemAnnotation((await PlacesUtils.promiseItemId(menuBookmarkInFolder.guid)),
-                                            "testanno1", "testvalue1", 0, PlacesUtils.annotations.EXPIRE_NEVER);
+  await setItemAnnotation(menuBookmarkInFolder.guid, "testanno1", "testvalue1");
 
   let toolbarFolder = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
                                                            type: PlacesUtils.bookmarks.TYPE_FOLDER });
@@ -63,8 +61,7 @@ add_task(async function test_eraseEverything() {
                                          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                          url: "http://mozilla.org/" });
   checkBookmarkObject(toolbarBookmarkInFolder);
-  PlacesUtils.annotations.setItemAnnotation((await PlacesUtils.promiseItemId(toolbarBookmarkInFolder.guid)),
-                                            "testanno1", "testvalue1", 0, PlacesUtils.annotations.EXPIRE_NEVER);
+  await setItemAnnotation(toolbarBookmarkInFolder.guid, "testanno1", "testvalue1");
 
   await PlacesTestUtils.promiseAsyncUpdates();
   Assert.ok(frecencyForUrl("http://example.com/") > frecencyForExample);

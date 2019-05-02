@@ -65,7 +65,7 @@ impl Driver for DefaultDriver {}
 pub fn log<D: Driver>(
     driver: &D,
     level: Level,
-    args: Arguments,
+    args: Arguments<'_>,
     module_path: &'static str,
     file: &'static str,
     line: u32,
