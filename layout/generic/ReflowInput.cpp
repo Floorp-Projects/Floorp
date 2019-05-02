@@ -857,6 +857,16 @@ void ReflowInput::InitDynamicReflowRoot() {
     canBeDynamicReflowRoot = false;
   }
 
+  // Subgrids are never reflow roots.
+  // FIXME: bug 1471758 will update this for 'contain'.
+  if (canBeDynamicReflowRoot &&
+      (mStylePosition->GridTemplateColumns().mIsSubgrid ||
+       mStylePosition->GridTemplateRows().mIsSubgrid)) {
+    // NOTE: we could check that 'display' of our content's primary frame is
+    // '[inline-]grid' here but that's probably not worth it in practice.
+    canBeDynamicReflowRoot = false;
+  }
+
   if (canBeDynamicReflowRoot) {
     mFrame->AddStateBits(NS_FRAME_DYNAMIC_REFLOW_ROOT);
   } else {
