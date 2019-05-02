@@ -694,6 +694,9 @@
         window.customElements.upgrade(this._stateMenulist);
         window.customElements.upgrade(this._enableBtn);
         window.customElements.upgrade(this._disableBtn);
+        window.customElements.upgrade(this._askToActivateMenuitem);
+        window.customElements.upgrade(this._alwaysActivateMenuitem);
+        window.customElements.upgrade(this._neverActivateMenuitem);
 
         this._installStatus = document.getAnonymousElementByAttribute(this, "anonid", "install-status");
         this._installStatus.mControl = this;

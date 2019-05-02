@@ -156,7 +156,7 @@
           var width = 0;
           for (var menuitem = this.firstElementChild; menuitem; menuitem = menuitem.nextElementSibling) {
             if (menuitem.localName == "menuitem" && menuitem.hasAttribute("acceltext")) {
-              var accel = document.getAnonymousElementByAttribute(menuitem, "anonid", "accel");
+              var accel = menuitem.menuAccel;
               if (accel) {
                 array.push(accel);
                 let accelWidth = accel.getBoundingClientRect().width;
