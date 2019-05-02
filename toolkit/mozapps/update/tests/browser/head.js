@@ -57,6 +57,9 @@ add_task(async function setupTestCommon() {
       [PREF_APP_UPDATE_DOWNLOAD_MAXATTEMPTS, 2],
       [PREF_APP_UPDATE_LOG, gDebugTest],
       [PREF_APP_UPDATE_SERVICE_ENABLED, false],
+      // Disable activity stream to prevent errors when opening pages during
+      // TV runs. See bug 1548422 for an example.
+      ["browser.library.activity-stream.enabled", false],
     ],
   });
 
