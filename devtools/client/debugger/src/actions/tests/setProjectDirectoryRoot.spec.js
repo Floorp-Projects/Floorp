@@ -44,7 +44,9 @@ describe("setProjectDirectoryRoot", () => {
   });
 
   it("should filter sources", async () => {
-    const store = createStore({});
+    const store = createStore({
+      getBreakableLines: async () => []
+    });
     const { dispatch, getState, cx } = store;
     await dispatch(actions.newGeneratedSource(makeSource("js/scopes.js")));
     await dispatch(actions.newGeneratedSource(makeSource("lib/vendor.js")));
@@ -63,14 +65,18 @@ describe("setProjectDirectoryRoot", () => {
   });
 
   it("should update the child directory ", () => {
-    const { dispatch, getState, cx } = createStore();
+    const { dispatch, getState, cx } = createStore({
+      getBreakableLines: async () => []
+    });
     dispatch(actions.setProjectDirectoryRoot(cx, "example.com"));
     dispatch(actions.setProjectDirectoryRoot(cx, "example.com/foo/bar"));
     expect(getProjectDirectoryRoot(getState())).toBe("example.com/foo/bar");
   });
 
   it("should update the child directory when domain name is Webpack://", () => {
-    const { dispatch, getState, cx } = createStore();
+    const { dispatch, getState, cx } = createStore({
+      getBreakableLines: async () => []
+    });
     dispatch(actions.setProjectDirectoryRoot(cx, "webpack://"));
     dispatch(actions.setProjectDirectoryRoot(cx, "webpack:///app"));
     expect(getProjectDirectoryRoot(getState())).toBe("webpack:///app");

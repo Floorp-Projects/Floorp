@@ -19,6 +19,7 @@ describe("breakpointPositions", () => {
 
     const store = createStore({
       getBreakpointPositions: async () => ({ "9": [1] }),
+      getBreakableLines: async () => [],
       sourceContents: async () => fooContent
     });
 
@@ -28,7 +29,7 @@ describe("breakpointPositions", () => {
     );
     await dispatch(actions.loadSourceById(cx, source.id));
 
-    dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo" }));
+    dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo", line: 9 }));
 
     await waitForState(store, state =>
       selectors.hasBreakpointPositions(state, "foo")
@@ -36,22 +37,24 @@ describe("breakpointPositions", () => {
 
     expect(
       selectors.getBreakpointPositionsForSource(getState(), "foo")
-    ).toEqual([
-      {
-        location: {
-          line: 9,
-          column: 1,
-          sourceId: "foo",
-          sourceUrl: "http://localhost:8000/examples/foo"
-        },
-        generatedLocation: {
-          line: 9,
-          column: 1,
-          sourceId: "foo",
-          sourceUrl: "http://localhost:8000/examples/foo"
+    ).toEqual({
+      [9]: [
+        {
+          location: {
+            line: 9,
+            column: 1,
+            sourceId: "foo",
+            sourceUrl: "http://localhost:8000/examples/foo"
+          },
+          generatedLocation: {
+            line: 9,
+            column: 1,
+            sourceId: "foo",
+            sourceUrl: "http://localhost:8000/examples/foo"
+          }
         }
-      }
-    ]);
+      ]
+    });
   });
 
   it("doesn't re-fetch positions", async () => {
@@ -65,6 +68,7 @@ describe("breakpointPositions", () => {
           count++;
           resolve = r;
         }),
+      getBreakableLines: async () => [],
       sourceContents: async () => fooContent
     });
 
@@ -74,8 +78,8 @@ describe("breakpointPositions", () => {
     );
     await dispatch(actions.loadSourceById(cx, source.id));
 
-    dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo" }));
-    dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo" }));
+    dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo", line: 9 }));
+    dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo", line: 9 }));
 
     resolve({ "9": [1] });
     await waitForState(store, state =>
@@ -84,22 +88,24 @@ describe("breakpointPositions", () => {
 
     expect(
       selectors.getBreakpointPositionsForSource(getState(), "foo")
-    ).toEqual([
-      {
-        location: {
-          line: 9,
-          column: 1,
-          sourceId: "foo",
-          sourceUrl: "http://localhost:8000/examples/foo"
-        },
-        generatedLocation: {
-          line: 9,
-          column: 1,
-          sourceId: "foo",
-          sourceUrl: "http://localhost:8000/examples/foo"
+    ).toEqual({
+      [9]: [
+        {
+          location: {
+            line: 9,
+            column: 1,
+            sourceId: "foo",
+            sourceUrl: "http://localhost:8000/examples/foo"
+          },
+          generatedLocation: {
+            line: 9,
+            column: 1,
+            sourceId: "foo",
+            sourceUrl: "http://localhost:8000/examples/foo"
+          }
         }
-      }
-    ]);
+      ]
+    });
 
     expect(count).toEqual(1);
   });

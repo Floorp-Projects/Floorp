@@ -91,6 +91,7 @@ add_task(async function() {
   is(pageValue, "let x = 2;", "Content loads from network, has doc value 2");
   await waitForLoadedSource(dbg, "inline-cache.html");
   dbgValue = findSourceContent(dbg, "inline-cache.html");
+
   info(`Debugger text: ${dbgValue.value}`);
   ok(
     dbgValue.value.includes(pageValue),

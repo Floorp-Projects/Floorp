@@ -74,4 +74,10 @@ export type SourceAction =
       +type: "CLOSE_TABS",
       +sources: Array<Source>,
       +tabs: any
+    |}
+  | {|
+      type: "SET_BREAKABLE_LINES",
+      +cx: Context,
+      breakableLines: number[],
+      sourceId: string
     |};

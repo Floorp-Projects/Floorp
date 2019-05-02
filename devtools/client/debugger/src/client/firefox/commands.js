@@ -449,9 +449,7 @@ async function getBreakpointPositions(
   for (const { thread, actor } of actors) {
     const sourceThreadClient = lookupThreadClient(thread);
     const sourceFront = sourceThreadClient.source({ actor });
-    const positions = await sourceFront.getBreakpointPositionsCompressed(
-      range
-    );
+    const positions = await sourceFront.getBreakpointPositionsCompressed(range);
 
     for (const line of Object.keys(positions)) {
       let columns = positions[line];
@@ -464,6 +462,33 @@ async function getBreakpointPositions(
     }
   }
   return sourcePositions;
+}
+
+async function getBreakableLines(actors: Array<SourceActor>) {
+  let lines = [];
+  for (const { thread, actor } of actors) {
+    const sourceThreadClient = lookupThreadClient(thread);
+    const sourceFront = sourceThreadClient.source({ actor });
+    let actorLines = [];
+    try {
+      actorLines = await sourceFront.getBreakableLines();
+    } catch (e) {
+      // Handle backward compatibility
+      if (
+        e.message &&
+        e.message.match(/does not recognize the packet type getBreakableLines/)
+      ) {
+        const pos = await sourceFront.getBreakpointPositionsCompressed();
+        actorLines = Object.keys(pos).map(line => Number(line));
+      } else if (!e.message || !e.message.match(/Connection closed/)) {
+        throw e;
+      }
+    }
+
+    lines = [...new Set([...lines, ...actorLines])];
+  }
+
+  return lines;
 }
 
 const clientCommands = {
@@ -486,6 +511,7 @@ const clientCommands = {
   sourceContents,
   getSourceForActor,
   getBreakpointPositions,
+  getBreakableLines,
   hasBreakpoint,
   setBreakpoint,
   setXHRBreakpoint,

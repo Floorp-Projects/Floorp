@@ -19,11 +19,10 @@ import {
 import { insertSourceActors } from "../../actions/source-actors";
 import { makeSourceId } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
-import { syncBreakpoint, setBreakpointPositions } from "../breakpoints";
+import { syncBreakpoint } from "../breakpoints";
 import { loadSourceText } from "./loadSourceText";
-import { isFetchingBreakpoints } from "../breakpoints/breakpointPositions";
 import { togglePrettyPrint } from "./prettyPrint";
-import { selectLocation } from "../sources";
+import { selectLocation, setBreakableLines } from "../sources";
 import {
   getRawSourceURL,
   isPrettyURL,
@@ -38,11 +37,13 @@ import {
   hasSourceActor,
   getPendingSelectedLocation,
   getPendingBreakpointsForSource,
-  getContext
+  getContext,
+  isSourceLoadingOrLoaded
 } from "../../selectors";
 
 import { prefs } from "../../utils/prefs";
 import sourceQueue from "../../utils/source-queue";
+import { ContextError } from "../../utils/context";
 
 import type {
   Source,
@@ -313,7 +314,6 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
           actor: source.actor,
           thread,
           source: newId,
-
           isBlackBoxed: source.isBlackBoxed,
           sourceMapURL: source.sourceMapURL,
           url: source.url,
@@ -331,25 +331,22 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
 
     const cx = getContext(getState());
     dispatch(addSources(cx, newSources));
-
-    const sourceIDsNeedingPositions = newSourceActors
-      .map(actor => actor.source)
-      .filter(sourceId => {
-        const source = getSource(getState(), sourceId);
-        return (
-          source && isInlineScript(source) && isFetchingBreakpoints(sourceId)
-        );
-      });
-
     dispatch(insertSourceActors(newSourceActors));
 
-    // Adding new sources may have cleared this file's breakpoint positions
-    // in cases where a new <script> loaded in the HTML, so we manually
-    // re-request new breakpoint positions.
-    for (const sourceId of sourceIDsNeedingPositions) {
-      dispatch(setBreakpointPositions({ cx, sourceId }));
+    for (const newSourceActor of newSourceActors) {
+      // Fetch breakable lines for new HTML scripts
+      // when the HTML file has started loading
+      if (
+        isInlineScript(newSourceActor) &&
+        isSourceLoadingOrLoaded(getState(), newSourceActor.source)
+      ) {
+        dispatch(setBreakableLines(cx, newSourceActor.source)).catch(error => {
+          if (!(error instanceof ContextError)) {
+            throw error;
+          }
+        });
+      }
     }
-
     await dispatch(checkNewSources(cx, newSources));
 
     return resultIds.map(id => getSourceFromId(getState(), id));

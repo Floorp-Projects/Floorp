@@ -469,6 +469,6 @@ export type EventListenerBreakpoints = string[];
 export type SourceDocuments = { [string]: Object };
 
 export type BreakpointPosition = MappedLocation;
-export type BreakpointPositions = BreakpointPosition[];
+export type BreakpointPositions = { [number]: BreakpointPosition[] };
 
 export type { Context, ThreadContext } from "./utils/context";

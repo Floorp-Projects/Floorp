@@ -107,9 +107,9 @@ export function addBreakpoint(
   return async ({ dispatch, getState, sourceMaps, client }: ThunkArgs) => {
     recordEvent("add_breakpoint");
 
-    const { sourceId, column } = initialLocation;
+    const { sourceId, column, line } = initialLocation;
 
-    await dispatch(setBreakpointPositions({ cx, sourceId }));
+    await dispatch(setBreakpointPositions({ cx, sourceId, line }));
 
     const position: ?BreakpointPosition = column
       ? getBreakpointPositionsForLocation(getState(), initialLocation)
