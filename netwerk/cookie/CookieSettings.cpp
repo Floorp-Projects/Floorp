@@ -7,6 +7,9 @@
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/Unused.h"
 #include "nsGlobalWindowInner.h"
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+#  include "nsIProtocolHandler.h"
+#endif
 #include "nsPermission.h"
 #include "nsPermissionManager.h"
 
@@ -134,8 +137,23 @@ CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
     return NS_ERROR_FAILURE;
   }
 
-  rv = pm->TestPermissionFromPrincipal(aPrincipal, NS_LITERAL_CSTRING("cookie"),
-                                       aCookiePermission);
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+  // Check if this protocol doesn't allow cookies.
+  bool hasFlags;
+  nsCOMPtr<nsIURI> uri;
+  aPrincipal->GetURI(getter_AddRefs(uri));
+  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_FORBIDS_COOKIE_ACCESS,
+                           &hasFlags);
+  if (NS_FAILED(rv) || hasFlags) {
+    *aCookiePermission = nsPermissionManager::DENY_ACTION;
+    rv = NS_OK;  // Reset, so it's not caught as a bad status after the `else`.
+  } else         // Note the tricky `else` which controls the call below.
+#endif
+
+    // Note that when compiled for Thunderbird/SeaMonkey, the following
+    // statement is controlled by the `else` in the `#ifdef` block above.
+    rv = pm->TestPermissionFromPrincipal(
+        aPrincipal, NS_LITERAL_CSTRING("cookie"), aCookiePermission);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
