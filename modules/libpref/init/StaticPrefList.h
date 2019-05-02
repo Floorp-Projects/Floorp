@@ -1396,18 +1396,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE true
-#else
-# define PREF_VALUE false
-#endif
 // BigInt API
 VARCACHE_PREF(
   "javascript.options.bigint",
    javascript_options_bigint,
-  RelaxedAtomicBool, PREF_VALUE
+  RelaxedAtomicBool, true
 )
-#undef PREF_VALUE
 
 VARCACHE_PREF(
   "javascript.options.experimental.fields",
