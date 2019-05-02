@@ -118,6 +118,18 @@ struct RequestData
   nsCString matchedList;
 };
 
+struct WebProgressStateChangeData
+{
+  bool isNavigating;
+  bool mayEnableCharacterEncodingMenu;
+
+  // The following fields are only set when the aStateFlags param passed with
+  // this struct is |nsIWebProgress.STATE_STOP|.
+  nsString contentType;
+  nsString charset;
+  nsIURI documentURI;
+};
+
 nested(upto inside_cpow) sync protocol PBrowser
 {
     manager PContent;
@@ -536,6 +548,11 @@ parent:
 
     async RegisterProtocolHandler(nsString scheme, nsIURI handlerURI, nsString title,
                                   nsIURI documentURI);
+
+    async OnStateChange(WebProgressData? aWebProgressData,
+                        RequestData aRequestData, uint32_t aStateFlags,
+                        nsresult aStatus,
+                        WebProgressStateChangeData? aStateChangeData);
 
     async OnProgressChange(WebProgressData? aWebProgressData,
                            RequestData aRequestData, int32_t aCurSelfProgress,
