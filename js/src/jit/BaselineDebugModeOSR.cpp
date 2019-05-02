@@ -166,7 +166,11 @@ static bool CollectJitStackScripts(JSContext* cx,
           break;
         }
 
+        // Baseline Interpreter frames don't need recompilation.
         BaselineFrame* baselineFrame = frame.baselineFrame();
+        if (baselineFrame->runningInInterpreter()) {
+          break;
+        }
 
         if (BaselineDebugModeOSRInfo* info =
                 baselineFrame->getDebugModeOSRInfo()) {
@@ -355,6 +359,12 @@ static void PatchBaselineFramesForDebugMode(
         // If the script wasn't recompiled or is not observed, there's
         // nothing to patch.
         if (!obs.shouldRecompileOrInvalidate(frame.script())) {
+          break;
+        }
+
+        // Baseline Interpreter frames don't need recompilation.
+        BaselineFrame* baselineFrame = frame.baselineFrame();
+        if (baselineFrame->runningInInterpreter()) {
           break;
         }
 
