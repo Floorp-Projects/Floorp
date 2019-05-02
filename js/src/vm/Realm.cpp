@@ -66,9 +66,10 @@ Realm::~Realm() {
     runtime_->lcovOutput().writeLCovResult(lcovOutput);
   }
 
-  // We cannot have a debuggee realm here so we don't have to call
-  // runtime->decrementNumDebuggeeRealms().
-  MOZ_ASSERT(!isDebuggee());
+  // We can have a debuggee realm here only if we are destroying the runtime and
+  // leaked GC things.
+  MOZ_ASSERT_IF(runtime_->gc.shutdownCollectedEverything(), !isDebuggee());
+  unsetIsDebuggee();
 
   MOZ_ASSERT(runtime_->numRealms > 0);
   runtime_->numRealms--;
