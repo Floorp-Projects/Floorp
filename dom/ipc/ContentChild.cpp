@@ -2298,6 +2298,8 @@ void ContentChild::ActorDestroy(ActorDestroyReason why) {
 
   mIdleObservers.Clear();
 
+  mBrowsingContextGroupHolder.Clear();
+
   nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (svc) {
     svc->UnregisterListener(mConsoleListener);
@@ -3798,7 +3800,6 @@ mozilla::ipc::IPCResult ContentChild::RecvRestoreBrowsingContextChildren(
 mozilla::ipc::IPCResult ContentChild::RecvRegisterBrowsingContextGroup(
     nsTArray<BrowsingContext::IPCInitializer>&& aInits) {
   RefPtr<BrowsingContextGroup> group = new BrowsingContextGroup();
-
   // Each of the initializers in aInits is sorted in pre-order, so our parent
   // should always be available before the element itself.
   for (auto& init : aInits) {
@@ -3909,6 +3910,11 @@ mozilla::ipc::IPCResult ContentChild::RecvCommitBrowsingContextTransaction(
     aTransaction.Apply(aContext, nullptr, &aEpochs);
   }
   return IPC_OK();
+}
+
+void ContentChild::HoldBrowsingContextGroup(BrowsingContextGroup* aBCG) {
+  RefPtr<BrowsingContextGroup> bcgPtr(aBCG);
+  mBrowsingContextGroupHolder.AppendElement(bcgPtr);
 }
 
 }  // namespace dom
