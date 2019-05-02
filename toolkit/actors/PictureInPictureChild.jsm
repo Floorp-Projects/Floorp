@@ -74,6 +74,13 @@ class PictureInPictureToggleChild extends ActorChild {
         mousemoveDeferredTask: null,
         // A weak reference to the last video we displayed the toggle over.
         weakOverVideo: null,
+        // True if the user is in the midst of clicking the toggle.
+        isClickingToggle: false,
+        // Set to the original target element on pointerdown if the user is clicking
+        // the toggle - this way, we can determine if a "click" event will need to be
+        // suppressed ("click" events don't fire if a "mouseup" occurs on a different
+        // element from the "pointerdown" / "mousedown" event).
+        clickedElement: null,
       };
       this.weakDocStates.set(this.content.document, state);
     }
@@ -98,12 +105,25 @@ class PictureInPictureToggleChild extends ActorChild {
         }
         break;
       }
-      case "mousedown": {
-        this.onMouseDown(event);
+      case "mousedown":
+      case "pointerup":
+      case "mouseup":
+      case "click": {
+        this.onMouseButtonEvent(event);
+        break;
+      }
+      case "pointerdown": {
+        this.onPointerDown(event);
         break;
       }
       case "mousemove": {
         this.onMouseMove(event);
+        break;
+      }
+      case "pagehide": {
+        if (event.target.top == event.target) {
+          this.removeMouseButtonListeners();
+        }
         break;
       }
     }
@@ -200,6 +220,40 @@ class PictureInPictureToggleChild extends ActorChild {
     }
   }
 
+  addMouseButtonListeners() {
+    // We want to try to cancel the mouse events from continuing
+    // on into content if the user has clicked on the toggle, so
+    // we don't use the mozSystemGroup here, and add the listener
+    // to the parent target of the window, which in this case,
+    // is the windowRoot. Since this event listener is attached to
+    // part of the outer window, we need to also remove it in a
+    // pagehide event listener in the event that the page unloads
+    // before stopTrackingMouseOverVideos fires.
+    this.content.windowRoot.addEventListener("pointerdown", this,
+                                             { capture: true });
+    this.content.windowRoot.addEventListener("mousedown", this,
+                                             { capture: true });
+    this.content.windowRoot.addEventListener("mouseup", this,
+                                             { capture: true });
+    this.content.windowRoot.addEventListener("pointerup", this,
+                                             { capture: true });
+    this.content.windowRoot.addEventListener("click", this,
+                                             { capture: true });
+  }
+
+  removeMouseButtonListeners() {
+    this.content.windowRoot.removeEventListener("pointerdown", this,
+                                                { capture: true });
+    this.content.windowRoot.removeEventListener("mousedown", this,
+                                                { capture: true });
+    this.content.windowRoot.removeEventListener("mouseup", this,
+                                                { capture: true });
+    this.content.windowRoot.removeEventListener("pointerup", this,
+                                                { capture: true });
+    this.content.windowRoot.removeEventListener("click", this,
+                                                { capture: true });
+  }
+
   /**
    * One of the challenges of displaying this toggle is that many sites put
    * things over top of <video> elements, like custom controls, or images, or
@@ -222,11 +276,7 @@ class PictureInPictureToggleChild extends ActorChild {
     }
     this.content.document.addEventListener("mousemove", this,
                                            { mozSystemGroup: true, capture: true });
-    // We want to try to cancel the mouse events from continuing
-    // on into content if the user has clicked on the toggle, so
-    // we don't use the mozSystemGroup here.
-    this.content.document.addEventListener("mousedown", this,
-                                           { capture: true });
+    this.addMouseButtonListeners();
   }
 
   /**
@@ -239,8 +289,7 @@ class PictureInPictureToggleChild extends ActorChild {
     state.mousemoveDeferredTask.disarm();
     this.content.document.removeEventListener("mousemove", this,
                                               { mozSystemGroup: true, capture: true });
-    this.content.document.removeEventListener("mousedown", this,
-                                              { capture: true });
+    this.removeMouseButtonListeners();
     let oldOverVideo = state.weakOverVideo && state.weakOverVideo.get();
     if (oldOverVideo) {
       this.onMouseLeaveVideo(oldOverVideo);
@@ -248,18 +297,19 @@ class PictureInPictureToggleChild extends ActorChild {
   }
 
   /**
-   * If we're tracking <video> elements, this mousedown event handler is run anytime
-   * a mousedown occurs on the document. This function is responsible for checking
+   * If we're tracking <video> elements, this pointerdown event handler is run anytime
+   * a pointerdown occurs on the document. This function is responsible for checking
    * if the user clicked on the Picture-in-Picture toggle. It does this by first
    * checking if the video is visible beneath the point that was clicked. Then
-   * it tests whether or not the mousedown occurred within the rectangle of the
-   * toggle. If so, the event's default behaviour and propagation are stopped,
-   * and Picture-in-Picture is triggered.
+   * it tests whether or not the pointerdown occurred within the rectangle of the
+   * toggle. If so, the event's propagation is stopped, and Picture-in-Picture is
+   * triggered.
    *
    * @param {Event} event The mousemove event.
    */
-  onMouseDown(event) {
+  onPointerDown(event) {
     let state = this.docState;
+
     let video = state.weakOverVideo && state.weakOverVideo.get();
     if (!video) {
       return;
@@ -287,16 +337,53 @@ class PictureInPictureToggleChild extends ActorChild {
 
     let toggle = shadowRoot.getElementById("pictureInPictureToggleButton");
     if (this.isMouseOverToggle(toggle, event)) {
-      event.preventDefault();
-      event.stopPropagation();
+      state.isClickingToggle = true;
+      state.clickedElement = Cu.getWeakReference(event.originalTarget);
+      event.stopImmediatePropagation();
       let pipEvent =
         new this.content.CustomEvent("MozTogglePictureInPicture", {
           bubbles: true,
         });
       video.dispatchEvent(pipEvent);
+
       // Since we've initiated Picture-in-Picture, we can go ahead and
       // hide the toggle now.
       this.onMouseLeaveVideo(video);
+    }
+  }
+
+  /**
+   * Called for mousedown, pointerup, mouseup and click events. If we
+   * detected that the user is clicking on the Picture-in-Picture toggle,
+   * these events are cancelled in the capture-phase before they reach
+   * content. The state for suppressing these events is cleared on the
+   * click event (unless the mouseup occurs on a different element from
+   * the mousedown, in which case, the state is cleared on mouseup).
+   *
+   * @param {Event} event A mousedown, pointerup, mouseup or click event.
+   */
+  onMouseButtonEvent(event) {
+    let state = this.docState;
+    if (state.isClickingToggle) {
+      event.stopImmediatePropagation();
+
+      // If this is a mouseup event, check to see if we have a record of what
+      // the original target was on pointerdown. If so, and if it doesn't match
+      // the mouseup original target, that means we won't get a click event, and
+      // we can clear the "clicking the toggle" state right away.
+      //
+      // Otherwise, we wait for the click event to do that.
+      let isMouseUpOnOtherElement =
+        event.type == "mouseup" &&
+        (!state.clickedElement ||
+         state.clickedElement.get() != event.originalTarget);
+
+      if (isMouseUpOnOtherElement || event.type == "click") {
+        // The click is complete, so now we reset the state so that
+        // we stop suppressing these events.
+        state.isClickingToggle = false;
+        state.clickedElement = null;
+      }
     }
   }
 
