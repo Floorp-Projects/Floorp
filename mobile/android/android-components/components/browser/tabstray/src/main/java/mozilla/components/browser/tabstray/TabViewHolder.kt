@@ -6,6 +6,7 @@ package mozilla.components.browser.tabstray
 
 import android.content.res.ColorStateList
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.cardview.widget.CardView
@@ -25,6 +26,7 @@ class TabViewHolder(
     private val cardView: CardView = (itemView as CardView).apply {
         elevation = tabsTray.styling.itemElevation
     }
+    private val iconView: ImageView = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
     private val tabView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_url)
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
@@ -64,6 +66,8 @@ class TabViewHolder(
         }
 
         thumbnailView.setImageBitmap(session.thumbnail)
+
+        iconView.setImageBitmap(session.icon)
     }
 
     /**

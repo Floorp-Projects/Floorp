@@ -13,12 +13,19 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <ImageView
+            android:id="@+id/mozac_browser_tabstray_icon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:importantForAccessibility="no"
+            android:padding="4dp" />
+
         <TextView
             android:id="@+id/mozac_browser_tabstray_url"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
+            android:layout_height="36dp"
             android:layout_alignParentTop="true"
+            android:layout_marginStart="42dp"
             android:layout_toStartOf="@id/mozac_browser_tabstray_close"
             android:ellipsize="end"
             android:lines="1"
@@ -27,8 +34,8 @@
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/mozac_browser_tabstray_close"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"
             android:contentDescription="@string/mozac_browser_tabstray_close_tab"
