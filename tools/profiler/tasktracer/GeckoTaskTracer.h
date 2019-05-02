@@ -10,9 +10,9 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Vector.h"
 #include "nsCOMPtr.h"
 #include "nsStringFwd.h"
-#include "nsTArrayForwardDeclare.h"
 
 #include <stdarg.h>
 
@@ -132,7 +132,7 @@ inline void AddLabel(const char* aFormat, ...) {
 
 void StartLogging();
 void StopLogging();
-UniquePtr<nsTArray<nsCString>> GetLoggedData(TimeStamp aStartTime);
+UniquePtr<Vector<nsCString>> GetLoggedData(TimeStamp aStartTime);
 
 // Returns the timestamp when Task Tracer is enabled in this process.
 PRTime GetStartTime();
