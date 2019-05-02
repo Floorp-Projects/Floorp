@@ -18,7 +18,7 @@ template <typename CharT, class Buffer>
 static CharT* ExtractWellSized(Buffer& cb) {
   size_t capacity = cb.capacity();
   size_t length = cb.length();
-  TempAllocPolicy allocPolicy = cb.allocPolicy();
+  StringBufferAllocPolicy allocPolicy = cb.allocPolicy();
 
   CharT* buf = cb.extractOrCopyRawBuffer();
   if (!buf) {
@@ -50,7 +50,7 @@ char16_t* StringBuffer::stealChars() {
 bool StringBuffer::inflateChars() {
   MOZ_ASSERT(isLatin1());
 
-  TwoByteCharBuffer twoByte(TempAllocPolicy{cx_, arenaId_});
+  TwoByteCharBuffer twoByte(StringBufferAllocPolicy{cx_, arenaId_});
 
   /*
    * Note: we don't use Vector::capacity() because it always returns a
