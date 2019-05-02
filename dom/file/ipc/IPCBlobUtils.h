@@ -158,21 +158,21 @@
  * 1. If IPCBlobInputStreamChild actor is not already owned by DOM-File thread,
  *    it calls Send__delete__ in order to inform the parent side that we don't
  *    need this IPC channel on the current thread.
+ * 2. A new IPCBlobInputStreamChild is created. IPCBlobInputStreamThread is
+ *    used to assign this actor to the DOM-File thread.
+ *    IPCBlobInputStreamThread::GetOrCreate() creates the DOM-File thread if it
+ *    doesn't exist yet. Pending operations and IPCBlobInputStreams are moved
+ *    onto the new actor.
  * 3. IPCBlobInputStreamParent::Recv__delete__ is called on the parent side and
  *    the parent actor is deleted. Doing this we don't remove the UUID from
  *    IPCBlobInputStreamStorage.
- * 4. When IPCBlobInputStreamChild::ActorDestroy() is called, we are sure that
- *    the IPC channel is completely released. IPCBlobInputStreamThread is be
- *    used to assign IPCBlobInputStreamChild actor to the DOM-File thread.
- *    IPCBlobInputStreamThread::GetOrCreate() creates the DOM-File thread if it
- *    doesn't exist yet and it initializes PBackground on it if needed.
- * 5. IPCBlobInputStreamChild is reused on the DOM-File thread for the creation
- *    of a new IPCBlobInputStreamParent actor on the parent side. Doing this,
- *    IPCBlobInputStreamChild will now be owned by the DOM-File thread.
- * 6. When the new IPCBlobInputStreamParent actor is created, it will receive
+ * 4. The IPCBlobInputStream constructor is sent with the new
+ *    IPCBlobInputStreamChild actor, with the DOM-File thread's PBackground as
+ *    its manager.
+ * 5. When the new IPCBlobInputStreamParent actor is created, it will receive
  *    the same UUID of the previous parent actor. The nsIInputStream will be
  *    retrieved from IPCBlobInputStreamStorage.
- * 7. In order to avoid leaks, IPCBlobInputStreamStorage will monitor child
+ * 6. In order to avoid leaks, IPCBlobInputStreamStorage will monitor child
  *    processes and in case one of them dies, it will release the
  *    nsIInputStream objects belonging to that process.
  *
