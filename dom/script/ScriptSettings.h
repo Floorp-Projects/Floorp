@@ -118,13 +118,6 @@ nsIGlobalObject* GetCurrentGlobal();
 //   Components.utils.
 nsIPrincipal* GetWebIDLCallerPrincipal();
 
-// This may be used by callers that know that their incumbent global is non-
-// null (i.e. they know there have been no System Caller pushes since the
-// inner-most script execution).
-inline JSObject& IncumbentJSGlobal() {
-  return *GetIncumbentGlobal()->GetGlobalJSObject();
-}
-
 // Returns whether JSAPI is active right now.  If it is not, working with a
 // JSContext you grab from somewhere random is not OK and you should be doing
 // AutoJSAPI or AutoEntryScript to get yourself a properly set up JSContext.
