@@ -40,7 +40,7 @@ function prepareCollapsibilitiesTest() {
 /* exported prepareCollapsibilitiesTest */
 
 async function toggleCollapsibility(debugTargetPane) {
-  debugTargetPane.querySelector(".js-debug-target-pane-title").click();
+  debugTargetPane.querySelector(".qa-debug-target-pane-title").click();
   // Wait for animation of collapse/expand.
   const animations = debugTargetPane.ownerDocument.getAnimations();
   await Promise.all(animations.map(animation => animation.finished));

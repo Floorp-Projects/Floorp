@@ -31,14 +31,14 @@ add_task(async function() {
 
   info("Check whether connection prompt toggle button exists");
   let connectionPromptToggleButton =
-    document.querySelector(".js-connection-prompt-toggle-button");
+    document.querySelector(".qa-connection-prompt-toggle-button");
   ok(connectionPromptToggleButton, "Toggle button existed");
   ok(connectionPromptToggleButton.textContent.includes("Disable"),
     "Toggle button shows 'Disable'");
 
   info("Click on the toggle button");
   connectionPromptToggleButton =
-    document.querySelector(".js-connection-prompt-toggle-button");
+    document.querySelector(".qa-connection-prompt-toggle-button");
   connectionPromptToggleButton.click();
   info("Wait until the toggle button text is updated");
   await waitUntil(() => connectionPromptToggleButton.textContent.includes("Enable"));

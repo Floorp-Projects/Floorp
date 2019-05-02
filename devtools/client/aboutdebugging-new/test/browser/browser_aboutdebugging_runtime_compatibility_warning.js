@@ -36,23 +36,23 @@ add_task(async function() {
 
   info("Select the compatible runtime and check that no warning is displayed");
   await selectRuntime(COMPATIBLE_DEVICE, COMPATIBLE_RUNTIME, document);
-  ok(!document.querySelector(".js-compatibility-warning"),
+  ok(!document.querySelector(".qa-compatibility-warning"),
     "Compatibility warning is not displayed");
 
   info("Select the old runtime and check that the too-old warning is displayed");
   await selectRuntime(OLD_DEVICE, OLD_RUNTIME, document);
-  ok(document.querySelector(".js-compatibility-warning-too-old"),
+  ok(document.querySelector(".qa-compatibility-warning-too-old"),
     "Expected compatibility warning is displayed (too-old)");
 
   info("Select the recent runtime and check that the too-recent warning is displayed");
   await selectRuntime(RECENT_DEVICE, RECENT_RUNTIME, document);
-  ok(document.querySelector(".js-compatibility-warning-too-recent"),
+  ok(document.querySelector(".qa-compatibility-warning-too-recent"),
     "Expected compatibility warning is displayed (too-recent)");
 
   info("Select the runtime incompatible with Fx 67 " +
     "and check that the debugger 67 warning is displayed");
   await selectRuntime(DEBUGGER_67_DEVICE, DEBUGGER_67_RUNTIME, document);
-  ok(document.querySelector(".js-compatibility-warning-too-old-67-debugger"));
+  ok(document.querySelector(".qa-compatibility-warning-too-old-67-debugger"));
 
   await removeTab(tab);
 });

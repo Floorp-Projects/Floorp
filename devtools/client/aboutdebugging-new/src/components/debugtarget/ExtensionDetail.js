@@ -124,7 +124,7 @@ class ExtensionDetail extends PureComponent {
 
     const link = dom.a(
       {
-        className: "js-manifest-url",
+        className: "qa-manifest-url",
         href: manifestURL,
         target: "_blank",
       },

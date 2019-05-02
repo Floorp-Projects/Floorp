@@ -39,7 +39,7 @@ add_task(async function() {
   disconnectRemoteRuntimeButton.click();
 
   info("Wait until the runtime is disconnected");
-  await waitUntil(() => document.querySelector(".js-connect-button"));
+  await waitUntil(() => document.querySelector(".qa-connect-button"));
 
   is(document.location.hash, DEFAULT_PAGE,
     "Redirection to the default page (this-firefox)");

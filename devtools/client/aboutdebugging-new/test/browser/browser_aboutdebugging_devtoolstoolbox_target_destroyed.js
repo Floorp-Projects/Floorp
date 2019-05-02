@@ -14,14 +14,14 @@ add_task(async function() {
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
   const { devtoolsDocument, devtoolsTab, devtoolsWindow } =
     await openAboutDevtoolsToolbox(document, tab, window, "about:home");
-  const targetInfoHeader = devtoolsDocument.querySelector(".js-debug-target-info");
+  const targetInfoHeader = devtoolsDocument.querySelector(".qa-debug-target-info");
   ok(targetInfoHeader.textContent.includes("about:home"),
     "about:devtools-toolbox is open for the target");
 
   // close the inspected tab and check that error page is shown
   info("removing the inspected tab");
   await removeTab(targetTab);
-  await waitUntil(() => devtoolsWindow.document.querySelector(".js-error-page"));
+  await waitUntil(() => devtoolsWindow.document.querySelector(".qa-error-page"));
 
   info("closing the toolbox");
   await removeTab(devtoolsTab);

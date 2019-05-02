@@ -22,7 +22,7 @@ add_task(async function() {
   await removeTab(tab);
 
   async function assertErrorIsShown(doc) {
-    await waitUntil(() => doc.querySelector(".js-error-page"));
-    ok(doc.querySelector(".js-error-page"), "Error page is rendered");
+    await waitUntil(() => doc.querySelector(".qa-error-page"));
+    ok(doc.querySelector(".qa-error-page"), "Error page is rendered");
   }
 });

@@ -87,7 +87,7 @@ describe("DebugTargetInfo component", () => {
   describe("Connection info", () => {
     it("displays connection info for USB Release target", () => {
       const component = renderer.create(DebugTargetInfo(USB_TARGET_INFO));
-      expect(findByClassName(component.root, "js-connection-info").length).toEqual(1);
+      expect(findByClassName(component.root, "qa-connection-info").length).toEqual(1);
     });
 
     it("renders the expected snapshot for USB Release target", () => {
@@ -97,14 +97,14 @@ describe("DebugTargetInfo component", () => {
 
     it("hides the connection info for This Firefox target", () => {
       const component = renderer.create(DebugTargetInfo(THIS_FIREFOX_TARGET_INFO));
-      expect(findByClassName(component.root, "js-connection-info").length).toEqual(0);
+      expect(findByClassName(component.root, "qa-connection-info").length).toEqual(0);
     });
   });
 
   describe("Target title", () => {
     it("displays the target title if the target of the Toolbox has a name", () => {
       const component = renderer.create(DebugTargetInfo(THIS_FIREFOX_TARGET_INFO));
-      expect(findByClassName(component.root, "js-target-title").length).toEqual(1);
+      expect(findByClassName(component.root, "qa-target-title").length).toEqual(1);
     });
 
     it("renders the expected snapshot for This Firefox target", () => {
@@ -114,7 +114,7 @@ describe("DebugTargetInfo component", () => {
 
     it("doesn't display the target title if the target of the Toolbox has no name", () => {
       const component = renderer.create(DebugTargetInfo(THIS_FIREFOX_NO_NAME_TARGET_INFO));
-      expect(findByClassName(component.root, "js-target-title").length).toEqual(0);
+      expect(findByClassName(component.root, "qa-target-title").length).toEqual(0);
     });
 
     it("renders the expected snapshot for a Toolbox with an unnamed target", () => {

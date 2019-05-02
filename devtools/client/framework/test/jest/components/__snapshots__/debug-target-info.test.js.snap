@@ -2,10 +2,10 @@
 
 exports[`DebugTargetInfo component Connection info renders the expected snapshot for USB Release target 1`] = `
 <header
-  className="debug-target-info js-debug-target-info"
+  className="debug-target-info qa-debug-target-info"
 >
   <span
-    className="iconized-label js-connection-info"
+    className="iconized-label qa-connection-info"
   >
     <img
       alt="usb icon"
@@ -39,7 +39,7 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
       src="chrome://devtools/skin/images/globe.svg"
     />
     <b
-      className="devtools-ellipsis-text js-target-title"
+      className="devtools-ellipsis-text qa-target-title"
     >
       Test Tab Name
     </b>
@@ -54,10 +54,10 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
 
 exports[`DebugTargetInfo component Target icon renders the expected snapshot for a process target 1`] = `
 <header
-  className="debug-target-info js-debug-target-info"
+  className="debug-target-info qa-debug-target-info"
 >
   <span
-    className="iconized-label js-connection-info"
+    className="iconized-label qa-connection-info"
   >
     <img
       alt="usb icon"
@@ -91,7 +91,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       src="chrome://devtools/skin/images/settings.svg"
     />
     <b
-      className="devtools-ellipsis-text js-target-title"
+      className="devtools-ellipsis-text qa-target-title"
     >
       Test Tab Name
     </b>
@@ -106,10 +106,10 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
 
 exports[`DebugTargetInfo component Target icon renders the expected snapshot for a tab target 1`] = `
 <header
-  className="debug-target-info js-debug-target-info"
+  className="debug-target-info qa-debug-target-info"
 >
   <span
-    className="iconized-label js-connection-info"
+    className="iconized-label qa-connection-info"
   >
     <img
       alt="usb icon"
@@ -143,7 +143,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       src="chrome://devtools/skin/images/globe.svg"
     />
     <b
-      className="devtools-ellipsis-text js-target-title"
+      className="devtools-ellipsis-text qa-target-title"
     >
       Test Tab Name
     </b>
@@ -158,10 +158,10 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
 
 exports[`DebugTargetInfo component Target icon renders the expected snapshot for a worker target 1`] = `
 <header
-  className="debug-target-info js-debug-target-info"
+  className="debug-target-info qa-debug-target-info"
 >
   <span
-    className="iconized-label js-connection-info"
+    className="iconized-label qa-connection-info"
   >
     <img
       alt="usb icon"
@@ -195,7 +195,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       src="chrome://devtools/skin/images/debugging-workers.svg"
     />
     <b
-      className="devtools-ellipsis-text js-target-title"
+      className="devtools-ellipsis-text qa-target-title"
     >
       Test Tab Name
     </b>
@@ -210,10 +210,10 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
 
 exports[`DebugTargetInfo component Target icon renders the expected snapshot for an extension target 1`] = `
 <header
-  className="debug-target-info js-debug-target-info"
+  className="debug-target-info qa-debug-target-info"
 >
   <span
-    className="iconized-label js-connection-info"
+    className="iconized-label qa-connection-info"
   >
     <img
       alt="usb icon"
@@ -247,7 +247,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       src="chrome://devtools/skin/images/debugging-addons.svg"
     />
     <b
-      className="devtools-ellipsis-text js-target-title"
+      className="devtools-ellipsis-text qa-target-title"
     >
       Test Tab Name
     </b>
@@ -262,7 +262,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
 
 exports[`DebugTargetInfo component Target title renders the expected snapshot for This Firefox target 1`] = `
 <header
-  className="debug-target-info js-debug-target-info"
+  className="debug-target-info qa-debug-target-info"
 >
   <span
     className="iconized-label"
@@ -288,7 +288,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
       src="chrome://devtools/skin/images/globe.svg"
     />
     <b
-      className="devtools-ellipsis-text js-target-title"
+      className="devtools-ellipsis-text qa-target-title"
     >
       Test Tab Name
     </b>
@@ -303,7 +303,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
 
 exports[`DebugTargetInfo component Target title renders the expected snapshot for a Toolbox with an unnamed target 1`] = `
 <header
-  className="debug-target-info js-debug-target-info"
+  className="debug-target-info qa-debug-target-info"
 >
   <span
     className="iconized-label"

@@ -26,12 +26,12 @@ add_task(async function() {
   info("Wait until the USB sidebar item appears");
   await waitUntil(() => findSidebarItemByText(RUNTIME_DEVICE_NAME, document));
   const usbRuntimeSidebarItem = findSidebarItemByText(RUNTIME_DEVICE_NAME, document);
-  const connectButton = usbRuntimeSidebarItem.querySelector(".js-connect-button");
+  const connectButton = usbRuntimeSidebarItem.querySelector(".qa-connect-button");
   ok(connectButton, "Connect button is displayed for the USB runtime");
 
   info("Click on the connect button and wait until it disappears");
   connectButton.click();
-  await waitUntil(() => !usbRuntimeSidebarItem.querySelector(".js-connect-button"));
+  await waitUntil(() => !usbRuntimeSidebarItem.querySelector(".qa-connect-button"));
 
   info("Check whether the label of item is updated after connecting");
   ok(usbRuntimeSidebarItem.textContent.includes(RUNTIME_NAME), "Label of item updated");

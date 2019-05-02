@@ -147,7 +147,7 @@ class RuntimePage extends PureComponent {
 
     return dom.article(
       {
-        className: "page js-runtime-page",
+        className: "page qa-runtime-page",
       },
       RuntimeInfo({ ...runtimeDetails.info, runtimeId, dispatch }),
       RuntimeActions({ dispatch, runtimeId, runtimeDetails }),
