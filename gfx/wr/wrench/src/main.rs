@@ -378,7 +378,11 @@ fn reftest<'a>(
     rx: Receiver<NotifierEvent>
 ) -> usize {
     let dim = window.get_inner_size();
-    let base_manifest = Path::new("reftests/reftest.list");
+    let base_manifest = if cfg!(target_os = "android") {
+        Path::new("/sdcard/wrench/reftests/reftest.list")
+    } else {
+        Path::new("reftests/reftest.list")
+    };
     let specific_reftest = subargs.value_of("REFTEST").map(|x| Path::new(x));
     let mut reftest_options = ReftestOptions::default();
     if let Some(allow_max_diff) = subargs.value_of("fuzz_tolerance") {
@@ -400,11 +404,15 @@ fn main() {
         .setting(clap::AppSettings::ArgRequiredElseHelp);
 
     // On android devices, attempt to read command line arguments
-    // from a text file located at /sdcard/wrench_args.
+    // from a text file located at /sdcard/wrench/args.
     let args = if cfg!(target_os = "android") {
+        // get full backtraces by default because it's hard to request
+        // externally on android
+        std::env::set_var("RUST_BACKTRACE", "full");
+
         let mut args = vec!["wrench".to_string()];
 
-        if let Ok(wrench_args) = fs::read_to_string("/sdcard/wrench_args") {
+        if let Ok(wrench_args) = fs::read_to_string("/sdcard/wrench/args") {
             for arg in wrench_args.split_whitespace() {
                 args.push(arg.to_string());
             }
