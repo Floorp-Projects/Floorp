@@ -277,13 +277,15 @@ function testWriteAccess(updateTestFile, createDirectory) {
  * @param handle The handle to close
  */
 function closeHandle(handle) {
-  let lib = ctypes.open("kernel32.dll");
-  let CloseHandle = lib.declare("CloseHandle",
-                                ctypes.winapi_abi,
-                                ctypes.int32_t, /* success */
-                                ctypes.void_t.ptr); /* handle */
-  CloseHandle(handle);
-  lib.close();
+  if (handle) {
+    let lib = ctypes.open("kernel32.dll");
+    let CloseHandle = lib.declare("CloseHandle",
+                                  ctypes.winapi_abi,
+                                  ctypes.int32_t, /* success */
+                                  ctypes.void_t.ptr); /* handle */
+    CloseHandle(handle);
+    lib.close();
+  }
 }
 
 /**
@@ -1967,6 +1969,7 @@ UpdateService.prototype = {
           // The OS would clean this up sometime after shutdown,
           // but that would have no guarantee on timing.
           closeHandle(gUpdateMutexHandle);
+          gUpdateMutexHandle = null;
         }
         if (this._retryTimer) {
           this._retryTimer.cancel();
