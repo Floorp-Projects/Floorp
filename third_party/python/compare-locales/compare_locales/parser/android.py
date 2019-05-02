@@ -61,6 +61,9 @@ class AndroidEntity(Entity):
     def raw_val(self):
         return self._raw_val_literal
 
+    def position(self, offset=0):
+        return (0, offset)
+
     def value_position(self, offset=0):
         return (0, offset)
 
@@ -178,22 +181,22 @@ class AndroidParser(Parser):
         except Exception:
             yield XMLJunk(contents)
             return
-        if doc.documentElement.nodeName != 'resources':
+        docElement = doc.documentElement
+        if docElement.nodeName != 'resources':
             yield XMLJunk(doc.toxml())
             return
-        root_children = doc.documentElement.childNodes
+        root_children = docElement.childNodes
         if not only_localizable:
-            attributes = ''.join(
-                ' {}="{}"'.format(attr_name, attr_value)
-                for attr_name, attr_value in
-                doc.documentElement.attributes.items()
-            )
             yield DocumentWrapper(
                 '<?xml?><resources>',
-                '<?xml version="1.0" encoding="utf-8"?>\n<resources{}>'.format(
-                    attributes
-                )
+                '<?xml version="1.0" encoding="utf-8"?>\n<resources'
             )
+            for attr_name, attr_value in docElement.attributes.items():
+                yield DocumentWrapper(
+                    attr_name,
+                    ' {}="{}"'.format(attr_name, attr_value)
+                )
+            yield DocumentWrapper('>', '>')
         child_num = 0
         while child_num < len(root_children):
             node = root_children[child_num]

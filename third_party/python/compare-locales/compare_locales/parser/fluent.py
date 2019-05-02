@@ -109,7 +109,13 @@ class FluentEntity(Entity):
 
     # In Fluent we treat entries as a whole.  FluentChecker reports errors at
     # offsets calculated from the beginning of the entry.
-    def value_position(self, offset=0):
+    def value_position(self, offset=None):
+        if offset is None:
+            # no offset given, use our value start or id end
+            if self.val_span:
+                offset = self.val_span[0] - self.span[0]
+            else:
+                offset = self.key_span[1] - self.span[0]
         return self.position(offset)
 
     @property

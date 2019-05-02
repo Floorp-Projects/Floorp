@@ -167,14 +167,12 @@ class SourceTreeConfigParser(L10nConfigParser):
 class EnumerateApp(object):
     reference = 'en-US'
 
-    def __init__(self, inipath, l10nbase, locales=None):
+    def __init__(self, inipath, l10nbase):
         self.setupConfigParser(inipath)
         self.modules = defaultdict(dict)
         self.l10nbase = mozpath.abspath(l10nbase)
         self.filters = []
         self.addFilters(*self.config.getFilters())
-        self.locales = locales or self.config.allLocales()
-        self.locales.sort()
 
     def setupConfigParser(self, inipath):
         self.config = L10nConfigParser(inipath)
@@ -193,7 +191,7 @@ class EnumerateApp(object):
         filters = self.config.getFilters()
         if filters:
             config.set_filter_py(filters[0])
-        config.locales += self.locales
+        config.set_locales(self.config.allLocales(), deep=True)
         return config
 
     def _config_for_ini(self, projectconfig, aConfig):

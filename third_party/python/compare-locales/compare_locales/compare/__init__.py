@@ -26,18 +26,19 @@ __all__ = [
 
 def compareProjects(
             project_configs,
+            locales,
             l10n_base_dir,
             stat_observer=None,
             merge_stage=None,
             clobber_merge=False,
             quiet=0,
         ):
-    locales = set()
+    all_locales = set(locales)
     comparer = ContentComparer(quiet)
     observers = comparer.observers
     for project in project_configs:
         # disable filter if we're in validation mode
-        if None in project.locales:
+        if None in locales:
             filter = None
         else:
             filter = project.filter
@@ -46,8 +47,9 @@ def compareProjects(
                 quiet=quiet,
                 filter=filter,
             ))
-        locales.update(project.locales)
-    for locale in sorted(locales):
+        if not locales:
+            all_locales.update(project.all_locales)
+    for locale in sorted(all_locales):
         files = paths.ProjectFiles(locale, project_configs,
                                    mergebase=merge_stage)
         if merge_stage is not None:
