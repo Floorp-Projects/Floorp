@@ -34,6 +34,7 @@ extern crate log;
 extern crate cert_storage;
 extern crate cosec;
 extern crate rsdparsa_capi;
+#[cfg(feature = "new_xulstore")]
 extern crate xulstore;
 #[cfg(feature = "spidermonkey_rust")]
 extern crate jsrust_shared;
