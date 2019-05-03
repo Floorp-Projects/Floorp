@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIVariant.idl"
 
 %{C++
 #define NS_CERTSTORAGE_CONTRACTID "@mozilla.org/security/certstorage;1"
@@ -12,12 +13,12 @@
 /**
  * Callback type used to notify callers that an operation performed by
  * nsICertStorage has completed. Indicates the result of the requested
- * operation.
+ * operation, as well as any data returned by the operation.
  */
 [scriptable, function, uuid(3f8fe26a-a436-4ad4-9c1c-a53c60973c31)]
 interface nsICertStorageCallback : nsISupports {
   [must_use]
-  void done(in nsresult result);
+  void done(in nsresult rv, in nsIVariant result);
 };
 
 /**
@@ -56,6 +57,19 @@ interface nsISubjectAndPubKeyRevocationState : nsIRevocationState {
 
 [scriptable, uuid(327100a7-3401-45ef-b160-bf880f1016fd)]
 interface nsICertStorage : nsISupports {
+  const octet DATA_TYPE_REVOCATION = 1;
+  const octet DATA_TYPE_CERTIFICATE = 2;
+
+  /**
+   * Asynchronously check if the backing storage has stored data of the given
+   * type in the past. This is useful if the backing storage may have had to
+   * have been deleted and recreated (as in bug 1546361 when we discovered that
+   * moving from a 32-bit binary to a 64-bit binary caused the DB to become
+   * unreadable, thus necessitating its deletion and recreation).
+   */
+  [must_use]
+  void hasPriorData(in octet type, in nsICertStorageCallback callback);
+
   const short STATE_UNSET = 0;
   const short STATE_ENFORCE = 1;
 
@@ -68,34 +82,6 @@ interface nsICertStorage : nsISupports {
   [must_use]
   void setRevocations(in Array<nsIRevocationState> revocations,
                       in nsICertStorageCallback callback);
-
-  /**
-   * Asynchronously set the whitelist state of an intermediate certificate by
-   * issuer and serial number. Both are base64-encoded.
-   * state (short) is STATE_ENFORCE for whitelisted certs, STATE_UNSET otherwise.
-   * The given callback is called with the result of the operation when it
-   * completes.
-   * Must only be called from the main thread.
-   */
-  [must_use]
-  void setWhitelist(in ACString issuer,
-                    in ACString serialNumber,
-                    in short state,
-                    in nsICertStorageCallback callback);
-
-  /**
-   * Asynchronously set the CRLite enrollment state of a certificate by issuer
-   * and serial number. Both are base64-encoded.
-   * state (short) is STATE_ENFORCE for enrolled certs, STATE_UNSET otherwise.
-   * The given callback is called with the result of the operation when it
-   * completes.
-   * Must only be called from the main thread.
-   */
-  [must_use]
-  void setEnrollment(in ACString issuer,
-                    in ACString serialNumber,
-                    in short state,
-                    in nsICertStorageCallback callback);
 
   /**
    * Get the revocation state of a certificate. STATE_UNSET indicates the
@@ -113,26 +99,6 @@ interface nsICertStorage : nsISupports {
                            in Array<octet> subject,
                            in Array<octet> pubkey);
 
-  /**
-   * Get the CRLite enrollment status of a certificate.
-   * issuer - issuer name, DER, Base64 encoded
-   * serial - serial number, DER, Base64 encoded
-   * Must not be called from the main thread.
-   */
-  [must_use]
-  short getEnrollmentState(in ACString issuer,
-                           in ACString serial);
-
-  /**
-   * Get the whitelist status of an intermediate certificate.
-   * issuer - issuer name, DER, Base64 encoded
-   * serial - serial number, DER, Base64 encoded
-   * Must not be called from the main thread.
-   */
-  [must_use]
-  short getWhitelistState(in ACString issuer,
-                          in ACString serial);
-
    /**
     * Check that the blocklist data is current. Specifically, that the current
     * time is no more than security.onecrl.maximum_staleness_in_seconds seconds
@@ -141,24 +107,6 @@ interface nsICertStorage : nsISupports {
     */
   [must_use]
   boolean isBlocklistFresh();
-
-   /**
-    * Check that the whitelist data is current. Specifically, that the current
-    * time is no more than security.onecrl.maximum_staleness_in_seconds seconds
-    * after the last whitelist update (as stored in the
-    * services.blocklist.intermediates.checked pref)
-    */
-  [must_use]
-  boolean isWhitelistFresh();
-
-   /**
-    * Check that the CRLite enrollment data is current. Specifically, that the current
-    * time is no more than security.onecrl.maximum_staleness_in_seconds seconds
-    * after the last crlite enrollment update (as stored in the
-    * services.blocklist.crlite.checked pref)
-    */
-  [must_use]
-  boolean isEnrollmentFresh();
 
   /**
    * Trust flags to use when adding a adding a certificate.
