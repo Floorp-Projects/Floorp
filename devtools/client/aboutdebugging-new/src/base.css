@@ -29,9 +29,11 @@
   /* Colors from Photon */
   --success-background: #30e60b;
   --warning-background: #fffbd6; /* from the Web Console */
+  --warning-border: rgba(164, 127, 0, 0.27); /* yellow-70(#a47f00) at 27% */
   --warning-icon: var(--yellow-65); /* from the Web Console */
   --warning-text: var(--yellow-80); /* from the Web Console */
   --error-background: #fdf2f5; /* from the Web Console */
+  --error-border: rgba(90, 0, 2, 0.16); /*  red-80(#5a0002) at 16% */
   --error-icon: var(--red-60); /* from the Web Console */
   --error-text: var(--red-70); /* from the Web Console */
   --highlight-50: #0a84ff;
