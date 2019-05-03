@@ -15,6 +15,7 @@ nsstring = { path = "../../../../xpcom/rust/nsstring" }
 rkv = "^0.9"
 rust_cascade = "0.3.4"
 sha2 = "^0.8"
+storage_variant = { path = "../../../../storage/variant" }
 style = { path = "../../../../servo/components/style" }
 thin-vec = { version = "0.1.0", features = ["gecko-ffi"] }
 time = "0.1"
