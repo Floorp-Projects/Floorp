@@ -18,7 +18,6 @@
 #include "mozilla/Preferences.h"
 #include "nsIPermissionManager.h"
 #include "nsThreadUtils.h"
-#include "nsXPCOM.h"
 #include "nsNetUtil.h"
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
@@ -38,8 +37,8 @@ mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
 #define LOG_ENABLED() MOZ_LOG_TEST(gCamerasParentLog, mozilla::LogLevel::Debug)
 
 namespace mozilla {
+using media::GetShutdownBarrier;
 using media::NewRunnableFrom;
-
 namespace camera {
 
 std::map<uint32_t, const char*> sDeviceUniqueIDs;
@@ -180,20 +179,9 @@ class DeliverFrameRunnable : public mozilla::Runnable {
   int mResult;
 };
 
-NS_IMPL_ISUPPORTS(CamerasParent, nsIObserver)
+NS_IMPL_ISUPPORTS(CamerasParent, nsIAsyncShutdownBlocker)
 
-NS_IMETHODIMP
-CamerasParent::Observe(nsISupports* aSubject, const char* aTopic,
-                       const char16_t* aData) {
-  MOZ_ASSERT(!strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID));
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  MOZ_ASSERT(obs);
-  obs->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
-  StopVideoCapture();
-  return NS_OK;
-}
-
-nsresult CamerasParent::DispatchToVideoCaptureThread(Runnable* event) {
+nsresult CamerasParent::DispatchToVideoCaptureThread(RefPtr<Runnable> event) {
   // Don't try to dispatch if we're already on the right thread.
   // There's a potential deadlock because the sThreadMonitor is likely
   // to be taken already.
@@ -208,8 +196,7 @@ nsresult CamerasParent::DispatchToVideoCaptureThread(Runnable* event) {
   if (!sVideoCaptureThread || !sVideoCaptureThread->IsRunning()) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<Runnable> addrefedEvent = event;
-  sVideoCaptureThread->message_loop()->PostTask(addrefedEvent.forget());
+  sVideoCaptureThread->message_loop()->PostTask(event.forget());
   return NS_OK;
 }
 
@@ -219,41 +206,38 @@ void CamerasParent::StopVideoCapture() {
   // from PBackground (when the Actor shuts down).
   // Shut down the WebRTC stack (on the capture thread)
   RefPtr<CamerasParent> self(this);
-  RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self]() {
-    MonitorAutoLock lock(*(self->sThreadMonitor));
-    self->CloseEngines();
-    self->sThreadMonitor->NotifyAll();
-    return NS_OK;
-  });
-  DebugOnly<nsresult> rv = DispatchToVideoCaptureThread(webrtc_runnable);
+  DebugOnly<nsresult> rv =
+      DispatchToVideoCaptureThread(NewRunnableFrom([self]() {
+        MonitorAutoLock lock(*(self->sThreadMonitor));
+        self->CloseEngines();
+        // After closing the WebRTC stack, clean up the
+        // VideoCapture thread.
+        base::Thread* thread = nullptr;
+        if (sNumOfOpenCamerasParentEngines == 0 && self->sVideoCaptureThread) {
+          thread = self->sVideoCaptureThread;
+          self->sVideoCaptureThread = nullptr;
+        }
+        nsresult rv = NS_DispatchToMainThread(NewRunnableFrom([self, thread]() {
+          if (thread) {
+            if (thread->IsRunning()) {
+              thread->Stop();
+            }
+            delete thread;
+          }
+          nsresult rv = GetShutdownBarrier()->RemoveBlocker(self);
+          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+          return NS_OK;
+        }));
+        if (NS_FAILED(rv)) {
+          LOG(("Could not dispatch VideoCaptureThread destruction"));
+        }
+        return rv;
+      }));
 #ifdef DEBUG
   // It's ok for the dispatch to fail if the cleanup it has to do
   // has been done already.
   MOZ_ASSERT(NS_SUCCEEDED(rv) || !mWebRTCAlive);
 #endif
-  // Hold here until the WebRTC thread is gone. We need to dispatch
-  // the thread deletion *now*, or there will be no more possibility
-  // to get to the main thread.
-  MonitorAutoLock lock(*sThreadMonitor);
-  while (mWebRTCAlive) {
-    sThreadMonitor->Wait();
-  }
-  // After closing the WebRTC stack, clean up the
-  // VideoCapture thread.
-  if (sNumOfOpenCamerasParentEngines == 0 && self->sVideoCaptureThread) {
-    base::Thread* thread = self->sVideoCaptureThread;
-    self->sVideoCaptureThread = nullptr;
-    RefPtr<Runnable> threadShutdown = NewRunnableFrom([thread]() {
-      if (thread->IsRunning()) {
-        thread->Stop();
-      }
-      delete thread;
-      return NS_OK;
-    });
-    if (NS_FAILED(NS_DispatchToMainThread(threadShutdown))) {
-      LOG(("Could not dispatch VideoCaptureThread destruction"));
-    }
-  }
 }
 
 int CamerasParent::DeliverFrameOverIPC(CaptureEngine capEng, uint32_t aStreamId,
@@ -1049,8 +1033,21 @@ void CamerasParent::ActorDestroy(ActorDestroyReason aWhy) {
   StopVideoCapture();
 }
 
+nsString CamerasParent::GetNewName() {
+  static volatile uint64_t counter = 0;
+  nsString name(NS_LITERAL_STRING("CamerasParent "));
+  name.AppendInt(++counter);
+  return name;
+}
+
+NS_IMETHODIMP CamerasParent::BlockShutdown(nsIAsyncShutdownClient*) {
+  StopVideoCapture();
+  return NS_OK;
+}
+
 CamerasParent::CamerasParent()
-    : mShmemPool(CaptureEngine::MaxEngine),
+    : mName(GetNewName()),
+      mShmemPool(CaptureEngine::MaxEngine),
       mChildIsAlive(true),
       mDestroyed(false),
       mWebRTCAlive(true) {
@@ -1068,17 +1065,11 @@ CamerasParent::CamerasParent()
   LOG(("Spinning up WebRTC Cameras Thread"));
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<Runnable> threadStart = NewRunnableFrom([self]() {
-    // Register thread shutdown observer
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (NS_WARN_IF(!obs)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv =
-        obs->AddObserver(self, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  NS_DispatchToMainThread(NewRunnableFrom([self]() {
+    nsresult rv = GetShutdownBarrier()->AddBlocker(
+        self, NS_LITERAL_STRING(__FILE__), __LINE__, NS_LITERAL_STRING(""));
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+
     // Start the thread
     MonitorAutoLock lock(*(self->sThreadMonitor));
     if (self->sVideoCaptureThread == nullptr) {
@@ -1097,8 +1088,7 @@ CamerasParent::CamerasParent()
     sNumOfOpenCamerasParentEngines++;
     self->sThreadMonitor->NotifyAll();
     return NS_OK;
-  });
-  NS_DispatchToMainThread(threadStart);
+  }));
 }
 
 CamerasParent::~CamerasParent() {

@@ -2024,7 +2024,7 @@ MediaManager* MediaManager::Get() {
     sSingleton->mShutdownBlocker = new Blocker();
     nsresult rv = media::GetShutdownBarrier()->AddBlocker(
         sSingleton->mShutdownBlocker, NS_LITERAL_STRING(__FILE__), __LINE__,
-        NS_LITERAL_STRING("Media shutdown"));
+        NS_LITERAL_STRING(""));
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }
   return sSingleton;
