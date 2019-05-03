@@ -53,6 +53,13 @@ function onLoad() {
     imgListener(img).then(() => {
       ok(true, "img shouldn't be loaded");
 
+      // `iframe` is a content iframe, and thus not in the same docgroup with
+      // us, which are a chrome-privileged test.
+      //
+      // Ensure the frame is laid out so that this cross-origin
+      // getComputedStyle call is guaranteed to work after bug 1440537.
+      iframe.getBoundingClientRect();
+
       // We can't use matches(":-moz-suppressed") here, as -moz-suppressed is
       // chrome-only, however now we are in a content iframe.
       is(iframe.contentWindow.getComputedStyle(img).color, "rgb(0, 128, 0)",
