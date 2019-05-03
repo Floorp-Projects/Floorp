@@ -411,7 +411,6 @@ class nsBlockFrame : public nsContainerFrame {
   explicit nsBlockFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                         ClassID aID = kClassID)
       : nsContainerFrame(aStyle, aPresContext, aID),
-        mMinWidth(NS_INTRINSIC_ISIZE_UNKNOWN),
         mPrefWidth(NS_INTRINSIC_ISIZE_UNKNOWN) {
 #ifdef DEBUG
     InitDebugFlags();
@@ -906,7 +905,8 @@ class nsBlockFrame : public nsContainerFrame {
 
   // FIXME The two variables should go through a renaming refactoring to reflect
   // the fact that they mean an inline size, not a width.
-  nscoord mMinWidth, mPrefWidth;
+  nscoord mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
+  nscoord mPrefWidth;
 
   nsLineList mLines;
 
