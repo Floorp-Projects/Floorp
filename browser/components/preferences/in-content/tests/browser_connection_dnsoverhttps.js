@@ -3,19 +3,27 @@ var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const SUBDIALOG_URL = "chrome://browser/content/preferences/connection.xul";
 const TRR_MODE_PREF = "network.trr.mode";
 const TRR_URI_PREF = "network.trr.uri";
+const TRR_RESOLVERS_PREF = "network.trr.resolvers";
 const TRR_CUSTOM_URI_PREF = "network.trr.custom_uri";
+const DEFAULT_RESOLVER_VALUE = "https://mozilla.cloudflare-dns.com/dns-query";
 
 const modeCheckboxSelector = "#networkDnsOverHttps";
-const uriTextboxSelector = "#customDnsOverHttpsInput";
+const uriTextboxSelector = "#networkCustomDnsOverHttpsInput";
+const resolverMenulistSelector = "#networkDnsOverHttpsResolverChoices";
 const defaultPrefValues = Object.freeze({
   [TRR_MODE_PREF]: 0,
   [TRR_URI_PREF]: "https://mozilla.cloudflare-dns.com/dns-query",
+  [TRR_RESOLVERS_PREF]: JSON.stringify([
+    { "name": "Cloudflare",  "url": DEFAULT_RESOLVER_VALUE },
+    { "name": "example.org", "url": "https://example.org/dns-query" },
+  ]),
   [TRR_CUSTOM_URI_PREF]: "",
 });
 
 function resetPrefs() {
   Services.prefs.clearUserPref(TRR_MODE_PREF);
   Services.prefs.clearUserPref(TRR_URI_PREF);
+  Services.prefs.clearUserPref(TRR_RESOLVERS_PREF);
   Services.prefs.clearUserPref(TRR_CUSTOM_URI_PREF);
 }
 
@@ -62,6 +70,10 @@ async function testWithProperties(props, startTime) {
   if (props.hasOwnProperty(TRR_URI_PREF)) {
     Services.prefs.setStringPref(TRR_URI_PREF, props[TRR_URI_PREF]);
   }
+  if (props.hasOwnProperty(TRR_RESOLVERS_PREF)) {
+    info(`Setting ${TRR_RESOLVERS_PREF} to ${props[TRR_RESOLVERS_PREF]}`);
+    Services.prefs.setStringPref(TRR_RESOLVERS_PREF, props[TRR_RESOLVERS_PREF]);
+  }
 
   let dialog = await openConnectionsSubDialog();
   await dialog.uiReady;
@@ -72,6 +84,7 @@ async function testWithProperties(props, startTime) {
                                                            "dialogclosing");
   let modeCheckbox = doc.querySelector(modeCheckboxSelector);
   let uriTextbox = doc.querySelector(uriTextboxSelector);
+  let resolverMenulist = doc.querySelector(resolverMenulistSelector);
   let uriPrefChangedPromise;
   let modePrefChangedPromise;
 
@@ -81,6 +94,9 @@ async function testWithProperties(props, startTime) {
   if (props.hasOwnProperty("expectedUriValue")) {
     is(uriTextbox.value, props.expectedUriValue, "URI textbox has expected value");
   }
+  if (props.hasOwnProperty("expectedResolverListValue")) {
+    is(resolverMenulist.value, props.expectedResolverListValue, "resolver menulist has expected value");
+  }
   if (props.clickMode) {
     info((Date.now() - startTime) + ": testWithProperties: clickMode, waiting for the pref observer");
     modePrefChangedPromise = waitForPrefObserver(TRR_MODE_PREF);
@@ -89,6 +105,15 @@ async function testWithProperties(props, startTime) {
     EventUtils.synthesizeMouseAtCenter(modeCheckbox, {}, win);
     info((Date.now() - startTime) + ": testWithProperties: clickMode, mouse click synthesized");
   }
+  if (props.hasOwnProperty("selectResolver")) {
+    info((Date.now() - startTime) + ": testWithProperties: selectResolver, creating change event");
+    resolverMenulist.focus();
+    resolverMenulist.value = props.selectResolver;
+    resolverMenulist.dispatchEvent(new Event("input", {bubbles: true}));
+    resolverMenulist.dispatchEvent(new Event("change", {bubbles: true}));
+    info((Date.now() - startTime) + ": testWithProperties: selectResolver, item value set and events dispatched");
+  }
+
   if (props.hasOwnProperty("inputUriKeys")) {
     info((Date.now() - startTime) + ": testWithProperties: inputUriKeys, waiting for the pref observer");
     uriPrefChangedPromise = waitForPrefObserver(TRR_CUSTOM_URI_PREF);
@@ -120,6 +145,12 @@ async function testWithProperties(props, startTime) {
     let modePref = Services.prefs.getIntPref(TRR_MODE_PREF);
     is(modePref, props.expectedModePref, "mode pref ended up with the expected value");
   }
+
+  if (props.hasOwnProperty("expectedFinalCusomUriPref")) {
+    let customUriPref = Services.prefs.getStringPref(TRR_CUSTOM_URI_PREF);
+    is(customUriPref, props.expectedFinalCustomUriPref, "custom_uri pref ended up with the expected value");
+  }
+
   info((Date.now() - startTime) + ": testWithProperties: fin");
 }
 
@@ -137,40 +168,78 @@ add_task(async function default_values() {
 
 let testVariations = [
   // verify state with defaults
-  { expectedModePref: 0, expectedUriValue: "" },
+  { name: "default", expectedModePref: 0, expectedUriValue: "" },
 
   // verify each of the modes maps to the correct checked state
-  { [TRR_MODE_PREF]: 0, expectedModeChecked: false },
-  { [TRR_MODE_PREF]: 1, expectedModeChecked: true },
-  { [TRR_MODE_PREF]: 2, expectedModeChecked: true },
-  { [TRR_MODE_PREF]: 3, expectedModeChecked: true },
-  { [TRR_MODE_PREF]: 4, expectedModeChecked: true },
-  { [TRR_MODE_PREF]: 5, expectedModeChecked: false },
+  { name: "mode 0",
+    [TRR_MODE_PREF]: 0, expectedModeChecked: false },
+  { name: "mode 1",
+    [TRR_MODE_PREF]: 1, expectedModeChecked: true, expectedFinalUriPref: DEFAULT_RESOLVER_VALUE},
+  { name: "mode 2",
+    [TRR_MODE_PREF]: 2, expectedModeChecked: true, expectedFinalUriPref: DEFAULT_RESOLVER_VALUE},
+  { name: "mode 3",
+    [TRR_MODE_PREF]: 3, expectedModeChecked: true, expectedFinalUriPref: DEFAULT_RESOLVER_VALUE},
+  { name: "mode 4",
+    [TRR_MODE_PREF]: 4, expectedModeChecked: true, expectedFinalUriPref: DEFAULT_RESOLVER_VALUE},
+  { name: "mode 5",
+    [TRR_MODE_PREF]: 5, expectedModeChecked: false },
   // verify an out of bounds mode value maps to the correct checked state
-  { [TRR_MODE_PREF]: 77, expectedModeChecked: false },
+  { name: "mode out-of-bounds",
+    [TRR_MODE_PREF]: 77, expectedModeChecked: false },
 
   // verify toggling the checkbox gives the right outcomes
-  { clickMode: true, expectedModeValue: 2, expectedUriValue: "" },
+  { name: "toggle mode on",
+    clickMode: true, expectedModeValue: 2, expectedUriValue: "", expectedFinalUriPref: DEFAULT_RESOLVER_VALUE },
   {
+    name: "toggle mode off",
     [TRR_MODE_PREF]: 4,
     expectedModeChecked: true, clickMode: true, expectedModePref: 0,
   },
-  // test that setting TRR_CUSTOM_URI_PREF subsequently changes TRR_URI_PREF
+  // test that selecting Custom, when we have a TRR_CUSTOM_URI_PREF subsequently changes TRR_URI_PREF
   {
+    name: "select custom with existing custom_uri pref value",
     [TRR_MODE_PREF]: 2, [TRR_CUSTOM_URI_PREF]: "https://example.com",
-    expectedModeValue: true, expectedUriValue: "https://example.com",
+    expectedModeValue: true, selectResolver: "custom", expectedUriValue: "https://example.com",
+    expectedFinalUriPref: "https://example.com",
+    expectedFinalCustomUriPref: "https://example.com",
   },
   {
-    [TRR_URI_PREF]: "",
-    clickMode: true, inputUriKeys: "https://example.com",
+    name: "select custom and enter new custom_uri pref value",
+    [TRR_URI_PREF]: "", [TRR_CUSTOM_URI_PREF]: "",
+    clickMode: true, selectResolver: "custom", inputUriKeys: "https://example.com",
     expectedModePref: 2, expectedFinalUriPref: "https://example.com",
+    expectedFinalCustomUriPref: "https://example.com",
   },
 
-  // verify the uri can be cleared
   {
+    name: "return to default from custom",
     [TRR_MODE_PREF]: 2, [TRR_URI_PREF]: "https://example.com", [TRR_CUSTOM_URI_PREF]: "https://example.com",
-    expectedUriValue: "https://example.com", inputUriKeys: "", expectedFinalUriPref: "",
+    expectedUriValue: "https://example.com",
+    expectedResolverListValue: "custom",
+    selectResolver: DEFAULT_RESOLVER_VALUE,
+    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
+    expectedFinalCustomUriPref: "https://example.com",
   },
+  {
+    name: "clear the custom uri",
+    [TRR_MODE_PREF]: 2, [TRR_URI_PREF]: "https://example.com", [TRR_CUSTOM_URI_PREF]: "https://example.com",
+    expectedUriValue: "https://example.com",
+    expectedResolverListValue: "custom",
+    inputUriKeys: "",
+    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
+    expectedFinalCustomUriPref: "",
+  },
+  {
+    name: "empty default resolver list",
+    [TRR_RESOLVERS_PREF]: "",
+    [TRR_MODE_PREF]: 2, [TRR_URI_PREF]: "https://example.com", [TRR_CUSTOM_URI_PREF]: "",
+    [TRR_RESOLVERS_PREF]: "",
+    expectedUriValue: "https://example.com",
+    expectedResolverListValue: "custom",
+    expectedFinalUriPref: "https://example.com",
+    expectedFinalCustomUriPref: "https://example.com",
+  },
+
 ];
 
 for (let props of testVariations) {
@@ -178,6 +247,7 @@ for (let props of testVariations) {
     await preferencesOpen;
     let startTime = Date.now();
     resetPrefs();
+    info("starting test: " + props.name);
     await testWithProperties(props, startTime);
   });
 }
