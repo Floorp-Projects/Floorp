@@ -646,7 +646,7 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
     LayoutDeviceToParentLayerScale zoom;
     if (Maybe<uint64_t> zoomAnimationId = apzc->GetZoomAnimationId()) {
       // for now we only support zooming on root content APZCs
-      MOZ_ASSERT(apzc->Metrics().IsRootContent());
+      MOZ_ASSERT(apzc->IsRootContent());
       zoom = apzc->GetCurrentPinchZoomScale(
           AsyncPanZoomController::eForCompositing);
       transforms.AppendElement(wr::ToWrTransformProperty(

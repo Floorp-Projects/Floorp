@@ -349,6 +349,13 @@ HangMonitorChild::~HangMonitorChild() {
 void HangMonitorChild::InterruptCallback() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
+  // The interrupt callback is triggered at non-deterministic points when
+  // recording/replaying, so don't perform any operations that can interact
+  // with the recording.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    return;
+  }
+
   bool paintWhileInterruptingJS;
   bool paintWhileInterruptingJSForce;
   TabId paintWhileInterruptingJSTab;
@@ -379,9 +386,7 @@ void HangMonitorChild::InterruptCallback() {
     mCancelContentJS = false;
   }
 
-  // Don't paint from the interrupt callback when recording or replaying, as
-  // the interrupt callback is triggered non-deterministically.
-  if (paintWhileInterruptingJS && !recordreplay::IsRecordingOrReplaying()) {
+  if (paintWhileInterruptingJS) {
     RefPtr<BrowserChild> browserChild =
         BrowserChild::FindBrowserChild(paintWhileInterruptingJSTab);
     if (browserChild) {
