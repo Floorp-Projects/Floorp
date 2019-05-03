@@ -43,7 +43,7 @@ class WebSocketEventService final : public nsIWebSocketEventService,
   void WebSocketOpened(uint32_t aWebSocketSerialID, uint64_t aInnerWindowID,
                        const nsAString& aEffectiveURI,
                        const nsACString& aProtocols,
-                       const nsACString& aExtensions,
+                       const nsACString& aExtensions, uint64_t aHttpChannelId,
                        nsIEventTarget* aTarget = nullptr);
 
   void WebSocketMessageAvailable(uint32_t aWebSocketSerialID,

@@ -36,11 +36,12 @@ mozilla::ipc::IPCResult WebSocketEventListenerChild::RecvWebSocketCreated(
 
 mozilla::ipc::IPCResult WebSocketEventListenerChild::RecvWebSocketOpened(
     const uint32_t& aWebSocketSerialID, const nsString& aEffectiveURI,
-    const nsCString& aProtocols, const nsCString& aExtensions) {
+    const nsCString& aProtocols, const nsCString& aExtensions,
+    const uint64_t& aHttpChannelId) {
   if (mService) {
     nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
     mService->WebSocketOpened(aWebSocketSerialID, mInnerWindowID, aEffectiveURI,
-                              aProtocols, aExtensions, target);
+                              aProtocols, aExtensions, aHttpChannelId, target);
   }
 
   return IPC_OK();
