@@ -8174,10 +8174,19 @@ nsresult PresShell::EventHandler::DispatchEventToDOM(
             nsContentUtils::IsURIInPrefList(
                 uri,
                 "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys");
+        mPresShell->mForceDispatchKeyPressEventsForNonPrintableKeys |=
+            nsContentUtils::IsURIInPrefList(uri,
+                                            "dom.keyboardevent.keypress.hack."
+                                            "dispatch_non_printable_keys.addl");
         mPresShell->mForceUseLegacyKeyCodeAndCharCodeValues |=
             nsContentUtils::IsURIInPrefList(uri,
                                             "dom.keyboardevent.keypress.hack."
                                             "use_legacy_keycode_and_charcode");
+        mPresShell->mForceUseLegacyKeyCodeAndCharCodeValues |=
+            nsContentUtils::IsURIInPrefList(
+                uri,
+                "dom.keyboardevent.keypress.hack."
+                "use_legacy_keycode_and_charcode.addl");
       }
       if (mPresShell->mForceDispatchKeyPressEventsForNonPrintableKeys) {
         aEvent->mFlags.mOnlySystemGroupDispatchInContent = false;
