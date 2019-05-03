@@ -735,15 +735,19 @@ var gViewController = {
 
     this.viewObjects.discover = gDiscoverView;
     this.viewObjects.legacy = gLegacyView;
-    this.viewObjects.updates = gUpdatesView;
     this.viewObjects.shortcuts = gShortcutsView;
 
     if (useHtmlViews) {
       this.viewObjects.list = htmlView("list");
       this.viewObjects.detail = htmlView("detail");
+      this.viewObjects.updates = htmlView("updates");
+      // gUpdatesView still handles when the Available Updates category is
+      // shown. Include it in viewObjects so it gets initialized and shutdown.
+      this.viewObjects._availableUpdatesSidebar = gUpdatesView;
     } else {
       this.viewObjects.list = gListView;
       this.viewObjects.detail = gDetailView;
+      this.viewObjects.updates = gUpdatesView;
     }
 
     for (let type in this.viewObjects) {
@@ -3837,6 +3841,9 @@ var gBrowser = {
   }, true);
 }
 
+const addonTypes = new Set([
+  "extension", "theme", "plugin", "dictionary", "locale",
+]);
 const htmlViewOpts = {
   loadViewFn(type, param) {
     let viewId = `addons://${type}`;
@@ -3844,6 +3851,11 @@ const htmlViewOpts = {
       viewId += "/" + encodeURIComponent(param);
     }
     gViewController.loadView(viewId);
+  },
+  setCategoryFn(name) {
+    if (addonTypes.has(name)) {
+      gCategories.select(`addons://list/${name}`);
+    }
   },
 };
 

@@ -177,7 +177,6 @@ user_pref("media.memory_caches_combined_limit_kb", 256);
 user_pref("media.openUnsupportedTypeWithExternalApp", false);
 user_pref("media.preload.auto", 3); // auto = enough
 user_pref("media.preload.default", 2); // default = metadata
-user_pref("media.preload.default.cellular", 2); // default = metadata
 user_pref("media.suspend-bkgnd-video.enabled", false);
 user_pref("media.test.dumpDebugInfo", true);
 user_pref("media.volume_scale", "0.01");

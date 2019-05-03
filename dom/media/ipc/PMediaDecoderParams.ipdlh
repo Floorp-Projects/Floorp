@@ -8,6 +8,7 @@ using mozilla::media::TimeUnit from "TimeUnits.h";
 
 namespace mozilla {
 
+// used for both SendInput/RecvInput and ProcessDecodedData/RecvOutput
 struct MediaDataIPDL
 {
   int64_t offset;
@@ -17,9 +18,11 @@ struct MediaDataIPDL
   bool keyframe;
 };
 
+// used for SendInput/RecvInput
 struct MediaRawDataIPDL
 {
   MediaDataIPDL base;
+  bool eos;
   Shmem buffer;
 };
 

@@ -20,11 +20,7 @@ namespace dom {
 //
 // If isMozBrowserElement is false, this PopupIPCTabContext is either a
 // <xul:browser> or an app frame.  The frame's app-id and app-frame-owner-app-id
-// will be equal to the opener's values.  For a <xul:browser>, those app IDs
-// will be NO_APP_ID.
-//
-// If isMozBrowserElement is true, the frame's browserFrameOwnerAppId will be
-// equal to the opener's app-id.
+// will be equal to the opener's values.
 //
 // It's an error to set isMozBrowserElement == false if opener is a mozbrowser
 // element.  Such a PopupIPCTabContext should be rejected by code which receives

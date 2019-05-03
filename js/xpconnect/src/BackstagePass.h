@@ -33,7 +33,8 @@ class BackstagePass : public nsIGlobalObject,
     return nullptr;
   }
 
-  virtual JSObject* GetGlobalJSObject() override;
+  JSObject* GetGlobalJSObject() override;
+  JSObject* GetGlobalJSObjectPreserveColor() const override;
 
   void ForgetGlobalObject() { mWrapper = nullptr; }
 

@@ -77,6 +77,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInput(
   data->mTimecode = aData.base().timecode();
   data->mDuration = aData.base().duration();
   data->mKeyframe = aData.base().keyframe();
+  data->mEOS = aData.eos();
 
   DeallocShmem(aData.buffer());
 

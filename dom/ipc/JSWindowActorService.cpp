@@ -8,7 +8,6 @@
 #include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/dom/EventListenerBinding.h"
-#include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/EventTarget.h"
@@ -19,12 +18,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/StaticPtr.h"
-#include "mozJSComponentLoader.h"
-#include "mozilla/extensions/WebExtensionContentScript.h"
 #include "mozilla/Logging.h"
-
-#include "nsIObserver.h"
-#include "nsIDOMEventListener.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,74 +26,15 @@ namespace {
 StaticRefPtr<JSWindowActorService> gJSWindowActorService;
 }
 
-/**
- * Object corresponding to a single actor protocol. This object acts as an
- * Event listener for the actor which is called for events which would
- * trigger actor creation.
- *
- * This object also can act as a carrier for methods and other state related to
- * a single protocol managed by the JSWindowActorService.
- */
-class JSWindowActorProtocol final : public nsIObserver,
-                                    public nsIDOMEventListener {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSIDOMEVENTLISTENER
+NS_IMPL_CYCLE_COLLECTING_ADDREF(JSWindowActorProtocol)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(JSWindowActorProtocol)
 
-  static already_AddRefed<JSWindowActorProtocol> FromIPC(
-      const JSWindowActorInfo& aInfo);
-  JSWindowActorInfo ToIPC();
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSWindowActorProtocol)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+NS_INTERFACE_MAP_END
 
-  static already_AddRefed<JSWindowActorProtocol> FromWebIDLOptions(
-      const nsAString& aName, const WindowActorOptions& aOptions,
-      ErrorResult& aRv);
-
-  struct Sided {
-    nsCString mModuleURI;
-  };
-
-  struct ParentSide : public Sided {};
-
-  struct EventDecl {
-    nsString mName;
-    EventListenerFlags mFlags;
-    Optional<bool> mPassive;
-  };
-
-  struct ChildSide : public Sided {
-    nsTArray<EventDecl> mEvents;
-    nsTArray<nsCString> mObservers;
-  };
-
-  const ParentSide& Parent() const { return mParent; }
-  const ChildSide& Child() const { return mChild; }
-
-  void RegisterListenersFor(EventTarget* aRoot);
-  void UnregisterListenersFor(EventTarget* aRoot);
-  void AddObservers();
-  void RemoveObservers();
-  bool Matches(BrowsingContext* aBrowsingContext, nsIURI* aURI,
-               const nsString& aRemoteType);
-
- private:
-  explicit JSWindowActorProtocol(const nsAString& aName) : mName(aName) {}
-  extensions::MatchPatternSet* GetURIMatcher();
-  ~JSWindowActorProtocol() = default;
-
-  nsString mName;
-  bool mAllFrames = false;
-  bool mIncludeChrome = false;
-  nsTArray<nsString> mMatches;
-  nsTArray<nsString> mRemoteTypes;
-
-  ParentSide mParent;
-  ChildSide mChild;
-
-  RefPtr<extensions::MatchPatternSet> mURIMatcher;
-};
-
-NS_IMPL_ISUPPORTS(JSWindowActorProtocol, nsIObserver, nsIDOMEventListener);
+NS_IMPL_CYCLE_COLLECTION(JSWindowActorProtocol, mURIMatcher)
 
 /* static */ already_AddRefed<JSWindowActorProtocol>
 JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
@@ -360,7 +295,11 @@ extensions::MatchPatternSet* JSWindowActorProtocol::GetURIMatcher() {
 }
 
 bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
-                                    nsIURI* aURI, const nsString& aRemoteType) {
+                                    nsIURI* aURI,
+                                    const nsAString& aRemoteType) {
+  MOZ_ASSERT(aBrowsingContext, "DocShell without a BrowsingContext!");
+  MOZ_ASSERT(aURI, "Must have URI!");
+
   if (!mRemoteTypes.IsEmpty() && !mRemoteTypes.Contains(aRemoteType)) {
     return false;
   }
@@ -489,107 +428,6 @@ void JSWindowActorService::GetJSWindowActorInfos(
   }
 }
 
-void JSWindowActorService::ConstructActor(
-    const nsAString& aName, bool aParentSide, BrowsingContext* aBrowsingContext,
-    nsIURI* aURI, const nsString& aRemoteType, JS::MutableHandleObject aActor,
-    ErrorResult& aRv) {
-  MOZ_ASSERT_IF(aParentSide, XRE_IsParentProcess());
-  MOZ_ASSERT(aBrowsingContext, "DocShell without a BrowsingContext!");
-  MOZ_ASSERT(aURI, "Must have URI!");
-  // Constructing an actor requires a running script, so push an AutoEntryScript
-  // onto the stack.
-  AutoEntryScript aes(xpc::PrivilegedJunkScope(), "JSWindowActor construction");
-  JSContext* cx = aes.cx();
-
-  // Load our descriptor
-  RefPtr<JSWindowActorProtocol> proto = mDescriptors.Get(aName);
-  if (!proto) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
-
-  const JSWindowActorProtocol::Sided* side;
-  if (aParentSide) {
-    side = &proto->Parent();
-  } else {
-    side = &proto->Child();
-  }
-
-  // Check if our current BrowsingContext and URI matches the requirements for
-  // this actor to load.
-  if (!proto->Matches(aBrowsingContext, aURI, aRemoteType)) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return;
-  }
-
-  // Load the module using mozJSComponentLoader.
-  RefPtr<mozJSComponentLoader> loader = mozJSComponentLoader::Get();
-  MOZ_ASSERT(loader);
-
-  JS::RootedObject global(cx);
-  JS::RootedObject exports(cx);
-  aRv = loader->Import(cx, side->mModuleURI, &global, &exports);
-  if (aRv.Failed()) {
-    return;
-  }
-  MOZ_ASSERT(exports, "null exports!");
-
-  // Load the specific property from our module.
-  JS::RootedValue ctor(cx);
-  nsAutoString ctorName(aName);
-  ctorName.Append(aParentSide ? NS_LITERAL_STRING("Parent")
-                              : NS_LITERAL_STRING("Child"));
-  if (!JS_GetUCProperty(cx, exports, ctorName.get(), ctorName.Length(),
-                        &ctor)) {
-    aRv.NoteJSContextException(cx);
-    return;
-  }
-
-  // Invoke the constructor loaded from the module.
-  if (!JS::Construct(cx, ctor, JS::HandleValueArray::empty(), aActor)) {
-    aRv.NoteJSContextException(cx);
-    return;
-  }
-}
-
-void JSWindowActorService::ReceiveMessage(nsISupports* aTarget,
-                                          JS::RootedObject& aObj,
-                                          const nsString& aMessageName,
-                                          ipc::StructuredCloneData& aData) {
-  IgnoredErrorResult error;
-  AutoEntryScript aes(aObj, "WindowGlobalChild Message Handler");
-  JSContext* cx = aes.cx();
-
-  // We passed the unwrapped object to AutoEntryScript so we now need to
-  // enter the realm of the global object that represents the realm of our
-  // callback.
-  JSAutoRealm ar(cx, aObj);
-  JS::RootedValue json(cx, JS::NullValue());
-
-  // Deserialize our data into a JS object in the correct compartment.
-  aData.Read(aes.cx(), &json, error);
-  if (NS_WARN_IF(error.Failed())) {
-    JS_ClearPendingException(cx);
-    return;
-  }
-
-  RootedDictionary<ReceiveMessageArgument> argument(cx);
-  argument.mObjects = JS_NewPlainObject(cx);
-  argument.mTarget = aTarget;
-  argument.mName = aMessageName;
-  argument.mData = json;
-  argument.mJson = json;
-  argument.mSync = false;
-
-  JS::Rooted<JSObject*> global(cx, JS::GetNonCCWObjectGlobal(aObj));
-  RefPtr<MessageListener> messageListener =
-      new MessageListener(aObj, global, nullptr, nullptr);
-
-  JS::Rooted<JS::Value> dummy(cx);
-  messageListener->ReceiveMessage(argument, &dummy,
-                                  "JSWindowActorService::ReceiveMessage");
-}
-
 void JSWindowActorService::RegisterWindowRoot(EventTarget* aRoot) {
   MOZ_ASSERT(!mRoots.Contains(aRoot));
   mRoots.AppendElement(aRoot);
@@ -606,6 +444,11 @@ void JSWindowActorService::UnregisterWindowRoot(EventTarget* aRoot) {
     // NOTE: No need to unregister listeners here, as the root is going away.
     gJSWindowActorService->mRoots.RemoveElement(aRoot);
   }
+}
+
+already_AddRefed<JSWindowActorProtocol> JSWindowActorService::GetProtocol(
+    const nsAString& aName) {
+  return mDescriptors.Get(aName);
 }
 
 }  // namespace dom

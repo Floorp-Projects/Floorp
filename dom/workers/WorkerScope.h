@@ -77,7 +77,10 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   virtual bool WrapGlobalObject(JSContext* aCx,
                                 JS::MutableHandle<JSObject*> aReflector) = 0;
 
-  virtual JSObject* GetGlobalJSObject(void) override { return GetWrapper(); }
+  JSObject* GetGlobalJSObject() override { return GetWrapper(); }
+  JSObject* GetGlobalJSObjectPreserveColor() const override {
+    return GetWrapperPreserveColor();
+  }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WorkerGlobalScope,
@@ -302,7 +305,10 @@ class WorkerDebuggerGlobalScope final : public DOMEventTargetHelper,
   virtual bool WrapGlobalObject(JSContext* aCx,
                                 JS::MutableHandle<JSObject*> aReflector);
 
-  virtual JSObject* GetGlobalJSObject(void) override { return GetWrapper(); }
+  JSObject* GetGlobalJSObject(void) override { return GetWrapper(); }
+  JSObject* GetGlobalJSObjectPreserveColor(void) const override {
+    return GetWrapperPreserveColor();
+  }
 
   void GetGlobal(JSContext* aCx, JS::MutableHandle<JSObject*> aGlobal,
                  ErrorResult& aRv);

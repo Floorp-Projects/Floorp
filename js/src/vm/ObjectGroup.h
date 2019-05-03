@@ -399,7 +399,6 @@ class ObjectGroup : public gc::TenuredCell {
   void updateNewPropertyTypes(const AutoSweepObjectGroup& sweep, JSContext* cx,
                               JSObject* obj, jsid id, HeapTypeSet* types);
   void addDefiniteProperties(JSContext* cx, Shape* shape);
-  bool matchDefiniteProperties(HandleObject obj);
   void markPropertyNonData(JSContext* cx, JSObject* obj, jsid id);
   void markPropertyNonWritable(JSContext* cx, JSObject* obj, jsid id);
   void markStateChange(const AutoSweepObjectGroup& sweep, JSContext* cx);

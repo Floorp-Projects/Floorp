@@ -19,6 +19,9 @@ function getMessage(state, id) {
 function getAllMessagesUiById(state) {
   return state.messages.messagesUiById;
 }
+function getAllMessagesPayloadById(state) {
+  return state.messages.messagesPayloadById;
+}
 
 function getAllMessagesTableDataById(state) {
   return state.messages.messagesTableDataById;
@@ -72,6 +75,7 @@ module.exports = {
   getAllGroupsById,
   getAllWarningGroupsById,
   getAllMessagesById,
+  getAllMessagesPayloadById,
   getAllMessagesTableDataById,
   getAllMessagesUiById,
   getAllNetworkMessagesUpdateById,

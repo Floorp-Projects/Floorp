@@ -73,6 +73,12 @@ interface nsIWebSocketChannel : nsISupports
     [must_use] readonly attribute ACString extensions;
 
     /**
+     * The channelId of the underlying http channel.
+     * It's available only after nsIWebSocketListener::onStart
+     */
+    [must_use] readonly attribute uint64_t httpChannelId;
+
+    /**
      * Init the WebSocketChannel with LoadInfo arguments.
      * @param aLoadingNode
      * @param aLoadingPrincipal
@@ -229,6 +235,16 @@ interface nsIWebSocketChannel : nsISupports
         return 0;
       }
       return serial;
+    }
+
+    inline uint64_t HttpChannelId()
+    {
+      uint64_t httpChannelId;
+      nsresult rv = GetHttpChannelId(&httpChannelId);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return 0;
+      }
+      return httpChannelId;
     }
 %}
 };

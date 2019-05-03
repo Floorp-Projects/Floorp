@@ -204,11 +204,6 @@ const char kResourceOriginPrefix[] = "resource://";
 #define TEMPORARY_DIRECTORY_NAME "temporary"
 #define DEFAULT_DIRECTORY_NAME "default"
 
-enum AppId {
-  kNoAppId = nsIScriptSecurityManager::NO_APP_ID,
-  kUnknownAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID
-};
-
 #define STORAGE_FILE_NAME "storage.sqlite"
 
 // The name of the file that we use to load/save the last access time of an
@@ -1656,7 +1651,6 @@ class MOZ_STACK_CLASS OriginParser final {
   const OriginAttributes mOriginAttributes;
   Tokenizer mTokenizer;
 
-  uint32_t mAppId;
   nsCString mScheme;
   nsCString mHost;
   Nullable<uint32_t> mPort;
@@ -1680,7 +1674,6 @@ class MOZ_STACK_CLASS OriginParser final {
       : mOrigin(aOrigin),
         mOriginAttributes(aOriginAttributes),
         mTokenizer(aOrigin, '+'),
-        mAppId(kNoAppId),
         mPort(),
         mSchemeType(eNone),
         mState(eExpectingAppIdOrScheme),
@@ -2030,23 +2023,18 @@ nsresult GetBinaryOutputStream(nsIFile* aFile, FileFlag aFileFlag,
   return NS_OK;
 }
 
-void GetJarPrefix(uint32_t aAppId, bool aInIsolatedMozBrowser,
-                  nsACString& aJarPrefix) {
-  MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
-  if (aAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-    aAppId = nsIScriptSecurityManager::NO_APP_ID;
-  }
-
+void GetJarPrefix(bool aInIsolatedMozBrowser, nsACString& aJarPrefix) {
   aJarPrefix.Truncate();
 
   // Fallback.
-  if (aAppId == nsIScriptSecurityManager::NO_APP_ID && !aInIsolatedMozBrowser) {
+  if (!aInIsolatedMozBrowser) {
     return;
   }
 
+  // AppId is an unused b2g identifier. Let's set it to 0 all the time (see bug
+  // 1320404).
   // aJarPrefix = appId + "+" + { 't', 'f' } + "+";
-  aJarPrefix.AppendInt(aAppId);
+  aJarPrefix.AppendInt(0);  // TODO: this is the appId, to be removed.
   aJarPrefix.Append('+');
   aJarPrefix.Append(aInIsolatedMozBrowser ? 't' : 'f');
   aJarPrefix.Append('+');
@@ -2067,8 +2055,7 @@ nsresult CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
   }
 
   nsCString groupPrefix;
-  GetJarPrefix(groupAttributes.mAppId, groupAttributes.mInIsolatedMozBrowser,
-               groupPrefix);
+  GetJarPrefix(groupAttributes.mInIsolatedMozBrowser, groupPrefix);
 
   nsCString group = groupPrefix + groupNoSuffix;
 
@@ -2081,8 +2068,7 @@ nsresult CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
   }
 
   nsCString originPrefix;
-  GetJarPrefix(originAttributes.mAppId, originAttributes.mInIsolatedMozBrowser,
-               originPrefix);
+  GetJarPrefix(originAttributes.mInIsolatedMozBrowser, originPrefix);
 
   nsCString origin = originPrefix + originNoSuffix;
 
@@ -9032,14 +9018,7 @@ auto OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
   // For IPv6 URL, it should at least have three groups.
   MOZ_ASSERT_IF(mIPGroup > 0, mIPGroup >= 3);
 
-  if (mAppId == kNoAppId) {
-    *aAttrs = mOriginAttributes;
-  } else {
-    MOZ_ASSERT(mOriginAttributes.mAppId == kNoAppId);
-
-    *aAttrs = OriginAttributes(mAppId, mInIsolatedMozBrowser);
-  }
-
+  *aAttrs = mOriginAttributes;
   nsAutoCString spec(mScheme);
 
   if (mSchemeType == eFile) {
@@ -9155,9 +9134,8 @@ void OriginParser::HandleToken(const nsDependentCSubstring& aToken) {
         nsCString token(aToken);
 
         nsresult rv;
-        uint32_t appId = token.ToInteger(&rv);
+        Unused << token.ToInteger(&rv);
         if (NS_SUCCEEDED(rv)) {
-          mAppId = appId;
           mState = eExpectingInMozBrowser;
           return;
         }
@@ -9932,20 +9910,6 @@ nsresult UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveMorgueDirectory(
 nsresult UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveAppsData(
     const OriginProps& aOriginProps, bool* aRemoved) {
   AssertIsOnIOThread();
-
-  // XXX This will need to be reworked as part of bug 1320404 (appId is
-  //     going to be removed from origin attributes).
-  if (aOriginProps.mAttrs.mAppId != kNoAppId &&
-      aOriginProps.mAttrs.mAppId != kUnknownAppId) {
-    nsresult rv = RemoveObsoleteOrigin(aOriginProps);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    *aRemoved = true;
-    return NS_OK;
-  }
-
   *aRemoved = false;
   return NS_OK;
 }

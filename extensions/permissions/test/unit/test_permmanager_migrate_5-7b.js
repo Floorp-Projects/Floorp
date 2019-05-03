@@ -94,7 +94,7 @@ add_task(function test() {
   let expected = [
     ["https://foo.com", "A", 2, 0, 0, 0],
     ["http://foo.com", "A", 2, 0, 0, 0],
-    ["http://foo.com^appId=1000&inBrowser=1", "A", 2, 0, 0, 0],
+    ["http://foo.com^inBrowser=1", "A", 2, 0, 0, 0],
 
     ["http://127.0.0.1", "B", 2, 0, 0, 0],
     ["http://localhost", "B", 2, 0, 0, 0],
@@ -144,7 +144,7 @@ add_task(function test() {
 
     let mozHostsStmt = db.createStatement("SELECT " +
                                           "host, type, permission, expireType, expireTime, " +
-                                          "modificationTime, appId, isInBrowserElement " +
+                                          "modificationTime, isInBrowserElement " +
                                           "FROM moz_hosts WHERE id = :id");
     try {
       // Check that the moz_hosts table still contains the correct values.
@@ -158,8 +158,7 @@ add_task(function test() {
         Assert.equal(mozHostsStmt.getInt64(3), it.expireType);
         Assert.equal(mozHostsStmt.getInt64(4), it.expireTime);
         Assert.equal(mozHostsStmt.getInt64(5), it.modificationTime);
-        Assert.equal(mozHostsStmt.getInt64(6), it.appId);
-        Assert.equal(mozHostsStmt.getInt64(7), it.isInBrowserElement);
+        Assert.equal(mozHostsStmt.getInt64(6), it.isInBrowserElement);
       });
     } finally {
       mozHostsStmt.finalize();

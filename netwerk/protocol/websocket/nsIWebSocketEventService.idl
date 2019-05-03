@@ -46,7 +46,8 @@ interface nsIWebSocketEventListener : nsISupports
   [must_use] void webSocketOpened(in unsigned long aWebSocketSerialID,
                                   in AString aEffectiveURI,
                                   in ACString aProtocols,
-                                  in ACString aExtensions);
+                                  in ACString aExtensions,
+                                  in uint64_t aHttpChannelId);
 
   const unsigned short TYPE_STRING      = 0x0;
   const unsigned short TYPE_BLOB        = 0x1;

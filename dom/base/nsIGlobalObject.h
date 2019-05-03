@@ -74,13 +74,34 @@ class nsIGlobalObject : public nsISupports,
    */
   bool IsDying() const { return mIsDying; }
 
-  // GetGlobalJSObject may return a gray object.  If this ever changes so that
-  // it stops doing that, please simplify the code in FindAssociatedGlobal in
-  // BindingUtils.h that does JS::ExposeObjectToActiveJS on the return value of
-  // GetGlobalJSObject.  Also, in that case the JS::ExposeObjectToActiveJS in
-  // AutoJSAPI::InitInternal can probably be removed.  And also the similar
-  // calls in XrayWrapper and nsGlobalWindow.
+  /**
+   * Return the JSObject for this global, if it still has one.  Otherwise return
+   * null.
+   *
+   * If non-null is returned, then the returned object will have been already
+   * exposed to active JS, so callers do not need to do it.
+   */
   virtual JSObject* GetGlobalJSObject() = 0;
+
+  /**
+   * Return the JSObject for this global _without_ exposing it to active JS.
+   * This may return a gray object.
+   *
+   * This method is appropriate to use in assertions (so there is less of a
+   * difference in GC/CC marking between debug and optimized builds) and in
+   * situations where we are sure no CC activity can happen while the return
+   * value is used and the return value does not end up escaping to the heap in
+   * any way.  In all other cases, and in particular in cases where the return
+   * value is held in a JS::Rooted or passed to the JSAutoRealm constructor, use
+   * GetGlobalJSObject.
+   */
+  virtual JSObject* GetGlobalJSObjectPreserveColor() const = 0;
+
+  /**
+   * Check whether this nsIGlobalObject still has a JSObject associated with it,
+   * or whether it's torn-down enough that the JSObject is gone.
+   */
+  bool HasJSGlobal() const { return GetGlobalJSObjectPreserveColor(); }
 
   // This method is not meant to be overridden.
   nsIPrincipal* PrincipalOrNull();

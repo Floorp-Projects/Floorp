@@ -25,8 +25,6 @@
 // +1 is to avoid clamped huge margin values being processed as auto margins
 #define NS_AUTOMARGIN (NS_UNCONSTRAINEDSIZE + 1)
 
-// FIXME The macro should go through a renaming refactoring to reflect the fact
-// that it means an inline size, not a width.
-#define NS_INTRINSIC_WIDTH_UNKNOWN nscoord_MIN
+#define NS_INTRINSIC_ISIZE_UNKNOWN nscoord_MIN
 
 #endif  // LayoutConstants_h___

@@ -183,14 +183,17 @@ class EventTargetDispatcher : public ChannelEvent {
 class StartEvent : public WebSocketEvent {
  public:
   StartEvent(const nsCString& aProtocol, const nsCString& aExtensions,
-             const nsString& aEffectiveURL, bool aEncrypted)
+             const nsString& aEffectiveURL, bool aEncrypted,
+             uint64_t aHttpChannelId)
       : mProtocol(aProtocol),
         mExtensions(aExtensions),
         mEffectiveURL(aEffectiveURL),
-        mEncrypted(aEncrypted) {}
+        mEncrypted(aEncrypted),
+        mHttpChannelId(aHttpChannelId) {}
 
   void Run(WebSocketChannelChild* aChild) override {
-    aChild->OnStart(mProtocol, mExtensions, mEffectiveURL, mEncrypted);
+    aChild->OnStart(mProtocol, mExtensions, mEffectiveURL, mEncrypted,
+                    mHttpChannelId);
   }
 
  private:
@@ -198,13 +201,17 @@ class StartEvent : public WebSocketEvent {
   nsCString mExtensions;
   nsString mEffectiveURL;
   bool mEncrypted;
+  uint64_t mHttpChannelId;
 };
 
 mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnStart(
     const nsCString& aProtocol, const nsCString& aExtensions,
-    const nsString& aEffectiveURL, const bool& aEncrypted) {
+    const nsString& aEffectiveURL, const bool& aEncrypted,
+    const uint64_t& aHttpChannelId) {
   mEventQ->RunOrEnqueue(new EventTargetDispatcher(
-      this, new StartEvent(aProtocol, aExtensions, aEffectiveURL, aEncrypted),
+      this,
+      new StartEvent(aProtocol, aExtensions, aEffectiveURL, aEncrypted,
+                     aHttpChannelId),
       mTargetThread));
 
   return IPC_OK();
@@ -213,12 +220,14 @@ mozilla::ipc::IPCResult WebSocketChannelChild::RecvOnStart(
 void WebSocketChannelChild::OnStart(const nsCString& aProtocol,
                                     const nsCString& aExtensions,
                                     const nsString& aEffectiveURL,
-                                    const bool& aEncrypted) {
+                                    const bool& aEncrypted,
+                                    const uint64_t& aHttpChannelId) {
   LOG(("WebSocketChannelChild::RecvOnStart() %p\n", this));
   SetProtocol(aProtocol);
   mNegotiatedExtensions = aExtensions;
   mEffectiveURL = aEffectiveURL;
   mEncrypted = aEncrypted;
+  mHttpChannelId = aHttpChannelId;
 
   if (mListenerMT) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);

@@ -21,6 +21,7 @@ const {
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
+  MESSAGE_UPDATE_PAYLOAD,
   MESSAGE_TABLE_RECEIVE,
   PAUSED_EXCECUTION_POINT,
   PRIVATE_MESSAGES_CLEAR,
@@ -93,6 +94,29 @@ function messageClose(id) {
   };
 }
 
+/**
+ * Make a query on the server to get a list of DOM elements matching the given
+ * CSS selectors and set the result as a message's additional data payload.
+ *
+ * @param {String} id
+ *        Message ID
+ * @param {String} cssSelectors
+ *        CSS selectors string to use in the querySelectorAll() call
+ * @return {[type]} [description]
+ */
+function messageGetMatchingElements(id, cssSelectors) {
+  return ({ dispatch, services }) => {
+    services
+      .requestEvaluation(`document.querySelectorAll('${cssSelectors}')`)
+      .then(response => {
+        dispatch(messageUpdatePayload(id, response.result));
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  };
+}
+
 function messageTableDataGet(id, client, dataType) {
   return ({dispatch}) => {
     let fetchObjectActorData;
@@ -118,6 +142,22 @@ function messageTableDataGet(id, client, dataType) {
 function messageTableDataReceive(id, data) {
   return {
     type: MESSAGE_TABLE_RECEIVE,
+    id,
+    data,
+  };
+}
+
+/**
+ * Associate additional data with a message without mutating the original message object.
+ *
+ * @param {String} id
+ *        Message ID
+ * @param {Object} data
+ *        Object with arbitrary data.
+ */
+function messageUpdatePayload(id, data) {
+  return {
+    type: MESSAGE_UPDATE_PAYLOAD,
     id,
     data,
   };
@@ -151,7 +191,9 @@ module.exports = {
   messagesClearLogpoint,
   messageOpen,
   messageClose,
+  messageGetMatchingElements,
   messageTableDataGet,
+  messageUpdatePayload,
   networkMessageUpdate,
   networkUpdateRequest,
   privateMessagesClear,

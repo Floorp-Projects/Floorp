@@ -118,9 +118,8 @@ nsCString Scheme0Scope(const nsACString& aOriginSuffix,
     MOZ_ASSERT(success);
   }
 
-  if (oa.mAppId != nsIScriptSecurityManager::NO_APP_ID ||
-      oa.mInIsolatedMozBrowser) {
-    result.AppendInt(oa.mAppId);
+  if (oa.mInIsolatedMozBrowser) {
+    result.AppendInt(0);  // This is the appId to be removed.
     result.Append(':');
     result.Append(oa.mInIsolatedMozBrowser ? 't' : 'f');
     result.Append(':');
@@ -132,7 +131,6 @@ nsCString Scheme0Scope(const nsACString& aOriginSuffix,
   // with originAttributes and originKey columns) so that switch between
   // schema 1 and 0 always works in both ways.
   nsAutoCString remaining;
-  oa.mAppId = 0;
   oa.mInIsolatedMozBrowser = false;
   oa.CreateSuffix(remaining);
   if (!remaining.IsEmpty()) {

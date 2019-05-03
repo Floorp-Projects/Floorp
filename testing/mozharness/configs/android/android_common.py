@@ -333,7 +333,8 @@ config = {
             "install": True,
             "options": [
                 "--symbols-path=%(symbols_path)s",
-                "--libxul=%(gtest_dir)s/libxul.so",
+                "--tests-path=%(gtest_dir)s",
+                "--libxul=%(gtest_dir)s/gtest_bin/gtest/libxul.so",
                 "--package=%(app)s",
                 "--deviceSerial=%(device_serial)s",
             ],

@@ -46,6 +46,7 @@
 #editBookmarkPanelRecommendation {
   position: absolute;
   height: 100%;
+  width: 100%;
   transition: all 0.25s cubic-bezier(0.07, 0.95, 0, 1);
 }
 

@@ -29,6 +29,8 @@ class TelemetryTestRunner(BaseMarionetteTestRunner):
                 #   * avoid net access in tests
                 #   * stabilize browser.search.region to avoid an extra subsession (bug 1545207)
                 "browser.search.geoip.url": "data:application/json,{\"country_code\": \"DE\"}",
+                # Disable smart sizing because it changes prefs at startup. (bug 1547750)
+                "browser.cache.disk.smart_size.enabled": False,
                 "toolkit.telemetry.server": "{}/pings".format(SERVER_URL),
                 "toolkit.telemetry.initDelay": 1,
                 "toolkit.telemetry.minSubsessionLength": 0,

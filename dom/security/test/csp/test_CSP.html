@@ -106,14 +106,12 @@ window.testResult = function(testname, result, msg) {
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv(
-  {'set':[// On a cellular connection the default preload value is 0 ("preload
-          // none"). Our Android emulators emulate a cellular connection, and
-          // so by default preload no media data. This causes the media_* tests
-          // to timeout. We set the default used by cellular connections to the
-          // same as used by non-cellular connections in order to get
-          // consistent behavior across platforms/devices.
-          ["media.preload.default", 2],
-          ["media.preload.default.cellular", 2]]},
+  {'set':[// This defaults to 0 ("preload none") on mobile (B2G/Android), which
+          // blocks loading the resource until the user interacts with a
+          // corresponding widget, which breaks the media_* tests. We set it
+          // back to the default used by desktop Firefox to get consistent
+          // behavior.
+          ["media.preload.default", 2]]},
     function() {
       // save this for last so that our listeners are registered.
       // ... this loads the testbed of good and bad requests.

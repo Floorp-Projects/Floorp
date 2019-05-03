@@ -19,6 +19,7 @@ const {
 const componentMap = new Map([
   ["ConsoleApiCall", require("./message-types/ConsoleApiCall")],
   ["ConsoleCommand", require("./message-types/ConsoleCommand")],
+  ["CSSWarning", require("./message-types/CSSWarning")],
   ["DefaultRenderer", require("./message-types/DefaultRenderer")],
   ["EvaluationResult", require("./message-types/EvaluationResult")],
   ["NetworkEventMessage", require("./message-types/NetworkEventMessage")],
@@ -32,6 +33,7 @@ class MessageContainer extends Component {
       messageId: PropTypes.string.isRequired,
       open: PropTypes.bool.isRequired,
       serviceContainer: PropTypes.object.isRequired,
+      payload: PropTypes.object,
       tableData: PropTypes.object,
       timestampsVisible: PropTypes.bool.isRequired,
       repeat: PropTypes.number,
@@ -53,6 +55,7 @@ class MessageContainer extends Component {
   shouldComponentUpdate(nextProps, nextState) {
     const repeatChanged = this.props.repeat !== nextProps.repeat;
     const openChanged = this.props.open !== nextProps.open;
+    const payloadChanged = this.props.payload !== nextProps.payload;
     const tableDataChanged = this.props.tableData !== nextProps.tableData;
     const timestampVisibleChanged =
       this.props.timestampsVisible !== nextProps.timestampsVisible;
@@ -66,6 +69,7 @@ class MessageContainer extends Component {
     return repeatChanged
       || badgeChanged
       || openChanged
+      || payloadChanged
       || tableDataChanged
       || timestampVisibleChanged
       || networkMessageUpdateChanged
@@ -92,6 +96,7 @@ function getMessageComponent(message) {
     case MESSAGE_SOURCE.NETWORK:
       return componentMap.get("NetworkEventMessage");
     case MESSAGE_SOURCE.CSS:
+      return componentMap.get("CSSWarning");
     case MESSAGE_SOURCE.JAVASCRIPT:
       switch (message.type) {
         case MESSAGE_TYPE.COMMAND:

@@ -4583,60 +4583,6 @@ CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
       cacheIRStubKind_(BaselineCacheIRStubKind::Regular),
       isFirstStub_(isFirstStub) {}
 
-AttachDecision CallIRGenerator::tryAttachStringSplit() {
-  // Only optimize StringSplitString(str, str)
-  if (argc_ != 2 || !args_[0].isString() || !args_[1].isString()) {
-    return AttachDecision::NoAction;
-  }
-
-  // If we have not previously attached a stub and both arguments are atoms,
-  // defer until after the call and attach a const string split stub.
-  if (isOptimizableConstStringSplit()) {
-    return AttachDecision::Deferred;
-  }
-
-  // Get the object group to use for this location.
-  RootedObjectGroup group(cx_,
-                          ObjectGroupRealm::getStringSplitStringGroup(cx_));
-  if (!group) {
-    cx_->clearPendingException();
-    return AttachDecision::NoAction;
-  }
-
-  Int32OperandId argcId(writer.setInputOperandId(0));
-
-  // Ensure argc == 2.
-  writer.guardSpecificInt32Immediate(argcId, 2);
-
-  // Ensure callee is the |String_split| native function.
-  ValOperandId calleeValId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
-  ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
-  writer.guardSpecificNativeFunction(calleeObjId,
-                                     js::intrinsic_StringSplitString);
-
-  // Ensure arg0 is a string.
-  ValOperandId arg0ValId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  StringOperandId arg0StrId = writer.guardIsString(arg0ValId);
-
-  // Ensure arg1 is a string.
-  ValOperandId arg1ValId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
-  StringOperandId arg1StrId = writer.guardIsString(arg1ValId);
-
-  // Call custom string splitter VM-function.
-  writer.callStringSplitResult(arg0StrId, arg1StrId, group);
-  writer.typeMonitorResult();
-
-  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
-  trackAttached("StringSplitString");
-
-  TypeScript::Monitor(cx_, script_, pc_, TypeSet::ObjectType(group));
-
-  return AttachDecision::Attach;
-}
-
 AttachDecision CallIRGenerator::tryAttachArrayPush() {
   // Only optimize on obj.push(val);
   if (argc_ != 1 || !thisval_.isObject()) {
@@ -4975,9 +4921,6 @@ AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
   }
 
   // Check for special-cased native functions.
-  if (callee->native() == js::intrinsic_StringSplitString) {
-    return tryAttachStringSplit();
-  }
   if (callee->native() == js::array_push) {
     return tryAttachArrayPush();
   }
@@ -5051,6 +4994,14 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
   return true;
 }
 
+AttachDecision CallIRGenerator::tryAttachSelfHosted(HandleFunction calleeFunc) {
+  if (isOptimizableConstStringSplit(calleeFunc)) {
+    return AttachDecision::Deferred;
+  }
+
+  return AttachDecision::NoAction;
+}
+
 AttachDecision CallIRGenerator::tryAttachCallScripted(
     HandleFunction calleeFunc) {
   if (JitOptions.disableCacheIRCalls) {
@@ -5100,6 +5051,8 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
     EnsureTrackPropertyTypes(cx_, calleeFunc, NameToId(cx_->names().prototype));
   }
 
+  TRY_ATTACH(tryAttachSelfHosted(calleeFunc));
+
   RootedObject templateObj(cx_);
   bool skipAttach = false;
   if (isConstructing && isSpecialized &&
@@ -5122,7 +5075,7 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   FieldOffset calleeOffset = 0;
   if (isSpecialized) {
     // Ensure callee matches this stub's callee
-    calleeOffset = writer.guardSpecificObject(calleeObjId, calleeFunc);
+    calleeOffset = writer.guardSpecificFunction(calleeObjId, calleeFunc);
     // Guard against relazification
     writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
   } else {
@@ -5276,8 +5229,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   }
 
   RootedObject templateObj(cx_);
-  if (isConstructing && isSpecialized &&
-      !getTemplateObjectForNative(calleeFunc, &templateObj)) {
+  if (isSpecialized && !getTemplateObjectForNative(calleeFunc, &templateObj)) {
     cx_->clearPendingException();
     return AttachDecision::NoAction;
   }
@@ -5293,7 +5245,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   FieldOffset calleeOffset = 0;
   if (isSpecialized) {
     // Ensure callee matches this stub's callee
-    calleeOffset = writer.guardSpecificObject(calleeObjId, calleeFunc);
+    calleeOffset = writer.guardSpecificFunction(calleeObjId, calleeFunc);
     writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags);
   } else {
     // Guard that object is a native function
@@ -5459,31 +5411,34 @@ AttachDecision CallIRGenerator::tryAttachStub() {
   return AttachDecision::NoAction;
 }
 
-bool CallIRGenerator::isOptimizableConstStringSplit() {
+bool CallIRGenerator::isOptimizableConstStringSplit(HandleFunction calleeFunc) {
   // If we have not yet attached any stubs to this IC...
   if (!isFirstStub_) {
     return false;
   }
 
-  // And we have two arguments, both of which are strings...
-  if (argc_ != 2 || !args_[0].isString() || !args_[1].isString()) {
+  // And |this| is a string:
+  if (!thisval_.isString()) {
     return false;
   }
 
-  // And the strings are atoms...
-  if (!args_[0].toString()->isAtom() || !args_[1].toString()->isAtom()) {
+  // And we have one argument, which is a string...
+  if (argc_ != 1 || !args_[0].isString()) {
+    return false;
+  }
+
+  // And both strings are atoms...
+  if (!thisval_.toString()->isAtom() || !args_[0].toString()->isAtom()) {
     return false;
   }
 
   // And we are calling a function in the current realm...
-  RootedFunction calleeFunc(cx_, &callee_.toObject().as<JSFunction>());
   if (calleeFunc->realm() != cx_->realm()) {
     return false;
   }
 
-  // Which is the String split intrinsic...
-  if (!calleeFunc->isNative() ||
-      calleeFunc->native() != js::intrinsic_StringSplitString) {
+  // Which is the String split self-hosted function
+  if (!IsSelfHostedFunctionWithName(calleeFunc, cx_->names().String_split)) {
     return false;
   }
 
@@ -5494,13 +5449,18 @@ bool CallIRGenerator::isOptimizableConstStringSplit() {
   return true;
 }
 
-AttachDecision CallIRGenerator::tryAttachConstStringSplit(HandleValue result) {
-  if (!isOptimizableConstStringSplit()) {
+AttachDecision CallIRGenerator::tryAttachConstStringSplit(
+    HandleValue result, HandleFunction calleeFunc) {
+  if (JitOptions.disableCacheIRCalls) {
     return AttachDecision::NoAction;
   }
 
-  RootedString str(cx_, args_[0].toString());
-  RootedString sep(cx_, args_[1].toString());
+  if (!isOptimizableConstStringSplit(calleeFunc)) {
+    return AttachDecision::NoAction;
+  }
+
+  RootedString str(cx_, thisval_.toString());
+  RootedString sep(cx_, args_[0].toString());
   RootedArrayObject resultObj(cx_, &result.toObject().as<ArrayObject>());
   uint32_t initLength = resultObj->getDenseInitializedLength();
   MOZ_ASSERT(initLength == resultObj->length(),
@@ -5535,29 +5495,32 @@ AttachDecision CallIRGenerator::tryAttachConstStringSplit(HandleValue result) {
 
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard that callee is the |intrinsic_StringSplitString| native function.
+  // Guard that callee is the self-hosted String_split function
   ValOperandId calleeValId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Callee, 2);
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
-  writer.guardSpecificNativeFunction(calleeObjId, intrinsic_StringSplitString);
+  writer.guardSpecificFunction(calleeObjId, calleeFunc);
 
-  // Guard that the first argument is the expected string
-  ValOperandId strValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, 2);
+  // Guard that |this| is the expected string
+  ValOperandId strValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   StringOperandId strStringId = writer.guardIsString(strValId);
-  writer.guardSpecificAtom(strStringId, &str->asAtom());
+  FieldOffset strOffset = writer.guardSpecificAtom(strStringId, &str->asAtom());
 
-  // Guard that the second argument is the expected string
-  ValOperandId sepValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, 2);
+  // Guard that the argument is the expected separator
+  ValOperandId sepValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   StringOperandId sepStringId = writer.guardIsString(sepValId);
-  writer.guardSpecificAtom(sepStringId, &sep->asAtom());
+  FieldOffset sepOffset = writer.guardSpecificAtom(sepStringId, &sep->asAtom());
 
-  writer.callConstStringSplitResult(arrObj);
+  FieldOffset templateOffset = writer.callConstStringSplitResult(arrObj);
 
   writer.typeMonitorResult();
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
 
-  trackAttached("Const string split");
+  writer.metaConstStringSplitData(strOffset, sepOffset, templateOffset);
 
+  trackAttached("Const string split");
   return AttachDecision::Attach;
 }
 
@@ -5570,15 +5533,11 @@ AttachDecision CallIRGenerator::tryAttachDeferredStub(HandleValue result) {
   // Ensure that the mode makes sense.
   MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
 
-  // We currently only defer native functions.
   RootedFunction calleeFunc(cx_, &callee_.toObject().as<JSFunction>());
-  MOZ_ASSERT(calleeFunc->isNative());
 
-  if (calleeFunc->native() == js::intrinsic_StringSplitString) {
-    return tryAttachConstStringSplit(result);
-  }
+  TRY_ATTACH(tryAttachConstStringSplit(result, calleeFunc));
 
-  MOZ_ASSERT_UNREACHABLE("Unexpected deferred function");
+  MOZ_ASSERT_UNREACHABLE("Unexpected deferred function failure");
   return AttachDecision::NoAction;
 }
 

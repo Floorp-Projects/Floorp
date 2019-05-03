@@ -914,7 +914,7 @@ bool _evaluate(NPP npp, NPObject* npobj, NPString* script, NPVariant* result) {
   NS_ENSURE_TRUE(doc, false);
 
   nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(doc->GetInnerWindow());
-  if (NS_WARN_IF(!win || !win->FastGetGlobalJSObject())) {
+  if (NS_WARN_IF(!win || !win->HasJSGlobal())) {
     return false;
   }
 

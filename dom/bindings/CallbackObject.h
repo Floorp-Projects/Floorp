@@ -206,7 +206,10 @@ class CallbackObject : public nsISupports {
     mCreationStack = aCreationStack;
     if (aIncumbentGlobal) {
       mIncumbentGlobal = aIncumbentGlobal;
-      mIncumbentJSGlobal = aIncumbentGlobal->GetGlobalJSObject();
+      // We don't want to expose to JS here (change the color).  If someone ever
+      // reads mIncumbentJSGlobal, that will expose.  If not, no need to expose
+      // here.
+      mIncumbentJSGlobal = aIncumbentGlobal->GetGlobalJSObjectPreserveColor();
     }
   }
 

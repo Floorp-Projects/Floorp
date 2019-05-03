@@ -12,8 +12,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 
-#define NO_APP_ID (nsIScriptSecurityManager::NO_APP_ID)
-
 using namespace mozilla::dom::ipc;
 using namespace mozilla::layout;
 
@@ -94,9 +92,6 @@ bool TabContext::SetTabContext(bool aIsMozBrowserElement,
                                const OriginAttributes& aOriginAttributes,
                                const nsAString& aPresentationURL) {
   NS_ENSURE_FALSE(mInitialized, false);
-
-  // Veryify that app id matches mAppId passed in originAttributes
-  MOZ_RELEASE_ASSERT(aOriginAttributes.mAppId == NO_APP_ID);
 
   mInitialized = true;
   mIsMozBrowserElement = aIsMozBrowserElement;

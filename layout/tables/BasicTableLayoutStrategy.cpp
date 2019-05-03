@@ -40,7 +40,7 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy() {}
 /* virtual */
 nscoord BasicTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext) {
   DISPLAY_MIN_INLINE_SIZE(mTableFrame, mMinISize);
-  if (mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  if (mMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     ComputeIntrinsicISizes(aRenderingContext);
   }
   return mMinISize;
@@ -50,10 +50,10 @@ nscoord BasicTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext) {
 nscoord BasicTableLayoutStrategy::GetPrefISize(gfxContext* aRenderingContext,
                                                bool aComputingSize) {
   DISPLAY_PREF_INLINE_SIZE(mTableFrame, mPrefISize);
-  NS_ASSERTION((mPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) ==
-                   (mPrefISizePctExpand == NS_INTRINSIC_WIDTH_UNKNOWN),
+  NS_ASSERTION((mPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) ==
+                   (mPrefISizePctExpand == NS_INTRINSIC_ISIZE_UNKNOWN),
                "dirtyness out of sync");
-  if (mPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  if (mPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     ComputeIntrinsicISizes(aRenderingContext);
   }
   return aComputingSize ? mPrefISizePctExpand : mPrefISize;
@@ -477,9 +477,9 @@ void BasicTableLayoutStrategy::ComputeIntrinsicISizes(
 
 /* virtual */
 void BasicTableLayoutStrategy::MarkIntrinsicISizesDirty() {
-  mMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
-  mPrefISize = NS_INTRINSIC_WIDTH_UNKNOWN;
-  mPrefISizePctExpand = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
+  mPrefISize = NS_INTRINSIC_ISIZE_UNKNOWN;
+  mPrefISizePctExpand = NS_INTRINSIC_ISIZE_UNKNOWN;
   mLastCalcISize = nscoord_MIN;
 }
 
@@ -493,14 +493,14 @@ void BasicTableLayoutStrategy::ComputeColumnISizes(
   }
   mLastCalcISize = iSize;
 
-  NS_ASSERTION((mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) ==
-                   (mPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN),
+  NS_ASSERTION((mMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) ==
+                   (mPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN),
                "dirtyness out of sync");
-  NS_ASSERTION((mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) ==
-                   (mPrefISizePctExpand == NS_INTRINSIC_WIDTH_UNKNOWN),
+  NS_ASSERTION((mMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) ==
+                   (mPrefISizePctExpand == NS_INTRINSIC_ISIZE_UNKNOWN),
                "dirtyness out of sync");
   // XXX Is this needed?
-  if (mMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  if (mMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     ComputeIntrinsicISizes(aReflowInput.mRenderingContext);
   }
 

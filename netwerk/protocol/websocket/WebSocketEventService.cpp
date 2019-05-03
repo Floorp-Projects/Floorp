@@ -112,22 +112,26 @@ class WebSocketOpenedRunnable final : public WebSocketBaseRunnable {
   WebSocketOpenedRunnable(uint32_t aWebSocketSerialID, uint64_t aInnerWindowID,
                           const nsAString& aEffectiveURI,
                           const nsACString& aProtocols,
-                          const nsACString& aExtensions)
+                          const nsACString& aExtensions,
+                          uint64_t aHttpChannelId)
       : WebSocketBaseRunnable(aWebSocketSerialID, aInnerWindowID),
         mEffectiveURI(aEffectiveURI),
         mProtocols(aProtocols),
-        mExtensions(aExtensions) {}
+        mExtensions(aExtensions),
+        mHttpChannelId(aHttpChannelId) {}
 
  private:
   virtual void DoWork(nsIWebSocketEventListener* aListener) override {
-    DebugOnly<nsresult> rv = aListener->WebSocketOpened(
-        mWebSocketSerialID, mEffectiveURI, mProtocols, mExtensions);
+    DebugOnly<nsresult> rv =
+        aListener->WebSocketOpened(mWebSocketSerialID, mEffectiveURI,
+                                   mProtocols, mExtensions, mHttpChannelId);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WebSocketOpened failed");
   }
 
   const nsString mEffectiveURI;
   const nsCString mProtocols;
   const nsCString mExtensions;
+  uint64_t mHttpChannelId;
 };
 
 class WebSocketMessageAvailableRunnable final : public WebSocketBaseRunnable {
@@ -238,15 +242,16 @@ void WebSocketEventService::WebSocketOpened(uint32_t aWebSocketSerialID,
                                             const nsAString& aEffectiveURI,
                                             const nsACString& aProtocols,
                                             const nsACString& aExtensions,
+                                            uint64_t aHttpChannelId,
                                             nsIEventTarget* aTarget) {
   // Let's continue only if we have some listeners.
   if (!HasListeners()) {
     return;
   }
 
-  RefPtr<WebSocketOpenedRunnable> runnable =
-      new WebSocketOpenedRunnable(aWebSocketSerialID, aInnerWindowID,
-                                  aEffectiveURI, aProtocols, aExtensions);
+  RefPtr<WebSocketOpenedRunnable> runnable = new WebSocketOpenedRunnable(
+      aWebSocketSerialID, aInnerWindowID, aEffectiveURI, aProtocols,
+      aExtensions, aHttpChannelId);
   DebugOnly<nsresult> rv = aTarget
                                ? aTarget->Dispatch(runnable, NS_DISPATCH_NORMAL)
                                : NS_DispatchToMainThread(runnable);

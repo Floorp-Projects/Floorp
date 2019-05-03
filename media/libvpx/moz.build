@@ -76,9 +76,8 @@ elif CONFIG['CPU_ARCH'] == 'arm':
             '-no-integrated-as',
         ]
 elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] == 'WINNT':
-    # Generic C-only configuration
-    EXPORTS.vpx += files['GENERIC_EXPORTS']
-    SOURCES += files['GENERIC_SOURCES']
+    EXPORTS.vpx += files['ARM64_EXPORTS']
+    SOURCES += files['ARM64_SOURCES']
     ASFLAGS += [ '-I%s/media/libvpx/config/win/aarch64/' % TOPSRCDIR ]
     LOCAL_INCLUDES += [ '/media/libvpx/config/win/aarch64/' ]
 elif CONFIG['CPU_ARCH'] == 'aarch64':

@@ -48,6 +48,9 @@ class SandboxPrivate : public nsIGlobalObject,
   nsIPrincipal* GetEffectiveStoragePrincipal() override { return nullptr; }
 
   JSObject* GetGlobalJSObject() override { return GetWrapper(); }
+  JSObject* GetGlobalJSObjectPreserveColor() const override {
+    return GetWrapperPreserveColor();
+  }
 
   void ForgetGlobalObject(JSObject* obj) { ClearWrapper(obj); }
 

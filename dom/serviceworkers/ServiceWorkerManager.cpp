@@ -1504,12 +1504,6 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aURI);
 
-  // XXXnsm Temporary fix until Bug 1171432 is fixed.
-  if (NS_WARN_IF(BasePrincipal::Cast(aPrincipal)->AppId() ==
-                 nsIScriptSecurityManager::UNKNOWN_APP_ID)) {
-    return nullptr;
-  }
-
   nsAutoCString scopeKey;
   nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
   if (NS_FAILED(rv)) {

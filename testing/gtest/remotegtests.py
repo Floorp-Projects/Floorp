@@ -9,6 +9,7 @@ from __future__ import with_statement
 from optparse import OptionParser
 
 import datetime
+import glob
 import os
 import posixpath
 import shutil
@@ -43,6 +44,7 @@ class RemoteGTests(object):
         # custom output parser is mandatory on Android
         env["MOZ_TBPL_PARSER"] = "1"
         env["MOZ_GTEST_LOG_PATH"] = self.remote_log
+        env["MOZ_GTEST_CWD"] = self.remote_profile
         env["MOZ_GTEST_MINIDUMPS_PATH"] = self.remote_minidumps
         env["MOZ_IN_AUTOMATION"] = "1"
         if shuffle:
@@ -52,7 +54,7 @@ class RemoteGTests(object):
 
         return env
 
-    def run_gtest(self, shuffle, test_filter, package, adb_path, device_serial,
+    def run_gtest(self, test_dir, shuffle, test_filter, package, adb_path, device_serial,
                   remote_test_root, libxul_path, symbols_path):
         """
            Launch the test app, run gtest, collect test results and wait for completion.
@@ -82,6 +84,12 @@ class RemoteGTests(object):
         # TODO -- consider packaging the gtest libxul.so in an apk
         remote = "/data/app/%s-1/lib/x86_64/" % self.package
         self.device.push(libxul_path, remote)
+
+        # Push support files to device. Avoid sub-directories so that libxul.so
+        # is not included.
+        for f in glob.glob(os.path.join(test_dir, "*")):
+            if not os.path.isdir(f):
+                self.device.push(f, self.remote_profile)
 
         env = self.build_environment(shuffle, test_filter)
         args = ["-unittest", "--gtest_death_test_style=threadsafe",
@@ -334,6 +342,9 @@ class remoteGtestOptions(OptionParser):
                         action="store_true",
                         default=False,
                         help="Randomize the execution order of tests.")
+        self.add_option("--tests-path",
+                        default=None,
+                        help="Path to gtest directory containing test support files.")
 
 
 def update_mozinfo():
@@ -364,7 +375,8 @@ def main():
     result = False
     try:
         device_exception = False
-        result = tester.run_gtest(options.shuffle, test_filter, options.package,
+        result = tester.run_gtest(options.tests_path,
+                                  options.shuffle, test_filter, options.package,
                                   options.adb_path, options.device_serial,
                                   options.remote_test_root, options.libxul_path,
                                   options.symbols_path)

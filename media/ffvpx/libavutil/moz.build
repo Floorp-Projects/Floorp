@@ -11,6 +11,8 @@ if CONFIG['FFVPX_ASFLAGS']:
         DIRS += ['x86']
     elif CONFIG['CPU_ARCH'] == 'arm':
         DIRS += ['arm']
+    elif CONFIG['CPU_ARCH'] == 'aarch64':
+        DIRS += ['aarch64']
 
 SharedLibrary('mozavutil')
 SOURCES += [

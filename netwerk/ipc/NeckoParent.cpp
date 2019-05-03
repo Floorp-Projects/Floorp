@@ -157,7 +157,7 @@ const char* NeckoParent::GetValidatedOriginAttributes(
     if (!aSerialized.IsNotNull()) {
       // If serialized is null, we cannot validate anything. We have to assume
       // that this requests comes from a SystemPrincipal.
-      aAttrs = OriginAttributes(NECKO_NO_APP_ID, false);
+      aAttrs = OriginAttributes(false);
     } else {
       aAttrs = aSerialized.mOriginAttributes;
     }
