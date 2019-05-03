@@ -65,6 +65,7 @@ const tests = [{
       role: "text leaf",
       name: `"Second level header "contrast`,
       badges: [ "contrast" ],
+      selected: true,
     }],
   },
 }, {
@@ -90,6 +91,7 @@ const tests = [{
       role: "text leaf",
       name: `"Second level header "contrast`,
       badges: [ "contrast" ],
+      selected: true,
     }],
   },
 }];
