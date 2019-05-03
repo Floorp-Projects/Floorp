@@ -2595,7 +2595,8 @@ static FeatureState& WebRenderHardwareQualificationStatus(
           }
 #endif
 #ifdef NIGHTLY_BUILD
-        } else if (adapterVendorID == u"0x8086") {  // Intel
+        } else if (adapterVendorID == u"0x8086" ||
+                   adapterVendorID == u"mesa/i965") {  // Intel
           const uint16_t supportedDevices[] = {
               // skylake gt2+
               0x1912,
@@ -2619,7 +2620,6 @@ static FeatureState& WebRenderHardwareQualificationStatus(
               // kabylake gt2+
               0x5912,
               0x5916,
-              0x5917,
               0x591a,
               0x591b,
               0x591c,
@@ -2669,11 +2669,7 @@ static FeatureState& WebRenderHardwareQualificationStatus(
             featureWebRenderQualified.Disable(
                 FeatureStatus::Blocked, "Device too old",
                 NS_LITERAL_CSTRING("FEATURE_FAILURE_DEVICE_TOO_OLD"));
-          }
-#  ifdef MOZ_WIDGET_GTK
-          else {
-            // Performance is not great on 4k screens with WebRender + Linux.
-            // Disable it for now if it is too large.
+          } else if (adapterVendorID == u"mesa/i965") {
             const int32_t maxPixels = 3440 * 1440;  // UWQHD
             int32_t pixels = aScreenSize.width * aScreenSize.height;
             if (pixels > maxPixels) {
@@ -2686,8 +2682,7 @@ static FeatureState& WebRenderHardwareQualificationStatus(
                   NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
             }
           }
-#  endif  // MOZ_WIDGET_GTK
-#endif    // NIGHTLY_BUILD
+#endif
         } else {
           featureWebRenderQualified.Disable(
               FeatureStatus::Blocked, "Unsupported vendor",
