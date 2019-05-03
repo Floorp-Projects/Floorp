@@ -1000,14 +1000,6 @@ class ScriptSource {
   MOZ_MUST_USE bool setBinASTSourceCopy(JSContext* cx, const uint8_t* buf,
                                         size_t len);
 
-  /*
-   * Initialize this as containing BinAST data for |buf|/|len|, using a shared,
-   * deduplicated version of |buf| if necessary.
-   */
-  MOZ_MUST_USE bool initializeBinAST(
-      JSContext* cx, UniqueChars&& buf, size_t len,
-      JS::MutableHandle<UniquePtr<frontend::BinASTSourceMetadata>> metadata);
-
   const uint8_t* binASTSource();
 
 #endif /* JS_BUILD_BINAST */
