@@ -28,8 +28,6 @@ loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsiv
 loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 
-loader.lazyImporter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
-
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
@@ -95,12 +93,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     // Enable WebIDE?
     const webIDEEnabled = Services.prefs.getBoolPref("devtools.webide.enabled");
     toggleMenuItem("menu_webide", webIDEEnabled);
-
-    if (webIDEEnabled) {
-      gDevToolsBrowser.installWebIDEWidget();
-    } else {
-      gDevToolsBrowser.uninstallWebIDEWidget();
-    }
 
     // Enable Browser Toolbox?
     const chromeEnabled = Services.prefs.getBoolPref("devtools.chrome.enabled");
@@ -395,31 +387,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   /**
-   * Install WebIDE widget
-   */
-  // Used by itself
-  installWebIDEWidget() {
-    if (this.isWebIDEWidgetInstalled()) {
-      return;
-    }
-
-    CustomizableUI.createWidget({
-      id: "webide-button",
-      shortcutId: "key_webide",
-      label: "devtools-webide-button2.label",
-      tooltiptext: "devtools-webide-button2.tooltiptext",
-      onCommand(event) {
-        gDevToolsBrowser.openWebIDE();
-      },
-    });
-  },
-
-  isWebIDEWidgetInstalled() {
-    const widgetWrapper = CustomizableUI.getWidget("webide-button");
-    return !!(widgetWrapper && widgetWrapper.provider == CustomizableUI.PROVIDER_API);
-  },
-
-  /**
    * Add the devtools-browser stylesheet to browser window's document. Returns a promise.
    *
    * @param  {Window} win
@@ -442,16 +409,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * The deferred promise will be resolved by WebIDE's UI.init()
    */
   isWebIDEInitialized: defer(),
-
-  /**
-   * Uninstall WebIDE widget
-   */
-  uninstallWebIDEWidget() {
-    if (this.isWebIDEWidgetInstalled()) {
-      CustomizableUI.removeWidgetFromArea("webide-button");
-    }
-    CustomizableUI.destroyWidget("webide-button");
-  },
 
   /**
    * Add this DevTools's presence to a browser window's document
