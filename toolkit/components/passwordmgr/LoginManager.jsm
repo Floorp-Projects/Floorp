@@ -9,16 +9,12 @@ const PERMISSION_SAVE_LOGINS = "login-saving";
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-                               "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginFormFactory",
                                "resource://gre/modules/LoginFormFactory.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginManagerContent",
                                "resource://gre/modules/LoginManagerContent.jsm");
-ChromeUtils.defineModuleGetter(this, "LoginAutoCompleteResult",
-                               "resource://gre/modules/LoginAutoCompleteResult.jsm");
 ChromeUtils.defineModuleGetter(this, "InsecurePasswordUtils",
                                "resource://gre/modules/InsecurePasswordUtils.jsm");
 
@@ -28,6 +24,11 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 });
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
+  throw new Error("LoginManager.jsm should only run in the parent process");
+}
+
 
 function LoginManager() {
   this.init();
@@ -56,8 +57,6 @@ LoginManager.prototype = {
 
   /* ---------- private members ---------- */
 
-
-
   _storage: null, // Storage component which contains the saved logins
 
 
@@ -65,24 +64,17 @@ LoginManager.prototype = {
    * Initialize the Login Manager. Automatically called when service
    * is created.
    *
-   * Note: Service created in /browser/base/content/browser.js,
-   *       delayedStartup()
+   * Note: Service created in BrowserGlue#_scheduleStartupIdleTasks()
    */
   init() {
     // Cache references to current |this| in utility objects
     this._observer._pwmgr            = this;
-    this._autoCompleteLookupPromise = null;
 
-    // Form submit observer checks forms for new logins and pw changes.
     Services.obs.addObserver(this._observer, "xpcom-shutdown");
+    Services.obs.addObserver(this._observer, "passwordmgr-storage-replace");
 
-    if (Services.appinfo.processType ===
-        Services.appinfo.PROCESS_TYPE_DEFAULT) {
-      Services.obs.addObserver(this._observer, "passwordmgr-storage-replace");
-
-      // Initialize storage so that asynchronous data loading can start.
-      this._initStorage();
-    }
+    // Initialize storage so that asynchronous data loading can start.
+    this._initStorage();
 
     Services.obs.addObserver(this._observer, "gather-telemetry");
   },
@@ -463,101 +455,6 @@ LoginManager.prototype = {
 
     log.debug("Login saving for", origin, "now enabled?", enabled);
     LoginHelper.notifyStorageChanged(enabled ? "hostSavingEnabled" : "hostSavingDisabled", origin);
-  },
-
-  /**
-   * Yuck. This is called directly by satchel:
-   * nsFormFillController::StartSearch()
-   * [toolkit/components/satchel/nsFormFillController.cpp]
-   *
-   * We really ought to have a simple way for code to register an
-   * auto-complete provider, and not have satchel calling pwmgr directly.
-   */
-  autoCompleteSearchAsync(aSearchString, aPreviousResult,
-                          aElement, aCallback) {
-    // aPreviousResult is an nsIAutoCompleteResult, aElement is
-    // HTMLInputElement
-
-    let {isNullPrincipal} = aElement.nodePrincipal;
-    // Show the insecure login warning in the passwords field on null principal documents.
-    let isSecure = !isNullPrincipal;
-    // Avoid loading InsecurePasswordUtils.jsm in a sandboxed document (e.g. an ad. frame) if we
-    // already know it has a null principal and will therefore get the insecure autocomplete
-    // treatment.
-    // InsecurePasswordUtils doesn't handle the null principal case as not secure because we don't
-    // want the same treatment:
-    // * The web console warnings will be confusing (as they're primarily about http:) and not very
-    //   useful if the developer intentionally sandboxed the document.
-    // * The site identity insecure field warning would require LoginManagerContent being loaded and
-    //   listening to some of the DOM events we're ignoring in null principal documents. For memory
-    //   reasons it's better to not load LMC at all for these sandboxed frames. Also, if the top-
-    //   document is sandboxing a document, it probably doesn't want that sandboxed document to be
-    //   able to affect the identity icon in the address bar by adding a password field.
-    if (isSecure) {
-      let form = LoginFormFactory.createFromField(aElement);
-      isSecure = InsecurePasswordUtils.isFormSecure(form);
-    }
-    let isPasswordField = aElement.type == "password";
-    let hostname = aElement.ownerDocument.documentURIObject.host;
-
-    let completeSearch = (autoCompleteLookupPromise, { logins, messageManager }) => {
-      // If the search was canceled before we got our
-      // results, don't bother reporting them.
-      if (this._autoCompleteLookupPromise !== autoCompleteLookupPromise) {
-        return;
-      }
-
-      this._autoCompleteLookupPromise = null;
-      let results = new LoginAutoCompleteResult(aSearchString, logins, {
-        messageManager,
-        isSecure,
-        isPasswordField,
-        hostname,
-      });
-      aCallback.onSearchCompletion(results);
-    };
-
-    if (isNullPrincipal) {
-      // Don't search login storage when the field has a null principal as we don't want to fill
-      // logins for the `location` in this case.
-      let acLookupPromise = this._autoCompleteLookupPromise = Promise.resolve({ logins: [] });
-      acLookupPromise.then(completeSearch.bind(this, acLookupPromise));
-      return;
-    }
-
-    if (isPasswordField && aSearchString) {
-      // Return empty result on password fields with password already filled.
-      let acLookupPromise = this._autoCompleteLookupPromise = Promise.resolve({ logins: [] });
-      acLookupPromise.then(completeSearch.bind(this, acLookupPromise));
-      return;
-    }
-
-    if (!LoginHelper.enabled) {
-      let acLookupPromise = this._autoCompleteLookupPromise = Promise.resolve({ logins: [] });
-      acLookupPromise.then(completeSearch.bind(this, acLookupPromise));
-      return;
-    }
-
-    log.debug("AutoCompleteSearch invoked. Search is:", aSearchString);
-
-    let previousResult;
-    if (aPreviousResult) {
-      previousResult = { searchString: aPreviousResult.searchString,
-                         logins: aPreviousResult.wrappedJSObject.logins };
-    } else {
-      previousResult = null;
-    }
-
-    let rect = BrowserUtils.getElementBoundingScreenRect(aElement);
-    let acLookupPromise = this._autoCompleteLookupPromise =
-      LoginManagerContent._autoCompleteSearchAsync(aSearchString, previousResult,
-                                                   aElement, rect);
-    acLookupPromise.then(completeSearch.bind(this, acLookupPromise))
-                             .catch(Cu.reportError);
-  },
-
-  stopSearch() {
-    this._autoCompleteLookupPromise = null;
   },
 }; // end of LoginManager implementation
 

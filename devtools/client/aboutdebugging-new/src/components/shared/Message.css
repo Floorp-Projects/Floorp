@@ -3,20 +3,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .message--level-error {
-  --message-color: var(--error-text);
   --message-background-color: var(--error-background);
+  --message-border-color: var(--error-border);
+  --message-color: var(--error-text);
   --message-icon-color: var(--error-icon);
 }
 
 .message--level-info {
-  --message-color: var(--grey-90);
   --message-background-color: var(--grey-20);
+  --message-border-color: transparent;
+  --message-color: var(--grey-90);
   --message-icon-color: var(--grey-90);
 }
 
 .message--level-warning {
-  --message-color: var(--warning-text);
   --message-background-color: var(--warning-background);
+  --message-border-color: var(--warning-border);
+  --message-color: var(--warning-text);
   --message-icon-color: var(--warning-icon);
 }
 
@@ -31,6 +34,7 @@
  */
 .message {
   background-color: var(--message-background-color);
+  border: 1px solid var(--message-border-color);
   border-radius: var(--base-unit);
   color: var(--message-color);
   display: grid;
@@ -50,9 +54,11 @@
 }
 
 .message__body {
+  align-self: center;
   font-size: var(--message-font-size);
   font-weight: 400;
   grid-area: body;
+  line-height: 1.6;
 }
 
 .message__button {

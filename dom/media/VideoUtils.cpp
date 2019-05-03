@@ -14,6 +14,7 @@
 #include "TimeUnits.h"
 #include "VorbisUtils.h"
 #include "mozilla/Base64.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
@@ -23,9 +24,11 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentTypeParser.h"
 #include "nsIConsoleService.h"
+#include "nsINetworkLinkService.h"
 #include "nsIRandomGenerator.h"
 #include "nsIServiceManager.h"
 #include "nsMathUtils.h"
+#include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
@@ -710,6 +713,48 @@ UniquePtr<TrackInfo> CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
     }
   }
   return trackInfo;
+}
+
+bool OnCellularConnection() {
+  uint32_t linkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+  if (XRE_IsContentProcess()) {
+    mozilla::dom::ContentChild* cpc =
+        mozilla::dom::ContentChild::GetSingleton();
+    if (!cpc) {
+      NS_WARNING("Can't get ContentChild singleton in content process!");
+      return false;
+    }
+    linkType = cpc->NetworkLinkType();
+  } else {
+    nsresult rv;
+    nsCOMPtr<nsINetworkLinkService> nls =
+        do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Can't get nsINetworkLinkService.");
+      return false;
+    }
+
+    rv = nls->GetLinkType(&linkType);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Can't get network link type.");
+      return false;
+    }
+  }
+
+  switch (linkType) {
+    case nsINetworkLinkService::LINK_TYPE_UNKNOWN:
+    case nsINetworkLinkService::LINK_TYPE_ETHERNET:
+    case nsINetworkLinkService::LINK_TYPE_USB:
+    case nsINetworkLinkService::LINK_TYPE_WIFI:
+      return false;
+    case nsINetworkLinkService::LINK_TYPE_WIMAX:
+    case nsINetworkLinkService::LINK_TYPE_2G:
+    case nsINetworkLinkService::LINK_TYPE_3G:
+    case nsINetworkLinkService::LINK_TYPE_4G:
+      return true;
+  }
+
+  return false;
 }
 
 }  // end namespace mozilla

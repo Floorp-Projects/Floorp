@@ -28,7 +28,6 @@ void JitRuntime::generateBailoutHandler(MacroAssembler&, Label*) {
 uint32_t JitRuntime::generatePreBarrier(JSContext*, MacroAssembler&, MIRType) {
   MOZ_CRASH();
 }
-JitCode* JitRuntime::generateDebugTrapHandler(JSContext*) { MOZ_CRASH(); }
 void JitRuntime::generateExceptionTailStub(MacroAssembler&, void*, Label*) {
   MOZ_CRASH();
 }

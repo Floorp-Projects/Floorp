@@ -150,10 +150,6 @@ this.AutoCompletePopup = {
     }
   },
 
-  // Along with being called internally by the receiveMessage handler,
-  // this function is also called directly by the login manager, which
-  // uses a single message to fill in the autocomplete results. See
-  // "PasswordManager:autoCompleteLogins".
   showPopupWithResults({ browser, rect, dir, results }) {
     if (!results.length || this.openedPopup) {
       // We shouldn't ever be showing an empty popup, and if we

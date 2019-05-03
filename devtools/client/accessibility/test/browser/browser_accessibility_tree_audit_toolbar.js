@@ -3,7 +3,7 @@
 
 "use strict";
 
-/* global toggleRow, toggleBadge, toggleFilter */
+/* global toggleRow, toggleFilter */
 
 const TEST_URI = `<html>
   <head>
@@ -35,6 +35,7 @@ const tests = [{
     tree: [{
       role: "document",
       name: `"Accessibility Panel Test"`,
+      selected: true,
     }],
   },
 }, {
@@ -47,6 +48,7 @@ const tests = [{
       role: "text leaf",
       name: `"Top level header "contrast`,
       badges: [ "contrast" ],
+      selected: true,
     }, {
       role: "text leaf",
       name: `"Second level header "contrast`,
@@ -56,7 +58,7 @@ const tests = [{
 }, {
   desc: "Click on the filter again.",
   setup: async ({ doc }) => {
-    await toggleBadge(doc, 0, 0);
+    await toggleFilter(doc, 0);
   },
   expected: {
     tree: [{
@@ -69,6 +71,7 @@ const tests = [{
       role: "text leaf",
       name: `"Top level header "contrast`,
       badges: [ "contrast" ],
+      selected: true,
     }, {
       role: "heading",
       name: `"Second level header"`,

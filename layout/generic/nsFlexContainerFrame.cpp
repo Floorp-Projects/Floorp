@@ -392,20 +392,18 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   // this flag, to avoid reflowing our children in bottom-to-top order.)
   bool AreAxesInternallyReversed() const { return mAreAxesInternallyReversed; }
 
- private:
-  // Delete copy-constructor & reassignment operator, to prevent accidental
-  // (unnecessary) copying.
-  FlexboxAxisTracker(const FlexboxAxisTracker&) = delete;
-  FlexboxAxisTracker& operator=(const FlexboxAxisTracker&) = delete;
-
-  // Private because callers shouldn't need to care about physical axes
-  // (but we do internally, to provide one API).
   bool IsMainAxisHorizontal() const {
     // If we're row-oriented, and our writing mode is NOT vertical,
     // or we're column-oriented and our writing mode IS vertical,
     // then our main axis is horizontal. This handles all cases:
     return mIsRowOriented != mWM.IsVertical();
   }
+
+ private:
+  // Delete copy-constructor & reassignment operator, to prevent accidental
+  // (unnecessary) copying.
+  FlexboxAxisTracker(const FlexboxAxisTracker&) = delete;
+  FlexboxAxisTracker& operator=(const FlexboxAxisTracker&) = delete;
 
   // Helpers for constructor which determine the orientation of our axes, based
   // on legacy box properties (-webkit-box-orient, -webkit-box-direction) or
@@ -625,10 +623,8 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
     return mFlexShrink * mFlexBaseSize;
   }
 
-  // Returns a LogicalSize representing the flex item's logical intrinsic ratio
-  // (ISize:BSize), as expressed in the *flex container's* writing mode.
-  const LogicalSize& IntrinsicRatio() const { return mIntrinsicRatio; }
-  bool HasIntrinsicRatio() const { return !mIntrinsicRatio.IsAllZero(); }
+  const AspectRatio& IntrinsicRatio() const { return mIntrinsicRatio; }
+  bool HasIntrinsicRatio() const { return !!mIntrinsicRatio; }
 
   // Getters for margin:
   // ===================
@@ -846,7 +842,7 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   nsIFrame* const mFrame;  // The flex item's frame.
   const float mFlexGrow;
   const float mFlexShrink;
-  const LogicalSize mIntrinsicRatio;
+  const AspectRatio mIntrinsicRatio;
   const nsMargin mBorderPadding;
   nsMargin mMargin;  // non-const because we need to resolve auto margins
 
@@ -1452,16 +1448,17 @@ static nscoord CrossSizeToUseWithRatio(const FlexItem& aFlexItem,
 
 // Convenience function; returns a main-size, given a cross-size and an
 // intrinsic ratio. The caller is responsible for ensuring that the passed-in
-// intrinsic ratio must not have 0 in its cross-axis component (or else we'll
-// divide by 0).
+// intrinsic ratio is not zero.
 static nscoord MainSizeFromAspectRatio(nscoord aCrossSize,
-                                       const LogicalSize& aIntrinsicRatio,
+                                       const AspectRatio& aIntrinsicRatio,
                                        const FlexboxAxisTracker& aAxisTracker) {
-  MOZ_ASSERT(aAxisTracker.GetCrossComponent(aIntrinsicRatio) != 0,
+  MOZ_ASSERT(aIntrinsicRatio,
              "Invalid ratio; will divide by 0! Caller should've checked...");
-  return NSCoordMulDiv(aCrossSize,
-                       aAxisTracker.GetMainComponent(aIntrinsicRatio),
-                       aAxisTracker.GetCrossComponent(aIntrinsicRatio));
+  AspectRatio ratio = aAxisTracker.IsMainAxisHorizontal()
+                          ? aIntrinsicRatio
+                          : aIntrinsicRatio.Inverted();
+
+  return ratio.ApplyTo(aCrossSize);
 }
 
 // Partially resolves "min-[width|height]:auto" and returns the resulting value.
@@ -1506,7 +1503,7 @@ static nscoord PartiallyResolveAutoMinSize(
   // * if the item has an intrinsic aspect ratio, the width (height) calculated
   //   from the aspect ratio and any definite size constraints in the opposite
   //   dimension.
-  if (aAxisTracker.GetCrossComponent(aFlexItem.IntrinsicRatio()) != 0) {
+  if (aFlexItem.IntrinsicRatio()) {
     // We have a usable aspect ratio. (not going to divide by 0)
     const bool useMinSizeIfCrossSizeIsIndefinite = true;
     nscoord crossSizeToUseWithRatio = CrossSizeToUseWithRatio(
@@ -1536,7 +1533,7 @@ static bool ResolveAutoFlexBasisFromRatio(
   //  - a definite cross size
   // then the flex base size is calculated from its inner cross size and the
   // flex item’s intrinsic aspect ratio.
-  if (aAxisTracker.GetCrossComponent(aFlexItem.IntrinsicRatio()) != 0) {
+  if (aFlexItem.IntrinsicRatio()) {
     // We have a usable aspect ratio. (not going to divide by 0)
     const bool useMinSizeIfCrossSizeIsIndefinite = false;
     nscoord crossSizeToUseWithRatio = CrossSizeToUseWithRatio(
@@ -1611,8 +1608,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
     // (We'll consider that later, if we need to.)
     resolvedMinSize =
         PartiallyResolveAutoMinSize(aFlexItem, aItemReflowInput, aAxisTracker);
-    if (resolvedMinSize > 0 &&
-        aAxisTracker.GetCrossComponent(aFlexItem.IntrinsicRatio()) == 0) {
+    if (resolvedMinSize > 0 && !aFlexItem.IntrinsicRatio()) {
       // We don't have a usable aspect ratio, so we need to consider our
       // min-content size as another candidate min-size, which we'll have to
       // min() with the current resolvedMinSize.
@@ -1872,9 +1868,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
     : mFrame(aFlexItemReflowInput.mFrame),
       mFlexGrow(aFlexGrow),
       mFlexShrink(aFlexShrink),
-      // We store the intrinsic ratio in the *flex container's* WM:
-      mIntrinsicRatio(aAxisTracker.GetWritingMode(),
-                      mFrame->GetIntrinsicRatio()),
+      mIntrinsicRatio(mFrame->GetIntrinsicRatio()),
       mBorderPadding(aFlexItemReflowInput.ComputedPhysicalBorderPadding()),
       mMargin(aFlexItemReflowInput.ComputedPhysicalMargin()),
       mMainMinSize(aMainMinSize),
@@ -1976,7 +1970,6 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
     : mFrame(aChildFrame),
       mFlexGrow(0.0f),
       mFlexShrink(0.0f),
-      mIntrinsicRatio(aContainerWM),
       // mBorderPadding uses default constructor,
       // mMargin uses default constructor,
       mFlexBaseSize(0),

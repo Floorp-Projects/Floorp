@@ -15,14 +15,24 @@ add_task(async function() {
 
   is(await getElementCount(".treeRow"), numRows, "Got the expected number of rows.");
   await assertRowSelected(null);
+
+  // Focus the tree and select first row.
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    const tree = content.document.querySelector(".treeTable");
+    tree.focus();
+    is(tree, content.document.activeElement, "Tree should be focused");
+    content.document.querySelector(".treeRow:nth-child(1)").click();
+  });
+  await assertRowSelected(1);
+
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const scroller = content.document.querySelector(".jsonPanelBox .panelContent");
     ok(scroller.clientHeight < scroller.scrollHeight, "There is a scrollbar.");
     is(scroller.scrollTop, 0, "Initially scrolled to the top.");
-
-    // Click to select last row.
-    content.document.querySelector(".treeRow:last-child").click();
   });
+
+  // Select last row.
+  await BrowserTestUtils.synthesizeKey("VK_END", {}, tab.linkedBrowser);
   await assertRowSelected(numRows);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
@@ -77,7 +87,7 @@ add_task(async function() {
 
   // Create a JSON with a row taller than the panel.
   const json = JSON.stringify([0, "a ".repeat(1e4), 1]);
-  await addJsonViewTab("data:application/json," + encodeURI(json));
+  const tab = await addJsonViewTab("data:application/json," + encodeURI(json));
 
   is(await getElementCount(".treeRow"), 3, "Got the expected number of rows.");
   await assertRowSelected(null);
@@ -88,20 +98,17 @@ add_task(async function() {
     is(scroller.scrollTop, 0, "Initially scrolled to the top.");
 
     // Select the tall row.
+    content.document.querySelector(".treeTable").focus();
     row.click();
   });
   await assertRowSelected(2);
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const scroller = content.document.querySelector(".jsonPanelBox .panelContent");
-    const row = content.document.querySelector(".treeRow:nth-child(2)");
-    is(scroller.scrollTop, row.offsetTop,
-       "Scrolled to the top of the row.");
+    is(scroller.scrollTop, 0, "When the row is visible, do not scroll on click.");
   });
 
   // Select the last row.
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    content.document.querySelector(".treeRow:last-child").click();
-  });
+  await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, tab.linkedBrowser);
   await assertRowSelected(3);
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const scroller = content.document.querySelector(".jsonPanelBox .panelContent");
@@ -117,8 +124,8 @@ add_task(async function() {
   const scroll = await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const scroller = content.document.querySelector(".jsonPanelBox .panelContent");
     const row = content.document.querySelector(".treeRow:nth-child(2)");
-    is(scroller.scrollTop + scroller.offsetHeight, row.offsetTop + row.offsetHeight,
-       "Scrolled to the bottom of the row.");
+    is(scroller.scrollTop + scroller.offsetHeight, scroller.scrollHeight,
+      "Scrolled to the bottom. When the row is visible, do not scroll on click.");
 
     // Scroll up a bit, so that both the top and bottom of the row are not visible.
     const scrollPos =
@@ -132,6 +139,7 @@ add_task(async function() {
     row.click();
     return scrollPos;
   });
+
   await assertRowSelected(2);
   await ContentTask.spawn(gBrowser.selectedBrowser, scroll, function(scrollPos) {
     const scroller = content.document.querySelector(".jsonPanelBox .panelContent");

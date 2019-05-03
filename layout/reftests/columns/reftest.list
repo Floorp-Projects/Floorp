@@ -42,3 +42,12 @@ fuzzy-if(browserIsRemote&&winWidget,0-142,0-276) == fieldset-columns-001.html fi
 == break-avoid-line-position-1.html break-avoid-line-position-1-ref.html
 pref(layout.css.column-span.enabled,true) == column-span-bidi-1.html column-span-bidi-1-ref.html
 pref(layout.css.column-span.enabled,true) == first-line-first-letter.html first-line-first-letter-ref.html
+
+# The following lines are duplicates of other lines from further up in this
+# manifest. They're listed again here so we can re-run these tests with
+# column-span enabled. These lines can be removed once the pref becomes
+# default-enabled (Bug 1426010).
+default-preferences pref(layout.css.column-span.enabled,true)
+fails == min-width-2.html min-width-2-ref.html # Bug 1548100
+fails == column-balancing-nested-001.html column-balancing-nested-001-ref.html # Bug 1548118
+default-preferences

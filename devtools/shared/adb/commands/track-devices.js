@@ -123,9 +123,14 @@ class TrackDevicesCommand extends EventEmitter {
   }
 
   _disconnectAllDevices() {
-    for (const [deviceId, status] of this._devices.entries()) {
-      if (status !== ADB_STATUS_OFFLINE) {
-        this.emit("device-disconnected", deviceId);
+    if (this._devices.size === 0) {
+      // If no devices were detected, fire an event to let consumer resume.
+      this.emit("no-devices-detected");
+    } else {
+      for (const [deviceId, status] of this._devices.entries()) {
+        if (status !== ADB_STATUS_OFFLINE) {
+          this.emit("device-disconnected", deviceId);
+        }
       }
     }
     this._devices = new Map();

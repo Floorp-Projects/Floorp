@@ -12,6 +12,7 @@
   --accessibility-horizontal-padding: 5px;
   --accessibility-horizontal-indent: 20px;
   --accessibility-properties-item-width: calc(100% - var(--accessibility-horizontal-indent));
+  --accessibility-tree-height: calc(100vh - var(--accessibility-toolbar-height) * 2 - 1px);
   --accessibility-arrow-horizontal-padding: 4px;
   --accessibility-tree-row-height: 21px;
   --accessibility-unfocused-tree-focused-node-background: var(--grey-20);
@@ -21,7 +22,6 @@
   --badge-active-background-color: var(--blue-50);
   --badge-active-border-color: #FFFFFFB3;
   --badge-interactive-background-color: var(--grey-20);
-  --badge-interactive-color: var(--grey-90);
   --accessible-label-background-color: white;
   --accessible-label-border-color: #CACAD1;
   --accessible-label-color: var(--grey-60);
@@ -37,7 +37,6 @@
   --badge-active-background-color: var(--blue-60);
   --badge-active-border-color: #FFF6;
   --badge-interactive-background-color: var(--grey-70);
-  --badge-interactive-color: var(--grey-30);
   --accessible-label-background-color: var(--grey-80);
   --accessible-label-border-color: var(--grey-50);
   --accessible-label-color: var(--grey-40);
@@ -71,14 +70,14 @@ body {
   fill: var(--theme-selection-color);
 }
 
-.mainFrame .main-panel {
-  flex: 1 1 auto;
-  overflow: auto;
-}
-
 .mainFrame {
   height: 100%;
   color: var(--theme-toolbar-color);
+}
+
+.main-panel {
+  /* To compenstate for 1px splitter between the tree and sidebar. */
+  width: var(--accessibility-full-length-minus-splitter);
 }
 
 .devtools-button,
@@ -90,8 +89,10 @@ body {
 .mainFrame .toggle-button.devtools-throbber::before {
   /* Default for .devtools-throbber is set to 1em which is too big for the
      devtools toolbar. */
-  height: 9px;
-  width: 9px;
+  height: 8px;
+  width: 8px;
+  margin-block-end: 1px;
+  margin-inline-end: 2px;
 }
 
 .split-box.horz {
@@ -166,6 +167,15 @@ body {
   box-shadow: none;
 }
 
+.devtools-toolbar .accessibility-tree-filters {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  align-items: center;
+  white-space: nowrap;
+  margin-inline-end: 5px;
+}
+
 /* Description */
 .description {
   color: var(--theme-toolbar-color);
@@ -225,24 +235,30 @@ body {
 }
 
 /* TreeView Customization */
-.split-box:not(.horz) .main-panel {
-  height: calc(100vh - var(--accessibility-toolbar-height));
+.treeTable thead, .treeTable tbody {
+  display: block;
 }
 
-.treeTable > thead {
-  position: sticky;
-  top: 0;
-  /* Bug 1466806 - fix expander arrow for expanding treeview rows rendering over the
-     thead */
-  z-index: 1;
+.treeTable tr {
+  width: 100%;
+  display: table;
 }
 
-.split-box:not(.horz) .treeTable {
-  /* To compenstate for 1px splitter between the tree and sidebar. */
-  width: var(--accessibility-full-length-minus-splitter);
+.treeTable tbody {
+  overflow-y: auto;
 }
 
-.split-box.horz .treeTable {
+.split-box:not(.horz) .treeTable tbody {
+  height: var(--accessibility-tree-height);
+}
+
+.split-box.horz .treeTable tbody {
+  /* Accessibility tree height depends on the height of the controlled panel
+     (sidebar) when in horz mode and also has an additional separator. */
+  height: calc(var(--accessibility-tree-height) - var(--split-box-controlled-panel-size) - 1px);
+}
+
+.treeTable {
   width: 100%;
 }
 
@@ -318,6 +334,7 @@ body {
 }
 
 .mainFrame .treeTable .treeHeaderCell {
+  width: 50%;
   border-bottom: 1px solid var(--theme-splitter-color);
   background: var(--theme-toolbar-background);
   font: message-box;
@@ -326,18 +343,20 @@ body {
   color: var(--theme-toolbar-color);
 }
 
-.badge.toggle-button,
-.mainFrame .treeTable .treeRow .badges .badge {
-  background-color: var(--badge-interactive-background-color);
-  color: var(--badge-interactive-color);
+.badge {
+  font: message-box;
   border-radius: 3px;
   padding: 0px 2px;
   margin-inline-start: 5px;
+  color: var(--accessible-label-color);
+  background-color: var(--accessible-label-background-color);
+  border: 1px solid var(--accessible-label-border-color);
 }
 
 .badge.toggle-button {
-  border: 1px solid transparent;
   color: var(--theme-body-color);
+  background-color: var(--badge-interactive-background-color);
+  border-color: transparent;
 }
 
 .devtools-toolbar .badge.toggle-button:focus {
@@ -347,25 +366,19 @@ body {
   -moz-outline-radius: 2px;
 }
 
-.mainFrame .treeTable .treeRow .badges .badge {
-  border: 1px solid var(--accessible-label-border-color);
-}
-
-.mainFrame .treeTable:focus .treeRow.selected .badges .badge {
-  background-color: var(--badge-interactive-background-color);
-  border: 1px solid var(--accessible-label-border-color);
-  color: var(--badge-interactive-color);
-}
-
-.badge.toggle-button.checked,
-.mainFrame .treeTable:focus .treeRow.selected .badges .badge.checked,
-.mainFrame .treeTable .treeRow .badges .badge.checked {
+.treeTable:focus .treeRow.selected .badges .badge {
   background-color: var(--badge-active-background-color);
+  border-color: var(--accessible-active-border-color);
   color: var(--theme-selection-color);
 }
 
-.mainFrame .treeTable .treeRow .badges .badge.checked {
-  border: 1px solid var(--badge-active-border-color);
+.treeTable:not(:focus):not(:focus-within) .treeRow.selected .badges .badge {
+  color: var(--accessible-label-color);
+}
+
+.badge.toggle-button.checked {
+  background-color: var(--badge-active-background-color);
+  color: var(--theme-selection-color);
 }
 
 /* Avoid having a default dotted border on keyboard focus since we provide focus

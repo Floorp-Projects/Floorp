@@ -34,7 +34,7 @@ tasks in the preview pane will be pushed to try. If you changed your mind you ca
 Unlike the ``syntax`` selector, the ``fuzzy`` selector doesn't use the commit message to pass
 information up to taskcluster. Instead, it uses a file that lives at the root of the repository
 called ``try_task_config.json``. You can read more information in the :doc:`taskcluster docs
-<taskcluster/try>`.
+</taskcluster/taskcluster/try>`.
 
 Extended Search
 ---------------

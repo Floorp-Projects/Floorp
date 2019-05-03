@@ -14,7 +14,6 @@ const { setupStore } = require("devtools/client/accessibility/test/jest/helpers"
 const Badge = require("devtools/client/accessibility/components/Badge");
 const ContrastBadgeClass = require("devtools/client/accessibility/components/ContrastBadge");
 const ContrastBadge = createFactory(ContrastBadgeClass);
-const { FILTERS } = require("devtools/client/accessibility/constants");
 
 describe("ContrastBadge component:", () => {
   const store = setupStore();
@@ -70,7 +69,7 @@ describe("ContrastBadge component:", () => {
     expect(badge.type()).toBe(Badge);
     expect(badge.props()).toMatchObject({
       label: "accessibility.badge.contrast",
-      filterKey: FILTERS.CONTRAST,
+      tooltip: "accessibility.badge.contrast.tooltip",
     });
   });
 });

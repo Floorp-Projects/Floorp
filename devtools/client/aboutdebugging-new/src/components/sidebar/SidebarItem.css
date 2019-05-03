@@ -48,6 +48,6 @@
 }
 
 .sidebar-item--breathe {
-  margin-block-start: calc(2 * var(--base-unit));
+  margin-block-start: calc(6 * var(--base-unit));
   margin-block-end: calc(2 * var(--base-unit));
 }
