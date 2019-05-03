@@ -730,9 +730,6 @@ void VRFrameData::LazyCreateMatrix(JS::Heap<JSObject*>& aArray,
       return;
     }
   }
-  if (aArray) {
-    JS::ExposeObjectToActiveJS(aArray);
-  }
   aRetval.set(aArray);
 }
 
