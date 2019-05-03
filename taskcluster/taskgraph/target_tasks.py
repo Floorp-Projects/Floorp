@@ -374,7 +374,7 @@ def target_tasks_ship_desktop(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('promote_fennec')
+@_target_task('promote_fennec_beta')
 def target_tasks_promote_fennec(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a candidates build of fennec. The
     nightly build process involves a pipeline of builds, signing,
@@ -395,7 +395,7 @@ def target_tasks_promote_fennec(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(full_task_graph[l])]
 
 
-@_target_task('ship_fennec')
+@_target_task('ship_fennec_beta')
 def target_tasks_ship_fennec(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to ship fennec.
     Previous build deps will be optimized out via action task."""
