@@ -2620,6 +2620,7 @@ static FeatureState& WebRenderHardwareQualificationStatus(
               // kabylake gt2+
               0x5912,
               0x5916,
+              0x5917,
               0x591a,
               0x591b,
               0x591c,
