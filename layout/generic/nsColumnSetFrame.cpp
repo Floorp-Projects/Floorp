@@ -284,6 +284,18 @@ static nscoord GetColumnGap(const nsColumnSetFrame* aFrame,
   return nsLayoutUtils::ResolveGapToLength(columnGap, aPercentageBasis);
 }
 
+static uint32_t ColumnBalancingDepth(const ReflowInput& aReflowInput,
+                                     uint32_t aMaxDepth) {
+  uint32_t depth = 0;
+  for (const ReflowInput* ri = aReflowInput.mParentReflowInput;
+       ri && depth < aMaxDepth; ri = ri->mParentReflowInput) {
+    if (ri->mFlags.mIsColumnBalancing) {
+      ++depth;
+    }
+  }
+  return depth;
+}
+
 static nscoord ClampUsedColumnWidth(const Length& aColumnWidth) {
   // Per spec, used values will be clamped to a minimum of 1px.
   return std::max(CSSPixel::ToAppUnits(1), aColumnWidth.ToAppUnits());
@@ -326,15 +338,10 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
   const bool isBalancing =
       colStyle->mColumnFill == StyleColumnFill::Balance && !aForceAuto;
   if (isBalancing) {
-    const uint32_t MAX_NESTED_COLUMN_BALANCING = 2;
-    uint32_t cnt = 0;
-    for (const ReflowInput* rs = aReflowInput.mParentReflowInput;
-         rs && cnt < MAX_NESTED_COLUMN_BALANCING; rs = rs->mParentReflowInput) {
-      if (rs->mFlags.mIsColumnBalancing) {
-        ++cnt;
-      }
-    }
-    if (cnt == MAX_NESTED_COLUMN_BALANCING) {
+    const uint32_t kMaxNestedColumnBalancingDepth = 2;
+    const uint32_t balancingDepth =
+        ColumnBalancingDepth(aReflowInput, kMaxNestedColumnBalancingDepth);
+    if (balancingDepth == kMaxNestedColumnBalancingDepth) {
       numColumns = 1;
     }
   }
