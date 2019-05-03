@@ -2455,27 +2455,6 @@ bool HTMLMediaElement::AllowedToPlay() const {
   return AutoplayPolicy::IsAllowedToPlay(*this);
 }
 
-uint32_t HTMLMediaElement::GetPreloadDefault() const {
-  if (mMediaSource) {
-    return HTMLMediaElement::PRELOAD_ATTR_METADATA;
-  }
-  if (OnCellularConnection()) {
-    return Preferences::GetInt("media.preload.default.cellular",
-                               HTMLMediaElement::PRELOAD_ATTR_NONE);
-  }
-  return Preferences::GetInt("media.preload.default",
-                             HTMLMediaElement::PRELOAD_ATTR_METADATA);
-}
-
-uint32_t HTMLMediaElement::GetPreloadDefaultAuto() const {
-  if (OnCellularConnection()) {
-    return Preferences::GetInt("media.preload.auto.cellular",
-                               HTMLMediaElement::PRELOAD_ATTR_METADATA);
-  }
-  return Preferences::GetInt("media.preload.auto",
-                             HTMLMediaElement::PRELOAD_ENOUGH);
-}
-
 void HTMLMediaElement::UpdatePreloadAction() {
   PreloadAction nextAction = PRELOAD_UNDEFINED;
   // If autoplay is set, or we're playing, we should always preload data,
@@ -2490,8 +2469,13 @@ void HTMLMediaElement::UpdatePreloadAction() {
         mAttrs.GetAttr(nsGkAtoms::preload, kNameSpaceID_None);
     // MSE doesn't work if preload is none, so it ignores the pref when src is
     // from MSE.
-    uint32_t preloadDefault = GetPreloadDefault();
-    uint32_t preloadAuto = GetPreloadDefaultAuto();
+    uint32_t preloadDefault =
+        mMediaSource
+            ? HTMLMediaElement::PRELOAD_ATTR_METADATA
+            : Preferences::GetInt("media.preload.default",
+                                  HTMLMediaElement::PRELOAD_ATTR_METADATA);
+    uint32_t preloadAuto = Preferences::GetInt(
+        "media.preload.auto", HTMLMediaElement::PRELOAD_ENOUGH);
     if (!val) {
       // Attribute is not set. Use the preload action specified by the
       // media.preload.default pref, or just preload metadata if not present.

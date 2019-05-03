@@ -6,11 +6,6 @@
 
 package org.mozilla.geckoview;
 
-import android.arch.lifecycle.ProcessLifecycleOwner;
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.LifecycleObserver;
-import android.arch.lifecycle.OnLifecycleEvent;
-
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -31,7 +26,6 @@ import android.util.Log;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoNetworkManager;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.GeckoThread;
@@ -98,36 +92,6 @@ public final class GeckoRuntime implements Parcelable {
      * @see GeckoSession.ContentDelegate#onCrash(GeckoSession)
      */
     public static final String EXTRA_CRASH_FATAL = "fatal";
-
-    private final class LifecycleListener implements LifecycleObserver {
-        public LifecycleListener() {
-        }
-
-        @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-        void onCreate() {
-            Log.d(LOGTAG, "Lifecycle: onCreate");
-        }
-
-        @OnLifecycleEvent(Lifecycle.Event.ON_START)
-        void onStart() {
-            Log.d(LOGTAG, "Lifecycle: onStart");
-        }
-
-        @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-        void onResume() {
-            Log.d(LOGTAG, "Lifecycle: onResume");
-            // Monitor network status and send change notifications to Gecko
-            // while active.
-            GeckoNetworkManager.getInstance().start(GeckoAppShell.getApplicationContext());
-        }
-
-        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-        void onPause() {
-            Log.d(LOGTAG, "Lifecycle: onPause");
-            // Stop monitoring network status while inactive.
-            GeckoNetworkManager.getInstance().stop();
-        }
-    }
 
     private static GeckoRuntime sDefaultRuntime;
 
@@ -302,9 +266,6 @@ public final class GeckoRuntime implements Parcelable {
 
         // Initialize the system ClipboardManager by accessing it on the main thread.
         GeckoAppShell.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
-
-        // Add process lifecycle listener to react to backgrounding events.
-        ProcessLifecycleOwner.get().getLifecycle().addObserver(new LifecycleListener());
         return true;
     }
 
