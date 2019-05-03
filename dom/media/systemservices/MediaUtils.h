@@ -132,7 +132,7 @@ class Refcountable<UniquePtr<T>> : public UniquePtr<T> {
 /* Async shutdown helpers
  */
 
-already_AddRefed<nsIAsyncShutdownClient> GetShutdownBarrier();
+RefPtr<nsIAsyncShutdownClient> GetShutdownBarrier();
 
 class ShutdownBlocker : public nsIAsyncShutdownBlocker {
  public:
@@ -162,10 +162,7 @@ class ShutdownTicket final {
       : mBlocker(aBlocker) {}
   NS_INLINE_DECL_REFCOUNTING(ShutdownTicket)
  private:
-  ~ShutdownTicket() {
-    nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
-    barrier->RemoveBlocker(mBlocker);
-  }
+  ~ShutdownTicket() { GetShutdownBarrier()->RemoveBlocker(mBlocker); }
 
   nsCOMPtr<nsIAsyncShutdownBlocker> mBlocker;
 };
