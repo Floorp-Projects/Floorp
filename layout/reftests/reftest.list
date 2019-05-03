@@ -390,8 +390,8 @@ include transform-3d/reftest.list
 # unicode/ (verify that we don't do expend effort doing unicode-aware case checks)
 include unicode/reftest.list
 
-# usercss - only supported in content processes.
-skip-if(!browserIsRemote) include usercss/reftest.list
+# usercss
+include usercss/reftest.list
 
 include view-source/reftest.list
 

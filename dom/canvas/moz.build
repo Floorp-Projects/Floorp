@@ -28,10 +28,6 @@ with Files('test/chrome/*webgl*'):
 with Files('test/crossorigin/*webgl*'):
     BUG_COMPONENT = ('Core', 'Canvas: WebGL')
 
-TEST_DIRS += [
-    'gtest'
-]
-
 # Change the following line(s) to avoid bug 1081323 (clobber after changing a manifest):
 # * Adjust failure errata for webgl-conf.
 
@@ -74,9 +70,7 @@ UNIFIED_SOURCES += [
     'CanvasRenderingContextHelper.cpp',
     'CanvasUtils.cpp',
     'ImageBitmap.cpp',
-    'ImageBitmapColorUtils.cpp',
     'ImageBitmapRenderingContext.cpp',
-    'ImageBitmapUtils.cpp',
     'ImageData.cpp',
     'OffscreenCanvas.cpp',
 ]
