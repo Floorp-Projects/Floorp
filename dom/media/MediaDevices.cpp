@@ -55,9 +55,34 @@ MediaDevices::~MediaDevices() {
   }
 }
 
+static bool IsSameOriginWithAllParentDocs(nsINode* aDoc) {
+  MOZ_ASSERT(aDoc);
+  nsINode* node = aDoc;
+  while ((node = nsContentUtils::GetCrossDocParentNode(node))) {
+    if (NS_FAILED(nsContentUtils::CheckSameOrigin(aDoc, node))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 already_AddRefed<Promise> MediaDevices::GetUserMedia(
     const MediaStreamConstraints& aConstraints, CallerType aCallerType,
     ErrorResult& aRv) {
+  if (Document* doc = GetOwner()->GetExtantDoc()) {
+    if (!GetOwner()->IsSecureContext()) {
+      doc->SetDocumentAndPageUseCounter(eUseCounter_custom_GetUserMediaInsec);
+    }
+    if (!IsSameOriginWithAllParentDocs(doc)) {
+      doc->SetDocumentAndPageUseCounter(eUseCounter_custom_GetUserMediaXOrigin);
+    }
+    Document* topDoc = doc->GetTopLevelContentDocument();
+    IgnoredErrorResult ignored;
+    if (topDoc && !topDoc->HasFocus(ignored)) {
+      doc->SetDocumentAndPageUseCounter(
+          eUseCounter_custom_GetUserMediaUnfocused);
+    }
+  }
   RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -86,6 +111,19 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
 already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
                                                          ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (Document* doc = GetOwner()->GetExtantDoc()) {
+    if (!GetOwner()->IsSecureContext()) {
+      doc->SetDocumentAndPageUseCounter(
+          eUseCounter_custom_EnumerateDevicesInsec);
+    }
+    Document* topDoc = doc->GetTopLevelContentDocument();
+    IgnoredErrorResult ignored;
+    if (topDoc && !topDoc->HasFocus(ignored)) {
+      doc->SetDocumentAndPageUseCounter(
+          eUseCounter_custom_EnumerateDevicesUnfocused);
+    }
+  }
   RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -134,6 +172,12 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
 already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
     const DisplayMediaStreamConstraints& aConstraints, CallerType aCallerType,
     ErrorResult& aRv) {
+  if (Document* doc = GetOwner()->GetExtantDoc()) {
+    if (!IsSameOriginWithAllParentDocs(doc)) {
+      doc->SetDocumentAndPageUseCounter(
+          eUseCounter_custom_GetDisplayMediaXOrigin);
+    }
+  }
   RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
