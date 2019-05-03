@@ -71,73 +71,98 @@ def eslint_setup(should_clobber=False):
     guide you through an interactive wizard helping you configure
     eslint for optimal use on Mozilla projects.
     """
+    package_setup(get_project_root(), 'eslint', should_clobber=should_clobber)
+
+
+def package_setup(package_root, package_name, should_clobber=False):
+    """Ensure `package_name` at `package_root` is installed.
+
+    This populates `package_root/node_modules`.
+    """
+    orig_project_root = get_project_root()
     orig_cwd = os.getcwd()
-    sys.path.append(os.path.dirname(__file__))
+    try:
+        set_project_root(package_root)
+        sys.path.append(os.path.dirname(__file__))
 
-    # npm sometimes fails to respect cwd when it is run using check_call so
-    # we manually switch folders here instead.
-    project_root = get_project_root()
-    os.chdir(project_root)
+        # npm sometimes fails to respect cwd when it is run using check_call so
+        # we manually switch folders here instead.
+        project_root = get_project_root()
+        os.chdir(project_root)
 
-    if should_clobber:
-        node_modules_path = os.path.join(project_root, "node_modules")
-        print("Clobbering node_modules...")
-        if sys.platform.startswith('win') and have_winrm():
-            process = subprocess.Popen(['winrm', '-rf', node_modules_path])
-            process.wait()
+        if should_clobber:
+            node_modules_path = os.path.join(project_root, "node_modules")
+            print("Clobbering %s..." % node_modules_path)
+            if sys.platform.startswith('win') and have_winrm():
+                process = subprocess.Popen(['winrm', '-rf', node_modules_path])
+                process.wait()
+            else:
+                mozfileremove(node_modules_path)
+
+        npm_path, version = find_npm_executable()
+        if not npm_path:
+            return 1
+
+        node_path, _ = find_node_executable()
+        if not node_path:
+            return 1
+
+        extra_parameters = ["--loglevel=error"]
+
+        package_lock_json_path = os.path.join(get_project_root(), "package-lock.json")
+        package_lock_json_tmp_path = os.path.join(tempfile.gettempdir(), "package-lock.json.tmp")
+
+        # If we have an npm version newer than 5.8.0, just use 'ci', as that's much
+        # simpler and does exactly what we want.
+        npm_is_older_version = version < StrictVersion("5.8.0").version
+
+        if npm_is_older_version:
+            cmd = [npm_path, "install"]
+            shutil.copy2(package_lock_json_path, package_lock_json_tmp_path)
         else:
-            mozfileremove(node_modules_path)
+            cmd = [npm_path, "ci"]
 
-    npm_path, version = find_npm_executable()
-    if not npm_path:
-        return 1
+        # On non-Windows, ensure npm is called via node, as node may not be in the
+        # path.
+        if platform.system() != "Windows":
+            cmd.insert(0, node_path)
 
-    node_path, _ = find_node_executable()
-    if not node_path:
-        return 1
+        cmd.extend(extra_parameters)
 
-    extra_parameters = ["--loglevel=error"]
+        # Ensure that bare `node` and `npm` in scripts, including post-install scripts, finds the
+        # binary we're invoking with.  Without this, it's easy for compiled extensions to get
+        # mismatched versions of the Node.js extension API.
+        path = os.environ.get('PATH', '').split(os.pathsep)
+        node_dir = os.path.dirname(node_path)
+        if node_dir not in path:
+            path = [node_dir] + path
 
-    package_lock_json_path = os.path.join(get_project_root(), "package-lock.json")
-    package_lock_json_tmp_path = os.path.join(tempfile.gettempdir(), "package-lock.json.tmp")
+        print("Installing %s for mach using \"%s\"..." % (package_name, " ".join(cmd)))
+        result = call_process(package_name, cmd, append_env={'PATH': os.pathsep.join(path)})
 
-    # If we have an npm version newer than 5.8.0, just use 'ci', as that's much
-    # simpler and does exactly what we want.
-    npm_is_older_version = version < StrictVersion("5.8.0").version
+        if npm_is_older_version:
+            shutil.move(package_lock_json_tmp_path, package_lock_json_path)
 
-    if npm_is_older_version:
-        cmd = [npm_path, "install"]
-        shutil.copy2(package_lock_json_path, package_lock_json_tmp_path)
-    else:
-        cmd = [npm_path, "ci"]
+        if not result:
+            return 1
 
-    # On non-Windows, ensure npm is called via node, as node may not be in the
-    # path.
-    if platform.system() != "Windows":
-        cmd.insert(0, node_path)
+        bin_path = os.path.join(get_project_root(), "node_modules", ".bin", package_name)
 
-    cmd.extend(extra_parameters)
-    print("Installing eslint for mach using \"%s\"..." % (" ".join(cmd)))
-    result = call_process("eslint", cmd)
+        print("\n%s installed successfully!" % package_name)
+        print("\nNOTE: Your local %s binary is at %s\n" % (package_name, bin_path))
 
-    if npm_is_older_version:
-        shutil.move(package_lock_json_tmp_path, package_lock_json_path)
-
-    if not result:
-        return 1
-
-    eslint_path = os.path.join(get_project_root(), "node_modules", ".bin", "eslint")
-
-    print("\nESLint and approved plugins installed successfully!")
-    print("\nNOTE: Your local eslint binary is at %s\n" % eslint_path)
-
-    os.chdir(orig_cwd)
+    finally:
+        set_project_root(orig_project_root)
+        os.chdir(orig_cwd)
 
 
-def call_process(name, cmd, cwd=None):
+def call_process(name, cmd, cwd=None, append_env={}):
+    env = dict(os.environ)
+    env.update(append_env)
+
     try:
         with open(os.devnull, "w") as fnull:
-            subprocess.check_call(cmd, cwd=cwd, stdout=fnull)
+            subprocess.check_call(cmd, cwd=cwd, stdout=fnull, env=env)
     except subprocess.CalledProcessError:
         if cwd:
             print("\nError installing %s in the %s folder, aborting." % (name, cwd))

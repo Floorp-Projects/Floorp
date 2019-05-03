@@ -61,6 +61,7 @@ MACH_MODULES = [
     'testing/web-platform/mach_commands.py',
     'testing/xpcshell/mach_commands.py',
     'toolkit/components/telemetry/tests/marionette/mach_commands.py',
+    'tools/browsertime/mach_commands.py',
     'tools/compare-locales/mach_commands.py',
     'tools/docs/mach_commands.py',
     'tools/lint/mach_commands.py',
