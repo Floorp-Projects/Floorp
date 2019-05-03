@@ -227,11 +227,13 @@ ChannelEventSink.prototype = {
 /**
  * A helper class to construct origin attributes.
  */
-function OriginAttributes(inIsolatedMozBrowser, privateId) {
+function OriginAttributes(appId, inIsolatedMozBrowser, privateId) {
+  this.appId = appId;
   this.inIsolatedMozBrowser = inIsolatedMozBrowser;
   this.privateBrowsingId = privateId;
 }
 OriginAttributes.prototype = {
+  appId: 0,
   inIsolatedMozBrowser: false,
   privateBrowsingId: 0
 };

@@ -22,7 +22,7 @@ function matches_never(perm, uris) {
   });
 }
 
-function mk_permission(uri) {
+function mk_permission(uri, isAppPermission = false) {
   let pm = Cc["@mozilla.org/permissionmanager;1"].
         getService(Ci.nsIPermissionManager);
 
@@ -30,7 +30,9 @@ function mk_permission(uri) {
         .getService(Ci.nsIScriptSecurityManager);
 
   // Get the permission from the principal!
-  let principal = secMan.createCodebasePrincipal(uri, {});
+  let attrs = {appId: 1000};
+  let principal =
+    secMan.createCodebasePrincipal(uri, isAppPermission ? attrs : {});
 
   pm.addFromPrincipal(principal, "test/matchesuri", pm.ALLOW_ACTION);
   let permission = pm.getPermissionObject(principal, "test/matchesuri", true);
