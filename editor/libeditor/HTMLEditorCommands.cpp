@@ -51,12 +51,15 @@ bool StateUpdatingCommandBase::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
-  if (!aTextEditor->IsSelectionEditable()) {
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return false;
+  }
+  if (!htmlEditor->IsSelectionEditable()) {
     return false;
   }
   if (aCommand == Command::FormatAbsolutePosition) {
-    HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
-    return htmlEditor && htmlEditor->IsAbsolutePositionEditorEnabled();
+    return htmlEditor->IsAbsolutePositionEditorEnabled();
   }
   return true;
 }
@@ -108,10 +111,6 @@ bool PasteNoFormattingCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
-
-  // This command is only implemented by nsIHTMLEditor, since
-  //  pasting in a plaintext editor automatically only supplies
-  //  "unformatted" text
   HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
   if (!htmlEditor) {
     return false;
@@ -374,16 +373,16 @@ bool RemoveListCommand::IsCommandEnabled(Command aCommand,
     return false;
   }
 
-  if (!aTextEditor->IsSelectionEditable()) {
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return false;
+  }
+
+  if (!htmlEditor->IsSelectionEditable()) {
     return false;
   }
 
   // It is enabled if we are in any list type
-  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
-  if (NS_WARN_IF(!htmlEditor)) {
-    return false;
-  }
-
   bool bMixed;
   nsAutoString localName;
   nsresult rv = GetListState(MOZ_KnownLive(htmlEditor), &bMixed, localName);
@@ -396,7 +395,7 @@ bool RemoveListCommand::IsCommandEnabled(Command aCommand,
 nsresult RemoveListCommand::DoCommand(Command aCommand,
                                       TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
-  if (!htmlEditor) {
+  if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
   // This removes any list type
@@ -427,13 +426,17 @@ bool IndentCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return false;
+  }
+  return htmlEditor->IsSelectionEditable();
 }
 
 nsresult IndentCommand::DoCommand(Command aCommand,
                                   TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
-  if (!htmlEditor) {
+  if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
   nsresult rv = htmlEditor->IndentAsAction();
@@ -467,13 +470,17 @@ bool OutdentCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return false;
+  }
+  return htmlEditor->IsSelectionEditable();
 }
 
 nsresult OutdentCommand::DoCommand(Command aCommand,
                                    TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
-  if (!htmlEditor) {
+  if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
   nsresult rv = htmlEditor->OutdentAsAction();
@@ -505,8 +512,12 @@ bool MultiStateCommandBase::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return false;
+  }
   // should be disabled sometimes, like if the current selection is an image
-  return aTextEditor->IsSelectionEditable();
+  return htmlEditor->IsSelectionEditable();
 }
 
 nsresult MultiStateCommandBase::DoCommand(Command aCommand,
@@ -1041,14 +1052,18 @@ bool RemoveStylesCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return false;
+  }
   // test if we have any styles?
-  return aTextEditor->IsSelectionEditable();
+  return htmlEditor->IsSelectionEditable();
 }
 
 nsresult RemoveStylesCommand::DoCommand(Command aCommand,
                                         TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
-  if (!htmlEditor) {
+  if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
   return MOZ_KnownLive(htmlEditor)->RemoveAllInlineProperties();
@@ -1078,14 +1093,18 @@ bool IncreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return false;
+  }
   // test if we are at max size?
-  return aTextEditor->IsSelectionEditable();
+  return htmlEditor->IsSelectionEditable();
 }
 
 nsresult IncreaseFontSizeCommand::DoCommand(Command aCommand,
                                             TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
-  if (!htmlEditor) {
+  if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
   return MOZ_KnownLive(htmlEditor)->IncreaseFontSize();
@@ -1114,14 +1133,18 @@ bool DecreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return false;
+  }
   // test if we are at min size?
-  return aTextEditor->IsSelectionEditable();
+  return htmlEditor->IsSelectionEditable();
 }
 
 nsresult DecreaseFontSizeCommand::DoCommand(Command aCommand,
                                             TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
-  if (!htmlEditor) {
+  if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
   return MOZ_KnownLive(htmlEditor)->DecreaseFontSize();
@@ -1150,7 +1173,11 @@ bool InsertHTMLCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return false;
+  }
+  return htmlEditor->IsSelectionEditable();
 }
 
 nsresult InsertHTMLCommand::DoCommand(Command aCommand,
@@ -1205,7 +1232,11 @@ bool InsertTagCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable();
+  HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
+  if (!htmlEditor) {
+    return false;
+  }
+  return htmlEditor->IsSelectionEditable();
 }
 
 // corresponding STATE_ATTRIBUTE is: src (img) and href (a)
