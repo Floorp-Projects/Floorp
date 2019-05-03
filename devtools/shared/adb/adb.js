@@ -33,9 +33,11 @@ class Adb extends EventEmitter {
     this._updateAdbProcess = this._updateAdbProcess.bind(this);
     this._onDeviceConnected = this._onDeviceConnected.bind(this);
     this._onDeviceDisconnected = this._onDeviceDisconnected.bind(this);
+    this._onNoDevicesDetected = this._onNoDevicesDetected.bind(this);
 
     this._trackDevicesCommand.on("device-connected", this._onDeviceConnected);
     this._trackDevicesCommand.on("device-disconnected", this._onDeviceDisconnected);
+    this._trackDevicesCommand.on("no-devices-detected", this._onNoDevicesDetected);
     adbAddon.on("update", this._updateAdbProcess);
   }
 
@@ -123,6 +125,10 @@ class Adb extends EventEmitter {
 
   _onDeviceDisconnected(deviceId) {
     this._devices.delete(deviceId);
+    this.updateRuntimes();
+  }
+
+  _onNoDevicesDetected() {
     this.updateRuntimes();
   }
 

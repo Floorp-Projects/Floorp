@@ -32,6 +32,10 @@ void MacroAssembler::move16SignExtend(Register src, Register dest) {
   movswl(src, dest);
 }
 
+void MacroAssembler::loadAbiReturnAddress(Register dest) {
+  loadPtr(Address(getStackPointer(), 0), dest);
+}
+
 // ===============================================================
 // Logical instructions
 

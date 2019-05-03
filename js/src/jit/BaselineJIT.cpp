@@ -151,7 +151,9 @@ JitExecStatus jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp,
       data.jitcode += MacroAssembler::ToggledCallSize(data.jitcode);
     }
   } else {
-    MOZ_CRASH("NYI: Interpreter executeOp code");
+    const BaselineInterpreter& interp =
+        cx->runtime()->jitRuntime()->baselineInterpreter();
+    data.jitcode = interp.interpretOpAddr().value;
   }
 
   // Note: keep this in sync with SetEnterJitData.
@@ -1080,6 +1082,23 @@ void BaselineScript::toggleTraceLoggerEngine(bool enable) {
 }
 #endif
 
+static void ToggleProfilerInstrumentation(JitCode* code,
+                                          uint32_t profilerEnterToggleOffset,
+                                          uint32_t profilerExitToggleOffset,
+                                          bool enable) {
+  CodeLocationLabel enterToggleLocation(code,
+                                        CodeOffset(profilerEnterToggleOffset));
+  CodeLocationLabel exitToggleLocation(code,
+                                       CodeOffset(profilerExitToggleOffset));
+  if (enable) {
+    Assembler::ToggleToCmp(enterToggleLocation);
+    Assembler::ToggleToCmp(exitToggleLocation);
+  } else {
+    Assembler::ToggleToJmp(enterToggleLocation);
+    Assembler::ToggleToJmp(exitToggleLocation);
+  }
+}
+
 void BaselineScript::toggleProfilerInstrumentation(bool enable) {
   if (enable == isProfilerInstrumentationOn()) {
     return;
@@ -1088,19 +1107,46 @@ void BaselineScript::toggleProfilerInstrumentation(bool enable) {
   JitSpew(JitSpew_BaselineIC, "  toggling profiling %s for BaselineScript %p",
           enable ? "on" : "off", this);
 
-  // Toggle the jump
-  CodeLocationLabel enterToggleLocation(method_,
-                                        CodeOffset(profilerEnterToggleOffset_));
-  CodeLocationLabel exitToggleLocation(method_,
-                                       CodeOffset(profilerExitToggleOffset_));
+  ToggleProfilerInstrumentation(method_, profilerEnterToggleOffset_,
+                                profilerExitToggleOffset_, enable);
+
   if (enable) {
-    Assembler::ToggleToCmp(enterToggleLocation);
-    Assembler::ToggleToCmp(exitToggleLocation);
     flags_ |= uint32_t(PROFILER_INSTRUMENTATION_ON);
   } else {
-    Assembler::ToggleToJmp(enterToggleLocation);
-    Assembler::ToggleToJmp(exitToggleLocation);
     flags_ &= ~uint32_t(PROFILER_INSTRUMENTATION_ON);
+  }
+}
+
+void BaselineInterpreter::toggleProfilerInstrumentation(bool enable) {
+  if (!JitOptions.baselineInterpreter) {
+    return;
+  }
+
+  AutoWritableJitCode awjc(code_);
+  ToggleProfilerInstrumentation(code_, profilerEnterToggleOffset_,
+                                profilerExitToggleOffset_, enable);
+}
+
+void BaselineInterpreter::toggleDebuggerInstrumentation(bool enable) {
+  if (!JitOptions.baselineInterpreter) {
+    return;
+  }
+
+  AutoWritableJitCode awjc(code_);
+
+  // Toggle prologue IsDebuggeeCheck code.
+  CodeLocationLabel debuggeeCheckLocation(code_,
+                                          CodeOffset(debuggeeCheckOffset_));
+  if (enable) {
+    Assembler::ToggleToCmp(debuggeeCheckLocation);
+  } else {
+    Assembler::ToggleToJmp(debuggeeCheckLocation);
+  }
+
+  // Toggle DebugTrapHandler calls.
+  for (uint32_t offset : debugTrapOffsets_) {
+    CodeLocationLabel trapLocation(code_, CodeOffset(offset));
+    Assembler::ToggleCall(trapLocation, enable);
   }
 }
 
@@ -1277,6 +1323,8 @@ void jit::ToggleBaselineProfiling(JSRuntime* runtime, bool enable) {
     return;
   }
 
+  jrt->baselineInterpreter().toggleProfilerInstrumentation(enable);
+
   for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
     for (auto script = zone->cellIter<JSScript>(); !script.done();
          script.next()) {
@@ -1364,4 +1412,27 @@ void jit::MarkActiveTypeScripts(Zone* zone) {
       MarkActiveTypeScripts(cx, iter);
     }
   }
+}
+
+void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
+                               uint32_t profilerEnterToggleOffset,
+                               uint32_t profilerExitToggleOffset,
+                               uint32_t debuggeeCheckOffset,
+                               DebugTrapOffsets&& debugTrapOffsets) {
+  code_ = code;
+  interpretOpOffset_ = interpretOpOffset;
+  profilerEnterToggleOffset_ = profilerEnterToggleOffset;
+  profilerExitToggleOffset_ = profilerExitToggleOffset;
+  debuggeeCheckOffset_ = debuggeeCheckOffset;
+  debugTrapOffsets_ = std::move(debugTrapOffsets);
+}
+
+bool jit::GenerateBaselineInterpreter(JSContext* cx,
+                                      BaselineInterpreter& interpreter) {
+  // Temporary JitOptions check to prevent crashes for now.
+  if (JitOptions.baselineInterpreter) {
+    MOZ_CRASH("NYI: GenerateBaselineInterpreter");
+  }
+
+  return true;
 }

@@ -651,6 +651,51 @@ void JitSpewBaselineICStats(JSScript* script, const char* dumpReason);
 
 static const unsigned BASELINE_MAX_ARGS_LENGTH = 20000;
 
+// Class storing the generated Baseline Interpreter code for the runtime.
+class BaselineInterpreter {
+  // The interpreter code.
+  JitCode* code_ = nullptr;
+
+  // Offset of the code to start interpreting a bytecode op.
+  uint32_t interpretOpOffset_ = 0;
+
+  // The offsets for the toggledJump instructions for profiler instrumentation.
+  uint32_t profilerEnterToggleOffset_ = 0;
+  uint32_t profilerExitToggleOffset_ = 0;
+
+  // The offset for the toggledJump instruction for the debugger's
+  // IsDebuggeeCheck code in the prologue.
+  uint32_t debuggeeCheckOffset_ = 0;
+
+  // Offsets of toggled calls to the DebugTrapHandler trampoline (for
+  // breakpoints and stepping).
+  using DebugTrapOffsets = js::Vector<uint32_t, 0, SystemAllocPolicy>;
+  DebugTrapOffsets debugTrapOffsets_;
+
+ public:
+  BaselineInterpreter() = default;
+
+  BaselineInterpreter(const BaselineInterpreter&) = delete;
+  void operator=(const BaselineInterpreter&) = delete;
+
+  void init(JitCode* code, uint32_t interpretOpOffset,
+            uint32_t profilerEnterToggleOffset,
+            uint32_t profilerExitToggleOffset, uint32_t debuggeeCheckOffset,
+            DebugTrapOffsets&& debugTrapOffsets);
+
+  uint8_t* codeRaw() const { return code_->raw(); }
+
+  TrampolinePtr interpretOpAddr() const {
+    return TrampolinePtr(codeRaw() + interpretOpOffset_);
+  }
+
+  void toggleProfilerInstrumentation(bool enable);
+  void toggleDebuggerInstrumentation(bool enable);
+};
+
+MOZ_MUST_USE bool GenerateBaselineInterpreter(JSContext* cx,
+                                              BaselineInterpreter& interpreter);
+
 }  // namespace jit
 }  // namespace js
 

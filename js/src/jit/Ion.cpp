@@ -166,6 +166,7 @@ JitRuntime::JitRuntime()
       doubleToInt32ValueStubOffset_(0),
       debugTrapHandler_(nullptr),
       baselineDebugModeOSRHandler_(nullptr),
+      baselineInterpreter_(),
       trampolineCode_(nullptr),
       jitcodeGlobalTable_(nullptr),
 #ifdef DEBUG
@@ -210,6 +211,10 @@ bool JitRuntime::initialize(JSContext* cx) {
 
   jitcodeGlobalTable_ = cx->new_<JitcodeGlobalTable>();
   if (!jitcodeGlobalTable_) {
+    return false;
+  }
+
+  if (!GenerateBaselineInterpreter(cx, baselineInterpreter_)) {
     return false;
   }
 

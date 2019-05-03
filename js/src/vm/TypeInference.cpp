@@ -3284,6 +3284,9 @@ bool js::AddClearDefiniteGetterSetterForPrototypeChain(JSContext* cx,
    */
   RootedObject proto(cx, group->proto().toObjectOrNull());
   while (proto) {
+    if (!proto->hasStaticPrototype()) {
+      return false;
+    }
     ObjectGroup* protoGroup = JSObject::getGroup(cx, proto);
     if (!protoGroup) {
       cx->recoverFromOutOfMemory();
@@ -3551,6 +3554,10 @@ bool JSScript::makeTypes(JSContext* cx) {
   prepareForDestruction.release();
 
   types_ = new (typeScript) TypeScript(this, std::move(icScript), numTypeSets);
+
+  // We have a TypeScript so we can set the script's jitCodeRaw_ pointer to the
+  // Baseline Interpreter code.
+  updateJitCodeRaw(cx->runtime());
 
 #ifdef DEBUG
   StackTypeSet* typeArray = typeScript->typeArrayDontCheckGeneration();
@@ -4582,6 +4589,7 @@ void JSScript::maybeReleaseTypes() {
 
   types_->destroy(zone());
   types_ = nullptr;
+  updateJitCodeRaw(runtimeFromMainThread());
 }
 
 void TypeScript::destroy(Zone* zone) {

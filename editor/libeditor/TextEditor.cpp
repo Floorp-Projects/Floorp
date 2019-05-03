@@ -1788,7 +1788,8 @@ TextEditor::Cut() {
                                                *nsGkAtoms::DeleteTxnName);
     DeleteSelectionAsSubAction(eNone, eStrip);
   }
-  return actionTaken ? NS_OK : NS_ERROR_FAILURE;
+  return EditorBase::ToGenericNSResult(
+      actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
 }
 
 bool TextEditor::CanCut() const {
@@ -1816,7 +1817,8 @@ TextEditor::Copy() {
   bool actionTaken = false;
   FireClipboardEvent(eCopy, nsIClipboard::kGlobalClipboard, &actionTaken);
 
-  return actionTaken ? NS_OK : NS_ERROR_FAILURE;
+  return EditorBase::ToGenericNSResult(
+      actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
 }
 
 bool TextEditor::CanCopy() const {

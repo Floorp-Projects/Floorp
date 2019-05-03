@@ -47,58 +47,105 @@ async function testCDP() {
   });
   ok(true, "CDP client has been instantiated");
 
-  const {Page, Runtime} = client;
+  const firstContext = await testRuntimeEnable(client);
+  await testEvaluate(client, firstContext);
+  const secondContext = await testNavigate(client, firstContext);
+  await testNavigateBack(client, firstContext, secondContext);
+  await testNavigateViaLocation(client, firstContext);
 
-  // turn on navigation related events, such as DOMContentLoaded et al.
-  await Runtime.enable();
-  ok(true, "Runtime domain has been enabled");
-
-  // Calling Runtime.enable will emit executionContextCreated for the existing contexts
-  const { context: context1 } = await Runtime.executionContextCreated();
-  ok(!!context1.id, "The execution context has an id");
-  ok(context1.auxData.isDefault, "The execution context is the default one");
-  ok(!!context1.auxData.frameId, "The execution context has a frame id set");
-
-  info("Navigate to a new URL");
-  const executionContextDestroyed2 = Runtime.executionContextDestroyed();
-  const executionContextCreated2 = Runtime.executionContextCreated();
-
-  const url = "data:text/html;charset=utf-8,test-page";
-  const { frameId } = await Page.navigate({ url });
-  ok(true, "A new page has been loaded");
-  is(frameId, context1.auxData.frameId, "Page.navigate returns the same frameId than executionContextCreated");
-
-  let { executionContextId } = await executionContextDestroyed2;
-  is(executionContextId, context1.id, "The destroyed event reports the previous context id");
-
-  const { context: context2 } = await executionContextCreated2;
-  ok(!!context2.id, "The execution context has an id");
-  isnot(context1.id, context2.id, "The new execution context has a different id");
-  ok(context2.auxData.isDefault, "The execution context is the default one");
-  is(context2.auxData.frameId, frameId, "The execution context frame id is the same " +
-    "than the one returned by Page.navigate");
-
-  isnot(executionContextId, context2.id, "The destroyed id is different from the " +
-    "created one");
-
-  // Navigates back to the previous page.
-  // This should resurect the original document from the BF Cache and recreate the
-  // context for it
-  info("Navigate back to the previous document");
-  const executionContextDestroyed3 = Runtime.executionContextDestroyed();
-  const executionContextCreated3 = Runtime.executionContextCreated();
-  gBrowser.selectedBrowser.goBack();
-  const { context: context3 } = await executionContextCreated3;
-  is(context3.id, context1.id, "The new execution context should be the same than the first one");
-  ok(context3.auxData.isDefault, "The execution context is the default one");
-  is(context3.auxData.frameId, frameId, "The execution context frame id is always the same");
-
-  ({ executionContextId } = await executionContextDestroyed3);
-  is(executionContextId, context2.id, "The destroyed event reports the previous context id");
   await client.close();
   ok(true, "The client is closed");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await RemoteAgent.close();
+}
+
+async function testRuntimeEnable({ Runtime }) {
+  // Enable watching for new execution context
+  await Runtime.enable();
+  ok(true, "Runtime domain has been enabled");
+
+  // Calling Runtime.enable will emit executionContextCreated for the existing contexts
+  const { context } = await Runtime.executionContextCreated();
+  ok(!!context.id, "The execution context has an id");
+  ok(context.auxData.isDefault, "The execution context is the default one");
+  ok(!!context.auxData.frameId, "The execution context has a frame id set");
+
+  return context;
+}
+
+async function testEvaluate({ Runtime }, previousContext) {
+  const contextId = previousContext.id;
+
+  const { result } = await Runtime.evaluate({ contextId, expression: "location.href" });
+  is(result.value, TEST_URI, "Runtime.evaluate works and is against the test page");
+}
+
+async function testNavigate({ Runtime, Page }, previousContext) {
+  info("Navigate to a new URL");
+  const executionContextDestroyed = Runtime.executionContextDestroyed();
+  const executionContextCreated = Runtime.executionContextCreated();
+
+  const url = "data:text/html;charset=utf-8,test-page";
+  const { frameId } = await Page.navigate({ url });
+  ok(true, "A new page has been loaded");
+  is(frameId, previousContext.auxData.frameId, "Page.navigate returns the same frameId than executionContextCreated");
+
+  const { executionContextId } = await executionContextDestroyed;
+  is(executionContextId, previousContext.id, "The destroyed event reports the previous context id");
+
+  const { context } = await executionContextCreated;
+  ok(!!context.id, "The execution context has an id");
+  isnot(previousContext.id, context.id, "The new execution context has a different id");
+  ok(context.auxData.isDefault, "The execution context is the default one");
+  is(context.auxData.frameId, frameId, "The execution context frame id is the same " +
+    "than the one returned by Page.navigate");
+
+  isnot(executionContextId, context.id, "The destroyed id is different from the " +
+    "created one");
+
+  return context;
+}
+
+// Navigates back to the previous page.
+// This should resurect the original document from the BF Cache and recreate the
+// context for it
+async function testNavigateBack({ Runtime }, firstContext, previousContext) {
+  info("Navigate back to the previous document");
+  const executionContextDestroyed = Runtime.executionContextDestroyed();
+  const executionContextCreated = Runtime.executionContextCreated();
+
+  gBrowser.selectedBrowser.goBack();
+
+  const { context } = await executionContextCreated;
+  is(context.id, firstContext.id, "The new execution context should be the same than the first one");
+  ok(context.auxData.isDefault, "The execution context is the default one");
+  is(context.auxData.frameId, firstContext.auxData.frameId, "The execution context frame id is always the same");
+
+  const { executionContextId } = await executionContextDestroyed;
+  is(executionContextId, previousContext.id, "The destroyed event reports the previous context id");
+
+  const { result } = await Runtime.evaluate({ contextId: context.id, expression: "location.href" });
+  is(result.value, TEST_URI, "Runtime.evaluate works and is against the page we just navigated to");
+}
+
+async function testNavigateViaLocation({ Runtime }, previousContext) {
+  const executionContextDestroyed = Runtime.executionContextDestroyed();
+  const executionContextCreated = Runtime.executionContextCreated();
+
+  const url2 = "data:text/html;charset=utf-8,test-page-2";
+  await Runtime.evaluate({ contextId: previousContext.id, expression: `window.location = '${url2}';` });
+
+  const { executionContextId } = await executionContextDestroyed;
+  is(executionContextId, previousContext.id, "The destroyed event reports the previous context id");
+
+  const { context } = await executionContextCreated;
+  ok(!!context.id, "The execution context has an id");
+  ok(context.auxData.isDefault, "The execution context is the default one");
+  is(context.auxData.frameId, previousContext.auxData.frameId, "The execution context frame id is the same " +
+    "the one returned by Page.navigate");
+
+  isnot(executionContextId, context.id, "The destroyed id is different from the " +
+    "created one");
 }

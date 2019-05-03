@@ -352,7 +352,7 @@ def run(templates={}, full=False, parameters=None, push=True, message='{msg}', c
         print('ERROR Could not find any tests or chunks to run.')
         return 1
 
-    tg = generate_tasks(parameters, full, root=build.topsrcdir)
+    tg = generate_tasks(parameters, full)
     all_tasks = tg.tasks.keys()
 
     tasks_by_chunks = filter_tasks_by_chunks(all_tasks, test_chunks)

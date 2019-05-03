@@ -22,6 +22,8 @@ const AccessibilityRow = createFactory(require("./AccessibilityRow"));
 const AccessibilityRowValue = createFactory(require("./AccessibilityRowValue"));
 const { Provider } = require("../provider");
 
+const { scrollIntoView } = require("devtools/client/shared/scroll");
+
 /**
  * Renders Accessibility panel tree.
  */
@@ -60,7 +62,16 @@ class AccessibilityTree extends Component {
     return null;
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
+    // When filtering is toggled, make sure that the selected row remains in
+    // view.
+    if (this.props.filtered !== prevProps.filtered) {
+      const selected = document.querySelector(".treeTable .treeRow.selected");
+      if (selected) {
+        scrollIntoView(selected);
+      }
+    }
+
     window.emit(EVENTS.ACCESSIBILITY_INSPECTOR_UPDATED);
   }
 
@@ -123,12 +134,7 @@ class AccessibilityTree extends Component {
   }
 
   renderValue(props) {
-    const { walker } = this.props;
-
-    return AccessibilityRowValue({
-      ...props,
-      walker,
-    });
+    return AccessibilityRowValue(props);
   }
 
   /**
@@ -191,7 +197,10 @@ class AccessibilityTree extends Component {
           if (event.target.classList.contains("theme-twisty")) {
             this.toggle(nodePath);
           }
-          this.selectRow(event.currentTarget);
+
+          this.selectRow(
+            this.rows.find(row => row.props.member.path === nodePath),
+            { preventAutoScroll: true });
         },
         onContextMenuTree: hasContextMenu && function(e) {
           // If context menu event is triggered on (or bubbled to) the TreeView, it was

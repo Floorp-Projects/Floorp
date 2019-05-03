@@ -56,7 +56,7 @@ class MediaBlockCacheBase {
 
   // Maximum number of blocks expected in this block cache. (But allow overflow
   // to accomodate incoming traffic before MediaCache can handle it.)
-  virtual int32_t GetMaxBlocks() const = 0;
+  virtual size_t GetMaxBlocks(size_t aCacheSizeInKiB) const = 0;
 
   // Can be called on any thread. This defers to a non-main thread.
   virtual nsresult WriteBlock(uint32_t aBlockIndex, Span<const uint8_t> aData1,

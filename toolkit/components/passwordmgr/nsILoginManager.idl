@@ -2,16 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "nsISupports.idl"
 
-interface nsIURI;
 interface nsILoginInfo;
-interface nsIAutoCompleteResult;
-interface nsIFormAutoCompleteObserver;
 interface nsIPropertyBag;
-
-webidl HTMLInputElement;
 
 [scriptable, uuid(38c7f6af-7df9-49c7-b558-2776b24e6cc1)]
 interface nsILoginManager : nsISupports {
@@ -216,24 +210,6 @@ interface nsILoginManager : nsISupports {
    */
   unsigned long countLogins(in AString aHostname, in AString aActionURL,
                             in AString aHttpRealm);
-
-
-  /**
-   * Generate results for a userfield autocomplete menu.
-   *
-   * NOTE: This interface is provided for use only by the FormFillController,
-   *       which calls it directly. This isn't really ideal, it should
-   *       probably be callback registered through the FFC.
-   */
-  void autoCompleteSearchAsync(in AString aSearchString,
-                               in nsIAutoCompleteResult aPreviousResult,
-                               in HTMLInputElement aElement,
-                               in nsIFormAutoCompleteObserver aListener);
-
-  /**
-   * Stop a previously-started async search.
-   */
-  void stopSearch();
 
   /**
    * Search for logins in the login manager. An array is always returned;

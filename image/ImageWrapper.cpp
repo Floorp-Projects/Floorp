@@ -120,9 +120,8 @@ ImageWrapper::GetIntrinsicSize(nsSize* aSize) {
   return mInnerImage->GetIntrinsicSize(aSize);
 }
 
-NS_IMETHODIMP
-ImageWrapper::GetIntrinsicRatio(nsSize* aSize) {
-  return mInnerImage->GetIntrinsicRatio(aSize);
+Maybe<AspectRatio> ImageWrapper::GetIntrinsicRatio() {
+  return mInnerImage->GetIntrinsicRatio();
 }
 
 NS_IMETHODIMP_(Orientation)
