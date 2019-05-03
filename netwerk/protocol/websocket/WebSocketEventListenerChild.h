@@ -29,7 +29,8 @@ class WebSocketEventListenerChild final : public PWebSocketEventListenerChild,
 
   mozilla::ipc::IPCResult RecvWebSocketOpened(
       const uint32_t& aWebSocketSerialID, const nsString& aEffectiveURI,
-      const nsCString& aProtocols, const nsCString& aExtensions);
+      const nsCString& aProtocols, const nsCString& aExtensions,
+      const uint64_t& aHttpChannelId);
 
   mozilla::ipc::IPCResult RecvWebSocketMessageAvailable(
       const uint32_t& aWebSocketSerialID, const nsCString& aData,
