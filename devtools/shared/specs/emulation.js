@@ -149,11 +149,6 @@ const emulationSpec = generateActorSpec({
       },
       response: {},
     },
-
-    simulateScreenOrientationChange: {
-      request: {},
-      response: {},
-    },
   },
 });
 

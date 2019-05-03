@@ -548,9 +548,6 @@ ResponsiveUI.prototype = {
       case "remove-device-association":
         this.onRemoveDeviceAssociation();
         break;
-      case "viewport-orientation-change":
-        this.onRotateViewport(event);
-        break;
       case "viewport-resize":
         this.onResizeViewport(event);
         break;
@@ -638,18 +635,6 @@ ResponsiveUI.prototype = {
       width,
       height,
     });
-  },
-
-  async onRotateViewport(event) {
-    const targetFront = await this.client.mainRoot.getTab();
-
-    // Ensure that simulateScreenOrientationChange is supported.
-    if (await targetFront.actorHasMethod("emulation",
-        "simulateScreenOrientationChange")) {
-      // TODO: From event.data, pass orientation and angle as arguments.
-      // See Bug 1357774.
-      await this.emulationFront.simulateScreenOrientationChange();
-    }
   },
 
   /**
