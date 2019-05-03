@@ -16,21 +16,32 @@ function cached_handler(metadata, response) {
   handlers_called++;
 }
 
-function makeChan(url, inIsolatedMozBrowser, userContextId) {
+function makeChan(url, appId, inIsolatedMozBrowser, userContextId) {
   var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
                     .QueryInterface(Ci.nsIHttpChannel);
-  chan.loadInfo.originAttributes = { inIsolatedMozBrowser: inIsolatedMozBrowser,
+  chan.loadInfo.originAttributes = { appId: appId,
+                                     inIsolatedMozBrowser: inIsolatedMozBrowser,
                                      userContextId: userContextId,
                                    };
   return chan;
 }
 
-// [inIsolatedMozBrowser, userContextId, expected_handlers_called]
+// [appId, inIsolatedMozBrowser, userContextId, expected_handlers_called]
 var firstTests = [
-  [false, 0, 1], [true, 0, 1], [false, 1, 1], [true, 1, 1],
+  [0, false, 0, 1], [0, true, 0, 1], [1, false, 0, 1], [1, true, 0, 1],
+  [0, false, 1, 1], [0, true, 1, 1], [1, false, 1, 1], [1, true, 1, 1]
 ];
 var secondTests = [
-  [false, 0, 0], [true, 0, 0], [false, 1, 1], [true, 1, 0],
+  [0, false, 0, 0], [0, true, 0, 0], [1, false, 0, 0], [1, true, 0, 1],
+  [0, false, 1, 0], [0, true, 1, 0], [1, false, 1, 0], [1, true, 1, 0]
+];
+var thirdTests = [
+  [0, false, 0, 0], [0, true, 0, 0], [1, false, 0, 1], [1, true, 0, 1],
+  [0, false, 1, 0], [0, true, 1, 0], [1, false, 1, 0], [1, true, 1, 0]
+];
+var fourthTests = [
+  [0, false, 0, 0], [0, true, 0, 0], [1, false, 0, 0], [1, true, 0, 0],
+  [0, false, 1, 1], [0, true, 1, 0], [1, false, 1, 0], [1, true, 1, 0]
 ];
 
 async function run_all_tests() {
@@ -45,9 +56,27 @@ async function run_all_tests() {
   if (procType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
     return;
 
-  Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId: 1 });
+  let attrs_inBrowser = { appId:1, inIsolatedMozBrowser:true };
+  let attrs_notInBrowser = { appId:1 };
+
+  Services.clearData.deleteDataFromOriginAttributesPattern(attrs_inBrowser);
 
   for (let test of secondTests) {
+    handlers_called = 0;
+    await test_channel(...test);
+  }
+
+  Services.clearData.deleteDataFromOriginAttributesPattern(attrs_notInBrowser);
+  Services.clearData.deleteDataFromOriginAttributesPattern(attrs_inBrowser);
+
+  for (let test of thirdTests) {
+    handlers_called = 0;
+    await test_channel(...test);
+  }
+
+  Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId: 1 });
+
+  for (let test of fourthTests) {
     handlers_called = 0;
     await test_channel(...test);
   }
@@ -68,9 +97,9 @@ function run_test() {
   });
 }
 
-function test_channel(inIsolatedMozBrowser, userContextId, expected) {
+function test_channel(appId, inIsolatedMozBrowser, userContextId, expected) {
   return new Promise(resolve => {
-    var chan = makeChan(URL, inIsolatedMozBrowser, userContextId);
+    var chan = makeChan(URL, appId, inIsolatedMozBrowser, userContextId);
     chan.asyncOpen(new ChannelListener(doneFirstLoad.bind(null, resolve), expected));
   });
 }
@@ -78,7 +107,7 @@ function test_channel(inIsolatedMozBrowser, userContextId, expected) {
 function doneFirstLoad(resolve, req, buffer, expected) {
   // Load it again, make sure it hits the cache
   var oa = req.loadInfo.originAttributes;
-  var chan = makeChan(URL, oa.isInIsolatedMozBrowserElement, oa.userContextId);
+  var chan = makeChan(URL, oa.appId, oa.isInIsolatedMozBrowserElement, oa.userContextId);
   chan.asyncOpen(new ChannelListener(doneSecondLoad.bind(null, resolve), expected));
 }
 

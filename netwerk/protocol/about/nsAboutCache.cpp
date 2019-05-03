@@ -100,10 +100,12 @@ nsresult nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
       "<label><input id='priv' type='checkbox'/> Private</label>\n"
       "<label><input id='anon' type='checkbox'/> Anonymous</label>\n");
 
-  // Visit scoping by browseris not implemented for the old cache, simply don't
-  // add these controls.  The inbrowser entries are already mixed in the
-  // default view anyway.
+  // Visit scoping by browser and appid is not implemented for
+  // the old cache, simply don't add these controls.
+  // The appid/inbrowser entries are already mixed in the default
+  // view anyway.
   mBuffer.AppendLiteral(
+      "<label><input id='appid' type='text' size='6'/> AppID</label>\n"
       "<label><input id='inbrowser' type='checkbox'/> In Browser "
       "Element</label>\n");
 

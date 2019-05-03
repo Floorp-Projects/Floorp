@@ -107,6 +107,7 @@ const SESSION_DATA_OA = JSON.stringify(
       name: "test1",
       originAttributes: {
         addonId: "",
+        appId: 0,
         inIsolatedMozBrowser: false,
         userContextId: 0,
       },

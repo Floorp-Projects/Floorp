@@ -34,9 +34,15 @@ TEST(OriginAttributes, Suffix_default)
   TestSuffix(attrs);
 }
 
-TEST(OriginAttributes, Suffix_inIsolatedMozBrowser)
+TEST(OriginAttributes, Suffix_appId_inIsolatedMozBrowser)
 {
-  OriginAttributes attrs(true);
+  OriginAttributes attrs(1, true);
+  TestSuffix(attrs);
+}
+
+TEST(OriginAttributes, Suffix_maxAppId_inIsolatedMozBrowser)
+{
+  OriginAttributes attrs(4294967295, true);
   TestSuffix(attrs);
 }
 
