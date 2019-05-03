@@ -302,14 +302,12 @@ class ModifyBusyCountRunnable final : public WorkerControlRunnable {
 
 class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
   nsString mScriptURL;
-  UniquePtr<SerializedStackHolder> mOriginStack;
 
  public:
   explicit CompileScriptRunnable(WorkerPrivate* aWorkerPrivate,
-                                 UniquePtr<SerializedStackHolder> aOriginStack,
                                  const nsAString& aScriptURL)
       : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
-        mScriptURL(aScriptURL), mOriginStack(aOriginStack.release()) {}
+        mScriptURL(aScriptURL) {}
 
  private:
   // We can't implement PreRun effectively, because at the point when that would
@@ -339,8 +337,8 @@ class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
     }
 
     ErrorResult rv;
-    workerinternals::LoadMainScript(aWorkerPrivate, std::move(mOriginStack),
-                                    mScriptURL, WorkerScript, rv);
+    workerinternals::LoadMainScript(aWorkerPrivate, mScriptURL, WorkerScript,
+                                    rv);
     rv.WouldReportJSException();
     // Explicitly ignore NS_BINDING_ABORTED on rv.  Or more precisely, still
     // return false and don't SetWorkerScriptExecutedSuccessfully() in that
@@ -2258,10 +2256,8 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
 
   MOZ_DIAGNOSTIC_ASSERT(worker->PrincipalIsValid());
 
-  UniquePtr<SerializedStackHolder> stack = GetCurrentStackForNetMonitor(aCx);
-
   RefPtr<CompileScriptRunnable> compiler =
-      new CompileScriptRunnable(worker, std::move(stack), aScriptURL);
+      new CompileScriptRunnable(worker, aScriptURL);
   if (!compiler->Dispatch()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -4057,7 +4053,7 @@ void WorkerPrivate::ReportError(JSContext* aCx,
   JS::RootedObject exnStack(aCx, JS::GetPendingExceptionStack(aCx));
   JS_ClearPendingException(aCx);
 
-  UniquePtr<WorkerErrorReport> report = MakeUnique<WorkerErrorReport>();
+  UniquePtr<WorkerErrorReport> report = MakeUnique<WorkerErrorReport>(this);
   if (aReport) {
     report->AssignErrorReport(aReport);
   } else {
@@ -4069,7 +4065,8 @@ void WorkerPrivate::ReportError(JSContext* aCx,
                                           &stackGlobal);
 
   if (stack) {
-    report->SerializeWorkerStack(aCx, this, stack);
+    JS::RootedValue stackValue(aCx, JS::ObjectValue(*stack));
+    report->Write(aCx, stackValue, IgnoreErrors());
   }
 
   if (report->mMessage.IsEmpty() && aToStringResult) {

@@ -12,7 +12,6 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
-#include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 
 already_AddRefed<nsFrameLoader> nsFrameLoaderOwner::GetFrameLoader() {
   return do_AddRef(mFrameLoader);
@@ -70,9 +69,7 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   // FrameLoader, fire an event to act like we've recreated ourselves, similar
   // to what XULFrameElement does after rebinding to the tree.
   // ChromeOnlyDispatch is turns on to make sure this isn't fired into content.
-  (new mozilla::AsyncEventDispatcher(owner,
-                                     NS_LITERAL_STRING("XULFrameLoaderCreated"),
-                                     mozilla::CanBubble::eYes,
-                                     mozilla::ChromeOnlyDispatch::eYes))
+  (new AsyncEventDispatcher(owner, NS_LITERAL_STRING("XULFrameLoaderCreated"),
+                            CanBubble::eYes, ChromeOnlyDispatch::eYes))
       ->RunDOMEventWhenSafe();
 }
