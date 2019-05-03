@@ -970,6 +970,21 @@ void Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem,
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
       break;
     }
+    case DisplayItemType::TYPE_BLEND_CONTAINER: {
+      aContext->GetDrawTarget()->PushLayer(false, 1.0,
+                                           nullptr, mozilla::gfx::Matrix(),
+                                           aItemBounds);
+      GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
+         aItem->GetPerFrameKey());
+      aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext,
+                             aRecorder);
+      aContext->GetDrawTarget()->PopLayer();
+      GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(),
+         aItem->GetPerFrameKey());
+      aContext->GetDrawTarget()->FlushItem(aItemBounds);
+      break;
+    }
     case DisplayItemType::TYPE_MASK: {
       GP("Paint Mask\n");
       auto maskItem = static_cast<nsDisplayMasksAndClipPaths*>(aItem);
