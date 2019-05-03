@@ -62,7 +62,6 @@ EXPORTS.mozilla.dom += [
     'TabMessageUtils.h',
     'URLClassifierChild.h',
     'URLClassifierParent.h',
-    'WindowGlobalActor.h',
     'WindowGlobalChild.h',
     'WindowGlobalParent.h',
 ]
@@ -107,7 +106,6 @@ UNIFIED_SOURCES += [
     'TabContext.cpp',
     'TabMessageUtils.cpp',
     'URLClassifierParent.cpp',
-    'WindowGlobalActor.cpp',
     'WindowGlobalChild.cpp',
     'WindowGlobalParent.cpp',
 ]
