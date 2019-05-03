@@ -180,6 +180,10 @@ class WebConsoleWrapper {
           return webConsoleUI.jsterm && webConsoleUI.jsterm.execute(expression);
         },
 
+        requestEvaluation: (string, options) => {
+          return webConsoleUI.webConsoleClient.evaluateJSAsync(string, options);
+        },
+
         getInputCursor: () => {
           return webConsoleUI.jsterm && webConsoleUI.jsterm.getSelectionStart();
         },
