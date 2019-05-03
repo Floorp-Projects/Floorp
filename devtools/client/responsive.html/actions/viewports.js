@@ -95,6 +95,18 @@ module.exports = {
    * Rotate the viewport.
    */
   rotateViewport(id) {
+    // TODO: Add `orientation` and `angle` properties to message data. See Bug 1357774.
+
+    // There is no window object to post to when ran on XPCShell as part of the unit
+    // tests and will immediately throw an error as a result.
+    try {
+      post(window, {
+        type: "viewport-orientation-change",
+      });
+    } catch (e) {
+      console.log("Unable to post message to window");
+    }
+
     return {
       type: ROTATE_VIEWPORT,
       id,
