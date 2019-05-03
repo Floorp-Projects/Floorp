@@ -7,7 +7,6 @@ package mozilla.components.service.glean.storages
 import mozilla.components.service.glean.Glean
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers as KotlinDispatchers
 import kotlinx.coroutines.GlobalScope
@@ -60,11 +59,6 @@ internal object EventsStorageEngine : StorageEngine {
         dir
     }
 
-    // The timestamp of recorded events is computed relative to this point in time
-    // which should roughly match with the process start time. Note that, according
-    // to the docs, the used clock is guaranteed to be monotonic.
-    private val startTime: Long = SystemClock.elapsedRealtime()
-
     // Maximum length of any string value in the extra dictionary, in characters
     internal const val MAX_LENGTH_EXTRA_KEY_VALUE = 100
 
@@ -78,7 +72,7 @@ internal object EventsStorageEngine : StorageEngine {
 
     // Timeout for waiting on async IO (during testing only)
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    internal const val JOB_TIMEOUT_MS = 250L
+    internal const val JOB_TIMEOUT_MS = 5000L
 
     // A lock to prevent simultaneous writing of the event files
     private val eventFileLock = Any()
@@ -210,7 +204,7 @@ internal object EventsStorageEngine : StorageEngine {
         // Rewrite all of the timestamps to they are relative to the first
         // timestamp
         val events = eventStores[storeName]?.let { store ->
-            var firstTimestamp = store[0].timestamp
+            val firstTimestamp = store[0].timestamp
             store.map { event ->
                 event.copy(timestamp = event.timestamp - firstTimestamp)
             }
