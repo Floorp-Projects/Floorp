@@ -69,6 +69,9 @@ permalink: /changelog/
   * Modified `EditToolbar`'s `updateUrl` function to take a `shouldAutoComplete` boolean. By default a call to this function does **not** autocomplete. Generally you want to disable autocomplete when calling `updateUrl` if the text is a search term.
   See `editMode` in `BrowserToolbar` and `setText` in `InlineAutocompleteEditText` for more information.
 
+* **browser-engine-system**
+  * Added support for Authentication dialogs on SystemEngineView.
+
 # 0.51.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.50.0...v0.51.0)

@@ -9,9 +9,11 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.net.http.SslCertificate
 import android.net.http.SslError
+import android.os.Build
 import android.os.Bundle
 import android.os.Message
 import android.view.View
+import android.webkit.HttpAuthHandler
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.SslErrorHandler
@@ -23,6 +25,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebView.HitTestResult
 import android.webkit.WebViewClient
+import android.webkit.WebViewDatabase
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import kotlinx.coroutines.runBlocking
@@ -40,6 +43,7 @@ import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -56,11 +60,13 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 import java.util.Calendar
 import java.util.Calendar.SECOND
 import java.util.Calendar.YEAR
@@ -1412,6 +1418,170 @@ class SystemEngineViewTest {
         }
 
         assertNull(thumbnail)
+    }
+
+    @Test
+    fun `calling onReceivedHttpAuthRequest must provide an Authentication PromptRequest`() {
+        val context = getApplicationContext<Context>()
+        val engineSession = SystemEngineSession(context)
+        val engineView = SystemEngineView(context)
+        var request: PromptRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+        engineView.render(engineSession)
+
+        val authHandler = mock<HttpAuthHandler>()
+        val host = "mozilla.org"
+        val realm = "realm"
+
+        engineSession.webView.webViewClient.onReceivedHttpAuthRequest(engineSession.webView, authHandler, host, realm)
+
+        val authRequest = request as PromptRequest.Authentication
+        assertTrue(request is PromptRequest.Authentication)
+
+        assertEquals(authRequest.title, "")
+
+        authRequest.onConfirm("u", "p")
+        verify(authHandler).proceed("u", "p")
+
+        authRequest.onDismiss()
+        verify(authHandler).cancel()
+    }
+
+    @Test
+    fun `calling onReceivedHttpAuthRequest with a null session must not provide an Authentication PromptRequest`() {
+        val context = getApplicationContext<Context>()
+        val engineSession = SystemEngineSession(context)
+        val engineView = SystemEngineView(context)
+        var request: PromptRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+        engineView.render(engineSession)
+
+        val authHandler = mock<HttpAuthHandler>()
+        engineView.session = null
+
+        engineSession.webView.webViewClient.onReceivedHttpAuthRequest(mock(), authHandler, "mozilla.org", "realm")
+
+        assertNull(request)
+        verify(authHandler).cancel()
+    }
+
+    @Test
+    fun `onReceivedHttpAuthRequest correctly handles realm`() {
+        val context = getApplicationContext<Context>()
+        val engineSession = SystemEngineSession(context)
+        val engineView = SystemEngineView(context)
+
+        var request: PromptRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+        engineView.render(engineSession)
+
+        val webView = engineSession.webView
+        val authHandler = mock<HttpAuthHandler>()
+        val host = "mozilla.org"
+
+        val longRealm = "Login with a user name of httpwatch and a different password each time"
+        webView.webViewClient.onReceivedHttpAuthRequest(webView, authHandler, host, longRealm)
+        assertTrue((request as PromptRequest.Authentication).message.endsWith("differen…”"))
+
+        val emptyRealm = ""
+        webView.webViewClient.onReceivedHttpAuthRequest(webView, authHandler, host, emptyRealm)
+        val noRealmMessageTail = context.getString(R.string.mozac_browser_engine_system_auth_no_realm_message).let {
+            it.substring(it.length - 10)
+        }
+        assertTrue((request as PromptRequest.Authentication).message.endsWith(noRealmMessageTail))
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
+    @Suppress("Deprecation")
+    fun `onReceivedHttpAuthRequest takes credentials from WebView`() {
+        val context = getApplicationContext<Context>()
+        val engineSession = SystemEngineSession(context)
+        val engineView = SystemEngineView(context)
+        var request: PromptRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+
+        engineSession.webView = spy(engineSession.webView)
+        engineView.render(engineSession)
+
+        // use captor as getWebViewClient() is available only from Oreo
+        // and this test runs on N to not use WebViewDatabase
+        val captor = argumentCaptor<WebViewClient>()
+        verify(engineSession.webView).webViewClient = captor.capture()
+        val webViewClient = captor.value
+
+        val host = "mozilla.org"
+        val realm = "realm"
+        val userName = "user123"
+        val password = "pass@123"
+
+        val validCredentials = arrayOf(userName, password)
+        `when`(engineSession.webView.getHttpAuthUsernamePassword(host, realm)).thenReturn(validCredentials)
+        webViewClient.onReceivedHttpAuthRequest(engineSession.webView, mock(), host, realm)
+        assertEquals((request as PromptRequest.Authentication).userName, userName)
+        assertEquals((request as PromptRequest.Authentication).password, password)
+
+        val nullCredentials = null
+        `when`(engineSession.webView.getHttpAuthUsernamePassword(host, realm)).thenReturn(nullCredentials)
+        webViewClient.onReceivedHttpAuthRequest(engineSession.webView, mock(), host, realm)
+        assertEquals((request as PromptRequest.Authentication).userName, "")
+        assertEquals((request as PromptRequest.Authentication).password, "")
+
+        val credentialsWithNulls = arrayOf<String?>(null, null)
+        `when`(engineSession.webView.getHttpAuthUsernamePassword(host, realm)).thenReturn(credentialsWithNulls)
+        webViewClient.onReceivedHttpAuthRequest(engineSession.webView, mock(), host, realm)
+        assertEquals((request as PromptRequest.Authentication).userName, "")
+        assertEquals((request as PromptRequest.Authentication).password, "")
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun `onReceivedHttpAuthRequest uses WebViewDatabase on Oreo+`() {
+        val context = getApplicationContext<Context>()
+        val engineSession = spy(SystemEngineSession(context))
+        val engineView = SystemEngineView(context)
+        var request: PromptRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                request = promptRequest
+            }
+        })
+        engineView.render(engineSession)
+
+        val host = "mozilla.org"
+        val realm = "realm"
+        val userName = "userFromDB"
+        val password = "pass@123FromDB"
+        val webViewDatabase = mock(WebViewDatabase::class.java)
+        `when`(webViewDatabase.getHttpAuthUsernamePassword(host, realm)).thenReturn(arrayOf(userName, password))
+        `when`(engineSession.webViewDatabase(context)).thenReturn(webViewDatabase)
+
+        engineSession.webView.webViewClient.onReceivedHttpAuthRequest(engineSession.webView, mock(), host, realm)
+
+        val authRequest = request as PromptRequest.Authentication
+        assertEquals(authRequest.userName, userName)
+        assertEquals(authRequest.password, password)
     }
 
     private fun Date.add(timeUnit: Int, amountOfTime: Int): Date {

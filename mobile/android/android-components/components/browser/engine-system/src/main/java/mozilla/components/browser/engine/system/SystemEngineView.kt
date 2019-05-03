@@ -16,6 +16,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
+import android.webkit.HttpAuthHandler
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.PermissionRequest
@@ -49,6 +50,7 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.support.ktx.kotlin.toUri
 import mozilla.components.support.utils.DownloadUtils
 import java.util.Date
 
@@ -271,6 +273,46 @@ class SystemEngineView @JvmOverloads constructor(
                 )?.apply {
                     view.loadDataWithBaseURL(url ?: request.url.toString(), data, mimeType, encoding, null)
                 }
+            }
+        }
+
+        override fun onReceivedHttpAuthRequest(view: WebView, handler: HttpAuthHandler, host: String, realm: String) {
+            val session = session ?: return handler.cancel()
+
+            val formattedUrl = session.currentUrl.toUri().let { uri ->
+                (uri.scheme ?: "http") + "://" + (uri.host ?: host)
+            }
+
+            // Trim obnoxiously long realms.
+            val trimmedRealm = if (realm.length > MAX_REALM_LENGTH) {
+                realm.substring(0, MAX_REALM_LENGTH) + "\u2026"
+            } else {
+                realm
+            }
+
+            val message = if (trimmedRealm.isEmpty()) {
+                context.getString(R.string.mozac_browser_engine_system_auth_no_realm_message, formattedUrl)
+            } else {
+                context.getString(R.string.mozac_browser_engine_system_auth_message, trimmedRealm, formattedUrl)
+            }
+
+            val credentials = view.getAuthCredentials(host, realm)
+            val userName = credentials.first
+            val password = credentials.second
+
+            session.notifyObservers {
+                onPromptRequest(
+                    PromptRequest.Authentication(
+                        "",
+                        message,
+                        userName,
+                        password,
+                        PromptRequest.Authentication.Method.HOST,
+                        PromptRequest.Authentication.Level.NONE,
+                        onConfirm = { user, pass -> handler.proceed(user, pass) },
+                        onDismiss = { handler.cancel() }
+                    )
+                )
             }
         }
     }
@@ -650,6 +692,26 @@ class SystemEngineView @JvmOverloads constructor(
         return jsAlertCount > MAX_SUCCESSIVE_DIALOG_COUNT
     }
 
+    @Suppress("Deprecation")
+    private fun WebView.getAuthCredentials(host: String, realm: String): Pair<String, String> {
+        val credentials = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            session?.webViewDatabase(context)?.getHttpAuthUsernamePassword(host, realm)
+        } else {
+            this.getHttpAuthUsernamePassword(host, realm)
+        }
+
+        var credentialsPair = "" to ""
+
+        if (!credentials.isNullOrEmpty() && credentials.size == 2) {
+
+            val user = credentials[0] ?: ""
+            val pass = credentials[1] ?: ""
+
+            credentialsPair = user to pass
+        }
+        return credentialsPair
+    }
+
     companion object {
 
         // Maximum number of successive dialogs before we prompt users to disable dialogs.
@@ -657,6 +719,9 @@ class SystemEngineView @JvmOverloads constructor(
 
         // Minimum time required between dialogs in seconds before enabling the stop dialog.
         internal const val MAX_SUCCESSIVE_DIALOG_SECONDS_LIMIT: Int = 3
+
+        // Maximum realm length to be shown in authentication dialog.
+        internal const val MAX_REALM_LENGTH: Int = 50
 
         @Volatile
         internal var URL_MATCHER: UrlMatcher? = null
