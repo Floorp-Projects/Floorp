@@ -14,6 +14,10 @@ Fenix creates and tries to send a "baseline" ping. It is defined inside the [`me
 
 Fenix sends event pings that allows us to measure feature performance. These are defined inside the [`metrics.yaml`](https://github.com/mozilla-mobile/fenix/blob/master/app/metrics.yaml) file.
 
+## Activation
+
+Fenix sends an activation ping once, at startup. Further documentation can be found in the [`activation` ping](activation.md) docs.
+
 ## Leanplum Events
 
 | Event           |  Leanplum Key | extras                |

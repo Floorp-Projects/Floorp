@@ -321,6 +321,8 @@ dependencies {
     implementation Deps.adjust
     implementation Deps.installreferrer // Required by Adjust
 
+    implementation Deps.google_ads_id // Required for the Google Advertising ID
+
 //    androidTestImplementation Deps.tools_test_runner
 //    androidTestImplementation Deps.tools_espresso_core
 

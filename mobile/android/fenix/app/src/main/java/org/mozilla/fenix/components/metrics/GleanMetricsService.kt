@@ -171,12 +171,15 @@ class GleanMetricsService(private val context: Context) : MetricsService {
      */
     private lateinit var starter: Job
 
+    private val activationPing = ActivationPing(context)
+
     override fun start() {
 
         if (initialized) return
         initialized = true
 
         starter = CoroutineScope(Dispatchers.Default).launch {
+            Glean.setUploadEnabled(true)
             Glean.initialize(context)
 
             Metrics.apply {
@@ -195,9 +198,9 @@ class GleanMetricsService(private val context: Context) : MetricsService {
                 code.set(defaultEngine.identifier)
                 name.set(defaultEngine.name)
                 submissionUrl.set(defaultEngine.buildSearchUrl(""))
-
-                Glean.setUploadEnabled(true)
             }
+
+            activationPing.checkAndSend()
         }
     }
 

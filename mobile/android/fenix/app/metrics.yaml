@@ -600,3 +600,37 @@ preferences:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
+
+activation:
+  identifier:
+    type: string
+    lifetime: ping
+    description: >
+      An hashed and salted version of the Google Advertising ID from the device.
+      This will never be sent in a ping that also contains the client_id.
+    send_in_pings:
+    - activation
+    bugs:
+    - 1538011
+    - 1501822
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2019-10-01"
+
+  activation_id:
+    type: uuid
+    lifetime: user
+    description: >
+      An alternate identifier, not correlated with the client_id, generated once
+      and only sent with the activation ping.
+    send_in_pings:
+    - activation
+    bugs:
+    - 1538011
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2019-10-01"

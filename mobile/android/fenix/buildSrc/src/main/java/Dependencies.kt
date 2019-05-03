@@ -45,6 +45,8 @@ private object Versions {
     const val tools_test_runner = "1.1.1"
     const val uiautomator = "2.1.3"
     const val test_tools = "1.0.2"
+
+    const val google_ads_id_version = "16.0.0"
 }
 
 @Suppress("unused")
@@ -164,4 +166,6 @@ object Deps {
     const val tools_test_rules = "com.android.support.test:rules:${Versions.tools_test_rules}"
     const val tools_test_runner = "com.android.support.test:runner:${Versions.tools_test_runner}"
     const val uiautomator = "com.android.support.test.uiautomator:uiautomator-v18:${Versions.uiautomator}"
+
+    const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"
 }
