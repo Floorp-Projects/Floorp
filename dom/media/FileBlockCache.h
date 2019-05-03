@@ -68,7 +68,7 @@ class FileBlockCache : public MediaBlockCacheBase {
 
   // Maximum number of blocks allowed in this block cache.
   // Calculated from "media.cache_size" pref.
-  int32_t GetMaxBlocks() const override;
+  size_t GetMaxBlocks(size_t aCacheSizeInKB) const override;
 
   // Can be called on any thread. This defers to a non-main thread.
   nsresult WriteBlock(uint32_t aBlockIndex, Span<const uint8_t> aData1,

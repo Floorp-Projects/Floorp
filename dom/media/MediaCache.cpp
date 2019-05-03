@@ -11,6 +11,7 @@
 #include "MediaBlockCacheBase.h"
 #include "MediaResource.h"
 #include "MemoryBlockCache.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ErrorNames.h"
@@ -23,12 +24,14 @@
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
+#include "nsINetworkLinkService.h"
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "prio.h"
+#include "VideoUtils.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -114,7 +117,6 @@ void MediaCacheFlusher::RegisterMediaCache(MediaCache* aMediaCache) {
 
   if (!gMediaCacheFlusher) {
     gMediaCacheFlusher = new MediaCacheFlusher();
-
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (observerService) {
@@ -122,6 +124,10 @@ void MediaCacheFlusher::RegisterMediaCache(MediaCache* aMediaCache) {
                                    true);
       observerService->AddObserver(gMediaCacheFlusher,
                                    "cacheservice:empty-cache", true);
+      observerService->AddObserver(
+          gMediaCacheFlusher, "contentchild:network-link-type-changed", true);
+      observerService->AddObserver(gMediaCacheFlusher,
+                                   NS_NETWORK_LINK_TYPE_TOPIC, true);
     }
   }
 
@@ -242,6 +248,10 @@ class MediaCache {
     return mMonitor;
   }
 
+  // Updates the cache size, readahead limit, and resume threshold, based on
+  // whether we're on a cellular connection or not. Main thread only.
+  static void UpdateGeometryStatics();
+
   /**
    * An iterator that makes it easy to iterate through all streams that
    * have a given resource ID and are not closed.
@@ -282,6 +292,7 @@ class MediaCache {
     NS_ASSERTION(NS_IsMainThread(), "Only construct MediaCache on main thread");
     MOZ_COUNT_CTOR(MediaCache);
     MediaCacheFlusher::RegisterMediaCache(this);
+    UpdateGeometryStatics();
   }
 
   ~MediaCache() {
@@ -311,6 +322,21 @@ class MediaCache {
     NS_ASSERTION(mIndex.Length() == 0, "Blocks leaked?");
 
     MOZ_COUNT_DTOR(MediaCache);
+  }
+
+  static size_t CacheSize() {
+    MOZ_ASSERT(sThread->IsOnCurrentThread());
+    return sCacheSizeInKB;
+  }
+
+  static size_t ReadaheadLimit() {
+    MOZ_ASSERT(sThread->IsOnCurrentThread());
+    return sReadaheadLimit;
+  }
+
+  static size_t ResumeThreshold() {
+    MOZ_ASSERT(sThread->IsOnCurrentThread());
+    return sResumeThreshold;
   }
 
   // Find a free or reusable block and return its index. If there are no
@@ -451,6 +477,11 @@ class MediaCache {
   // to access sThread on all threads.
   static bool sThreadInit;
 
+  // Accesson MediaCache thread only.
+  static size_t sCacheSizeInKB;
+  static size_t sReadaheadLimit;
+  static size_t sResumeThreshold;
+
  private:
   // Used by MediaCacheStream::GetDebugInfo() only for debugging.
   // Don't add new callers to this function.
@@ -470,6 +501,37 @@ StaticRefPtr<nsIThread> MediaCache::sThread;
 /* static */
 bool MediaCache::sThreadInit = false;
 
+/* static */ size_t MediaCache::sCacheSizeInKB = 0;
+/* static */ size_t MediaCache::sReadaheadLimit = 0;
+/* static */ size_t MediaCache::sResumeThreshold = 0;
+
+void MediaCache::UpdateGeometryStatics() {
+  NS_ASSERTION(NS_IsMainThread(),
+               "Only call on main thread");  // JNI required on Android...
+  bool cacheAggressively = !OnCellularConnection();
+  LOG("MediaCache::UpdateGeometryStatics() cacheAggressively=%d",
+      cacheAggressively);
+  // Read the prefs on the main thread, and post their value to the MediaCache
+  // thread. This ensures the values are synchronized.
+  uint32_t cacheSize = 0, readaheadLimit = 0, resumeThreshold = 0;
+  if (cacheAggressively) {
+    cacheSize = StaticPrefs::MediaCacheSize();
+    readaheadLimit = StaticPrefs::MediaCacheReadaheadLimit();
+    resumeThreshold = StaticPrefs::MediaCacheResumeThreshold();
+  } else {
+    cacheSize = StaticPrefs::MediaCacheCellularSize();
+    readaheadLimit = StaticPrefs::MediaCacheCellularReadaheadLimit();
+    resumeThreshold = StaticPrefs::MediaCacheCellularResumeThreshold();
+  }
+  nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction("MediaCache::UpdateGeometryStatics", [=]() {
+        sCacheSizeInKB = cacheSize;
+        sReadaheadLimit = readaheadLimit;
+        sResumeThreshold = resumeThreshold;
+      });
+  sThread->Dispatch(r.forget());
+}
+
 NS_IMETHODIMP
 MediaCacheFlusher::Observe(nsISupports* aSubject, char const* aTopic,
                            char16_t const* aData) {
@@ -486,6 +548,10 @@ MediaCacheFlusher::Observe(nsISupports* aSubject, char const* aTopic,
       mc->Flush();
     }
     return NS_OK;
+  }
+  if (strcmp(aTopic, "contentchild:network-link-type-changed") == 0 ||
+      strcmp(aTopic, NS_NETWORK_LINK_TYPE_TOPIC) == 0) {
+    MediaCache::UpdateGeometryStatics();
   }
   return NS_OK;
 }
@@ -827,7 +893,8 @@ int32_t MediaCache::FindBlockForIncomingData(AutoLock& aLock, TimeStamp aNow,
     // b) the data we're going to store in the free block is not higher
     // priority than the data already stored in the free block.
     // The latter can lead us to go over the cache limit a bit.
-    if ((mIndex.Length() < uint32_t(mBlockCache->GetMaxBlocks()) ||
+    if ((mIndex.Length() <
+             uint32_t(mBlockCache->GetMaxBlocks(MediaCache::CacheSize())) ||
          blockIndex < 0 ||
          PredictNextUseForIncomingData(aLock, aStream) >=
              PredictNextUse(aLock, aNow, blockIndex))) {
@@ -1155,7 +1222,7 @@ void MediaCache::Update() {
   mInUpdate = true;
 #endif
 
-  int32_t maxBlocks = mBlockCache->GetMaxBlocks();
+  int32_t maxBlocks = mBlockCache->GetMaxBlocks(MediaCache::CacheSize());
   TimeStamp now = TimeStamp::Now();
 
   int32_t freeBlockCount = mFreeBlocks.GetCount();
@@ -1276,8 +1343,8 @@ void MediaCache::Update() {
     }
   }
 
-  int32_t resumeThreshold = StaticPrefs::MediaCacheResumeThreshold();
-  int32_t readaheadLimit = StaticPrefs::MediaCacheReadaheadLimit();
+  int32_t resumeThreshold = MediaCache::ResumeThreshold();
+  int32_t readaheadLimit = MediaCache::ReadaheadLimit();
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     actions.AppendElement(StreamAction{});
