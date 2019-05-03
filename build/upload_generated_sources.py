@@ -20,6 +20,7 @@ from Queue import Queue
 import requests
 import sys
 import tarfile
+from requests.packages.urllib3.util.retry import Retry
 from threading import Event, Thread
 import time
 
@@ -92,6 +93,12 @@ def upload_worker(queue, event, bucket, session_args):
 def do_work(artifact, region, bucket):
     session_args = {'region_name': region}
     session = requests.Session()
+    retry = Retry(total=5, backoff_factor=0.1,
+                  status_forcelist=[500, 502, 503, 504])
+    http_adapter = requests.adapters.HTTPAdapter(max_retries=retry)
+    session.mount('https://', http_adapter)
+    session.mount('http://', http_adapter)
+
     if 'TASK_ID' in os.environ:
         level = os.environ.get('MOZ_SCM_LEVEL', '1')
         secrets_url = 'http://taskcluster/secrets/v1/secret/project/releng/gecko/build/level-{}/gecko-generated-sources-upload'.format( # noqa
