@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.jsm",
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.jsm",
 });
@@ -286,6 +287,14 @@ var Policies = {
     },
   },
 
+  "DefaultDownloadDirectory": {
+    onBeforeAddons(manager, param) {
+      setDefaultPref("browser.download.dir", replacePathVariables(param));
+      // If a custom download directory is being used, just lock folder list to 2.
+      setAndLockPref("browser.download.folderList", 2);
+    },
+  },
+
   "DisableAppUpdate": {
     onBeforeAddons(manager, param) {
       if (param) {
@@ -495,6 +504,14 @@ var Policies = {
   "DontCheckDefaultBrowser": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("browser.shell.checkDefaultBrowser", !param);
+    },
+  },
+
+  "DownloadDirectory": {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("browser.download.dir", replacePathVariables(param));
+      // If a custom download directory is being used, just lock folder list to 2.
+      setAndLockPref("browser.download.folderList", 2);
     },
   },
 
@@ -819,6 +836,12 @@ var Policies = {
       for (let preference in param) {
         setAndLockPref(preference, param[preference]);
       }
+    },
+  },
+
+  "PromptForDownloadLocation": {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("browser.download.useDownloadDir", !param);
     },
   },
 
@@ -1272,6 +1295,13 @@ async function runOncePerModification(actionName, policyValue, callback) {
 function clearRunOnceModification(actionName) {
   let prefName = `browser.policies.runOncePerModification.${actionName}`;
   Services.prefs.clearUserPref(prefName);
+}
+
+function replacePathVariables(path) {
+  if (path.includes("${home}")) {
+    return path.replace("${home}", FileUtils.getFile("Home", []).path);
+  }
+  return path;
 }
 
 let gChromeURLSBlocked = false;
