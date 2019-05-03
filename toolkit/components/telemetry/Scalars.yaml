@@ -3626,13 +3626,14 @@ networking:
       - 1533363
       - 1546903
       - 1546796
+      - 1546906
     description: >
       How many KB of HTTP data transferred by type, there are some categories
       separated by keys based on 4 parameters:
         1. normal browsing or private browsing
         2. first party or third party
-        3. class of service
-        4. tracking classification
+        3. class of service (Leader/Background/Others)
+        4. tracking classification (Basic/Content/FingerprintingContent)
 
       Available keys are:
         "Y0_N1",
