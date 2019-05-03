@@ -213,7 +213,7 @@ nsresult WorkerLoadInfo::GetPrincipalsAndLoadGroupFromChannel(
   }
 
   // The principal can change, but it should still match the original
-  // load group's appId and browser element flag.
+  // load group's browser element flag.
   MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(channelLoadGroup, channelPrincipal));
 
   channelPrincipal.forget(aPrincipalOut);

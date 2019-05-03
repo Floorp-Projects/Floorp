@@ -294,18 +294,6 @@ BasePrincipal::GetOriginSuffix(nsACString& aOriginAttributes) {
 }
 
 NS_IMETHODIMP
-BasePrincipal::GetAppId(uint32_t* aAppId) {
-  if (AppId() == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-    MOZ_ASSERT(false);
-    *aAppId = nsIScriptSecurityManager::NO_APP_ID;
-    return NS_OK;
-  }
-
-  *aAppId = AppId();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 BasePrincipal::GetUserContextId(uint32_t* aUserContextId) {
   *aUserContextId = UserContextId();
   return NS_OK;
