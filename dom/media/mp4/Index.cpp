@@ -254,9 +254,7 @@ SampleDescriptionEntry* SampleIterator::GetSampleDescriptionEntry() {
   FallibleTArray<SampleDescriptionEntry>& sampleDescriptions =
       mIndex->mMoofParser->mSampleDescriptions;
   if (sampleDescriptionIndex >= sampleDescriptions.Length()) {
-    MOZ_ASSERT_UNREACHABLE(
-        "Should always be able to find the appropriate sample description! "
-        "Malformed mp4?");
+    // The sample description index is invalid, the mp4 is malformed. Bail out.
     return nullptr;
   }
   return &sampleDescriptions[sampleDescriptionIndex];
