@@ -1806,6 +1806,15 @@ var AddonManagerInternal = {
         this.installNotifyObservers("addon-install-origin-blocked", topBrowser,
                                     aInstallingPrincipal.URI, aInstall);
         return;
+      } else if (topBrowser.ownerGlobal.fullScreen) {
+        // Addon installation and the resulting notifications should be blocked in fullscreen for security and usability reasons.
+        // Installation prompts in fullscreen can trick the user into installing unwanted addons.
+        // In fullscreen the notification box does not have a clear visual association with its parent anymore.
+        aInstall.cancel();
+
+        this.installNotifyObservers("addon-install-blocked-silent", topBrowser,
+                                    aInstallingPrincipal.URI, aInstall);
+        return;
       }
 
       // The install may start now depending on the web install listener,
