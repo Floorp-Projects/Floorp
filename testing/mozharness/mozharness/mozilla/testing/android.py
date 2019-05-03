@@ -250,6 +250,12 @@ class AndroidMixin(object):
         perf_path = os.path.join(dir, "android-performance.log")
         with open(perf_path, "w") as f:
 
+            f.write('\n\nHost cpufreq/scaling_governor:\n')
+            cpus = glob.glob('/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor')
+            for cpu in cpus:
+                out = subprocess.check_output(['cat', cpu])
+                f.write("%s: %s" % (cpu, out))
+
             f.write('\n\nHost /proc/cpuinfo:\n')
             out = subprocess.check_output(['cat', '/proc/cpuinfo'])
             f.write(out)
