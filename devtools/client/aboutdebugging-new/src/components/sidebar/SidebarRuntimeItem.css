@@ -33,6 +33,7 @@
 .sidebar-runtime-item__runtime__details {
   font-size: var(--caption-10-font-size);
   font-weight: var(--caption-10-font-weight);
+  line-height: 1.2;
 }
 
 .sidebar-runtime-item__message:first-of-type {
