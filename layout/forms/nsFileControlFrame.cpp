@@ -175,7 +175,7 @@ void nsFileControlFrame::Reflow(nsPresContext* aPresContext,
         aStatus.Reset();
         labelFrame->AddStateBits(NS_FRAME_IS_DIRTY |
                                  NS_BLOCK_NEEDS_BIDI_RESOLUTION);
-        mMinWidth = NS_INTRINSIC_ISIZE_UNKNOWN;
+        mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
         mPrefWidth = NS_INTRINSIC_ISIZE_UNKNOWN;
         done = true;
         continue;
