@@ -144,7 +144,7 @@ class nsInlineFrame : public nsContainerFrame {
 
   nsInlineFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)
       : nsContainerFrame(aStyle, aPresContext, aID),
-        mBaseline(NS_INTRINSIC_WIDTH_UNKNOWN) {}
+        mBaseline(NS_INTRINSIC_ISIZE_UNKNOWN) {}
 
   virtual LogicalSides GetLogicalSkipSides(
       const ReflowInput* aReflowInput = nullptr) const override;

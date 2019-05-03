@@ -70,7 +70,7 @@ class BRFrame final : public nsFrame {
  protected:
   explicit BRFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsFrame(aStyle, aPresContext, kClassID),
-        mAscent(NS_INTRINSIC_WIDTH_UNKNOWN) {}
+        mAscent(NS_INTRINSIC_ISIZE_UNKNOWN) {}
 
   virtual ~BRFrame();
 
