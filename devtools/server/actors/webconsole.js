@@ -1552,6 +1552,7 @@ WebConsoleActor.prototype =
       notes: notesArray,
       executionPoint: pageError.executionPoint,
       chromeContext: pageError.isFromChromeContext,
+      cssSelectors: pageError.cssSelectors,
     };
   },
 

@@ -252,6 +252,11 @@ a {
   overflow: visible;
 }
 
+.message-body-wrapper .elements-label {
+  color: var(--location-color);
+  margin: calc(var(--console-output-vertical-padding) * 2) 0;
+}
+
 /* The bubble that shows the number of times a message is repeated */
 .message-repeats,
 .warning-group-badge {
