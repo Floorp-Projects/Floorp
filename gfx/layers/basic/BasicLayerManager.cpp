@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"                    // for already_AddRefed
 #include "nsDebug.h"                     // for NS_ASSERTION, etc
 #include "nsISupportsImpl.h"             // for gfxContext::Release, etc
+#include "nsLayoutUtils.h"               // for nsLayoutUtils
 #include "nsPoint.h"                     // for nsIntPoint
 #include "nsRect.h"                      // for mozilla::gfx::IntRect
 #include "nsRegion.h"                    // for nsIntRegion, etc
@@ -564,11 +565,13 @@ bool BasicLayerManager::EndTransactionInternal(
 
   mTransactionIncomplete = false;
 
+  std::unordered_set<ScrollableLayerGuid::ViewID> scrollIdsUpdated;
+
   if (mRoot) {
     if (aFlags & END_NO_COMPOSITE) {
       // Apply pending tree updates before recomputing effective
       // properties.
-      mRoot->ApplyPendingUpdatesToSubtree();
+      scrollIdsUpdated = mRoot->ApplyPendingUpdatesToSubtree();
     }
 
     // Need to do this before we call ApplyDoubleBuffering,
@@ -624,6 +627,14 @@ bool BasicLayerManager::EndTransactionInternal(
   if (mRoot) {
     mAnimationReadyTime = TimeStamp::Now();
     mRoot->StartPendingAnimations(mAnimationReadyTime);
+
+    // Once we're sure we're not going to fall back to a full paint,
+    // notify the scroll frames which had pending updates.
+    if (!mTransactionIncomplete) {
+      for (ScrollableLayerGuid::ViewID scrollId : scrollIdsUpdated) {
+        nsLayoutUtils::NotifyPaintSkipTransaction(scrollId);
+      }
+    }
   }
 
 #ifdef MOZ_LAYERS_HAVE_LOG

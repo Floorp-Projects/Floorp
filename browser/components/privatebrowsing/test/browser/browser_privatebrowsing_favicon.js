@@ -189,8 +189,8 @@ add_task(async function test_favicon_privateBrowsing() {
   // Generate two random cookies for non-private window and private window
   // respectively.
   let cookies = [];
-  cookies.push(Math.random().toString());
-  cookies.push(Math.random().toString());
+  cookies.push(Math.random().toString() + "=1");
+  cookies.push(Math.random().toString() + "=1");
 
   // Open a tab in private window and add a cookie into it.
   await assignCookies(privateWindow.gBrowser, TEST_SITE, cookies[0]);
@@ -244,11 +244,12 @@ add_task(async function test_favicon_cache_privateBrowsing() {
 
   // Add an observer for making sure the favicon has been loaded and cached.
   let promiseFaviconLoaded = waitOnFaviconLoaded(FAVICON_CACHE_URI);
+  let promiseFaviconResponse = waitOnFaviconResponse(FAVICON_CACHE_URI);
 
   // Open a tab for the non-private window.
   let tabInfoNonPrivate = await openTab(gBrowser, TEST_CACHE_PAGE);
 
-  let response = await waitOnFaviconResponse(FAVICON_CACHE_URI);
+  let response = await promiseFaviconResponse;
 
   await promiseFaviconLoaded;
 
@@ -266,11 +267,13 @@ add_task(async function test_favicon_cache_privateBrowsing() {
     url: TEST_CACHE_PAGE,
   });
 
+  promiseFaviconResponse = waitOnFaviconResponse(FAVICON_CACHE_URI);
+
   // Open a tab for the private window.
   let tabInfoPrivate = await openTab(privateWindow.gBrowser, TEST_CACHE_PAGE);
 
   // Wait for the favicon response of the private tab.
-  response = await waitOnFaviconResponse(FAVICON_CACHE_URI);
+  response = await promiseFaviconResponse;
 
   // Make sure the favicon is loaded through the network and its privateBrowsingId is correct.
   is(response.topic, "http-on-examine-response", "The favicon image should be loaded through the network again.");

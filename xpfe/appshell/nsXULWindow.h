@@ -34,6 +34,10 @@
 #include "nsIWidgetListener.h"
 #include "nsIRemoteTab.h"
 
+#ifndef MOZ_NEW_XULSTORE
+#  include "nsIXULStore.h"
+#endif
+
 namespace mozilla {
 namespace dom {
 class Element;
@@ -194,6 +198,9 @@ class nsXULWindow : public nsIBaseWindow,
   GetPrimaryRemoteTabSize(int32_t* aWidth, int32_t* aHeight);
   nsresult GetPrimaryContentShellSize(int32_t* aWidth, int32_t* aHeight);
   nsresult SetPrimaryRemoteTabSize(int32_t aWidth, int32_t aHeight);
+#ifndef MOZ_NEW_XULSTORE
+  nsCOMPtr<nsIXULStore> mLocalStore;
+#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXULWindow, NS_XULWINDOW_IMPL_CID)

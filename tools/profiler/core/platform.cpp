@@ -362,7 +362,9 @@ class CorePS {
 
   static void AppendRegisteredPage(PSLockRef,
                                    RefPtr<PageInformation>&& aRegisteredPage) {
-#ifdef DEBUG
+    // Disabling this assertion for now until we fix the same page registration
+    // issue. See Bug 1542918.
+#if 0
     struct RegisteredPageComparator {
       PageInformation* aA;
       bool operator()(PageInformation* aB) const { return aA->Equals(aB); }

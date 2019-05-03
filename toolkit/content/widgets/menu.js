@@ -139,16 +139,112 @@ class MozMenuCaption extends MozMenuBaseMixin(MozXULElement) {
 
 customElements.define("menucaption", MozMenuCaption);
 
-// In general, wait to render menus inside menupopups until they are going to be visible:
+// In general, wait to render menus and menuitems inside menupopups
+// until they are going to be visible:
 window.addEventListener("popupshowing", (e) => {
   if (e.originalTarget.ownerDocument != document) {
     return;
   }
   e.originalTarget.setAttribute("hasbeenopened", "true");
-  for (let menu of e.originalTarget.querySelectorAll("menu")) {
-    menu.render();
+  for (let el of e.originalTarget.querySelectorAll("menuitem, menu")) {
+    el.render();
   }
 }, { capture: true });
+
+class MozMenuItem extends MozMenuItemBaseMixin(MozXULElement) {
+  static get inheritedAttributes() {
+    return {
+      ".menu-iconic-text": "value=label,crop,accesskey,highlightable",
+      ".menu-text": "value=label,crop,accesskey,highlightable",
+      ".menu-iconic-highlightable-text": "text=label,crop,accesskey,highlightable",
+      ".menu-iconic-left": "selected,_moz-menuactive,disabled,checked",
+      ".menu-iconic-icon": "src=image,validate,triggeringprincipal=iconloadingprincipal",
+      ".menu-iconic-accel": "value=acceltext",
+      ".menu-accel": "value=acceltext",
+    };
+  }
+
+  static get iconicNoAccelFragment() {
+    // Add aria-hidden="true" on all DOM, since XULMenuAccessible handles accessibility here.
+    let frag = document.importNode(MozXULElement.parseXULToFragment(`
+      <hbox class="menu-iconic-left" align="center" pack="center" aria-hidden="true">
+        <image class="menu-iconic-icon"/>
+      </hbox>
+      <label class="menu-iconic-text" flex="1" crop="right" aria-hidden="true"/>
+      <label class="menu-iconic-highlightable-text" crop="right" aria-hidden="true"/>
+    `), true);
+    Object.defineProperty(this, "iconicNoAccelFragment", {value: frag});
+    return frag;
+  }
+
+  static get iconicFragment() {
+    let frag = document.importNode(MozXULElement.parseXULToFragment(`
+      <hbox class="menu-iconic-left" align="center" pack="center" aria-hidden="true">
+        <image class="menu-iconic-icon"/>
+      </hbox>
+      <label class="menu-iconic-text" flex="1" crop="right" aria-hidden="true"/>
+      <label class="menu-iconic-highlightable-text" crop="right" aria-hidden="true"/>
+      <hbox class="menu-accel-container" aria-hidden="true">
+        <label class="menu-iconic-accel"/>
+      </hbox>
+    `), true);
+    Object.defineProperty(this, "iconicFragment", {value: frag});
+    return frag;
+  }
+
+  static get plainFragment() {
+    let frag = document.importNode(MozXULElement.parseXULToFragment(`
+      <label class="menu-text" crop="right" aria-hidden="true"/>
+      <hbox class="menu-accel-container" aria-hidden="true">
+        <label class="menu-accel"/>
+      </hbox>
+    `), true);
+    Object.defineProperty(this, "plainFragment", {value: frag});
+    return frag;
+  }
+
+  get isIconic() {
+    let type = this.getAttribute("type");
+    return type == "checkbox" || type == "radio" || this.classList.contains("menuitem-iconic");
+  }
+
+  get isMenulistChild() {
+    return this.matches("menulist > menupopup > menuitem");
+  }
+
+  get isInHiddenMenupopup() {
+    return this.matches("menupopup:not([hasbeenopened]) menuitem");
+  }
+
+  render() {
+    if (this.renderedOnce) {
+      return;
+    }
+    this.renderedOnce = true;
+    this.textContent = "";
+    if (this.isMenulistChild) {
+      this.append(this.constructor.iconicNoAccelFragment.cloneNode(true));
+    } else if (this.isIconic) {
+      this.append(this.constructor.iconicFragment.cloneNode(true));
+    } else {
+      this.append(this.constructor.plainFragment.cloneNode(true));
+    }
+
+    this.initializeAttributeInheritance();
+  }
+
+  connectedCallback() {
+    // Eagerly render if we are being inserted into a menulist (since we likely need to
+    // size it), or into an already-opened menupopup (since we are already visible).
+    // Checking isConnectedAndReady is an optimization that will let us quickly skip
+    // non-menulists that are being connected during parse.
+    if (this.isMenulistChild || (this.isConnectedAndReady && !this.isInHiddenMenupopup)) {
+      this.render();
+    }
+  }
+}
+
+customElements.define("menuitem", MozMenuItem);
 
 const isHiddenWindow = document.documentURI == "chrome://browser/content/hiddenWindow.xul";
 
@@ -168,15 +264,15 @@ class MozMenu extends MozMenuBaseMixin(MozElements.MozElementMixin(XULMenuElemen
   }
 
   get needsEagerRender() {
-    return this.isMenubarChild || this.isSizingPopup || !this.isInHiddenMenupopup;
+    return this.isMenubarChild || this.isMenulistChild || !this.isInHiddenMenupopup;
   }
 
   get isMenubarChild() {
     return this.matches("menubar > menu");
   }
 
-  get isSizingPopup() {
-    return this.matches("[sizetopopup] menu") || this.matches("menulist menu");
+  get isMenulistChild() {
+    return this.matches("menulist > menupopup > menu");
   }
 
   get isInHiddenMenupopup() {

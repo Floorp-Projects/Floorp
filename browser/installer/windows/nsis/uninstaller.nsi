@@ -420,6 +420,7 @@ Section "Uninstall"
   DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Launcher"
   DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Browser"
   DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Image"
+  DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Telemetry"
 !endif
 
   ${un.RemovePrecompleteEntries} "false"

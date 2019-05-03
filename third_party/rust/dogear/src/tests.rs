@@ -1751,6 +1751,72 @@ fn left_pane_root() {
 }
 
 #[test]
+fn livemarks() {
+    before_each();
+
+    let local_tree = nodes!({
+        ("menu________", Folder, {
+            ("livemarkAAAA", Livemark),
+            ("livemarkBBBB", Folder),
+            ("livemarkCCCC", Livemark)
+        }),
+        ("toolbar_____", Folder, {
+            ("livemarkDDDD", Livemark)
+        })
+    })
+    .into_tree()
+    .unwrap();
+
+    let remote_tree = nodes!({
+        ("menu________", Folder, {
+            ("livemarkAAAA", Livemark),
+            ("livemarkBBBB", Livemark),
+            ("livemarkCCCC", Folder)
+        }),
+        ("unfiled_____", Folder, {
+            ("livemarkEEEE", Livemark)
+        })
+    })
+    .into_tree()
+    .unwrap();
+
+    let mut merger = Merger::new(&local_tree, &remote_tree);
+    let merged_root = merger.merge().unwrap();
+    assert!(merger.subsumes(&local_tree));
+    assert!(merger.subsumes(&remote_tree));
+
+    let expected_tree = nodes!({
+        ("menu________", Folder[needs_merge = true]),
+        ("toolbar_____", Folder[needs_merge = true]),
+        ("unfiled_____", Folder[needs_merge = true])
+    })
+    .into_tree()
+    .unwrap();
+    let expected_deletions = vec![
+        "livemarkAAAA",
+        "livemarkBBBB",
+        "livemarkCCCC",
+        "livemarkDDDD",
+        "livemarkEEEE",
+    ];
+    let expected_telem = StructureCounts {
+        merged_nodes: 3,
+        // A, B, and C are counted twice, since they exist on both sides.
+        merged_deletions: 8,
+        ..StructureCounts::default()
+    };
+
+    let merged_tree = merged_root.into_tree().unwrap();
+    assert_eq!(merged_tree, expected_tree);
+
+    let mut deletions = merger.deletions().map(|d| d.guid).collect::<Vec<_>>();
+    deletions.sort();
+    assert_eq!(deletions, expected_deletions);
+
+    assert_eq!(merger.counts(), &expected_telem);
+}
+
+#[test]
 fn non_syncable_items() {
     before_each();
 
@@ -2567,7 +2633,7 @@ fn cycle() {
         .kind()
     {
         ErrorKind::Cycle(guid) => assert_eq!(guid, &Guid::from("folderAAAAAA")),
-        err => assert!(false, "Wrong error kind for cycle: {:?}", err),
+        err => panic!("Wrong error kind for cycle: {:?}", err),
     }
 }
 

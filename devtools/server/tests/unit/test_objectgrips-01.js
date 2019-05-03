@@ -22,7 +22,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
         Assert.equal(response.ownPropertyNames[1], "b");
         Assert.equal(response.ownPropertyNames[2], "c");
 
-        threadClient.resume(resolve);
+        threadClient.resume().then(resolve);
       });
     });
 

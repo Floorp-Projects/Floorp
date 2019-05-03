@@ -66,7 +66,7 @@ function test_pause_frame() {
       Assert.equal(response.ownProperties.b.value.type, "undefined");
       Assert.equal(false, "class" in response.ownProperties.b.value);
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
       });
     });

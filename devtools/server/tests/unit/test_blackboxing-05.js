@@ -69,7 +69,7 @@ function test_black_box() {
 }
 
 function test_black_box_exception() {
-  gThreadClient.getSources(async function({error, sources}) {
+  gThreadClient.getSources().then(async function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
     const sourceFront = await getSource(gThreadClient, BLACK_BOXED_URL);
     await blackBox(sourceFront);

@@ -49,6 +49,9 @@ function test_crash(when, andThen) {
     menuitem.addEventListener("mouseup", function (e) {
       menuitem.removeEventListener("mouseup", arguments.callee, true);
       menuitem.addEventListener("DOMAttrModified", function (e) {
+        if (e.target != e.currentTarget) {
+          return;
+        }
         if (e.attrName == "_moz-menuactive") {
           if (!attrChanges[e.attrChange])
             attrChanges[e.attrChange] = 1;

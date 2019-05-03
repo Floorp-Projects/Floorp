@@ -61,7 +61,8 @@ describe("loadSourceText", () => {
       {
         ...sourceThreadClient,
         sourceContents: async () => fooGenContent,
-        getBreakpointPositions: async () => ({ "1": [0] })
+        getBreakpointPositions: async () => ({ "1": [0] }),
+        getBreakableLines: async () => []
       },
       {},
       {
@@ -155,7 +156,8 @@ describe("loadSourceText", () => {
           count++;
           resolve = r;
         }),
-      getBreakpointPositions: async () => ({})
+      getBreakpointPositions: async () => ({}),
+      getBreakableLines: async () => []
     });
     const id = "foo";
 
@@ -192,7 +194,8 @@ describe("loadSourceText", () => {
           count++;
           resolve = r;
         }),
-      getBreakpointPositions: async () => ({})
+      getBreakpointPositions: async () => ({}),
+      getBreakableLines: async () => []
     });
     const id = "foo";
 

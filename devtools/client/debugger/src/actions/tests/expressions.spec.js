@@ -37,7 +37,8 @@ const mockThreadClient = {
     ),
   getFrameScopes: async () => {},
   sourceContents: () => ({ source: "", contentType: "text/javascript" }),
-  getBreakpointPositions: async () => [],
+  getBreakpointPositions: async () => ({}),
+  getBreakableLines: async () => [],
   autocomplete: () => {
     return new Promise(resolve => {
       resolve({

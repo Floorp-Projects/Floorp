@@ -5,11 +5,10 @@ let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
 Services.prefs.setIntPref("extensions.enabledScopes", scopes);
 Services.prefs.setBoolPref("extensions.webextensions.background-delayed-startup", false);
 
-AddonTestUtils.usePrivilegedSignatures = false;
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
 async function getWrapper(id, hidden) {
-  let xpi = await AddonTestUtils.createTempWebExtensionFile({
+  let wrapper = await installBuiltinExtension({
     manifest: {
       applications: {gecko: {id}},
       hidden,
@@ -18,21 +17,7 @@ async function getWrapper(id, hidden) {
       browser.test.sendMessage("started");
     },
   });
-
-  // The built-in location requires a resource: URL that maps to a
-  // jar: or file: URL.  This would typically be something bundled
-  // into omni.ja but for testing we just use a temp file.
-  let base = Services.io.newURI(`jar:file:${xpi.path}!/`);
-  let resProto = Services.io.getProtocolHandler("resource")
-                         .QueryInterface(Ci.nsIResProtocolHandler);
-  resProto.setSubstitution("ext-test", base);
-
-  let wrapper = ExtensionTestUtils.expectExtension(id);
-  await AddonManager.installBuiltinAddon("resource://ext-test/");
-  await wrapper.awaitStartup();
   await wrapper.awaitMessage("started");
-  ok(true, "Extension was installed successfully in built-in location");
-
   return wrapper;
 }
 

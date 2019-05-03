@@ -3251,7 +3251,8 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
 
   // newCookie says whether there are multiple cookies in the header;
   // so we can handle them separately.
-  bool newCookie = ParseAttributes(aCookieHeader, aCookieAttributes);
+  bool discard = false;
+  bool newCookie = ParseAttributes(aCookieHeader, aCookieAttributes, discard);
 
   // Collect telemetry on how often secure cookies are set from non-secure
   // origins, and vice-versa.
@@ -3397,7 +3398,7 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
     }
   }
 
-  aSetCookie = true;
+  aSetCookie = !discard;
   return newCookie;
 }
 
@@ -3798,7 +3799,8 @@ bool nsCookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
 // folded into the cookie struct here, because we don't know which one to use
 // until we've parsed the header.
 bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
-                                      nsCookieAttributes& aCookieAttributes) {
+                                      nsCookieAttributes& aCookieAttributes,
+                                      bool& aDiscard) {
   static const char kPath[] = "path";
   static const char kDomain[] = "domain";
   static const char kExpires[] = "expires";
@@ -3818,6 +3820,8 @@ bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
   aCookieAttributes.isHttpOnly = false;
   aCookieAttributes.sameSite = nsICookie2::SAMESITE_UNSET;
 
+  aDiscard = false;
+
   nsDependentCSubstring tokenString(cookieStart, cookieStart);
   nsDependentCSubstring tokenValue(cookieStart, cookieStart);
   bool newCookie, equalsFound;
@@ -3833,13 +3837,17 @@ bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
     aCookieAttributes.name = tokenString;
     aCookieAttributes.value = tokenValue;
   } else {
-    aCookieAttributes.value = tokenString;
+    aDiscard = true;
   }
 
   // extract remaining attributes
   while (cookieStart != cookieEnd && !newCookie) {
     newCookie = GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue,
                               equalsFound);
+
+    if (aDiscard) {
+      continue;
+    }
 
     if (!tokenValue.IsEmpty()) {
       tokenValue.BeginReading(tempBegin);

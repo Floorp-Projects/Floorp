@@ -67,7 +67,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
       threadClient.stepOver();
       await waiter;
       threadClient.removeBreakpoint(location);
-      threadClient.resume(resolve);
+      threadClient.resume().then(resolve);
     });
 
     /* eslint-disable */

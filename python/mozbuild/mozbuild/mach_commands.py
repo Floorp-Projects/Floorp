@@ -3494,8 +3494,11 @@ class StaticAnalysis(MachCommandBase):
                         # here, we expect changes. if we are here, this means that
                         # there is a diff to show
                         if e.output:
-                            # Replace the temp path by its original path to display a valid patch
-                            patches[original_path] = e.output.replace(target_file, original_path)
+                            # Replace the temp path by the path relative to the repository to display a valid patch
+                            relative_path = os.path.relpath(original_path, self.topsrcdir)
+                            patch = e.output.replace(target_file, relative_path)
+                            patch = patch.replace(original_path, relative_path)
+                            patches[original_path] = patch
 
             if output_format == 'json':
                 output = json.dumps(patches, indent=4)

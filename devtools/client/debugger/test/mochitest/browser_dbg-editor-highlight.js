@@ -9,8 +9,7 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
   const {
-    selectors: { getSource, getSourceContent },
-    getState
+    selectors: { getSource, getSourceContent }
   } = dbg;
   const sourceUrl = `${EXAMPLE_URL}long.js`;
 

@@ -250,8 +250,9 @@ class SortedItemSelectList {
 
   createItem({label, value, className, disabled}) {
     let item = document.createElement("menuitem");
-    item.value = value;
     item.setAttribute("label", label);
+    if (value)
+      item.value = value;
     if (className)
       item.classList.add(className);
     if (disabled)

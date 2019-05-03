@@ -33,7 +33,7 @@ function run_test() {
 
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    gThreadClient.getFrames(0, null, function(frameResponse) {
+    gThreadClient.getFrames(0, null).then(function(frameResponse) {
       Assert.equal(frameResponse.frames.length, 5);
       // Now wait for the next pause, after which the three
       // youngest actors should be popped..
@@ -47,7 +47,7 @@ function test_pause_frame() {
           Assert.equal(expectPopped[i], popped[i]);
         }
 
-        gThreadClient.resume(() => finishClient(gClient));
+        gThreadClient.resume().then(() => finishClient(gClient));
       });
       gThreadClient.resume();
     });

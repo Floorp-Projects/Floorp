@@ -3,16 +3,19 @@
  */
 
 // Tests that extensions behave correctly in safe mode
+let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;
+Services.prefs.setIntPref("extensions.enabledScopes", scopes);
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 const ID = "addon1@tests.mozilla.org";
+const BUILTIN_ID = "builtin@tests.mozilla.org";
 const VERSION = "1.0";
 
 // Sets up the profile by installing an add-on.
 add_task(async function setup() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   gAppInfo.inSafeMode = true;
 
   await promiseStartupManager();
@@ -28,6 +31,14 @@ add_task(async function setup() {
       applications: {gecko: {id: ID}},
     },
   });
+  let wrapper = await installBuiltinExtension({
+    manifest: {
+      applications: {gecko: {id: BUILTIN_ID}},
+    },
+  });
+
+  let builtin = await AddonManager.getAddonByID(BUILTIN_ID);
+  Assert.notEqual(builtin, null, "builtin extension is installed");
 
   await promiseRestartManager();
 
@@ -39,6 +50,11 @@ add_task(async function setup() {
   Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
   Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
   do_check_not_in_crash_annotation(ID, VERSION);
+
+  builtin = await AddonManager.getAddonByID(BUILTIN_ID);
+  Assert.notEqual(builtin, null, "builtin extension is installed");
+  Assert.ok(builtin.isActive, "builtin extension is active");
+  await wrapper.unload();
 });
 
 // Disabling an add-on should work

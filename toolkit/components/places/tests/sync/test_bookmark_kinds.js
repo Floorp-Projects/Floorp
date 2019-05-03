@@ -143,8 +143,16 @@ add_task(async function test_mismatched_folder_types() {
       guid: "l1nZZXfB8nC7",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       title: "Innerst i Sneglehode",
+    }, {
+      guid: "livemarkBBBB",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: "B",
     }],
   });
+  // Livemarks have been removed in bug 1477671, but Sync still checks the anno
+  // to distinguish them from folders.
+  await setItemAnnotation("livemarkBBBB", PlacesUtils.LMANNO_FEEDURI,
+    "http://example.com/b");
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Make remote changes");
@@ -152,7 +160,7 @@ add_task(async function test_mismatched_folder_types() {
     id: "toolbar",
     parentid: "places",
     type: "folder",
-    children: ["l1nZZXfB8nC7"],
+    children: ["l1nZZXfB8nC7", "livemarkBBBB"],
   }, {
     "id": "l1nZZXfB8nC7",
     "type": "livemark",
@@ -166,6 +174,12 @@ add_task(async function test_mismatched_folder_types() {
        "vjbZlPlSyGY8", "UtjUhVyrpeG6", "rVq8WMG2wfZI", "Lx0tcy43ZKhZ",
        "oT74WwV8_j4P", "IztsItWVSo3-"],
     "parentid": "toolbar",
+  }, {
+    id: "livemarkBBBB",
+    parentid: "toolbar",
+    type: "folder",
+    title: "B",
+    children: [],
   }]);
 
   info("Apply remote");
@@ -175,8 +189,15 @@ add_task(async function test_mismatched_folder_types() {
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
     updated: ["toolbar"],
-    deleted: ["l1nZZXfB8nC7"],
-  }, "Legacy livemark should be deleted remotely");
+    deleted: ["l1nZZXfB8nC7", "livemarkBBBB"],
+  }, "Should delete livemarks remotely");
+
+  await assertLocalTree(PlacesUtils.bookmarks.toolbarGuid, {
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 1,
+    title: BookmarksToolbarTitle,
+  }, "Should delete livemarks locally");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

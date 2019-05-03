@@ -32,11 +32,20 @@ class LauncherRegistryInfo final {
     ForceDisabled = 2,
   };
 
+  enum class CheckOption {
+    Default,
+    Force,
+  };
+
   LauncherRegistryInfo() : mBinPath(GetFullBinaryPath().get()) {}
 
   LauncherVoidResult ReflectPrefToRegistry(const bool aEnable);
   LauncherResult<EnabledState> IsEnabled();
-  LauncherResult<ProcessType> Check(const ProcessType aDesiredType);
+  LauncherResult<bool> IsTelemetryEnabled();
+  LauncherVoidResult ReflectTelemetryPrefToRegistry(const bool aEnable);
+  LauncherResult<ProcessType> Check(const ProcessType aDesiredType,
+                                    const CheckOption aOption =
+                                      CheckOption::Default);
   LauncherVoidResult DisableDueToFailure();
 
  private:
@@ -52,9 +61,11 @@ class LauncherRegistryInfo final {
   LauncherVoidResult ClearStartTimestamps();
   LauncherResult<DWORD> GetSavedImageTimestamp();
   LauncherResult<uint64_t> GetStartTimestamp(ProcessType aProcessType);
+  LauncherResult<bool> GetTelemetrySetting();
 
   LauncherResult<std::wstring> ResolveValueName(ProcessType aProcessType);
   std::wstring ResolveImageTimestampValueName();
+  std::wstring ResolveTelemetryValueName();
 
  private:
   nsAutoRegKey mRegKey;
@@ -62,11 +73,13 @@ class LauncherRegistryInfo final {
   std::wstring mImageValueName;
   std::wstring mBrowserValueName;
   std::wstring mLauncherValueName;
+  std::wstring mTelemetryValueName;
 
   static const wchar_t kLauncherSubKeyPath[];
   static const wchar_t kLauncherSuffix[];
   static const wchar_t kBrowserSuffix[];
   static const wchar_t kImageTimestampSuffix[];
+  static const wchar_t kTelemetrySuffix[];
 };
 
 }  // namespace mozilla

@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     'nsIBadCertListener2.idl',
     'nsICertificateDialogs.idl',
     'nsICertOverrideService.idl',
-    'nsICertStorage.idl',
     'nsIClientAuthDialogs.idl',
     'nsIContentSignatureVerifier.idl',
     'nsICryptoHash.idl',
@@ -94,7 +93,6 @@ EXPORTS.ipc += [
 ]
 
 UNIFIED_SOURCES += [
-    'cert_storage/src/cert_storage.cpp',
     'ContentSignatureVerifier.cpp',
     'CryptoTask.cpp',
     'CSTrustDomain.cpp',
@@ -182,6 +180,21 @@ if CONFIG['MOZ_XUL']:
 UNIFIED_SOURCES += [
     'md4.c',
 ]
+
+if CONFIG['MOZ_NEW_CERT_STORAGE']:
+    XPIDL_SOURCES += [
+        'nsICertStorage.idl',
+    ]
+    UNIFIED_SOURCES += [
+        'cert_storage/src/cert_storage.cpp',
+    ]
+else:
+    XPIDL_SOURCES += [
+        'nsICertBlocklist.idl',
+    ]
+    UNIFIED_SOURCES += [
+        'CertBlocklist.cpp',
+    ]
 
 FINAL_LIBRARY = 'xul'
 

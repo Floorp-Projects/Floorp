@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![allow(unknown_lints)]
+#![warn(rust_2018_idioms)]
+
 #[macro_use]
 mod driver;
 mod error;

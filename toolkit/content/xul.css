@@ -225,21 +225,6 @@ menubar > menu:empty {
   visibility: collapse;
 }
 
-/********* menuitem ***********/
-
-menuitem {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem");
-}
-
-menuitem.menuitem-iconic {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
-}
-
-menuitem[type="checkbox"],
-menuitem[type="radio"] {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
-}
-
 .menu-text {
   -moz-box-flex: 1;
 }
@@ -541,10 +526,6 @@ menulist[popuponly="true"] {
   height: 0 !important;
   min-height: 0 !important;
   border: 0 !important;
-}
-
-menulist > menupopup > menuitem {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic-noaccel");
 }
 
 menulist > menupopup > .popup-internal-box > .scrollbutton-up,

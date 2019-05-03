@@ -145,7 +145,7 @@ class BasicCompositor : public Compositor {
 
   void FinishPendingComposite() override;
 
-  virtual void RequestRecordFrames(bool aWillRecord) override {
+  virtual void RequestAllowFrameRecording(bool aWillRecord) override {
     mRecordFrames = aWillRecord;
   }
 

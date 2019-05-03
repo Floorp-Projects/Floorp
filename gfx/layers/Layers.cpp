@@ -247,14 +247,14 @@ void Layer::ScrollMetadataChanged() {
   mApzcs.SetLength(GetScrollMetadataCount());
 }
 
-void Layer::ApplyPendingUpdatesToSubtree() {
+std::unordered_set<ScrollableLayerGuid::ViewID>
+Layer::ApplyPendingUpdatesToSubtree() {
   ForEachNode<ForwardIterator>(this, [](Layer* layer) {
     layer->ApplyPendingUpdatesForThisTransaction();
   });
-
   // Once we're done recursing through the whole tree, clear the pending
   // updates from the manager.
-  Manager()->ClearPendingScrollInfoUpdate();
+  return Manager()->ClearPendingScrollInfoUpdate();
 }
 
 bool Layer::IsOpaqueForVisibility() {
@@ -621,7 +621,6 @@ void Layer::ApplyPendingUpdatesForThisTransaction() {
         Manager()->GetPendingScrollInfoUpdate(scrollId);
     if (update) {
       fm.UpdatePendingScrollInfo(update.value());
-      nsLayoutUtils::NotifyPaintSkipTransaction(scrollId);
       Mutated();
     }
   }
@@ -2264,10 +2263,17 @@ Maybe<ScrollUpdateInfo> LayerManager::GetPendingScrollInfoUpdate(
   return Nothing();
 }
 
-void LayerManager::ClearPendingScrollInfoUpdate() {
+std::unordered_set<ScrollableLayerGuid::ViewID>
+LayerManager::ClearPendingScrollInfoUpdate() {
+  std::unordered_set<ScrollableLayerGuid::ViewID> scrollIds;
   for (auto renderRoot : wr::kRenderRoots) {
-    mPendingScrollUpdates[renderRoot].clear();
+    auto& updates = mPendingScrollUpdates[renderRoot];
+    for (const auto& update : updates) {
+      scrollIds.insert(update.first);
+    }
+    updates.clear();
   }
+  return scrollIds;
 }
 
 void PrintInfo(std::stringstream& aStream, HostLayer* aLayerComposite) {

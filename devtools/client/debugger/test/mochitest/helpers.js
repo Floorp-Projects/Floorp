@@ -225,7 +225,7 @@ function waitForSelectedSource(dbg, url) {
   const {
     getSelectedSourceWithContent,
     hasSymbols,
-    hasBreakpointPositions
+    getBreakableLines
   } = dbg.selectors;
 
   return waitForState(
@@ -245,7 +245,7 @@ function waitForSelectedSource(dbg, url) {
         return false;
       }
 
-      return hasSymbols(source) && hasBreakpointPositions(source.id);
+      return hasSymbols(source) && getBreakableLines(source.id);
     },
     "selected source"
   );
@@ -308,7 +308,8 @@ function assertPausedLocation(dbg) {
 function assertDebugLine(dbg, line) {
   // Check the debug line
   const lineInfo = getCM(dbg).lineInfo(line - 1);
-  const { source, content } = dbg.selectors.getSelectedSourceWithContent() || {};
+  const { source, content } =
+    dbg.selectors.getSelectedSourceWithContent() || {};
   if (source && !content) {
     const url = source.url;
     ok(
@@ -504,7 +505,8 @@ function isSelectedFrameSelected(dbg, state) {
   // Make sure the source text is completely loaded for the
   // source we are paused in.
   const sourceId = frame.location.sourceId;
-  const { source, content } = dbg.selectors.getSelectedSourceWithContent() || {};
+  const { source, content } =
+    dbg.selectors.getSelectedSourceWithContent() || {};
 
   if (!source) {
     return false;
@@ -610,7 +612,9 @@ function findSource(dbg, url, { silent } = { silent: false }) {
 function findSourceContent(dbg, url, opts) {
   const source = findSource(dbg, url, opts);
 
-  if (!source) return null;
+  if (!source) {
+    return null;
+  }
 
   const content = dbg.selectors.getSourceContent(source.id);
 
@@ -645,7 +649,9 @@ function waitForLoadedSources(dbg) {
     dbg,
     state => {
       const sources = dbg.selectors.getSourceList();
-      return sources.every(source => !!dbg.selectors.getSourceContent(source.id));
+      return sources.every(
+        source => !!dbg.selectors.getSourceContent(source.id)
+      );
     },
     "loaded source"
   );
@@ -844,8 +850,7 @@ function setBreakpointOptions(dbg, source, line, column, options) {
 
 function findBreakpoint(dbg, url, line) {
   const source = findSource(dbg, url);
-  const column = getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
-  return dbg.selectors.getBreakpoint({ sourceId: source.id, line, column });
+  return dbg.selectors.getBreakpointsForSource(source.id, line)[0];
 }
 
 async function loadAndAddBreakpoint(dbg, filename, line, column) {

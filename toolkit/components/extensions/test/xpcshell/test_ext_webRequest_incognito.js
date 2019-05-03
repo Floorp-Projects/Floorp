@@ -19,8 +19,12 @@ add_task(async function test_incognito_webrequest_access() {
     background() {
       browser.webRequest.onBeforeRequest.addListener(async (details) => {
         browser.test.assertTrue(details.incognito, "incognito flag is set");
-        browser.test.notifyPass("webRequest.private");
-      }, {urls: ["<all_urls>"]}, ["blocking"]);
+      }, {urls: ["<all_urls>"], incognito: true}, ["blocking"]);
+
+      browser.webRequest.onBeforeRequest.addListener(async (details) => {
+        browser.test.assertFalse(details.incognito, "incognito flag is not set");
+        browser.test.notifyPass("webRequest.spanning");
+      }, {urls: ["<all_urls>"], incognito: false}, ["blocking"]);
     },
   });
   await pb_extension.startup();
@@ -40,14 +44,15 @@ add_task(async function test_incognito_webrequest_access() {
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy", {privateBrowsing: true});
-  await pb_extension.awaitFinish("webRequest.private");
-  await pb_extension.unload();
   await contentPage.close();
 
   contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy");
   await extension.awaitFinish("webRequest");
-  await extension.unload();
+  await pb_extension.awaitFinish("webRequest.spanning");
   await contentPage.close();
+
+  await pb_extension.unload();
+  await extension.unload();
 
   Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });

@@ -369,7 +369,10 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   // Since we're sending a full mScrollData that will include the new scroll
   // offsets, and we can throw away the pending scroll updates we had kept for
   // an empty transaction.
-  ClearPendingScrollInfoUpdate();
+  auto scrollIdsUpdated = ClearPendingScrollInfoUpdate();
+  for (ScrollableLayerGuid::ViewID update : scrollIdsUpdated) {
+    nsLayoutUtils::NotifyPaintSkipTransaction(update);
+  }
 
   mLatestTransactionId =
       mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);

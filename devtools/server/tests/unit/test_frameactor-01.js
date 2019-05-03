@@ -34,7 +34,7 @@ function test_pause_frame() {
     Assert.ok(!!packet.frame);
     Assert.ok(!!packet.frame.actor);
     Assert.equal(packet.frame.displayName, "stopMe");
-    gThreadClient.resume(function() {
+    gThreadClient.resume().then(function() {
       finishClient(gClient);
     });
   });

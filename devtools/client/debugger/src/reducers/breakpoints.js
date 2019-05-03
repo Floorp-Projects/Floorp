@@ -13,7 +13,6 @@ import { isGeneratedId } from "devtools-source-map";
 import { isEqual } from "lodash";
 
 import { makeBreakpointId } from "../utils/breakpoint";
-import "../utils/breakable-lines";
 
 // eslint-disable-next-line max-len
 import { getBreakpointsList as getBreakpointsListSelector } from "../selectors/breakpoints";

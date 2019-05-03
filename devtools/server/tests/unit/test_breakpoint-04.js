@@ -31,7 +31,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
 
         // Remove the breakpoint.
         threadClient.removeBreakpoint(location);
-        threadClient.resume(resolve);
+        threadClient.resume().then(resolve);
       });
 
       // Continue until the breakpoint is hit.

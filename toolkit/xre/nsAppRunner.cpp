@@ -246,6 +246,11 @@ extern void InstallSignalHandlers(const char* ProgramName);
 #define FILE_INVALIDATE_CACHES NS_LITERAL_CSTRING(".purgecaches")
 #define FILE_STARTUP_INCOMPLETE NS_LITERAL_STRING(".startup-incomplete")
 
+#if defined(MOZ_BLOCK_PROFILE_DOWNGRADE) || defined(MOZ_LAUNCHER_PROCESS)
+static const char kPrefHealthReportUploadEnabled[] =
+  "datareporting.healthreport.uploadEnabled";
+#endif  // defined(MOZ_BLOCK_PROFILE_DOWNGRADE) || defined(MOZ_LAUNCHER_PROCESS)
+
 int gArgc;
 char** gArgv;
 
@@ -1509,19 +1514,8 @@ static void RegisterApplicationRestartChanged(const char* aPref, void* aData) {
 
 #  if defined(MOZ_LAUNCHER_PROCESS)
 
-static const char kShieldPrefName[] = "app.shield.optoutstudies.enabled";
-
 static void OnLauncherPrefChanged(const char* aPref, void* aData) {
-  const bool kLauncherPrefDefaultValue =
-#    if defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
-      true
-#    else
-      false
-#    endif  // defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
-      ;
-  bool prefVal = Preferences::GetBool(kShieldPrefName, false) &&
-                 Preferences::GetBool(PREF_WIN_LAUNCHER_PROCESS_ENABLED,
-                                      kLauncherPrefDefaultValue);
+  bool prefVal = Preferences::GetBool(PREF_WIN_LAUNCHER_PROCESS_ENABLED, true);
 
   mozilla::LauncherRegistryInfo launcherRegInfo;
   mozilla::LauncherVoidResult reflectResult =
@@ -1529,10 +1523,16 @@ static void OnLauncherPrefChanged(const char* aPref, void* aData) {
   MOZ_ASSERT(reflectResult.isOk());
 }
 
-static void SetupLauncherProcessPref() {
-  // In addition to the launcher pref itself, we also tie the launcher process
-  // state to the SHIELD opt-out pref.
+static void OnLauncherTelemetryPrefChanged(const char* aPref, void* aData) {
+  bool prefVal = Preferences::GetBool(kPrefHealthReportUploadEnabled, true);
 
+  mozilla::LauncherRegistryInfo launcherRegInfo;
+  mozilla::LauncherVoidResult reflectResult =
+      launcherRegInfo.ReflectTelemetryPrefToRegistry(prefVal);
+  MOZ_ASSERT(reflectResult.isOk());
+}
+
+static void SetupLauncherProcessPref() {
   if (gLauncherProcessState) {
     // We've already successfully run
     return;
@@ -1550,18 +1550,6 @@ static void SetupLauncherProcessPref() {
         CrashReporter::Annotation::LauncherProcessState,
         static_cast<uint32_t>(enabledState.unwrap()));
 
-#    if defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
-    // Reflect the pref states into the registry by calling
-    // OnLauncherPrefChanged.
-    OnLauncherPrefChanged(PREF_WIN_LAUNCHER_PROCESS_ENABLED, nullptr);
-
-    // Now obtain the revised state of the launcher process for reflection
-    // into prefs
-    enabledState = launcherRegInfo.IsEnabled();
-#    endif  // defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
-  }
-
-  if (enabledState.isOk()) {
     // Reflect the launcher process registry state into user prefs
     Preferences::SetBool(
         PREF_WIN_LAUNCHER_PROCESS_ENABLED,
@@ -1569,9 +1557,15 @@ static void SetupLauncherProcessPref() {
             mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled);
   }
 
-  Preferences::RegisterCallback(&OnLauncherPrefChanged, kShieldPrefName);
+  mozilla::LauncherVoidResult reflectResult =
+    launcherRegInfo.ReflectTelemetryPrefToRegistry(
+      Preferences::GetBool(kPrefHealthReportUploadEnabled, true));
+  MOZ_ASSERT(reflectResult.isOk());
+
   Preferences::RegisterCallback(&OnLauncherPrefChanged,
                                 PREF_WIN_LAUNCHER_PROCESS_ENABLED);
+  Preferences::RegisterCallback(&OnLauncherTelemetryPrefChanged,
+                                kPrefHealthReportUploadEnabled);
 }
 
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)
@@ -2070,8 +2064,8 @@ static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
   NS_ENSURE_TRUE_VOID(prefBranch);
 
   bool enabled;
-  nsresult rv = prefBranch->GetBoolPref(
-      "datareporting.healthreport.uploadEnabled", &enabled);
+  nsresult rv = prefBranch->GetBoolPref(kPrefHealthReportUploadEnabled,
+                                        &enabled);
   NS_ENSURE_SUCCESS_VOID(rv);
   if (!enabled) {
     return;

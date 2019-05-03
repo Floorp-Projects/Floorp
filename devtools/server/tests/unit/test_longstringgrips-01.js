@@ -61,13 +61,13 @@ function test_longstring_grip() {
         try {
           Assert.equal(response, "monkey");
         } finally {
-          gThreadClient.resume(function() {
+          gThreadClient.resume().then(function() {
             finishClient(gClient);
           });
         }
       });
     } catch (error) {
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
         do_throw(error);
       });

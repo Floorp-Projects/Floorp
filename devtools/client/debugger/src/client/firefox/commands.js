@@ -125,51 +125,35 @@ function forEachWorkerThread(iteratee) {
 }
 
 function resume(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).resume(resolve);
-  });
+  return lookupThreadClient(thread).resume();
 }
 
 function stepIn(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).stepIn(resolve);
-  });
+  return lookupThreadClient(thread).stepIn();
 }
 
 function stepOver(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).stepOver(resolve);
-  });
+  return lookupThreadClient(thread).stepOver();
 }
 
 function stepOut(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).stepOut(resolve);
-  });
+  return lookupThreadClient(thread).stepOut();
 }
 
 function rewind(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).rewind(resolve);
-  });
+  return lookupThreadClient(thread).rewind();
 }
 
 function reverseStepIn(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).reverseStepIn(resolve);
-  });
+  return lookupThreadClient(thread).reverseStepIn();
 }
 
 function reverseStepOver(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).reverseStepOver(resolve);
-  });
+  return lookupThreadClient(thread).reverseStepOver();
 }
 
 function reverseStepOut(thread: string): Promise<*> {
-  return new Promise(resolve => {
-    lookupThreadClient(thread).reverseStepOut(resolve);
-  });
+  return lookupThreadClient(thread).reverseStepOut();
 }
 
 function breakOnNext(thread: string): Promise<*> {
@@ -465,9 +449,7 @@ async function getBreakpointPositions(
   for (const { thread, actor } of actors) {
     const sourceThreadClient = lookupThreadClient(thread);
     const sourceFront = sourceThreadClient.source({ actor });
-    const positions = await sourceFront.getBreakpointPositionsCompressed(
-      range
-    );
+    const positions = await sourceFront.getBreakpointPositionsCompressed(range);
 
     for (const line of Object.keys(positions)) {
       let columns = positions[line];
@@ -480,6 +462,33 @@ async function getBreakpointPositions(
     }
   }
   return sourcePositions;
+}
+
+async function getBreakableLines(actors: Array<SourceActor>) {
+  let lines = [];
+  for (const { thread, actor } of actors) {
+    const sourceThreadClient = lookupThreadClient(thread);
+    const sourceFront = sourceThreadClient.source({ actor });
+    let actorLines = [];
+    try {
+      actorLines = await sourceFront.getBreakableLines();
+    } catch (e) {
+      // Handle backward compatibility
+      if (
+        e.message &&
+        e.message.match(/does not recognize the packet type getBreakableLines/)
+      ) {
+        const pos = await sourceFront.getBreakpointPositionsCompressed();
+        actorLines = Object.keys(pos).map(line => Number(line));
+      } else if (!e.message || !e.message.match(/Connection closed/)) {
+        throw e;
+      }
+    }
+
+    lines = [...new Set([...lines, ...actorLines])];
+  }
+
+  return lines;
 }
 
 const clientCommands = {
@@ -502,6 +511,7 @@ const clientCommands = {
   sourceContents,
   getSourceForActor,
   getBreakpointPositions,
+  getBreakableLines,
   hasBreakpoint,
   setBreakpoint,
   setXHRBreakpoint,
