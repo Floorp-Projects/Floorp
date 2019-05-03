@@ -463,7 +463,6 @@ function getGfxAdapter(aSuffix = "") {
     subsysID: getGfxField("adapterSubsysID" + aSuffix, null),
     RAM: memoryMB,
     driver: getGfxField("adapterDriver" + aSuffix, null),
-    driverVendor: getGfxField("adapterDriverVendor" + aSuffix, null),
     driverVersion: getGfxField("adapterDriverVersion" + aSuffix, null),
     driverDate: getGfxField("adapterDriverDate" + aSuffix, null),
   };
@@ -1773,7 +1772,7 @@ EnvironmentCache.prototype = {
       features: {},
     };
 
-    if (AppConstants.platform !== "android") {
+    if (!["android", "linux"].includes(AppConstants.platform)) {
       let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
       try {
         gfxData.monitors = gfxInfo.getMonitors();
