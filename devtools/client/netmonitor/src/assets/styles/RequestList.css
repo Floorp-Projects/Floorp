@@ -340,7 +340,7 @@
   background-repeat: repeat-y;
   background-position: left center;
   /* Background created on a <canvas> in js. */
-  /* @see devtools/client/netmonitor/src/waterfall-background.js */
+  /* @see devtools/client/netmonitor/src/widgets/WaterfallBackground.js */
   background-image: -moz-element(#waterfall-background);
 }
 
