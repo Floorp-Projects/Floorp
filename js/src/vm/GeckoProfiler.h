@@ -13,7 +13,7 @@
 #include <stddef.h>
 
 #include "js/ProfilingStack.h"
-#include "threading/ExclusiveData.h"
+#include "threading/ProtectedData.h"
 #include "vm/JSScript.h"
 #include "vm/MutexIDs.h"
 
@@ -109,7 +109,7 @@ using ProfileStringMap = HashMap<JSScript*, UniqueChars,
 
 class GeckoProfilerRuntime {
   JSRuntime* rt;
-  ExclusiveData<ProfileStringMap> strings;
+  MainThreadData<ProfileStringMap> strings_;
   bool slowAssertions;
   uint32_t enabled_;
   void (*eventMarker_)(const char*);
@@ -131,6 +131,8 @@ class GeckoProfilerRuntime {
 
   void markEvent(const char* event);
 
+  ProfileStringMap& strings() { return strings_.ref(); }
+
   /* meant to be used for testing, not recommended to call in normal code */
   size_t stringsCount();
   void stringsReset();
@@ -143,11 +145,9 @@ class GeckoProfilerRuntime {
 #endif
 };
 
-inline size_t GeckoProfilerRuntime::stringsCount() {
-  return strings.lock()->count();
-}
+inline size_t GeckoProfilerRuntime::stringsCount() { return strings().count(); }
 
-inline void GeckoProfilerRuntime::stringsReset() { strings.lock()->clear(); }
+inline void GeckoProfilerRuntime::stringsReset() { strings().clear(); }
 
 /*
  * This class is used in RunScript() to push the marker onto the sampling stack

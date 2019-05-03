@@ -34,7 +34,7 @@ GeckoProfilerThread::GeckoProfilerThread()
 
 GeckoProfilerRuntime::GeckoProfilerRuntime(JSRuntime* rt)
     : rt(rt),
-      strings(mutexid::GeckoProfilerStrings),
+      strings_(),
       slowAssertions(false),
       enabled_(false),
       eventMarker_(nullptr) {
@@ -154,13 +154,11 @@ void GeckoProfilerRuntime::enable(bool enabled) {
 /* Lookup the string for the function/script, creating one if necessary */
 const char* GeckoProfilerRuntime::profileString(JSScript* script,
                                                 JSFunction* maybeFun) {
-  auto locked = strings.lock();
-
-  ProfileStringMap::AddPtr s = locked->lookupForAdd(script);
+  ProfileStringMap::AddPtr s = strings().lookupForAdd(script);
 
   if (!s) {
     auto str = allocProfileString(script, maybeFun);
-    if (!str || !locked->add(s, script, std::move(str))) {
+    if (!str || !strings().add(s, script, std::move(str))) {
       return nullptr;
     }
   }
@@ -176,9 +174,8 @@ void GeckoProfilerRuntime::onScriptFinalized(JSScript* script) {
    * off, we still want to remove the string, so no check of enabled() is
    * done.
    */
-  auto locked = strings.lock();
-  if (ProfileStringMap::Ptr entry = locked->lookup(script)) {
-    locked->remove(entry);
+  if (ProfileStringMap::Ptr entry = strings().lookup(script)) {
+    strings().remove(entry);
   }
 }
 
@@ -331,8 +328,7 @@ void GeckoProfilerThread::trace(JSTracer* trc) {
 }
 
 void GeckoProfilerRuntime::fixupStringsMapAfterMovingGC() {
-  auto locked = strings.lock();
-  for (ProfileStringMap::Enum e(locked.get()); !e.empty(); e.popFront()) {
+  for (ProfileStringMap::Enum e(strings()); !e.empty(); e.popFront()) {
     JSScript* script = e.front().key();
     if (IsForwarded(script)) {
       script = Forwarded(script);
@@ -343,11 +339,10 @@ void GeckoProfilerRuntime::fixupStringsMapAfterMovingGC() {
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void GeckoProfilerRuntime::checkStringsMapAfterMovingGC() {
-  auto locked = strings.lock();
-  for (auto r = locked->all(); !r.empty(); r.popFront()) {
+  for (auto r = strings().all(); !r.empty(); r.popFront()) {
     JSScript* script = r.front().key();
     CheckGCThingAfterMovingGC(script);
-    auto ptr = locked->lookup(script);
+    auto ptr = strings().lookup(script);
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
   }
 }
