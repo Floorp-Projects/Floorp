@@ -2059,7 +2059,8 @@ void nsJSContext::MaybePokeCC() {
     return;
   }
 
-  if (!sLastCCEndTime.IsNull()) {
+  // Don't run consecutive CCs too often.
+  if (sCleanupsSinceLastGC && !sLastCCEndTime.IsNull()) {
     uint32_t sinceLastCCEnd = TimeUntilNow(sLastCCEndTime);
     if (sinceLastCCEnd < NS_CC_DELAY) {
       return;
