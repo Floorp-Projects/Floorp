@@ -14699,7 +14699,7 @@
   "HTTP_TRAFFIC_ANALYSIS_2": {
     "record_in_processes": ["main"],
     "alert_emails": ["gachen@mozilla.com"],
-    "bug_numbers": [1533363, 1546796],
+    "bug_numbers": [1533363, 1546796, 1546906],
     "expires_in_version": "73",
     "kind": "categorical",
     "n_values": 50,
@@ -14732,6 +14732,6 @@
       "Connection",
       "Transaction"
     ],
-    "description": "Numbers of HTTP transactions and connections by type. There are some categories separated by labels based on 4 parameters: 1. normal browsing or private browsing 2. first party or third party 3. class of service 4. tracking classification."
+    "description": "Numbers of HTTP transactions and connections by type. There are some categories separated by labels based on 4 parameters: 1. normal browsing or private browsing 2. first party or third party 3. class of service (Leader/Background/Others) 4. tracking classification (Basic/Content/FingerprintingContent)."
   }
 }
