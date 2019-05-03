@@ -682,8 +682,8 @@ static bool RemoveFirstLine(nsLineList& aFromLines, nsFrameList& aFromFrames,
 /* virtual */
 void nsBlockFrame::MarkIntrinsicISizesDirty() {
   nsBlockFrame* dirtyBlock = static_cast<nsBlockFrame*>(FirstContinuation());
-  dirtyBlock->mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
-  dirtyBlock->mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+  dirtyBlock->mMinWidth = NS_INTRINSIC_ISIZE_UNKNOWN;
+  dirtyBlock->mPrefWidth = NS_INTRINSIC_ISIZE_UNKNOWN;
   if (!(GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)) {
     for (nsIFrame* frame = dirtyBlock; frame;
          frame = frame->GetNextContinuation()) {
@@ -702,8 +702,8 @@ void nsBlockFrame::CheckIntrinsicCacheAgainstShrinkWrapState() {
   bool inflationEnabled = !presContext->mInflationDisabledForShrinkWrap;
   if (inflationEnabled !=
       !!(GetStateBits() & NS_BLOCK_FRAME_INTRINSICS_INFLATED)) {
-    mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
-    mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mMinWidth = NS_INTRINSIC_ISIZE_UNKNOWN;
+    mPrefWidth = NS_INTRINSIC_ISIZE_UNKNOWN;
     if (inflationEnabled) {
       AddStateBits(NS_BLOCK_FRAME_INTRINSICS_INFLATED);
     } else {
@@ -721,7 +721,7 @@ nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
 
   CheckIntrinsicCacheAgainstShrinkWrapState();
 
-  if (mMinWidth != NS_INTRINSIC_WIDTH_UNKNOWN) return mMinWidth;
+  if (mMinWidth != NS_INTRINSIC_ISIZE_UNKNOWN) return mMinWidth;
 
   if (StyleDisplay()->IsContainSize()) {
     mMinWidth = 0;
@@ -799,7 +799,7 @@ nscoord nsBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
 
   CheckIntrinsicCacheAgainstShrinkWrapState();
 
-  if (mPrefWidth != NS_INTRINSIC_WIDTH_UNKNOWN) return mPrefWidth;
+  if (mPrefWidth != NS_INTRINSIC_ISIZE_UNKNOWN) return mPrefWidth;
 
   if (StyleDisplay()->IsContainSize()) {
     mPrefWidth = 0;
