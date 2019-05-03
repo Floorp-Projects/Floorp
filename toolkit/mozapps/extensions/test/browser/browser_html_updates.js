@@ -108,20 +108,21 @@ add_task(async function testChangeAutoUpdates() {
   await extension.unload();
 });
 
-async function setupExtensionWithUpdate() {
+async function setupExtensionWithUpdate(id) {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.checkUpdateSecurity", false]],
   });
 
   let server = AddonTestUtils.createHttpServer();
   let serverHost = `http://localhost:${server.identity.primaryPort}`;
+  let updatesPath = `/ext-updates-${id}.json`;
 
   let baseManifest = {
     name: "Updates",
     applications: {
       gecko: {
-        id: "update@mochi.test",
-        update_url: `${serverHost}/ext-updates.json`,
+        id,
+        update_url: serverHost + updatesPath,
       },
     },
   };
@@ -132,18 +133,19 @@ async function setupExtensionWithUpdate() {
       version: "2",
     },
   });
-  server.registerFile("/update-2.xpi", updateXpi);
-  AddonTestUtils.registerJSON(server, "/ext-updates.json", {
+  let xpiFilename = `/update-${id}.xpi`;
+  server.registerFile(xpiFilename, updateXpi);
+  AddonTestUtils.registerJSON(server, updatesPath, {
     addons: {
-      "update@mochi.test": {
+      [id]: {
         updates: [
-          {version: "2", update_link: `${serverHost}/update-2.xpi`},
+          {version: "2", update_link: serverHost + xpiFilename},
         ],
       },
     },
   });
 
-  return ExtensionTestUtils.loadExtension({
+  let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       ...baseManifest,
       version: "1",
@@ -151,6 +153,8 @@ async function setupExtensionWithUpdate() {
     // Use permanent so the add-on can be updated.
     useAddonManager: "permanent",
   });
+  await extension.startup();
+  return extension;
 }
 
 function disableAutoUpdates(card) {
@@ -163,7 +167,7 @@ function disableAutoUpdates(card) {
   ok(!updateCheckButton.hidden, "The button is now visible");
 
   // There shouldn't be an update shown to the user.
-  assertUpdateState(card, false);
+  assertUpdateState({card, shown: false});
 }
 
 function checkForUpdate(card, expected) {
@@ -181,26 +185,28 @@ function installUpdate(card, expected) {
   return Promise.all([updateInstalled, updated]);
 }
 
-function assertUpdateState(card, shown) {
+function assertUpdateState({card, shown, expanded = true}) {
   let menuButton = card.querySelector(".more-options-button");
   ok(menuButton.classList.contains("more-options-button-badged") == shown,
      "The menu button is badged");
   let installButton = card.querySelector('panel-item[action="install-update"]');
   ok(installButton.hidden != shown,
      `The install button is ${shown ? "hidden" : "shown"}`);
-  let updateCheckButton = card.querySelector('button[action="update-check"]');
-  ok(updateCheckButton.hidden == shown,
-     `The update check button is ${shown ? "hidden" : "shown"}`);
+  if (expanded) {
+    let updateCheckButton = card.querySelector('button[action="update-check"]');
+    ok(updateCheckButton.hidden == shown,
+      `The update check button is ${shown ? "hidden" : "shown"}`);
+  }
 }
 
 add_task(async function testUpdateAvailable() {
-  let extension = await setupExtensionWithUpdate();
-  await extension.startup();
+  let id = "update@mochi.test";
+  let extension = await setupExtensionWithUpdate(id);
 
   let win = await loadInitialView("extension");
   let doc = win.document;
 
-  await loadDetailView(win, "update@mochi.test");
+  await loadDetailView(win, id);
 
   let card = doc.querySelector("addon-card");
 
@@ -209,7 +215,7 @@ add_task(async function testUpdateAvailable() {
   await checkForUpdate(card, "update-found");
 
   // There should now be an update.
-  assertUpdateState(card, true);
+  assertUpdateState({card, shown: true});
 
   // The version was 1.
   let versionRow = card.querySelector(".addon-detail-row-version");
@@ -222,7 +228,7 @@ add_task(async function testUpdateAvailable() {
   is(versionRow.lastChild.textContent, "2", "The version has updated");
 
   // No update is shown again.
-  assertUpdateState(card, false);
+  assertUpdateState({card, shown: false});
 
   // Check for updates again, there shouldn't be an update.
   await checkForUpdate(card, "no-update");
@@ -232,8 +238,8 @@ add_task(async function testUpdateAvailable() {
 });
 
 add_task(async function testUpdateCancelled() {
-  let extension = await setupExtensionWithUpdate();
-  await extension.startup();
+  let id = "update@mochi.test";
+  let extension = await setupExtensionWithUpdate(id);
 
   let win = await loadInitialView("extension");
   let doc = win.document;
@@ -246,7 +252,7 @@ add_task(async function testUpdateCancelled() {
   await checkForUpdate(card, "update-found");
 
   // There should now be an update.
-  assertUpdateState(card, true);
+  assertUpdateState({card, shown: true});
 
   // The add-on starts as version 1.
   let versionRow = card.querySelector(".addon-detail-row-version");
@@ -264,8 +270,96 @@ add_task(async function testUpdateCancelled() {
   is(versionRow.lastChild.textContent, "1", "The version hasn't changed");
 
   // The update has been removed.
-  assertUpdateState(card, false);
+  assertUpdateState({card, shown: false});
 
   await closeView(win);
   await extension.unload();
+});
+
+add_task(async function testAvailableUpdates() {
+  let ids = ["update1@mochi.test", "update2@mochi.test", "update3@mochi.test"];
+  let addons = await Promise.all(ids.map(id => setupExtensionWithUpdate(id)));
+
+  // Disable global add-on updates.
+  AddonManager.autoUpdateDefault = false;
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  let managerDoc = win.managerWindow.document;
+  let {gCategories} = win.managerWindow;
+  let availableCat = gCategories.get("addons://updates/available");
+
+  ok(availableCat.hidden, "Available updates is hidden");
+  is(availableCat.badgeCount, 0, "There are no updates");
+
+  // Check for all updates.
+  let updatesFound = TestUtils.topicObserved("EM-update-check-finished");
+  managerDoc.getElementById("utils-updateNow").doCommand();
+  await updatesFound;
+
+  // Wait for the available updates count to finalize, it's async.
+  await BrowserTestUtils.waitForCondition(() => availableCat.badgeCount == 3);
+
+  // The category shows the correct update count.
+  ok(!availableCat.hidden, "Available updates is visible");
+  is(availableCat.badgeCount, 3, "There are 3 updates");
+
+  // Go to the available updates page.
+  let loaded = waitForViewLoad(win);
+  availableCat.click();
+  await loaded;
+
+  // Check the updates are shown.
+  let cards = doc.querySelectorAll("addon-card");
+  is(cards.length, 3, "There are 3 cards");
+
+  // Each card should have an update.
+  for (let card of cards) {
+    assertUpdateState({card, shown: true, expanded: false});
+  }
+
+  // Check the detail page for the first add-on.
+  await loadDetailView(win, ids[0]);
+  is(gCategories.selected, "addons://list/extension",
+     "The extensions category is selected");
+
+  // Go back to the last view.
+  loaded = waitForViewLoad(win);
+  managerDoc.getElementById("go-back").click();
+  await loaded;
+
+  // We're back on the updates view.
+  is(gCategories.selected, "addons://updates/available",
+     "The available updates category is selected");
+
+  // Find the cards again.
+  cards = doc.querySelectorAll("addon-card");
+  is(cards.length, 3, "There are 3 cards");
+
+  // Install the first update.
+  await installUpdate(cards[0], "update-installed");
+  assertUpdateState({card: cards[0], shown: false, expanded: false});
+
+  // The count goes down but the card stays.
+  is(availableCat.badgeCount, 2, "There are only 2 updates now");
+  is(doc.querySelectorAll("addon-card").length, 3,
+     "All 3 cards are still visible on the updates page");
+
+  // Install the other two updates.
+  await installUpdate(cards[1], "update-installed");
+  assertUpdateState({card: cards[1], shown: false, expanded: false});
+  await installUpdate(cards[2], "update-installed");
+  assertUpdateState({card: cards[2], shown: false, expanded: false});
+
+  // The count goes down but the card stays.
+  is(availableCat.badgeCount, 0, "There are no more updates");
+  is(doc.querySelectorAll("addon-card").length, 3,
+     "All 3 cards are still visible on the updates page");
+
+  // Enable global add-on updates again.
+  AddonManager.autoUpdateDefault = true;
+
+  await closeView(win);
+  await Promise.all(addons.map(addon => addon.unload()));
 });
