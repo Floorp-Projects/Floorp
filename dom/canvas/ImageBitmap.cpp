@@ -20,8 +20,6 @@
 #include "mozilla/ScopeExit.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
-#include "ImageBitmapColorUtils.h"
-#include "ImageBitmapUtils.h"
 #include "ImageUtils.h"
 #include "imgLoader.h"
 #include "imgTools.h"
@@ -481,68 +479,6 @@ void ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv) {
   mPictureRect = FixUpNegativeDimension(aRect, aRv);
 }
 
-static already_AddRefed<SourceSurface> ConvertColorFormatIfNeeded(
-    RefPtr<SourceSurface> aSurface) {
-  const SurfaceFormat srcFormat = aSurface->GetFormat();
-  if (srcFormat == SurfaceFormat::R8G8B8A8 ||
-      srcFormat == SurfaceFormat::B8G8R8A8 ||
-      srcFormat == SurfaceFormat::R8G8B8X8 ||
-      srcFormat == SurfaceFormat::B8G8R8X8 ||
-      srcFormat == SurfaceFormat::A8R8G8B8 ||
-      srcFormat == SurfaceFormat::X8R8G8B8) {
-    return aSurface.forget();
-  }
-
-  if (srcFormat == SurfaceFormat::A8 || srcFormat == SurfaceFormat::Depth) {
-    return nullptr;
-  }
-
-  const int bytesPerPixel = BytesPerPixel(SurfaceFormat::B8G8R8A8);
-  const IntSize dstSize = aSurface->GetSize();
-  const uint32_t dstStride = dstSize.width * bytesPerPixel;
-
-  RefPtr<DataSourceSurface> dstDataSurface =
-      Factory::CreateDataSourceSurfaceWithStride(
-          dstSize, SurfaceFormat::B8G8R8A8, dstStride);
-  if (NS_WARN_IF(!dstDataSurface)) {
-    return nullptr;
-  }
-
-  RefPtr<DataSourceSurface> srcDataSurface = aSurface->GetDataSurface();
-  if (NS_WARN_IF(!srcDataSurface)) {
-    return nullptr;
-  }
-
-  DataSourceSurface::ScopedMap srcMap(srcDataSurface, DataSourceSurface::READ);
-  DataSourceSurface::ScopedMap dstMap(dstDataSurface, DataSourceSurface::WRITE);
-  if (NS_WARN_IF(!srcMap.IsMapped()) || NS_WARN_IF(!dstMap.IsMapped())) {
-    return nullptr;
-  }
-
-  int rv = 0;
-  if (srcFormat == SurfaceFormat::R8G8B8) {
-    rv = RGB24ToBGRA32(srcMap.GetData(), srcMap.GetStride(), dstMap.GetData(),
-                       dstMap.GetStride(), dstSize.width, dstSize.height);
-  } else if (srcFormat == SurfaceFormat::B8G8R8) {
-    rv = BGR24ToBGRA32(srcMap.GetData(), srcMap.GetStride(), dstMap.GetData(),
-                       dstMap.GetStride(), dstSize.width, dstSize.height);
-  } else if (srcFormat == SurfaceFormat::HSV) {
-    rv = HSVToBGRA32((const float*)srcMap.GetData(), srcMap.GetStride(),
-                     dstMap.GetData(), dstMap.GetStride(), dstSize.width,
-                     dstSize.height);
-  } else if (srcFormat == SurfaceFormat::Lab) {
-    rv = LabToBGRA32((const float*)srcMap.GetData(), srcMap.GetStride(),
-                     dstMap.GetData(), dstMap.GetStride(), dstSize.width,
-                     dstSize.height);
-  }
-
-  if (NS_WARN_IF(rv != 0)) {
-    return nullptr;
-  }
-
-  return dstDataSurface.forget();
-}
-
 /*
  * The functionality of PrepareForDrawTarget method:
  * (1) Get a SourceSurface from the mData (which is a layers::Image).
@@ -567,14 +503,6 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
     if (!mSurface) {
       return nullptr;
     }
-  }
-
-  // Check if we need to convert the format.
-  // Convert R8G8B8/B8G8R8/HSV/Lab to B8G8R8A8.
-  // Return null if the original format is A8 or Depth.
-  mSurface = ConvertColorFormatIfNeeded(mSurface);
-  if (NS_WARN_IF(!mSurface)) {
-    return nullptr;
   }
 
   RefPtr<DrawTarget> target = aTarget;
