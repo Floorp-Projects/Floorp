@@ -176,7 +176,7 @@ void nsFileControlFrame::Reflow(nsPresContext* aPresContext,
         labelFrame->AddStateBits(NS_FRAME_IS_DIRTY |
                                  NS_BLOCK_NEEDS_BIDI_RESOLUTION);
         mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
-        mPrefWidth = NS_INTRINSIC_ISIZE_UNKNOWN;
+        mCachedPrefISize = NS_INTRINSIC_ISIZE_UNKNOWN;
         done = true;
         continue;
       }
@@ -528,7 +528,7 @@ nscoord nsFileControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
   DISPLAY_MIN_INLINE_SIZE(this, result);
 
   // Make sure we measure with the uncropped filename.
-  if (mPrefWidth == NS_INTRINSIC_ISIZE_UNKNOWN) {
+  if (mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     nsAutoString filename;
     HTMLInputElement::FromNode(mContent)->GetDisplayFileName(filename);
     UpdateDisplayedValue(filename, false);
