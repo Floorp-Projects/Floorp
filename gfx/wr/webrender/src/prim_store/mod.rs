@@ -2442,78 +2442,16 @@ impl PrimitiveStore {
             prim_instance.prepared_frame_id = frame_state.render_tasks.frame_id();
         }
 
-        match prim_instance.kind {
-            PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
-                let pic = &mut self.pictures[pic_index.0];
-                let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
-                if pic.prepare_for_render(
-                    pic_index,
-                    prim_instance,
-                    prim_info.clipped_world_rect,
-                    pic_context.surface_index,
-                    frame_context,
-                    frame_state,
-                    data_stores,
-                ) {
-                    if let Some(ref mut splitter) = pic_state.plane_splitter {
-                        PicturePrimitive::add_split_plane(
-                            splitter,
-                            frame_state.transforms,
-                            prim_instance,
-                            pic.local_rect,
-                            &prim_info.combined_local_clip_rect,
-                            frame_context.screen_world_rect,
-                            plane_split_anchor,
-                        );
-                    }
-
-                    // If this picture uses segments, ensure the GPU cache is
-                    // up to date with segment local rects.
-                    // TODO(gw): This entire match statement above can now be
-                    //           refactored into prepare_interned_prim_for_render.
-                    if pic.can_use_segments() {
-                        write_segment(
-                            segment_instance_index,
-                            frame_state,
-                            &mut scratch.segments,
-                            &mut scratch.segment_instances,
-                            |request| {
-                                request.push(PremultipliedColorF::WHITE);
-                                request.push(PremultipliedColorF::WHITE);
-                                request.push([
-                                    -1.0,       // -ve means use prim rect for stretch size
-                                    0.0,
-                                    0.0,
-                                    0.0,
-                                ]);
-                            }
-                        );
-                    }
-                } else {
-                    prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
-                }
-            }
-            PrimitiveInstanceKind::TextRun { .. } |
-            PrimitiveInstanceKind::Clear { .. } |
-            PrimitiveInstanceKind::Rectangle { .. } |
-            PrimitiveInstanceKind::NormalBorder { .. } |
-            PrimitiveInstanceKind::ImageBorder { .. } |
-            PrimitiveInstanceKind::YuvImage { .. } |
-            PrimitiveInstanceKind::Image { .. } |
-            PrimitiveInstanceKind::LinearGradient { .. } |
-            PrimitiveInstanceKind::RadialGradient { .. } |
-            PrimitiveInstanceKind::LineDecoration { .. } => {
-                self.prepare_interned_prim_for_render(
-                    prim_instance,
-                    pic_context,
-                    pic_state,
-                    frame_context,
-                    frame_state,
-                    data_stores,
-                    scratch,
-                );
-            }
-        }
+        self.prepare_interned_prim_for_render(
+            prim_instance,
+            plane_split_anchor,
+            pic_context,
+            pic_state,
+            frame_context,
+            frame_state,
+            data_stores,
+            scratch,
+        );
 
         true
     }
@@ -2602,8 +2540,9 @@ impl PrimitiveStore {
     fn prepare_interned_prim_for_render(
         &mut self,
         prim_instance: &mut PrimitiveInstance,
+        plane_split_anchor: usize,
         pic_context: &PictureContext,
-        pic_state: &PictureState,
+        pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
         data_stores: &mut DataStores,
@@ -2993,8 +2932,54 @@ impl PrimitiveStore {
                 // TODO(gw): Consider whether it's worth doing segment building
                 //           for gradient primitives.
             }
-            _ => {
-                unreachable!();
+            PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
+                let pic = &mut self.pictures[pic_index.0];
+                let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
+                if pic.prepare_for_render(
+                    *pic_index,
+                    prim_info.clipped_world_rect,
+                    pic_context.surface_index,
+                    frame_context,
+                    frame_state,
+                    data_stores,
+                ) {
+                    if let Some(ref mut splitter) = pic_state.plane_splitter {
+                        PicturePrimitive::add_split_plane(
+                            splitter,
+                            frame_state.transforms,
+                            prim_instance.spatial_node_index,
+                            pic.local_rect,
+                            &prim_info.combined_local_clip_rect,
+                            frame_context.screen_world_rect,
+                            plane_split_anchor,
+                        );
+                    }
+
+                    // If this picture uses segments, ensure the GPU cache is
+                    // up to date with segment local rects.
+                    // TODO(gw): This entire match statement above can now be
+                    //           refactored into prepare_interned_prim_for_render.
+                    if pic.can_use_segments() {
+                        write_segment(
+                            *segment_instance_index,
+                            frame_state,
+                            &mut scratch.segments,
+                            &mut scratch.segment_instances,
+                            |request| {
+                                request.push(PremultipliedColorF::WHITE);
+                                request.push(PremultipliedColorF::WHITE);
+                                request.push([
+                                    -1.0,       // -ve means use prim rect for stretch size
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                ]);
+                            }
+                        );
+                    }
+                } else {
+                    prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                }
             }
         };
     }
