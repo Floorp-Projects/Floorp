@@ -1006,7 +1006,7 @@ class ScriptSource {
    */
   MOZ_MUST_USE bool initializeBinAST(
       JSContext* cx, UniqueChars&& buf, size_t len,
-      UniquePtr<frontend::BinASTSourceMetadata> metadata);
+      JS::MutableHandle<UniquePtr<frontend::BinASTSourceMetadata>> metadata);
 
   const uint8_t* binASTSource();
 
@@ -1159,6 +1159,9 @@ class ScriptSource {
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult codeBinASTData(XDRState<mode>* const xdr,
                                                ScriptSource* const ss);
+
+  template <typename Unit, XDRMode mode>
+  static void codeRetrievableData(ScriptSource* ss);
 
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult xdrData(XDRState<mode>* const xdr,
