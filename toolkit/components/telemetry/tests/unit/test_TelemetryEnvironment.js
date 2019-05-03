@@ -606,7 +606,6 @@ function checkSystemSection(data) {
   for (let disk of EXPECTED_HDD_FIELDS) {
     Assert.ok(check(data.system.hdd[disk].model));
     Assert.ok(check(data.system.hdd[disk].revision));
-    Assert.ok(check(data.system.hdd[disk].type));
   }
 
   let gfxData = data.system.gfx;
