@@ -114,8 +114,6 @@ class GeckoProfilerRuntime {
   uint32_t enabled_;
   void (*eventMarker_)(const char*);
 
-  UniqueChars allocProfileString(JSScript* script, JSFunction* function);
-
  public:
   explicit GeckoProfilerRuntime(JSRuntime* rt);
 
@@ -126,7 +124,10 @@ class GeckoProfilerRuntime {
   bool slowAssertionsEnabled() { return slowAssertions; }
 
   void setEventMarker(void (*fn)(const char*));
-  const char* profileString(JSScript* script, JSFunction* maybeFun);
+
+  static UniqueChars allocProfileString(JSContext* cx, JSScript* script);
+  const char* profileString(JSContext* cx, JSScript* script);
+
   void onScriptFinalized(JSScript* script);
 
   void markEvent(const char* event);
