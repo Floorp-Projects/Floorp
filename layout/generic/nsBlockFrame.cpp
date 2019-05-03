@@ -682,8 +682,8 @@ static bool RemoveFirstLine(nsLineList& aFromLines, nsFrameList& aFromFrames,
 /* virtual */
 void nsBlockFrame::MarkIntrinsicISizesDirty() {
   nsBlockFrame* dirtyBlock = static_cast<nsBlockFrame*>(FirstContinuation());
-  dirtyBlock->mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
-  dirtyBlock->mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+  dirtyBlock->mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
+  dirtyBlock->mCachedPrefISize = NS_INTRINSIC_ISIZE_UNKNOWN;
   if (!(GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)) {
     for (nsIFrame* frame = dirtyBlock; frame;
          frame = frame->GetNextContinuation()) {
@@ -702,8 +702,8 @@ void nsBlockFrame::CheckIntrinsicCacheAgainstShrinkWrapState() {
   bool inflationEnabled = !presContext->mInflationDisabledForShrinkWrap;
   if (inflationEnabled !=
       !!(GetStateBits() & NS_BLOCK_FRAME_INTRINSICS_INFLATED)) {
-    mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
-    mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
+    mCachedPrefISize = NS_INTRINSIC_ISIZE_UNKNOWN;
     if (inflationEnabled) {
       AddStateBits(NS_BLOCK_FRAME_INTRINSICS_INFLATED);
     } else {
@@ -717,15 +717,17 @@ nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
   nsIFrame* firstInFlow = FirstContinuation();
   if (firstInFlow != this) return firstInFlow->GetMinISize(aRenderingContext);
 
-  DISPLAY_MIN_INLINE_SIZE(this, mMinWidth);
+  DISPLAY_MIN_INLINE_SIZE(this, mCachedMinISize);
 
   CheckIntrinsicCacheAgainstShrinkWrapState();
 
-  if (mMinWidth != NS_INTRINSIC_WIDTH_UNKNOWN) return mMinWidth;
+  if (mCachedMinISize != NS_INTRINSIC_ISIZE_UNKNOWN) {
+    return mCachedMinISize;
+  }
 
   if (StyleDisplay()->IsContainSize()) {
-    mMinWidth = 0;
-    return mMinWidth;
+    mCachedMinISize = 0;
+    return mCachedMinISize;
   }
 
 #ifdef DEBUG
@@ -786,8 +788,8 @@ nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
   }
   data.ForceBreak();
 
-  mMinWidth = data.mPrevLines;
-  return mMinWidth;
+  mCachedMinISize = data.mPrevLines;
+  return mCachedMinISize;
 }
 
 /* virtual */
@@ -795,15 +797,17 @@ nscoord nsBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nsIFrame* firstInFlow = FirstContinuation();
   if (firstInFlow != this) return firstInFlow->GetPrefISize(aRenderingContext);
 
-  DISPLAY_PREF_INLINE_SIZE(this, mPrefWidth);
+  DISPLAY_PREF_INLINE_SIZE(this, mCachedPrefISize);
 
   CheckIntrinsicCacheAgainstShrinkWrapState();
 
-  if (mPrefWidth != NS_INTRINSIC_WIDTH_UNKNOWN) return mPrefWidth;
+  if (mCachedPrefISize != NS_INTRINSIC_ISIZE_UNKNOWN) {
+    return mCachedPrefISize;
+  }
 
   if (StyleDisplay()->IsContainSize()) {
-    mPrefWidth = 0;
-    return mPrefWidth;
+    mCachedPrefISize = 0;
+    return mCachedPrefISize;
   }
 
 #ifdef DEBUG
@@ -875,8 +879,8 @@ nscoord nsBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
   }
   data.ForceBreak();
 
-  mPrefWidth = data.mPrevLines;
-  return mPrefWidth;
+  mCachedPrefISize = data.mPrevLines;
+  return mCachedPrefISize;
 }
 
 nsRect nsBlockFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const {

@@ -1750,6 +1750,20 @@ set_config('HAVE_YASM', have_yasm)
 # Until the YASM variable is not necessary in old-configure.
 add_old_configure_assignment('YASM', have_yasm)
 
+
+# clang-cl integrated assembler support
+# ==============================================================
+@depends(target)
+def clangcl_asflags(target):
+    asflags = None
+    if target.os == 'WINNT' and target.cpu == 'aarch64':
+        asflags = ['--target=aarch64-windows-msvc']
+    return asflags
+
+
+set_config('CLANGCL_ASFLAGS', clangcl_asflags)
+
+
 # Code Coverage
 # ==============================================================
 

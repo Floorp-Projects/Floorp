@@ -359,7 +359,7 @@ static JSObject* CreateNativeHandlerFunction(JSContext* aCx,
 
   JS::Rooted<JSObject*> obj(aCx, JS_GetFunctionObject(func));
 
-  JS::ExposeObjectToActiveJS(aHolder);
+  JS::AssertObjectIsNotGray(aHolder);
   js::SetFunctionNativeReserved(obj, SLOT_NATIVEHANDLER,
                                 JS::ObjectValue(*aHolder));
   js::SetFunctionNativeReserved(obj, SLOT_NATIVEHANDLER_TASK,
@@ -479,8 +479,9 @@ void Promise::HandleException(JSContext* aCx) {
 already_AddRefed<Promise> Promise::CreateFromExisting(
     nsIGlobalObject* aGlobal, JS::Handle<JSObject*> aPromiseObj,
     PropagateUserInteraction aPropagateUserInteraction) {
-  MOZ_ASSERT(js::GetObjectCompartment(aGlobal->GetGlobalJSObject()) ==
-             js::GetObjectCompartment(aPromiseObj));
+  MOZ_ASSERT(
+      js::GetObjectCompartment(aGlobal->GetGlobalJSObjectPreserveColor()) ==
+      js::GetObjectCompartment(aPromiseObj));
   RefPtr<Promise> p = new Promise(aGlobal);
   p->mPromiseObj = aPromiseObj;
   if (aPropagateUserInteraction == ePropagateUserInteraction &&
@@ -573,14 +574,6 @@ void Promise::MaybeRejectWithClone(JSContext* aCx,
   options.wrapReflectors = true;
   StackScopedClone(cx, options, sourceScope, &value);
   MaybeReject(aCx, value);
-}
-
-JSObject* Promise::GlobalJSObject() const {
-  return mGlobal->GetGlobalJSObject();
-}
-
-JS::Compartment* Promise::Compartment() const {
-  return js::GetObjectCompartment(GlobalJSObject());
 }
 
 // A WorkerRunnable to resolve/reject the Promise on the worker thread.

@@ -1036,8 +1036,8 @@ struct nsGridContainerFrame::Tracks {
         mCanResolveLineRangeSize(false) {
     mBaselineSubtreeAlign[BaselineSharingGroup::First] = NS_STYLE_ALIGN_AUTO;
     mBaselineSubtreeAlign[BaselineSharingGroup::Last] = NS_STYLE_ALIGN_AUTO;
-    mBaseline[BaselineSharingGroup::First] = NS_INTRINSIC_WIDTH_UNKNOWN;
-    mBaseline[BaselineSharingGroup::Last] = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mBaseline[BaselineSharingGroup::First] = NS_INTRINSIC_ISIZE_UNKNOWN;
+    mBaseline[BaselineSharingGroup::Last] = NS_INTRINSIC_ISIZE_UNKNOWN;
   }
 
   void Initialize(const TrackSizingFunctions& aFunctions,
@@ -3431,7 +3431,7 @@ static nscoord ContentContribution(
   nscoord size = nsLayoutUtils::IntrinsicForAxis(
       axis, aRC, child, aConstraint, aPercentageBasis,
       aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED, aMinSizeClamp);
-  if (size == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  if (size == NS_INTRINSIC_ISIZE_UNKNOWN) {
     // We need to reflow the child to find its BSize contribution.
     // XXX this will give mostly correct results for now (until bug 1174569).
     nscoord availISize = INFINITE_ISIZE_COORD;
@@ -3893,7 +3893,7 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
           }
         }
         if (grid || nsLayoutUtils::GetFirstLineBaseline(wm, child, &baseline)) {
-          NS_ASSERTION(baseline != NS_INTRINSIC_WIDTH_UNKNOWN,
+          NS_ASSERTION(baseline != NS_INTRINSIC_ISIZE_UNKNOWN,
                        "about to use an unknown baseline");
           auto frameSize = isInlineAxis ? child->ISize(wm) : child->BSize(wm);
           auto m = child->GetLogicalUsedMargin(wm);
@@ -3914,7 +3914,7 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
           }
         }
         if (grid || nsLayoutUtils::GetLastLineBaseline(wm, child, &baseline)) {
-          NS_ASSERTION(baseline != NS_INTRINSIC_WIDTH_UNKNOWN,
+          NS_ASSERTION(baseline != NS_INTRINSIC_ISIZE_UNKNOWN,
                        "about to use an unknown baseline");
           auto frameSize = isInlineAxis ? child->ISize(wm) : child->BSize(wm);
           auto m = child->GetLogicalUsedMargin(wm);
@@ -5726,7 +5726,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
 
   for (auto& perAxisBaseline : mBaseline) {
     for (auto& baseline : perAxisBaseline) {
-      baseline = NS_INTRINSIC_WIDTH_UNKNOWN;
+      baseline = NS_INTRINSIC_ISIZE_UNKNOWN;
     }
   }
 
@@ -6214,7 +6214,7 @@ nscoord nsGridContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
 
 nscoord nsGridContainerFrame::GetMinISize(gfxContext* aRC) {
   DISPLAY_MIN_INLINE_SIZE(this, mCachedMinISize);
-  if (mCachedMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  if (mCachedMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     mCachedMinISize = StyleDisplay()->IsContainSize()
                           ? 0
                           : IntrinsicISize(aRC, nsLayoutUtils::MIN_ISIZE);
@@ -6224,7 +6224,7 @@ nscoord nsGridContainerFrame::GetMinISize(gfxContext* aRC) {
 
 nscoord nsGridContainerFrame::GetPrefISize(gfxContext* aRC) {
   DISPLAY_PREF_INLINE_SIZE(this, mCachedPrefISize);
-  if (mCachedPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  if (mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     mCachedPrefISize = StyleDisplay()->IsContainSize()
                            ? 0
                            : IntrinsicISize(aRC, nsLayoutUtils::PREF_ISIZE);
@@ -6233,11 +6233,11 @@ nscoord nsGridContainerFrame::GetPrefISize(gfxContext* aRC) {
 }
 
 void nsGridContainerFrame::MarkIntrinsicISizesDirty() {
-  mCachedMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
-  mCachedPrefISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
+  mCachedPrefISize = NS_INTRINSIC_ISIZE_UNKNOWN;
   for (auto& perAxisBaseline : mBaseline) {
     for (auto& baseline : perAxisBaseline) {
-      baseline = NS_INTRINSIC_WIDTH_UNKNOWN;
+      baseline = NS_INTRINSIC_ISIZE_UNKNOWN;
     }
   }
   nsContainerFrame::MarkIntrinsicISizesDirty();
@@ -6435,7 +6435,7 @@ void nsGridContainerFrame::CalculateBaselines(
     mBaseline[axis][BaselineSharingGroup::First] =
         ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::First, aWM,
                                           aCBSize);
-  } else if (firstBaseline == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  } else if (firstBaseline == NS_INTRINSIC_ISIZE_UNKNOWN) {
     FindItemInGridOrderResult gridOrderFirstItem = FindFirstItemInGridOrder(
         *aIter, *aGridItems,
         axis == eLogicalAxisBlock ? &GridArea::mRows : &GridArea::mCols,
@@ -6462,7 +6462,7 @@ void nsGridContainerFrame::CalculateBaselines(
     mBaseline[axis][BaselineSharingGroup::Last] =
         ::SynthesizeBaselineFromBorderBox(BaselineSharingGroup::Last, aWM,
                                           aCBSize);
-  } else if (lastBaseline == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  } else if (lastBaseline == NS_INTRINSIC_ISIZE_UNKNOWN) {
     // For finding items for the 'last baseline' we need to create a reverse
     // iterator ('aIter' is the forward iterator from the GridReflowInput).
     using Iter = ReverseCSSOrderAwareFrameIterator;

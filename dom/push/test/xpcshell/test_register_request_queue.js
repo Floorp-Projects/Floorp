@@ -44,12 +44,12 @@ add_task(async function test_register_request_queue() {
   let firstRegister = PushService.register({
     scope: "https://example.com/page/1",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
   });
   let secondRegister = PushService.register({
     scope: "https://example.com/page/1",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
   });
 
   await Promise.all([

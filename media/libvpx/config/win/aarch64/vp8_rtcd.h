@@ -147,9 +147,6 @@ void vp8_sixtap_predict8x4_c(unsigned char *src, int src_pitch, int xofst, int y
 void vp8_sixtap_predict8x8_c(unsigned char *src, int src_pitch, int xofst, int yofst, unsigned char *dst, int dst_pitch);
 #define vp8_sixtap_predict8x8 vp8_sixtap_predict8x8_c
 
-void vp8_temporal_filter_apply_c(unsigned char *frame1, unsigned int stride, unsigned char *frame2, unsigned int block_size, int strength, int filter_weight, unsigned int *accumulator, unsigned short *count);
-#define vp8_temporal_filter_apply vp8_temporal_filter_apply_c
-
 void vp8_rtcd(void);
 
 #include "vpx_config.h"

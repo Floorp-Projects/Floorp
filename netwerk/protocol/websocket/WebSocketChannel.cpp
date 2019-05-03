@@ -2782,6 +2782,8 @@ nsresult WebSocketChannel::SetupRequest() {
   LOG(("WebSocketChannel::SetupRequest: expected server key %s\n",
        mHashedSecret.get()));
 
+  mHttpChannelId = mHttpChannel->ChannelId();
+
   return NS_OK;
 }
 

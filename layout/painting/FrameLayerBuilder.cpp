@@ -6841,6 +6841,13 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
                    NSIntPixelsToAppUnits(aOffset.y, appUnitsPerDevPixel));
   boundRect.ScaleInverseRoundOut(aXScale, aYScale);
 
+  if (boundRect.IsEmpty()) {
+    // Hack! This can happen if the conversion of |aRect| to scaled and offset
+    // app units overflowed. Ideally the conversion would detect this and handle
+    // such situations gracefully. For now, do nothing.
+    return;
+  }
+
 #ifdef DEBUG
   // Tracks effect nesting level. These are used to track that every effect
   // start marker has a corresponding end marker.

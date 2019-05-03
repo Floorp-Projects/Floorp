@@ -45,7 +45,7 @@ add_task(async function test_register_case() {
   let newRecord = await PushService.register({
     scope: "https://example.net/case",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
   });
   equal(newRecord.endpoint, "https://example.com/update/case",
     "Wrong push endpoint in registration record");

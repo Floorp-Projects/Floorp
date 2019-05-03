@@ -311,7 +311,7 @@ avpriv_set_systematic_pal2
 avutil_configuration
 avutil_license
 avutil_version
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(_ARM64_)
 avpriv_emms_asm
 #endif
 avpriv_slicethread_create

@@ -1557,6 +1557,8 @@ with only_when(compile_environment):
         flags = None
         if target.kernel == 'WINNT' and target.cpu == 'x86':
             flags = ['-DPIC', '-DWIN32']
+        elif target.kernel == 'WINNT' and target.cpu == 'aarch64':
+            flags = ['-DPIC', '-DWIN64']
         elif target.cpu == 'x86_64':
             if target.kernel == 'Darwin':
                 flags = ['-D__x86_64__', '-DPIC', '-DMACHO']
@@ -1593,7 +1595,8 @@ with only_when(compile_environment | artifact_builds):
     def ffvpx(yasm_has_avx2, libav_fft, vpx_as_flags, target):
         enable = flac_only = use_yasm = False
         flags = []
-        if target.cpu in ('x86', 'x86_64'):
+        if target.cpu in ('x86', 'x86_64') or \
+                target.cpu == 'aarch64' and target.kernel == 'WINNT':
             enable = True
             if libav_fft and libav_fft.flags:
                 use_yasm = True
@@ -1602,6 +1605,8 @@ with only_when(compile_environment | artifact_builds):
                     if target.cpu == 'x86':
                         # 32-bit windows need to prefix symbols with an underscore.
                         flags.extend(('-DPREFIX', '-Pconfig_win32.asm'))
+                    elif target.cpu == 'aarch64':
+                        use_yasm = False
                     else:
                         flags.append('-Pconfig_win64.asm')
                 elif target.kernel == 'Darwin':

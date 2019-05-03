@@ -53,16 +53,14 @@ function run_test()
          .getService(Ci.nsIPermissionManager);
 
   let entries = [
-    { origin: 'http://example.com', originAttributes: { appId: 1 } },
-    { origin: 'http://example.com', originAttributes: { appId: 1, inIsolatedMozBrowser: true } },
     { origin: 'http://example.com', originAttributes: {} },
-    { origin: 'http://example.com', originAttributes: { appId: 2 } },
+    { origin: 'http://example.com', originAttributes: { inIsolatedMozBrowser: true } },
   ];
 
-  // In that case, all permissions from app 1 should be removed but not the other ones.
-  test(entries, getData({appId: 1}), [ pm.UNKNOWN_ACTION, pm.UNKNOWN_ACTION, pm.ALLOW_ACTION, pm.ALLOW_ACTION ]);
+  // In that case, all permissions should be removed.
+  test(entries, getData({}), [ pm.UNKNOWN_ACTION, pm.UNKNOWN_ACTION, pm.ALLOW_ACTION, pm.ALLOW_ACTION ]);
 
-  // In that case, only the permissions of app 1 related to a browserElement should be removed.
+  // In that case, only the permissions related to a browserElement should be removed.
   // All the other permissions should stay.
-  test(entries, getData({appId: 1, inIsolatedMozBrowser: true}), [ pm.ALLOW_ACTION, pm.UNKNOWN_ACTION, pm.ALLOW_ACTION, pm.ALLOW_ACTION ]);
+  test(entries, getData({ inIsolatedMozBrowser: true}), [ pm.ALLOW_ACTION, pm.UNKNOWN_ACTION, pm.ALLOW_ACTION, pm.ALLOW_ACTION ]);
 }

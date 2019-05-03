@@ -419,9 +419,12 @@ pref("permissions.desktop-notification.postPrompt.enabled", false);
 
 pref("permissions.postPrompt.animate", true);
 
-// This is meant to be enabled only for studies, not for
-// permanent data collection on any channel.
+// This is primarily meant to be enabled for studies.
+#ifdef NIGHTLY_BUILD
+pref("permissions.eventTelemetry.enabled", true);
+#else
 pref("permissions.eventTelemetry.enabled", false);
+#endif
 
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window

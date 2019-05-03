@@ -69,6 +69,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_IMETHOD SetServerParameters(
       nsITransportProvider* aProvider,
       const nsACString& aNegotiatedExtensions) override;
+  NS_IMETHOD GetHttpChannelId(uint64_t* aHttpChannelId) override;
 
   // Off main thread URI access.
   virtual void GetEffectiveURL(nsAString& aEffectiveURL) const = 0;
@@ -115,6 +116,8 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   uint32_t mPingResponseTimeout; /* milliseconds */
 
   uint32_t mSerial;
+
+  uint64_t mHttpChannelId;
 };
 
 }  // namespace net

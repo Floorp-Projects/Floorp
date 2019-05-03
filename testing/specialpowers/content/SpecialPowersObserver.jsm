@@ -219,13 +219,13 @@ SpecialPowersObserver.prototype._registerObservers = {
         var permission = aSubject.QueryInterface(Ci.nsIPermission);
 
         // specialPowersAPI will consume this value, and it is used as a
-        // fake permission, but only type and principal.appId will be used.
+        // fake permission, but only type will be used.
         //
         // We need to ensure that it looks the same as a real permission,
         // so we fake these properties.
         msg.permission = {
           principal: {
-            originAttributes: {appId: permission.principal.appId},
+            originAttributes: {},
           },
           type: permission.type,
         };

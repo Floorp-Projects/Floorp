@@ -199,10 +199,9 @@ nsresult GetPrincipalFromOrigin(const nsACString& aOrigin,
   return NS_OK;
 }
 
-nsresult GetPrincipal(nsIURI* aURI, uint32_t aAppId,
-                      bool aIsInIsolatedMozBrowserElement,
+nsresult GetPrincipal(nsIURI* aURI, bool aIsInIsolatedMozBrowserElement,
                       nsIPrincipal** aPrincipal) {
-  mozilla::OriginAttributes attrs(aAppId, aIsInIsolatedMozBrowserElement);
+  mozilla::OriginAttributes attrs(aIsInIsolatedMozBrowserElement);
   nsCOMPtr<nsIPrincipal> principal =
       mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
@@ -465,8 +464,7 @@ class MOZ_STACK_CLASS UpgradeIPHostToOriginDB final
 nsresult UpgradeHostToOriginAndInsert(
     const nsACString& aHost, const nsCString& aType, uint32_t aPermission,
     uint32_t aExpireType, int64_t aExpireTime, int64_t aModificationTime,
-    uint32_t aAppId, bool aIsInIsolatedMozBrowserElement,
-    UpgradeHostToOriginHelper* aHelper) {
+    bool aIsInIsolatedMozBrowserElement, UpgradeHostToOriginHelper* aHelper) {
   if (aHost.EqualsLiteral("<file>")) {
     // We no longer support the magic host <file>
     NS_WARNING(
@@ -491,7 +489,7 @@ nsresult UpgradeHostToOriginAndInsert(
     }
 
     nsCOMPtr<nsIPrincipal> principal;
-    rv = GetPrincipal(uri, aAppId, aIsInIsolatedMozBrowserElement,
+    rv = GetPrincipal(uri, aIsInIsolatedMozBrowserElement,
                       getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -606,7 +604,7 @@ nsresult UpgradeHostToOriginAndInsert(
 
       // We now have a URI which we can make a nsIPrincipal out of
       nsCOMPtr<nsIPrincipal> principal;
-      rv = GetPrincipal(uri, aAppId, aIsInIsolatedMozBrowserElement,
+      rv = GetPrincipal(uri, aIsInIsolatedMozBrowserElement,
                         getter_AddRefs(principal));
       if (NS_WARN_IF(NS_FAILED(rv))) continue;
 
@@ -654,7 +652,7 @@ nsresult UpgradeHostToOriginAndInsert(
                    NS_LITERAL_CSTRING("http://") + hostSegment);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = GetPrincipal(uri, aAppId, aIsInIsolatedMozBrowserElement,
+    rv = GetPrincipal(uri, aIsInIsolatedMozBrowserElement,
                       getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -669,7 +667,7 @@ nsresult UpgradeHostToOriginAndInsert(
                    NS_LITERAL_CSTRING("https://") + hostSegment);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = GetPrincipal(uri, aAppId, aIsInIsolatedMozBrowserElement,
+    rv = GetPrincipal(uri, aIsInIsolatedMozBrowserElement,
                       getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -889,7 +887,7 @@ void nsPermissionManager::Startup() {
 // nsPermissionManager Implementation
 
 #define PERMISSIONS_FILE_NAME "permissions.sqlite"
-#define HOSTS_SCHEMA_VERSION 9
+#define HOSTS_SCHEMA_VERSION 10
 
 #define HOSTPERM_FILE_NAME "hostperm.1"
 
@@ -1305,7 +1303,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
           rv = mDBConn->CreateStatement(
               NS_LITERAL_CSTRING(
                   "SELECT host, type, permission, expireType, expireTime, "
-                  "modificationTime, appId, isInBrowserElement FROM moz_hosts"),
+                  "modificationTime, isInBrowserElement FROM moz_hosts"),
               getter_AddRefs(stmt));
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1315,7 +1313,6 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
           uint32_t expireType;
           int64_t expireTime;
           int64_t modificationTime;
-          uint32_t appId;
           bool isInBrowserElement;
           bool hasResult;
 
@@ -1335,19 +1332,14 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
             expireType = stmt->AsInt32(3);
             expireTime = stmt->AsInt64(4);
             modificationTime = stmt->AsInt64(5);
-            if (NS_WARN_IF(stmt->AsInt64(6) < 0)) {
-              migrationError = true;
-              continue;
-            }
-            appId = static_cast<uint32_t>(stmt->AsInt64(6));
-            isInBrowserElement = static_cast<bool>(stmt->AsInt32(7));
+            isInBrowserElement = static_cast<bool>(stmt->AsInt32(6));
 
             // Perform the meat of the migration by deferring to the
             // UpgradeHostToOriginAndInsert function.
             UpgradeHostToOriginDBMigration upHelper(mDBConn, &id);
             rv = UpgradeHostToOriginAndInsert(
                 host, type, permission, expireType, expireTime,
-                modificationTime, appId, isInBrowserElement, &upHelper);
+                modificationTime, isInBrowserElement, &upHelper);
             if (NS_FAILED(rv)) {
               NS_WARNING(
                   "Unexpected failure when upgrading migrating permission "
@@ -1484,7 +1476,7 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
           rv = mDBConn->CreateStatement(
               NS_LITERAL_CSTRING(
                   "SELECT host, type, permission, expireType, expireTime, "
-                  "modificationTime, appId, isInBrowserElement FROM moz_hosts"),
+                  "modificationTime, isInBrowserElement FROM moz_hosts"),
               getter_AddRefs(stmt));
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1504,7 +1496,6 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
           uint32_t expireType;
           int64_t expireTime;
           int64_t modificationTime;
-          uint32_t appId;
           bool isInBrowserElement;
 
           while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
@@ -1530,18 +1521,14 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
             expireType = stmt->AsInt32(3);
             expireTime = stmt->AsInt64(4);
             modificationTime = stmt->AsInt64(5);
-            if (NS_WARN_IF(stmt->AsInt64(6) < 0)) {
-              continue;
-            }
-            appId = static_cast<uint32_t>(stmt->AsInt64(6));
-            isInBrowserElement = static_cast<bool>(stmt->AsInt32(7));
+            isInBrowserElement = static_cast<bool>(stmt->AsInt32(6));
 
             // Perform the meat of the migration by deferring to the
             // UpgradeHostToOriginAndInsert function.
             UpgradeIPHostToOriginDB upHelper(mDBConn, &id);
             rv = UpgradeHostToOriginAndInsert(
                 host, type, permission, expireType, expireTime,
-                modificationTime, appId, isInBrowserElement, &upHelper);
+                modificationTime, isInBrowserElement, &upHelper);
             if (NS_FAILED(rv)) {
               NS_WARNING(
                   "Unexpected failure when upgrading migrating permission "
@@ -1582,6 +1569,64 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
         }
 
         rv = mDBConn->SetSchemaVersion(9);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+        // fall through to the next upgrade
+        MOZ_FALLTHROUGH;
+
+      // Version 10 removes appId from moz_hosts. SQLite doesn't support the
+      // dropping of columns from existing tables. We need to create a temporary
+      // table, copy the data, drop the old table, rename the new one.
+      case 9: {
+        rv = mDBConn->BeginTransaction();
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        bool tableExists = false;
+        mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts_v9"), &tableExists);
+        if (tableExists) {
+          NS_WARNING(
+              "The temporary database moz_hosts_v9 already exists, dropping "
+              "it.");
+          rv = mDBConn->ExecuteSimpleSQL(
+              NS_LITERAL_CSTRING("DROP TABLE moz_hosts_v9"));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        rv = mDBConn->ExecuteSimpleSQL(
+            NS_LITERAL_CSTRING("CREATE TABLE moz_hosts_v9 ("
+                               " id INTEGER PRIMARY KEY"
+                               ",host TEXT"
+                               ",type TEXT"
+                               ",permission INTEGER"
+                               ",expireType INTEGER"
+                               ",expireTime INTEGER"
+                               ",modificationTime INTEGER"
+                               ",isInBrowserElement INTEGER"
+                               ")"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "INSERT INTO moz_hosts_v9 "
+            "(id, host, type, permission, expireType, "
+            "expireTime, modificationTime, isInBrowserElement) "
+            "SELECT id, host, type, permission, expireType, expireTime, "
+            "modificationTime, isInBrowserElement FROM moz_hosts WHERE appId = "
+            "0"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->ExecuteSimpleSQL(
+            NS_LITERAL_CSTRING("DROP TABLE moz_hosts"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->ExecuteSimpleSQL(
+            NS_LITERAL_CSTRING("ALTER TABLE moz_hosts_v9 RENAME TO moz_hosts"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->SetSchemaVersion(10);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = mDBConn->CommitTransaction();
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -1680,7 +1725,6 @@ nsresult nsPermissionManager::CreateTable() {
                          ",expireType INTEGER"
                          ",expireTime INTEGER"
                          ",modificationTime INTEGER"
-                         ",appId INTEGER"
                          ",isInBrowserElement INTEGER"
                          ")"));
 }
@@ -2416,7 +2460,7 @@ nsresult nsPermissionManager::CommonTestPermissionInternal(
   return NS_OK;
 }
 
-// Returns PermissionHashKey for a given { host, appId, isInBrowserElement }
+// Returns PermissionHashKey for a given { host, isInBrowserElement }
 // tuple. This is not simply using PermissionKey because we will walk-up domains
 // in case of |host| contains sub-domains. Returns null if nothing found. Also
 // accepts host on the format "<foo>". This will perform an exact match lookup
@@ -2469,7 +2513,7 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
   return nullptr;
 }
 
-// Returns PermissionHashKey for a given { host, appId, isInBrowserElement }
+// Returns PermissionHashKey for a given { host, isInBrowserElement }
 // tuple. This is not simply using PermissionKey because we will walk-up domains
 // in case of |host| contains sub-domains. Returns null if nothing found. Also
 // accepts host on the format "<foo>". This will perform an exact match lookup
@@ -3004,10 +3048,10 @@ nsresult nsPermissionManager::_DoImport(nsIInputStream* inputStream,
       int64_t modificationTime = 0;
 
       UpgradeHostToOriginHostfileImport upHelper(this, operation, id);
-      error = UpgradeHostToOriginAndInsert(
-          lineArray[3], lineArray[1], permission,
-          nsIPermissionManager::EXPIRE_NEVER, 0, modificationTime,
-          nsIScriptSecurityManager::NO_APP_ID, false, &upHelper);
+      error =
+          UpgradeHostToOriginAndInsert(lineArray[3], lineArray[1], permission,
+                                       nsIPermissionManager::EXPIRE_NEVER, 0,
+                                       modificationTime, false, &upHelper);
       if (NS_FAILED(error)) {
         NS_WARNING("There was a problem importing a host permission");
       }

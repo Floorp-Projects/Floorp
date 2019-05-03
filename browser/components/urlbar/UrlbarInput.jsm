@@ -166,7 +166,9 @@ class UrlbarInput {
     this.view.panel.addEventListener("popupshowing", this);
     this.view.panel.addEventListener("popuphidden", this);
 
-    this.inputField.controllers.insertControllerAt(0, new CopyCutController(this));
+    this._copyCutController = new CopyCutController(this);
+    this.inputField.controllers.insertControllerAt(0, this._copyCutController);
+
     this._initPasteAndGo();
 
     // Tracks IME composition.
@@ -187,7 +189,20 @@ class UrlbarInput {
 
     this.view.panel.remove();
 
-    this.inputField.controllers.removeControllerAt(0);
+    // When uninit is called due to exiting the browser's customize mode,
+    // this.inputField.controllers is not the original list of controllers, and
+    // it doesn't contain CopyCutController.  That's why removeCopyCutController
+    // must be called when entering customize mode.  If uninit ends up getting
+    // called by something else though, try to remove the controller now.
+    try {
+      // If removeCopyCutController throws, then the controller isn't in the
+      // list of the input's controllers, and the consumer should have called
+      // removeCopyCutController at some earlier point, e.g., when customize
+      // mode was entered.
+      this.removeCopyCutController();
+    } catch (ex) {
+      Cu.reportError("Leaking UrlbarInput._copyCutController! You should have called removeCopyCutController!");
+    }
 
     if (Object.getOwnPropertyDescriptor(this, "valueFormatter").get) {
       this.valueFormatter.uninit();
@@ -201,6 +216,17 @@ class UrlbarInput {
     delete this.view;
     delete this.controller;
     delete this.textbox;
+  }
+
+  /**
+   * Removes the CopyCutController from the input's controllers list.  This must
+   * be called when the browser's customize mode is entered.
+   */
+  removeCopyCutController() {
+    if (this._copyCutController) {
+      this.inputField.controllers.removeController(this._copyCutController);
+      delete this._copyCutController;
+    }
   }
 
   /**

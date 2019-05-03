@@ -117,8 +117,10 @@ load 1236639.html
 test-pref(media.navigator.permission.disabled,true) test-pref(media.getusermedia.insecure.enabled,true) test-pref(media.getusermedia.insecure.enabled,true) load 1388372.html
 load 1494073.html
 skip-if(Android) load 1526044.html # Bug 1528391
+load encrypted-track-with-bad-sample-description-index.mp4 # Bug 1533211
+load encrypted-track-without-tenc.mp4 # Bug 1533215
 load 1533909.html
 load 1538727.html
 load empty-samples.webm # Bug 1540580
 test-pref(media.autoplay.block-webaudio,false) load 1545133.html
-load track-with-zero-dimensions.mp4
+load track-with-zero-dimensions.mp4 # Bug 1542539

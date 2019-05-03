@@ -11,6 +11,7 @@ const { createFactory } = require("devtools/client/shared/vendor/react");
 let { MessageContainer, getMessageComponent } = require("devtools/client/webconsole/components/MessageContainer");
 MessageContainer = createFactory(MessageContainer);
 const ConsoleApiCall = require("devtools/client/webconsole/components/message-types/ConsoleApiCall");
+const CSSWarning = require("devtools/client/webconsole/components/message-types/CSSWarning");
 const EvaluationResult = require("devtools/client/webconsole/components/message-types/EvaluationResult");
 const PageError = require("devtools/client/webconsole/components/message-types/PageError");
 
@@ -43,7 +44,7 @@ describe("MessageContainer component:", () => {
         message: stubPreparedMessages.get("ReferenceError: asdf is not defined"),
       },
       {
-        component: PageError,
+        component: CSSWarning,
         message: stubPreparedMessages.get(
           "Unknown property ‘such-unknown-property’.  Declaration dropped."
         ),

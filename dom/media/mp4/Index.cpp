@@ -131,9 +131,8 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
   // treat it as unencrypted, even if other fragments may be encrypted.
   if (sampleDescriptionEntry->mIsEncryptedEntry) {
     if (!moofParser->mSinf.IsValid()) {
-      MOZ_ASSERT_UNREACHABLE(
-          "Sample description entry reports sample is encrypted, but no "
-          "sinf was parsed!");
+      // The sample description entry says this sample is encrypted, but we
+      // don't have a relevant sinf box, this shouldn't happen, so bail.
       return nullptr;
     }
     if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cenc")) {
@@ -255,9 +254,7 @@ SampleDescriptionEntry* SampleIterator::GetSampleDescriptionEntry() {
   FallibleTArray<SampleDescriptionEntry>& sampleDescriptions =
       mIndex->mMoofParser->mSampleDescriptions;
   if (sampleDescriptionIndex >= sampleDescriptions.Length()) {
-    MOZ_ASSERT_UNREACHABLE(
-        "Should always be able to find the appropriate sample description! "
-        "Malformed mp4?");
+    // The sample description index is invalid, the mp4 is malformed. Bail out.
     return nullptr;
   }
   return &sampleDescriptions[sampleDescriptionIndex];

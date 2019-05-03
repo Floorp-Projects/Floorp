@@ -42,6 +42,13 @@ JSObject* BackstagePass::GetGlobalJSObject() {
   return nullptr;
 }
 
+JSObject* BackstagePass::GetGlobalJSObjectPreserveColor() const {
+  if (mWrapper) {
+    return mWrapper->GetFlatJSObjectPreserveColor();
+  }
+  return nullptr;
+}
+
 void BackstagePass::SetGlobalObject(JSObject* global) {
   nsISupports* p = XPCWrappedNative::Get(global);
   MOZ_ASSERT(p);

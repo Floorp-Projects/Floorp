@@ -39,6 +39,10 @@ class RemoteAgentClass {
       throw new Error("Remote agent can only be instantiated from the parent process");
     }
 
+    if (this.server) {
+      return;
+    }
+
     this.server = new HttpServer();
     this.targets = new Targets();
 
@@ -67,7 +71,7 @@ class RemoteAgentClass {
     return !!this.server && !this.server._socketClosed;
   }
 
-  listen(address) {
+  async listen(address) {
     if (!(address instanceof Ci.nsIURI)) {
       throw new TypeError(`Expected nsIURI: ${address}`);
     }
@@ -85,6 +89,10 @@ class RemoteAgentClass {
     if (this.listening) {
       return;
     }
+
+    this.init();
+
+    await this.tabs.start();
 
     try {
       this.server._start(port, host);
@@ -185,7 +193,6 @@ class RemoteAgentClass {
     this.init();
 
     await Observer.once("sessionstore-windows-restored");
-    await this.tabs.start();
 
     try {
       this.listen(addr);

@@ -148,25 +148,39 @@
   <checkbox id="networkProxySOCKSRemoteDNS"
             preference="network.proxy.socks_remote_dns"
             data-l10n-id="connection-proxy-socks-remote-dns" />
-  <checkbox id="networkDnsOverHttps"
+
+  <groupbox>
+    <checkbox id="networkDnsOverHttps"
             data-l10n-id="connection-dns-over-https"
             preference="network.trr.mode"
             onsyncfrompreference="return gConnectionsDialog.readDnsOverHttpsMode();"
-            onsynctopreference="return gConnectionsDialog.writeDnsOverHttpsMode();"
-            oncommand="gConnectionsDialog.updateDnsOverHttpsUI();"/>
-  <vbox class="indent" flex="1">
-    <radiogroup id="DnsOverHttpsUrlRadioGroup" orient="vertical">
-      <radio id="defaultDnsOverHttpsUrlRadio"
-             data-l10n-id="connection-dns-over-https-url-default"
-             data-l10n-args='{"url":""}'
-             preference="network.trr.uri"
-             oncommand="gConnectionsDialog.updateDnsOverHttpsUI();"/>
-      <hbox>
-        <radio id="customDnsOverHttpsUrlRadio"
-               data-l10n-id="connection-dns-over-https-url-custom"
-               oncommand="gConnectionsDialog.updateDnsOverHttpsUI();"/>
-        <textbox id="customDnsOverHttpsInput" flex="1" preference="network.trr.custom_uri"/>
-      </hbox>
-    </radiogroup>
-  </vbox>
+            onsynctopreference="return gConnectionsDialog.writeDnsOverHttpsMode();"/>
+
+    <grid class="indent" flex="1">
+      <columns>
+        <column></column>
+        <column flex="1"></column>
+      </columns>
+      <rows>
+        <row align="center">
+          <hbox pack="end">
+            <label id="networkDnsOverHttpsResolverChoicesLabel"
+                   data-l10n-id="connection-dns-over-https-url-resolver"
+                   control="networkDnsOverHttpsResolverChoices"/>
+          </hbox>
+          <menulist id="networkDnsOverHttpsResolverChoices"
+                    oncommand="gConnectionsDialog.updateDnsOverHttpsUI()"></menulist>
+        </row>
+        <row align="center" id="customDnsOverHttpsContainer" hidden="true">
+          <hbox pack="end">
+            <label id="networkCustomDnsOverHttpsInputLabel"
+                   data-l10n-id="connection-dns-over-https-custom-label"
+                   control="networkCustomDnsOverHttpsInput"/>
+          </hbox>
+          <textbox id="networkCustomDnsOverHttpsInput" flex="1"
+                   preference="network.trr.custom_uri"/>
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
 </dialog>

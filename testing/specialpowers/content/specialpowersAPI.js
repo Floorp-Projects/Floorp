@@ -979,7 +979,6 @@ SpecialPowersAPI.prototype = {
           for (var j = 0; j < undos.length; j++) {
             var undo = undos[j];
             if (undo.op == this._obsDataMap[aData] &&
-                undo.principal.originAttributes.appId == permission.principal.originAttributes.appId &&
                 undo.type == permission.type) {
               // Remove this undo item if it has been done by others(not
               // specialpowers itself.)

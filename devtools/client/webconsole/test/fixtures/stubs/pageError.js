@@ -72,6 +72,7 @@ stubPreparedMessages.set(`ReferenceError: asdf is not defined`, new ConsoleMessa
   "groupId": null,
   "errorMessageName": "JSMSG_NOT_DEFINED",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
+  "cssSelectors": "",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
@@ -118,6 +119,7 @@ stubPreparedMessages.set(`SyntaxError: redeclaration of let a`, new ConsoleMessa
   "groupId": null,
   "errorMessageName": "JSMSG_REDECLARED_VAR",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Redeclared_parameter?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
+  "cssSelectors": "",
   "userProvidedStyles": null,
   "notes": [
     {
@@ -185,6 +187,7 @@ stubPreparedMessages.set(`TypeError longString message`, new ConsoleMessage({
   },
   "groupId": null,
   "errorMessageName": "",
+  "cssSelectors": "",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
@@ -237,6 +240,7 @@ stubPreparedMessages.set(`throw ""`, new ConsoleMessage({
   },
   "groupId": null,
   "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+  "cssSelectors": "",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
@@ -289,6 +293,7 @@ stubPreparedMessages.set(`throw "tomato"`, new ConsoleMessage({
   },
   "groupId": null,
   "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
+  "cssSelectors": "",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
@@ -354,7 +359,8 @@ stubPackets.set(`ReferenceError: asdf is not defined`, {
       }
     ],
     "notes": null,
-    "chromeContext": false
+    "chromeContext": false,
+    "cssSelectors": ""
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"
@@ -406,7 +412,8 @@ stubPackets.set(`SyntaxError: redeclaration of let a`, {
         }
       }
     ],
-    "chromeContext": false
+    "chromeContext": false,
+    "cssSelectors": ""
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"
@@ -459,7 +466,8 @@ stubPackets.set(`TypeError longString message`, {
       }
     ],
     "notes": null,
-    "chromeContext": false
+    "chromeContext": false,
+    "cssSelectors": ""
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"
@@ -507,7 +515,8 @@ stubPackets.set(`throw ""`, {
       }
     ],
     "notes": null,
-    "chromeContext": false
+    "chromeContext": false,
+    "cssSelectors": ""
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"
@@ -555,7 +564,8 @@ stubPackets.set(`throw "tomato"`, {
       }
     ],
     "notes": null,
-    "chromeContext": false
+    "chromeContext": false,
+    "cssSelectors": ""
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"

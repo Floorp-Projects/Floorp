@@ -1670,9 +1670,7 @@ inline JSObject* FindAssociatedGlobal(JSContext* cx,
   }
 
   MOZ_ASSERT(JS_IsGlobalObject(global));
-  // This object could be gray if the nsIGlobalObject is the only thing keeping
-  // it alive.
-  JS::ExposeObjectToActiveJS(global);
+  JS::AssertObjectIsNotGray(global);
   return global;
 }
 
@@ -2081,21 +2079,24 @@ void DoTraceSequence(JSTracer* trc, InfallibleTArray<T>& seq) {
 template <typename T>
 class MOZ_RAII SequenceRooter final : private JS::CustomAutoRooter {
  public:
-  SequenceRooter(JSContext* aCx,
+  template <typename CX>
+  SequenceRooter(const CX& cx,
                  FallibleTArray<T>* aSequence MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
         mFallibleArray(aSequence),
         mSequenceType(eFallibleArray) {}
 
-  SequenceRooter(JSContext* aCx,
+  template <typename CX>
+  SequenceRooter(const CX& cx,
                  InfallibleTArray<T>* aSequence MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
         mInfallibleArray(aSequence),
         mSequenceType(eInfallibleArray) {}
 
-  SequenceRooter(JSContext* aCx, Nullable<nsTArray<T>>* aSequence
-                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+  template <typename CX>
+  SequenceRooter(const CX& cx, Nullable<nsTArray<T>>* aSequence
+                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
         mNullableArray(aSequence),
         mSequenceType(eNullableArray) {}
 
@@ -2128,15 +2129,17 @@ class MOZ_RAII SequenceRooter final : private JS::CustomAutoRooter {
 template <typename K, typename V>
 class MOZ_RAII RecordRooter final : private JS::CustomAutoRooter {
  public:
-  RecordRooter(JSContext* aCx,
+  template <typename CX>
+  RecordRooter(const CX& cx,
                Record<K, V>* aRecord MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
         mRecord(aRecord),
         mRecordType(eRecord) {}
 
-  RecordRooter(JSContext* aCx,
+  template <typename CX>
+  RecordRooter(const CX& cx,
                Nullable<Record<K, V>>* aRecord MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::CustomAutoRooter(aCx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
+      : JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT),
         mNullableRecord(aRecord),
         mRecordType(eNullableRecord) {}
 
@@ -2165,7 +2168,8 @@ class MOZ_RAII RecordRooter final : private JS::CustomAutoRooter {
 template <typename T>
 class MOZ_RAII RootedUnion : public T, private JS::CustomAutoRooter {
  public:
-  explicit RootedUnion(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  template <typename CX>
+  explicit RootedUnion(const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : T(),
         JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}
 
@@ -2176,7 +2180,8 @@ template <typename T>
 class MOZ_STACK_CLASS NullableRootedUnion : public Nullable<T>,
                                             private JS::CustomAutoRooter {
  public:
-  explicit NullableRootedUnion(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  template <typename CX>
+  explicit NullableRootedUnion(const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : Nullable<T>(),
         JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT) {}
 

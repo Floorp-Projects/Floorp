@@ -548,7 +548,7 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   bool IsIsolated();
 
-  const nsCString &GetTopWindowOrigin();
+  const nsCString& GetTopWindowOrigin();
 
   already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();
 
@@ -697,7 +697,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   // true iff there is AutoRedirectVetoNotifier on the stack
   uint32_t mHasAutoRedirectVetoNotifier : 1;
   // consumers set this to true to use cache pinning, this has effect
-  // only when the channel is in an app context (load context has an appid)
+  // only when the channel is in an app context
   uint32_t mPinCacheContent : 1;
   // True if CORS preflight has been performed
   uint32_t mIsCorsPreflightDone : 1;

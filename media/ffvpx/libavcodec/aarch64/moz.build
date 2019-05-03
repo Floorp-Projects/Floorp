@@ -1,0 +1,47 @@
+## -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+## vim: set filetype=python:
+## This Source Code Form is subject to the terms of the Mozilla Public
+## License, v. 2.0. If a copy of the MPL was not distributed with this
+## file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    'h264chroma_init_aarch64.c',
+    'h264cmc_neon.S',
+    'h264dsp_init_aarch64.c',
+    'h264dsp_neon.S',
+    'h264idct_neon.S',
+    'h264pred_init.c',
+    'h264pred_neon.S',
+    'hpeldsp_init_aarch64.c',
+    'hpeldsp_neon.S',
+    'idctdsp_init_aarch64.c',
+    'mdct_neon.S',
+    'neon.S',
+    'simple_idct_neon.S',
+    'videodsp.S',
+    'videodsp_init.c',
+    'vp9dsp_init_10bpp_aarch64.c',
+    'vp9dsp_init_12bpp_aarch64.c',
+    'vp9dsp_init_16bpp_aarch64_template.c',
+    'vp9dsp_init_aarch64.c',
+    'vp9itxfm_16bpp_neon.S',
+    'vp9itxfm_neon.S',
+    'vp9lpf_16bpp_neon.S',
+    'vp9lpf_neon.S',
+    'vp9mc_16bpp_neon.S',
+    'vp9mc_neon.S',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    USE_INTEGRATED_CLANGCL_AS = True
+    DEFINES['EXTERN_ASM'] = ''
+
+if CONFIG['MOZ_LIBAV_FFT']:
+    SOURCES += [
+        'fft_init_aarch64.c',
+        'fft_neon.S',
+    ]
+
+FINAL_LIBRARY = 'mozavcodec'
+
+include('/media/ffvpx/ffvpxcommon.mozbuild')

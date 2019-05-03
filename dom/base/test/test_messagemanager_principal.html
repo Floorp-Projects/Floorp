@@ -24,9 +24,6 @@
       addMessageListener("test:ipcMessage", function(message) {
         sendAsyncMessage(message.name, "principal: " + (message.principal ? "OK" : "KO"));
 
-        sendAsyncMessage(message.name, "principal.appId: " +
-                         ("appId" in message.principal ? "OK" : "KO"));
-
         sendAsyncMessage(message.name, "principal.origin: " +
                          ("origin" in message.principal ? "OK" : "KO"));
 

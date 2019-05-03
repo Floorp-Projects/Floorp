@@ -757,10 +757,6 @@ class JitcodeGlobalEntry {
     return compare(*this, other);
   }
 
-  // Compute a profiling string for a given script.
-  static char* createScriptString(JSContext* cx, JSScript* script,
-                                  size_t* length = nullptr);
-
   bool hasTrackedOptimizations() const {
     switch (kind()) {
       case Ion:

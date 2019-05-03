@@ -3,6 +3,30 @@
 
 "use strict";
 
+const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
+const {RemoteAgentError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
+
+/**
+ * Override `add_task` in order to translate chrome-remote-interface exceptions
+ * into something that logs better errors on stdout
+ */
+const original_add_task = add_task.bind(this);
+this.add_task = function(test) {
+  original_add_task(async function() {
+    try {
+      await test();
+    } catch (e) {
+      // Display better error message with the server side stacktrace
+      // if an error happened on the server side:
+      if (e.response) {
+        throw RemoteAgentError.fromJSON(e.response);
+      } else {
+        throw e;
+      }
+    }
+  });
+};
+
 const CRI_URI = "http://example.com/browser/remote/test/browser/chrome-remote-interface.js";
 
 /**

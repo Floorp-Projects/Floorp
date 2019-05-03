@@ -9,6 +9,8 @@
 if CONFIG['FFVPX_ASFLAGS']:
     if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64':
         DIRS += ['x86']
+    elif CONFIG['CPU_ARCH'] == 'aarch64':
+        DIRS += ['aarch64']
     elif CONFIG['CPU_ARCH'] == 'arm':
         DIRS += ['arm']
 
