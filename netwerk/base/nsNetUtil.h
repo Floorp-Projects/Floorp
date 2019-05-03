@@ -351,7 +351,7 @@ nsresult NS_NewLoadGroup(nsILoadGroup** aResult, nsIPrincipal* aPrincipal);
 
 // Determine if the given loadGroup/principal pair will produce a principal
 // with similar permissions when passed to NS_NewChannel().  This checks for
-// things like making sure the appId and browser element flags match.  Without
+// things like making sure the browser element flag matches.  Without
 // an appropriate load group these values can be lost when getting the result
 // principal back out of the channel.  Null principals are also always allowed
 // as they do not have permissions to actually use the load group.
@@ -630,11 +630,6 @@ bool NS_IsSafeTopLevelNav(nsIChannel* aChannel);
  * cross origin navigation.
  */
 bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI);
-
-// Constants duplicated from nsIScriptSecurityManager so we avoid having necko
-// know about script security manager.
-#define NECKO_NO_APP_ID 0
-#define NECKO_UNKNOWN_APP_ID UINT32_MAX
 
 // Unique first-party domain for separating the safebrowsing cookie.
 // Note if this value is changed, code in test_cookiejars_safebrowsing.js and
@@ -929,9 +924,9 @@ bool NS_ShouldClassifyChannel(nsIChannel* aChannel);
 /**
  * Helper to set the blocking reason on loadinfo of the channel.
  */
-nsresult NS_SetRequestBlockingReason(nsIChannel *channel, uint32_t reason);
-nsresult NS_SetRequestBlockingReason(nsILoadInfo *loadInfo, uint32_t reason);
-nsresult NS_SetRequestBlockingReasonIfNull(nsILoadInfo *loadInfo,
+nsresult NS_SetRequestBlockingReason(nsIChannel* channel, uint32_t reason);
+nsresult NS_SetRequestBlockingReason(nsILoadInfo* loadInfo, uint32_t reason);
+nsresult NS_SetRequestBlockingReasonIfNull(nsILoadInfo* loadInfo,
                                            uint32_t reason);
 
 namespace mozilla {

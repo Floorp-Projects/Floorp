@@ -232,7 +232,7 @@ class nsDocShell final : public nsDocLoader,
   NS_IMETHOD OnLeaveLink() override;
 
   // Don't use NS_DECL_NSILOADCONTEXT because some of nsILoadContext's methods
-  // are shared with nsIDocShell (appID, etc.) and can't be declared twice.
+  // are shared with nsIDocShell and can't be declared twice.
   NS_IMETHOD GetAssociatedWindow(mozIDOMWindowProxy**) override;
   NS_IMETHOD GetTopWindow(mozIDOMWindowProxy**) override;
   NS_IMETHOD GetTopFrameElement(mozilla::dom::Element**) override;
