@@ -310,6 +310,7 @@ window._gBrowser = {
         remoteType = E10SUtils.getRemoteTypeForURI(
           uriToLoad,
           gMultiProcessBrowser,
+          gFissionBrowser,
           E10SUtils.DEFAULT_REMOTE_TYPE
         );
       } else {
@@ -1811,6 +1812,7 @@ window._gBrowser = {
     aOptions.remoteType =
       E10SUtils.getRemoteTypeForURI(aURL,
         gMultiProcessBrowser,
+        gFissionBrowser,
         oldRemoteType,
         aBrowser.currentURI);
 
@@ -2025,6 +2027,7 @@ window._gBrowser = {
             }
             return E10SUtils.getRemoteTypeForURI(url,
                                                  gMultiProcessBrowser,
+                                                 gFissionBrowser,
                                                  undefined,
                                                  uri);
           };
@@ -2457,13 +2460,14 @@ window._gBrowser = {
           referrerInfo.originalReferrer) {
         preferredRemoteType =
           E10SUtils.getRemoteTypeForURI(referrerInfo.originalReferrer.spec,
-                                        gMultiProcessBrowser);
+                                        gMultiProcessBrowser, gFissionBrowser);
       }
 
       let remoteType =
         forceNotRemote ? E10SUtils.NOT_REMOTE :
         E10SUtils.getRemoteTypeForURI(aURI, gMultiProcessBrowser,
-          preferredRemoteType);
+                                      gFissionBrowser,
+                                      preferredRemoteType);
 
       // If we open a new tab with the newtab URL in the default
       // userContext, check if there is a preloaded browser ready.

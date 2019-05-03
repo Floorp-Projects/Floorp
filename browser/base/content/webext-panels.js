@@ -51,7 +51,9 @@ function getBrowser(panel) {
   if (panel.extension.remote) {
     browser.setAttribute("remote", "true");
     browser.setAttribute("remoteType",
-                         E10SUtils.getRemoteTypeForURI(panel.uri, true,
+                         E10SUtils.getRemoteTypeForURI(panel.uri,
+                                                       /* remote */ true,
+                                                       /* fission */ false,
                                                        E10SUtils.EXTENSION_REMOTE_TYPE));
     readyPromise = promiseEvent(browser, "XULFrameLoaderCreated");
 

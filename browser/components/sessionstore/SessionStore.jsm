@@ -2349,24 +2349,25 @@ var SessionStoreInternal = {
       browsingContext = aChannel.loadInfo.browsingContext;
     } else {
       browsingContext = aChannel.loadInfo.frameBrowsingContext;
-
-      let top = browsingContext.top;
-      if (!top.embedderElement) {
-        debug(`[process-switch]: no embedder for top - ignoring`);
-        return;
-      }
-
-      let docShell = top.embedderElement.ownerGlobal.docShell;
-      let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
-
-      if (!loadContext.useRemoteSubframes) {
-        debug(`[process-switch]: remote subframes disabled - ignoring`);
-        return;
-      }
     }
 
     if (!browsingContext) {
       debug(`[process-switch]: no BrowsingContext - ignoring`);
+      return;
+    }
+
+    // Determine if remote subframes should be used for this load.
+    let topBC = browsingContext.top;
+    if (!topBC.embedderElement) {
+      debug(`[process-switch]: no embedder for top - ignoring`);
+      return;
+    }
+
+    let topDocShell = topBC.embedderElement.ownerGlobal.docShell;
+    let useRemoteSubframes = topDocShell.QueryInterface(Ci.nsILoadContext)
+                                        .useRemoteSubframes;
+    if (!useRemoteSubframes && cp != Ci.nsIContentPolicy.TYPE_DOCUMENT) {
+      debug(`[process-switch]: remote subframes disabled - ignoring`);
       return;
     }
 
@@ -2408,6 +2409,7 @@ var SessionStoreInternal = {
       Services.scriptSecurityManager.getChannelResultPrincipal(aChannel);
     let remoteType = E10SUtils.getRemoteTypeForPrincipal(resultPrincipal,
                                                          true,
+                                                         useRemoteSubframes,
                                                          currentRemoteType,
                                                          currentPrincipal);
     if (currentRemoteType == remoteType &&

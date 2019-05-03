@@ -91,7 +91,8 @@ class GeckoViewNavigationChild extends GeckoViewChildModule {
   // nsIWebBrowserChrome
   shouldLoadURIInThisProcess(aURI) {
     debug `shouldLoadURIInThisProcess ${aURI.displaySpec}`;
-    return E10SUtils.shouldLoadURIInThisProcess(aURI);
+    let remoteSubframes = docShell.QueryInterface(Ci.nsILoadContext).useRemoteSubframes;
+    return E10SUtils.shouldLoadURIInThisProcess(aURI, remoteSubframes);
   }
 
   // nsIWebBrowserChrome
