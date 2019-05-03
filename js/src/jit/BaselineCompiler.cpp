@@ -5660,7 +5660,9 @@ bool BaselineCodeGen<Handler>::emit_JSOP_FINALYIELDRVAL() {
 
 template <>
 void BaselineCompilerCodeGen::emitJumpToInterpretOpLabel() {
-  MOZ_CRASH("NYI: Interpreter emitJumpToInterpretOpLabel");
+  TrampolinePtr code =
+      cx->runtime()->jitRuntime()->baselineInterpreter().interpretOpAddr();
+  masm.jump(code);
 }
 
 template <>

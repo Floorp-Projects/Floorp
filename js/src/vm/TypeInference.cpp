@@ -3555,6 +3555,10 @@ bool JSScript::makeTypes(JSContext* cx) {
 
   types_ = new (typeScript) TypeScript(this, std::move(icScript), numTypeSets);
 
+  // We have a TypeScript so we can set the script's jitCodeRaw_ pointer to the
+  // Baseline Interpreter code.
+  updateJitCodeRaw(cx->runtime());
+
 #ifdef DEBUG
   StackTypeSet* typeArray = typeScript->typeArrayDontCheckGeneration();
   for (unsigned i = 0; i < numBytecodeTypeSets(); i++) {
@@ -4585,6 +4589,7 @@ void JSScript::maybeReleaseTypes() {
 
   types_->destroy(zone());
   types_ = nullptr;
+  updateJitCodeRaw(runtimeFromMainThread());
 }
 
 void TypeScript::destroy(Zone* zone) {
