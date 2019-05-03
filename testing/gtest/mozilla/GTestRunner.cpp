@@ -115,6 +115,17 @@ int RunGTestFunc(int* argc, char** argv) {
 #ifdef XP_WIN
   mozilla::ipc::windows::InitUIThread();
 #endif
+#ifdef ANDROID
+  // On Android, gtest is running in an application, which uses a
+  // current working directory of '/' by default. Desktop tests
+  // sometimes assume that support files are in the current
+  // working directory. For compatibility with desktop, the Android
+  // harness pushes test support files to the device at the location
+  // specified by MOZ_GTEST_CWD and gtest changes the cwd to that
+  // location.
+  char* path = PR_GetEnv("MOZ_GTEST_CWD");
+  chdir(path);
+#endif
   nsCOMPtr<nsICrashReporter> crashreporter;
   char* crashreporterStr = PR_GetEnv("MOZ_CRASHREPORTER");
   if (crashreporterStr && !strcmp(crashreporterStr, "1")) {
