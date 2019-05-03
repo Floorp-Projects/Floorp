@@ -162,6 +162,7 @@
 #include "nsIJARChannel.h"
 #include "nsIScreenManager.h"
 #include "nsIEffectiveTLDService.h"
+#include "nsIClassifiedChannel.h"
 
 #include "xpcprivate.h"
 
@@ -5367,16 +5368,15 @@ void nsGlobalWindowOuter::FirePopupBlockedEvent(
 
 void nsGlobalWindowOuter::NotifyContentBlockingEvent(
     unsigned aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aURIHint,
+    nsIChannel* aTrackingChannel,
     const mozilla::Maybe<AntiTrackingCommon::StorageAccessGrantedReason>&
         aReason) {
   MOZ_ASSERT(aURIHint);
+  DebugOnly<bool> isCookiesBlockedTracker =
+      aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
   MOZ_ASSERT_IF(aBlocked, aReason.isNothing());
-  MOZ_ASSERT_IF(aEvent != nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
-                aReason.isNothing());
-  MOZ_ASSERT_IF(
-      !aBlocked &&
-          aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
-      aReason.isSome());
+  MOZ_ASSERT_IF(!isCookiesBlockedTracker, aReason.isNothing());
+  MOZ_ASSERT_IF(isCookiesBlockedTracker && !aBlocked, aReason.isSome());
 
   nsCOMPtr<nsIDocShell> docShell = GetDocShell();
   if (!docShell) {
@@ -5387,6 +5387,8 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(
 
   nsCOMPtr<nsIURI> uri(aURIHint);
   nsCOMPtr<nsIChannel> channel(aChannel);
+  nsCOMPtr<nsIClassifiedChannel> trackingChannel =
+      do_QueryInterface(aTrackingChannel);
 
   static bool prefInitialized = false;
   if (!prefInitialized) {
@@ -5398,7 +5400,8 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(
 
   nsCOMPtr<nsIRunnable> func = NS_NewRunnableFunction(
       "NotifyContentBlockingEventDelayed",
-      [doc, docShell, uri, channel, aEvent, aBlocked, aReason]() {
+      [doc, docShell, uri, channel, aEvent, aBlocked, aReason,
+       trackingChannel]() {
         // This event might come after the user has navigated to another
         // page. To prevent showing the TrackingProtection UI on the wrong
         // page, we need to check that the loading URI for the channel is
@@ -5465,7 +5468,14 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(
           }
         } else if (aEvent ==
                    nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
-          doc->SetHasTrackingCookiesBlocked(aBlocked, origin, aReason);
+          nsTArray<nsCString> trackingFullHashes;
+          if (trackingChannel) {
+            Unused << trackingChannel->GetMatchedTrackingFullHashes(
+                trackingFullHashes);
+          }
+          doc->SetHasTrackingCookiesBlocked(aBlocked, origin, aReason,
+                                            trackingFullHashes);
+
           if (!aBlocked) {
             unblocked = !doc->GetHasTrackingCookiesBlocked();
           }

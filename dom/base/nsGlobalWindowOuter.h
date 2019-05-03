@@ -461,6 +461,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   virtual void NotifyContentBlockingEvent(
       unsigned aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aURIHint,
+      nsIChannel* aTrackingChannel,
       const mozilla::Maybe<
           mozilla::AntiTrackingCommon::StorageAccessGrantedReason>& aReason)
       override;
