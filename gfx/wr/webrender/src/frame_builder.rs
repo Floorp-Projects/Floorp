@@ -14,7 +14,7 @@ use hit_test::{HitTester, HitTestingScene};
 #[cfg(feature = "replay")]
 use hit_test::HitTestingSceneStats;
 use internal_types::{FastHashMap, PlaneSplitter};
-use picture::{PictureSurface, PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
+use picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
 use picture::{RetainedTiles, TileCache, DirtyRegion};
 use prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
 #[cfg(feature = "replay")]
@@ -428,6 +428,24 @@ impl FrameBuilder {
             clip_chain_stack: ClipChainStack::new(),
         };
 
+        let root_render_task = RenderTask::new_picture(
+            RenderTaskLocation::Fixed(self.output_rect),
+            self.output_rect.size.to_f32(),
+            self.root_pic_index,
+            DeviceIntPoint::zero(),
+            Vec::new(),
+            UvRectKind::Rect,
+            root_spatial_node_index,
+            global_device_pixel_scale,
+        );
+
+        let root_render_task_id = frame_state.render_tasks.add(root_render_task);
+        frame_state
+            .surfaces
+            .first_mut()
+            .unwrap()
+            .surface = Some(root_render_task_id);
+
         // Push a default dirty region which culls primitives
         // against the screen world rect, in absence of any
         // other dirty regions.
@@ -478,24 +496,14 @@ impl FrameBuilder {
             .surfaces[ROOT_SURFACE_INDEX.0]
             .take_render_tasks();
 
-        let root_render_task = RenderTask::new_picture(
-            RenderTaskLocation::Fixed(self.output_rect),
-            self.output_rect.size.to_f32(),
-            self.root_pic_index,
-            DeviceIntPoint::zero(),
-            child_tasks,
-            UvRectKind::Rect,
-            root_spatial_node_index,
-            global_device_pixel_scale,
-        );
+        for child_task_id in child_tasks {
+            frame_state.render_tasks.add_dependency(
+                root_render_task_id,
+                child_task_id,
+            );
+        }
 
-        let render_task_id = frame_state.render_tasks.add(root_render_task);
-        frame_state
-            .surfaces
-            .first_mut()
-            .unwrap()
-            .surface = Some(PictureSurface::RenderTask(render_task_id));
-        Some(render_task_id)
+        Some(root_render_task_id)
     }
 
     pub fn build(

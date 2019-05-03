@@ -14,7 +14,7 @@ use gpu_types::{ClipMaskInstance, SplitCompositeInstance, SnapOffsets};
 use gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use internal_types::{FastHashMap, SavedTargetIndex, TextureSource};
-use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureSurface};
+use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, PrimitiveVisibilityIndex};
 use prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, VECS_PER_SEGMENT};
@@ -1032,16 +1032,12 @@ impl AlphaBatchBuilder {
                                 .raster_config
                                 .as_ref()
                                 .expect("BUG: 3d primitive was not assigned a surface");
-                            let (uv_rect_address, _) = ctx
-                                .surfaces[raster_config.surface_index.0]
-                                .surface
-                                .as_ref()
-                                .expect("BUG: no surface")
-                                .resolve(
-                                    render_tasks,
-                                    ctx.resource_cache,
-                                    gpu_cache,
-                                );
+                            let (uv_rect_address, _) = render_tasks.resolve_surface(
+                                ctx.surfaces[raster_config.surface_index.0]
+                                    .surface
+                                    .expect("BUG: no surface"),
+                                gpu_cache,
+                            );
 
                             let prim_header_index = prim_headers.push(&prim_header, z_id, [
                                 uv_rect_address.as_int(),
@@ -1099,9 +1095,7 @@ impl AlphaBatchBuilder {
                             render_tasks,
                         ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
-                        let surface = ctx.surfaces[raster_config.surface_index.0]
-                            .surface
-                            .as_ref();
+                        let surface = ctx.surfaces[raster_config.surface_index.0].surface;
 
                         match raster_config.composite_mode {
                             PictureCompositeMode::TileCache { .. } => {
@@ -1263,13 +1257,10 @@ impl AlphaBatchBuilder {
                                         let kind = BatchKind::Brush(
                                             BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
                                         );
-                                        let (uv_rect_address, textures) = surface
-                                            .expect("bug: surface must be allocated by now")
-                                            .resolve(
-                                                render_tasks,
-                                                ctx.resource_cache,
-                                                gpu_cache,
-                                            );
+                                        let (uv_rect_address, textures) = render_tasks.resolve_surface(
+                                            surface.expect("bug: surface must be allocated by now"),
+                                            gpu_cache,
+                                        );
                                         let key = BatchKey::new(
                                             kind,
                                             non_segmented_blend_mode,
@@ -1327,9 +1318,7 @@ impl AlphaBatchBuilder {
                                         let content_key = BatchKey::new(kind, non_segmented_blend_mode, content_textures);
 
                                         // Retrieve the UV rect addresses for shadow/content.
-                                        let cache_task_id = surface
-                                            .expect("bug: surface must be allocated by now")
-                                            .resolve_render_task_id();
+                                        let cache_task_id = surface.expect("bug: surface must be allocated by now");
                                         let shadow_uv_rect_address = render_tasks[cache_task_id]
                                             .get_texture_address(gpu_cache)
                                             .as_int();
@@ -1442,13 +1431,10 @@ impl AlphaBatchBuilder {
                                             FilterOp::ComponentTransfer => unreachable!(),
                                         };
 
-                                        let (uv_rect_address, textures) = surface
-                                            .expect("bug: surface must be allocated by now")
-                                            .resolve(
-                                                render_tasks,
-                                                ctx.resource_cache,
-                                                gpu_cache,
-                                            );
+                                        let (uv_rect_address, textures) = render_tasks.resolve_surface(
+                                            surface.expect("bug: surface must be allocated by now"),
+                                            gpu_cache,
+                                        );
 
                                         let key = BatchKey::new(
                                             BatchKind::Brush(BrushBatchKind::Blend),
@@ -1494,13 +1480,10 @@ impl AlphaBatchBuilder {
 
                                 let user_data = filter_data.gpu_cache_handle.as_int(gpu_cache);
 
-                                let (uv_rect_address, textures) = surface
-                                    .expect("bug: surface must be allocated by now")
-                                    .resolve(
-                                        render_tasks,
-                                        ctx.resource_cache,
-                                        gpu_cache,
-                                    );
+                                let (uv_rect_address, textures) = render_tasks.resolve_surface(
+                                    surface.expect("bug: surface must be allocated by now"),
+                                    gpu_cache,
+                                );
 
                                 let key = BatchKey::new(
                                     BatchKind::Brush(BrushBatchKind::Blend),
@@ -1532,13 +1515,10 @@ impl AlphaBatchBuilder {
                                 );
                             }
                             PictureCompositeMode::MixBlend(mode) if ctx.use_advanced_blending => {
-                                let (uv_rect_address, textures) = surface
-                                    .expect("bug: surface must be allocated by now")
-                                    .resolve(
-                                        render_tasks,
-                                        ctx.resource_cache,
-                                        gpu_cache,
-                                    );
+                                let (uv_rect_address, textures) = render_tasks.resolve_surface(
+                                    surface.expect("bug: surface must be allocated by now"),
+                                    gpu_cache,
+                                );
                                 let key = BatchKey::new(
                                     BatchKind::Brush(
                                         BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
@@ -1570,9 +1550,7 @@ impl AlphaBatchBuilder {
                                 );
                             }
                             PictureCompositeMode::MixBlend(mode) => {
-                                let cache_task_id = surface
-                                    .expect("bug: surface must be allocated by now")
-                                    .resolve_render_task_id();
+                                let cache_task_id = surface.expect("bug: surface must be allocated by now");
                                 let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
 
                                 let key = BatchKey::new(
@@ -1612,9 +1590,7 @@ impl AlphaBatchBuilder {
                                 );
                             }
                             PictureCompositeMode::Blit(_) => {
-                                let cache_task_id = surface
-                                    .expect("bug: surface must be allocated by now")
-                                    .resolve_render_task_id();
+                                let cache_task_id = surface.expect("bug: surface must be allocated by now");
                                 let uv_rect_address = render_tasks[cache_task_id]
                                     .get_texture_address(gpu_cache)
                                     .as_int();
@@ -2653,47 +2629,16 @@ impl PrimitiveInstance {
     }
 }
 
-impl PictureSurface {
-    // Retrieve the uv rect handle, and texture for a picture surface.
-    fn resolve(
+impl RenderTaskTree {
+    fn resolve_surface(
         &self,
-        render_tasks: &RenderTaskTree,
-        resource_cache: &ResourceCache,
+        task_id: RenderTaskId,
         gpu_cache: &GpuCache,
     ) -> (GpuCacheAddress, BatchTextures) {
-        match *self {
-            PictureSurface::TextureCache(ref handle) => {
-                let rt_cache_entry = resource_cache
-                    .get_cached_render_task(handle);
-                let cache_item = resource_cache
-                    .get_texture_cache_item(&rt_cache_entry.handle);
-
-                (
-                    gpu_cache.get_address(&cache_item.uv_rect_handle),
-                    BatchTextures::color(cache_item.texture_id),
-                )
-            }
-            PictureSurface::RenderTask(task_id) => {
-                (
-                    render_tasks[task_id].get_texture_address(gpu_cache),
-                    BatchTextures::render_target_cache(),
-                )
-            }
-        }
-    }
-
-    // Retrieve the render task id for a picture surface. Should only
-    // be used where it's known that this picture surface will never
-    // be persisted in the texture cache.
-    fn resolve_render_task_id(&self) -> RenderTaskId {
-        match *self {
-            PictureSurface::TextureCache(..) => {
-                panic!("BUG: unexpectedly cached render task");
-            }
-            PictureSurface::RenderTask(task_id) => {
-                task_id
-            }
-        }
+        (
+            self[task_id].get_texture_address(gpu_cache),
+            BatchTextures::render_target_cache(),
+        )
     }
 }
 

@@ -139,6 +139,17 @@ impl RenderTaskTree {
         }
     }
 
+    /// Express a render task dependency between a parent and child task.
+    /// This is used to assign tasks to render passes.
+    pub fn add_dependency(
+        &mut self,
+        parent_id: RenderTaskId,
+        child_id: RenderTaskId,
+    ) {
+        let parent = &mut self[parent_id];
+        parent.children.push(child_id);
+    }
+
     /// Assign this frame's render tasks to render passes ordered so that passes appear
     /// earlier than the ones that depend on them.
     pub fn generate_passes(
