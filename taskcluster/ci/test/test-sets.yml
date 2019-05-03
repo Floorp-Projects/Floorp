@@ -421,6 +421,7 @@ android-x86_64-tests:
     - mochitest-gpu
     # various reftest (plain) failures; bug 1501582
     # - reftest
+    - xpcshell
 
 android-x86-tests:
     - web-platform-tests
