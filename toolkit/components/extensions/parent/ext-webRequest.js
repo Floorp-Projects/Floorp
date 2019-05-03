@@ -64,6 +64,9 @@ function registerEvent(extension, eventName, fire, filter, info, remoteTab = nul
   if (filter.windowId) {
     filter2.windowId = filter.windowId;
   }
+  if (filter.incognito !== undefined) {
+    filter2.incognito = filter.incognito;
+  }
 
   let blockingAllowed = extension.hasPermission("webRequestBlocking");
 

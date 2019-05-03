@@ -36,7 +36,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
             Assert.equal(response.descriptor.get.class, "Function");
             Assert.equal(response.descriptor.set.type, "undefined");
 
-            threadClient.resume(resolve);
+            threadClient.resume().then(resolve);
           });
         });
       });

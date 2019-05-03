@@ -17,7 +17,8 @@ import { simpleMockThreadClient } from "../../tests/helpers/threadClient.js";
 function mockClient(positionsResponse = {}) {
   return {
     ...simpleMockThreadClient,
-    getBreakpointPositions: async () => positionsResponse
+    getBreakpointPositions: async () => positionsResponse,
+    getBreakableLines: async () => []
   };
 }
 

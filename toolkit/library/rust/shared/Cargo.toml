@@ -27,14 +27,14 @@ audioipc-server = { path = "../../../../media/audioipc/server", optional = true 
 u2fhid = { path = "../../../../dom/webauthn/u2f-hid-rs" }
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
 rsdparsa_capi = { path = "../../../../media/webrtc/signaling/src/sdp/rsdparsa_capi" }
-xulstore = { path = "../../../components/xulstore" }
+xulstore = { path = "../../../components/xulstore", optional = true }
 # We have these to enforce common feature sets for said crates.
 log = {version = "0.4", features = ["release_max_level_info"]}
 env_logger = {version = "0.5", default-features = false} # disable `regex` to reduce code size
 cose-c = { version = "0.1.5" }
 jsrust_shared = { path = "../../../../js/src/rust/shared", optional = true }
 arrayvec = "0.4"
-cert_storage = { path = "../../../../security/manager/ssl/cert_storage" }
+cert_storage = { path = "../../../../security/manager/ssl/cert_storage", optional = true }
 bitsdownload = { path = "../../../components/bitsdownload", optional = true }
 storage = { path = "../../../../storage/rust" }
 bookmark_sync = { path = "../../../components/places/bookmark_sync", optional = true }
@@ -61,6 +61,8 @@ cranelift_arm64 = ["jsrust_shared/cranelift_arm64"]
 cranelift_none = ["jsrust_shared/cranelift_none"]
 gecko_profiler = ["profiler_helper"]
 gecko_profiler_parse_elf = ["profiler_helper/parse_elf"]
+new_xulstore = ["xulstore"]
+new_cert_storage = ["cert_storage"]
 
 [lib]
 path = "lib.rs"

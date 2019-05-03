@@ -40,7 +40,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
         protoClient.getOwnPropertyNames(function(response) {
           Assert.ok(response.ownPropertyNames.toString != undefined);
 
-          threadClient.resume(resolve);
+          threadClient.resume().then(resolve);
         });
       });
     });

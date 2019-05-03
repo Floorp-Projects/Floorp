@@ -195,14 +195,90 @@ function fetch_blocklist() {
   return RemoteSettings.pollChanges();
 }
 
+function* generate_revocations_txt_lines() {
+  let profile = do_get_profile();
+  let revocations = profile.clone();
+  revocations.append("revocations.txt");
+  ok(revocations.exists(), "the revocations file should exist");
+  let inputStream = Cc["@mozilla.org/network/file-input-stream;1"]
+                      .createInstance(Ci.nsIFileInputStream);
+  inputStream.init(revocations, -1, -1, 0);
+  inputStream.QueryInterface(Ci.nsILineInputStream);
+  let hasmore = false;
+  do {
+    let line = {};
+    hasmore = inputStream.readLine(line);
+    yield line.value;
+  } while (hasmore);
+}
+
+// Check that revocations.txt contains, in any order, the lines
+// ("top-level lines") that are the keys in |expected|, each followed
+// immediately by the lines ("sublines") in expected[topLevelLine]
+// (again, in any order).
+function check_revocations_txt_contents(expected) {
+  let lineGenerator = generate_revocations_txt_lines();
+  let firstLine = lineGenerator.next();
+  equal(firstLine.done, false,
+        "first line of revocations.txt should be present");
+  equal(firstLine.value, "# Auto generated contents. Do not edit.",
+        "first line of revocations.txt");
+  let line = lineGenerator.next();
+  let topLevelFound = {};
+  while (true) {
+    if (line.done) {
+      break;
+    }
+
+    ok(line.value in expected,
+       `${line.value} should be an expected top-level line in revocations.txt`);
+    ok(!(line.value in topLevelFound),
+       `should not have seen ${line.value} before in revocations.txt`);
+    topLevelFound[line.value] = true;
+    let topLevelLine = line.value;
+
+    let sublines = expected[line.value];
+    let subFound = {};
+    while (true) {
+      line = lineGenerator.next();
+      if (line.done || !(line.value in sublines)) {
+        break;
+      }
+      ok(!(line.value in subFound),
+         `should not have seen ${line.value} before in revocations.txt`);
+      subFound[line.value] = true;
+    }
+    for (let subline in sublines) {
+      ok(subFound[subline],
+         `should have found ${subline} below ${topLevelLine} in revocations.txt`);
+    }
+  }
+  for (let topLevelLine in expected) {
+    ok(topLevelFound[topLevelLine],
+       `should have found ${topLevelLine} in revocations.txt`);
+  }
+}
+
 function run_test() {
   // import the certificates we need
   load_cert("test-ca", "CTu,CTu,CTu");
   load_cert("test-int", ",,");
   load_cert("other-test-ca", "CTu,CTu,CTu");
 
-  let certList = Cc["@mozilla.org/security/certstorage;1"]
-                  .getService(Ci.nsICertStorage);
+  let certList = AppConstants.MOZ_NEW_CERT_STORAGE ?
+    Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage) :
+    Cc["@mozilla.org/security/certblocklist;1"].getService(Ci.nsICertBlocklist);
+
+  let expected = { "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5":
+                     { "\tVCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=": true },
+                   "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=":
+                     { " Rym6o+VN9xgZXT/QLrvN/nv1ZN4=": true},
+                   "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=":
+                     { " a0X7/7DlTaedpgrIJg25iBPOkIM=": true},
+                   "MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl":
+                     { " Tg==": true,
+                       " Hw==": true },
+                 };
 
   add_task(async function() {
     // check some existing items in revocations.txt are blocked.
@@ -272,6 +348,12 @@ function run_test() {
     file = "test_onecrl/ee-revoked-by-subject-and-pubkey.pem";
     await verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
 
+    if (!AppConstants.MOZ_NEW_CERT_STORAGE) {
+      // Check the blocklist entry has been persisted properly to the backing
+      // file
+      check_revocations_txt_contents(expected);
+    }
+
     // Check the blocklisted intermediate now causes a failure
     file = "test_onecrl/test-int-ee.pem";
     await verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
@@ -294,9 +376,31 @@ function run_test() {
     // Check a bad cert is still bad (unknown issuer)
     file = "bad_certs/unknownissuer.pem";
     await verify_cert(file, SEC_ERROR_UNKNOWN_ISSUER);
+
+    if (!AppConstants.MOZ_NEW_CERT_STORAGE) {
+      // check that save with no further update is a no-op
+      let lastModified = gRevocations.lastModifiedTime;
+      // add an already existing entry
+      certList.revokeCertByIssuerAndSerial("MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl",
+                                           "Hw==");
+      certList.saveEntries();
+      let newModified = gRevocations.lastModifiedTime;
+      equal(lastModified, newModified,
+            "saveEntries with no modifications should not update the backing file");
+    }
   });
 
-  add_task(async function() {
+  add_test({
+    skip_if: () => AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, function() {
+    // Check the blocklist entry has not changed
+    check_revocations_txt_contents(expected);
+    run_next_test();
+  });
+
+  add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function() {
     ok(certList.isBlocklistFresh(), "Blocklist should be fresh.");
   });
 

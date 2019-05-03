@@ -34,7 +34,6 @@ import {
   type ReduceAllQuery
 } from "../utils/resource";
 
-import { findBreakableLines } from "../utils/breakable-lines";
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
 import * as asyncValue from "../utils/async-value";
 import type { AsyncValue, SettledValue } from "../utils/async-value";
@@ -66,7 +65,9 @@ import type { LoadSourceAction } from "../actions/types/SourceAction";
 import { uniq } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
-type SourcesContentMap = { [SourceId]: SettledValue<SourceContent> | null };
+type SourcesContentMap = {
+  [SourceId]: AsyncValue<SourceContent> | null
+};
 export type BreakpointPositionsMap = { [SourceId]: BreakpointPositions };
 export type SourcesMapByThread = { [ThreadId]: SourcesMap };
 type SourceActorMap = { [SourceId]: Array<SourceActorId> };
@@ -201,19 +202,26 @@ function update(
     case "SET_PROJECT_DIRECTORY_ROOT":
       return updateProjectDirectoryRoot(state, action.url);
 
+    case "SET_BREAKABLE_LINES": {
+      const { breakableLines, sourceId } = action;
+      return {
+        ...state,
+        breakableLines: {
+          ...state.breakableLines,
+          [sourceId]: breakableLines
+        }
+      };
+    }
+
     case "ADD_BREAKPOINT_POSITIONS": {
       const { source, positions } = action;
-      const breakableLines = findBreakableLines(source, positions);
+      const breakpointPositions = state.breakpointPositions[source.id];
 
       return {
         ...state,
         breakpointPositions: {
           ...state.breakpointPositions,
-          [source.id]: positions
-        },
-        breakableLines: {
-          ...state.breakableLines,
-          [source.id]: breakableLines
+          [source.id]: { ...breakpointPositions, ...positions }
         }
       };
     }
@@ -385,7 +393,7 @@ function updateLoadedState(
 
   let content;
   if (action.status === "start") {
-    content = null;
+    content = asyncValue.pending();
   } else if (action.status === "error") {
     content = asyncValue.rejected(action.error);
   } else if (typeof action.value.text === "string") {
@@ -741,11 +749,16 @@ export function getSourceWithContent(
 export function getSourceContent(
   state: OuterState,
   id: SourceId
-): AsyncValue<SourceContent> | null {
+): SettledValue<SourceContent> | null {
   // Assert the resource exists.
   getResource(state.sources.sources, id);
+  const content = state.sources.content[id];
 
-  return state.sources.content[id] || null;
+  if (!content || content.state === "pending") {
+    return null;
+  }
+
+  return content;
 }
 
 const contentLookup: WeakMap<Source, SourceWithContent> = new WeakMap();
@@ -755,10 +768,13 @@ function getSourceWithContentInner(
   id: SourceId
 ): SourceWithContent {
   const source = getResource(sources, id);
-  const contentValue = content[source.id];
+  let contentValue = content[source.id];
 
   let result = contentLookup.get(source);
   if (!result || result.content !== contentValue) {
+    if (contentValue && contentValue.state === "pending") {
+      contentValue = null;
+    }
     result = {
       source,
       content: contentValue
@@ -902,6 +918,15 @@ export function hasBreakpointPositions(
   return !!getBreakpointPositionsForSource(state, sourceId);
 }
 
+export function hasBreakpointPositionsForLine(
+  state: OuterState,
+  sourceId: string,
+  line: number
+): boolean {
+  const positions = getBreakpointPositionsForSource(state, sourceId);
+  return !!(positions && positions[line]);
+}
+
 export function getBreakpointPositionsForLocation(
   state: OuterState,
   location: SourceLocation
@@ -926,5 +951,10 @@ export const getSelectedBreakableLines: Selector<Set<number>> = createSelector(
   },
   breakableLines => new Set(breakableLines || [])
 );
+
+export function isSourceLoadingOrLoaded(state: OuterState, sourceId: string) {
+  const content = state.sources.content[sourceId];
+  return content !== null;
+}
 
 export default update;

@@ -68,7 +68,7 @@ function test_pause_frame() {
         Assert.ok(!!vars.arguments.value.actor);
         Assert.equal(vars.foo.value, 2 * Math.PI);
 
-        gThreadClient.resume(function() {
+        gThreadClient.resume().then(function() {
           finishClient(gClient);
         });
       });

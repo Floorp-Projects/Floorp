@@ -12,3 +12,15 @@ pre {
 html:not([dir]) pre { /* Not a UA sheet, so doesn't use :-moz-has-dir-attr */
   unicode-bidi: plaintext;
 }
+
+/* NOTE(emilio): For some reason some pages, mainly bing.com, load a bunch of
+ * scripts in zero-size <object> elements, see bug 1548449.
+ *
+ * Line-breaking such documents is useless and pretty expensive, so only render
+ * them if there's a viewport. Sigh.
+ */
+@media (width: 0) or (height: 0) {
+  :root {
+    display: none;
+  }
+}

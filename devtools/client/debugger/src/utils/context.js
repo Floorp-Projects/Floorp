@@ -52,11 +52,13 @@ export type ThreadContext = {|
 
 export type Context = NavigateContext | ThreadContext;
 
+export class ContextError extends Error {}
+
 export function validateNavigateContext(state: State, cx: Context) {
   const newcx = getThreadContext(state);
 
   if (newcx.navigateCounter != cx.navigateCounter) {
-    throw new Error("Page has navigated");
+    throw new ContextError("Page has navigated");
   }
 }
 
@@ -64,11 +66,11 @@ function validateThreadContext(state: State, cx: ThreadContext) {
   const newcx = getThreadContext(state);
 
   if (cx.thread != newcx.thread) {
-    throw new Error("Current thread has changed");
+    throw new ContextError("Current thread has changed");
   }
 
   if (cx.pauseCounter != newcx.pauseCounter) {
-    throw new Error("Current thread has paused or resumed");
+    throw new ContextError("Current thread has paused or resumed");
   }
 }
 

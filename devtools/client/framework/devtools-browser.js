@@ -500,7 +500,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
             break;
           case "attached":
             // When the debugger is already open.
-            threadClient.interrupt(() => {
+            threadClient.interrupt().then(() => {
               threadClient.resumeThenPause();
               callback();
             });
@@ -508,7 +508,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
           case "resuming":
             // The debugger is newly opened.
             threadClient.addOneTimeListener("resumed", () => {
-              threadClient.interrupt(() => {
+              threadClient.interrupt().then(() => {
                 threadClient.resumeThenPause();
                 callback();
               });

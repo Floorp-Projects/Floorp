@@ -20,6 +20,12 @@ void SetProcessPriority(int aPid, ProcessPriority aPriority) {
 
   nsAutoHandle processHandle(
       ::OpenProcess(PROCESS_SET_INFORMATION, FALSE, aPid));
+#ifdef DEBUG
+  if (!processHandle) {
+    printf_stderr("::OpenProcess() failed with error %#08x\n",
+                  ::GetLastError());
+  }
+#endif  // DEBUG
   MOZ_ASSERT(processHandle);
   if (processHandle) {
     DWORD priority = NORMAL_PRIORITY_CLASS;

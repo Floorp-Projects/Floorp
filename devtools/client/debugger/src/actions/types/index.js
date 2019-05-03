@@ -34,6 +34,7 @@ import type { Panel } from "../../client/firefox/types";
  */
 export type ThunkArgs = {
   dispatch: (action: any) => Promise<any>,
+  forkedDispatch: (action: any) => Promise<any>,
   getState: () => State,
   client: typeof clientCommands,
   sourceMaps: SourceMaps,

@@ -35,7 +35,8 @@ const threadClient = {
   evaluate: async expression => ({ result: evaluationResult[expression] }),
   evaluateExpressions: async expressions =>
     expressions.map(expression => ({ result: evaluationResult[expression] })),
-  getBreakpointPositions: async () => ({})
+  getBreakpointPositions: async () => ({}),
+  getBreakableLines: async () => []
 };
 
 const sourceMaps = {

@@ -70,7 +70,8 @@ const mockThreadClient = {
       }
     });
   },
-  getBreakpointPositions: async () => ({})
+  getBreakpointPositions: async () => ({}),
+  getBreakableLines: async () => []
 };
 
 const mockFrameId = "1";
@@ -172,7 +173,10 @@ describe("pause", () => {
     });
 
     it("should step over when paused after an await", async () => {
-      const store = createStore(mockThreadClient);
+      const store = createStore({
+        ...mockThreadClient,
+        getBreakpointPositions: async () => ({ [2]: [1] })
+      });
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo({
         sourceId: "await",

@@ -27,7 +27,7 @@ add_task(async function test_incognito_proxy_onRequest_access() {
       browser.proxy.onRequest.addListener(async (details) => {
         browser.test.assertFalse(details.incognito, "incognito flag is not set");
         browser.test.notifyPass("proxy.onRequest");
-      }, {urls: ["<all_urls>"]});
+      }, {urls: ["<all_urls>"], types: ["main_frame"]});
 
       // Actual call arguments do not matter here.
       await browser.test.assertRejects(
@@ -50,23 +50,29 @@ add_task(async function test_incognito_proxy_onRequest_access() {
     },
     background() {
       browser.proxy.onRequest.addListener(async (details) => {
-        browser.test.assertTrue(details.incognito, "incognito flag is set");
-        browser.test.notifyPass("proxy.onRequest.private");
-      }, {urls: ["<all_urls>"]});
+        browser.test.assertTrue(details.incognito, "incognito flag is set with filter");
+        browser.test.sendMessage("proxy.onRequest.private");
+      }, {urls: ["<all_urls>"], types: ["main_frame"], incognito: true});
+
+      browser.proxy.onRequest.addListener(async (details) => {
+        browser.test.assertFalse(details.incognito, "incognito flag is not set with filter");
+        browser.test.notifyPass("proxy.onRequest.spanning");
+      }, {urls: ["<all_urls>"], types: ["main_frame"], incognito: false});
     },
   });
   await pextension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy", {privateBrowsing: true});
-  await pextension.awaitFinish("proxy.onRequest.private");
-  await pextension.unload();
+  await pextension.awaitMessage("proxy.onRequest.private");
   await contentPage.close();
 
   contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy");
   await extension.awaitFinish("proxy.onRequest");
-
-  await extension.unload();
+  await pextension.awaitFinish("proxy.onRequest.spanning");
   await contentPage.close();
+
+  await pextension.unload();
+  await extension.unload();
 
   Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 });

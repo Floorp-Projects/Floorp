@@ -53,7 +53,7 @@ function test_banana_environment() {
         const grandpaClient = new EnvironmentClient(gThreadClient, grandpa);
         grandpaClient.getBindings(response => {
           Assert.equal(response.bindings.arguments[0].y.value, "y");
-          gThreadClient.resume(() => finishClient(gClient));
+          gThreadClient.resume().then(() => finishClient(gClient));
         });
       });
     });

@@ -28,6 +28,7 @@ const threadClient = {
     contentType: "text/javascript"
   }),
   getBreakpointPositions: async () => ({}),
+  getBreakableLines: async () => [],
   detachWorkers: () => {}
 };
 

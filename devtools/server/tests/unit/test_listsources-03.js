@@ -31,7 +31,7 @@ function run_test() {
 
 function test_simple_listsources() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    gThreadClient.getSources(function(response) {
+    gThreadClient.getSources().then(function(response) {
       Assert.ok(
         !response.error,
         "There shouldn't be an error fetching large amounts of sources.");
@@ -40,7 +40,7 @@ function test_simple_listsources() {
         return s.url.match(/foo-999.js$/);
       }));
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
       });
     });

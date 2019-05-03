@@ -86,10 +86,7 @@ add_task(async function test_execute() {
     content += "0";
   }
 
-  let itemId = await PlacesUtils.promiseItemId(bookmarks[1].guid);
-
-  PlacesUtils.annotations.setItemAnnotation(itemId, "test-anno", content, 0,
-                                            PlacesUtils.annotations.EXPIRE_NEVER);
+  await setItemAnnotation(bookmarks[1].guid, "test-anno", content);
   await PlacesUtils.history.update({
     url: uri,
     annotations: new Map([["test-anno", content]]),

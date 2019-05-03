@@ -5,13 +5,8 @@
 "use strict";
 
 add_task(threadClientTest(async ({ threadClient, debuggee, client, targetFront }) => {
-  return new Promise(resolve => {
-    threadClient.interrupt(function(response) {
-      Assert.equal(threadClient.paused, true);
-      threadClient.resume(function() {
-        Assert.equal(threadClient.paused, false);
-        resolve();
-      });
-    });
-  });
+  await threadClient.interrupt();
+  Assert.equal(threadClient.paused, true);
+  await threadClient.resume();
+  Assert.equal(threadClient.paused, false);
 }));

@@ -521,13 +521,17 @@ bool ChannelWrapper::Matches(
     return false;
   }
 
+  nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo();
+  bool isPrivate =
+      loadInfo && loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  if (!aFilter.mIncognito.IsNull() && aFilter.mIncognito.Value() != isPrivate) {
+    return false;
+  }
+
   if (aExtension) {
     // Verify extension access to private requests
-    if (!aExtension->PrivateBrowsingAllowed()) {
-      nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo();
-      if (loadInfo && loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0) {
-        return false;
-      }
+    if (isPrivate && !aExtension->PrivateBrowsingAllowed()) {
+      return false;
     }
 
     bool isProxy =

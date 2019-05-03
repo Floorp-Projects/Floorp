@@ -24,6 +24,7 @@ const wchar_t LauncherRegistryInfo::kLauncherSubKeyPath[] =
 const wchar_t LauncherRegistryInfo::kLauncherSuffix[] = L"|Launcher";
 const wchar_t LauncherRegistryInfo::kBrowserSuffix[] = L"|Browser";
 const wchar_t LauncherRegistryInfo::kImageTimestampSuffix[] = L"|Image";
+const wchar_t LauncherRegistryInfo::kTelemetrySuffix[] = L"|Telemetry";
 
 LauncherResult<LauncherRegistryInfo::Disposition> LauncherRegistryInfo::Open() {
   if (!!mRegKey) {
@@ -93,8 +94,29 @@ LauncherVoidResult LauncherRegistryInfo::ReflectPrefToRegistry(
   return Ok();
 }
 
+LauncherVoidResult LauncherRegistryInfo::ReflectTelemetryPrefToRegistry(
+    const bool aEnable) {
+  LauncherResult<Disposition> disposition = Open();
+  if (disposition.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(disposition);
+  }
+
+  std::wstring valueName(ResolveTelemetryValueName());
+
+  DWORD value = aEnable ? 1UL : 0UL;
+  DWORD len = sizeof(value);
+  LSTATUS result = ::RegSetValueExW(mRegKey.get(), valueName.c_str(), 0,
+                                    REG_DWORD, reinterpret_cast<PBYTE>(&value),
+                                    len);
+  if (result != ERROR_SUCCESS) {
+    return LAUNCHER_ERROR_FROM_WIN32(result);
+  }
+
+  return Ok();
+}
+
 LauncherResult<LauncherRegistryInfo::ProcessType> LauncherRegistryInfo::Check(
-    const ProcessType aDesiredType) {
+    const ProcessType aDesiredType, const CheckOption aOption) {
   LauncherResult<Disposition> disposition = Open();
   if (disposition.isErr()) {
     return LAUNCHER_ERROR_FROM_RESULT(disposition);
@@ -174,6 +196,12 @@ LauncherResult<LauncherRegistryInfo::ProcessType> LauncherRegistryInfo::Check(
     // No change to typeToRunAs
   }
 
+  // Debugging setting that forces the desired type regardless of the various
+  // tests that have been performed.
+  if (aOption == CheckOption::Force) {
+    typeToRunAs = aDesiredType;
+  }
+
   LauncherVoidResult wroteTimestamp = Ok();
 
   if (typeToRunAs == ProcessType::Browser && aDesiredType != typeToRunAs) {
@@ -235,6 +263,15 @@ LauncherRegistryInfo::IsEnabled() {
   return EnabledState::FailDisabled;
 }
 
+LauncherResult<bool> LauncherRegistryInfo::IsTelemetryEnabled() {
+  LauncherResult<Disposition> disposition = Open();
+  if (disposition.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(disposition);
+  }
+
+  return GetTelemetrySetting();
+}
+
 LauncherResult<std::wstring> LauncherRegistryInfo::ResolveValueName(
     LauncherRegistryInfo::ProcessType aProcessType) {
   if (aProcessType == ProcessType::Launcher) {
@@ -265,6 +302,16 @@ std::wstring LauncherRegistryInfo::ResolveImageTimestampValueName() {
   }
 
   return mImageValueName;
+}
+
+std::wstring LauncherRegistryInfo::ResolveTelemetryValueName() {
+  if (mTelemetryValueName.empty()) {
+    mTelemetryValueName.assign(mBinPath);
+    mTelemetryValueName.append(kTelemetrySuffix,
+                               ArrayLength(kTelemetrySuffix) - 1);
+  }
+
+  return mTelemetryValueName;
 }
 
 LauncherVoidResult LauncherRegistryInfo::WriteStartTimestamp(
@@ -388,6 +435,31 @@ LauncherResult<DWORD> LauncherRegistryInfo::GetSavedImageTimestamp() {
   }
 
   return value;
+}
+
+LauncherResult<bool> LauncherRegistryInfo::GetTelemetrySetting() {
+  std::wstring telemetryValueName = ResolveTelemetryValueName();
+
+  DWORD value;
+  DWORD valueLen = sizeof(value);
+  DWORD type;
+  LSTATUS result = ::RegQueryValueExW(
+      mRegKey.get(), telemetryValueName.c_str(), nullptr, &type,
+      reinterpret_cast<PBYTE>(&value), &valueLen);
+  if (result == ERROR_FILE_NOT_FOUND) {
+    // Value does not exist, treat as false
+    return false;
+  }
+
+  if (result != ERROR_SUCCESS) {
+    return LAUNCHER_ERROR_FROM_WIN32(result);
+  }
+
+  if (type != REG_DWORD) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_DATATYPE_MISMATCH);
+  }
+
+  return value != 0;
 }
 
 LauncherResult<uint64_t> LauncherRegistryInfo::GetStartTimestamp(

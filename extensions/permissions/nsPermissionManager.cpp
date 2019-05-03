@@ -1022,8 +1022,10 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
   if (NS_FAILED(rv)) {
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                 getter_AddRefs(permissionsFile));
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_UNEXPECTED;
+    }
   }
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
   rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(PERMISSIONS_FILE_NAME));
   NS_ENSURE_SUCCESS(rv, rv);

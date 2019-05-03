@@ -7,6 +7,10 @@
 // Tests that cert_storage properly handles its preference values.
 
 function run_test() {
+  if (!AppConstants.MOZ_NEW_CERT_STORAGE) {
+    return;
+  }
+
   let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
   // Since none of our prefs start with values, looking them up will fail. cert_storage should use
   // safe fallbacks.

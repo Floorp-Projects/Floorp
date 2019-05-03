@@ -1726,3 +1726,39 @@ def has_remote(toolkit):
 
 set_config('MOZ_HAS_REMOTE', has_remote)
 set_define('MOZ_HAS_REMOTE', has_remote)
+
+
+# new XULStore implementation
+# ==============================================================
+
+@depends(milestone)
+def new_xulstore(milestone):
+    if milestone.is_nightly:
+        return True
+
+set_config('MOZ_NEW_XULSTORE', True, when=new_xulstore)
+set_define('MOZ_NEW_XULSTORE', True, when=new_xulstore)
+
+
+# new Notification Store implementation
+# ==============================================================
+
+@depends(milestone)
+def new_notification_store(milestone):
+    if milestone.is_nightly:
+        return True
+
+set_config('MOZ_NEW_NOTIFICATION_STORE', True, when=new_notification_store)
+set_define('MOZ_NEW_NOTIFICATION_STORE', True, when=new_notification_store)
+
+
+# new Cert Storage implementation
+# ==============================================================
+
+@depends(milestone)
+def new_cert_storage(milestone):
+    if milestone.is_nightly:
+        return True
+
+set_config('MOZ_NEW_CERT_STORAGE', True, when=new_cert_storage)
+set_define('MOZ_NEW_CERT_STORAGE', True, when=new_cert_storage)

@@ -248,9 +248,7 @@ class TestCases {
 
   // Annos don't have an async API, so we use the sync API for both tests.
   async setAnno(guid, name, value) {
-    let id = await PlacesUtils.promiseItemId(guid);
-    PlacesUtils.annotations.setItemAnnotation(id, name, value, 0,
-                                              PlacesUtils.annotations.EXPIRE_NEVER);
+    await setItemAnnotation(guid, name, value);
   }
 }
 

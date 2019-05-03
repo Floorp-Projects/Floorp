@@ -66,25 +66,23 @@ function test_black_box() {
   /* eslint-enable no-multi-spaces, no-undef */
 }
 
-function test_black_box_dbg_statement() {
-  gThreadClient.getSources(async function({error, sources}) {
-    Assert.ok(!error, "Should not get an error: " + error);
-    const sourceFront = await getSource(gThreadClient, BLACK_BOXED_URL);
+async function test_black_box_dbg_statement() {
+  await gThreadClient.getSources();
+  const sourceFront = await getSource(gThreadClient, BLACK_BOXED_URL);
 
-    await blackBox(sourceFront);
+  await blackBox(sourceFront);
 
-    gThreadClient.addOneTimeListener("paused", async function(event, packet) {
-      Assert.equal(packet.why.type, "breakpoint",
-                   "We should pass over the debugger statement.");
+  gThreadClient.addOneTimeListener("paused", async function(event, packet) {
+    Assert.equal(packet.why.type, "breakpoint",
+                 "We should pass over the debugger statement.");
 
-      const source = await getSourceById(gThreadClient, packet.frame.where.actor);
-      gThreadClient.removeBreakpoint({ sourceUrl: source.url, line: 4 }, {});
+    const source = await getSourceById(gThreadClient, packet.frame.where.actor);
+    gThreadClient.removeBreakpoint({ sourceUrl: source.url, line: 4 }, {});
 
-      await gThreadClient.resume();
-      await test_unblack_box_dbg_statement(sourceFront);
-    });
-    gDebuggee.runTest();
+    await gThreadClient.resume();
+    await test_unblack_box_dbg_statement(sourceFront);
   });
+  gDebuggee.runTest();
 }
 
 async function test_unblack_box_dbg_statement(sourceFront) {

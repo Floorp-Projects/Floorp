@@ -147,12 +147,9 @@ impl<T: Copy + Into<usize>> IsValidGuid for [T] {
     #[inline]
     fn is_valid_guid(&self) -> bool {
         self.len() == 12
-            && self.iter().all(|&byte| {
-                VALID_GUID_BYTES
-                    .get(byte.into())
-                    .map(|&b| b == 1)
-                    .unwrap_or(false)
-            })
+            && self
+                .iter()
+                .all(|&byte| VALID_GUID_BYTES.get(byte.into()).map_or(false, |&b| b == 1))
     }
 }
 
@@ -252,13 +249,13 @@ impl Hash for Guid {
 
 // The default Debug impl is pretty unhelpful here.
 impl fmt::Debug for Guid {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Guid({:?})", self.as_str())
     }
 }
 
 impl fmt::Display for Guid {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
 }

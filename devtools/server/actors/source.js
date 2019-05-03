@@ -260,6 +260,18 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       });
   },
 
+  getBreakableLines() {
+    const positions = this.getBreakpointPositions();
+    const lines = new Set();
+    for (const position of positions) {
+      if (!lines.has(position.line)) {
+        lines.add(position.line);
+      }
+    }
+
+    return Array.from(lines);
+  },
+
   getBreakpointPositions(query) {
     const {
       start: {
@@ -291,7 +303,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
           lineNumber < startLine ||
           (lineNumber === startLine && columnNumber < startColumn) ||
           lineNumber > endLine ||
-          (lineNumber === endLine && columnNumber > endColumn)
+          (lineNumber === endLine && columnNumber >= endColumn)
         ) {
           continue;
         }
