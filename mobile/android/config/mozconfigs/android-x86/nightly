@@ -9,6 +9,7 @@ ac_add_options --target=i686-linux-android
 ac_add_options --with-android-min-sdk=16
 
 ac_add_options --with-branding=mobile/android/branding/nightly
+ac_add_options --with-version-file-path=mobile/android/config/version-files/nightly
 
 export FENNEC_NIGHTLY=1
 
