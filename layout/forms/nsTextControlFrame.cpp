@@ -112,7 +112,7 @@ class nsTextControlFrame::nsAnonDivObserver final
 nsTextControlFrame::nsTextControlFrame(ComputedStyle* aStyle,
                                        nsPresContext* aPresContext)
     : nsContainerFrame(aStyle, aPresContext, kClassID),
-      mFirstBaseline(NS_INTRINSIC_WIDTH_UNKNOWN),
+      mFirstBaseline(NS_INTRINSIC_ISIZE_UNKNOWN),
       mEditorHasBeenInitialized(false),
       mIsProcessing(false)
 #ifdef DEBUG

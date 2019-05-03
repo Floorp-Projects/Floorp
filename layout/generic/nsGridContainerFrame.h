@@ -294,11 +294,11 @@ class nsGridContainerFrame final : public nsContainerFrame {
   explicit nsGridContainerFrame(ComputedStyle* aStyle,
                                 nsPresContext* aPresContext)
       : nsContainerFrame(aStyle, aPresContext, kClassID),
-        mCachedMinISize(NS_INTRINSIC_WIDTH_UNKNOWN),
-        mCachedPrefISize(NS_INTRINSIC_WIDTH_UNKNOWN) {
+        mCachedMinISize(NS_INTRINSIC_ISIZE_UNKNOWN),
+        mCachedPrefISize(NS_INTRINSIC_ISIZE_UNKNOWN) {
     for (auto& perAxisBaseline : mBaseline) {
       for (auto& baseline : perAxisBaseline) {
-        baseline = NS_INTRINSIC_WIDTH_UNKNOWN;
+        baseline = NS_INTRINSIC_ISIZE_UNKNOWN;
       }
     }
   }

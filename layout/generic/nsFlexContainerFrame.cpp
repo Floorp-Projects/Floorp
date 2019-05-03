@@ -1815,8 +1815,8 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
 
 /* virtual */
 void nsFlexContainerFrame::MarkIntrinsicISizesDirty() {
-  mCachedMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
-  mCachedPrefISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
+  mCachedPrefISize = NS_INTRINSIC_ISIZE_UNKNOWN;
 
   nsContainerFrame::MarkIntrinsicISizesDirty();
 }
@@ -2367,7 +2367,7 @@ nsresult nsFlexContainerFrame::GetFrameName(nsAString& aResult) const {
 
 nscoord nsFlexContainerFrame::GetLogicalBaseline(
     mozilla::WritingMode aWM) const {
-  NS_ASSERTION(mBaselineFromLastReflow != NS_INTRINSIC_WIDTH_UNKNOWN,
+  NS_ASSERTION(mBaselineFromLastReflow != NS_INTRINSIC_ISIZE_UNKNOWN,
                "baseline has not been set");
 
   if (HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
@@ -5215,7 +5215,7 @@ nscoord nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
 /* virtual */
 nscoord nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext) {
   DISPLAY_MIN_INLINE_SIZE(this, mCachedMinISize);
-  if (mCachedMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  if (mCachedMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     mCachedMinISize =
         StyleDisplay()->IsContainSize()
             ? 0
@@ -5228,7 +5228,7 @@ nscoord nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext) {
 /* virtual */
 nscoord nsFlexContainerFrame::GetPrefISize(gfxContext* aRenderingContext) {
   DISPLAY_PREF_INLINE_SIZE(this, mCachedPrefISize);
-  if (mCachedPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  if (mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     mCachedPrefISize =
         StyleDisplay()->IsContainSize()
             ? 0

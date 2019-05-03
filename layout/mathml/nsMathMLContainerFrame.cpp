@@ -911,13 +911,13 @@ static nscoord AddInterFrameSpacingToSize(ReflowOutput& aDesiredSize,
 
 /* virtual */
 void nsMathMLContainerFrame::MarkIntrinsicISizesDirty() {
-  mIntrinsicWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mIntrinsicWidth = NS_INTRINSIC_ISIZE_UNKNOWN;
   nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
 void nsMathMLContainerFrame::UpdateIntrinsicWidth(
     gfxContext* aRenderingContext) {
-  if (mIntrinsicWidth == NS_INTRINSIC_WIDTH_UNKNOWN) {
+  if (mIntrinsicWidth == NS_INTRINSIC_ISIZE_UNKNOWN) {
     ReflowOutput desiredSize(GetWritingMode());
     GetIntrinsicISizeMetrics(aRenderingContext, desiredSize);
 

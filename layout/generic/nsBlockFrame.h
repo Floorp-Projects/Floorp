@@ -411,8 +411,8 @@ class nsBlockFrame : public nsContainerFrame {
   explicit nsBlockFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                         ClassID aID = kClassID)
       : nsContainerFrame(aStyle, aPresContext, aID),
-        mMinWidth(NS_INTRINSIC_WIDTH_UNKNOWN),
-        mPrefWidth(NS_INTRINSIC_WIDTH_UNKNOWN) {
+        mMinWidth(NS_INTRINSIC_ISIZE_UNKNOWN),
+        mPrefWidth(NS_INTRINSIC_ISIZE_UNKNOWN) {
 #ifdef DEBUG
     InitDebugFlags();
 #endif

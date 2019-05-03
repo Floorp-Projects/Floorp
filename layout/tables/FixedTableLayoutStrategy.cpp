@@ -31,7 +31,7 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy() {}
 /* virtual */
 nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext) {
   DISPLAY_MIN_INLINE_SIZE(mTableFrame, mMinISize);
-  if (mMinISize != NS_INTRINSIC_WIDTH_UNKNOWN) {
+  if (mMinISize != NS_INTRINSIC_ISIZE_UNKNOWN) {
     return mMinISize;
   }
 
@@ -133,7 +133,7 @@ nscoord FixedTableLayoutStrategy::GetPrefISize(gfxContext* aRenderingContext,
 
 /* virtual */
 void FixedTableLayoutStrategy::MarkIntrinsicISizesDirty() {
-  mMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
   mLastCalcISize = nscoord_MIN;
 }
 
