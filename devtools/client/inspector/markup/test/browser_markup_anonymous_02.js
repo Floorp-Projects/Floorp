@@ -12,14 +12,14 @@ const TEST_URL = URL_ROOT + "doc_markup_anonymous_xul.xul";
 add_task(async function() {
   const {inspector} = await openInspectorForURL(TEST_URL);
 
-  const toolbarbutton = await getNodeFront("toolbarbutton", inspector);
-  const children = await inspector.walker.children(toolbarbutton);
+  const boundNode = await getNodeFront("#xbl-host", inspector);
+  const children = await inspector.walker.children(boundNode);
 
-  is(toolbarbutton.numChildren, 4, "Correct number of children");
-  is(children.nodes.length, 4, "Children returned from walker");
+  is(boundNode.numChildren, 2, "Correct number of children");
+  is(children.nodes.length, 2, "Children returned from walker");
 
-  is(toolbarbutton.isAnonymous, false, "Toolbarbutton is not anonymous");
-  await isEditingMenuEnabled(toolbarbutton, inspector);
+  is(boundNode.isAnonymous, false, "Node with XBL binding is not anonymous");
+  await isEditingMenuEnabled(boundNode, inspector);
 
   for (const node of children.nodes) {
     ok(node.isAnonymous, "Child is anonymous");
