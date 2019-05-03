@@ -11,6 +11,7 @@
 #include "mozilla/dom/PWindowGlobalChild.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/WindowGlobalActor.h"
 
 class nsGlobalWindowInner;
 class nsDocShell;
@@ -28,12 +29,14 @@ class BrowserChild;
  * Actor for a single nsGlobalWindowInner. This actor is used to communicate
  * information to the parent process asynchronously.
  */
-class WindowGlobalChild : public nsWrapperCache, public PWindowGlobalChild {
+class WindowGlobalChild final : public WindowGlobalActor,
+                                public PWindowGlobalChild {
   friend class PWindowGlobalChild;
 
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WindowGlobalChild)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WindowGlobalChild)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WindowGlobalChild,
+                                                         WindowGlobalActor)
 
   static already_AddRefed<WindowGlobalChild> GetByInnerWindowId(
       uint64_t aInnerWindowId);
@@ -43,7 +46,7 @@ class WindowGlobalChild : public nsWrapperCache, public PWindowGlobalChild {
     return GetByInnerWindowId(aInnerWindowId);
   }
 
-  dom::BrowsingContext* BrowsingContext() { return mBrowsingContext; }
+  dom::BrowsingContext* BrowsingContext() override { return mBrowsingContext; }
   nsGlobalWindowInner* WindowGlobal() { return mWindowGlobal; }
 
   // Has this actor been shut down
@@ -82,8 +85,12 @@ class WindowGlobalChild : public nsWrapperCache, public PWindowGlobalChild {
   nsISupports* GetParentObject();
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+  nsIURI* GetDocumentURI() override;
 
  protected:
+  const nsAString& GetRemoteType() override;
+  JSWindowActor::Type GetSide() override { return JSWindowActor::Type::Child; }
+
   // IPC messages
   mozilla::ipc::IPCResult RecvRawMessage(const JSWindowActorMessageMeta& aMeta,
                                          const ClonedMessageData& aData);
