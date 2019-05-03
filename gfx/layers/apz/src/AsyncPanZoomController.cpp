@@ -846,10 +846,10 @@ AsyncPanZoomController::AsyncPanZoomController(
       mPinchEventBuffer(
           TimeDuration::FromMilliseconds(gfxPrefs::APZPinchLockBufferMaxAge())),
       mZoomConstraints(false, false,
-                       Metrics().GetDevPixelsPerCSSPixel() * kViewportMinScale /
-                           ParentLayerToScreenScale(1),
-                       Metrics().GetDevPixelsPerCSSPixel() * kViewportMaxScale /
-                           ParentLayerToScreenScale(1)),
+                       mScrollMetadata.GetMetrics().GetDevPixelsPerCSSPixel() *
+                           kViewportMinScale / ParentLayerToScreenScale(1),
+                       mScrollMetadata.GetMetrics().GetDevPixelsPerCSSPixel() *
+                           kViewportMaxScale / ParentLayerToScreenScale(1)),
       mLastSampleTime(GetFrameTime()),
       mLastCheckerboardReport(GetFrameTime()),
       mOverscrollEffect(MakeUnique<OverscrollEffect>(*this)),
@@ -910,8 +910,8 @@ void AsyncPanZoomController::Destroy() {
 
   // Only send the release message if the SharedFrameMetrics has been created.
   if (mMetricsSharingController && mSharedFrameMetricsBuffer) {
-    Unused << mMetricsSharingController->StopSharingMetrics(
-        Metrics().GetScrollId(), mAPZCId);
+    Unused << mMetricsSharingController->StopSharingMetrics(GetScrollId(),
+                                                            mAPZCId);
   }
 
   {  // scope the lock
@@ -1576,6 +1576,7 @@ nsEventStatus AsyncPanZoomController::OnScaleBegin(
   SetState(PINCHING);
   mX.SetVelocity(0);
   mY.SetVelocity(0);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   mLastZoomFocus =
       aEvent.mLocalFocusPoint - Metrics().GetCompositionBounds().TopLeft();
 
@@ -1623,16 +1624,15 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
     }
   }
 
-  // Only the root APZC is zoomable, and the root APZC is not allowed to have
-  // different x and y scales. If it did, the calculations in this function
-  // would have to be adjusted (as e.g. it would no longer be valid to take
-  // the minimum or maximum of the ratios of the widths and heights of the
-  // page rect and the composition bounds).
-  MOZ_ASSERT(Metrics().IsRootContent());
-  MOZ_ASSERT(Metrics().GetZoom().AreScalesSame());
-
   {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
+    // Only the root APZC is zoomable, and the root APZC is not allowed to have
+    // different x and y scales. If it did, the calculations in this function
+    // would have to be adjusted (as e.g. it would no longer be valid to take
+    // the minimum or maximum of the ratios of the widths and heights of the
+    // page rect and the composition bounds).
+    MOZ_ASSERT(Metrics().IsRootContent());
+    MOZ_ASSERT(Metrics().GetZoom().AreScalesSame());
 
     CSSToParentLayerScale userZoom = Metrics().GetZoom().ToScaleFactor();
     ParentLayerPoint focusPoint =
@@ -2342,7 +2342,7 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
       if (RefPtr<GeckoContentController> controller =
               GetGeckoContentController()) {
         controller->NotifyMozMouseScrollEvent(
-            Metrics().GetScrollId(), NS_LITERAL_STRING("MozMouseScrollFailed"));
+            GetScrollId(), NS_LITERAL_STRING("MozMouseScrollFailed"));
       }
     }
     return nsEventStatus_eConsumeNoDefault;
@@ -2362,7 +2362,11 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
       // Wheel events from "clicky" mouse wheels trigger scroll snapping to the
       // next snap point. Check for this, and adjust the delta to take into
       // account the snap point.
-      CSSPoint startPosition = Metrics().GetScrollOffset();
+      CSSPoint startPosition;
+      {
+        RecursiveMutexAutoLock lock(mRecursiveMutex);
+        startPosition = Metrics().GetScrollOffset();
+      }
       MaybeAdjustDeltaForScrollSnappingOnWheelInput(aEvent, delta,
                                                     startPosition);
 
@@ -2455,8 +2459,7 @@ void AsyncPanZoomController::NotifyMozMouseScrollEvent(
   if (!controller) {
     return;
   }
-
-  controller->NotifyMozMouseScrollEvent(Metrics().GetScrollId(), aString);
+  controller->NotifyMozMouseScrollEvent(GetScrollId(), aString);
 }
 
 nsEventStatus AsyncPanZoomController::OnPanMayBegin(
@@ -3976,7 +3979,6 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime) {
 
   {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-
     {  // scope lock
       MutexAutoLock lock(mCheckerboardEventLock);
       // Update RendertraceProperty before UpdateAnimation() call, since
@@ -3993,7 +3995,6 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime) {
 
     requestAnimationFrame = UpdateAnimation(aSampleTime, &deferredTasks);
   }
-
   // Execute any deferred tasks queued up by mAnimation's Sample() (called by
   // UpdateAnimation()). This needs to be done after the monitor is released
   // since the tasks are allowed to call APZCTreeManager methods which can grab
@@ -4159,6 +4160,7 @@ AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(
 
 LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
     AsyncTransformConsumer aMode) const {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   AutoApplyAsyncTestAttributes testAttributeApplier(this);
   CSSToParentLayerScale2D scale = GetEffectiveZoom(aMode);
   // Note that in general the zoom might have different x- and y-scales.
@@ -4755,7 +4757,7 @@ const FrameMetrics& AsyncPanZoomController::Metrics() const {
 
 const FrameMetrics& AsyncPanZoomController::GetFrameMetrics() const {
   mRecursiveMutex.AssertCurrentThreadIn();
-  return mScrollMetadata.GetMetrics();
+  return Metrics();
   ;
 }
 
@@ -4795,18 +4797,18 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     return;
   }
 
-  // Only the root APZC is zoomable, and the root APZC is not allowed to have
-  // different x and y scales. If it did, the calculations in this function
-  // would have to be adjusted (as e.g. it would no longer be valid to take
-  // the minimum or maximum of the ratios of the widths and heights of the
-  // page rect and the composition bounds).
-  MOZ_ASSERT(Metrics().IsRootContent());
-  MOZ_ASSERT(Metrics().GetZoom().AreScalesSame());
-
   SetState(ANIMATING_ZOOM);
 
   {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+    // Only the root APZC is zoomable, and the root APZC is not allowed to have
+    // different x and y scales. If it did, the calculations in this function
+    // would have to be adjusted (as e.g. it would no longer be valid to take
+    // the minimum or maximum of the ratios of the widths and heights of the
+    // page rect and the composition bounds).
+    MOZ_ASSERT(Metrics().IsRootContent());
+    MOZ_ASSERT(Metrics().GetZoom().AreScalesSame());
 
     ParentLayerRect compositionBounds = Metrics().GetCompositionBounds();
     CSSRect cssPageRect = Metrics().GetScrollableRect();
@@ -5023,6 +5025,7 @@ void AsyncPanZoomController::DispatchStateChangeNotification(
       if (APZCTreeManager* manager = GetApzcTreeManager()) {
         if (AndroidDynamicToolbarAnimator* animator =
                 manager->GetAndroidDynamicToolbarAnimator()) {
+          RecursiveMutexAutoLock lock(mRecursiveMutex);
           animator->UpdateRootFrameMetrics(Metrics());
         }
       }
@@ -5059,6 +5062,7 @@ void AsyncPanZoomController::UpdateZoomConstraints(
     return;
   }
 
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   CSSToParentLayerScale min = Metrics().GetDevPixelsPerCSSPixel() *
                               kViewportMinScale / ParentLayerToScreenScale(1);
   CSSToParentLayerScale max = Metrics().GetDevPixelsPerCSSPixel() *
@@ -5109,6 +5113,7 @@ void AsyncPanZoomController::GetGuid(ScrollableLayerGuid* aGuidOut) const {
 }
 
 ScrollableLayerGuid AsyncPanZoomController::GetGuid() const {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   return ScrollableLayerGuid(mLayersId, Metrics().GetPresShellId(),
                              Metrics().GetScrollId());
 }
