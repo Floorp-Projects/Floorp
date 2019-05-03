@@ -58,7 +58,7 @@ You can test that everything is working by running these commands:
 
 .. code-block:: shell
 
-    $ statedir=`mach python -c "from mozboot.util import get_state_dir; get_state_dir(srcdir=True)"`
+    $ statedir=`mach python -c "from mozboot.util import get_state_dir; print(get_state_dir(srcdir=True))"`
     $ rm -rf $statedir/cache/taskgraph
     $ touch taskcluster/mach_commands.py
     # wait a minute for generation to trigger and finish
