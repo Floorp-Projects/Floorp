@@ -716,7 +716,8 @@ WebSocketImpl::OnStart(nsISupports* aContext) {
 
   mService->WebSocketOpened(
       mChannel->Serial(), mInnerWindowID, mWebSocket->mEffectiveURL,
-      mWebSocket->mEstablishedProtocol, mWebSocket->mEstablishedExtensions);
+      mWebSocket->mEstablishedProtocol, mWebSocket->mEstablishedExtensions,
+      mChannel->HttpChannelId());
 
   // Let's keep the object alive because the webSocket can be CCed in the
   // onopen callback.

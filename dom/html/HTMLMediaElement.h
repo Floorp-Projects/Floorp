@@ -1737,9 +1737,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   virtual void MaybeBeginCloningVisually(){};
 
-  uint32_t GetPreloadDefault() const;
-  uint32_t GetPreloadDefaultAuto() const;
-
   /**
    * This function is called by AfterSetAttr and OnAttrSetButNotChanged.
    * It will not be called if the value is being unset.

@@ -866,10 +866,6 @@ template <ComparisonKind Kind>
 bool StringsCompare(JSContext* cx, HandleString lhs, HandleString rhs,
                     bool* res);
 
-MOZ_MUST_USE bool StringSplitHelper(JSContext* cx, HandleString str,
-                                    HandleString sep, HandleObjectGroup group,
-                                    uint32_t limit, MutableHandleValue result);
-
 MOZ_MUST_USE bool ArrayPopDense(JSContext* cx, HandleObject obj,
                                 MutableHandleValue rval);
 MOZ_MUST_USE bool ArrayPushDense(JSContext* cx, HandleArrayObject arr,

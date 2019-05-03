@@ -558,12 +558,14 @@ html|input[type="checkbox"]:checked {
   fill: #2292d0;
 }
 
-xul|checkbox[disabled="true"] {
+xul|checkbox[disabled="true"],
+xul|label[disabled="true"] {
   color: inherit;
 }
 
 xul|checkbox[disabled="true"],
-html|input[type="checkbox"]:disabled {
+html|input[type="checkbox"]:disabled,
+xul|label[disabled="true"] {
   opacity: 0.5;
 }
 

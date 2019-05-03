@@ -2218,8 +2218,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
 
     // So far we want to make sure Inherit doesn't override any other origin
     // attribute than firstPartyDomain.
-    MOZ_ASSERT(attrs.mAppId == oa.mAppId,
-               "docshell and document should have the same appId attribute.");
     MOZ_ASSERT(
         attrs.mUserContextId == oa.mUserContextId,
         "docshell and document should have the same userContextId attribute.");
@@ -2234,7 +2232,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   }
 
   if (OwnerIsMozBrowserFrame()) {
-    attrs.mAppId = nsIScriptSecurityManager::NO_APP_ID;
     attrs.mInIsolatedMozBrowser = OwnerIsIsolatedMozBrowserFrame();
     docShell->SetFrameType(nsIDocShell::FRAME_TYPE_BROWSER);
   } else {
@@ -3378,8 +3375,6 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   OriginAttributes attrs;
   attrs.mInIsolatedMozBrowser = OwnerIsIsolatedMozBrowserFrame();
   nsresult rv;
-
-  attrs.mAppId = nsIScriptSecurityManager::NO_APP_ID;
 
   // set the userContextId on the attrs before we pass them into
   // the tab context

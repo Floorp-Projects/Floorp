@@ -131,16 +131,17 @@ ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject* aGlobal,
                                                    Type aType)
     : mGlobalObject(aGlobal), mType(aType), mOlder(nullptr) {
   MOZ_ASSERT_IF(IsIncumbentCandidate() && !NoJSAPI(), mGlobalObject);
-  MOZ_ASSERT(!mGlobalObject || mGlobalObject->GetGlobalJSObject(),
+  MOZ_ASSERT(!mGlobalObject || mGlobalObject->HasJSGlobal(),
              "Must have an actual JS global for the duration on the stack");
   MOZ_ASSERT(
-      !mGlobalObject || JS_IsGlobalObject(mGlobalObject->GetGlobalJSObject()),
+      !mGlobalObject ||
+          JS_IsGlobalObject(mGlobalObject->GetGlobalJSObjectPreserveColor()),
       "No outer windows allowed");
 }
 
 ScriptSettingsStackEntry::~ScriptSettingsStackEntry() {
   // We must have an actual JS global for the entire time this is on the stack.
-  MOZ_ASSERT_IF(mGlobalObject, mGlobalObject->GetGlobalJSObject());
+  MOZ_ASSERT_IF(mGlobalObject, mGlobalObject->HasJSGlobal());
 }
 
 // If the entry or incumbent global ends up being something that the subject
@@ -286,7 +287,8 @@ void AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   MOZ_ASSERT(aCx == danger::GetJSContext());
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
   MOZ_ASSERT(bool(aGlobalObject) == bool(aGlobal));
-  MOZ_ASSERT_IF(aGlobalObject, aGlobalObject->GetGlobalJSObject() == aGlobal);
+  MOZ_ASSERT_IF(aGlobalObject,
+                aGlobalObject->GetGlobalJSObjectPreserveColor() == aGlobal);
 #ifdef DEBUG
   bool haveException = JS_IsExceptionPending(aCx);
 #endif  // DEBUG
@@ -295,7 +297,7 @@ void AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   mIsMainThread = aIsMainThread;
   mGlobalObject = aGlobalObject;
   if (aGlobal) {
-    JS::ExposeObjectToActiveJS(aGlobal);
+    JS::AssertObjectIsNotGray(aGlobal);
   }
   mAutoNullableRealm.emplace(mCx, aGlobal);
 
@@ -383,7 +385,7 @@ AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread,
     : ScriptSettingsStackEntry(aGlobalObject, aType),
       mIsMainThread(aIsMainThread) {
   MOZ_ASSERT(aGlobalObject);
-  MOZ_ASSERT(aGlobalObject->GetGlobalJSObject(), "Must have a JS global");
+  MOZ_ASSERT(aGlobalObject->HasJSGlobal(), "Must have a JS global");
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
 
   InitInternal(aGlobalObject, aGlobalObject->GetGlobalJSObject(),

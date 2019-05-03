@@ -553,8 +553,8 @@ class GeckoProfilerThread {
    *   - exit: this function has ceased execution, and no further
    *           entries/exits will be made
    */
-  bool enter(JSContext* cx, JSScript* script, JSFunction* maybeFun);
-  void exit(JSScript* script, JSFunction* maybeFun);
+  bool enter(JSContext* cx, JSScript* script);
+  void exit(JSContext* cx, JSScript* script);
   inline void updatePC(JSContext* cx, JSScript* script, jsbytecode* pc);
 };
 

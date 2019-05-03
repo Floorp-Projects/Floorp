@@ -237,10 +237,10 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   explicit nsFlexContainerFrame(ComputedStyle* aStyle,
                                 nsPresContext* aPresContext)
       : nsContainerFrame(aStyle, aPresContext, kClassID),
-        mCachedMinISize(NS_INTRINSIC_WIDTH_UNKNOWN),
-        mCachedPrefISize(NS_INTRINSIC_WIDTH_UNKNOWN),
-        mBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN),
-        mLastBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN) {}
+        mCachedMinISize(NS_INTRINSIC_ISIZE_UNKNOWN),
+        mCachedPrefISize(NS_INTRINSIC_ISIZE_UNKNOWN),
+        mBaselineFromLastReflow(NS_INTRINSIC_ISIZE_UNKNOWN),
+        mLastBaselineFromLastReflow(NS_INTRINSIC_ISIZE_UNKNOWN) {}
 
   virtual ~nsFlexContainerFrame();
 

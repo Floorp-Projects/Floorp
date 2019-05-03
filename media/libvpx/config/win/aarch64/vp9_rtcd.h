@@ -73,9 +73,6 @@ void vp9_quantize_fp_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, int
 void vp9_scale_and_extend_frame_c(const struct yv12_buffer_config *src, struct yv12_buffer_config *dst, INTERP_FILTER filter_type, int phase_scaler);
 #define vp9_scale_and_extend_frame vp9_scale_and_extend_frame_c
 
-void vp9_temporal_filter_apply_c(const uint8_t *frame1, unsigned int stride, const uint8_t *frame2, unsigned int block_width, unsigned int block_height, int strength, int filter_weight, uint32_t *accumulator, uint16_t *count);
-#define vp9_temporal_filter_apply vp9_temporal_filter_apply_c
-
 void vp9_rtcd(void);
 
 #include "vpx_config.h"

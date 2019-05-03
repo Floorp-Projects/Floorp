@@ -859,14 +859,30 @@ bool BaselineInspector::isOptimizableConstStringSplit(jsbytecode* pc,
   }
 
   ICStub* stub = entry.firstStub();
-  if (stub->kind() != ICStub::Call_ConstStringSplit) {
-    return false;
+
+  if (stub->kind() == ICStub::Call_ConstStringSplit) {
+    *strOut = stub->toCall_ConstStringSplit()->expectedStr();
+    *sepOut = stub->toCall_ConstStringSplit()->expectedSep();
+    *objOut = stub->toCall_ConstStringSplit()->templateObject();
+    return true;
   }
 
-  *strOut = stub->toCall_ConstStringSplit()->expectedStr();
-  *sepOut = stub->toCall_ConstStringSplit()->expectedSep();
-  *objOut = stub->toCall_ConstStringSplit()->templateObject();
-  return true;
+  if (ICStub::IsCacheIRKind(stub->kind())) {
+    mozilla::Maybe<CacheIRReader> argReader;
+    if (!MaybeArgumentReader(stub, CacheOp::MetaThreeByte, argReader) ||
+        argReader->metaKind<MetaThreeByteKind>() !=
+            MetaThreeByteKind::ConstStringSplitData) {
+      return false;
+    }
+    const CacheIRStubInfo* stubInfo = GetCacheIRStubInfo(stub);
+    *strOut = stubInfo->getStubField<JSString*>(stub, argReader->stubOffset());
+    *sepOut = stubInfo->getStubField<JSString*>(stub, argReader->stubOffset());
+    *objOut =
+        stubInfo->getStubField<ArrayObject*>(stub, argReader->stubOffset());
+    return true;
+  }
+
+  return false;
 }
 
 JSObject* BaselineInspector::getTemplateObjectForClassHook(jsbytecode* pc,

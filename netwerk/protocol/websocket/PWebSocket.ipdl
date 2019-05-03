@@ -50,7 +50,8 @@ parent:
 child:
   // Forwarded notifications corresponding to the nsIWebSocketListener interface
   async OnStart(nsCString aProtocol, nsCString aExtensions,
-                nsString aEffectiveURL, bool aEncrypted);
+                nsString aEffectiveURL, bool aEncrypted,
+                uint64_t aHttpChannelId);
   async OnStop(nsresult aStatusCode);
   async OnMessageAvailable(nsCString aMsg);
   async OnBinaryMessageAvailable(nsCString aMsg);

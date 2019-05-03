@@ -389,6 +389,7 @@
   MACRO(sticky, sticky, "sticky")                                              \
   MACRO(StringIterator, StringIterator, "String Iterator")                     \
   MACRO(strings, strings, "strings")                                           \
+  MACRO(String_split, String_split, "String_split")                            \
   MACRO(StructType, StructType, "StructType")                                  \
   MACRO(style, style, "style")                                                 \
   MACRO(super, super, "super")                                                 \

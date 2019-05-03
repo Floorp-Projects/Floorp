@@ -227,7 +227,6 @@ namespace jit {
   _(StringFromCharCode, js::jit::StringFromCharCode)                           \
   _(StringFromCodePoint, js::jit::StringFromCodePoint)                         \
   _(StringReplace, js::jit::StringReplace)                                     \
-  _(StringSplitHelper, js::jit::StringSplitHelper)                             \
   _(StringSplitString, js::StringSplitString)                                  \
   _(StringToLowerCase, js::StringToLowerCase)                                  \
   _(StringToNumber, js::StringToNumber)                                        \

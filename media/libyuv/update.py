@@ -52,8 +52,6 @@ def apply_patches(base):
         'allow_disabling_asm_avx2.patch',
         # add H444ToARGB() variant
         'add_H444ToARGB.patch',
-        # avoid selecting neon codepaths on AArch64 Windows
-        'aarch64-windows-noneon.patch',
         # fix the x86 mingw-clang build
         'bug_1491848.patch',
     ]

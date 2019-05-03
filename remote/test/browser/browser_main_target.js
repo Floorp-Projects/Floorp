@@ -5,15 +5,11 @@
 
 // Test very basic CDP features.
 
-const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
-
 const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
 
 add_task(async function() {
   // Start the CDP server
-  RemoteAgent.init();
-  RemoteAgent.tabs.start();
-  RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
+  await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
 
   const { mainProcessTarget } = RemoteAgent.targets;
   ok(mainProcessTarget,

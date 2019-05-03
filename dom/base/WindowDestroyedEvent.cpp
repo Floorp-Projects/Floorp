@@ -106,7 +106,7 @@ WindowDestroyedEvent::Run() {
         NS_ENSURE_TRUE(currentInner, NS_OK);
 
         AutoSafeJSContext cx;
-        JS::Rooted<JSObject*> obj(cx, currentInner->FastGetGlobalJSObject());
+        JS::Rooted<JSObject*> obj(cx, currentInner->GetGlobalJSObject());
         if (obj && !js::IsSystemRealm(js::GetNonCCWObjectRealm(obj))) {
           JS::Realm* realm = js::GetNonCCWObjectRealm(obj);
 

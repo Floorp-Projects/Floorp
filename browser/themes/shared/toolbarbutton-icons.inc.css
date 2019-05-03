@@ -396,10 +396,6 @@ toolbar[brighttext] {
   fill: rgb(213, 32, 20);
 }
 
-#webide-button {
-  list-style-image: url("chrome://browser/skin/webIDE.svg");
-}
-
 #library-button {
   list-style-image: url("chrome://browser/skin/library.svg");
 }

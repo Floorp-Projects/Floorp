@@ -1956,6 +1956,7 @@ UpdateService.prototype = {
           if (!this._downloader.usingBits) {
             this.stopDownload();
           } else {
+            this._downloader.cleanup();
             // The BITS downloader isn't stopped on exit so the
             // active-update.xml needs to be saved for the values sent to
             // telemetry to be saved to disk.
@@ -4642,6 +4643,20 @@ Downloader.prototype = {
     } else {
       // Prevent leaking the update object (bug 454964)
       this._update = null;
+    }
+  },
+
+  /**
+   * This function should be called when shutting down so that resources get
+   * freed properly.
+   */
+  cleanup: function Downloader_cleanup() {
+    if (this.usingBits) {
+      if (this._pendingRequest) {
+        this._pendingRequest.then(() => this._request.shutdown());
+      } else {
+        this._request.shutdown();
+      }
     }
   },
 

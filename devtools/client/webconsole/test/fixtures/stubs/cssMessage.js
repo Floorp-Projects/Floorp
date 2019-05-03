@@ -35,6 +35,7 @@ stubPreparedMessages.set(`Unknown property ‘such-unknown-property’.  Declara
   },
   "groupId": null,
   "errorMessageName": "",
+  "cssSelectors": "p",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
@@ -65,6 +66,7 @@ stubPreparedMessages.set(`Error in parsing value for ‘padding-top’.  Declara
   },
   "groupId": null,
   "errorMessageName": "",
+  "cssSelectors": "p",
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
@@ -93,7 +95,8 @@ stubPackets.set(`Unknown property ‘such-unknown-property’.  Declaration drop
     "private": false,
     "stacktrace": null,
     "notes": null,
-    "chromeContext": false
+    "chromeContext": false,
+    "cssSelectors": "p"
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"
@@ -119,7 +122,8 @@ stubPackets.set(`Error in parsing value for ‘padding-top’.  Declaration drop
     "private": false,
     "stacktrace": null,
     "notes": null,
-    "chromeContext": false
+    "chromeContext": false,
+    "cssSelectors": "p"
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"

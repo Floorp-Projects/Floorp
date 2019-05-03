@@ -33,8 +33,7 @@
     'build_msa': 0,
     'conditions': [
        ['(target_arch == "armv7" or target_arch == "armv7s" or \
-       (target_arch == "arm" and arm_version >= 7) or \
-       (OS != "win" and target_arch == "arm64")) \
+       (target_arch == "arm" and arm_version >= 7) or target_arch == "arm64")\
        and (arm_neon == 1 or arm_neon_optional == 1)', {
          'build_neon': 1,
        }],

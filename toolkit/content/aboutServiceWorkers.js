@@ -66,13 +66,6 @@ async function display(info, pushService) {
   document.l10n.setAttributes(title, "origin-title", { originTitle: info.principal.origin });
   div.appendChild(title);
 
-  if (info.principal.appId) {
-    let b2gtitle = document.createElement("h3");
-    let trueFalse = info.principal.isInIsolatedMozBrowserElement ? "true" : "false";
-    document.l10n.setAttributes(b2gtitle, "app-title", { appId: info.principal.appId, isInIsolatedElement: trueFalse });
-    div.appendChild(b2gtitle);
-  }
-
   let list = document.createElement("ul");
   div.appendChild(list);
 

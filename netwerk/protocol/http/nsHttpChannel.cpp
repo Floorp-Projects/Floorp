@@ -1343,7 +1343,7 @@ HttpTrafficCategory nsHttpChannel::CreateTrafficCategory() {
 
     if (flags & CF::CLASSIFIED_TRACKING_CONTENT) {
       tc = TC::eContent;
-    } else if (flags & CF::CLASSIFIED_FINGERPRINTING) {
+    } else if (flags & CF::CLASSIFIED_FINGERPRINTING_CONTENT) {
       tc = TC::eFingerprinting;
     } else if (flags & CF::CLASSIFIED_ANY_BASIC_TRACKING) {
       tc = TC::eBasic;

@@ -652,12 +652,17 @@ class GTestCommands(MachCommandBase):
             self._run_make(directory='browser/app', target='repackage',
                            ensure_exit_code=True)
 
+        cwd = os.path.join(self.topobjdir, '_tests', 'gtest')
+
+        if not os.path.isdir(cwd):
+            os.makedirs(cwd)
+
         if conditions.is_android(self):
             if jobs != 1:
                 print("--jobs is not supported on Android and will be ignored")
             if debug or debugger or debugger_args:
                 print("--debug options are not supported on Android and will be ignored")
-            return self.android_gtest(shuffle, gtest_filter,
+            return self.android_gtest(cwd, shuffle, gtest_filter,
                                       package, adb_path, device_serial, remote_test_root, libxul_path)
 
         if package or adb_path or device_serial or remote_test_root or libxul_path:
@@ -672,11 +677,6 @@ class GTestCommands(MachCommandBase):
 
         if debug or debugger or debugger_args:
             args = self.prepend_debugger_args(args, debugger, debugger_args)
-
-        cwd = os.path.join(self.topobjdir, '_tests', 'gtest')
-
-        if not os.path.isdir(cwd):
-            os.makedirs(cwd)
 
         # Use GTest environment variable to control test execution
         # For details see:
@@ -739,7 +739,7 @@ class GTestCommands(MachCommandBase):
 
         return exit_code
 
-    def android_gtest(self, shuffle, gtest_filter,
+    def android_gtest(self, test_dir, shuffle, gtest_filter,
                       package, adb_path, device_serial, remote_test_root, libxul_path):
         # setup logging for mozrunner
         from mozlog.commandline import setup_logging
@@ -764,8 +764,9 @@ class GTestCommands(MachCommandBase):
                             ('.py', 'r', imp.PY_SOURCE))
         import remotegtests
         tester = remotegtests.RemoteGTests()
-        tester.run_gtest(shuffle, gtest_filter, package, adb_path, device_serial,
+        tester.run_gtest(test_dir, shuffle, gtest_filter, package, adb_path, device_serial,
                          remote_test_root, libxul_path, None)
+        tester.cleanup()
 
         return 0
 

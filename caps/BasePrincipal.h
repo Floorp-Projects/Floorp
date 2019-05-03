@@ -122,7 +122,6 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetOriginAttributes(JSContext* aCx,
                                  JS::MutableHandle<JS::Value> aVal) final;
   NS_IMETHOD GetOriginSuffix(nsACString& aOriginSuffix) final;
-  NS_IMETHOD GetAppId(uint32_t* aAppId) final;
   NS_IMETHOD GetIsInIsolatedMozBrowserElement(
       bool* aIsInIsolatedMozBrowserElement) final;
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
@@ -154,7 +153,6 @@ class BasePrincipal : public nsJSPrincipals {
   const OriginAttributes& OriginAttributesRef() final {
     return mOriginAttributes;
   }
-  uint32_t AppId() const { return mOriginAttributes.mAppId; }
   extensions::WebExtensionPolicy* AddonPolicy();
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
   uint32_t PrivateBrowsingId() const {

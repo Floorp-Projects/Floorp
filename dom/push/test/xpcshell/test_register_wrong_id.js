@@ -58,7 +58,7 @@ add_task(async function test_register_wrong_id() {
     PushService.register({
       scope: "https://example.com/mismatched",
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+        { inIsolatedMozBrowser: false }),
     }),
     /Registration error/,
     "Expected error for mismatched register reply"

@@ -9955,8 +9955,10 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   aLoadState->TriggeringPrincipal()->GetCsp(getter_AddRefs(csp));
 #ifdef DEBUG
-  if (!aLoadState->TriggeringPrincipal()->GetIsNullPrincipal()) {
-    // After Bug 965637 we can remove that assertion anyway.
+  // We only serialize the CSP within CodebasePrincipals hence
+  // lets only assert if the load is triggered by a CodebesPrincipal.
+  // After Bug 965637 we can remove that assertion anyway.
+  if (aLoadState->TriggeringPrincipal()->GetIsCodebasePrincipal()) {
     nsCOMPtr<nsIContentSecurityPolicy> argsCSP = aLoadState->Csp();
     MOZ_ASSERT(nsCSPContext::Equals(csp, argsCSP));
   }

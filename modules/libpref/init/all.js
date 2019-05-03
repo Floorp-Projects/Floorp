@@ -206,6 +206,8 @@ pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_i
 // if you need to limit under a directory, the path should end with "/" like
 // "example.com/foo/".  Note that this cannot limit port number for now.
 pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys", "www.icloud.com");
+// Pref for end-users and policy to add additional values.
+pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys.addl", "");
 
 // Blacklist of domains of web apps which handle keyCode and charCode of
 // keypress events with a path only for Firefox (i.e., broken if we set
@@ -213,6 +215,8 @@ pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys", "www.icloud.
 // same as "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys". So,
 // check its explanation for the detail.
 pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "*.collabserv.com,*.gov.online.office365.us,*.officeapps-df.live.com,*.officeapps.live.com,*.online.office.de,*.partner.officewebapps.cn,*.scniris.com");
+// Pref for end-users and policy to add additional values.
+pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode.addl", "");
 
 // Blacklist of domains of web apps which listen for non-primary click events
 // on window global or document. The format is exactly same as
@@ -5512,6 +5516,8 @@ pref("network.connectivity-service.IPv6.url", "http://detectportal.firefox.com/s
 pref("network.trr.mode", 0);
 // DNS-over-HTTP service to use, must be HTTPS://
 pref("network.trr.uri", "https://mozilla.cloudflare-dns.com/dns-query");
+// DNS-over-HTTP service options, must be HTTPS://
+pref("network.trr.resolvers", "[{ \"name\": \"Cloudflare\", \"url\": \"https://mozilla.cloudflare-dns.com/dns-query\" }]");
 // credentials to pass to DOH end-point
 pref("network.trr.credentials", "");
 pref("network.trr.custom_uri", "");

@@ -99,7 +99,6 @@ void MIDIMessageEvent::GetData(JSContext* cx,
       return;
     }
     mRawData.Clear();
-    JS::ExposeObjectToActiveJS(mData);
   }
   aData.set(mData);
 }

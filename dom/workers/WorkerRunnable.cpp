@@ -341,20 +341,20 @@ WorkerRunnable::Run() {
     // If we're on the parent thread and have a reflector and a globalObject,
     // then the realms of cx, globalObject, and the worker's reflector
     // should all match.
-    MOZ_ASSERT_IF(globalObject, js::GetObjectCompartment(wrapper) ==
-                                    js::GetContextCompartment(cx));
-    MOZ_ASSERT_IF(globalObject, js::GetObjectCompartment(wrapper) ==
-                                    js::GetObjectCompartment(
-                                        globalObject->GetGlobalJSObject()));
+    MOZ_ASSERT_IF(globalObject,
+                  js::GetNonCCWObjectRealm(wrapper) == js::GetContextRealm(cx));
+    MOZ_ASSERT_IF(globalObject,
+                  js::GetNonCCWObjectRealm(wrapper) ==
+                      js::GetNonCCWObjectRealm(
+                          globalObject->GetGlobalJSObjectPreserveColor()));
 
     // If we're on the parent thread and have a reflector, then our
     // JSContext had better be either in the null realm (and hence
     // have no globalObject) or in the realm of our reflector.
-    MOZ_ASSERT(
-        !js::GetContextCompartment(cx) ||
-            js::GetObjectCompartment(wrapper) == js::GetContextCompartment(cx),
-        "Must either be in the null compartment or in our reflector "
-        "compartment");
+    MOZ_ASSERT(!js::GetContextRealm(cx) ||
+                   js::GetNonCCWObjectRealm(wrapper) == js::GetContextRealm(cx),
+               "Must either be in the null compartment or in our reflector "
+               "compartment");
 
     ar.emplace(cx, wrapper);
   }

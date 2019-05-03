@@ -19,10 +19,14 @@
 #undef HAVE_DIRENT_H
 #undef HAVE_UNISTD_H
 #endif
+#if defined(_ARM64_)
+#include "config_aarch64_win64.h"
+#else
 #if defined(HAVE_64BIT_BUILD)
 #include "config_win64.h"
 #else
 #include "config_win32.h"
+#endif
 #endif
 // Adjust configure defines for GCC
 #if !defined(_MSC_VER)

@@ -78,7 +78,6 @@ add_task(async function test1() {
   });
 
   let originAttributes = ChromeUtils.originAttributesToSuffix({
-    appId: Ci.nsIScriptSecurityManager.NO_APP_ID,
     inIsolatedMozBrowser: false,
   });
   let newRecord = await PushService.register({

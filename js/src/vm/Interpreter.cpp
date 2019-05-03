@@ -2000,7 +2000,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           // version of the function popped a copy of the frame pushed by the
           // OSR trampoline.)
           if (wasProfiler) {
-            cx->geckoProfiler().exit(script, script->functionNonDelazifying());
+            cx->geckoProfiler().exit(cx, script);
           }
 
           if (activation.entryFrame() != REGS.fp()) {

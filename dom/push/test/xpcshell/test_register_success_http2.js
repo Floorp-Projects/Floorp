@@ -49,7 +49,7 @@ add_task(async function test_pushSubscriptionSuccess() {
   let newRecord = await PushService.register({
     scope: "https://example.org/1",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
   });
 
   var subscriptionUri = serverURL + "/pushSubscriptionSuccesss";
@@ -83,7 +83,7 @@ add_task(async function test_pushSubscriptionMissingLink2() {
   let newRecord = await PushService.register({
     scope: "https://example.org/no_receiptEndpoint",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
   });
 
   var subscriptionUri = serverURL + "/subscriptionMissingLink2";
