@@ -54,6 +54,14 @@ exports.menuitems = [
   },
   { id: "menu_devtools_separator",
     separator: true },
+  { id: "menu_devtools_remotedebugging",
+    l10nKey: "devtoolsRemoteDebugging",
+    disabled: true,
+    oncommand(event) {
+      const window = event.target.ownerDocument.defaultView;
+      gDevToolsBrowser.openAboutDebugging(window.gBrowser);
+    },
+  },
   { id: "menu_webide",
     l10nKey: "webide",
     disabled: true,
@@ -117,14 +125,6 @@ exports.menuitems = [
       ScratchpadManager.openScratchpad();
     },
     keyId: "scratchpad",
-  },
-  { id: "menu_devtools_serviceworkers",
-    l10nKey: "devtoolsServiceWorkers",
-    disabled: true,
-    oncommand(event) {
-      const window = event.target.ownerDocument.defaultView;
-      gDevToolsBrowser.openAboutDebugging(window.gBrowser, "workers");
-    },
   },
   { id: "menu_devtools_connect",
     l10nKey: "devtoolsConnect",
