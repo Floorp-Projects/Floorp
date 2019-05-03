@@ -1415,9 +1415,12 @@ impl RenderBackend {
         }
 
         // Avoid re-building the frame if the current built frame is still valid.
-        let build_frame = (render_frame && !doc.frame_is_valid) ||
-            self.resource_cache.requires_frame_build() &&
-            doc.frame_builder.is_some();
+        // However, if the resource_cache requires a frame build, _always_ do that, unless
+        // doc.can_render() is false, as in that case a frame build can't happen anyway.
+        // We want to ensure we do this because even if the doc doesn't have pixels it
+        // can still try to access stale texture cache items.
+        let build_frame = (render_frame && !doc.frame_is_valid && doc.has_pixels()) ||
+            (self.resource_cache.requires_frame_build() && doc.can_render());
 
         // Request composite is true when we want to composite frame even when
         // there is no frame update. This happens when video frame is updated under
@@ -1427,7 +1430,7 @@ impl RenderBackend {
         }
 
         let mut frame_build_time = None;
-        if build_frame && doc.has_pixels() {
+        if build_frame {
             profile_scope!("generate frame");
 
             *frame_counter += 1;
