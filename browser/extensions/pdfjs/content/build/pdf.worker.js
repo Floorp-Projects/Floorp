@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.154';
-const pdfjsBuild = '762c58e0';
+const pdfjsVersion = '2.2.160';
+const pdfjsBuild = '155304a0';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -378,7 +378,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.154';
+    let workerVersion = '2.2.160';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -19616,7 +19616,9 @@ var NullOptimizer = function NullOptimizerClosure() {
       this.queue.argsArray.push(args);
     },
 
-    flush() {}
+    flush() {},
+
+    reset() {}
 
   };
   return NullOptimizer;
@@ -19631,7 +19633,7 @@ var OperatorList = function OperatorListClosure() {
     this.fnArray = [];
     this.argsArray = [];
 
-    if (messageHandler && this.intent !== 'oplist') {
+    if (messageHandler && intent !== 'oplist') {
       this.optimizer = new QueueOptimizer(this);
     } else {
       this.optimizer = new NullOptimizer(this);
@@ -20554,7 +20556,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       });
       return fontCapability.promise;
     },
-    buildPath: function PartialEvaluator_buildPath(operatorList, fn, args) {
+
+    buildPath(operatorList, fn, args, parsingText = false) {
       var lastIndex = operatorList.length - 1;
 
       if (!args) {
@@ -20562,13 +20565,23 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       }
 
       if (lastIndex < 0 || operatorList.fnArray[lastIndex] !== _util.OPS.constructPath) {
+        if (parsingText) {
+          (0, _util.warn)(`Encountered path operator "${fn}" inside of a text object.`);
+          operatorList.addOp(_util.OPS.save, null);
+        }
+
         operatorList.addOp(_util.OPS.constructPath, [[fn], args]);
+
+        if (parsingText) {
+          operatorList.addOp(_util.OPS.restore, null);
+        }
       } else {
         var opArgs = operatorList.argsArray[lastIndex];
         opArgs[0].push(fn);
         Array.prototype.push.apply(opArgs[1], args);
       }
     },
+
     handleColorN: function PartialEvaluator_handleColorN(operatorList, fn, args, cs, patterns, resources, task) {
       var patternName = args[args.length - 1];
       var pattern;
@@ -20611,6 +20624,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
       var self = this;
       var xref = this.xref;
+      let parsingText = false;
       var imageCache = Object.create(null);
 
       var xobjs = resources.get('XObject') || _primitives.Dict.empty;
@@ -20732,6 +20746,14 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                 operatorList.addOp(_util.OPS.setFont, [loadedName, fontSize]);
               }));
               return;
+
+            case _util.OPS.beginText:
+              parsingText = true;
+              break;
+
+            case _util.OPS.endText:
+              parsingText = false;
+              break;
 
             case _util.OPS.endInlineImage:
               var cacheKey = args[0].cacheKey;
@@ -20914,11 +20936,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
             case _util.OPS.curveTo2:
             case _util.OPS.curveTo3:
             case _util.OPS.closePath:
-              self.buildPath(operatorList, fn, args);
-              continue;
-
             case _util.OPS.rectangle:
-              self.buildPath(operatorList, fn, args);
+              self.buildPath(operatorList, fn, args, parsingText);
               continue;
 
             case _util.OPS.markPoint:
