@@ -17,11 +17,10 @@ import mozilla.components.service.glean.private.TimeUnit
 import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.triggerWorkManager
 import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.getMockWebServer
 import mozilla.components.service.glean.isWorkScheduled
 import mozilla.components.service.glean.utils.getISOTimeString
 import mozilla.components.service.glean.utils.parseISOTimeString
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -220,8 +219,7 @@ class MetricsPingSchedulerTest {
     @Test
     fun `collectMetricsPing must correctly trigger the collection of the metrics ping`() {
         // Setup a test server and make Glean point to it.
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         resetGlean(getContextWithMockedInfo(), Configuration(
             serverEndpoint = "http://" + server.hostName + ":" + server.port,
@@ -404,8 +402,7 @@ class MetricsPingSchedulerTest {
     //     Glean.initialized = false
 
     //     // Start the web-server that will receive the metrics ping.
-    //     val server = MockWebServer()
-    //     server.enqueue(MockResponse().setBody("OK"))
+    //     val server = getMockWebServer()
 
     //     // Set the current system time to a known datetime: this should make the metrics ping
     //     // overdue and trigger it at startup.

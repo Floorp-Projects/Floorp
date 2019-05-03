@@ -30,8 +30,6 @@ import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.utils.getLanguageFromLocale
 import mozilla.components.service.glean.utils.getLocaleTag
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -126,12 +124,7 @@ class GleanTest {
 
     @Test
     fun `test sending of background pings`() {
-        val server = MockWebServer()
-
-        // It's important to note here that we expect to receive two pings back, the baseline and
-        // the events ping so we need to enqueue a response back for EACH of them.
-        server.enqueue(MockResponse().setBody("OK"))
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         val click = EventMetricType<NoExtraKeys>(
             disabled = false,
@@ -468,8 +461,7 @@ class GleanTest {
         // This test ensures that "custom-ping-1" contains "metric.a" with a value of "SomeTestValue"
         // when the ping is collected.
 
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         val pingName = "custom_ping_1"
         val ping = PingType(

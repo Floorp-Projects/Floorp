@@ -12,10 +12,9 @@ import mozilla.components.lib.fetch.okhttp.OkHttpClient
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.TestPingTagClient
 import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.getMockWebServer
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -138,8 +137,7 @@ class HttpPingUploaderTest {
 
     @Test
     fun `upload() correctly uploads the ping data with default configuration`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         val testConfig = testDefaultConfig.copy(
             userAgent = "Telemetry/42.23",
@@ -161,8 +159,7 @@ class HttpPingUploaderTest {
 
     @Test
     fun `upload() correctly uploads the ping data with httpurlconnection client`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         val testConfig = testDefaultConfig.copy(
             userAgent = "Telemetry/42.23",
@@ -186,8 +183,7 @@ class HttpPingUploaderTest {
 
     @Test
     fun `upload() correctly uploads the ping data with OkHttp client`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         val testConfig = testDefaultConfig.copy(
             userAgent = "Telemetry/42.23",
@@ -211,8 +207,7 @@ class HttpPingUploaderTest {
 
     @Test
     fun `upload() must not transmit any cookie`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         val testConfig = testDefaultConfig.copy(
             userAgent = "Telemetry/42.23",

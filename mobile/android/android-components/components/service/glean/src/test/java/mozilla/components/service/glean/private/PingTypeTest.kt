@@ -7,12 +7,11 @@ package mozilla.components.service.glean.private
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.getContextWithMockedInfo
+import mozilla.components.service.glean.getMockWebServer
 import mozilla.components.service.glean.isWorkScheduled
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.triggerWorkManager
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -35,9 +34,7 @@ class PingTypeTest {
 
     @Test
     fun `test sending of custom pings`() {
-        val server = MockWebServer()
-
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         val customPing = PingType(
             name = "custom",
@@ -75,9 +72,7 @@ class PingTypeTest {
 
     @Test
     fun `test sending of custom pings without client_id`() {
-        val server = MockWebServer()
-
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         val customPing = PingType(
             name = "custom",
@@ -115,9 +110,7 @@ class PingTypeTest {
 
     @Test
     fun `Sending a ping with an unknown name is a no-op`() {
-        val server = MockWebServer()
-
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         val counter = CounterMetricType(
             disabled = false,

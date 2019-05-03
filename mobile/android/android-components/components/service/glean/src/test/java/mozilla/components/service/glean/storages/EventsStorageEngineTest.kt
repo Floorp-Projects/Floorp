@@ -13,11 +13,10 @@ import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.EventMetricType
 import mozilla.components.service.glean.getContextWithMockedInfo
 import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.getMockWebServer
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.triggerWorkManager
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Before
@@ -260,8 +259,7 @@ class EventsStorageEngineTest {
 
     @Test
     fun `test sending of event ping when it fills up`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         val click = EventMetricType<TestEventNumberKeys>(
             disabled = false,
@@ -352,8 +350,7 @@ class EventsStorageEngineTest {
             EventsStorageEngine.storageDirectory.listFiles().size
         )
 
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
             serverEndpoint = "http://" + server.hostName + ":" + server.port,
@@ -404,8 +401,7 @@ class EventsStorageEngineTest {
 
     @Test
     fun `handle truncated events on disk`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
+        val server = getMockWebServer()
 
         resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
             serverEndpoint = "http://" + server.hostName + ":" + server.port,

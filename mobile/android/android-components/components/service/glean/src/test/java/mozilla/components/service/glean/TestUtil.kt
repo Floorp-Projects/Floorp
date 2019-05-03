@@ -25,6 +25,10 @@ import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.json.JSONObject
 import org.junit.Assert
 import org.mockito.ArgumentMatchers
@@ -242,4 +246,18 @@ internal class TestPingTagClient(
             request.headers ?: responseHeaders,
             responseBody)
     }
+}
+
+/**
+ * Create a mock webserver that accepts all requests.
+ * @return a [MockWebServer] instance
+ */
+internal fun getMockWebServer(): MockWebServer {
+    val server = MockWebServer()
+    server.setDispatcher(object : Dispatcher() {
+        override fun dispatch(request: RecordedRequest): MockResponse {
+            return MockResponse().setBody("OK")
+        }
+    })
+    return server
 }
