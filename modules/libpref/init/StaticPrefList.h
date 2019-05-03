@@ -1435,18 +1435,17 @@ VARCACHE_PREF(
 // reviewer had an unshakeable preference for that.
 
 // File-backed MediaCache size.
+#ifdef ANDROID
+# define PREF_VALUE  32768  // Measured in KiB
+#else
+# define PREF_VALUE 512000  // Measured in KiB
+#endif
 VARCACHE_PREF(
   "media.cache_size",
    MediaCacheSize,
-  uint32_t, 512000 // Measured in KiB
+  RelaxedAtomicUint32, PREF_VALUE
 )
-// Size of file backed MediaCache while on a connection which is cellular (3G, etc),
-// and thus assumed to be "expensive".
-VARCACHE_PREF(
-  "media.cache_size.cellular",
-   MediaCacheCellularSize,
-  uint32_t, 32768 // Measured in KiB
-)
+#undef PREF_VALUE
 
 // If a resource is known to be smaller than this size (in kilobytes), a
 // memory-backed MediaCache may be used; otherwise the (single shared global)
@@ -1475,30 +1474,32 @@ VARCACHE_PREF(
 
 // When a network connection is suspended, don't resume it until the amount of
 // buffered data falls below this threshold (in seconds).
+#ifdef ANDROID
+# define PREF_VALUE 10  // Use a smaller limit to save battery.
+#else
+# define PREF_VALUE 30
+#endif
 VARCACHE_PREF(
   "media.cache_resume_threshold",
    MediaCacheResumeThreshold,
-  uint32_t, 30
+  RelaxedAtomicInt32, PREF_VALUE
 )
-VARCACHE_PREF(
-  "media.cache_resume_threshold.cellular",
-   MediaCacheCellularResumeThreshold,
-  uint32_t, 10
-)
+#undef PREF_VALUE
 
 // Stop reading ahead when our buffered data is this many seconds ahead of the
 // current playback position. This limit can stop us from using arbitrary
 // amounts of network bandwidth prefetching huge videos.
+#ifdef ANDROID
+# define PREF_VALUE 30  // Use a smaller limit to save battery.
+#else
+# define PREF_VALUE 60
+#endif
 VARCACHE_PREF(
   "media.cache_readahead_limit",
    MediaCacheReadaheadLimit,
-  uint32_t, 60
+  RelaxedAtomicInt32, PREF_VALUE
 )
-VARCACHE_PREF(
-  "media.cache_readahead_limit.cellular",
-   MediaCacheCellularReadaheadLimit,
-  uint32_t, 30
-)
+#undef PREF_VALUE
 
 // AudioSink
 VARCACHE_PREF(
