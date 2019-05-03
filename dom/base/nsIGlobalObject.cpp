@@ -30,7 +30,7 @@ nsIGlobalObject::~nsIGlobalObject() {
 }
 
 nsIPrincipal* nsIGlobalObject::PrincipalOrNull() {
-  JSObject* global = GetGlobalJSObject();
+  JSObject* global = GetGlobalJSObjectPreserveColor();
   if (NS_WARN_IF(!global)) return nullptr;
 
   return nsContentUtils::ObjectPrincipal(global);
