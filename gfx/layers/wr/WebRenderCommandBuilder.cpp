@@ -2166,6 +2166,13 @@ WebRenderCommandBuilder::GenerateFallbackData(
       bool isInvalidated = PaintItemByDrawTarget(
           aItem, dt, offset, aDisplayListBuilder,
           fallbackData->mBasicLayerManager, scale, highlight);
+      if (!isInvalidated) {
+        if (!aItem->GetBuildingRect().IsEqualInterior(fallbackData->mBuildingRect)) {
+          // The building rect has changed but we didn't see any invalidations.
+          // We should still consider this an invalidation.
+          isInvalidated = true;
+        }
+      }
       recorder->FlushItem(IntRect({0, 0}, dtSize.ToUnknownSize()));
       TakeExternalSurfaces(recorder, fallbackData->mExternalSurfaces,
                            mManager->GetRenderRootStateManager(), aResources);
@@ -2255,6 +2262,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
   // Update current bounds to fallback data
   fallbackData->mBounds = paintBounds;
+  fallbackData->mBuildingRect = aItem->GetBuildingRect();
 
   MOZ_ASSERT(fallbackData->GetImageKey());
 
