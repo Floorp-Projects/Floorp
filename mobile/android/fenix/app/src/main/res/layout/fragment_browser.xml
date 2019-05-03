@@ -38,4 +38,13 @@
         mozac:findInPageButtonsTint="?primaryText"
         mozac:findInPageResultCountTextColor="?primaryText" />
 
+    <mozilla.components.feature.readerview.view.ReaderViewControlsBar
+        android:id="@+id/readerViewControlsBar"
+        android:background="?foundation"
+        android:elevation="24dp"
+        android:visibility="gone"
+        android:layout_gravity="bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

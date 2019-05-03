@@ -109,6 +109,12 @@
     <color name="quick_action_read_icon">#8a201f</color>
     <color name="quick_action_read_icon_background">#fce98f</color>
 
+    <color name="quick_action_reader_close_icon">#f9f9fb</color>
+    <color name="quick_action_reader_close_icon_background">#582bcb</color>
+
+    <color name="quick_action_reader_appearance_icon">#482166</color>
+    <color name="quick_action_reader_appearance_icon_background">#ecbcfb</color>
+
     <!-- Toggle Colors -->
     <color name="toggle_off_knob_light_theme">@color/photonGrey10</color>
     <color name="toggle_off_track_light_theme">@color/dark_grey_90</color>
@@ -124,4 +130,7 @@
     <color name="light_grey_05">#FBFBFE</color>
     <color name="dark_grey_90">#15141A</color>
     <color name="neutral_text">@color/white_color</color>
+
+    <!-- Reader View colors -->
+    <color name="mozac_feature_readerview_text_color">@color/primary_text_light_theme</color>
 </resources>

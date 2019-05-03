@@ -39,6 +39,7 @@ import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.prompts.PromptFeature
+import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
@@ -101,6 +102,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     private val promptsFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
+    private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
@@ -286,6 +288,24 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             view = view
         )
 
+        readerViewFeature.set(
+            feature = ReaderViewFeature(
+                requireContext(),
+                requireComponents.core.engine,
+                requireComponents.core.sessionManager,
+                view.readerViewControlsBar
+            ) {
+                getManagedEmitter<QuickActionChange>().apply {
+                    onNext(QuickActionChange.ReadableStateChange(it))
+                    onNext(QuickActionChange.ReaderActiveStateChange(
+                        sessionManager.selectedSession?.readerMode ?: false)
+                    )
+                }
+            },
+            owner = this,
+            view = view
+        )
+
         val actionEmitter = ActionBusFactory.get(this).getManagedEmitter(SearchAction::class.java)
 
         customTabSessionId?.let {
@@ -380,8 +400,24 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                         bookmarkTapped()
                     }
                     is QuickActionAction.ReadPressed -> {
-                        requireComponents.analytics.metrics.track(Event.QuickActionSheetReadTapped)
-                        ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "908")
+                        readerViewFeature.withFeature { feature ->
+                            requireComponents.analytics.metrics.track(Event.QuickActionSheetReadTapped)
+                            val actionEmitter = getManagedEmitter<QuickActionChange>()
+                            val enabled = requireComponents.core.sessionManager.selectedSession?.readerMode ?: false
+                            if (enabled) {
+                                feature.hideReaderView()
+                                actionEmitter.onNext(QuickActionChange.ReaderActiveStateChange(false))
+                            } else {
+                                feature.showReaderView()
+                                actionEmitter.onNext(QuickActionChange.ReaderActiveStateChange(true))
+                            }
+                        }
+                    }
+                    is QuickActionAction.ReadAppearancePressed -> {
+                        // TODO telemetry: https://github.com/mozilla-mobile/fenix/issues/2267
+                        readerViewFeature.withFeature { feature ->
+                            feature.showControls()
+                        }
                     }
                 }
             }
@@ -454,6 +490,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         return when {
             findInPageIntegration.onBackPressed() -> true
             fullScreenFeature.onBackPressed() -> true
+            readerViewFeature.onBackPressed() -> true
             sessionFeature.onBackPressed() -> true
             else -> false
         }

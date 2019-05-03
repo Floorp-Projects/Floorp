@@ -18,7 +18,8 @@ class QuickActionComponent(
     bus: ActionBusFactory,
     override var initialState: QuickActionState = QuickActionState(
         readable = false,
-        bookmarked = false
+        bookmarked = false,
+        readerActive = false
     )
 ) : UIComponent<QuickActionState, QuickActionAction, QuickActionChange>(
     bus.getManagedEmitter(QuickActionAction::class.java),
@@ -33,6 +34,9 @@ class QuickActionComponent(
             is QuickActionChange.ReadableStateChange -> {
                 state.copy(readable = change.readable)
             }
+            is QuickActionChange.ReaderActiveStateChange -> {
+                state.copy(readerActive = change.active)
+            }
         }
     }
 
@@ -44,7 +48,7 @@ class QuickActionComponent(
     }
 }
 
-data class QuickActionState(val readable: Boolean, val bookmarked: Boolean) : ViewState
+data class QuickActionState(val readable: Boolean, val bookmarked: Boolean, val readerActive: Boolean) : ViewState
 
 sealed class QuickActionAction : Action {
     object Opened : QuickActionAction()
@@ -53,9 +57,11 @@ sealed class QuickActionAction : Action {
     object DownloadsPressed : QuickActionAction()
     object BookmarkPressed : QuickActionAction()
     object ReadPressed : QuickActionAction()
+    object ReadAppearancePressed : QuickActionAction()
 }
 
 sealed class QuickActionChange : Change {
     data class BookmarkedStateChange(val bookmarked: Boolean) : QuickActionChange()
     data class ReadableStateChange(val readable: Boolean) : QuickActionChange()
+    data class ReaderActiveStateChange(val active: Boolean) : QuickActionChange()
 }

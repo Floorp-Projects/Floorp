@@ -78,6 +78,10 @@ class QuickActionUIView(
             actionEmitter.onNext(QuickActionAction.ReadPressed)
             quickActionSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
         }
+        view.quick_action_read_appearance.setOnClickListener {
+            actionEmitter.onNext(QuickActionAction.ReadAppearancePressed)
+            quickActionSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
     }
 
     /**
@@ -105,7 +109,16 @@ class QuickActionUIView(
     }
 
     override fun updateView() = Consumer<QuickActionState> {
-        view.quick_action_read.visibility = if (it.readable) View.VISIBLE else View.GONE
+        view.quick_action_read.apply {
+            visibility = if (it.readable) View.VISIBLE else View.GONE
+            isSelected = it.readerActive
+            text = if (it.readerActive) {
+                context.getString(R.string.quick_action_read_close)
+            } else {
+                context.getString(R.string.quick_action_read)
+            }
+        }
+        view.quick_action_read_appearance.visibility = if (it.readerActive) View.VISIBLE else View.GONE
         view.quick_action_bookmark.isSelected = it.bookmarked
     }
 
