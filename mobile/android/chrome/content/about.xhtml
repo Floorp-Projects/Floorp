@@ -57,7 +57,9 @@
       <li><a id="privacyURL">&aboutPage.privacyPolicy.label;</a></li>
       <li><a href="about:rights">&aboutPage.rights.label;</a></li>
 #ifndef NIGHTLY_BUILD
+#ifndef FENNEC_NIGHTLY
       <li><a id="releaseNotesURL">&aboutPage.relNotes.label;</a></li>
+#endif
 #endif
       <li><a id="creditsURL">&aboutPage.credits.label;</a></li>
       <li><a href="about:license">&aboutPage.license.label;</a></li>
@@ -65,9 +67,11 @@
     </ul>
 
 #ifdef RELEASE_OR_BETA
+#ifndef FENNEC_NIGHTLY
     <div id="aboutDetails">
       <p>&aboutPage.logoTrademark;</p>
     </div>
+#endif
 #endif
 
     <script type="application/javascript" src="chrome://browser/content/about.js" />
