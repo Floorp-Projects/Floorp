@@ -44,9 +44,17 @@ let NewTabPagePreloading = {
    * Create a browser in the right process type.
    */
   _createBrowser(win) {
-    const {gBrowser, gMultiProcessBrowser, BROWSER_NEW_TAB_URL} = win;
+    const {
+      gBrowser,
+      gMultiProcessBrowser,
+      gFissionBrowser,
+      BROWSER_NEW_TAB_URL,
+    } = win;
+
     let remoteType =
-      E10SUtils.getRemoteTypeForURI(BROWSER_NEW_TAB_URL, gMultiProcessBrowser);
+      E10SUtils.getRemoteTypeForURI(BROWSER_NEW_TAB_URL,
+                                    gMultiProcessBrowser,
+                                    gFissionBrowser);
     let browser = gBrowser.createBrowser({ isPreloadBrowser: true, remoteType });
     gBrowser.preloadedBrowser = browser;
 
