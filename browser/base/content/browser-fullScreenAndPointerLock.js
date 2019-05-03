@@ -373,6 +373,12 @@ var FullScreen = {
         } else {
           browser = event.target.ownerGlobal.docShell.chromeEventHandler;
         }
+
+        // Addon installation should be cancelled when entering fullscreen for security and usability reasons.
+        // Installation prompts in fullscreen can trick the user into installing unwanted addons.
+        // In fullscreen the notification box does not have a clear visual association with its parent anymore.
+        gXPInstallObserver.removeAllNotifications(browser);
+
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
         this.enterDomFullscreen(browser);
         break;
