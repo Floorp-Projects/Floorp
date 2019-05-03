@@ -1,6 +1,6 @@
 /* exported ACCENT_COLOR, BACKGROUND, ENCODED_IMAGE_DATA, FRAME_COLOR, TAB_TEXT_COLOR,
    TEXT_COLOR, TAB_BACKGROUND_TEXT_COLOR, imageBufferFromDataURI, hexToCSS, hexToRGB, testBorderColor,
-   waitForTransition */
+   waitForTransition, checkThemeHeaderImage */
 
 "use strict";
 
@@ -81,4 +81,21 @@ function testBorderColor(element, expected) {
   Assert.equal(computedStyle.borderBottomColor,
                hexToCSS(expected),
                "Element bottom border color should be set.");
+}
+
+function checkThemeHeaderImage(window, expectedURL) {
+  const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
+
+  let root = window.document.documentElement;
+  if (expectedURL === "none") {
+    Assert.equal(window.getComputedStyle(root).backgroundImage,
+                 "none", "Should have no background image");
+  } else {
+    Assert.equal(window.getComputedStyle(root).backgroundImage,
+                 "-moz-element(#lwt-header-image)",
+                 "Should have -moz-element background image");
+
+    Assert.equal(LightweightThemeManager.themeData.theme.headerImage.src,
+                 expectedURL, "Theme image has expected source");
+  }
 }
