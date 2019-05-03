@@ -6,7 +6,6 @@ package mozilla.components.service.glean.storages
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
-import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.private.CommonMetricData
 import mozilla.components.service.glean.private.TimeUnit
 import mozilla.components.service.glean.utils.getAdjustedTime
@@ -182,7 +181,6 @@ internal open class TimespansStorageEngineImplementation(
     /**
      * Test-only method used to clear the timespans stores.
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     override fun clearAllStores() {
         super.clearAllStores()
         timeUnitsMap.clear()

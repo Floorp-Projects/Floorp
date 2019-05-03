@@ -5,7 +5,6 @@
 package mozilla.components.service.glean.storages
 
 import android.content.Context
-import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.private.BooleanMetricType
 import mozilla.components.service.glean.private.CounterMetricType
 import mozilla.components.service.glean.private.DatetimeMetricType
@@ -124,8 +123,10 @@ internal class StorageEngineManager(
         return jsonPing
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun clearAllStores() {
+    /**
+     * Clear all recorded metrics in all stores.
+     */
+    internal fun clearAllStores() {
         for (storageEngine in storageEngines) {
             storageEngine.value.clearAllStores()
         }

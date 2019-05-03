@@ -5,7 +5,6 @@
 package mozilla.components.service.glean.storages
 
 import android.content.Context
-import androidx.annotation.VisibleForTesting
 
 /**
  * Base interface intended to be implemented by the different
@@ -39,7 +38,6 @@ internal interface StorageEngine {
     /**
      * Clear all stored data in the storage engine
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun clearAllStores()
 
     /**

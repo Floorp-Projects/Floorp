@@ -7,7 +7,6 @@ package mozilla.components.service.glean.private
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.GleanMetrics.Pings
 import mozilla.components.service.glean.collectAndCheckPingSchema
 import mozilla.components.service.glean.storages.BooleansStorageEngine
@@ -19,7 +18,6 @@ import mozilla.components.service.glean.storages.TimespansStorageEngine
 import mozilla.components.service.glean.storages.UuidsStorageEngine
 import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.resetGlean
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,11 +47,6 @@ class LabeledMetricTypeTest {
     @Before
     fun setup() {
         resetGlean()
-    }
-
-    @After
-    fun resetGlobalState() {
-        Glean.setUploadEnabled(true)
     }
 
     @Test

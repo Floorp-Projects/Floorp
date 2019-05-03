@@ -4,7 +4,9 @@
 
 package mozilla.components.service.glean.private
 
+import android.content.Context
 import android.os.SystemClock
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.Glean
@@ -12,6 +14,7 @@ import mozilla.components.service.glean.resetGlean
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.Before
 import org.junit.runner.RunWith
@@ -181,6 +184,8 @@ class EventMetricTypeTest {
 
     @Test
     fun `events should not record when upload is disabled`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+
         val eventMetric = EventMetricType<testNameKeys>(
             disabled = false,
             category = "ui",
@@ -197,11 +202,14 @@ class EventMetricTypeTest {
         Glean.setUploadEnabled(false)
         assertEquals(false, Glean.getUploadEnabled())
         eventMetric.record(mapOf(testNameKeys.testName to "event2"))
-        val snapshot2 = eventMetric.testGetValue()
-        assertEquals(1, snapshot2.size)
+        try {
+            eventMetric.testGetValue()
+            fail("Expected events to be empty")
+        } catch (e: NullPointerException) {
+        }
         Glean.setUploadEnabled(true)
         eventMetric.record(mapOf(testNameKeys.testName to "event3"))
         val snapshot3 = eventMetric.testGetValue()
-        assertEquals(2, snapshot3.size)
+        assertEquals(1, snapshot3.size)
     }
 }

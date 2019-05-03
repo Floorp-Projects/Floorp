@@ -19,7 +19,6 @@ import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.service.glean.config.Configuration
-import mozilla.components.service.glean.firstrun.FileFirstRunDetector
 import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.scheduler.PingUploadWorker
@@ -33,7 +32,6 @@ import org.json.JSONObject
 import org.junit.Assert
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
-import java.io.File
 import java.util.concurrent.ExecutionException
 
 /**
@@ -139,9 +137,6 @@ internal fun resetGlean(
         ExperimentsStorageEngine.clearAllStores()
     }
 
-    // Clear the "first run" flag.
-    val firstRun = FileFirstRunDetector(File(context.applicationInfo.dataDir, Glean.GLEAN_DATA_DIR))
-    firstRun.reset()
     // Init Glean.
     Glean.initialized = false
     Glean.setUploadEnabled(true)

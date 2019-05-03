@@ -7,7 +7,6 @@ package mozilla.components.service.glean.storages
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.private.CommonMetricData
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.support.base.log.logger.Logger
@@ -288,7 +287,6 @@ internal abstract class GenericStorageEngine<MetricType> : StorageEngine {
         editor?.apply()
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     override fun clearAllStores() {
         userLifetimeStorage.edit().clear().apply()
         pingLifetimeStorage.edit().clear().apply()

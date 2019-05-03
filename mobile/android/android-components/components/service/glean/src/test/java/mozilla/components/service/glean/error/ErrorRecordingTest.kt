@@ -4,13 +4,11 @@
 
 package mozilla.components.service.glean.error
 
-import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.StringMetricType
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import mozilla.components.support.base.log.logger.Logger
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -22,11 +20,6 @@ class ErrorRecordingTest {
     @Before
     fun setup() {
         resetGlean()
-    }
-
-    @After
-    fun resetGlobalState() {
-        Glean.setUploadEnabled(true)
     }
 
     @Test

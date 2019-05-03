@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -16,7 +17,6 @@ import java.io.File
 import java.util.UUID
 
 import mozilla.components.service.glean.config.Configuration
-import mozilla.components.service.glean.firstrun.FileFirstRunDetector
 import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
 import mozilla.components.service.glean.GleanMetrics.Pings
 import mozilla.components.service.glean.ping.PingMaker
@@ -41,6 +41,8 @@ import mozilla.components.support.base.log.logger.Logger
 open class GleanInternalAPI internal constructor () {
     private val logger = Logger("glean/Glean")
 
+    private var applicationContext: Context? = null
+
     // Include our singletons of StorageEngineManager and PingMaker
     private lateinit var storageEngineManager: StorageEngineManager
     private lateinit var pingMaker: PingMaker
@@ -50,7 +52,7 @@ open class GleanInternalAPI internal constructor () {
 
     // `internal` so this can be modified for testing
     internal var initialized = false
-    private var uploadEnabled = true
+    internal var uploadEnabled = true
 
     // The application id detected by Glean to be used as part of the submission
     // endpoint.
@@ -61,6 +63,12 @@ open class GleanInternalAPI internal constructor () {
     internal lateinit var metricsPingScheduler: MetricsPingScheduler
 
     internal lateinit var pingStorageEngine: PingStorageEngine
+
+    companion object {
+        internal val KNOWN_CLIENT_ID = UUID.fromString(
+            "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0"
+        )
+    }
 
     /**
      * Initialize Glean.
@@ -87,6 +95,8 @@ open class GleanInternalAPI internal constructor () {
 
         registerPings(Pings)
 
+        this.applicationContext = applicationContext
+
         storageEngineManager = StorageEngineManager(applicationContext = applicationContext)
         pingMaker = PingMaker(storageEngineManager, applicationContext)
         this.configuration = configuration
@@ -95,7 +105,7 @@ open class GleanInternalAPI internal constructor () {
 
         // Core metrics are initialized using the engines, without calling the async
         // API. For this reason we're safe to set `initialized = true` right after it.
-        initializeCoreMetrics(applicationContext)
+        onChangeUploadEnabled(uploadEnabled)
 
         // This must be set before anything that might trigger the sending of pings.
         initialized = true
@@ -137,14 +147,22 @@ open class GleanInternalAPI internal constructor () {
      *
      * Metric collection is enabled by default.
      *
-     * When disabled, metrics aren't recorded at all and no data
+     * When uploading is disabled, metrics aren't recorded at all and no data
      * is uploaded.
+     *
+     * When disabling, all pending metrics, events and queued pings are cleared.
+     *
+     * When enabling, the core Glean metrics are recreated.
      *
      * @param enabled When true, enable metric collection.
      */
     fun setUploadEnabled(enabled: Boolean) {
         logger.info("Metrics enabled: $enabled")
+        val origUploadEnabled = uploadEnabled
         uploadEnabled = enabled
+        if (isInitialized() && origUploadEnabled != enabled) {
+            onChangeUploadEnabled(enabled)
+        }
     }
 
     /**
@@ -152,6 +170,55 @@ open class GleanInternalAPI internal constructor () {
      */
     fun getUploadEnabled(): Boolean {
         return uploadEnabled
+    }
+
+    /**
+     * Handles the changing of state when uploadEnabled changes.
+     *
+     * When disabling, all pending metrics, events and queued pings are cleared.
+     *
+     * When enabling, the core Glean metrics are recreated.
+     *
+     * If Glean is not initialized, this is a no-op.
+     */
+    private fun onChangeUploadEnabled(enabled: Boolean) {
+        if (enabled) {
+            initializeCoreMetrics(applicationContext!!)
+        } else {
+            clearMetrics()
+        }
+    }
+
+    /**
+     * Clear any pending metrics when telemetry is disabled.
+     */
+    @Suppress("EXPERIMENTAL_API_USAGE")
+    private fun clearMetrics() = Dispatchers.API.launch {
+        // There is only one metric that we want to survive after clearing all metrics:
+        // firstRunDate. Here, we store its value so we can restore it after clearing
+        // the metrics.
+        val firstRunDateMetric = GleanInternalMetrics.firstRunDate
+        val existingFirstRunDate = DatetimesStorageEngine.getSnapshot(
+            firstRunDateMetric.sendInPings[0], false)?.get(firstRunDateMetric.identifier)?.let {
+            parseISOTimeString(it)
+        }
+
+        pingStorageEngine.clearPendingPings()
+        storageEngineManager.clearAllStores()
+
+        // This does not clear the experiments store (which isn't managed by the
+        // StorageEngineManager), since doing so would mean we would have to have the
+        // application tell us again which experiments are active if telemetry is
+        // re-enabled.
+
+        // Store a "dummy" KNOWN_CLIENT_ID in clientId.  This will make it easier to detect if
+        // pings were unintentionally sent after uploading is disabled.
+        UuidsStorageEngine.record(GleanInternalMetrics.clientId, KNOWN_CLIENT_ID)
+
+        // Restore the firstRunDate
+        existingFirstRunDate?.let {
+            DatetimesStorageEngine.set(firstRunDateMetric, it)
+        }
     }
 
     /**
@@ -283,13 +350,21 @@ open class GleanInternalAPI internal constructor () {
 
         // The first time Glean runs, we set the client id and other internal
         // one-time only metrics.
-        val firstRunDetector = FileFirstRunDetector(gleanDataDir)
-        if (firstRunDetector.isFirstRun()) {
+        fixLegacyPingInfoMetrics()
+
+        val clientIdMetric = GleanInternalMetrics.clientId
+        val existingClientId = UuidsStorageEngine.getSnapshot(
+            clientIdMetric.sendInPings[0], false)?.get(clientIdMetric.identifier)
+        if (existingClientId == null || existingClientId == KNOWN_CLIENT_ID) {
             val uuid = UUID.randomUUID()
-            UuidsStorageEngine.record(GleanInternalMetrics.clientId, uuid)
-            DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate)
-        } else {
-            fixLegacyPingInfoMetrics()
+            UuidsStorageEngine.record(clientIdMetric, uuid)
+        }
+
+        val firstRunDateMetric = GleanInternalMetrics.firstRunDate
+        val existingFirstRunDate = DatetimesStorageEngine.getSnapshot(
+            firstRunDateMetric.sendInPings[0], false)?.get(firstRunDateMetric.identifier)
+        if (existingFirstRunDate == null) {
+            DatetimesStorageEngine.set(firstRunDateMetric)
         }
 
         // Set a few more metrics that will be sent as part of every ping.
@@ -358,6 +433,7 @@ open class GleanInternalAPI internal constructor () {
      * @param pings List of pings to send.
      * @return The async Job performing the work of assembling the ping
      */
+    @Suppress("EXPERIMENTAL_API_USAGE")
     internal fun sendPings(pings: List<PingType>) = Dispatchers.API.launch {
         if (!isInitialized()) {
             logger.error("Glean must be initialized before sending pings.")
@@ -443,6 +519,7 @@ open class GleanInternalAPI internal constructor () {
     }
 }
 
+@SuppressLint("StaticFieldLeak")
 object Glean : GleanInternalAPI() {
     internal const val SCHEMA_VERSION = 1
 

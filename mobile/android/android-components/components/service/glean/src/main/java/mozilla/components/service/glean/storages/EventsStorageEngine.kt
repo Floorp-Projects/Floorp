@@ -313,7 +313,6 @@ internal object EventsStorageEngine : StorageEngine {
     override val sendAsTopLevelField: Boolean
         get() = true
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     override fun clearAllStores() {
         // Wait until any writes have cleared until deleting all the files.
         // This is not a performance problem since this function is for use
@@ -327,7 +326,6 @@ internal object EventsStorageEngine : StorageEngine {
         eventStores.clear()
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun testWaitForWrites(timeout: Long = JOB_TIMEOUT_MS) {
         ioTask?.let {
             runBlocking {

@@ -81,7 +81,10 @@ internal class PingStorageEngine(context: Context) {
      * @return Boolean representing the success of the upload task. This may be the value bubbled up
      *         from the callback, or if there was an error reading the files.
      */
+    @Synchronized
     fun process(processingCallback: (String, String, Configuration) -> Boolean): Boolean {
+        // Marked as @Synchronized so that this doesn't run at the same time as
+        // clearPendingPings.
         logger.debug("Processing persisted pings at ${storageDirectory.absolutePath}")
 
         var success = true
@@ -173,5 +176,27 @@ internal class PingStorageEngine(context: Context) {
         if (!temporaryFile.renameTo(pingFile)) {
             logger.warn("Unable to move ${temporaryFile.absolutePath} to ${pingFile.absolutePath}")
         }
+    }
+
+    /**
+     * Deletes any pending pings on disk.
+     */
+    @Synchronized
+    internal fun clearPendingPings() {
+        // Marked as @Synchronized so that this doesn't run at the same time as
+        // process.
+        storageDirectory.listFiles()?.forEach { file ->
+            val fileWasDeleted = file.delete()
+            logger.debug("${file.name} was deleted: $fileWasDeleted")
+        }
+    }
+
+    /**
+     * Returns the number of pending pings on disk, for testing purposes.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @Synchronized
+    internal fun testGetNumPendingPings(): Int {
+        return storageDirectory.listFiles()!!.size
     }
 }
