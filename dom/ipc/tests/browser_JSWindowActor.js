@@ -5,7 +5,7 @@
 // This test opens and closes a large number of windows, which can be slow
 // especially on debug builds. This decreases the likelihood of the test timing
 // out.
-requestLongerTimeout(2);
+requestLongerTimeout(4);
 
 const URL = "about:blank";
 const TEST_URL = "http://test2.example.org/";
