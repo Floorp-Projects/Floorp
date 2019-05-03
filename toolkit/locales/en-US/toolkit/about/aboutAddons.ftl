@@ -390,3 +390,6 @@ addon-badge-private-browsing-allowed =
 addon-detail-private-browsing-help = When allowed, the extension will have access to your online activities while private browsing. <a data-l10n-name="learn-more">Learn more</a>
 addon-detail-private-browsing-allow = Allow
 addon-detail-private-browsing-disallow = Don’t Allow
+
+available-updates-heading = Available Updates
+recent-updates-heading = Recent Updates
