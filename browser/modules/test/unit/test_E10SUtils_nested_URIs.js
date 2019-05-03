@@ -53,11 +53,11 @@ function run_test() {
     for (let preferredRemoteType of TEST_PREFERRED_REMOTE_TYPES) {
       let plainUri = Services.io.newURI(testCase.plainURL);
       let plainRemoteType =
-        E10SUtils.getRemoteTypeForURIObject(plainUri, true, preferredRemoteType);
+        E10SUtils.getRemoteTypeForURIObject(plainUri, true, false, preferredRemoteType);
 
       let nestedUri = Services.io.newURI(testCase.nestedURL);
       let nestedRemoteType =
-        E10SUtils.getRemoteTypeForURIObject(nestedUri, true, preferredRemoteType);
+        E10SUtils.getRemoteTypeForURIObject(nestedUri, true, false, preferredRemoteType);
 
       let nestedStr = nestedUri.scheme + ":";
       do {
