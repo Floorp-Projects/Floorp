@@ -42,7 +42,8 @@ BaseWebSocketChannel::BaseWebSocketChannel()
       mPingForced(false),
       mIsServerSide(false),
       mPingInterval(0),
-      mPingResponseTimeout(10000) {
+      mPingResponseTimeout(10000),
+      mHttpChannelId(0) {
   // Generation of a unique serial ID.
   uint64_t processID = 0;
   if (XRE_IsContentProcess()) {
@@ -248,6 +249,12 @@ BaseWebSocketChannel::SetServerParameters(
   mServerTransportProvider = aProvider;
   mNegotiatedExtensions = aNegotiatedExtensions;
   mIsServerSide = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseWebSocketChannel::GetHttpChannelId(uint64_t* aHttpChannelId) {
+  *aHttpChannelId = mHttpChannelId;
   return NS_OK;
 }
 
