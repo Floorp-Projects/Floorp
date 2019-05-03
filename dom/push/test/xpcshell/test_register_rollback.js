@@ -75,7 +75,7 @@ add_task(async function test_register_rollback() {
     PushService.register({
       scope: "https://example.com/storage-error",
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+        { inIsolatedMozBrowser: false }),
     }),
     /universe has imploded/,
     "Expected error for unregister database failure"

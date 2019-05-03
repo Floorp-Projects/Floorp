@@ -35,7 +35,7 @@ add_task(async function test_pushSubscriptionNoConnection() {
     PushService.register({
       scope: "https://example.net/page/invalid-response",
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+        { inIsolatedMozBrowser: false }),
     }),
     /Registration error/,
     "Expected error for not being able to establish connecion."
@@ -71,7 +71,7 @@ add_task(async function test_pushSubscriptionMissingLocation() {
     PushService.register({
       scope: "https://example.net/page/invalid-response",
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+        { inIsolatedMozBrowser: false }),
     }),
     /Registration error/,
     "Expected error for the missing location header."
@@ -97,7 +97,7 @@ add_task(async function test_pushSubscriptionMissingLink() {
     PushService.register({
       scope: "https://example.net/page/invalid-response",
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+        { inIsolatedMozBrowser: false }),
     }),
     /Registration error/,
     "Expected error for the missing link header."
@@ -123,7 +123,7 @@ add_task(async function test_pushSubscriptionMissingLink1() {
     PushService.register({
       scope: "https://example.net/page/invalid-response",
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+        { inIsolatedMozBrowser: false }),
     }),
     /Registration error/,
     "Expected error for the missing push endpoint."
@@ -149,7 +149,7 @@ add_task(async function test_pushSubscriptionLocationBogus() {
     PushService.register({
       scope: "https://example.net/page/invalid-response",
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+        { inIsolatedMozBrowser: false }),
     }),
     /Registration error/,
     "Expected error for the bogus location"
@@ -175,7 +175,7 @@ add_task(async function test_pushSubscriptionNot2xxCode() {
     PushService.register({
       scope: "https://example.net/page/invalid-response",
       originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+        { inIsolatedMozBrowser: false }),
     }),
     /Registration error/,
     "Expected error for not 201 responce code."

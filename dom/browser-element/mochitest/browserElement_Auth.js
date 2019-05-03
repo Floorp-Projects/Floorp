@@ -159,12 +159,12 @@ function testAuthJarNoInterfere(e) {
 
   // Set a bunch of auth data that should not conflict with the correct auth data already
   // stored in the cache.
-  var attrs = {appId: 1};
+  var attrs = {userContextId: 1};
   var principal = secMan.createCodebasePrincipal(uri, attrs);
   authMgr.setAuthIdentity("http", "test", -1, "basic", "http_realm",
                           "tests/dom/browser-element/mochitest/file_http_401_response.sjs",
                           "", "httpuser", "wrongpass", false, principal);
-  attrs = {appId: 1, inIsolatedMozBrowser: true};
+  attrs = {userContextId: 1, inIsolatedMozBrowser: true};
   principal = secMan.createCodebasePrincipal(uri, attrs);
   authMgr.setAuthIdentity("http", "test", -1, "basic", "http_realm",
                           "tests/dom/browser-element/mochitest/file_http_401_response.sjs",
