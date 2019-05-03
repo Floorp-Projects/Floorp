@@ -24,7 +24,8 @@ child:
   async WebSocketOpened(uint32_t awebSocketSerialID,
                         nsString aEffectiveURI,
                         nsCString aProtocols,
-                        nsCString aExtensions);
+                        nsCString aExtensions,
+                        uint64_t aHttpChannelId);
 
   async WebSocketMessageAvailable(uint32_t awebSocketSerialID,
                                   nsCString aData,
