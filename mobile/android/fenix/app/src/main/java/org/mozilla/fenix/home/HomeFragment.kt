@@ -40,6 +40,7 @@ import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.collections.Tab
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.ext.urlToHost
@@ -202,10 +203,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                 (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
             }
             is TabAction.Close -> {
-                requireComponents.core.sessionManager.findSessionById(action.sessionId)
-                    ?.let { session ->
-                        requireComponents.core.sessionManager.remove(session)
-                    }
+                removeTabWithUndo(action.sessionId)
             }
             is TabAction.Share -> {
                 requireComponents.core.sessionManager.findSessionById(action.sessionId)
@@ -301,6 +299,39 @@ class HomeFragment : Fragment(), CoroutineScope {
         }
         requireComponents.core.sessionManager.register(observer)
         return observer
+    }
+
+    private fun removeTabWithUndo(sessionId: String) {
+        val sessionManager = requireComponents.core.sessionManager
+        getManagedEmitter<SessionControlChange>().onNext(
+            SessionControlChange.TabsChange(
+                sessionManager.sessions
+                    .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
+                    .filter { it.id != sessionId }
+                    .map {
+                        val selected =
+                            it == sessionManager.selectedSession
+                        org.mozilla.fenix.home.sessioncontrol.Tab(
+                            it.id,
+                            it.url,
+                            it.url.urlToHost(),
+                            it.title,
+                            selected,
+                            it.thumbnail
+                        )
+                    }
+            )
+        )
+
+        CoroutineScope(Dispatchers.Main).allowUndo(
+            view!!, getString(R.string.snackbar_tab_deleted),
+            getString(R.string.snackbar_deleted_undo), { emitSessionChanges() }
+        ) {
+            sessionManager.findSessionById(sessionId)
+                ?.let { session ->
+                    sessionManager.remove(session)
+                }
+        }
     }
 
     private fun emitSessionChanges() {
