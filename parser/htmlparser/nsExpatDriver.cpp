@@ -154,6 +154,18 @@ static int Driver_HandleExternalEntityRef(void* aExternalEntityRefHandler,
                                          aPublicId);
 }
 
+static void Driver_HandleEntityDecl(
+    void* aUserData, const XML_Char* aEntityName, int aIsParameterEntity,
+    const XML_Char* aValue, int aValueLength, const XML_Char* aBase,
+    const XML_Char* aSystemId, const XML_Char* aPublicId,
+    const XML_Char* aNotationName) {
+  NS_ASSERTION(aUserData, "expat driver should exist");
+  if (aUserData) {
+    static_cast<nsExpatDriver*>(aUserData)->HandleEntityDecl(
+        aEntityName, aValue, aValueLength);
+  }
+}
+
 /***************************** END CALL BACKS ********************************/
 
 /***************************** CATALOG UTILS *********************************/
@@ -472,6 +484,19 @@ nsresult nsExpatDriver::HandleEndDoctypeDecl() {
   mInternalSubset.Truncate();
 
   return NS_OK;
+}
+
+void nsExpatDriver::HandleEntityDecl(const char16_t* aEntityName,
+                                     const char16_t* aEntityValue,
+                                     const uint32_t aLength) {
+  MOZ_ASSERT(
+      mInInternalSubset || mInExternalDTD,
+      "Should only see entity declarations in the internal subset or in DTDs");
+  auto charLength = aLength / sizeof(char16_t);
+  nsDependentSubstring entityVal(aEntityValue, charLength);
+  if (entityVal.FindChar('<') != -1) {
+    MaybeStopParser(NS_ERROR_UNEXPECTED);
+  }
 }
 
 static nsresult ExternalDTDStreamReaderFunc(nsIUnicharInputStream* aIn,
@@ -1057,6 +1082,9 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 
   XML_SetParamEntityParsing(mExpatParser,
                             XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE);
+  if (doc && doc->NodePrincipal()->IsSystemPrincipal()) {
+    XML_SetEntityDeclHandler(mExpatParser, Driver_HandleEntityDecl);
+  }
   XML_SetDoctypeDeclHandler(mExpatParser, Driver_HandleStartDoctypeDecl,
                             Driver_HandleEndDoctypeDecl);
 

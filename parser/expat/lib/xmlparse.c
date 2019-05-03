@@ -1765,6 +1765,8 @@ XML_SetAttlistDeclHandler(XML_Parser parser,
   if (parser != NULL)
     attlistDeclHandler = attdecl;
 }
+#endif
+/* END MOZILLA CHANGE */
 
 void XMLCALL
 XML_SetEntityDeclHandler(XML_Parser parser,
@@ -1773,8 +1775,6 @@ XML_SetEntityDeclHandler(XML_Parser parser,
   if (parser != NULL)
     entityDeclHandler = handler;
 }
-#endif
-/* END MOZILLA CHANGE */
 
 void XMLCALL
 XML_SetXmlDeclHandler(XML_Parser parser,
