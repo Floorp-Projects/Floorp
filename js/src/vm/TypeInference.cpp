@@ -2874,35 +2874,6 @@ void ObjectGroup::addDefiniteProperties(JSContext* cx, Shape* shape) {
   }
 }
 
-bool ObjectGroup::matchDefiniteProperties(HandleObject obj) {
-  AutoSweepObjectGroup sweep(this);
-  unsigned count = getPropertyCount(sweep);
-  for (unsigned i = 0; i < count; i++) {
-    Property* prop = getProperty(sweep, i);
-    if (!prop) {
-      continue;
-    }
-    if (prop->types.definiteProperty()) {
-      unsigned slot = prop->types.definiteSlot();
-
-      bool found = false;
-      Shape* shape = obj->as<NativeObject>().lastProperty();
-      while (!shape->isEmptyShape()) {
-        if (shape->slot() == slot && shape->propid() == prop->id) {
-          found = true;
-          break;
-        }
-        shape = shape->previous();
-      }
-      if (!found) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
 void js::AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj,
                            jsid id, TypeSet::Type type) {
   MOZ_ASSERT(id == IdToTypeId(id));
@@ -3801,41 +3772,6 @@ bool TypeNewScript::make(JSContext* cx, ObjectGroup* group, JSFunction* fun) {
 
   gc::gcTracer.traceTypeNewScript(group);
   return true;
-}
-
-// Make a TypeNewScript with the same initializer list as |newScript| but with
-// a new template object.
-/* static */
-TypeNewScript* TypeNewScript::makeNativeVersion(JSContext* cx,
-                                                TypeNewScript* newScript,
-                                                PlainObject* templateObject) {
-  MOZ_RELEASE_ASSERT(cx->zone()->types.activeAnalysis);
-
-  auto nativeNewScript = cx->make_unique<TypeNewScript>();
-  if (!nativeNewScript) {
-    return nullptr;
-  }
-
-  nativeNewScript->function_ = newScript->function();
-  nativeNewScript->templateObject_ = templateObject;
-
-  TypeNewScriptInitializer* cursor = newScript->initializerList;
-  while (cursor->kind != TypeNewScriptInitializer::DONE) {
-    cursor++;
-  }
-
-  size_t initializerLength = cursor - newScript->initializerList + 1;
-
-  nativeNewScript->initializerList =
-      cx->pod_calloc<TypeNewScriptInitializer>(initializerLength);
-  if (!nativeNewScript->initializerList) {
-    return nullptr;
-  }
-
-  PodCopy(nativeNewScript->initializerList, newScript->initializerList,
-          initializerLength);
-
-  return nativeNewScript.release();
 }
 
 size_t TypeNewScript::sizeOfIncludingThis(
