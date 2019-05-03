@@ -525,7 +525,7 @@ nscoord nsFileControlFrame::GetMinISize(gfxContext* aRenderingContext) {
 
 nscoord nsFileControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
+  DISPLAY_PREF_INLINE_SIZE(this, result);
 
   // Make sure we measure with the uncropped filename.
   if (mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
