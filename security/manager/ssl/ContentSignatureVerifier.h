@@ -27,17 +27,6 @@ class ContentSignatureVerifier final : public nsIContentSignatureVerifier {
 
  private:
   ~ContentSignatureVerifier() = default;
-
-  nsresult VerifyContentSignatureInternal(
-      const nsACString& aData, const nsACString& aCSHeader,
-      const nsACString& aCertChain, const nsACString& aHostname,
-      /* out */
-      mozilla::Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS&
-          aErrorLabel,
-      /* out */ nsACString& aCertFingerprint, /* out */ uint32_t& aErrorValue);
-  nsresult ParseContentSignatureHeader(
-      const nsACString& aContentSignatureHeader,
-      /* out */ nsCString& aSignature);
 };
 
 #endif  // ContentSignatureVerifier_h

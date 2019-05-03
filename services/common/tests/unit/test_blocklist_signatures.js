@@ -136,16 +136,14 @@ add_task(async function test_check_signatures() {
   const emptyData = "[]";
   const emptySignature = "p384ecdsa=zbugm2FDitsHwk5-IWsas1PpWwY29f0Fg5ZHeqD8fzep7AVl2vfcaHA7LdmCZ28qZLOioGKvco3qT117Q4-HlqFTJM7COHzxGyU2MMJ0ZTnhJrPOC1fP3cVQjU1PTWi9";
   const name = "onecrl.content-signature.mozilla.org";
-  ok(verifier.verifyContentSignature(emptyData, emptySignature,
-                                     getCertChain(), name));
-
-  verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
-               .createInstance(Ci.nsIContentSignatureVerifier);
+  ok(await verifier.asyncVerifyContentSignature(emptyData, emptySignature,
+                                                getCertChain(), name));
 
   const collectionData = '[{"details":{"bug":"https://bugzilla.mozilla.org/show_bug.cgi?id=1155145","created":"2016-01-18T14:43:37Z","name":"GlobalSign certs","who":".","why":"."},"enabled":true,"id":"97fbf7c4-3ef2-f54f-0029-1ba6540c63ea","issuerName":"MHExKDAmBgNVBAMTH0dsb2JhbFNpZ24gUm9vdFNpZ24gUGFydG5lcnMgQ0ExHTAbBgNVBAsTFFJvb3RTaWduIFBhcnRuZXJzIENBMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMQswCQYDVQQGEwJCRQ==","last_modified":2000,"serialNumber":"BAAAAAABA/A35EU="},{"details":{"bug":"https://bugzilla.mozilla.org/show_bug.cgi?id=1155145","created":"2016-01-18T14:48:11Z","name":"GlobalSign certs","who":".","why":"."},"enabled":true,"id":"e3bd531e-1ee4-7407-27ce-6fdc9cecbbdc","issuerName":"MIGBMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTElMCMGA1UECxMcUHJpbWFyeSBPYmplY3QgUHVibGlzaGluZyBDQTEwMC4GA1UEAxMnR2xvYmFsU2lnbiBQcmltYXJ5IE9iamVjdCBQdWJsaXNoaW5nIENB","last_modified":3000,"serialNumber":"BAAAAAABI54PryQ="}]';
   const collectionSignature = "p384ecdsa=f4pA2tYM5jQgWY6YUmhUwQiBLj6QO5sHLD_5MqLePz95qv-7cNCuQoZnPQwxoptDtW8hcWH3kLb0quR7SB-r82gkpR9POVofsnWJRA-ETb0BcIz6VvI3pDT49ZLlNg3p";
 
-  ok(verifier.verifyContentSignature(collectionData, collectionSignature, getCertChain(), name));
+  ok(await verifier.asyncVerifyContentSignature(collectionData, collectionSignature,
+                                                getCertChain(), name));
 
   // set up prefs so the kinto updater talks to the test server
   Services.prefs.setCharPref(PREF_SETTINGS_SERVER,
