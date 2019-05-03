@@ -69,7 +69,6 @@ class nsLayoutStylesheetCache final : public nsIObserver,
   static void Shutdown();
 
   static void SetUserContentCSSURL(nsIURI* aURI);
-  static nsIURI* GetUserContentCSSURL();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 

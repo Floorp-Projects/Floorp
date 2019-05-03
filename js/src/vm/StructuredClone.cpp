@@ -47,7 +47,7 @@
 #include "js/ArrayBuffer.h"  // JS::{ArrayBufferHasData,DetachArrayBuffer,IsArrayBufferObject,New{,Mapped}ArrayBufferWithContents,ReleaseMappedArrayBufferContents}
 #include "js/Date.h"
 #include "js/GCHashTable.h"
-#include "js/RegExpFlags.h"        // JS::RegExpFlags
+#include "js/RegExpFlags.h"        // JS::RegExpFlag, JS::RegExpFlags
 #include "js/SharedArrayBuffer.h"  // JS::IsSharedArrayBufferObject
 #include "js/Wrapper.h"
 #include "vm/BigIntType.h"
@@ -66,6 +66,7 @@
 using namespace js;
 
 using JS::CanonicalizeNaN;
+using JS::RegExpFlag;
 using JS::RegExpFlags;
 using JS::RootedValueVector;
 using mozilla::AssertedCast;
@@ -2462,7 +2463,14 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
     }
 
     case SCTAG_REGEXP_OBJECT: {
-      RegExpFlags flags = AssertedCast<uint8_t>(data);
+      if ((data & RegExpFlag::AllFlags) != data) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                  JSMSG_SC_BAD_SERIALIZED_DATA, "regexp");
+        return false;
+      }
+
+      RegExpFlags flags(AssertedCast<uint8_t>(data));
+
       uint32_t tag2, stringData;
       if (!in.readPair(&tag2, &stringData)) {
         return false;
@@ -2472,6 +2480,7 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp) {
                                   JSMSG_SC_BAD_SERIALIZED_DATA, "regexp");
         return false;
       }
+
       JSString* str = readString(stringData);
       if (!str) {
         return false;
