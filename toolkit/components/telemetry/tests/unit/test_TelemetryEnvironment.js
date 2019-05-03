@@ -506,7 +506,6 @@ function checkGfxAdapter(data) {
     subsysID: "string",
     RAM: "number",
     driver: "string",
-    driverVendor: "string",
     driverVersion: "string",
     driverDate: "string",
     GPUActive: "boolean",
@@ -632,7 +631,7 @@ function checkSystemSection(data) {
   Assert.ok(gfxData.adapters[0].GPUActive, "The first GFX adapter must be active.");
 
   Assert.ok(Array.isArray(gfxData.monitors));
-  if (gIsWindows || gIsMac || gIsLinux) {
+  if (gIsWindows || gIsMac) {
     Assert.ok(gfxData.monitors.length >= 1, "There is at least one monitor.");
     Assert.equal(typeof gfxData.monitors[0].screenWidth, "number");
     Assert.equal(typeof gfxData.monitors[0].screenHeight, "number");
