@@ -12,7 +12,6 @@ import android.widget.Toast;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.PackageUtil;
 
 public class DefaultBrowserPreference extends LinkPreference {
 
@@ -27,21 +26,15 @@ public class DefaultBrowserPreference extends LinkPreference {
     @Override
     protected void onClick() {
         if (GeckoPreferences.PREFS_DEFAULT_BROWSER.equals(getKey()) && AppConstants.Versions.feature24Plus) {
-            if (PackageUtil.isNoDefaultBrowserSet(this.getContext())) {
-                // the user don't have setup a default browser
-                PackageUtil.showInstalledBrowsers(this.getContext());
+            Toast.makeText(this.getContext(),
+                    this.getContext().getString(R.string.default_browser_system_settings_toast),
+                    Toast.LENGTH_LONG).show();
 
-            } else if (!PackageUtil.isDefaultBrowser(this.getContext())) {
-                Toast.makeText(this.getContext(),
-                        this.getContext().getString(R.string.default_browser_system_settings_toast),
-                        Toast.LENGTH_LONG).show();
-
-                // We are special casing the link to set the default browser here: On old Android versions we
-                // link to a SUMO page but on new Android versions we can link to the default app settings where
-                // the user can actually set a default browser (Bug 1312686).
-                Intent changeDefaultApps = new Intent("android.settings.MANAGE_DEFAULT_APPS_SETTINGS");
-                getContext().startActivity(changeDefaultApps);
-            }
+            // We are special casing the link to set the default browser here: On old Android versions we
+            // link to a SUMO page but on new Android versions we can link to the default app settings where
+            // the user can actually set a default browser (Bug 1312686).
+            Intent changeDefaultApps = new Intent("android.settings.MANAGE_DEFAULT_APPS_SETTINGS");
+            getContext().startActivity(changeDefaultApps);
         } else {
             super.onClick();
         }
