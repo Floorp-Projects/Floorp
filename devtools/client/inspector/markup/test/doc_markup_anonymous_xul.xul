@@ -3,6 +3,15 @@
 <xul:window xmlns="http://www.w3.org/1999/xhtml"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="Test anonymous xul nodes.">
-  <xul:toolbarbutton id="test"></xul:toolbarbutton>
+  <xbl:bindings xmlns:xbl="http://www.mozilla.org/xbl"
+                xmlns:xul="http://www.mozilla.org/keymaster/gaktekeeper/there.is.only.xul">
+    <xbl:binding id="test">
+      <xbl:content>
+        <xul:box anonid="xbl-anon1">Anonymous</xul:box>
+        <xul:box anonid="xbl-anon2">Anonymous</xul:box>
+      </xbl:content>
+    </xbl:binding>
+  </xbl:bindings>
+  <box id="xbl-host" style="-moz-binding: url(#test)"/>
 </xul:window>
 
