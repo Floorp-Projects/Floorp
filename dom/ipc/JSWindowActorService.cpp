@@ -552,44 +552,6 @@ void JSWindowActorService::ConstructActor(
   }
 }
 
-void JSWindowActorService::ReceiveMessage(nsISupports* aTarget,
-                                          JS::RootedObject& aObj,
-                                          const nsString& aMessageName,
-                                          ipc::StructuredCloneData& aData) {
-  IgnoredErrorResult error;
-  AutoEntryScript aes(aObj, "WindowGlobalChild Message Handler");
-  JSContext* cx = aes.cx();
-
-  // We passed the unwrapped object to AutoEntryScript so we now need to
-  // enter the realm of the global object that represents the realm of our
-  // callback.
-  JSAutoRealm ar(cx, aObj);
-  JS::RootedValue json(cx, JS::NullValue());
-
-  // Deserialize our data into a JS object in the correct compartment.
-  aData.Read(aes.cx(), &json, error);
-  if (NS_WARN_IF(error.Failed())) {
-    JS_ClearPendingException(cx);
-    return;
-  }
-
-  RootedDictionary<ReceiveMessageArgument> argument(cx);
-  argument.mObjects = JS_NewPlainObject(cx);
-  argument.mTarget = aTarget;
-  argument.mName = aMessageName;
-  argument.mData = json;
-  argument.mJson = json;
-  argument.mSync = false;
-
-  JS::Rooted<JSObject*> global(cx, JS::GetNonCCWObjectGlobal(aObj));
-  RefPtr<MessageListener> messageListener =
-      new MessageListener(aObj, global, nullptr, nullptr);
-
-  JS::Rooted<JS::Value> dummy(cx);
-  messageListener->ReceiveMessage(argument, &dummy,
-                                  "JSWindowActorService::ReceiveMessage");
-}
-
 void JSWindowActorService::RegisterWindowRoot(EventTarget* aRoot) {
   MOZ_ASSERT(!mRoots.Contains(aRoot));
   mRoots.AppendElement(aRoot);

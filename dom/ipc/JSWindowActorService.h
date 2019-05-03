@@ -8,7 +8,6 @@
 #define mozilla_dom_JSWindowActorService_h
 
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIURI.h"
 #include "nsRefPtrHashtable.h"
@@ -48,10 +47,6 @@ class JSWindowActorService final {
                       BrowsingContext* aBrowsingContext, nsIURI* aURI,
                       const nsString& aRemoteType,
                       JS::MutableHandleObject aActor, ErrorResult& aRv);
-
-  void ReceiveMessage(nsISupports* aActor, JS::RootedObject& aObj,
-                      const nsString& aMessageName,
-                      ipc::StructuredCloneData& aData);
 
   // Register or unregister a WindowRoot object from this JSWindowActorService.
   void RegisterWindowRoot(EventTarget* aRoot);
