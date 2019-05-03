@@ -1993,15 +1993,15 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   bool doomCurrentInner = false;
 
+  // Only non-gray (i.e. exposed to JS) objects should be assigned to
+  // newInnerGlobal.
   JS::Rooted<JSObject*> newInnerGlobal(cx);
   if (reUseInnerWindow) {
     // We're reusing the current inner window.
     NS_ASSERTION(!currentInner->IsFrozen(),
                  "We should never be reusing a shared inner window");
     newInnerWindow = currentInner;
-    newInnerGlobal = currentInner->GetWrapperPreserveColor();
-
-    JS::ExposeObjectToActiveJS(newInnerGlobal);
+    newInnerGlobal = currentInner->GetWrapper();
 
     // We're reusing the inner window, but this still counts as a navigation,
     // so all expandos and such defined on the outer window should go away.
@@ -2028,7 +2028,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   } else {
     if (aState) {
       newInnerWindow = wsh->GetInnerWindow();
-      newInnerGlobal = newInnerWindow->GetWrapperPreserveColor();
+      newInnerGlobal = newInnerWindow->GetWrapper();
     } else {
       newInnerWindow = nsGlobalWindowInner::Create(this, thisChrome);
       if (StaticPrefs::dom_timeout_defer_during_load()) {
@@ -2095,7 +2095,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
       SetWrapper(mContext->GetWindowProxy());
     } else {
-      JS::ExposeObjectToActiveJS(newInnerGlobal);
       JS::Rooted<JSObject*> outerObject(
           cx, NewOuterWindowProxy(cx, newInnerGlobal, thisChrome));
       if (!outerObject) {
