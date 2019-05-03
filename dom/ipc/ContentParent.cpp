@@ -2391,8 +2391,12 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
 
   // Content processes have no permission to access profile directory, so we
   // send the file URL instead.
-  nsIURI* ucsURI = nsLayoutStylesheetCache::Singleton()->GetUserContentCSSURL();
-  SerializeURI(ucsURI, xpcomInit.userContentSheetURL());
+  StyleSheet* ucs = nsLayoutStylesheetCache::Singleton()->GetUserContentSheet();
+  if (ucs) {
+    SerializeURI(ucs->GetSheetURI(), xpcomInit.userContentSheetURL());
+  } else {
+    SerializeURI(nullptr, xpcomInit.userContentSheetURL());
+  }
 
   // 1. Build ContentDeviceData first, as it may affect some gfxVars.
   gfxPlatform::GetPlatform()->BuildContentDeviceData(
