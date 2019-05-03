@@ -34,9 +34,10 @@ add_task(async function test_support_backgrounds_position() {
 
   let toolboxCS = window.getComputedStyle(toolbox);
   let rootCS = window.getComputedStyle(docEl);
+  let rootBgImage = rootCS.backgroundImage.split(",")[0].trim();
   let bgImage = toolboxCS.backgroundImage.split(",")[0].trim();
-
-  checkThemeHeaderImage(window, `moz-extension://${extension.uuid}/face1.png`);
+  Assert.ok(rootBgImage.includes("face1.png"),
+            `The backgroundImage should use face1.png. Actual value is: ${rootBgImage}`);
   Assert.equal(toolboxCS.backgroundImage, Array(3).fill(bgImage).join(", "),
                "The backgroundImage should use face2.png three times.");
   Assert.equal(toolboxCS.backgroundPosition, "0% 0%, 50% 0%, 100% 100%",
@@ -94,8 +95,10 @@ add_task(async function test_support_backgrounds_repeat() {
 
   let rootCS = window.getComputedStyle(docEl);
   let toolboxCS = window.getComputedStyle(toolbox);
-  checkThemeHeaderImage(window, `moz-extension://${extension.uuid}/face0.png`);
-  Assert.equal([1, 2, 3].map(num => `url("moz-extension://${extension.uuid}/face${num}.png")`).join(", "),
+  let bgImage = rootCS.backgroundImage.split(",")[0].trim();
+  Assert.ok(bgImage.includes("face0.png"),
+            `The backgroundImage should use face.png. Actual value is: ${bgImage}`);
+  Assert.equal([1, 2, 3].map(num => bgImage.replace(/face[\d]*/, `face${num}`)).join(", "),
                toolboxCS.backgroundImage, "The backgroundImage should use face.png three times.");
   Assert.equal(rootCS.backgroundPosition, "100% 0%",
                "The backgroundPosition should use the default value for root.");
@@ -143,7 +146,9 @@ add_task(async function test_additional_images_check() {
 
   let rootCS = window.getComputedStyle(docEl);
   let toolboxCS = window.getComputedStyle(toolbox);
-  checkThemeHeaderImage(window, `moz-extension://${extension.uuid}/face.png`);
+  let bgImage = rootCS.backgroundImage.split(",")[0];
+  Assert.ok(bgImage.includes("face.png"),
+            `The backgroundImage should use face.png. Actual value is: ${bgImage}`);
   Assert.equal("none", toolboxCS.backgroundImage,
                "The backgroundImage should not use face.png.");
   Assert.equal(rootCS.backgroundPosition, "100% 0%",
