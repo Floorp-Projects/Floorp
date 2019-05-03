@@ -7387,6 +7387,14 @@ void nsGridContainerFrame::UpdateSubgridFrameState() {
 }
 
 nsFrameState nsGridContainerFrame::ComputeSelfSubgridBits() const {
+  // 'contain:layout/paint' makes us an "independent formatting context",
+  // which prevents us from being a subgrid in this case (but not always).
+  // https://drafts.csswg.org/css-display-3/#establish-an-independent-formatting-context
+  auto* display = StyleDisplay();
+  if (display->IsContainLayout() || display->IsContainPaint()) {
+    return nsFrameState(0);
+  }
+
   // skip our scroll frame and such if we have it
   auto* parent = GetParent();
   while (parent && parent->GetContent() == GetContent()) {
