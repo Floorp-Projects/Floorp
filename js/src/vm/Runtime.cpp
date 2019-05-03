@@ -770,6 +770,10 @@ void JSRuntime::clearUsedByHelperThread(Zone* zone) {
 }
 
 void JSRuntime::incrementNumDebuggeeRealms() {
+  if (numDebuggeeRealms_ == 0) {
+    jitRuntime()->baselineInterpreter().toggleDebuggerInstrumentation(true);
+  }
+
   numDebuggeeRealms_++;
   MOZ_ASSERT(numDebuggeeRealms_ <= numRealms);
 }
@@ -777,6 +781,10 @@ void JSRuntime::incrementNumDebuggeeRealms() {
 void JSRuntime::decrementNumDebuggeeRealms() {
   MOZ_ASSERT(numDebuggeeRealms_ > 0);
   numDebuggeeRealms_--;
+
+  if (numDebuggeeRealms_ == 0) {
+    jitRuntime()->baselineInterpreter().toggleDebuggerInstrumentation(false);
+  }
 }
 
 bool js::CurrentThreadCanAccessRuntime(const JSRuntime* rt) {

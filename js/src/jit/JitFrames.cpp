@@ -376,21 +376,35 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
         script->resetWarmUpCounter();
 
         // Resume at the start of the catch block.
-        PCMappingSlotInfo slotInfo;
         rfe->kind = ResumeFromException::RESUME_CATCH;
-        rfe->target =
-            script->baselineScript()->nativeCodeForPC(script, *pc, &slotInfo);
-        MOZ_ASSERT(slotInfo.isStackSynced());
+        if (frame.baselineFrame()->runningInInterpreter()) {
+          const BaselineInterpreter& interp =
+              cx->runtime()->jitRuntime()->baselineInterpreter();
+          frame.baselineFrame()->setInterpreterPC(*pc);
+          rfe->target = interp.interpretOpAddr().value;
+        } else {
+          PCMappingSlotInfo slotInfo;
+          rfe->target =
+              script->baselineScript()->nativeCodeForPC(script, *pc, &slotInfo);
+          MOZ_ASSERT(slotInfo.isStackSynced());
+        }
         return true;
       }
 
       case JSTRY_FINALLY: {
-        PCMappingSlotInfo slotInfo;
         SettleOnTryNote(cx, tn, frame, ei, rfe, pc);
         rfe->kind = ResumeFromException::RESUME_FINALLY;
-        rfe->target =
-            script->baselineScript()->nativeCodeForPC(script, *pc, &slotInfo);
-        MOZ_ASSERT(slotInfo.isStackSynced());
+        if (frame.baselineFrame()->runningInInterpreter()) {
+          const BaselineInterpreter& interp =
+              cx->runtime()->jitRuntime()->baselineInterpreter();
+          frame.baselineFrame()->setInterpreterPC(*pc);
+          rfe->target = interp.interpretOpAddr().value;
+        } else {
+          PCMappingSlotInfo slotInfo;
+          rfe->target =
+              script->baselineScript()->nativeCodeForPC(script, *pc, &slotInfo);
+          MOZ_ASSERT(slotInfo.isStackSynced());
+        }
         // Drop the exception instead of leaking cross compartment data.
         if (!cx->getPendingException(
                 MutableHandleValue::fromMarkedLocation(&rfe->exception))) {
