@@ -9,6 +9,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/Unused.h"
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
 #include <limits>
@@ -63,6 +64,7 @@ void ResizeObserverNotificationHelper::Unregister() {
 
   bool rv = refreshDriver->RemoveRefreshObserver(this, FlushType::Display);
   MOZ_DIAGNOSTIC_ASSERT(rv, "Should remove the observer successfully");
+  Unused << rv;
 
   mRegistered = false;
 }
