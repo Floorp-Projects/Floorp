@@ -6,6 +6,7 @@
 DevToolsModules(
     'ConsoleApiCall.js',
     'ConsoleCommand.js',
+    'CSSWarning.js',
     'DefaultRenderer.js',
     'EvaluationResult.js',
     'NetworkEventMessage.js',

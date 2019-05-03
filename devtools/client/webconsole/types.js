@@ -46,6 +46,7 @@ exports.ConsoleMessage = function(props) {
     errorMessageName: null,
     exceptionDocURL: null,
     executionPoint: undefined,
+    cssSelectors: "",
     userProvidedStyles: null,
     notes: null,
     indent: 0,

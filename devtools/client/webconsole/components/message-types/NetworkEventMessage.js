@@ -97,15 +97,15 @@ function NetworkEventMessage({
     );
   }
 
-  const toggle = (e) => {
+  const onToggle = (messageId, e) => {
     const shouldOpenLink = (isMacOS && e.metaKey) || (!isMacOS && e.ctrlKey);
     if (shouldOpenLink) {
       serviceContainer.openLink(request.url, e);
       e.stopPropagation();
     } else if (open) {
-      dispatch(actions.messageClose(id));
+      dispatch(actions.messageClose(messageId));
     } else {
-      dispatch(actions.messageOpen(id));
+      dispatch(actions.messageOpen(messageId));
     }
   };
 
@@ -114,10 +114,10 @@ function NetworkEventMessage({
   const xhr = isXHR
     ? dom.span({ className: "xhr" }, l10n.getStr("webConsoleXhrIndicator"))
     : null;
-  const requestUrl = dom.span({ className: "url", title: request.url, onClick: toggle },
+  const requestUrl = dom.span({ className: "url", title: request.url },
     request.url);
   const statusBody = statusInfo
-    ? dom.a({ className: "status", onClick: toggle }, statusInfo)
+    ? dom.a({ className: "status" }, statusInfo)
     : null;
 
   const messageBody = [xhr, method, requestUrl, statusBody];
@@ -169,6 +169,7 @@ function NetworkEventMessage({
     indent,
     collapsible: true,
     open,
+    onToggle,
     attachment,
     topLevelClasses,
     timeStamp,
