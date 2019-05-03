@@ -7,12 +7,14 @@
 #include "ContentSignatureVerifier.h"
 
 #include "BRNameMatchingPolicy.h"
+#include "CryptoTask.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
 #include "cryptohi.h"
 #include "keyhi.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
 #include "nsPromiseFlatString.h"
 #include "nsSecurityHeaderParser.h"
@@ -26,6 +28,7 @@ NS_IMPL_ISUPPORTS(ContentSignatureVerifier, nsIContentSignatureVerifier)
 using namespace mozilla;
 using namespace mozilla::pkix;
 using namespace mozilla::psm;
+using dom::Promise;
 
 static LazyLogModule gCSVerifierPRLog("ContentSignatureVerifier");
 #define CSVerifier_LOG(args) MOZ_LOG(gCSVerifierPRLog, LogLevel::Debug, args)
@@ -35,22 +38,80 @@ const unsigned char kPREFIX[] = {'C', 'o', 'n', 't', 'e', 'n', 't',
                                  '-', 'S', 'i', 'g', 'n', 'a', 't',
                                  'u', 'r', 'e', ':', 0};
 
-NS_IMETHODIMP
-ContentSignatureVerifier::VerifyContentSignature(const nsACString& aData,
-                                                 const nsACString& aCSHeader,
-                                                 const nsACString& aCertChain,
-                                                 const nsACString& aHostname,
-                                                 bool* _retval) {
-  NS_ENSURE_ARG(_retval);
-  *_retval = false;
+class VerifyContentSignatureTask : public CryptoTask {
+ public:
+  VerifyContentSignatureTask(const nsACString& aData,
+                             const nsACString& aCSHeader,
+                             const nsACString& aCertChain,
+                             const nsACString& aHostname,
+                             RefPtr<Promise>& aPromise)
+      : mData(aData),
+        mCSHeader(aCSHeader),
+        mCertChain(aCertChain),
+        mHostname(aHostname),
+        mSignatureVerified(false),
+        mPromise(aPromise) {}
 
+ private:
+  virtual nsresult CalculateResult() override;
+  virtual void CallCallback(nsresult rv) override;
+
+  nsCString mData;
+  nsCString mCSHeader;
+  nsCString mCertChain;
+  nsCString mHostname;
+  bool mSignatureVerified;
+  RefPtr<Promise> mPromise;
+};
+
+NS_IMETHODIMP
+ContentSignatureVerifier::AsyncVerifyContentSignature(
+    const nsACString& aData, const nsACString& aCSHeader,
+    const nsACString& aCertChain, const nsACString& aHostname, JSContext* aCx,
+    Promise** aPromise) {
+  NS_ENSURE_ARG_POINTER(aCx);
+
+  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  RefPtr<VerifyContentSignatureTask> task(new VerifyContentSignatureTask(
+      aData, aCSHeader, aCertChain, aHostname, promise));
+  nsresult rv = task->Dispatch("ContentSig");
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  promise.forget(aPromise);
+  return NS_OK;
+}
+
+static nsresult VerifyContentSignatureInternal(
+    const nsACString& aData, const nsACString& aCSHeader,
+    const nsACString& aCertChain, const nsACString& aHostname,
+    /* out */
+    mozilla::Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS&
+        aErrorLabel,
+    /* out */ nsACString& aCertFingerprint, /* out */ uint32_t& aErrorValue);
+static nsresult ParseContentSignatureHeader(
+    const nsACString& aContentSignatureHeader,
+    /* out */ nsCString& aSignature);
+
+nsresult VerifyContentSignatureTask::CalculateResult() {
   // 3 is the default, non-specific, "something failed" error.
   Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS errorLabel =
       Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS::err3;
   nsAutoCString certFingerprint;
   uint32_t errorValue = 3;
   nsresult rv =
-      VerifyContentSignatureInternal(aData, aCSHeader, aCertChain, aHostname,
+      VerifyContentSignatureInternal(mData, mCSHeader, mCertChain, mHostname,
                                      errorLabel, certFingerprint, errorValue);
   if (NS_FAILED(rv)) {
     CSVerifier_LOG(("CSVerifier: Signature verification failed"));
@@ -64,10 +125,18 @@ ContentSignatureVerifier::VerifyContentSignature(const nsACString& aData,
     return rv;
   }
 
-  *_retval = true;
+  mSignatureVerified = true;
   Accumulate(Telemetry::CONTENT_SIGNATURE_VERIFICATION_STATUS, 0);
 
   return NS_OK;
+}
+
+void VerifyContentSignatureTask::CallCallback(nsresult rv) {
+  if (NS_FAILED(rv)) {
+    mPromise->MaybeReject(rv);
+  } else {
+    mPromise->MaybeResolve(mSignatureVerified);
+  }
 }
 
 bool IsNewLine(char16_t c) { return c == '\n' || c == '\r'; }
@@ -138,7 +207,7 @@ nsresult ReadChainIntoCertList(const nsACString& aCertChain,
 // key in the end-entity certificate from the chain. Returns NS_OK if everything
 // is satisfactory and a failing nsresult otherwise. The output parameters are
 // filled with telemetry data to report in the case of failures.
-nsresult ContentSignatureVerifier::VerifyContentSignatureInternal(
+static nsresult VerifyContentSignatureInternal(
     const nsACString& aData, const nsACString& aCSHeader,
     const nsACString& aCertChain, const nsACString& aHostname,
     /* out */
@@ -316,7 +385,7 @@ nsresult ContentSignatureVerifier::VerifyContentSignatureInternal(
   return NS_OK;
 }
 
-nsresult ContentSignatureVerifier::ParseContentSignatureHeader(
+static nsresult ParseContentSignatureHeader(
     const nsACString& aContentSignatureHeader,
     /* out */ nsCString& aSignature) {
   // We only support p384 ecdsa.
