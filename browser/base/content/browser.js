@@ -3051,7 +3051,6 @@ var BrowserOnClick = {
   init() {
     let mm = window.messageManager;
     mm.addMessageListener("Browser:CertExceptionError", this);
-    mm.addMessageListener("Browser:OpenCaptivePortalPage", this);
     mm.addMessageListener("Browser:SiteBlockedError", this);
     mm.addMessageListener("Browser:EnableOnlineMode", this);
     mm.addMessageListener("Browser:SetSSLErrorReportAuto", this);
@@ -3060,9 +3059,6 @@ var BrowserOnClick = {
     mm.addMessageListener("Browser:SSLErrorGoBack", this);
     mm.addMessageListener("Browser:PrimeMitm", this);
     mm.addMessageListener("Browser:ResetEnterpriseRootsPref", this);
-
-    Services.obs.addObserver(this, "captive-portal-login-abort");
-    Services.obs.addObserver(this, "captive-portal-login-success");
   },
 
   uninit() {
@@ -3076,20 +3072,6 @@ var BrowserOnClick = {
     mm.removeMessageListener("Browser:SSLErrorGoBack", this);
     mm.removeMessageListener("Browser:PrimeMitm", this);
     mm.removeMessageListener("Browser:ResetEnterpriseRootsPref", this);
-
-    Services.obs.removeObserver(this, "captive-portal-login-abort");
-    Services.obs.removeObserver(this, "captive-portal-login-success");
-  },
-
-  observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "captive-portal-login-abort":
-      case "captive-portal-login-success":
-        // Broadcast when a captive portal is freed so that error pages
-        // can refresh themselves.
-        window.messageManager.broadcastAsyncMessage("Browser:CaptivePortalFreed");
-      break;
-    }
   },
 
   receiveMessage(msg) {
@@ -3099,9 +3081,6 @@ var BrowserOnClick = {
                          msg.data.isTopFrame, msg.data.location,
                          msg.data.securityInfoAsString,
                          msg.data.frameId);
-      break;
-      case "Browser:OpenCaptivePortalPage":
-        CaptivePortalWatcher.ensureCaptivePortalTab();
       break;
       case "Browser:SiteBlockedError":
         this.onAboutBlocked(msg.data.elementId, msg.data.reason,

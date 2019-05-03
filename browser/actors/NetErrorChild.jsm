@@ -613,9 +613,6 @@ class NetErrorChild extends ActorChild {
     case "AboutNetErrorLoad":
       this.onPageLoad(aEvent.originalTarget, doc.defaultView);
       break;
-    case "AboutNetErrorOpenCaptivePortal":
-      this.openCaptivePortalPage(aEvent);
-      break;
     case "AboutNetErrorSetAutomatic":
       this.onSetAutomatic(aEvent);
       break;
@@ -647,18 +644,7 @@ class NetErrorChild extends ActorChild {
       }
 
       this.onCertErrorDetails(msg, frameDocShell);
-    } else if (msg.name == "Browser:CaptivePortalFreed") {
-      // TODO: This check is not correct for frames.
-      if (!this.isAboutCertError(this.content.document)) {
-        return;
-      }
-
-      this.onCaptivePortalFreed(msg);
     }
-  }
-
-  onCaptivePortalFreed(msg) {
-    this.content.dispatchEvent(new this.content.CustomEvent("AboutNetErrorCaptivePortalFreed"));
   }
 
   changedCertPrefs() {
@@ -759,11 +745,6 @@ class NetErrorChild extends ActorChild {
     this.mm.sendAsyncMessage("Browser:SSLErrorReportTelemetry",
                             {reportStatus: TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN});
   }
-
-  openCaptivePortalPage(evt) {
-    this.mm.sendAsyncMessage("Browser:OpenCaptivePortalPage");
-  }
-
 
   onResetPreferences(evt) {
     this.mm.sendAsyncMessage("Browser:ResetSSLPreferences");
