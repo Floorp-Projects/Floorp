@@ -6,9 +6,17 @@
 
 #include "ContentBlockingLog.h"
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/RandomNum.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Unused.h"
 #include "mozilla/XorShift128PlusRNG.h"
+
+static LazyLogModule gContentBlockingLog("ContentBlockingLog");
+#define LOG(fmt, ...) \
+  MOZ_LOG(gContentBlockingLog, mozilla::LogLevel::Debug, (fmt, ##__VA_ARGS__))
+
+typedef mozilla::Telemetry::OriginMetricID OriginMetricID;
 
 namespace mozilla {
 namespace dom {
@@ -74,12 +82,35 @@ static bool IsReportingEnabled() {
   return IsReportingPerUserEnabled() && IsReportingPerDocumentEnabled();
 }
 
+static void ReportOriginSingleHash(OriginMetricID aId,
+                                   const nsACString& aOrigin) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  LOG("ReportOriginSingleHash metric=%s",
+      Telemetry::MetricIDToString[static_cast<uint32_t>(aId)]);
+  LOG("ReportOriginSingleHash origin=%s", PromiseFlatCString(aOrigin).get());
+
+  if (XRE_IsParentProcess()) {
+    Telemetry::RecordOrigin(aId, aOrigin);
+    return;
+  }
+
+  dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+  if (NS_WARN_IF(!contentChild)) {
+    return;
+  }
+
+  Unused << contentChild->SendRecordOrigin(static_cast<uint32_t>(aId),
+                                           nsCString(aOrigin));
+}
+
 void ContentBlockingLog::ReportLog() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!IsReportingEnabled()) {
     return;
   }
+  LOG("ContentBlockingLog::ReportLog [this=%p]", this);
 
   for (const auto& originEntry : mLog) {
     if (!originEntry.mData) {
@@ -88,7 +119,8 @@ void ContentBlockingLog::ReportLog() {
 
     for (const auto& logEntry : Reversed(originEntry.mData->mLogs)) {
       if (logEntry.mType !=
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
+          logEntry.mTrackingFullHashes.IsEmpty()) {
         continue;
       }
 
@@ -97,7 +129,6 @@ void ContentBlockingLog::ReportLog() {
       const bool testMode =
           StaticPrefs::telemetry_origin_telemetry_test_mode_enabled();
 
-      using OriginMetricID = Telemetry::OriginMetricID;
       OriginMetricID metricId =
           testMode ? OriginMetricID::ContentBlocking_Blocked_TestOnly
                    : OriginMetricID::ContentBlocking_Blocked;
@@ -129,7 +160,9 @@ void ContentBlockingLog::ReportLog() {
         }
       }
 
-      Telemetry::RecordOrigin(metricId, originEntry.mOrigin);
+      for (const nsCString& hash : logEntry.mTrackingFullHashes) {
+        ReportOriginSingleHash(metricId, hash);
+      }
       break;
     }
   }
