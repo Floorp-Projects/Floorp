@@ -131,9 +131,8 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
   // treat it as unencrypted, even if other fragments may be encrypted.
   if (sampleDescriptionEntry->mIsEncryptedEntry) {
     if (!moofParser->mSinf.IsValid()) {
-      MOZ_ASSERT_UNREACHABLE(
-          "Sample description entry reports sample is encrypted, but no "
-          "sinf was parsed!");
+      // The sample description entry says this sample is encrypted, but we
+      // don't have a relevant sinf box, this shouldn't happen, so bail.
       return nullptr;
     }
     if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cenc")) {
