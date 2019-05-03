@@ -240,6 +240,15 @@ var gURLBarHandler = {
   },
 
   /**
+   * Invoked by CustomizationHandler when a customization starts.
+   */
+  customizeStart() {
+    if (this._urlbar && this._urlbar.constructor.name == "UrlbarInput") {
+      this._urlbar.removeCopyCutController();
+    }
+  },
+
+  /**
    * Invoked by CustomizationHandler when a customization ends.
    */
   customizeEnd() {
