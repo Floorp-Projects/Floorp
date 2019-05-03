@@ -55,6 +55,7 @@ already_AddRefed<DataSourceSurface> SharedSurfacesParent::Get(
     const wr::ExternalImageId& aId) {
   StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
+    gfxCriticalNote << "SSP:Get " << aId.mHandle << " shtd";
     return nullptr;
   }
 
@@ -68,6 +69,7 @@ already_AddRefed<DataSourceSurface> SharedSurfacesParent::Acquire(
     const wr::ExternalImageId& aId) {
   StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
+    gfxCriticalNote << "SSP:Acq " << aId.mHandle << " shtd";
     return nullptr;
   }
 
@@ -111,6 +113,7 @@ void SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
   MOZ_ASSERT(NS_IsMainThread());
   StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
+    gfxCriticalNote << "SSP:Ads " << aId.mHandle << " shtd";
     return;
   }
 
@@ -168,6 +171,7 @@ void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
   MOZ_ASSERT(aPid != base::GetCurrentProcId());
   StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
+    gfxCriticalNote << "SSP:Add " << aId.mHandle << " shtd";
     return;
   }
 
@@ -176,6 +180,7 @@ void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
       new SourceSurfaceSharedDataWrapper();
   if (NS_WARN_IF(!surface->Init(aDesc.size(), aDesc.stride(), aDesc.format(),
                                 aDesc.handle(), aPid))) {
+    gfxCriticalNote << "SSP:Add " << aId.mHandle << " init";
     return;
   }
 
