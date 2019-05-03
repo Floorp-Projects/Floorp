@@ -70,7 +70,6 @@ class ExtractOriginData : protected mozilla::Tokenizer {
     origin.Assign(scope);
 
     // Bail out if it isn't appId.
-    // AppId doesn't exist any more but we could have old storage data...
     uint32_t appId;
     if (!ReadInteger(&appId)) {
       return;
@@ -131,7 +130,7 @@ class ExtractOriginData : protected mozilla::Tokenizer {
         }
       }
     } else {
-      OriginAttributes attrs(inIsolatedMozBrowser);
+      OriginAttributes attrs(appId, inIsolatedMozBrowser);
       attrs.CreateSuffix(suffix);
     }
 
