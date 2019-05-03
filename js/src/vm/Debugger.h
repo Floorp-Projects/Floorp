@@ -136,14 +136,13 @@ class DebuggerWeakMap
                   ZoneAllocPolicy>
       CountMap;
 
-  CountMap zoneCounts;
   JS::Compartment* compartment;
 
  public:
   typedef WeakMap<Key, Value> Base;
 
   explicit DebuggerWeakMap(JSContext* cx)
-      : Base(cx), zoneCounts(cx->zone()), compartment(cx->compartment()) {}
+      : Base(cx), compartment(cx->compartment()) {}
 
  public:
   // Expose those parts of HashMap public interface that are used by Debugger
@@ -159,6 +158,7 @@ class DebuggerWeakMap
   // Expose WeakMap public interface.
 
   using Base::all;
+  using Base::has;
   using Base::lookup;
   using Base::lookupForAdd;
   using Base::remove;
@@ -171,25 +171,8 @@ class DebuggerWeakMap
     CheckDebuggeeThing(k, InvisibleKeysOk);
 #endif
     MOZ_ASSERT(!Base::has(k));
-    if (!incZoneCount(k->zone())) {
-      return false;
-    }
     bool ok = Base::relookupOrAdd(p, k, v);
-    if (!ok) {
-      decZoneCount(k->zone());
-    }
     return ok;
-  }
-
-  template <typename KeyInput>
-  bool has(const KeyInput& k) const {
-    return !!this->lookup(k);
-  }
-
-  void remove(const Lookup& l) {
-    MOZ_ASSERT(Base::has(l));
-    Base::remove(l);
-    decZoneCount(l->zone());
   }
 
   // Remove entries whose keys satisfy the given predicate.
@@ -198,7 +181,6 @@ class DebuggerWeakMap
     for (Enum e(*static_cast<Base*>(this)); !e.empty(); e.popFront()) {
       JSObject* key = e.front().key();
       if (test(key)) {
-        decZoneCount(key->zoneFromAnyThread());
         e.removeFront();
       }
     }
@@ -218,46 +200,7 @@ class DebuggerWeakMap
     }
   }
 
-  bool hasKeyInZone(JS::Zone* zone) {
-    CountMap::Ptr p = zoneCounts.lookup(zone);
-    MOZ_ASSERT_IF(p.found(), p->value() > 0);
-    return p.found();
-  }
-
  private:
-  /* Override sweep method to also update our edge cache. */
-  void sweep() override {
-    MOZ_ASSERT(CurrentThreadIsPerformingGC());
-    for (Enum e(*static_cast<Base*>(this)); !e.empty(); e.popFront()) {
-      if (gc::IsAboutToBeFinalized(&e.front().mutableKey())) {
-        decZoneCount(e.front().key()->zoneFromAnyThread());
-        e.removeFront();
-      }
-    }
-#ifdef DEBUG
-    Base::assertEntriesNotAboutToBeFinalized();
-#endif
-  }
-
-  MOZ_MUST_USE bool incZoneCount(JS::Zone* zone) {
-    CountMap::AddPtr p = zoneCounts.lookupForAdd(zone);
-    if (!p && !zoneCounts.add(p, zone, 0)) {
-      return false;  // OOM'd while adding
-    }
-    ++p->value();
-    return true;
-  }
-
-  void decZoneCount(JS::Zone* zone) {
-    CountMap::Ptr p = zoneCounts.lookup(zone);
-    MOZ_ASSERT(p);
-    MOZ_ASSERT(p->value() > 0);
-    --p->value();
-    if (p->value() == 0) {
-      zoneCounts.remove(zone);
-    }
-  }
-
 #ifdef JS_GC_ZEAL
   // Let the weak map marking verifier know that this map can
   // contain keys in other zones.
@@ -991,7 +934,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static void traceAllForMovingGC(JSTracer* trc);
   static void sweepAll(FreeOp* fop);
   static void detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global);
-  static MOZ_MUST_USE bool findSweepGroupEdges(JS::Zone* zone);
+  static MOZ_MUST_USE bool findSweepGroupEdges(JSRuntime* rt);
 #ifdef DEBUG
   static bool isDebuggerCrossCompartmentEdge(JSObject* obj,
                                              const js::gc::Cell* cell);
