@@ -464,6 +464,12 @@
     "minbytes": 4424,
     "maxbytes": 4424
   },
+  "{profile}\\permissions.sqlite-journal": {
+    "mincount": 0,
+    "maxcount": 18,
+    "minbytes": 0,
+    "maxbytes": 7208
+  },
   "{profile}\\pkcs11.txt": {
     "mincount": 0,
     "maxcount": 4,
