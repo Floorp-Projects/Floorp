@@ -28,7 +28,6 @@ class GfxInfo final : public GfxInfoBase {
   NS_IMETHOD GetAdapterDeviceID(nsAString& aAdapterDeviceID) override;
   NS_IMETHOD GetAdapterSubsysID(nsAString& aAdapterSubsysID) override;
   NS_IMETHOD GetAdapterRAM(nsAString& aAdapterRAM) override;
-  NS_IMETHOD GetAdapterDriverVendor(nsAString& aAdapterDriverVendor) override;
   NS_IMETHOD GetAdapterDriverVersion(nsAString& aAdapterDriverVersion) override;
   NS_IMETHOD GetAdapterDriverDate(nsAString& aAdapterDriverDate) override;
   NS_IMETHOD GetAdapterDescription2(nsAString& aAdapterDescription) override;
@@ -37,7 +36,6 @@ class GfxInfo final : public GfxInfoBase {
   NS_IMETHOD GetAdapterDeviceID2(nsAString& aAdapterDeviceID) override;
   NS_IMETHOD GetAdapterSubsysID2(nsAString& aAdapterSubsysID) override;
   NS_IMETHOD GetAdapterRAM2(nsAString& aAdapterRAM) override;
-  NS_IMETHOD GetAdapterDriverVendor2(nsAString& aAdapterDriverVendor) override;
   NS_IMETHOD GetAdapterDriverVersion2(
       nsAString& aAdapterDriverVersion) override;
   NS_IMETHOD GetAdapterDriverDate2(nsAString& aAdapterDriverDate) override;
@@ -63,13 +61,12 @@ class GfxInfo final : public GfxInfoBase {
       OperatingSystem* aOS = nullptr) override;
   virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo() override;
 
-  virtual bool DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
-                                     const nsAString& aDriverVendor) override;
+  virtual bool DoesVendorMatch(const nsAString& aBlocklistVendor,
+                               const nsAString& aAdapterVendor) override;
 
  private:
   nsCString mVendorId;
   nsCString mDeviceId;
-  nsCString mDriverVendor;
   nsCString mDriverVersion;
   nsCString mAdapterDescription;
   nsCString mAdapterRAM;

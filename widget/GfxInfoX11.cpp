@@ -49,8 +49,6 @@ void GfxInfo::AddCrashReportAnnotations() {
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterDeviceID,
                                      mDeviceId);
   CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::AdapterDriverVendor, mDriverVendor);
-  CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::AdapterDriverVersion, mDriverVersion);
 }
 
@@ -223,7 +221,7 @@ void GfxInfo::GetData() {
   // GL_VENDOR string.
   mIsMesa = glVersion.Find("Mesa") != -1;
 
-  // We need to use custom driver vendor IDs for mesa so we can treat them
+  // We need to use custom vendor IDs for mesa so we can treat them
   // differently than the proprietary drivers.
   if (mIsMesa) {
     mIsAccelerated = !mesaAccelerated.Equals("FALSE");
@@ -231,34 +229,27 @@ void GfxInfo::GetData() {
     // forcing software rasterization on a DRI-accelerated X server by using
     // LIBGL_ALWAYS_SOFTWARE or a similar restriction.
     if (strcasestr(glRenderer.get(), "llvmpipe")) {
-      CopyUTF16toUTF8(GfxDriverInfo::GetDriverVendor(DriverMesaLLVMPipe),
-                      mDriverVendor);
+      CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(VendorMesaLLVMPipe),
+                      mVendorId);
       mIsAccelerated = false;
     } else if (strcasestr(glRenderer.get(), "softpipe")) {
-      CopyUTF16toUTF8(GfxDriverInfo::GetDriverVendor(DriverMesaSoftPipe),
-                      mDriverVendor);
+      CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(VendorMesaSoftPipe),
+                      mVendorId);
       mIsAccelerated = false;
     } else if (strcasestr(glRenderer.get(), "software rasterizer") ||
                !mIsAccelerated) {
       // Fallback to reporting swrast if GLX_MESA_query_renderer tells us
       // we're using an unaccelerated context.
-      CopyUTF16toUTF8(GfxDriverInfo::GetDriverVendor(DriverMesaSWRast),
-                      mDriverVendor);
+      CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(VendorMesaSWRast),
+                      mVendorId);
       mIsAccelerated = false;
     } else if (!driDriver.IsEmpty()) {
-      mDriverVendor = nsPrintfCString("mesa/%s", driDriver.get());
+      mVendorId = nsPrintfCString("mesa/%s", driDriver.get());
     } else {
       // Some other mesa configuration where we couldn't get enough info.
       NS_WARNING("Failed to detect Mesa driver being used!");
-      CopyUTF16toUTF8(GfxDriverInfo::GetDriverVendor(DriverMesaUnknown),
-                      mDriverVendor);
-    }
-
-    if (!mesaVendor.IsEmpty()) {
-      mVendorId = mesaVendor;
-    } else {
-      NS_WARNING(
-          "Failed to get Mesa vendor ID! GLX_MESA_query_renderer unsupported?");
+      CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(VendorMesaUnknown),
+                      mVendorId);
     }
 
     if (!mesaDevice.IsEmpty()) {
@@ -296,8 +287,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     // to query device IDs backing a GL context for blacklisting.
     APPEND_TO_DRIVER_BLOCKLIST(
         OperatingSystem::Linux,
-        (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorAll),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverMesaAll),
+        (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorMesaAll),
         GfxDriverInfo::allDevices, GfxDriverInfo::allFeatures,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(10, 0, 0, 0), "FEATURE_FAILURE_OLD_MESA", "Mesa 10.0");
@@ -306,7 +296,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     APPEND_TO_DRIVER_BLOCKLIST(
         OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, GfxDriverInfo::allFeatures,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(257, 21, 0, 0), "FEATURE_FAILURE_OLD_NVIDIA", "NVIDIA 257.21");
@@ -315,7 +304,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     APPEND_TO_DRIVER_BLOCKLIST(
         OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, GfxDriverInfo::allFeatures,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
         V(13, 15, 100, 1), "FEATURE_FAILURE_OLD_FGLRX", "fglrx 13.15.100.1");
@@ -323,20 +311,19 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     ////////////////////////////////////
     // FEATURE_WEBRENDER
 
-    // Intel Mesa baseline, chosen arbitrarily.
+    // Mesa baseline (chosen arbitrarily as that which ships with
+    // Ubuntu 18.04 LTS).
     APPEND_TO_DRIVER_BLOCKLIST(
         OperatingSystem::Linux,
-        (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
+        (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorMesaAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
-        V(18, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_OLD_MESA", "Mesa 18.0.0.0");
+        V(18, 2, 8, 0), "FEATURE_FAILURE_WEBRENDER_OLD_MESA", "Mesa 18.2.8.0");
 
     // Disable on all NVIDIA devices for now.
     APPEND_TO_DRIVER_BLOCKLIST(
         OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
         V(0, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_NO_LINUX_NVIDIA", "");
@@ -345,7 +332,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     APPEND_TO_DRIVER_BLOCKLIST(
         OperatingSystem::Linux,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
         V(0, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_NO_LINUX_ATI", "");
@@ -353,14 +339,14 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   return *sDriverInfo;
 }
 
-bool GfxInfo::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
-                                    const nsAString& aDriverVendor) {
+bool GfxInfo::DoesVendorMatch(const nsAString& aBlocklistVendor,
+                              const nsAString& aAdapterVendor) {
   if (mIsMesa &&
-      aBlocklistVendor.Equals(GfxDriverInfo::GetDriverVendor(DriverMesaAll),
+      aBlocklistVendor.Equals(GfxDriverInfo::GetDeviceVendor(VendorMesaAll),
                               nsCaseInsensitiveStringComparator())) {
     return true;
   }
-  return GfxInfoBase::DoesDriverVendorMatch(aBlocklistVendor, aDriverVendor);
+  return GfxInfoBase::DoesVendorMatch(aBlocklistVendor, aAdapterVendor);
 }
 
 nsresult GfxInfo::GetFeatureStatusImpl(
@@ -460,18 +446,6 @@ GfxInfo::GetAdapterDriver2(nsAString& aAdapterDriver) {
 }
 
 NS_IMETHODIMP
-GfxInfo::GetAdapterDriverVendor(nsAString& aAdapterDriverVendor) {
-  GetData();
-  CopyASCIItoUTF16(mDriverVendor, aAdapterDriverVendor);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetAdapterDriverVendor2(nsAString& aAdapterDriverVendor) {
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 GfxInfo::GetAdapterDriverVersion(nsAString& aAdapterDriverVersion) {
   GetData();
   CopyASCIItoUTF16(mDriverVersion, aAdapterDriverVersion);
@@ -539,7 +513,9 @@ GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) { return NS_ERROR_FAILURE; }
 NS_IMETHODIMP GfxInfo::SpoofVendorID(const nsAString& aVendorID) {
   GetData();
   CopyUTF16toUTF8(aVendorID, mVendorId);
-  mIsAccelerated = true;
+  mIsAccelerated = !(mVendorId.EqualsLiteral("mesa/llvmpipe") ||
+                     mVendorId.EqualsLiteral("mesa/softpipe") ||
+                     mVendorId.EqualsLiteral("mesa/swrast"));
   return NS_OK;
 }
 
