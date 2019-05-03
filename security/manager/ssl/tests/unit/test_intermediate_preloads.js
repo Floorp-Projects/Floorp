@@ -7,12 +7,16 @@
 "use strict";
 do_get_profile(); // must be called before getting nsIX509CertDB
 
-const {RemoteSecuritySettings} = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
 const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 const {TelemetryTestUtils} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
-let remoteSecSetting = new RemoteSecuritySettings();
+let remoteSecSetting;
+if (AppConstants.MOZ_NEW_CERT_STORAGE) {
+  const {RemoteSecuritySettings} = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
+  remoteSecSetting = new RemoteSecuritySettings();
+}
+
 let server;
 
 let intermediate1Data;
@@ -213,7 +217,9 @@ function setupKintoPreloadServer(certGenerator, options = {
   });
 }
 
-add_task(async function test_preload_empty() {
+add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function test_preload_empty() {
   Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
 
   let countDownloadAttempts = 0;
@@ -240,7 +246,9 @@ add_task(async function test_preload_empty() {
                               certificateUsageSSLServer);
 });
 
-add_task(async function test_preload_disabled() {
+add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function test_preload_disabled() {
   Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, false);
 
   let countDownloadAttempts = 0;
@@ -254,7 +262,9 @@ add_task(async function test_preload_disabled() {
   equal(countDownloadAttempts, 0, "There should have been no downloads");
 });
 
-add_task(async function test_preload_invalid_hash() {
+add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function test_preload_invalid_hash() {
   Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
   const invalidHash = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d";
 
@@ -294,7 +304,9 @@ add_task(async function test_preload_invalid_hash() {
                               certificateUsageSSLServer);
 });
 
-add_task(async function test_preload_invalid_length() {
+add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function test_preload_invalid_length() {
   Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
 
   let countDownloadAttempts = 0;
@@ -333,7 +345,9 @@ add_task(async function test_preload_invalid_length() {
                               certificateUsageSSLServer);
 });
 
-add_task(async function test_preload_basic() {
+add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function test_preload_basic() {
   Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
   Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
 
@@ -379,7 +393,9 @@ add_task(async function test_preload_basic() {
 });
 
 
-add_task(async function test_preload_200() {
+add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function test_preload_200() {
   Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
   Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
 

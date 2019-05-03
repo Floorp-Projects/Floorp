@@ -42,7 +42,7 @@ function test_named_function() {
       Assert.equal(response.parameterNames.length, 1);
       Assert.equal(response.parameterNames[0], "arg1");
 
-      gThreadClient.resume(test_inferred_name_function);
+      gThreadClient.resume().then(test_inferred_name_function);
     });
   });
 
@@ -65,7 +65,7 @@ function test_inferred_name_function() {
       Assert.equal(response.parameterNames[1], "bar");
       Assert.equal(response.parameterNames[2], "baz");
 
-      gThreadClient.resume(test_anonymous_function);
+      gThreadClient.resume().then(test_anonymous_function);
     });
   });
 
@@ -88,7 +88,7 @@ function test_anonymous_function() {
       Assert.equal(response.parameterNames[1], "bar");
       Assert.equal(response.parameterNames[2], "baz");
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
       });
     });

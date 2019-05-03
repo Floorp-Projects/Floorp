@@ -151,6 +151,68 @@ JS::Result<> ArrayOps<uint32_t>::storeResult(JSContext* cx, uint32_t v,
   return Ok();
 }
 
+template <>
+struct ArrayOps<int64_t> {
+  static JS::Result<int64_t> convertValue(JSContext* cx, HandleValue v) {
+    BigInt* bi = ToBigInt(cx, v);
+    if (!bi) {
+      return cx->alreadyReportedError();
+    }
+    return BigInt::toInt64(bi);
+  }
+
+  static JS::Result<int64_t> convertValue(JSContext* cx, HandleValue v,
+                                           MutableHandleValue result) {
+    BigInt* bi = ToBigInt(cx, v);
+    if (!bi) {
+      return cx->alreadyReportedError();
+    }
+    result.setBigInt(bi);
+    return BigInt::toInt64(bi);
+  }
+
+  static JS::Result<> storeResult(JSContext* cx, int64_t v,
+                                  MutableHandleValue result) {
+    BigInt* bi = BigInt::createFromInt64(cx, v);
+    if (!bi) {
+      return cx->alreadyReportedError();
+    }
+    result.setBigInt(bi);
+    return Ok();
+  }
+};
+
+template <>
+struct ArrayOps<uint64_t> {
+  static JS::Result<uint64_t> convertValue(JSContext* cx, HandleValue v) {
+    BigInt* bi = ToBigInt(cx, v);
+    if (!bi) {
+      return cx->alreadyReportedError();
+    }
+    return BigInt::toUint64(bi);
+  }
+
+  static JS::Result<uint64_t> convertValue(JSContext* cx, HandleValue v,
+                                            MutableHandleValue result) {
+    BigInt* bi = ToBigInt(cx, v);
+    if (!bi) {
+      return cx->alreadyReportedError();
+    }
+    result.setBigInt(bi);
+    return BigInt::toUint64(bi);
+  }
+
+  static JS::Result<> storeResult(JSContext* cx, uint64_t v,
+                                  MutableHandleValue result) {
+    BigInt* bi = BigInt::createFromUint64(cx, v);
+    if (!bi) {
+      return cx->alreadyReportedError();
+    }
+    result.setBigInt(bi);
+    return Ok();
+  }
+};
+
 template <template <typename> class F, typename... Args>
 bool perform(JSContext* cx, HandleValue objv, HandleValue idxv, Args... args) {
   Rooted<TypedArrayObject*> view(cx, nullptr);
@@ -178,9 +240,11 @@ bool perform(JSContext* cx, HandleValue objv, HandleValue idxv, Args... args) {
     case Scalar::Float32:
     case Scalar::Float64:
     case Scalar::Uint8Clamped:
-    case Scalar::BigInt64:
-    case Scalar::BigUint64:
       return ReportBadArrayType(cx);
+    case Scalar::BigInt64:
+      return F<int64_t>::run(cx, viewData.cast<int64_t*>() + offset, args...);
+    case Scalar::BigUint64:
+      return F<uint64_t>::run(cx, viewData.cast<uint64_t*>() + offset, args...);
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
       break;
@@ -305,12 +369,17 @@ static bool AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv,
   }                                                                \
   static uint32_t operate(SharedMem<uint32_t*> addr, uint32_t v) { \
     return NAME(addr, v);                                          \
+  }                                                                \
+  static int64_t operate(SharedMem<int64_t*> addr, int64_t v) {    \
+    return NAME(addr, v);                                          \
+  }                                                                \
+  static uint64_t operate(SharedMem<uint64_t*> addr, uint64_t v) { \
+    return NAME(addr, v);                                          \
   }
 
 class PerformAdd {
  public:
   INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchAddSeqCst)
-  static int32_t perform(int32_t x, int32_t y) { return x + y; }
 };
 
 bool js::atomics_add(JSContext* cx, unsigned argc, Value* vp) {
@@ -322,7 +391,6 @@ bool js::atomics_add(JSContext* cx, unsigned argc, Value* vp) {
 class PerformSub {
  public:
   INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchSubSeqCst)
-  static int32_t perform(int32_t x, int32_t y) { return x - y; }
 };
 
 bool js::atomics_sub(JSContext* cx, unsigned argc, Value* vp) {
@@ -334,7 +402,6 @@ bool js::atomics_sub(JSContext* cx, unsigned argc, Value* vp) {
 class PerformAnd {
  public:
   INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchAndSeqCst)
-  static int32_t perform(int32_t x, int32_t y) { return x & y; }
 };
 
 bool js::atomics_and(JSContext* cx, unsigned argc, Value* vp) {
@@ -346,7 +413,6 @@ bool js::atomics_and(JSContext* cx, unsigned argc, Value* vp) {
 class PerformOr {
  public:
   INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchOrSeqCst)
-  static int32_t perform(int32_t x, int32_t y) { return x | y; }
 };
 
 bool js::atomics_or(JSContext* cx, unsigned argc, Value* vp) {
@@ -358,7 +424,6 @@ bool js::atomics_or(JSContext* cx, unsigned argc, Value* vp) {
 class PerformXor {
  public:
   INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchXorSeqCst)
-  static int32_t perform(int32_t x, int32_t y) { return x ^ y; }
 };
 
 bool js::atomics_xor(JSContext* cx, unsigned argc, Value* vp) {
@@ -494,29 +559,10 @@ FutexThread::WaitResult js::atomics_wait_impl(
   return AtomicsWait(cx, sarb, byteOffset, value, timeout);
 }
 
-bool js::atomics_wait(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  HandleValue objv = args.get(0);
-  HandleValue idxv = args.get(1);
-  HandleValue valv = args.get(2);
-  HandleValue timeoutv = args.get(3);
-  MutableHandleValue r = args.rval();
-
-  Rooted<TypedArrayObject*> view(cx, nullptr);
-  if (!GetSharedTypedArray(cx, objv, &view)) {
-    return false;
-  }
-  if (view->type() != Scalar::Int32) {
-    return ReportBadArrayType(cx);
-  }
-  uint32_t offset;
-  if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
-    return false;
-  }
-  int32_t value;
-  if (!ToInt32(cx, valv, &value)) {
-    return false;
-  }
+template <typename T>
+static bool DoAtomicsWait(JSContext* cx, Handle<TypedArrayObject*> view,
+                          uint32_t offset, T value, HandleValue timeoutv,
+                          MutableHandleValue r) {
   mozilla::Maybe<mozilla::TimeDuration> timeout;
   if (!timeoutv.isUndefined()) {
     double timeout_ms;
@@ -537,7 +583,7 @@ bool js::atomics_wait(JSContext* cx, unsigned argc, Value* vp) {
   // The computation will not overflow because range checks have been
   // performed.
   uint32_t byteOffset =
-      offset * sizeof(int32_t) +
+      offset * sizeof(T) +
       (view->dataPointerShared().cast<uint8_t*>().unwrap(/* arithmetic */) -
        sab->dataPointerShared().unwrap(/* arithmetic */));
 
@@ -557,6 +603,44 @@ bool js::atomics_wait(JSContext* cx, unsigned argc, Value* vp) {
     default:
       MOZ_CRASH("Should not happen");
   }
+}
+
+bool js::atomics_wait(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  HandleValue objv = args.get(0);
+  HandleValue idxv = args.get(1);
+  HandleValue valv = args.get(2);
+  HandleValue timeoutv = args.get(3);
+  MutableHandleValue r = args.rval();
+
+  Rooted<TypedArrayObject*> view(cx, nullptr);
+  if (!GetSharedTypedArray(cx, objv, &view)) {
+    return false;
+  }
+
+  if (view->type() != Scalar::Int32 && view->type() != Scalar::BigInt64) {
+    return ReportBadArrayType(cx);
+  }
+
+  uint32_t offset;
+  if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
+    return false;
+  }
+
+  if (view->type() == Scalar::Int32) {
+    int32_t value;
+    if (!ToInt32(cx, valv, &value)) {
+      return false;
+    }
+    return DoAtomicsWait(cx, view, offset, value, timeoutv, r);
+  }
+
+  MOZ_ASSERT(view->type() == Scalar::BigInt64);
+  RootedBigInt valbi(cx, ToBigInt(cx, valv));
+  if (!valbi) {
+    return false;
+  }
+  return DoAtomicsWait(cx, view, offset, BigInt::toInt64(valbi), timeoutv, r);
 }
 
 int64_t js::atomics_notify_impl(SharedArrayRawBuffer* sarb, uint32_t byteOffset,
@@ -605,9 +689,11 @@ bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
   if (!GetSharedTypedArray(cx, objv, &view)) {
     return false;
   }
-  if (view->type() != Scalar::Int32) {
+  if (view->type() != Scalar::Int32 && view->type() != Scalar::BigInt64) {
     return ReportBadArrayType(cx);
   }
+  uint32_t elementSize =
+      view->type() == Scalar::Int32 ? sizeof(int32_t) : sizeof(int64_t);
   uint32_t offset;
   if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
     return false;
@@ -630,7 +716,7 @@ bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
   // The computation will not overflow because range checks have been
   // performed.
   uint32_t byteOffset =
-      offset * sizeof(int32_t) +
+      offset * elementSize +
       (view->dataPointerShared().cast<uint8_t*>().unwrap(/* arithmetic */) -
        sab->dataPointerShared().unwrap(/* arithmetic */));
 

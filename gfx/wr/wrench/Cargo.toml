@@ -49,12 +49,11 @@ font-loader = "0.7"
 [package.metadata.android]
 package_name = "org.mozilla.wrench"
 label = "Wrench"
-assets = "reftests"
 android_version = 28
 target_sdk_version = 18
 min_sdk_version = 18
 fullscreen = true
-build_targets = [ "armv7-linux-androideabi" ]
+build_targets = [ "armv7-linux-androideabi", "i686-linux-android" ]
 opengles_version_major = 3
 opengles_version_minor = 0
 [package.metadata.android.application_attributes]

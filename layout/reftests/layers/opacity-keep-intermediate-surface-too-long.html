@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta charset="utf-8">
+<title>Clicking the canvas should turn it green (and shift it slighly)</title>
+
+<style>
+
+canvas {
+  border: 10px solid black;
+}
+
+.opacity {
+  opacity: 0.8;
+}
+
+</style>
+
+</head><body><div style="transform: translateX(1px)"><!-- create reference frame -->
+  <div class="wrapper"><!-- this starts out without a transform but later gets transformed -->
+    <div class="opacity"><!-- this creates a ContainerLayer with an intermediate surface for group opacity -->
+      <div class="border"><!-- this adds another visual element into the group opacity -->
+        <canvas id="canvas" width="200" height="200"></canvas><!-- this causes all ancestor effects to become active ContainerLayers -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+var canvas = document.getElementById('canvas');
+var wrapper = document.querySelector('.wrapper');
+canvas.width = 200;
+canvas.height = 200;
+var ctx = canvas.getContext('2d');
+ctx.fillStyle = 'red';
+ctx.fillRect(0, 0, 200, 200);
+
+function doTest() {
+  ctx.fillStyle = 'lime';
+  ctx.fillRect(0, 0, 200, 200);
+  wrapper.style.transform = 'translateX(1px)';
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest);
+
+</script>
+</body></html>

@@ -8,6 +8,7 @@
 #define GFX_LAYERS_H
 
 #include <map>
+#include <unordered_set>
 #include <stdint.h>        // for uint32_t, uint64_t, uint8_t
 #include <stdio.h>         // for FILE
 #include <sys/types.h>     // for int32_t
@@ -794,7 +795,8 @@ class LayerManager : public FrameRecorder {
       const ScrollUpdateInfo& aUpdateInfo, wr::RenderRoot aRenderRoot);
   Maybe<ScrollUpdateInfo> GetPendingScrollInfoUpdate(
       ScrollableLayerGuid::ViewID aScrollId);
-  void ClearPendingScrollInfoUpdate();
+  std::unordered_set<ScrollableLayerGuid::ViewID>
+  ClearPendingScrollInfoUpdate();
 
  protected:
   wr::RenderRootArray<ScrollUpdatesMap> mPendingScrollUpdates;
@@ -1483,8 +1485,11 @@ class Layer {
    *
    * Apply pending changes to layers before drawing them, if those
    * pending changes haven't been overridden by later changes.
+   *
+   * Returns a list of scroll ids which had pending updates.
    */
-  void ApplyPendingUpdatesToSubtree();
+  std::unordered_set<ScrollableLayerGuid::ViewID>
+  ApplyPendingUpdatesToSubtree();
 
   /**
    * DRAWING PHASE ONLY

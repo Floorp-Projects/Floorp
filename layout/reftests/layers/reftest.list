@@ -40,3 +40,5 @@ skip-if(!browserIsRemote||!d2d||gpuProcess) == data:text/plain,FAIL about:blank
 skip-if(!gpuProcessForceEnabled||gpuProcess) == data:text/plain,FAIL about:blank
 
 fuzzy-if(webrender,0-1,0-8033) == opacity-background-1.html opacity-background-1-ref.html
+
+== opacity-keep-intermediate-surface-too-long.html opacity-keep-intermediate-surface-too-long-ref.html

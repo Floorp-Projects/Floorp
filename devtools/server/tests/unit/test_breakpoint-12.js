@@ -77,7 +77,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
             // We don't expect any more pauses after the breakpoint was hit once.
             Assert.ok(false);
           });
-          threadClient.resume(function() {
+          threadClient.resume().then(function() {
             // Give any remaining breakpoints a chance to trigger.
             do_timeout(1000, resolve);
           });

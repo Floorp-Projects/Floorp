@@ -242,7 +242,8 @@ function normalizeFilter(filter) {
     filter = {};
   }
 
-  return {urls: filter.urls || null, types: filter.types || null};
+  return {urls: filter.urls || null, types: filter.types || null,
+          incognito: filter.incognito !== undefined ? filter.incognito : null};
 }
 
 class ProxyChannelFilter {

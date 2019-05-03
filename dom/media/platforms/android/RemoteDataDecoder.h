@@ -43,20 +43,23 @@ class RemoteDataDecoder : public MediaDataDecoder,
 
   // Methods only called on mTaskQueue.
   RefPtr<FlushPromise> ProcessFlush();
+  RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
   RefPtr<ShutdownPromise> ProcessShutdown();
   void UpdateInputStatus(int64_t aTimestamp, bool aProcessed);
   void UpdateOutputStatus(RefPtr<MediaData>&& aSample);
   void ReturnDecodedData();
   void DrainComplete();
   void Error(const MediaResult& aError);
-  void AssertOnTaskQueue() { MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn()); }
+  void AssertOnTaskQueue() const {
+    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  }
 
   enum class State { DRAINED, DRAINABLE, DRAINING, SHUTDOWN };
   void SetState(State aState) {
     AssertOnTaskQueue();
     mState = aState;
   }
-  State GetState() {
+  State GetState() const {
     AssertOnTaskQueue();
     return mState;
   }

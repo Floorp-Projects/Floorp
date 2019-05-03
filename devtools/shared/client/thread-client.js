@@ -66,8 +66,6 @@ ThreadClient.prototype = {
    *        Whether execution should rewind until the limit is reached, rather
    *        than proceeding forwards. This parameter has no effect if the
    *        server does not support rewinding.
-   * @param function onResponse
-   *        Called with the response packet.
    */
   _doResume: DebuggerClient.requester({
     type: "resume",
@@ -105,8 +103,6 @@ ThreadClient.prototype = {
    *
    * @param object options
    *        A dictionary object of the new options to use in the thread actor.
-   * @param function onResponse
-   *        Called with the response packet.
    */
   reconfigure: DebuggerClient.requester({
     type: "reconfigure",
@@ -116,108 +112,79 @@ ThreadClient.prototype = {
   /**
    * Resume a paused thread.
    */
-  resume: function(onResponse) {
-    return this._doResume(null, false, onResponse);
+  resume: function() {
+    return this._doResume(null, false);
   },
 
   /**
    * Resume then pause without stepping.
    *
-   * @param function onResponse
-   *        Called with the response packet.
    */
-  resumeThenPause: function(onResponse) {
-    return this._doResume({ type: "break" }, false, onResponse);
+  resumeThenPause: function() {
+    return this._doResume({ type: "break" }, false);
   },
 
   /**
    * Rewind a thread until a breakpoint is hit.
-   *
-   * @param function aOnResponse
-   *        Called with the response packet.
    */
-  rewind: function(onResponse) {
-    this._doResume(null, true, onResponse);
+  rewind: function() {
+    return this._doResume(null, true);
   },
 
   /**
    * Step over a function call.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
    */
-  stepOver: function(onResponse) {
-    return this._doResume({ type: "next" }, false, onResponse);
+  stepOver: function() {
+    return this._doResume({ type: "next" }, false);
   },
 
   /**
    * Step into a function call.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
    */
-  stepIn: function(onResponse) {
-    return this._doResume({ type: "step" }, false, onResponse);
+  stepIn: function() {
+    return this._doResume({ type: "step" }, false);
   },
 
   /**
    * Step out of a function call.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
    */
-  stepOut: function(onResponse) {
-    return this._doResume({ type: "finish" }, false, onResponse);
+  stepOut: function() {
+    return this._doResume({ type: "finish" }, false);
   },
 
   /**
    * Rewind step over a function call.
-   *
-   * @param function aOnResponse
-   *        Called with the response packet.
    */
-  reverseStepOver: function(onResponse) {
-    return this._doResume({ type: "next" }, true, onResponse);
+  reverseStepOver: function() {
+    return this._doResume({ type: "next" }, true);
   },
 
   /**
    * Rewind step into a function call.
-   *
-   * @param function aOnResponse
-   *        Called with the response packet.
    */
-  reverseStepIn: function(onResponse) {
-    return this._doResume({ type: "step" }, true, onResponse);
+  reverseStepIn: function() {
+    return this._doResume({ type: "step" }, true);
   },
 
   /**
    * Rewind step out of a function call.
-   *
-   * @param function aOnResponse
-   *        Called with the response packet.
    */
-  reverseStepOut: function(onResponse) {
-    return this._doResume({ type: "finish" }, true, onResponse);
+  reverseStepOut: function() {
+    return this._doResume({ type: "finish" }, true);
   },
 
   /**
    * Immediately interrupt a running thread.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
    */
-  interrupt: function(onResponse) {
-    return this._doInterrupt(null, onResponse);
+  interrupt: function() {
+    return this._doInterrupt(null);
   },
 
   /**
    * Pause execution right before the next JavaScript bytecode is executed.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
    */
-  breakOnNext: function(onResponse) {
-    return this._doInterrupt("onNext", onResponse);
+  breakOnNext: function() {
+    return this._doInterrupt("onNext");
   },
 
   /**
@@ -225,25 +192,19 @@ ThreadClient.prototype = {
    *
    * @param object aTarget
    *        Description of the warp destination.
-   * @param function aOnResponse
-   *        Called with the response packet.
    */
-  timeWarp: function(target, onResponse) {
+  timeWarp: function(target) {
     const warp = () => {
-      this._doResume({ type: "warp", target }, true, onResponse);
+      this._doResume({ type: "warp", target }, true);
     };
     if (this.paused) {
-      warp();
-    } else {
-      this.interrupt(warp);
+      return warp();
     }
+    return this.interrupt().then(warp);
   },
 
   /**
    * Interrupt a running thread.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
    */
   _doInterrupt: DebuggerClient.requester({
     type: "interrupt",
@@ -257,8 +218,6 @@ ThreadClient.prototype = {
    *        Enables pausing if true, disables otherwise.
    * @param boolean ignoreCaughtExceptions
    *        Whether to ignore caught exceptions
-   * @param function onResponse
-   *        Called with the response packet.
    */
   pauseOnExceptions: DebuggerClient.requester({
     type: "pauseOnExceptions",
@@ -268,9 +227,6 @@ ThreadClient.prototype = {
 
   /**
    * Detach from the thread actor.
-   *
-   * @param function onResponse
-   *        Called with the response packet.
    */
   detach: DebuggerClient.requester({
     type: "detach",
@@ -294,9 +250,6 @@ ThreadClient.prototype = {
 
   /**
    * Request the loaded sources for the current thread.
-   *
-   * @param onResponse Function
-   *        Called with the thread's response.
    */
   getSources: DebuggerClient.requester({
     type: "sources",
@@ -311,8 +264,6 @@ ThreadClient.prototype = {
    * @param count integer
    *        The maximum number of frames to return, or null to return all
    *        frames.
-   * @param onResponse function
-   *        Called with the thread's response.
    */
   getFrames: DebuggerClient.requester({
     type: "frames",

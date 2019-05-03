@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "dogear"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Lina Cambridge <lina@mozilla.com>"]
 exclude = ["/.travis/**", ".travis.yml"]
 description = "A library for merging bookmark trees."

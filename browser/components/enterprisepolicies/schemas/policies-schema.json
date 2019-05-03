@@ -331,6 +331,30 @@
       "type": "boolean"
     },
 
+    "FirefoxHome": {
+      "type": "object",
+      "properties": {
+        "Search": {
+          "type": "boolean"
+        },
+        "TopSites": {
+          "type": "boolean"
+        },
+        "Highlights": {
+          "type": "boolean"
+        },
+        "Pocket": {
+          "type": "boolean"
+        },
+        "Snippets": {
+          "type": "boolean"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "FlashPlugin": {
       "type": "object",
       "properties": {

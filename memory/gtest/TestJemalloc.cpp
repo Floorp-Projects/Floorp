@@ -229,7 +229,7 @@ TEST(Jemalloc, PtrInfo)
   UniquePtr<int> p = MakeUnique<int>();
   size_t chunksizeMask = stats.chunksize - 1;
   char* chunk = (char*)(uintptr_t(p.get()) & ~chunksizeMask);
-  size_t chunkHeaderSize = stats.chunksize - stats.large_max;
+  size_t chunkHeaderSize = stats.chunksize - stats.large_max - stats.page_size;
   for (size_t i = 0; i < chunkHeaderSize; i += 64) {
     jemalloc_ptr_info(&chunk[i], &info);
     ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
@@ -621,4 +621,52 @@ TEST(Jemalloc, JunkPoison)
   _gdb_sleep_duration = old_gdb_sleep_duration;
 #  endif
 }
+
+TEST(Jemalloc, GuardRegion) {
+  jemalloc_stats_t stats;
+  jemalloc_stats(&stats);
+
+#  ifdef HAS_GDB_SLEEP_DURATION
+  // Avoid death tests adding some unnecessary (long) delays.
+  unsigned int old_gdb_sleep_duration = _gdb_sleep_duration;
+  _gdb_sleep_duration = 0;
+#  endif
+
+  arena_id_t arena = moz_create_arena();
+  ASSERT_TRUE(arena != 0);
+
+  // Do enough large allocations to fill a chunk, and then one additional one,
+  // and check that the guard page is still present after the one-but-last
+  // allocation, i.e. that we didn't allocate the guard.
+  Vector<void*> ptr_list;
+  for (size_t cnt = 0; cnt < stats.large_max / stats.page_size; cnt++) {
+    void* ptr = moz_arena_malloc(arena, stats.page_size);
+    ASSERT_TRUE(ptr != nullptr);
+    ASSERT_TRUE(ptr_list.append(ptr));
+  }
+
+  void* last_ptr_in_chunk = ptr_list[ptr_list.length() - 1];
+  void* extra_ptr = moz_arena_malloc(arena, stats.page_size);
+  void* guard_page = (void*)ALIGNMENT_CEILING(
+    (uintptr_t)last_ptr_in_chunk + stats.page_size, stats.page_size);
+  jemalloc_ptr_info_t info;
+  jemalloc_ptr_info(guard_page, &info);
+  ASSERT_TRUE(jemalloc_ptr_is_freed_page(&info));
+  ASSERT_TRUE(info.tag == TagFreedPageDecommitted);
+
+  ASSERT_DEATH_WRAP(*(char*)guard_page = 0, "");
+
+  for (void* ptr : ptr_list) {
+    moz_arena_free(arena, ptr);
+  }
+  moz_arena_free(arena, extra_ptr);
+
+  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+  // moz_dispose_arena(arena);
+
+#  ifdef HAS_GDB_SLEEP_DURATION
+  _gdb_sleep_duration = old_gdb_sleep_duration;
+#  endif
+}
+
 #endif

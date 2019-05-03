@@ -26,14 +26,23 @@ SimpleTest.waitForExplicitFinish();
 
 function runTests()
 {
-  var menu = $("menu");
+  let menu = $("menu");
+  let menuitemAddedWhileHidden = menu.appendItem("Added while hidden");
+  ok(!menuitemAddedWhileHidden.querySelector(".menu-text"), "hidden menuitem hasn't rendered yet.");
+
   menu.menupopup.addEventListener("popupshown", () => {
-    var submenu = $("submenu");
+    is(menuitemAddedWhileHidden.querySelector(".menu-text").value, "Added while hidden",
+      "menuitemAddedWhileHidden item has rendered after shown.");
+    let menuitemAddedWhileShown = menu.appendItem("Added while shown");
+    is(menuitemAddedWhileShown.querySelector(".menu-text").value, "Added while shown",
+      "menuitemAddedWhileShown item has eagerly rendered.");
+
+    let submenu = $("submenu");
     is(submenu.querySelector(".menu-text").value, "One", "submenu has rendered.");
 
-    var submenuDynamic = document.createXULElement("menu");
+    let submenuDynamic = document.createXULElement("menu");
     submenuDynamic.setAttribute("label", "Dynamic");
-    ok(!submenuDynamic.querySelector(".menu-text"), "dynamic subment hasn't rendered yet.");
+    ok(!submenuDynamic.querySelector(".menu-text"), "dynamic submenu hasn't rendered yet.");
     menu.menupopup.append(submenuDynamic);
     is(submenuDynamic.querySelector(".menu-text").value, "Dynamic", "dynamic submenu has rendered.");
 
@@ -44,7 +53,7 @@ function runTests()
 
 function submenuOpened()
 {
-  var submenu = $("submenu");
+  let submenu = $("submenu");
   is(submenu.getAttribute('_moz-menuactive'), "true", "menu highlighted");
   submenu.hidden = true;
   $("menu").open = false;

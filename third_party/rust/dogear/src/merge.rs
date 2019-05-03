@@ -20,7 +20,7 @@ use std::{
 use crate::driver::{DefaultDriver, Driver};
 use crate::error::{ErrorKind, Result};
 use crate::guid::{Guid, IsValidGuid};
-use crate::tree::{Content, Kind, MergeState, MergedNode, MergedRoot, Node, Tree, Validity};
+use crate::tree::{Content, MergeState, MergedNode, MergedRoot, Node, Tree, Validity};
 
 /// Structure change types, used to indicate if a node on one side is moved
 /// or deleted on the other.
@@ -206,11 +206,11 @@ impl<'t, D: Driver> Merger<'t, D> {
 
     /// Returns an iterator for all accepted local and remote deletions.
     #[inline]
-    pub fn deletions(&self) -> impl Iterator<Item = Deletion> {
+    pub fn deletions(&self) -> impl Iterator<Item = Deletion<'_>> {
         self.local_deletions().chain(self.remote_deletions())
     }
 
-    pub(crate) fn local_deletions(&self) -> impl Iterator<Item = Deletion> {
+    pub(crate) fn local_deletions(&self) -> impl Iterator<Item = Deletion<'_>> {
         self.delete_locally.iter().filter_map(move |guid| {
             if self.delete_remotely.contains(guid) {
                 None
@@ -218,8 +218,7 @@ impl<'t, D: Driver> Merger<'t, D> {
                 let local_level = self
                     .local_tree
                     .node_for_guid(guid)
-                    .map(|node| node.level())
-                    .unwrap_or(-1);
+                    .map_or(-1, |node| node.level());
                 // Items that should be deleted locally already have tombstones
                 // on the server, so we don't need to upload tombstones for
                 // these deletions.
@@ -232,13 +231,12 @@ impl<'t, D: Driver> Merger<'t, D> {
         })
     }
 
-    pub(crate) fn remote_deletions(&self) -> impl Iterator<Item = Deletion> {
+    pub(crate) fn remote_deletions(&self) -> impl Iterator<Item = Deletion<'_>> {
         self.delete_remotely.iter().map(move |guid| {
             let local_level = self
                 .local_tree
                 .node_for_guid(guid)
-                .map(|node| node.level())
-                .unwrap_or(-1);
+                .map_or(-1, |node| node.level());
             Deletion {
                 guid,
                 local_level,
@@ -1006,7 +1004,7 @@ impl<'t, D: Driver> Merger<'t, D> {
         remote_parent_node: Node<'t>,
         remote_node: Node<'t>,
     ) -> Result<StructureChange> {
-        if !remote_node_is_syncable(&remote_node) {
+        if !remote_node.is_syncable() {
             // If the remote node is known to be non-syncable, we unconditionally
             // delete it, even if it's syncable or moved locally.
             return self.delete_remote_node(merged_node, remote_node);
@@ -1110,7 +1108,7 @@ impl<'t, D: Driver> Merger<'t, D> {
 
         if !self.remote_tree.is_deleted(&local_node.guid) {
             if let Some(remote_node) = self.remote_tree.node_for_guid(&local_node.guid) {
-                if !remote_node_is_syncable(&remote_node) {
+                if !remote_node.is_syncable() {
                     // The local node is syncable, but the remote node is not.
                     // This can happen if we applied an orphaned left pane
                     // query in a previous sync, and later saw the left pane
@@ -1539,18 +1537,5 @@ impl<'t, D: Driver> Merger<'t, D> {
             );
             None
         }
-    }
-}
-
-/// Indicates if the tree in the remote node is syncable. This filters out
-/// livemarks (bug 1477671) and orphaned Places queries (bug 1433182).
-fn remote_node_is_syncable(remote_node: &Node) -> bool {
-    if !remote_node.is_syncable() {
-        return false;
-    }
-    match remote_node.kind {
-        Kind::Livemark => false,
-        Kind::Query if remote_node.diverged() => false,
-        _ => true,
     }
 }

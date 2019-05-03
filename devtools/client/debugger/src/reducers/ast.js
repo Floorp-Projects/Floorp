@@ -44,7 +44,6 @@ export type PreviewValue = {|
 
 export type ASTState = {
   +symbols: SymbolsMap,
-  +emptyLines: EmptyLinesMap,
   +outOfScopeLocations: ?Array<AstLocation>,
   +inScopeLines: ?Array<number>,
   +preview: Preview
@@ -53,7 +52,6 @@ export type ASTState = {
 export function initialASTState(): ASTState {
   return {
     symbols: {},
-    emptyLines: {},
     outOfScopeLocations: null,
     inScopeLines: null,
     preview: null

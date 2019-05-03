@@ -88,6 +88,8 @@ policy-Extensions = Install, uninstall or lock extensions. The Install option ta
 
 policy-ExtensionUpdate = Enable or disable automatic extension updates.
 
+policy-FirefoxHome = Configure Firefox Home.
+
 policy-FlashPlugin = Allow or deny usage of the Flash plugin.
 
 policy-HardwareAcceleration = If false, turn off hardware acceleration.

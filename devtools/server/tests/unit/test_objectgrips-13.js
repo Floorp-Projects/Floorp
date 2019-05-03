@@ -62,6 +62,6 @@ function test_bad_definition_site(obj) {
   try {
     obj._client.request("definitionSite", () => Assert.ok(false));
   } catch (e) {
-    gThreadClient.resume(() => finishClient(gClient));
+    gThreadClient.resume().then(() => finishClient(gClient));
   }
 }

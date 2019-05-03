@@ -523,11 +523,11 @@ class Compositor : public TextureSourceProvider {
   CompositorBridgeParent* GetCompositorBridgeParent() const { return mParent; }
 
   /**
-   * Request the compositor to record its frames.
+   * Request the compositor to allow recording its frames.
    *
-   * For all compositors except |BasicCompositor|, this is a noop.
+   * This is a noop on |CompositorOGL|.
    */
-  virtual void RequestRecordFrames(bool aWillRecord) {}
+  virtual void RequestAllowFrameRecording(bool aWillRecord) {}
 
   /**
    * Record the current frame for readback by the |CompositionRecorder|.

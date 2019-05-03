@@ -8,8 +8,8 @@ var EXPORTED_SYMBOLS = [
   "initialize",
 ];
 
+const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { RemoteSecuritySettings } = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 ChromeUtils.defineModuleGetter(this, "RemoteSettings", "resource://services-settings/remote-settings.js");
@@ -73,39 +73,60 @@ function setRevocations(certStorage, revocations) {
  *
  * @param {Object} data   Current records in the local db.
  */
-async function updateCertBlocklist({ data: { created, updated, deleted } }) {
-  const certList = Cc["@mozilla.org/security/certstorage;1"]
-                     .getService(Ci.nsICertStorage);
-  let items = [];
+const updateCertBlocklist = AppConstants.MOZ_NEW_CERT_STORAGE ?
+  async function({ data: { created, updated, deleted } }) {
+    const certList = Cc["@mozilla.org/security/certstorage;1"]
+                       .getService(Ci.nsICertStorage);
+    let items = [];
 
-  for (let item of deleted) {
-    if (item.issuerName && item.serialNumber) {
-      items.push(new IssuerAndSerialRevocationState(item.issuerName,
-        item.serialNumber, Ci.nsICertStorage.STATE_UNSET));
-    } else if (item.subject && item.pubKeyHash) {
-      items.push(new SubjectAndPubKeyRevocationState(item.subject,
-        item.pubKeyHash, Ci.nsICertStorage.STATE_UNSET));
+    for (let item of deleted) {
+      if (item.issuerName && item.serialNumber) {
+        items.push(new IssuerAndSerialRevocationState(item.issuerName,
+          item.serialNumber, Ci.nsICertStorage.STATE_UNSET));
+      } else if (item.subject && item.pubKeyHash) {
+        items.push(new SubjectAndPubKeyRevocationState(item.subject,
+          item.pubKeyHash, Ci.nsICertStorage.STATE_UNSET));
+      }
     }
-  }
 
-  const toAdd = created.concat(updated.map(u => u.new));
+    const toAdd = created.concat(updated.map(u => u.new));
 
-  for (let item of toAdd) {
-    if (item.issuerName && item.serialNumber) {
-      items.push(new IssuerAndSerialRevocationState(item.issuerName,
-        item.serialNumber, Ci.nsICertStorage.STATE_ENFORCE));
-    } else if (item.subject && item.pubKeyHash) {
-      items.push(new SubjectAndPubKeyRevocationState(item.subject,
-        item.pubKeyHash, Ci.nsICertStorage.STATE_ENFORCE));
+    for (let item of toAdd) {
+      if (item.issuerName && item.serialNumber) {
+        items.push(new IssuerAndSerialRevocationState(item.issuerName,
+          item.serialNumber, Ci.nsICertStorage.STATE_ENFORCE));
+      } else if (item.subject && item.pubKeyHash) {
+        items.push(new SubjectAndPubKeyRevocationState(item.subject,
+          item.pubKeyHash, Ci.nsICertStorage.STATE_ENFORCE));
+      }
     }
-  }
 
-  try {
-    await setRevocations(certList, items);
-  } catch (e) {
-    Cu.reportError(e);
-  }
-}
+    try {
+      await setRevocations(certList, items);
+    } catch (e) {
+      Cu.reportError(e);
+    }
+  } : async function({ data: { current: records } }) {
+    const certList = Cc["@mozilla.org/security/certblocklist;1"]
+                       .getService(Ci.nsICertBlocklist);
+    for (let item of records) {
+      try {
+        if (item.issuerName && item.serialNumber) {
+          certList.revokeCertByIssuerAndSerial(item.issuerName,
+                                              item.serialNumber);
+        } else if (item.subject && item.pubKeyHash) {
+          certList.revokeCertBySubjectAndPubKey(item.subject,
+                                                item.pubKeyHash);
+        }
+      } catch (e) {
+        // prevent errors relating to individual blocklist entries from
+        // causing sync to fail. We will accumulate telemetry on these failures in
+        // bug 1254099.
+        Cu.reportError(e);
+      }
+    }
+    certList.saveEntries();
+  };
 
 /**
  * Modify the appropriate security pins based on records from the remote
@@ -256,9 +277,22 @@ function initialize() {
   });
   PinningBlocklistClient.on("sync", updatePinningList);
 
-  // In Bug 1526018 this will move into its own service, as it's not quite like
-  // the others.
-  RemoteSecuritySettingsClient = new RemoteSecuritySettings();
+  if (AppConstants.MOZ_NEW_CERT_STORAGE) {
+    const { RemoteSecuritySettings } = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
+
+    // In Bug 1526018 this will move into its own service, as it's not quite like
+    // the others.
+    RemoteSecuritySettingsClient = new RemoteSecuritySettings();
+
+    return {
+      OneCRLBlocklistClient,
+      AddonBlocklistClient,
+      PluginBlocklistClient,
+      GfxBlocklistClient,
+      PinningBlocklistClient,
+      RemoteSecuritySettingsClient,
+    };
+  }
 
   return {
     OneCRLBlocklistClient,
@@ -266,6 +300,5 @@ function initialize() {
     PluginBlocklistClient,
     GfxBlocklistClient,
     PinningBlocklistClient,
-    RemoteSecuritySettingsClient,
   };
 }

@@ -306,7 +306,8 @@ export type SourceClient = {
   prettyPrint: number => Promise<*>,
   disablePrettyPrint: () => Promise<*>,
   blackBox: (range?: Range) => Promise<*>,
-  unblackBox: (range?: Range) => Promise<*>
+  unblackBox: (range?: Range) => Promise<*>,
+  getBreakableLines: () => Promise<number[]>
 };
 
 /**

@@ -9,6 +9,7 @@ DIRS += [
 
 CompiledModules(
     'blackbox.js',
+    'breakableLines.js',
     'index.js',
     'loadSourceText.js',
     'newSources.js',

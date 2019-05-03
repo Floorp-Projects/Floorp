@@ -11,7 +11,11 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtr.h"
 #include "nsDebug.h"
-#include "nsICertStorage.h"
+#ifdef MOZ_NEW_CERT_STORAGE
+#  include "nsICertStorage.h"
+#else
+#  include "nsICertBlocklist.h"
+#endif
 #include "nsIX509CertDB.h"
 #include "ScopedNSSTypes.h"
 
@@ -73,7 +77,11 @@ class CSTrustDomain final : public mozilla::pkix::TrustDomain {
 
  private:
   /*out*/ UniqueCERTCertList& mCertChain;
+#ifdef MOZ_NEW_CERT_STORAGE
   nsCOMPtr<nsICertStorage> mCertBlocklist;
+#else
+  nsCOMPtr<nsICertBlocklist> mCertBlocklist;
+#endif
 };
 
 }  // namespace psm

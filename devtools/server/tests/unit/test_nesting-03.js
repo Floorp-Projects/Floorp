@@ -36,19 +36,23 @@ function start_second_connection() {
   });
 }
 
-function test_nesting() {
-  gThreadClient1.resume(response => {
-    Assert.equal(response.error, "wrongOrder");
-    gThreadClient2.resume(response => {
-      Assert.ok(!response.error);
-      Assert.equal(response.from, gThreadClient2.actor);
+async function test_nesting() {
+  try {
+    await gThreadClient1.resume();
+  } catch (e) {
+    Assert.equal(e.error, "wrongOrder");
+  }
+  try {
+    await gThreadClient2.resume();
+  } catch (e) {
+    Assert.ok(!e.error);
+    Assert.equal(e.from, gThreadClient2.actor);
+  }
 
-      gThreadClient1.resume(response => {
-        Assert.ok(!response.error);
-        Assert.equal(response.from, gThreadClient1.actor);
+  gThreadClient1.resume().then(response => {
+    Assert.ok(!response.error);
+    Assert.equal(response.from, gThreadClient1.actor);
 
-        gClient1.close(() => finishClient(gClient2));
-      });
-    });
+    gClient1.close(() => finishClient(gClient2));
   });
 }

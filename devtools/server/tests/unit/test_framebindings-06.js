@@ -48,7 +48,7 @@ function test_banana_environment() {
       equal(parent.type, "function");
       equal(parent.function.name, "banana");
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         finishClient(gClient);
       });
     });

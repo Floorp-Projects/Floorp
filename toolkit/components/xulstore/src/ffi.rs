@@ -4,7 +4,7 @@
 
 use crate as XULStore;
 use crate::{iter::XULStoreIterator, persist::clear_on_shutdown, statics::update_profile_dir};
-use libc::c_char;
+use libc::{c_char, c_void};
 use nserror::{nsresult, NS_ERROR_NOT_IMPLEMENTED, NS_OK};
 use nsstring::{nsAString, nsString};
 use std::cell::RefCell;
@@ -28,6 +28,11 @@ pub struct InitXULStoreService {}
 impl XULStoreService {
     fn new() -> RefPtr<XULStoreService> {
         XULStoreService::allocate(InitXULStoreService {})
+    }
+
+    #[allow(non_snake_case)]
+    fn Persist(&self, _node: *const c_void, _attr: *const nsAString) -> nsresult {
+        NS_ERROR_NOT_IMPLEMENTED
     }
 
     xpcom_method!(

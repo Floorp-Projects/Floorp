@@ -119,7 +119,8 @@
             "minItems": 1
           },
           "tabId": { "type": "integer", "optional": true },
-          "windowId": { "type": "integer", "optional": true }
+          "windowId": { "type": "integer", "optional": true },
+          "incognito": { "type": "boolean", "optional": true, "description": "If provided, requests that do not match the incognito state will be filtered out."}
         }
       },
       {

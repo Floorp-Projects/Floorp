@@ -15,9 +15,10 @@ import {
   getBreakpointsForSource,
   getSourceActorsForSource
 } from "../../selectors";
-import { setBreakpointPositions, addBreakpoint } from "../breakpoints";
+import { addBreakpoint } from "../breakpoints";
 
 import { prettyPrintSource } from "./prettyPrint";
+import { setBreakableLines } from "./breakableLines";
 import { isFulfilled } from "../../utils/async-value";
 
 import * as parser from "../../workers/parser";
@@ -116,8 +117,8 @@ async function loadSourceTextPromise(
         ? content.value
         : { type: "text", value: "", contentType: undefined }
     );
-    dispatch(setBreakpointPositions({ cx, sourceId: newSource.id }));
 
+    await dispatch(setBreakableLines(cx, source.id));
     // Update the text in any breakpoints for this source by re-adding them.
     const breakpoints = getBreakpointsForSource(getState(), source.id);
     for (const { location, options, disabled } of breakpoints) {

@@ -175,20 +175,11 @@ void IPCBlobInputStreamChild::ActorDestroy(
     mState = migrating ? eInactiveMigrating : eInactive;
   }
 
-  if (migrating) {
-    // We were waiting for this! Now we can migrate the actor in the correct
-    // thread.
-    RefPtr<IPCBlobInputStreamThread> thread =
-        IPCBlobInputStreamThread::GetOrCreate();
-    MOZ_ASSERT(thread, "We cannot continue without DOMFile thread.");
-
-    ResetManager();
-    thread->MigrateActor(this);
+  if (!migrating) {
+    // Let's cleanup the workerRef and the pending operation queue.
+    Shutdown();
     return;
   }
-
-  // Let's cleanup the workerRef and the pending operation queue.
-  Shutdown();
 }
 
 IPCBlobInputStreamChild::ActorState IPCBlobInputStreamChild::State() {
@@ -199,7 +190,7 @@ IPCBlobInputStreamChild::ActorState IPCBlobInputStreamChild::State() {
 already_AddRefed<IPCBlobInputStream> IPCBlobInputStreamChild::CreateStream() {
   bool shouldMigrate = false;
 
-  RefPtr<IPCBlobInputStream> stream = new IPCBlobInputStream(this);
+  RefPtr<IPCBlobInputStream> stream;
 
   {
     MutexAutoLock lock(mMutex);
@@ -213,11 +204,36 @@ already_AddRefed<IPCBlobInputStream> IPCBlobInputStreamChild::CreateStream() {
     if (mState == eActive &&
         !IPCBlobInputStreamThread::IsOnFileEventTarget(mOwningEventTarget)) {
       MOZ_ASSERT(mStreams.IsEmpty());
+
       shouldMigrate = true;
       mState = eActiveMigrating;
-    }
 
-    mStreams.AppendElement(stream);
+      RefPtr<IPCBlobInputStreamThread> thread =
+          IPCBlobInputStreamThread::GetOrCreate();
+      MOZ_ASSERT(thread, "We cannot continue without DOMFile thread.");
+
+      // Create a new actor object to connect to the target thread.
+      RefPtr<IPCBlobInputStreamChild> newActor =
+          new IPCBlobInputStreamChild(mID, mSize);
+      {
+        MutexAutoLock newActorLock(newActor->mMutex);
+
+        // Move over our local state onto the new actor object.
+        newActor->mWorkerRef = mWorkerRef;
+        newActor->mState = eInactiveMigrating;
+        newActor->mPendingOperations.SwapElements(mPendingOperations);
+
+        // Create the actual stream object.
+        stream = new IPCBlobInputStream(newActor);
+        newActor->mStreams.AppendElement(stream);
+      }
+
+      // Perform the actual migration.
+      thread->MigrateActor(newActor);
+    } else {
+      stream = new IPCBlobInputStream(this);
+      mStreams.AppendElement(stream);
+    }
   }
 
   // Send__delete__ will call ActorDestroy(). mMutex cannot be locked at this

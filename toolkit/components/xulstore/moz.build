@@ -10,30 +10,35 @@ with Files('**'):
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
+XPIDL_MODULE = 'toolkit_xulstore'
+
 XPIDL_SOURCES += [
     'nsIXULStore.idl',
 ]
-
-TEST_DIRS += [
-    'tests/gtest',
-]
-
-EXPORTS.mozilla += [
-    'XULStore.h',
-]
-
-EXTRA_JS_MODULES += [
-    'XULStore.jsm',
-]
-
-XPIDL_MODULE = 'xulstore'
 
 XPCOM_MANIFESTS += [
     'components.conf',
 ]
 
-UNIFIED_SOURCES += [
-    'XULStore.cpp',
-]
+if CONFIG['MOZ_NEW_XULSTORE']:
+    EXTRA_JS_MODULES += [
+        'new/XULStore.jsm',
+    ]
 
-FINAL_LIBRARY = 'xul'
+    TEST_DIRS += [
+        'tests/gtest',
+    ]
+
+    EXPORTS.mozilla += [
+        'XULStore.h',
+    ]
+
+    UNIFIED_SOURCES += [
+        'XULStore.cpp',
+    ]
+
+    FINAL_LIBRARY = 'xul'
+else:
+    EXTRA_JS_MODULES += [
+        'old/XULStore.jsm',
+    ]

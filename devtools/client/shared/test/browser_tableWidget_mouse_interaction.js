@@ -198,11 +198,12 @@ var testMouseInteraction = async function() {
   click(node, 2);
   await onPopupShown;
 
-  is(table.menupopup.querySelectorAll("[disabled]").length, 1,
+  is(table.menupopup.querySelectorAll("menuitem[disabled]").length, 1,
      "Only 1 menuitem is disabled");
-  is(table.menupopup.querySelector("[disabled]"),
+  is(table.menupopup.querySelector("menuitem[disabled]"),
      table.menupopup.querySelector("[data-id='col1']"),
      "Which is the unique column");
+
   // popup should be open now
   // clicking on second column label
   let onPopupHidden = once(table.menupopup, "popuphidden");
@@ -226,7 +227,7 @@ var testMouseInteraction = async function() {
   click(node, 2);
   await onPopupShown;
 
-  is(table.menupopup.querySelectorAll("[disabled]").length, 1,
+  is(table.menupopup.querySelectorAll("menuitem[disabled]").length, 1,
      "Only 1 menuitem is disabled");
   // popup should be open now
   // clicking on second column label
@@ -251,12 +252,12 @@ var testMouseInteraction = async function() {
   click(node, 2);
   await onPopupShown;
 
-  is(table.menupopup.querySelectorAll("[disabled]").length, 2,
+  is(table.menupopup.querySelectorAll("menuitem[disabled]").length, 2,
      "2 menuitems are disabled now as only 2 columns remain visible");
-  is(table.menupopup.querySelectorAll("[disabled]")[0],
+  is(table.menupopup.querySelectorAll("menuitem[disabled]")[0],
      table.menupopup.querySelector("[data-id='col1']"),
      "First is the unique column");
-  is(table.menupopup.querySelectorAll("[disabled]")[1],
+  is(table.menupopup.querySelectorAll("menuitem[disabled]")[1],
      table.menupopup.querySelector("[data-id='col4']"),
      "Second is the last column");
 

@@ -128,6 +128,11 @@ decorate_task(
 );
 
 decorate_task(
+  withPrefEnv({
+    set: [
+      ["features.normandy-remote-settings.enabled", false],
+    ],
+  }),
   withStub(Uptake, "reportRunner"),
   withStub(NormandyApi, "fetchRecipes"),
   withStub(ActionsManager.prototype, "runRecipe"),
@@ -258,6 +263,11 @@ decorate_task(
 );
 
 decorate_task(
+  withPrefEnv({
+    set: [
+      ["features.normandy-remote-settings.enabled", false],
+    ],
+  }),
   withMockNormandyApi,
   async function testRunFetchFail(mockApi) {
     const reportRunner = sinon.stub(Uptake, "reportRunner");

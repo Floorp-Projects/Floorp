@@ -9,7 +9,9 @@
 
 do_get_profile();
 
-var certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
+if (AppConstants.MOZ_NEW_CERT_STORAGE) {
+  this.certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
+}
 
 async function addCertBySubject(cert, subject) {
   let result = await new Promise((resolve) => {
@@ -46,7 +48,9 @@ function getLongString(uniquePart, length) {
   return String(uniquePart).padStart(length, "0");
 }
 
-add_task(async function test_common_subject() {
+add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function test_common_subject() {
   await addCertBySubject("some certificate bytes 1", "some common subject");
   await addCertBySubject("some certificate bytes 2", "some common subject");
   await addCertBySubject("some certificate bytes 3", "some common subject");
@@ -68,7 +72,9 @@ add_task(async function test_common_subject() {
   Assert.deepEqual(storedOtherCertsAsStrings, expectedOtherCerts, "should have other certificate");
 });
 
-add_task(async function test_many_entries() {
+add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function test_many_entries() {
   const NUM_CERTS = 500;
   const CERT_LENGTH = 3000;
   const SUBJECT_LENGTH = 40;
@@ -85,7 +91,9 @@ add_task(async function test_many_entries() {
   }
 });
 
-add_task(async function test_removal() {
+add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function test_removal() {
   // As long as cert_storage is given valid base64, attempting to delete some nonexistent
   // certificate will "succeed" (it'll do nothing).
   await removeCertByHash(btoa("thishashisthewrongsize"));

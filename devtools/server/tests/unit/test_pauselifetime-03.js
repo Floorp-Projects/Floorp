@@ -46,7 +46,7 @@ function test_pause_frame() {
       Assert.equal(response.error, "unrecognizedPacketType");
       Assert.ok(objClient.valid);
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume().then(function() {
         // Now that we've resumed, should get no-such-actor for the
         // same request.
         gClient.request({ to: objActor, type: "bogusRequest" }, function(response) {

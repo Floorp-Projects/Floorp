@@ -1,11 +1,14 @@
 "use strict";
 
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-add_task(async function test_get_values() {
-  // Import XULStore.jsm before getting the profile to ensure that the new store
+add_task({
+  skip_if: () => !AppConstants.MOZ_NEW_XULSTORE,
+}, async function test_get_values() {
+  // Import XULStore before getting the profile to ensure that the new store
   // is initialized, as the purpose of this test is to confirm that the old
   // store data gets migrated if the profile change happens post-initialization.
   const {XULStore} = ChromeUtils.import("resource://gre/modules/XULStore.jsm");

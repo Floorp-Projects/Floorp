@@ -462,6 +462,12 @@ dictionary MozRequestFilter {
    * match pattern set.
    */
   MatchPatternSet? urls = null;
+
+  /**
+   * If present, the request only matches if the loadInfo privateBrowsingId matches
+   * against the given incognito value.
+   */
+  boolean? incognito = null;
 };
 
 dictionary MozRequestMatchOptions {
