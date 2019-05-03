@@ -14,6 +14,8 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "nsRefPtrHashtable.h"
 
+class nsIGlobalObject;
+
 namespace mozilla {
 namespace dom {
 
@@ -35,6 +37,8 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(JSWindowActor)
 
   JSWindowActor();
+
+  enum class Type { Parent, Child };
 
   const nsString& Name() const { return mName; }
 
