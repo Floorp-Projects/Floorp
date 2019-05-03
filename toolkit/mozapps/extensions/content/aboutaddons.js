@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this, "SUPPORT_URL", "app.support.baseURL",
   "", null, val => Services.urlFormatter.formatURL(val));
 
+const UPDATES_RECENT_TIMESPAN = 2 * 24 * 3600000; // 2 days (in milliseconds)
+
 const PLUGIN_ICON_URL = "chrome://global/skin/plugins/pluginGeneric.svg";
 const PERMISSION_MASKS = {
   "ask-to-activate": AddonManager.PERM_CAN_ASK_TO_ACTIVATE,
@@ -114,6 +116,7 @@ function hasPermission(addon, permission) {
  * @param {string} param The (optional) param for the view.
  */
 let loadViewFn;
+let setCategoryFn;
 
 let _templates = {};
 
@@ -1041,11 +1044,9 @@ class AddonList extends HTMLElement {
       throw new Error(`type must be set to find add-ons`);
     }
 
-    // Find everything matching our type.
-    let addons = await AddonManager.getAddonsByTypes([this.type]);
-
-    // Sort by name.
-    addons.sort(this.sortByFn);
+    // Find everything matching our type, null will find all types.
+    let type = this.type == "all" ? null : [this.type];
+    let addons = await AddonManager.getAddonsByTypes(type);
 
     // Put the add-ons into the sections, an add-on goes in the first section
     // that it matches the filterFn for. It might not go in any section.
@@ -1055,6 +1056,11 @@ class AddonList extends HTMLElement {
       if (index != -1) {
         sectionedAddons[index].push(addon);
       }
+    }
+
+    // Sort the add-ons in each section.
+    for (let section of sectionedAddons) {
+      section.sort(this.sortByFn);
     }
 
     return sectionedAddons;
@@ -1094,7 +1100,7 @@ class AddonList extends HTMLElement {
 
   addAddon(addon) {
     // Only insert add-ons of the right type.
-    if (addon.type != this.type) {
+    if (addon.type != this.type && this.type != "all") {
       this.sendEvent("skip-add", "type-mismatch");
       return;
     }
@@ -1250,6 +1256,9 @@ class DetailView {
     let addon = await AddonManager.getAddonByID(this.id);
     let card = document.createElement("addon-card");
 
+    // Ensure the category for this add-on type is selected.
+    setCategoryFn(addon.type);
+
     // Go back to the list view when the add-on is removed.
     card.addEventListener("remove", () => loadViewFn("list", addon.type));
 
@@ -1262,6 +1271,46 @@ class DetailView {
   }
 }
 
+class UpdatesView {
+  constructor({param, root}) {
+    this.root = root;
+    this.param = param;
+  }
+
+  async render() {
+    let list = document.createElement("addon-list");
+    list.type = "all";
+    if (this.param == "available") {
+      list.setSections([{
+        headingId: "available-updates-heading",
+        filterFn: addon => addon.updateInstall,
+      }]);
+    } else if (this.param == "recent") {
+      list.sortByFn = (a, b) => {
+        if (a.updateDate > b.updateDate) {
+          return -1;
+        }
+        if (a.updateDate < b.updateDate) {
+          return 1;
+        }
+        return 0;
+      };
+      let updateLimit = new Date() - UPDATES_RECENT_TIMESPAN;
+      list.setSections([{
+        headingId: "recent-updates-heading",
+        filterFn: addon =>
+          !addon.hidden && addon.updateDate && addon.updateDate > updateLimit,
+      }]);
+    } else {
+      throw new Error(`Unknown updates view ${this.param}`);
+    }
+
+    await list.render();
+    this.root.textContent = "";
+    this.root.appendChild(list);
+  }
+}
+
 // Generic view management.
 let root = null;
 
@@ -1271,6 +1320,7 @@ let root = null;
 function initialize(opts) {
   root = document.getElementById("main");
   loadViewFn = opts.loadViewFn;
+  setCategoryFn = opts.setCategoryFn;
   AddonCardListenerHandler.startup();
   window.addEventListener("unload", () => {
     // Clear out the root node so the disconnectedCallback will trigger
@@ -1290,6 +1340,8 @@ async function show(type, param) {
     await new ListView({param, root}).render();
   } else if (type == "detail") {
     await new DetailView({param, root}).render();
+  } else if (type == "updates") {
+    await new UpdatesView({param, root}).render();
   }
 }
 
