@@ -283,7 +283,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
 
   RefPtr<BrowsingContext> kungFuDeathGrip(this);
 
-  if (!Group()->EvictCachedContext(this)) {
+  if (Group() && !Group()->EvictCachedContext(this)) {
     Children* children = nullptr;
     if (mParent) {
       children = &mParent->mChildren;
