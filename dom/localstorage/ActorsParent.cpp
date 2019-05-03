@@ -1486,6 +1486,8 @@ class Connection final {
   class CachedStatement;
 
  private:
+  class InitOriginHelper;
+
   class FlushOp;
   class CloseOp;
 
@@ -1497,8 +1499,10 @@ class Connection final {
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
       mCachedStatements;
   WriteOptimizer mWriteOptimizer;
+  const nsCString mSuffix;
+  const nsCString mGroup;
   const nsCString mOrigin;
-  const nsString mDirectoryPath;
+  nsString mDirectoryPath;
   /**
    * Propagated from PrepareDatastoreOp. PrepareDatastoreOp may defer the
    * creation of the localstorage client directory and database on the
@@ -1567,8 +1571,8 @@ class Connection final {
 
  private:
   // Only created by ConnectionThread.
-  Connection(ConnectionThread* aConnectionThread, const nsACString& aOrigin,
-             const nsAString& aDirectoryPath,
+  Connection(ConnectionThread* aConnectionThread, const nsACString& aSuffix,
+             const nsACString& aGroup, const nsACString& aOrigin,
              nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
              bool aDatabaseNotAvailable);
 
@@ -1603,6 +1607,48 @@ class Connection::CachedStatement final {
   // No funny business allowed.
   CachedStatement(const CachedStatement&) = delete;
   CachedStatement& operator=(const CachedStatement&) = delete;
+};
+
+/**
+ * Helper to invoke EnsureOriginIsInitialized and InitUsageForOrigin on the
+ * QuotaManager IO thread from the LocalStorage connection thread when creating
+ * a database connection on demand. This is necessary because we attempt to
+ * defer the creation of the origin directory and the database until absolutely
+ * needed, but the directory creation and origin initialization must happen on
+ * the QM IO thread for invariant reasons. (We can't just use a mutex because
+ * there could be logic on the IO thread that also wants to deal with the same
+ * origin, so we need to queue a runnable and wait our turn.)
+ */
+class Connection::InitOriginHelper final : public Runnable {
+  mozilla::Monitor mMonitor;
+  const nsCString mSuffix;
+  const nsCString mGroup;
+  const nsCString mOrigin;
+  nsString mOriginDirectoryPath;
+  nsresult mIOThreadResultCode;
+  bool mWaiting;
+
+ public:
+  InitOriginHelper(const nsACString& aSuffix, const nsACString& aGroup,
+                   const nsACString& aOrigin)
+      : Runnable("dom::localstorage::Connection::InitOriginHelper"),
+        mMonitor("InitOriginHelper::mMonitor"),
+        mSuffix(aSuffix),
+        mGroup(aGroup),
+        mOrigin(aOrigin),
+        mIOThreadResultCode(NS_OK),
+        mWaiting(true) {
+    AssertIsOnConnectionThread();
+  }
+
+  nsresult BlockAndReturnOriginDirectoryPath(nsAString& aOriginDirectoryPath);
+
+ private:
+  ~InitOriginHelper() {}
+
+  nsresult RunOnIOThread();
+
+  NS_DECL_NSIRUNNABLE
 };
 
 class Connection::FlushOp final : public ConnectionDatastoreOperationBase {
@@ -1649,7 +1695,8 @@ class ConnectionThread final {
   void AssertIsOnConnectionThread();
 
   already_AddRefed<Connection> CreateConnection(
-      const nsACString& aOrigin, const nsAString& aDirectoryPath,
+      const nsACString& aSuffix, const nsACString& aGroup,
+      const nsACString& aOrigin,
       nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
       bool aDatabaseNotAvailable);
 
@@ -2361,7 +2408,6 @@ class PrepareDatastoreOp
   nsCString mGroup;
   nsCString mMainThreadOrigin;
   nsCString mOrigin;
-  nsString mDirectoryPath;
   nsString mDatabaseFilePath;
   uint32_t mPrivateBrowsingId;
   int64_t mUsage;
@@ -4129,15 +4175,16 @@ ConnectionDatastoreOperationBase::Run() {
  ******************************************************************************/
 
 Connection::Connection(ConnectionThread* aConnectionThread,
+                       const nsACString& aSuffix, const nsACString& aGroup,
                        const nsACString& aOrigin,
-                       const nsAString& aDirectoryPath,
                        nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
                        bool aDatabaseNotAvailable)
     : mConnectionThread(aConnectionThread),
       mQuotaClient(QuotaClient::GetInstance()),
       mArchivedOriginScope(std::move(aArchivedOriginScope)),
+      mSuffix(aSuffix),
+      mGroup(aGroup),
       mOrigin(aOrigin),
-      mDirectoryPath(aDirectoryPath),
       mDatabaseNotAvailable(aDatabaseNotAvailable),
       mFlushScheduled(false)
 #ifdef DEBUG
@@ -4146,8 +4193,8 @@ Connection::Connection(ConnectionThread* aConnectionThread,
 #endif
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(!aGroup.IsEmpty());
   MOZ_ASSERT(!aOrigin.IsEmpty());
-  MOZ_ASSERT(!aDirectoryPath.IsEmpty());
 }
 
 Connection::~Connection() {
@@ -4239,94 +4286,135 @@ void Connection::EndUpdateBatch() {
 nsresult Connection::EnsureStorageConnection() {
   AssertIsOnConnectionThread();
 
-  if (!mStorageConnection) {
-    nsCOMPtr<nsIFile> file;
-    nsresult rv = NS_NewLocalFile(mDirectoryPath, false, getter_AddRefs(file));
+  if (mStorageConnection) {
+    return NS_OK;
+  }
+
+  nsresult rv;
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  if (!mDatabaseNotAvailable) {
+    nsCOMPtr<nsIFile> directoryEntry;
+    rv = quotaManager->GetDirectoryForOrigin(PERSISTENCE_TYPE_DEFAULT, mOrigin,
+                                             getter_AddRefs(directoryEntry));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    if (mDatabaseNotAvailable) {
-      bool exists;
-      rv = file->Exists(&exists);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (!exists) {
-        rv = file->Create(nsIFile::DIRECTORY_TYPE, 0755);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      }
+    rv = directoryEntry->Append(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
 
-    rv = file->Append(NS_LITERAL_STRING(DATA_FILE_NAME));
+    rv = directoryEntry->GetPath(mDirectoryPath);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = directoryEntry->Append(NS_LITERAL_STRING(DATA_FILE_NAME));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsString databaseFilePath;
+    rv = directoryEntry->GetPath(databaseFilePath);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     nsCOMPtr<mozIStorageConnection> storageConnection;
-
-    if (mDatabaseNotAvailable) {
-      QuotaManager* quotaManager = QuotaManager::Get();
-      MOZ_ASSERT(quotaManager);
-
-      RefPtr<Runnable> runnable =
-          NS_NewRunnableFunction("dom::localstorage::InitUsageRunnable",
-                                 [origin = mOrigin]() {
-                                   InitUsageForOrigin(origin, 0);
-                                 });
-
-      MOZ_ALWAYS_SUCCEEDS(
-          quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
-
-      nsCOMPtr<nsIFile> usageFile;
-      rv = GetUsageFile(mDirectoryPath, getter_AddRefs(usageFile));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      bool removedUsageFile;
-      rv = CreateStorageConnection(file, usageFile, mOrigin,
-                                   getter_AddRefs(storageConnection),
-                                   &removedUsageFile);
-
-      MOZ_ASSERT(!removedUsageFile);
-
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      MOZ_ASSERT(mQuotaClient);
-
-      MutexAutoLock shadowDatabaseLock(mQuotaClient->ShadowDatabaseMutex());
-
-      nsCOMPtr<mozIStorageConnection> shadowConnection;
-      if (!gInitializedShadowStorage) {
-        rv = CreateShadowStorageConnection(quotaManager->GetBasePath(),
-                                           getter_AddRefs(shadowConnection));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        gInitializedShadowStorage = true;
-      }
-    } else {
-      nsString filePath;
-      rv = file->GetPath(filePath);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = GetStorageConnection(filePath, getter_AddRefs(storageConnection));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+    rv = GetStorageConnection(databaseFilePath,
+                              getter_AddRefs(storageConnection));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
 
     mStorageConnection = storageConnection;
+
+    return NS_OK;
   }
+
+  RefPtr<InitOriginHelper> helper =
+      new InitOriginHelper(mSuffix, mGroup, mOrigin);
+
+  nsString originDirectoryPath;
+  rv = helper->BlockAndReturnOriginDirectoryPath(originDirectoryPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIFile> directoryEntry;
+  rv = NS_NewLocalFile(originDirectoryPath, false,
+                       getter_AddRefs(directoryEntry));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = directoryEntry->Append(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = directoryEntry->GetPath(mDirectoryPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = directoryEntry->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!exists) {
+    rv = directoryEntry->Create(nsIFile::DIRECTORY_TYPE, 0755);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  rv = directoryEntry->Append(NS_LITERAL_STRING(DATA_FILE_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIFile> usageFile;
+  rv = GetUsageFile(mDirectoryPath, getter_AddRefs(usageFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<mozIStorageConnection> storageConnection;
+  bool removedUsageFile;
+
+  rv = CreateStorageConnection(directoryEntry, usageFile, mOrigin,
+                               getter_AddRefs(storageConnection),
+                               &removedUsageFile);
+
+  MOZ_ASSERT(!removedUsageFile);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(mQuotaClient);
+
+  MutexAutoLock shadowDatabaseLock(mQuotaClient->ShadowDatabaseMutex());
+
+  nsCOMPtr<mozIStorageConnection> shadowConnection;
+  if (!gInitializedShadowStorage) {
+    rv = CreateShadowStorageConnection(quotaManager->GetBasePath(),
+                                       getter_AddRefs(shadowConnection));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    gInitializedShadowStorage = true;
+  }
+
+  mStorageConnection = storageConnection;
 
   return NS_OK;
 }
@@ -4453,6 +4541,71 @@ void Connection::CachedStatement::Assign(
   if (mStatement) {
     mScoper.emplace(mStatement);
   }
+}
+
+nsresult Connection::InitOriginHelper::BlockAndReturnOriginDirectoryPath(
+    nsAString& aOriginDirectoryPath) {
+  AssertIsOnConnectionThread();
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  MOZ_ALWAYS_SUCCEEDS(
+      quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL));
+
+  mozilla::MonitorAutoLock lock(mMonitor);
+  while (mWaiting) {
+    lock.Wait();
+  }
+
+  if (NS_WARN_IF(NS_FAILED(mIOThreadResultCode))) {
+    return mIOThreadResultCode;
+  }
+
+  aOriginDirectoryPath = mOriginDirectoryPath;
+  return NS_OK;
+}
+
+nsresult Connection::InitOriginHelper::RunOnIOThread() {
+  AssertIsOnIOThread();
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  nsCOMPtr<nsIFile> directoryEntry;
+  nsresult rv = quotaManager->EnsureOriginIsInitialized(
+      PERSISTENCE_TYPE_DEFAULT, mSuffix, mGroup, mOrigin,
+      getter_AddRefs(directoryEntry));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = directoryEntry->GetPath(mOriginDirectoryPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  InitUsageForOrigin(mOrigin, 0);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Connection::InitOriginHelper::Run() {
+  AssertIsOnIOThread();
+
+  nsresult rv = RunOnIOThread();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mIOThreadResultCode = rv;
+  }
+
+  mozilla::MonitorAutoLock lock(mMonitor);
+  MOZ_ASSERT(mWaiting);
+
+  mWaiting = false;
+  lock.Notify();
+
+  return NS_OK;
 }
 
 Connection::FlushOp::FlushOp(Connection* aConnection,
@@ -4613,7 +4766,8 @@ void ConnectionThread::AssertIsOnConnectionThread() {
 }
 
 already_AddRefed<Connection> ConnectionThread::CreateConnection(
-    const nsACString& aOrigin, const nsAString& aDirectoryPath,
+    const nsACString& aSuffix, const nsACString& aGroup,
+    const nsACString& aOrigin,
     nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
     bool aDatabaseNotAvailable) {
   AssertIsOnOwningThread();
@@ -4621,7 +4775,7 @@ already_AddRefed<Connection> ConnectionThread::CreateConnection(
   MOZ_ASSERT(!mConnections.GetWeak(aOrigin));
 
   RefPtr<Connection> connection =
-      new Connection(this, aOrigin, aDirectoryPath,
+      new Connection(this, aSuffix, aGroup, aOrigin,
                      std::move(aArchivedOriginScope), aDatabaseNotAvailable);
   mConnections.Put(aOrigin, connection);
 
@@ -6743,15 +6897,28 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     return DatabaseNotAvailable();
   }
 
-  // Initialize the origin even when the origin directory doesn't exist and we
-  // don't have data for migration. GetQuotaObject in GetResponse would fail
-  // otherwise.
+  // The origin directory doesn't need to be created when we don't have data for
+  // migration. It will be created on the connection thread in
+  // Connection::EnsureStorageConnection.
+  // However, origin quota must be initialized, GetQuotaObject in GetResponse
+  // would fail otherwise.
   nsCOMPtr<nsIFile> directoryEntry;
-  rv = quotaManager->EnsureOriginIsInitialized(PERSISTENCE_TYPE_DEFAULT,
-                                               mSuffix, mGroup, mOrigin,
-                                               getter_AddRefs(directoryEntry));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (hasDataForMigration) {
+    rv = quotaManager->EnsureOriginIsInitialized(
+        PERSISTENCE_TYPE_DEFAULT, mSuffix, mGroup, mOrigin,
+        getter_AddRefs(directoryEntry));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    rv = quotaManager->GetDirectoryForOrigin(PERSISTENCE_TYPE_DEFAULT, mOrigin,
+                                             getter_AddRefs(directoryEntry));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    quotaManager->EnsureQuotaForOrigin(PERSISTENCE_TYPE_DEFAULT, mGroup,
+                                       mOrigin);
   }
 
   rv = directoryEntry->Append(NS_LITERAL_STRING(LS_DIRECTORY_NAME));
@@ -6759,7 +6926,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     return rv;
   }
 
-  rv = directoryEntry->GetPath(mDirectoryPath);
+  nsString directoryPath;
+  rv = directoryEntry->GetPath(directoryPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -6815,7 +6983,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   }
 
   nsCOMPtr<nsIFile> usageFile;
-  rv = GetUsageFile(mDirectoryPath, getter_AddRefs(usageFile));
+  rv = GetUsageFile(directoryPath, getter_AddRefs(usageFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7104,7 +7272,7 @@ nsresult PrepareDatastoreOp::BeginLoadData() {
   }
 
   mConnection = gConnectionThread->CreateConnection(
-      mOrigin, mDirectoryPath, std::move(mArchivedOriginScope),
+      mSuffix, mGroup, mOrigin, std::move(mArchivedOriginScope),
       /* aDatabaseNotAvailable */ false);
   MOZ_ASSERT(mConnection);
 
@@ -7229,7 +7397,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
         }
 
         mConnection = gConnectionThread->CreateConnection(
-            mOrigin, mDirectoryPath, std::move(mArchivedOriginScope),
+            mSuffix, mGroup, mOrigin, std::move(mArchivedOriginScope),
             /* aDatabaseNotAvailable */ true);
         MOZ_ASSERT(mConnection);
       }
