@@ -993,14 +993,13 @@ bool nsOuterWindowProxy::GetSubframeWindow(JSContext* cx,
   // Just return the window's global
   nsGlobalWindowOuter* global = nsGlobalWindowOuter::Cast(frame);
   frame->EnsureInnerWindow();
-  JSObject* obj = global->FastGetGlobalJSObject();
+  JSObject* obj = global->GetGlobalJSObject();
   // This null check fixes a hard-to-reproduce crash that occurs when we
   // get here when we're mid-call to nsDocShell::Destroy. See bug 640904
   // comment 105.
   if (MOZ_UNLIKELY(!obj)) {
     return xpc::Throw(cx, NS_ERROR_FAILURE);
   }
-  JS::ExposeObjectToActiveJS(obj);
   vp.setObject(*obj);
   return JS_WrapValue(cx, vp);
 }
@@ -1505,12 +1504,6 @@ nsresult nsGlobalWindowOuter::EnsureScriptEnvironment() {
 }
 
 nsIScriptContext* nsGlobalWindowOuter::GetScriptContext() { return mContext; }
-
-JSObject* nsGlobalWindowOuter::GetGlobalJSObject() { return GetWrapper(); }
-
-JSObject* nsGlobalWindowOuter::GetGlobalJSObjectPreserveColor() const {
-  return FastGetGlobalJSObject();
-}
 
 bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
   // We reuse the inner window when:

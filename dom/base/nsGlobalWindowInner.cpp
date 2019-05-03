@@ -1574,12 +1574,6 @@ nsIScriptContext* nsGlobalWindowInner::GetScriptContext() {
   return outer->GetScriptContext();
 }
 
-JSObject* nsGlobalWindowInner::GetGlobalJSObject() { return GetWrapper(); }
-
-JSObject* nsGlobalWindowInner::GetGlobalJSObjectPreserveColor() const {
-  return FastGetGlobalJSObject();
-}
-
 void nsGlobalWindowInner::TraceGlobalJSObject(JSTracer* aTrc) {
   TraceWrapper(aTrc, "active window global");
 }
@@ -5662,7 +5656,7 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
       JS::CompileOptions options(aes.cx());
       options.setFileAndLine(filename, lineNo);
       options.setNoScriptRval(true);
-      JS::Rooted<JSObject*> global(aes.cx(), FastGetGlobalJSObject());
+      JS::Rooted<JSObject*> global(aes.cx(), GetGlobalJSObject());
       nsresult rv;
       {
         nsJSUtils::ExecutionContext exec(aes.cx(), global);

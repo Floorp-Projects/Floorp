@@ -1652,14 +1652,11 @@ bool DOMXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper,
       if (subframe) {
         subframe->EnsureInnerWindow();
         nsGlobalWindowOuter* global = nsGlobalWindowOuter::Cast(subframe);
-        // FastGetGlobalJSObject is non-virtual so calling it and then manually
-        // exposing is faster than calling the virtual GetGlobalJSObject()...
-        JSObject* obj = global->FastGetGlobalJSObject();
+        JSObject* obj = global->GetGlobalJSObject();
         if (MOZ_UNLIKELY(!obj)) {
           // It's gone?
           return xpc::Throw(cx, NS_ERROR_FAILURE);
         }
-        ExposeObjectToActiveJS(obj);
         desc.value().setObject(*obj);
         FillPropertyDescriptor(desc, wrapper, true);
         return JS_WrapPropertyDescriptor(cx, desc);

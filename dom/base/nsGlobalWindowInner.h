@@ -244,13 +244,18 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   }
 
   // nsIGlobalObject
-  JSObject* GetGlobalJSObject() override;
-  JSObject* GetGlobalJSObjectPreserveColor() const override;
-
-  // nsIScriptGlobalObject
-  // If this ever starts exposing to active JS, we can remove various
-  // ExposeObjectToActiveJS calls.
-  JSObject* FastGetGlobalJSObject() const { return GetWrapperPreserveColor(); }
+  JSObject* GetGlobalJSObject() final {
+    return GetWrapper();
+  }
+  JSObject* GetGlobalJSObjectPreserveColor() const final {
+    return GetWrapperPreserveColor();
+  }
+  // The HasJSGlobal on nsIGlobalObject ends up having to do a virtual
+  // call to GetGlobalJSObjectPreserveColor(), because when it's
+  // making the call it doesn't know it's doing it on an
+  // nsGlobalWindowInner.  Add a version here that can be entirely
+  // non-virtual.
+  bool HasJSGlobal() const { return GetGlobalJSObjectPreserveColor(); }
 
   void TraceGlobalJSObject(JSTracer* aTrc);
 
