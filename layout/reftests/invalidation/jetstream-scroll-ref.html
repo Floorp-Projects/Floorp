@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html class="reftest-wait" reftest-async-scroll><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, viewport-fit=cover">
+<style>
+    figure {
+        position: relative;
+        width: 100vw;
+        left: 50%;
+        transform: translate(-50%);
+    }
+
+    figure img {
+        filter: url(#invertLightness)
+    }
+
+    main { scrollbar-width: none; width: 400px; height: 500px; overflow: auto; border: 1px solid black; }
+</style>
+
+</head>
+
+<body>
+
+    <svg xmlns="http://www.w3.org/2000/svg"> <style>svg{display:block;width:0;height:0}</style>
+        <filter id="invertLightness" x="0" y="0" style="color-interpolation-filters:sRGB">
+            <feColorMatrix type="matrix" in="SourceGraphic" result="red" values="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1">
+            </feColorMatrix>
+            <feColorMatrix type="matrix" in="SourceGraphic" result="green" values="0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 1">
+            </feColorMatrix>
+            <feColorMatrix type="matrix" in="SourceGraphic" result="blue" values="0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 1">
+            </feColorMatrix>
+            <feBlend in="red" in2="green" mode="lighten" result="maxyellow"></feBlend>
+            <feBlend in="maxyellow" in2="blue" mode="lighten" result="max"></feBlend>
+            <feBlend in="red" in2="green" mode="darken" result="minyellow"></feBlend>
+            <feBlend in="minyellow" in2="blue" mode="darken" result="min"></feBlend>
+            <feComponentTransfer result="adjustment" in="min">
+                <feFuncR type="linear" intercept="1" slope="-1"></feFuncR>
+                <feFuncG type="linear" intercept="1" slope="-1"></feFuncG>
+                <feFuncB type="linear" intercept="1" slope="-1"></feFuncB>
+            </feComponentTransfer>
+            <feComposite operator="arithmetic" in="SourceGraphic" in2="adjustment" k1="0" k2="1" k3="1" k4="-1" result="channelAdjustment"></feComposite>
+            <feComposite operator="arithmetic" in="channelAdjustment" in2="max" k1="0" k2="1" k3="-1" k4="1" result="finalColors">
+            </feComposite>
+            <feComposite operator="in" in="finalColors" in2="SourceAlpha"></feComposite>
+        </filter>
+    </svg>
+    <main id="content"
+          reftest-displayport-x="0"
+          reftest-displayport-y="0"
+          reftest-displayport-w="400"
+          reftest-displayport-h="500">
+    <div>
+      <article>
+        <div>
+          <div style="height: 1000px"></div>
+          <figure>
+            <img id=telement src="data:image/webp;base64,UklGRugAAABXRUJQVlA4TNsAAAAvOEuOAQfQxhK3sf8BBW3bMOUPvzuO6H+G//znP//5z3/+85///Oc///nPf/7zn//85z//+c9//vOf//znP//5z3/+85///Oc///nPf/7zn//85z//+c9//vOf//znP//5z3/+85///Oc///nPf/7zn//85z//+c9//vOf//znP//5z3/+85///Oc///nPf/7zn//85z//+c9//vOf//znP//5z3/+85///Oc///nPf/7zn//85z//+c9//vOf//znP//5z3/+85///Oc///nPf/7zn//85z//qwEA" alt="JetStream 2 Scores. Bigger is Better.">
+          </figure>
+        </div>
+      </article>
+    </div>
+    </main>
+</body>
+<script>
+
+    document.getElementById("content").scrollTop = 1100;
+    document.documentElement.removeAttribute("class");
+</script>
+
+</html>

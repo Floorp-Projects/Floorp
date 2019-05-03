@@ -203,6 +203,7 @@ class WebRenderFallbackData : public WebRenderUserData {
   RefPtr<BasicLayerManager> mBasicLayerManager;
   nsAutoPtr<nsDisplayItemGeometry> mGeometry;
   nsRect mBounds;
+  nsRect mBuildingRect;
   gfx::Size mScale;
 
  protected:
