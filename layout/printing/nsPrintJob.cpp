@@ -3227,7 +3227,8 @@ void nsPrintJob::TurnScriptingOn(bool aDoTurnOn) {
         if (propThere != NS_PROPTABLE_PROP_NOT_THERE) {
           doc->DeleteProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview);
           if (go->HasJSGlobal()) {
-            xpc::Scriptability::Get(go->GetGlobalJSObject()).Unblock();
+            xpc::Scriptability::Get(go->GetGlobalJSObjectPreserveColor())
+                .Unblock();
           }
           window->Resume();
         }
@@ -3241,7 +3242,8 @@ void nsPrintJob::TurnScriptingOn(bool aDoTurnOn) {
           doc->SetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
                            NS_INT32_TO_PTR(doc->IsScriptEnabled()));
           if (go && go->HasJSGlobal()) {
-            xpc::Scriptability::Get(go->GetGlobalJSObject()).Block();
+            xpc::Scriptability::Get(go->GetGlobalJSObjectPreserveColor())
+                .Block();
           }
           window->Suspend();
         }

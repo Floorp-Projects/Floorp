@@ -134,7 +134,8 @@ ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject* aGlobal,
   MOZ_ASSERT(!mGlobalObject || mGlobalObject->HasJSGlobal(),
              "Must have an actual JS global for the duration on the stack");
   MOZ_ASSERT(
-      !mGlobalObject || JS_IsGlobalObject(mGlobalObject->GetGlobalJSObject()),
+      !mGlobalObject ||
+          JS_IsGlobalObject(mGlobalObject->GetGlobalJSObjectPreserveColor()),
       "No outer windows allowed");
 }
 
@@ -286,7 +287,8 @@ void AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   MOZ_ASSERT(aCx == danger::GetJSContext());
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
   MOZ_ASSERT(bool(aGlobalObject) == bool(aGlobal));
-  MOZ_ASSERT_IF(aGlobalObject, aGlobalObject->GetGlobalJSObject() == aGlobal);
+  MOZ_ASSERT_IF(aGlobalObject,
+                aGlobalObject->GetGlobalJSObjectPreserveColor() == aGlobal);
 #ifdef DEBUG
   bool haveException = JS_IsExceptionPending(aCx);
 #endif  // DEBUG

@@ -108,7 +108,10 @@ void CallbackObject::FinishSlowJSInitIfMoreThanOneOwner(JSContext* aCx) {
     }
     mIncumbentGlobal = GetIncumbentGlobal();
     if (mIncumbentGlobal) {
-      mIncumbentJSGlobal = mIncumbentGlobal->GetGlobalJSObject();
+      // We don't want to expose to JS here (change the color).  If someone ever
+      // reads mIncumbentJSGlobal, that will expose.  If not, no need to expose
+      // here.
+      mIncumbentJSGlobal = mIncumbentGlobal->GetGlobalJSObjectPreserveColor();
     }
   } else {
     // We can just forget all our stuff.
