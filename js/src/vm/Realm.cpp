@@ -338,12 +338,10 @@ void Realm::traceRoots(JSTracer* trc,
   // keys of the HashMap to avoid adding a strong reference to the JSScript
   // pointers.
   //
-  // If the code coverage is either enabled with the --dump-bytecode command
-  // line option, or with the PCCount JSFriend API functions, then we mark the
-  // keys of the map to hold the JSScript alive.
+  // If the --dump-bytecode command line option or the PCCount JSFriend API
+  // is used, then we mark the keys of the map to hold the JSScript alive.
   if (scriptCountsMap && trc->runtime()->profilingScripts &&
       !JS::RuntimeHeapIsMinorCollecting()) {
-    MOZ_ASSERT_IF(!trc->runtime()->isBeingDestroyed(), collectCoverage());
     for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty();
          r.popFront()) {
       JSScript* script = const_cast<JSScript*>(r.front().key());
