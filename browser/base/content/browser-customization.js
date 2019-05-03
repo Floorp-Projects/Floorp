@@ -39,6 +39,8 @@ var CustomizationHandler = {
     UpdateUrlbarSearchSplitterState();
 
     PlacesToolbarHelper.customizeStart();
+
+    gURLBarHandler.customizeStart();
   },
 
   _customizationEnding(aDetails) {
