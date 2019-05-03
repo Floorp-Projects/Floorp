@@ -223,8 +223,8 @@ open class ExperimentsInternalAPI internal constructor() {
      * @param context context
      * @param experimentId the id of the experiment
      * @param active overridden value for the experiment, true to activate it, false to deactivate
+     * @param branchName overridden branch name for the experiment
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun setOverride(
         context: Context,
         experimentId: String,
@@ -292,7 +292,6 @@ open class ExperimentsInternalAPI internal constructor() {
      * @exception IllegalArgumentException when called from the main thread
      * @param context context
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun clearAllOverridesNow(context: Context) {
         evaluator.clearAllOverridesNow(context)
     }

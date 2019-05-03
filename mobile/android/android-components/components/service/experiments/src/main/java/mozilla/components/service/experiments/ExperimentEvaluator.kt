@@ -178,9 +178,8 @@ internal class ExperimentEvaluator(
      * @param context context
      * @param descriptor descriptor of the experiment
      * @param active overridden value for the experiment, true to activate it, false to deactivate
-     * @param branch overridden branch name for the experiment.
+     * @param branchName overridden branch name for the experiment.
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun setOverride(
         context: Context,
         descriptor: ExperimentDescriptor,
@@ -253,7 +252,6 @@ internal class ExperimentEvaluator(
      *
      * @param context context
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun clearAllOverrides(context: Context) {
         getSharedPreferencesEnabled(context)
             .edit()
@@ -271,7 +269,6 @@ internal class ExperimentEvaluator(
      * @param context context
      */
     @SuppressLint("ApplySharedPref")
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun clearAllOverridesNow(context: Context) {
         require(Looper.myLooper() != Looper.getMainLooper()) { "This cannot be used on the main thread" }
         clearAllOverrides(context)

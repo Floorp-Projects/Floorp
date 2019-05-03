@@ -92,16 +92,26 @@ In the above:
 
     |key|type|description|
     |---|----|-----------|
-    | updateExperiments | boolean (--ez) | forces the experiments updater to run and fetch experiments immediately |
-    | setKintoInstance | string (--es) | sets the Kinto instance to the specified instance ("dev", "staging", "prod" only) |
+    | updateExperiments | boolean (--ez) | Forces the experiments updater to run and fetch experiments immediately. You must pass `true` or `false` following this switch but either will update experiments if this is present |
+    | setKintoInstance | string (--es) | Sets the Kinto instance to the specified instance ("dev", "staging", "prod" only) |
+    | overrideExperiment | string (--es) | Used to pass in the experiment to override and must be followed by the `branch` command below. |
+    | branch | string (--es) | Used to set the branch for overriding the experiment and is meant to be used with the `overrideExperiment` command above. |
+    | clearAllOverrides | boolean (--ez) | Clears any overrides that have been set.  You must pass `true` or `false` following this switch but either will clear the overrides if this is present. Should **not** be used in combination with the `overrideExperiment` command |
 
-For example, to direct a release build of the Glean sample application to (1) update experiments immediately and 
-(2) change the Kinto instance to the staging instance, the following command can be used:
+#### Examples
+ 
+To direct a release build of the Glean sample application to (1) update experiments immediately and (2) change the Kinto instance to the staging instance, the following command can be used:
 
 ```
 adb shell am start -n org.mozilla.samples.glean.debug/mozilla.components.service.experiments.debug.ExperimentsDebugActivity \
   --ez updateExperiments true \
   --es setKintoInstance staging
+```
+
+To direct a release build of the Glean sample application to override the experiment and branch, the following command can be used:
+
+```
+adb shell am start -n org.mozilla.samples.glean.debug/mozilla.components.service.experiments.debug.ExperimentsDebugActivity --es overrideExperiment testExperiment --es branch testBranch
 ```
 
 ## Experiments format for Kinto
