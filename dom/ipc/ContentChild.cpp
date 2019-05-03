@@ -2029,6 +2029,17 @@ mozilla::ipc::IPCResult ContentChild::RecvPScriptCacheConstructor(
 
 PNeckoChild* ContentChild::AllocPNeckoChild() { return new NeckoChild(); }
 
+mozilla::ipc::IPCResult ContentChild::RecvNetworkLinkTypeChange(
+    const uint32_t& aType) {
+  mNetworkLinkType = aType;
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, "contentchild:network-link-type-changed",
+                         nullptr);
+  }
+  return IPC_OK();
+}
+
 bool ContentChild::DeallocPNeckoChild(PNeckoChild* necko) {
   delete necko;
   return true;
