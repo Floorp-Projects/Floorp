@@ -1205,10 +1205,6 @@ class nsDocShell final : public nsDocLoader,
   bool mTitleValidForCurrentURI : 1;
 
   bool mIsFrame : 1;
-
-  // This flag indicates whether or not the DocShell is currently executing an
-  // nsIWebNavigation navigation method.
-  bool mIsNavigating : 1;
 };
 
 #endif /* nsDocShell_h__ */
