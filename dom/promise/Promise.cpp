@@ -359,7 +359,7 @@ static JSObject* CreateNativeHandlerFunction(JSContext* aCx,
 
   JS::Rooted<JSObject*> obj(aCx, JS_GetFunctionObject(func));
 
-  JS::ExposeObjectToActiveJS(aHolder);
+  JS::AssertObjectIsNotGray(aHolder);
   js::SetFunctionNativeReserved(obj, SLOT_NATIVEHANDLER,
                                 JS::ObjectValue(*aHolder));
   js::SetFunctionNativeReserved(obj, SLOT_NATIVEHANDLER_TASK,
