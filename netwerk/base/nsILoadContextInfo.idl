@@ -23,9 +23,6 @@ interface nsIDOMWindow;
 [scriptable, builtinclass, uuid(555e2f8a-a1f6-41dd-88ca-ed4ed6b98a22)]
 interface nsILoadContextInfo : nsISupports
 {
-  const unsigned long NO_APP_ID = 0;
-  const unsigned long UNKNOWN_APP_ID = 4294967295; // UINT32_MAX
-
   /**
    * Whether the context is in a Private Browsing mode
    */
