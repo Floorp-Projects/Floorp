@@ -243,6 +243,7 @@ RefPtr<MediaDataDecoder::DecodePromise> VideoDecoderChild::Decode(
   MediaRawDataIPDL sample(
       MediaDataIPDL(aSample->mOffset, aSample->mTime, aSample->mTimecode,
                     aSample->mDuration, aSample->mKeyframe),
+      aSample->mEOS,
       std::move(buffer));
   SendInput(sample);
   return mDecodePromise.Ensure(__func__);
