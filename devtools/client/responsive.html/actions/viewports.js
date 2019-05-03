@@ -95,6 +95,11 @@ module.exports = {
    * Rotate the viewport.
    */
   rotateViewport(id) {
+    // TODO: Add `orientation` and `angle` properties to message data. See Bug 1357774.
+    post(window, {
+      type: "viewport-orientation-change",
+    });
+
     return {
       type: ROTATE_VIEWPORT,
       id,
