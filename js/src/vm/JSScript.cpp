@@ -5431,6 +5431,9 @@ void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   } else if (hasBaselineScript()) {
     jitCodeRaw_ = baseline->method()->raw();
     jitCodeSkipArgCheck_ = jitCodeRaw_;
+  } else if (types() && js::jit::JitOptions.baselineInterpreter) {
+    jitCodeRaw_ = rt->jitRuntime()->baselineInterpreter().codeRaw();
+    jitCodeSkipArgCheck_ = jitCodeRaw_;
   } else {
     jitCodeRaw_ = rt->jitRuntime()->interpreterStub().value;
     jitCodeSkipArgCheck_ = jitCodeRaw_;
