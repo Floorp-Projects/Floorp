@@ -31,6 +31,8 @@ policy-CertificatesDescription = Add certificates or use built-in certificates.
 
 policy-Cookies = Allow or deny websites to set cookies.
 
+policy-DefaultDownloadDirectory = Set the default download directory.
+
 policy-DisableAppUpdate = Prevent the browser from updating.
 
 policy-DisableBuiltinPDFViewer = Disable PDF.js, the built-in PDF viewer in { -brand-short-name }.
@@ -78,6 +80,8 @@ policy-DNSOverHTTPS = Configure DNS over HTTPS.
 
 policy-DontCheckDefaultBrowser = Disable check for default browser on startup.
 
+policy-DownloadDirectory = Set and lock the download directory.
+
 # “lock” means that the user won’t be able to change this setting
 policy-EnableTrackingProtection = Enable or disable Content Blocking and optionally lock it.
 
@@ -118,6 +122,8 @@ policy-Permissions = Configure permissions for camera, microphone, location and 
 policy-PopupBlocking = Allow certain websites to display popups by default.
 
 policy-Preferences = Set and lock the value for a subset of preferences.
+
+policy-PromptForDownloadLocation = Ask where to save files when downloading.
 
 policy-Proxy = Configure proxy settings.
 

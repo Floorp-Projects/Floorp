@@ -164,6 +164,10 @@
       }
     },
 
+    "DefaultDownloadDirectory": {
+      "type": "string"
+    },
+
     "DisableAppUpdate": {
       "type": "boolean"
     },
@@ -274,6 +278,10 @@
 
     "DontCheckDefaultBrowser": {
       "type": "boolean"
+    },
+
+    "DownloadDirectory": {
+      "type": "string"
     },
 
     "EnableTrackingProtection": {
@@ -622,6 +630,10 @@
           "type": "boolean"
         }
       }
+    },
+
+    "PromptForDownloadLocation": {
+      "type": "boolean"
     },
 
     "Proxy": {
