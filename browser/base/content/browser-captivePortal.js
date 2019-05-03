@@ -38,6 +38,7 @@ var CaptivePortalWatcher = {
   },
 
   init() {
+    Services.obs.addObserver(this, "ensure-captive-portal-tab");
     Services.obs.addObserver(this, "captive-portal-login");
     Services.obs.addObserver(this, "captive-portal-login-abort");
     Services.obs.addObserver(this, "captive-portal-login-success");
@@ -67,6 +68,7 @@ var CaptivePortalWatcher = {
   },
 
   uninit() {
+    Services.obs.removeObserver(this, "ensure-captive-portal-tab");
     Services.obs.removeObserver(this, "captive-portal-login");
     Services.obs.removeObserver(this, "captive-portal-login-abort");
     Services.obs.removeObserver(this, "captive-portal-login-success");
@@ -83,6 +85,9 @@ var CaptivePortalWatcher = {
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "ensure-captive-portal-tab":
+        this.ensureCaptivePortalTab();
+        break;
       case "captive-portal-login":
         this._captivePortalDetected();
         break;
