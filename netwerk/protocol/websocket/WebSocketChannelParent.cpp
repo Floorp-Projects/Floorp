@@ -187,6 +187,7 @@ WebSocketChannelParent::OnStart(nsISupports* aContext) {
   nsAutoCString protocol, extensions;
   nsString effectiveURL;
   bool encrypted = false;
+  uint64_t httpChannelId = 0;
   if (mChannel) {
     DebugOnly<nsresult> rv = mChannel->GetProtocol(protocol);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -199,9 +200,10 @@ WebSocketChannelParent::OnStart(nsISupports* aContext) {
 
     channel->GetEffectiveURL(effectiveURL);
     encrypted = channel->IsEncrypted();
+    httpChannelId = channel->HttpChannelId();
   }
-  if (!mIPCOpen ||
-      !SendOnStart(protocol, extensions, effectiveURL, encrypted)) {
+  if (!mIPCOpen || !SendOnStart(protocol, extensions, effectiveURL, encrypted,
+                                httpChannelId)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
