@@ -16,6 +16,7 @@
 
 #include "builtin/TypedObject.h"
 #include "jit/BaselineICList.h"
+#include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
 #include "jit/ICStubSpace.h"
 #include "jit/IonCode.h"
@@ -195,6 +196,9 @@ class JitRuntime {
   WriteOnceData<JitCode*> baselineDebugModeOSRHandler_;
   WriteOnceData<void*> baselineDebugModeOSRHandlerNoFrameRegPopAddr_;
 
+  // BaselineInterpreter state.
+  BaselineInterpreter baselineInterpreter_;
+
   // Code for trampolines and VMFunction wrappers.
   WriteOnceData<JitCode*> trampolineCode_;
 
@@ -325,6 +329,8 @@ class JitRuntime {
   JitCode* debugTrapHandler(JSContext* cx);
   JitCode* getBaselineDebugModeOSRHandler(JSContext* cx);
   void* getBaselineDebugModeOSRHandlerAddress(JSContext* cx, bool popFrameReg);
+
+  BaselineInterpreter& baselineInterpreter() { return baselineInterpreter_; }
 
   TrampolinePtr getGenericBailoutHandler() const {
     return trampolineCode(bailoutHandlerOffset_);

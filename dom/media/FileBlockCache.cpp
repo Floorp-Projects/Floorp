@@ -125,11 +125,9 @@ void FileBlockCache::Flush() {
   }));
 }
 
-int32_t FileBlockCache::GetMaxBlocks() const {
+size_t FileBlockCache::GetMaxBlocks(size_t aCacheSizeInKB) const {
   // We look up the cache size every time. This means dynamic changes
   // to the pref are applied.
-  const uint32_t cacheSizeKb =
-      std::min(StaticPrefs::MediaCacheSize(), uint32_t(INT32_MAX) * 2);
   // Ensure we can divide BLOCK_SIZE by 1024.
   static_assert(MediaCacheStream::BLOCK_SIZE % 1024 == 0,
                 "BLOCK_SIZE should be a multiple of 1024");
@@ -140,14 +138,13 @@ int32_t FileBlockCache::GetMaxBlocks() const {
   static_assert(MediaCacheStream::BLOCK_SIZE / 1024 <= int64_t(UINT32_MAX),
                 "BLOCK_SIZE / 1024 should be at most UINT32_MAX");
   // Since BLOCK_SIZE is a strict multiple of 1024,
-  // cacheSizeKb * 1024 / BLOCK_SIZE == cacheSizeKb / (BLOCK_SIZE / 1024),
-  // but the latter formula avoids a potential overflow from `* 1024`.
+  // aCacheSizeInKB * 1024 / BLOCK_SIZE == aCacheSizeInKB / (BLOCK_SIZE /
+  // 1024), but the latter formula avoids a potential overflow from `* 1024`.
   // And because BLOCK_SIZE/1024 is at least 2, the maximum cache size
   // INT32_MAX*2 will give a maxBlocks that can fit in an int32_t.
-  constexpr uint32_t blockSizeKb =
-      uint32_t(MediaCacheStream::BLOCK_SIZE / 1024);
-  const int32_t maxBlocks = int32_t(cacheSizeKb / blockSizeKb);
-  return std::max(maxBlocks, int32_t(1));
+  constexpr size_t blockSizeKb = size_t(MediaCacheStream::BLOCK_SIZE / 1024);
+  const size_t maxBlocks = aCacheSizeInKB / blockSizeKb;
+  return std::max(maxBlocks, size_t(1));
 }
 
 FileBlockCache::FileBlockCache()

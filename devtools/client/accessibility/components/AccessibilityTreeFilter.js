@@ -79,6 +79,7 @@ class AccessibilityTreeFilter extends Component {
 
     return div({
       role: "toolbar",
+      className: "accessibility-tree-filters",
     },
       L10N.getStr("accessibility.tree.filters"),
       ...filterButtons);

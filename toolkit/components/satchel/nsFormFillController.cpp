@@ -33,7 +33,7 @@
 #include "nsIContentViewer.h"
 #include "nsIContent.h"
 #include "nsRect.h"
-#include "nsILoginManager.h"
+#include "nsILoginAutoCompleteSearch.h"
 #include "nsToolkitCompsCID.h"
 #include "nsEmbedCID.h"
 #include "nsContentUtils.h"
@@ -65,7 +65,7 @@ static nsIFormAutoComplete* GetFormAutoComplete() {
   return sInstance;
 }
 
-NS_IMPL_CYCLE_COLLECTION(nsFormFillController, mController, mLoginManager,
+NS_IMPL_CYCLE_COLLECTION(nsFormFillController, mController, mLoginManagerAC,
                          mLoginReputationService, mFocusedPopup, mDocShells,
                          mPopups, mLastListener, mLastFormAutoComplete)
 
@@ -298,8 +298,8 @@ nsFormFillController::MarkAsLoginManagerField(HTMLInputElement* aInput) {
     }
   }
 
-  if (!mLoginManager) {
-    mLoginManager = do_GetService("@mozilla.org/login-manager;1");
+  if (!mLoginManagerAC) {
+    mLoginManagerAC = do_GetService("@mozilla.org/login-manager/autocompletesearch;1");
   }
 
   return NS_OK;
@@ -707,19 +707,18 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
     // Handle the case where a password field is focused but
     // MarkAsLoginManagerField wasn't called because password manager is
     // disabled.
-    if (!mLoginManager) {
-      mLoginManager = do_GetService("@mozilla.org/login-manager;1");
+    if (!mLoginManagerAC) {
+      mLoginManagerAC = do_GetService("@mozilla.org/login-manager/autocompletesearch;1");
     }
 
-    if (NS_WARN_IF(!mLoginManager)) {
+    if (NS_WARN_IF(!mLoginManagerAC)) {
       return NS_ERROR_FAILURE;
     }
 
     // XXX aPreviousResult shouldn't ever be a historyResult type, since we're
     // not letting satchel manage the field?
     mLastListener = aListener;
-    rv = mLoginManager->AutoCompleteSearchAsync(aSearchString, aPreviousResult,
-                                                mFocusedInput, this);
+    rv = mLoginManagerAC->StartSearch(aSearchString, aPreviousResult, mFocusedInput, this);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch: non-login field"));
@@ -800,8 +799,8 @@ nsFormFillController::StopSearch() {
   if (mLastFormAutoComplete) {
     mLastFormAutoComplete->StopAutoCompleteSearch();
     mLastFormAutoComplete = nullptr;
-  } else if (mLoginManager) {
-    mLoginManager->StopSearch();
+  } else if (mLoginManagerAC) {
+    mLoginManagerAC->StopSearch();
   }
   return NS_OK;
 }

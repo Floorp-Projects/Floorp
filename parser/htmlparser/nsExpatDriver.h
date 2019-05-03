@@ -49,6 +49,8 @@ class nsExpatDriver : public nsIDTD, public nsITokenizer {
                                   const char16_t* aPubid,
                                   bool aHasInternalSubset);
   nsresult HandleEndDoctypeDecl();
+  void HandleEntityDecl(const char16_t* aEntityName,
+                        const char16_t* aEntityValue, const uint32_t aLength);
 
  private:
   // Load up an external stream to get external entity information
