@@ -351,9 +351,6 @@ class TypeNewScript {
   bool rollbackPartiallyInitializedObjects(JSContext* cx, ObjectGroup* group);
 
   static bool make(JSContext* cx, ObjectGroup* group, JSFunction* fun);
-  static TypeNewScript* makeNativeVersion(JSContext* cx,
-                                          TypeNewScript* newScript,
-                                          PlainObject* templateObject);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -434,8 +431,6 @@ struct MOZ_RAII AutoEnterAnalysis {
 /////////////////////////////////////////////////////////////////////
 // Interface functions
 /////////////////////////////////////////////////////////////////////
-
-void MarkIteratorUnknownSlow(JSContext* cx);
 
 void TypeMonitorCallSlow(JSContext* cx, JSObject* callee, const CallArgs& args,
                          bool constructing);
