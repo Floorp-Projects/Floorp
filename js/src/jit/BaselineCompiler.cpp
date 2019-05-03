@@ -349,13 +349,13 @@ MethodStatus BaselineCompiler::compile() {
             baselineScript.get());
 
     // Generate profiling string.
-    char* str = JitcodeGlobalEntry::createScriptString(cx, script);
+    UniqueChars str = GeckoProfilerRuntime::allocProfileString(cx, script);
     if (!str) {
       return Method_Error;
     }
 
     JitcodeGlobalEntry::BaselineEntry entry;
-    entry.init(code, code->raw(), code->rawEnd(), script, str);
+    entry.init(code, code->raw(), code->rawEnd(), script, str.release());
 
     JitcodeGlobalTable* globalTable =
         cx->runtime()->jitRuntime()->getJitcodeGlobalTable();

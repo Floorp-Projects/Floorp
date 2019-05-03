@@ -40,7 +40,7 @@ inline bool probes::EnterScript(JSContext* cx, JSScript* script,
 
   JSRuntime* rt = cx->runtime();
   if (rt->geckoProfiler().enabled()) {
-    if (!cx->geckoProfiler().enter(cx, script, maybeFun)) {
+    if (!cx->geckoProfiler().enter(cx, script)) {
       return false;
     }
     MOZ_ASSERT_IF(!fp->script()->isGenerator() && !fp->script()->isAsync(),
@@ -64,7 +64,7 @@ inline void probes::ExitScript(JSContext* cx, JSScript* script,
 #endif
 
   if (popProfilerFrame) {
-    cx->geckoProfiler().exit(script, maybeFun);
+    cx->geckoProfiler().exit(cx, script);
   }
 }
 
