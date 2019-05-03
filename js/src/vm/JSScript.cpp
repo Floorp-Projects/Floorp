@@ -2186,25 +2186,6 @@ MOZ_MUST_USE bool ScriptSource::setBinASTSourceCopy(JSContext* cx,
   return true;
 }
 
-MOZ_MUST_USE bool ScriptSource::initializeBinAST(
-    JSContext* cx, UniqueChars&& buf, size_t len,
-    MutableHandle<UniquePtr<frontend::BinASTSourceMetadata>> metadata) {
-  MOZ_ASSERT(data.is<Missing>(),
-             "should only be initializing a fresh ScriptSource");
-  MOZ_ASSERT(binASTMetadata_ == nullptr, "shouldn't have BinAST metadata yet");
-
-  auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
-  auto deduped = cache.getOrCreate(std::move(buf), len);
-  if (!deduped) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  data = SourceType(BinAST(std::move(*deduped)));
-  binASTMetadata_ = std::move(metadata.get());
-  return true;
-}
-
 const uint8_t* ScriptSource::binASTSource() {
   MOZ_ASSERT(hasBinASTSource());
   return reinterpret_cast<const uint8_t*>(data.as<BinAST>().string.chars());
@@ -2764,14 +2745,22 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
   MOZ_TRY(xdr->codeUint32(&binASTLength));
 
   // XDR the BinAST data.
-  UniquePtr<char[], JS::FreePolicy> bytes;
+  Maybe<SharedImmutableString> binASTData;
   if (mode == XDR_DECODE) {
-    bytes =
-        xdr->cx()->template make_pod_array<char>(Max<size_t>(binASTLength, 1));
+    auto bytes = xdr->cx()->template make_pod_array<char>(Max<size_t>(
+        binASTLength, 1));
     if (!bytes) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
     MOZ_TRY(xdr->codeBytes(bytes.get(), binASTLength));
+
+    auto& cache =
+        xdr->cx()->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
+    binASTData = cache.getOrCreate(std::move(bytes), binASTLength);
+    if (!binASTData) {
+      ReportOutOfMemory(xdr->cx());
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
   } else {
     void* bytes = ss->binASTData();
     MOZ_TRY(xdr->codeBytes(bytes, binASTLength));
@@ -2830,7 +2819,7 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
     JSAtom** atomsBase = binASTMetadata->atomsBase();
     auto slices = binASTMetadata->sliceBase();
     const char* sourceBase =
-        mode == XDR_ENCODE ? ss->data.as<BinAST>().string.chars() : bytes.get();
+        (mode == XDR_ENCODE ? ss->data.as<BinAST>().string : *binASTData).chars();
 
     for (uint32_t i = 0; i < numStrings; i++) {
       uint8_t isNull;
@@ -2867,14 +2856,21 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
   }
 
   if (mode == XDR_DECODE) {
+    MOZ_ASSERT(binASTData.isSome());
     MOZ_ASSERT(freshMetadata != nullptr);
-    if (!ss->initializeBinAST(xdr->cx(), std::move(bytes), binASTLength,
-                              &freshMetadata)) {
-      return xdr->fail(JS::TranscodeResult_Throw);
-    }
+
+    MOZ_ASSERT(ss->data.is<Missing>(),
+               "should only be initializing a fresh ScriptSource");
+    MOZ_ASSERT(ss->binASTMetadata_ == nullptr,
+               "shouldn't have BinAST metadata yet");
+
+    ss->data = SourceType(BinAST(std::move(*binASTData)));
+    ss->binASTMetadata_ = std::move(freshMetadata.get());
   }
 
+  MOZ_ASSERT(binASTData.isNothing());
   MOZ_ASSERT(freshMetadata == nullptr);
+  MOZ_ASSERT(ss->data.is<BinAST>());
 
   return Ok();
 #endif  // !defined(JS_BUILD_BINAST)
