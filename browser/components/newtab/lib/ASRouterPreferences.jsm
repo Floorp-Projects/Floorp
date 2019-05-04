@@ -27,12 +27,17 @@ const USER_PREFERENCES = {
   cfrFeatures: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
 };
 
-const TEST_PROVIDER = {
+const TEST_PROVIDERS = [{
   id: "snippets_local_testing",
   type: "local",
   localProvider: "SnippetsTestMessageProvider",
   enabled: true,
-};
+}, {
+  id: "panel_local_testing",
+  type: "local",
+  localProvider: "PanelTestProvider",
+  enabled: true,
+}];
 
 class _ASRouterPreferences {
   constructor() {
@@ -79,7 +84,7 @@ class _ASRouterPreferences {
       const config = this._getProviderConfig();
       const providers = config.map(provider => Object.freeze(provider));
       if (this.devtoolsEnabled) {
-        providers.unshift(TEST_PROVIDER);
+        providers.unshift(...TEST_PROVIDERS);
       }
       this._providers = Object.freeze(providers);
     }
@@ -112,16 +117,6 @@ class _ASRouterPreferences {
       this._devtoolsEnabled = Services.prefs.getBoolPref(this._devtoolsPref, false);
     }
     return this._devtoolsEnabled;
-  }
-
-  get specialConditions() {
-    let allowLegacySnippets = true;
-    for (const provider of this.providers) {
-      if (provider.id === "snippets" && provider.enabled) {
-        allowLegacySnippets = false;
-      }
-    }
-    return {allowLegacySnippets};
   }
 
   observe(aSubject, aTopic, aPrefName) {
@@ -192,6 +187,6 @@ class _ASRouterPreferences {
 this._ASRouterPreferences = _ASRouterPreferences;
 
 this.ASRouterPreferences = new _ASRouterPreferences();
-this.TEST_PROVIDER = TEST_PROVIDER;
+this.TEST_PROVIDERS = TEST_PROVIDERS;
 
-const EXPORTED_SYMBOLS = ["_ASRouterPreferences", "ASRouterPreferences", "TEST_PROVIDER"];
+const EXPORTED_SYMBOLS = ["_ASRouterPreferences", "ASRouterPreferences", "TEST_PROVIDERS"];

@@ -296,7 +296,7 @@ function ASRouterUserEvent(data) {
 /**
  * DiscoveryStreamSpocsFill - A telemetry ping indicating a SPOCS Fill event.
  *
- * @param  {object} data Fields to include in the ping (spocs_fills, etc.)
+ * @param  {object} data Fields to include in the ping (spoc_fills, etc.)
  * @param  {int} importContext (For testing) Override the import context for testing.
  * @return {object} An AlsoToMain action
  */

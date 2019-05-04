@@ -8,6 +8,9 @@ describe("BookmarkPanelHub", () => {
   let fakeAddImpression;
   let fakeHandleMessageRequest;
   let fakeL10n;
+  let fakeMessage;
+  let fakeTarget;
+  let fakeContainer;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     globals = new GlobalOverrider();
@@ -19,6 +22,39 @@ describe("BookmarkPanelHub", () => {
     instance = new _BookmarkPanelHub();
     fakeAddImpression = sandbox.stub();
     fakeHandleMessageRequest = sandbox.stub();
+    fakeMessage = {
+      text: "text",
+      title: "title",
+      link: {
+        url: "url",
+        text: "text",
+      },
+      color: "white",
+      background_color_1: "#7d31ae",
+      background_color_2: "#5033be",
+      info_icon: {tooltiptext: "cfr-bookmark-tooltip-text"},
+      close_button: {tooltiptext: "cfr-bookmark-tooltip-text"},
+    };
+    fakeContainer = {
+      addEventListener: sandbox.stub(),
+      setAttribute: sandbox.stub(),
+      classList: {add: sandbox.stub()},
+      appendChild: sandbox.stub(),
+      children: [],
+      style: {},
+    };
+    fakeTarget = {
+      document: {
+        createElementNS: sandbox.stub().returns(fakeContainer),
+      },
+      container: {
+        querySelector: sandbox.stub(),
+        appendChild: sandbox.stub(),
+      },
+      hidePopup: sandbox.stub(),
+      infoButton: {},
+      close: sandbox.stub(),
+    };
   });
   afterEach(() => {
     instance.uninit();
@@ -52,16 +88,16 @@ describe("BookmarkPanelHub", () => {
       sandbox.restore();
     });
     it("should not re-request messages for the same URL", async () => {
-      const fakeTarget = {url: "foo.com"};
-      instance._response = {url: "foo.com"};
+      instance._response = {url: "foo.com", content: true};
+      fakeTarget.url = "foo.com";
+      sandbox.stub(instance, "showMessage");
 
       await instance.messageRequest(fakeTarget);
 
       assert.notCalled(fakeHandleMessageRequest);
+      assert.calledOnce(instance.showMessage);
     });
     it("should call handleMessageRequest", async () => {
-      const fakeMessage = {};
-      const fakeTarget = {};
       fakeHandleMessageRequest.resolves(fakeMessage);
 
       await instance.messageRequest(fakeTarget, {});
@@ -70,8 +106,6 @@ describe("BookmarkPanelHub", () => {
       assert.calledWithExactly(fakeHandleMessageRequest, instance._trigger);
     });
     it("should call onResponse", async () => {
-      const fakeMessage = {};
-      const fakeTarget = {};
       fakeHandleMessageRequest.resolves(fakeMessage);
 
       await instance.messageRequest(fakeTarget, {});
@@ -81,7 +115,6 @@ describe("BookmarkPanelHub", () => {
     });
   });
   describe("#onResponse", () => {
-    let fakeTarget;
     beforeEach(() => {
       sandbox.stub(instance, "showMessage");
       sandbox.stub(instance, "sendImpression");
@@ -102,43 +135,11 @@ describe("BookmarkPanelHub", () => {
       assert.calledWithExactly(instance.hideMessage, fakeTarget);
     });
   });
-  describe("#showMessage", () => {
-    let fakeTarget;
-    let fakeContainer;
-    const fakeMessage = {
-      text: "text",
-      title: "title",
-      link: {
-        url: "url",
-        text: "text",
-      },
-      color: "white",
-      background_color_1: "#7d31ae",
-      background_color_2: "#5033be",
-      info_icon: {tooltiptext: "cfr-bookmark-tooltip-text"},
-      close_button: {tooltiptext: "cfr-bookmark-tooltip-text"},
-    };
+  describe("#showMessage.collapsed=false", () => {
     beforeEach(() => {
       sandbox.stub(instance, "toggleRecommendation");
+      sandbox.stub(instance, "_response").value({collapsed: false});
       instance.init(fakeHandleMessageRequest, fakeAddImpression);
-      fakeContainer = {
-        addEventListener: sandbox.stub(),
-        setAttribute: sandbox.stub(),
-        classList: {add: sandbox.stub()},
-        appendChild: sandbox.stub(),
-        children: [],
-        style: {},
-      };
-      fakeTarget = {
-        document: {
-          createElementNS: sandbox.stub().returns(fakeContainer),
-        },
-        container: {
-          querySelector: sandbox.stub(),
-          appendChild: sandbox.stub(),
-        },
-        hidePopup: sandbox.stub(),
-      };
     });
     it("should create a container", () => {
       fakeTarget.container.querySelector.returns(false);
@@ -165,6 +166,22 @@ describe("BookmarkPanelHub", () => {
 
       assert.calledOnce(windowStub.ownerGlobal.openLinkIn);
     });
+    it("should collapse the message", () => {
+      fakeTarget.container.querySelector.returns(false);
+      sandbox.spy(instance, "collapseMessage");
+      instance._response.collapsed = false;
+
+      instance.showMessage(fakeMessage, fakeTarget);
+      // Show message calls it once so we need to reset
+      instance.toggleRecommendation.reset();
+      // Call the event listener cb
+      fakeContainer.addEventListener.secondCall.args[1]();
+
+      assert.calledOnce(instance.collapseMessage);
+      assert.calledOnce(fakeTarget.close);
+      assert.isTrue(instance._response.collapsed);
+      assert.calledOnce(instance.toggleRecommendation);
+    });
     it("should call toggleRecommendation `true`", () => {
       instance.showMessage(fakeMessage, fakeTarget);
 
@@ -172,8 +189,19 @@ describe("BookmarkPanelHub", () => {
       assert.calledWithExactly(instance.toggleRecommendation, true);
     });
   });
+  describe("#showMessage.collapsed=true", () => {
+    beforeEach(() => {
+      sandbox.stub(instance, "_response").value({collapsed: true, target: fakeTarget});
+      sandbox.stub(instance, "toggleRecommendation");
+    });
+    it("should return early if the message is collapsed", () => {
+      instance.showMessage();
+
+      assert.calledOnce(instance.toggleRecommendation);
+      assert.calledWithExactly(instance.toggleRecommendation, false);
+    });
+  });
   describe("#hideMessage", () => {
-    let fakeTarget;
     let removeStub;
     beforeEach(() => {
       sandbox.stub(instance, "toggleRecommendation");
@@ -239,7 +267,7 @@ describe("BookmarkPanelHub", () => {
   describe("#_forceShowMessage", () => {
     it("should call showMessage with the correct args", () => {
       const msg = {content: "foo"};
-      const target = {infoButton: {disabled: false}};
+      const target = {infoButton: {disabled: false}, recommendationContainer: {removeAttribute: sandbox.stub()}};
       sandbox.stub(instance, "showMessage");
       sandbox.stub(instance, "_response").value({target, win: "win"});
 
@@ -247,6 +275,17 @@ describe("BookmarkPanelHub", () => {
 
       assert.calledOnce(instance.showMessage);
       assert.calledWithExactly(instance.showMessage, "foo", target, "win");
+    });
+    it("should call toggleRecommendation with true", () => {
+      const msg = {content: "foo"};
+      sandbox.stub(instance, "showMessage");
+      sandbox.stub(instance, "toggleRecommendation");
+      sandbox.stub(instance, "_response").value({fakeTarget, win: "win"});
+
+      instance._forceShowMessage(msg);
+
+      assert.calledOnce(instance.toggleRecommendation);
+      assert.calledWithExactly(instance.toggleRecommendation, true);
     });
   });
   describe("#sendImpression", () => {

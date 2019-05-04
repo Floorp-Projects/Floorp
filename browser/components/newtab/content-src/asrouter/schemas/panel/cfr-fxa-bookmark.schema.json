@@ -61,39 +61,26 @@
         }
       ]
     },
-    "link": {
+    "cta": {
       "description": "Link shown at the bottom of the message, call to action",
-      "properties": {
-        "text": {
-          "description": "Message shown as part of anchor tag",
-          "oneOf": [
-            {
-              "allOf": [
-                {"$ref": "#/definitions/richText"},
-                {"description": "Message to be shown"}
-              ]
-            },
-            {
-              "type": "object",
-              "properties": {
-                "string_id": {
-                  "type": "string",
-                  "description": "Fluent id of localized string"
-                }
-              },
-              "required": ["string_id"]
-            }
-          ] 
-        },
-        "url": {
-          "description": "Value for href attribute of the anchor",
+      "oneOf": [
+        {
           "allOf": [
-            {"$ref": "#/definitions/link_url"},
-            {"description": "Link that opens in a new tab"}
+            {"$ref": "#/definitions/richText"},
+            {"description": "Message to be shown"}
           ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string",
+              "description": "Fluent id of localized string"
+            }
+          },
+          "required": ["string_id"]
         }
-      },
-      "required": ["text", "url"]
+      ]
     },
     "info_icon": {
       "type": "object",
@@ -121,8 +108,56 @@
         }
       },
       "required": ["tooltiptext"]
+    },
+    "close_button": {
+      "type": "object",
+      "description": "The small dissmiss icon displayed in the top right corner of the message. Not configurable, only the tooltip text." ,
+      "properties": {
+        "tooltiptext": {
+          "oneOf": [
+            {
+              "allOf": [
+                {"$ref": "#/definitions/plainText"},
+                {"description": "Message to be shown"}
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "string_id": {
+                  "type": "string",
+                  "description": "Fluent id of localized string"
+                }
+              },
+              "required": ["string_id"]
+            }
+          ]
+        }
+      },
+      "required": ["tooltiptext"]
+    },
+    "color": {
+      "description": "Message text color",
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Valid CSS color"}
+      ]
+    },
+    "background_color_1": {
+      "description": "Configurable background color through CSS gradient",
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Valid CSS color"}
+      ]
+    },
+    "background_color_2": {
+      "description": "Configurable background color through CSS gradient",
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Valid CSS color"}
+      ]
     }
   },
   "additionalProperties": false,
-  "required": ["title", "text", "link", "info_icon"]
+  "required": ["title", "text", "cta", "info_icon"]
 }

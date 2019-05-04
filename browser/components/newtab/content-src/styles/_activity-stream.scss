@@ -13,6 +13,10 @@ body,
   min-height: 100vh;
 }
 
+#root { // sass-lint:disable-line no-ids
+  position: relative;
+}
+
 body {
   background-color: var(--newtab-background-color);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
