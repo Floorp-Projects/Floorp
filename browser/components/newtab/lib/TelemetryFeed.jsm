@@ -346,6 +346,10 @@ this.TelemetryFeed = class TelemetryFeed {
 
     if (session.perf.visibility_event_rcvd_ts) {
       session.session_duration = Math.round(perfService.absNow() - session.perf.visibility_event_rcvd_ts);
+    } else {
+      // This session was never shown (i.e. the hidden preloaded newtab), there was no user session either.
+      this.sessions.delete(portID);
+      return;
     }
 
     let sessionEndEvent = this.createSessionEndEvent(session);
@@ -844,7 +848,7 @@ this.TelemetryFeed = class TelemetryFeed {
    */
   handleDiscoveryStreamSpocsFill(data) {
     const payload = this.createSpocsFillPing(data);
-    this.sendStructuredIngestionEvent(payload, "spocs-fills", "1");
+    this.sendStructuredIngestionEvent(payload, "spoc-fills", "1");
   }
 
   /**

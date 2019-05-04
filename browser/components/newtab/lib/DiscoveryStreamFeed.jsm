@@ -5,6 +5,7 @@
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {NewTabUtils} = ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
+const {setTimeout, clearTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 ChromeUtils.defineModuleGetter(this, "perfService", "resource://activity-stream/common/PerfService.jsm");
@@ -22,6 +23,7 @@ const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
 const MIN_DOMAIN_AFFINITIES_UPDATE_TIME = 12 * 60 * 60 * 1000; // 12 hours
 const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
 const DEFAULT_MAX_HISTORY_QUERY_RESULTS = 1000;
+const FETCH_TIMEOUT = 45 * 1000;
 const PREF_CONFIG = "discoverystream.config";
 const PREF_ENDPOINTS = "discoverystream.endpoints";
 const PREF_OPT_OUT = "discoverystream.optOut.0";
@@ -141,10 +143,17 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         throw new Error(`Not one of allowed prefixes (${allowed})`);
       }
 
-      const response = await fetch(endpoint, {credentials: "omit"});
+      const controller = new AbortController();
+      const {signal} = controller;
+      const fetchPromise = fetch(endpoint, {credentials: "omit", signal});
+      // istanbul ignore next
+      const timeoutId = setTimeout(() => { controller.abort(); }, FETCH_TIMEOUT);
+
+      const response = await fetchPromise;
       if (!response.ok) {
         throw new Error(`Unexpected status (${response.status})`);
       }
+      clearTimeout(timeoutId);
       return response.json();
     } catch (error) {
       Cu.reportError(`Failed to fetch ${endpoint}: ${error.message}`);
@@ -228,19 +237,19 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   async loadLayout(sendUpdate, isStartup) {
     let layout = {};
-    if (this.config.hardcoded_layout) {
-      layout = {lastUpdate: Date.now(), ...defaultLayoutResp};
-    } else {
+    if (!this.config.hardcoded_layout) {
       layout = await this.fetchLayout(isStartup);
     }
 
-    if (layout && layout.layout) {
-      sendUpdate({
-        type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
-        data: layout,
-      });
+    if (!layout || !layout.layout) {
+      layout = {lastUpdate: Date.now(), ...defaultLayoutResp};
     }
-    if (layout && layout.spocs && layout.spocs.url) {
+
+    sendUpdate({
+      type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
+      data: layout,
+    });
+    if (layout.spocs && layout.spocs.url) {
       sendUpdate({
         type: at.DISCOVERY_STREAM_SPOCS_ENDPOINT,
         data: layout.spocs.url,
@@ -388,7 +397,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     // We can have no data if spocs set to off.
     // We can have no data if request fails and there is no good cache.
     // We want to send an update spocs or not, so client can render something.
-    spocs = spocs || {
+    spocs = spocs && spocs.data ? spocs : {
       lastUpdated: Date.now(),
       data: {},
     };

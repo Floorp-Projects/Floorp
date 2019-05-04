@@ -112,7 +112,7 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
   // all other SPOCS that never went through the probabilistic selection, its reason will
   // be "out_of_position".
   let spocsFill = [];
-  if (spocs.data && spocs.data.spocs) {
+  if (spocs.data.spocs) {
     const chosenSpocsFill = [...chosenSpocs]
       .map(spoc => ({id: spoc.id, reason: "n/a", displayed: 1, full_recalc: 0}));
     const unchosenSpocsFill = [...unchosenSpocs]

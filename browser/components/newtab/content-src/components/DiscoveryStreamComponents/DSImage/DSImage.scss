@@ -2,7 +2,8 @@
   display: block;
   position: relative;
 
-  img {
+  img,
+  .broken-image {
     background-color: var(--newtab-card-placeholder-color);
     position: absolute;
     top: 0;

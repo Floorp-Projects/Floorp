@@ -22,6 +22,7 @@ class _BookmarkPanelHub {
 
     this.messageRequest = this.messageRequest.bind(this);
     this.toggleRecommendation = this.toggleRecommendation.bind(this);
+    this.collapseMessage = this.collapseMessage.bind(this);
   }
 
   /**
@@ -56,8 +57,9 @@ class _BookmarkPanelHub {
    * @returns {obj|null} response object or null if no messages matched
    */
   async messageRequest(target, win) {
-    if (this._response && this._response.url === target.url) {
-      return this.onResponse(this._response, target, win);
+    if (this._response && this._response.url === target.url && this._response.content) {
+      this.showMessage(this._response.content, target, win);
+      return true;
     }
 
     const response = await this._handleMessageRequest(this._trigger);
@@ -72,6 +74,7 @@ class _BookmarkPanelHub {
   onResponse(response, target, win) {
     this._response = {
       ...response,
+      collapsed: false,
       target,
       win,
       url: target.url,
@@ -90,6 +93,11 @@ class _BookmarkPanelHub {
   }
 
   showMessage(message, target, win) {
+    if (this._response.collapsed) {
+      this.toggleRecommendation(false);
+      return;
+    }
+
     const createElement = elem => target.document.createElementNS("http://www.w3.org/1999/xhtml", elem);
 
     if (!target.container.querySelector("#cfrMessageContainer")) {
@@ -110,7 +118,10 @@ class _BookmarkPanelHub {
       close.setAttribute("id", "cfrClose");
       close.setAttribute("aria-label", "close");
       this._l10n.setAttributes(close, message.close_button.tooltiptext);
-      close.addEventListener("click", target.close);
+      close.addEventListener("click", e => {
+        this.collapseMessage();
+        target.close(e);
+      });
       const title = createElement("h1");
       title.setAttribute("id", "editBookmarkPanelRecommendationTitle");
       this._l10n.setAttributes(title, message.title);
@@ -133,12 +144,24 @@ class _BookmarkPanelHub {
 
   toggleRecommendation(visible) {
     const {target} = this._response;
-    target.infoButton.checked = visible !== undefined ? !!visible : !target.infoButton.checked;
+    if (visible === undefined) {
+      // When called from the info button of the bookmark panel
+      target.infoButton.checked = !target.infoButton.checked;
+    } else {
+      target.infoButton.checked = visible;
+    }
     if (target.infoButton.checked) {
+      // If it was ever collapsed we need to cancel the state
+      this._response.collapsed = false;
       target.recommendationContainer.removeAttribute("disabled");
     } else {
       target.recommendationContainer.setAttribute("disabled", "disabled");
     }
+  }
+
+  collapseMessage() {
+    this._response.collapsed = true;
+    this.toggleRecommendation(false);
   }
 
   hideMessage(target) {
@@ -147,11 +170,12 @@ class _BookmarkPanelHub {
       container.remove();
     }
     this.toggleRecommendation(false);
+    this._response = null;
   }
 
   _forceShowMessage(message) {
+    this.toggleRecommendation(true);
     this.showMessage(message.content, this._response.target, this._response.win);
-    this._response.target.infoButton.disabled = false;
   }
 
   sendImpression() {
