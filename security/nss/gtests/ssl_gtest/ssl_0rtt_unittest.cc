@@ -649,6 +649,227 @@ TEST_P(TlsConnectTls13, ZeroRttOrdering) {
   EXPECT_EQ(2U, step);
 }
 
+// Early data remains available after the handshake completes for TLS.
+TEST_F(TlsConnectStreamTls13, ZeroRttLateReadTls) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  client_->Handshake();  // ClientHello
+
+  // Write some early data.
+  const uint8_t data[] = {1, 2, 3, 4, 5, 6, 7, 8};
+  PRInt32 rv = PR_Write(client_->ssl_fd(), data, sizeof(data));
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data)), rv);
+
+  // Consume the ClientHello and generate ServerHello..Finished.
+  server_->Handshake();
+
+  // Read some of the data.
+  std::vector<uint8_t> small_buffer(1 + sizeof(data) / 2);
+  rv = PR_Read(server_->ssl_fd(), small_buffer.data(), small_buffer.size());
+  EXPECT_EQ(static_cast<PRInt32>(small_buffer.size()), rv);
+  EXPECT_EQ(0, memcmp(data, small_buffer.data(), small_buffer.size()));
+
+  Handshake();  // Complete the handshake.
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+
+  // After the handshake, it should be possible to read the remainder.
+  uint8_t big_buf[100];
+  rv = PR_Read(server_->ssl_fd(), big_buf, sizeof(big_buf));
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data) - small_buffer.size()), rv);
+  EXPECT_EQ(0, memcmp(&data[small_buffer.size()], big_buf,
+                      sizeof(data) - small_buffer.size()));
+
+  // And that's all there is to read.
+  rv = PR_Read(server_->ssl_fd(), big_buf, sizeof(big_buf));
+  EXPECT_GT(0, rv);
+  EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PORT_GetError());
+}
+
+// Early data that arrives before the handshake can be read after the handshake
+// is complete.
+TEST_F(TlsConnectDatagram13, ZeroRttLateReadDtls) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  client_->Handshake();  // ClientHello
+
+  // Write some early data.
+  const uint8_t data[] = {1, 2, 3};
+  PRInt32 written = PR_Write(client_->ssl_fd(), data, sizeof(data));
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data)), written);
+
+  Handshake();  // Complete the handshake.
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+
+  // Reading at the server should return the early data, which was buffered.
+  uint8_t buf[sizeof(data) + 1] = {0};
+  PRInt32 read = PR_Read(server_->ssl_fd(), buf, sizeof(buf));
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data)), read);
+  EXPECT_EQ(0, memcmp(data, buf, sizeof(data)));
+}
+
+class PacketHolder : public PacketFilter {
+ public:
+  PacketHolder() = default;
+
+  virtual Action Filter(const DataBuffer& input, DataBuffer* output) {
+    packet_ = input;
+    Disable();
+    return DROP;
+  }
+
+  const DataBuffer& packet() const { return packet_; }
+
+ private:
+  DataBuffer packet_;
+};
+
+// Early data that arrives late is discarded for DTLS.
+TEST_F(TlsConnectDatagram13, ZeroRttLateArrivalDtls) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  client_->Handshake();  // ClientHello
+
+  // Write some early data.  Twice, so that we can read bits of it.
+  const uint8_t data[] = {1, 2, 3};
+  PRInt32 written = PR_Write(client_->ssl_fd(), data, sizeof(data));
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data)), written);
+
+  // Block and capture the next packet.
+  auto holder = std::make_shared<PacketHolder>();
+  client_->SetFilter(holder);
+  written = PR_Write(client_->ssl_fd(), data, sizeof(data));
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data)), written);
+  EXPECT_FALSE(holder->enabled()) << "the filter should disable itself";
+
+  // Consume the ClientHello and generate ServerHello..Finished.
+  server_->Handshake();
+
+  // Read some of the data.
+  std::vector<uint8_t> small_buffer(sizeof(data));
+  PRInt32 read =
+      PR_Read(server_->ssl_fd(), small_buffer.data(), small_buffer.size());
+
+  EXPECT_EQ(static_cast<PRInt32>(small_buffer.size()), read);
+  EXPECT_EQ(0, memcmp(data, small_buffer.data(), small_buffer.size()));
+
+  Handshake();  // Complete the handshake.
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+
+  server_->SendDirect(holder->packet());
+
+  // Reading now should return nothing, even though a valid packet was
+  // delivered.
+  read = PR_Read(server_->ssl_fd(), small_buffer.data(), small_buffer.size());
+  EXPECT_GT(0, read);
+  EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PORT_GetError());
+}
+
+// Early data reads in TLS should be coalesced.
+TEST_F(TlsConnectStreamTls13, ZeroRttCoalesceReadTls) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  client_->Handshake();  // ClientHello
+
+  // Write some early data.  In two writes.
+  const uint8_t data[] = {1, 2, 3, 4, 5, 6};
+  PRInt32 written = PR_Write(client_->ssl_fd(), data, 1);
+  EXPECT_EQ(1, written);
+
+  written = PR_Write(client_->ssl_fd(), data + 1, sizeof(data) - 1);
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data) - 1), written);
+
+  // Consume the ClientHello and generate ServerHello..Finished.
+  server_->Handshake();
+
+  // Read all of the data.
+  std::vector<uint8_t> buffer(sizeof(data));
+  PRInt32 read = PR_Read(server_->ssl_fd(), buffer.data(), buffer.size());
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data)), read);
+  EXPECT_EQ(0, memcmp(data, buffer.data(), sizeof(data)));
+
+  Handshake();  // Complete the handshake.
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+}
+
+// Early data reads in DTLS should not be coalesced.
+TEST_F(TlsConnectDatagram13, ZeroRttNoCoalesceReadDtls) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  client_->Handshake();  // ClientHello
+
+  // Write some early data.  In two writes.
+  const uint8_t data[] = {1, 2, 3, 4, 5, 6};
+  PRInt32 written = PR_Write(client_->ssl_fd(), data, 1);
+  EXPECT_EQ(1, written);
+
+  written = PR_Write(client_->ssl_fd(), data + 1, sizeof(data) - 1);
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data) - 1), written);
+
+  // Consume the ClientHello and generate ServerHello..Finished.
+  server_->Handshake();
+
+  // Try to read all of the data.
+  std::vector<uint8_t> buffer(sizeof(data));
+  PRInt32 read = PR_Read(server_->ssl_fd(), buffer.data(), buffer.size());
+  EXPECT_EQ(1, read);
+  EXPECT_EQ(0, memcmp(data, buffer.data(), 1));
+
+  // Read the remainder.
+  read = PR_Read(server_->ssl_fd(), buffer.data(), buffer.size());
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data) - 1), read);
+  EXPECT_EQ(0, memcmp(data + 1, buffer.data(), sizeof(data) - 1));
+
+  Handshake();  // Complete the handshake.
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+}
+
+// Early data reads in DTLS should fail if the buffer is too small.
+TEST_F(TlsConnectDatagram13, ZeroRttShortReadDtls) {
+  SetupForZeroRtt();
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  client_->Handshake();  // ClientHello
+
+  // Write some early data.  In two writes.
+  const uint8_t data[] = {1, 2, 3, 4, 5, 6};
+  PRInt32 written = PR_Write(client_->ssl_fd(), data, sizeof(data));
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data)), written);
+
+  // Consume the ClientHello and generate ServerHello..Finished.
+  server_->Handshake();
+
+  // Try to read all of the data into a small buffer.
+  std::vector<uint8_t> buffer(sizeof(data));
+  PRInt32 read = PR_Read(server_->ssl_fd(), buffer.data(), 1);
+  EXPECT_GT(0, read);
+  EXPECT_EQ(SSL_ERROR_RX_SHORT_DTLS_READ, PORT_GetError());
+
+  // Read again with more space.
+  read = PR_Read(server_->ssl_fd(), buffer.data(), buffer.size());
+  EXPECT_EQ(static_cast<PRInt32>(sizeof(data)), read);
+  EXPECT_EQ(0, memcmp(data, buffer.data(), sizeof(data)));
+
+  Handshake();  // Complete the handshake.
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+}
+
 #ifndef NSS_DISABLE_TLS_1_3
 INSTANTIATE_TEST_CASE_P(Tls13ZeroRttReplayTest, TlsZeroRttReplayTest,
                         TlsConnectTestBase::kTlsVariantsAll);

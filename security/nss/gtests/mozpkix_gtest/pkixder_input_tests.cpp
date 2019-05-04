@@ -359,6 +359,7 @@ TEST_F(pkixder_input_tests, Skip_WrapAroundPointer)
   // but this should catch the problem on at least some compilers, if not all of
   // them.
   const uint8_t* der = nullptr;
+  // coverity[FORWARD_NULL]
   --der;
   Input buf;
   ASSERT_EQ(Success, buf.Init(der, 0));
