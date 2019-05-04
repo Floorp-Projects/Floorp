@@ -153,7 +153,7 @@ impl RenderTaskTree {
     /// Assign this frame's render tasks to render passes ordered so that passes appear
     /// earlier than the ones that depend on them.
     pub fn generate_passes(
-        &self,
+        &mut self,
         main_render_task: Option<RenderTaskId>,
         screen_size: DeviceIntSize,
         gpu_supports_fast_clears: bool,
@@ -179,6 +179,9 @@ impl RenderTaskTree {
                 &mut passes,
             );
         }
+
+
+        self.resolve_target_conflicts(&mut passes);
 
         passes
     }
@@ -275,6 +278,113 @@ impl RenderTaskTree {
                 task.target_kind(),
                 &task.location,
             );
+        }
+    }
+
+    /// Resolve conflicts between the generated passes and the limitiations of our target
+    /// allocation scheme.
+    ///
+    /// The render task graph operates with a ping-pong target allocation scheme where
+    /// a set of targets is written to by even passes and a different set of targets is
+    /// written to by odd passes.
+    /// Since tasks cannot read and write the same target, we can run into issues if a
+    /// task pass in N + 2 reads the result of a task in pass N.
+    /// To avoid such cases have to insert blit tasks to copy the content of the task
+    /// into pass N + 1 which is readable by pass N + 2.
+    ///
+    /// In addition, allocated rects of pass N are currently not tracked and can be
+    /// overwritten by allocations in later passes on the same target, unless the task
+    /// has been marked for saving, which perserves the allocated rect until the end of
+    /// the frame. This is a big hammer, hopefully we won't need to mark many passes
+    /// for saving. A better solution would be to track allocations through the entire
+    /// graph, there is a prototype of that in https://github.com/nical/toy-render-graph/
+    fn resolve_target_conflicts(&mut self, passes: &mut [RenderPass]) {
+        // Keep track of blit tasks we inserted to avoid adding several blits for the same
+        // task.
+        let mut task_redirects = vec![None; self.tasks.len()];
+
+        let mut task_passes = vec![-1; self.tasks.len()];
+        for pass_index in 0..passes.len() {
+            for task in &passes[pass_index].tasks {
+                task_passes[task.index as usize] = pass_index as i32;
+            }
+        }
+
+        for task_index in 0..self.tasks.len() {
+            if task_passes[task_index] < 0 {
+                // The task doesn't contribute to this frame.
+                continue;
+            }
+
+            let pass_index = task_passes[task_index];
+
+            // Go through each dependency and check whether they belong
+            // to a pass that uses the same targets and/or are more than
+            // one pass behind.
+            for nth_child in 0..self.tasks[task_index].children.len() {
+                let child_task_index = self.tasks[task_index].children[nth_child].index as usize;
+                let child_pass_index = task_passes[child_task_index];
+
+                if child_pass_index == pass_index - 1 {
+                    // This should be the most common case.
+                    continue;
+                }
+
+                if child_pass_index % 2 != pass_index % 2 {
+                    // The tasks and its dependency aren't on the same targets,
+                    // but the dependency needs to be kept alive.
+                    self.tasks[child_task_index].mark_for_saving();
+                    continue;
+                }
+
+                if let Some(blit_id) = task_redirects[child_task_index] {
+                    // We already resolved a similar conflict with a blit task,
+                    // reuse the same blit instead of creating a new one.
+                    self.tasks[task_index].children[nth_child] = blit_id;
+
+                    // Mark for saving if the blit is more than pass appart from
+                    // our task.
+                    if child_pass_index < pass_index - 2 {
+                        self.tasks[blit_id.index as usize].mark_for_saving();
+                    }
+
+                    continue;
+                }
+
+                // Our dependency is an even number of passes behind, need
+                // to insert a blit to ensure we don't read and write from
+                // the same target.
+
+                let task_id = RenderTaskId {
+                    index: child_task_index as u32,
+                    #[cfg(debug_assertions)]
+                    frame_id: self.frame_id,
+                };
+
+                let mut blit = RenderTask::new_blit(
+                    self.tasks[task_index].location.size(),
+                    BlitSource::RenderTask { task_id },
+                );
+
+                // Mark for saving if the blit is more than pass appart from
+                // our task.
+                if child_pass_index < pass_index - 2 {
+                    blit.mark_for_saving();
+                }
+
+                let blit_id = RenderTaskId {
+                    index: self.tasks.len() as u32,
+                    #[cfg(debug_assertions)]
+                    frame_id: self.frame_id,
+                };
+
+                self.tasks.push(blit);
+
+                passes[child_pass_index as usize + 1].tasks.push(blit_id);
+
+                self.tasks[task_index].children[nth_child] = blit_id;
+                task_redirects[task_index] = Some(blit_id);
+            }
         }
     }
 
