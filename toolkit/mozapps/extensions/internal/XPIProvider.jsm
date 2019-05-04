@@ -105,7 +105,7 @@ const XPI_PERMISSION                  = "install";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-const DB_SCHEMA = 29;
+const DB_SCHEMA = 30;
 
 function encoded(strings, ...values) {
   let result = [];
