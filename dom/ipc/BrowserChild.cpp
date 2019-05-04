@@ -30,6 +30,7 @@
 #include "mozilla/dom/PBrowser.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
+#include "mozilla/dom/SessionStoreListener.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/IMEStateManager.h"
@@ -616,6 +617,10 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent) {
     mPuppetWidget->CreateCompositor();
   }
 
+  mSessionStoreListener = new TabListener(docShell, nullptr);
+  rv = mSessionStoreListener->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -967,6 +972,11 @@ void BrowserChild::DestroyWindow() {
   if (mCoalescedMouseEventFlusher) {
     mCoalescedMouseEventFlusher->RemoveObserver();
     mCoalescedMouseEventFlusher = nullptr;
+  }
+
+  if (mSessionStoreListener) {
+    mSessionStoreListener->RemoveListeners();
+    mSessionStoreListener = nullptr;
   }
 
   // In case we don't have chance to process all entries, clean all data in
@@ -1909,6 +1919,12 @@ mozilla::ipc::IPCResult BrowserChild::RecvNativeSynthesisResponse(
     const uint64_t& aObserverId, const nsCString& aResponse) {
   mozilla::widget::AutoObserverNotifier::NotifySavedObserver(aObserverId,
                                                              aResponse.get());
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvFlushTabState(
+    const uint32_t& aFlushId) {
+  UpdateSessionStore(aFlushId);
   return IPC_OK();
 }
 
@@ -3591,6 +3607,33 @@ nsresult BrowserChild::PrepareProgressListenerData(
     }
   }
   return NS_OK;
+}
+
+bool BrowserChild::UpdateSessionStore(uint32_t aFlushId) {
+  if (!mSessionStoreListener) {
+    return false;
+  }
+  RefPtr<ContentSessionStore> store = mSessionStoreListener->GetSessionStore();
+
+  Maybe<nsCString> docShellCaps;
+  if (store->IsDocCapChanged()) {
+    docShellCaps.emplace(store->GetDocShellCaps());
+  }
+
+  Maybe<bool> privatedMode;
+  if (store->IsPrivateChanged()) {
+    privatedMode.emplace(store->GetPrivateModeEnabled());
+  }
+
+  nsTArray<int32_t> positionDescendants;
+  nsTArray<nsCString> positions;
+  if (store->IsScrollPositionChanged()) {
+    store->GetScrollPositions(positions, positionDescendants);
+  }
+
+  Unused << SendSessionStoreUpdate(docShellCaps, privatedMode, positions,
+                                   positionDescendants, aFlushId);
+  return true;
 }
 
 BrowserChildMessageManager::BrowserChildMessageManager(

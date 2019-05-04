@@ -5,12 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'SessionStoreListener.h',
     'SessionStoreUtils.h',
 ]
 
 UNIFIED_SOURCES += [
+    'SessionStoreListener.cpp',
     'SessionStoreUtils.cpp',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 

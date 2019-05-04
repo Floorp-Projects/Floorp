@@ -295,46 +295,6 @@ SessionHistoryListener.prototype.QueryInterface =
                           Ci.nsISupportsWeakReference]);
 
 /**
- * Listens for scroll position changes. Whenever the user scrolls the top-most
- * frame we update the scroll position and will restore it when requested.
- *
- * Causes a SessionStore:update message to be sent that contains the current
- * scroll positions as a tree of strings. If no frame of the whole frame tree
- * is scrolled this will return null so that we don't tack a property onto
- * the tabData object in the parent process.
- *
- * Example:
- *   {scroll: "100,100", children: [null, null, {scroll: "200,200"}]}
- */
-class ScrollPositionListener extends Handler {
-  constructor(store) {
-    super(store);
-
-    SessionStoreUtils.addDynamicFrameFilteredListener(
-        this.mm, "mozvisualscroll", this,
-        /* capture */ false, /* system group */ true);
-
-    this.stateChangeNotifier.addObserver(this);
-  }
-
-  handleEvent() {
-    this.messageQueue.push("scroll", () => this.collect());
-  }
-
-  onPageLoadCompleted() {
-    this.messageQueue.push("scroll", () => this.collect());
-  }
-
-  onPageLoadStarted() {
-    this.messageQueue.push("scroll", () => null);
-  }
-
-  collect() {
-    return SessionStoreUtils.collectScrollPosition(this.mm.content);
-  }
-}
-
-/**
  * Listens for changes to input elements. Whenever the value of an input
  * element changes we will re-collect data for the current frame tree and send
  * a message to the parent process.
@@ -369,39 +329,6 @@ class FormDataListener extends Handler {
 
   collect() {
     return SessionStoreUtils.collectFormData(this.mm.content);
-  }
-}
-
-/**
- * Listens for changes to docShell capabilities. Whenever a new load is started
- * we need to re-check the list of capabilities and send message when it has
- * changed.
- *
- * Causes a SessionStore:update message to be sent that contains the currently
- * disabled docShell capabilities (all nsIDocShell.allow* properties set to
- * false) as a string - i.e. capability names separate by commas.
- */
-class DocShellCapabilitiesListener extends Handler {
-  constructor(store) {
-    super(store);
-
-    /**
-     * This field is used to compare the last docShell capabilities to the ones
-     * that have just been collected. If nothing changed we won't send a message.
-     */
-    this._latestCapabilities = "";
-
-    this.stateChangeNotifier.addObserver(this);
-  }
-
-  onPageLoadStarted() {
-    let caps = SessionStoreUtils.collectDocShellCapabilities(this.mm.docShell);
-
-    // Send new data only when the capability list changes.
-    if (caps != this._latestCapabilities) {
-      this._latestCapabilities = caps;
-      this.messageQueue.push("disallow", () => caps || null);
-    }
   }
 }
 
@@ -535,38 +462,6 @@ class SessionStorageListener extends Handler {
     this.collect();
   }
 }
-
-/**
- * Listen for changes to the privacy status of the tab.
- * By definition, tabs start in non-private mode.
- *
- * Causes a SessionStore:update message to be sent for
- * field "isPrivate". This message contains
- *  |true| if the tab is now private
- *  |null| if the tab is now public - the field is therefore
- *  not saved.
- */
-class PrivacyListener extends Handler {
-  constructor(store) {
-    super(store);
-
-    this.mm.docShell.addWeakPrivacyTransitionObserver(this);
-
-    // Check that value at startup as it might have
-    // been set before the frame script was loaded.
-    if (this.mm.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing) {
-      this.messageQueue.push("isPrivate", () => true);
-    }
-  }
-
-  // Ci.nsIPrivacyTransitionObserver
-  privateModeChanged(enabled) {
-    this.messageQueue.push("isPrivate", () => enabled || null);
-  }
-}
-PrivacyListener.prototype.QueryInterface =
-  ChromeUtils.generateQI([Ci.nsIPrivacyTransitionObserver,
-                          Ci.nsISupportsWeakReference]);
 
 /**
  * A message queue that takes collected data and will take care of sending it
@@ -826,9 +721,6 @@ class ContentSessionStore {
       new FormDataListener(this),
       new SessionHistoryListener(this),
       new SessionStorageListener(this),
-      new ScrollPositionListener(this),
-      new DocShellCapabilitiesListener(this),
-      new PrivacyListener(this),
       this.stateChangeNotifier,
       this.messageQueue,
     ];

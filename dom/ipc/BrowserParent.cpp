@@ -2391,6 +2391,31 @@ void BrowserParent::ReconstructWebProgressAndRequest(
       aRequestData.matchedList());
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
+    const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
+    const nsTArray<nsCString>& aPositions,
+    const nsTArray<int32_t>& aPositionDescendants, const uint32_t& aFlushId) {
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
+  if (!xulBrowserWindow) {
+    return IPC_OK();
+  }
+
+  if (aDocShellCaps.isSome()) {
+    xulBrowserWindow->UpdateDocShellCaps(aDocShellCaps.value());
+  }
+
+  if (aPrivatedMode.isSome()) {
+    xulBrowserWindow->UpdateIsPrivate(aPrivatedMode.value());
+  }
+
+  if (aPositions.Length() != 0) {
+    xulBrowserWindow->UpdateScrollPositions(aPositions, aPositionDescendants);
+  }
+
+  xulBrowserWindow->UpdateSessionStore(mFrameElement, aFlushId);
+  return IPC_OK();
+}
+
 bool BrowserParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
