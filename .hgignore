@@ -129,9 +129,8 @@ _OPT\.OBJ/
 # Ignore tox generated dir
 .tox/
 
-# Ignore ESLint and other tool's node_modules.
+# Ignore ESLint node_modules
 ^node_modules/
-^tools/browsertime/node_modules/
 ^tools/lint/eslint/eslint-plugin-mozilla/node_modules/
 
 # Ignore talos virtualenv and tp5n files.
