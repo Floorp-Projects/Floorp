@@ -637,10 +637,8 @@ nsresult VerifyCertificate(CERTCertificate* signerCert,
     return mozilla::psm::GetXPCOMFromNSSError(MapResultToPRErrorCode(result));
   }
 
-  // 1556333000 seconds since the epoch should be about 2019-04-27T02:43:20.000Z
-  Time verificationTime = TimeFromEpochInSeconds(1556333000);
   result = BuildCertChain(
-      trustDomain, certDER, verificationTime, EndEntityOrCA::MustBeEndEntity,
+      trustDomain, certDER, Now(), EndEntityOrCA::MustBeEndEntity,
       KeyUsage::digitalSignature, KeyPurposeId::id_kp_codeSigning,
       CertPolicyId::anyPolicy, nullptr /*stapledOCSPResponse*/);
   if (result == mozilla::pkix::Result::ERROR_EXPIRED_CERTIFICATE) {
