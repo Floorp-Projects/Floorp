@@ -145,7 +145,7 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.fetchFromEndpoint("https://getpocket.cdn.mozilla.net/dummy?consumer_key=$apiKey");
 
-      assert.calledWith(fetchStub, "https://getpocket.cdn.mozilla.net/dummy?consumer_key=replaced", {credentials: "omit"});
+      assert.calledWithMatch(fetchStub, "https://getpocket.cdn.mozilla.net/dummy?consumer_key=replaced", {credentials: "omit"});
     });
   });
 
@@ -211,6 +211,15 @@ describe("DiscoveryStreamFeed", () => {
       await feed.loadLayout(feed.store.dispatch);
 
       assert.notCalled(feed.fetchLayout);
+      assert.equal(feed.store.getState().DiscoveryStream.spocs.spocs_endpoint, "https://getpocket.cdn.mozilla.net/v3/firefox/unique-spocs?consumer_key=$apiKey");
+    });
+    it("should fetch local layout for invalid layout endpoint or when fetch layout fails", async () => {
+      feed.config.hardcoded_layout = false;
+      fetchStub.resolves({ok: false});
+
+      await feed.loadLayout(feed.store.dispatch, true);
+
+      assert.calledOnce(fetchStub);
       assert.equal(feed.store.getState().DiscoveryStream.spocs.spocs_endpoint, "https://getpocket.cdn.mozilla.net/v3/firefox/unique-spocs?consumer_key=$apiKey");
     });
   });

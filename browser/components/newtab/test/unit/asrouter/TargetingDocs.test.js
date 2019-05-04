@@ -6,6 +6,8 @@ const SKIP_DOCS = [];
 // These are extra message context attributes via ASRouter.jsm
 const MESSAGE_CONTEXT_ATTRIBUTES = [
   "previousSessionEnd",
+  "trailheadInterrupt",
+  "trailheadTriplet",
 ];
 
 function getHeadingsFromDocs() {

@@ -505,7 +505,7 @@ export class ASRouterAdminInner extends React.PureComponent {
 
     return (<table>{this.renderTableHead()}<tbody>
       {providersConfig.map((provider, i) => {
-        const isTestProvider = provider.id === "snippets_local_testing";
+        const isTestProvider = provider.id.includes("_local_testing");
         const info = providerInfo.find(p => p.id === provider.id) || {};
         const isUserEnabled = provider.id in userPrefInfo ? userPrefInfo[provider.id] : true;
         const isSystemEnabled = (isTestProvider || provider.enabled);
@@ -699,6 +699,16 @@ export class ASRouterAdminInner extends React.PureComponent {
     return <p>No errors</p>;
   }
 
+  renderTrailheadInfo() {
+    const {trailheadInterrupt, trailheadTriplet, trailheadInitialized} = this.state;
+    return trailheadInitialized ? (<table className="minimal-table">
+      <tbody>
+        <tr><td>Interrupt branch</td><td>{trailheadInterrupt}</td></tr>
+        <tr><td>Triplet branch</td><td>{trailheadTriplet}</td></tr>
+      </tbody>
+    </table>) : <p>Trailhead is not initialized. To update these values, load about:welcome.</p>;
+  }
+
   getSection() {
     const [section] = this.props.location.routes;
     switch (section) {
@@ -729,6 +739,8 @@ export class ASRouterAdminInner extends React.PureComponent {
         return (<React.Fragment>
           <h2>Message Providers <button title="Restore all provider settings that ship with Firefox" className="button" onClick={this.resetPref}>Restore default prefs</button></h2>
           {this.state.providers ? this.renderProviders() : null}
+          <h2>Trailhead</h2>
+          {this.renderTrailheadInfo()}
           <h2>Messages</h2>
           {this.renderMessageFilter()}
           {this.renderMessages()}

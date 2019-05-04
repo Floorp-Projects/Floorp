@@ -77,7 +77,10 @@ onboarding-fxa-text = Sign up for a { -fxaccount-brand-name } and sync your book
 
 onboarding-tracking-protection-title = Control How You’re Tracked
 onboarding-tracking-protection-text = Don’t like when ads follow you around? { -brand-short-name } helps you control how advertisers track your activity online.
-onboarding-tracking-protection-button = Learn More
+onboarding-tracking-protection-button = { PLATFORM() ->
+  [windows] Update Options
+  *[other] Update Preferences
+}
 
 onboarding-data-sync-title = Take Your Settings with You
 # "Sync" is short for synchronize.

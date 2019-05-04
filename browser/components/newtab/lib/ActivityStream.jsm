@@ -120,7 +120,7 @@ const PREFS_CONFIG = new Map([
   }],
   ["telemetry.structuredIngestion", {
     title: "Enable Structured Ingestion Telemetry data collection",
-    value: AppConstants.EARLY_BETA_OR_EARLIER,
+    value: true,
     value_local_dev: false,
   }],
   ["telemetry.structuredIngestion.endpoint", {

@@ -361,7 +361,7 @@ function ASRouterUserEvent(data) {
 /**
  * DiscoveryStreamSpocsFill - A telemetry ping indicating a SPOCS Fill event.
  *
- * @param  {object} data Fields to include in the ping (spocs_fills, etc.)
+ * @param  {object} data Fields to include in the ping (spoc_fills, etc.)
  * @param  {int} importContext (For testing) Override the import context for testing.
  * @return {object} An AlsoToMain action
  */
@@ -1380,7 +1380,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     const providerInfo = this.state.providers;
     const userPrefInfo = this.state.userPrefs;
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, this.renderTableHead(), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, providersConfig.map((provider, i) => {
-      const isTestProvider = provider.id === "snippets_local_testing";
+      const isTestProvider = provider.id.includes("_local_testing");
       const info = providerInfo.find(p => p.id === provider.id) || {};
       const isUserEnabled = provider.id in userPrefInfo ? userPrefInfo[provider.id] : true;
       const isSystemEnabled = isTestProvider || provider.enabled;
@@ -1612,6 +1612,17 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", null, "No errors");
   }
 
+  renderTrailheadInfo() {
+    const {
+      trailheadInterrupt,
+      trailheadTriplet,
+      trailheadInitialized
+    } = this.state;
+    return trailheadInitialized ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", {
+      className: "minimal-table"
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "Interrupt branch"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, trailheadInterrupt)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tr", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, "Triplet branch"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, trailheadTriplet)))) : react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", null, "Trailhead is not initialized. To update these values, load about:welcome.");
+  }
+
   getSection() {
     const [section] = this.props.location.routes;
 
@@ -1640,7 +1651,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
           title: "Restore all provider settings that ship with Firefox",
           className: "button",
           onClick: this.resetPref
-        }, "Restore default prefs")), this.state.providers ? this.renderProviders() : null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Messages"), this.renderMessageFilter(), this.renderMessages(), this.renderPasteModal());
+        }, "Restore default prefs")), this.state.providers ? this.renderProviders() : null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Trailhead"), this.renderTrailheadInfo(), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Messages"), this.renderMessageFilter(), this.renderMessages(), this.renderPasteModal());
     }
   }
 
@@ -3252,13 +3263,17 @@ module.exports = ReactRedux;
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Trailhead", function() { return Trailhead; });
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_Trailhead", function() { return _Trailhead; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Trailhead", function() { return Trailhead; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
-/* harmony import */ var _components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(15);
-/* harmony import */ var _OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(14);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(11);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
+/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_intl__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(15);
+/* harmony import */ var _OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(14);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(11);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_4__);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
 
 
 
@@ -3268,16 +3283,19 @@ const FLUENT_FILES = ["branding/brand.ftl", "browser/branding/sync-brand.ftl", /
 "browser/newtab/onboarding.ftl", // These are WIP/in-development strings that only get used if the string
 // doesn't already exist in onboarding.ftl above
 "trailhead.ftl"];
-class Trailhead extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent {
+class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.closeModal = this.closeModal.bind(this);
+    this.hideCardPanel = this.hideCardPanel.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.onInputInvalid = this.onInputInvalid.bind(this);
     this.state = {
       emailInput: "",
       isModalOpen: true,
+      showCardPanel: true,
+      showCards: false,
       flowId: "",
       flowBeginTime: 0
     };
@@ -3333,6 +3351,15 @@ class Trailhead extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureCompone
     global.document.body.classList.remove("hide-main"); // Add inline-onboarding class to disable fixed search header and fixed positioned settings icon
 
     global.document.body.classList.add("inline-onboarding");
+
+    if (!this.props.message.content) {
+      // No modal overlay, let the user scroll and deal them some cards.
+      global.document.body.classList.remove("welcome");
+
+      if (this.props.message.includeBundle || this.props.message.cards) {
+        this.revealCards();
+      }
+    }
   }
 
   componentDidUnmount() {
@@ -3362,6 +3389,7 @@ class Trailhead extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureCompone
     this.setState({
       isModalOpen: false
     });
+    this.revealCards();
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
       event: "SKIPPED_SIGNIN",
       ...this._getFormInfo()
@@ -3390,6 +3418,28 @@ class Trailhead extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureCompone
     e.target.focus();
   }
 
+  hideCardPanel() {
+    this.setState({
+      showCardPanel: false
+    });
+  }
+
+  revealCards() {
+    this.setState({
+      showCards: true
+    });
+  }
+
+  getStringValue(str) {
+    if (str.property_id) {
+      str.value = this.props.intl.formatMessage({
+        id: str.property_id
+      });
+    }
+
+    return str.value;
+  }
+
   render() {
     const {
       props
@@ -3398,123 +3448,134 @@ class Trailhead extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureCompone
       bundle: cards,
       content
     } = props.message;
-    return react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_3___default.a.Fragment, null, this.state.isModalOpen && content ? react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_1__["ModalOverlayWrapper"], {
-      innerClassName: `trailhead ${content.className}`,
+    const innerClassName = ["trailhead", content && content.className].filter(v => v).join(" ");
+    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, this.state.isModalOpen && content ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_2__["ModalOverlayWrapper"], {
+      innerClassName: innerClassName,
       onClose: this.closeModal
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "trailheadInner"
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "trailheadContent"
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("h1", {
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h1", {
       "data-l10n-id": content.title.string_id
-    }, content.title.value), content.subtitle && react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("p", {
+    }, this.getStringValue(content.title)), content.subtitle && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
       "data-l10n-id": content.subtitle.string_id
-    }, content.subtitle.value), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("ul", {
+    }, this.getStringValue(content.subtitle)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("ul", {
       className: "trailheadBenefits"
-    }, content.benefits.map(item => react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("li", {
+    }, content.benefits.map(item => react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("li", {
       key: item.id,
       className: item.id
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("h3", {
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", {
       "data-l10n-id": item.title.string_id
-    }, item.title.value), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("p", {
+    }, this.getStringValue(item.title)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
       "data-l10n-id": item.text.string_id
-    }, item.text.value)))), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
+    }, this.getStringValue(item.text))))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       className: "trailheadLearn",
       "data-l10n-id": content.learn.text.string_id,
       href: content.learn.url
-    }, content.learn.text.value)), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    }, this.getStringValue(content.learn.text))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "trailheadForm"
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("h3", {
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", {
       "data-l10n-id": content.form.title.string_id
-    }, content.form.title.value), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("p", {
+    }, this.getStringValue(content.form.title)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
       "data-l10n-id": content.form.text.string_id
-    }, content.form.text.value), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("form", {
+    }, this.getStringValue(content.form.text)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("form", {
       method: "get",
       action: this.props.fxaEndpoint,
       target: "_blank",
       rel: "noopener noreferrer",
       onSubmit: this.onSubmit
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "service",
       type: "hidden",
       value: "sync"
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "action",
       type: "hidden",
       value: "email"
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "context",
       type: "hidden",
       value: "fx_desktop_v3"
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "entrypoint",
       type: "hidden",
       value: "activity-stream-firstrun"
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "utm_source",
       type: "hidden",
       value: "activity-stream"
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "utm_campaign",
       type: "hidden",
       value: "firstrun"
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "utm_term",
       type: "hidden",
       value: "trailhead"
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "flow_id",
       type: "hidden",
       value: this.state.flowId
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "flow_begin_time",
       type: "hidden",
       value: this.state.flowBeginTime
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("p", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
       "data-l10n-id": "onboarding-join-form-email-error",
       className: "error"
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       "data-l10n-id": content.form.email.string_id,
-      placeholder: content.form.email.placeholder,
+      placeholder: this.getStringValue(content.form.email),
       name: "email",
       type: "email",
       required: "true",
       onInvalid: this.onInputInvalid,
       onChange: this.onInputChange
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("p", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
       className: "trailheadTerms",
       "data-l10n-id": "onboarding-join-form-legal"
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       "data-l10n-name": "terms",
       href: "https://accounts.firefox.com/legal/terms"
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       "data-l10n-name": "privacy",
       href: "https://accounts.firefox.com/legal/privacy"
-    })), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
+    })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       "data-l10n-id": content.form.button.string_id,
       type: "submit"
-    }, content.form.button.value)))), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
+    }, this.getStringValue(content.form.button))))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "trailheadStart",
       "data-l10n-id": content.skipButton.string_id,
       onClick: this.closeModal
-    }, content.skipButton.value)) : null, cards && cards.length ? react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: "trailheadCards"
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
+    }, this.getStringValue(content.skipButton))) : null, cards && cards.length ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+      className: `trailheadCards ${this.state.showCardPanel ? "expanded" : "collapsed"}`
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "trailheadCardsInner"
-    }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("h1", {
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h1", {
       "data-l10n-id": "onboarding-welcome-header"
-    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: "trailheadCardGrid"
-    }, cards.map(card => react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_2__["OnboardingCard"], _extends({
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+      className: `trailheadCardGrid${this.state.showCards ? " show" : ""}`
+    }, cards.map(card => react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_3__["OnboardingCard"], _extends({
       key: card.id,
       className: "trailheadCard",
       sendUserActionTelemetry: props.sendUserActionTelemetry,
       onAction: props.onAction,
       UISurface: "TRAILHEAD"
-    }, card)))))) : null);
+    }, card)))), this.state.showCardPanel && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "icon icon-dismiss",
+      onClick: this.hideCardPanel,
+      title: props.intl.formatMessage({
+        id: "menu_action_dismiss"
+      }),
+      "aria-label": props.intl.formatMessage({
+        id: "menu_action_dismiss"
+      })
+    }))) : null);
   }
 
 }
+const Trailhead = Object(react_intl__WEBPACK_IMPORTED_MODULE_1__["injectIntl"])(_Trailhead);
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
@@ -7425,6 +7486,7 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onOptimizedImageError = this.onOptimizedImageError.bind(this);
+    this.onNonOptimizedImageError = this.onNonOptimizedImageError.bind(this);
     this.state = {
       isSeen: false,
       optimizedImageFailed: false
@@ -7488,9 +7550,15 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
             srcSet: `${source2x} 2x`
           });
         }
-      } else {
+      } else if (!this.state.nonOptimizedImageFailed) {
         img = external_React_default.a.createElement("img", {
+          onError: this.onNonOptimizedImageError,
           src: this.props.source
+        });
+      } else {
+        // Remove the img element if both sources fail. Render a placeholder instead.
+        img = external_React_default.a.createElement("div", {
+          className: "broken-image"
         });
       }
     }
@@ -7504,6 +7572,12 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
     // This will trigger a re-render and the unoptimized 450px image will be used as a fallback
     this.setState({
       optimizedImageFailed: true
+    });
+  }
+
+  onNonOptimizedImageError() {
+    this.setState({
+      nonOptimizedImageFailed: true
     });
   }
 
@@ -8369,7 +8443,7 @@ const selectLayoutRender = (state, prefs, rickRollCache) => {
 
   let spocsFill = [];
 
-  if (spocs.data && spocs.data.spocs) {
+  if (spocs.data.spocs) {
     const chosenSpocsFill = [...chosenSpocs].map(spoc => ({
       id: spoc.id,
       reason: "n/a",
@@ -11712,7 +11786,7 @@ class CachedIterable {
 
 }
 // CONCATENATED MODULE: ./node_modules/fluent/src/fallback.js
-function _asyncIterator(iterable) { var method; if (typeof Symbol === "function") { if (Symbol.asyncIterator) { method = iterable[Symbol.asyncIterator]; if (method != null) return method.call(iterable); } if (Symbol.iterator) { method = iterable[Symbol.iterator]; if (method != null) return method.call(iterable); } } throw new TypeError("Object is not async iterable"); }
+function _asyncIterator(iterable) { var method; if (typeof Symbol !== "undefined") { if (Symbol.asyncIterator) { method = iterable[Symbol.asyncIterator]; if (method != null) return method.call(iterable); } if (Symbol.iterator) { method = iterable[Symbol.iterator]; if (method != null) return method.call(iterable); } } throw new TypeError("Object is not async iterable"); }
 
 /*
  * @overview
@@ -12520,8 +12594,7 @@ const INITIAL_STATE = {
     initialized: false
   },
   ASRouter: {
-    initialized: false,
-    allowLegacySnippets: null
+    initialized: false
   },
   Snippets: {
     initialized: false
@@ -12603,11 +12676,6 @@ function ASRouter(prevState = INITIAL_STATE.ASRouter, action) {
     case Actions["actionTypes"].AS_ROUTER_INITIALIZED:
       return { ...action.data,
         initialized: true
-      };
-
-    case Actions["actionTypes"].AS_ROUTER_PREF_CHANGED:
-      return { ...prevState,
-        ...action.data
       };
 
     default:
