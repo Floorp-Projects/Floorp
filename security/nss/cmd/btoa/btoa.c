@@ -120,6 +120,7 @@ main(int argc, char **argv)
 
     /* Parse command line arguments */
     optstate = PL_CreateOptState(argc, argv, "i:o:w:");
+    PORT_Assert(optstate);
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             default:
@@ -203,9 +204,7 @@ main(int argc, char **argv)
     }
     exitCode = 0;
 loser:
-    if (optstate) {
-        PL_DestroyOptState(optstate);
-    }
+    PL_DestroyOptState(optstate);
     if (inFile && closeIn) {
         fclose(inFile);
     }

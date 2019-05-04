@@ -250,6 +250,7 @@ void TlsConnectTestBase::Reset(const std::string& server_name,
     server_->SkipVersionChecks();
   }
 
+  std::cerr << "Reset" << std::endl;
   Init();
 }
 
