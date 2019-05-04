@@ -1229,6 +1229,7 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
             }
             if (att->attrib.ulValueLen != sizeof(ctx->key)) {
                 sftk_FreeAttribute(att);
+                PORT_Free(ctx);
                 crv = CKR_KEY_HANDLE_INVALID;
                 break;
             }
