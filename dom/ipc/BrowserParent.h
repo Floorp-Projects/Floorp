@@ -195,6 +195,11 @@ class BrowserParent final : public PBrowserParent,
       nsCOMPtr<nsIWebProgress>& aOutWebProgress,
       nsCOMPtr<nsIRequest>& aOutRequest);
 
+  mozilla::ipc::IPCResult RecvSessionStoreUpdate(
+      const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
+      const nsTArray<nsCString>& aPositions,
+      const nsTArray<int32_t>& aPositionDescendants, const uint32_t& aFlushId);
+
   mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(
       PBrowserParent* aOpener, const nsString& aURL, const nsString& aName,
       bool aForceNoReferrer, const nsString& aFeatures,
