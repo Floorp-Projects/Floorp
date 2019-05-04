@@ -556,8 +556,15 @@ parent:
     async OnContentBlockingEvent(WebProgressData? aWebProgressData,
                                  RequestData aRequestData, uint32_t aEvent);
 
+    async SessionStoreUpdate(nsCString? aDocShellCaps,
+                             bool? aPrivatedMode,
+                             nsCString[] aPositions,
+                             int32_t[] aPositionDescendants,
+                             uint32_t aFlushId);
+
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
+    async FlushTabState(uint32_t aFlushId);
 
 parent:
 

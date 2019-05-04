@@ -102,6 +102,12 @@ interface FrameLoader {
   void requestUpdatePosition();
 
   /**
+   * Force a TabStateFlush from native sessionStoreListeners.
+   * Return true if the flush requires async ipc call.
+   */
+  boolean requestTabStateFlush(unsigned long aFlushId);
+
+  /**
    * Print the current document.
    *
    * @param aOuterWindowID the ID of the outer window to print

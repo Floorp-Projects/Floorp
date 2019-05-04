@@ -52,6 +52,7 @@ class OriginAttributes;
 namespace dom {
 class ChromeMessageSender;
 class ContentParent;
+class TabListener;
 class InProcessBrowserChildMessageManager;
 class MessageSender;
 class PBrowserParent;
@@ -190,6 +191,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void RequestNotifyAfterRemotePaint();
 
   void RequestUpdatePosition(mozilla::ErrorResult& aRv);
+
+  bool RequestTabStateFlush(uint32_t aFlushId);
 
   void Print(uint64_t aOuterWindowID, nsIPrintSettings* aPrintSettings,
              nsIWebProgressListener* aProgressListener,
@@ -491,6 +494,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   mozilla::ScreenIntSize mLazySize;
 
   RefPtr<mozilla::dom::ParentSHistory> mParentSHistory;
+
+  RefPtr<mozilla::dom::TabListener> mSessionStoreListener;
 
   bool mDepthTooGreat : 1;
   bool mIsTopLevelContent : 1;

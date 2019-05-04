@@ -82,6 +82,8 @@ class TabGroup;
 class ClonedMessageData;
 class CoalescedMouseData;
 class CoalescedWheelData;
+class ContentSessionStore;
+class TabListener;
 class RequestData;
 class WebProgressData;
 
@@ -396,6 +398,9 @@ class BrowserChild final : public BrowserChildBase,
   virtual mozilla::ipc::IPCResult RecvNativeSynthesisResponse(
       const uint64_t& aObserverId, const nsCString& aResponse) override;
 
+  virtual mozilla::ipc::IPCResult RecvFlushTabState(
+      const uint32_t& aFlushId) override;
+
   virtual mozilla::ipc::IPCResult RecvPluginEvent(
       const WidgetPluginEvent& aEvent) override;
 
@@ -686,6 +691,8 @@ class BrowserChild final : public BrowserChildBase,
     return *sVisibleTabs;
   }
 
+  bool UpdateSessionStore(uint32_t aFlushId);
+
  protected:
   virtual ~BrowserChild();
 
@@ -900,6 +907,7 @@ class BrowserChild final : public BrowserChildBase,
   RefPtr<CoalescedMouseMoveFlusher> mCoalescedMouseEventFlusher;
 
   RefPtr<layers::IAPZCTreeManager> mApzcTreeManager;
+  RefPtr<TabListener> mSessionStoreListener;
 
   // The most recently seen layer observer epoch in RecvSetDocShellIsActive.
   layers::LayersObserverEpoch mLayersObserverEpoch;
