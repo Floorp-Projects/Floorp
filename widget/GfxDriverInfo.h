@@ -9,45 +9,47 @@
 #include "nsString.h"
 
 // Macros for adding a blocklist item to the static list.
-#define APPEND_TO_DRIVER_BLOCKLIST(os, vendor, devices, feature,            \
-                                   featureStatus, driverComparator,         \
-                                   driverVersion, ruleId, suggestedVersion) \
-  sDriverInfo->AppendElement(GfxDriverInfo(                                 \
-      os, vendor, devices, feature, featureStatus, driverComparator,        \
-      driverVersion, ruleId, suggestedVersion))
-#define APPEND_TO_DRIVER_BLOCKLIST2(os, vendor, devices, feature,           \
-                                    featureStatus, driverComparator,        \
-                                    driverVersion, ruleId)                  \
-  sDriverInfo->AppendElement(GfxDriverInfo(os, vendor, devices, feature,    \
-                                           featureStatus, driverComparator, \
-                                           driverVersion, ruleId))
+#define APPEND_TO_DRIVER_BLOCKLIST(os, vendor, driverVendor, devices, feature, \
+                                   featureStatus, driverComparator,            \
+                                   driverVersion, ruleId, suggestedVersion)    \
+  sDriverInfo->AppendElement(GfxDriverInfo(                                    \
+      os, vendor, driverVendor, devices, feature, featureStatus,               \
+      driverComparator, driverVersion, ruleId, suggestedVersion))
+#define APPEND_TO_DRIVER_BLOCKLIST2(os, vendor, driverVendor, devices,         \
+                                    feature, featureStatus, driverComparator,  \
+                                    driverVersion, ruleId)                     \
+  sDriverInfo->AppendElement(                                                  \
+      GfxDriverInfo(os, vendor, driverVendor, devices, feature, featureStatus, \
+                    driverComparator, driverVersion, ruleId))
 
-#define APPEND_TO_DRIVER_BLOCKLIST_RANGE(                           \
-    os, vendor, devices, feature, featureStatus, driverComparator,  \
-    driverVersion, driverVersionMax, ruleId, suggestedVersion)      \
-  do {                                                              \
-    MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE ||      \
-               driverComparator == DRIVER_BETWEEN_INCLUSIVE ||      \
-               driverComparator == DRIVER_BETWEEN_INCLUSIVE_START); \
-    GfxDriverInfo info(os, vendor, devices, feature, featureStatus, \
-                       driverComparator, driverVersion, ruleId,     \
-                       suggestedVersion);                           \
-    info.mDriverVersionMax = driverVersionMax;                      \
-    sDriverInfo->AppendElement(info);                               \
+#define APPEND_TO_DRIVER_BLOCKLIST_RANGE(                                      \
+    os, vendor, driverVendor, devices, feature, featureStatus,                 \
+    driverComparator, driverVersion, driverVersionMax, ruleId,                 \
+    suggestedVersion)                                                          \
+  do {                                                                         \
+    MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE ||                 \
+               driverComparator == DRIVER_BETWEEN_INCLUSIVE ||                 \
+               driverComparator == DRIVER_BETWEEN_INCLUSIVE_START);            \
+    GfxDriverInfo info(os, vendor, driverVendor, devices, feature,             \
+                       featureStatus, driverComparator, driverVersion, ruleId, \
+                       suggestedVersion);                                      \
+    info.mDriverVersionMax = driverVersionMax;                                 \
+    sDriverInfo->AppendElement(info);                                          \
   } while (false)
 
-#define APPEND_TO_DRIVER_BLOCKLIST_RANGE_GPU2(                      \
-    os, vendor, devices, feature, featureStatus, driverComparator,  \
-    driverVersion, driverVersionMax, ruleId, suggestedVersion)      \
-  do {                                                              \
-    MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE ||      \
-               driverComparator == DRIVER_BETWEEN_INCLUSIVE ||      \
-               driverComparator == DRIVER_BETWEEN_INCLUSIVE_START); \
-    GfxDriverInfo info(os, vendor, devices, feature, featureStatus, \
-                       driverComparator, driverVersion, ruleId,     \
-                       suggestedVersion, false, true);              \
-    info.mDriverVersionMax = driverVersionMax;                      \
-    sDriverInfo->AppendElement(info);                               \
+#define APPEND_TO_DRIVER_BLOCKLIST_RANGE_GPU2(                                 \
+    os, vendor, driverVendor, devices, feature, featureStatus,                 \
+    driverComparator, driverVersion, driverVersionMax, ruleId,                 \
+    suggestedVersion)                                                          \
+  do {                                                                         \
+    MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE ||                 \
+               driverComparator == DRIVER_BETWEEN_INCLUSIVE ||                 \
+               driverComparator == DRIVER_BETWEEN_INCLUSIVE_START);            \
+    GfxDriverInfo info(os, vendor, driverVendor, devices, feature,             \
+                       featureStatus, driverComparator, driverVersion, ruleId, \
+                       suggestedVersion, false, true);                         \
+    info.mDriverVersionMax = driverVersionMax;                                 \
+    sDriverInfo->AppendElement(info);                                          \
   } while (false)
 
 namespace mozilla {
@@ -128,18 +130,23 @@ enum DeviceVendor {
   VendorParallels,
   VendorQualcomm,
 
+  DeviceVendorMax
+};
+
+enum DriverVendor {
+  DriverVendorAll,  // There is an assumption that this is the first enum
   // Wildcard for all Mesa drivers.
-  VendorMesaAll,
+  DriverMesaAll,
   // Note that the following list of Mesa drivers is not comprehensive; we pull
   // the DRI driver at runtime. These drivers are provided for convenience when
   // populating the local blocklist.
-  VendorMesaLLVMPipe,
-  VendorMesaSoftPipe,
-  VendorMesaSWRast,
+  DriverMesaLLVMPipe,
+  DriverMesaSoftPipe,
+  DriverMesaSWRast,
   // A generic ID to be provided when we can't determine the DRI driver on Mesa.
-  VendorMesaUnknown,
+  DriverMesaUnknown,
 
-  DeviceVendorMax
+  DriverVendorMax
 };
 
 /* Array of devices to match, or an empty array for all devices */
@@ -148,7 +155,8 @@ typedef nsTArray<nsString> GfxDeviceFamily;
 struct GfxDriverInfo {
   // If |ownDevices| is true, you are transferring ownership of the devices
   // array, and it will be deleted when this GfxDriverInfo is destroyed.
-  GfxDriverInfo(OperatingSystem os, nsAString& vendor, GfxDeviceFamily* devices,
+  GfxDriverInfo(OperatingSystem os, const nsAString& vendor,
+                const nsAString& driverVendor, GfxDeviceFamily* devices,
                 int32_t feature, int32_t featureStatus, VersionComparisonOp op,
                 uint64_t driverVersion, const char* ruleId,
                 const char* suggestedVersion = nullptr, bool ownDevices = false,
@@ -162,6 +170,7 @@ struct GfxDriverInfo {
   uint32_t mOperatingSystemVersion;
 
   nsString mAdapterVendor;
+  nsString mDriverVendor;
 
   static GfxDeviceFamily* const allDevices;
   GfxDeviceFamily* mDevices;
@@ -192,6 +201,9 @@ struct GfxDriverInfo {
 
   static const nsAString& GetDeviceVendor(DeviceVendor id);
   static nsAString* sDeviceVendors[DeviceVendorMax];
+
+  static const nsAString& GetDriverVendor(DriverVendor id);
+  static nsAString* sDriverVendors[DriverVendorMax];
 
   nsString mModel, mHardware, mProduct, mManufacturer;
 

@@ -326,6 +326,9 @@ const SNAPSHOT_SCHEMA = {
         adapterDrivers: {
           type: "string",
         },
+        driverVendor: {
+          type: "string",
+        },
         driverVersion: {
           type: "string",
         },
@@ -348,6 +351,9 @@ const SNAPSHOT_SCHEMA = {
           type: "string",
         },
         adapterDrivers2: {
+          type: "string",
+        },
+        driverVendor2: {
           type: "string",
         },
         driverVersion2: {

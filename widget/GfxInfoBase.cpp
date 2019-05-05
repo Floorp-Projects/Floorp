@@ -71,6 +71,11 @@ class ShutdownObserver : public nsIObserver {
       GfxDriverInfo::sDeviceVendors[i] = nullptr;
     }
 
+    for (uint32_t i = 0; i < DriverVendorMax; i++) {
+      delete GfxDriverInfo::sDriverVendors[i];
+      GfxDriverInfo::sDriverVendors[i] = nullptr;
+    }
+
     GfxInfoBase::sShutdownOccurred = true;
 
     return NS_OK;
@@ -471,6 +476,8 @@ static bool BlacklistEntryToDriverInfo(nsCString& aBlacklistEntry,
       aDriverInfo.mOperatingSystemVersion = strtoul(value.get(), nullptr, 10);
     } else if (key.EqualsLiteral("vendor")) {
       aDriverInfo.mAdapterVendor = dataValue;
+    } else if (key.EqualsLiteral("driverVendor")) {
+      aDriverInfo.mDriverVendor = dataValue;
     } else if (key.EqualsLiteral("feature")) {
       aDriverInfo.mFeature = BlacklistFeatureToGfxFeature(dataValue);
       if (aDriverInfo.mFeature < 0) {
@@ -679,16 +686,19 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
   // Get the adapters once then reuse below
   nsAutoString adapterVendorID[2];
   nsAutoString adapterDeviceID[2];
+  nsAutoString adapterDriverVendor[2];
   nsAutoString adapterDriverVersionString[2];
   bool adapterInfoFailed[2];
 
   adapterInfoFailed[0] =
       (NS_FAILED(GetAdapterVendorID(adapterVendorID[0])) ||
        NS_FAILED(GetAdapterDeviceID(adapterDeviceID[0])) ||
+       NS_FAILED(GetAdapterDriverVendor(adapterDriverVendor[0])) ||
        NS_FAILED(GetAdapterDriverVersion(adapterDriverVersionString[0])));
   adapterInfoFailed[1] =
       (NS_FAILED(GetAdapterVendorID2(adapterVendorID[1])) ||
        NS_FAILED(GetAdapterDeviceID2(adapterDeviceID[1])) ||
+       NS_FAILED(GetAdapterDriverVendor2(adapterDriverVendor[1])) ||
        NS_FAILED(GetAdapterDriverVersion2(adapterDriverVersionString[1])));
   // No point in going on if we don't have adapter info
   if (adapterInfoFailed[0] && adapterInfoFailed[1]) {
@@ -729,6 +739,11 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
     }
 
     if (!DoesVendorMatch(info[i].mAdapterVendor, adapterVendorID[infoIndex])) {
+      continue;
+    }
+
+    if (!DoesDriverVendorMatch(info[i].mDriverVendor,
+                               adapterDriverVendor[infoIndex])) {
       continue;
     }
 
@@ -885,6 +900,15 @@ bool GfxInfoBase::DoesVendorMatch(const nsAString& aBlocklistVendor,
                                  nsCaseInsensitiveStringComparator()) ||
          aBlocklistVendor.Equals(GfxDriverInfo::GetDeviceVendor(VendorAll),
                                  nsCaseInsensitiveStringComparator());
+}
+
+bool GfxInfoBase::DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
+                                        const nsAString& aDriverVendor) {
+  return aBlocklistVendor.Equals(aDriverVendor,
+                                 nsCaseInsensitiveStringComparator()) ||
+         aBlocklistVendor.Equals(
+             GfxDriverInfo::GetDriverVendor(DriverVendorAll),
+             nsCaseInsensitiveStringComparator());
 }
 
 nsresult GfxInfoBase::GetFeatureStatusImpl(
@@ -1159,6 +1183,30 @@ void GfxInfoBase::RemoveCollector(GfxInfoCollectorBase* collector) {
     delete sCollectors;
     sCollectors = nullptr;
   }
+}
+
+nsresult GfxInfoBase::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray) {
+  // If we have no platform specific implementation for detecting monitors, we
+  // can just get the screen size from gfxPlatform as the best guess.
+  if (!gfxPlatform::Initialized()) {
+    return NS_OK;
+  }
+
+  // If the screen size is empty, we are probably in xpcshell.
+  gfx::IntSize screenSize = gfxPlatform::GetPlatform()->GetScreenSize();
+
+  JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+
+  JS::Rooted<JS::Value> screenWidth(aCx, JS::Int32Value(screenSize.width));
+  JS_SetProperty(aCx, obj, "screenWidth", screenWidth);
+
+  JS::Rooted<JS::Value> screenHeight(aCx, JS::Int32Value(screenSize.height));
+  JS_SetProperty(aCx, obj, "screenHeight", screenHeight);
+
+  JS::Rooted<JS::Value> element(aCx, JS::ObjectValue(*obj));
+  JS_SetElement(aCx, aOutArray, 0, element);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

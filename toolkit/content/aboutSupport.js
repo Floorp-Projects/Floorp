@@ -507,6 +507,7 @@ var snapshotFormatters = {
       ["adapterDescription", "gpu-description"],
       ["adapterVendorID", "gpu-vendor-id"],
       ["adapterDeviceID", "gpu-device-id"],
+      ["driverVendor", "gpu-driver-vendor"],
       ["driverVersion", "gpu-driver-version"],
       ["driverDate", "gpu-driver-date"],
       ["adapterDrivers", "gpu-drivers"],

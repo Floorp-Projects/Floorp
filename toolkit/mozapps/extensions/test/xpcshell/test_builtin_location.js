@@ -43,6 +43,29 @@ add_task(async function test_builtin_location() {
   notEqual(addon, null, "Addon is installed");
   ok(addon.isActive, "Addon is active");
 
+  // After a restart that causes a database rebuild, it should still work
+  await promiseRestartManager("2");
+  await wrapper.awaitStartup();
+  await wrapper.awaitMessage("started");
+  ok(true, "Extension in built-in location ran after restart");
+
+  addon = await promiseAddonByID(id);
+  notEqual(addon, null, "Addon is installed");
+  ok(addon.isActive, "Addon is active");
+
+  // After a restart that changes the schema version, it should still work
+  await promiseShutdownManager();
+  Services.prefs.setIntPref("extensions.databaseSchema", 0);
+  await promiseStartupManager();
+
+  await wrapper.awaitStartup();
+  await wrapper.awaitMessage("started");
+  ok(true, "Extension in built-in location ran after restart");
+
+  addon = await promiseAddonByID(id);
+  notEqual(addon, null, "Addon is installed");
+  ok(addon.isActive, "Addon is active");
+
   await wrapper.unload();
 
   addon = await promiseAddonByID(id);
