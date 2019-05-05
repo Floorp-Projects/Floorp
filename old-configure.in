@@ -3122,7 +3122,7 @@ if test "$MOZ_TELEMETRY_REPORTING"; then
     AC_DEFINE(MOZ_TELEMETRY_REPORTING)
 
     # Enable Telemetry by default for nightly and aurora channels
-    if test -z "$RELEASE_OR_BETA"; then
+    if test -z "$RELEASE_OR_BETA" || test -n "$FENNEC_NIGHTLY"; then
       AC_DEFINE(MOZ_TELEMETRY_ON_BY_DEFAULT)
     fi
 fi

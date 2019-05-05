@@ -579,6 +579,7 @@ function runDoorhangerUpdateTest(updateParams, checkAttempts, steps) {
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
+        [PREF_APP_UPDATE_IDLETIME, 0],
         [PREF_APP_UPDATE_URL_MANUAL, URL_MANUAL_UPDATE],
         [PREF_APP_UPDATE_URL_DETAILS, gDetailsURL],
       ],
@@ -603,8 +604,8 @@ function runDoorhangerUpdateTest(updateParams, checkAttempts, steps) {
       });
     } else {
       // Perform a startup processing doorhanger test.
-      reloadUpdateManagerData();
       writeStatusFile(STATE_FAILED_CRC_ERROR);
+      reloadUpdateManagerData();
       testPostUpdateProcessing();
     }
 

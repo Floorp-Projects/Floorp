@@ -151,7 +151,7 @@ import java.util.concurrent.Callable;
     }
 
     private void handleException(final Throwable t) {
-        if (AppConstants.NIGHTLY_BUILD) {
+        if (AppConstants.NIGHTLY_BUILD || AppConstants.FENNEC_NIGHTLY) {
             // We want to be aware of problems: Let's re-throw the exception on the main thread to
             // force an app crash. However we only do this in Nightly builds. Every other build
             // (especially release builds) should just carry on and log the error.
@@ -168,7 +168,7 @@ import java.util.concurrent.Callable;
 
     private boolean shouldLog() {
         // Do not log anything if debugging is disabled and never log anything in a non-nightly build.
-        return DEBUG && AppConstants.NIGHTLY_BUILD;
+        return DEBUG && (AppConstants.NIGHTLY_BUILD || AppConstants.FENNEC_NIGHTLY);
     }
 
     private void logPreparer(IconRequest request, Preparer preparer) {

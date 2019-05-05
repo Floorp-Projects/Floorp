@@ -453,10 +453,10 @@ class RemoteSettingsClient extends EventEmitter {
                                                                      timestamp);
     const verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
       .createInstance(Ci.nsIContentSignatureVerifier);
-    if (!verifier.verifyContentSignature(serialized,
-                                         "p384ecdsa=" + signature,
-                                         certChain,
-                                         this.signerName)) {
+    if (!await verifier.asyncVerifyContentSignature(serialized,
+                                                    "p384ecdsa=" + signature,
+                                                    certChain,
+                                                    this.signerName)) {
       throw new RemoteSettingsClient.InvalidSignatureError(`${bucket}/${collection}`);
     }
   }
