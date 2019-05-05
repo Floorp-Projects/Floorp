@@ -2906,7 +2906,7 @@ this.XPIDatabaseReconcile = {
         AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED, id);
 
         if (previousAddon.location &&
-            (!previousAddon._sourceBundle || 
+            (!previousAddon._sourceBundle ||
              (previousAddon._sourceBundle.exists() &&
               !previousAddon._sourceBundle.equals(currentAddon._sourceBundle)))) {
           promise = XPIInternal.BootstrapScope.get(previousAddon).update(
