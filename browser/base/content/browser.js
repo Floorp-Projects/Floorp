@@ -1253,7 +1253,7 @@ function _loadURI(browser, uri, params = {}) {
       let loadParams = {
         uri,
         triggeringPrincipal: triggeringPrincipal
-          ? gSerializationHelper.serializeToString(triggeringPrincipal)
+          ? E10SUtils.serializePrincipal(triggeringPrincipal)
           : null,
         flags,
         referrerInfo: E10SUtils.serializeReferrerInfo(referrerInfo),
@@ -3523,9 +3523,7 @@ function getSecurityInfo(securityInfoAsString) {
   if (!securityInfoAsString)
     return null;
 
-  const serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
-                       .getService(Ci.nsISerializationHelper);
-  let securityInfo = serhelper.deserializeObject(securityInfoAsString);
+  let securityInfo = gSerializationHelper.deserializeObject(securityInfoAsString);
   securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
 
   return securityInfo;
