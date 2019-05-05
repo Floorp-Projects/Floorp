@@ -86,9 +86,6 @@ def pr_or_push(is_push):
             for craft_function in ALL_RAPTOR_CRAFT_FUNCTIONS:
                 args = (signing_task_id, mozharness_task_id, variant, gecko_revision)
                 other_tasks[taskcluster.slugId()] = craft_function(*args)
-                # we also want the arm APK to be tested on 64-bit-devices
-                if architecture == 'arm':
-                    other_tasks[taskcluster.slugId()] = craft_function(*args, force_run_on_64_bit_device=True)
 
     for craft_function in (
         BUILDER.craft_detekt_task,
