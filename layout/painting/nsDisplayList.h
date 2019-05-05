@@ -2008,8 +2008,8 @@ class RetainedDisplayList;
     return aBuilder->Allocate(aSize, DisplayItemType::e);                    \
   }                                                                          \
                                                                              \
-  template <typename T, typename... Args>                                    \
-  friend T* ::MakeDisplayItem(nsDisplayListBuilder* aBuilder,                \
+  template <typename T, typename F, typename... Args>                        \
+  friend T* ::MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,     \
                               Args&&... aArgs);                              \
                                                                              \
  public:
@@ -2034,10 +2034,13 @@ MOZ_ALWAYS_INLINE T* MakeClone(nsDisplayListBuilder* aBuilder, const T* aItem) {
 void AssertUniqueItem(nsDisplayItem* aItem);
 #endif
 
-template <typename T, typename... Args>
-MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder,
+template <typename T, typename F, typename... Args>
+MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
                                      Args&&... aArgs) {
-  T* item = new (aBuilder) T(aBuilder, std::forward<Args>(aArgs)...);
+  static_assert(std::is_base_of<nsIFrame, F>::value,
+                "Frame type is not derived from nsIFrame");
+
+  T* item = new (aBuilder) T(aBuilder, aFrame, std::forward<Args>(aArgs)...);
 
   if (T::ItemType() != DisplayItemType::TYPE_GENERIC) {
     item->SetType(T::ItemType());
@@ -2178,8 +2181,11 @@ class nsDisplayItemBase : public nsDisplayItemLink {
    * outlines for the same element. For this, we need a way for items to
    * identify their type. We use the type for other purposes too.
    */
-  DisplayItemType GetType() const { return mType; }
-  void SetType(const DisplayItemType aType) { mType = aType; }
+  DisplayItemType GetType() const {
+    MOZ_ASSERT(mType != DisplayItemType::TYPE_ZERO,
+               "Display item should have a valid type!");
+    return mType;
+  }
 
   /**
    * Pairing this with the Frame() pointer gives a key that
@@ -2283,7 +2289,7 @@ class nsDisplayItemBase : public nsDisplayItemLink {
 
  protected:
   nsDisplayItemBase(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : mFrame(aFrame) {
+      : mFrame(aFrame), mType(DisplayItemType::TYPE_ZERO) {
     MOZ_COUNT_CTOR(nsDisplayItemBase);
     MOZ_ASSERT(mFrame);
 
@@ -2308,6 +2314,7 @@ class nsDisplayItemBase : public nsDisplayItemLink {
     }
   }
 
+  void SetType(const DisplayItemType aType) { mType = aType; }
   void SetPerFrameKey(const uint16_t aKey) { mKey = aKey; }
 
   void SetDeletedFrame();
@@ -3232,10 +3239,11 @@ class nsDisplayList {
     mLength++;
   }
 
-  template <typename T, typename... Args>
-  void AppendNewToTop(nsDisplayListBuilder* aBuilder, Args&&... aArgs) {
+  template <typename T, typename F, typename... Args>
+  void AppendNewToTop(nsDisplayListBuilder* aBuilder, F* aFrame,
+                      Args&&... aArgs) {
     nsDisplayItem* item =
-        MakeDisplayItem<T>(aBuilder, std::forward<Args>(aArgs)...);
+        MakeDisplayItem<T>(aBuilder, aFrame, std::forward<Args>(aArgs)...);
     if (item) {
       AppendToTop(item);
     }
@@ -3258,10 +3266,11 @@ class nsDisplayList {
     mLength++;
   }
 
-  template <typename T, typename... Args>
-  void AppendNewToBottom(nsDisplayListBuilder* aBuilder, Args&&... aArgs) {
+  template <typename T, typename F, typename... Args>
+  void AppendNewToBottom(nsDisplayListBuilder* aBuilder, F* aFrame,
+                         Args&&... aArgs) {
     nsDisplayItem* item =
-        MakeDisplayItem<T>(aBuilder, std::forward<Args>(aArgs)...);
+        MakeDisplayItem<T>(aBuilder, aFrame, std::forward<Args>(aArgs)...);
     if (item) {
       AppendToBottom(item);
     }
@@ -4014,8 +4023,9 @@ class nsDisplayGeneric : public nsDisplayItem {
   void* operator new(size_t aSize, nsDisplayListBuilder* aBuilder) {
     return aBuilder->Allocate(aSize, DisplayItemType::TYPE_GENERIC);
   }
-  template <typename T, typename... Args>
-  friend T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, Args&&... aArgs);
+  template <typename T, typename F, typename... Args>
+  friend T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
+                            Args&&... aArgs);
 
   PaintCallback mPaint;
   OldPaintCallback mOldPaint;  // XXX: should be removed eventually
@@ -4402,7 +4412,6 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
 
   struct InitData {
     nsDisplayListBuilder* builder;
-    nsIFrame* frame;
     mozilla::ComputedStyle* backgroundStyle;
     nsCOMPtr<imgIContainer> image;
     nsRect backgroundRect;
@@ -4425,7 +4434,7 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
                               mozilla::ComputedStyle* aBackgroundStyle);
 
   explicit nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilder,
-                                    const InitData& aInitData,
+                                    nsIFrame* aFrame, const InitData& aInitData,
                                     nsIFrame* aFrameForBounds = nullptr);
   ~nsDisplayBackgroundImage() override;
 
@@ -4616,7 +4625,7 @@ static uint16_t CalculateTablePerFrameKey(const uint16_t aIndex,
 class nsDisplayTableBackgroundImage : public nsDisplayBackgroundImage {
  public:
   nsDisplayTableBackgroundImage(nsDisplayListBuilder* aBuilder,
-                                const InitData& aInitData,
+                                nsIFrame* aFrame, const InitData& aInitData,
                                 nsIFrame* aCellFrame);
   ~nsDisplayTableBackgroundImage() override;
 
