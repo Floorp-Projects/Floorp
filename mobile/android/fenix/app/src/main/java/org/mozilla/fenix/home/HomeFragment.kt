@@ -7,28 +7,28 @@ package org.mozilla.fenix.home
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
-import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.BOTTOM
-import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.TOP
-import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.START
-import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.END
-import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.BOTTOM
+import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.END
+import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.START
+import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.TOP
 import org.jetbrains.anko.constraint.layout.applyConstraintSet
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
@@ -64,6 +64,9 @@ class HomeFragment : Fragment(), CoroutineScope {
     private val bus = ActionBusFactory.get(this)
     private var sessionObserver: SessionManager.Observer? = null
     private var homeMenu: HomeMenu? = null
+
+    var deleteSessionJob: (suspend () -> Unit)? = null
+
     private lateinit var sessionControlComponent: SessionControlComponent
 
     private lateinit var job: Job
@@ -203,7 +206,16 @@ class HomeFragment : Fragment(), CoroutineScope {
                 (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
             }
             is TabAction.Close -> {
-                removeTabWithUndo(action.sessionId)
+                if (deleteSessionJob == null) removeTabWithUndo(action.sessionId) else {
+                    deleteSessionJob?.let {
+                        launch {
+                            it.invoke()
+                        }.invokeOnCompletion {
+                            deleteSessionJob = null
+                            removeTabWithUndo(action.sessionId)
+                        }
+                    }
+                }
             }
             is TabAction.Share -> {
                 requireComponents.core.sessionManager.findSessionById(action.sessionId)
@@ -322,6 +334,13 @@ class HomeFragment : Fragment(), CoroutineScope {
                     }
             )
         )
+
+        deleteSessionJob = {
+            sessionManager.findSessionById(sessionId)
+                ?.let { session ->
+                    sessionManager.remove(session)
+                }
+        }
 
         CoroutineScope(Dispatchers.Main).allowUndo(
             view!!, getString(R.string.snackbar_tab_deleted),

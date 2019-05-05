@@ -6,7 +6,6 @@ package org.mozilla.fenix.ext
 
 import android.view.View
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -19,7 +18,7 @@ fun CoroutineScope.allowUndo(
     onCancel: suspend () -> Unit = {},
     operation: suspend () -> Unit
 ) {
-    val undoJob = launch(IO) {
+    val undoJob = launch(Main) {
         delay(UNDO_DELAY)
         operation.invoke()
     }
