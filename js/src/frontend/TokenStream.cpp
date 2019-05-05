@@ -2679,33 +2679,28 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
           return badToken();
         }
       } else if (IsAsciiDigit(unit)) {
+        // Octal integer literals are not permitted in strict mode code.
+        if (!strictModeError(JSMSG_DEPRECATED_OCTAL)) {
+          return badToken();
+        }
+
         radix = 8;
         isLegacyOctalOrNoctal = true;
         // one past the '0'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
+        bool nonOctalDecimalIntegerLiteral = false;
         do {
-          // Octal integer literals are not permitted in strict mode
-          // code.
-          if (!strictModeError(JSMSG_DEPRECATED_OCTAL)) {
-            return badToken();
-          }
-
-          // Outside strict mode, we permit 08 and 09 as decimal
-          // numbers, which makes our behaviour a superset of the
-          // ECMA numeric grammar. We might not always be so
-          // permissive, so we warn about it.
           if (unit >= '8') {
-            if (!warning(JSMSG_BAD_OCTAL, unit == '8' ? "08" : "09")) {
-              return badToken();
-            }
-
-            // Use the decimal scanner for the rest of the number.
-            return decimalNumber(unit, start, numStart, modifier, ttp);
+            nonOctalDecimalIntegerLiteral = true;
           }
-
           unit = getCodeUnit();
         } while (IsAsciiDigit(unit));
+
+        if (nonOctalDecimalIntegerLiteral) {
+          // Use the decimal scanner for the rest of the number.
+          return decimalNumber(unit, start, numStart, modifier, ttp);
+        }
       } else {
         // '0' not followed by [XxBbOo0-9];  scan as a decimal number.
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
