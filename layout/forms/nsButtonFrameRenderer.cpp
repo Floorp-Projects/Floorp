@@ -63,8 +63,8 @@ bool nsButtonFrameRenderer::isDisabled() {
 class nsDisplayButtonBoxShadowOuter : public nsDisplayItem {
  public:
   nsDisplayButtonBoxShadowOuter(nsDisplayListBuilder* aBuilder,
-                                nsButtonFrameRenderer* aRenderer)
-      : nsDisplayItem(aBuilder, aRenderer->GetFrame()) {
+                                nsIFrame* aFrame)
+      : nsDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayButtonBoxShadowOuter);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -186,9 +186,9 @@ bool nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
 
 class nsDisplayButtonBorder final : public nsDisplayItem {
  public:
-  nsDisplayButtonBorder(nsDisplayListBuilder* aBuilder,
+  nsDisplayButtonBorder(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                         nsButtonFrameRenderer* aRenderer)
-      : nsDisplayItem(aBuilder, aRenderer->GetFrame()), mBFR(aRenderer) {
+      : nsDisplayItem(aBuilder, aFrame), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -292,9 +292,9 @@ nsRect nsDisplayButtonBorder::GetBounds(nsDisplayListBuilder* aBuilder,
 
 class nsDisplayButtonForeground final : public nsDisplayItem {
  public:
-  nsDisplayButtonForeground(nsDisplayListBuilder* aBuilder,
+  nsDisplayButtonForeground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             nsButtonFrameRenderer* aRenderer)
-      : nsDisplayItem(aBuilder, aRenderer->GetFrame()), mBFR(aRenderer) {
+      : nsDisplayItem(aBuilder, aFrame), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonForeground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -386,7 +386,8 @@ nsresult nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
                                               nsDisplayList* aBackground,
                                               nsDisplayList* aForeground) {
   if (mFrame->StyleEffects()->mBoxShadow) {
-    aBackground->AppendNewToTop<nsDisplayButtonBoxShadowOuter>(aBuilder, this);
+    aBackground->AppendNewToTop<nsDisplayButtonBoxShadowOuter>(aBuilder,
+                                                               GetFrame());
   }
 
   nsRect buttonRect = mFrame->GetRectRelativeToSelf();
@@ -394,12 +395,14 @@ nsresult nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
   nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, mFrame,
                                                        buttonRect, aBackground);
 
-  aBackground->AppendNewToTop<nsDisplayButtonBorder>(aBuilder, this);
+  aBackground->AppendNewToTop<nsDisplayButtonBorder>(aBuilder, GetFrame(),
+                                                     this);
 
   // Only display focus rings if we actually have them. Since at most one
   // button would normally display a focus ring, most buttons won't have them.
   if (mInnerFocusStyle && mInnerFocusStyle->StyleBorder()->HasBorder()) {
-    aForeground->AppendNewToTop<nsDisplayButtonForeground>(aBuilder, this);
+    aForeground->AppendNewToTop<nsDisplayButtonForeground>(aBuilder, GetFrame(),
+                                                           this);
   }
   return NS_OK;
 }

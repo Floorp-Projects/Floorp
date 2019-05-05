@@ -192,8 +192,9 @@ class nsDisplayCanvasBackgroundColor final : public nsDisplaySolidColorBase {
 class nsDisplayCanvasBackgroundImage : public nsDisplayBackgroundImage {
  public:
   explicit nsDisplayCanvasBackgroundImage(nsDisplayListBuilder* aBuilder,
+                                          nsIFrame* aFrame,
                                           const InitData& aInitData)
-      : nsDisplayBackgroundImage(aBuilder, aInitData) {}
+      : nsDisplayBackgroundImage(aBuilder, aFrame, aInitData) {}
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
