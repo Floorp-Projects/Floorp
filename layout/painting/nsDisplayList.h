@@ -2014,6 +2014,22 @@ class RetainedDisplayList;
                                                                              \
  public:
 
+#define NS_DISPLAY_ALLOW_CLONING()                                          \
+  template <typename T>                                                     \
+  friend T* MakeClone(nsDisplayListBuilder* aBuilder, const T* aItem);      \
+                                                                            \
+  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override { \
+    return MakeClone(aBuilder, this);                                       \
+  }
+
+template <typename T>
+MOZ_ALWAYS_INLINE T* MakeClone(nsDisplayListBuilder* aBuilder, const T* aItem) {
+  T* item = new (aBuilder) T(aBuilder, *aItem);
+  item->SetType(T::ItemType());
+  item->SetPerFrameKey(item->CalculatePerFrameKey());
+  return item;
+}
+
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 void AssertUniqueItem(nsDisplayItem* aItem);
 #endif
@@ -2401,6 +2417,7 @@ class nsDisplayItem : public nsDisplayItemBase {
    * Create a clone of this item.
    */
   virtual nsDisplayItem* Clone(nsDisplayListBuilder* aBuilder) const {
+    MOZ_ASSERT_UNREACHABLE("Clone() called on an incorrect item type!");
     return nullptr;
   }
 
@@ -5463,6 +5480,9 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
   uint16_t mIndex;
   bool mHasZIndexOverride;
   bool mClearingClipChain = false;
+
+ private:
+  NS_DISPLAY_ALLOW_CLONING()
 };
 
 /**
@@ -5510,6 +5530,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
         mForEventsAndPluginsOnly(aOther.mForEventsAndPluginsOnly),
         mNeedsActiveLayer(aOther.mNeedsActiveLayer),
         mChildOpacityState(ChildOpacityState::Unknown) {
+    MOZ_COUNT_CTOR(nsDisplayOpacity);
     // We should not try to merge flattened opacities.
     MOZ_ASSERT(aOther.mChildOpacityState != ChildOpacityState::Applied);
   }
@@ -5523,11 +5544,6 @@ class nsDisplayOpacity : public nsDisplayWrapList {
   void RestoreState() override {
     nsDisplayItem::RestoreState();
     mOpacity = mState.mOpacity;
-  }
-
-  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override {
-    MOZ_COUNT_CTOR(nsDisplayOpacity);
-    return MakeDisplayItem<nsDisplayOpacity>(aBuilder, *this);
   }
 
   void InvalidateCachedChildInfo(nsDisplayListBuilder* aBuilder) override {
@@ -5604,6 +5620,8 @@ class nsDisplayOpacity : public nsDisplayWrapList {
   float GetOpacity() const { return mOpacity; }
 
  private:
+  NS_DISPLAY_ALLOW_CLONING()
+
   bool ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder);
   bool IsEffectsWrapper() const;
 
@@ -5640,18 +5658,15 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
                      const nsDisplayBlendMode& aOther)
       : nsDisplayWrapList(aBuilder, aOther),
         mBlendMode(aOther.mBlendMode),
-        mIndex(aOther.mIndex) {}
+        mIndex(aOther.mIndex) {
+    MOZ_COUNT_CTOR(nsDisplayBlendMode);
+  }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsDisplayBlendMode() override { MOZ_COUNT_DTOR(nsDisplayBlendMode); }
 #endif
 
   NS_DISPLAY_DECL_NAME("BlendMode", TYPE_BLEND_MODE)
-
-  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override {
-    MOZ_COUNT_CTOR(nsDisplayBlendMode);
-    return MakeDisplayItem<nsDisplayBlendMode>(aBuilder, *this);
-  }
 
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
@@ -5690,6 +5705,9 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
  protected:
   uint8_t mBlendMode;
   uint16_t mIndex;
+
+ private:
+  NS_DISPLAY_ALLOW_CLONING()
 };
 
 class nsDisplayTableBlendMode : public nsDisplayBlendMode {
@@ -5725,10 +5743,6 @@ class nsDisplayTableBlendMode : public nsDisplayBlendMode {
 
   NS_DISPLAY_DECL_NAME("TableBlendMode", TYPE_TABLE_BLEND_MODE)
 
-  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override {
-    return MakeDisplayItem<nsDisplayTableBlendMode>(aBuilder, *this);
-  }
-
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
   void RemoveFrame(nsIFrame* aFrame) override {
@@ -5746,6 +5760,9 @@ class nsDisplayTableBlendMode : public nsDisplayBlendMode {
  protected:
   nsIFrame* mAncestorFrame;
   TableType mTableType;
+
+ private:
+  NS_DISPLAY_ALLOW_CLONING()
 };
 
 class nsDisplayBlendContainer : public nsDisplayWrapList {
@@ -5765,11 +5782,6 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
 #endif
 
   NS_DISPLAY_DECL_NAME("BlendContainer", TYPE_BLEND_CONTAINER)
-
-  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override {
-    MOZ_COUNT_CTOR(nsDisplayBlendContainer);
-    return MakeDisplayItem<nsDisplayBlendContainer>(aBuilder, *this);
-  }
 
   already_AddRefed<Layer> BuildLayer(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
@@ -5810,11 +5822,16 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
   nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder,
                           const nsDisplayBlendContainer& aOther)
       : nsDisplayWrapList(aBuilder, aOther),
-        mIsForBackground(aOther.mIsForBackground) {}
+        mIsForBackground(aOther.mIsForBackground) {
+    MOZ_COUNT_CTOR(nsDisplayBlendContainer);
+  }
 
   // Used to distinguish containers created at building stacking
   // context or appending background.
   bool mIsForBackground;
+
+ private:
+  NS_DISPLAY_ALLOW_CLONING()
 };
 
 class nsDisplayTableBlendContainer : public nsDisplayBlendContainer {
@@ -5824,10 +5841,6 @@ class nsDisplayTableBlendContainer : public nsDisplayBlendContainer {
       const ActiveScrolledRoot* aActiveScrolledRoot, nsIFrame* aAncestorFrame);
 
   NS_DISPLAY_DECL_NAME("TableBlendContainer", TYPE_TABLE_BLEND_CONTAINER)
-
-  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override {
-    return MakeDisplayItem<nsDisplayTableBlendContainer>(aBuilder, *this);
-  }
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
@@ -5861,11 +5874,7 @@ class nsDisplayTableBlendContainer : public nsDisplayBlendContainer {
                                const nsDisplayTableBlendContainer& aOther)
       : nsDisplayBlendContainer(aBuilder, aOther),
         mAncestorFrame(aOther.mAncestorFrame),
-        mTableType(aOther.mTableType) {
-    if (aBuilder->IsRetainingDisplayList()) {
-      mAncestorFrame->AddDisplayItem(this);
-    }
-  }
+        mTableType(aOther.mTableType) {}
 
   ~nsDisplayTableBlendContainer() override {
     if (mAncestorFrame) {
@@ -5875,6 +5884,9 @@ class nsDisplayTableBlendContainer : public nsDisplayBlendContainer {
 
   nsIFrame* mAncestorFrame;
   TableType mTableType;
+
+ private:
+  NS_DISPLAY_ALLOW_CLONING()
 };
 
 /**
@@ -6108,7 +6120,9 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
   nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,
                           const nsDisplayStickyPosition& aOther)
       : nsDisplayOwnLayer(aBuilder, aOther),
-        mContainerASR(aOther.mContainerASR) {}
+        mContainerASR(aOther.mContainerASR) {
+    MOZ_COUNT_CTOR(nsDisplayStickyPosition);
+  }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsDisplayStickyPosition() override {
@@ -6118,10 +6132,6 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
 
   void SetClipChain(const DisplayItemClipChain* aClipChain,
                     bool aStore) override;
-  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override {
-    MOZ_COUNT_CTOR(nsDisplayStickyPosition);
-    return MakeDisplayItem<nsDisplayStickyPosition>(aBuilder, *this);
-  }
 
   already_AddRefed<Layer> BuildLayer(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
@@ -6143,6 +6153,8 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
   const ActiveScrolledRoot* GetContainerASR() const { return mContainerASR; }
 
  private:
+  NS_DISPLAY_ALLOW_CLONING()
+
   // This stores the ASR that this sticky container item would have assuming it
   // has no fixed descendants. This may be the same as the ASR returned by
   // GetActiveScrolledRoot(), or it may be a descendant of that.
@@ -6175,10 +6187,6 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
 #endif
 
   NS_DISPLAY_DECL_NAME("FixedPosition", TYPE_FIXED_POSITION)
-
-  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override {
-    return MakeDisplayItem<nsDisplayFixedPosition>(aBuilder, *this);
-  }
 
   already_AddRefed<Layer> BuildLayer(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
@@ -6222,6 +6230,9 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
   RefPtr<const ActiveScrolledRoot> mContainerASR;
   uint16_t mIndex;
   bool mIsFixedBackground;
+
+ private:
+  NS_DISPLAY_ALLOW_CLONING()
 };
 
 class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
@@ -6232,10 +6243,6 @@ class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
       nsIFrame* aAncestorFrame);
 
   NS_DISPLAY_DECL_NAME("TableFixedPosition", TYPE_TABLE_FIXED_POSITION)
-
-  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override {
-    return MakeDisplayItem<nsDisplayTableFixedPosition>(aBuilder, *this);
-  }
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
@@ -6260,11 +6267,7 @@ class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
                               const nsDisplayTableFixedPosition& aOther)
       : nsDisplayFixedPosition(aBuilder, aOther),
         mAncestorFrame(aOther.mAncestorFrame),
-        mTableType(aOther.mTableType) {
-    if (aBuilder->IsRetainingDisplayList()) {
-      mAncestorFrame->AddDisplayItem(this);
-    }
-  }
+        mTableType(aOther.mTableType) {}
 
   ~nsDisplayTableFixedPosition() override {
     if (mAncestorFrame) {
@@ -6274,6 +6277,9 @@ class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
 
   nsIFrame* mAncestorFrame;
   TableType mTableType;
+
+ private:
+  NS_DISPLAY_ALLOW_CLONING()
 };
 
 /**
@@ -6484,7 +6490,9 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
                              const ActiveScrolledRoot* aActiveScrolledRoot);
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder,
                              const nsDisplayMasksAndClipPaths& aOther)
-      : nsDisplayEffectsBase(aBuilder, aOther), mDestRects(aOther.mDestRects) {}
+      : nsDisplayEffectsBase(aBuilder, aOther), mDestRects(aOther.mDestRects) {
+    MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
+  }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsDisplayMasksAndClipPaths() override {
@@ -6493,11 +6501,6 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
 #endif
 
   NS_DISPLAY_DECL_NAME("Mask", TYPE_MASK)
-
-  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override {
-    MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
-    return MakeDisplayItem<nsDisplayMasksAndClipPaths>(aBuilder, *this);
-  }
 
   bool CanMerge(const nsDisplayItem* aItem) const override;
 
@@ -6562,6 +6565,8 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
       const ActiveScrolledRoot* aASR) const override;
 
  private:
+  NS_DISPLAY_ALLOW_CLONING()
+
   // According to mask property and the capability of aManager, determine
   // whether we can paint the mask onto a dedicate mask layer.
   bool CanPaintOnMaskLayer(LayerManager* aManager);
@@ -6584,18 +6589,15 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
   nsDisplayFilters(nsDisplayListBuilder* aBuilder,
                    const nsDisplayFilters& aOther)
       : nsDisplayEffectsBase(aBuilder, aOther),
-        mEffectsBounds(aOther.mEffectsBounds) {}
+        mEffectsBounds(aOther.mEffectsBounds) {
+    MOZ_COUNT_CTOR(nsDisplayFilters);
+  }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsDisplayFilters() override { MOZ_COUNT_DTOR(nsDisplayFilters); }
 #endif
 
   NS_DISPLAY_DECL_NAME("Filter", TYPE_FILTER)
-
-  nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override {
-    MOZ_COUNT_CTOR(nsDisplayFilters);
-    return MakeDisplayItem<nsDisplayFilters>(aBuilder, *this);
-  }
 
   bool CanMerge(const nsDisplayItem* aItem) const override {
     // Items for the same content element should be merged into a single
@@ -6654,6 +6656,8 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
   bool CreateWebRenderCSSFilters(WrFiltersHolder& wrFilters);
 
  private:
+  NS_DISPLAY_ALLOW_CLONING()
+
   // relative to mFrame
   nsRect mEffectsBounds;
 };
