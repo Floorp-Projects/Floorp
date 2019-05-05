@@ -134,7 +134,7 @@ var NormandyApi = {
 
     let valid;
     try {
-      valid = verifier.verifyContentSignature(
+      valid = await verifier.asyncVerifyContentSignature(
         serialized,
         builtSignature,
         certChain,

@@ -317,6 +317,7 @@ class UrlbarController {
             break;
           }
           if (executeAction) {
+            this.userSelectionBehavior = "arrow";
             this.input.startQuery({ searchString: this.input.textValue });
           }
         }
@@ -330,9 +331,15 @@ class UrlbarController {
         break;
       case KeyEvent.DOM_VK_DELETE:
       case KeyEvent.DOM_VK_BACK_SPACE:
-        if (event.shiftKey && this.view.isOpen &&
-            (!executeAction || this._handleDeleteEntry())) {
-          event.preventDefault();
+        if (!this.view.isOpen) {
+          break;
+        }
+        if (event.shiftKey) {
+          if (!executeAction || this._handleDeleteEntry()) {
+            event.preventDefault();
+          }
+        } else if (executeAction) {
+          this.view.removeAccessibleFocus();
         }
         break;
     }

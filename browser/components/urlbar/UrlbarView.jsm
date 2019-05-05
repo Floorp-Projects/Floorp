@@ -215,7 +215,7 @@ class UrlbarView {
         isFirstPreselectedResult = true;
         this._selectItem(this._rows.firstElementChild, {
           updateInput: false,
-          setAccessibleFocus: false,
+          setAccessibleFocus: this.controller._userSelectionBehavior == "arrow",
         });
       } else {
         // Clear the selection when we get a new set of results.
