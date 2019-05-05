@@ -49,6 +49,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
  * @property context a reference to the context.
  * @property sessionManager the [SessionManager] instance in order to subscribe
  * to the selected [Session].
+ * @property sessionId optional sessionId to be observed if null the selected session will be observed.
  * @property storage the object in charge of persisting all the [SitePermissions] objects.
  * @property sitePermissionsRules indicates how permissions should behave per permission category.
  * @property fragmentManager a reference to a [FragmentManager], used to show permissions prompts.
@@ -61,6 +62,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_sitepermissions_prompt_dialog"
 class SitePermissionsFeature(
     private val context: Context,
     private val sessionManager: SessionManager,
+    private var sessionId: String? = null,
     private val storage: SitePermissionsStorage = SitePermissionsStorage(context),
     var sitePermissionsRules: SitePermissionsRules? = null,
     private val fragmentManager: FragmentManager,
@@ -76,7 +78,7 @@ class SitePermissionsFeature(
     }
 
     override fun start() {
-        observer.observeSelected()
+        observer.observeIdOrSelected(sessionId)
         fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
             // There's still a [SitePermissionsDialogFragment] visible from the last time. Re-attach
             // this feature so that the fragment can invoke the callback on this feature once the user
@@ -341,7 +343,7 @@ class SitePermissionsFeature(
                 host,
                 R.string.mozac_feature_sitepermissions_camera_and_microphone,
                 R.drawable.mozac_ic_microphone,
-                shouldIncludeDoNotAskAgainCheckBox = true
+                showDoNotAskAgainCheckBox = true
             )
         }
     }
@@ -359,7 +361,7 @@ class SitePermissionsFeature(
                     host,
                     R.string.mozac_feature_sitepermissions_location_title,
                     R.drawable.mozac_ic_location,
-                    shouldIncludeDoNotAskAgainCheckBox = true
+                    showDoNotAskAgainCheckBox = true
                 )
             }
             is ContentNotification -> {
@@ -369,7 +371,7 @@ class SitePermissionsFeature(
                     host,
                     R.string.mozac_feature_sitepermissions_notification_title,
                     R.drawable.mozac_ic_notification,
-                    shouldIncludeDoNotAskAgainCheckBox = false,
+                    showDoNotAskAgainCheckBox = false,
                     isNotificationRequest = true
                 )
             }
@@ -380,7 +382,7 @@ class SitePermissionsFeature(
                     host,
                     R.string.mozac_feature_sitepermissions_microfone_title,
                     R.drawable.mozac_ic_microphone,
-                    shouldIncludeDoNotAskAgainCheckBox = true
+                    showDoNotAskAgainCheckBox = true
                 )
             }
             is ContentVideoCamera, is ContentVideoCapture -> {
@@ -390,7 +392,7 @@ class SitePermissionsFeature(
                     host,
                     R.string.mozac_feature_sitepermissions_camera_title,
                     R.drawable.mozac_ic_video,
-                    shouldIncludeDoNotAskAgainCheckBox = true
+                    showDoNotAskAgainCheckBox = true
                 )
             }
             else ->
@@ -406,7 +408,7 @@ class SitePermissionsFeature(
         host: String,
         @StringRes titleId: Int,
         @DrawableRes iconId: Int,
-        shouldIncludeDoNotAskAgainCheckBox: Boolean = false,
+        showDoNotAskAgainCheckBox: Boolean = false,
         isNotificationRequest: Boolean = false
     ): SitePermissionsDialogFragment {
         val title = context.getString(titleId, host)
@@ -416,7 +418,7 @@ class SitePermissionsFeature(
             title,
             iconId,
             this,
-            shouldIncludeDoNotAskAgainCheckBox,
+            showDoNotAskAgainCheckBox,
             isNotificationRequest = isNotificationRequest
         )
     }

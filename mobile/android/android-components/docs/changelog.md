@@ -45,6 +45,7 @@ permalink: /changelog/
   * ⚠️ **This is a breaking API change**: ``anchorView`` property has been removed if you want to change the position of the prompts use the ``promptsStyling`` property.
   * Added new property ``context``. It must be provided in the constructor.
   * Do not save new site permissions in private sessions.
+  * Added ``sessionId`` property for adding site permissions on custom tabs.
   * Allow prompts styling via ``PromptsStyling``
   ```kotlin
     data class PromptsStyling(

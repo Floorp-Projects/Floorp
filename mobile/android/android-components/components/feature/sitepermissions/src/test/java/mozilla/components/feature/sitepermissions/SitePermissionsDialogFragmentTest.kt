@@ -179,6 +179,7 @@ class SitePermissionsDialogFragmentTest {
 
         val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
 
+        assertTrue(fragment.userSelectionCheckBox)
         assertFalse(checkBox.isVisible())
     }
 

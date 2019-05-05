@@ -151,6 +151,35 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
+    fun `providing a custom session id to the feature will notified on new incoming permissionRequests`() {
+        val customTabSession = Session("customTabSessionId")
+        val selectedSession = Session("")
+
+        mockSessionManager.add(selectedSession)
+        mockSessionManager.select(selectedSession)
+        mockSessionManager.add(customTabSession)
+
+        var wasCalled = false
+
+        sitePermissionFeature = SitePermissionsFeature(
+            context = context,
+            sessionManager = mockSessionManager,
+            onNeedToRequestPermissions = {
+                wasCalled = true
+            },
+            sessionId = customTabSession.id,
+            fragmentManager = mockFragmentManager
+        )
+
+        sitePermissionFeature.start()
+
+        val mockPermissionRequest: PermissionRequest = mock()
+        customTabSession.appPermissionRequest = Consumable.from(mockPermissionRequest)
+
+        assertTrue(wasCalled)
+    }
+
+    @Test
     fun `granting a content permission must call grant and consume contentPermissionRequest`() {
         val permissions = listOf(
             ContentVideoCapture("", "back camera"),

@@ -38,17 +38,15 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
 
     internal var feature: SitePermissionsFeature? = null
 
-    internal val sessionId: String by lazy { safeArguments.getString(KEY_SESSION_ID) }
+    internal val sessionId: String get() = safeArguments.getString(KEY_SESSION_ID, "")
 
-    internal val title: String by lazy { safeArguments.getString(KEY_TITLE) }
+    internal val title: String get() = safeArguments.getString(KEY_TITLE, "")
 
-    internal val dialogGravity: Int by lazy { safeArguments.getInt(KEY_DIALOG_GRAVITY, DEFAULT_VALUE) }
+    internal val dialogGravity: Int get() = safeArguments.getInt(KEY_DIALOG_GRAVITY, DEFAULT_VALUE)
 
-    internal val dialogShouldWidthMatchParent: Boolean by lazy {
-        safeArguments.getBoolean(KEY_DIALOG_WIDTH_MATCH_PARENT)
-    }
+    internal val dialogShouldWidthMatchParent: Boolean get() = safeArguments.getBoolean(KEY_DIALOG_WIDTH_MATCH_PARENT)
 
-    internal val shouldIncludeCheckBox: Boolean by lazy { safeArguments.getBoolean(KEY_SHOULD_INCLUDE_CHECKBOX) }
+    internal val showDoNotAskAgainCheckBox: Boolean get() = safeArguments.getBoolean(KEY_SHOULD_INCLUDE_CHECKBOX)
 
     private val safeArguments get() = requireNotNull(arguments)
 
@@ -108,7 +106,7 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
             )
         }
     }
-
+    @SuppressLint("InflateParams")
     private fun createContainer(): View {
         val rootView = LayoutInflater.from(requireContext()).inflate(
             R.layout.mozac_site_permissions_prompt,
@@ -146,14 +144,13 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
             negativeButton.setText(R.string.mozac_feature_sitepermissions_never_allow)
         }
 
-        if (shouldIncludeCheckBox) {
+        if (showDoNotAskAgainCheckBox) {
             addCheckbox(rootView)
         }
 
         return rootView
     }
 
-    @SuppressLint("InflateParams")
     private fun addCheckbox(containerView: View) {
         val checkBox = containerView.findViewById<CheckBox>(R.id.do_not_ask_again)
         checkBox.visibility = VISIBLE
@@ -184,7 +181,7 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
                 putBoolean(KEY_USER_CHECK_BOX, shouldIncludeCheckBox)
                 putBoolean(KEY_IS_NOTIFICATION_REQUEST, isNotificationRequest)
                 if (isNotificationRequest) {
-                    putBoolean(KEY_USER_CHECK_BOX, false)
+                    putBoolean(KEY_USER_CHECK_BOX, true)
                     putBoolean(KEY_SHOULD_INCLUDE_CHECKBOX, false)
                 }
 
