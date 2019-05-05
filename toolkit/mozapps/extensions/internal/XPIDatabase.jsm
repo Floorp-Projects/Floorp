@@ -2833,7 +2833,7 @@ this.XPIDatabaseReconcile = {
 
     for (let [id, addon] of previousVisible) {
       if (addon.location) {
-        if (addon.location.isBuiltin) {
+        if (addon.location.name == KEY_APP_BUILTINS) {
           continue;
         }
         if (addonExists(addon)) {
