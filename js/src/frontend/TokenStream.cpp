@@ -2181,7 +2181,18 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::matchInteger(
     if (isIntegerUnit(unit)) {
       continue;
     }
+#ifdef NIGHTLY_BUILD
+    if (unit != '_') {
+      break;
+    }
+    unit = getCodeUnit();
+    if (!isIntegerUnit(unit)) {
+      error(JSMSG_MISSING_DIGIT_AFTER_SEPARATOR);
+      return false;
+    }
+#else
     break;
+#endif /* NIGHTLY_BUILD */
   }
 
   *nextUnit = unit;
@@ -2254,8 +2265,9 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
     // "0." and "0e..." numbers parse "." or "e..." here.  Neither range
     // contains a number, so we can't use |FullStringToDouble|.  (Parse
     // failures return 0.0, so we'll still get the right result.)
-    if (!StringToDouble(anyCharsAccess().cx, numStart,
-                        this->sourceUnits.addressOfNextCodeUnit(), &dval)) {
+    if (!GetDecimalNonInteger(anyCharsAccess().cx, numStart,
+                              this->sourceUnits.addressOfNextCodeUnit(),
+                              &dval)) {
       return false;
     }
   }
@@ -2432,6 +2444,12 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::bigIntLiteral(
     // binary, octal, decimal, or hex digits.  Already checked by caller, as
     // the "n" indicating bigint comes at the end.
     MOZ_ASSERT(isAsciiCodePoint(unit));
+#ifdef NIGHTLY_BUILD
+    // Skip over any separators.
+    if (unit == '_') {
+      continue;
+    }
+#endif
     if (!this->appendCodePointToCharBuffer(unit)) {
       return false;
     }
@@ -2697,12 +2715,25 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
           unit = getCodeUnit();
         } while (IsAsciiDigit(unit));
 
+#ifdef NIGHTLY_BUILD
+        if (unit == '_') {
+          error(JSMSG_SEPARATOR_IN_ZERO_PREFIXED_NUMBER);
+          return badToken();
+        }
+#endif /* NIGHTLY_BUILD */
+
         if (nonOctalDecimalIntegerLiteral) {
           // Use the decimal scanner for the rest of the number.
           return decimalNumber(unit, start, numStart, modifier, ttp);
         }
+#ifdef NIGHTLY_BUILD
+      } else if (unit == '_') {
+        // Give a more explicit error message when '_' is used after '0'.
+        error(JSMSG_SEPARATOR_IN_ZERO_PREFIXED_NUMBER);
+        return badToken();
+#endif /* NIGHTLY_BUILD */
       } else {
-        // '0' not followed by [XxBbOo0-9];  scan as a decimal number.
+        // '0' not followed by [XxBbOo0-9_];  scan as a decimal number.
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
         // NOTE: |unit| may be EOF here.  (This is permitted by case #3
@@ -2747,7 +2778,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
       double dval;
       if (!GetFullInteger(anyCharsAccess().cx, numStart,
                           this->sourceUnits.addressOfNextCodeUnit(), radix,
-                          &dval)) {
+                          IntegerSeparatorHandling::SkipUnderscore, &dval)) {
         return badToken();
       }
       newNumberToken(dval, NoDecimal, start, modifier, ttp);
