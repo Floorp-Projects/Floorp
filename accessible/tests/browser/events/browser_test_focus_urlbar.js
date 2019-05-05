@@ -82,7 +82,7 @@ async function runTests() {
   await TestUtils.waitForTick();
   testStates(textBox, STATE_FOCUSED);
 
-  info("Ensuring autocomplete focus on down arrow");
+  info("Ensuring autocomplete focus on down arrow (1)");
   focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
   EventUtils.synthesizeKey("KEY_ArrowDown");
   event = await focused;
@@ -126,7 +126,7 @@ async function runTests() {
   // Move back to the end so the next press of down arrow opens the popup.
   EventUtils.synthesizeKey("KEY_ArrowRight");
 
-  info("Ensuring autocomplete focus on down arrow");
+  info("Ensuring autocomplete focus on down arrow (2)");
   focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
   EventUtils.synthesizeKey("KEY_ArrowDown");
   event = await focused;
@@ -140,7 +140,7 @@ async function runTests() {
   EventUtils.synthesizeKey("KEY_Backspace");
   await waitForSearchFinish();
 
-  info("Ensuring autocomplete focus on down arrow");
+  info("Ensuring autocomplete focus on down arrow (3)");
   focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
   EventUtils.synthesizeKey("KEY_ArrowDown");
   event = await focused;
@@ -152,7 +152,7 @@ async function runTests() {
   await focused;
   testStates(textBox, STATE_FOCUSED);
 
-  info("Ensuring autocomplete focus on down arrow");
+  info("Ensuring autocomplete focus on down arrow (4)");
   focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
   EventUtils.synthesizeKey("KEY_ArrowDown");
   event = await focused;

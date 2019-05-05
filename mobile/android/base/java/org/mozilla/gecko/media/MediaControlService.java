@@ -40,9 +40,9 @@ public class MediaControlService extends Service {
 
         if (intent.hasExtra(GeckoMediaControlAgent.EXTRA_NOTIFICATION_DATA)) {
             if (GeckoMediaControlAgent.getInstance().isAttachedToContext() ||
-                    /* bug 1516665 - If we are not attached to context but the build is not release or beta continue
+                    /* bug 1516665 - If we are not attached to context but the build is a Nightly, continue
                     in order to gather more information */
-                    !AppConstants.RELEASE_OR_BETA) {
+                    AppConstants.FENNEC_NIGHTLY) {
                     currentNotification = GeckoMediaControlAgent.getInstance().createNotification(
                             (MediaNotification) intent.getParcelableExtra(GeckoMediaControlAgent.EXTRA_NOTIFICATION_DATA));
             } else {
