@@ -166,6 +166,13 @@ static uint32_t GetSingleCodePoint(const char16_t** p, const char16_t* end) {
 }
 
 template <typename CharT>
+static constexpr bool IsAsciiBinary(CharT c) {
+  using UnsignedCharT = std::make_unsigned_t<CharT>;
+  auto uc = static_cast<UnsignedCharT>(c);
+  return uc == '0' || uc == '1';
+}
+
+template <typename CharT>
 static constexpr bool IsAsciiOctal(CharT c) {
   using UnsignedCharT = std::make_unsigned_t<CharT>;
   auto uc = static_cast<UnsignedCharT>(c);
@@ -2165,6 +2172,23 @@ void SourceUnits<Utf8Unit>::consumeRestOfSingleLineComment() {
 }
 
 template <typename Unit, class AnyCharsAccess>
+MOZ_MUST_USE MOZ_ALWAYS_INLINE bool
+TokenStreamSpecific<Unit, AnyCharsAccess>::matchInteger(
+    IsIntegerUnit isIntegerUnit, int32_t* nextUnit) {
+  int32_t unit;
+  while (true) {
+    unit = getCodeUnit();
+    if (isIntegerUnit(unit)) {
+      continue;
+    }
+    break;
+  }
+
+  *nextUnit = unit;
+  return true;
+}
+
+template <typename Unit, class AnyCharsAccess>
 MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
     int32_t unit, TokenStart start, const Unit* numStart, Modifier modifier,
     TokenKind* out) {
@@ -2173,8 +2197,10 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
   auto noteBadToken = MakeScopeExit([this]() { this->badToken(); });
 
   // Consume integral component digits.
-  while (IsAsciiDigit(unit)) {
-    unit = getCodeUnit();
+  if (IsAsciiDigit(unit)) {
+    if (!matchInteger(IsAsciiDigit, &unit)) {
+      return false;
+    }
   }
 
   // Numbers contain no escapes, so we can read directly from |sourceUnits|.
@@ -2198,9 +2224,9 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
     // Consume any decimal dot and fractional component.
     if (unit == '.') {
       decimalPoint = HasDecimal;
-      do {
-        unit = getCodeUnit();
-      } while (IsAsciiDigit(unit));
+      if (!matchInteger(IsAsciiDigit, &unit)) {
+        return false;
+      }
     }
 
     // Consume any exponential notation.
@@ -2218,9 +2244,9 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
       }
 
       // Consume exponential digits.
-      do {
-        unit = getCodeUnit();
-      } while (IsAsciiDigit(unit));
+      if (!matchInteger(IsAsciiDigit, &unit)) {
+        return false;
+      }
     }
 
     ungetCodeUnit(unit);
@@ -2617,13 +2643,13 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0x'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        while (IsAsciiHexDigit(unit)) {
-          unit = getCodeUnit();
+        if (!matchInteger(IsAsciiHexDigit, &unit)) {
+          return badToken();
         }
       } else if (unit == 'b' || unit == 'B') {
         radix = 2;
         unit = getCodeUnit();
-        if (unit != '0' && unit != '1') {
+        if (!IsAsciiBinary(unit)) {
           // NOTE: |unit| may be EOF here.
           ungetCodeUnit(unit);
           error(JSMSG_MISSING_BINARY_DIGITS);
@@ -2633,8 +2659,8 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0b'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        while (unit == '0' || unit == '1') {
-          unit = getCodeUnit();
+        if (!matchInteger(IsAsciiBinary, &unit)) {
+          return badToken();
         }
       } else if (unit == 'o' || unit == 'O') {
         radix = 8;
@@ -2649,8 +2675,8 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0o'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        while (IsAsciiOctal(unit)) {
-          unit = getCodeUnit();
+        if (!matchInteger(IsAsciiOctal, &unit)) {
+          return badToken();
         }
       } else if (IsAsciiDigit(unit)) {
         radix = 8;
