@@ -172,7 +172,7 @@ void nsTableFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // see if border collapse is on, if so set it
   const nsStyleTableBorder* tableStyle = StyleTableBorder();
   bool borderCollapse =
-      (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse);
+      (StyleBorderCollapse::Collapse == tableStyle->mBorderCollapse);
   SetBorderCollapse(borderCollapse);
   if (borderCollapse) {
     SetNeedToCalcHasBCBorders(true);
