@@ -297,7 +297,8 @@ JSONParserBase::Token JSONParser<CharT>::readNumber() {
     }
 
     double d;
-    if (!GetFullInteger(cx, digitStart.get(), current.get(), 10, &d)) {
+    if (!GetFullInteger(cx, digitStart.get(), current.get(), 10,
+                        IntegerSeparatorHandling::None, &d)) {
       return token(OOM);
     }
     return numberToken(negative ? -d : d);
