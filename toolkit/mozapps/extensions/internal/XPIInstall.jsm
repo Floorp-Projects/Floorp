@@ -340,6 +340,36 @@ XPIPackage = class XPIPackage extends Package {
 };
 
 /**
+ * Return an object that implements enough of the Package interface
+ * to allow loadManifest() to work for a built-in addon (ie, one loaded
+ * from a resource: url)
+ *
+ * @param {nsIURL} baseURL The URL for the root of the add-on.
+ * @returns {object}
+ */
+function builtinPackage(baseURL) {
+  return {
+    rootURI: baseURL,
+    filePath: baseURL.spec,
+    file: null,
+    verifySignedState() {
+      return {
+        signedState: AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+        cert: null,
+      };
+    },
+    async hasResource(path) {
+      try {
+        let response = await fetch(this.rootURI.resolve(path));
+        return response.ok;
+      } catch (e) {
+        return false;
+      }
+    },
+  };
+}
+
+/**
  * Determine the reason to pass to an extension's bootstrap methods when
  * switch between versions.
  *
@@ -610,8 +640,23 @@ var loadManifestFromFile = async function(aFile, aLocation, aOldAddon) {
  * A synchronous method for loading an add-on's manifest. Do not use
  * this.
  */
-function syncLoadManifestFromFile(aFile, aLocation, aOldAddon) {
-  return XPIInternal.awaitPromise(loadManifestFromFile(aFile, aLocation, aOldAddon));
+function syncLoadManifest(state, location, oldAddon) {
+  if (location.name == "app-builtin") {
+    let pkg = builtinPackage(Services.io.newURI(oldAddon.rootURI));
+    return XPIInternal.awaitPromise(loadManifest(pkg, location, oldAddon));
+  }
+
+  let file = new nsIFile(state.path);
+  let pkg = Package.get(file);
+  return XPIInternal.awaitPromise((async () => {
+    try {
+      let addon = await loadManifest(pkg, location, oldAddon);
+      addon.rootURI = getURIForResourceInFile(file, "").spec;
+      return addon;
+    } finally {
+      pkg.close();
+    }
+  })());
 }
 
 /**
@@ -3226,7 +3271,7 @@ var XPIInstall = {
   flushJarCache,
   newVersionReason,
   recursiveRemove,
-  syncLoadManifestFromFile,
+  syncLoadManifest,
 
   // Keep track of in-progress operations that support cancel()
   _inProgress: [],
@@ -3695,27 +3740,7 @@ var XPIInstall = {
       throw new Error("Built-in addons must use resource: URLS");
     }
 
-    // Enough of the Package interface to allow loadManifest() to work.
-    let pkg = {
-      rootURI: baseURL,
-      filePath: baseURL.spec,
-      file: null,
-      verifySignedState() {
-        return {
-          signedState: AddonManager.SIGNEDSTATE_NOT_REQUIRED,
-          cert: null,
-        };
-      },
-      async hasResource(path) {
-        try {
-          let response = await fetch(this.rootURI.resolve(path));
-          return response.ok;
-        } catch (e) {
-          return false;
-        }
-      },
-    };
-
+    let pkg = builtinPackage(baseURL);
     let addon = await loadManifest(pkg, XPIInternal.BuiltInLocation);
     addon.rootURI = base;
 
