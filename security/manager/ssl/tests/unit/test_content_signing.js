@@ -63,7 +63,7 @@ function check_telemetry(expected_index, expected, expectedId) {
   ERROR_HISTOGRAM.clear();
 }
 
-function run_test() {
+add_task(async function run_test() {
   // set up some data
   const DATA = readFile(do_get_file(TEST_DATA_DIR + "test.txt"));
   const GOOD_SIGNATURE = "p384ecdsa=" +
@@ -97,7 +97,7 @@ function run_test() {
   VERIFICATION_HISTOGRAM.clear();
   let chain1 = oneCRLChain.join("\n");
   let verifier = getSignatureVerifier();
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ONECRL_NAME),
      "Before the root is set, signatures should fail to verify but not throw.");
   // Check for generic chain building error.
   check_telemetry(6, 1, getCertHash("content_signing_onecrl_ee"));
@@ -105,18 +105,18 @@ function run_test() {
   setRoot(TEST_DATA_DIR + "content_signing_root.pem");
 
   // Check good signatures from good certificates with the correct SAN
-  ok(verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ONECRL_NAME),
+  ok(await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ONECRL_NAME),
      "A OneCRL signature should verify with the OneCRL chain");
   let chain2 = remoteNewTabChain.join("\n");
-  ok(verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain2,
-                                     ABOUT_NEWTAB_NAME),
+  ok(await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chain2,
+                                                ABOUT_NEWTAB_NAME),
      "A newtab signature should verify with the newtab chain");
   // Check for valid signature
   check_telemetry(0, 2, getCertHash("content_signing_remote_newtab_ee"));
 
   // Check a bad signature when a good chain is provided
   chain1 = oneCRLChain.join("\n");
-  ok(!verifier.verifyContentSignature(DATA, BAD_SIGNATURE, chain1, ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, BAD_SIGNATURE, chain1, ONECRL_NAME),
      "A bad signature should not verify");
   // Check for invalid signature
   check_telemetry(1, 1, getCertHash("content_signing_onecrl_ee"));
@@ -124,8 +124,8 @@ function run_test() {
   // Check a good signature from cert with good SAN but a different key than the
   // one used to create the signature
   let badKeyChain = oneCRLBadKeyChain.join("\n");
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, badKeyChain,
-                                      ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, badKeyChain,
+                                                 ONECRL_NAME),
      "A signature should not verify if the signing key is wrong");
   // Check for wrong key in cert.
   check_telemetry(9, 1, getCertHash("content_signing_onecrl_wrong_key_ee"));
@@ -133,77 +133,77 @@ function run_test() {
   // Check a good signature from cert with good SAN but a different key than the
   // one used to create the signature (this time, an RSA key)
   let rsaKeyChain = oneCRLBadKeyChain.join("\n");
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, rsaKeyChain,
-                                      ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, rsaKeyChain,
+                                                 ONECRL_NAME),
      "A signature should not verify if the signing key is wrong (RSA)");
   // Check for wrong key in cert.
   check_telemetry(9, 1, getCertHash("content_signing_onecrl_wrong_key_ee"));
 
   // Check a good signature from cert with good SAN but with chain missing root
   let missingRoot = [oneCRLChain[0], oneCRLChain[1]].join("\n");
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, missingRoot,
-                                      ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, missingRoot,
+                                                 ONECRL_NAME),
      "A signature should not verify if the chain is incomplete (missing root)");
   // Check for generic chain building error.
   check_telemetry(6, 1, getCertHash("content_signing_onecrl_ee"));
 
   // Check a good signature from cert with good SAN but with no path to root
   let missingInt = [oneCRLChain[0], oneCRLChain[2]].join("\n");
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, missingInt,
-                                      ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, missingInt,
+                                                 ONECRL_NAME),
      "A signature should not verify if the chain is incomplete (missing int)");
   // Check for generic chain building error.
   check_telemetry(6, 1, getCertHash("content_signing_onecrl_ee"));
 
   // Check good signatures from good certificates with the wrong SANs
   chain1 = oneCRLChain.join("\n");
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
-                                      ABOUT_NEWTAB_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
+                                                 ABOUT_NEWTAB_NAME),
      "A OneCRL signature should not verify if we require the newtab SAN");
   // Check for invalid EE cert.
   check_telemetry(7, 1, getCertHash("content_signing_onecrl_ee"));
 
   chain2 = remoteNewTabChain.join("\n");
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain2,
-                                      ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chain2,
+                                                 ONECRL_NAME),
      "A newtab signature should not verify if we require the OneCRL SAN");
   // Check for invalid EE cert.
   check_telemetry(7, 1, getCertHash("content_signing_remote_newtab_ee"));
 
   // Check good signatures with good chains with some other invalid names
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ""),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ""),
      "A signature should not verify if the SANs do not match an empty name");
   // Check for invalid EE cert.
   check_telemetry(7, 1, getCertHash("content_signing_onecrl_ee"));
 
   // Test expired certificate.
   let chainExpired = expiredOneCRLChain.join("\n");
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chainExpired, ""),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chainExpired, ""),
      "A signature should not verify if the signing certificate is expired");
   // Check for expired cert.
   check_telemetry(4, 1, getCertHash("content_signing_onecrl_ee_expired"));
 
   // Test not valid yet certificate.
   let chainNotValidYet = notValidYetOneCRLChain.join("\n");
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chainNotValidYet, ""),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chainNotValidYet, ""),
      "A signature should not verify if the signing certificate is not valid yet");
   // Check for not yet valid cert.
   check_telemetry(5, 1, getCertHash("content_signing_onecrl_ee_not_valid_yet"));
 
   let relatedName = "subdomain." + ONECRL_NAME;
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
-                                      relatedName),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
+                                                 relatedName),
      "A signature should not verify if the SANs do not match a related name");
 
   let randomName = "\xb1\x9bU\x1c\xae\xaa3\x19H\xdb\xed\xa1\xa1\xe0\x81\xfb" +
                    "\xb2\x8f\x1cP\xe5\x8b\x9c\xc2s\xd3\x1f\x8e\xbbN";
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, randomName),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chain1, randomName),
      "A signature should not verify if the SANs do not match a random name");
 
   // check good signatures with chains that have strange or missing SANs
   chain1 = noSANChain.join("\n");
-  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
-                                      ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
+                                                 ONECRL_NAME),
      "A signature should not verify if the SANs do not match a supplied name");
 
   // Check malformed signature data
@@ -226,9 +226,8 @@ function run_test() {
     "LpLB1Nzal42BQZn7i4rhAldYdcVvy7rOMlsTUb5Zz6vpVW9LCT9lMJ7Sq1xbU-0g==",
     ];
   for (let badSig of bad_signatures) {
-    throws(() => {
-      verifier.verifyContentSignature(DATA, badSig, chain1, ONECRL_NAME);
-    }, /NS_ERROR/, `Bad or malformed signature "${badSig}" should be rejected`);
+    await Assert.rejects(verifier.asyncVerifyContentSignature(DATA, badSig, chain1, ONECRL_NAME),
+                         /NS_ERROR/, `Bad or malformed signature "${badSig}" should be rejected`);
   }
 
   // Check malformed and missing certificate chain data
@@ -259,17 +258,20 @@ function run_test() {
   }
 
   for (let badChain of badChains) {
-    throws(() => {
-      verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, badChain,
-                                      ONECRL_NAME);
-    }, /NS_ERROR/, `Bad chain data starting "${badChain.substring(0, 80)}" ` +
-                   "should be rejected");
+    await Assert.rejects(verifier.asyncVerifyContentSignature(DATA, GOOD_SIGNATURE, badChain,
+                                                              ONECRL_NAME),
+                         /NS_ERROR/,
+                         `Bad chain data starting "${badChain.substring(0, 80)}" ` +
+                         "should be rejected");
   }
 
-  ok(!verifier.verifyContentSignature(DATA + "appended data", GOOD_SIGNATURE, chain1, ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA + "appended data", GOOD_SIGNATURE, chain1,
+                                                 ONECRL_NAME),
      "A good signature should not verify if the data is tampered with (append)");
-  ok(!verifier.verifyContentSignature("prefixed data" + DATA, GOOD_SIGNATURE, chain1, ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature("prefixed data" + DATA, GOOD_SIGNATURE, chain1,
+                                                 ONECRL_NAME),
      "A good signature should not verify if the data is tampered with (prefix)");
-  ok(!verifier.verifyContentSignature(DATA.replace(/e/g, "i"), GOOD_SIGNATURE, chain1, ONECRL_NAME),
+  ok(!await verifier.asyncVerifyContentSignature(DATA.replace(/e/g, "i"), GOOD_SIGNATURE, chain1,
+                                                 ONECRL_NAME),
      "A good signature should not verify if the data is tampered with (modify)");
-}
+});

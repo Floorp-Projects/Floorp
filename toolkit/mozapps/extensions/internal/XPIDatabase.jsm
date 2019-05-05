@@ -2410,9 +2410,7 @@ this.XPIDatabaseReconcile = {
 
       if (!aNewAddon) {
         // Load the manifest from the add-on.
-        let file = new nsIFile(aAddonState.path);
-        aNewAddon = XPIInstall.syncLoadManifestFromFile(file, aLocation);
-        aNewAddon.rootURI = XPIInternal.getURIForResourceInFile(file, "").spec;
+        aNewAddon = XPIInstall.syncLoadManifest(aAddonState, aLocation);
       }
       // The add-on in the manifest should match the add-on ID.
       if (aNewAddon.id != aId) {
@@ -2506,9 +2504,7 @@ this.XPIDatabaseReconcile = {
     try {
       // If there isn't an updated install manifest for this add-on then load it.
       if (!aNewAddon) {
-        let file = new nsIFile(aAddonState.path);
-        aNewAddon = XPIInstall.syncLoadManifestFromFile(file, aLocation, aOldAddon);
-        aNewAddon.rootURI = XPIInternal.getURIForResourceInFile(file, "").spec;
+        aNewAddon = XPIInstall.syncLoadManifest(aAddonState, aLocation, aOldAddon);
       } else {
         aNewAddon.rootURI = aOldAddon.rootURI;
       }
@@ -2586,9 +2582,7 @@ this.XPIDatabaseReconcile = {
     let manifest = null;
     if (checkSigning || aReloadMetadata) {
       try {
-        let file = new nsIFile(aAddonState.path);
-        manifest = XPIInstall.syncLoadManifestFromFile(file, aLocation);
-        manifest.rootURI = aOldAddon.rootURI;
+        manifest = XPIInstall.syncLoadManifest(aAddonState, aLocation);
       } catch (err) {
         // If we can no longer read the manifest, it is no longer compatible.
         aOldAddon.brokenManifest = true;
@@ -2839,6 +2833,9 @@ this.XPIDatabaseReconcile = {
 
     for (let [id, addon] of previousVisible) {
       if (addon.location) {
+        if (addon.location.name == KEY_APP_BUILTINS) {
+          continue;
+        }
         if (addonExists(addon)) {
           XPIInternal.BootstrapScope.get(addon).uninstall();
         }
@@ -2909,8 +2906,9 @@ this.XPIDatabaseReconcile = {
         AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED, id);
 
         if (previousAddon.location &&
-            previousAddon._sourceBundle.exists() &&
-            !previousAddon._sourceBundle.equals(currentAddon._sourceBundle)) {
+            (!previousAddon._sourceBundle ||
+             (previousAddon._sourceBundle.exists() &&
+              !previousAddon._sourceBundle.equals(currentAddon._sourceBundle)))) {
           promise = XPIInternal.BootstrapScope.get(previousAddon).update(
             currentAddon);
         } else if (this.isSystemAddonLocation(currentAddon.location) &&
