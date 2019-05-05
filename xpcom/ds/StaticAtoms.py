@@ -1216,7 +1216,6 @@ STATIC_ATOMS = [
     Atom("truespeed", "truespeed"),
     Atom("tt", "tt"),
     Atom("type", "type"),
-    Atom("typemustmatch", "typemustmatch"),
     Atom("u", "u"),
     Atom("ul", "ul"),
     Atom("unparsedEntityUri", "unparsed-entity-uri"),
