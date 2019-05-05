@@ -30,7 +30,6 @@ UNSUPPORTED_FEATURES = set([
     "regexp-lookbehind",
     "regexp-named-groups",
     "regexp-unicode-property-escapes",
-    "numeric-separator-literal",
     "Intl.Locale",
     "global",
     "export-star-as-namespace-from-module",
@@ -47,7 +46,9 @@ FEATURE_CHECK_NEEDED = {
         "(function(){try{eval('c=class{x;}');return(false);}catch{return(true);}})()",
     "dynamic-import": "!xulRuntime.shell",
 }
-RELEASE_OR_BETA = set()
+RELEASE_OR_BETA = set([
+    "numeric-separator-literal",
+])
 
 
 @contextlib.contextmanager
