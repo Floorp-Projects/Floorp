@@ -642,7 +642,7 @@ var loadManifestFromFile = async function(aFile, aLocation, aOldAddon) {
  */
 function syncLoadManifest(state, location, oldAddon) {
   if (location.name == "app-builtin") {
-    let pkg = builtinPackage(Services.io.newURI(oldAddon.rootURI));
+    let pkg = builtinPackage(Services.io.newURI(state.rootURI));
     return XPIInternal.awaitPromise(loadManifest(pkg, location, oldAddon));
   }
 
