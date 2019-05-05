@@ -1652,7 +1652,7 @@ nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aNewData) const {
 nsStyleTableBorder::nsStyleTableBorder(const Document& aDocument)
     : mBorderSpacingCol(0),
       mBorderSpacingRow(0),
-      mBorderCollapse(NS_STYLE_BORDER_SEPARATE),
+      mBorderCollapse(StyleBorderCollapse::Separate),
       mCaptionSide(NS_STYLE_CAPTION_SIDE_TOP),
       mEmptyCells(NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
   MOZ_COUNT_CTOR(nsStyleTableBorder);
