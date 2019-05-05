@@ -8096,13 +8096,14 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
       initialized = aQuotaManager->IsTemporaryStorageInitialized();
     }
 
+    bool hasOtherClient = false;
+
     UsageInfo usageInfo;
 
     if (!mClientType.IsNull()) {
       // Checking whether there is any other client in the directory is needed.
       // If there is not, removing whole directory is needed.
       nsCOMPtr<nsIDirectoryEnumerator> originEntries;
-      bool hasOtherClient = false;
       if (NS_WARN_IF(NS_FAILED(
               file->GetDirectoryEntries(getter_AddRefs(originEntries)))) ||
           !originEntries) {
@@ -8200,11 +8201,13 @@ void ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
     }
 
     if (aPersistenceType != PERSISTENCE_TYPE_PERSISTENT) {
-      if (mClientType.IsNull()) {
-        aQuotaManager->RemoveQuotaForOrigin(aPersistenceType, group, origin);
-      } else {
+      if (hasOtherClient) {
+        MOZ_ASSERT(!mClientType.IsNull());
+
         aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, group, origin,
                                               usageInfo.TotalUsage());
+      } else {
+        aQuotaManager->RemoveQuotaForOrigin(aPersistenceType, group, origin);
       }
     }
 

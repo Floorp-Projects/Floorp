@@ -8,7 +8,7 @@
 
 add_task(async function test() {
   await BrowserTestUtils.withNewTab({ gBrowser,
-                                      url: "chrome://global/content/aboutProfiles.xhtml" },
+                                      url: "chrome://global/content/mozilla.xhtml" },
                                      async function(newBrowser) {
     // NB: We load the chrome:// page in the parent process.
     await testXFOFrameInChrome(newBrowser);

@@ -5,6 +5,8 @@
 include protocol PBackground;
 include protocol PBackgroundLSSnapshot;
 
+include PBackgroundLSSharedTypes;
+
 include "mozilla/dom/localstorage/SerializationHelpers.h";
 
 using mozilla::dom::LSSnapshot::LoadState
@@ -12,18 +14,6 @@ using mozilla::dom::LSSnapshot::LoadState
 
 namespace mozilla {
 namespace dom {
-
-/**
- * LocalStorage key/value pair wire representations.  `value` may be void in
- * cases where there is a value but it is not being sent for memory/bandwidth
- * conservation purposes.  (It's not possible to have a null/undefined `value`
- * as Storage is defined explicitly as a String store.)
- */
-struct LSItemInfo
-{
-  nsString key;
-  nsString value;
-};
 
 /**
  * Initial LSSnapshot state as produced by Datastore::GetSnapshotInitInfo.  See
