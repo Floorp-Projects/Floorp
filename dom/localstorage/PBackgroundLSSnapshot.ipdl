@@ -5,6 +5,8 @@
 include protocol PBackground;
 include protocol PBackgroundLSDatabase;
 
+include PBackgroundLSSharedTypes;
+
 namespace mozilla {
 namespace dom {
 
@@ -50,15 +52,16 @@ parent:
 
   /**
    * Invoked on demand to load an item that didn't fit into the initial
-   * snapshot prefill.
+   * snapshot prefill and also some additional key/value pairs to lower down
+   * the need to use this synchronous message again.
    *
    * This needs to be synchronous because LocalStorage's semantics are
    * synchronous.  Note that the Snapshot in the PBackground parent already
    * has the answers to this request immediately available without needing to
    * consult any other threads or perform any I/O.
    */
-  sync LoadItem(nsString key)
-    returns (nsString value);
+  sync LoadValueAndMoreItems(nsString key)
+    returns (nsString value, LSItemInfo[] itemInfos);
 
   /**
    * Invoked on demand to load all keys in in their canonical order if they

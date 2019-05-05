@@ -135,24 +135,71 @@ add_task(async function() {
     key8: "initial8",
   };
 
-  function getPartialPrefill() {
-    let size = 0;
-    let entries = Object.entries(initialState);
-    for (let i = 0; i < entries.length / 2; i++) {
-      let entry = entries[i];
-      size += entry[0].length + entry[1].length;
+  let sizeOfOneKey;
+  let sizeOfOneValue;
+  let sizeOfOneItem;
+  let sizeOfKeys = 0;
+  let sizeOfItems = 0;
+
+  let entries = Object.entries(initialState);
+  for (let i = 0; i < entries.length; i++) {
+    let entry = entries[i];
+    let sizeOfKey = entry[0].length;
+    let sizeOfValue = entry[1].length;
+    let sizeOfItem = sizeOfKey + sizeOfValue;
+    if (i == 0) {
+      sizeOfOneKey = sizeOfKey;
+      sizeOfOneValue = sizeOfValue;
+      sizeOfOneItem = sizeOfItem;
     }
-    return size;
+    sizeOfKeys += sizeOfKey;
+    sizeOfItems += sizeOfItem;
   }
 
+  info("Size of one key is " + sizeOfOneKey);
+  info("Size of one value is " + sizeOfOneValue);
+  info("Size of one item is " + sizeOfOneItem);
+  info("Size of keys is " + sizeOfKeys);
+  info("Size of items is " + sizeOfItems);
+
   const prefillValues = [
-    0,                   // no prefill
-    getPartialPrefill(), // partial prefill
-    -1,                  // full prefill
+    // Zero prefill (prefill disabled)
+    0,
+    // Less than one key length prefill
+    sizeOfOneKey - 1,
+    // Greater than one key length and less than one item length prefill
+    sizeOfOneKey + 1,
+    // Precisely one item length prefill
+    sizeOfOneItem,
+    // Precisely two times one item length prefill
+    2 * sizeOfOneItem,
+    // Precisely size of keys prefill
+    sizeOfKeys,
+    // Less than size of keys plus one value length prefill
+    sizeOfKeys + sizeOfOneValue - 1,
+    // Precisely size of keys plus one value length prefill
+    sizeOfKeys + sizeOfOneValue,
+    // Greater than size of keys plus one value length and less than size of
+    // keys plus two times one value length prefill
+    sizeOfKeys + sizeOfOneValue + 1,
+    // Precisely size of keys plus two times one value length prefill
+    sizeOfKeys + 2 * sizeOfOneValue,
+    // Precisely size of keys plus three times one value length prefill
+    sizeOfKeys + 3 * sizeOfOneValue,
+    // Precisely size of keys plus four times one value length prefill
+    sizeOfKeys + 4 * sizeOfOneValue,
+    // Precisely size of keys plus five times one value length prefill
+    sizeOfKeys + 5 * sizeOfOneValue,
+    // Precisely size of keys plus six times one value length prefill
+    sizeOfKeys + 6 * sizeOfOneValue,
+    // Precisely size of items prefill
+    sizeOfItems,
+    // Unlimited prefill
+    -1,
   ];
 
   for (let prefillValue of prefillValues) {
-    info("Setting prefill value");
+    info("Setting prefill value to " + prefillValue);
 
     await SpecialPowers.pushPrefEnv({
       set: [
@@ -160,209 +207,247 @@ add_task(async function() {
       ],
     });
 
-    info("Stage 1");
-
-    const setRemoveMutations1 = [
-      ["key0", "setRemove10"],
-      ["key1", "setRemove11"],
-      ["key2", null],
-      ["key3", "setRemove13"],
-      ["key4", "setRemove14"],
-      ["key5", "setRemove15"],
-      ["key6", "setRemove16"],
-      ["key7", "setRemove17"],
-      ["key8", null],
-      ["key9", "setRemove19"],
+    const gradualPrefillValues = [
+      // Zero gradual prefill
+      0,
+      // Less than one key length gradual prefill
+      sizeOfOneKey - 1,
+      // Greater than one key length and less than one item length gradual
+      // prefill
+      sizeOfOneKey + 1,
+      // Precisely one item length gradual prefill
+      sizeOfOneItem,
+      // Precisely two times one item length gradual prefill
+      2 * sizeOfOneItem,
+      // Precisely three times one item length gradual prefill
+      3 * sizeOfOneItem,
+      // Precisely four times one item length gradual prefill
+      4 * sizeOfOneItem,
+      // Precisely five times one item length gradual prefill
+      5 * sizeOfOneItem,
+      // Precisely six times one item length gradual prefill
+      6 * sizeOfOneItem,
+      // Precisely size of items prefill
+      sizeOfItems,
+      // Unlimited gradual prefill
+      -1,
     ];
 
-    const setRemoveState1 = {
-      key0: "setRemove10",
-      key1: "setRemove11",
-      key3: "setRemove13",
-      key4: "setRemove14",
-      key5: "setRemove15",
-      key6: "setRemove16",
-      key7: "setRemove17",
-      key9: "setRemove19",
-    };
+    for (let gradualPrefillValue of gradualPrefillValues) {
+      info("Setting gradual prefill value to " + gradualPrefillValue);
 
-    const setRemoveMutations2 = [
-      ["key0", "setRemove20"],
-      ["key1", null],
-      ["key2", "setRemove22"],
-      ["key3", "setRemove23"],
-      ["key4", "setRemove24"],
-      ["key5", "setRemove25"],
-      ["key6", "setRemove26"],
-      ["key7", null],
-      ["key8", "setRemove28"],
-      ["key9", "setRemove29"],
-    ];
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["dom.storage.snapshot_gradual_prefill", gradualPrefillValue],
+        ],
+      });
 
-    const setRemoveState2 = {
-      key0: "setRemove20",
-      key2: "setRemove22",
-      key3: "setRemove23",
-      key4: "setRemove24",
-      key5: "setRemove25",
-      key6: "setRemove26",
-      key8: "setRemove28",
-      key9: "setRemove29",
-    };
+      info("Stage 1");
 
-    // Apply initial mutations using an explicit snapshot. The explicit
-    // snapshot here ensures that the parent process have received the changes.
-    await beginExplicitSnapshot(writerTab1);
-    await applyMutations(writerTab1, initialMutations);
-    await endExplicitSnapshot(writerTab1);
+      const setRemoveMutations1 = [
+        ["key0", "setRemove10"],
+        ["key1", "setRemove11"],
+        ["key2", null],
+        ["key3", "setRemove13"],
+        ["key4", "setRemove14"],
+        ["key5", "setRemove15"],
+        ["key6", "setRemove16"],
+        ["key7", "setRemove17"],
+        ["key8", null],
+        ["key9", "setRemove19"],
+      ];
 
-    // Begin explicit snapshots in all tabs except readerTab2. All these tabs
-    // should see the initial state regardless what other tabs are doing.
-    await beginExplicitSnapshot(writerTab1);
-    await beginExplicitSnapshot(writerTab2);
-    await beginExplicitSnapshot(readerTab1);
+      const setRemoveState1 = {
+        key0: "setRemove10",
+        key1: "setRemove11",
+        key3: "setRemove13",
+        key4: "setRemove14",
+        key5: "setRemove15",
+        key6: "setRemove16",
+        key7: "setRemove17",
+        key9: "setRemove19",
+      };
 
-    // Apply first array of set/remove mutations in writerTab1 and end the
-    // explicit snapshot. This will trigger saving of values in other active
-    // snapshots.
-    await applyMutations(writerTab1, setRemoveMutations1);
-    await endExplicitSnapshot(writerTab1);
+      const setRemoveMutations2 = [
+        ["key0", "setRemove20"],
+        ["key1", null],
+        ["key2", "setRemove22"],
+        ["key3", "setRemove23"],
+        ["key4", "setRemove24"],
+        ["key5", "setRemove25"],
+        ["key6", "setRemove26"],
+        ["key7", null],
+        ["key8", "setRemove28"],
+        ["key9", "setRemove29"],
+      ];
 
-    // Begin an explicit snapshot in readerTab2. writerTab1 already ended its
-    // explicit snapshot, so readerTab2 should see mutations done by
-    // writerTab1.
-    await beginExplicitSnapshot(readerTab2);
+      const setRemoveState2 = {
+        key0: "setRemove20",
+        key2: "setRemove22",
+        key3: "setRemove23",
+        key4: "setRemove24",
+        key5: "setRemove25",
+        key6: "setRemove26",
+        key8: "setRemove28",
+        key9: "setRemove29",
+      };
 
-    // Apply second array of set/remove mutations in writerTab2 and end the
-    // explicit snapshot. This will trigger saving of values in other active
-    // snapshots, but only if they haven't been saved already.
-    await applyMutations(writerTab2, setRemoveMutations2);
-    await endExplicitSnapshot(writerTab2);
+      // Apply initial mutations using an explicit snapshot. The explicit
+      // snapshot here ensures that the parent process have received the
+      // changes.
+      await beginExplicitSnapshot(writerTab1);
+      await applyMutations(writerTab1, initialMutations);
+      await endExplicitSnapshot(writerTab1);
 
-    // Verify state in readerTab1, it should match the initial state.
-    await verifyState(readerTab1, initialState);
-    await endExplicitSnapshot(readerTab1);
+      // Begin explicit snapshots in all tabs except readerTab2. All these tabs
+      // should see the initial state regardless what other tabs are doing.
+      await beginExplicitSnapshot(writerTab1);
+      await beginExplicitSnapshot(writerTab2);
+      await beginExplicitSnapshot(readerTab1);
 
-    // Verify state in readerTab2, it should match the state after the first
-    // array of set/remove mutatations have been applied and "commited".
-    await verifyState(readerTab2, setRemoveState1);
-    await endExplicitSnapshot(readerTab2);
+      // Apply first array of set/remove mutations in writerTab1 and end the
+      // explicit snapshot. This will trigger saving of values in other active
+      // snapshots.
+      await applyMutations(writerTab1, setRemoveMutations1);
+      await endExplicitSnapshot(writerTab1);
 
-    // Verify final state, it should match the state after the second array of
-    // set/remove mutation have been applied and "commited". An explicit
-    // snapshot is used.
-    await beginExplicitSnapshot(readerTab1);
-    await verifyState(readerTab1, setRemoveState2);
-    await endExplicitSnapshot(readerTab1);
+      // Begin an explicit snapshot in readerTab2. writerTab1 already ended its
+      // explicit snapshot, so readerTab2 should see mutations done by
+      // writerTab1.
+      await beginExplicitSnapshot(readerTab2);
 
-    info("Stage 2");
+      // Apply second array of set/remove mutations in writerTab2 and end the
+      // explicit snapshot. This will trigger saving of values in other active
+      // snapshots, but only if they haven't been saved already.
+      await applyMutations(writerTab2, setRemoveMutations2);
+      await endExplicitSnapshot(writerTab2);
 
-    const setRemoveClearMutations1 = [
-      ["key0", "setRemoveClear10"],
-      ["key1", null],
-      [null, null],
-    ];
+      // Verify state in readerTab1, it should match the initial state.
+      await verifyState(readerTab1, initialState);
+      await endExplicitSnapshot(readerTab1);
 
-    const setRemoveClearState1 = {
-    };
+      // Verify state in readerTab2, it should match the state after the first
+      // array of set/remove mutatations have been applied and "commited".
+      await verifyState(readerTab2, setRemoveState1);
+      await endExplicitSnapshot(readerTab2);
 
-    const setRemoveClearMutations2 = [
-      ["key8", null],
-      ["key9", "setRemoveClear29"],
-      [null, null],
-    ];
+      // Verify final state, it should match the state after the second array of
+      // set/remove mutation have been applied and "commited". An explicit
+      // snapshot is used.
+      await beginExplicitSnapshot(readerTab1);
+      await verifyState(readerTab1, setRemoveState2);
+      await endExplicitSnapshot(readerTab1);
 
-    const setRemoveClearState2 = {
-    };
+      info("Stage 2");
 
-    // This is very similar to previous stage except that in addition to
-    // set/remove, the clear operation is involved too.
-    await beginExplicitSnapshot(writerTab1);
-    await applyMutations(writerTab1, initialMutations);
-    await endExplicitSnapshot(writerTab1);
+      const setRemoveClearMutations1 = [
+        ["key0", "setRemoveClear10"],
+        ["key1", null],
+        [null, null],
+      ];
 
-    await beginExplicitSnapshot(writerTab1);
-    await beginExplicitSnapshot(writerTab2);
-    await beginExplicitSnapshot(readerTab1);
+      const setRemoveClearState1 = {
+      };
 
-    await applyMutations(writerTab1, setRemoveClearMutations1);
-    await endExplicitSnapshot(writerTab1);
+      const setRemoveClearMutations2 = [
+        ["key8", null],
+        ["key9", "setRemoveClear29"],
+        [null, null],
+      ];
 
-    await beginExplicitSnapshot(readerTab2);
+      const setRemoveClearState2 = {
+      };
 
-    await applyMutations(writerTab2, setRemoveClearMutations2);
-    await endExplicitSnapshot(writerTab2);
+      // This is very similar to previous stage except that in addition to
+      // set/remove, the clear operation is involved too.
+      await beginExplicitSnapshot(writerTab1);
+      await applyMutations(writerTab1, initialMutations);
+      await endExplicitSnapshot(writerTab1);
 
-    await verifyState(readerTab1, initialState);
-    await endExplicitSnapshot(readerTab1);
+      await beginExplicitSnapshot(writerTab1);
+      await beginExplicitSnapshot(writerTab2);
+      await beginExplicitSnapshot(readerTab1);
 
-    await verifyState(readerTab2, setRemoveClearState1);
-    await endExplicitSnapshot(readerTab2);
+      await applyMutations(writerTab1, setRemoveClearMutations1);
+      await endExplicitSnapshot(writerTab1);
 
-    await beginExplicitSnapshot(readerTab1);
-    await verifyState(readerTab1, setRemoveClearState2);
-    await endExplicitSnapshot(readerTab1);
+      await beginExplicitSnapshot(readerTab2);
 
-    info("Stage 3");
+      await applyMutations(writerTab2, setRemoveClearMutations2);
+      await endExplicitSnapshot(writerTab2);
 
-    const changeOrderMutations = [
-      ["key1", null],
-      ["key2", null],
-      ["key3", null],
-      ["key5", null],
-      ["key6", null],
-      ["key7", null],
-      ["key8", null],
-      ["key8", "initial8"],
-      ["key7", "initial7"],
-      ["key6", "initial6"],
-      ["key5", "initial5"],
-      ["key3", "initial3"],
-      ["key2", "initial2"],
-      ["key1", "initial1"],
-    ];
+      await verifyState(readerTab1, initialState);
+      await endExplicitSnapshot(readerTab1);
 
-    // Apply initial mutations using an explicit snapshot. The explicit
-    // snapshot here ensures that the parent process have received the changes.
-    await beginExplicitSnapshot(writerTab1);
-    await applyMutations(writerTab1, initialMutations);
-    await endExplicitSnapshot(writerTab1);
+      await verifyState(readerTab2, setRemoveClearState1);
+      await endExplicitSnapshot(readerTab2);
 
-    // Begin explicit snapshots in all tabs except writerTab2 which is not used
-    // in this stage. All these tabs should see the initial order regardless
-    // what other tabs are doing.
-    await beginExplicitSnapshot(readerTab1);
-    await beginExplicitSnapshot(writerTab1);
-    await beginExplicitSnapshot(readerTab2);
+      await beginExplicitSnapshot(readerTab1);
+      await verifyState(readerTab1, setRemoveClearState2);
+      await endExplicitSnapshot(readerTab1);
 
-    // Get all keys in readerTab1 and end the explicit snapshot. No mutations
-    // have been applied yet.
-    let tab1Keys = await getKeys(readerTab1);
-    await endExplicitSnapshot(readerTab1);
+      info("Stage 3");
 
-    // Apply mutations that change the order of keys and end the explicit
-    // snapshot. The state is unchanged. This will trigger saving of key order
-    // in other active snapshots, but only if the order hasn't been saved
-    // already.
-    await applyMutations(writerTab1, changeOrderMutations);
-    await endExplicitSnapshot(writerTab1);
+      const changeOrderMutations = [
+        ["key1", null],
+        ["key2", null],
+        ["key3", null],
+        ["key5", null],
+        ["key6", null],
+        ["key7", null],
+        ["key8", null],
+        ["key8", "initial8"],
+        ["key7", "initial7"],
+        ["key6", "initial6"],
+        ["key5", "initial5"],
+        ["key3", "initial3"],
+        ["key2", "initial2"],
+        ["key1", "initial1"],
+      ];
 
-    // Get all keys in readerTab2 and end the explicit snapshot. Change order
-    // mutations have been applied, but the order should stay unchanged.
-    let tab2Keys = await getKeys(readerTab2);
-    await endExplicitSnapshot(readerTab2);
+      // Apply initial mutations using an explicit snapshot. The explicit
+      // snapshot here ensures that the parent process have received the
+      // changes.
+      await beginExplicitSnapshot(writerTab1);
+      await applyMutations(writerTab1, initialMutations);
+      await endExplicitSnapshot(writerTab1);
 
-    // Verify the key order is the same.
-    is(tab2Keys.length, tab1Keys.length, "Correct keys length");
-    for (let i = 0; i < tab2Keys.length; i++) {
-      is(tab2Keys[i], tab1Keys[i], "Correct key");
+      // Begin explicit snapshots in all tabs except writerTab2 which is not
+      // used in this stage. All these tabs should see the initial order
+      // regardless what other tabs are doing.
+      await beginExplicitSnapshot(readerTab1);
+      await beginExplicitSnapshot(writerTab1);
+      await beginExplicitSnapshot(readerTab2);
+
+      // Get all keys in readerTab1 and end the explicit snapshot. No mutations
+      // have been applied yet.
+      let tab1Keys = await getKeys(readerTab1);
+      await endExplicitSnapshot(readerTab1);
+
+      // Apply mutations that change the order of keys and end the explicit
+      // snapshot. The state is unchanged. This will trigger saving of key order
+      // in other active snapshots, but only if the order hasn't been saved
+      // already.
+      await applyMutations(writerTab1, changeOrderMutations);
+      await endExplicitSnapshot(writerTab1);
+
+      // Get all keys in readerTab2 and end the explicit snapshot. Change order
+      // mutations have been applied, but the order should stay unchanged.
+      let tab2Keys = await getKeys(readerTab2);
+      await endExplicitSnapshot(readerTab2);
+
+      // Verify the key order is the same.
+      is(tab2Keys.length, tab1Keys.length, "Correct keys length");
+      for (let i = 0; i < tab2Keys.length; i++) {
+        is(tab2Keys[i], tab1Keys[i], "Correct key");
+      }
+
+      // Verify final state, it should match the initial state since applied
+      // mutations only changed the key order. An explicit snapshot is used.
+      await beginExplicitSnapshot(readerTab1);
+      await verifyState(readerTab1, initialState);
+      await endExplicitSnapshot(readerTab1);
     }
-
-    // Verify final state, it should match the initial state since applied
-    // mutations only changed the key order. An explicit snapshot is used.
-    await beginExplicitSnapshot(readerTab1);
-    await verifyState(readerTab1, initialState);
-    await endExplicitSnapshot(readerTab1);
   }
 
   // - Clean up.
