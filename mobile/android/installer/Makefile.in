@@ -67,7 +67,9 @@ include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 ifneq (,$(JS_BINARY))
 ifndef MOZ_DEBUG
 ifndef NIGHTLY_BUILD
+ifndef FENNEC_NIGHTLY
 MOZ_PACKAGER_MINIFY_JS=1
+endif
 endif
 endif
 endif

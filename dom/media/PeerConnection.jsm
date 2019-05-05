@@ -1641,6 +1641,19 @@ class RTCPeerConnection {
     if (maxRetransmitTime !== undefined) {
       this.logWarning("Use maxPacketLifeTime instead of deprecated maxRetransmitTime which will stop working soon in createDataChannel!");
     }
+
+    if (protocol.length > 32767) {
+      // At least 65536/2 UTF-16 characters. UTF-8 might be too long.
+      // Spec says to check how long |protocol| and |label| are in _bytes_. This
+      // is a little ambiguous. For now, examine the length of the utf-8 encoding.
+      const byteCounter = new TextEncoder("utf-8");
+
+      if (byteCounter.encode(protocol).length > 65535) {
+        throw new this._win.DOMException(
+            "protocol cannot be longer than 65535 bytes", "TypeError");
+      }
+    }
+
     if (!negotiated) {
       id = null;
     } else if (id === null) {

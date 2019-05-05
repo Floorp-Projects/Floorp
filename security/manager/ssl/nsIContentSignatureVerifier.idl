@@ -27,12 +27,13 @@ interface nsIContentSignatureVerifier : nsISupports
    *                                PEM encoded string.
    * @param aHostname               The hostname for which the end entity must
                                     be valid.
-   * @returns true if the signature matches the data and aCertificateChain is
-   *          valid within aContext, false if not.
+   * @returns Promise that resolves with the value true if the signature
+   *          matches the data and aCertificateChain is valid within aContext,
+   *          and false if not. Rejects if another error occurred.
    */
-  [must_use]
-  boolean verifyContentSignature(in ACString aData,
-                                 in ACString aContentSignatureHeader,
-                                 in ACString aCertificateChain,
-                                 in ACString aHostname);
+  [implicit_jscontext, must_use]
+  Promise asyncVerifyContentSignature(in ACString aData,
+                                      in ACString aContentSignatureHeader,
+                                      in ACString aCertificateChain,
+                                      in ACString aHostname);
 };
