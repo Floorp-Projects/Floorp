@@ -22,7 +22,6 @@ boolean_attributes = {
   "img": ["ismap"],
   "input": ["autofocus", "checked", "disabled", "formnovalidate", "multiple", "readonly", "required"],
   "menuitem": ["checked", "default", "disabled"],
-  "object": ["typemustmatch"],
   "ol": ["reversed"],
   "optgroup": ["disabled"],
   "option": ["disabled", "selected"],

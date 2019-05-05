@@ -1325,7 +1325,6 @@ const boolEls = {
   ],
   keygen: ["autofocus", "disabled"],
   menuitem: ["checked", "default", "disabled"],
-  object: ["typemustmatch"],
   ol: ["reversed"],
   optgroup: ["disabled"],
   option: ["disabled", "selected"],

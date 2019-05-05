@@ -101,10 +101,6 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement,
   void SetType(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::type, aValue, aRv);
   }
-  bool TypeMustMatch() { return GetBoolAttr(nsGkAtoms::typemustmatch); }
-  void SetTypeMustMatch(bool aValue, ErrorResult& aRv) {
-    SetHTMLBoolAttr(nsGkAtoms::typemustmatch, aValue, aRv);
-  }
   void GetName(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::name, aValue); }
   void SetName(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::name, aValue, aRv);
