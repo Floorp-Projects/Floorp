@@ -729,6 +729,19 @@ button {
   list-style: decimal;
 }
 
+table,
+th,
+td {
+  border: 1px solid currentColor;
+  border-collapse: collapse;
+  padding: 6px;
+  vertical-align: top;
+}
+
+table {
+  margin: 5px;
+}
+
 /* Visually hide (but don't display: none) screen reader elements */
 .moz-reader-content .visually-hidden,
 .moz-reader-content .visuallyhidden,

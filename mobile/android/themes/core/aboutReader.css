@@ -414,6 +414,19 @@ body.dark > .container > .content blockquote {
   margin-bottom: 20px !important;
 }
 
+table,
+th,
+td {
+  border: 1px solid currentColor;
+  border-collapse: collapse;
+  padding: 6px;
+  vertical-align: top;
+}
+
+table {
+  margin: 5px;
+}
+
 /* Covers all images showing edge-to-edge using a 
    an optional caption text */
 .moz-reader-content .wp-caption,
