@@ -303,7 +303,7 @@ typedef enum JSGCParamKey {
    * gc::ChunkSize, otherwise it'll be rounded to the nearest gc::ChunkSize.
    *
    * Default: Nursery::SubChunkLimit
-   * Pref: None
+   * Pref: javascript.options.mem.nursery.min_kb
    */
   JSGC_MIN_NURSERY_BYTES = 31,
 
