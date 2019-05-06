@@ -2730,6 +2730,7 @@ pref("services.settings.security.onecrl.collection", "onecrl");
 pref("services.settings.security.onecrl.signer", "onecrl.content-signature.mozilla.org");
 pref("services.settings.security.onecrl.checked", 0);
 
+pref("extensions.abuseReport.enabled", false);
 pref("extensions.abuseReport.url", "https://addons.mozilla.org/api/v4/abuse/report/addon/");
 
 // Blocklist preferences

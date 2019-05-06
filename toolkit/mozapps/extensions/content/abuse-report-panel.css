@@ -1,0 +1,187 @@
+/* Abuse Reports card */
+
+:root {
+  --close-icon-url: url("chrome://global/skin/icons/close.svg");
+  --close-icon-size: 20px;
+
+  --radio-image-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E %3Ccircle cx='8' cy='8' r='4' fill='%23fff'/%3E %3C/svg%3E");
+  --radio-size: 16px;
+
+  --modal-panel-min-width: 60%;
+  --modal-panel-margin-top: 36px;
+  --modal-panel-margin-bottom: 36px;
+  --modal-panel-margin: 20%;
+  --modal-panel-padding: 40px;
+
+  --line-height: 20px;
+  --textarea-height: 220px;
+  --button-padding: 52px;
+  --listitem-padding-bottom: 14px;
+  --list-radio-column-size: 28px;
+  --note-font-size: 14px;
+  --note-font-weight: 400;
+  --subtitle-font-size: 16px;
+  --subtitle-font-weight: 600;
+}
+
+/* Ensure that the document (embedded in the XUL about:addons using a
+   XUL browser) has a transparent background */
+html {
+  background-color: transparent;
+}
+
+.modal-overlay-outer {
+  background: rgba(12, 12, 13, 0.6);
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  z-index: -1;
+}
+
+.modal-panel-container {
+  padding-top: var(--modal-panel-margin-top);
+  padding-bottom: var(--modal-panel-margin-bottom);
+  padding-left: var(--modal-panel-margin);
+  padding-right: var(--modal-panel-margin);
+}
+
+.addon-abuse-report {
+  min-width: var(--modal-panel-min-width);
+  padding: var(--modal-panel-padding);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.addon-abuse-report:hover {
+  /* Avoid the card box highlighting on hover. */
+  box-shadow: none;
+}
+
+.addon-abuse-report button {
+  padding: 0 var(--button-padding);
+}
+
+.abuse-report-close-icon {
+  /* position the close button in the panel upper-right corner */
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 16px;
+}
+
+button.abuse-report-close-icon {
+  background: var(--close-icon-url) no-repeat center center;
+  -moz-context-properties: fill, fill-opacity;
+  color: inherit !important;
+  fill: currentColor;
+  fill-opacity: 0;
+  min-width: auto;
+  min-height: auto;
+  width: var(--close-icon-size);
+  height: var(--close-icon-size);
+  margin: 0;
+  padding: 0;
+}
+
+button.abuse-report-close-icon:hover {
+  fill-opacity: 0.1;
+}
+
+button.abuse-report-close-icon:hover:active {
+  fill-opacity: 0.2;
+}
+
+.abuse-report-header {
+  display: flex;
+  flex-direction: row;
+}
+
+.abuse-report-contents,
+.abuse-report-contents > hr {
+  width: 100%;
+}
+
+.abuse-report-note {
+  color: var(--grey-50);
+  font-size: var(--note-font-size);
+  font-weight: var(--note-font-weight);
+  line-height: var(--line-height);
+}
+
+.abuse-report-subtitle {
+  font-size: var(--subtitle-font-size);
+  font-weight: var(--subtitle-font-weight);
+  line-height: var(--line-height);
+}
+
+ul.abuse-report-reasons {
+  list-style-type: none;
+  padding-inline-start: 0;
+}
+
+ul.abuse-report-reasons > li {
+  display: flex;
+  padding-bottom: var(--listitem-padding-bottom);
+}
+
+ul.abuse-report-reasons > li > label {
+  width: 100%;
+  line-height: var(--line-height);
+  font-size: var(--subtitle-font-size);
+  font-weight: var(--note-font-weight);
+}
+
+ul.abuse-report-reasons > li > label {
+  display: grid;
+  grid-template-columns: var(--list-radio-column-size) auto;
+  grid-template-rows: 50% auto;
+}
+
+ul.abuse-report-reasons > li > label > [type=radio] {
+  grid-column: 1;
+}
+
+ul.abuse-report-reasons > li > label > span {
+  grid-column: 2;
+}
+
+ul.abuse-report-reasons > li > label > span:nth-child(2) {
+  padding-top: 2px;
+}
+
+.abuse-report-contents [type=radio] {
+  -moz-appearance: none;
+  height: var(--radio-size);
+  width: var(--radio-size);
+  border-radius: 100%;
+  border: 1px solid var(--grey-90-a30);
+  background-color: var(--grey-90-a10);
+  margin-inline-start: 4px;
+  margin-inline-end: 4px;
+}
+
+.abuse-report-contents [type=radio]:focus {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+}
+
+.abuse-report-contents [type=radio]:hover {
+  background-color: var(--grey-90-a20);
+}
+
+.abuse-report-contents [type=radio]:checked {
+  background-image: var(--radio-image-url);
+  background-color: var(--blue-60);
+  background-position: center center;
+}
+
+.abuse-report-contents [type=radio]:checked:hover {
+  background-color: var(--blue-70);
+}
+
+abuse-report-submit-panel textarea {
+  width: 100%;
+  height: var(--textarea-height);
+  resize: none;
+  box-sizing: border-box;
+}
+
