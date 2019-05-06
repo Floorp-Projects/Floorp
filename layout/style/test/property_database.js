@@ -7232,7 +7232,7 @@ gCSSProperties["grid-template"] = {
 };
 if (isGridTemplateSubgridValueEnabled) {
   gCSSProperties["grid-template"].other_values.push(
-    "subgrid",
+    "subgrid / subgrid",
     "subgrid/40px 20px",
     "subgrid [foo] [] [bar baz] / 40px 20px",
     "40px 20px/subgrid",
@@ -7241,6 +7241,7 @@ if (isGridTemplateSubgridValueEnabled) {
     "subgrid [foo] [] [bar baz]/subgrid [foo] [] [bar baz]"
   );
   gCSSProperties["grid-template"].invalid_values.push(
+    "subgrid",
     "subgrid []",
     "subgrid [] / 'fizz'",
     "subgrid / 'fizz'"
