@@ -8,7 +8,6 @@ const {BookmarksEngine} = ChromeUtils.import("resource://services-sync/engines/b
 const {RotaryEngine} = ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-
 function SteamStore(engine) {
   Store.call(this, "Steam", engine);
 }
@@ -163,7 +162,10 @@ add_task(async function test_processIncoming_error() {
     });
 
     equal(pingPayload.engines.length, 1);
-    equal(pingPayload.engines[0].name, "bookmarks");
+
+    let engineName = bufferedBookmarksEnabled() ? "bookmarks-buffered" :
+                                                  "bookmarks";
+    equal(pingPayload.engines[0].name, engineName);
     deepEqual(pingPayload.engines[0].failureReason, {
       name: "httperror",
       code: 500,
@@ -188,10 +190,13 @@ add_task(async function test_uploading() {
   });
 
   try {
+    let engineName = bufferedBookmarksEnabled() ? "bookmarks-buffered" :
+                                                  "bookmarks";
+
     let ping = await sync_engine_and_validate_telem(engine, false);
     ok(!!ping);
     equal(ping.engines.length, 1);
-    equal(ping.engines[0].name, "bookmarks");
+    equal(ping.engines[0].name, engineName);
     ok(!!ping.engines[0].outgoing);
     greater(ping.engines[0].outgoing[0].sent, 0);
     ok(!ping.engines[0].incoming);
@@ -206,7 +211,7 @@ add_task(async function test_uploading() {
 
     ping = await sync_engine_and_validate_telem(engine, false);
     equal(ping.engines.length, 1);
-    equal(ping.engines[0].name, "bookmarks");
+    equal(ping.engines[0].name, engineName);
     equal(ping.engines[0].outgoing.length, 1);
     ok(!!ping.engines[0].incoming);
   } finally {
@@ -528,7 +533,12 @@ add_task(async function test_initial_sync_engines() {
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
   // These are the only ones who actually have things to sync at startup.
-  let engineNames = ["clients", "bookmarks", "prefs", "tabs"];
+  let telemetryEngineNames = ["clients", "prefs", "tabs"];
+  if (bufferedBookmarksEnabled()) {
+    telemetryEngineNames.push("bookmarks-buffered");
+  } else {
+    telemetryEngineNames.push("bookmarks");
+  }
   let server = await serverForEnginesWithKeys({"foo": "password"}, ["bookmarks", "prefs", "tabs"].map(name =>
     Service.engineManager.get(name)
   ));
@@ -544,7 +554,7 @@ add_task(async function test_initial_sync_engines() {
 
     // for the rest we don't care about specifics
     for (let e of ping.engines) {
-      if (!engineNames.includes(engine.name)) {
+      if (!telemetryEngineNames.includes(engine.name)) {
         continue;
       }
       greaterOrEqual(e.took, 1);
