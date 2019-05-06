@@ -176,6 +176,7 @@ class BadPrSocket : public DummyIOLayerMethods {
     // NSPR method vtable with the ones from this object.
     dummy_layer_ =
         PR_GetIdentitiesLayer(agent->ssl_fd(), DummyPrSocket::LayerId());
+    EXPECT_TRUE(dummy_layer_);
     original_methods_ = dummy_layer_->methods;
     original_secret_ = dummy_layer_->secret;
     dummy_layer_->methods = fd_->methods;

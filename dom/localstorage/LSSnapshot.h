@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_localstorage_LSSnapshot_h
 #define mozilla_dom_localstorage_LSSnapshot_h
 
+#include "LSValue.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -112,7 +114,8 @@ class LSSnapshot final : public nsIRunnable {
 
   bool Explicit() const { return mExplicit; }
 
-  nsresult Init(const LSSnapshotInitInfo& aInitInfo, bool aExplicit);
+  nsresult Init(const nsAString& aKey, const LSSnapshotInitInfo& aInitInfo,
+                bool aExplicit);
 
   nsresult GetLength(uint32_t* aResult);
 

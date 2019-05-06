@@ -93,7 +93,7 @@ typedef nsClassHashtable<nsCStringHashKey, ArchivedOriginInfo>
  ******************************************************************************/
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 2;
+const uint32_t kMajorSchemaVersion = 4;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -321,6 +321,7 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
       NS_LITERAL_CSTRING("CREATE TABLE data"
                          "( key TEXT PRIMARY KEY"
                          ", value TEXT NOT NULL"
+                         ", utf16Length INTEGER NOT NULL DEFAULT 0"
                          ", compressed INTEGER NOT NULL DEFAULT 0"
                          ", lastAccessTime INTEGER NOT NULL DEFAULT 0"
                          ");"));
@@ -355,6 +356,42 @@ nsresult UpgradeSchemaFrom1_0To2_0(mozIStorageConnection* aConnection) {
   }
 
   rv = aConnection->SetSchemaVersion(MakeSchemaVersion(2, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult UpgradeSchemaFrom2_0To3_0(mozIStorageConnection* aConnection) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE data ADD COLUMN utf16Length INTEGER NOT NULL DEFAULT 0;"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("UPDATE data SET utf16Length = utf16Length(value);"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(3, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult UpgradeSchemaFrom3_0To4_0(mozIStorageConnection* aConnection) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  nsresult rv = aConnection->SetSchemaVersion(MakeSchemaVersion(4, 0));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -511,12 +548,16 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
       }
     } else {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((2 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((4 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
         if (schemaVersion == MakeSchemaVersion(1, 0)) {
           rv = UpgradeSchemaFrom1_0To2_0(connection);
+        } else if (schemaVersion == MakeSchemaVersion(2, 0)) {
+          rv = UpgradeSchemaFrom2_0To3_0(connection);
+        } else if (schemaVersion == MakeSchemaVersion(3, 0)) {
+          rv = UpgradeSchemaFrom3_0To4_0(connection);
         } else {
           LS_WARNING(
               "Unable to open LocalStorage database, no upgrade path is "
@@ -1227,10 +1268,9 @@ class WriteOptimizer final {
     aWriteOptimizer.mTotalDelta = 0;
   }
 
-  void AddItem(const nsString& aKey, const nsString& aValue,
-               int64_t aDelta = 0);
+  void AddItem(const nsString& aKey, const LSValue& aValue, int64_t aDelta = 0);
 
-  void UpdateItem(const nsString& aKey, const nsString& aValue,
+  void UpdateItem(const nsString& aKey, const LSValue& aValue,
                   int64_t aDelta = 0);
 
   void RemoveItem(const nsString& aKey, int64_t aDelta = 0);
@@ -1271,15 +1311,15 @@ class WriteOptimizer::WriteInfo {
  */
 class WriteOptimizer::AddItemInfo : public WriteInfo {
   nsString mKey;
-  nsString mValue;
+  LSValue mValue;
 
  public:
-  AddItemInfo(const nsAString& aKey, const nsAString& aValue)
+  AddItemInfo(const nsAString& aKey, const LSValue& aValue)
       : mKey(aKey), mValue(aValue) {}
 
   const nsAString& GetKey() const { return mKey; }
 
-  const nsAString& GetValue() const { return mValue; }
+  const LSValue& GetValue() const { return mValue; }
 
  private:
   Type GetType() override { return AddItem; }
@@ -1292,7 +1332,7 @@ class WriteOptimizer::AddItemInfo : public WriteInfo {
  */
 class WriteOptimizer::UpdateItemInfo final : public AddItemInfo {
  public:
-  UpdateItemInfo(const nsAString& aKey, const nsAString& aValue)
+  UpdateItemInfo(const nsAString& aKey, const LSValue& aValue)
       : AddItemInfo(aKey, aValue) {}
 
  private:
@@ -1482,9 +1522,9 @@ class Connection final {
   // connection thread.
   void Close(nsIRunnable* aCallback);
 
-  void AddItem(const nsString& aKey, const nsString& aValue, int64_t aDelta);
+  void AddItem(const nsString& aKey, const LSValue& aValue, int64_t aDelta);
 
-  void UpdateItem(const nsString& aKey, const nsString& aValue, int64_t aDelta);
+  void UpdateItem(const nsString& aKey, const LSValue& aValue, int64_t aDelta);
 
   void RemoveItem(const nsString& aKey, int64_t aDelta);
 
@@ -1647,7 +1687,7 @@ class Datastore final
    * Non-authoritative hashtable representation of mOrderedItems for efficient
    * lookup.
    */
-  nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsDataHashtable<nsStringHashKey, LSValue> mValues;
   /**
    * The authoritative ordered state of the Datastore; mValue also exists as an
    * unordered hashtable for efficient lookup.
@@ -1673,7 +1713,7 @@ class Datastore final
             already_AddRefed<DirectoryLock>&& aDirectoryLock,
             already_AddRefed<Connection>&& aConnection,
             already_AddRefed<QuotaObject>&& aQuotaObject,
-            nsDataHashtable<nsStringHashKey, nsString>& aValues,
+            nsDataHashtable<nsStringHashKey, LSValue>& aValues,
             nsTArray<LSItemInfo>& aOrderedItems);
 
   const nsCString& Origin() const { return mOrigin; }
@@ -1713,7 +1753,8 @@ class Datastore final
 
   void NoteInactiveDatabase(Database* aDatabase);
 
-  void GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
+  void GetSnapshotInitInfo(const nsString& aKey, bool& aAddKeyToUnknownItems,
+                           nsTHashtable<nsStringHashKey>& aLoadedItems,
                            nsTArray<LSItemInfo>& aItemInfos,
                            uint32_t& aNextLoadIndex, uint32_t& aTotalLength,
                            int64_t& aInitialUsage, int64_t& aPeakUsage,
@@ -1721,7 +1762,7 @@ class Datastore final
 
   const nsTArray<LSItemInfo>& GetOrderedItems() const { return mOrderedItems; }
 
-  void GetItem(const nsString& aKey, nsString& aValue) const;
+  void GetItem(const nsString& aKey, LSValue& aValue) const;
 
   void GetKeys(nsTArray<nsString>& aKeys) const;
 
@@ -1735,11 +1776,11 @@ class Datastore final
    * explicit batch.
    */
   void SetItem(Database* aDatabase, const nsString& aDocumentURI,
-               const nsString& aKey, const nsString& aOldValue,
-               const nsString& aValue);
+               const nsString& aKey, const LSValue& aOldValue,
+               const LSValue& aValue);
 
   void RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
-                  const nsString& aKey, const nsString& aOldValue);
+                  const nsString& aKey, const LSValue& aOldValue);
 
   void Clear(Database* aDatabase, const nsString& aDocumentURI);
 
@@ -1766,13 +1807,13 @@ class Datastore final
   void CleanupMetadata();
 
   void NotifySnapshots(Database* aDatabase, const nsAString& aKey,
-                       const nsAString& aOldValue, bool aAffectsOrder);
+                       const LSValue& aOldValue, bool aAffectsOrder);
 
   void MarkSnapshotsDirty();
 
   void NotifyObservers(Database* aDatabase, const nsString& aDocumentURI,
-                       const nsString& aKey, const nsString& aOldValue,
-                       const nsString& aNewValue);
+                       const nsString& aKey, const LSValue& aOldValue,
+                       const LSValue& aNewValue);
 };
 
 class PreparedDatastore {
@@ -1929,14 +1970,15 @@ class Database final
   mozilla::ipc::IPCResult RecvAllowToClose() override;
 
   PBackgroundLSSnapshotParent* AllocPBackgroundLSSnapshotParent(
-      const nsString& aDocumentURI, const bool& aIncreasePeakUsage,
-      const int64_t& aRequestedSize, const int64_t& aMinSize,
-      LSSnapshotInitInfo* aInitInfo) override;
+      const nsString& aDocumentURI, const nsString& aKey,
+      const bool& aIncreasePeakUsage, const int64_t& aRequestedSize,
+      const int64_t& aMinSize, LSSnapshotInitInfo* aInitInfo) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundLSSnapshotConstructor(
       PBackgroundLSSnapshotParent* aActor, const nsString& aDocumentURI,
-      const bool& aIncreasePeakUsage, const int64_t& aRequestedSize,
-      const int64_t& aMinSize, LSSnapshotInitInfo* aInitInfo) override;
+      const nsString& aKey, const bool& aIncreasePeakUsage,
+      const int64_t& aRequestedSize, const int64_t& aMinSize,
+      LSSnapshotInitInfo* aInitInfo) override;
 
   bool DeallocPBackgroundLSSnapshotParent(
       PBackgroundLSSnapshotParent* aActor) override;
@@ -1994,7 +2036,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
    * are changed/evicted from the Datastore as they happen, as reported to us by
    * SaveItem notifications.
    */
-  nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsDataHashtable<nsStringHashKey, LSValue> mValues;
   /**
    * Latched state of mDatastore's keys during a SaveItem notification with
    * aAffectsOrder=true.  The ordered keys needed to be saved off so that a
@@ -2051,6 +2093,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   Snapshot(Database* aDatabase, const nsAString& aDocumentURI);
 
   void Init(nsTHashtable<nsStringHashKey>& aLoadedItems,
+            nsTHashtable<nsStringHashKey>& aUnknownItems,
             uint32_t aNextLoadIndex, uint32_t aTotalLength,
             int64_t aInitialUsage, int64_t aPeakUsage,
             LSSnapshot::LoadState aLoadState) {
@@ -2064,14 +2107,17 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
     MOZ_ASSERT(mPeakUsage == -1);
 
     mLoadedItems.SwapElements(aLoadedItems);
+    mUnknownItems.SwapElements(aUnknownItems);
     mNextLoadIndex = aNextLoadIndex;
     mTotalLength = aTotalLength;
     mUsage = aInitialUsage;
     mPeakUsage = aPeakUsage;
     if (aLoadState == LSSnapshot::LoadState::AllOrderedKeys) {
+      MOZ_ASSERT(mUnknownItems.Count() == 0);
       mLoadKeysReceived = true;
     } else if (aLoadState == LSSnapshot::LoadState::AllOrderedItems) {
       MOZ_ASSERT(mLoadedItems.Count() == 0);
+      MOZ_ASSERT(mUnknownItems.Count() == 0);
       MOZ_ASSERT(mNextLoadIndex == mTotalLength);
       mLoadedReceived = true;
       mLoadedAllItems = true;
@@ -2084,7 +2130,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
    * internal state so that snapshots can save off the state of a value at the
    * time of their creation.
    */
-  void SaveItem(const nsAString& aKey, const nsAString& aOldValue,
+  void SaveItem(const nsAString& aKey, const LSValue& aOldValue,
                 bool aAffectsOrder);
 
   void MarkDirty();
@@ -2110,7 +2156,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   mozilla::ipc::IPCResult RecvLoaded() override;
 
   mozilla::ipc::IPCResult RecvLoadValueAndMoreItems(
-      const nsString& aKey, nsString* aValue,
+      const nsString& aKey, LSValue* aValue,
       nsTArray<LSItemInfo>* aItemInfos) override;
 
   mozilla::ipc::IPCResult RecvLoadKeys(nsTArray<nsString>* aKeys) override;
@@ -2133,8 +2179,8 @@ class Observer final : public PBackgroundLSObserverParent {
   const nsCString& Origin() const { return mOrigin; }
 
   void Observe(Database* aDatabase, const nsString& aDocumentURI,
-               const nsString& aKey, const nsString& aOldValue,
-               const nsString& aNewValue);
+               const nsString& aKey, const LSValue& aOldValue,
+               const LSValue& aNewValue);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Observer)
 
@@ -2290,7 +2336,7 @@ class PrepareDatastoreOp
   RefPtr<Datastore> mDatastore;
   nsAutoPtr<ArchivedOriginScope> mArchivedOriginScope;
   LoadDataOp* mLoadDataOp;
-  nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsDataHashtable<nsStringHashKey, LSValue> mValues;
   nsTArray<LSItemInfo> mOrderedItems;
   const LSRequestCommonParams mParams;
   Maybe<ContentParentId> mContentParentId;
@@ -3572,7 +3618,7 @@ already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient() {
  * WriteOptimizer
  ******************************************************************************/
 
-void WriteOptimizer::AddItem(const nsString& aKey, const nsString& aValue,
+void WriteOptimizer::AddItem(const nsString& aKey, const LSValue& aValue,
                              int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
@@ -3589,7 +3635,7 @@ void WriteOptimizer::AddItem(const nsString& aKey, const nsString& aValue,
   mTotalDelta += aDelta;
 }
 
-void WriteOptimizer::UpdateItem(const nsString& aKey, const nsString& aValue,
+void WriteOptimizer::UpdateItem(const nsString& aKey, const LSValue& aValue,
                                 int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
@@ -3758,8 +3804,9 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
 
   Connection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(
-      NS_LITERAL_CSTRING("INSERT OR REPLACE INTO data (key, value) "
-                         "VALUES(:key, :value)"),
+      NS_LITERAL_CSTRING(
+          "INSERT OR REPLACE INTO data (key, value, utf16Length, compressed) "
+          "VALUES(:key, :value, :utf16Length, :compressed)"),
       &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3770,7 +3817,19 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
     return rv;
   }
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), mValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("utf16Length"),
+                             mValue.UTF16Length());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("compressed"),
+                             mValue.IsCompressed());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3815,7 +3874,15 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
     return rv;
   }
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
+  if (mValue.IsCompressed()) {
+    nsCString value;
+    if (NS_WARN_IF(!SnappyUncompress(mValue, value))) {
+      return NS_ERROR_FAILURE;
+    }
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), value);
+  } else {
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), mValue);
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4072,7 +4139,7 @@ void Connection::Close(nsIRunnable* aCallback) {
   Dispatch(op);
 }
 
-void Connection::AddItem(const nsString& aKey, const nsString& aValue,
+void Connection::AddItem(const nsString& aKey, const LSValue& aValue,
                          int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
@@ -4080,7 +4147,7 @@ void Connection::AddItem(const nsString& aKey, const nsString& aValue,
   mWriteOptimizer.AddItem(aKey, aValue, aDelta);
 }
 
-void Connection::UpdateItem(const nsString& aKey, const nsString& aValue,
+void Connection::UpdateItem(const nsString& aKey, const LSValue& aValue,
                             int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
@@ -4468,7 +4535,7 @@ Datastore::Datastore(const nsACString& aOrigin, uint32_t aPrivateBrowsingId,
                      already_AddRefed<DirectoryLock>&& aDirectoryLock,
                      already_AddRefed<Connection>&& aConnection,
                      already_AddRefed<QuotaObject>&& aQuotaObject,
-                     nsDataHashtable<nsStringHashKey, nsString>& aValues,
+                     nsDataHashtable<nsStringHashKey, LSValue>& aValues,
                      nsTArray<LSItemInfo>& aOrderedItems)
     : mDirectoryLock(std::move(aDirectoryLock)),
       mConnection(std::move(aConnection)),
@@ -4646,7 +4713,9 @@ void Datastore::NoteInactiveDatabase(Database* aDatabase) {
   }
 }
 
-void Datastore::GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
+void Datastore::GetSnapshotInitInfo(const nsString& aKey,
+                                    bool& aAddKeyToUnknownItems,
+                                    nsTHashtable<nsStringHashKey>& aLoadedItems,
                                     nsTArray<LSItemInfo>& aItemInfos,
                                     uint32_t& aNextLoadIndex,
                                     uint32_t& aTotalLength,
@@ -4668,80 +4737,190 @@ void Datastore::GetSnapshotInitInfo(nsTHashtable<nsStringHashKey>& aLoadedItems,
   MOZ_ASSERT(mSizeOfItems == sizeOfItems);
 #endif
 
-  if (mSizeOfKeys <= gSnapshotPrefill) {
-    if (mSizeOfItems <= gSnapshotPrefill) {
+  // Computes load state optimized for current size of keys and items.
+  // Zero key length and value can be passed to do a quick initial estimation.
+  // If computed load state is already AllOrderedItems then excluded key length
+  // and value length can't make it any better.
+  auto GetLoadState = [&](auto aKeyLength, auto aValueLength) {
+    if (mSizeOfKeys - aKeyLength <= gSnapshotPrefill) {
+      if (mSizeOfItems - aKeyLength - aValueLength <= gSnapshotPrefill) {
+        return LSSnapshot::LoadState::AllOrderedItems;
+      }
+
+      return LSSnapshot::LoadState::AllOrderedKeys;
+    }
+
+    return LSSnapshot::LoadState::Partial;
+  };
+
+  // Value for given aKey if aKey is not void (can be void too if value doesn't
+  // exist for given aKey).
+  LSValue value;
+  // If aKey and value are not void, checkKey will be set to true. Once we find
+  // an item for given aKey in one of the loops below, checkKey is set to false
+  // to prevent additional comparison of strings (string implementation compares
+  // string lengths first to avoid char by char comparison if possible).
+  bool checkKey = false;
+
+  // Avoid additional hash lookup if all ordered items fit into initial prefill
+  // already.
+  LSSnapshot::LoadState loadState = GetLoadState(/* aKeyLength */ 0,
+                                                 /* aValueLength */ 0);
+  if (loadState != LSSnapshot::LoadState::AllOrderedItems && !aKey.IsVoid()) {
+    GetItem(aKey, value);
+    if (!value.IsVoid()) {
+      // Ok, we have a non void aKey and value.
+
+      // We have to watch for aKey during one of the loops below to exclude it
+      // from the size computation. The super fast mode (AllOrderedItems)
+      // doesn't have to do that though.
+      checkKey = true;
+
+      // We have to compute load state again because aKey length and value
+      // length is excluded from the size in this case.
+      loadState = GetLoadState(aKey.Length(), value.Length());
+    }
+  }
+
+  switch (loadState) {
+    case LSSnapshot::LoadState::AllOrderedItems: {
+      // We're sending all ordered items, we don't need to check keys because
+      // mOrderedItems must contain a value for aKey if checkKey is true.
+
       aItemInfos.AppendElements(mOrderedItems);
 
       MOZ_ASSERT(aItemInfos.Length() == mValues.Count());
       aNextLoadIndex = mValues.Count();
 
-      aLoadState = LSSnapshot::LoadState::AllOrderedItems;
-    } else {
+      aAddKeyToUnknownItems = false;
+
+      break;
+    }
+
+    case LSSnapshot::LoadState::AllOrderedKeys: {
+      // We don't have enough snapshot budget to send all items, but we do have
+      // enough to send all of the keys and to make a best effort to populate as
+      // many values as possible. We send void string values once we run out of
+      // budget. A complicating factor is that we want to make sure that we send
+      // the value for aKey which is a localStorage read that's triggering this
+      // request. Since that key can happen anywhere in the list of items, we
+      // need to handle it specially.
+      //
+      // The loop is effectively doing 2 things in parallel:
+      //
+      //   1. Looking for the `aKey` to send. This is tracked by `checkKey`
+      //      which is true if there was an `aKey` specified and until we
+      //      populate its value, and false thereafter.
+      //   2. Sending values until we run out of `size` budget and switch to
+      //      sending void values. `doneSendingValues` tracks when we've run out
+      //      of size budget, with `setVoidValue` tracking whether a value
+      //      should be sent for each turn of the event loop but can be
+      //      overridden when `aKey` is found.
+
       int64_t size = mSizeOfKeys;
-      nsString value;
+      bool setVoidValue = false;
+      bool doneSendingValues = false;
       for (uint32_t index = 0; index < mOrderedItems.Length(); index++) {
         const LSItemInfo& item = mOrderedItems[index];
 
         const nsString& key = item.key();
+        const LSValue& value = item.value();
 
-        if (!value.IsVoid()) {
-          value = item.value();
-
-          size += static_cast<int64_t>(value.Length());
-
-          if (size <= gSnapshotPrefill) {
-            aLoadedItems.PutEntry(key);
+        if (checkKey && key == aKey) {
+          checkKey = false;
+          setVoidValue = false;
+        } else if (!setVoidValue) {
+          if (doneSendingValues) {
+            setVoidValue = true;
           } else {
-            value.SetIsVoid(true);
+            size += static_cast<int64_t>(value.Length());
 
-            // We set value to void so that will guard against entering the
-            // parent branch during next iterations. So aNextLoadIndex is set
-            // only once.
-            aNextLoadIndex = index;
+            if (size > gSnapshotPrefill) {
+              setVoidValue = true;
+              doneSendingValues = true;
+
+              // We set doneSendingValues to true and that will guard against
+              // entering this branch during next iterations. So aNextLoadIndex
+              // is set only once.
+              aNextLoadIndex = index;
+            }
           }
         }
+
+        LSItemInfo* itemInfo = aItemInfos.AppendElement();
+        itemInfo->key() = key;
+        if (setVoidValue) {
+          itemInfo->value().SetIsVoid(true);
+        } else {
+          aLoadedItems.PutEntry(key);
+          itemInfo->value() = value;
+        }
+      }
+
+      aAddKeyToUnknownItems = false;
+
+      break;
+    }
+
+    case LSSnapshot::LoadState::Partial: {
+      int64_t size = 0;
+      for (uint32_t index = 0; index < mOrderedItems.Length(); index++) {
+        const LSItemInfo& item = mOrderedItems[index];
+
+        const nsString& key = item.key();
+        const LSValue& value = item.value();
+
+        if (checkKey && key == aKey) {
+          checkKey = false;
+        } else {
+          size += static_cast<int64_t>(key.Length()) +
+                  static_cast<int64_t>(value.Length());
+
+          if (size > gSnapshotPrefill) {
+            aNextLoadIndex = index;
+            break;
+          }
+        }
+
+        aLoadedItems.PutEntry(key);
 
         LSItemInfo* itemInfo = aItemInfos.AppendElement();
         itemInfo->key() = key;
         itemInfo->value() = value;
       }
 
-      aLoadState = LSSnapshot::LoadState::AllOrderedKeys;
-    }
-  } else {
-    int64_t size = 0;
-    for (uint32_t index = 0; index < mOrderedItems.Length(); index++) {
-      const LSItemInfo& item = mOrderedItems[index];
+      aAddKeyToUnknownItems = false;
 
-      const nsString& key = item.key();
-      const nsString& value = item.value();
+      if (!aKey.IsVoid()) {
+        if (value.IsVoid()) {
+          aAddKeyToUnknownItems = true;
+        } else if (checkKey) {
+          // The item wasn't added in the loop above, add it here.
 
-      size += static_cast<int64_t>(key.Length()) +
-              static_cast<int64_t>(value.Length());
-
-      if (size > gSnapshotPrefill) {
-        aNextLoadIndex = index;
-        break;
+          LSItemInfo* itemInfo = aItemInfos.AppendElement();
+          itemInfo->key() = aKey;
+          itemInfo->value() = value;
+        }
       }
 
-      aLoadedItems.PutEntry(key);
+      MOZ_ASSERT(aItemInfos.Length() < mOrderedItems.Length());
 
-      LSItemInfo* itemInfo = aItemInfos.AppendElement();
-      itemInfo->key() = key;
-      itemInfo->value() = value;
+      break;
     }
 
-    MOZ_ASSERT(aItemInfos.Length() < mOrderedItems.Length());
-    aLoadState = LSSnapshot::LoadState::Partial;
+    default:
+      MOZ_CRASH("Bad load state value!");
   }
 
   aTotalLength = mValues.Count();
 
   aInitialUsage = mUsage;
   aPeakUsage = aInitialUsage;
+
+  aLoadState = loadState;
 }
 
-void Datastore::GetItem(const nsString& aKey, nsString& aValue) const {
+void Datastore::GetItem(const nsString& aKey, LSValue& aValue) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mClosed);
 
@@ -4760,51 +4939,54 @@ void Datastore::GetKeys(nsTArray<nsString>& aKeys) const {
 }
 
 void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
-                        const nsString& aKey, const nsString& aOldValue,
-                        const nsString& aValue) {
+                        const nsString& aKey, const LSValue& aOldValue,
+                        const LSValue& aValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mInUpdateBatch);
 
-  nsString oldValue;
+  LSValue oldValue;
   GetItem(aKey, oldValue);
 
-  if (oldValue != aValue || oldValue.IsVoid() != aValue.IsVoid()) {
+  if (oldValue != aValue) {
     bool isNewItem = oldValue.IsVoid();
 
     NotifySnapshots(aDatabase, aKey, oldValue, /* affectsOrder */ isNewItem);
 
     mValues.Put(aKey, aValue);
 
-    int64_t sizeOfItem;
+    int64_t delta;
 
     if (isNewItem) {
       mWriteOptimizer.AddItem(aKey, aValue);
 
       int64_t sizeOfKey = static_cast<int64_t>(aKey.Length());
-      sizeOfItem = sizeOfKey + static_cast<int64_t>(aValue.Length());
 
-      mUpdateBatchUsage += sizeOfItem;
+      delta = sizeOfKey + static_cast<int64_t>(aValue.UTF16Length());
+
+      mUpdateBatchUsage += delta;
 
       mSizeOfKeys += sizeOfKey;
-      mSizeOfItems += sizeOfItem;
+      mSizeOfItems += sizeOfKey + static_cast<int64_t>(aValue.Length());
+      ;
     } else {
       mWriteOptimizer.UpdateItem(aKey, aValue);
 
-      sizeOfItem = static_cast<int64_t>(aValue.Length()) -
-                   static_cast<int64_t>(oldValue.Length());
+      delta = static_cast<int64_t>(aValue.UTF16Length()) -
+              static_cast<int64_t>(oldValue.UTF16Length());
 
-      mUpdateBatchUsage += sizeOfItem;
+      mUpdateBatchUsage += delta;
 
-      mSizeOfItems += sizeOfItem;
+      mSizeOfItems += static_cast<int64_t>(aValue.Length()) -
+                      static_cast<int64_t>(oldValue.Length());
     }
 
     if (IsPersistent()) {
       if (oldValue.IsVoid()) {
-        mConnection->AddItem(aKey, aValue, sizeOfItem);
+        mConnection->AddItem(aKey, aValue, delta);
       } else {
-        mConnection->UpdateItem(aKey, aValue, sizeOfItem);
+        mConnection->UpdateItem(aKey, aValue, delta);
       }
     }
   }
@@ -4813,13 +4995,13 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
 }
 
 void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
-                           const nsString& aKey, const nsString& aOldValue) {
+                           const nsString& aKey, const LSValue& aOldValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mInUpdateBatch);
 
-  nsString oldValue;
+  LSValue oldValue;
   GetItem(aKey, oldValue);
 
   if (!oldValue.IsVoid()) {
@@ -4830,19 +5012,20 @@ void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
     mWriteOptimizer.RemoveItem(aKey);
 
     int64_t sizeOfKey = static_cast<int64_t>(aKey.Length());
-    int64_t sizeOfItem = sizeOfKey + static_cast<int64_t>(oldValue.Length());
 
-    mUpdateBatchUsage -= sizeOfItem;
+    int64_t delta = -sizeOfKey - static_cast<int64_t>(oldValue.UTF16Length());
+
+    mUpdateBatchUsage += delta;
 
     mSizeOfKeys -= sizeOfKey;
-    mSizeOfItems -= sizeOfItem;
+    mSizeOfItems -= sizeOfKey + static_cast<int64_t>(oldValue.Length());
 
     if (IsPersistent()) {
-      mConnection->RemoveItem(aKey, -sizeOfItem);
+      mConnection->RemoveItem(aKey, delta);
     }
   }
 
-  NotifyObservers(aDatabase, aDocumentURI, aKey, aOldValue, VoidString());
+  NotifyObservers(aDatabase, aDocumentURI, aKey, aOldValue, VoidLSValue());
 }
 
 void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
@@ -4852,13 +5035,13 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
   MOZ_ASSERT(mInUpdateBatch);
 
   if (mValues.Count()) {
-    int64_t sizeOfItems = 0;
+    int64_t delta = 0;
     for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
       const nsAString& key = iter.Key();
-      const nsAString& value = iter.Data();
+      const LSValue& value = iter.Data();
 
-      sizeOfItems += (static_cast<int64_t>(key.Length()) +
-                      static_cast<int64_t>(value.Length()));
+      delta += -static_cast<int64_t>(key.Length()) -
+               static_cast<int64_t>(value.UTF16Length());
 
       NotifySnapshots(aDatabase, key, value, /* aAffectsOrder */ true);
     }
@@ -4867,18 +5050,18 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
 
     mWriteOptimizer.Clear();
 
-    mUpdateBatchUsage -= sizeOfItems;
+    mUpdateBatchUsage += delta;
 
     mSizeOfKeys = 0;
     mSizeOfItems = 0;
 
     if (IsPersistent()) {
-      mConnection->Clear(-sizeOfItems);
+      mConnection->Clear(delta);
     }
   }
 
-  NotifyObservers(aDatabase, aDocumentURI, VoidString(), VoidString(),
-                  VoidString());
+  NotifyObservers(aDatabase, aDocumentURI, VoidString(), VoidLSValue(),
+                  VoidLSValue());
 }
 
 void Datastore::PrivateBrowsingClear() {
@@ -5049,8 +5232,7 @@ void Datastore::CleanupMetadata() {
 }
 
 void Datastore::NotifySnapshots(Database* aDatabase, const nsAString& aKey,
-                                const nsAString& aOldValue,
-                                bool aAffectsOrder) {
+                                const LSValue& aOldValue, bool aAffectsOrder) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
 
@@ -5082,8 +5264,8 @@ void Datastore::MarkSnapshotsDirty() {
 
 void Datastore::NotifyObservers(Database* aDatabase,
                                 const nsString& aDocumentURI,
-                                const nsString& aKey, const nsString& aOldValue,
-                                const nsString& aNewValue) {
+                                const nsString& aKey, const LSValue& aOldValue,
+                                const LSValue& aNewValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
 
@@ -5283,9 +5465,9 @@ mozilla::ipc::IPCResult Database::RecvAllowToClose() {
 }
 
 PBackgroundLSSnapshotParent* Database::AllocPBackgroundLSSnapshotParent(
-    const nsString& aDocumentURI, const bool& aIncreasePeakUsage,
-    const int64_t& aRequestedSize, const int64_t& aMinSize,
-    LSSnapshotInitInfo* aInitInfo) {
+    const nsString& aDocumentURI, const nsString& aKey,
+    const bool& aIncreasePeakUsage, const int64_t& aRequestedSize,
+    const int64_t& aMinSize, LSSnapshotInitInfo* aInitInfo) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(aIncreasePeakUsage && aRequestedSize <= 0)) {
@@ -5311,8 +5493,9 @@ PBackgroundLSSnapshotParent* Database::AllocPBackgroundLSSnapshotParent(
 
 mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
     PBackgroundLSSnapshotParent* aActor, const nsString& aDocumentURI,
-    const bool& aIncreasePeakUsage, const int64_t& aRequestedSize,
-    const int64_t& aMinSize, LSSnapshotInitInfo* aInitInfo) {
+    const nsString& aKey, const bool& aIncreasePeakUsage,
+    const int64_t& aRequestedSize, const int64_t& aMinSize,
+    LSSnapshotInitInfo* aInitInfo) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT_IF(aIncreasePeakUsage, aRequestedSize > 0);
   MOZ_ASSERT_IF(aIncreasePeakUsage, aMinSize > 0);
@@ -5321,8 +5504,7 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
 
   auto* snapshot = static_cast<Snapshot*>(aActor);
 
-  // TODO: This can be optimized depending on which operation triggers snapshot
-  //       creation. For example clear() doesn't need to receive items at all.
+  bool addKeyToUnknownItems;
   nsTHashtable<nsStringHashKey> loadedItems;
   nsTArray<LSItemInfo> itemInfos;
   uint32_t nextLoadIndex;
@@ -5330,20 +5512,26 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
   int64_t initialUsage;
   int64_t peakUsage;
   LSSnapshot::LoadState loadState;
-  mDatastore->GetSnapshotInitInfo(loadedItems, itemInfos, nextLoadIndex,
-                                  totalLength, initialUsage, peakUsage,
-                                  loadState);
+  mDatastore->GetSnapshotInitInfo(aKey, addKeyToUnknownItems, loadedItems,
+                                  itemInfos, nextLoadIndex, totalLength,
+                                  initialUsage, peakUsage, loadState);
+
+  nsTHashtable<nsStringHashKey> unknownItems;
+  if (addKeyToUnknownItems) {
+    unknownItems.PutEntry(aKey);
+  }
 
   if (aIncreasePeakUsage) {
     int64_t size = mDatastore->RequestUpdateUsage(aRequestedSize, aMinSize);
     peakUsage += size;
   }
 
-  snapshot->Init(loadedItems, nextLoadIndex, totalLength, initialUsage,
-                 peakUsage, loadState);
+  snapshot->Init(loadedItems, unknownItems, nextLoadIndex, totalLength,
+                 initialUsage, peakUsage, loadState);
 
   RegisterSnapshot(snapshot);
 
+  aInitInfo->addKeyToUnknownItems() = addKeyToUnknownItems;
   aInitInfo->itemInfos() = std::move(itemInfos);
   aInitInfo->totalLength() = totalLength;
   aInitInfo->initialUsage() = initialUsage;
@@ -5391,7 +5579,7 @@ Snapshot::~Snapshot() {
   MOZ_ASSERT(mFinishReceived);
 }
 
-void Snapshot::SaveItem(const nsAString& aKey, const nsAString& aOldValue,
+void Snapshot::SaveItem(const nsAString& aKey, const LSValue& aOldValue,
                         bool aAffectsOrder) {
   AssertIsOnBackgroundThread();
 
@@ -5402,7 +5590,7 @@ void Snapshot::SaveItem(const nsAString& aKey, const nsAString& aOldValue,
   }
 
   if (!mLoadedItems.GetEntry(aKey) && !mUnknownItems.GetEntry(aKey)) {
-    nsString oldValue(aOldValue);
+    LSValue oldValue(aOldValue);
     mValues.LookupForAdd(aKey).OrInsert([oldValue]() { return oldValue; });
   }
 
@@ -5557,7 +5745,7 @@ mozilla::ipc::IPCResult Snapshot::RecvLoaded() {
 }
 
 mozilla::ipc::IPCResult Snapshot::RecvLoadValueAndMoreItems(
-    const nsString& aKey, nsString* aValue, nsTArray<LSItemInfo>* aItemInfos) {
+    const nsString& aKey, LSValue* aValue, nsTArray<LSItemInfo>* aItemInfos) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aValue);
   MOZ_ASSERT(aItemInfos);
@@ -5646,7 +5834,7 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadValueAndMoreItems(
         // changed, we need to do a hash lookup rather than being able to do an
         // optimized direct access to the index.
 
-        nsString value;
+        LSValue value;
         auto valueEntry = mValues.Lookup(key);
         if (valueEntry) {
           value = valueEntry.Data();
@@ -5779,8 +5967,8 @@ Observer::Observer(const nsACString& aOrigin)
 Observer::~Observer() { MOZ_ASSERT(mActorDestroyed); }
 
 void Observer::Observe(Database* aDatabase, const nsString& aDocumentURI,
-                       const nsString& aKey, const nsString& aOldValue,
-                       const nsString& aNewValue) {
+                       const nsString& aKey, const LSValue& aOldValue,
+                       const LSValue& aNewValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
 
@@ -6540,8 +6728,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = connection->CreateStatement(
-        NS_LITERAL_CSTRING("INSERT INTO data (key, value) "
-                           "SELECT key, value "
+        NS_LITERAL_CSTRING("INSERT INTO data (key, value, utf16Length) "
+                           "SELECT key, value, utf16Length(value) "
                            "FROM webappsstore2 "
                            "WHERE originKey = :originKey "
                            "AND originAttributes = :originAttributes;"
@@ -7162,10 +7350,10 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
   }
 
   Connection::CachedStatement stmt;
-  nsresult rv =
-      mConnection->GetCachedStatement(NS_LITERAL_CSTRING("SELECT key, value "
-                                                         "FROM data;"),
-                                      &stmt);
+  nsresult rv = mConnection->GetCachedStatement(
+      NS_LITERAL_CSTRING("SELECT key, value, utf16Length, compressed "
+                         "FROM data;"),
+      &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7178,11 +7366,25 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
       return rv;
     }
 
-    nsString value;
-    rv = stmt->GetString(1, value);
+    nsCString buffer;
+    rv = stmt->GetUTF8String(1, buffer);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    int32_t utf16Length;
+    rv = stmt->GetInt32(2, &utf16Length);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    int32_t compressed;
+    rv = stmt->GetInt32(3, &compressed);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    LSValue value(buffer, utf16Length, compressed);
 
     mPrepareDatastoreOp->mValues.Put(key, value);
     auto item = mPrepareDatastoreOp->mOrderedItems.AppendElement();
@@ -7191,7 +7393,7 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
     mPrepareDatastoreOp->mSizeOfKeys += key.Length();
     mPrepareDatastoreOp->mSizeOfItems += key.Length() + value.Length();
 #ifdef DEBUG
-    mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.Length();
+    mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.UTF16Length();
 #endif
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
