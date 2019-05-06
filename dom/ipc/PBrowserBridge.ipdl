@@ -18,7 +18,11 @@ namespace mozilla {
 namespace dom {
 
 /**
- * PBrowserBridge corresponds to a remote iframe.
+ * A PBrowserBridge connects an iframe/browser in a content process to the
+ * PBrowser that manages the embedded content.
+ *
+ * See `dom/docs/Fission-IPC-Diagram.svg` for an overview of the DOM IPC
+ * actors.
  */
 async protocol PBrowserBridge {
   manager PBrowser;
