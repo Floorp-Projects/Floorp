@@ -868,7 +868,8 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
   RefPtr<IAPZCTreeManager> treeManager = mAPZC;  // for capture by the lambdas
 
   ContentReceivedInputBlockCallback callback(
-      [treeManager](uint64_t aInputBlockId, bool aPreventDefault) {
+      [treeManager](const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId,
+                    bool aPreventDefault) {
         MOZ_ASSERT(NS_IsMainThread());
         APZThreadUtils::RunOnControllerThread(NewRunnableMethod<uint64_t, bool>(
             "layers::IAPZCTreeManager::ContentReceivedInputBlock", treeManager,
@@ -982,7 +983,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
               mSetAllowedTouchBehaviorCallback);
         }
         postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
-            this, GetDocument(), *(original->AsTouchEvent()), aGuid.mLayersId,
+            this, GetDocument(), *(original->AsTouchEvent()), aGuid,
             aInputBlockId);
       }
       mAPZEventState->ProcessTouchEvent(*touchEvent, aGuid, aInputBlockId,
@@ -990,18 +991,18 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     } else if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
       MOZ_ASSERT(wheelEvent->mFlags.mHandledByAPZ);
       postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
-          this, GetDocument(), *(original->AsWheelEvent()), aGuid.mLayersId,
+          this, GetDocument(), *(original->AsWheelEvent()), aGuid,
           aInputBlockId);
       if (wheelEvent->mCanTriggerSwipe) {
         ReportSwipeStarted(aInputBlockId, wheelEvent->TriggersSwipe());
       }
-      mAPZEventState->ProcessWheelEvent(*wheelEvent, aInputBlockId);
+      mAPZEventState->ProcessWheelEvent(*wheelEvent, aGuid, aInputBlockId);
     } else if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
       MOZ_ASSERT(mouseEvent->mFlags.mHandledByAPZ);
       postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
-          this, GetDocument(), *(original->AsMouseEvent()), aGuid.mLayersId,
+          this, GetDocument(), *(original->AsMouseEvent()), aGuid,
           aInputBlockId);
-      mAPZEventState->ProcessMouseEvent(*mouseEvent, aInputBlockId);
+      mAPZEventState->ProcessMouseEvent(*mouseEvent, aGuid, aInputBlockId);
     }
     if (postLayerization && postLayerization->Register()) {
       Unused << postLayerization.release();
