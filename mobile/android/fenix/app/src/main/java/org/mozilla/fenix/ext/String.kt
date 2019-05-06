@@ -26,3 +26,20 @@ fun String?.urlToHost(): String {
         ""
     }
 }
+
+fun String?.urlToTrimmedHost(): String {
+    return try {
+        val url = URL(this)
+        val firstIndex = url.host.indexOfFirst { it == '.' } + 1
+        val lastIndex = url.host.indexOfLast { it == '.' }
+
+        // Trim all but the title of the website from the hostname. 'www.mozilla.org' becomes 'mozilla'
+        when {
+            firstIndex - 1 == lastIndex -> url.host.substring(0, lastIndex)
+            firstIndex < lastIndex -> url.host.substring(firstIndex, lastIndex)
+            else -> url.host
+        }
+    } catch (e: MalformedURLException) {
+        ""
+    }
+}

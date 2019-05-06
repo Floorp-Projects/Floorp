@@ -25,6 +25,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.mvi.UIView
 
 class CollectionCreationUIView(

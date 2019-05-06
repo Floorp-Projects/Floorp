@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/item_collection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:clickable="true"
+        android:clipToPadding="false"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:background="@drawable/rounded_all_corners"
+        android:elevation="5dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <ImageView
+                android:id="@+id/collection_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="18dp"
+                android:tint="@null"
+                android:src="@drawable/ic_archive"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+        <TextView
+                android:id="@+id/collection_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="17dp"
+                android:layout_marginStart="14dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:minLines="1"
+                android:textAppearance="@style/Header16TextStyle"
+                app:layout_constraintStart_toEndOf="@id/collection_icon"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+        <ImageView
+                android:id="@+id/expand_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="26dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_chevron_down"
+                app:layout_constraintStart_toEndOf="@id/collection_title"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+        <TextView
+                android:id="@+id/collection_description"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:minLines="2"
+                android:textAppearance="@style/SubtitleTextStyle"
+                app:layout_constraintStart_toStartOf="@id/collection_title"
+                app:layout_constraintTop_toBottomOf="@id/collection_share_button"
+                app:layout_constraintEnd_toStartOf="@id/collection_share_button"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <ImageButton
+                android:id="@+id/collection_share_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/tab_menu"
+                android:src="@drawable/ic_hollow_share"
+                android:layout_marginEnd="29dp"
+                app:layout_constraintEnd_toStartOf="@id/collection_overflow_button"
+                app:layout_constraintTop_toTopOf="@id/collection_icon"/>
+
+        <ImageButton
+                android:id="@+id/collection_overflow_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/tab_menu"
+                android:src="@drawable/ic_menu"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/collection_icon"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

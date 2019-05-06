@@ -33,7 +33,7 @@
                 android:contentDescription="@string/current_session_image"
                 android:paddingBottom="20dp"
                 android:src="@drawable/ic_session_thumbnail_placeholder_greyscale"
-                android:tint="@color/session_placeholder_blue"
+                android:tint="@color/collection_icon_color_blue"
                 android:tintMode="multiply"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />

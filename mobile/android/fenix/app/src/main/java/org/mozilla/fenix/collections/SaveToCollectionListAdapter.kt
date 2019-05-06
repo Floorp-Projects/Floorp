@@ -14,13 +14,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import org.mozilla.fenix.R
+import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import kotlin.coroutines.CoroutineContext
 
 class SaveCollectionListAdapter(
     val actionEmitter: Observer<CollectionCreationAction>
 ) : RecyclerView.Adapter<CollectionViewHolder>() {
 
-    private var collections: List<Collection> = listOf()
+    private var collections: List<TabCollection> = listOf()
     private lateinit var job: Job
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CollectionViewHolder {
@@ -58,7 +59,7 @@ class CollectionViewHolder(
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
 
-    private var collection: Collection? = null
+    private var collection: TabCollection? = null
 
     private val listener = View.OnClickListener {
         collection?.apply {
@@ -71,7 +72,7 @@ class CollectionViewHolder(
         view.setOnClickListener(listener)
     }
 
-    fun bind(collection: Collection) {
+    fun bind(collection: TabCollection) {
         this.collection = collection
         view.collection_item.text = collection.title
     }

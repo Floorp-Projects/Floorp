@@ -5,6 +5,7 @@ package org.mozilla.fenix.collections
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import androidx.lifecycle.ViewModel
+import org.mozilla.fenix.home.sessioncontrol.Tab
 
 class CreateCollectionViewModel : ViewModel() {
     var selectedTabs = setOf<Tab>()

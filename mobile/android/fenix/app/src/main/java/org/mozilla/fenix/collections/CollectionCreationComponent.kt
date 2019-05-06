@@ -5,24 +5,14 @@ package org.mozilla.fenix.collections
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import android.view.ViewGroup
+import org.mozilla.fenix.home.sessioncontrol.Tab
+import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.ViewState
-
-data class Tab(
-    val sessionId: String,
-    val url: String,
-    val hostname: String,
-    val title: String
-)
-
-data class Collection(
-    val collectionId: String,
-    val title: String
-)
 
 sealed class SaveCollectionStep {
     object SelectTabs : SaveCollectionStep()
@@ -55,7 +45,7 @@ sealed class CollectionCreationAction : Action {
     data class SaveCollectionName(val tabs: List<Tab>, val name: String) :
         CollectionCreationAction()
 
-    data class SelectCollection(val collection: Collection) :
+    data class SelectCollection(val collection: TabCollection) :
         CollectionCreationAction()
 }
 

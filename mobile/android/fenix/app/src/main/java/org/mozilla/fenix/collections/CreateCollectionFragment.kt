@@ -17,11 +17,15 @@ import kotlinx.android.synthetic.main.fragment_create_collection.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.getRootView
+import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
+import java.util.Random
 
 class CreateCollectionFragment : DialogFragment() {
+    // Temporary callback. In the future we will just directly add the collection to the core session manager.
+    var onCollectionSaved: ((TabCollection) -> Unit)? = null
     private lateinit var collectionCreationComponent: CollectionCreationComponent
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,6 +95,8 @@ class CreateCollectionFragment : DialogFragment() {
                 is CollectionCreationAction.SaveCollectionName -> {
                     showSavedSnackbar(it.tabs.size)
                     dismiss()
+                    val newCollection = TabCollection(Random().nextInt(), it.name, it.tabs.toMutableList())
+                    onCollectionSaved?.invoke(newCollection)
                 }
             }
         }

@@ -74,12 +74,12 @@
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
 
-    <!-- Session placeholder icons-->
-    <color name="session_placeholder_blue">#00B3F4</color>
-    <color name="session_placeholder_orange">#FF8A50</color>
-    <color name="session_placeholder_green">#54FFBD</color>
-    <color name="session_placeholder_purple">#AB71FF</color>
-    <color name="session_placeholder_pink">#FF4AA2</color>
+    <!-- Collection icons-->
+    <color name="collection_icon_color_violet">#7542E5</color>
+    <color name="collection_icon_color_blue">#0250BB</color>
+    <color name="collection_icon_color_pink">#E31587</color>
+    <color name="collection_icon_color_green">#2AC3A2</color>
+    <color name="collection_icon_color_yellow">#E27F2E</color>
 
     <!-- Library buttons -->
     <color name="library_sessions_icon_background">#B9F0FD</color>

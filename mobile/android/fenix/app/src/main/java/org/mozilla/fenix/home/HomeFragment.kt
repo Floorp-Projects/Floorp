@@ -38,18 +38,20 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.collections.CreateCollectionFragment
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
-import org.mozilla.fenix.collections.Tab
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
-import org.mozilla.fenix.ext.urlToHost
+import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.Mode
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.SessionControlComponent
 import org.mozilla.fenix.home.sessioncontrol.SessionControlState
 import org.mozilla.fenix.home.sessioncontrol.TabAction
+import org.mozilla.fenix.home.sessioncontrol.CollectionAction
+import org.mozilla.fenix.home.sessioncontrol.TabCollection
+import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -73,6 +75,9 @@ class HomeFragment : Fragment(), CoroutineScope {
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
+    // TODO Remove this stub when we have the a-c version!
+    var storedCollections = mutableListOf<TabCollection>()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -80,12 +85,12 @@ class HomeFragment : Fragment(), CoroutineScope {
     ): View? {
         job = Job()
         val view = inflater.inflate(R.layout.fragment_home, container, false)
-        val mode =
-            if ((activity as HomeActivity).browsingModeManager.isPrivate) Mode.Private else Mode.Normal
+        val mode = if ((activity as HomeActivity).browsingModeManager.isPrivate) Mode.Private else Mode.Normal
+
         sessionControlComponent = SessionControlComponent(
             view.homeLayout,
             bus,
-            SessionControlState(listOf(), mode)
+            SessionControlState(listOf(), listOf(), mode)
         )
 
         view.homeLayout.applyConstraintSet {
@@ -178,6 +183,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                 .subscribe {
                     when (it) {
                         is SessionControlAction.Tab -> handleTabAction(it.action)
+                        is SessionControlAction.Collection -> handleCollectionAction(it.action)
                     }
                 }
         }
@@ -241,6 +247,44 @@ class HomeFragment : Fragment(), CoroutineScope {
             is TabAction.ShareTabs -> {
                 ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1843")
             }
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    private fun handleCollectionAction(action: CollectionAction) {
+        when (action) {
+            is CollectionAction.Expand -> {
+                storedCollections.find { it.id == action.collection.id }?.apply { expanded = true }
+            }
+            is CollectionAction.Collapse -> {
+                storedCollections.find { it.id == action.collection.id }?.apply { expanded = false }
+            }
+            is CollectionAction.Delete -> {
+                storedCollections.find { it.id == action.collection.id }?.let { storedCollections.remove(it) }
+            }
+            is CollectionAction.AddTab -> {
+                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1575")
+            }
+            is CollectionAction.Rename -> {
+                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1575")
+            }
+            is CollectionAction.OpenTabs -> {
+                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "2205")
+            }
+            is CollectionAction.ShareTabs -> {
+                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1585")
+            }
+            is CollectionAction.RemoveTab -> {
+                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1578")
+            }
+        }
+
+        emitCollectionChange()
+    }
+
+    private fun emitCollectionChange() {
+        storedCollections.map { it.copy() }.let {
+            getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
         }
     }
 
@@ -326,7 +370,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                         org.mozilla.fenix.home.sessioncontrol.Tab(
                             it.id,
                             it.url,
-                            it.url.urlToHost(),
+                            it.url.urlToTrimmedHost(),
                             it.title,
                             selected,
                             it.thumbnail
@@ -364,7 +408,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                         org.mozilla.fenix.home.sessioncontrol.Tab(
                             it.id,
                             it.url,
-                            it.url.urlToHost(),
+                            it.url.urlToTrimmedHost(),
                             it.title,
                             selected,
                             it.thumbnail
@@ -376,7 +420,7 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     private fun showCollectionCreationFragment(selectedTabId: String?) {
         val tabs = requireComponents.core.sessionManager.sessions
-            .map { Tab(it.id, it.url, it.url.urlToHost(), it.title) }
+            .map { Tab(it.id, it.url, it.url.urlToTrimmedHost(), it.title) }
 
         val viewModel = activity?.run {
             ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
@@ -387,11 +431,17 @@ class HomeFragment : Fragment(), CoroutineScope {
         viewModel?.selectedTabs = selectedSet
         viewModel?.saveCollectionStep = SaveCollectionStep.SelectTabs
 
-        CreateCollectionFragment()
-            .show(
+        CreateCollectionFragment().also {
+            it.onCollectionSaved = {
+                storedCollections.add(it)
+                emitCollectionChange()
+            }
+
+            it.show(
                 requireActivity().supportFragmentManager,
                 CreateCollectionFragment.createCollectionTag
             )
+        }
     }
 
     companion object {

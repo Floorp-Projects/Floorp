@@ -15,6 +15,10 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.NoTabMessageViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionMessageViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import java.lang.IllegalStateException
 
 sealed class AdapterItem {
@@ -24,6 +28,10 @@ sealed class AdapterItem {
     object PrivateBrowsingDescription : AdapterItem()
     object SaveTabGroup : AdapterItem()
     object DeleteTabs : AdapterItem()
+    object CollectionHeader : AdapterItem()
+    object NoCollectionMessage : AdapterItem()
+    data class CollectionItem(val collection: TabCollection) : AdapterItem()
+    data class TabInCollectionItem(val collection: TabCollection, val tab: Tab, val isLastTab: Boolean) : AdapterItem()
 
     val viewType: Int
         get() = when (this) {
@@ -33,6 +41,10 @@ sealed class AdapterItem {
             SaveTabGroup -> SaveTabGroupViewHolder.LAYOUT_ID
             PrivateBrowsingDescription -> PrivateBrowsingDescriptionViewHolder.LAYOUT_ID
             DeleteTabs -> DeleteTabsViewHolder.LAYOUT_ID
+            CollectionHeader -> CollectionHeaderViewHolder.LAYOUT_ID
+            NoCollectionMessage -> NoCollectionMessageViewHolder.LAYOUT_ID
+            is CollectionItem -> CollectionViewHolder.LAYOUT_ID
+            is TabInCollectionItem -> TabInCollectionViewHolder.LAYOUT_ID
         }
 }
 
@@ -62,6 +74,12 @@ class SessionControlAdapter(
                 actionEmitter
             )
             DeleteTabsViewHolder.LAYOUT_ID -> DeleteTabsViewHolder(view, actionEmitter)
+            CollectionHeaderViewHolder.LAYOUT_ID -> CollectionHeaderViewHolder(view)
+            NoCollectionMessageViewHolder.LAYOUT_ID -> NoCollectionMessageViewHolder(
+                view
+            )
+            CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, actionEmitter, job)
+            TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, actionEmitter, job)
             else -> throw IllegalStateException()
         }
     }
@@ -85,6 +103,13 @@ class SessionControlAdapter(
             is TabViewHolder -> holder.bindSession(
                 (items[position] as AdapterItem.TabItem).tab
             )
+            is CollectionViewHolder -> holder.bindSession(
+                (items[position] as AdapterItem.CollectionItem).collection
+            )
+            is TabInCollectionViewHolder -> {
+                val item = (items[position] as AdapterItem.TabInCollectionItem)
+                holder.bindSession(item.collection, item.tab, item.isLastTab)
+            }
         }
     }
 }

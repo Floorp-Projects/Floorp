@@ -17,7 +17,7 @@ import org.mozilla.fenix.mvi.ViewState
 class SessionControlComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
-    override var initialState: SessionControlState = SessionControlState(emptyList(), Mode.Normal)
+    override var initialState: SessionControlState = SessionControlState(emptyList(), emptyList(), Mode.Normal)
 ) :
     UIComponent<SessionControlState, SessionControlAction, SessionControlChange>(
         bus.getManagedEmitter(SessionControlAction::class.java),
@@ -26,6 +26,7 @@ class SessionControlComponent(
 
     override val reducer: (SessionControlState, SessionControlChange) -> SessionControlState = { state, change ->
         when (change) {
+            is SessionControlChange.CollectionsChange -> state.copy(collections = change.collections)
             is SessionControlChange.TabsChange -> state.copy(tabs = change.tabs)
             is SessionControlChange.ModeChange -> state.copy(mode = change.mode)
         }
@@ -45,8 +46,16 @@ data class Tab(
     val url: String,
     val hostname: String,
     val title: String,
-    val selected: Boolean,
+    val selected: Boolean? = null,
     val thumbnail: Bitmap? = null
+)
+
+data class TabCollection(
+    val id: Int,
+    val title: String,
+    val tabs: MutableList<Tab>,
+    val iconColor: Int = 0,
+    var expanded: Boolean = false
 )
 
 sealed class Mode {
@@ -56,6 +65,7 @@ sealed class Mode {
 
 data class SessionControlState(
     val tabs: List<Tab>,
+    val collections: List<TabCollection>,
     val mode: Mode
 ) : ViewState
 
@@ -70,15 +80,32 @@ sealed class TabAction : Action {
     object PrivateBrowsingLearnMore : TabAction()
 }
 
+sealed class CollectionAction : Action {
+    data class Expand(val collection: TabCollection) : CollectionAction()
+    data class Collapse(val collection: TabCollection) : CollectionAction()
+    data class Delete(val collection: TabCollection) : CollectionAction()
+    data class AddTab(val collection: TabCollection) : CollectionAction()
+    data class Rename(val collection: TabCollection) : CollectionAction()
+    data class OpenTabs(val collection: TabCollection) : CollectionAction()
+    data class ShareTabs(val collection: TabCollection) : CollectionAction()
+    data class RemoveTab(val collection: TabCollection, val tab: Tab) : CollectionAction()
+}
+
 sealed class SessionControlAction : Action {
     data class Tab(val action: TabAction) : SessionControlAction()
+    data class Collection(val action: CollectionAction) : SessionControlAction()
 }
 
 fun Observer<SessionControlAction>.onNext(tabAction: TabAction) {
     onNext(SessionControlAction.Tab(tabAction))
 }
 
+fun Observer<SessionControlAction>.onNext(collectionAction: CollectionAction) {
+    onNext(SessionControlAction.Collection(collectionAction))
+}
+
 sealed class SessionControlChange : Change {
     data class TabsChange(val tabs: List<Tab>) : SessionControlChange()
     data class ModeChange(val mode: Mode) : SessionControlChange()
+    data class CollectionsChange(val collections: List<TabCollection>) : SessionControlChange()
 }

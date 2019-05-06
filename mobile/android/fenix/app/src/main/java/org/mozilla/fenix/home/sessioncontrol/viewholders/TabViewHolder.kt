@@ -17,7 +17,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.IconRequest
-import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.support.ktx.android.content.res.pxToDp
@@ -85,18 +84,18 @@ class TabViewHolder(
             setOnClickListener {
                 tabMenu.menuBuilder
                     .build(view.context)
-                    .show(anchor = it, orientation = BrowserMenu.Orientation.DOWN)
+                    .show(anchor = it)
             }
         }
     }
 
     fun bindSession(tab: Tab) {
         this.tab = tab
-        updateText(tab)
-        updateSelected(tab.selected)
+        updateTabUI(tab)
+        updateSelected(tab.selected ?: false)
     }
 
-    fun updateText(tab: Tab) {
+    private fun updateTabUI(tab: Tab) {
         hostname.text = tab.hostname
         tab_title.text = tab.title
         launch(Dispatchers.IO) {

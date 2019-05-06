@@ -2,8 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-
-
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">More options</string>
@@ -269,8 +267,12 @@
     <string name="current_session_image">Current session image</string>
     <!-- Button to save the current set of tabs into a collection -->
     <string name="save_to_collection">Save to collection</string>
-    <!-- Text for the button to delete a session -->
-    <string name="session_delete">Delete session</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Delete collection</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Rename collection</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Open tabs</string>
     <!-- Text for the button to delete a single session -->
     <string name="session_item_delete">Delete</string>
     <!-- Text to tell the user how many more tabs this session has.
@@ -383,11 +385,9 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL copied</string>
 
-
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Go to Settings</string>
-
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
         to give users access to site specific information / settings. For example:
         Secure settings status and a button to modify site permissions -->
@@ -427,6 +427,13 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Off</string>
 
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Collections</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">No collections</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_collections_description">Your collections will be shown here.</string>
 
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Select Tabs</string>
@@ -442,7 +449,6 @@
 
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Select All</string>
-
     <!-- Text to prompt users to select the tabs to save in the "select tabs" stepof the collection creator -->
     <string name="create_collection_save_to_collection_empty">Select tabs to save</string>
 

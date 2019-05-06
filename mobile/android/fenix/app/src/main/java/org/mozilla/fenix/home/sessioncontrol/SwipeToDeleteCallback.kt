@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import org.mozilla.fenix.R
+import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
 
 class SwipeToDeleteCallback(
@@ -27,8 +28,11 @@ class SwipeToDeleteCallback(
     }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-        if (viewHolder is TabViewHolder) {
-            actionEmitter.onNext(TabAction.Close(viewHolder.tab?.sessionId!!))
+        when (viewHolder) {
+            is TabViewHolder -> actionEmitter.onNext(TabAction.Close(viewHolder.tab?.sessionId!!))
+            is TabInCollectionViewHolder -> {
+                actionEmitter.onNext(CollectionAction.RemoveTab(viewHolder.collection, viewHolder.tab))
+            }
         }
     }
 
@@ -43,11 +47,18 @@ class SwipeToDeleteCallback(
     ) {
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
         val icon = ContextCompat.getDrawable(recyclerView.context, R.drawable.ic_delete)
-        val background = ContextCompat.getDrawable(
-            recyclerView.context,
-            R.drawable.session_background
-        )
 
+        val backgroundDrawable = when {
+            viewHolder is TabInCollectionViewHolder && viewHolder.isLastTab -> {
+                R.drawable.tab_in_collection_last_swipe_background
+            }
+            viewHolder is TabInCollectionViewHolder -> {
+                R.drawable.tab_in_collection_swipe_background
+            }
+            else -> R.drawable.session_background
+        }
+
+        val background = ContextCompat.getDrawable(recyclerView.context, backgroundDrawable)
         background?.let {
             icon?.let {
                 val itemView = viewHolder.itemView
@@ -95,7 +106,7 @@ class SwipeToDeleteCallback(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder
     ): Int {
-        return if (viewHolder is TabViewHolder) {
+        return if (viewHolder is TabViewHolder || viewHolder is TabInCollectionViewHolder) {
             super.getSwipeDirs(recyclerView, viewHolder)
         } else 0
     }

@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.IconRequest
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.home.sessioncontrol.Tab
 import kotlin.coroutines.CoroutineContext
 
 class CollectionCreationTabListAdapter(

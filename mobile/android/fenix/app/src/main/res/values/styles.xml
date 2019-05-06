@@ -166,10 +166,32 @@
         <item name="android:letterSpacing">0.03</item>
     </style>
 
+    <style name="Header16TextStyle" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">?primaryText</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="Header14TextStyle" parent="TextAppearance.MaterialComponents.Body2">
         <item name="android:textColor">?primaryText</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Header12TextStyle" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">?secondaryText</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Body14TextStyle" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">?primaryText</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="SubtitleTextStyle" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">?secondaryText</item>
+        <item name="android:textSize">14sp</item>
     </style>
 
     <style name="ToolbarTitleTextStyle" parent="HeaderTextStyle">

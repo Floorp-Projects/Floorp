@@ -27,7 +27,7 @@
         android:focusable="false"
         android:textStyle="bold"
         android:gravity="center"
-        android:text="@string/session_delete"
+        android:text="@string/collection_delete"
         android:textColor="?contrastText"
         android:textSize="16sp" />
 </FrameLayout>
