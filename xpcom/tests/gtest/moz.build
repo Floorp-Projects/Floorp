@@ -7,9 +7,11 @@
 UNIFIED_SOURCES += [
     'Helpers.cpp',
     'TestArenaAllocator.cpp',
+    'TestAtoms.cpp',
     'TestAutoPtr.cpp',
     'TestAutoRef.cpp',
     'TestAutoRefCnt.cpp',
+    'TestBase64.cpp',
     'TestCallTemplates.cpp',
     'TestCloneInputStream.cpp',
     'TestCOMPtrEq.cpp',
@@ -43,6 +45,7 @@ UNIFIED_SOURCES += [
     'TestSnappyStreams.cpp',
     'TestStateWatching.cpp',
     'TestStorageStream.cpp',
+    'TestStrings.cpp',
     'TestStringStream.cpp',
     'TestSynchronization.cpp',
     'TestTArray.cpp',
@@ -53,6 +56,7 @@ UNIFIED_SOURCES += [
     'TestThreadMetrics.cpp',
     'TestThreadPool.cpp',
     'TestThreadPoolListener.cpp',
+    'TestThreads.cpp',
     'TestThrottledEventQueue.cpp',
     'TestTimeStamp.cpp',
     'TestTokenizer.cpp',
@@ -61,11 +65,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
-        'TestAtoms.cpp',
-        'TestBase64.cpp',
         'TestPipes.cpp',
-        'TestStrings.cpp',
-        'TestThreads.cpp',
     ]
 
 # skip the test on windows10-aarch64 due to perma-fail, bug 1422219
@@ -97,7 +97,6 @@ else:
     UNIFIED_SOURCES += [
         'TestFilePreferencesUnix.cpp',
     ]
-
 
 if CONFIG['WRAP_STL_INCLUDES'] and CONFIG['CC_TYPE'] != 'clang-cl' and CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
