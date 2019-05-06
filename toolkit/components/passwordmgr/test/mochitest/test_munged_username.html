@@ -129,6 +129,20 @@ const TESTCASES = [
   },
 ];
 
+/**
+ * @return {Promise} resolving when form submission was processed.
+ */
+function getSubmitMessage() {
+  info("getSubmitMessage");
+  return new Promise((resolve, reject) => {
+    PWMGR_COMMON_PARENT.addMessageListener("formSubmissionProcessed", function processed(...args) {
+      info("got formSubmissionProcessed");
+      PWMGR_COMMON_PARENT.removeMessageListener("formSubmissionProcessed", processed);
+      resolve(...args);
+    });
+  });
+}
+
 add_task(async function test_new_logins() {
   for (let tc of TESTCASES) {
     info("Starting testcase: " + JSON.stringify(tc));
