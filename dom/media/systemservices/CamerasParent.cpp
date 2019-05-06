@@ -224,7 +224,7 @@ void CamerasParent::StopVideoCapture() {
             }
             delete thread;
           }
-          DebugOnly<nsresult> rv = GetShutdownBarrier()->RemoveBlocker(self);
+          nsresult rv = GetShutdownBarrier()->RemoveBlocker(self);
           MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
           return NS_OK;
         }));
