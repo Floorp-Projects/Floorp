@@ -129,6 +129,11 @@ const runtime = {
   // this flag will be true when the connection was timeout.
   isConnectionTimeout: PropTypes.bool.isRequired,
 
+  // this flag will be true when the detected runtime is Fenix (Firefox Preview).
+  // Fenix need specific logic to get their display name, version and logos.
+  // Discussion ongoing in https://github.com/mozilla-mobile/fenix/issues/2016
+  isFenix: PropTypes.bool.isRequired,
+
   // unavailable runtimes are placeholders for devices where the runtime has not been
   // started yet. For instance an ADB device connected without a compatible runtime
   // running.
