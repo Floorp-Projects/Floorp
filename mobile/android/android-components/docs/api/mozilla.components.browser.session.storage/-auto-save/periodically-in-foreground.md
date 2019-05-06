@@ -10,4 +10,4 @@ Saves the state periodically when the app is in the foreground.
 
 `interval` - The interval in which the state should be saved to disk.
 
-`unit` - The time unit of the [interval](periodically-in-foreground.md#mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, android.arch.lifecycle.Lifecycle)/interval) parameter.
+`unit` - The time unit of the [interval](periodically-in-foreground.md#mozilla.components.browser.session.storage.AutoSave$periodicallyInForeground(kotlin.Long, java.util.concurrent.TimeUnit, java.util.concurrent.ScheduledExecutorService, androidx.lifecycle.Lifecycle)/interval) parameter.

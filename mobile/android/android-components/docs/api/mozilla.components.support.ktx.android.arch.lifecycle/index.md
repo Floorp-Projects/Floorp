@@ -6,4 +6,4 @@
 
 | Name | Summary |
 |---|---|
-| [android.arch.lifecycle.Lifecycle](android.arch.lifecycle.-lifecycle/index.md) |  |
+| [androidx.lifecycle.Lifecycle](androidx.lifecycle.-lifecycle/index.md) |  |

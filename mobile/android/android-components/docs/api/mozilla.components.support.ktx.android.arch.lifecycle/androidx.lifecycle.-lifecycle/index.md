@@ -1,6 +1,6 @@
-[android-components](../../index.md) / [mozilla.components.support.ktx.android.arch.lifecycle](../index.md) / [android.arch.lifecycle.Lifecycle](./index.md)
+[android-components](../../index.md) / [mozilla.components.support.ktx.android.arch.lifecycle](../index.md) / [androidx.lifecycle.Lifecycle](./index.md)
 
-### Extensions for android.arch.lifecycle.Lifecycle
+### Extensions for androidx.lifecycle.Lifecycle
 
 | Name | Summary |
 |---|---|

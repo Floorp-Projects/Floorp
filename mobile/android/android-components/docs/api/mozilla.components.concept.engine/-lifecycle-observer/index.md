@@ -2,15 +2,15 @@
 
 # LifecycleObserver
 
-`class LifecycleObserver : LifecycleObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineView.kt#L80)
+`class LifecycleObserver : LifecycleObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineView.kt#L79)
 
-[LifecycleObserver](#) which dispatches lifecycle events to an [EngineView](../-engine-view/index.md).
+[LifecycleObserver](./index.md) which dispatches lifecycle events to an [EngineView](../-engine-view/index.md).
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `LifecycleObserver(engineView: `[`EngineView`](../-engine-view/index.md)`)`<br>[LifecycleObserver](#) which dispatches lifecycle events to an [EngineView](../-engine-view/index.md). |
+| [&lt;init&gt;](-init-.md) | `LifecycleObserver(engineView: `[`EngineView`](../-engine-view/index.md)`)`<br>[LifecycleObserver](./index.md) which dispatches lifecycle events to an [EngineView](../-engine-view/index.md). |
 
 ### Properties
 

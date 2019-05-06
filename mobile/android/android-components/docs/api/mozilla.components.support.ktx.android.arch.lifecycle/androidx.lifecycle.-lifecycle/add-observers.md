@@ -1,4 +1,4 @@
-[android-components](../../index.md) / [mozilla.components.support.ktx.android.arch.lifecycle](../index.md) / [android.arch.lifecycle.Lifecycle](index.md) / [addObservers](./add-observers.md)
+[android-components](../../index.md) / [mozilla.components.support.ktx.android.arch.lifecycle](../index.md) / [androidx.lifecycle.Lifecycle](index.md) / [addObservers](./add-observers.md)
 
 # addObservers
 

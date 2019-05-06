@@ -2,7 +2,7 @@
 
 # PocketEndpoint
 
-`class PocketEndpoint` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/pocket/src/main/java/mozilla/components/service/pocket/PocketEndpoint.kt#L19)
+`class PocketEndpoint` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/pocket/src/main/java/mozilla/components/service/pocket/PocketEndpoint.kt#L20)
 
 Makes requests to the Pocket API and returns the requested data.
 

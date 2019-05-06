@@ -4,5 +4,5 @@
 
 `LifecycleObserver(engineView: `[`EngineView`](../-engine-view/index.md)`)`
 
-[LifecycleObserver](#) which dispatches lifecycle events to an [EngineView](../-engine-view/index.md).
+[LifecycleObserver](index.md) which dispatches lifecycle events to an [EngineView](../-engine-view/index.md).
 

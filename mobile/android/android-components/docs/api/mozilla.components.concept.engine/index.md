@@ -12,7 +12,7 @@
 | [EngineSessionState](-engine-session-state/index.md) | `interface EngineSessionState`<br>The state of an [EngineSession](-engine-session/index.md). An instance can be obtained from [EngineSession.saveState](-engine-session/save-state.md). Creating a new [EngineSession](-engine-session/index.md) and calling [EngineSession.restoreState](-engine-session/restore-state.md) with the same state instance should restore the previous session. |
 | [EngineView](-engine-view/index.md) | `interface EngineView`<br>View component that renders web content. |
 | [HitResult](-hit-result/index.md) | `sealed class HitResult`<br>Represents all the different supported types of data that can be found from long clicking an element. |
-| [LifecycleObserver](-lifecycle-observer/index.md) | `class LifecycleObserver : LifecycleObserver`<br>[LifecycleObserver](#) which dispatches lifecycle events to an [EngineView](-engine-view/index.md). |
+| [LifecycleObserver](-lifecycle-observer/index.md) | `class LifecycleObserver : LifecycleObserver`<br>[LifecycleObserver](-lifecycle-observer/index.md) which dispatches lifecycle events to an [EngineView](-engine-view/index.md). |
 | [Settings](-settings/index.md) | `abstract class Settings`<br>Holds settings of an engine or session. Concrete engine implementations define how these settings are applied i.e. whether a setting is applied on an engine or session instance. |
 | [UnsupportedSetting](-unsupported-setting/index.md) | `class UnsupportedSetting<T>` |
 

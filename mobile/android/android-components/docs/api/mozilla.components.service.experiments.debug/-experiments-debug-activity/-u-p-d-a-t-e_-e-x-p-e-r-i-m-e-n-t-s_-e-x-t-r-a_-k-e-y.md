@@ -2,4 +2,4 @@
 
 # UPDATE_EXPERIMENTS_EXTRA_KEY
 
-`const val UPDATE_EXPERIMENTS_EXTRA_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/debug/ExperimentsDebugActivity.kt#L27)
+`const val UPDATE_EXPERIMENTS_EXTRA_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/debug/ExperimentsDebugActivity.kt#L31)

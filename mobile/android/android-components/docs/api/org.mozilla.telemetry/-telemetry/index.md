@@ -19,7 +19,7 @@
 | [getClient](get-client.md) | `open fun getClient(): `[`TelemetryClient`](../../org.mozilla.telemetry.net/-telemetry-client/index.md) |
 | [getClientId](get-client-id.md) | `open fun getClientId(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Returns the unique client id for this installation (UUID). |
 | [getConfiguration](get-configuration.md) | `open fun getConfiguration(): `[`TelemetryConfiguration`](../../org.mozilla.telemetry.config/-telemetry-configuration/index.md) |
-| [getPingBuilder](get-ping-builder.md) | `open fun getPingBuilder(pingType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`TelemetryPingBuilder`](../../org.mozilla.telemetry.ping/-telemetry-ping-builder/index.md)`?`<br>Returns a previously added ping builder or null if no ping builder of the given type has been added. |
+| [getPingBuilder](get-ping-builder.md) | `open fun getPingBuilder(pingType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`TelemetryPingBuilder`](../../org.mozilla.telemetry.ping/-telemetry-ping-builder/index.md)<br>Returns a previously added ping builder or null if no ping builder of the given type has been added. |
 | [getStorage](get-storage.md) | `open fun getStorage(): `[`TelemetryStorage`](../../org.mozilla.telemetry.storage/-telemetry-storage/index.md) |
 | [queueEvent](queue-event.md) | `open fun queueEvent(event: `[`TelemetryEvent`](../../org.mozilla.telemetry.event/-telemetry-event/index.md)`): `[`Telemetry`](./index.md) |
 | [queuePing](queue-ping.md) | `open fun queuePing(pingType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Telemetry`](./index.md) |

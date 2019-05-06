@@ -2,7 +2,7 @@
 
 # PermissionRequest
 
-`interface PermissionRequest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L14)
+`interface PermissionRequest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/permission/PermissionRequest.kt#L11)
 
 Represents a permission request, used when engines need access to protected
 resources. Every request must be handled by either calling [grant](grant.md) or [reject](reject.md).

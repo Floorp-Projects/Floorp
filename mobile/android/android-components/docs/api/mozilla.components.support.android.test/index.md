@@ -12,4 +12,4 @@
 
 | Name | Summary |
 |---|---|
-| [android.arch.lifecycle.LiveData](android.arch.lifecycle.-live-data/index.md) |  |
+| [androidx.lifecycle.LiveData](androidx.lifecycle.-live-data/index.md) |  |
