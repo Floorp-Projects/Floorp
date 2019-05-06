@@ -101,8 +101,6 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:fadingEdgeLength="30dp"
-        android:requiresFadingEdge="vertical"
         app:layout_constraintBottom_toTopOf="@+id/add_tabs_layout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
