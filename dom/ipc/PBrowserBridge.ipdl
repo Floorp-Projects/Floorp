@@ -12,6 +12,7 @@ using ScreenIntSize from "Units.h";
 using nsSizeMode from "nsIWidgetListener.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+using mozilla::WidgetMouseEvent from "ipc/nsGUIEventIPC.h";
 
 namespace mozilla {
 namespace dom {
@@ -55,6 +56,11 @@ parent:
    * Navigate by key (Tab/Shift+Tab/F6/Shift+f6).
    */
   async NavigateByKey(bool aForward, bool aForDocumentNavigation);
+
+  /**
+   * Dispatch the given synthesized mousemove event to the child.
+   */
+  async DispatchSynthesizedMouseEvent(WidgetMouseEvent event);
 
   /**
    * Sending an activate message moves focus to the iframe.

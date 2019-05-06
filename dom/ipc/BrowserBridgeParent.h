@@ -56,6 +56,9 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
                                             const bool& aForDocumentNavigation);
 
+  mozilla::ipc::IPCResult RecvDispatchSynthesizedMouseEvent(
+      const WidgetMouseEvent& aEvent);
+
   mozilla::ipc::IPCResult RecvActivate();
 
   mozilla::ipc::IPCResult RecvDeactivate();
