@@ -113,11 +113,6 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   }
 
   MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
-  MOZ_MUST_USE bool emitCallScriptedGetterResultShared(
-      TypedOrValueRegister receiver, TypedOrValueRegister output);
-  MOZ_MUST_USE bool emitCallNativeGetterResultShared(
-      TypedOrValueRegister receiver, TypedOrValueRegister output,
-      AutoSaveLiveRegisters& save);
 
   bool needsPostBarrier() const {
     return ic_->asSetPropertyIC()->needsPostBarrier();
@@ -930,8 +925,12 @@ bool IonCacheIRCompiler::emitGuardHasGetterSetter() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallScriptedGetterResultShared(
-    TypedOrValueRegister receiver, TypedOrValueRegister output) {
+bool IonCacheIRCompiler::emitCallScriptedGetterResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoSaveLiveRegisters save(*this);
+  AutoOutputRegister output(*this);
+
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
   JSFunction* target = &objectStubField(reader.stubOffset())->as<JSFunction>();
   AutoScratchRegister scratch(allocator, masm);
 
@@ -962,7 +961,7 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResultShared(
   for (size_t i = 0; i < target->nargs(); i++) {
     masm.Push(UndefinedValue());
   }
-  masm.Push(receiver);
+  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
 
   if (!isSameRealm) {
     masm.switchToRealm(target->realm(), scratch);
@@ -998,30 +997,12 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResultShared(
   return true;
 }
 
-bool IonCacheIRCompiler::emitCallScriptedGetterResult() {
+bool IonCacheIRCompiler::emitCallNativeGetterResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoSaveLiveRegisters save(*this);
   AutoOutputRegister output(*this);
 
   Register obj = allocator.useRegister(masm, reader.objOperandId());
-
-  return emitCallScriptedGetterResultShared(
-      TypedOrValueRegister(MIRType::Object, AnyRegister(obj)), output);
-}
-
-bool IonCacheIRCompiler::emitCallScriptedGetterByValueResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
-
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-
-  return emitCallScriptedGetterResultShared(val, output);
-}
-
-bool IonCacheIRCompiler::emitCallNativeGetterResultShared(
-    TypedOrValueRegister receiver, TypedOrValueRegister output,
-    AutoSaveLiveRegisters& save) {
   JSFunction* target = &objectStubField(reader.stubOffset())->as<JSFunction>();
   MOZ_ASSERT(target->isNative());
 
@@ -1038,8 +1019,8 @@ bool IonCacheIRCompiler::emitCallNativeGetterResultShared(
   // are the function arguments.
 
   // Construct vp array:
-  // Push receiver value for |this|
-  masm.Push(receiver);
+  // Push object value for |this|
+  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
   // Push callee/outparam.
   masm.Push(ObjectValue(*target));
 
@@ -1088,27 +1069,6 @@ bool IonCacheIRCompiler::emitCallNativeGetterResultShared(
 
   masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
   return true;
-}
-
-bool IonCacheIRCompiler::emitCallNativeGetterResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
-
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-
-  return emitCallNativeGetterResultShared(
-      TypedOrValueRegister(MIRType::Object, AnyRegister(obj)), output, save);
-}
-
-bool IonCacheIRCompiler::emitCallNativeGetterByValueResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
-
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-
-  return emitCallNativeGetterResultShared(val, output, save);
 }
 
 bool IonCacheIRCompiler::emitCallProxyGetResult() {
