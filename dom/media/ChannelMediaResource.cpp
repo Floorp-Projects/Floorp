@@ -911,9 +911,8 @@ double ChannelMediaResource::GetDownloadRate(bool* aIsReliable) {
 
 int64_t ChannelMediaResource::GetLength() { return mCacheStream.GetLength(); }
 
-nsCString ChannelMediaResource::GetDebugInfo() {
-  return NS_LITERAL_CSTRING("ChannelMediaResource: ") +
-         mCacheStream.GetDebugInfo();
+void ChannelMediaResource::GetDebugInfo(dom::MediaResourceDebugInfo& aInfo) {
+  mCacheStream.GetDebugInfo(aInfo.mCacheStream);
 }
 
 // ChannelSuspendAgent

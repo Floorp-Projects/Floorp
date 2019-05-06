@@ -222,15 +222,11 @@ void AudioSinkWrapper::OnAudioEnded() {
   mAudioEnded = true;
 }
 
-nsCString AudioSinkWrapper::GetDebugInfo() {
+void AudioSinkWrapper::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
   AssertOwnerThread();
-  auto str = nsPrintfCString(
-      "AudioSinkWrapper: IsStarted=%d IsPlaying=%d AudioEnded=%d", IsStarted(),
-      IsPlaying(), mAudioEnded);
-  if (mAudioSink) {
-    AppendStringIfNotEmpty(str, mAudioSink->GetDebugInfo());
-  }
-  return std::move(str);
+  aInfo.mAudioSink.mIsPlaying = IsPlaying();
+  aInfo.mAudioSink.mIsStarted = IsStarted();
+  aInfo.mAudioSink.mAudioEnded = mAudioEnded;
 }
 
 }  // namespace mozilla

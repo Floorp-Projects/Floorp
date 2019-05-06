@@ -15,6 +15,7 @@
 #  include "mozilla/Maybe.h"
 #  include "mozilla/Monitor.h"
 #  include "mozilla/TaskQueue.h"
+#  include "mozilla/dom/MediaDebugInfoBinding.h"
 
 namespace mozilla {
 
@@ -49,9 +50,9 @@ class MediaSourceDemuxer : public MediaDataDemuxer,
   TaskQueue* GetTaskQueue() { return mTaskQueue; }
   void NotifyInitDataArrived();
 
-  // Returns a string describing the state of the MediaSource internal
+  // Returns a structure describing the state of the MediaSource internal
   // buffered data. Used for debugging purposes.
-  void GetMozDebugReaderData(nsACString& aString);
+  void GetDebugInfo(dom::MediaSourceDemuxerDebugInfo& aInfo);
 
   void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
 

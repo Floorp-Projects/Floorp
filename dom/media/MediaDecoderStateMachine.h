@@ -98,6 +98,7 @@ hardware (via AudioStream).
 #  include "mozilla/StateMirroring.h"
 #  include "nsAutoPtr.h"
 #  include "nsThreadUtils.h"
+#  include "mozilla/dom/MediaDebugInfoBinding.h"
 
 namespace mozilla {
 
@@ -153,6 +154,8 @@ DDLoggedTypeDeclName(MediaDecoderStateMachine);
 
   See MediaDecoder.h for more details.
 */
+using StateMachineDebugInfoPromise = MozPromise<bool, bool, true>;
+
 class MediaDecoderStateMachine
     : public DecoderDoctorLifeLogger<MediaDecoderStateMachine> {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine)
@@ -182,7 +185,8 @@ class MediaDecoderStateMachine
   // Returns the state machine task queue.
   TaskQueue* OwnerThread() const { return mTaskQueue; }
 
-  RefPtr<MediaDecoder::DebugInfoPromise> RequestDebugInfo();
+  RefPtr<StateMachineDebugInfoPromise> RequestDebugInfo(
+      dom::MediaDecoderStateMachineDebugInfo& aInfo);
 
   void SetOutputStreamPrincipal(const nsCOMPtr<nsIPrincipal>& aPrincipal);
   void SetOutputStreamCORSMode(CORSMode aCORSMode);
@@ -310,7 +314,7 @@ class MediaDecoderStateMachine
   static const char* ToStateStr(State aState);
   const char* ToStateStr();
 
-  nsCString GetDebugInfo();
+  void GetDebugInfo(dom::MediaDecoderStateMachineDebugInfo& aInfo);
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.

@@ -1543,49 +1543,30 @@ already_AddRefed<MediaSource> HTMLMediaElement::GetMozMediaSourceObject()
   return source.forget();
 }
 
-void HTMLMediaElement::GetMozDebugReaderData(nsAString& aString) {
-  if (mDecoder && !mSrcStream) {
-    nsAutoCString result;
-    mDecoder->GetMozDebugReaderData(result);
-    CopyUTF8toUTF16(result, aString);
-  }
-}
-
 already_AddRefed<Promise> HTMLMediaElement::MozRequestDebugInfo(
     ErrorResult& aRv) {
   RefPtr<Promise> promise = CreateDOMPromise(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
-
-  nsAutoString result;
-  GetMozDebugReaderData(result);
-
-  if (mVideoFrameContainer) {
-    result.AppendPrintf(
-        "Compositor dropped frame(including when element's invisible): %u\n",
-        mVideoFrameContainer->GetDroppedImageCount());
-  }
-
+  auto result =
+      MakeRefPtr<media::Refcountable<dom::HTMLMediaElementDebugInfo>>();
   if (mMediaKeys) {
-    nsString EMEInfo;
-    GetEMEInfo(EMEInfo);
-    result.AppendLiteral("EME Info: ");
-    result.Append(EMEInfo);
-    result.AppendLiteral("\n");
+    GetEMEInfo(result->mEMEInfo);
   }
-
+  if (mVideoFrameContainer) {
+    result->mCompositorDroppedFrames =
+        mVideoFrameContainer->GetDroppedImageCount();
+  }
   if (mDecoder) {
-    mDecoder->RequestDebugInfo()->Then(
-        mAbstractMainThread, __func__,
-        [promise, result](const nsACString& aString) {
-          promise->MaybeResolve(result + NS_ConvertUTF8toUTF16(aString));
-        },
-        [promise, result]() { promise->MaybeResolve(result); });
+    mDecoder->RequestDebugInfo(result->mDecoder)
+        ->Then(
+            mAbstractMainThread, __func__,
+            [promise, result]() { promise->MaybeResolve(result.get()); },
+            [promise, result]() { promise->MaybeResolve(result.get()); });
   } else {
-    promise->MaybeResolve(result);
+    promise->MaybeResolve(result.get());
   }
-
   return promise.forget();
 }
 
@@ -1608,22 +1589,6 @@ already_AddRefed<Promise> HTMLMediaElement::MozRequestDebugLog(
       },
       [promise](nsresult rv) { promise->MaybeReject(rv); });
 
-  return promise.forget();
-}
-
-already_AddRefed<Promise> HTMLMediaElement::MozDumpDebugInfo() {
-  ErrorResult rv;
-  RefPtr<Promise> promise = CreateDOMPromise(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return nullptr;
-  }
-  if (mDecoder) {
-    mDecoder->DumpDebugInfo()->Then(mAbstractMainThread, __func__,
-                                    promise.get(),
-                                    &Promise::MaybeResolveWithUndefined);
-  } else {
-    promise->MaybeResolveWithUndefined();
-  }
   return promise.forget();
 }
 
@@ -7139,21 +7104,12 @@ void HTMLMediaElement::AsyncRejectPendingPlayPromises(nsresult aError) {
   mMainThreadEventTarget->Dispatch(event.forget());
 }
 
-void HTMLMediaElement::GetEMEInfo(nsString& aEMEInfo) {
+void HTMLMediaElement::GetEMEInfo(dom::EMEDebugInfo& aInfo) {
   if (!mMediaKeys) {
     return;
   }
-
-  nsString keySystem;
-  mMediaKeys->GetKeySystem(keySystem);
-
-  nsString sessionsInfo;
-  mMediaKeys->GetSessionsInfo(sessionsInfo);
-
-  aEMEInfo.AppendLiteral("Key System=");
-  aEMEInfo.Append(keySystem);
-  aEMEInfo.AppendLiteral(" SessionsInfo=");
-  aEMEInfo.Append(sessionsInfo);
+  mMediaKeys->GetKeySystem(aInfo.mKeySystem);
+  mMediaKeys->GetSessionsInfo(aInfo.mSessionsInfo);
 }
 
 void HTMLMediaElement::NotifyDecoderActivityChanges() const {

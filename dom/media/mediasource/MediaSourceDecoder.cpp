@@ -235,12 +235,8 @@ void MediaSourceDecoder::SetMediaSourceDuration(double aDuration) {
   }
 }
 
-void MediaSourceDecoder::GetMozDebugReaderData(nsACString& aString) {
-  aString += NS_LITERAL_CSTRING("Container Type: MediaSource\n");
-  if (mReader && mDemuxer) {
-    mReader->GetMozDebugReaderData(aString);
-    mDemuxer->GetMozDebugReaderData(aString);
-  }
+void MediaSourceDecoder::GetDebugInfo(dom::MediaSourceDecoderDebugInfo& aInfo) {
+  mReader->GetDebugInfo(aInfo.mReader);
 }
 
 double MediaSourceDecoder::GetDuration() {
