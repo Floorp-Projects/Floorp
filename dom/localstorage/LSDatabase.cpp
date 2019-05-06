@@ -120,7 +120,7 @@ nsresult LSDatabase::GetLength(LSObject* aObject, uint32_t* aResult) {
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, VoidString());
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -140,7 +140,7 @@ nsresult LSDatabase::GetKey(LSObject* aObject, uint32_t aIndex,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, VoidString());
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -160,7 +160,7 @@ nsresult LSDatabase::GetItem(LSObject* aObject, const nsAString& aKey,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, aKey);
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -179,7 +179,7 @@ nsresult LSDatabase::GetKeys(LSObject* aObject, nsTArray<nsString>& aKeys) {
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, VoidString());
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -200,7 +200,7 @@ nsresult LSDatabase::SetItem(LSObject* aObject, const nsAString& aKey,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, aKey);
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -220,7 +220,7 @@ nsresult LSDatabase::RemoveItem(LSObject* aObject, const nsAString& aKey,
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, aKey);
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -239,7 +239,7 @@ nsresult LSDatabase::Clear(LSObject* aObject, LSNotifyInfo& aNotifyInfo) {
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mAllowedToClose);
 
-  nsresult rv = EnsureSnapshot(aObject, VoidString());
+  nsresult rv = EnsureSnapshot(aObject);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -262,7 +262,7 @@ nsresult LSDatabase::BeginExplicitSnapshot(LSObject* aObject) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  nsresult rv = EnsureSnapshot(aObject, VoidString(), /* aExplicit */ true);
+  nsresult rv = EnsureSnapshot(aObject, /* aExplicit */ true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -290,8 +290,7 @@ nsresult LSDatabase::EndExplicitSnapshot(LSObject* aObject) {
   return NS_OK;
 }
 
-nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, const nsAString& aKey,
-                                    bool aExplicit) {
+nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, bool aExplicit) {
   MOZ_ASSERT(aObject);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT_IF(mSnapshot, !aExplicit);
@@ -307,7 +306,7 @@ nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, const nsAString& aKey,
 
   LSSnapshotInitInfo initInfo;
   bool ok = mActor->SendPBackgroundLSSnapshotConstructor(
-      actor, aObject->DocumentURI(), nsString(aKey),
+      actor, aObject->DocumentURI(),
       /* increasePeakUsage */ true,
       /* requestedSize */ 131072,
       /* minSize */ 4096, &initInfo);
@@ -318,7 +317,7 @@ nsresult LSDatabase::EnsureSnapshot(LSObject* aObject, const nsAString& aKey,
   snapshot->SetActor(actor);
 
   // This add refs snapshot.
-  nsresult rv = snapshot->Init(aKey, initInfo, aExplicit);
+  nsresult rv = snapshot->Init(initInfo, aExplicit);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
