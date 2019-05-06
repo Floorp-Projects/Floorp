@@ -252,6 +252,16 @@ void nsHttpConnectionInfo::BuildHashKey() {
     mHashKey.Append('}');
   }
 
+  if (mProxyInfo) {
+    const nsCString& connectionIsolationKey =
+        mProxyInfo->ConnectionIsolationKey();
+    if (!connectionIsolationKey.IsEmpty()) {
+      mHashKey.AppendLiteral("{CIK ");
+      mHashKey.Append(connectionIsolationKey);
+      mHashKey.AppendLiteral("}");
+    }
+  }
+
   nsAutoCString originAttributes;
   mOriginAttributes.CreateSuffix(originAttributes);
   mHashKey.Append(originAttributes);

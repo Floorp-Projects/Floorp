@@ -368,7 +368,7 @@ class SocksTestClient {
     }
 
     let pi = pps.newProxyInfoWithAuth(socks.version, socks.host, socks.port,
-                                      socks.username, socks.password,
+                                      socks.username, socks.password, "", "",
                                       pi_flags, -1, null);
 
     this.trans = sts.createTransport(null, 0, dest.host, dest.port, pi);
