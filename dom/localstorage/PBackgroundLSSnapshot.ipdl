@@ -7,25 +7,20 @@ include protocol PBackgroundLSDatabase;
 
 include PBackgroundLSSharedTypes;
 
-include "mozilla/dom/localstorage/SerializationHelpers.h";
-
-using mozilla::dom::LSValue
-  from "mozilla/dom/LSValue.h";
-
 namespace mozilla {
 namespace dom {
 
 struct LSSetItemInfo
 {
   nsString key;
-  LSValue oldValue;
-  LSValue value;
+  nsString oldValue;
+  nsString value;
 };
 
 struct LSRemoveItemInfo
 {
   nsString key;
-  LSValue oldValue;
+  nsString oldValue;
 };
 
 struct LSClearInfo
@@ -66,7 +61,7 @@ parent:
    * consult any other threads or perform any I/O.
    */
   sync LoadValueAndMoreItems(nsString key)
-    returns (LSValue value, LSItemInfo[] itemInfos);
+    returns (nsString value, LSItemInfo[] itemInfos);
 
   /**
    * Invoked on demand to load all keys in in their canonical order if they

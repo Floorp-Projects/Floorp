@@ -145,40 +145,10 @@ class QuotaManager final : public BackgroundThreadObject {
     return mTemporaryStorageInitialized;
   }
 
-  /**
-   * For initialization of an origin where the directory already exists. This is
-   * used by EnsureTemporaryStorageIsInitialized/InitializeRepository once it
-   * has tallied origin usage by calling each of the QuotaClient InitOrigin
-   * methods.
-   */
   void InitQuotaForOrigin(PersistenceType aPersistenceType,
                           const nsACString& aGroup, const nsACString& aOrigin,
                           uint64_t aUsageBytes, int64_t aAccessTime,
                           bool aPersisted);
-
-  /**
-   * For use in special-cases like LSNG where we need to be able to know that
-   * there is no data stored for an origin. LSNG knows that there is 0 usage for
-   * its storage of an origin and wants to make sure there is a QuotaObject
-   * tracking this. This method will create a non-persisted, 0-usage,
-   * mDirectoryExists=false OriginInfo if there isn't already an OriginInfo. If
-   * an OriginInfo already exists, it will be left as-is, because that implies a
-   * different client has usages for the origin (and there's no need to add
-   * LSNG's 0 usage to the QuotaObject).
-   */
-  void EnsureQuotaForOrigin(PersistenceType aPersistenceType,
-                            const nsACString& aGroup,
-                            const nsACString& aOrigin);
-
-  /**
-   * For use when creating an origin directory. It's possible that origin usage
-   * is already being tracked due to a call to EnsureQuotaForOrigin, and in that
-   * case we need to update the existing OriginInfo rather than create a new one.
-   */
-  void NoteOriginDirectoryCreated(PersistenceType aPersistenceType,
-                                  const nsACString& aGroup,
-                                  const nsACString& aOrigin, bool aPersisted,
-                                  int64_t& aTimestamp);
 
   void DecreaseUsageForOrigin(PersistenceType aPersistenceType,
                               const nsACString& aGroup,
@@ -278,19 +248,6 @@ class QuotaManager final : public BackgroundThreadObject {
   uint64_t CollectOriginsForEviction(
       uint64_t aMinSizeToBeFreed, nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
 
-  /**
-   * Helper method to invoke the provided predicate on all "pending" OriginInfo
-   * instances. These are origins for which the origin directory has not yet
-   * been created but for which quota is already being tracked. This happens,
-   * for example, for the LocalStorage client where an origin that previously
-   * was not using LocalStorage can start issuing writes which it buffers until
-   * eventually flushing them. We defer creating the origin directory for as
-   * long as possible in that case, so the directory won't exist. Logic that
-   * would otherwise only consult the filesystem also needs to use this method.
-   */
-  template <typename P>
-  void CollectPendingOriginsForListing(P aPredicate);
-
   void AssertStorageIsInitialized() const
 #ifdef DEBUG
       ;
@@ -305,18 +262,18 @@ class QuotaManager final : public BackgroundThreadObject {
                                      const nsACString& aSuffix,
                                      const nsACString& aGroup,
                                      const nsACString& aOrigin,
+                                     bool aCreateIfNotExists,
                                      nsIFile** aDirectory);
 
-  nsresult EnsureOriginIsInitializedInternal(PersistenceType aPersistenceType,
-                                             const nsACString& aSuffix,
-                                             const nsACString& aGroup,
-                                             const nsACString& aOrigin,
-                                             nsIFile** aDirectory,
-                                             bool* aCreated);
+  nsresult EnsureOriginIsInitializedInternal(
+      PersistenceType aPersistenceType, const nsACString& aSuffix,
+      const nsACString& aGroup, const nsACString& aOrigin,
+      bool aCreateIfNotExists, nsIFile** aDirectory, bool* aCreated);
 
   nsresult EnsureTemporaryStorageIsInitialized();
 
-  nsresult EnsureOriginDirectory(nsIFile* aDirectory, bool* aCreated);
+  nsresult EnsureOriginDirectory(nsIFile* aDirectory, bool aCreateIfNotExists,
+                                 bool* aCreated);
 
   nsresult AboutToClearOrigins(
       const Nullable<PersistenceType>& aPersistenceType,
@@ -442,9 +399,6 @@ class QuotaManager final : public BackgroundThreadObject {
                                   const nsACString& aGroup,
                                   const nsACString& aOrigin);
 
-  already_AddRefed<GroupInfo> LockedGetOrCreateGroupInfo(
-      PersistenceType aPersistenceType, const nsACString& aGroup);
-
   already_AddRefed<OriginInfo> LockedGetOriginInfo(
       PersistenceType aPersistenceType, const nsACString& aGroup,
       const nsACString& aOrigin);
@@ -486,11 +440,10 @@ class QuotaManager final : public BackgroundThreadObject {
   nsresult UpgradeLocalStorageArchiveFrom0To1(
       nsCOMPtr<mozIStorageConnection>& aConnection);
 
-  nsresult UpgradeLocalStorageArchiveFrom1To2(
-      nsCOMPtr<mozIStorageConnection>& aConnection);
-
-  nsresult UpgradeLocalStorageArchiveFrom2To3(
-      nsCOMPtr<mozIStorageConnection>& aConnection);
+  /*
+    nsresult UpgradeLocalStorageArchiveFrom1To2(
+        nsCOMPtr<mozIStorageConnection>& aConnection);
+  */
 
   nsresult InitializeRepository(PersistenceType aPersistenceType);
 
