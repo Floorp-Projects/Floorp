@@ -42,6 +42,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "SUPPORT_URL", "app.support.baseURL"
                                       "", null, val => Services.urlFormatter.formatURL(val));
 XPCOMUtils.defineLazyPreferenceGetter(this, "useHtmlViews",
                                       "extensions.htmlaboutaddons.enabled");
+XPCOMUtils.defineLazyPreferenceGetter(this, "useHtmlDiscover",
+                                      "extensions.htmlaboutaddons.discover.enabled");
 
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";
@@ -739,7 +741,6 @@ var gViewController = {
     if (useHtmlViews) {
       this.viewObjects.list = htmlView("list");
       this.viewObjects.detail = htmlView("detail");
-      this.viewObjects.discover = htmlView("discover");
       this.viewObjects.updates = htmlView("updates");
       // gUpdatesView still handles when the Available Updates category is
       // shown. Include it in viewObjects so it gets initialized and shutdown.
@@ -747,8 +748,13 @@ var gViewController = {
     } else {
       this.viewObjects.list = gListView;
       this.viewObjects.detail = gDetailView;
-      this.viewObjects.discover = gDiscoverView;
       this.viewObjects.updates = gUpdatesView;
+    }
+
+    if (useHtmlDiscover) {
+      this.viewObjects.discover = htmlView("discover");
+    } else {
+      this.viewObjects.discover = gDiscoverView;
     }
 
     for (let type in this.viewObjects) {
