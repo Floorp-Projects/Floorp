@@ -105,7 +105,7 @@ TestFilter.prototype = {
   _timeout: 0,
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]),
   applyFilter: function(pps, uri, pi, cb) {
-    var pi_tail = pps.newProxyInfo(this._type, this._host, this._port,
+    var pi_tail = pps.newProxyInfo(this._type, this._host, this._port, "", "",
                                    this._flags, this._timeout, null);
     if (pi)
       pi.failoverProxy = pi_tail;
@@ -120,8 +120,8 @@ BasicFilter.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]),
   applyFilter: function(pps, uri, pi, cb) {
     cb.onProxyFilterResult(
-      pps.newProxyInfo("http", "localhost", 8080, 0, 10,
-      pps.newProxyInfo("direct", "", -1, 0, 0, null))
+      pps.newProxyInfo("http", "localhost", 8080, "", "", 0, 10,
+      pps.newProxyInfo("direct", "", -1, "", "", 0, 0, null))
     );
   }
 };
@@ -131,8 +131,8 @@ BasicChannelFilter.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyChannelFilter]),
   applyFilter: function(pps, channel, pi, cb) {
     cb.onProxyFilterResult(
-      pps.newProxyInfo("http", channel.URI.host, 7777, 0, 10,
-      pps.newProxyInfo("direct", "", -1, 0, 0, null))
+      pps.newProxyInfo("http", channel.URI.host, 7777, "", "", 0, 10,
+      pps.newProxyInfo("direct", "", -1, "", "", 0, 0, null))
     );
   }
 };
