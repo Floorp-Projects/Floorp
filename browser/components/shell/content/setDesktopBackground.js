@@ -26,6 +26,8 @@ var gSetBackground = {
     // regular screens seem to be 32:9 (3.56) according to Wikipedia.
     let screenRatio = Math.min(this._screenWidth / this._screenHeight, 4);
     this._canvas.width = this._canvas.height * screenRatio;
+    document.getElementById("preview-unavailable").style.width =
+      this._canvas.width + "px";
 
     if (AppConstants.platform == "macosx") {
       document.documentElement.getButton("accept").hidden = true;
@@ -101,6 +103,7 @@ var gSetBackground = {
   updatePosition() {
     var ctx = this._canvas.getContext("2d");
     ctx.clearRect(0, 0, this._screenWidth, this._screenHeight);
+    document.getElementById("preview-unavailable").hidden = true;
 
     if (AppConstants.platform != "macosx") {
       this._position = document.getElementById("menuPosition").value;
@@ -157,18 +160,9 @@ var gSetBackground = {
         break;
       }
       case "SPAN": {
-        ctx.fillStyle = "black";
+        document.getElementById("preview-unavailable").hidden = false;
+        ctx.fillStyle = "#222";
         ctx.fillRect(0, 0, this._screenWidth, this._screenHeight);
-        let x = this._screenWidth / 2;
-        let y = this._screenHeight / 2;
-        let radius = this._screenHeight * .4;
-        let delta = Math.sin(.25 * Math.PI) * radius; // opp = sin * hyp
-        ctx.lineWidth = radius / 4.5;
-        ctx.strokeStyle = "#9B2423";
-        ctx.arc(x, y, radius, -.75 * Math.PI, 1.25 * Math.PI);
-        ctx.stroke();
-        ctx.lineWidth *= .8;
-        ctx.lineTo(x + delta, y + delta);
         ctx.stroke();
       }
     }
