@@ -903,6 +903,9 @@ pub struct Capabilities {
     /// is available on some mobile GPUs. This allows fast access to
     /// the per-pixel tile memory.
     pub supports_pixel_local_storage: bool,
+    /// Whether KHR_debug is supported for getting debug messages from
+    /// the driver.
+    pub supports_khr_debug: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -1134,16 +1137,6 @@ impl Device {
         cached_programs: Option<Rc<ProgramCache>>,
         allow_pixel_local_storage_support: bool,
     ) -> Device {
-        // On debug builds, assert that each GL call is error-free. We don't do
-        // this on release builds because the synchronous call can stall the
-        // pipeline.
-        if cfg!(debug_assertions) {
-            gl = gl::ErrorReactingGl::wrap(gl, |gl, name, code| {
-                Self::echo_driver_messages(gl);
-                panic!("Caught GL error {:x} at {}", code, name);
-            });
-        }
-
         let mut max_texture_size = [0];
         let mut max_texture_layers = [0];
         unsafe {
@@ -1163,6 +1156,19 @@ impl Device {
         let mut extensions = Vec::new();
         for i in 0 .. extension_count {
             extensions.push(gl.get_string_i(gl::EXTENSIONS, i));
+        }
+
+        // On debug builds, assert that each GL call is error-free. We don't do
+        // this on release builds because the synchronous call can stall the
+        // pipeline.
+        let supports_khr_debug = supports_extension(&extensions, "GL_KHR_debug");
+        if cfg!(debug_assertions) {
+            gl = gl::ErrorReactingGl::wrap(gl, move |gl, name, code| {
+                if supports_khr_debug {
+                    Self::log_driver_messages(gl);
+                }
+                panic!("Caught GL error {:x} at {}", code, name);
+            });
         }
 
         // Our common-case image data in Firefox is BGRA, so we make an effort
@@ -1285,6 +1291,7 @@ impl Device {
                 supports_copy_image_sub_data,
                 supports_blit_to_texture_array,
                 supports_pixel_local_storage,
+                supports_khr_debug,
             },
 
             bgra_format_internal,
@@ -3093,7 +3100,13 @@ impl Device {
         }
     }
 
-    pub fn echo_driver_messages(gl: &gl::Gl) {
+    pub fn echo_driver_messages(&self) {
+        if self.capabilities.supports_khr_debug {
+            Device::log_driver_messages(self.gl());
+        }
+    }
+
+    fn log_driver_messages(gl: &gl::Gl) {
         for msg in gl.get_debug_messages() {
             let level = match msg.severity {
                 gl::DEBUG_SEVERITY_HIGH => Level::Error,
