@@ -352,6 +352,25 @@ ResponsiveUI.prototype = {
     debug("Wait until swap start");
     await this.swap.start();
 
+    // Set the ui toolWindow to fullZoom and textZoom of 100%. Directly change
+    // the zoom levels of the toolwindow docshell. That doesn't affect the zoom
+    // of the RDM content, but it does send events that confuse the Zoom UI.
+    // So before we adjust the zoom levels of the toolWindow, we first cache
+    // the reported zoom levels of the RDM content, because we'll have to
+    // re-apply them to re-sync the Zoom UI.
+
+    // Cache the values now and we'll re-apply them near the end of this function.
+    // This is important since other steps here can also cause the Zoom UI update
+    // event to be sent for other browsers, and this means that the changes from
+    // our Zoom UI update event would be overwritten. After this function, future
+    // changes to zoom levels will send Zoom UI update events in an order that
+    // keeps the Zoom UI synchronized with the RDM content zoom levels.
+    const fullZoom = this.tab.linkedBrowser.fullZoom;
+    const textZoom = this.tab.linkedBrowser.textZoom;
+
+    ui.toolWindow.docShell.contentViewer.fullZoom = 1;
+    ui.toolWindow.docShell.contentViewer.textZoom = 1;
+
     this.tab.addEventListener("BeforeTabRemotenessChange", this);
 
     // Notify the inner browser to start the frame script
@@ -370,6 +389,11 @@ ResponsiveUI.prototype = {
       this.settingOnboardingTooltip =
         new SettingOnboardingTooltip(ui.toolWindow.document);
     }
+
+    // Re-apply our cached zoom levels. Other Zoom UI update events have finished
+    // by now.
+    this.tab.linkedBrowser.fullZoom = fullZoom;
+    this.tab.linkedBrowser.textZoom = textZoom;
 
     // Non-blocking message to tool UI to start any delayed init activities
     message.post(this.toolWindow, "post-init");
