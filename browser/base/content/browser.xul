@@ -402,6 +402,11 @@
                 label="&customizeMenu.removeExtension.label;"
                 contexttype="toolbaritem"
                 class="customize-context-removeExtension"/>
+      <menuitem oncommand="ToolbarContextMenu.reportExtensionForContextAction(this.parentElement, 'toolbar_context_menu')"
+                accesskey="&customizeMenu.reportExtension.accesskey;"
+                label="&customizeMenu.reportExtension.label;"
+                contexttype="toolbaritem"
+                class="customize-context-reportExtension"/>
       <menuseparator/>
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
                 accesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
