@@ -1501,3 +1501,38 @@ function mockPromptService() {
   });
   return promptService;
 }
+
+function assertHasPendingUninstalls(addonList, expectedPendingUninstallsCount) {
+  const pendingUninstalls = addonList
+    .querySelector("message-bar-stack.pending-uninstall");
+  ok(pendingUninstalls,
+     "Got a pending-uninstall message-bar-stack");
+  is(pendingUninstalls.childElementCount, expectedPendingUninstallsCount,
+     "Got a message bar in the pending-uninstall message-bar-stack");
+}
+
+function assertHasPendingUninstallAddon(addonList, addon) {
+  const pendingUninstalls = addonList
+    .querySelector("message-bar-stack.pending-uninstall");
+  const addonPendingUninstall = addonList.getPendingUninstallBar(addon);
+  ok(addonPendingUninstall,
+     "Got expected message-bar for the pending uninstall test extension");
+  is(addonPendingUninstall.parentNode, pendingUninstalls,
+     "pending uninstall bar should be part of the message-bar-stack");
+  is(addonPendingUninstall.getAttribute("addon-id"), addon.id,
+     "Got expected addon-id attribute on the pending uninstall message-bar");
+}
+
+async function testUndoPendingUninstall(addonList, addon) {
+  const addonPendingUninstall = addonList.getPendingUninstallBar(addon);
+  const undoButton = addonPendingUninstall.querySelector("button[action=undo]");
+  ok(undoButton, "Got undo action button in the pending uninstall message-bar");
+
+  info("Clicking the pending uninstall undo button and wait for addon card rendered");
+  const updated = BrowserTestUtils.waitForEvent(addonList, "add") ;
+  undoButton.click();
+  await updated;
+
+  ok(addon && !(addon.pendingOperations & AddonManager.PENDING_UNINSTALL),
+     "The addon pending uninstall cancelled");
+}

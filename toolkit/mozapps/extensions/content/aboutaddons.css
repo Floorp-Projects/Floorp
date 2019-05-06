@@ -15,8 +15,13 @@
 }
 
 /* The margin between message bars. */
-#abuse-reports-messages > * {
+message-bar-stack > * {
   margin-bottom: 8px;
+}
+
+/* The margin between pending message-bar-stack and the section heading. */
+addon-list message-bar-stack.pending-uninstall {
+  margin-bottom: 12px;
 }
 
 /* List sections */

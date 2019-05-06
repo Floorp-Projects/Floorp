@@ -143,7 +143,7 @@ async function submitReport({report, reason, message}) {
         // action "keep" doesn't require any further action,
         // just handle "remove".
         if (action === "remove") {
-          report.addon.uninstall();
+          report.addon.uninstall(true);
         }
       },
     });
