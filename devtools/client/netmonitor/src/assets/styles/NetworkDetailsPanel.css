@@ -332,23 +332,24 @@
     margin-left: 4px;
 }
 
-/* Params tabpanel */
+/* Params and Response error messages */
 
-.network-monitor .request-error-header {
+.network-monitor .request-error-header,
+.network-monitor .response-error-header {
   margin: 0;
-  padding: 3px 8px;
-  background-color: var(--theme-highlight-red);
-  color: var(--theme-selection-color);
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  background-color: var(--red-60);
+  color: white;
+  line-height: 16px;
+}
+
+.theme-dark .network-monitor .request-error-header,
+.theme-dark .network-monitor .response-error-header {
+  background-color: var(--red-70);
 }
 
 /* Response tabpanel */
-
-.network-monitor .response-error-header {
-  margin: 0;
-  padding: 3px 8px;
-  background-color: var(--theme-highlight-red);
-  color: var(--theme-selection-color);
-}
 
 .network-monitor .response-image-box {
   display: flex;
