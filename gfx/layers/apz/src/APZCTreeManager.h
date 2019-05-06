@@ -585,8 +585,13 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       wr::RenderRoot aRenderRoot);
 
  public:
-  // Public hooks for gtests subclass
+  // Public hook for gtests subclass
   virtual TimeStamp GetFrameTime();
+
+  // Also used for controlling time during tests
+  void SetTestSampleTime(const Maybe<TimeStamp>& aTime);
+ private:
+  Maybe<TimeStamp> mTestSampleTime;
 
  public:
   /* Some helper functions to find an APZC given some identifying input. These

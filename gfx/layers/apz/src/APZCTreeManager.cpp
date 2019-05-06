@@ -339,7 +339,16 @@ AsyncPanZoomController* APZCTreeManager::NewAPZCInstance(
       AsyncPanZoomController::USE_GESTURE_DETECTOR);
 }
 
-TimeStamp APZCTreeManager::GetFrameTime() { return TimeStamp::Now(); }
+void APZCTreeManager::SetTestSampleTime(const Maybe<TimeStamp>& aTime) {
+  mTestSampleTime = aTime;
+}
+
+TimeStamp APZCTreeManager::GetFrameTime() {
+  if (mTestSampleTime) {
+    return *mTestSampleTime;
+  }
+  return TimeStamp::Now();
+}
 
 void APZCTreeManager::SetAllowedTouchBehavior(
     uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aValues) {
