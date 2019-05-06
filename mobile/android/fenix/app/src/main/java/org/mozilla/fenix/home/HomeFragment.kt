@@ -43,15 +43,15 @@ import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.ext.urlToTrimmedHost
+import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.Mode
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.SessionControlComponent
 import org.mozilla.fenix.home.sessioncontrol.SessionControlState
-import org.mozilla.fenix.home.sessioncontrol.TabAction
-import org.mozilla.fenix.home.sessioncontrol.CollectionAction
-import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.home.sessioncontrol.Tab
+import org.mozilla.fenix.home.sessioncontrol.TabAction
+import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -388,7 +388,10 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         CoroutineScope(Dispatchers.Main).allowUndo(
             view!!, getString(R.string.snackbar_tab_deleted),
-            getString(R.string.snackbar_deleted_undo), { emitSessionChanges() }
+            getString(R.string.snackbar_deleted_undo), {
+                deleteSessionJob = null
+                emitSessionChanges()
+            }
         ) {
             sessionManager.findSessionById(sessionId)
                 ?.let { session ->
