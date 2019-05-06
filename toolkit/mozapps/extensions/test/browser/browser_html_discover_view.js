@@ -338,7 +338,9 @@ async function testAddonUninstall(card) {
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
+      // Enable HTML for all because some tests load non-discopane views.
       ["extensions.htmlaboutaddons.enabled", true],
+      ["extensions.htmlaboutaddons.discover.enabled", true],
       // Disable the telemetry client ID (and its associated UI warning).
       // browser_html_discover_view_clientid.js covers this functionality.
       ["browser.discovery.enabled", false],

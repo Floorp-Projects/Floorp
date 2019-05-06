@@ -47,7 +47,7 @@ add_task(async function setup() {
       ["datareporting.healthreport.uploadEnabled", true],
       ["extensions.getAddons.discovery.api_url", `${serverBaseUrl}discoapi`],
       ["app.support.baseURL", `${serverBaseUrl}sumo/`],
-      ["extensions.htmlaboutaddons.enabled", true],
+      ["extensions.htmlaboutaddons.discover.enabled", true],
     ],
   });
 });
