@@ -629,7 +629,6 @@ var AddonRepository = {
 
     switch (aEntry.type) {
       case "persona":
-      case "statictheme":
         addon.type = "theme";
         break;
 
