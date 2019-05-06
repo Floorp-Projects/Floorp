@@ -339,7 +339,8 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     let {extension} = this;
     let isCurrent = false;
     let index = -1;
-    if (extension.startupReason === "ADDON_UPGRADE") {
+    if (extension.startupReason === "ADDON_UPGRADE" &&
+        !extension.addonData.builtIn) {
       let engines = await Services.search.getEnginesByExtensionID(extension.id);
       if (engines.length > 0) {
         let firstEngine = engines[0];
@@ -358,7 +359,8 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           extension.id, DEFAULT_SEARCH_STORE_TYPE, ENGINE_ADDED_SETTING_NAME,
           engines[0].name);
       }
-      if (extension.startupReason === "ADDON_UPGRADE") {
+      if (extension.startupReason === "ADDON_UPGRADE" &&
+          !extension.addonData.builtIn) {
         let engines = await Services.search.getEnginesByExtensionID(extension.id);
         let engine = Services.search.getEngineByName(engines[0].name);
         if (isCurrent) {
