@@ -34,7 +34,8 @@ namespace layers {
 
 class ActiveElementManager;
 
-typedef std::function<void(uint64_t /* input block id */,
+typedef std::function<void(const ScrollableLayerGuid&,
+                           uint64_t /* input block id */,
                            bool /* prevent default */)>
     ContentReceivedInputBlockCallback;
 
@@ -54,11 +55,13 @@ class APZEventState final {
 
   void ProcessSingleTap(const CSSPoint& aPoint,
                         const CSSToLayoutDeviceScale& aScale,
-                        Modifiers aModifiers, int32_t aClickCount);
+                        Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
+                        int32_t aClickCount);
   MOZ_CAN_RUN_SCRIPT
   void ProcessLongTap(PresShell* aPresShell, const CSSPoint& aPoint,
                       const CSSToLayoutDeviceScale& aScale,
-                      Modifiers aModifiers, uint64_t aInputBlockId);
+                      Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
+                      uint64_t aInputBlockId);
   MOZ_CAN_RUN_SCRIPT
   void ProcessLongTapUp(PresShell* aPresShell, const CSSPoint& aPoint,
                         const CSSToLayoutDeviceScale& aScale,
@@ -68,8 +71,10 @@ class APZEventState final {
                          uint64_t aInputBlockId, nsEventStatus aApzResponse,
                          nsEventStatus aContentResponse);
   void ProcessWheelEvent(const WidgetWheelEvent& aEvent,
+                         const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId);
   void ProcessMouseEvent(const WidgetMouseEvent& aEvent,
+                         const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId);
   void ProcessAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
   void ProcessClusterHit();
