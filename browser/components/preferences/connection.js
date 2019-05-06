@@ -406,15 +406,6 @@ var gConnectionsDialog = {
       customContainer.hidden = true;
       customInput.disabled = true;
     }
-
-    // The height has likely changed, find our SubDialog and tell it to resize.
-    requestAnimationFrame(() => {
-      let dialogs = window.opener.gSubDialog._dialogs;
-      let index = dialogs.findIndex(d => d._frame.contentDocument == document);
-      if (index != -1) {
-        dialogs[index].resizeDialog();
-      }
-    });
   },
 
   getDnsOverHttpsControls() {
