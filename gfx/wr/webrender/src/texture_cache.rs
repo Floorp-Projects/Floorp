@@ -671,11 +671,11 @@ impl TextureCache {
                                  mem::replace(&mut self.doc_data, PerDocumentData::new()));
     }
 
-    pub fn before_frames(&mut self, time: SystemTime) {
+    pub fn prepare_for_frames(&mut self, time: SystemTime) {
         self.maybe_reclaim_shared_memory(time);
     }
 
-    pub fn after_frames(&mut self) {
+    pub fn bookkeep_after_frames(&mut self) {
         self.require_frame_build = false;
     }
 

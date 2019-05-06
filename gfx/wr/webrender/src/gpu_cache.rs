@@ -694,7 +694,7 @@ pub struct GpuCache {
     /// Whether there is a pending clear to send with the
     /// next update.
     pending_clear: bool,
-    /// Indicates that before_frames has been called for this group of frames.
+    /// Indicates that prepare_for_frames has been called for this group of frames.
     /// Used for sanity checks.
     prepared_for_frames: bool,
     /// This indicates that we performed a cleanup operation which requires all
@@ -748,7 +748,7 @@ impl GpuCache {
         self.requires_frame_build
     }
 
-    pub fn before_frames(&mut self) {
+    pub fn prepare_for_frames(&mut self) {
         self.prepared_for_frames = true;
         if self.should_reclaim_memory() {
             self.clear();
@@ -759,7 +759,7 @@ impl GpuCache {
         }
     }
 
-    pub fn after_frames(&mut self) {
+    pub fn bookkeep_after_frames(&mut self) {
         assert!(self.document_frames_to_build.is_empty());
         assert!(self.prepared_for_frames);
         self.requires_frame_build = false;
