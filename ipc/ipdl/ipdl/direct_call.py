@@ -574,10 +574,6 @@ VIRTUAL_CALL_CLASSES = set([
     ("PSessionStorageObserver", "child"),
     ("PSessionStorageObserver", "parent"),
 
-    # Recv* methods are MOZ_CAN_RUN_SCRIPT and OnMessageReceived is not, so
-    # it's not allowed to call them.
-    ("PBrowser", "child"),
-
     # can't be included safely for compilation error reasons
     ("PGMPContent", "parent"),
     ("PGMPService", "child"),
