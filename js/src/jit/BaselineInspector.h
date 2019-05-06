@@ -98,10 +98,6 @@ class BaselineInspector {
   bool hasSeenAccessedGetter(jsbytecode* pc);
   bool hasSeenDoubleResult(jsbytecode* pc);
 
-  MOZ_MUST_USE bool isOptimizableConstStringSplit(jsbytecode* pc,
-                                                  JSString** strOut,
-                                                  JSString** sepOut,
-                                                  ArrayObject** objOut);
   JSObject* getTemplateObject(jsbytecode* pc);
   JSObject* getTemplateObjectForNative(jsbytecode* pc, Native native);
   JSObject* getTemplateObjectForClassHook(jsbytecode* pc, const Class* clasp);

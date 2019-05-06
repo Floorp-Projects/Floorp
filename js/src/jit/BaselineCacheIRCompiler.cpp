@@ -929,27 +929,6 @@ bool BaselineCacheIRCompiler::emitLoadStringResult() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallConstStringSplitResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  Address resultTemplateAddr(stubAddress(reader.stubOffset()));
-
-  AutoScratchRegister scratch(allocator, masm);
-  allocator.discardStack(masm);
-
-  AutoStubFrame stubFrame(*this);
-  stubFrame.enter(masm, scratch);
-
-  // Push argument
-  masm.loadPtr(resultTemplateAddr, scratch);
-  masm.Push(scratch);
-
-  using Fn = bool (*)(JSContext*, HandleArrayObject, MutableHandleValue);
-  callVM<Fn, CopyStringSplitArray>(masm);
-
-  stubFrame.leave(masm);
-  return true;
-}
-
 bool BaselineCacheIRCompiler::emitCompareStringResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
