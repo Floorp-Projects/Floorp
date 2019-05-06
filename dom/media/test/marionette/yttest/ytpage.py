@@ -8,7 +8,6 @@ import contextlib
 import os
 import time
 import json
-import re
 
 from marionette_driver.by import By
 
@@ -86,7 +85,6 @@ class YoutubePage:
         res = self.execute_async_script(script)
         if res is None:
             return res
-        res = self._parse_res(res)
         self._dump_res(res)
         return res
 
@@ -95,37 +93,6 @@ class YoutubePage:
             context = self.marionette.CONTEXT_CONTENT
         with self.marionette.using_context(context):
             return self.marionette.execute_async_script(script, sandbox="system")
-
-    def _parse_res(self, res):
-        debug_info = {}
-        # The parsing won't be necessary once we have bug 1542674
-        for key, value in res["mozRequestDebugInfo"].items():
-            key, value = key.strip(), value.strip()
-            if key.startswith(SPLIT_FIELD):
-                value_dict = {}
-                for field in re.findall(r"\S+\(.+\)\s|\S+", value):
-                    field = field.strip()
-                    if field == "":
-                        continue
-                    if field.startswith("VideoQueue"):
-                        k = "VideoQueue"
-                        v = field[len("VideoQueue(") : -2]  # noqa: E203
-                        fields = {}
-                        v = v.split(" ")
-                        for h in v:
-                            f, vv = h.split("=")
-                            fields[f] = vv
-                        v = fields
-                    else:
-                        if "=" in field:
-                            k, v = field.split("=", 1)
-                        else:
-                            k, v = field.split(":", 1)
-                    value_dict[k] = v
-                value = value_dict
-            debug_info[key] = value
-        res["mozRequestDebugInfo"] = debug_info
-        return res
 
     def _dump_res(self, res):
         raw = json.dumps(res, indent=2, sort_keys=True)

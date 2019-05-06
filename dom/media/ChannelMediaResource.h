@@ -155,7 +155,7 @@ class ChannelMediaResource
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  nsCString GetDebugInfo() override;
+  void GetDebugInfo(dom::MediaResourceDebugInfo& aInfo) override;
 
   class Listener final : public nsIStreamListener,
                          public nsIInterfaceRequestor,
