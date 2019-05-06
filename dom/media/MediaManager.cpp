@@ -168,24 +168,6 @@ class nsMainThreadPtrHolder<
   nsMainThreadPtrHolder(const nsMainThreadPtrHolder& aOther) = delete;
 };
 
-namespace {
-already_AddRefed<nsIAsyncShutdownClient> GetShutdownPhase() {
-  nsCOMPtr<nsIAsyncShutdownService> svc = mozilla::services::GetAsyncShutdown();
-  MOZ_RELEASE_ASSERT(svc);
-
-  nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase;
-  nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(shutdownPhase));
-  if (!shutdownPhase) {
-    // We are probably in a content process. We need to do cleanup at
-    // XPCOM shutdown in leakchecking builds.
-    rv = svc->GetXpcomWillShutdown(getter_AddRefs(shutdownPhase));
-  }
-  MOZ_RELEASE_ASSERT(shutdownPhase);
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-  return shutdownPhase.forget();
-}
-}  // namespace
-
 namespace mozilla {
 
 #ifdef LOG
@@ -2025,8 +2007,6 @@ MediaManager* MediaManager::Get() {
 
     // Prepare async shutdown
 
-    nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase = GetShutdownPhase();
-
     class Blocker : public media::ShutdownBlocker {
      public:
       Blocker()
@@ -2042,9 +2022,9 @@ MediaManager* MediaManager::Get() {
     };
 
     sSingleton->mShutdownBlocker = new Blocker();
-    nsresult rv = shutdownPhase->AddBlocker(
+    nsresult rv = media::GetShutdownBarrier()->AddBlocker(
         sSingleton->mShutdownBlocker, NS_LITERAL_STRING(__FILE__), __LINE__,
-        NS_LITERAL_STRING("Media shutdown"));
+        NS_LITERAL_STRING(""));
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   }
   return sSingleton;
@@ -3651,8 +3631,8 @@ void MediaManager::Shutdown() {
           mMediaThread->Stop();
         }
         // Remove async shutdown blocker
-        nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase = GetShutdownPhase();
-        shutdownPhase->RemoveBlocker(sSingleton->mShutdownBlocker);
+        media::GetShutdownBarrier()->RemoveBlocker(
+            sSingleton->mShutdownBlocker);
 
         // we hold a ref to 'self' which is the same as sSingleton
         sSingleton = nullptr;

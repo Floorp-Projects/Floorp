@@ -3349,8 +3349,11 @@ var gDetailView = {
       browser.sameProcessAsFrameLoader = policy.extension.groupFrameLoader;
     }
 
+    let remoteSubframes = window.docShell.QueryInterface(Ci.nsILoadContext).useRemoteSubframes;
+
     let readyPromise;
-    if (E10SUtils.canLoadURIInRemoteType(optionsURL, E10SUtils.EXTENSION_REMOTE_TYPE)) {
+    if (E10SUtils.canLoadURIInRemoteType(optionsURL, remoteSubframes,
+                                         E10SUtils.EXTENSION_REMOTE_TYPE)) {
       browser.setAttribute("remote", "true");
       browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
       readyPromise = promiseEvent("XULFrameLoaderCreated", browser);

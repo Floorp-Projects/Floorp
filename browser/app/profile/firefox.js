@@ -1325,9 +1325,9 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", fal
 #endif
 
 #ifdef NIGHTLY_BUILD
-pref("trailhead.firstrun.cohort", 1);
+pref("trailhead.firstrun.branches", "join-privacy");
 #else
-pref("trailhead.firstrun.cohort", 0);
+pref("trailhead.firstrun.branches", "control");
 #endif
 
 // Enable the DOM fullscreen API.

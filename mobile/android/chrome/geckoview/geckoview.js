@@ -113,6 +113,7 @@ var ModuleManager = {
         this.browser.remoteType || E10SUtils.NOT_REMOTE;
     const remoteType = E10SUtils.getRemoteTypeForURI(
         aURI, this.settings.useMultiprocess,
+        /* useRemoteSubframes */ false,
         currentType, this.browser.currentURI);
 
     debug `updateRemoteType: uri=${aURI} currentType=${currentType}

@@ -15,8 +15,6 @@ function run_test() {
   // Since none of our prefs start with values, looking them up will fail. cert_storage should use
   // safe fallbacks.
   ok(!certStorage.isBlocklistFresh(), "checking blocklist freshness shouldn't crash");
-  ok(!certStorage.isWhitelistFresh(), "checking whitelist freshness shouldn't crash");
-  ok(!certStorage.isEnrollmentFresh(), "checking enrollment freshness shouldn't crash");
 
   // If we set nonsensical values, cert_storage should still use safe fallbacks.
   Services.prefs.setIntPref("services.blocklist.onecrl.checked", -2);

@@ -403,13 +403,14 @@ describe("TelemetryFeed", () => {
       assert.ok(Number.isInteger(session.session_duration),
         "session_duration should be an integer");
     });
-    it("shouldn't add session_duration if there's no visibility_event_rcvd_ts", () => {
+    it("shouldn't send session ping if there's no visibility_event_rcvd_ts", () => {
       sandbox.stub(instance, "sendEvent");
-      const session = instance.addSession("foo");
+      instance.addSession("foo");
 
       instance.endSession("foo");
 
-      assert.notProperty(session, "session_duration");
+      assert.notCalled(instance.sendEvent);
+      assert.isFalse(instance.sessions.has("foo"));
     });
     it("should remove the session from .sessions", () => {
       sandbox.stub(instance, "sendEvent");
@@ -428,6 +429,7 @@ describe("TelemetryFeed", () => {
       sandbox.stub(instance, "createSessionEndEvent");
       sandbox.stub(instance.utEvents, "sendSessionEndEvent");
       const session = instance.addSession("foo");
+      session.perf.visibility_event_rcvd_ts = 444.4732;
 
       instance.endSession("foo");
 

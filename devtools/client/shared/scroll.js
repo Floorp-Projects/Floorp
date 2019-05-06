@@ -90,13 +90,15 @@ define(function(require, exports, module) {
    *          - alignTo:   "top" or "bottom" to indicate if we should scroll the element
    *                       to the top or the bottom of the scrollable container when the
    *                       element is off canvas.
+   *          - center:    Indicate if we should scroll the element to the middle of the
+   *                       scrollable container when the element is off canvas.
    */
   function scrollIntoView(element, options = {}) {
     if (!element) {
       return;
     }
 
-    const { alignTo, container } = options;
+    const { alignTo, center, container } = options;
 
     const { top, bottom } = element.getBoundingClientRect();
     const scrolledParent = closestScrolledParent(container || element.parentNode);
@@ -106,6 +108,11 @@ define(function(require, exports, module) {
       (top >= scrolledParentRect.top && bottom <= scrolledParentRect.bottom);
 
     if (isVisible) {
+      return;
+    }
+
+    if (center) {
+      element.scrollIntoView({ block: "center" });
       return;
     }
 

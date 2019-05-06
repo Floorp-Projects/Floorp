@@ -74,7 +74,8 @@ body {
   --trailhead-header-text-color: #2B2156;
   --trailhead-cards-background-color: #EDEDF0;
   --trailhead-card-button-background-color: rgba(12, 12, 13, 0.1);
-  --trailhead-card-button-background-hover-color: rgba(12, 12, 13, 0.2); }
+  --trailhead-card-button-background-hover-color: rgba(12, 12, 13, 0.2);
+  --trailhead-card-button-background-active-color: rgba(12, 12, 13, 0.3); }
   body[lwt-newtab-brighttext] {
     --newtab-background-color: #2A2A2E;
     --newtab-border-primary-color: rgba(249, 249, 250, 0.8);
@@ -122,7 +123,8 @@ body {
     --trailhead-header-text-color: rgba(255, 255, 255, 0.6);
     --trailhead-cards-background-color: rgba(12, 12, 13, 0.1);
     --trailhead-card-button-background-color: rgba(12, 12, 13, 0.3);
-    --trailhead-card-button-background-hover-color: rgba(12, 12, 13, 0.4); }
+    --trailhead-card-button-background-hover-color: rgba(12, 12, 13, 0.4);
+    --trailhead-card-button-background-active-color: rgba(12, 12, 13, 0.5); }
 
 .icon {
   background-position: center center;
@@ -244,6 +246,9 @@ html {
 body,
 #root {
   min-height: 100vh; }
+
+#root {
+  position: relative; }
 
 body {
   background-color: var(--newtab-background-color);
@@ -1636,7 +1641,7 @@ main {
   right: 48px;
   border: 0;
   background: none;
-  z-index: 3000;
+  z-index: 1;
   border-radius: 2px; }
   .asrouter-toggle .icon-devtools {
     background-image: url("chrome://browser/skin/developer.svg");
@@ -1686,6 +1691,16 @@ main {
   .asrouter-admin table {
     border-collapse: collapse;
     width: 100%; }
+    .asrouter-admin table.minimal-table {
+      border-collapse: collapse; }
+      .asrouter-admin table.minimal-table td {
+        padding: 8px;
+        border: 1px solid var(--newtab-border-secondary-color); }
+      .asrouter-admin table.minimal-table td:first-child {
+        width: 1%;
+        white-space: nowrap; }
+      .asrouter-admin table.minimal-table td:not(:first-child) {
+        font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace; }
     .asrouter-admin table.errorReporting tr {
       border: 1px solid var(--newtab-textbox-background-color); }
     .asrouter-admin table.errorReporting td {
@@ -2651,7 +2666,8 @@ main {
 .ds-image {
   display: block;
   position: relative; }
-  .ds-image img {
+  .ds-image img,
+  .ds-image .broken-image {
     background-color: var(--newtab-card-placeholder-color);
     position: absolute;
     top: 0;
@@ -3719,8 +3735,10 @@ a.firstrun-link {
     margin: 0; }
   .trailhead .trailheadContent .trailheadLearn {
     display: block;
-    margin-top: 30px;
-    margin-inline-start: 74px; }
+    margin-top: 30px; }
+    @media (min-width: 850px) {
+      .trailhead .trailheadContent .trailheadLearn {
+        margin-inline-start: 74px; } }
   .trailhead.syncCohort {
     left: calc(50% - 430px);
     width: 860px; }
@@ -3742,13 +3760,19 @@ a.firstrun-link {
   .trailhead .trailheadBenefits {
     padding: 0; }
     .trailhead .trailheadBenefits li {
-      background-position: left 4px;
+      background-position: left 6px;
       background-repeat: no-repeat;
-      background-size: 62px;
+      background-size: 40px;
       -moz-context-properties: fill;
       fill: #0A84FF;
       list-style: none;
-      padding-inline-start: 74px; }
+      padding-top: 8px; }
+      @media (min-width: 850px) {
+        .trailhead .trailheadBenefits li {
+          background-position-y: 4px;
+          background-size: 62px;
+          margin-inline-end: 60px;
+          padding-inline-start: 74px; } }
       .trailhead .trailheadBenefits li:dir(rtl) {
         background-position-x: right; }
       .trailhead .trailheadBenefits li.knowledge {
@@ -3761,13 +3785,16 @@ a.firstrun-link {
       color: #CB9EFF;
       font-size: 22px;
       font-weight: 400;
-      margin-bottom: 4px; }
+      margin: 0 0 4px;
+      padding-inline-start: 52px; }
+      @media (min-width: 850px) {
+        .trailhead .trailheadBenefits h3 {
+          padding-inline-start: 0; } }
     .trailhead .trailheadBenefits p {
       color: #FFF;
       font-size: 15px;
       line-height: 22px;
-      margin: 4px 0 15px;
-      margin-inline-end: 60px; }
+      margin: 4px 0 15px; }
   .trailhead .trailheadForm {
     background: url("../data/content/assets/trailhead/firefox-logo.png") top center/100px no-repeat;
     min-width: 260px;
@@ -3813,6 +3840,8 @@ a.firstrun-link {
         background-color: #0250BB; }
       .trailhead .trailheadForm button:focus {
         outline: dotted 1px; }
+      .trailhead .trailheadForm button:active {
+        background-color: #054096; }
   .trailhead .trailheadStart {
     border: 1px solid rgba(255, 255, 255, 0.5);
     cursor: pointer;
@@ -3827,10 +3856,20 @@ a.firstrun-link {
       border-color: transparent; }
     .trailhead .trailheadStart:focus {
       outline: dotted 1px; }
+    .trailhead .trailheadStart:active {
+      background-color: #054096; }
+  .trailhead .trailheadInner,
+  .trailhead .trailheadStart {
+    animation: fadeIn 0.4s; }
 
 .trailheadCards {
   background: var(--trailhead-cards-background-color);
-  text-align: center; }
+  max-height: 1000px;
+  overflow: hidden;
+  text-align: center;
+  transition: max-height 0.5s cubic-bezier(0.07, 0.95, 0, 1); }
+  .trailheadCards.collapsed {
+    max-height: 0; }
   .trailheadCards h1 {
     font-size: 36px;
     font-weight: 200;
@@ -3849,11 +3888,26 @@ a.firstrun-link {
   @media (min-width: 1122px) {
     .trailheadCardsInner {
       width: 1042px; } }
+  .trailheadCardsInner .icon-dismiss {
+    border: 0;
+    cursor: pointer;
+    inset-inline-end: 15px;
+    padding: 15px;
+    opacity: 0.75;
+    position: absolute;
+    top: 15px; }
+    .trailheadCardsInner .icon-dismiss:hover, .trailheadCardsInner .icon-dismiss:focus {
+      background-color: var(--newtab-element-hover-color); }
 
 .trailheadCardGrid {
   display: grid;
   grid-gap: 32px;
-  margin: 0; }
+  margin: 0;
+  opacity: 0;
+  transition: opacity 0.4s;
+  transition-delay: 0.1s; }
+  .trailheadCardGrid.show {
+    opacity: 1; }
   @media (min-width: 610px) {
     .trailheadCardGrid {
       grid-template-columns: repeat(auto-fit, 224px); } }
@@ -3895,6 +3949,10 @@ a.firstrun-link {
     .trailheadCard .onboardingButton:focus, .trailheadCard .onboardingButton:hover {
       box-shadow: none;
       background: var(--trailhead-card-button-background-hover-color); }
+    .trailheadCard .onboardingButton:focus {
+      outline: dotted 1px; }
+    .trailheadCard .onboardingButton:active {
+      background: var(--trailhead-card-button-background-active-color); }
   .trailheadCard .onboardingButtonContainer {
     height: 60px;
     position: absolute;
@@ -3907,6 +3965,9 @@ a.firstrun-link {
   position: relative; }
   .inline-onboarding .outer-wrapper .prefs-button button {
     position: absolute; }
+
+.inline-onboarding .asrouter-toggle {
+  position: absolute; }
 
 @media (max-height: 700px) {
   .activity-stream.welcome.inline-onboarding {

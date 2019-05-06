@@ -17,6 +17,7 @@ extern crate thin_vec;
 extern crate time;
 #[macro_use]
 extern crate xpcom;
+extern crate storage_variant;
 extern crate style;
 
 use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
@@ -38,11 +39,12 @@ use std::fs::{create_dir_all, remove_file, File};
 use std::io::{BufRead, BufReader};
 use std::mem::size_of;
 use std::os::raw::c_char;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::slice;
 use std::str;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, SystemTime};
+use storage_variant::VariantType;
 use thin_vec::ThinVec;
 use xpcom::interfaces::{
     nsICertStorage, nsICertStorageCallback, nsIFile, nsIIssuerAndSerialRevocationState,
@@ -53,10 +55,9 @@ use xpcom::{nsIID, GetterAddrefs, RefPtr, ThreadBoundRefPtr, XpCom};
 
 const PREFIX_REV_IS: &str = "is";
 const PREFIX_REV_SPK: &str = "spk";
-const PREFIX_CRLITE: &str = "crlite";
-const PREFIX_WL: &str = "wl";
 const PREFIX_SUBJECT: &str = "subject";
 const PREFIX_CERT: &str = "cert";
+const PREFIX_DATA_TYPE: &str = "datatype";
 
 macro_rules! make_key {
     ( $prefix:expr, $( $part:expr ),+ ) => {
@@ -123,10 +124,13 @@ impl SecurityState {
 
         // Open the store in read-write mode initially to create it (if needed)
         // and migrate data from the old store (if any).
-        let mut builder = Rkv::environment_builder();
-        builder.set_max_dbs(2);
-        builder.set_map_size(16777216); // 16MB
-        let env = Rkv::from_env(store_path.as_path(), builder)?;
+        // If opening initially fails, try to remove and recreate the database.
+        // Consumers will repopulate the database as necessary if this happens.
+        // (See bug 1546361.)
+        let env = make_env(store_path.as_path()).or_else(|_| {
+            remove_db(store_path.as_path())?;
+            make_env(store_path.as_path())
+        })?;
         let store = env.open_single("cert_storage", StoreOptions::create())?;
 
         // if the profile has a revocations.txt, migrate it and remove the file
@@ -219,10 +223,7 @@ impl SecurityState {
         // two LMDB environments open at the same time.
         drop(self.env_and_store.take());
 
-        let mut builder = Rkv::environment_builder();
-        builder.set_max_dbs(2);
-        builder.set_map_size(16777216); // 16MB
-        let env = Rkv::from_env(store_path.as_path(), builder)?;
+        let env = make_env(store_path.as_path())?;
         let store = env.open_single("cert_storage", StoreOptions::create())?;
         self.env_and_store.replace(EnvAndStore { env, store });
         Ok(())
@@ -242,23 +243,6 @@ impl SecurityState {
         let env = Rkv::from_env(store_path.as_path(), builder)?;
         let store = env.open_single("cert_storage", StoreOptions::default())?;
         self.env_and_store.replace(EnvAndStore { env, store });
-        Ok(())
-    }
-
-    fn write_entry(&mut self, key: &[u8], value: i16) -> Result<(), SecurityStateError> {
-        self.reopen_store_read_write()?;
-        {
-            let env_and_store = match self.env_and_store.as_mut() {
-                Some(env_and_store) => env_and_store,
-                None => return Err(SecurityStateError::from("env and store not initialized?")),
-            };
-            let mut writer = env_and_store.env.write()?;
-            env_and_store
-                .store
-                .put(&mut writer, key, &Value::I64(value as i64))?;
-            writer.commit()?;
-        }
-        self.reopen_store_read_only()?;
         Ok(())
     }
 
@@ -284,6 +268,27 @@ impl SecurityState {
         }
     }
 
+    pub fn get_has_prior_data(&self, data_type: u8) -> Result<bool, SecurityStateError> {
+        let env_and_store = match self.env_and_store.as_ref() {
+            Some(env_and_store) => env_and_store,
+            None => return Err(SecurityStateError::from("env and store not initialized?")),
+        };
+        let reader = env_and_store.env.read()?;
+        match env_and_store
+            .store
+            .get(&reader, &make_key!(PREFIX_DATA_TYPE, &[data_type]))
+        {
+            Ok(Some(Value::Bool(true))) => Ok(true),
+            Ok(None) => Ok(false),
+            Ok(_) => Err(SecurityStateError::from(
+                "Unexpected type when trying to get a Value::Bool",
+            )),
+            Err(_) => Err(SecurityStateError::from(
+                "There was a problem getting the value",
+            )),
+        }
+    }
+
     pub fn set_revocations(
         &mut self,
         entries: &[(Vec<u8>, i16)],
@@ -295,6 +300,15 @@ impl SecurityState {
                 None => return Err(SecurityStateError::from("env and store not initialized?")),
             };
             let mut writer = env_and_store.env.write()?;
+            // Make a note that we have prior revocation data now.
+            env_and_store.store.put(
+                &mut writer,
+                &make_key!(
+                    PREFIX_DATA_TYPE,
+                    &[nsICertStorage::DATA_TYPE_REVOCATION as u8]
+                ),
+                &Value::Bool(true),
+            )?;
 
             for entry in entries {
                 env_and_store
@@ -306,24 +320,6 @@ impl SecurityState {
         }
         self.reopen_store_read_only()?;
         Ok(())
-    }
-
-    pub fn set_enrollment(
-        &mut self,
-        issuer: &[u8],
-        serial: &[u8],
-        state: i16,
-    ) -> Result<(), SecurityStateError> {
-        self.write_entry(&make_key!(PREFIX_CRLITE, issuer, serial), state)
-    }
-
-    pub fn set_whitelist(
-        &mut self,
-        issuer: &[u8],
-        serial: &[u8],
-        state: i16,
-    ) -> Result<(), SecurityStateError> {
-        self.write_entry(&make_key!(PREFIX_WL, issuer, serial), state)
     }
 
     pub fn get_revocation_state(
@@ -365,32 +361,6 @@ impl SecurityState {
         }
     }
 
-    pub fn get_enrollment_state(
-        &self,
-        issuer: &[u8],
-        serial: &[u8],
-    ) -> Result<i16, SecurityStateError> {
-        let issuer_serial = make_key!(PREFIX_CRLITE, issuer, serial);
-        match self.read_entry(&issuer_serial) {
-            Ok(Some(value)) => Ok(value),
-            Ok(None) => Ok(nsICertStorage::STATE_UNSET as i16),
-            Err(_) => return Err(SecurityStateError::from("problem reading enrollment state")),
-        }
-    }
-
-    pub fn get_whitelist_state(
-        &self,
-        issuer: &[u8],
-        serial: &[u8],
-    ) -> Result<i16, SecurityStateError> {
-        let issuer_serial = make_key!(PREFIX_WL, issuer, serial);
-        match self.read_entry(&issuer_serial) {
-            Ok(Some(value)) => Ok(value),
-            Ok(None) => Ok(nsICertStorage::STATE_UNSET as i16),
-            Err(_) => Err(SecurityStateError::from("problem reading whitelist state")),
-        }
-    }
-
     pub fn is_data_fresh(
         &self,
         update_pref: &str,
@@ -417,20 +387,6 @@ impl SecurityState {
     pub fn is_blocklist_fresh(&self) -> Result<bool, SecurityStateError> {
         self.is_data_fresh(
             "services.settings.security.onecrl.checked",
-            "security.onecrl.maximum_staleness_in_seconds",
-        )
-    }
-
-    pub fn is_whitelist_fresh(&self) -> Result<bool, SecurityStateError> {
-        self.is_data_fresh(
-            "services.blocklist.intermediates.checked",
-            "security.onecrl.maximum_staleness_in_seconds",
-        )
-    }
-
-    pub fn is_enrollment_fresh(&self) -> Result<bool, SecurityStateError> {
-        self.is_data_fresh(
-            "services.blocklist.crlite.checked",
             "security.onecrl.maximum_staleness_in_seconds",
         )
     }
@@ -462,6 +418,15 @@ impl SecurityState {
                 None => return Err(SecurityStateError::from("env and store not initialized?")),
             };
             let mut writer = env_and_store.env.write()?;
+            // Make a note that we have prior cert data now.
+            env_and_store.store.put(
+                &mut writer,
+                &make_key!(
+                    PREFIX_DATA_TYPE,
+                    &[nsICertStorage::DATA_TYPE_CERTIFICATE as u8]
+                ),
+                &Value::Bool(true),
+            )?;
 
             let mut digest = Sha256::default();
             digest.input(cert_der);
@@ -800,6 +765,31 @@ fn get_store_path(profile_path: &PathBuf) -> Result<PathBuf, SecurityStateError>
     Ok(store_path)
 }
 
+fn make_env(path: &Path) -> Result<Rkv, SecurityStateError> {
+    let mut builder = Rkv::environment_builder();
+    builder.set_max_dbs(2);
+    builder.set_map_size(16777216); // 16MB
+    Rkv::from_env(path, builder).map_err(SecurityStateError::from)
+}
+
+fn unconditionally_remove_file(path: &Path) -> Result<(), SecurityStateError> {
+    match remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(e) => match e.kind() {
+            std::io::ErrorKind::NotFound => Ok(()),
+            _ => Err(SecurityStateError::from(e)),
+        },
+    }
+}
+
+fn remove_db(path: &Path) -> Result<(), SecurityStateError> {
+    let db = path.join("data.mdb");
+    unconditionally_remove_file(&db)?;
+    let lock = path.join("lock.mdb");
+    unconditionally_remove_file(&lock)?;
+    Ok(())
+}
+
 fn do_construct_cert_storage(
     _outer: *const nsISupports,
     iid: *const xpcom::nsIID,
@@ -862,30 +852,35 @@ fn read_int_pref(name: &str) -> Result<u32, SecurityStateError> {
 }
 
 // This is a helper for creating a task that will perform a specific action on a background thread.
-struct SecurityStateTask<F: FnOnce(&mut SecurityState) -> Result<(), SecurityStateError>> {
+struct SecurityStateTask<
+    T: Default + VariantType,
+    F: FnOnce(&mut SecurityState) -> Result<T, SecurityStateError>,
+> {
     callback: AtomicCell<Option<ThreadBoundRefPtr<nsICertStorageCallback>>>,
     security_state: Arc<RwLock<SecurityState>>,
-    result: AtomicCell<nserror::nsresult>,
+    result: AtomicCell<(nserror::nsresult, T)>,
     task_action: AtomicCell<Option<F>>,
 }
 
-impl<F: FnOnce(&mut SecurityState) -> Result<(), SecurityStateError>> SecurityStateTask<F> {
+impl<T: Default + VariantType, F: FnOnce(&mut SecurityState) -> Result<T, SecurityStateError>>
+    SecurityStateTask<T, F>
+{
     fn new(
         callback: &nsICertStorageCallback,
         security_state: &Arc<RwLock<SecurityState>>,
         task_action: F,
-    ) -> SecurityStateTask<F> {
+    ) -> SecurityStateTask<T, F> {
         SecurityStateTask {
             callback: AtomicCell::new(Some(ThreadBoundRefPtr::new(RefPtr::new(callback)))),
             security_state: Arc::clone(security_state),
-            result: AtomicCell::new(NS_ERROR_FAILURE),
+            result: AtomicCell::new((NS_ERROR_FAILURE, T::default())),
             task_action: AtomicCell::new(Some(task_action)),
         }
     }
 }
 
-impl<F: FnOnce(&mut SecurityState) -> Result<(), SecurityStateError>> Task
-    for SecurityStateTask<F>
+impl<T: Default + VariantType, F: FnOnce(&mut SecurityState) -> Result<T, SecurityStateError>> Task
+    for SecurityStateTask<T, F>
 {
     fn run(&self) {
         let mut ss = match self.security_state.write() {
@@ -898,8 +893,8 @@ impl<F: FnOnce(&mut SecurityState) -> Result<(), SecurityStateError>> Task
         }
         if let Some(task_action) = self.task_action.swap(None) {
             let rv = task_action(&mut ss)
-                .and_then(|_| Ok(NS_OK))
-                .unwrap_or(NS_ERROR_FAILURE);
+                .and_then(|v| Ok((NS_OK, v)))
+                .unwrap_or((NS_ERROR_FAILURE, T::default()));
             self.result.store(rv);
         }
     }
@@ -907,8 +902,9 @@ impl<F: FnOnce(&mut SecurityState) -> Result<(), SecurityStateError>> Task
     fn done(&self) -> Result<(), nsresult> {
         let threadbound = self.callback.swap(None).ok_or(NS_ERROR_FAILURE)?;
         let callback = threadbound.get_ref().ok_or(NS_ERROR_FAILURE)?;
-        let result = self.result.swap(NS_ERROR_FAILURE);
-        let nsrv = unsafe { callback.Done(result) };
+        let result = self.result.swap((NS_ERROR_FAILURE, T::default()));
+        let variant = result.1.into_variant();
+        let nsrv = unsafe { callback.Done(result.0, &*variant) };
         match nsrv {
             NS_OK => Ok(()),
             e => Err(e),
@@ -996,8 +992,6 @@ impl CertStorage {
     unsafe fn setup_prefs(&self) -> Result<(), SecurityStateError> {
         let int_prefs = [
             "services.settings.security.onecrl.checked",
-            "services.blocklist.intermediates.checked",
-            "services.blocklist.crlite.checked",
             "security.onecrl.maximum_staleness_in_seconds",
         ];
 
@@ -1024,6 +1018,28 @@ impl CertStorage {
         }
 
         Ok(())
+    }
+
+    unsafe fn HasPriorData(
+        &self,
+        data_type: u8,
+        callback: *const nsICertStorageCallback,
+    ) -> nserror::nsresult {
+        if !is_main_thread() {
+            return NS_ERROR_NOT_SAME_THREAD;
+        }
+        if callback.is_null() {
+            return NS_ERROR_FAILURE;
+        }
+        let task = Box::new(SecurityStateTask::new(
+            &*callback,
+            &self.security_state,
+            move |ss| ss.get_has_prior_data(data_type),
+        ));
+        let thread = try_ns!(self.thread.lock());
+        let runnable = try_ns!(TaskRunnable::new("HasPriorData", task));
+        try_ns!(runnable.dispatch(&*thread));
+        NS_OK
     }
 
     unsafe fn SetRevocations(
@@ -1088,58 +1104,6 @@ impl CertStorage {
         NS_OK
     }
 
-    unsafe fn SetEnrollment(
-        &self,
-        issuer: *const nsACString,
-        serial: *const nsACString,
-        state: i16,
-        callback: *const nsICertStorageCallback,
-    ) -> nserror::nsresult {
-        if !is_main_thread() {
-            return NS_ERROR_NOT_SAME_THREAD;
-        }
-        if issuer.is_null() || serial.is_null() || callback.is_null() {
-            return NS_ERROR_FAILURE;
-        }
-        let issuer_decoded = try_ns!(base64::decode(&*issuer));
-        let serial_decoded = try_ns!(base64::decode(&*serial));
-        let task = Box::new(SecurityStateTask::new(
-            &*callback,
-            &self.security_state,
-            move |ss| ss.set_enrollment(&issuer_decoded, &serial_decoded, state),
-        ));
-        let thread = try_ns!(self.thread.lock());
-        let runnable = try_ns!(TaskRunnable::new("SetEnrollment", task));
-        try_ns!(runnable.dispatch(&*thread));
-        NS_OK
-    }
-
-    unsafe fn SetWhitelist(
-        &self,
-        issuer: *const nsACString,
-        serial: *const nsACString,
-        state: i16,
-        callback: *const nsICertStorageCallback,
-    ) -> nserror::nsresult {
-        if !is_main_thread() {
-            return NS_ERROR_NOT_SAME_THREAD;
-        }
-        if issuer.is_null() || serial.is_null() || callback.is_null() {
-            return NS_ERROR_FAILURE;
-        }
-        let issuer_decoded = try_ns!(base64::decode(&*issuer));
-        let serial_decoded = try_ns!(base64::decode(&*serial));
-        let task = Box::new(SecurityStateTask::new(
-            &*callback,
-            &self.security_state,
-            move |ss| ss.set_whitelist(&issuer_decoded, &serial_decoded, state),
-        ));
-        let thread = try_ns!(self.thread.lock());
-        let runnable = try_ns!(TaskRunnable::new("SetWhitelist", task));
-        try_ns!(runnable.dispatch(&*thread));
-        NS_OK
-    }
-
     unsafe fn GetRevocationState(
         &self,
         issuer: *const ThinVec<u8>,
@@ -1164,85 +1128,11 @@ impl CertStorage {
         }
     }
 
-    unsafe fn GetEnrollmentState(
-        &self,
-        issuer: *const nsACString,
-        serial: *const nsACString,
-        state: *mut i16,
-    ) -> nserror::nsresult {
-        if is_main_thread() {
-            return NS_ERROR_NOT_SAME_THREAD;
-        }
-        if issuer.is_null() || serial.is_null() {
-            return NS_ERROR_FAILURE;
-        }
-        let issuer_decoded = try_ns!(base64::decode(&*issuer));
-        let serial_decoded = try_ns!(base64::decode(&*serial));
-        *state = nsICertStorage::STATE_UNSET as i16;
-        let ss = get_security_state!(self);
-        match ss.get_enrollment_state(&issuer_decoded, &serial_decoded) {
-            Ok(st) => {
-                *state = st;
-                NS_OK
-            }
-            _ => NS_ERROR_FAILURE,
-        }
-    }
-
-    unsafe fn GetWhitelistState(
-        &self,
-        issuer: *const nsACString,
-        serial: *const nsACString,
-        state: *mut i16,
-    ) -> nserror::nsresult {
-        if is_main_thread() {
-            return NS_ERROR_NOT_SAME_THREAD;
-        }
-        if issuer.is_null() || serial.is_null() {
-            return NS_ERROR_FAILURE;
-        }
-        let issuer_decoded = try_ns!(base64::decode(&*issuer));
-        let serial_decoded = try_ns!(base64::decode(&*serial));
-        *state = nsICertStorage::STATE_UNSET as i16;
-        let ss = get_security_state!(self);
-        match ss.get_whitelist_state(&issuer_decoded, &serial_decoded) {
-            Ok(st) => {
-                *state = st;
-                NS_OK
-            }
-            _ => NS_ERROR_FAILURE,
-        }
-    }
-
     unsafe fn IsBlocklistFresh(&self, fresh: *mut bool) -> nserror::nsresult {
         *fresh = false;
         let ss = try_ns!(self.security_state.read());
         // This doesn't use the db -> don't need to make sure it's open.
         *fresh = match ss.is_blocklist_fresh() {
-            Ok(is_fresh) => is_fresh,
-            Err(_) => false,
-        };
-
-        NS_OK
-    }
-
-    unsafe fn IsWhitelistFresh(&self, fresh: *mut bool) -> nserror::nsresult {
-        *fresh = false;
-        let ss = try_ns!(self.security_state.read());
-        // This doesn't use the db -> don't need to make sure it's open.
-        *fresh = match ss.is_whitelist_fresh() {
-            Ok(is_fresh) => is_fresh,
-            Err(_) => false,
-        };
-
-        NS_OK
-    }
-
-    unsafe fn IsEnrollmentFresh(&self, fresh: *mut bool) -> nserror::nsresult {
-        *fresh = false;
-        let ss = try_ns!(self.security_state.read());
-        // This doesn't use the db -> don't need to make sure it's open.
-        *fresh = match ss.is_enrollment_fresh() {
             Ok(is_fresh) => is_fresh,
             Err(_) => false,
         };
