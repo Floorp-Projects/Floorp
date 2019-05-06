@@ -1,0 +1,797 @@
+{
+   "results" : [
+      {
+         "heading_text" : "Tigers Matter ** DON'T DELTE ME**",
+         "description_text" : "",
+         "addon" : {
+            "icon_url" : "https://addons-dev-cdn.allizom.org/static/img/addon-icons/default-64.png",
+            "guid" : "{e0d2e13b-2e07-49d5-9574-eb0227482320}",
+            "authors" : [
+               {
+                  "id" : 7804538,
+                  "name" : "Sondergaard",
+                  "picture_url" : "https://addons-dev-cdn.allizom.org/user-media/userpics/7/7804/7804538.png?modified=1392125542",
+                  "username" : "EatingStick",
+                  "url" : "https://addons-dev.allizom.org/en-US/firefox/user/7804538/"
+               }
+            ],
+            "previews" : [
+               {
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/183/183758.png?modified=1555593109",
+                  "image_size" : [
+                     680,
+                     92
+                  ],
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/183/183758.png?modified=1555593109",
+                  "id" : 183758,
+                  "thumbnail_size" : [
+                     473,
+                     64
+                  ],
+                  "caption" : null
+               },
+               {
+                  "id" : 183768,
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/183/183768.png?modified=1555593111",
+                  "image_size" : [
+                     760,
+                     92
+                  ],
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/183/183768.png?modified=1555593111",
+                  "caption" : null,
+                  "thumbnail_size" : [
+                     529,
+                     64
+                  ]
+               },
+               {
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/183/183777.png?modified=1555593112",
+                  "id" : 183777,
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/183/183777.png?modified=1555593112",
+                  "image_size" : [
+                     720,
+                     92
+                  ],
+                  "caption" : null,
+                  "thumbnail_size" : [
+                     501,
+                     64
+                  ]
+               }
+            ],
+            "name" : "Tigers Matter ** DON'T DELTE ME**",
+            "id" : 496012,
+            "url" : "https://addons-dev.allizom.org/en-US/firefox/addon/tigers-matter/",
+            "type" : "statictheme",
+            "ratings" : {
+               "average" : 4.7636,
+               "text_count" : 55,
+               "count" : 55,
+               "bayesian_average" : 4.75672
+            },
+            "slug" : "tigers-matter",
+            "average_daily_users" : 1,
+            "current_version" : {
+               "compatibility" : {
+                  "firefox" : {
+                     "max" : "*",
+                     "min" : "53.0"
+                  },
+                  "android" : {
+                     "max" : "*",
+                     "min" : "65.0"
+                  }
+               },
+               "is_strict_compatibility_enabled" : false,
+               "id" : 1655900,
+               "files" : [
+                  {
+                     "is_restart_required" : false,
+                     "url" : "https://addons-dev.allizom.org/firefox/downloads/file/376561/tigers_matter_dont_delte_me-2.0-an+fx.xpi?src=",
+                     "created" : "2019-04-18T13:11:48Z",
+                     "size" : 86337,
+                     "status" : "public",
+                     "is_webextension" : true,
+                     "is_mozilla_signed_extension" : false,
+                     "permissions" : [],
+                     "hash" : "sha256:ebeb6e4f40ceafbc4affc5bc9a182ed44ae410d71b8c5f9c547f8d45863e0c37",
+                     "platform" : "all",
+                     "id" : 376561
+                  }
+               ]
+            }
+         },
+         "description" : "",
+         "is_recommendation" : false,
+         "heading" : "Tigers Matter ** DON&#39;T DELTE ME** <span>by <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/tigers-matter/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Sondergaard</a></span>"
+      },
+      {
+         "heading" : "Customize new tab pages <span> with <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/awesome-screenshot-plus-/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Awesome Screenshot Plus - Capture, Annotate &amp; More by Diigo Inc.</a> </span>",
+         "is_recommendation" : false,
+         "addon" : {
+            "url" : "https://addons-dev.allizom.org/en-US/firefox/addon/awesome-screenshot-plus-/",
+            "type" : "extension",
+            "ratings" : {
+               "count" : 848,
+               "bayesian_average" : 3.87925,
+               "average" : 3.8797,
+               "text_count" : 842
+            },
+            "slug" : "awesome-screenshot-plus-",
+            "average_daily_users" : 1,
+            "current_version" : {
+               "is_strict_compatibility_enabled" : false,
+               "id" : 1532816,
+               "files" : [
+                  {
+                     "url" : "https://addons-dev.allizom.org/firefox/downloads/file/253549/awesome_screenshot_plus-7-an+fx.xpi?src=",
+                     "is_restart_required" : false,
+                     "size" : 4196,
+                     "created" : "2017-09-01T13:31:17Z",
+                     "is_webextension" : true,
+                     "status" : "public",
+                     "is_mozilla_signed_extension" : false,
+                     "permissions" : [],
+                     "hash" : "sha256:4cd8e9b7e89f61e6855d01c73c5c05920c1e0e91f3ae0f45adbb4bd9919f59d7",
+                     "platform" : "all",
+                     "id" : 253549
+                  }
+               ],
+               "compatibility" : {
+                  "android" : {
+                     "min" : "48.0",
+                     "max" : "*"
+                  },
+                  "firefox" : {
+                     "max" : "*",
+                     "min" : "48.0"
+                  }
+               }
+            },
+            "authors" : [
+               {
+                  "username" : "diigo-inc",
+                  "name" : "Diigo Inc.",
+                  "picture_url" : "https://addons-dev-cdn.allizom.org/user-media/userpics/0/6/6724.png?modified=1554393597",
+                  "url" : "https://addons-dev.allizom.org/en-US/firefox/user/6724/",
+                  "id" : 6724
+               }
+            ],
+            "icon_url" : "https://addons-dev-cdn.allizom.org/user-media/addon_icons/287/287841-64.png?modified=mcrushed",
+            "guid" : "jid0-GXjLLfbCoAx0LcltEdFrEkQdQPI@jetpack",
+            "previews" : [
+               {
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/previews/thumbs/54/54638.png?modified=1543388383",
+                  "id" : 54638,
+                  "image_size" : [
+                     625,
+                     525
+                  ],
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/previews/full/54/54638.png?modified=1543388383",
+                  "caption" : "Capture and annotate a page",
+                  "thumbnail_size" : [
+                     571,
+                     480
+                  ]
+               },
+               {
+                  "caption" : "Crop selected area",
+                  "thumbnail_size" : [
+                     571,
+                     480
+                  ],
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/previews/full/54/54639.png?modified=1543388385",
+                  "image_size" : [
+                     625,
+                     525
+                  ],
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/previews/thumbs/54/54639.png?modified=1543388385",
+                  "id" : 54639
+               },
+               {
+                  "caption" : "Save as a local file or upload to get a sharable link",
+                  "thumbnail_size" : [
+                     640,
+                     234
+                  ],
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/previews/full/54/54641.png?modified=1543388385",
+                  "image_size" : [
+                     700,
+                     256
+                  ],
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/previews/thumbs/54/54641.png?modified=1543388385",
+                  "id" : 54641
+               }
+            ],
+            "name" : "Awesome Screenshot Plus - Capture, Annotate & More",
+            "id" : 287841
+         },
+         "description" : "<blockquote>Capture the whole page or any portion, annotate it with rectangles, circles, arrows, lines and text, blur sensitive info, one-click upload to share. And more! Capture the whole page or any portion, annotate it with rectangles, circles, arrows, lines</blockquote>",
+         "heading_text" : "Customize new tab pages  with Awesome Screenshot Plus - Capture, Annotate & More ",
+         "description_text" : "Capture the whole page or any portion, annotate it with rectangles, circles, arrows, lines and text, blur sensitive info, one-click upload to share. And more! Capture the whole page or any portion, annotate it with rectangles, circles, arrows, lines"
+      },
+      {
+         "heading_text" : "Perform better as an admin  with Admin Assistant ",
+         "description_text" : "Help Admins in their daily work",
+         "addon" : {
+            "slug" : "amo-admin-assistant-test",
+            "average_daily_users" : 0,
+            "current_version" : {
+               "files" : [
+                  {
+                     "is_restart_required" : false,
+                     "url" : "https://addons-dev.allizom.org/firefox/downloads/file/255370/amo_admin_assistant-4.2-fx.xpi?src=",
+                     "size" : 16016,
+                     "created" : "2018-08-21T16:49:21Z",
+                     "is_webextension" : true,
+                     "status" : "public",
+                     "is_mozilla_signed_extension" : false,
+                     "permissions" : [
+                        "tabs",
+                        "https://addons-internal.prod.mozaws.net/*",
+                        "https://dxr.mozilla.org/addons/*"
+                     ],
+                     "hash" : "sha256:cd28c841a6daf8a2e3c94b0773b373fec0213404b70074309326cfc75e6725d3",
+                     "platform" : "all",
+                     "id" : 255370
+                  }
+               ],
+               "is_strict_compatibility_enabled" : false,
+               "id" : 1534709,
+               "compatibility" : {
+                  "firefox" : {
+                     "min" : "45.0",
+                     "max" : "*"
+                  }
+               }
+            },
+            "url" : "https://addons-dev.allizom.org/en-US/firefox/addon/amo-admin-assistant-test/",
+            "ratings" : {
+               "bayesian_average" : 0,
+               "count" : 0,
+               "text_count" : 0,
+               "average" : 0
+            },
+            "type" : "extension",
+            "id" : 496168,
+            "guid" : "aaa-test-icon@xulforge.com",
+            "icon_url" : "https://addons-dev-cdn.allizom.org/static/img/addon-icons/default-64.png",
+            "authors" : [
+               {
+                  "id" : 4230,
+                  "url" : "https://addons-dev.allizom.org/en-US/firefox/user/4230/",
+                  "username" : "jorge-villalobos",
+                  "name" : "Jorge Villalobos",
+                  "picture_url" : null
+               }
+            ],
+            "previews" : [],
+            "name" : "AMO Admin Assistant Test"
+         },
+         "description" : "<blockquote>Help Admins in their daily work</blockquote>",
+         "is_recommendation" : false,
+         "heading" : "Perform better as an admin <span> with <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/amo-admin-assistant-test/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Admin Assistant by Jorge Villalobos</a> </span>"
+      },
+      {
+         "addon" : {
+            "authors" : [
+               {
+                  "name" : "LexaDev",
+                  "picture_url" : "https://addons-dev-cdn.allizom.org/user-media/userpics/10/10640/10640485.png?modified=1554812253",
+                  "username" : "LexaSV",
+                  "url" : "https://addons-dev.allizom.org/en-US/firefox/user/10640485/",
+                  "id" : 10640485
+               }
+            ],
+            "icon_url" : "https://addons-dev-cdn.allizom.org/static/img/addon-icons/default-64.png",
+            "guid" : "{f9b9cdd3-91ae-476e-9c21-d5ecfce9889f}",
+            "previews" : [
+               {
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/183/183694.png?modified=1555593096",
+                  "image_size" : [
+                     680,
+                     92
+                  ],
+                  "id" : 183694,
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/183/183694.png?modified=1555593096",
+                  "thumbnail_size" : [
+                     473,
+                     64
+                  ],
+                  "caption" : null
+               },
+               {
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/183/183699.png?modified=1555593097",
+                  "id" : 183699,
+                  "image_size" : [
+                     760,
+                     92
+                  ],
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/183/183699.png?modified=1555593097",
+                  "caption" : null,
+                  "thumbnail_size" : [
+                     529,
+                     64
+                  ]
+               },
+               {
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/183/183703.png?modified=1555593098",
+                  "image_size" : [
+                     720,
+                     92
+                  ],
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/183/183703.png?modified=1555593098",
+                  "id" : 183703,
+                  "caption" : null,
+                  "thumbnail_size" : [
+                     501,
+                     64
+                  ]
+               }
+            ],
+            "name" : "iarba",
+            "id" : 495969,
+            "url" : "https://addons-dev.allizom.org/en-US/firefox/addon/iarba/",
+            "ratings" : {
+               "bayesian_average" : 4.86128,
+               "count" : 10,
+               "text_count" : 10,
+               "average" : 4.9
+            },
+            "type" : "statictheme",
+            "slug" : "iarba",
+            "current_version" : {
+               "files" : [
+                  {
+                     "url" : "https://addons-dev.allizom.org/firefox/downloads/file/376535/iarba-2.0-an+fx.xpi?src=",
+                     "is_restart_required" : false,
+                     "size" : 895804,
+                     "created" : "2019-04-18T13:11:35Z",
+                     "is_mozilla_signed_extension" : false,
+                     "status" : "public",
+                     "is_webextension" : true,
+                     "id" : 376535,
+                     "permissions" : [],
+                     "platform" : "all",
+                     "hash" : "sha256:d7ecbdfa8ba56c5d08129c867e68b02ffc8c6000a7f7f85d85d2a558045babfa"
+                  }
+               ],
+               "is_strict_compatibility_enabled" : false,
+               "id" : 1655874,
+               "compatibility" : {
+                  "android" : {
+                     "min" : "65.0",
+                     "max" : "*"
+                  },
+                  "firefox" : {
+                     "min" : "53.0",
+                     "max" : "*"
+                  }
+               }
+            },
+            "average_daily_users" : 1
+         },
+         "description" : "",
+         "heading_text" : "Custom heading  for a theme",
+         "description_text" : "",
+         "heading" : "Custom heading  for a theme",
+         "is_recommendation" : false
+      },
+      {
+         "description_text" : "Get international weather forecasts",
+         "heading_text" : "Have a nice day   with Forcastfox ",
+         "description" : "<blockquote>Get international weather forecasts</blockquote>",
+         "addon" : {
+            "id" : 502855,
+            "authors" : [
+               {
+                  "id" : 10641527,
+                  "url" : "https://addons-dev.allizom.org/en-US/firefox/user/10641527/",
+                  "name" : "Amoga-dev",
+                  "picture_url" : "https://addons-dev-cdn.allizom.org/user-media/userpics/10/10641/10641527.png?modified=1555333028",
+                  "username" : "Amoga_dev_REST"
+               }
+            ],
+            "icon_url" : "https://addons-dev-cdn.allizom.org/static/img/addon-icons/default-64.png",
+            "guid" : "forecastfox@s3_fix_version",
+            "previews" : [],
+            "name" : "Forecastfox (fix version)",
+            "slug" : "forecastfox-fix-version",
+            "current_version" : {
+               "id" : 1541667,
+               "is_strict_compatibility_enabled" : false,
+               "files" : [
+                  {
+                     "permissions" : [
+                        "activeTab",
+                        "tabs",
+                        "background",
+                        "storage",
+                        "webRequest",
+                        "webRequestBlocking",
+                        "<all_urls>",
+                        "http://www.s3blog.org/geolocation.html*",
+                        "https://embed.windy.com/embed2.html*"
+                     ],
+                     "platform" : "all",
+                     "hash" : "sha256:89e4de4ce86005c57b0197f671e86936aaf843ebd5751caae02cad4991ccbf0a",
+                     "id" : 262328,
+                     "is_webextension" : true,
+                     "status" : "public",
+                     "is_mozilla_signed_extension" : false,
+                     "url" : "https://addons-dev.allizom.org/firefox/downloads/file/262328/forecastfox_fix_version-4.20-an+fx.xpi?src=",
+                     "is_restart_required" : false,
+                     "created" : "2019-01-16T07:54:26Z",
+                     "size" : 1331686
+                  }
+               ],
+               "compatibility" : {
+                  "android" : {
+                     "min" : "51.0",
+                     "max" : "*"
+                  },
+                  "firefox" : {
+                     "min" : "51.0",
+                     "max" : "*"
+                  }
+               }
+            },
+            "average_daily_users" : 0,
+            "url" : "https://addons-dev.allizom.org/en-US/firefox/addon/forecastfox-fix-version/",
+            "type" : "extension",
+            "ratings" : {
+               "count" : 0,
+               "bayesian_average" : 0,
+               "average" : 0,
+               "text_count" : 0
+            }
+         },
+         "is_recommendation" : false,
+         "heading" : "Have a nice day  <span> with <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/forecastfox-fix-version/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Forcastfox by Amoga-dev</a> </span>"
+      },
+      {
+         "description_text" : "A test extension from webext-generator.",
+         "heading_text" : "...because cats are awesome  with Tabby Cat ",
+         "description" : "<blockquote>A test extension from webext-generator.</blockquote>",
+         "addon" : {
+            "name" : "tabby cat",
+            "previews" : [],
+            "guid" : "{1ed4b641-bac7-4492-b304-6ddc01f538ae}",
+            "icon_url" : "https://addons-dev-cdn.allizom.org/user-media/addon_icons/502/502774-64.png?modified=f289a992",
+            "authors" : [
+               {
+                  "url" : "https://addons-dev.allizom.org/en-US/firefox/user/10641572/",
+                  "username" : "AdminUserTestDev1",
+                  "picture_url" : "https://addons-dev-cdn.allizom.org/user-media/userpics/10/10641/10641572.png?modified=1555675110",
+                  "name" : "úþÿ Ψ Φ ֎",
+                  "id" : 10641572
+               }
+            ],
+            "id" : 502774,
+            "ratings" : {
+               "bayesian_average" : 0,
+               "count" : 0,
+               "text_count" : 0,
+               "average" : 0
+            },
+            "type" : "extension",
+            "url" : "https://addons-dev.allizom.org/en-US/firefox/addon/tabby-catextension/",
+            "current_version" : {
+               "compatibility" : {
+                  "firefox" : {
+                     "max" : "*",
+                     "min" : "48.0"
+                  },
+                  "android" : {
+                     "max" : "*",
+                     "min" : "48.0"
+                  }
+               },
+               "is_strict_compatibility_enabled" : false,
+               "id" : 1541570,
+               "files" : [
+                  {
+                     "created" : "2018-12-04T09:54:24Z",
+                     "size" : 4374,
+                     "is_restart_required" : false,
+                     "url" : "https://addons-dev.allizom.org/firefox/downloads/file/262231/tabby_cat-1.0-an+fx.xpi?src=",
+                     "is_mozilla_signed_extension" : false,
+                     "status" : "public",
+                     "is_webextension" : true,
+                     "id" : 262231,
+                     "hash" : "sha256:f12c8a8b71e7d4c48e38db6b6a374ca8dcde42d6cb13fb1f2a8299bb51116615",
+                     "platform" : "all",
+                     "permissions" : []
+                  }
+               ]
+            },
+            "average_daily_users" : 1,
+            "slug" : "tabby-catextension"
+         },
+         "is_recommendation" : false,
+         "heading" : "...because cats are awesome <span> with <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/tabby-catextension/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Tabby Cat by úþÿ Ψ Φ ֎</a> </span>"
+      },
+      {
+         "addon" : {
+            "url" : "https://addons-dev.allizom.org/en-US/firefox/addon/the-moon-cat/",
+            "ratings" : {
+               "average" : 4.8182,
+               "text_count" : 11,
+               "count" : 11,
+               "bayesian_average" : 4.78325
+            },
+            "type" : "statictheme",
+            "slug" : "the-moon-cat",
+            "average_daily_users" : 2,
+            "current_version" : {
+               "files" : [
+                  {
+                     "is_mozilla_signed_extension" : false,
+                     "status" : "public",
+                     "is_webextension" : true,
+                     "id" : 262333,
+                     "permissions" : [],
+                     "hash" : "sha256:d159190add69c739b0fe07b19ad3ff48045c5ded502a8df0f892b8feb645c5ae",
+                     "platform" : "all",
+                     "is_restart_required" : false,
+                     "url" : "https://addons-dev.allizom.org/firefox/downloads/file/262333/the_moon_cat-1.0-an+fx.xpi?src=",
+                     "size" : 102889,
+                     "created" : "2019-01-16T08:31:21Z"
+                  }
+               ],
+               "is_strict_compatibility_enabled" : false,
+               "id" : 1541672,
+               "compatibility" : {
+                  "firefox" : {
+                     "max" : "*",
+                     "min" : "53.0"
+                  },
+                  "android" : {
+                     "min" : "65.0",
+                     "max" : "*"
+                  }
+               }
+            },
+            "icon_url" : "https://addons-dev-cdn.allizom.org/static/img/addon-icons/default-64.png",
+            "authors" : [
+               {
+                  "url" : "https://addons-dev.allizom.org/en-US/firefox/user/5822165/",
+                  "username" : "Rallara",
+                  "name" : "Rallara",
+                  "picture_url" : "https://addons-dev-cdn.allizom.org/user-media/userpics/5/5822/5822165.png?modified=1391855104",
+                  "id" : 5822165
+               }
+            ],
+            "guid" : "{db4f6548-da04-43fb-a03e-249bf70ef5a1}",
+            "previews" : [
+               {
+                  "thumbnail_size" : [
+                     473,
+                     64
+                  ],
+                  "caption" : null,
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/14/14307.png?modified=1547627485",
+                  "image_size" : [
+                     680,
+                     92
+                  ],
+                  "id" : 14307,
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/14/14307.png?modified=1547627485"
+               },
+               {
+                  "thumbnail_size" : [
+                     529,
+                     64
+                  ],
+                  "caption" : null,
+                  "id" : 14308,
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/14/14308.png?modified=1547627486",
+                  "image_size" : [
+                     760,
+                     92
+                  ],
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/14/14308.png?modified=1547627486"
+               },
+               {
+                  "thumbnail_size" : [
+                     501,
+                     64
+                  ],
+                  "caption" : null,
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/14/14309.png?modified=1547627487",
+                  "image_size" : [
+                     720,
+                     92
+                  ],
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/14/14309.png?modified=1547627487",
+                  "id" : 14309
+               }
+            ],
+            "name" : "the Moon Cat",
+            "id" : 502859
+         },
+         "description" : "",
+         "heading_text" : "cool moon cat",
+         "description_text" : "",
+         "heading" : "cool moon cat <span>by <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/the-moon-cat/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">Rallara</a></span>",
+         "is_recommendation" : false
+      },
+      {
+         "heading" : "Testptcustomheading",
+         "is_recommendation" : false,
+         "description" : "<blockquote>AAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGG</blockquote>",
+         "addon" : {
+            "icon_url" : "https://addons-dev-cdn.allizom.org/static/img/addon-icons/default-64.png",
+            "guid" : "{2e5ff8c8-32fe-46d0-9fc8-6b8986621f3c}",
+            "authors" : [
+               {
+                  "id" : 10641570,
+                  "url" : "https://addons-dev.allizom.org/en-US/firefox/user/10641570/",
+                  "name" : "BobsDisplayName",
+                  "picture_url" : "https://addons-dev-cdn.allizom.org/user-media/userpics/10/10641/10641570.png?modified=1536063975",
+                  "username" : "BobsUserName"
+               }
+            ],
+            "previews" : [],
+            "name" : "SI",
+            "id" : 495710,
+            "url" : "https://addons-dev.allizom.org/en-US/firefox/addon/search_by_image/",
+            "ratings" : {
+               "average" : 3.8333,
+               "text_count" : 5,
+               "count" : 6,
+               "bayesian_average" : 3.77144
+            },
+            "type" : "extension",
+            "slug" : "search_by_image",
+            "current_version" : {
+               "files" : [
+                  {
+                     "id" : 262271,
+                     "permissions" : [
+                        "contextMenus",
+                        "storage",
+                        "tabs",
+                        "activeTab",
+                        "notifications",
+                        "webRequest",
+                        "webRequestBlocking",
+                        "<all_urls>",
+                        "http://*/*",
+                        "https://*/*",
+                        "ftp://*/*",
+                        "file:///*"
+                     ],
+                     "platform" : "all",
+                     "hash" : "sha256:f358b24d0b950f5acf035342dec64c99ee2e22a5cf369e7c787ebb00013127a8",
+                     "is_mozilla_signed_extension" : false,
+                     "is_webextension" : true,
+                     "status" : "public",
+                     "url" : "https://addons-dev.allizom.org/firefox/downloads/file/262271/search_by_image_reverse_image_search-1.12.6-fx.xpi?src=",
+                     "is_restart_required" : false,
+                     "size" : 372225,
+                     "created" : "2018-12-14T13:48:23Z"
+                  }
+               ],
+               "id" : 1541610,
+               "is_strict_compatibility_enabled" : false,
+               "compatibility" : {
+                  "firefox" : {
+                     "min" : "57.0",
+                     "max" : "*"
+                  }
+               }
+            },
+            "average_daily_users" : 374
+         },
+         "description_text" : "AAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGGAAAGGGG",
+         "heading_text" : "Testptcustomheading"
+      },
+      {
+         "description" : "",
+         "addon" : {
+            "icon_url" : "https://addons-dev-cdn.allizom.org/static/img/addon-icons/default-64.png",
+            "guid" : "{f5e7a6ee-ebe0-4add-8f75-b5e4015feca1}",
+            "authors" : [
+               {
+                  "id" : 8733220,
+                  "url" : "https://addons-dev.allizom.org/en-US/firefox/user/8733220/",
+                  "username" : "michellet-2",
+                  "name" : "michellet",
+                  "picture_url" : null
+               }
+            ],
+            "previews" : [
+               {
+                  "caption" : null,
+                  "thumbnail_size" : [
+                     473,
+                     64
+                  ],
+                  "id" : 14304,
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/14/14304.png?modified=1547627480",
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/14/14304.png?modified=1547627480",
+                  "image_size" : [
+                     680,
+                     92
+                  ]
+               },
+               {
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/14/14305.png?modified=1547627481",
+                  "image_size" : [
+                     760,
+                     92
+                  ],
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/14/14305.png?modified=1547627481",
+                  "id" : 14305,
+                  "thumbnail_size" : [
+                     529,
+                     64
+                  ],
+                  "caption" : null
+               },
+               {
+                  "caption" : null,
+                  "thumbnail_size" : [
+                     501,
+                     64
+                  ],
+                  "thumbnail_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/thumbs/14/14306.png?modified=1547627482",
+                  "id" : 14306,
+                  "image_size" : [
+                     720,
+                     92
+                  ],
+                  "image_url" : "https://addons-dev-cdn.allizom.org/user-media/version-previews/full/14/14306.png?modified=1547627482"
+               }
+            ],
+            "name" : "Purple Sparkles",
+            "id" : 502858,
+            "url" : "https://addons-dev.allizom.org/en-US/firefox/addon/purple-sparkles/",
+            "type" : "statictheme",
+            "ratings" : {
+               "count" : 4,
+               "bayesian_average" : 4.1476,
+               "average" : 4.25,
+               "text_count" : 3
+            },
+            "slug" : "purple-sparkles",
+            "average_daily_users" : 445,
+            "current_version" : {
+               "compatibility" : {
+                  "firefox" : {
+                     "min" : "53.0",
+                     "max" : "*"
+                  },
+                  "android" : {
+                     "max" : "*",
+                     "min" : "65.0"
+                  }
+               },
+               "id" : 1541671,
+               "is_strict_compatibility_enabled" : false,
+               "files" : [
+                  {
+                     "created" : "2019-01-16T08:31:18Z",
+                     "size" : 237348,
+                     "url" : "https://addons-dev.allizom.org/firefox/downloads/file/262332/purple_sparkles-1.0-an+fx.xpi?src=",
+                     "is_restart_required" : false,
+                     "is_mozilla_signed_extension" : false,
+                     "is_webextension" : true,
+                     "status" : "public",
+                     "id" : 262332,
+                     "hash" : "sha256:5a3d311b7c1be2ee32446dbcf1422c5d7c786c5a237aa3d4e2939074ab50ad30",
+                     "platform" : "all",
+                     "permissions" : []
+                  }
+               ]
+            }
+         },
+         "description_text" : "",
+         "heading_text" : "Purple Sparkles",
+         "heading" : "Purple Sparkles <span>by <a href=\"https://addons-dev.allizom.org/en-US/firefox/addon/purple-sparkles/?utm_source=discovery.addons-dev.allizom.org&utm_medium=firefox-browser&utm_content=discopane-entry-link&src=api\">michellet</a></span>",
+         "is_recommendation" : false
+      }
+   ],
+   "count" : 9
+}
