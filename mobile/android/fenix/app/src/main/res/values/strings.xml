@@ -420,8 +420,6 @@
     <string name="phone_feature_blocked_by_android">Blocked by Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Exceptions</string>
-    <!-- Action in Quick Settings dialog to report a site problem related to tracking protection -->
-    <string name="tracking_protection_report_problem">Report a problem</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="tracking_protection_on">On</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->

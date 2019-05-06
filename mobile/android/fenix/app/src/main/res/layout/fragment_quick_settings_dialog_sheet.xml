@@ -60,7 +60,7 @@
         android:layout_height="@dimen/quicksettings_item_height"
         android:gravity="top"
         android:paddingStart="48dp"
-        android:text="@string/tracking_protection_report_problem"
+        android:text="@string/browser_menu_report_issue"
         android:textColor="?accentBright"
         android:textSize="12sp"
         app:layout_constraintBottom_toTopOf="@id/line_divider"
