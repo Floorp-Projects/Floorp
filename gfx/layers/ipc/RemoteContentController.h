@@ -85,6 +85,7 @@ class RemoteContentController : public GeckoContentController,
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void Destroy() override;
+  mozilla::ipc::IPCResult RecvDestroy();
 
   bool IsRemote() override;
 

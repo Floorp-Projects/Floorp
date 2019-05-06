@@ -370,6 +370,13 @@ void RemoteContentController::Destroy() {
   }
 }
 
+mozilla::ipc::IPCResult RemoteContentController::RecvDestroy() {
+  // The actor on the other side is about to get destroyed, so let's not send
+  // it any more messages.
+  mCanSend = false;
+  return IPC_OK();
+}
+
 bool RemoteContentController::IsRemote() { return true; }
 
 }  // namespace layers

@@ -147,6 +147,8 @@ UrlClassifierFeatureCryptominingAnnotation::ProcessChannel(
       aList, sClassificationData,
       nsIHttpChannel::ClassificationFlags::CLASSIFIED_CRYPTOMINING);
 
+  UrlClassifierCommon::SetTrackingInfo(aChannel, aList, aHashes);
+
   UrlClassifierCommon::AnnotateChannel(
       aChannel, AntiTrackingCommon::eCryptomining, flags,
       nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT);

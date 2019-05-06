@@ -178,6 +178,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   // nsMenuParent interface
   virtual nsMenuFrame* GetCurrentMenuItem() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem) override;
   virtual void CurrentMenuIsBeingDestroyed() override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -254,6 +255,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   virtual void UpdateWidgetProperties() override;
 
   // layout, position and display the popup as needed
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
                    nsIFrame* aAnchor, bool aSizedToPopup);
 
@@ -347,7 +349,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   }
 #endif
 
-  void EnsureMenuItemIsVisible(nsMenuFrame* aMenuFrame);
+  MOZ_CAN_RUN_SCRIPT void EnsureMenuItemIsVisible(nsMenuFrame* aMenuFrame);
 
   void ChangeByPage(bool aIsUp);
 

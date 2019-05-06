@@ -1344,7 +1344,10 @@ void TelemetryEvent::SetEventRecordingEnabled(const nsACString& category,
   if (!gCategoryNames.Contains(category)) {
     LogToBrowserConsole(
         nsIScriptError::warningFlag,
-        NS_LITERAL_STRING("Unkown category for SetEventRecordingEnabled."));
+        NS_ConvertUTF8toUTF16(
+            NS_LITERAL_CSTRING(
+                "Unknown category for SetEventRecordingEnabled: ") +
+            category));
     return;
   }
 

@@ -196,6 +196,10 @@ class BrowserChildBase : public nsISupports,
   nsCOMPtr<nsIWebBrowserChrome3> mWebBrowserChrome;
 };
 
+/**
+ * BrowserChild implements the child actor part of the PBrowser protocol. See
+ * PBrowser for more information.
+ */
 class BrowserChild final : public BrowserChildBase,
                            public PBrowserChild,
                            public nsIWebBrowserChrome2,
@@ -701,6 +705,7 @@ class BrowserChild final : public BrowserChildBase,
   virtual mozilla::ipc::IPCResult RecvSetDocShellIsActive(
       const bool& aIsActive) override;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual mozilla::ipc::IPCResult RecvRenderLayers(
       const bool& aEnabled, const bool& aForce,
       const layers::LayersObserverEpoch& aEpoch) override;

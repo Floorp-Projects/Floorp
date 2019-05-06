@@ -489,7 +489,7 @@ var AddonTestUtils = {
       }
 
       const proxyFilter = {
-        proxyInfo: proxyService.newProxyInfo("http", serverHost, serverPort, 0, 4096, null),
+        proxyInfo: proxyService.newProxyInfo("http", serverHost, serverPort, "", "", 0, 4096, null),
 
         applyFilter(service, channel, defaultProxyInfo, callback) {
           if (hosts.has(channel.URI.host)) {

@@ -1565,12 +1565,12 @@ impl ResourceCache {
         })
     }
 
-    pub fn before_frames(&mut self, time: SystemTime) {
-        self.texture_cache.before_frames(time);
+    pub fn prepare_for_frames(&mut self, time: SystemTime) {
+        self.texture_cache.prepare_for_frames(time);
     }
 
-    pub fn after_frames(&mut self) {
-        self.texture_cache.after_frames();
+    pub fn bookkeep_after_frames(&mut self) {
+        self.texture_cache.bookkeep_after_frames();
     }
 
     pub fn requires_frame_build(&self) -> bool {

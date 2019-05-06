@@ -47,6 +47,7 @@ class HTMLLabelElement final : public nsGenericHTMLElement {
                      ErrorResult& aError) override;
 
   // nsIContent
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
   virtual bool PerformAccesskey(bool aKeyCausesActivation,
                                 bool aIsTrustedEvent) override;

@@ -310,12 +310,12 @@ class nsViewManager final {
    * Flush the accumulated dirty region to the widget and update widget
    * geometry.
    */
-  void ProcessPendingUpdates();
+  MOZ_CAN_RUN_SCRIPT void ProcessPendingUpdates();
 
   /**
    * Just update widget geometry without flushing the dirty region
    */
-  void UpdateWidgetGeometry();
+  MOZ_CAN_RUN_SCRIPT void UpdateWidgetGeometry();
 
   int32_t AppUnitsPerDevPixel() const {
     return mContext->AppUnitsPerDevPixel();
@@ -328,10 +328,12 @@ class nsViewManager final {
   void InvalidateHierarchy();
   void FlushPendingInvalidates();
 
+  MOZ_CAN_RUN_SCRIPT
   void ProcessPendingUpdatesForView(nsView* aView,
                                     bool aFlushDirtyRegion = true);
   void ProcessPendingUpdatesRecurse(
       nsView* aView, AutoTArray<nsCOMPtr<nsIWidget>, 1>& aWidgets);
+  MOZ_CAN_RUN_SCRIPT
   void ProcessPendingUpdatesPaint(nsIWidget* aWidget);
 
   void FlushDirtyRegionToWidget(nsView* aView);
@@ -347,6 +349,7 @@ class nsViewManager final {
   void InvalidateViews(nsView* aView);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
+  MOZ_CAN_RUN_SCRIPT
   void Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion);
 
   // Utilities
@@ -380,9 +383,10 @@ class nsViewManager final {
     return RootViewManager()->mRefreshDisableCount == 0;
   }
 
-  void WillPaintWindow(nsIWidget* aWidget);
+  MOZ_CAN_RUN_SCRIPT void WillPaintWindow(nsIWidget* aWidget);
+  MOZ_CAN_RUN_SCRIPT
   bool PaintWindow(nsIWidget* aWidget, const LayoutDeviceIntRegion& aRegion);
-  void DidPaintWindow();
+  MOZ_CAN_RUN_SCRIPT void DidPaintWindow();
 
   // Call this when you need to let the viewmanager know that it now has
   // pending updates.

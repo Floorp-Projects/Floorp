@@ -198,7 +198,7 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
     return NS_OK;
   }
 
-  NS_IMETHOD Notify(nsITimer* timer) override {
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Notify(nsITimer* timer) override {
     if (mSelection && mPresContext) {
       AutoWeakFrame frame =
           mContent ? mPresContext->GetPrimaryFrameFor(mContent) : nullptr;
@@ -216,7 +216,8 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
       }
 
       NS_ASSERTION(frame->PresContext() == mPresContext, "document mismatch?");
-      mSelection->DoAutoScroll(frame, pt);
+      RefPtr<Selection> selection = mSelection;
+      selection->DoAutoScroll(frame, pt);
     }
     return NS_OK;
   }
@@ -3044,7 +3045,7 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
     return NS_OK;
   }
 
-  PresShell* presShell = mFrameSelection->GetPresShell();
+  RefPtr<PresShell> presShell = mFrameSelection->GetPresShell();
   if (!presShell || !presShell->GetDocument()) {
     return NS_OK;
   }

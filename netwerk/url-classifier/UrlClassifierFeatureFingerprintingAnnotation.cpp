@@ -149,6 +149,8 @@ UrlClassifierFeatureFingerprintingAnnotation::ProcessChannel(
       aList, sClassificationData,
       nsIHttpChannel::ClassificationFlags::CLASSIFIED_FINGERPRINTING);
 
+  UrlClassifierCommon::SetTrackingInfo(aChannel, aList, aHashes);
+
   UrlClassifierCommon::AnnotateChannel(
       aChannel, AntiTrackingCommon::eFingerprinting, flags,
       nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT);

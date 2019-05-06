@@ -4596,21 +4596,25 @@ void GetUserMediaWindowListener::StopSharing() {
 void GetUserMediaWindowListener::StopRawID(const nsString& removedDeviceID) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
+  nsTArray<Pair<RefPtr<SourceListener>, TrackID>> matches;
   for (auto& source : mActiveListeners) {
     if (source->GetAudioDevice()) {
       nsString id;
       source->GetAudioDevice()->GetRawId(id);
       if (removedDeviceID.Equals(id)) {
-        source->StopTrack(kAudioTrack);
+        matches.AppendElement(MakePair(source, TrackID(kAudioTrack)));
       }
     }
     if (source->GetVideoDevice()) {
       nsString id;
       source->GetVideoDevice()->GetRawId(id);
       if (removedDeviceID.Equals(id)) {
-        source->StopTrack(kVideoTrack);
+        matches.AppendElement(MakePair(source, TrackID(kVideoTrack)));
       }
     }
+  }
+  for (auto& pair : matches) {
+    pair.first()->StopTrack(pair.second());
   }
 }
 

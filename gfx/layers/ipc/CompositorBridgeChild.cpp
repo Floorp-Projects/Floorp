@@ -175,6 +175,12 @@ void CompositorBridgeChild::Destroy() {
     wrBridge->Destroy(/* aIsSync */ false);
   }
 
+  AutoTArray<PAPZChild*, 16> apzChildren;
+  ManagedPAPZChild(apzChildren);
+  for (PAPZChild* child : apzChildren) {
+    Unused << child->SendDestroy();
+  }
+
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
   for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
     RefPtr<TextureClient> texture =
@@ -185,6 +191,9 @@ void CompositorBridgeChild::Destroy() {
     }
   }
 
+  // The WillClose message is synchronous, so we know that after it returns
+  // any messages sent by the above code will have been processed on the
+  // other side.
   SendWillClose();
   mCanSend = false;
 

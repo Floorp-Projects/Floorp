@@ -91,6 +91,13 @@ class nsHttpConnectionInfo final : public ARefBase {
     return mProxyInfo ? mProxyInfo->Password().get() : nullptr;
   }
 
+  const nsCString& ProxyAuthorizationHeader() const {
+    return mProxyInfo ? mProxyInfo->ProxyAuthorizationHeader() : EmptyCString();
+  }
+  const nsCString& ConnectionIsolationKey() const {
+    return mProxyInfo ? mProxyInfo->ConnectionIsolationKey() : EmptyCString();
+  }
+
   // Compare this connection info to another...
   // Two connections are 'equal' if they end up talking the same
   // protocol to the same server. This is needed to properly manage

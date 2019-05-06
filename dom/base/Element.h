@@ -1368,6 +1368,7 @@ class Element : public FragmentOrElement {
    * @param aFlags      Extra flags for the dispatching event.  The true flags
    *                    will be respected.
    */
+  MOZ_CAN_RUN_SCRIPT
   static nsresult DispatchClickEvent(nsPresContext* aPresContext,
                                      WidgetInputEvent* aSourceEvent,
                                      nsIContent* aTarget, bool aFullDispatch,
@@ -1382,6 +1383,7 @@ class Element : public FragmentOrElement {
    * If aPresContext is nullptr, this does nothing.
    */
   using nsIContent::DispatchEvent;
+  MOZ_CAN_RUN_SCRIPT
   static nsresult DispatchEvent(nsPresContext* aPresContext,
                                 WidgetEvent* aEvent, nsIContent* aTarget,
                                 bool aFullDispatch, nsEventStatus* aStatus);
