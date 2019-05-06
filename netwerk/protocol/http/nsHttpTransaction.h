@@ -463,10 +463,12 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
  public:
   void GetNetworkAddresses(NetAddr& self, NetAddr& peer);
+  bool ResolvedByTRR() { return mResolvedByTRR; }
 
  private:
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
+  bool mResolvedByTRR;
 
   bool m0RTTInProgress;
   bool mDoNotTryEarlyData;
