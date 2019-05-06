@@ -339,6 +339,9 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.htmlaboutaddons.enabled", true],
+      // Disable the telemetry client ID (and its associated UI warning).
+      // browser_html_discover_view_clientid.js covers this functionality.
+      ["browser.discovery.enabled", false],
     ],
   });
 });
