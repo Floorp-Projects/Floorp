@@ -10,6 +10,8 @@ apply plugin: 'androidx.navigation.safeargs.kotlin'
 
 apply plugin: 'org.mozilla.appservices'
 
+import com.android.build.gradle.internal.tasks.AppPreBuildTask
+
 appservices {
     defaultConfig {
         megazord = 'fenix'
@@ -25,8 +27,8 @@ android {
         applicationId "org.mozilla.fenix"
         minSdkVersion Config.minSdkVersion
         targetSdkVersion Config.targetSdkVersion
-        versionCode Config.versionCode
-        versionName Config.versionName + Config.generateVersionSuffix()
+        versionCode 1
+        versionName Config.generateDebugVersionName()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
         manifestPlaceholders.isRaptorEnabled = "false"
@@ -57,6 +59,7 @@ android {
             resValue "bool", "IS_NOT_RELEASED", "false"
         }
         beta releaseTemplate >> {
+            applicationIdSuffix ".beta"
             buildConfigField "boolean", "IS_RELEASED", "true"
             resValue "bool", "IS_NOT_RELEASED", "false"
         }
@@ -129,10 +132,11 @@ android.applicationVariants.all { variant ->
 
     def buildType = variant.buildType.name
     def versionCode = null
+    def isReleased = variant.buildType.buildConfigFields['IS_RELEASED']?.value ?: false
 
     buildConfigField 'Boolean', 'COLLECTIONS_ENABLED', (buildType != "release").toString()
 
-    if (buildType == "nightly") {
+    if (isReleased) {
         versionCode = generatedVersionCode
 
         // The Google Play Store does not allow multiple APKs for the same app that all have the
@@ -150,7 +154,25 @@ android.applicationVariants.all { variant ->
         }// else variant.flavorName.contains("Arm")) use generated version code
 
         variant.outputs.all {
-            setVersionCodeOverride(versionCode)
+            versionCodeOverride = versionCode
+            versionNameOverride = Config.releaseVersionName(project)
+        }
+
+        // If this is a release build, validate that "versionName" is set
+        tasks.withType(AppPreBuildTask) { prebuildTask ->
+            // You can't add a closure to a variant, so we need to look for an early variant-specific type
+            // of task (AppPreBuildTask is the first) and filter to make sure we're looking at the task for
+            // this variant that we're currently configuring
+            if (prebuildTask.variantName != variant.name) {
+                return
+            }
+
+            // Append to the task so the first thing it does is run our validation
+            prebuildTask.doFirst {
+                if (!project.hasProperty('versionName')) {
+                    throw new RuntimeException("Release builds require the 'versionName' property, e.g.: './gradlew -PversionName=<...> assembleNightly'")
+                }
+            }
         }
     }
 
@@ -197,7 +219,7 @@ android.applicationVariants.all { variant ->
 
     print("Adjust token: ")
 
-    if (variant.buildType.buildConfigFields['IS_RELEASED']?.value) {
+    if (isReleased) {
         try {
             def token = new File("${rootDir}/.adjust_token").text.trim()
             buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'

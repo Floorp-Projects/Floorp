@@ -9,3 +9,7 @@ def convert_camel_case_into_kebab_case(string):
 
 def lower_case_first_letter(string):
     return '{}{}'.format(string[0].lower(), string[1:])
+
+
+def upper_case_first_letter(string):
+    return string[0].upper() + string[1:]

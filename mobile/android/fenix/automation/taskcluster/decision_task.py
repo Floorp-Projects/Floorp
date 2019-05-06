@@ -9,7 +9,10 @@ Decision task for nightly releases.
 from __future__ import print_function
 
 import argparse
+import datetime
 import os
+import re
+
 import taskcluster
 
 from lib.gradle import get_build_variants, get_geckoview_versions
@@ -94,8 +97,7 @@ def pr_or_push(is_push):
     return (build_tasks, signing_tasks, other_tasks)
 
 
-def nightly(track):
-    is_staging = track == 'staging-nightly'
+def release(track, is_staging, version_name):
     architectures = ['x86', 'arm', 'aarch64']
     apk_paths = ["public/target.{}.apk".format(arch) for arch in architectures]
 
@@ -104,12 +106,13 @@ def nightly(track):
     push_tasks = {}
 
     build_task_id = taskcluster.slugId()
-    build_tasks[build_task_id] = BUILDER.craft_assemble_nightly_task(architectures, is_staging)
+    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(architectures, track, is_staging, version_name)
 
     signing_task_id = taskcluster.slugId()
-    signing_tasks[signing_task_id] = BUILDER.craft_nightly_signing_task(
+    signing_tasks[signing_task_id] = BUILDER.craft_release_signing_task(
         build_task_id,
         apk_paths=apk_paths,
+        track=track,
         is_staging=is_staging,
     )
 
@@ -117,6 +120,7 @@ def nightly(track):
     push_tasks[push_task_id] = BUILDER.craft_push_task(
         signing_task_id,
         apks=apk_paths,
+        track=track,
         is_staging=is_staging,
     )
 
@@ -132,15 +136,14 @@ if __name__ == "__main__":
 
     subparsers.add_parser('pull-request')
     subparsers.add_parser('push')
-    release_parser = subparsers.add_parser('release')
 
-    release_parser.add_argument('--nightly', action="store_true", default=False)
-    release_parser.add_argument(
-        '--track', action="store", choices=['nightly', 'staging-nightly'], required=True
-    )
+    nightly_parser = subparsers.add_parser('nightly')
+    nightly_parser.add_argument('--staging', action='store_true')
+
+    release_parser = subparsers.add_parser('beta')
+    release_parser.add_argument('tag')
 
     result = parser.parse_args()
-
     command = result.command
     taskcluster_queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
 
@@ -148,8 +151,14 @@ if __name__ == "__main__":
         ordered_groups_of_tasks = pr_or_push(False)
     elif command == 'push':
         ordered_groups_of_tasks = pr_or_push(True)
-    elif command == 'release':
-        ordered_groups_of_tasks = nightly(result.track)
+    elif command == 'nightly':
+        formatted_date = datetime.datetime.now().strftime('%y%V')
+        ordered_groups_of_tasks = release('nightly', result.staging, '1.0.{}'.format(formatted_date))
+    elif command == 'beta':
+        semver = re.compile(r'^\d+\.\d+\.\d+-beta\.\d+$')
+        if not semver.match(result.tag):
+            raise ValueError('Github tag must be in beta semver format, e.g.: "1.0.0-beta.0')
+        ordered_groups_of_tasks = release('beta', False, result.tag)
     else:
         raise Exception('Unsupported command "{}"'.format(command))
 

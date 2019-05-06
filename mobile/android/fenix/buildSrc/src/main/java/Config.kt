@@ -1,3 +1,5 @@
+import org.gradle.api.Project
+import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -9,22 +11,27 @@ import java.util.Locale
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 object Config {
-    const val versionCode = 1
-    const val versionName = "1.0"
-
     // Synchronized build configuration for all modules
     const val compileSdkVersion = 28
     const val minSdkVersion = 21
     const val targetSdkVersion = 28
 
     @JvmStatic
-    fun generateVersionSuffix(): String {
+    private fun generateDebugVersionName(): String {
         val today = Date()
         // Append the year (2 digits) and week in year (2 digits). This will make it easier to distinguish versions and
         // identify ancient versions when debugging issues. However this will still keep the same version number during
         // the week so that we do not end up with a lot of versions in tools like Sentry. As an extra this matches the
         // sections we use in the changelog (weeks).
-        return SimpleDateFormat(".yyww", Locale.US).format(today)
+        return SimpleDateFormat("1.0.yyww", Locale.US).format(today)
+    }
+
+    @JvmStatic
+    fun releaseVersionName(project: Project): String {
+        // This function is called in the configuration phase, before gradle knows which variants we'll use.
+        // So, validation that "versionName" has been set happens elsewhere (at time of writing, we staple
+        // validation to tasks of type "AppPreBuildTask"
+        return if (project.hasProperty("versionName")) project.property("versionName") as String else ""
     }
 
     @JvmStatic
