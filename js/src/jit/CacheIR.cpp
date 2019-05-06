@@ -920,23 +920,26 @@ static void EmitCallGetterResultNoGuards(CacheIRWriter& writer, JSObject* obj,
       MOZ_ASSERT(target->isBuiltinNative());
       writer.callNativeGetterResult(receiverId, target);
       writer.typeMonitorResult();
-    } break;
+      break;
+    }
     case CanAttachScriptedGetter: {
       JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
       MOZ_ASSERT(target->hasJitEntry());
       writer.callScriptedGetterResult(receiverId, target);
       writer.typeMonitorResult();
-    } break;
+      break;
+    }
     default:
+      // CanAttachNativeGetProp guarantees that the getter is either a native or
+      // a scripted function.
       MOZ_ASSERT_UNREACHABLE("Can't attach getter");
       break;
   }
 }
 
-static void EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj,
-                                 JSObject* holder, Shape* shape,
-                                 ObjOperandId objId, ObjOperandId receiverId,
-                                 ICState::Mode mode) {
+static void EmitCallGetterResultGuards(CacheIRWriter& writer, JSObject* obj,
+                                       JSObject* holder, Shape* shape,
+                                       ObjOperandId objId, ICState::Mode mode) {
   // Use the megamorphic guard if we're in megamorphic mode, except if |obj|
   // is a Window as GuardHasGetterSetter doesn't support this yet (Window may
   // require outerizing).
@@ -953,7 +956,13 @@ static void EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj,
   } else {
     writer.guardHasGetterSetter(objId, shape);
   }
+}
 
+static void EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj,
+                                 JSObject* holder, Shape* shape,
+                                 ObjOperandId objId, ObjOperandId receiverId,
+                                 ICState::Mode mode) {
+  EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode);
   EmitCallGetterResultNoGuards(writer, obj, holder, shape, receiverId);
 }
 
@@ -961,6 +970,36 @@ static void EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj,
                                  JSObject* holder, Shape* shape,
                                  ObjOperandId objId, ICState::Mode mode) {
   EmitCallGetterResult(writer, obj, holder, shape, objId, objId, mode);
+}
+
+static void EmitCallGetterByValueResult(CacheIRWriter& writer, JSObject* obj,
+                                        JSObject* holder, Shape* shape,
+                                        ObjOperandId objId,
+                                        ValOperandId receiverId,
+                                        ICState::Mode mode) {
+  EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode);
+
+  switch (IsCacheableGetPropCall(obj, holder, shape)) {
+    case CanAttachNativeGetter: {
+      JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
+      MOZ_ASSERT(target->isBuiltinNative());
+      writer.callNativeGetterByValueResult(receiverId, target);
+      writer.typeMonitorResult();
+      break;
+    }
+    case CanAttachScriptedGetter: {
+      JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
+      MOZ_ASSERT(target->hasJitEntry());
+      writer.callScriptedGetterByValueResult(receiverId, target);
+      writer.typeMonitorResult();
+      break;
+    }
+    default:
+      // CanAttachNativeGetProp guarantees that the getter is either a native or
+      // a scripted function.
+      MOZ_ASSERT_UNREACHABLE("Can't attach getter");
+      break;
+  }
 }
 
 void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
@@ -1850,33 +1889,59 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
   RootedNativeObject holder(cx_);
   NativeGetPropCacheability type = CanAttachNativeGetProp(
       cx_, proto, id, &holder, &shape, pc_, resultFlags_);
-  if (type == CanAttachTemporarilyUnoptimizable) {
-    return AttachDecision::TemporarilyUnoptimizable;
-  }
-  if (type != CanAttachReadSlot) {
-    return AttachDecision::NoAction;
-  }
+  switch (type) {
+    case CanAttachNone:
+      return AttachDecision::NoAction;
+    case CanAttachTemporarilyUnoptimizable:
+      return AttachDecision::TemporarilyUnoptimizable;
+    case CanAttachReadSlot: {
+      if (holder) {
+        // Instantiate this property, for use during Ion compilation.
+        if (IsIonEnabled(cx_)) {
+          EnsureTrackPropertyTypes(cx_, holder, id);
+        }
+      }
 
-  if (holder) {
-    // Instantiate this property, for use during Ion compilation.
-    if (IsIonEnabled(cx_)) {
-      EnsureTrackPropertyTypes(cx_, holder, id);
+      if (val_.isNumber()) {
+        writer.guardIsNumber(valId);
+      } else {
+        writer.guardType(valId, val_.type());
+      }
+      maybeEmitIdGuard(id);
+
+      ObjOperandId protoId = writer.loadObject(proto);
+      EmitReadSlotResult(writer, proto, holder, shape, protoId);
+      EmitReadSlotReturn(writer, proto, holder, shape);
+
+      trackAttached("PrimitiveSlot");
+      return AttachDecision::Attach;
+    }
+    case CanAttachScriptedGetter:
+    case CanAttachNativeGetter: {
+      MOZ_ASSERT(!idempotent());
+
+      // The primitive stubs don't currently support |super| access.
+      if (isSuper()) {
+        return AttachDecision::NoAction;
+      }
+
+      if (val_.isNumber()) {
+        writer.guardIsNumber(valId);
+      } else {
+        writer.guardType(valId, val_.type());
+      }
+      maybeEmitIdGuard(id);
+
+      ObjOperandId protoId = writer.loadObject(proto);
+      EmitCallGetterByValueResult(writer, proto, holder, shape, protoId, valId,
+                                  mode_);
+
+      trackAttached("PrimitiveGetter");
+      return AttachDecision::Attach;
     }
   }
 
-  if (val_.isNumber()) {
-    writer.guardIsNumber(valId);
-  } else {
-    writer.guardType(valId, val_.type());
-  }
-  maybeEmitIdGuard(id);
-
-  ObjOperandId protoId = writer.loadObject(proto);
-  EmitReadSlotResult(writer, proto, holder, shape, protoId);
-  EmitReadSlotReturn(writer, proto, holder, shape);
-
-  trackAttached("Primitive");
-  return AttachDecision::Attach;
+  MOZ_CRASH("Bad NativeGetPropCacheability");
 }
 
 AttachDecision GetPropIRGenerator::tryAttachStringLength(ValOperandId valId,
