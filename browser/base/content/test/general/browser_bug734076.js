@@ -61,7 +61,7 @@ add_task(async function() {
     {
       name: "show only this frame",
       url: "http://mochi.test:8888/",
-      element: "iframe",
+      element: ["iframe", "html"],
       go() {
         return ContentTask.spawn(gBrowser.selectedBrowser, { writeDomainURL }, async function(arg) {
           let doc = content.document;
