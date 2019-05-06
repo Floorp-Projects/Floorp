@@ -158,6 +158,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsIMutable.h"
+#include "nsINetworkLinkService.h"
 #include "nsIObserverService.h"
 #include "nsIParentChannel.h"
 #include "nsIRemoteWindowContext.h"
@@ -614,6 +615,7 @@ static const char* sObserverTopics[] = {
     "cookie-changed",
     "private-cookie-changed",
     "clear-site-data-reload-needed",
+    NS_NETWORK_LINK_TYPE_TOPIC,
 };
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
@@ -3124,8 +3126,28 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, "clear-site-data-reload-needed")) {
     // Rebroadcast "clear-site-data-reload-needed".
     Unused << SendClearSiteDataReloadNeeded(nsString(aData));
+  } else if (!strcmp(aTopic, NS_NETWORK_LINK_TYPE_TOPIC)) {
+    UpdateNetworkLinkType();
   }
+
   return NS_OK;
+}
+
+void ContentParent::UpdateNetworkLinkType() {
+  nsresult rv;
+  nsCOMPtr<nsINetworkLinkService> nls =
+      do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  uint32_t linkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+  rv = nls->GetLinkType(&linkType);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  Unused << SendNetworkLinkTypeChange(linkType);
 }
 
 NS_IMETHODIMP
