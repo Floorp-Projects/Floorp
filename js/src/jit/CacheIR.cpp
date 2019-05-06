@@ -377,84 +377,59 @@ static bool IsCacheableGetPropReadSlot(JSObject* obj, JSObject* holder,
   return true;
 }
 
-static bool IsCacheableGetPropCallNative(JSObject* obj, JSObject* holder,
-                                         Shape* shape) {
+enum NativeGetPropCacheability {
+  CanAttachNone,
+  CanAttachReadSlot,
+  CanAttachNativeGetter,
+  CanAttachScriptedGetter,
+  CanAttachTemporarilyUnoptimizable
+};
+
+static NativeGetPropCacheability IsCacheableGetPropCall(JSObject* obj,
+                                                        JSObject* holder,
+                                                        Shape* shape) {
   if (!shape || !IsCacheableProtoChain(obj, holder)) {
-    return false;
+    return CanAttachNone;
   }
 
   if (!shape->hasGetterValue() || !shape->getterValue().isObject()) {
-    return false;
+    return CanAttachNone;
   }
 
   if (!shape->getterValue().toObject().is<JSFunction>()) {
-    return false;
+    return CanAttachNone;
   }
 
   JSFunction& getter = shape->getterValue().toObject().as<JSFunction>();
-  if (!getter.isBuiltinNative()) {
-    return false;
-  }
 
   if (getter.isClassConstructor()) {
-    return false;
-  }
-
-  // Check for a getter that has jitinfo and whose jitinfo says it's
-  // OK with both inner and outer objects.
-  if (getter.hasJitInfo() && !getter.jitInfo()->needsOuterizedThisObject()) {
-    return true;
+    return CanAttachNone;
   }
 
   // For getters that need the WindowProxy (instead of the Window) as this
   // object, don't cache if obj is the Window, since our cache will pass that
   // instead of the WindowProxy.
-  return !IsWindow(obj);
-}
-
-static bool IsCacheableGetPropCallScripted(
-    JSObject* obj, JSObject* holder, Shape* shape,
-    bool* isTemporarilyUnoptimizable = nullptr) {
-  if (!shape || !IsCacheableProtoChain(obj, holder)) {
-    return false;
-  }
-
-  if (!shape->hasGetterValue() || !shape->getterValue().isObject()) {
-    return false;
-  }
-
-  if (!shape->getterValue().toObject().is<JSFunction>()) {
-    return false;
-  }
-
-  // See IsCacheableGetPropCallNative.
   if (IsWindow(obj)) {
-    return false;
-  }
-
-  JSFunction& getter = shape->getterValue().toObject().as<JSFunction>();
-  if (getter.isBuiltinNative()) {
-    return false;
-  }
-
-  // Natives with jit entry can use the scripted path.
-  if (getter.isNativeWithJitEntry()) {
-    return true;
-  }
-
-  if (!getter.hasScript()) {
-    if (isTemporarilyUnoptimizable) {
-      *isTemporarilyUnoptimizable = true;
+    // Check for a getter that has jitinfo and whose jitinfo says it's
+    // OK with both inner and outer objects.
+    if (!getter.hasJitInfo() || getter.jitInfo()->needsOuterizedThisObject()) {
+      return CanAttachNone;
     }
-    MOZ_ASSERT(getter.isInterpretedLazy());
-    return false;
   }
 
-  if (getter.isClassConstructor()) {
-    return false;
+  if (getter.isBuiltinNative()) {
+    return CanAttachNativeGetter;
   }
 
-  return true;
+  if (getter.hasScript() || getter.isNativeWithJitEntry()) {
+    return CanAttachScriptedGetter;
+  }
+
+  if (getter.isInterpretedLazy()) {
+    return CanAttachTemporarilyUnoptimizable;
+  }
+
+  return CanAttachNone;
 }
 
 static bool CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id) {
@@ -545,13 +520,6 @@ static bool IsCacheableNoProperty(JSContext* cx, JSObject* obj,
   return CheckHasNoSuchProperty(cx, obj, id);
 }
 
-enum NativeGetPropCacheability {
-  CanAttachNone,
-  CanAttachReadSlot,
-  CanAttachCallGetter,
-  CanAttachTemporarilyUnoptimizable
-};
-
 static NativeGetPropCacheability CanAttachNativeGetProp(
     JSContext* cx, HandleObject obj, HandleId id,
     MutableHandleNativeObject holder, MutableHandleShape shape, jsbytecode* pc,
@@ -587,18 +555,7 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
 
   // Idempotent ICs cannot call getters, see tryAttachIdempotentStub.
   if (pc && (resultFlags & GetPropertyResultFlags::Monitored)) {
-    bool isTemporarilyUnoptimizable = false;
-    if (IsCacheableGetPropCallScripted(obj, holder, shape,
-                                       &isTemporarilyUnoptimizable)) {
-      return CanAttachCallGetter;
-    }
-    if (isTemporarilyUnoptimizable) {
-      return CanAttachTemporarilyUnoptimizable;
-    }
-
-    if (IsCacheableGetPropCallNative(obj, holder, shape)) {
-      return CanAttachCallGetter;
-    }
+    return IsCacheableGetPropCall(obj, holder, shape);
   }
 
   return CanAttachNone;
@@ -957,20 +914,23 @@ static void EmitReadSlotReturn(CacheIRWriter& writer, JSObject*,
 static void EmitCallGetterResultNoGuards(CacheIRWriter& writer, JSObject* obj,
                                          JSObject* holder, Shape* shape,
                                          ObjOperandId receiverId) {
-  if (IsCacheableGetPropCallNative(obj, holder, shape)) {
-    JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-    MOZ_ASSERT(target->isBuiltinNative());
-    writer.callNativeGetterResult(receiverId, target);
-    writer.typeMonitorResult();
-    return;
+  switch (IsCacheableGetPropCall(obj, holder, shape)) {
+    case CanAttachNativeGetter: {
+      JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
+      MOZ_ASSERT(target->isBuiltinNative());
+      writer.callNativeGetterResult(receiverId, target);
+      writer.typeMonitorResult();
+    } break;
+    case CanAttachScriptedGetter: {
+      JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
+      MOZ_ASSERT(target->hasJitEntry());
+      writer.callScriptedGetterResult(receiverId, target);
+      writer.typeMonitorResult();
+    } break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Can't attach getter");
+      break;
   }
-
-  MOZ_ASSERT(IsCacheableGetPropCallScripted(obj, holder, shape));
-
-  JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
-  MOZ_ASSERT(target->hasJitEntry());
-  writer.callScriptedGetterResult(receiverId, target);
-  writer.typeMonitorResult();
 }
 
 static void EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj,
@@ -1061,7 +1021,8 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
 
       trackAttached("NativeSlot");
       return AttachDecision::Attach;
-    case CanAttachCallGetter: {
+    case CanAttachScriptedGetter:
+    case CanAttachNativeGetter: {
       // |super.prop| accesses use a |this| value that differs from lookup
       // object
       MOZ_ASSERT(!idempotent());
@@ -1143,8 +1104,6 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
   switch (type) {
     case CanAttachNone:
       return AttachDecision::NoAction;
-    case CanAttachTemporarilyUnoptimizable:
-      return AttachDecision::TemporarilyUnoptimizable;
 
     case CanAttachReadSlot: {
       maybeEmitIdGuard(id);
@@ -1157,11 +1116,7 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       return AttachDecision::Attach;
     }
 
-    case CanAttachCallGetter: {
-      if (!IsCacheableGetPropCallNative(windowObj, holder, shape)) {
-        return AttachDecision::NoAction;
-      }
-
+    case CanAttachNativeGetter: {
       // Make sure the native getter is okay with the IC passing the Window
       // instead of the WindowProxy as |this| value.
       JSFunction* callee = &shape->getterObject()->as<JSFunction>();
@@ -1187,6 +1142,10 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       trackAttached("WindowProxyGetter");
       return AttachDecision::Attach;
     }
+
+    case CanAttachScriptedGetter:
+    case CanAttachTemporarilyUnoptimizable:
+      MOZ_ASSERT_UNREACHABLE("Not possible for window proxies");
   }
 
   MOZ_CRASH("Unreachable");
@@ -1499,7 +1458,8 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj,
   } else {
     // Call the getter. Note that we pass objId, the DOM proxy, as |this|
     // and not the expando object.
-    MOZ_ASSERT(canCache == CanAttachCallGetter);
+    MOZ_ASSERT(canCache == CanAttachNativeGetter ||
+               canCache == CanAttachScriptedGetter);
     EmitCallGetterResultNoGuards(writer, expandoObj, expandoObj, propShape,
                                  objId);
   }
@@ -1601,7 +1561,8 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
       // property is on to do some checks. Since we actually looked at
       // checkObj, and no extra guards will be generated, we can just
       // pass that instead.
-      MOZ_ASSERT(canCache == CanAttachCallGetter);
+      MOZ_ASSERT(canCache == CanAttachNativeGetter ||
+                 canCache == CanAttachScriptedGetter);
       MOZ_ASSERT(!isSuper());
       EmitCallGetterResultNoGuards(writer, checkObj, holder, shape, objId);
     }
@@ -2508,7 +2469,8 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
     return AttachDecision::NoAction;
   }
 
-  if (!IsCacheableGetPropCallNative(&globalLexical->global(), holder, shape)) {
+  if (IsCacheableGetPropCall(&globalLexical->global(), holder, shape) !=
+      CanAttachNativeGetter) {
     return AttachDecision::NoAction;
   }
 

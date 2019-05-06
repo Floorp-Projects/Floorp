@@ -1006,6 +1006,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   virtual void NotifyContentBlockingEvent(
       unsigned aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aURIHint,
+      nsIChannel* aTrackingChannel,
       const mozilla::Maybe<
           mozilla::AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
           mozilla::Nothing()) = 0;

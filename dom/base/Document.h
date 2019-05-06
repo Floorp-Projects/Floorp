@@ -1116,10 +1116,11 @@ class Document : public nsINode,
    */
   void SetHasTrackingCookiesBlocked(
       bool aHasTrackingCookiesBlocked, const nsACString& aOriginBlocked,
-      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason) {
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
+      const nsTArray<nsCString>& aTrackingFullHashes) {
     RecordContentBlockingLog(
         aOriginBlocked, nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
-        aHasTrackingCookiesBlocked, aReason);
+        aHasTrackingCookiesBlocked, aReason, aTrackingFullHashes);
   }
 
   /**
@@ -3858,8 +3859,10 @@ class Document : public nsINode,
   void RecordContentBlockingLog(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
       const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
-          Nothing()) {
-    mContentBlockingLog.RecordLog(aOrigin, aType, aBlocked, aReason);
+          Nothing(),
+      const nsTArray<nsCString>& aTrackingFullHashes = nsTArray<nsCString>()) {
+    mContentBlockingLog.RecordLog(aOrigin, aType, aBlocked, aReason,
+                                  aTrackingFullHashes);
   }
 
   mutable std::bitset<eDeprecatedOperationCount> mDeprecationWarnedAbout;

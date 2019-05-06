@@ -17,6 +17,7 @@
   --in-content-box-background-hover: #ededf0; /* grey 20 */
   --in-content-box-background-active: #d7d7db; /* grey 30 */
   --in-content-box-border-color: var(--grey-90-a30);
+  --in-content-box-info-background: var(--grey-20);
   --in-content-item-hover: rgba(69, 161, 255, 0.2); /* blue 40 a20 */
   --in-content-item-selected: #0a84ff;
   --in-content-border-highlight: #0a84ff;
@@ -100,6 +101,7 @@
     --in-content-box-background-hover: rgba(249,249,250,0.15);
     --in-content-box-background-active: rgba(249,249,250,0.2);
     --in-content-box-background-odd: rgba(249,249,250,0.05);
+    --in-content-box-info-background: rgba(249,249,250,0.15);
 
     --in-content-border-color: rgba(249,249,250,0.2);
     --in-content-border-hover: rgba(249,249,250,0.3);
@@ -125,6 +127,8 @@
     --in-content-link-color-active: var(--blue-60);
 
     --in-content-tab-color: var(--in-content-page-color);
+
+    --card-outline-color: var(--grey-60);
 
     scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
   }
@@ -854,9 +858,8 @@ xul|treechildren::-moz-tree-image(selected) {
 
 /* Message bars */
 .message-bar {
-  background-color: var(--grey-20);
+  background-color: var(--in-content-box-info-background);
   border-radius: 4px;
-  color: var(--grey-90);
   min-height: 32px;
   -moz-box-align: center;
   padding: 4px;

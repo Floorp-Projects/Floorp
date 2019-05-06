@@ -408,6 +408,10 @@ var gMultiProcessBrowser =
   window.docShell
         .QueryInterface(Ci.nsILoadContext)
         .useRemoteTabs;
+var gFissionBrowser =
+  window.docShell
+        .QueryInterface(Ci.nsILoadContext)
+        .useRemoteSubframes;
 
 var gBrowserAllowScriptsToCloseInitialTabs = false;
 
@@ -1204,7 +1208,7 @@ function _loadURI(browser, uri, params = {}) {
     mustChangeProcess,
     newFrameloader,
   } = E10SUtils.shouldLoadURIInBrowser(browser, uri, gMultiProcessBrowser,
-                                       flags);
+                                       gFissionBrowser, flags);
   if (uriObject && handleUriInChrome(browser, uriObject)) {
     // If we've handled the URI in Chrome then just return here.
     return;
@@ -1249,7 +1253,7 @@ function _loadURI(browser, uri, params = {}) {
       let loadParams = {
         uri,
         triggeringPrincipal: triggeringPrincipal
-          ? gSerializationHelper.serializeToString(triggeringPrincipal)
+          ? E10SUtils.serializePrincipal(triggeringPrincipal)
           : null,
         flags,
         referrerInfo: E10SUtils.serializeReferrerInfo(referrerInfo),
@@ -1316,7 +1320,8 @@ function RedirectLoad({ target: browser, data }) {
     // If we're in a Large-Allocation process, we prefer switching back into a
     // normal content process, as that way we can clean up the L-A process.
     data.loadOptions.remoteType =
-      E10SUtils.getRemoteTypeForURI(data.loadOptions.uri, gMultiProcessBrowser);
+      E10SUtils.getRemoteTypeForURI(data.loadOptions.uri, gMultiProcessBrowser,
+                                    gFissionBrowser);
   }
 
   // We should only start the redirection if the browser window has finished
@@ -2719,7 +2724,8 @@ async function BrowserViewSourceOfDocument(aArgsOrDocument) {
     // that of the original URL, so disable remoteness if necessary for this
     // URL.
     preferredRemoteType =
-      E10SUtils.getRemoteTypeForURI(args.URL, gMultiProcessBrowser);
+      E10SUtils.getRemoteTypeForURI(args.URL, gMultiProcessBrowser,
+                                    gFissionBrowser);
   }
 
   // In the case of popups, we need to find a non-popup browser window.
@@ -3517,9 +3523,7 @@ function getSecurityInfo(securityInfoAsString) {
   if (!securityInfoAsString)
     return null;
 
-  const serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
-                       .getService(Ci.nsISerializationHelper);
-  let securityInfo = serhelper.deserializeObject(securityInfoAsString);
+  let securityInfo = gSerializationHelper.deserializeObject(securityInfoAsString);
   securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
 
   return securityInfo;

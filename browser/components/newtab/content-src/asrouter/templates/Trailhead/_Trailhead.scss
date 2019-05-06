@@ -1,6 +1,9 @@
 .trailhead {
   $benefit-icon-size: 62px;
   $benefit-icon-spacing: $benefit-icon-size + 12px;
+  $benefit-icon-size-small: 40px;
+  $benefit-icon-spacing-small: $benefit-icon-size-small + 12px;
+  $responsive-breakpoint: 850px;
 
   background: url('#{$image-path}trailhead/accounts-form-bg.jpg') bottom / cover;
   color: $white;
@@ -43,7 +46,10 @@
     .trailheadLearn {
       display: block;
       margin-top: 30px;
-      margin-inline-start: $benefit-icon-spacing;
+
+      @media (min-width: $responsive-breakpoint) {
+        margin-inline-start: $benefit-icon-spacing;
+      }
     }
   }
 
@@ -80,13 +86,21 @@
     padding: 0;
 
     li {
-      background-position: left 4px;
+      background-position: left 6px;
       background-repeat: no-repeat;
-      background-size: $benefit-icon-size;
+      background-size: $benefit-icon-size-small;
       -moz-context-properties: fill;
       fill: $blue-50;
       list-style: none;
-      padding-inline-start: $benefit-icon-spacing;
+      padding-top: 8px;
+
+
+      @media (min-width: $responsive-breakpoint) {
+        background-position-y: 4px;
+        background-size: $benefit-icon-size;
+        margin-inline-end: 60px;
+        padding-inline-start: $benefit-icon-spacing;
+      }
 
       &:dir(rtl) {
         background-position-x: right;
@@ -109,7 +123,12 @@
       color: $violet-20;
       font-size: 22px;
       font-weight: 400;
-      margin-bottom: 4px;
+      margin: 0 0 4px;
+      padding-inline-start: $benefit-icon-spacing-small;
+
+      @media (min-width: $responsive-breakpoint) {
+        padding-inline-start: 0;
+      }
     }
 
     p {
@@ -117,7 +136,6 @@
       font-size: 15px;
       line-height: 22px;
       margin: 4px 0 15px;
-      margin-inline-end: 60px;
     }
   }
 
@@ -191,6 +209,10 @@
       &:focus {
         outline: dotted 1px;
       }
+
+      &:active {
+        background-color: $trailhead-blue-70;
+      }
     }
   }
 
@@ -213,12 +235,29 @@
     &:focus {
       outline: dotted 1px;
     }
+
+    &:active {
+      background-color: $trailhead-blue-70;
+    }
+  }
+
+  .trailheadInner,
+  .trailheadStart {
+    animation: fadeIn 0.4s;
   }
 }
 
 .trailheadCards {
   background: var(--trailhead-cards-background-color);
+  max-height: 1000px;
+  overflow: hidden;
   text-align: center;
+  transition: max-height 0.5s $photon-easing;
+
+
+  &.collapsed {
+    max-height: 0;
+  }
 
   h1 {
     font-size: 36px;
@@ -244,12 +283,33 @@
     width: $wrapper-max-width-widest;
   }
 
+  .icon-dismiss {
+    border: 0;
+    cursor: pointer;
+    inset-inline-end: 15px;
+    padding: 15px;
+    opacity: 0.75;
+    position: absolute;
+    top: 15px;
+
+    &:hover,
+    &:focus {
+      background-color: var(--newtab-element-hover-color);
+    }
+  }
 }
 
 .trailheadCardGrid {
   display: grid;
   grid-gap: $base-gutter;
   margin: 0;
+  opacity: 0;
+  transition: opacity 0.4s;
+  transition-delay: 0.1s;
+
+  &.show {
+    opacity: 1;
+  }
 
   @media (min-width: $break-point-medium) {
     grid-template-columns: repeat(auto-fit, $card-width);
@@ -305,6 +365,14 @@
       box-shadow: none;
       background: var(--trailhead-card-button-background-hover-color);
     }
+
+    &:focus {
+      outline: dotted 1px;
+    }
+
+    &:active {
+      background: var(--trailhead-card-button-background-active-color);
+    }
   }
 
   .onboardingButtonContainer {
@@ -326,6 +394,10 @@
         position: absolute;
       }
     }
+  }
+
+  .asrouter-toggle {
+    position: absolute;
   }
 }
 

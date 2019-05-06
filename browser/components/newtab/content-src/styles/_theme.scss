@@ -83,6 +83,7 @@ body {
   --trailhead-cards-background-color: #{$grey-20};
   --trailhead-card-button-background-color: #{$grey-90-10};
   --trailhead-card-button-background-hover-color: #{$grey-90-20};
+  --trailhead-card-button-background-active-color: #{$grey-90-30};
 
   &[lwt-newtab-brighttext] {
     // General styles
@@ -148,5 +149,6 @@ body {
     --trailhead-cards-background-color: #{$grey-90-10};
     --trailhead-card-button-background-color: #{$grey-90-30};
     --trailhead-card-button-background-hover-color: #{$grey-90-40};
+    --trailhead-card-button-background-active-color: #{$grey-90-50};
   }
 }

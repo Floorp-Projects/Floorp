@@ -89,7 +89,8 @@ void UrlClassifierCommon::NotifyChannelBlocked(nsIChannel* aChannel,
 
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
-  pwin->NotifyContentBlockingEvent(aBlockedReason, aChannel, true, uri);
+  pwin->NotifyContentBlockingEvent(aBlockedReason, aChannel, true, uri,
+                                   aChannel);
 }
 
 /* static */

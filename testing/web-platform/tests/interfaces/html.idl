@@ -384,7 +384,6 @@ interface HTMLEmbedElement : HTMLElement {
 interface HTMLObjectElement : HTMLElement {
   [CEReactions] attribute USVString data;
   [CEReactions] attribute DOMString type;
-  [CEReactions] attribute boolean typeMustMatch;
   [CEReactions] attribute DOMString name;
   [CEReactions] attribute DOMString useMap;
   readonly attribute HTMLFormElement? form;

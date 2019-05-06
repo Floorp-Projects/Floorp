@@ -68,7 +68,7 @@ class AccessibilityTree extends Component {
     if (this.props.filtered !== prevProps.filtered) {
       const selected = document.querySelector(".treeTable .treeRow.selected");
       if (selected) {
-        scrollIntoView(selected);
+        scrollIntoView(selected, { center: true });
       }
     }
 

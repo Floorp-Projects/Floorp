@@ -183,9 +183,11 @@ TEST_F(TelemetryTestFixture, EncodedSnapshot) {
   Unused << mTelemetry->ClearOrigins();
 
   const nsLiteralCString doubleclick("doubleclick.net");
+  const nsLiteralCString unknown("this origin isn't known to Origin Telemetry");
   const nsLiteralCString telemetryTest1("telemetry.test_test1");
 
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, unknown);
 
   // Properly prepare the prio prefs
   // (Sourced from PrioEncoder.cpp from when it was being prototyped)

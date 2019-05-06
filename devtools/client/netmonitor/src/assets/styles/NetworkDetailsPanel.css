@@ -128,6 +128,11 @@
   color: var(--theme-toolbar-color);
 }
 
+/* Force the twisty icon to gray even if the treeRow has the selected class */
+.network-monitor .tree-container .treeTable .treeRow.tree-section .theme-twisty {
+  fill: var(--theme-icon-dimmed-color);
+}
+
 .network-monitor .tree-container .treeTable .treeValueCell {
   /* FIXME: Make value cell can be reduced to shorter width */
   max-width: 0;

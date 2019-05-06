@@ -339,8 +339,6 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
           ("%s: Restoring children of 0x%08" PRIx64 "",
            XRE_IsParentProcess() ? "Parent" : "Child", Id()));
 
-  MOZ_DIAGNOSTIC_ASSERT(mChildren.IsEmpty());
-
   for (BrowsingContext* child : aChildren) {
     MOZ_DIAGNOSTIC_ASSERT(child->GetParent() == this);
     Unused << Group()->EvictCachedContext(child);
