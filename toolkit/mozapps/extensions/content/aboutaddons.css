@@ -259,6 +259,12 @@ panel-item[action="install-update"] {
   --icon: url("chrome://global/skin/icons/update-icon.svg");
 }
 
+panel-item[action="report"] {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  --icon: url(chrome://global/skin/icons/warning.svg);
+}
+
 panel-item-separator {
   display: block;
   height: 1px;

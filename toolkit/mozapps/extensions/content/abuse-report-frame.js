@@ -38,6 +38,10 @@
 
       document.addEventListener("focus", this);
 
+      this.promiseHtmlAboutAddons.then(win => {
+        win.document.addEventListener("abuse-report:new", this);
+      });
+
       this.update();
     }
 
@@ -47,9 +51,15 @@
       this.promiseBrowserLoaded = null;
       this.report = null;
       document.removeEventListener("focus", this);
+
+      this.promiseHtmlAboutAddons.then(win => {
+        win.document.removeEventListener("abuse-report:new", this);
+      });
     }
 
     handleEvent(evt) {
+      // The "abuse-report:new" events are dispatched from the html about:addons sub-frame
+      // (on the html about:addons document).
       // "abuse-report:cancel", "abuse-report:submit" and "abuse-report:updated" are
       // all dispatched from the AbuseReport webcomponent (on the AbuseReport element itself).
       // All the "abuse-report:*" events are also forwarded (dispatched on the frame
@@ -58,6 +68,10 @@
       switch (evt.type) {
         case "focus":
           this.focus();
+          break;
+        case "abuse-report:new":
+          this.openReport(evt.detail);
+          this.forwardEvent(evt);
           break;
         case "abuse-report:cancel":
           this.cancelReport();
