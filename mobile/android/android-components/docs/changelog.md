@@ -14,6 +14,9 @@ permalink: /changelog/
 
 * ℹ️ **Migrated all components to [AndroidX](https://developer.android.com/jetpack/androidx).**
 
+* ℹ️ **Upgraded Gradle to 5.3.1**
+  * ⚠️ This requires using the 1.3.30 Kotlin gradle plugin or higher.
+
 * **feature-readerview**
   * 🆕 New component/feature that provides reader mode functionality. To see a complete and working example of how to integrate this new component, check out the `ReaderViewIntegration` class in our [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
   ```kotlin
@@ -40,7 +43,7 @@ permalink: /changelog/
 
 * **feature-sitepermissions**
   * Do not save new site permissions in private sessions.
-  
+
 * **service-glean**
    * ⚠️ **This is a breaking API change**: Custom pings must be explicitly
      registered with Glean at startup time. See
@@ -48,7 +51,7 @@ permalink: /changelog/
 
 * **ui-autocomplete**
   * Added an optional `shouldAutoComplete` boolean to `setText` which is currently used by `updateUrl` in `EditToolbar`.
-  
+
 * **browser-toolbar**
   * Modified `EditToolbar`'s `updateUrl` function to take a `shouldAutoComplete` boolean. By default a call to this function does **not** autocomplete. Generally you want to disable autocomplete when calling `updateUrl` if the text is a search term.
   See `editMode` in `BrowserToolbar` and `setText` in `InlineAutocompleteEditText` for more information.
@@ -66,7 +69,7 @@ permalink: /changelog/
 
 * **browser-errorpages**
   * Added `%backButton%` replacement for buttons that need the text "Go Back" instead of "Try Again"
-  
+
 * **browser-session**, **browser-engine-gecko-nightly**, **browser-engine-system**
   * Fixed an issue causing `Session.searchTerms` getting cleared to early. Now the search terms will stay assigned to the `Session` until a new request, triggered by a user interaction like clicking a link, started loading (ignoring redirects).
 
