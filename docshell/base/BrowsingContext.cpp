@@ -344,14 +344,14 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
     Unused << Group()->EvictCachedContext(child);
   }
 
-  mChildren.SwapElements(aChildren);
+  mChildren.AppendElements(aChildren);
 
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);
 
-    nsTArray<BrowsingContextId> contexts(mChildren.Length());
-    for (BrowsingContext* child : mChildren) {
+    nsTArray<BrowsingContextId> contexts(aChildren.Length());
+    for (BrowsingContext* child : aChildren) {
       contexts.AppendElement(child->Id());
     }
     cc->SendRestoreBrowsingContextChildren(this, contexts);
