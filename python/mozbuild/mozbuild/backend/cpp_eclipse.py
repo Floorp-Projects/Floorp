@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import errno
+import glob
 import random
 import os
 import shutil
@@ -41,6 +42,7 @@ class CppEclipseBackend(CommonBackend):
         self._args_for_dirs = {}
         self._project_name = 'Gecko'
         self._workspace_dir = self._get_workspace_path()
+        self._workspace_lang_dir = os.path.join(self._workspace_dir, '.metadata/.plugins/org.eclipse.cdt.core')
         self._project_dir = os.path.join(self._workspace_dir, self._project_name)
         self._overwriting_workspace = os.path.isdir(self._workspace_dir)
 
@@ -104,9 +106,8 @@ class CppEclipseBackend(CommonBackend):
         settings_dir = os.path.join(self._project_dir, '.settings')
         launch_dir = os.path.join(self._project_dir, 'RunConfigurations')
         workspace_settings_dir = os.path.join(self._workspace_dir, '.metadata/.plugins/org.eclipse.core.runtime/.settings')
-        workspace_language_dir = os.path.join(self._workspace_dir, '.metadata/.plugins/org.eclipse.cdt.core')
 
-        for dir_name in [self._project_dir, settings_dir, launch_dir, workspace_settings_dir, workspace_language_dir]:
+        for dir_name in [self._project_dir, settings_dir, launch_dir, workspace_settings_dir, self._workspace_lang_dir]:
             try:
                 os.makedirs(dir_name)
             except OSError as e:
@@ -125,7 +126,7 @@ class CppEclipseBackend(CommonBackend):
         with open(language_path, 'wb') as fh:
             self._write_language_settings(fh)
 
-        workspace_language_path = os.path.join(workspace_language_dir, 'language.settings.xml')
+        workspace_language_path = os.path.join(self._workspace_lang_dir, 'language.settings.xml')
         with open(workspace_language_path, 'wb') as fh:
             workspace_lang_settings = WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE
             workspace_lang_settings = workspace_lang_settings.replace("@COMPILER_FLAGS@", self._cxx + " " + self._cppflags);
@@ -210,6 +211,13 @@ class CppEclipseBackend(CommonBackend):
             fh.write(NOINDEX_TEMPLATE);
 
     def _remove_noindex(self):
+        # Below we remove the config file that temporarily disabled the indexer
+        # while we were importing the project. Unfornutanely, CDT doesn't
+        # notice indexer settings changes in config files when it restarts. To
+        # work around that we remove the index database here to force it to:
+        for f in glob.glob(os.path.join(self._workspace_lang_dir, "*.pdom")):
+            os.remove(f)
+
         noindex_path = os.path.join(self._project_dir, '.settings/org.eclipse.cdt.core.prefs')
         # This may fail if the entire tree has been removed; that's fine.
         try:
