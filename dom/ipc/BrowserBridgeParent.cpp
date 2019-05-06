@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
+#include "mozilla/layers/InputAPZContext.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::layout;
@@ -144,6 +145,30 @@ IPCResult BrowserBridgeParent::RecvRenderLayers(
 IPCResult BrowserBridgeParent::RecvNavigateByKey(
     const bool& aForward, const bool& aForDocumentNavigation) {
   Unused << mBrowserParent->SendNavigateByKey(aForward, aForDocumentNavigation);
+  return IPC_OK();
+}
+
+IPCResult BrowserBridgeParent::RecvDispatchSynthesizedMouseEvent(
+    const WidgetMouseEvent& aEvent) {
+  if (aEvent.mMessage != eMouseMove ||
+      aEvent.mReason != WidgetMouseEvent::eSynthesized) {
+    return IPC_FAIL(this, "Unexpected event type");
+  }
+
+  WidgetMouseEvent event = aEvent;
+  // Convert mRefPoint from the dispatching child process coordinate space
+  // to the parent coordinate space. The SendRealMouseEvent call will convert
+  // it into the dispatchee child process coordinate space
+  event.mRefPoint = Manager()->TransformChildToParent(event.mRefPoint);
+  // We need to set up an InputAPZContext on the stack because
+  // BrowserParent::SendRealMouseEvent requires one. But the only thing in
+  // that context that is actually used in this scenario is the layers id,
+  // and we already have that on the mouse event.
+  layers::InputAPZContext context(
+      layers::ScrollableLayerGuid(event.mLayersId, 0,
+                                  layers::ScrollableLayerGuid::NULL_SCROLL_ID),
+      0, nsEventStatus_eIgnore);
+  mBrowserParent->SendRealMouseEvent(event);
   return IPC_OK();
 }
 

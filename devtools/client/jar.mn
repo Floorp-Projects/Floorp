@@ -117,6 +117,7 @@ devtools.jar:
     skin/images/webconsole/error.svg (themes/images/webconsole/error.svg)
     skin/images/webconsole/info.svg (themes/images/webconsole/info.svg)
     skin/images/webconsole/input.svg (themes/images/webconsole/input.svg)
+    skin/images/webconsole/navigation.svg (themes/images/webconsole/navigation.svg)
     skin/images/webconsole/return.svg (themes/images/webconsole/return.svg)
     skin/images/breadcrumbs-scrollbutton.svg (themes/images/breadcrumbs-scrollbutton.svg)
     skin/animation.css (themes/animation.css)

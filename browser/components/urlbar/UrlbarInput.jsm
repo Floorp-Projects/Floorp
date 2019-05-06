@@ -1555,20 +1555,20 @@ class UrlbarInput {
 
   _on_drop(event) {
     let droppedItem = getDroppableData(event);
-    if (!droppedItem) {
-      return;
+    let droppedURL = droppedItem instanceof URL ? droppedItem.href : droppedItem;
+    if (droppedURL && (droppedURL !== this.window.gBrowser.currentURI.spec)) {
+      let principal = Services.droppedLinkHandler.getTriggeringPrincipal(event);
+      this.value = droppedURL;
+      this.window.SetPageProxyState("invalid");
+      this.focus();
+      this.handleCommand(null, undefined, undefined, principal);
+      // For safety reasons, in the drop case we don't want to immediately show
+      // the the dropped value, instead we want to keep showing the current page
+      // url until an onLocationChange happens.
+      // See the handling in URLBarSetURI for further details.
+      this.window.gBrowser.userTypedValue = null;
+      this.window.URLBarSetURI(null, true);
     }
-    let principal = Services.droppedLinkHandler.getTriggeringPrincipal(event);
-    this.value = droppedItem instanceof URL ? droppedItem.href : droppedItem;
-    this.window.SetPageProxyState("invalid");
-    this.focus();
-    this.handleCommand(null, undefined, undefined, principal);
-    // For safety reasons, in the drop case we don't want to immediately show
-    // the the dropped value, instead we want to keep showing the current page
-    // url until an onLocationChange happens.
-    // See the handling in URLBarSetURI for further details.
-    this.window.gBrowser.userTypedValue = null;
-    this.window.URLBarSetURI(null, true);
   }
 }
 

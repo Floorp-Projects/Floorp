@@ -44,6 +44,7 @@
 #include "nsContentList.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
+#include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/PopupBlocker.h"
@@ -500,7 +501,8 @@ class MOZ_STACK_CLASS nsPresShellEventCB : public EventDispatchingCallback {
         frame = mPresShell->GetRootFrame();
       }
       if (frame) {
-        frame->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent->AsGUIEvent(),
+        frame->HandleEvent(MOZ_KnownLive(aVisitor.mPresContext),
+                           aVisitor.mEvent->AsGUIEvent(),
                            &aVisitor.mEventStatus);
       }
     }
@@ -5373,6 +5375,22 @@ static nsView* FindViewContaining(nsView* aView, nsPoint aPt) {
   return aView;
 }
 
+static BrowserBridgeChild* GetChildBrowser(nsView* aView) {
+  if (!aView) {
+    return nullptr;
+  }
+  nsIFrame* frame = aView->GetFrame();
+  if (!frame && aView->GetParent()) {
+    // If frame is null then view is an anonymous inner view, and we want
+    // the frame from the corresponding outer view.
+    frame = aView->GetParent()->GetFrame();
+  }
+  if (!frame || !frame->GetContent()) {
+    return nullptr;
+  }
+  return BrowserBridgeChild::GetFrom(frame->GetContent());
+}
+
 void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
   // If drag session has started, we shouldn't synthesize mousemove event.
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
@@ -5427,9 +5445,10 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
   // This could be a bit slow (traverses entire view hierarchy)
   // but it's OK to do it once per synthetic mouse event
   view = FindFloatingViewContaining(rootView, mMouseLocation);
+  nsView* pointView = view;
   if (!view) {
     view = rootView;
-    nsView* pointView = FindViewContaining(rootView, mMouseLocation);
+    pointView = FindViewContaining(rootView, mMouseLocation);
     // pointView can be null in situations related to mouse capture
     pointVM = (pointView ? pointView : view)->GetViewManager();
     refpoint = mMouseLocation + rootView->ViewToWidgetOffset();
@@ -5452,7 +5471,17 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
   // XXX set event.mModifiers ?
   // XXX mnakano I think that we should get the latest information from widget.
 
-  if (RefPtr<PresShell> presShell = pointVM->GetPresShell()) {
+  if (BrowserBridgeChild* bbc = GetChildBrowser(pointView)) {
+    // If we have a BrowserBridgeChild, we're going to be dispatching this
+    // mouse event into an OOP iframe of the current document.
+    event.mLayersId = bbc->GetLayersId();
+    bbc->SendDispatchSynthesizedMouseEvent(event);
+  } else if (RefPtr<PresShell> presShell = pointVM->GetPresShell()) {
+    // Otherwise we're targetting regular (non-OOP iframe) content in the
+    // current process. This field probably won't even be read, but we
+    // can fill it in with a sane value.
+    event.mLayersId = mMouseEventTargetGuid.mLayersId;
+
     // Since this gets run in a refresh tick there isn't an InputAPZContext on
     // the stack from the nsBaseWidget. We need to simulate one with at least
     // the correct target guid, so that the correct callback transform gets

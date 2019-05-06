@@ -55,6 +55,7 @@ struct ParamTraits<mozilla::WidgetEvent> {
     WriteParam(aMsg, aParam.mTime);
     WriteParam(aMsg, aParam.mTimeStamp);
     WriteParam(aMsg, aParam.mFlags);
+    WriteParam(aMsg, aParam.mLayersId);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -66,7 +67,8 @@ struct ParamTraits<mozilla::WidgetEvent> {
                ReadParam(aMsg, aIter, &aResult->mFocusSequenceNumber) &&
                ReadParam(aMsg, aIter, &aResult->mTime) &&
                ReadParam(aMsg, aIter, &aResult->mTimeStamp) &&
-               ReadParam(aMsg, aIter, &aResult->mFlags);
+               ReadParam(aMsg, aIter, &aResult->mFlags) &&
+               ReadParam(aMsg, aIter, &aResult->mLayersId);
     aResult->mClass = static_cast<mozilla::EventClassID>(eventClassID);
     if (ret) {
       // Reset cross process dispatching state here because the event has not
