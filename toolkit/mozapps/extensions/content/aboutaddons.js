@@ -112,6 +112,11 @@ function hasPermission(addon, permission) {
   return !!(addon.permissions & PERMISSION_MASKS[permission]);
 }
 
+function isPending(addon, action) {
+  const amAction = AddonManager["PENDING_" + action.toUpperCase()];
+  return !!(addon.pendingOperations & amAction);
+}
+
 /**
  * This function is set in initialize() by the parent about:addons window. It
  * is a helper for gViewController.loadView().
@@ -768,7 +773,7 @@ class AddonCard extends HTMLElement {
             this.panel.hide();
             let response = windowRoot.ownerGlobal.promptRemoveExtension(addon);
             if (response == 0) {
-              await addon.uninstall();
+              await addon.uninstall(true);
               this.sendEvent("remove");
             } else {
               this.sendEvent("remove-cancelled");
@@ -1014,6 +1019,7 @@ class AddonList extends HTMLElement {
   constructor() {
     super();
     this.sections = [];
+    this.pendingUninstallAddons = new Set();
   }
 
   async connectedCallback() {
@@ -1031,6 +1037,11 @@ class AddonList extends HTMLElement {
     // Remove content and stop listening until this is connected again.
     this.textContent = "";
     this.removeListener();
+
+    // Process any pending uninstall related to this list.
+    for (const addon of this.pendingUninstallAddons) {
+      addon.uninstall();
+    }
   }
 
   /**
@@ -1072,6 +1083,10 @@ class AddonList extends HTMLElement {
     return this.querySelector(`addon-card[addon-id="${addon.id}"]`);
   }
 
+  getPendingUninstallBar(addon) {
+    return this.querySelector(`message-bar[addon-id="${addon.id}"]`);
+  }
+
   sortByFn(aAddon, bAddon) {
     return aAddon.name.localeCompare(bAddon.name);
   }
@@ -1092,6 +1107,12 @@ class AddonList extends HTMLElement {
       let index = this.sections.findIndex(({filterFn}) => filterFn(addon));
       if (index != -1) {
         sectionedAddons[index].push(addon);
+      } else if (isPending(addon, "uninstall")) {
+        // A second tab may be opened on "about:addons" (or Firefox may
+        // have crashed) while there are still "pending uninstall" add-ons.
+        // Ensure to list them in the pendingUninstall message-bar-stack
+        // when the AddonList is initially rendered.
+        this.pendingUninstallAddons.add(addon);
       }
     }
 
@@ -1101,6 +1122,45 @@ class AddonList extends HTMLElement {
     }
 
     return sectionedAddons;
+  }
+
+  createPendingUninstallStack() {
+    const stack = document.createElement("message-bar-stack");
+    stack.setAttribute("class", "pending-uninstall");
+    stack.setAttribute("reverse", "");
+    return stack;
+ }
+
+  addPendingUninstallBar(addon) {
+    const stack = this.pendingUninstallStack;
+    const mb = document.createElement("message-bar");
+    mb.setAttribute("addon-id", addon.id);
+    mb.setAttribute("type", "generic");
+
+    const addonName = document.createElement("span");
+    addonName.setAttribute("data-l10n-name", "addon-name");
+    const message = document.createElement("span");
+    message.append(addonName);
+    const undo = document.createElement("button");
+    undo.setAttribute("action", "undo");
+    undo.addEventListener("click", () => {
+      addon.cancelUninstall();
+    });
+
+    document.l10n.setAttributes(message, "pending-uninstall-description", {
+      "addon": addon.name,
+    });
+    document.l10n.setAttributes(undo, "pending-uninstall-undo-button");
+
+    mb.append(message, undo);
+    stack.append(mb);
+  }
+
+  removePendingUninstallBar(addon) {
+    const messagebar = this.getPendingUninstallBar(addon);
+    if (messagebar) {
+      messagebar.remove();
+    }
   }
 
   createSectionHeading(headingIndex) {
@@ -1217,9 +1277,16 @@ class AddonList extends HTMLElement {
 
     let sectionedAddons = await this.getAddons();
 
-    // Render the sections.
     let frag = document.createDocumentFragment();
 
+    // Render the pending uninstall message-bar-stack.
+    this.pendingUninstallStack = this.createPendingUninstallStack();
+    for (let addon of this.pendingUninstallAddons) {
+      this.addPendingUninstallBar(addon);
+    }
+    frag.appendChild(this.pendingUninstallStack);
+
+    // Render the sections.
     for (let i = 0; i < sectionedAddons.length; i++) {
       this.sections[i].node = this.renderSection(sectionedAddons[i], i);
       frag.appendChild(this.sections[i].node);
@@ -1239,11 +1306,26 @@ class AddonList extends HTMLElement {
     AddonManager.removeAddonListener(this);
   }
 
+  onOperationCancelled(addon) {
+    if (this.pendingUninstallAddons.has(addon) &&
+        !isPending(addon, "uninstall")) {
+      this.pendingUninstallAddons.delete(addon);
+      this.removePendingUninstallBar(addon);
+    }
+    this.updateAddon(addon);
+  }
+
   onEnabled(addon) {
     this.updateAddon(addon);
   }
 
   onDisabled(addon) {
+    this.updateAddon(addon);
+  }
+
+  onUninstalling(addon) {
+    this.pendingUninstallAddons.add(addon);
+    this.addPendingUninstallBar(addon);
     this.updateAddon(addon);
   }
 
@@ -1255,6 +1337,7 @@ class AddonList extends HTMLElement {
   }
 
   onUninstalled(addon) {
+    this.removePendingUninstallBar(addon);
     this.removeAddon(addon);
   }
 }
@@ -1271,10 +1354,12 @@ class ListView {
     list.type = this.type;
     list.setSections([{
       headingId: "addons-enabled-heading",
-      filterFn: addon => !addon.hidden && addon.isActive,
+      filterFn: addon => !addon.hidden && addon.isActive &&
+                         !isPending(addon, "uninstall"),
     }, {
       headingId: "addons-disabled-heading",
-      filterFn: addon => !addon.hidden && !addon.isActive,
+      filterFn: addon => !addon.hidden && !addon.isActive &&
+                         !isPending(addon, "uninstall"),
     }]);
 
     await list.render();
