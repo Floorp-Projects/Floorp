@@ -40,6 +40,13 @@
         'freebl_gtest_deps',
         '<(DEPTH)/exports.gyp:nss_exports',
       ],
+      'conditions': [
+      [ 'cc_is_gcc==1 and (target_arch=="ia32" or target_arch=="x64")', {
+         'cflags_cc': [
+          '-msse2',
+          ],
+        }],
+      ],
     },
     {
       'target_name': 'prng_gtest',

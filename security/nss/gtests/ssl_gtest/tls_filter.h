@@ -549,9 +549,9 @@ class SelectiveDropFilter : public PacketFilter {
 class SelectiveRecordDropFilter : public TlsRecordFilter {
  public:
   SelectiveRecordDropFilter(const std::shared_ptr<TlsAgent>& a,
-                            uint32_t pattern, bool enabled = true)
+                            uint32_t pattern, bool on = true)
       : TlsRecordFilter(a), pattern_(pattern), counter_(0) {
-    if (!enabled) {
+    if (!on) {
       Disable();
     }
   }

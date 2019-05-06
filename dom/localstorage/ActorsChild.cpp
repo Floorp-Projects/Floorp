@@ -70,9 +70,9 @@ mozilla::ipc::IPCResult LSDatabaseChild::RecvRequestAllowToClose() {
 }
 
 PBackgroundLSSnapshotChild* LSDatabaseChild::AllocPBackgroundLSSnapshotChild(
-    const nsString& aDocumentURI, const bool& aIncreasePeakUsage,
-    const int64_t& aRequestedSize, const int64_t& aMinSize,
-    LSSnapshotInitInfo* aInitInfo) {
+    const nsString& aDocumentURI, const nsString& aKey,
+    const bool& aIncreasePeakUsage, const int64_t& aRequestedSize,
+    const int64_t& aMinSize, LSSnapshotInitInfo* aInitInfo) {
   MOZ_CRASH("PBackgroundLSSnapshotChild actor should be manually constructed!");
 }
 
@@ -126,7 +126,7 @@ void LSObserverChild::ActorDestroy(ActorDestroyReason aWhy) {
 mozilla::ipc::IPCResult LSObserverChild::RecvObserve(
     const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
     const nsString& aDocumentURI, const nsString& aKey,
-    const nsString& aOldValue, const nsString& aNewValue) {
+    const LSValue& aOldValue, const LSValue& aNewValue) {
   AssertIsOnOwningThread();
 
   if (!mObserver) {
@@ -140,8 +140,8 @@ mozilla::ipc::IPCResult LSObserverChild::RecvObserve(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  Storage::NotifyChange(/* aStorage */ nullptr, principal, aKey, aOldValue,
-                        aNewValue,
+  Storage::NotifyChange(/* aStorage */ nullptr, principal, aKey,
+                        aOldValue.AsString(), aNewValue.AsString(),
                         /* aStorageType */ kLocalStorageType, aDocumentURI,
                         /* aIsPrivate */ !!aPrivateBrowsingId,
                         /* aImmediateDispatch */ true);
