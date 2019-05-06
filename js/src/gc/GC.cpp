@@ -289,10 +289,11 @@ static const size_t MaxMallocBytes = 128 * 1024 * 1024;
 /*
  * JSGC_MIN_NURSERY_BYTES
  *
- * 192K is conservative, not too low that root marking dominates. The Limit
- * should be a multiple of Nursery::SubChunkStep.
+ * With some testing (Bug 1532838) we increased this to 256K from 192K
+ * which improves performance.  We should try to reduce this for background
+ * tabs.
  */
-static const size_t GCMinNurseryBytes = 192 * 1024;
+static const size_t GCMinNurseryBytes = 256 * 1024;
 
 /* JSGC_ALLOCATION_THRESHOLD_FACTOR */
 static const float AllocThresholdFactor = 0.9f;
