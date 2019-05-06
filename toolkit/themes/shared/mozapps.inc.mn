@@ -23,6 +23,9 @@
   skin/classic/mozapps/extensions/alerticon-info-positive.svg (../../shared/extensions/alerticon-info-positive.svg)
   skin/classic/mozapps/extensions/alerticon-info-negative.svg (../../shared/extensions/alerticon-info-negative.svg)
   skin/classic/mozapps/extensions/category-legacy.svg        (../../shared/extensions/category-legacy.svg)
+#ifndef ANDROID
+  skin/classic/mozapps/extensions/rating-star.svg            (../../shared/extensions/rating-star.svg)
+#endif
   skin/classic/mozapps/aboutNetworking.css                   (../../shared/aboutNetworking.css)
 #ifndef ANDROID
   skin/classic/mozapps/aboutProfiles.css                     (../../shared/aboutProfiles.css)
