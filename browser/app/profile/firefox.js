@@ -1593,6 +1593,9 @@ pref("browser.contentblocking.introCount", 0);
 
 pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/content-blocking/start/");
 
+// 1800 = 30 min in seconds
+pref("browser.contentblocking.introDelaySeconds", 1800);
+
 // Workaround for Google Recaptcha
 pref("urlclassifier.trackingAnnotationSkipURLs", "google.com/recaptcha/,*.google.com/recaptcha/");
 

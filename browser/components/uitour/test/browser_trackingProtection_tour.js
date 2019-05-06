@@ -6,17 +6,20 @@ var gContentWindow;
 
 const { UrlClassifierTestUtils } = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
+const PREF_INTRO_DELAY = "browser.contentblocking.introDelaySeconds";
 const TP_ENABLED_PREF = "privacy.trackingprotection.enabled";
 
 add_task(setup_UITourTest);
 
 add_task(async function test_setup() {
   Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
+  Services.prefs.setIntPref(PREF_INTRO_DELAY, 0);
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(function() {
     UrlClassifierTestUtils.cleanupTestTrackers();
     Services.prefs.clearUserPref("privacy.trackingprotection.enabled");
+    Services.prefs.clearUserPref(PREF_INTRO_DELAY);
   });
 });
 
