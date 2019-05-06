@@ -586,8 +586,7 @@ class BrowserChild final : public BrowserChildBase,
   // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
   void DoFakeShow(const ShowInfo& aShowInfo);
 
-  void ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
-                                 uint64_t aInputBlockId,
+  void ContentReceivedInputBlock(uint64_t aInputBlockId,
                                  bool aPreventDefault) const;
   void SetTargetAPZC(
       uint64_t aInputBlockId,
