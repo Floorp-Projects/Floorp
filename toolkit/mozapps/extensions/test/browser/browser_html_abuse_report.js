@@ -9,6 +9,11 @@ const {
 const {
   AddonTestUtils,
 } = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const {
+  ExtensionCommon,
+} = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+
+const {makeWidgetId} = ExtensionCommon;
 
 const ADDON_ID = "test-extension-to-report@mochi.test";
 const REPORT_ENTRY_POINT = "test-entrypoint";
@@ -41,6 +46,21 @@ function handleSubmitRequest({request, response}) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "application/json", false);
   response.write("{}");
+}
+
+function createPromptConfirmEx({remove = false, report = false} = {}) {
+  return (...args) => {
+    const checkboxState = args.pop();
+    const checkboxMessage = args.pop();
+    is(checkboxState && checkboxState.value, false,
+       "checkboxState should be initially false");
+    ok(checkboxMessage,
+       "Got a checkboxMessage in promptService.confirmEx call");
+    // Report checkbox selected.
+    checkboxState.value = report;
+    // Remove accepted.
+    return remove ? 0 : 1;
+  };
 }
 
 async function openAboutAddons(type = "extension") {
@@ -860,6 +880,104 @@ add_task(async function test_trigger_abusereport_from_aboutaddons_menu() {
 
   is(abuseReportEl.addon && abuseReportEl.addon.id, extension.id,
      "Abuse Report panel rendered for the expected addonId");
+
+  await closeAboutAddons();
+  await extension.unload();
+});
+
+add_task(async function test_trigger_abusereport_from_aboutaddons_remove() {
+  const EXT_ID = "test-report-from-aboutaddons-remove@mochi.test";
+  const extension = await installTestExtension(EXT_ID);
+
+  await openAboutAddons();
+  await gManagerWindow.htmlBrowserLoaded;
+
+  const abuseReportFrameEl = getAbuseReportFrame();
+  ok(abuseReportFrameEl.hidden,
+     "Abuse Report frame should be initially hidden");
+
+  const {contentDocument: doc} = gManagerWindow.getHtmlBrowser();
+
+  const addonCard = doc.querySelector(
+    `addon-list addon-card[addon-id="${extension.id}"]`);
+  ok(addonCard, "Got the addon-card for the test extension");
+
+  const removeButton = addonCard.querySelector("[action=remove]");
+  ok(removeButton, "Got the report action for the test extension");
+
+  const onceReportNew = BrowserTestUtils.waitForEvent(
+    abuseReportFrameEl, "abuse-report:new");
+  const onceReportFrameShown = BrowserTestUtils.waitForEvent(
+    abuseReportFrameEl, "abuse-report:frame-shown");
+
+  // Prepare the mocked prompt service.
+  const promptService = mockPromptService();
+  promptService.confirmEx = createPromptConfirmEx({remove: true, report: true});
+
+  info("Click the report action and wait for the 'abuse-report:new' event");
+  removeButton.click();
+  const newReportEvent = await onceReportNew;
+
+  Assert.deepEqual(newReportEvent.detail, {
+    addonId: extension.id,
+    reportEntryPoint: "uninstall",
+  }, "Got the expected details in the 'abuse-report:new' event");
+
+  info("Wait for the abuse report frame to be visible");
+  await onceReportFrameShown;
+  ok(!abuseReportFrameEl.hidden,
+    "Abuse Report frame should be visible");
+
+  info("Wait for the abuse report panel to be rendered");
+  const abuseReportEl = await abuseReportFrameEl.promiseAbuseReport;
+  await promiseAbuseReportRendered(abuseReportEl);
+
+  is(abuseReportEl.addon && abuseReportEl.addon.id, extension.id,
+     "Abuse Report panel rendered for the expected addonId");
+
+  await closeAboutAddons();
+  await extension.unload();
+});
+
+add_task(async function test_trigger_abusereport_from_browserAction_remove() {
+  const EXT_ID = "test-report-from-browseraction-remove@mochi.test";
+  const extension = await installTestExtension(EXT_ID, "extension", {
+    browser_action: {},
+  });
+
+  // Prepare the mocked prompt service.
+  const promptService = mockPromptService();
+  promptService.confirmEx = createPromptConfirmEx({remove: true, report: true});
+
+  info(`Open browserAction context menu in toolbar context menu`);
+  let buttonId = `${makeWidgetId(EXT_ID)}-browser-action`;
+  const menu = document.getElementById("toolbar-context-menu");
+  const node = document.getElementById(CSS.escape(buttonId));
+  const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(node, {type: "contextmenu"});
+  await shown;
+
+  info(`Clicking on "Remove Extension" context menu item`);
+  let removeExtension = menu.querySelector(
+    ".customize-context-removeExtension");
+  removeExtension.click();
+
+  // Wait about:addons to be loaded.
+  const browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.browserLoaded(browser);
+  is(browser.currentURI.spec, "about:addons",
+    "about:addons tab currently selected");
+  menu.hidePopup();
+
+  const abuseReportFrame = browser.contentDocument
+    .querySelector("addon-abuse-report-xulframe");
+
+  ok(!abuseReportFrame.hidden,
+     "Abuse report frame has the expected visibility");
+  is(abuseReportFrame.report.addon.id, EXT_ID,
+    "Abuse report frame has the expected addon id");
+  is(abuseReportFrame.report.reportEntryPoint, "uninstall",
+    "Abuse report frame has the expected reportEntryPoint");
 
   await closeAboutAddons();
   await extension.unload();
