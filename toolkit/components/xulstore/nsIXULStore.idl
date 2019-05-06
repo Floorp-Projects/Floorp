@@ -12,6 +12,12 @@ webidl Node;
  * Typically it is used to store the persisted state for the document, such as
  * window location, toolbars that are open and nodes that are open and closed in a tree.
  *
+ * If MOZ_NEW_XULSTORE is enabled:
+ * XULStore.jsm wraps this API in useful abstractions for JS consumers.
+ * XULStore.h provides a more idiomatic API for C++ consumers.
+ * You should use those APIs unless you have good reasons to use this one.
+ *
+ * If MOZ_NEW_XULSTORE is disabled:
  * The data is serialized to [profile directory]/xulstore.json
  */
 [scriptable, uuid(987c4b35-c426-4dd7-ad49-3c9fa4c65d20)]
