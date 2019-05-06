@@ -131,7 +131,7 @@ with only_when(target_is_osx):
 
     @depends_if('--with-macos-sdk')
     @imports(_from='os.path', _import='isdir')
-    @imports(_from='plistlib', _import='readPlist')
+    @imports(_from='biplist', _import='readPlist')
     def macos_sdk(value):
         sdk_min_version = Version('10.11')
         sdk_max_version = Version('10.14')
