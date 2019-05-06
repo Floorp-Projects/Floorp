@@ -11,22 +11,18 @@ UNIFIED_SOURCES = [
     'TestADAM7InterpolatingFilter.cpp',
     'TestAnimationFrameBuffer.cpp',
     'TestBlendAnimationFilter.cpp',
+    'TestContainers.cpp',
     'TestCopyOnWrite.cpp',
     'TestDeinterlacingFilter.cpp',
+    'TestFrameAnimator.cpp',
     'TestLoader.cpp',
     'TestRemoveFrameRectFilter.cpp',
     'TestStreamingLexer.cpp',
     'TestSurfaceSink.cpp',
 ]
 
-if CONFIG['OS_TARGET'] != 'Android':
-    UNIFIED_SOURCES += [
-        'TestContainers.cpp',
-        'TestFrameAnimator.cpp',
-    ]
-
-# skip the test on windows10-aarch64 and Android, aarch64 due to 1544961
-if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64') and (CONFIG['OS_TARGET'] != 'Android'):
+# skip the test on windows10-aarch64, aarch64 due to 1544961
+if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
     UNIFIED_SOURCES += [
         'TestDecoders.cpp',
         'TestDecodeToSurface.cpp',
