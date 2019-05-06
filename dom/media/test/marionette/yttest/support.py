@@ -94,15 +94,14 @@ class VideoStreamTestCase(MarionetteTestCase):
         debug_info = res["mozRequestDebugInfo"]
 
         # looking at mNumSamplesOutputTotal vs mNumSamplesSkippedTotal
-        decoded, skipped = debug_info["Video Frames Decoded"].split(" ", 1)
-        decoded = int(decoded)
-        skipped = int(skipped.split("=")[-1][:-1])
-        self.assertLess(skipped, decoded * 0.04)
+        reader_info = debug_info['decoder']['reader']
+        self.assertLess(reader_info["videoNumSamplesSkippedTotal"],
+                        reader_info["videoNumSamplesOutputTotal"] * 0.04)
 
         # extracting in/out from the debugInfo
-        video_state = debug_info["Video State"]
-        video_in = int(video_state["in"])
-        video_out = int(video_state["out"])
+        video_state = reader_info["videoState"]
+        video_in = video_state["numSamplesInput"]
+        video_out = video_state["numSamplesOutput"]
         # what's the ratio ? we want 99%+
         if video_out != video_in:
             in_out_ratio = float(video_out) / float(video_in) * 100
