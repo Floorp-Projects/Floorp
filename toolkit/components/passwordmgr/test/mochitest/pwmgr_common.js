@@ -142,26 +142,6 @@ function checkUnmodifiedForm(formNum) {
   }
 }
 
-/**
- * @param {Function} [aFilterFn = undefined] Function to filter out irrelevant submissions.
- * @return {Promise} resolving when a relevant form submission was processed.
- */
-function getSubmitMessage(aFilterFn = undefined) {
-  info("getSubmitMessage");
-  return new Promise((resolve, reject) => {
-    PWMGR_COMMON_PARENT.addMessageListener("formSubmissionProcessed", function processed(...args) {
-      if (aFilterFn && !aFilterFn(...args)) {
-        // This submission isn't the one we're waiting for.
-        return;
-      }
-
-      info("got formSubmissionProcessed");
-      PWMGR_COMMON_PARENT.removeMessageListener("formSubmissionProcessed", processed);
-      resolve(...args);
-    });
-  });
-}
-
 function registerRunTests() {
   return new Promise(resolve => {
     function onDOMContentLoaded() {
