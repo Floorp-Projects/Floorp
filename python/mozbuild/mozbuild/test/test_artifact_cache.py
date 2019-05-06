@@ -11,8 +11,8 @@ import unittest
 from tempfile import mkdtemp
 from shutil import rmtree
 
-from mozbuild.artifacts import ArtifactCache
-from mozbuild import artifacts
+from mozbuild.artifact_cache import ArtifactCache
+from mozbuild import artifact_cache
 
 
 CONTENTS = {
@@ -55,10 +55,10 @@ class FakeSession(object):
 
 class TestArtifactCache(unittest.TestCase):
     def setUp(self):
-        self.min_cached_artifacts = artifacts.MIN_CACHED_ARTIFACTS
-        self.max_cached_artifacts_size = artifacts.MAX_CACHED_ARTIFACTS_SIZE
-        artifacts.MIN_CACHED_ARTIFACTS = 2
-        artifacts.MAX_CACHED_ARTIFACTS_SIZE = 4096
+        self.min_cached_artifacts = artifact_cache.MIN_CACHED_ARTIFACTS
+        self.max_cached_artifacts_size = artifact_cache.MAX_CACHED_ARTIFACTS_SIZE
+        artifact_cache.MIN_CACHED_ARTIFACTS = 2
+        artifact_cache.MAX_CACHED_ARTIFACTS_SIZE = 4096
 
         self._real_utime = os.utime
         os.utime = self.utime
@@ -68,8 +68,8 @@ class TestArtifactCache(unittest.TestCase):
 
     def tearDown(self):
         rmtree(self.tmpdir)
-        artifacts.MIN_CACHED_ARTIFACTS = self.min_cached_artifacts
-        artifacts.MAX_CACHED_ARTIFACTS_SIZE = self.max_cached_artifacts_size
+        artifact_cache.MIN_CACHED_ARTIFACTS = self.min_cached_artifacts
+        artifact_cache.MAX_CACHED_ARTIFACTS_SIZE = self.max_cached_artifacts_size
         os.utime = self._real_utime
 
     def utime(self, path, times):
