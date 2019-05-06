@@ -607,3 +607,8 @@ async function assertBookmarksTreeMatches(rootGuid, expected, message) {
     throw new Assert.constructor.AssertionError({ actual, expected, message });
   }
 }
+
+function bufferedBookmarksEnabled() {
+  return Services.prefs.getBoolPref("services.sync.engine.bookmarks.buffer",
+    false);
+}
