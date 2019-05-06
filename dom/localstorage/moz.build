@@ -34,6 +34,8 @@ EXPORTS.mozilla.dom += [
     'LSObject.h',
     'LSObserver.h',
     'LSSnapshot.h',
+    'LSValue.h',
+    'SnappyUtils.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -45,7 +47,9 @@ UNIFIED_SOURCES += [
     'LSObject.cpp',
     'LSObserver.cpp',
     'LSSnapshot.cpp',
+    'LSValue.cpp',
     'ReportInternalError.cpp',
+    'SnappyUtils.cpp',
 ]
 
 IPDL_SOURCES += [

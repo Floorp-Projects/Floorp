@@ -70,7 +70,7 @@ static void GenerateEsniKey(time_t windowStart, SSLNamedGroup group,
   ASSERT_NE(nullptr, priv);
   SECITEM_FreeItem(&ecParams, PR_FALSE);
   PRUint8 encoded[1024];
-  unsigned int encoded_len;
+  unsigned int encoded_len = 0;
 
   SECStatus rv = SSL_EncodeESNIKeys(
       &cipher_suites[0], cipher_suites.size(), group, pub, 100, windowStart,
@@ -375,11 +375,13 @@ TEST_P(TlsConnectTls13, ConnectEsniCSMismatch) {
   GenerateEsniKey(time(nullptr), ssl_grp_ec_curve25519, kDefaultSuites, &record,
                   &pub, &priv);
   PRUint8 encoded[1024];
-  unsigned int encoded_len;
+  unsigned int encoded_len = 0;
 
   SECStatus rv = SSL_EncodeESNIKeys(
       &kChaChaSuite[0], kChaChaSuite.size(), ssl_grp_ec_curve25519, pub.get(),
       100, time(0), time(0) + 10, encoded, &encoded_len, sizeof(encoded));
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_LT(0U, encoded_len);
   rv = SSL_SetESNIKeyPair(server_->ssl_fd(), priv.get(), encoded, encoded_len);
   ASSERT_EQ(SECSuccess, rv);
   rv = SSL_EnableESNI(client_->ssl_fd(), record.data(), record.len(), "");
