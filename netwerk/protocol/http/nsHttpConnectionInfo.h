@@ -140,9 +140,12 @@ class nsHttpConnectionInfo final : public ARefBase {
   void SetTlsFlags(uint32_t aTlsFlags);
   uint32_t GetTlsFlags() const { return mTlsFlags; }
 
-  // TrrUsed means that this connection is used to send TRR requests over
-  void SetTrrUsed(bool aUsed) { mTrrUsed = aUsed; }
-  bool GetTrrUsed() const { return mTrrUsed; }
+  // IsTrrServiceChannel means that this connection is used to send TRR requests
+  // over
+  void SetIsTrrServiceChannel(bool aIsTRRChannel) {
+    mIsTrrServiceChannel = aIsTRRChannel;
+  }
+  bool GetIsTrrServiceChannel() const { return mIsTrrServiceChannel; }
 
   // SetTrrDisabled means don't use TRR to resolve host names for this
   // connection
@@ -229,7 +232,7 @@ class nsHttpConnectionInfo final : public ARefBase {
 
   uint32_t mTlsFlags;
   uint16_t mIsolated : 1;
-  uint16_t mTrrUsed : 1;
+  uint16_t mIsTrrServiceChannel : 1;
   uint16_t mTrrDisabled : 1;
   uint16_t mIPv4Disabled : 1;
   uint16_t mIPv6Disabled : 1;

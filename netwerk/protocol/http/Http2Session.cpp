@@ -416,7 +416,7 @@ uint32_t Http2Session::RegisterStreamID(Http2Stream* stream, uint32_t aNewID) {
     // don't count push streams here
     MOZ_ASSERT(stream->Transaction(), "no transation for the stream!");
     RefPtr<nsHttpConnectionInfo> ci(stream->Transaction()->ConnectionInfo());
-    if (ci && ci->GetTrrUsed()) {
+    if (ci && ci->GetIsTrrServiceChannel()) {
       IncrementTrrCounter();
     }
   }
