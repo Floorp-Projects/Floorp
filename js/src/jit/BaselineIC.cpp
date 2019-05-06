@@ -567,7 +567,6 @@ bool ICStub::NonCacheIRStubMakesGCCalls(Kind kind) {
     case Call_ScriptedApplyArray:
     case Call_ScriptedApplyArguments:
     case Call_ScriptedFunCall:
-    case Call_ConstStringSplit:
     case WarmUpCounter_Fallback:
     // These three fallback stubs don't actually make non-tail calls,
     // but the fallback code for the bailout path needs to pop the stub frame
@@ -654,14 +653,6 @@ void ICStub::trace(JSTracer* trc) {
       ICCall_ClassHook* callStub = toCall_ClassHook();
       TraceNullableEdge(trc, &callStub->templateObject(),
                         "baseline-callclasshook-template");
-      break;
-    }
-    case ICStub::Call_ConstStringSplit: {
-      ICCall_ConstStringSplit* callStub = toCall_ConstStringSplit();
-      TraceEdge(trc, &callStub->templateObject(),
-                "baseline-callstringsplit-template");
-      TraceEdge(trc, &callStub->expectedSep(), "baseline-callstringsplit-sep");
-      TraceEdge(trc, &callStub->expectedStr(), "baseline-callstringsplit-str");
       break;
     }
     case ICStub::TypeMonitor_SingleObject: {
@@ -3384,33 +3375,6 @@ static bool GetTemplateObjectForClassHook(JSContext* cx, JSNative hook,
   return true;
 }
 
-static bool IsOptimizableConstStringSplit(Realm* callerRealm,
-                                          const Value& callee, int argc,
-                                          Value* args) {
-  if (argc != 2 || !args[0].isString() || !args[1].isString()) {
-    return false;
-  }
-
-  if (!args[0].toString()->isAtom() || !args[1].toString()->isAtom()) {
-    return false;
-  }
-
-  if (!callee.isObject() || !callee.toObject().is<JSFunction>()) {
-    return false;
-  }
-
-  JSFunction& calleeFun = callee.toObject().as<JSFunction>();
-  if (calleeFun.realm() != callerRealm) {
-    return false;
-  }
-  if (!calleeFun.isNative() ||
-      calleeFun.native() != js::intrinsic_StringSplitString) {
-    return false;
-  }
-
-  return true;
-}
-
 static bool TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub,
                               HandleScript script, jsbytecode* pc, JSOp op,
                               uint32_t argc, Value* vp, bool constructing,
@@ -3430,15 +3394,6 @@ static bool TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub,
 
   RootedValue callee(cx, vp[0]);
   RootedValue thisv(cx, vp[1]);
-
-  // Don't attach an optimized call stub if we could potentially attach an
-  // optimized ConstStringSplit stub.
-  if (stub->numOptimizedStubs() == 0 &&
-      IsOptimizableConstStringSplit(cx->realm(), callee, argc, vp + 2)) {
-    return true;
-  }
-
-  stub->unlinkStubsWithKind(cx, ICStub::Call_ConstStringSplit);
 
   if (!callee.isObject()) {
     return true;
@@ -3704,72 +3659,6 @@ static bool TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub,
   return true;
 }
 
-static bool TryAttachConstStringSplit(JSContext* cx, ICCall_Fallback* stub,
-                                      HandleScript script, uint32_t argc,
-                                      HandleValue callee, Value* vp,
-                                      jsbytecode* pc, HandleValue res,
-                                      bool* attached) {
-  if (stub->numOptimizedStubs() != 0) {
-    return true;
-  }
-
-  Value* args = vp + 2;
-
-  if (!IsOptimizableConstStringSplit(cx->realm(), callee, argc, args)) {
-    return true;
-  }
-
-  RootedString str(cx, args[0].toString());
-  RootedString sep(cx, args[1].toString());
-  RootedArrayObject obj(cx, &res.toObject().as<ArrayObject>());
-  uint32_t initLength = obj->getDenseInitializedLength();
-  MOZ_ASSERT(initLength == obj->length(),
-             "string-split result is a fully initialized array");
-
-  // Copy the array before storing in stub.
-  RootedArrayObject arrObj(cx);
-  arrObj =
-      NewFullyAllocatedArrayTryReuseGroup(cx, obj, initLength, TenuredObject);
-  if (!arrObj) {
-    return false;
-  }
-  arrObj->ensureDenseInitializedLength(cx, 0, initLength);
-
-  // Atomize all elements of the array.
-  if (initLength > 0) {
-    // Mimic NewFullyAllocatedStringArray() and directly inform TI about
-    // the element type.
-    AddTypePropertyId(cx, arrObj, JSID_VOID, TypeSet::StringType());
-
-    for (uint32_t i = 0; i < initLength; i++) {
-      JSAtom* str = js::AtomizeString(cx, obj->getDenseElement(i).toString());
-      if (!str) {
-        return false;
-      }
-
-      arrObj->initDenseElement(i, StringValue(str));
-    }
-  }
-
-  ICTypeMonitor_Fallback* typeMonitorFallback =
-      stub->getFallbackMonitorStub(cx, script);
-  if (!typeMonitorFallback) {
-    return false;
-  }
-
-  ICCall_ConstStringSplit::Compiler compiler(
-      cx, typeMonitorFallback->firstMonitorStub(), script->pcToOffset(pc), str,
-      sep, arrObj);
-  ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
-  if (!newStub) {
-    return false;
-  }
-
-  stub->addNewStub(newStub);
-  *attached = true;
-  return true;
-}
-
 bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
                     uint32_t argc, Value* vp, MutableHandleValue res) {
   stub->incrementEnteredCount();
@@ -3806,7 +3695,6 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   }
 
   bool canAttachStub = stub->state().canAttachStub();
-  bool isFirstStub = stub->numOptimizedStubs() == 0;
   bool handled = false;
   bool deferred = false;
 
@@ -3815,7 +3703,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   if (canAttachStub) {
     HandleValueArray args = HandleValueArray::fromMarkedLocation(argc, vp + 2);
     CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), argc, callee,
-                        callArgs.thisv(), newTarget, args, isFirstStub);
+                        callArgs.thisv(), newTarget, args);
     switch (gen.tryAttachStub()) {
       case AttachDecision::NoAction:
         break;
@@ -3896,7 +3784,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   if (deferred && canAttachStub) {
     HandleValueArray args = HandleValueArray::fromMarkedLocation(argc, vp + 2);
     CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), argc, callee,
-                        callArgs.thisv(), newTarget, args, isFirstStub);
+                        callArgs.thisv(), newTarget, args);
     switch (gen.tryAttachDeferredStub(res)) {
       case AttachDecision::Attach: {
         ICStub* newStub = AttachBaselineCacheIRStub(
@@ -3918,16 +3806,6 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
       case AttachDecision::Deferred:
         MOZ_ASSERT_UNREACHABLE("Impossible attach decision");
         break;
-    }
-  }
-
-  if (!handled && canAttachStub && !constructing) {
-    // If 'callee' is a potential Call_ConstStringSplit, try to attach an
-    // optimized ConstStringSplit stub. Note that vp[0] now holds the return
-    // value instead of the callee, so we pass the callee as well.
-    if (!TryAttachConstStringSplit(cx, stub, script, argc, callee, vp, pc, res,
-                                   &handled)) {
-      return false;
     }
   }
 
@@ -3963,7 +3841,6 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
 
   // Try attaching a call stub.
   bool handled = false;
-  bool isFirstStub = stub->numOptimizedStubs() == 0;
   if (op != JSOP_SPREADEVAL && op != JSOP_STRICTSPREADEVAL &&
       stub->state().canAttachStub()) {
     // Try CacheIR first:
@@ -3973,7 +3850,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
     HandleValueArray args = HandleValueArray::fromMarkedLocation(
         aobj->length(), aobj->getDenseElements());
     CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), 1, callee,
-                        thisv, newTarget, args, isFirstStub);
+                        thisv, newTarget, args);
     switch (gen.tryAttachStub()) {
       case AttachDecision::NoAction:
         break;
@@ -4773,111 +4650,6 @@ bool ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm) {
   EmitEnterTypeMonitorIC(masm);
 
   masm.bind(&failure);
-  EmitStubGuardFailure(masm);
-  return true;
-}
-
-bool ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm) {
-  // Stack Layout:
-  //      [ ..., CalleeVal, ThisVal, strVal, sepVal, +ICStackValueOffset+ ]
-  static const size_t SEP_DEPTH = 0;
-  static const size_t STR_DEPTH = sizeof(Value);
-  static const size_t CALLEE_DEPTH = 3 * sizeof(Value);
-
-  AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
-  Label failureRestoreArgc;
-#ifdef DEBUG
-  Label twoArg;
-  Register argcReg = R0.scratchReg();
-  masm.branch32(Assembler::Equal, argcReg, Imm32(2), &twoArg);
-  masm.assumeUnreachable("Expected argc == 2");
-  masm.bind(&twoArg);
-#endif
-  Register scratchReg = regs.takeAny();
-
-  // Guard that callee is native function js::intrinsic_StringSplitString.
-  {
-    Address calleeAddr(masm.getStackPointer(),
-                       ICStackValueOffset + CALLEE_DEPTH);
-    ValueOperand calleeVal = regs.takeAnyValue();
-
-    // Ensure that callee is an object.
-    masm.loadValue(calleeAddr, calleeVal);
-    masm.branchTestObject(Assembler::NotEqual, calleeVal, &failureRestoreArgc);
-
-    // Ensure that callee is a function.
-    Register calleeObj = masm.extractObject(calleeVal, ExtractTemp0);
-    masm.branchTestObjClass(Assembler::NotEqual, calleeObj, &JSFunction::class_,
-                            scratchReg, calleeObj, &failureRestoreArgc);
-
-    // Ensure that callee's function impl is the native
-    // intrinsic_StringSplitString.
-    masm.loadPtr(Address(calleeObj, JSFunction::offsetOfNativeOrEnv()),
-                 scratchReg);
-    masm.branchPtr(Assembler::NotEqual, scratchReg,
-                   ImmPtr(js::intrinsic_StringSplitString),
-                   &failureRestoreArgc);
-
-    regs.add(calleeVal);
-  }
-
-  // Guard sep.
-  {
-    // Ensure that sep is a string.
-    Address sepAddr(masm.getStackPointer(), ICStackValueOffset + SEP_DEPTH);
-    ValueOperand sepVal = regs.takeAnyValue();
-
-    masm.loadValue(sepAddr, sepVal);
-    masm.branchTestString(Assembler::NotEqual, sepVal, &failureRestoreArgc);
-
-    Register sep = sepVal.scratchReg();
-    masm.unboxString(sepVal, sep);
-    masm.branchPtr(Assembler::NotEqual,
-                   Address(ICStubReg, offsetOfExpectedSep()), sep,
-                   &failureRestoreArgc);
-    regs.add(sepVal);
-  }
-
-  // Guard str.
-  {
-    // Ensure that str is a string.
-    Address strAddr(masm.getStackPointer(), ICStackValueOffset + STR_DEPTH);
-    ValueOperand strVal = regs.takeAnyValue();
-
-    masm.loadValue(strAddr, strVal);
-    masm.branchTestString(Assembler::NotEqual, strVal, &failureRestoreArgc);
-
-    Register str = strVal.scratchReg();
-    masm.unboxString(strVal, str);
-    masm.branchPtr(Assembler::NotEqual,
-                   Address(ICStubReg, offsetOfExpectedStr()), str,
-                   &failureRestoreArgc);
-    regs.add(strVal);
-  }
-
-  // Main stub body.
-  {
-    Register paramReg = regs.takeAny();
-
-    // Push arguments.
-    enterStubFrame(masm, scratchReg);
-    masm.loadPtr(Address(ICStubReg, offsetOfTemplateObject()), paramReg);
-    masm.push(paramReg);
-
-    using Fn = bool (*)(JSContext*, HandleArrayObject, MutableHandleValue);
-    if (!callVM<Fn, CopyStringSplitArray>(masm)) {
-      return false;
-    }
-    leaveStubFrame(masm);
-    regs.add(paramReg);
-  }
-
-  // Enter type monitor IC to type-check result.
-  EmitEnterTypeMonitorIC(masm);
-
-  // Guard failure path.
-  masm.bind(&failureRestoreArgc);
-  masm.move32(Imm32(2), R0.scratchReg());
   EmitStubGuardFailure(masm);
   return true;
 }

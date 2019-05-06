@@ -129,7 +129,6 @@ namespace jit {
   _(BooleanToString)                      \
   _(CallIsSuspendedGeneratorResult)       \
   _(MetaTwoByte)                          \
-  _(MetaThreeByte)                        \
   _(WrapResult)
 
 // [SMDDOC] CacheIR Value Representation and Tracking

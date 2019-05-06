@@ -1317,11 +1317,6 @@ bool IonCacheIRCompiler::emitLoadStringResult() {
   MOZ_CRASH("not used in ion");
 }
 
-bool IonCacheIRCompiler::emitCallConstStringSplitResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  MOZ_CRASH("not used in ion");
-}
-
 bool IonCacheIRCompiler::emitCompareStringResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoSaveLiveRegisters save(*this);

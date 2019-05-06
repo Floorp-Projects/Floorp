@@ -4385,13 +4385,3 @@ bool CacheIRCompiler::emitMetaTwoByte() {
 
   return true;
 }
-
-// This op generates no code. It is consumed by BaselineInspector.
-bool CacheIRCompiler::emitMetaThreeByte() {
-  mozilla::Unused << reader.readByte();  // meta kind
-  mozilla::Unused << reader.readByte();  // payload byte 1
-  mozilla::Unused << reader.readByte();  // payload byte 2
-  mozilla::Unused << reader.readByte();  // payload byte 3
-
-  return true;
-}
