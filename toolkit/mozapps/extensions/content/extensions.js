@@ -42,8 +42,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "SUPPORT_URL", "app.support.baseURL"
                                       "", null, val => Services.urlFormatter.formatURL(val));
 XPCOMUtils.defineLazyPreferenceGetter(this, "useHtmlViews",
                                       "extensions.htmlaboutaddons.enabled");
-XPCOMUtils.defineLazyPreferenceGetter(this, "useHtmlDiscover",
-                                      "extensions.htmlaboutaddons.discover.enabled");
 
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";
@@ -735,6 +733,7 @@ var gViewController = {
     this.headeredViewsDeck = document.getElementById("headered-views-content");
     this.backButton = document.getElementById("go-back");
 
+    this.viewObjects.discover = gDiscoverView;
     this.viewObjects.legacy = gLegacyView;
     this.viewObjects.shortcuts = gShortcutsView;
 
@@ -749,12 +748,6 @@ var gViewController = {
       this.viewObjects.list = gListView;
       this.viewObjects.detail = gDetailView;
       this.viewObjects.updates = gUpdatesView;
-    }
-
-    if (useHtmlDiscover) {
-      this.viewObjects.discover = htmlView("discover");
-    } else {
-      this.viewObjects.discover = gDiscoverView;
     }
 
     for (let type in this.viewObjects) {
@@ -924,10 +917,6 @@ var gViewController = {
     } catch (e) {
       // Some views don't have a label, like the updates view.
       headingLabel = "";
-      if (view.type == "discover") {
-        headingLabel = gStrings.ext.formatStringFromName(
-          "listHeading.discover", [gStrings.brandShortName], 1);
-      }
     }
     headingName.textContent = headingLabel;
     setSearchLabel(view.param);
