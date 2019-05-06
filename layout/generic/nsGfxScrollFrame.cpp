@@ -3931,10 +3931,6 @@ bool ScrollFrameHelper::DecideScrollableLayer(
   // date if we just introduced a new animated geometry root.
   if (oldWillBuildScrollableLayer != mWillBuildScrollableLayer) {
     aBuilder->RecomputeCurrentAnimatedGeometryRoot();
-    MOZ_DIAGNOSTIC_ASSERT(!aBuilder->IsPartialUpdate() ||
-                              aBuilder->InInvalidSubtree() ||
-                              mOuter->IsFrameModified(),
-                          "Displayport changed without an invalidation");
   }
 
   mIsScrollableLayerInRootContainer =
