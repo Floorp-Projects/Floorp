@@ -130,52 +130,7 @@ function workerHandler(publicInterface: Object) {
   };
 }
 
-function streamingWorkerHandler(
-  publicInterface: Object,
-  { timeout = 100 }: Object = {},
-  worker: Object = self
-) {
-  async function streamingWorker(id, tasks) {
-    let isWorking = true;
-
-    const timeoutId = setTimeout(() => {
-      isWorking = false;
-    }, timeout);
-
-    const results = [];
-    while (tasks.length !== 0 && isWorking) {
-      const { callback, context, args } = tasks.shift();
-      const result = await callback.call(context, args);
-      results.push(result);
-    }
-    worker.postMessage({ id, status: "pending", data: results });
-    clearTimeout(timeoutId);
-
-    if (tasks.length !== 0) {
-      await streamingWorker(id, tasks);
-    }
-  }
-
-  return async function(msg: Message) {
-    const { id, method, args } = msg.data;
-    const workerMethod = publicInterface[method];
-    if (!workerMethod) {
-      console.error(`Could not find ${method} defined in worker.`);
-    }
-    worker.postMessage({ id, status: "start" });
-
-    try {
-      const tasks = workerMethod(args);
-      await streamingWorker(id, tasks);
-      worker.postMessage({ id, status: "done" });
-    } catch (error) {
-      worker.postMessage({ id, status: "error", error });
-    }
-  };
-}
-
 module.exports = {
   WorkerDispatcher,
-  workerHandler,
-  streamingWorkerHandler
+  workerHandler
 };
