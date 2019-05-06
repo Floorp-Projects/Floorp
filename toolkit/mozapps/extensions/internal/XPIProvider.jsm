@@ -106,7 +106,7 @@ const XPI_PERMISSION                  = "install";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-const DB_SCHEMA = 30;
+const DB_SCHEMA = 31;
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "enabledScopesPref",
                                       PREF_EM_ENABLED_SCOPES,
