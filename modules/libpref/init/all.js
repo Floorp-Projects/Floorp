@@ -1479,10 +1479,12 @@ pref("javascript.options.mem.high_water_mark", 128);
 // cannot be represented directly in order to show it in about:config.
 pref("javascript.options.mem.max", -1);
 
-// JSGC_MAX_NURSERY_BYTES
+// JSGC_MIN_NURSERY_BYTES / JSGC_MAX_NURSERY_BYTES
 #if defined(ANDROID) || defined(XP_IOS)
+pref("javascript.options.mem.nursery.min_kb", 192);
 pref("javascript.options.mem.nursery.max_kb", 4096);
 #else
+pref("javascript.options.mem.nursery.min_kb", 192);
 pref("javascript.options.mem.nursery.max_kb", 16384);
 #endif
 

@@ -2355,8 +2355,8 @@ static void SetMemoryPrefChangedCallbackMB(const char* aPrefName,
   }
 }
 
-static void SetMemoryNurseryMaxPrefChangedCallback(const char* aPrefName,
-                                                   void* aClosure) {
+static void SetMemoryNurseryPrefChangedCallback(const char* aPrefName,
+                                                void* aClosure) {
   int32_t prefKB = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   CheckedInt<int32_t> prefB = CheckedInt<int32_t>(prefKB) * 1024;
@@ -2511,7 +2511,10 @@ void nsJSContext::EnsureStatics() {
   Preferences::RegisterCallbackAndCall(SetMemoryPrefChangedCallbackMB,
                                        "javascript.options.mem.max",
                                        (void*)JSGC_MAX_BYTES);
-  Preferences::RegisterCallbackAndCall(SetMemoryNurseryMaxPrefChangedCallback,
+  Preferences::RegisterCallbackAndCall(SetMemoryNurseryPrefChangedCallback,
+                                       "javascript.options.mem.nursery.min_kb",
+                                       (void*)JSGC_MIN_NURSERY_BYTES);
+  Preferences::RegisterCallbackAndCall(SetMemoryNurseryPrefChangedCallback,
                                        "javascript.options.mem.nursery.max_kb",
                                        (void*)JSGC_MAX_NURSERY_BYTES);
 
