@@ -156,6 +156,7 @@ class nsIWidgetListener {
    * this widget or of other widgets.
    * Must be called after every call to PaintWindow.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void DidPaintWindow();
 
   virtual void DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
