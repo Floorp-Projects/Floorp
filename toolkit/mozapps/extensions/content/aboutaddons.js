@@ -771,10 +771,17 @@ class AddonCard extends HTMLElement {
         case "remove":
           {
             this.panel.hide();
-            let response = windowRoot.ownerGlobal.promptRemoveExtension(addon);
-            if (response == 0) {
+            let {
+              remove, report,
+            } = windowRoot.ownerGlobal.promptRemoveExtension(addon);
+            if (remove) {
               await addon.uninstall(true);
               this.sendEvent("remove");
+              if (report) {
+                openAbuseReport({
+                  addonId: addon.id, reportEntryPoint: "uninstall",
+                });
+              }
             } else {
               this.sendEvent("remove-cancelled");
             }
