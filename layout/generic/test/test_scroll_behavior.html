@@ -19,6 +19,7 @@
   </style>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
@@ -31,14 +32,6 @@
   window.addEventListener("load", function(event) {
     if (event.target != document)
       return;
-
-    // See bug 1062609 - these tests do not work with APZ yet. If APZ is
-    // enabled, end the tests early.
-    if (SpecialPowers.getBoolPref("layers.async-pan-zoom.enabled")) {
-      todo(false, "This test does not yet work with APZ.");
-      SimpleTest.finish();
-      return;
-    }
 
     SpecialPowers.pushPrefEnv(
       { 'set': [['layout.css.scroll-behavior.enabled', true]] },
@@ -57,7 +50,7 @@
   function testScrollBehaviorInterruption(nextTest) {
     // Take control of refresh driver
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
-    waitForAllPaintsFlushed(function() {
+    waitForApzFlushedRepaints(function() {
 
       window.scrollTo(10, 9);
       ok(window.scrollX == 10 && window.scrollY == 9,
@@ -72,7 +65,7 @@
         "smooth scroll-behavior must be asynchronous");
 
       SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(100);
-      waitForAllPaintsFlushed(function() {
+      waitForApzFlushedRepaints(function() {
         ok(window.scrollX != 15 && window.scrollY != 16
            && window.scrollX != 100 && window.scrollY != 200,
           "smooth scroll-behavior must be triggered by window.scrollTo");
@@ -82,13 +75,13 @@
           "instant scroll-behavior must interrupt smooth scroll-behavior animation");
 
         SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(100);
-        waitForAllPaintsFlushed(function() {
+        waitForApzFlushedRepaints(function() {
           ok(window.scrollX == 50 && window.scrollY == 52,
             "smooth scroll-behavior animation must stop after being interrupted");
 
           // Release control of refresh driver
           SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
-          waitForAllPaintsFlushed(nextTest);
+          waitForApzFlushedRepaints(nextTest);
         });
       });
     });
@@ -214,7 +207,7 @@
               testFrameRate();
             });
           } else {
-            waitForAllPaintsFlushed(testDeltas);
+            waitForApzFlushedRepaints(testDeltas);
           }
         }
 
@@ -244,7 +237,7 @@
     // Take control of refresh driver so we can synthesize
     // various frame rates
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
-    waitForAllPaintsFlushed(function() {
+    waitForApzFlushedRepaints(function() {
 
       window.scrollTo(startX, startY);
       window.scrollTo({left: endX, top: endY, behavior: 'smooth'});
@@ -258,7 +251,7 @@
 
           currentTime += timeStep;
           SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(timeStep);
-          waitForAllPaintsFlushed(function() {
+          waitForApzFlushedRepaints(function() {
             if (window.scrollX == endX && window.scrollY == endY) {
               frameCountAtDestination++;
             } else {
@@ -279,7 +272,7 @@
           // Release control of refresh driver
           SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
-          waitForAllPaintsFlushed(function() {
+          waitForApzFlushedRepaints(function() {
 
             // We must not include the duplicated frames at the animation
             // destination as the tests are dependant on the total duration of
