@@ -1,5 +1,11 @@
 /* eslint max-len: ["error", 80] */
 
+const {
+  AddonTestUtils,
+} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+
+AddonTestUtils.initMochitest(this);
+
 let promptService;
 
 const SECTION_INDEXES = {
@@ -121,10 +127,89 @@ add_task(async function testExtensionList() {
   await removed;
 
   addon = await AddonManager.getAddonByID("test@mochi.test");
-  ok(!addon, "The addon is not longer found");
+  ok(addon && !!(addon.pendingOperations & AddonManager.PENDING_UNINSTALL),
+     "The addon is pending uninstall");
 
+  // Ensure that a pending uninstall bar has been created for the
+  // pending uninstall extension, and pressing the undo button will
+  // refresh the list and render a card to the re-enabled extension.
+  assertHasPendingUninstalls(list, 1);
+  assertHasPendingUninstallAddon(list, addon);
+
+  // Add a second pending uninstall extension.
+  info("Install a second test extension and wait for addon card rendered");
+  let added = BrowserTestUtils.waitForEvent(list, "add");
+  const extension2 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "Test extension 2",
+      applications: {gecko: {id: "test-2@mochi.test"}},
+      icons: {
+        32: "test-icon.png",
+      },
+    },
+    useAddonManager: "temporary",
+  });
+  await extension2.startup();
+
+  await added;
+  ok(getCardByAddonId(list, extension2.id),
+     "Got a card added for the second extension");
+
+  info("Uninstall the second test extension and wait for addon card removed");
+  removed = BrowserTestUtils.waitForEvent(list, "remove");
+  const addon2 = await AddonManager.getAddonByID(extension2.id);
+  addon2.uninstall(true);
+  await removed;
+
+  ok(!getCardByAddonId(list, extension2.id),
+     "Addon card for the second extension removed");
+
+  assertHasPendingUninstalls(list, 2);
+  assertHasPendingUninstallAddon(list, addon2);
+
+  // Addon2 was enabled before entering the pending uninstall state,
+  // wait for its startup after pressing undo.
+  let addon2Started = AddonTestUtils.promiseWebExtensionStartup(addon2.id);
+  await testUndoPendingUninstall(list, addon);
+  await testUndoPendingUninstall(list, addon2);
+  info("Wait for the second pending uninstal add-ons startup");
+  await addon2Started;
+
+  await extension2.unload();
   await extension.unload();
+
+  // Install a third addon to verify that is being fully removed once the
+  // about:addons page is closed.
+  const xpi = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      name: "Test extension 3",
+      applications: {gecko: {id: "test-3@mochi.test"}},
+      icons: {
+        32: "test-icon.png",
+      },
+    },
+  });
+
+  added = BrowserTestUtils.waitForEvent(list, "add");
+  const addon3 = await AddonManager.installTemporaryAddon(xpi);
+  await added;
+  ok(getCardByAddonId(list, addon3.id),
+     "Addon card for the third extension added");
+
+  removed = BrowserTestUtils.waitForEvent(list, "remove");
+  addon3.uninstall(true);
+  await removed;
+  ok(!getCardByAddonId(list, addon3.id),
+     "Addon card for the third extension removed");
+
+  assertHasPendingUninstalls(list, 1);
+  ok(addon3 && !!(addon3.pendingOperations & AddonManager.PENDING_UNINSTALL),
+     "The third addon is pending uninstall");
+
   await closeView(win);
+
+  ok(!await AddonManager.getAddonByID(addon3.id),
+     "The third addon has been fully uninstalled");
 });
 
 add_task(async function testMouseSupport() {
