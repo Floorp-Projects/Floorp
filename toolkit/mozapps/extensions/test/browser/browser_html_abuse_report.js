@@ -814,3 +814,53 @@ add_task(async function test_abuse_report_message_bars() {
   await extension.unload();
   await extension2.unload();
 });
+
+add_task(async function test_trigger_abusereport_from_aboutaddons_menu() {
+  const EXT_ID = "test-report-from-aboutaddons-menu@mochi.test";
+  const extension = await installTestExtension(EXT_ID);
+
+  await openAboutAddons();
+  await gManagerWindow.htmlBrowserLoaded;
+
+  const abuseReportFrameEl = getAbuseReportFrame();
+  ok(abuseReportFrameEl.hidden,
+     "Abuse Report frame should be initially hidden");
+
+  const {contentDocument: doc} = gManagerWindow.getHtmlBrowser();
+
+  const addonCard = doc.querySelector(
+    `addon-list addon-card[addon-id="${extension.id}"]`);
+  ok(addonCard, "Got the addon-card for the test extension");
+
+  const reportButton = addonCard.querySelector("[action=report]");
+  ok(reportButton, "Got the report action for the test extension");
+
+  const onceReportNew = BrowserTestUtils.waitForEvent(
+    abuseReportFrameEl, "abuse-report:new");
+  const onceReportFrameShown = BrowserTestUtils.waitForEvent(
+    abuseReportFrameEl, "abuse-report:frame-shown");
+
+  info("Click the report action and wait for the 'abuse-report:new' event");
+  reportButton.click();
+  const newReportEvent = await onceReportNew;
+
+  Assert.deepEqual(newReportEvent.detail, {
+    addonId: extension.id,
+    reportEntryPoint: "menu",
+  }, "Got the expected details in the 'abuse-report:new' event");
+
+  info("Wait for the abuse report frame to be visible");
+  await onceReportFrameShown;
+  ok(!abuseReportFrameEl.hidden,
+    "Abuse Report frame should be visible");
+
+  info("Wait for the abuse report panel to be rendered");
+  const abuseReportEl = await abuseReportFrameEl.promiseAbuseReport;
+  await promiseAbuseReportRendered(abuseReportEl);
+
+  is(abuseReportEl.addon && abuseReportEl.addon.id, extension.id,
+     "Abuse Report panel rendered for the expected addonId");
+
+  await closeAboutAddons();
+  await extension.unload();
+});

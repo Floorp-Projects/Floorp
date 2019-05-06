@@ -4,6 +4,7 @@
 /* eslint max-len: ["error", 80] */
 /* exported initialize, hide, show */
 /* import-globals-from aboutaddonsCommon.js */
+/* import-globals-from abuse-reports.js */
 /* global windowRoot */
 
 "use strict";
@@ -21,6 +22,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "", null, val => Services.urlFormatter.formatURL(val));
 
 const UPDATES_RECENT_TIMESPAN = 2 * 24 * 3600000; // 2 days (in milliseconds)
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "ABUSE_REPORT_ENABLED",
+                                      "extensions.abuseReport.enabled", false);
 
 const PLUGIN_ICON_URL = "chrome://global/skin/plugins/pluginGeneric.svg";
 const PERMISSION_MASKS = {
@@ -362,6 +366,34 @@ class AddonOptions extends HTMLElement {
     }
   }
 
+  get panel() {
+    return this.querySelector("panel-list");
+  }
+
+  updateSeparatorsVisibility() {
+    let lastSeparator;
+    let elWasVisible = false;
+
+    // Collect the panel-list children that are not already hidden.
+    const children = Array.from(this.panel.children)
+                          .filter(el => !el.hidden);
+
+    for (let child of children) {
+      if (child.tagName == "PANEL-ITEM-SEPARATOR") {
+        child.hidden = !elWasVisible;
+        if (!child.hidden) {
+          lastSeparator = child;
+        }
+        elWasVisible = false;
+      } else {
+        elWasVisible = true;
+      }
+    }
+    if (!elWasVisible && lastSeparator) {
+      lastSeparator.hidden = true;
+    }
+  }
+
   render() {
     this.appendChild(importTemplate("addon-options"));
   }
@@ -370,6 +402,9 @@ class AddonOptions extends HTMLElement {
     // Hide remove button if not allowed.
     let removeButton = this.querySelector('[action="remove"]');
     removeButton.hidden = !hasPermission(addon, "uninstall");
+
+    // Hide the report button if reporting is preffed off.
+    this.querySelector('[action="report"]').hidden = !ABUSE_REPORT_ENABLED;
 
     // Set disable label and hide if not allowed.
     let toggleDisabledButton = this.querySelector('[action="toggle-disabled"]');
@@ -381,14 +416,12 @@ class AddonOptions extends HTMLElement {
     // Set the update button and badge the menu if there's an update.
     this.querySelector('[action="install-update"]').hidden = !updateInstall;
 
-    // The separator isn't needed when expanded (nothing under it) or when the
-    // remove and disable buttons are hidden (nothing above it).
-    let separator = this.querySelector("panel-item-separator");
-    separator.hidden = card.expanded ||
-      removeButton.hidden && toggleDisabledButton.hidden;
-
     // Hide the expand button if we're expanded.
     this.querySelector('[action="expand"]').hidden = card.expanded;
+
+    // Update the separators visibility based on the updated visibility
+    // of the actions in the panel-list.
+    this.updateSeparatorsVisibility();
   }
 }
 customElements.define("addon-options", AddonOptions);
@@ -750,6 +783,10 @@ class AddonCard extends HTMLElement {
           if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
             this.panel.toggle(e);
           }
+          break;
+        case "report":
+          this.panel.hide();
+          openAbuseReport({addonId: addon.id, reportEntryPoint: "menu"});
           break;
       }
     } else if (e.type == "change") {
