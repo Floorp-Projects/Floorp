@@ -199,6 +199,7 @@ HttpBaseChannel::HttpBaseChannel()
       mAllowAltSvc(true),
       mBeConservative(false),
       mIsTRRServiceChannel(false),
+      mResolvedByTRR(false),
       mResponseTimeoutEnabled(true),
       mAllRedirectsSameOrigin(true),
       mAllRedirectsPassTimingAllowCheck(true),
@@ -2410,6 +2411,13 @@ HttpBaseChannel::GetIsTRRServiceChannel(bool* aIsTRRServiceChannel) {
 NS_IMETHODIMP
 HttpBaseChannel::SetIsTRRServiceChannel(bool aIsTRRServiceChannel) {
   mIsTRRServiceChannel = aIsTRRServiceChannel;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetIsResolvedByTRR(bool* aResolvedByTRR) {
+  NS_ENSURE_ARG_POINTER(aResolvedByTRR);
+  *aResolvedByTRR = mResolvedByTRR;
   return NS_OK;
 }
 
