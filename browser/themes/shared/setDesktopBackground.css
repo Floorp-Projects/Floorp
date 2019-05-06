@@ -14,3 +14,10 @@ html|canvas#screen {
 #monitor-base {
   list-style-image: url("chrome://browser/skin/monitor-base.png");
 }
+
+html|p#preview-unavailable {
+  margin: 12px 11px;
+  text-align: center;
+  color: #9B2423;
+  font-weight: bold;
+}
