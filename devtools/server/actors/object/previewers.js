@@ -288,15 +288,13 @@ const previewers = {
   }],
 
   Proxy: [function({obj, hooks}, grip, rawObj) {
-    // Only preview top-level proxies, avoiding recursion. Otherwise, since both the
-    // target and handler can also be proxies, we could get an exponential behavior.
-    if (hooks.getGripDepth() > 1) {
-      return true;
-    }
-
     // The `isProxy` getter of the debuggee object only detects proxies without
     // security wrappers. If false, the target and handler are not available.
     const hasTargetAndHandler = obj.isProxy;
+    if (hasTargetAndHandler) {
+      grip.proxyTarget = hooks.createValueGrip(obj.proxyTarget);
+      grip.proxyHandler = hooks.createValueGrip(obj.proxyHandler);
+    }
 
     grip.preview = {
       kind: "Object",
@@ -304,11 +302,13 @@ const previewers = {
       ownPropertiesLength: 2 * hasTargetAndHandler,
     };
 
+    if (hooks.getGripDepth() > 1) {
+      return true;
+    }
+
     if (hasTargetAndHandler) {
-      Object.assign(grip.preview.ownProperties, {
-        "<target>": {value: hooks.createValueGrip(obj.proxyTarget)},
-        "<handler>": {value: hooks.createValueGrip(obj.proxyHandler)},
-      });
+      grip.preview.ownProperties["<target>"] = {value: grip.proxyTarget};
+      grip.preview.ownProperties["<handler>"] = {value: grip.proxyHandler};
     }
 
     return true;

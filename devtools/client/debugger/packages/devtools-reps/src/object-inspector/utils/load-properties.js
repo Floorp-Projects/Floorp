@@ -8,8 +8,7 @@ const {
   enumNonIndexedProperties,
   getPrototype,
   enumSymbols,
-  getFullText,
-  getProxySlots
+  getFullText
 } = require("./client");
 
 const {
@@ -78,10 +77,6 @@ function loadItemProperties(
     promises.push(getFullText(createLongStringClient(value), item));
   }
 
-  if (shouldLoadItemProxySlots(item, loadedProperties)) {
-    promises.push(getProxySlots(getObjectClient()));
-  }
-
   return Promise.all(promises).then(mergeResponses);
 }
 
@@ -103,11 +98,6 @@ function mergeResponses(responses: Array<Object>): Object {
 
     if (response.fullText) {
       data.fullText = response.fullText;
-    }
-
-    if (response.proxyTarget && response.proxyHandler) {
-      data.proxyTarget = response.proxyTarget;
-      data.proxyHandler = response.proxyHandler;
     }
   }
 
@@ -214,13 +204,6 @@ function shouldLoadItemFullText(
   return !loadedProperties.has(item.path) && nodeIsLongString(item);
 }
 
-function shouldLoadItemProxySlots(
-  item: Node,
-  loadedProperties: LoadedProperties = new Map()
-): boolean {
-  return !loadedProperties.has(item.path) && nodeIsProxy(item);
-}
-
 module.exports = {
   loadItemProperties,
   mergeResponses,
@@ -229,6 +212,5 @@ module.exports = {
   shouldLoadItemNonIndexedProperties,
   shouldLoadItemPrototype,
   shouldLoadItemSymbols,
-  shouldLoadItemFullText,
-  shouldLoadItemProxySlots
+  shouldLoadItemFullText
 };
