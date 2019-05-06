@@ -3901,6 +3901,32 @@ AMTelemetry = {
     });
   },
 
+  /**
+   * Record an event on abuse report submissions.
+   *
+   * @params {object} opts
+   * @params {string} opts.addonId
+   *         The id of the addon being reported.
+   * @params {string} [opts.addonType]
+   *         The type of the addon being reported  (only present for an existing
+   *         addonId).
+   * @params {string} [opts.errorType]
+   *         The AbuseReport errorType for a submission failure.
+   * @params {string} opts.reportEntryPoint
+   *         The entry point of the abuse report.
+   */
+  recordReportEvent({addonId, addonType, errorType, reportEntryPoint}) {
+    this.recordEvent({
+      method: "report",
+      object: reportEntryPoint,
+      value: addonId,
+      extra: this.formatExtraVars({
+        addon_type: addonType,
+        error_type: errorType,
+      }),
+    });
+  },
+
   recordEvent({method, object, value, extra}) {
     if (typeof value != "string") {
       // The value must be a string or null, make sure it's valid so sending

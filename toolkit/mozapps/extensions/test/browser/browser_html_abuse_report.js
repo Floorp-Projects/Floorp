@@ -16,7 +16,7 @@ const {
 const {makeWidgetId} = ExtensionCommon;
 
 const ADDON_ID = "test-extension-to-report@mochi.test";
-const REPORT_ENTRY_POINT = "test-entrypoint";
+const REPORT_ENTRY_POINT = "menu";
 const BASE_TEST_MANIFEST = {
   name: "Fake extension to report",
   author: "Fake author",
