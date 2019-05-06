@@ -169,6 +169,13 @@ export class ConditionalPanel extends PureComponent<Props> {
           : "editor.conditionalPanel.placeholder2"
       )
     });
+
+    codeMirror.on("keydown", (cm, e) => {
+      if (e.key === "Enter") {
+        e.codemirrorIgnore = true;
+      }
+    });
+
     const codeMirrorWrapper = codeMirror.getWrapperElement();
 
     codeMirrorWrapper.addEventListener("keydown", e => {
