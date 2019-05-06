@@ -4030,14 +4030,13 @@ var XPIInstall = {
 
     Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
 
-    // TODO hide hidden add-ons (bug 557710)
-    let wrapper = aAddon.wrapper;
-    AddonManagerPrivate.callAddonListeners("onOperationCancelled", wrapper);
-
     if (!aAddon.disabled) {
       XPIInternal.BootstrapScope.get(aAddon).startup(BOOTSTRAP_REASONS.ADDON_INSTALL);
       XPIDatabase.updateAddonActive(aAddon, true);
     }
+
+    let wrapper = aAddon.wrapper;
+    AddonManagerPrivate.callAddonListeners("onOperationCancelled", wrapper);
 
     // Notify any other providers that this theme is now enabled again.
     if (aAddon.type === "theme" && aAddon.active)
