@@ -335,6 +335,7 @@ class nsSocketTransport final : public nsASocketHandler,
   nsCString mDNSRecordTxt;
   bool mEsniQueried;
   bool mEsniUsed;
+  bool mResolvedByTRR;
 
   // mNetAddr/mSelfAddr is valid from GetPeerAddr()/GetSelfAddr() once we have
   // reached STATE_TRANSFERRING. It must not change after that.
