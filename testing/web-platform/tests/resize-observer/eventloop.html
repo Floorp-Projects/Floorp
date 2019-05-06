@@ -86,7 +86,24 @@ function test0() {
       }
     }
   ]);
-  return helper.start(() => t1.remove());
+
+  return new Promise((resolve, reject) => {
+    // This test uses requestAnimationFrame() to check the count of event loop,
+    // but on some browsers, the FrameRequestCallback may be throttled (i.e.
+    // simply fired after some extra time) in cases where this test is running
+    // in an iframe that hasn't yet been painted (i.e. we're not visible).
+    // This may result in some intermittent failures if this test didn't get a
+    // first paint (and hence may not have started firing FrameRequestCallbacks)
+    // by the time the test starts expecting helper.rafCount to have changed.
+    //
+    // Therefore, we don't start the test logic until body.onload has fired.
+    // This increases the likelihood that this testcase will have gotten a
+    // chance to paint when we start invoking requestAnimationFrame, and that
+    // its rAF callbacks will fire when the test logic expects them to.
+    document.body.onload = () => resolve();
+  }).then(() => {
+    return helper.start(() => t1.remove());
+  });
 }
 
 function test1() {
