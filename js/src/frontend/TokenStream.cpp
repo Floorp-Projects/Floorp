@@ -166,6 +166,13 @@ static uint32_t GetSingleCodePoint(const char16_t** p, const char16_t* end) {
 }
 
 template <typename CharT>
+static constexpr bool IsAsciiBinary(CharT c) {
+  using UnsignedCharT = std::make_unsigned_t<CharT>;
+  auto uc = static_cast<UnsignedCharT>(c);
+  return uc == '0' || uc == '1';
+}
+
+template <typename CharT>
 static constexpr bool IsAsciiOctal(CharT c) {
   using UnsignedCharT = std::make_unsigned_t<CharT>;
   auto uc = static_cast<UnsignedCharT>(c);
@@ -2165,6 +2172,34 @@ void SourceUnits<Utf8Unit>::consumeRestOfSingleLineComment() {
 }
 
 template <typename Unit, class AnyCharsAccess>
+MOZ_MUST_USE MOZ_ALWAYS_INLINE bool
+TokenStreamSpecific<Unit, AnyCharsAccess>::matchInteger(
+    IsIntegerUnit isIntegerUnit, int32_t* nextUnit) {
+  int32_t unit;
+  while (true) {
+    unit = getCodeUnit();
+    if (isIntegerUnit(unit)) {
+      continue;
+    }
+#ifdef NIGHTLY_BUILD
+    if (unit != '_') {
+      break;
+    }
+    unit = getCodeUnit();
+    if (!isIntegerUnit(unit)) {
+      error(JSMSG_MISSING_DIGIT_AFTER_SEPARATOR);
+      return false;
+    }
+#else
+    break;
+#endif /* NIGHTLY_BUILD */
+  }
+
+  *nextUnit = unit;
+  return true;
+}
+
+template <typename Unit, class AnyCharsAccess>
 MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
     int32_t unit, TokenStart start, const Unit* numStart, Modifier modifier,
     TokenKind* out) {
@@ -2173,8 +2208,10 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
   auto noteBadToken = MakeScopeExit([this]() { this->badToken(); });
 
   // Consume integral component digits.
-  while (IsAsciiDigit(unit)) {
-    unit = getCodeUnit();
+  if (IsAsciiDigit(unit)) {
+    if (!matchInteger(IsAsciiDigit, &unit)) {
+      return false;
+    }
   }
 
   // Numbers contain no escapes, so we can read directly from |sourceUnits|.
@@ -2198,9 +2235,9 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
     // Consume any decimal dot and fractional component.
     if (unit == '.') {
       decimalPoint = HasDecimal;
-      do {
-        unit = getCodeUnit();
-      } while (IsAsciiDigit(unit));
+      if (!matchInteger(IsAsciiDigit, &unit)) {
+        return false;
+      }
     }
 
     // Consume any exponential notation.
@@ -2218,9 +2255,9 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
       }
 
       // Consume exponential digits.
-      do {
-        unit = getCodeUnit();
-      } while (IsAsciiDigit(unit));
+      if (!matchInteger(IsAsciiDigit, &unit)) {
+        return false;
+      }
     }
 
     ungetCodeUnit(unit);
@@ -2228,8 +2265,9 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
     // "0." and "0e..." numbers parse "." or "e..." here.  Neither range
     // contains a number, so we can't use |FullStringToDouble|.  (Parse
     // failures return 0.0, so we'll still get the right result.)
-    if (!StringToDouble(anyCharsAccess().cx, numStart,
-                        this->sourceUnits.addressOfNextCodeUnit(), &dval)) {
+    if (!GetDecimalNonInteger(anyCharsAccess().cx, numStart,
+                              this->sourceUnits.addressOfNextCodeUnit(),
+                              &dval)) {
       return false;
     }
   }
@@ -2406,6 +2444,12 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::bigIntLiteral(
     // binary, octal, decimal, or hex digits.  Already checked by caller, as
     // the "n" indicating bigint comes at the end.
     MOZ_ASSERT(isAsciiCodePoint(unit));
+#ifdef NIGHTLY_BUILD
+    // Skip over any separators.
+    if (unit == '_') {
+      continue;
+    }
+#endif
     if (!this->appendCodePointToCharBuffer(unit)) {
       return false;
     }
@@ -2617,13 +2661,13 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0x'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        while (IsAsciiHexDigit(unit)) {
-          unit = getCodeUnit();
+        if (!matchInteger(IsAsciiHexDigit, &unit)) {
+          return badToken();
         }
       } else if (unit == 'b' || unit == 'B') {
         radix = 2;
         unit = getCodeUnit();
-        if (unit != '0' && unit != '1') {
+        if (!IsAsciiBinary(unit)) {
           // NOTE: |unit| may be EOF here.
           ungetCodeUnit(unit);
           error(JSMSG_MISSING_BINARY_DIGITS);
@@ -2633,8 +2677,8 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0b'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        while (unit == '0' || unit == '1') {
-          unit = getCodeUnit();
+        if (!matchInteger(IsAsciiBinary, &unit)) {
+          return badToken();
         }
       } else if (unit == 'o' || unit == 'O') {
         radix = 8;
@@ -2649,39 +2693,47 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0o'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        while (IsAsciiOctal(unit)) {
-          unit = getCodeUnit();
+        if (!matchInteger(IsAsciiOctal, &unit)) {
+          return badToken();
         }
       } else if (IsAsciiDigit(unit)) {
+        // Octal integer literals are not permitted in strict mode code.
+        if (!strictModeError(JSMSG_DEPRECATED_OCTAL)) {
+          return badToken();
+        }
+
         radix = 8;
         isLegacyOctalOrNoctal = true;
         // one past the '0'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
+        bool nonOctalDecimalIntegerLiteral = false;
         do {
-          // Octal integer literals are not permitted in strict mode
-          // code.
-          if (!strictModeError(JSMSG_DEPRECATED_OCTAL)) {
-            return badToken();
-          }
-
-          // Outside strict mode, we permit 08 and 09 as decimal
-          // numbers, which makes our behaviour a superset of the
-          // ECMA numeric grammar. We might not always be so
-          // permissive, so we warn about it.
           if (unit >= '8') {
-            if (!warning(JSMSG_BAD_OCTAL, unit == '8' ? "08" : "09")) {
-              return badToken();
-            }
-
-            // Use the decimal scanner for the rest of the number.
-            return decimalNumber(unit, start, numStart, modifier, ttp);
+            nonOctalDecimalIntegerLiteral = true;
           }
-
           unit = getCodeUnit();
         } while (IsAsciiDigit(unit));
+
+#ifdef NIGHTLY_BUILD
+        if (unit == '_') {
+          error(JSMSG_SEPARATOR_IN_ZERO_PREFIXED_NUMBER);
+          return badToken();
+        }
+#endif /* NIGHTLY_BUILD */
+
+        if (nonOctalDecimalIntegerLiteral) {
+          // Use the decimal scanner for the rest of the number.
+          return decimalNumber(unit, start, numStart, modifier, ttp);
+        }
+#ifdef NIGHTLY_BUILD
+      } else if (unit == '_') {
+        // Give a more explicit error message when '_' is used after '0'.
+        error(JSMSG_SEPARATOR_IN_ZERO_PREFIXED_NUMBER);
+        return badToken();
+#endif /* NIGHTLY_BUILD */
       } else {
-        // '0' not followed by [XxBbOo0-9];  scan as a decimal number.
+        // '0' not followed by [XxBbOo0-9_];  scan as a decimal number.
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
         // NOTE: |unit| may be EOF here.  (This is permitted by case #3
@@ -2726,7 +2778,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
       double dval;
       if (!GetFullInteger(anyCharsAccess().cx, numStart,
                           this->sourceUnits.addressOfNextCodeUnit(), radix,
-                          &dval)) {
+                          IntegerSeparatorHandling::SkipUnderscore, &dval)) {
         return badToken();
       }
       newNumberToken(dval, NoDecimal, start, modifier, ttp);

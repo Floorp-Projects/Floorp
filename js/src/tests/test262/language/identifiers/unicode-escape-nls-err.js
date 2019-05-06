@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- numeric-separator-literal is not supported
+// |reftest| skip-if(release_or_beta) error:SyntaxError -- numeric-separator-literal is not released yet
 // Copyright (C) 2014 Valerie Young. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

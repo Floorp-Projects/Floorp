@@ -333,6 +333,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   NS_DECL_NSIDOMEVENTLISTENER
 
   // nsIRollupListener
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool Rollup(uint32_t aCount, bool aFlush, const nsIntPoint* pos,
                       nsIContent** aLastRolledUp) override;
   virtual bool ShouldRollupOnMouseWheelEvent() override;

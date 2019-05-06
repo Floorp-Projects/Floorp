@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const {
-  WorkerDispatcher,
-  workerHandler,
-  streamingWorkerHandler
-} = require("../worker-utils");
+const { WorkerDispatcher, workerHandler } = require("../worker-utils");
 
 describe("worker utils", () => {
   it("starts a worker", () => {
@@ -146,58 +142,5 @@ describe("worker utils", () => {
     const listener = addEventListenerMock.mock.calls[0][1];
     dispatcher.stop();
     listener({ data: { id: 1 } });
-  });
-});
-
-it("streams a task", async () => {
-  jest.useRealTimers();
-
-  const postMessageMock = jest.fn();
-
-  const worker = {
-    postMessage: postMessageMock
-  };
-
-  function makeTasks() {
-    return [
-      {
-        callback: () => new Promise(resolve => setTimeout(() => resolve(1), 50))
-      },
-      {
-        callback: () => new Promise(resolve => setTimeout(() => resolve(2), 50))
-      }
-    ];
-  }
-
-  const _workerHandler = streamingWorkerHandler(
-    { makeTasks },
-    { timeout: 25 },
-    worker
-  );
-
-  const id = 1;
-  const task = _workerHandler({
-    data: { id, method: "makeTasks", calls: [[]] }
-  });
-  await task;
-
-  expect(postMessageMock.mock.calls).toHaveLength(4);
-  expect(postMessageMock.mock.calls[0][0]).toEqual({
-    id,
-    status: "start"
-  });
-  expect(postMessageMock.mock.calls[1][0]).toEqual({
-    id,
-    status: "pending",
-    data: [1]
-  });
-  expect(postMessageMock.mock.calls[2][0]).toEqual({
-    id,
-    status: "pending",
-    data: [2]
-  });
-  expect(postMessageMock.mock.calls[3][0]).toEqual({
-    id,
-    status: "done"
   });
 });

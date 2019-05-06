@@ -389,9 +389,12 @@ class nsView final : public nsIWidgetListener {
   virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth,
                              int32_t aHeight) override;
   virtual bool RequestWindowClose(nsIWidget* aWidget) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void WillPaintWindow(nsIWidget* aWidget) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool PaintWindow(nsIWidget* aWidget,
                            LayoutDeviceIntRegion aRegion) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void DidPaintWindow() override;
   virtual void DidCompositeWindow(
       mozilla::layers::TransactionId aTransactionId,

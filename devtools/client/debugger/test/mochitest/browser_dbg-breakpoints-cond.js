@@ -56,6 +56,10 @@ async function setLogPoint(dbg, index, value) {
   await typeInPanel(dbg, value);
 }
 
+async function waitForConditionalPanelFocus(dbg) {
+  await waitFor(() => dbg.win.document.activeElement.tagName === "TEXTAREA");
+}
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
   await pushPref("devtools.debugger.features.column-breakpoints", true);
@@ -79,6 +83,29 @@ add_task(async function() {
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.condition, "12", "breakpoint is created with the condition");
   await assertEditorBreakpoint(dbg, 5, { hasCondition: true });
+
+  info("Hit 'Enter' when the cursor is in the conditional statement");
+  rightClickElement(dbg, "gutter", 5);
+  selectContextMenuItem(dbg, `${selectors.editConditionItem}`);
+  await waitForConditionalPanelFocus(dbg);
+  pressKey(dbg, "Left");
+  pressKey(dbg, "Enter");
+  await waitForCondition(dbg, 12);
+
+  bp = findBreakpoint(dbg, "simple2", 5);
+  is(bp.options.condition, "12", "Hit 'Enter' doesn't add a new line");
+
+  info("Hit 'Alt+Enter' when the cursor is in the conditional statement");
+  rightClickElement(dbg, "gutter", 5);
+  selectContextMenuItem(dbg, `${selectors.editConditionItem}`);
+  await waitForConditionalPanelFocus(dbg);
+  pressKey(dbg, "Left");
+  pressKey(dbg, "AltEnter");
+  pressKey(dbg, "Enter");
+  await waitForCondition(dbg, "1\n2");
+
+  bp = findBreakpoint(dbg, "simple2", 5);
+  is(bp.options.condition, "1\n2", "Hit 'Alt+Enter' adds a new line");
 
   clickElement(dbg, "gutter", 5);
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
