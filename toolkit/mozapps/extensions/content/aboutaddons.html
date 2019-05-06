@@ -8,9 +8,12 @@
     <link rel="localization" href="toolkit/about/aboutAddons.ftl">
 
     <script src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"></script>
+    <script src="chrome://mozapps/content/extensions/message-bar.js"></script>
     <script src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
   </head>
   <body>
+    <message-bar-stack id="abuse-reports-messages" reverse max-message-bar-count="3">
+    </message-bar-stack>
     <div id="main">
     </div>
 
