@@ -29,6 +29,7 @@
   <script src="chrome://global/content/contentAreaUtils.js"/>
   <script src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"/>
   <script src="chrome://mozapps/content/extensions/extensions.js"/>
+  <script src="chrome://mozapps/content/extensions/abuse-report-frame.js"/>
 
   <popupset>
     <!-- menu for an addon item -->
@@ -130,7 +131,9 @@
     <key id="focusSearch" data-l10n-id="search-header-shortcut"
          modifiers="accel" command="cmd_focusSearch"/>
   </keyset>
-  <hbox flex="1">
+
+  <stack id="main-page-stack" flex="1">
+  <hbox id="main-page-content" flex="1">
     <vbox id="category-box">
       <!-- category list -->
       <richlistbox id="categories" flex="1">
@@ -671,4 +674,6 @@
       </deck>
     </vbox>
   </hbox>
+  <addon-abuse-report-xulframe hidden="true"></addon-abuse-report-xulframe>
+  </stack>
 </page>
