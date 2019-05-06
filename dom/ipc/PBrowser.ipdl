@@ -118,6 +118,13 @@ struct RequestData
   nsCString matchedList;
 };
 
+/**
+ * A PBrowser manages a maximal locally connected subtree of BrowsingContexts
+ * in a content process.
+ *
+ * See `dom/docs/Fission-IPC-Diagram.svg` for an overview of the DOM IPC
+ * actors.
+ */
 nested(upto inside_cpow) sync protocol PBrowser
 {
     manager PContent;
