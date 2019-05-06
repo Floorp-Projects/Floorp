@@ -185,7 +185,7 @@ cleanup:
 }
 
 static const char *const usageInfo[] = {
-    "pk11import - test PK11_PrivateKeyImport()"
+    "pk11import - test PK11_PrivateKeyImport()",
     "Options:",
     " -d certdir            directory containing cert database",
     " -k keysize            size of the rsa, dh, and dsa key to test (default 1024)",
