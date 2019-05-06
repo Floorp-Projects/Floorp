@@ -32,6 +32,7 @@ def _create_header(array_name, cert_bytes):
 array_names = [
     'xpcshellRoot',
     'addonsPublicRoot',
+    'addonsPublicIntermediate',
     'addonsStageRoot',
     'privilegedPackageRoot',
 ]
