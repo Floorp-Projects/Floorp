@@ -4,6 +4,8 @@
 
 /* eslint max-len: ["error", 80] */
 
+/* exported openAbuseReport */
+
 /**
  * This script is part of the HTML about:addons page and it provides some
  * helpers used for the Abuse Reporting submission (and related message bars).
@@ -46,6 +48,12 @@ const ABUSE_REPORT_MESSAGE_BARS = {
     id: "error", actions: ["retry", "cancel"], type: "error",
   },
 };
+
+function openAbuseReport({addonId, reportEntryPoint}) {
+  document.dispatchEvent(new CustomEvent("abuse-report:new", {
+    detail: {addonId, reportEntryPoint},
+  }));
+}
 
 // Helper function used to create abuse report message bars in the
 // HTML about:addons page.
