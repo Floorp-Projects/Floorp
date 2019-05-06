@@ -395,6 +395,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gFxaToolbarAccessed",
     showFxaToolbarMenu(gFxaToolbarEnabled);
   });
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "gHtmlAboutAddonsEnabled",
+  "extensions.htmlaboutaddons.enabled", false);
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "gAddonAbuseReportEnabled",
+  "extensions.abuseReport.enabled", false);
+
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/translation-notification.js", window);
@@ -6648,10 +6654,19 @@ var ToolbarContextMenu = {
   async updateExtension(popup) {
     let removeExtension = popup.querySelector(".customize-context-removeExtension");
     let manageExtension = popup.querySelector(".customize-context-manageExtension");
-    let separator = removeExtension.nextElementSibling;
+    let reportExtension = popup.querySelector(".customize-context-reportExtension");
+    let separator = reportExtension.nextElementSibling;
     let id = this._getExtensionId(popup);
     let addon = id && await AddonManager.getAddonByID(id);
-    removeExtension.hidden = manageExtension.hidden = separator.hidden = !addon;
+
+    for (let element of [removeExtension, manageExtension, separator]) {
+      element.hidden = !addon;
+    }
+
+    reportExtension.hidden = !addon ||
+                             !gAddonAbuseReportEnabled ||
+                             !gHtmlAboutAddonsEnabled;
+
     if (addon) {
       removeExtension.disabled = !(addon.permissions & AddonManager.PERM_CAN_UNINSTALL);
     }
@@ -6673,6 +6688,19 @@ var ToolbarContextMenu = {
     if (response == 0) {
       addon.uninstall();
     }
+  },
+
+  async reportExtensionForContextAction(popup, reportEntryPoint) {
+    let id = this._getExtensionId(popup);
+    let addon = id && await AddonManager.getAddonByID(id);
+    if (!addon) {
+      return;
+    }
+    const win = await BrowserOpenAddonsMgr("addons://list/extension");
+    win.openAbuseReport({
+      addonId: addon.id,
+      reportEntryPoint,
+    });
   },
 
   openAboutAddonsForContextAction(popup) {
