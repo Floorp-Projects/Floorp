@@ -14,6 +14,7 @@ const MIN_MS_BETWEEN_SUBMITS = 30000;
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -87,6 +88,11 @@ const AbuseReporter = {
     const addon = await AddonManager.getAddonByID(addonId);
 
     if (!addon) {
+      AMTelemetry.recordReportEvent({
+        addonId,
+        errorType: "ERROR_ADDON_NOTFOUND",
+        reportEntryPoint,
+      });
       throw new AbuseReportError("ERROR_ADDON_NOTFOUND");
     }
 
@@ -234,6 +240,16 @@ class AbuseReport {
     };
   }
 
+  recordTelemetry(errorType) {
+    const {addon, reportEntryPoint} = this;
+    AMTelemetry.recordReportEvent({
+      addonId: addon.id,
+      addonType: addon.type,
+      errorType,
+      reportEntryPoint,
+    });
+  }
+
   /**
    * Submit the current report, given a reason and a message.
    *
@@ -255,15 +271,21 @@ class AbuseReport {
       reportEntryPoint,
     } = this[PRIVATE_REPORT_PROPS];
 
+    // Record telemetry event and throw an AbuseReportError.
+    const throwReportError = (errorType) => {
+      this.recordTelemetry(errorType);
+      throw new AbuseReportError(errorType);
+    };
+
     if (aborted) {
       // Report aborted before being actually submitted.
-      throw new AbuseReportError("ERROR_ABORTED_SUBMIT");
+      throwReportError("ERROR_ABORTED_SUBMIT");
     }
 
     // Prevent submit of a new abuse report in less than MIN_MS_BETWEEN_SUBMITS.
     let msFromLastReport = AbuseReporter.getTimeFromLastReport();
     if (msFromLastReport < MIN_MS_BETWEEN_SUBMITS) {
-      throw new AbuseReportError("ERROR_RECENT_SUBMIT");
+      throwReportError("ERROR_RECENT_SUBMIT");
     }
 
     let response;
@@ -283,29 +305,35 @@ class AbuseReport {
       });
     } catch (err) {
       if (err.name === "AbortError") {
-        throw new AbuseReportError("ERROR_ABORTED_SUBMIT");
+        throwReportError("ERROR_ABORTED_SUBMIT");
       }
       Cu.reportError(err);
-      throw new AbuseReportError("ERROR_NETWORK");
+      throwReportError("ERROR_NETWORK");
     }
 
     if (response.ok && response.status >= 200 && response.status < 400) {
       // Ensure that the response is also a valid json format.
-      await response.json();
+      try {
+        await response.json();
+      } catch (err) {
+        this.recordTelemetry("ERROR_UNKNOWN");
+        throw err;
+      }
       AbuseReporter.updateLastReportTimestamp();
+      this.recordTelemetry();
       return;
     }
 
     if (response.status >= 400 && response.status < 500) {
-      throw new AbuseReportError("ERROR_CLIENT");
+      throwReportError("ERROR_CLIENT");
     }
 
     if (response.status >= 500 && response.status < 600) {
-      throw new AbuseReportError("ERROR_SERVER");
+      throwReportError("ERROR_SERVER");
     }
 
     // We got an unexpected HTTP status code.
-    throw new AbuseReportError("ERROR_UNKNOWN");
+    throwReportError("ERROR_UNKNOWN");
   }
 
   /**
