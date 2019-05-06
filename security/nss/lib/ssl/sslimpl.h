@@ -576,8 +576,9 @@ struct TLS13KeyShareEntryStr {
 };
 
 typedef struct TLS13EarlyDataStr {
-    PRCList link; /* The linked list link */
-    SECItem data; /* The data */
+    PRCList link;          /* The linked list link */
+    unsigned int consumed; /* How much has been read. */
+    SECItem data;          /* The data */
 } TLS13EarlyData;
 
 typedef enum {

@@ -1088,6 +1088,61 @@ JS_PUBLIC_API bool IsUnwrappedSavedFrame(JSObject* obj) {
   return obj->is<js::SavedFrame>();
 }
 
+static bool AssignProperty(JSContext* cx, HandleObject dst, HandleObject src,
+                           const char* property) {
+  RootedValue v(cx);
+  return JS_GetProperty(cx, src, property, &v) &&
+         JS_DefineProperty(cx, dst, property, v, JSPROP_ENUMERATE);
+}
+
+JS_PUBLIC_API JSObject* ConvertSavedFrameToPlainObject
+    (JSContext* cx, HandleObject savedFrameArg, SavedFrameSelfHosted selfHosted) {
+  MOZ_ASSERT(savedFrameArg);
+
+  RootedObject savedFrame(cx, savedFrameArg);
+  RootedObject baseConverted(cx), lastConverted(cx);
+  RootedValue v(cx);
+
+  baseConverted = lastConverted = JS_NewObject(cx, nullptr);
+  if (!baseConverted) {
+    return nullptr;
+  }
+
+  bool foundParent;
+  do {
+    if (!AssignProperty(cx, lastConverted, savedFrame, "source") ||
+        !AssignProperty(cx, lastConverted, savedFrame, "sourceId") ||
+        !AssignProperty(cx, lastConverted, savedFrame, "line") ||
+        !AssignProperty(cx, lastConverted, savedFrame, "column") ||
+        !AssignProperty(cx, lastConverted, savedFrame, "functionDisplayName") ||
+        !AssignProperty(cx, lastConverted, savedFrame, "asyncCause")) {
+      return nullptr;
+    }
+
+    const char* parentProperties[] = { "parent", "asyncParent" };
+    foundParent = false;
+    for (const char* prop : parentProperties) {
+      if (!JS_GetProperty(cx, savedFrame, prop, &v)) {
+        return nullptr;
+      }
+      if (v.isObject()) {
+        RootedObject nextConverted(cx, JS_NewObject(cx, nullptr));
+        if (!nextConverted ||
+            !JS_DefineProperty(cx, lastConverted, prop, nextConverted,
+                               JSPROP_ENUMERATE)) {
+          return nullptr;
+        }
+        lastConverted = nextConverted;
+        savedFrame = &v.toObject();
+        foundParent = true;
+        break;
+      }
+    }
+  } while (foundParent);
+
+  return baseConverted;
+}
+
 } /* namespace JS */
 
 namespace js {

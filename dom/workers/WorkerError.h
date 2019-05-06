@@ -7,9 +7,9 @@
 #ifndef mozilla_dom_workers_WorkerError_h
 #define mozilla_dom_workers_WorkerError_h
 
+#include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "jsapi.h"
-#include "WorkerRef.h"
 
 namespace mozilla {
 
@@ -38,9 +38,7 @@ class WorkerErrorNote : public WorkerErrorBase {
 
 class WorkerPrivate;
 
-// The StructuredCloneHolder superclass is used to encode the error's stack
-// data, if there is any.
-class WorkerErrorReport : public WorkerErrorBase, public StructuredCloneHolder {
+class WorkerErrorReport : public WorkerErrorBase, public SerializedStackHolder {
  public:
   nsString mLine;
   uint32_t mFlags;
@@ -48,13 +46,7 @@ class WorkerErrorReport : public WorkerErrorBase, public StructuredCloneHolder {
   bool mMutedError;
   nsTArray<WorkerErrorNote> mNotes;
 
-  // Hold a reference on the originating worker until the error has been
-  // processed.
-  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
-
-  // Create a new error report. aWorkerPrivate represents the worker where the
-  // error originated.
-  explicit WorkerErrorReport(WorkerPrivate* aWorkerPrivate);
+  WorkerErrorReport();
 
   void AssignErrorReport(JSErrorReport* aReport);
 

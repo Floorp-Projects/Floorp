@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <memory>
 
 #ifdef __MACH__
 #include <mach/clock.h>
@@ -27,7 +28,7 @@ void gettime(struct timespec* tp) {
   tp->tv_sec = mts.tv_sec;
   tp->tv_nsec = mts.tv_nsec;
 #else
-  clock_gettime(CLOCK_MONOTONIC, tp);
+  ASSERT_NE(0, timespec_get(tp, TIME_UTC));
 #endif
 }
 
@@ -84,8 +85,9 @@ class MPITest : public ::testing::Test {
     mp_int a;
     ASSERT_EQ(MP_OKAY, mp_init(&a));
     ASSERT_EQ(MP_OKAY, mp_read_unsigned_octets(&a, ref.data(), ref.size()));
-    uint8_t buf[len];
-    ASSERT_EQ(MP_OKAY, mp_to_fixlen_octets(&a, buf, len));
+    std::unique_ptr<uint8_t[]> buf(new uint8_t[len]);
+    ASSERT_NE(buf, nullptr);
+    ASSERT_EQ(MP_OKAY, mp_to_fixlen_octets(&a, buf.get(), len));
     size_t compare;
     if (len > ref.size()) {
       for (size_t i = 0; i < len - ref.size(); ++i) {
@@ -96,9 +98,9 @@ class MPITest : public ::testing::Test {
       compare = len;
     }
     dump("value", ref.data(), ref.size());
-    dump("output", buf, len);
-    ASSERT_EQ(0, memcmp(buf + len - compare, ref.data() + ref.size() - compare,
-                        compare))
+    dump("output", buf.get(), len);
+    ASSERT_EQ(0, memcmp(buf.get() + len - compare,
+                        ref.data() + ref.size() - compare, compare))
         << "comparing " << compare << " octets";
     mp_clear(&a);
   }
