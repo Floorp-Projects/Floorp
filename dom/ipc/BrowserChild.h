@@ -196,6 +196,10 @@ class BrowserChildBase : public nsISupports,
   nsCOMPtr<nsIWebBrowserChrome3> mWebBrowserChrome;
 };
 
+/**
+ * BrowserChild implements the child actor part of the PBrowser protocol. See
+ * PBrowser for more information.
+ */
 class BrowserChild final : public BrowserChildBase,
                            public PBrowserChild,
                            public nsIWebBrowserChrome2,

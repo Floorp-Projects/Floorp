@@ -78,6 +78,10 @@ namespace ipc {
 class StructuredCloneData;
 }  // namespace ipc
 
+/**
+ * BrowserParent implements the parent actor part of the PBrowser protocol. See
+ * PBrowser for more information.
+ */
 class BrowserParent final : public PBrowserParent,
                             public nsIDOMEventListener,
                             public nsIRemoteTab,
