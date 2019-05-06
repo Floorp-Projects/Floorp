@@ -1291,6 +1291,9 @@ bool CompositorBridgeParent::SetTestSampleTime(const LayersId& aId,
   }
 
   mTestTime = Some(aTime);
+  if (mApzcTreeManager) {
+    mApzcTreeManager->SetTestSampleTime(mTestTime);
+  }
 
   if (mWrBridge) {
     mWrBridge->FlushRendering();
@@ -1318,6 +1321,9 @@ bool CompositorBridgeParent::SetTestSampleTime(const LayersId& aId,
 
 void CompositorBridgeParent::LeaveTestMode(const LayersId& aId) {
   mTestTime = Nothing();
+  if (mApzcTreeManager) {
+    mApzcTreeManager->SetTestSampleTime(mTestTime);
+  }
 }
 
 void CompositorBridgeParent::ApplyAsyncProperties(
