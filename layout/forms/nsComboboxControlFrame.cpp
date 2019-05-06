@@ -1388,7 +1388,8 @@ bool nsComboboxControlFrame::Rollup(uint32_t aCount, bool aFlush,
   if (aFlush && weakFrame.IsAlive()) {
     // The popup's visibility doesn't update until the minimize animation has
     // finished, so call UpdateWidgetGeometry to update it right away.
-    nsViewManager* viewManager = mDropdownFrame->GetView()->GetViewManager();
+    RefPtr<nsViewManager> viewManager =
+        mDropdownFrame->GetView()->GetViewManager();
     viewManager->UpdateWidgetGeometry();  // might destroy us
   }
 

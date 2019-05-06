@@ -701,6 +701,7 @@ class BrowserChild final : public BrowserChildBase,
   virtual mozilla::ipc::IPCResult RecvSetDocShellIsActive(
       const bool& aIsActive) override;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual mozilla::ipc::IPCResult RecvRenderLayers(
       const bool& aEnabled, const bool& aForce,
       const layers::LayersObserverEpoch& aEpoch) override;
