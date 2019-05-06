@@ -31,6 +31,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -83,6 +84,7 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.quickactionsheet.QuickActionAction
 import org.mozilla.fenix.quickactionsheet.QuickActionChange
 import org.mozilla.fenix.quickactionsheet.QuickActionComponent
+import org.mozilla.fenix.quickactionsheet.QuickActionState
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.utils.Settings
@@ -152,7 +154,15 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             }
         }
 
-        QuickActionComponent(view.nestedScrollQuickAction, ActionBusFactory.get(this))
+        QuickActionComponent(
+            view.nestedScrollQuickAction,
+            ActionBusFactory.get(this),
+            QuickActionState(
+                readable = getSessionById()?.readerable ?: false,
+                bookmarked = findBookmarkedURL(getSessionById()),
+                readerActive = getSessionById()?.readerMode ?: false
+            )
+        )
 
         val activity = activity as HomeActivity
         DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
@@ -297,8 +307,10 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             ) {
                 getManagedEmitter<QuickActionChange>().apply {
                     onNext(QuickActionChange.ReadableStateChange(it))
-                    onNext(QuickActionChange.ReaderActiveStateChange(
-                        sessionManager.selectedSession?.readerMode ?: false)
+                    onNext(
+                        QuickActionChange.ReaderActiveStateChange(
+                            sessionManager.selectedSession?.readerMode ?: false
+                        )
                     )
                 }
             },
@@ -345,6 +357,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         sessionObserver = subscribeToSession()
         sessionManagerObserver = subscribeToSessions()
         updateToolbar()
+        getSessionById()?.let { updateBookmarkState(it) }
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
@@ -678,7 +691,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             override fun onLoadingStateChanged(session: Session, loading: Boolean) {
                 super.onLoadingStateChanged(session, loading)
                 if (!loading) {
-                    searchBookmarks(session)
+                    updateBookmarkState(session)
                 }
                 setToolbarBehavior(loading)
             }
@@ -706,10 +719,19 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         }
     }
 
-    private fun searchBookmarks(session: Session) {
+    private fun findBookmarkedURL(session: Session?): Boolean {
+        session?.let {
+            return runBlocking {
+                val list = requireComponents.core.bookmarksStorage.getBookmarksWithUrl(it.url)
+                list.isNotEmpty() && list[0].url == it.url
+            }
+        }
+        return false
+    }
+
+    private fun updateBookmarkState(session: Session) {
         launch {
-            val list = requireComponents.core.bookmarksStorage.getBookmarksWithUrl(session.url)
-            val found = list.isNotEmpty() && list[0].url == session.url
+            val found = findBookmarkedURL(session)
             launch(Main) {
                 getManagedEmitter<QuickActionChange>()
                     .onNext(QuickActionChange.BookmarkedStateChange(found))
