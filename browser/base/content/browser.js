@@ -6616,8 +6616,18 @@ function promptRemoveExtension(addon) {
   let {BUTTON_TITLE_IS_STRING: titleString, BUTTON_TITLE_CANCEL: titleCancel,
         BUTTON_POS_0, BUTTON_POS_1, confirmEx} = Services.prompt;
   let btnFlags = BUTTON_POS_0 * titleString + BUTTON_POS_1 * titleCancel;
-  return confirmEx(null, title, message, btnFlags, btnTitle, null, null, null,
-                    {value: 0});
+  let checkboxState = {value: false};
+  let checkboxMessage = null;
+
+  // Enable abuse report checkbox in the remove extension dialog.
+  if (gHtmlAboutAddonsEnabled && gAddonAbuseReportEnabled) {
+    checkboxMessage = getFormattedString("webext.remove.abuseReportCheckbox.message", [
+      document.getElementById("bundle_brand").getString("vendorShortName"),
+    ]);
+  }
+  const result = confirmEx(null, title, message, btnFlags, btnTitle, null, null,
+                           checkboxMessage, checkboxState);
+  return {remove: result === 0, report: checkboxState.value};
 }
 
 var ToolbarContextMenu = {
@@ -6678,15 +6688,20 @@ var ToolbarContextMenu = {
     if (!addon || !(addon.permissions & AddonManager.PERM_CAN_UNINSTALL)) {
       return;
     }
-    let response = promptRemoveExtension(addon);
+    let {remove, report} = promptRemoveExtension(addon);
     AMTelemetry.recordActionEvent({
       object: "browserAction",
       action: "uninstall",
-      value: response ? "cancelled" : "accepted",
+      value: remove ? "accepted" : "cancelled",
       extra: {addonId: addon.id},
     });
-    if (response == 0) {
-      addon.uninstall();
+    if (remove) {
+      // Leave the extension in pending uninstall if we are also
+      // reporting the add-on.
+      await addon.uninstall(report);
+      if (report) {
+        this.reportExtensionForContextAction(popup, "uninstall");
+      }
     }
   },
 
