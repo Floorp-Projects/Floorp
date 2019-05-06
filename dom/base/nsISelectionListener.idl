@@ -21,6 +21,7 @@ interface nsISelectionListener : nsISupports
   const short COLLAPSETOEND_REASON=64;
   const short IME_REASON=128;
 
+  [can_run_script]
   void notifySelectionChanged(in Document doc, in Selection sel,
                               in short reason);
 };
