@@ -2074,7 +2074,7 @@ void nsJSContext::MaybePokeCC() {
     uint32_t sinceLastForgetSkippableCycle =
         TimeUntilNow(sLastForgetSkippableCycleEndTime);
     if (sinceLastForgetSkippableCycle <
-            NS_TIME_BETWEEN_FORGET_SKIPPABLE_CYCLES) {
+        NS_TIME_BETWEEN_FORGET_SKIPPABLE_CYCLES) {
       return;
     }
   }
@@ -2357,9 +2357,9 @@ static void SetMemoryPrefChangedCallbackMB(const char* aPrefName,
 
 static void SetMemoryNurseryMaxPrefChangedCallback(const char* aPrefName,
                                                    void* aClosure) {
-  int32_t prefMB = Preferences::GetInt(aPrefName, -1);
+  int32_t prefKB = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
-  CheckedInt<int32_t> prefB = CheckedInt<int32_t>(prefMB) * 1024;
+  CheckedInt<int32_t> prefB = CheckedInt<int32_t>(prefKB) * 1024;
   if (prefB.isValid() && prefB.value() >= 0) {
     SetGCParameter((JSGCParamKey)(uintptr_t)aClosure, prefB.value());
   } else {
