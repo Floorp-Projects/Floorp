@@ -54,7 +54,7 @@ def pr_or_push(is_push):
         print("Exit")
         return {}
 
-    variants = get_build_variants()
+    debug_variants = [variant for variant in get_build_variants() if variant.endswith('Debug')]
     geckoview_nightly_version = get_geckoview_versions()['nightly']
     mozharness_task_id = fetch_mozharness_task_id(geckoview_nightly_version)
     gecko_revision = taskcluster.Queue().task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
@@ -63,19 +63,15 @@ def pr_or_push(is_push):
     signing_tasks = {}
     other_tasks = {}
 
-    for variant in variants:
+    for variant in debug_variants:
         assemble_task_id = taskcluster.slugId()
         build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
         build_tasks[taskcluster.slugId()] = BUILDER.craft_test_task(variant)
 
-        architecture, build_type = get_architecture_and_build_type_from_variant(variant)
-        # autophone only supports arm and aarch64, so only sign/perftest those builds
-        if (
-            is_push and
-            build_type == 'raptor' and
-            architecture in ('arm', 'aarch64') and
-            SHORT_HEAD_BRANCH == 'master'
-        ):
+    if is_push and SHORT_HEAD_BRANCH == 'master':
+        for variant in ('armRaptor', 'aarch64Raptor'):
+            assemble_task_id = taskcluster.slugId()
+            build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
             signing_task_id = taskcluster.slugId()
             signing_tasks[signing_task_id] = BUILDER.craft_raptor_signing_task(assemble_task_id, variant)
 

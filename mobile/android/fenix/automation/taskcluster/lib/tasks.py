@@ -348,18 +348,17 @@ class TaskBuilder(object):
         routes = []
         if self.repo_url == _OFFICIAL_REPO_URL:
             routes = [
-                'index.project.mobile.fenix.v2.branch.master.revision.{}.{}.{}'.format(
-                    self.commit, 'raptor', architecture
+                'index.project.mobile.fenix.v2.branch.master.revision.{}.raptor.{}'.format(
+                    self.commit, architecture
                 ),
-                'index.project.mobile.fenix.v2.branch.master.latest.{}.{}'.format(
-                    'raptor', architecture
+                'index.project.mobile.fenix.v2.branch.master.latest.raptor.{}'.format(
+                    architecture
                 ),
-                'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.revision.{}.{}.{}'.format(
-                    self.date.year, self.date.month, self.date.day, self.commit,
-                    'raptor', architecture
+                'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.revision.{}.raptor.{}'.format(
+                    self.date.year, self.date.month, self.date.day, self.commit, architecture
                 ),
-                'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.latest.{}.{}'.format(
-                    self.date.year, self.date.month, self.date.day, 'raptor', architecture
+                'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.latest.raptor.{}'.format(
+                    self.date.year, self.date.month, self.date.day, architecture
                 ),
             ]
 
@@ -582,7 +581,7 @@ def _craft_artifacts_from_variant(variant):
 
 def _craft_apk_full_path_from_variant(variant):
     architecture, build_type = get_architecture_and_build_type_from_variant(variant)
-    postfix = '-unsigned' if build_type.startswith('release') else ''
+    postfix = '' if build_type == 'debug' else '-unsigned'
     return '/opt/fenix/app/build/outputs/apk/{architecture}/{build_type}/app-{architecture}-{build_type}{postfix}.apk'.format(     # noqa: E501
         architecture=architecture,
         build_type=build_type,
