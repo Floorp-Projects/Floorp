@@ -153,7 +153,7 @@ class ToolbarUIView(
         with(view.context) {
             val defaultEngineIcon = components.search.searchEngineManager.defaultSearchEngine?.icon
             val searchIcon = newState.engine?.icon ?: defaultEngineIcon
-            val draw = BitmapDrawable(searchIcon)
+            val draw = BitmapDrawable(resources, searchIcon)
             val iconSize =
                 containerView?.context!!.resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
             draw.setBounds(0, 0, iconSize, iconSize)
