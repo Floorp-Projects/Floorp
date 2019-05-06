@@ -45,7 +45,7 @@ class MemoryBlockCache : public MediaBlockCacheBase {
 
   // Maximum number of blocks allowed in this block cache.
   // Based on initial content length, and minimum usable block cache.
-  int32_t GetMaxBlocks() const override { return mMaxBlocks; }
+  size_t GetMaxBlocks(size_t) const override { return mMaxBlocks; }
 
   // Can be called on any thread.
   virtual nsresult WriteBlock(uint32_t aBlockIndex, Span<const uint8_t> aData1,
@@ -73,7 +73,7 @@ class MemoryBlockCache : public MediaBlockCacheBase {
   const size_t mInitialContentLength;
 
   // Maximum number of blocks that this MemoryBlockCache expects.
-  const int32_t mMaxBlocks;
+  const size_t mMaxBlocks;
 
   // Mutex which controls access to all members below.
   Mutex mMutex;
