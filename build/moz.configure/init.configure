@@ -1128,16 +1128,26 @@ set_define('MOZILLA_OFFICIAL', mozilla_official)
 add_old_configure_assignment('MOZILLA_OFFICIAL', mozilla_official)
 
 
+# Allow specifying custom paths to the version files used by the milestone() function below.
+option('--with-version-file-path',
+       nargs=1,
+       help='Specify a custom path to app version files instead of auto-detecting',
+       default=None)
+
+@depends('--with-version-file-path')
+def version_path(path):
+    return path
+
 # set RELEASE_OR_BETA and NIGHTLY_BUILD variables depending on the cycle we're in
 # The logic works like this:
 # - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
 # - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
 # - otherwise, we're building Release/Beta (define RELEASE_OR_BETA)
-@depends(check_build_environment, build_project, '--help')
+@depends(check_build_environment, build_project, version_path, '--help')
 @imports(_from='__builtin__', _import='open')
 @imports('os')
 @imports('re')
-def milestone(build_env, build_project, _):
+def milestone(build_env, build_project, version_path, _):
     versions = []
     paths = ['config/milestone.txt']
     if build_project == 'js':
@@ -1147,8 +1157,12 @@ def milestone(build_env, build_project, _):
             'browser/config/version.txt',
             'browser/config/version_display.txt',
         ]
+    if version_path:
+        version_path = version_path[0]
+    else:
+        version_path = os.path.join(build_project, 'config')
     for f in ('version.txt', 'version_display.txt'):
-        f = os.path.join(build_project, 'config', f)
+        f = os.path.join(version_path, f)
         if not os.path.exists(os.path.join(build_env.topsrcdir, f)):
             break
         paths.append(f)
