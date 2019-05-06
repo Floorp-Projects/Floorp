@@ -218,7 +218,7 @@ const char kResourceOriginPrefix[] = "resource://";
 #define LS_ARCHIVE_FILE_NAME "ls-archive.sqlite"
 #define LS_ARCHIVE_TMP_FILE_NAME "ls-archive-tmp.sqlite"
 
-const uint32_t kLocalStorageArchiveVersion = 3;
+const uint32_t kLocalStorageArchiveVersion = 1;
 
 const char kProfileDoChangeTopic[] = "profile-do-change";
 
@@ -446,6 +446,7 @@ nsresult LoadLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
   return NS_OK;
 }
 
+/*
 nsresult SaveLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
                                         uint32_t aVersion) {
   AssertIsOnIOThread();
@@ -471,6 +472,7 @@ nsresult SaveLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
 
   return NS_OK;
 }
+*/
 
 /******************************************************************************
  * Quota manager class declarations
@@ -613,19 +615,9 @@ class OriginInfo final {
 
  public:
   OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin, uint64_t aUsage,
-             int64_t aAccessTime, bool aPersisted, bool aDirectoryExists);
+             int64_t aAccessTime, bool aPersisted);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OriginInfo)
-
-  GroupInfo* GetGroupInfo() const { return mGroupInfo; }
-
-  const nsCString& Origin() const { return mOrigin; }
-
-  int64_t LockedUsage() const {
-    AssertCurrentThreadOwnsQuotaMutex();
-
-    return mUsage;
-  }
 
   int64_t LockedAccessTime() const {
     AssertCurrentThreadOwnsQuotaMutex();
@@ -664,19 +656,6 @@ class OriginInfo final {
   uint64_t mUsage;
   int64_t mAccessTime;
   bool mPersisted;
-  /**
-   * In some special cases like the LocalStorage client where it's possible to
-   * create a Quota-using representation but not actually write any data, we
-   * want to be able to track quota for an origin without creating its origin
-   * directory or the per-client files until they are actually needed to store
-   * data. In those cases, the OriginInfo will be created by
-   * EnsureQuotaForOrigin and the resulting mDirectoryExists will be false until
-   * the origin actually needs to be created. It is possible for mUsage to be
-   * greater than zero while mDirectoryExists is false, representing a state
-   * where a client like LocalStorage has reserved quota for disk writes, but
-   * has not yet flushed the data to disk.
-   */
-  bool mDirectoryExists;
 };
 
 class OriginInfoLRUComparator {
@@ -711,8 +690,6 @@ class GroupInfo final {
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GroupInfo)
-
-  PersistenceType GetPersistenceType() const { return mPersistenceType; }
 
  private:
   // Private destructor, to discourage deletion outside of Release():
@@ -1148,12 +1125,6 @@ class GetUsageOp final : public QuotaUsageRequestBase,
 
  private:
   ~GetUsageOp() {}
-
-  void ProcessOriginInternal(QuotaManager* aQuotaManager,
-                             const PersistenceType aPersistenceType,
-                             const nsACString& aOrigin,
-                             const int64_t aTimestamp, const bool aPersisted,
-                             const uint64_t aUsage);
 
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
@@ -2255,21 +2226,26 @@ nsresult CreateDirectoryMetadataFiles(nsIFile* aDirectory, bool aPersisted,
                                       const nsACString& aSuffix,
                                       const nsACString& aGroup,
                                       const nsACString& aOrigin,
-                                      int64_t aTimestamp) {
+                                      int64_t* aTimestamp) {
   AssertIsOnIOThread();
 
+  int64_t timestamp = PR_Now();
+
   nsresult rv =
-      CreateDirectoryMetadata(aDirectory, aTimestamp, aSuffix, aGroup, aOrigin);
+      CreateDirectoryMetadata(aDirectory, timestamp, aSuffix, aGroup, aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = CreateDirectoryMetadata2(aDirectory, aTimestamp, aPersisted, aSuffix,
+  rv = CreateDirectoryMetadata2(aDirectory, timestamp, aPersisted, aSuffix,
                                 aGroup, aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
+  if (aTimestamp) {
+    *aTimestamp = timestamp;
+  }
   return NS_OK;
 }
 
@@ -3411,28 +3387,6 @@ uint64_t QuotaManager::CollectOriginsForEviction(
   return 0;
 }
 
-template <typename P>
-void QuotaManager::CollectPendingOriginsForListing(P aPredicate) {
-  MutexAutoLock lock(mQuotaMutex);
-
-  for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
-    GroupInfoPair* pair = iter.UserData();
-
-    MOZ_ASSERT(!iter.Key().IsEmpty());
-    MOZ_ASSERT(pair);
-
-    RefPtr<GroupInfo> groupInfo =
-        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
-    if (groupInfo) {
-      for (RefPtr<OriginInfo>& originInfo : groupInfo->mOriginInfos) {
-        if (!originInfo->mDirectoryExists) {
-          aPredicate(originInfo);
-        }
-      }
-    }
-  }
-}
-
 nsresult QuotaManager::Init(const nsAString& aBasePath) {
   mBasePath = aBasePath;
 
@@ -3569,64 +3523,22 @@ void QuotaManager::InitQuotaForOrigin(PersistenceType aPersistenceType,
 
   MutexAutoLock lock(mQuotaMutex);
 
-  RefPtr<GroupInfo> groupInfo =
-      LockedGetOrCreateGroupInfo(aPersistenceType, aGroup);
+  GroupInfoPair* pair;
+  if (!mGroupInfoPairs.Get(aGroup, &pair)) {
+    pair = new GroupInfoPair();
+    mGroupInfoPairs.Put(aGroup, pair);
+    // The hashtable is now responsible to delete the GroupInfoPair.
+  }
+
+  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
+  if (!groupInfo) {
+    groupInfo = new GroupInfo(pair, aPersistenceType, aGroup);
+    pair->LockedSetGroupInfo(aPersistenceType, groupInfo);
+  }
 
   RefPtr<OriginInfo> originInfo =
-      new OriginInfo(groupInfo, aOrigin, aUsageBytes, aAccessTime, aPersisted,
-                     /* aDirectoryExists */ true);
+      new OriginInfo(groupInfo, aOrigin, aUsageBytes, aAccessTime, aPersisted);
   groupInfo->LockedAddOriginInfo(originInfo);
-}
-
-void QuotaManager::EnsureQuotaForOrigin(PersistenceType aPersistenceType,
-                                        const nsACString& aGroup,
-                                        const nsACString& aOrigin) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
-
-  MutexAutoLock lock(mQuotaMutex);
-
-  RefPtr<GroupInfo> groupInfo =
-      LockedGetOrCreateGroupInfo(aPersistenceType, aGroup);
-
-  RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
-  if (!originInfo) {
-    originInfo = new OriginInfo(
-        groupInfo, aOrigin, /* aUsageBytes */ 0, /* aAccessTime */ PR_Now(),
-        /* aPersisted */ false, /* aDirectoryExists */ false);
-    groupInfo->LockedAddOriginInfo(originInfo);
-  }
-}
-
-void QuotaManager::NoteOriginDirectoryCreated(PersistenceType aPersistenceType,
-                                              const nsACString& aGroup,
-                                              const nsACString& aOrigin,
-                                              bool aPersisted,
-                                              int64_t& aTimestamp) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
-
-  int64_t timestamp;
-
-  MutexAutoLock lock(mQuotaMutex);
-
-  RefPtr<GroupInfo> groupInfo =
-      LockedGetOrCreateGroupInfo(aPersistenceType, aGroup);
-
-  RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
-  if (originInfo) {
-    originInfo->mPersisted = aPersisted;
-    originInfo->mDirectoryExists = true;
-    timestamp = originInfo->LockedAccessTime();
-  } else {
-    timestamp = PR_Now();
-    RefPtr<OriginInfo> originInfo = new OriginInfo(
-        groupInfo, aOrigin, /* aUsageBytes */ 0, /* aAccessTime */ timestamp,
-        aPersisted, /* aDirectoryExists */ true);
-    groupInfo->LockedAddOriginInfo(originInfo);
-  }
-
-  aTimestamp = timestamp;
 }
 
 void QuotaManager::DecreaseUsageForOrigin(PersistenceType aPersistenceType,
@@ -5349,6 +5261,7 @@ nsresult QuotaManager::UpgradeLocalStorageArchiveFrom0To1(
   return NS_OK;
 }
 
+/*
 nsresult QuotaManager::UpgradeLocalStorageArchiveFrom1To2(
     nsCOMPtr<mozIStorageConnection>& aConnection) {
   nsresult rv = SaveLocalStorageArchiveVersion(aConnection, 2);
@@ -5358,16 +5271,7 @@ nsresult QuotaManager::UpgradeLocalStorageArchiveFrom1To2(
 
   return NS_OK;
 }
-
-nsresult QuotaManager::UpgradeLocalStorageArchiveFrom2To3(
-    nsCOMPtr<mozIStorageConnection>& aConnection) {
-  nsresult rv = SaveLocalStorageArchiveVersion(aConnection, 3);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
+*/
 
 #ifdef DEBUG
 
@@ -5591,18 +5495,17 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
           return rv;
         }
       } else {
-        static_assert(kLocalStorageArchiveVersion == 3,
+        static_assert(kLocalStorageArchiveVersion == 1,
                       "Upgrade function needed due to LocalStorage archive "
                       "version increase.");
 
         while (version != kLocalStorageArchiveVersion) {
           if (version == 0) {
             rv = UpgradeLocalStorageArchiveFrom0To1(connection);
-          } else if (version == 1) {
+          } /* else if (version == 1) {
             rv = UpgradeLocalStorageArchiveFrom1To2(connection);
-          } else if (version == 2) {
-            rv = UpgradeLocalStorageArchiveFrom2To3(connection);
-          } else {
+          } */
+          else {
             QM_WARNING(
                 "Unable to initialize LocalStorage archive, no upgrade path is "
                 "available!");
@@ -5719,15 +5622,19 @@ void QuotaManager::OpenDirectoryInternal(
 
 nsresult QuotaManager::EnsureOriginIsInitialized(
     PersistenceType aPersistenceType, const nsACString& aSuffix,
-    const nsACString& aGroup, const nsACString& aOrigin, nsIFile** aDirectory) {
+    const nsACString& aGroup, const nsACString& aOrigin,
+    bool aCreateIfNotExists, nsIFile** aDirectory) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
 
   nsCOMPtr<nsIFile> directory;
   bool created;
   nsresult rv = EnsureOriginIsInitializedInternal(
-      aPersistenceType, aSuffix, aGroup, aOrigin, getter_AddRefs(directory),
-      &created);
+      aPersistenceType, aSuffix, aGroup, aOrigin, aCreateIfNotExists,
+      getter_AddRefs(directory), &created);
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    return rv;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5738,8 +5645,8 @@ nsresult QuotaManager::EnsureOriginIsInitialized(
 
 nsresult QuotaManager::EnsureOriginIsInitializedInternal(
     PersistenceType aPersistenceType, const nsACString& aSuffix,
-    const nsACString& aGroup, const nsACString& aOrigin, nsIFile** aDirectory,
-    bool* aCreated) {
+    const nsACString& aGroup, const nsACString& aOrigin,
+    bool aCreateIfNotExists, nsIFile** aDirectory, bool* aCreated) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
   MOZ_ASSERT(aCreated);
@@ -5767,7 +5674,10 @@ nsresult QuotaManager::EnsureOriginIsInitializedInternal(
   }
 
   bool created;
-  rv = EnsureOriginDirectory(directory, &created);
+  rv = EnsureOriginDirectory(directory, aCreateIfNotExists, &created);
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    return rv;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5775,11 +5685,9 @@ nsresult QuotaManager::EnsureOriginIsInitializedInternal(
   int64_t timestamp;
   if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
     if (created) {
-      timestamp = PR_Now();
-
       rv = CreateDirectoryMetadataFiles(directory,
                                         /* aPersisted */ true, aSuffix, aGroup,
-                                        aOrigin, timestamp);
+                                        aOrigin, &timestamp);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -5800,15 +5708,17 @@ nsresult QuotaManager::EnsureOriginIsInitializedInternal(
 
     mInitializedOrigins.AppendElement(aOrigin);
   } else if (created) {
-    NoteOriginDirectoryCreated(aPersistenceType, aGroup, aOrigin,
-                               /* aPersisted */ false, timestamp);
-
     rv = CreateDirectoryMetadataFiles(directory,
                                       /* aPersisted */ false, aSuffix, aGroup,
-                                      aOrigin, timestamp);
+                                      aOrigin, &timestamp);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    // Don't need to traverse the directory, since it's empty.
+    InitQuotaForOrigin(aPersistenceType, aGroup, aOrigin,
+                       /* aUsageBytes */ 0, timestamp,
+                       /* aPersisted */ false);
   }
 
   directory.forget(aDirectory);
@@ -5886,6 +5796,7 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 }
 
 nsresult QuotaManager::EnsureOriginDirectory(nsIFile* aDirectory,
+                                             bool aCreateIfNotExists,
                                              bool* aCreated) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
@@ -5898,6 +5809,10 @@ nsresult QuotaManager::EnsureOriginDirectory(nsIFile* aDirectory,
   }
 
   if (!exists) {
+    if (!aCreateIfNotExists) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
     nsString leafName;
     rv = aDirectory->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6346,27 +6261,6 @@ void QuotaManager::LockedRemoveQuotaForOrigin(PersistenceType aPersistenceType,
   }
 }
 
-already_AddRefed<GroupInfo> QuotaManager::LockedGetOrCreateGroupInfo(
-    PersistenceType aPersistenceType, const nsACString& aGroup) {
-  mQuotaMutex.AssertCurrentThreadOwns();
-  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
-
-  GroupInfoPair* pair;
-  if (!mGroupInfoPairs.Get(aGroup, &pair)) {
-    pair = new GroupInfoPair();
-    mGroupInfoPairs.Put(aGroup, pair);
-    // The hashtable is now responsible to delete the GroupInfoPair.
-  }
-
-  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
-  if (!groupInfo) {
-    groupInfo = new GroupInfo(pair, aPersistenceType, aGroup);
-    pair->LockedSetGroupInfo(aPersistenceType, groupInfo);
-  }
-
-  return groupInfo.forget();
-}
-
 already_AddRefed<OriginInfo> QuotaManager::LockedGetOriginInfo(
     PersistenceType aPersistenceType, const nsACString& aGroup,
     const nsACString& aOrigin) {
@@ -6622,14 +6516,12 @@ bool QuotaManager::IsSanitizedOriginValid(const nsACString& aSanitizedOrigin) {
  ******************************************************************************/
 
 OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
-                       uint64_t aUsage, int64_t aAccessTime, bool aPersisted,
-                       bool aDirectoryExists)
+                       uint64_t aUsage, int64_t aAccessTime, bool aPersisted)
     : mGroupInfo(aGroupInfo),
       mOrigin(aOrigin),
       mUsage(aUsage),
       mAccessTime(aAccessTime),
-      mPersisted(aPersisted),
-      mDirectoryExists(aDirectoryExists) {
+      mPersisted(aPersisted) {
   MOZ_ASSERT(aGroupInfo);
   MOZ_ASSERT_IF(aPersisted,
                 aGroupInfo->mPersistenceType == PERSISTENCE_TYPE_DEFAULT);
@@ -7732,47 +7624,6 @@ GetUsageOp::GetUsageOp(const UsageRequestParams& aParams)
   MOZ_ASSERT(aParams.type() == UsageRequestParams::TAllUsageParams);
 }
 
-void GetUsageOp::ProcessOriginInternal(QuotaManager* aQuotaManager,
-                                       const PersistenceType aPersistenceType,
-                                       const nsACString& aOrigin,
-                                       const int64_t aTimestamp,
-                                       const bool aPersisted,
-                                       const uint64_t aUsage) {
-  if (!mGetAll && aQuotaManager->IsOriginInternal(aOrigin)) {
-    return;
-  }
-
-  OriginUsage* originUsage;
-
-  // We can't store pointers to OriginUsage objects in the hashtable
-  // since AppendElement() reallocates its internal array buffer as number
-  // of elements grows.
-  uint32_t index;
-  if (mOriginUsagesIndex.Get(aOrigin, &index)) {
-    originUsage = &mOriginUsages[index];
-  } else {
-    index = mOriginUsages.Length();
-
-    originUsage = mOriginUsages.AppendElement();
-
-    originUsage->origin() = aOrigin;
-    originUsage->persisted() = false;
-    originUsage->usage() = 0;
-    originUsage->lastAccessed() = 0;
-
-    mOriginUsagesIndex.Put(aOrigin, index);
-  }
-
-  if (aPersistenceType == PERSISTENCE_TYPE_DEFAULT) {
-    originUsage->persisted() = aPersisted;
-  }
-
-  originUsage->usage() = originUsage->usage() + aUsage;
-
-  originUsage->lastAccessed() =
-      std::max<int64_t>(originUsage->lastAccessed(), aTimestamp);
-}
-
 bool GetUsageOp::IsCanceled() {
   AssertIsOnIOThread();
 
@@ -7797,6 +7648,36 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager* aQuotaManager,
     return rv;
   }
 
+  if (!mGetAll && aQuotaManager->IsOriginInternal(origin)) {
+    return NS_OK;
+  }
+
+  OriginUsage* originUsage;
+
+  // We can't store pointers to OriginUsage objects in the hashtable
+  // since AppendElement() reallocates its internal array buffer as number
+  // of elements grows.
+  uint32_t index;
+  if (mOriginUsagesIndex.Get(origin, &index)) {
+    originUsage = &mOriginUsages[index];
+  } else {
+    index = mOriginUsages.Length();
+
+    originUsage = mOriginUsages.AppendElement();
+
+    originUsage->origin() = origin;
+    originUsage->persisted() = false;
+    originUsage->usage() = 0;
+
+    mOriginUsagesIndex.Put(origin, index);
+  }
+
+  if (aPersistenceType == PERSISTENCE_TYPE_DEFAULT) {
+    originUsage->persisted() = persisted;
+  }
+
+  originUsage->lastAccessed() = timestamp;
+
   UsageInfo usageInfo;
   rv = GetUsageForOrigin(aQuotaManager, aPersistenceType, group, origin,
                          &usageInfo);
@@ -7804,8 +7685,7 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager* aQuotaManager,
     return rv;
   }
 
-  ProcessOriginInternal(aQuotaManager, aPersistenceType, origin, timestamp,
-                        persisted, usageInfo.TotalUsage());
+  originUsage->usage() = originUsage->usage() + usageInfo.TotalUsage();
 
   return NS_OK;
 }
@@ -7823,18 +7703,6 @@ nsresult GetUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
       return rv;
     }
   }
-
-  // TraverseRepository above only consulted the filesystem. We also need to
-  // consider origins which may have pending quota usage, such as buffered
-  // LocalStorage writes for an origin which didn't previously have any
-  // LocalStorage data.
-
-  aQuotaManager->CollectPendingOriginsForListing([&](OriginInfo* aOriginInfo) {
-    ProcessOriginInternal(
-        aQuotaManager, aOriginInfo->GetGroupInfo()->GetPersistenceType(),
-        aOriginInfo->Origin(), aOriginInfo->LockedAccessTime(),
-        aOriginInfo->LockedPersisted(), aOriginInfo->LockedUsage());
-  });
 
   return NS_OK;
 }
@@ -8051,7 +7919,7 @@ nsresult InitOriginOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
   bool created;
   nsresult rv = aQuotaManager->EnsureOriginIsInitializedInternal(
       mPersistenceType.Value(), mSuffix, mGroup, mOriginScope.GetOrigin(),
-      getter_AddRefs(directory), &created);
+      /* aCreateIfNotExists */ true, getter_AddRefs(directory), &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8564,29 +8432,29 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
   }
 
   bool created;
-  rv = aQuotaManager->EnsureOriginDirectory(directory, &created);
+  rv = aQuotaManager->EnsureOriginDirectory(directory,
+                                            /* aCreateIfNotExists */ true,
+                                            &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   if (created) {
     int64_t timestamp;
-
-    // Origin directory has been successfully created.
-    // Create OriginInfo too if temporary storage was already initialized.
-    if (aQuotaManager->IsTemporaryStorageInitialized()) {
-      aQuotaManager->NoteOriginDirectoryCreated(
-          mPersistenceType.Value(), mGroup, mOriginScope.GetOrigin(),
-          /* aPersisted */ true, timestamp);
-    } else {
-      timestamp = PR_Now();
-    }
-
     rv = CreateDirectoryMetadataFiles(directory,
                                       /* aPersisted */ true, mSuffix, mGroup,
-                                      mOriginScope.GetOrigin(), timestamp);
+                                      mOriginScope.GetOrigin(), &timestamp);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    // Directory metadata has been successfully created.
+    // Create OriginInfo too if temporary storage was already initialized.
+    if (aQuotaManager->IsTemporaryStorageInitialized()) {
+      aQuotaManager->InitQuotaForOrigin(mPersistenceType.Value(), mGroup,
+                                        mOriginScope.GetOrigin(),
+                                        /* aUsageBytes */ 0, timestamp,
+                                        /* aPersisted */ true);
     }
   } else {
     // Get the persisted flag (restore the metadata file if necessary).
@@ -8680,14 +8548,6 @@ nsresult ListInitializedOriginsOp::DoDirectoryWork(
       return rv;
     }
   }
-
-  // TraverseRepository above only consulted the file-system to get a list of
-  // known origins, but we also need to include origins that have pending quota
-  // usage.
-
-  aQuotaManager->CollectPendingOriginsForListing([&](OriginInfo* aOriginInfo) {
-    mOrigins.AppendElement(aOriginInfo->Origin());
-  });
 
   return NS_OK;
 }
