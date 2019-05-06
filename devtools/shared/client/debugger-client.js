@@ -359,11 +359,10 @@ DebuggerClient.prototype = {
     const deferred = promise.defer();
     function listenerJson(resp) {
       removeRequestListeners();
-      resp = safeOnResponse(resp);
       if (resp.error) {
-        deferred.reject(resp);
+        deferred.reject(safeOnResponse(resp));
       } else {
-        deferred.resolve(resp);
+        deferred.resolve(safeOnResponse(resp));
       }
     }
     function listenerBulk(resp) {
