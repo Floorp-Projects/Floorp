@@ -303,3 +303,15 @@ bool nsMacUtilsImpl::IsTCSMEnabled() {
   return (rv == 0) && (oldVal != 0);
 }
 #endif
+
+// Returns 0 on error.
+/* static */
+uint32_t nsMacUtilsImpl::GetPhysicalCPUCount() {
+  uint32_t oldVal = 0;
+  size_t oldValSize = sizeof(oldVal);
+  int rv = sysctlbyname("hw.physicalcpu_max", &oldVal, &oldValSize, NULL, 0);
+  if (rv == -1) {
+    return 0;
+  }
+  return oldVal;
+}

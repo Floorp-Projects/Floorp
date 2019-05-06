@@ -36,6 +36,8 @@ class nsMacUtilsImpl final : public nsIMacUtils {
 #endif   /* MOZ_SANDBOX */
 
   static void EnableTCSMIfAvailable();
+  static bool IsTCSMAvailable();
+  static uint32_t GetPhysicalCPUCount();
 
  private:
   ~nsMacUtilsImpl() {}
@@ -60,7 +62,6 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   };
   static mozilla::Atomic<nsMacUtilsImpl::TCSMStatus> sTCSMStatus;
 
-  static bool IsTCSMAvailable();
   static nsresult EnableTCSM();
 #if defined(DEBUG)
   static bool IsTCSMEnabled();
