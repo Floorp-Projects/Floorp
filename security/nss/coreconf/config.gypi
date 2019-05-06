@@ -64,9 +64,14 @@
           ],
         }],
         ['"<(GENERATOR)"=="ninja"', {
-          'cc_is_clang%': '<!(<(python) <(DEPTH)/coreconf/check_cc_clang.py)',
+          'cc_is_clang%': '<!(<(python) <(DEPTH)/coreconf/check_cc.py clang)',
         }, {
           'cc_is_clang%': '0',
+        }],
+        ['"<(GENERATOR)"=="ninja"', {
+          'cc_is_gcc%': '<!(<(python) <(DEPTH)/coreconf/check_cc.py gcc)',
+        }, {
+          'cc_is_gcc%': '0',
         }],
       ],
     },
@@ -86,6 +91,7 @@
     'dll_suffix': '<(dll_suffix)',
     'freebl_name': '<(freebl_name)',
     'cc_is_clang%': '<(cc_is_clang)',
+    'cc_is_gcc%': '<(cc_is_gcc)',
     'cc_use_gnu_ld%': '<(cc_use_gnu_ld)',
     # Some defaults
     'disable_tests%': 0,

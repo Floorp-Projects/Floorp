@@ -13,7 +13,7 @@ const TEST_URI = `
     }
     #subgrid {
       display: grid;
-      grid: subgrid;
+      grid: subgrid / subgrid;
     }
     #flex {
       display: flex;

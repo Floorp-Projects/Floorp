@@ -899,10 +899,8 @@ sdb_GetAttributeValueNoLock(SDB *sdb, CK_OBJECT_HANDLE object_id,
         }
         columns = newColumns;
     }
-    if (!columns) {
-        error = CKR_OBJECT_HANDLE_INVALID;
-        goto loser;
-    }
+
+    PORT_Assert(columns);
 
     char *statement = sqlite3_mprintf("SELECT DISTINCT %s FROM %s where id=$ID LIMIT 1;",
                                       columns, table);

@@ -198,6 +198,7 @@
             'gtests/certdb_gtest/certdb_gtest.gyp:certdb_gtest',
             'gtests/freebl_gtest/freebl_gtest.gyp:prng_gtest',
             'gtests/freebl_gtest/freebl_gtest.gyp:blake2b_gtest',
+            'gtests/freebl_gtest/freebl_gtest.gyp:freebl_gtest',
             'gtests/mozpkix_gtest/mozpkix_gtest.gyp:mozpkix_gtest',
             'gtests/nss_bogo_shim/nss_bogo_shim.gyp:nss_bogo_shim',
             'gtests/pk11_gtest/pk11_gtest.gyp:pk11_gtest',

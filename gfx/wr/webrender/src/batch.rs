@@ -18,6 +18,7 @@ use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, PrimitiveVisibilityIndex};
 use prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, VECS_PER_SEGMENT};
+use prim_store::{recompute_snap_offsets};
 use prim_store::image::ImageSource;
 use render_backend::DataStores;
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree, TileBlit};
@@ -625,6 +626,8 @@ impl AlphaBatchBuilder {
             prim_common_data.prim_size,
         );
 
+        let snap_offsets = prim_info.snap_offsets;
+
         if is_chased {
             println!("\tbatch {:?} with bound {:?}", prim_rect, bounding_rect);
         }
@@ -641,6 +644,7 @@ impl AlphaBatchBuilder {
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
+                    snap_offsets,
                     task_address,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -715,6 +719,7 @@ impl AlphaBatchBuilder {
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
+                    snap_offsets,
                     task_address,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -767,6 +772,7 @@ impl AlphaBatchBuilder {
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
+                    snap_offsets,
                     task_address,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -934,6 +940,7 @@ impl AlphaBatchBuilder {
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
+                    snap_offsets,
                     task_address,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -978,8 +985,9 @@ impl AlphaBatchBuilder {
                 let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
 
                 let prim_header = PrimitiveHeader {
-                    local_rect: picture.local_rect,
+                    local_rect: picture.snapped_local_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
+                    snap_offsets,
                     task_address,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -1016,8 +1024,9 @@ impl AlphaBatchBuilder {
                             ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
                             let prim_header = PrimitiveHeader {
-                                local_rect: pic.local_rect,
+                                local_rect: pic.snapped_local_rect,
                                 local_clip_rect: prim_info.combined_local_clip_rect,
+                                snap_offsets,
                                 task_address,
                                 specific_prim_address: GpuCacheAddress::invalid(),
                                 transform_id: transforms
@@ -1075,19 +1084,12 @@ impl AlphaBatchBuilder {
 
                 match picture.raster_config {
                     Some(ref raster_config) => {
-                        // All pictures must snap to their primitive rect instead of the
-                        // visible rect like most primitives. This is because the picture's
-                        // visible rect includes the effect of the picture's clip rect,
-                        // which was not considered by the picture's children. The primitive
-                        // rect however is simply the union of the visible rect of the
-                        // children, which they snapped to, which is precisely what we also
-                        // need to snap to in order to be consistent.
-                        let mut brush_flags = BrushFlags::SNAP_TO_PRIMITIVE;
-
                         // If the child picture was rendered in local space, we can safely
                         // interpolate the UV coordinates with perspective correction.
-                        if raster_config.establishes_raster_root {
-                            brush_flags |= BrushFlags::PERSPECTIVE_INTERPOLATION;
+                        let brush_flags = if raster_config.establishes_raster_root {
+                            BrushFlags::PERSPECTIVE_INTERPOLATION
+                        } else {
+                            BrushFlags::empty()
                         };
 
                         let clip_task_address = ctx.get_prim_clip_task_address(
@@ -1125,7 +1127,7 @@ impl AlphaBatchBuilder {
                                 // the local bounds of the picture extend to within the edge tiles.
                                 let local_clip_rect = prim_info
                                     .combined_local_clip_rect
-                                    .intersection(&picture.local_rect)
+                                    .intersection(&picture.snapped_local_rect)
                                     .and_then(|rect| {
                                         rect.intersection(&tile_cache.local_clip_rect)
                                     });
@@ -1144,9 +1146,17 @@ impl AlphaBatchBuilder {
                                         // Get the local rect of the tile.
                                         let tile_rect = tile.local_rect;
 
+                                        // Adjust the snap offsets for the tile.
+                                        let snap_offsets = recompute_snap_offsets(
+                                            tile_rect,
+                                            prim_rect,
+                                            snap_offsets,
+                                        );
+
                                         let prim_header = PrimitiveHeader {
                                             local_rect: tile_rect,
                                             local_clip_rect,
+                                            snap_offsets,
                                             task_address,
                                             specific_prim_address: prim_cache_address,
                                             transform_id,
@@ -1343,6 +1353,7 @@ impl AlphaBatchBuilder {
 
                                         let shadow_prim_header = PrimitiveHeader {
                                             local_rect: shadow_rect,
+                                            snap_offsets: prim_info.shadow_snap_offsets,
                                             specific_prim_address: shadow_prim_address,
                                             ..prim_header
                                         };
@@ -1619,8 +1630,9 @@ impl AlphaBatchBuilder {
                                 };
 
                                 let prim_header = PrimitiveHeader {
-                                    local_rect: picture.local_rect,
+                                    local_rect: picture.snapped_local_rect,
                                     local_clip_rect: prim_info.combined_local_clip_rect,
+                                    snap_offsets,
                                     task_address,
                                     specific_prim_address: prim_cache_address,
                                     transform_id,
@@ -1706,6 +1718,7 @@ impl AlphaBatchBuilder {
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
+                    snap_offsets: snap_offsets,
                     task_address,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -1779,6 +1792,7 @@ impl AlphaBatchBuilder {
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
+                    snap_offsets: snap_offsets,
                     task_address,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -1886,6 +1900,7 @@ impl AlphaBatchBuilder {
                 let prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
+                    snap_offsets: snap_offsets,
                     task_address,
                     specific_prim_address: prim_cache_address,
                     transform_id,
@@ -1990,6 +2005,7 @@ impl AlphaBatchBuilder {
                     let prim_header = PrimitiveHeader {
                         local_rect: prim_rect,
                         local_clip_rect: prim_info.combined_local_clip_rect,
+                        snap_offsets: snap_offsets,
                         task_address,
                         specific_prim_address: prim_cache_address,
                         transform_id,
@@ -2042,6 +2058,7 @@ impl AlphaBatchBuilder {
                         let prim_header = PrimitiveHeader {
                             local_rect: prim_rect,
                             local_clip_rect: image_instance.tight_local_clip_rect,
+                            snap_offsets,
                             task_address,
                             specific_prim_address: gpu_cache.get_address(&gpu_handle),
                             transform_id,
@@ -2087,6 +2104,7 @@ impl AlphaBatchBuilder {
                 let mut prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
+                    snap_offsets,
                     task_address,
                     specific_prim_address: GpuCacheAddress::invalid(),
                     transform_id,
@@ -2225,6 +2243,7 @@ impl AlphaBatchBuilder {
                 let mut prim_header = PrimitiveHeader {
                     local_rect: prim_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
+                    snap_offsets,
                     task_address,
                     specific_prim_address: GpuCacheAddress::invalid(),
                     transform_id,
@@ -2494,10 +2513,18 @@ fn add_gradient_tiles(
     let user_data = [stops_handle.as_int(gpu_cache), 0, 0, 0];
 
     for tile in visible_tiles {
+        // Adjust the snap offsets for the tile.
+        let snap_offsets = recompute_snap_offsets(
+            tile.local_rect,
+            base_prim_header.local_rect,
+            base_prim_header.snap_offsets,
+        );
+
         let prim_header = PrimitiveHeader {
             specific_prim_address: gpu_cache.get_address(&tile.handle),
             local_rect: tile.local_rect,
             local_clip_rect: tile.local_clip_rect,
+            snap_offsets,
             ..*base_prim_header
         };
         let prim_header_index = prim_headers.push(&prim_header, z_id, user_data);
