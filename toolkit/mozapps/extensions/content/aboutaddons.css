@@ -9,6 +9,16 @@
   max-width: var(--section-width);
 }
 
+#abuse-reports-messages {
+  margin-inline-start: 28px;
+  max-width: var(--section-width);
+}
+
+/* The margin between message bars. */
+#abuse-reports-messages > * {
+  margin-bottom: 8px;
+}
+
 /* List sections */
 
 .list-section-heading {
