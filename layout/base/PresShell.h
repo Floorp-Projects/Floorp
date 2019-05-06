@@ -559,6 +559,7 @@ class PresShell final : public nsStubDocumentObserver,
    * view.
    * @return true if any scrolling happened, false if no scrolling happened
    */
+  MOZ_CAN_RUN_SCRIPT
   bool ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
                                ScrollAxis aVertical, ScrollAxis aHorizontal,
                                ScrollFlags aScrollFlags);
