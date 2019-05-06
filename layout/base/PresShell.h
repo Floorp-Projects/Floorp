@@ -1282,8 +1282,7 @@ class PresShell final : public nsStubDocumentObserver,
   void ThemeChanged() { mPresContext->ThemeChanged(); }
   void BackingScaleFactorChanged() { mPresContext->UIResolutionChangedSync(); }
 
-  // nsIViewObserver interface
-
+  MOZ_CAN_RUN_SCRIPT
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
              PaintFlags aFlags);
 

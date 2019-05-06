@@ -326,18 +326,17 @@ void nsViewManager::Refresh(nsView* aView,
     NS_ASSERTION(GetDisplayRootFor(aView) == aView,
                  "Widgets that we paint must all be display roots");
 
-    if (mPresShell) {
+    if (RefPtr<PresShell> presShell = mPresShell) {
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf_stderr("--COMPOSITE-- %p\n", mPresShell);
+        printf_stderr("--COMPOSITE-- %p\n", presShell.get());
       }
 #endif
-      PaintFlags paintFlags = PaintFlags::PaintComposite;
       LayerManager* manager = widget->GetLayerManager();
       if (!manager->NeedsWidgetInvalidation()) {
         manager->FlushRendering();
       } else {
-        mPresShell->Paint(aView, damageRegion, paintFlags);
+        presShell->Paint(aView, damageRegion, PaintFlags::PaintComposite);
       }
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -394,7 +393,8 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
       nsIWidget* widget = widgets[i];
       nsView* view = nsView::GetViewFor(widget);
       if (view) {
-        view->GetViewManager()->ProcessPendingUpdatesPaint(widget);
+        RefPtr<nsViewManager> viewManager = view->GetViewManager();
+        viewManager->ProcessPendingUpdatesPaint(MOZ_KnownLive(widget));
       }
     }
     SetPainting(false);
@@ -450,16 +450,16 @@ void nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget) {
       return;
     }
 
-    if (mPresShell) {
+    if (RefPtr<PresShell> presShell = mPresShell) {
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
         printf_stderr(
             "---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n",
-            mPresShell, view, aWidget);
+            presShell.get(), view, aWidget);
       }
 #endif
 
-      mPresShell->Paint(view, nsRegion(), PaintFlags::PaintLayers);
+      presShell->Paint(view, nsRegion(), PaintFlags::PaintLayers);
       view->SetForcedRepaint(false);
 
 #ifdef MOZ_DUMP_PAINTING
@@ -1006,7 +1006,8 @@ void nsViewManager::IsPainting(bool& aIsPainting) {
 
 void nsViewManager::ProcessPendingUpdates() {
   if (!IsRootVM()) {
-    RootViewManager()->ProcessPendingUpdates();
+    RefPtr<nsViewManager> rootViewManager = RootViewManager();
+    rootViewManager->ProcessPendingUpdates();
     return;
   }
 
@@ -1023,13 +1024,13 @@ void nsViewManager::ProcessPendingUpdates() {
 
 void nsViewManager::UpdateWidgetGeometry() {
   if (!IsRootVM()) {
-    RootViewManager()->UpdateWidgetGeometry();
+    RefPtr<nsViewManager> rootViewManager = RootViewManager();
+    rootViewManager->UpdateWidgetGeometry();
     return;
   }
 
   if (mHasPendingWidgetGeometryChanges) {
     mHasPendingWidgetGeometryChanges = false;
-    RefPtr<nsViewManager> strongThis(this);
     ProcessPendingUpdatesForView(mRootView, false);
   }
 }
