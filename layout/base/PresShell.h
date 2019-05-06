@@ -559,6 +559,7 @@ class PresShell final : public nsStubDocumentObserver,
    * view.
    * @return true if any scrolling happened, false if no scrolling happened
    */
+  MOZ_CAN_RUN_SCRIPT
   bool ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
                                ScrollAxis aVertical, ScrollAxis aHorizontal,
                                ScrollFlags aScrollFlags);
@@ -637,7 +638,7 @@ class PresShell final : public nsStubDocumentObserver,
    * Interface to dispatch events via the presshell
    * @note The caller must have a strong reference to the PresShell.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   nsresult HandleEventWithTarget(WidgetEvent* aEvent, nsIFrame* aFrame,
                                  nsIContent* aContent,
                                  nsEventStatus* aEventStatus,
@@ -1034,13 +1035,13 @@ class PresShell final : public nsStubDocumentObserver,
    * Fires on the presshell for the painted widget.
    * This is issued at a time when it's safe to modify widget geometry.
    */
-  void WillPaintWindow();
+  MOZ_CAN_RUN_SCRIPT void WillPaintWindow();
   /**
    * Notify that we called Paint with PaintFlags::PaintComposite.
    * Fires on the presshell for the painted widget.
    * This is issued at a time when it's safe to modify widget geometry.
    */
-  void DidPaintWindow();
+  MOZ_CAN_RUN_SCRIPT void DidPaintWindow();
 
   bool IsVisible();
   MOZ_CAN_RUN_SCRIPT
@@ -1282,8 +1283,7 @@ class PresShell final : public nsStubDocumentObserver,
   void ThemeChanged() { mPresContext->ThemeChanged(); }
   void BackingScaleFactorChanged() { mPresContext->UIResolutionChangedSync(); }
 
-  // nsIViewObserver interface
-
+  MOZ_CAN_RUN_SCRIPT
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
              PaintFlags aFlags);
 

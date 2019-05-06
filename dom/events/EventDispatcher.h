@@ -50,8 +50,11 @@ class EventTarget;
  * is called right after calling event listener for the current event target.
  */
 
-class EventChainVisitor {
+class MOZ_STACK_CLASS EventChainVisitor {
  public:
+  // For making creators of this class instances guarantee the lifetime of
+  // aPresContext, this needs to be marked as MOZ_CAN_RUN_SCRIPT.
+  MOZ_CAN_RUN_SCRIPT
   EventChainVisitor(nsPresContext* aPresContext, WidgetEvent* aEvent,
                     dom::Event* aDOMEvent,
                     nsEventStatus aEventStatus = nsEventStatus_eIgnore)
@@ -63,6 +66,9 @@ class EventChainVisitor {
 
   /**
    * The prescontext, possibly nullptr.
+   * Note that the lifetime of mPresContext is guaranteed by the creators so
+   * that you can use this with MOZ_KnownLive() when you set argument
+   * of can-run-script methods to this.
    */
   nsPresContext* const mPresContext;
 
@@ -106,8 +112,9 @@ class EventChainVisitor {
   nsCOMPtr<nsISupports> mItemData;
 };
 
-class EventChainPreVisitor : public EventChainVisitor {
+class MOZ_STACK_CLASS EventChainPreVisitor final : public EventChainVisitor {
  public:
+  MOZ_CAN_RUN_SCRIPT
   EventChainPreVisitor(nsPresContext* aPresContext, WidgetEvent* aEvent,
                        dom::Event* aDOMEvent, nsEventStatus aEventStatus,
                        bool aIsInAnon,
@@ -292,10 +299,16 @@ class EventChainPreVisitor : public EventChainVisitor {
   dom::EventTarget* mTargetInKnownToBeHandledScope;
 };
 
-class EventChainPostVisitor : public mozilla::EventChainVisitor {
+class MOZ_STACK_CLASS EventChainPostVisitor final
+    : public mozilla::EventChainVisitor {
  public:
+  // Note that for making guarantee the lifetime of mPresContext and mDOMEvent,
+  // creators should guarantee that aOther won't be deleted while the instance
+  // of this class is alive.
+  MOZ_CAN_RUN_SCRIPT
   explicit EventChainPostVisitor(EventChainVisitor& aOther)
-      : EventChainVisitor(aOther.mPresContext, aOther.mEvent, aOther.mDOMEvent,
+      : EventChainVisitor(MOZ_KnownLive(aOther.mPresContext), aOther.mEvent,
+                          MOZ_KnownLive(aOther.mDOMEvent),
                           aOther.mEventStatus) {}
 };
 

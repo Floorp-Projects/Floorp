@@ -183,9 +183,9 @@ a {
   height: 14px;
   margin: var(--console-output-vertical-padding) 4px;
   background-image: none;
-  background-position: 50% 50%;
+  background-position: center;
   background-repeat: no-repeat;
-  background-size: 12px 12px;
+  background-size: 12px;
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -224,7 +224,7 @@ a {
 
 .message.navigationMarker > .icon {
   color: var(--object-color);
-  background-image: url(chrome://devtools/skin/images/globe.svg);
+  background-image: url(chrome://devtools/skin/images/webconsole/navigation.svg);
 }
 
 .message:hover > .icon.rewindable {

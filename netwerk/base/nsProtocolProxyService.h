@@ -215,9 +215,12 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    */
   nsresult NewProxyInfo_Internal(const char* type, const nsACString& host,
                                  int32_t port, const nsACString& username,
-                                 const nsACString& password, uint32_t flags,
-                                 uint32_t timeout, nsIProxyInfo* next,
-                                 uint32_t aResolveFlags, nsIProxyInfo** result);
+                                 const nsACString& password,
+                                 const nsACString& aProxyAuthorizationHeader,
+                                 const nsACString& aConnectionIsolationKey,
+                                 uint32_t flags, uint32_t timeout,
+                                 nsIProxyInfo* next, uint32_t aResolveFlags,
+                                 nsIProxyInfo** result);
 
   /**
    * This method is an internal version of Resolve that does not query PAC.

@@ -59,6 +59,7 @@ class nsScrollbarButtonFrame final : public nsButtonBoxFrame {
     return NS_OK;
   }
 
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         mozilla::WidgetGUIEvent* aEvent,
                         nsEventStatus* aEventStatus) override {

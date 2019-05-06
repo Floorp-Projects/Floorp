@@ -15,7 +15,7 @@ function launchConnection(socks_vers, socks_port, dest_host, dest_port, dns)
     pi_flags = Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST;
   
   var pps = new ProtocolProxyService();
-  var pi = pps.newProxyInfo(socks_vers, 'localhost', socks_port,
+  var pi = pps.newProxyInfo(socks_vers, 'localhost', socks_port, '', '',
           pi_flags, -1, null);
   var trans = sts.createTransport(null, 0, dest_host, dest_port, pi);
   var input = trans.openInputStream(Ci.nsITransport.OPEN_BLOCKING,0,0);

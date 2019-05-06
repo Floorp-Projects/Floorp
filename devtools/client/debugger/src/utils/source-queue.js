@@ -36,5 +36,8 @@ export default {
   },
 
   flush: () => Promise.all([queue.flush(), currentWork]),
-  clear: () => queue.cancel()
+  clear: () => {
+    queuedSources = [];
+    queue.cancel();
+  }
 };

@@ -81,6 +81,20 @@ static bool EnsureDtoaState(JSContext* cx) {
   return true;
 }
 
+template <typename CharT>
+static inline void AssertWellPlacedNumericSeparator(const CharT* s,
+                                                    const CharT* start,
+                                                    const CharT* end) {
+  MOZ_ASSERT(start < end, "string is non-empty");
+  MOZ_ASSERT(s > start, "number can't start with a separator");
+  MOZ_ASSERT(s + 1 < end,
+             "final character in a numeric literal can't be a separator");
+  MOZ_ASSERT(*(s + 1) != '_',
+             "separator can't be followed by another separator");
+  MOZ_ASSERT(*(s - 1) != '_',
+             "separator can't be preceded by another separator");
+}
+
 /*
  * If we're accumulating a decimal number and the number is >= 2^53, then the
  * fast result from the loop in Get{Prefix,Decimal}Integer may be inaccurate.
@@ -95,12 +109,17 @@ static bool ComputeAccurateDecimalInteger(JSContext* cx, const CharT* start,
     return false;
   }
 
+  size_t j = 0;
   for (size_t i = 0; i < length; i++) {
     char c = char(start[i]);
+    if (c == '_') {
+      AssertWellPlacedNumericSeparator(start + i, start, end);
+      continue;
+    }
     MOZ_ASSERT(IsAsciiAlphanumeric(c));
-    cstr[i] = c;
+    cstr[j++] = c;
   }
-  cstr[length] = 0;
+  cstr[j] = 0;
 
   if (!EnsureDtoaState(cx)) {
     return false;
@@ -119,21 +138,32 @@ class BinaryDigitReader {
   const int base;     /* Base of number; must be a power of 2 */
   int digit;          /* Current digit value in radix given by base */
   int digitMask;      /* Mask to extract the next bit from digit */
-  const CharT* start; /* Pointer to the remaining digits */
+  const CharT* cur;   /* Pointer to the remaining digits */
+  const CharT* start; /* Pointer to the start of the string */
   const CharT* end;   /* Pointer to first non-digit */
 
  public:
   BinaryDigitReader(int base, const CharT* start, const CharT* end)
-      : base(base), digit(0), digitMask(0), start(start), end(end) {}
+      : base(base),
+        digit(0),
+        digitMask(0),
+        cur(start),
+        start(start),
+        end(end) {}
 
   /* Return the next binary digit from the number, or -1 if done. */
   int nextDigit() {
     if (digitMask == 0) {
-      if (start == end) {
+      if (cur == end) {
         return -1;
       }
 
-      int c = *start++;
+      int c = *cur++;
+      if (c == '_') {
+        AssertWellPlacedNumericSeparator(cur - 1, start, end);
+        c = *cur++;
+      }
+
       MOZ_ASSERT(IsAsciiAlphanumeric(c));
       digit = AsciiAlphanumericToNumber(c);
       digitMask = base >> 1;
@@ -222,7 +252,8 @@ template double js::ParseDecimalNumber(
 
 template <typename CharT>
 bool js::GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end,
-                          int base, const CharT** endp, double* dp) {
+                          int base, IntegerSeparatorHandling separatorHandling,
+                          const CharT** endp, double* dp) {
   MOZ_ASSERT(start <= end);
   MOZ_ASSERT(2 <= base && base <= 36);
 
@@ -231,6 +262,11 @@ bool js::GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end,
   for (; s < end; s++) {
     CharT c = *s;
     if (!IsAsciiAlphanumeric(c)) {
+      if (c == '_' &&
+          separatorHandling == IntegerSeparatorHandling::SkipUnderscore) {
+        AssertWellPlacedNumericSeparator(s, start, end);
+        continue;
+      }
       break;
     }
 
@@ -253,7 +289,7 @@ bool js::GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end,
   /*
    * Otherwise compute the correct integer from the prefix of valid digits
    * if we're computing for base ten or a power of two.  Don't worry about
-   * other bases; see 15.1.2.2 step 13.
+   * other bases; see ES2018, 18.2.5 `parseInt(string, radix)`, step 13.
    */
   if (base == 10) {
     return ComputeAccurateDecimalInteger(cx, start, s, dp);
@@ -270,10 +306,12 @@ namespace js {
 
 template bool GetPrefixInteger(JSContext* cx, const char16_t* start,
                                const char16_t* end, int base,
+                               IntegerSeparatorHandling separatorHandling,
                                const char16_t** endp, double* dp);
 
 template bool GetPrefixInteger(JSContext* cx, const Latin1Char* start,
                                const Latin1Char* end, int base,
+                               IntegerSeparatorHandling separatorHandling,
                                const Latin1Char** endp, double* dp);
 
 }  // namespace js
@@ -287,6 +325,10 @@ bool js::GetDecimalInteger(JSContext* cx, const CharT* start, const CharT* end,
   double d = 0.0;
   for (; s < end; s++) {
     CharT c = *s;
+    if (c == '_') {
+      AssertWellPlacedNumericSeparator(s, start, end);
+      continue;
+    }
     MOZ_ASSERT(IsAsciiDigit(c));
     int digit = c - '0';
     d = d * 10 + digit;
@@ -316,6 +358,59 @@ bool GetDecimalInteger<Utf8Unit>(JSContext* cx, const Utf8Unit* start,
                                  const Utf8Unit* end, double* dp) {
   return GetDecimalInteger(cx, Utf8AsUnsignedChars(start),
                            Utf8AsUnsignedChars(end), dp);
+}
+
+}  // namespace js
+
+template <typename CharT>
+bool js::GetDecimalNonInteger(JSContext* cx, const CharT* start,
+                              const CharT* end, double* dp) {
+  MOZ_ASSERT(start <= end);
+
+  size_t length = end - start;
+  Vector<char, 32> chars(cx);
+  if (!chars.growByUninitialized(length + 1)) {
+    return false;
+  }
+
+  const CharT* s = start;
+  size_t i = 0;
+  for (; s < end; s++) {
+    CharT c = *s;
+    if (c == '_') {
+      AssertWellPlacedNumericSeparator(s, start, end);
+      continue;
+    }
+    MOZ_ASSERT(IsAsciiDigit(c) || c == '.' || c == 'e' || c == 'E' ||
+               c == '+' || c == '-');
+    chars[i++] = char(c);
+  }
+  chars[i] = 0;
+
+  if (!EnsureDtoaState(cx)) {
+    return false;
+  }
+
+  char* ep;
+  *dp = js_strtod_harder(cx->dtoaState, chars.begin(), &ep);
+  MOZ_ASSERT(ep >= chars.begin());
+
+  return true;
+}
+
+namespace js {
+
+template bool GetDecimalNonInteger(JSContext* cx, const char16_t* start,
+                                   const char16_t* end, double* dp);
+
+template bool GetDecimalNonInteger(JSContext* cx, const Latin1Char* start,
+                                   const Latin1Char* end, double* dp);
+
+template <>
+bool GetDecimalNonInteger<Utf8Unit>(JSContext* cx, const Utf8Unit* start,
+                                    const Utf8Unit* end, double* dp) {
+  return GetDecimalNonInteger(cx, Utf8AsUnsignedChars(start),
+                              Utf8AsUnsignedChars(end), dp);
 }
 
 }  // namespace js
@@ -408,7 +503,8 @@ static bool ParseIntImpl(JSContext* cx, const CharT* chars, size_t length,
   /* Steps 11-15. */
   const CharT* actualEnd;
   double d;
-  if (!GetPrefixInteger(cx, s, end, radix, &actualEnd, &d)) {
+  if (!GetPrefixInteger(cx, s, end, radix, IntegerSeparatorHandling::None,
+                        &actualEnd, &d)) {
     return false;
   }
 
@@ -1578,7 +1674,8 @@ static bool CharsToNumber(JSContext* cx, const CharT* chars, size_t length,
        */
       const CharT* endptr;
       double d;
-      if (!GetPrefixInteger(cx, bp + 2, end, radix, &endptr, &d) ||
+      if (!GetPrefixInteger(cx, bp + 2, end, radix,
+                            IntegerSeparatorHandling::None, &endptr, &d) ||
           endptr == bp + 2 || SkipSpace(endptr, end) != end) {
         *result = GenericNaN();
       } else {

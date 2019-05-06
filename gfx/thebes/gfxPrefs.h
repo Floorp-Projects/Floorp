@@ -406,11 +406,6 @@ class gfxPrefs final {
   DECL_GFX_PREF(Once, "dom.vr.service.enabled",                VRServiceEnabled, bool, true);
   DECL_GFX_PREF(Live, "dom.w3c_pointer_events.enabled",        PointerEventsEnabled, bool, false);
 
-  // Make APZ send child-to-screen layer matrices to the chrome process
-  // even when the GPU process is in use (behind pref due to IPC errors
-  // in reftests) https://bugzilla.mozilla.org/show_bug.cgi?id=1533673
-  DECL_GFX_PREF(Live, "fission.apz-matrices-with-gpu-process", FissionApzMatricesWithGpuProcess, bool, false);
-
   DECL_GFX_PREF(Live, "general.smoothScroll",                  SmoothScrollEnabled, bool, true);
   DECL_GFX_PREF(Live, "general.smoothScroll.currentVelocityWeighting",
                 SmoothScrollCurrentVelocityWeighting, float, 0.25);

@@ -15,6 +15,28 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
+  Components.Constructor(
+    "@mozilla.org/referrer-info;1",
+    "nsIReferrerInfo",
+    "init"));
+
+// Create default ReferrerInfo instance for the given referrer URI string.
+const createReferrerInfo = aReferrer => {
+  let referrerUri;
+  try {
+    referrerUri = Services.io.newURI(aReferrer);
+  } catch (ignored) {
+  }
+
+  return new ReferrerInfo(
+    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    true,
+    referrerUri
+  );
+};
+
+
 // Handles navigation requests between Gecko and a GeckoView.
 // Handles GeckoView:GoBack and :GoForward requests dispatched by
 // GeckoView.goBack and .goForward.
@@ -105,7 +127,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
         this.browser.loadURI(parsedUri ? parsedUri.spec : uri, {
           flags: navFlags,
-          referrerURI: referrer,
+          referrerInfo: createReferrerInfo(referrer),
           triggeringPrincipal,
         });
         break;
@@ -133,7 +155,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
         this.browser.loadURI(uri, {
           flags,
-          referrerURI: referrer,
+          referrerInfo: createReferrerInfo(referrer),
           triggeringPrincipal: E10SUtils.deserializePrincipal(triggeringPrincipal),
         });
         break;
@@ -272,7 +294,11 @@ class GeckoViewNavigation extends GeckoViewModule {
       // Should we throw?
       return null;
     }
-    browser.loadURI(aUri.spec, null, null, null, null, aTriggeringPrincipal, aCsp);
+
+    browser.loadURI(aUri.spec, {
+      triggeringPrincipal: aTriggeringPrincipal,
+      csp: aCsp,
+    });
     return browser;
   }
 

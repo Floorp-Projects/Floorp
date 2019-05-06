@@ -107,7 +107,7 @@ TestFilter.prototype = {
       throw Cr.NS_ERROR_FAILURE;
     }
 
-    var pi_tail = pps.newProxyInfo(this._type, this._host, this._port,
+    var pi_tail = pps.newProxyInfo(this._type, this._host, this._port, "", "",
                                    this._flags, this._timeout, null);
     if (pi)
       pi.failoverProxy = pi_tail;

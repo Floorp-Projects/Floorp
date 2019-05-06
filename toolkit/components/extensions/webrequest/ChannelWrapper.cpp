@@ -824,6 +824,9 @@ nsresult FillProxyInfo(MozProxyInfo& aDict, nsIProxyInfo* aProxyInfo) {
   MOZ_TRY(aProxyInfo->GetPort(&aDict.mPort));
   MOZ_TRY(aProxyInfo->GetType(aDict.mType));
   MOZ_TRY(aProxyInfo->GetUsername(aDict.mUsername));
+  MOZ_TRY(
+      aProxyInfo->GetProxyAuthorizationHeader(aDict.mProxyAuthorizationHeader));
+  MOZ_TRY(aProxyInfo->GetConnectionIsolationKey(aDict.mConnectionIsolationKey));
   MOZ_TRY(aProxyInfo->GetFailoverTimeout(&aDict.mFailoverTimeout.Construct()));
 
   uint32_t flags;

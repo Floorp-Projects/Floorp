@@ -137,6 +137,7 @@ class nsIWidgetListener {
    * at a time when it's OK to change the geometry of this widget or of
    * other widgets. Must be called before every call to PaintWindow.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void WillPaintWindow(nsIWidget* aWidget);
 
   /**
@@ -145,6 +146,7 @@ class nsIWidgetListener {
    * This is called at a time when it is not OK to change the geometry of
    * this widget or of other widgets.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool PaintWindow(nsIWidget* aWidget,
                            mozilla::LayoutDeviceIntRegion aRegion);
 
@@ -154,6 +156,7 @@ class nsIWidgetListener {
    * this widget or of other widgets.
    * Must be called after every call to PaintWindow.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void DidPaintWindow();
 
   virtual void DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
