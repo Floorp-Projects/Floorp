@@ -732,9 +732,11 @@ class TaskCache(CacheManager):
 
         # PGO builds are now known as "shippable" for all platforms but Android.
         # For macOS and linux32 shippable builds are equivalent to opt builds and
-        # replace them on some trees.
+        # replace them on some trees. Additionally, we no longer produce win64
+        # opt builds on integration branches.
         if not job.startswith('android-'):
-            if job.endswith('-pgo') or job in ('macosx64-opt', 'linux-opt'):
+            if job.endswith('-pgo') or job in ('macosx64-opt', 'linux-opt',
+                                               'win64-opt'):
                 tree += '.shippable'
             if job.endswith('-pgo'):
                 job = job.replace('-pgo', '-opt')
