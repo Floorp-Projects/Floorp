@@ -5,6 +5,7 @@
 :root {
   --btn-bg-color: rgba(50,50,50,0.55);
   --close-btn-bg-color: rgb(211,216,220);
+  --resize-margin: 5px;
 }
 
 body {
@@ -19,16 +20,17 @@ body {
 }
 
 browser {
-  -moz-window-dragging: drag;
   flex: 1;
 }
 
 #controls {
-  height: 100%;
+  height: calc(100% - 2 * var(--resize-margin));
   left: 0;
   position: absolute;
   top: 0;
-  width: 100%;
+  width: calc(100% - 2 * var(--resize-margin));
+  margin: var(--resize-margin);
+  -moz-window-dragging: drag;
 }
 
 .control-item {

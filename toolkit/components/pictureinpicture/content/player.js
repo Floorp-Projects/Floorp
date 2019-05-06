@@ -45,9 +45,6 @@ async function setupPlayer(originatingBrowser, videoData) {
     PictureInPicture.unload();
   });
 
-  await window.promiseDocumentFlushed(() => {});
-  browser.style.MozWindowDragging = "drag";
-
   let close = document.getElementById("close");
   close.addEventListener("click", () => {
     window.close();
