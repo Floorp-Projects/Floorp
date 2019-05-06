@@ -70,7 +70,6 @@ namespace jit {
   _(ConvertElementsToDoubles, js::ObjectElements::ConvertElementsToDoubles)    \
   _(CopyElementsForWrite, js::NativeObject::CopyElementsForWrite)              \
   _(CopyLexicalEnvironmentObject, js::jit::CopyLexicalEnvironmentObject)       \
-  _(CopyStringSplitArray, js::jit::CopyStringSplitArray)                       \
   _(CreateAsyncFromSyncIterator, js::CreateAsyncFromSyncIterator)              \
   _(CreateDerivedTypedObj, js::jit::CreateDerivedTypedObj)                     \
   _(CreateGenerator, js::jit::CreateGenerator)                                 \
