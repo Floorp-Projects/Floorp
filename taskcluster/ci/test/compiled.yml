@@ -93,6 +93,7 @@ jittest:
             # Additionally, platforms contain suffixes like "/opt" or "/debug".
             (?=linux).*(?!-ccov)...../.*: []  # redundant with SM(...)
             (?=windows).*(?!-ccov)...../.*: []  # redundant with SM(p)
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             android-hw-.*-api-16/opt: ['try']
             default: built-projects
     chunks:
