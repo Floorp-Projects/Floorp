@@ -153,7 +153,7 @@
             this.removeAttribute("overflow");
 
             if (this._lastTabClosedByMouse) {
-              this._expandSpacerBy(this.arrowScrollbox._scrollButtonDown.clientWidth);
+              this._expandSpacerBy(this._scrollButtonWidth);
             }
 
             for (let tab of Array.from(gBrowser._removingTabs)) {
@@ -411,6 +411,7 @@
       <field name="_tabDefaultMaxWidth">NaN</field>
       <field name="_lastTabClosedByMouse">false</field>
       <field name="_hasTabTempMaxWidth">false</field>
+      <field name="_scrollButtonWidth">0</field>
 
       <!-- Try to keep the active tab's close button under the mouse cursor -->
       <method name="_lockTabSizing">
@@ -429,6 +430,7 @@
               parseFloat(window.getComputedStyle(aTab).maxWidth);
           }
           this._lastTabClosedByMouse = true;
+          this._scrollButtonWidth = window.windowUtils.getBoundsWithoutFlushing(this.arrowScrollbox._scrollButtonDown).width;
 
           if (this.getAttribute("overflow") == "true") {
             // Don't need to do anything if we're in overflow mode and aren't scrolled

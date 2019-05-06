@@ -1812,7 +1812,8 @@ nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame(nsIFrame* aStart) {
 
 void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem) {
   if (aMenuItem) {
-    aMenuItem->PresShell()->ScrollFrameRectIntoView(
+    RefPtr<mozilla::PresShell> presShell = aMenuItem->PresShell();
+    presShell->ScrollFrameRectIntoView(
         aMenuItem, nsRect(nsPoint(0, 0), aMenuItem->GetRect().Size()),
         ScrollAxis(), ScrollAxis(),
         ScrollFlags::ScrollOverflowHidden |

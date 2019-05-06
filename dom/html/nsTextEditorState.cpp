@@ -804,12 +804,9 @@ void TextInputListener::OnSelectionChange(Selection& aSelection,
   if (!collapsed && (aReason & (nsISelectionListener::MOUSEUP_REASON |
                                 nsISelectionListener::KEYPRESS_REASON |
                                 nsISelectionListener::SELECTALL_REASON))) {
-    nsIContent* content = mFrame->GetContent();
-    if (content) {
-      nsCOMPtr<Document> doc = content->GetComposedDoc();
-      if (doc) {
-        RefPtr<PresShell> presShell = doc->GetPresShell();
-        if (presShell) {
+    if (nsCOMPtr<nsIContent> content = mFrame->GetContent()) {
+      if (nsCOMPtr<Document> doc = content->GetComposedDoc()) {
+        if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
           nsEventStatus status = nsEventStatus_eIgnore;
           WidgetEvent event(true, eFormSelect);
 

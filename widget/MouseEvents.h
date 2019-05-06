@@ -18,6 +18,7 @@ namespace mozilla {
 namespace dom {
 class PBrowserParent;
 class PBrowserChild;
+class PBrowserBridgeParent;
 }  // namespace dom
 
 class WidgetPointerEvent;
@@ -92,6 +93,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
  private:
   friend class dom::PBrowserParent;
   friend class dom::PBrowserChild;
+  friend class dom::PBrowserBridgeParent;
 
  protected:
   WidgetMouseEventBase()
@@ -185,6 +187,7 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
  private:
   friend class dom::PBrowserParent;
   friend class dom::PBrowserChild;
+  friend class dom::PBrowserBridgeParent;
 
  public:
   typedef bool ReasonType;

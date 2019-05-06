@@ -1053,8 +1053,8 @@ nsresult NS_NewProxyInfo(const nsACString& type, const nsACString& host,
   nsCOMPtr<nsIProtocolProxyService> pps =
       do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
-    rv =
-        pps->NewProxyInfo(type, host, port, flags, UINT32_MAX, nullptr, result);
+    rv = pps->NewProxyInfo(type, host, port, EmptyCString(), EmptyCString(),
+                           flags, UINT32_MAX, nullptr, result);
   return rv;
 }
 
@@ -2940,20 +2940,20 @@ nsresult NS_CompareLoadInfoAndLoadContext(nsIChannel* aChannel) {
   return NS_OK;
 }
 
-nsresult NS_SetRequestBlockingReason(nsIChannel *channel, uint32_t reason) {
+nsresult NS_SetRequestBlockingReason(nsIChannel* channel, uint32_t reason) {
   NS_ENSURE_ARG(channel);
 
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   return NS_SetRequestBlockingReason(loadInfo, reason);
 }
 
-nsresult NS_SetRequestBlockingReason(nsILoadInfo *loadInfo, uint32_t reason) {
+nsresult NS_SetRequestBlockingReason(nsILoadInfo* loadInfo, uint32_t reason) {
   NS_ENSURE_ARG(loadInfo);
 
   return loadInfo->SetRequestBlockingReason(reason);
 }
 
-nsresult NS_SetRequestBlockingReasonIfNull(nsILoadInfo *loadInfo,
+nsresult NS_SetRequestBlockingReasonIfNull(nsILoadInfo* loadInfo,
                                            uint32_t reason) {
   NS_ENSURE_ARG(loadInfo);
 

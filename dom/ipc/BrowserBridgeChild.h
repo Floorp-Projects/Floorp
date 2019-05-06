@@ -15,7 +15,8 @@ namespace dom {
 class BrowsingContext;
 
 /**
- * Child side for a remote frame.
+ * BrowserBridgeChild implements the child actor part of the PBrowserBridge
+ * protocol. See PBrowserBridge for more information.
  */
 class BrowserBridgeChild : public PBrowserBridgeChild {
  public:

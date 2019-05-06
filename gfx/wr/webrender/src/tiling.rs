@@ -564,8 +564,12 @@ impl RenderTarget for ColorRenderTarget {
                             target_rect: target_rect.inner_rect(task_info.padding)
                         });
                     }
-                    BlitSource::RenderTask { .. } => {
-                        panic!("BUG: render task blit jobs to render tasks not supported");
+                    BlitSource::RenderTask { task_id } => {
+                        let (target_rect, _) = task.get_target_rect();
+                        self.blits.push(BlitJob {
+                            source: BlitJobSource::RenderTask(task_id),
+                            target_rect: target_rect.inner_rect(task_info.padding)
+                        });
                     }
                 }
             }

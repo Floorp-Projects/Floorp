@@ -863,7 +863,7 @@ impl RenderBackend {
             while let Ok(msg) = self.scene_rx.try_recv() {
                 match msg {
                     SceneBuilderResult::Transactions(mut txns, result_tx) => {
-                        self.resource_cache.before_frames(SystemTime::now());
+                        self.prepare_for_frames();
                         self.maybe_force_nop_documents(
                             &mut frame_counter,
                             &mut profile_counters,
@@ -921,7 +921,7 @@ impl RenderBackend {
                                 has_built_scene,
                             );
                         }
-                        self.resource_cache.after_frames();
+                        self.bookkeep_after_frames();
                     },
                     SceneBuilderResult::FlushComplete(tx) => {
                         tx.send(()).ok();
@@ -1199,6 +1199,20 @@ impl RenderBackend {
         true
     }
 
+    fn prepare_for_frames(&mut self) {
+        self.resource_cache.prepare_for_frames(SystemTime::now());
+        self.gpu_cache.prepare_for_frames();
+    }
+
+    fn bookkeep_after_frames(&mut self) {
+        self.resource_cache.bookkeep_after_frames();
+        self.gpu_cache.bookkeep_after_frames();   
+    }
+
+    fn requires_frame_build(&mut self) -> bool {
+        self.resource_cache.requires_frame_build() || self.gpu_cache.requires_frame_build()
+    }
+
     fn prepare_transactions(
         &mut self,
         document_ids: Vec<DocumentId>,
@@ -1234,13 +1248,6 @@ impl RenderBackend {
                     &mut txn.resource_updates,
                     &mut profile_counters.resources,
                 );
-
-                // If we've been above the threshold for reclaiming GPU cache memory for
-                // long enough, drop it and rebuild it. This needs to be done before any
-                // updates for this frame are made.
-                if self.gpu_cache.should_reclaim_memory() {
-                    self.gpu_cache.clear();
-                }
 
                 for scene_msg in transaction_msg.scene_ops.drain(..) {
                     let _timer = profile_counters.total_time.timer();
@@ -1281,7 +1288,7 @@ impl RenderBackend {
                 }
             }
         } else {
-            self.resource_cache.before_frames(SystemTime::now());
+            self.prepare_for_frames();
             self.maybe_force_nop_documents(
                 frame_counter,
                 profile_counters,
@@ -1302,7 +1309,7 @@ impl RenderBackend {
                 );
             }
 
-            self.resource_cache.after_frames();
+            self.bookkeep_after_frames();
             return;
         }
 
@@ -1326,7 +1333,7 @@ impl RenderBackend {
                                     profile_counters: &mut BackendProfileCounters,
                                     document_already_present: F) where
         F: Fn(DocumentId) -> bool {
-        if self.resource_cache.requires_frame_build() {
+        if self.requires_frame_build() {
             let nop_documents : Vec<DocumentId> = self.documents.keys()
                 .cloned()
                 .filter(|key| !document_already_present(*key))
@@ -1373,6 +1380,7 @@ impl RenderBackend {
             }
         }
 
+        let requires_frame_build = self.requires_frame_build();
         let doc = self.documents.get_mut(&document_id).unwrap();
         doc.has_built_scene |= has_built_scene;
 
@@ -1420,7 +1428,7 @@ impl RenderBackend {
         // We want to ensure we do this because even if the doc doesn't have pixels it
         // can still try to access stale texture cache items.
         let build_frame = (render_frame && !doc.frame_is_valid && doc.has_pixels()) ||
-            (self.resource_cache.requires_frame_build() && doc.can_render());
+            (requires_frame_build && doc.can_render());
 
         // Request composite is true when we want to composite frame even when
         // there is no frame update. This happens when video frame is updated under
@@ -1657,6 +1665,10 @@ impl RenderBackend {
         }
         let config = CaptureConfig::new(root, bits);
 
+        if config.bits.contains(CaptureBits::FRAME) {
+            self.prepare_for_frames();
+        }
+
         for (&id, doc) in &mut self.documents {
             debug!("\tdocument {:?}", id);
             if config.bits.contains(CaptureBits::SCENE) {
@@ -1696,6 +1708,14 @@ impl RenderBackend {
 
             let data_stores_name = format!("data-stores-{}-{}", id.namespace_id.0, id.id);
             config.serialize(&doc.data_stores, data_stores_name);
+        }
+
+        if config.bits.contains(CaptureBits::FRAME) {
+            // TODO: there is no guarantee that we won't hit this case, but we want to
+            // report it here if we do. If we don't, it will simply crash in
+            // Renderer::render_impl and give us less information about the source.
+            assert!(!self.requires_frame_build(), "Caches were cleared during a capture.");
+            self.bookkeep_after_frames();
         }
 
         debug!("\tscene builder");

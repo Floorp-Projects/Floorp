@@ -548,8 +548,8 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         {
           DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
           bgImageClip.Clear();
-          bgItem =
-              MakeDisplayItem<nsDisplayCanvasBackgroundImage>(aBuilder, bgData);
+          bgItem = MakeDisplayItem<nsDisplayCanvasBackgroundImage>(
+              aBuilder, this, bgData);
           if (bgItem) {
             bgItem->SetDependentFrame(aBuilder, dependentFrame);
           }
@@ -562,7 +562,8 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
       } else {
         nsDisplayCanvasBackgroundImage* bgItem =
-            MakeDisplayItem<nsDisplayCanvasBackgroundImage>(aBuilder, bgData);
+            MakeDisplayItem<nsDisplayCanvasBackgroundImage>(aBuilder, this,
+                                                            bgData);
         if (bgItem) {
           bgItem->SetDependentFrame(aBuilder, dependentFrame);
           thisItemList.AppendToTop(bgItem);

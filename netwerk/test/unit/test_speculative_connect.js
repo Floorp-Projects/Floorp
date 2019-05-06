@@ -245,7 +245,7 @@ function test_proxies(proxyHost, next) {
               .getService();
     Assert.notEqual(typeof(pps), undefined);
 
-    var proxyInfo = pps.newProxyInfo("http", proxyHost, 8080, 0, 1, null);
+    var proxyInfo = pps.newProxyInfo("http", proxyHost, 8080, "", "", 0, 1, null);
     Assert.notEqual(typeof(proxyInfo), undefined);
 
     var transport = sts.createTransport(null, 0, "dummyHost", 80, proxyInfo);

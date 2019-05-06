@@ -457,15 +457,14 @@ public class GeckoView extends FrameLayout {
 
     @Override
     public void onAttachedToWindow() {
-        if (mSession == null) {
+        if (mSession != null && mRuntime != null) {
+            if (!mSession.isOpen()) {
+                mSession.open(mRuntime);
+            }
+            mRuntime.orientationChanged();
+        } else {
             Log.w(LOGTAG, "No GeckoSession attached to this GeckoView instance. Call setSession to attach a GeckoSession to this instance.");
-            return;
         }
-
-        if (!mSession.isOpen()) {
-            mSession.open(mRuntime);
-        }
-        mRuntime.orientationChanged();
 
         super.onAttachedToWindow();
     }

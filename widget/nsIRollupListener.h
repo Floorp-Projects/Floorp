@@ -31,6 +31,7 @@ class nsIRollupListener {
    *
    * Returns true if the event that the caller is processing should be consumed.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool Rollup(uint32_t aCount, bool aFlush, const nsIntPoint* aPoint,
                       nsIContent** aLastRolledUp) = 0;
 

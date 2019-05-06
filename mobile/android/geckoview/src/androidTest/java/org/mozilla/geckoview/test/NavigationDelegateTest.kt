@@ -1140,6 +1140,19 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @WithDevToolsAPI
+    @Test fun loadUriReferrer() {
+        val uri = "https://example.com"
+        val referrer = "https://foo.org/"
+
+        sessionRule.session.loadUri(uri, referrer, GeckoSession.LOAD_FLAGS_NONE)
+        sessionRule.session.waitForPageStop()
+
+        assertThat("Referrer should match",
+                   sessionRule.session.evaluateJS("document.referrer") as String,
+                   equalTo(referrer))
+    }
+
+    @WithDevToolsAPI
     @Test(expected = GeckoResult.UncaughtException::class)
     fun onNewSession_doesNotAllowOpened() {
         // Disable popup blocker.

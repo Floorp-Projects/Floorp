@@ -35,7 +35,7 @@ interface nsIProxyInfo : nsISupports
    *
    * A future version of this interface may define additional types.
    */
-  readonly attribute ACString type; 
+  readonly attribute ACString type;
 
   /**
    * This attribute specifies flags that modify the proxy type.  The value of
@@ -46,7 +46,7 @@ interface nsIProxyInfo : nsISupports
 
   /**
    * This attribute specifies flags that were used by nsIProxyProtocolService when
-   * creating this ProxyInfo element. 
+   * creating this ProxyInfo element.
    */
   readonly attribute unsigned long resolveFlags;
 
@@ -73,6 +73,17 @@ interface nsIProxyInfo : nsISupports
    */
   attribute nsIProxyInfo failoverProxy;
 
+  /**
+   * Any non-empty value will be passed directly as Proxy-Authorization header
+   * value for the CONNECT request attempt.  However, this header set on the
+   * resource request itself takes precedence.
+   */
+  readonly attribute ACString proxyAuthorizationHeader;
+
+  /**
+   * An optional key used for additional isolation of this proxy connection.
+   */
+  readonly attribute ACString connectionIsolationKey;
 
   /****************************************************************************
    * The following "Proxy Flags" may be bit-wise combined to construct the

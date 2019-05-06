@@ -56,6 +56,18 @@ nsProxyInfo::GetPassword(nsACString& result) {
 }
 
 NS_IMETHODIMP
+nsProxyInfo::GetProxyAuthorizationHeader(nsACString& result) {
+  result = mProxyAuthorizationHeader;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProxyInfo::GetConnectionIsolationKey(nsACString& result) {
+  result = mConnectionIsolationKey;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsProxyInfo::GetFailoverTimeout(uint32_t* result) {
   *result = mTimeout;
   return NS_OK;

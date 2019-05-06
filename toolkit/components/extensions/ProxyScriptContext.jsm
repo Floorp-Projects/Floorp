@@ -65,7 +65,7 @@ const ProxyInfoData = {
     if (proxyData.type && proxyData.type.toLowerCase() === "direct") {
       return {type: proxyData.type};
     }
-    for (let prop of ["type", "host", "port", "username", "password", "proxyDNS", "failoverTimeout"]) {
+    for (let prop of ["type", "host", "port", "username", "password", "proxyDNS", "failoverTimeout", "proxyAuthorizationHeader", "connectionIsolationKey"]) {
       this[prop](proxyData);
     }
     return proxyData;
@@ -135,6 +135,20 @@ const ProxyInfoData = {
     }
   },
 
+  proxyAuthorizationHeader(proxyData) {
+    let {proxyauthorizationheader} = proxyData;
+    if (proxyauthorizationheader !== undefined && typeof username !== "string") {
+      throw new ExtensionError(`ProxyInfoData: Invalid proxy server authorization header: "${proxyauthorizationheader}"`);
+    }
+  },
+
+  connectionIsolationKey(proxyData) {
+    let {connectionisolationkey} = proxyData;
+    if (connectionisolationkey !== undefined && typeof username !== "string") {
+      throw new ExtensionError(`ProxyInfoData: Invalid proxy server authorization header: "${connectionisolationkey}"`);
+    }
+  },
+
   createProxyInfoFromData(proxyDataList, defaultProxyInfo, proxyDataListIndex = 0) {
     if (proxyDataListIndex >= proxyDataList.length) {
       return defaultProxyInfo;
@@ -143,7 +157,7 @@ const ProxyInfoData = {
     if (proxyData == null) {
       return null;
     }
-    let {type, host, port, username, password, proxyDNS, failoverTimeout} =
+    let {type, host, port, username, password, proxyDNS, failoverTimeout, proxyAuthorizationHeader, connectionIsolationKey} =
         ProxyInfoData.validate(proxyData);
     if (type === PROXY_TYPES.DIRECT) {
       return defaultProxyInfo;
@@ -152,13 +166,13 @@ const ProxyInfoData = {
 
     if (type === PROXY_TYPES.SOCKS || type === PROXY_TYPES.SOCKS4) {
       return ProxyService.newProxyInfoWithAuth(
-        type, host, port, username, password,
-        proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
-        failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC,
-        failoverProxy);
+        type, host, port, username, password, proxyAuthorizationHeader,
+        connectionIsolationKey, proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
+        failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC, failoverProxy);
     }
     return ProxyService.newProxyInfo(
       type, host, port,
+      proxyAuthorizationHeader, connectionIsolationKey,
       proxyDNS ? TRANSPARENT_PROXY_RESOLVES_HOST : 0,
       failoverTimeout ? failoverTimeout : PROXY_TIMEOUT_SEC,
       failoverProxy);
