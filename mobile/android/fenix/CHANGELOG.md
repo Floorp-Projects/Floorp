@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1874 - Added TOP info panel dialog for custom tabs.
 - #1411 - Added disabled style for disabled permissions items in site info panel.
 - #1735 - Adds API to see the release channel
+- #2318 - Added Firefox Accounts Pairing feature to "Turn On Sync" options
 
 ### Changed
 - #1429 - Updated site permissions ui for MVP

@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.BrowserDirection
@@ -16,8 +17,8 @@ import org.mozilla.fenix.ext.requireComponents
 
 class TurnOnSyncFragment : PreferenceFragmentCompat() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onResume() {
+        super.onResume()
         (activity as AppCompatActivity).title = getString(R.string.preferences_sync)
         (activity as AppCompatActivity).supportActionBar?.show()
     }
@@ -29,8 +30,11 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
             findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_sign_in))
         val preferenceNewAccount =
             findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_create_account))
+        val preferencePairSignIn =
+            findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_pair))
         preferenceSignIn?.onPreferenceClickListener = getClickListenerForSignIn()
         preferenceNewAccount?.onPreferenceClickListener = getClickListenerForSignIn()
+        preferencePairSignIn?.onPreferenceClickListener = getClickListenerForPairing()
     }
 
     private fun getClickListenerForSignIn(): Preference.OnPreferenceClickListener {
@@ -44,6 +48,15 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
             view?.let {
                 (activity as HomeActivity).openToBrowser(BrowserDirection.FromSettings)
             }
+            true
+        }
+    }
+
+    private fun getClickListenerForPairing(): Preference.OnPreferenceClickListener {
+        return Preference.OnPreferenceClickListener {
+            val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairInstructionsFragment()
+            Navigation.findNavController(view!!).navigate(directions)
+
             true
         }
     }
