@@ -1665,6 +1665,10 @@ impl RenderBackend {
         }
         let config = CaptureConfig::new(root, bits);
 
+        if config.bits.contains(CaptureBits::FRAME) {
+            self.prepare_for_frames();
+        }
+
         for (&id, doc) in &mut self.documents {
             debug!("\tdocument {:?}", id);
             if config.bits.contains(CaptureBits::SCENE) {
@@ -1704,6 +1708,14 @@ impl RenderBackend {
 
             let data_stores_name = format!("data-stores-{}-{}", id.namespace_id.0, id.id);
             config.serialize(&doc.data_stores, data_stores_name);
+        }
+
+        if config.bits.contains(CaptureBits::FRAME) {
+            // TODO: there is no guarantee that we won't hit this case, but we want to
+            // report it here if we do. If we don't, it will simply crash in
+            // Renderer::render_impl and give us less information about the source.
+            assert!(!self.requires_frame_build(), "Caches were cleared during a capture.");
+            self.bookkeep_after_frames();
         }
 
         debug!("\tscene builder");

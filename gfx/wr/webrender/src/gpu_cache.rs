@@ -728,6 +728,7 @@ impl GpuCache {
         let mut cache = Self::new();
         let mut now = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
         now.advance();
+        cache.prepared_for_frames = true;
         cache.begin_frame(now);
         cache
     }
