@@ -473,8 +473,7 @@ BrowserChild::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-void BrowserChild::ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
-                                             uint64_t aInputBlockId,
+void BrowserChild::ContentReceivedInputBlock(uint64_t aInputBlockId,
                                              bool aPreventDefault) const {
   if (mApzcTreeManager) {
     mApzcTreeManager->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
@@ -599,13 +598,11 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent) {
   nsWeakPtr weakPtrThis = do_GetWeakReference(
       static_cast<nsIBrowserChild*>(this));  // for capture by the lambda
   ContentReceivedInputBlockCallback callback(
-      [weakPtrThis](const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId,
-                    bool aPreventDefault) {
+      [weakPtrThis](uint64_t aInputBlockId, bool aPreventDefault) {
         if (nsCOMPtr<nsIBrowserChild> browserChild =
                 do_QueryReferent(weakPtrThis)) {
           static_cast<BrowserChild*>(browserChild.get())
-              ->ContentReceivedInputBlock(aGuid, aInputBlockId,
-                                          aPreventDefault);
+              ->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
         }
       });
   mAPZEventState = new APZEventState(mPuppetWidget, std::move(callback));
@@ -1336,7 +1333,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleTap(
   switch (aType) {
     case GeckoContentController::TapType::eSingleTap:
       if (mBrowserChildMessageManager) {
-        mAPZEventState->ProcessSingleTap(point, scale, aModifiers, aGuid, 1);
+        mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 1);
       }
       break;
     case GeckoContentController::TapType::eDoubleTap:
@@ -1344,13 +1341,13 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleTap(
       break;
     case GeckoContentController::TapType::eSecondTap:
       if (mBrowserChildMessageManager) {
-        mAPZEventState->ProcessSingleTap(point, scale, aModifiers, aGuid, 2);
+        mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 2);
       }
       break;
     case GeckoContentController::TapType::eLongTap:
       if (mBrowserChildMessageManager) {
         RefPtr<APZEventState> eventState(mAPZEventState);
-        eventState->ProcessLongTap(presShell, point, scale, aModifiers, aGuid,
+        eventState->ProcessLongTap(presShell, point, scale, aModifiers,
                                    aInputBlockId);
       }
       break;
@@ -1647,7 +1644,7 @@ void BrowserChild::HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
   DispatchWidgetEventViaAPZ(localEvent);
 
   if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
-    mAPZEventState->ProcessMouseEvent(aEvent, aGuid, aInputBlockId);
+    mAPZEventState->ProcessMouseEvent(aEvent, aInputBlockId);
   }
 
   // Do this after the DispatchWidgetEventViaAPZ call above, so that if the
@@ -1743,7 +1740,7 @@ void BrowserChild::DispatchWheelEvent(const WidgetWheelEvent& aEvent,
   }
 
   if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
-    mAPZEventState->ProcessWheelEvent(localEvent, aGuid, aInputBlockId);
+    mAPZEventState->ProcessWheelEvent(localEvent, aInputBlockId);
   }
 }
 

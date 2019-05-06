@@ -175,11 +175,9 @@ NS_IMPL_ISUPPORTS(DelayedFireSingleTapEvent, nsITimerCallback, nsINamed)
 void APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
                                      const CSSToLayoutDeviceScale& aScale,
                                      Modifiers aModifiers,
-                                     const ScrollableLayerGuid& aGuid,
                                      int32_t aClickCount) {
-  APZES_LOG("Handling single tap at %s on %s with %d\n",
-            Stringify(aPoint).c_str(), Stringify(aGuid).c_str(),
-            mTouchEndCancelled);
+  APZES_LOG("Handling single tap at %s with %d\n",
+            Stringify(aPoint).c_str(), mTouchEndCancelled);
 
   RefPtr<nsIContent> touchRollup = GetTouchRollup();
   mTouchRollup = nullptr;
@@ -263,7 +261,6 @@ void APZEventState::ProcessLongTap(PresShell* aPresShell,
                                    const CSSPoint& aPoint,
                                    const CSSToLayoutDeviceScale& aScale,
                                    Modifiers aModifiers,
-                                   const ScrollableLayerGuid& aGuid,
                                    uint64_t aInputBlockId) {
   APZES_LOG("Handling long tap at %s\n", Stringify(aPoint).c_str());
 
@@ -289,7 +286,7 @@ void APZEventState::ProcessLongTap(PresShell* aPresShell,
   bool eventHandled =
       FireContextmenuEvents(aPresShell, aPoint, aScale, aModifiers, widget);
 #endif
-  mContentReceivedInputBlockCallback(aGuid, aInputBlockId, eventHandled);
+  mContentReceivedInputBlockCallback(aInputBlockId, eventHandled);
 
   if (eventHandled) {
     // Also send a touchcancel to content, so that listeners that might be
@@ -358,8 +355,7 @@ void APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
       }
 
       if (isTouchPrevented) {
-        mContentReceivedInputBlockCallback(aGuid, aInputBlockId,
-                                           isTouchPrevented);
+        mContentReceivedInputBlockCallback(aInputBlockId, isTouchPrevented);
         sentContentResponse = true;
       } else {
         APZES_LOG("Event not prevented; pending response for %" PRIu64 " %s\n",
@@ -415,19 +411,17 @@ void APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
 }
 
 void APZEventState::ProcessWheelEvent(const WidgetWheelEvent& aEvent,
-                                      const ScrollableLayerGuid& aGuid,
                                       uint64_t aInputBlockId) {
   // If this event starts a swipe, indicate that it shouldn't result in a
   // scroll by setting defaultPrevented to true.
   bool defaultPrevented = aEvent.DefaultPrevented() || aEvent.TriggersSwipe();
-  mContentReceivedInputBlockCallback(aGuid, aInputBlockId, defaultPrevented);
+  mContentReceivedInputBlockCallback(aInputBlockId, defaultPrevented);
 }
 
 void APZEventState::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
-                                      const ScrollableLayerGuid& aGuid,
                                       uint64_t aInputBlockId) {
   bool defaultPrevented = false;
-  mContentReceivedInputBlockCallback(aGuid, aInputBlockId, defaultPrevented);
+  mContentReceivedInputBlockCallback(aInputBlockId, defaultPrevented);
 }
 
 void APZEventState::ProcessAPZStateChange(ViewID aViewId,
@@ -501,8 +495,7 @@ bool APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault) {
   if (mPendingTouchPreventedResponse) {
     APZES_LOG("Sending response %d for pending guid: %s\n", aPreventDefault,
               Stringify(mPendingTouchPreventedGuid).c_str());
-    mContentReceivedInputBlockCallback(mPendingTouchPreventedGuid,
-                                       mPendingTouchPreventedBlockId,
+    mContentReceivedInputBlockCallback(mPendingTouchPreventedBlockId,
                                        aPreventDefault);
     mPendingTouchPreventedResponse = false;
     return true;

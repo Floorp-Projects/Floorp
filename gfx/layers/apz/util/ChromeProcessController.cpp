@@ -192,17 +192,17 @@ void ChromeProcessController::HandleTap(
 
   switch (aType) {
     case TapType::eSingleTap:
-      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, aGuid, 1);
+      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 1);
       break;
     case TapType::eDoubleTap:
       HandleDoubleTap(point, aModifiers, aGuid);
       break;
     case TapType::eSecondTap:
-      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, aGuid, 2);
+      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 2);
       break;
     case TapType::eLongTap: {
       RefPtr<APZEventState> eventState(mAPZEventState);
-      eventState->ProcessLongTap(presShell, point, scale, aModifiers, aGuid,
+      eventState->ProcessLongTap(presShell, point, scale, aModifiers,
                                  aInputBlockId);
       break;
     }
