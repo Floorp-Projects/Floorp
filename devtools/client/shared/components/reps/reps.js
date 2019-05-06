@@ -1712,8 +1712,8 @@ function makeNodesForPromiseProperties(item) {
   return properties;
 }
 
-function makeNodesForProxyProperties(loadedProps, item) {
-  const { proxyHandler, proxyTarget } = loadedProps;
+function makeNodesForProxyProperties(item) {
+  const { proxyHandler, proxyTarget } = getValue(item);
 
   return [createNode({
     parent: item,
@@ -2106,8 +2106,8 @@ function getChildren(options) {
     return addToCache(makeNodesForMapEntry(item));
   }
 
-  if (nodeIsProxy(item) && hasLoadedProps) {
-    return addToCache(makeNodesForProxyProperties(loadedProps, item));
+  if (nodeIsProxy(item)) {
+    return addToCache(makeNodesForProxyProperties(item));
   }
 
   if (nodeIsLongString(item) && hasLoadedProps) {
@@ -3481,8 +3481,7 @@ const {
   enumNonIndexedProperties,
   getPrototype,
   enumSymbols,
-  getFullText,
-  getProxySlots
+  getFullText
 } = __webpack_require__(197);
 
 const {
@@ -3536,10 +3535,6 @@ function loadItemProperties(item, createObjectClient, createLongStringClient, lo
     promises.push(getFullText(createLongStringClient(value), item));
   }
 
-  if (shouldLoadItemProxySlots(item, loadedProperties)) {
-    promises.push(getProxySlots(getObjectClient()));
-  }
-
   return Promise.all(promises).then(mergeResponses);
 }
 
@@ -3561,11 +3556,6 @@ function mergeResponses(responses) {
 
     if (response.fullText) {
       data.fullText = response.fullText;
-    }
-
-    if (response.proxyTarget && response.proxyHandler) {
-      data.proxyTarget = response.proxyTarget;
-      data.proxyHandler = response.proxyHandler;
     }
   }
 
@@ -3613,10 +3603,6 @@ function shouldLoadItemFullText(item, loadedProperties = new Map()) {
   return !loadedProperties.has(item.path) && nodeIsLongString(item);
 }
 
-function shouldLoadItemProxySlots(item, loadedProperties = new Map()) {
-  return !loadedProperties.has(item.path) && nodeIsProxy(item);
-}
-
 module.exports = {
   loadItemProperties,
   mergeResponses,
@@ -3625,8 +3611,7 @@ module.exports = {
   shouldLoadItemNonIndexedProperties,
   shouldLoadItemPrototype,
   shouldLoadItemSymbols,
-  shouldLoadItemFullText,
-  shouldLoadItemProxySlots
+  shouldLoadItemFullText
 };
 
 /***/ }),
@@ -3721,10 +3706,6 @@ async function getFullText(longStringClient, item) {
   });
 }
 
-async function getProxySlots(objectClient) {
-  return objectClient.getProxySlots();
-}
-
 function iteratorSlice(iterator, start, end) {
   start = start || 0;
   const count = end ? end - start + 1 : iterator.count;
@@ -3741,8 +3722,7 @@ module.exports = {
   enumNonIndexedProperties,
   enumSymbols,
   getPrototype,
-  getFullText,
-  getProxySlots
+  getFullText
 };
 
 /***/ }),
