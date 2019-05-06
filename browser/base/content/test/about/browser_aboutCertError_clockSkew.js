@@ -41,7 +41,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   Services.prefs.setIntPref(PREF_SERVICES_SETTINGS_LAST_FETCHED, Math.floor(Date.now() / 1000));
 
   let formatter = new Services.intl.DateTimeFormat(undefined, {
-    dateStyle: "short",
+    dateStyle: "long",
   });
 
   // For this test, we want to trick Firefox into believing that
