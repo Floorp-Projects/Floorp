@@ -110,13 +110,6 @@ add_task(async function test_responder_no_items() {
 add_task(async function test_responder_upload() {
   let server = await makeServer();
 
-  // Pretend we've already synced this bookmark, so that we can ensure it's
-  // uploaded in response to our repair request.
-  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                                title: "Get Firefox",
-                                                url: "http://getfirefox.com/",
-                                                source: PlacesUtils.bookmarks.SOURCES.SYNC });
-
   await Service.sync();
   deepEqual(getServerBookmarks(server).keys().sort(), [
     "menu",
@@ -124,6 +117,13 @@ add_task(async function test_responder_upload() {
     "toolbar",
     "unfiled",
   ], "Should only upload roots on first sync");
+
+  // Pretend we've already synced this bookmark, so that we can ensure it's
+  // uploaded in response to our repair request.
+  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                title: "Get Firefox",
+                                                url: "http://getfirefox.com/",
+                                                source: PlacesUtils.bookmarks.SOURCES.SYNC });
 
   let request = {
     request: "upload",
@@ -224,13 +224,6 @@ add_task(async function test_responder_missing_items() {
     title: "Get Firefox",
     url: "http://getfirefox.com/",
   });
-  let tbBmk = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    title: "Get Thunderbird",
-    url: "http://getthunderbird.com/",
-    // Pretend we've already synced Thunderbird.
-    source: PlacesUtils.bookmarks.SOURCES.SYNC,
-  });
 
   await Service.sync();
   deepEqual(getServerBookmarks(server).keys().sort(), [
@@ -240,6 +233,14 @@ add_task(async function test_responder_missing_items() {
     "unfiled",
     fxBmk.guid,
   ].sort(), "Should upload roots and Firefox on first sync");
+
+  let tbBmk = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "Get Thunderbird",
+    url: "http://getthunderbird.com/",
+    // Pretend we've already synced Thunderbird.
+    source: PlacesUtils.bookmarks.SOURCES.SYNC,
+  });
 
   _("Request Firefox, Thunderbird, and nonexistent GUID");
   let request = {
