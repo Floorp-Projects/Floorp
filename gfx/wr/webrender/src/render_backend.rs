@@ -863,7 +863,7 @@ impl RenderBackend {
             while let Ok(msg) = self.scene_rx.try_recv() {
                 match msg {
                     SceneBuilderResult::Transactions(mut txns, result_tx) => {
-                        self.before_frames();
+                        self.prepare_for_frames();
                         self.maybe_force_nop_documents(
                             &mut frame_counter,
                             &mut profile_counters,
@@ -921,7 +921,7 @@ impl RenderBackend {
                                 has_built_scene,
                             );
                         }
-                        self.after_frames();
+                        self.bookkeep_after_frames();
                     },
                     SceneBuilderResult::FlushComplete(tx) => {
                         tx.send(()).ok();
@@ -1199,14 +1199,14 @@ impl RenderBackend {
         true
     }
 
-    fn before_frames(&mut self) {
-        self.resource_cache.before_frames(SystemTime::now());
-        self.gpu_cache.before_frames();
+    fn prepare_for_frames(&mut self) {
+        self.resource_cache.prepare_for_frames(SystemTime::now());
+        self.gpu_cache.prepare_for_frames();
     }
 
-    fn after_frames(&mut self) {
-        self.resource_cache.after_frames();
-        self.gpu_cache.after_frames();   
+    fn bookkeep_after_frames(&mut self) {
+        self.resource_cache.bookkeep_after_frames();
+        self.gpu_cache.bookkeep_after_frames();   
     }
 
     fn requires_frame_build(&mut self) -> bool {
@@ -1288,7 +1288,7 @@ impl RenderBackend {
                 }
             }
         } else {
-            self.before_frames();
+            self.prepare_for_frames();
             self.maybe_force_nop_documents(
                 frame_counter,
                 profile_counters,
@@ -1309,7 +1309,7 @@ impl RenderBackend {
                 );
             }
 
-            self.after_frames();
+            self.bookkeep_after_frames();
             return;
         }
 
