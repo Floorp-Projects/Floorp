@@ -5,7 +5,7 @@
   right: 48px;
   border: 0;
   background: none;
-  z-index: 3000;
+  z-index: 1;
   border-radius: 2px;
 
   .icon-devtools {
@@ -81,6 +81,24 @@
   table {
     border-collapse: collapse;
     width: 100%;
+
+    &.minimal-table {
+      border-collapse: collapse;
+
+      td {
+        padding: 8px;
+        border: 1px solid $border-color;
+      }
+
+      td:first-child {
+        width: 1%;
+        white-space: nowrap;
+      }
+
+      td:not(:first-child) {
+        font-family: $monospace;
+      }
+    }
 
     &.errorReporting {
       tr {
@@ -207,4 +225,3 @@
     margin-inline-start: 4px;
   }
 }
-

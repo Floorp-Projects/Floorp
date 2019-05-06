@@ -3544,44 +3544,31 @@ void Debugger::detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global) {
 }
 
 /* static */
-bool Debugger::findSweepGroupEdges(Zone* zone) {
-  JSRuntime* rt = zone->runtimeFromMainThread();
+bool Debugger::findSweepGroupEdges(JSRuntime* rt) {
+  // Ensure that debuggers and their debuggees are finalized in the same group
+  // by adding edges in both directions for debuggee zones. These are weak
+  // references that are not in the cross compartment wrapper map.
+
   for (Debugger* dbg : rt->debuggerList()) {
     Zone* debuggerZone = dbg->object->zone();
     if (!debuggerZone->isGCMarking()) {
       continue;
     }
 
-    if (debuggerZone == zone) {
-      // Add edges to debuggee zones. These are weak references that are
-      // not in the cross compartment wrapper map.
-      for (auto e = dbg->debuggeeZones.all(); !e.empty(); e.popFront()) {
-        Zone* debuggeeZone = e.front();
-        if (debuggeeZone->isGCMarking()) {
-          if (!zone->addSweepGroupEdgeTo(debuggeeZone)) {
-            return false;
-          }
-        }
+    for (auto e = dbg->debuggeeZones.all(); !e.empty(); e.popFront()) {
+      Zone* debuggeeZone = e.front();
+      if (!debuggeeZone->isGCMarking()) {
+        continue;
       }
-    } else {
-      // For debugger cross compartment wrappers, add edges in the
-      // opposite direction to those already added by
-      // Compartment::findOutgoingEdges and above. This ensure that
-      // debuggers and their debuggees are finalized in the same group.
-      if (dbg->debuggeeZones.has(zone) ||
-          dbg->generatorFrames.hasKeyInZone(zone) ||
-          dbg->scripts.hasKeyInZone(zone) ||
-          dbg->lazyScripts.hasKeyInZone(zone) ||
-          dbg->sources.hasKeyInZone(zone) || dbg->objects.hasKeyInZone(zone) ||
-          dbg->environments.hasKeyInZone(zone) ||
-          dbg->wasmInstanceScripts.hasKeyInZone(zone) ||
-          dbg->wasmInstanceSources.hasKeyInZone(zone)) {
-        if (!zone->addSweepGroupEdgeTo(debuggerZone)) {
+
+
+      if (!debuggerZone->addSweepGroupEdgeTo(debuggeeZone) ||
+          !debuggeeZone->addSweepGroupEdgeTo(debuggerZone)) {
           return false;
-        }
       }
     }
   }
+
   return true;
 }
 

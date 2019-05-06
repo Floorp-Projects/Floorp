@@ -207,7 +207,7 @@ function plInit() {
         // instance which adds the load listener and injects tpRecordTime), all the
         // pages should be able to load in the same mode as the initial page - due
         // to this reinitialization on the switch.
-        let remoteType = E10SUtils.getRemoteTypeForURI(pageUrls[0], true);
+        let remoteType = E10SUtils.getRemoteTypeForURI(pageUrls[0], /* remote */ true, /* fission */ false);
         let tabbrowser = browserWindow.gBrowser;
         if (remoteType) {
           tabbrowser.updateBrowserRemoteness(tabbrowser.initialBrowser, { remoteType });

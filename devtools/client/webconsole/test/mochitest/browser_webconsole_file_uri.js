@@ -29,7 +29,8 @@ add_task(async function() {
   // Open tab with correct remote type so we don't switch processes when we load
   // the file:// URI, otherwise we won't get the same web console.
   const remoteType = E10SUtils.getRemoteTypeForURI(uri.spec,
-                                                 gMultiProcessBrowser);
+                                                   gMultiProcessBrowser,
+                                                   gFissionBrowser);
   const { browser } = await loadTab("about:blank", remoteType);
 
   hud = await openConsole();

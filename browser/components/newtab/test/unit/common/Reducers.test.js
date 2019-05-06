@@ -1056,15 +1056,6 @@ describe("Reducers", () => {
       assert.propertyVal(nextState, "hide", false);
     });
   });
-  describe("ASRouter", () => {
-    it("should listen for pref changes on AS_ROUTER_PREF_CHANGED", async () => {
-      const action = {data: {foo: "bar"}, type: at.AS_ROUTER_PREF_CHANGED};
-
-      const result = ASRouter({}, action);
-
-      assert.propertyVal(result, "foo", "bar");
-    });
-  });
   it("should set initialized to true on AS_ROUTER_INITIALIZED", () => {
     const nextState = ASRouter(undefined, {type: "AS_ROUTER_INITIALIZED"});
     assert.propertyVal(nextState, "initialized", true);

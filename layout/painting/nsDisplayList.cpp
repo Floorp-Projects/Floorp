@@ -1956,6 +1956,12 @@ nsDisplayListBuilder::AGRState nsDisplayListBuilder::IsAnimatedGeometryRoot(
     return AGR_YES;
   }
 
+  if (aFrame->StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY &&
+      IsStickyFrameActive(this, aFrame, parent)) {
+    aIsAsync = true;
+    return AGR_YES;
+  }
+
   if (aFrame->IsTransformed()) {
     aIsAsync = EffectCompositor::HasAnimationsForCompositor(
         aFrame, DisplayItemType::TYPE_TRANSFORM);
@@ -2001,11 +2007,6 @@ nsDisplayListBuilder::AGRState nsDisplayListBuilder::IsAnimatedGeometryRoot(
       nsLayoutUtils::ViewportHasDisplayPort(aFrame->PresContext())) {
     // Viewport frames in a display port need to be animated geometry roots
     // for background-attachment:fixed elements.
-    return AGR_YES;
-  }
-
-  if (aFrame->StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY &&
-      IsStickyFrameActive(this, aFrame, parent)) {
     return AGR_YES;
   }
 

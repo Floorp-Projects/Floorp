@@ -325,7 +325,8 @@ var WebBrowserChrome = {
   },
 
   shouldLoadURIInThisProcess(URI) {
-    return E10SUtils.shouldLoadURIInThisProcess(URI);
+    let remoteSubframes = docShell.QueryInterface(Ci.nsILoadContext).useRemoteSubframes;
+    return E10SUtils.shouldLoadURIInThisProcess(URI, remoteSubframes);
   },
 
   reloadInFreshProcess(docShell, URI, referrer, triggeringPrincipal, loadFlags) {

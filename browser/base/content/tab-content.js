@@ -44,7 +44,8 @@ var WebBrowserChrome = {
   },
 
   shouldLoadURIInThisProcess(aURI) {
-    return E10SUtils.shouldLoadURIInThisProcess(aURI);
+    let remoteSubframes = docShell.QueryInterface(Ci.nsILoadContext).useRemoteSubframes;
+    return E10SUtils.shouldLoadURIInThisProcess(aURI, remoteSubframes);
   },
 
   // Try to reload the currently active or currently loading page in a new process.

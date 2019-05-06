@@ -69,6 +69,8 @@ class MediaDevices final : public DOMEventTargetHelper,
 
   virtual ~MediaDevices();
   nsCOMPtr<nsITimer> mFuzzTimer;
+
+  void RecordAccessTelemetry(const UseCounter counter) const;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaDevices,

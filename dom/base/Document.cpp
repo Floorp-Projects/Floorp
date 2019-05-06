@@ -1451,10 +1451,6 @@ Document::~Document() {
 
   ReportUseCounters();
 
-  if (!nsContentUtils::IsInPrivateBrowsing(this)) {
-    mContentBlockingLog.ReportLog();
-  }
-
   mInDestructor = true;
   mInUnlinkOrDeletion = true;
 
@@ -7792,6 +7788,11 @@ void Document::Destroy() {
   // The ContentViewer wants to release the document now.  So, tell our content
   // to drop any references to the document so that it can be destroyed.
   if (mIsGoingAway) return;
+
+  // Make sure to report before IPC closed.
+  if (!nsContentUtils::IsInPrivateBrowsing(this)) {
+    mContentBlockingLog.ReportLog();
+  }
 
   mIsGoingAway = true;
 

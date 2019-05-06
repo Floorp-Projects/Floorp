@@ -223,54 +223,49 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
         # If Firefox is installed, there is no way to determine whether
         # the current build is installed, and certainly no way to
         # determine if the installed build is the desired build.
-        # Installing every time is problematic because:
+        # Installing every time (without prompting) is problematic because:
         #  - it prevents testing against other builds (downloaded apk)
         #  - installation may take a couple of minutes.
         if not app:
             app = build_obj.substs["ANDROID_PACKAGE_NAME"]
         device = _get_device(build_obj.substs, device_serial)
         response = ''
-        while not device.is_app_installed(app):
-            try:
-                if 'fennec' in app or 'firefox' in app:
-                    response = response = raw_input(
-                        "It looks like %s is not installed on this device.\n"
-                        "Install Firefox? (Y/n) or quit to exit " % app).strip()
-                    if response.lower().startswith('y') or response == '':
-                        _log_info("Installing Firefox. This may take a while...")
-                        build_obj._run_make(directory=".", target='install',
-                                            ensure_exit_code=False)
-                elif app == 'org.mozilla.geckoview.test':
-                    response = response = raw_input(
-                        "It looks like %s is not installed on this device.\n"
-                        "Install geckoview AndroidTest? (Y/n) or quit to exit " % app).strip()
-                    if response.lower().startswith('y') or response == '':
-                        _log_info("Installing geckoview AndroidTest. This may take a while...")
-                        sub = 'geckoview:installWithGeckoBinariesDebugAndroidTest'
-                        build_obj._mach_context.commands.dispatch('gradle',
-                                                                  args=[sub],
-                                                                  context=build_obj._mach_context)
-                elif app == 'org.mozilla.geckoview_example':
-                    response = response = raw_input(
-                        "It looks like %s is not installed on this device.\n"
-                        "Install geckoview_example? (Y/n) or quit to exit " % app).strip()
-                    if response.lower().startswith('y') or response == '':
-                        _log_info("Installing geckoview_example. This may take a while...")
-                        sub = 'install-geckoview_example'
-                        build_obj._mach_context.commands.dispatch('android',
-                                                                  subcommand=sub,
-                                                                  args=[],
-                                                                  context=build_obj._mach_context)
-                else:
-                    response = raw_input(
-                        "It looks like %s is not installed on this device,\n"
-                        "but I don't know how to install it.\n"
-                        "Install it now, then hit Enter or quit to exit " % app)
-            except EOFError:
-                response = 'quit'
-            if response == 'quit':
-                device_verified = False
-                break
+        action = 'Re-install'
+        if not device.is_app_installed(app):
+            _log_info("It looks like %s is not installed on this device." % app)
+            action = 'Install'
+        if 'fennec' in app or 'firefox' in app:
+            response = response = raw_input(
+                "%s Firefox? (Y/n) " % action).strip()
+            if response.lower().startswith('y') or response == '':
+                _log_info("Installing Firefox. This may take a while...")
+                build_obj._run_make(directory=".", target='install',
+                                    ensure_exit_code=False)
+        elif app == 'org.mozilla.geckoview.test':
+            response = response = raw_input(
+                "%s geckoview AndroidTest? (Y/n) " % action).strip()
+            if response.lower().startswith('y') or response == '':
+                _log_info("Installing geckoview AndroidTest. This may take a while...")
+                sub = 'geckoview:installWithGeckoBinariesDebugAndroidTest'
+                build_obj._mach_context.commands.dispatch('gradle',
+                                                          args=[sub],
+                                                          context=build_obj._mach_context)
+        elif app == 'org.mozilla.geckoview_example':
+            response = response = raw_input(
+                "%s geckoview_example? (Y/n) " % action).strip()
+            if response.lower().startswith('y') or response == '':
+                _log_info("Installing geckoview_example. This may take a while...")
+                sub = 'install-geckoview_example'
+                build_obj._mach_context.commands.dispatch('android',
+                                                          subcommand=sub,
+                                                          args=[],
+                                                          context=build_obj._mach_context)
+        else:
+            if not device.is_app_installed(app):
+                response = raw_input(
+                    "It looks like %s is not installed on this device,\n"
+                    "but I don't know how to install it.\n"
+                    "Install it now, then hit Enter " % app)
 
     if device_verified and xre:
         # Check whether MOZ_HOST_BIN has been set to a valid xre; if not,

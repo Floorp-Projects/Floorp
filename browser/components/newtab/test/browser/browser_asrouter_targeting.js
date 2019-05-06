@@ -149,6 +149,26 @@ add_task(async function check_usesFirefoxSync() {
     "should select correct item by usesFirefoxSync");
 });
 
+add_task(async function check_isFxAEnabled() {
+  await pushPrefs(["identity.fxaccounts.enabled", false]);
+  is(await ASRouterTargeting.Environment.isFxAEnabled, false,
+    "should return false if fxa is disabled");
+
+  const message = {id: "foo", targeting: "isFxAEnabled"};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), undefined,
+    "should not select a message if fxa is disabled");
+});
+
+add_task(async function check_isFxAEnabled() {
+  await pushPrefs(["identity.fxaccounts.enabled", true]);
+  is(await ASRouterTargeting.Environment.isFxAEnabled, true,
+    "should return true if fxa is enabled");
+
+  const message = {id: "foo", targeting: "isFxAEnabled"};
+  is(await ASRouterTargeting.findMatchingMessage({messages: [message]}), message,
+    "should select the correct message");
+});
+
 add_task(async function check_totalBookmarksCount() {
   // Make sure we remove default bookmarks so they don't interfere
   await clearHistoryAndBookmarks();

@@ -123,8 +123,29 @@ class CrossCompartmentKey {
     return wrapped.match(matcher);
   }
 
+  bool isDebuggerKey() const {
+    struct DebuggerMatcher {
+      bool operator()(JSObject* const& obj) { return false; }
+      bool operator()(JSString* const& str) { return false; }
+      bool operator()(const DebuggerAndScript& tpl) {
+        return true;
+      }
+      bool operator()(const DebuggerAndLazyScript& tpl) {
+        return true;
+      }
+      bool operator()(const DebuggerAndObject& tpl) {
+        return true;
+      }
+    } matcher;
+    return wrapped.match(matcher);
+  }
+
   JS::Compartment* compartment() {
     return applyToWrapped([](auto tp) { return (*tp)->maybeCompartment(); });
+  }
+
+  JS::Zone* zone() {
+    return applyToWrapped([](auto tp) { return (*tp)->zone(); });
   }
 
   struct Hasher : public DefaultHasher<CrossCompartmentKey> {

@@ -1,4 +1,9 @@
-import {_ASRouter, MessageLoaderUtils} from "lib/ASRouter.jsm";
+import {
+  _ASRouter,
+  chooseBranch,
+  MessageLoaderUtils,
+  TRAILHEAD_CONFIG,
+} from "lib/ASRouter.jsm";
 import {ASRouterTargeting, QueryCache} from "lib/ASRouterTargeting.jsm";
 import {
   CHILD_TO_PARENT_MESSAGE_NAME,
@@ -17,7 +22,9 @@ import {ASRouterPreferences} from "lib/ASRouterPreferences.jsm";
 import {ASRouterTriggerListeners} from "lib/ASRouterTriggerListeners.jsm";
 import {CFRPageActions} from "lib/CFRPageActions.jsm";
 import {GlobalOverrider} from "test/unit/utils";
+import {PanelTestProvider} from "lib/PanelTestProvider.jsm";
 import ProviderResponseSchema from "content-src/asrouter/schemas/provider-response.schema.json";
+import {SnippetsTestMessageProvider} from "lib/SnippetsTestMessageProvider.jsm";
 
 const MESSAGE_PROVIDER_PREF_NAME = "browser.newtabpage.activity-stream.asrouter.providers.snippets";
 const FAKE_PROVIDERS = [FAKE_LOCAL_PROVIDER, FAKE_REMOTE_PROVIDER, FAKE_REMOTE_SETTINGS_PROVIDER];
@@ -75,7 +82,8 @@ describe("ASRouter", () => {
     setMessageProviderPref(providers);
     channel = new FakeRemotePageManager();
     dispatchStub = sandbox.stub();
-    Router = new _ASRouter(FAKE_LOCAL_PROVIDERS);
+    // `.freeze` to catch any attempts at modifying the object
+    Router = new _ASRouter(Object.freeze(FAKE_LOCAL_PROVIDERS));
     await Router.init(channel, createFakeStorage(), dispatchStub);
   }
 
@@ -108,8 +116,14 @@ describe("ASRouter", () => {
       uninit: sandbox.stub(),
       _forceShowMessage: sandbox.stub(),
     };
-    globals.set("AttributionCode", fakeAttributionCode);
-    globals.set("BookmarkPanelHub", FakeBookmarkPanelHub);
+    globals.set({
+      AttributionCode: fakeAttributionCode,
+      // Testing framework doesn't know how to `defineLazyModuleGetter` so we're
+      // importing these modules into the global scope ourselves.
+      SnippetsTestMessageProvider,
+      PanelTestProvider,
+      BookmarkPanelHub: FakeBookmarkPanelHub,
+    });
     await createRouterAndInit();
   });
   afterEach(() => {
@@ -151,7 +165,7 @@ describe("ASRouter", () => {
       assert.deepEqual(Router.state.messageImpressions, messageImpressions);
     });
     it("should await .loadMessagesFromAllProviders() and add messages from providers to state.messages", async () => {
-      Router = new _ASRouter(FAKE_LOCAL_PROVIDERS);
+      Router = new _ASRouter(Object.freeze(FAKE_LOCAL_PROVIDERS));
 
       const loadMessagesSpy = sandbox.spy(Router, "loadMessagesFromAllProviders");
       await Router.init(channel, createFakeStorage(), dispatchStub);
@@ -187,6 +201,27 @@ describe("ASRouter", () => {
     });
     it("should dispatch a AS_ROUTER_INITIALIZED event to AS with ASRouterPreferences.specialConditions", async () => {
       assert.calledWith(Router.dispatchToAS, ac.BroadcastToContent({type: "AS_ROUTER_INITIALIZED", data: ASRouterPreferences.specialConditions}));
+    });
+    describe("lazily loading local test providers", () => {
+      afterEach(() => {
+        Router.uninit();
+      });
+      it("should add the local test providers on init if devtools are enabled", async () => {
+        sandbox.stub(ASRouterPreferences, "devtoolsEnabled").get(() => true);
+
+        await createRouterAndInit();
+
+        assert.property(Router._localProviders, "SnippetsTestMessageProvider");
+        assert.property(Router._localProviders, "PanelTestProvider");
+      });
+      it("should not add the local test providers on init if devtools are disabled", async () => {
+        sandbox.stub(ASRouterPreferences, "devtoolsEnabled").get(() => false);
+
+        await createRouterAndInit();
+
+        assert.notProperty(Router._localProviders, "SnippetsTestMessageProvider");
+        assert.notProperty(Router._localProviders, "PanelTestProvider");
+      });
     });
   });
 
@@ -913,7 +948,7 @@ describe("ASRouter", () => {
       });
 
       it("should call BookmarkPanelHub._forceShowMessage the provider is cfr-fxa", async () => {
-        const testMessage = {id: "foo", template: "cfr_doorhanger", provider: "cfr-fxa"};
+        const testMessage = {id: "foo", template: "fxa_bookmark_panel"};
         await Router.setState({messages: [testMessage]});
         const msg = fakeAsyncMessage({type: "OVERRIDE_MESSAGE", data: {id: testMessage.id}});
         await Router.onMessage(msg);
@@ -1521,6 +1556,161 @@ describe("ASRouter", () => {
       const [action] = dispatchStub.firstCall.args;
       assert.equal(action.type, "AS_ROUTER_TELEMETRY_USER_EVENT");
       assert.equal(action.data.message_id, "foo");
+    });
+  });
+
+  describe("trailhead", () => {
+    it("should call .setupTrailhead on init", async () => {
+      sandbox.spy(Router, "setupTrailhead");
+      sandbox.stub(Router, "_generateTrailheadBranches").resolves({experiment: "", interrupt: "join", triplet: "privacy"});
+      sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF).returns(true);
+
+      await Router.init(channel, createFakeStorage(), dispatchStub);
+
+      assert.calledOnce(Router.setupTrailhead);
+      assert.propertyVal(Router.state, "trailheadInitialized", true);
+    });
+    it("should call .setupTrailhead on init but return early if the DID_SEE_ABOUT_WELCOME_PREF is false", async () => {
+      sandbox.spy(Router, "setupTrailhead");
+      sandbox.spy(Router, "_generateTrailheadBranches");
+      sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF).returns(false);
+
+      await Router.init(channel, createFakeStorage(), dispatchStub);
+
+      assert.calledOnce(Router.setupTrailhead);
+      assert.notCalled(Router._generateTrailheadBranches);
+      assert.propertyVal(Router.state, "trailheadInitialized", false);
+    });
+    it("should call .setupTrailhead and set the DID_SEE_ABOUT_WELCOME_PREF on a firstRun TRIGGER message", async () => {
+      sandbox.spy(Router, "setupTrailhead");
+      const msg = fakeAsyncMessage({type: "TRIGGER", data: {trigger: {id: "firstRun"}}});
+      await Router.onMessage(msg);
+
+      assert.calledOnce(Router.setupTrailhead);
+    });
+
+    it("should have trailheadInterrupt and trailheadTriplet in the message context", async () => {
+      sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF).returns(true);
+      sandbox.stub(Router, "_generateTrailheadBranches").resolves({experiment: "", interrupt: "join", triplet: "privacy"});
+      await Router.setupTrailhead();
+
+      assert.propertyVal(Router._getMessagesContext(), "trailheadInterrupt", "join");
+      assert.propertyVal(Router._getMessagesContext(), "trailheadTriplet", "privacy");
+    });
+
+    describe(".setupTrailhead", () => {
+      let getBoolPrefStub;
+
+      beforeEach(() => {
+        getBoolPrefStub = sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF).returns(true);
+      });
+
+      const configWithExperiment = {experiment: "interrupt", interrupt: "join", triplet: "privacy"};
+      const configWithoutExperiment = {experiment: "", interrupt: "control", triplet: ""};
+
+      it("should generates an experiment/branch configuration and update Router.state", async () => {
+        const config = configWithoutExperiment;
+        sandbox.stub(Router, "_generateTrailheadBranches").resolves(config);
+
+        await Router.setupTrailhead();
+
+        assert.propertyVal(Router.state, "trailheadInitialized", true);
+        assert.propertyVal(Router.state, "trailheadInterrupt", config.interrupt);
+        assert.propertyVal(Router.state, "trailheadTriplet", config.triplet);
+      });
+      it("should only run once", async () => {
+        sandbox.spy(Router, "setState");
+
+        await Router.setupTrailhead();
+        await Router.setupTrailhead();
+        await Router.setupTrailhead();
+
+        assert.calledOnce(Router.setState);
+      });
+      it("should return early if DID_SEE_ABOUT_WELCOME_PREF is false", async () => {
+        getBoolPrefStub.withArgs(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF).returns(false);
+
+        await Router.setupTrailhead();
+
+        sandbox.spy(Router, "setState");
+        assert.notCalled(Router.setState);
+      });
+      it("should set active experiment if one is defined", async () => {
+        sandbox.stub(Router, "_generateTrailheadBranches").resolves(configWithExperiment);
+        sandbox.stub(global.TelemetryEnvironment, "setExperimentActive");
+
+        await Router.setupTrailhead();
+
+        assert.calledOnce(global.TelemetryEnvironment.setExperimentActive);
+      });
+      it("should not set an active experiment if no experiment is defined", async () => {
+        sandbox.stub(Router, "_generateTrailheadBranches").resolves(configWithoutExperiment);
+        sandbox.stub(global.TelemetryEnvironment, "setExperimentActive");
+
+        await Router.setupTrailhead();
+
+        assert.notCalled(global.TelemetryEnvironment.setExperimentActive);
+      });
+    });
+
+    describe("._generateTrailheadBranches", () => {
+      async function checkReturnValue(expected) {
+        const result = await Router._generateTrailheadBranches();
+        assert.propertyVal(result, "experiment", expected.experiment);
+        assert.propertyVal(result, "interrupt", expected.interrupt);
+        assert.propertyVal(result, "triplet", expected.triplet);
+      }
+      it("should return control experience with no experiment if locale is NOT in TRAILHEAD_LOCALES", async () => {
+        sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "zh-CN");
+        checkReturnValue({experiment: "", interrupt: "control", triplet: ""});
+      });
+      it("should use values in override pref if it is set with no experiment", async () => {
+        getStringPrefStub.withArgs(TRAILHEAD_CONFIG.OVERRIDE_PREF).returns("join-privacy");
+        checkReturnValue({experiment: "", interrupt: "join", triplet: "privacy"});
+
+        getStringPrefStub.withArgs(TRAILHEAD_CONFIG.OVERRIDE_PREF).returns("nofirstrun");
+        checkReturnValue({experiment: "", interrupt: "nofirstrun", triplet: ""});
+      });
+      it("should return control experience with no experiment if locale is NOT in TRAILHEAD_LOCALES", async () => {
+        sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "zh-CN");
+        checkReturnValue({experiment: "", interrupt: "control", triplet: ""});
+      });
+      it("should return control experience with no experiment if locale is NOT in TRAILHEAD_LOCALES", async () => {
+        sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "zh-CN");
+        checkReturnValue({experiment: "", interrupt: "control", triplet: ""});
+      });
+      it("should roll for experiment if locale is in TRAILHEAD_LOCALES", async () => {
+        sandbox.stub(global.Sampling, "ratioSample").resolves(1); // 1 = interrupts experiment
+        sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "en-US");
+        checkReturnValue({experiment: "interrupts", interrupt: "join", triplet: "supercharge"});
+      });
+      it("should roll a triplet experiment", async () => {
+        sandbox.stub(global.Sampling, "ratioSample").resolves(2); // 2 = triplets experiment
+        sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "en-US");
+        checkReturnValue({experiment: "triplets", interrupt: "join", triplet: "multidevice"});
+      });
+      it("should roll no experiment", async () => {
+        sandbox.stub(global.Sampling, "ratioSample").resolves(0); // 0 = no experiment
+        sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "en-US");
+        checkReturnValue({experiment: "", interrupt: "join", triplet: "supercharge"});
+      });
+    });
+  });
+
+  describe("chooseBranch", () => {
+    it("should call .ratioSample with the second value in each branch and return one of the first values", async () => {
+      sandbox.stub(global.Sampling, "ratioSample").resolves(0);
+      const result = await chooseBranch("bleep", [["foo", 14], ["bar", 42]]);
+
+      assert.calledWith(global.Sampling.ratioSample, "bleep", [14, 42]);
+      assert.equal(result, "foo");
+    });
+    it("should use 1 as the default ratio", async () => {
+      sandbox.stub(global.Sampling, "ratioSample").resolves(1);
+      const result = await chooseBranch("bleep", [["foo"], ["bar"]]);
+
+      assert.calledWith(global.Sampling.ratioSample, "bleep", [1, 1]);
+      assert.equal(result, "bar");
     });
   });
 });

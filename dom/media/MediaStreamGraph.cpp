@@ -3293,8 +3293,7 @@ MediaStreamGraph* MediaStreamGraph::GetInstance(
       };
 
       gMediaStreamGraphShutdownBlocker = new Blocker();
-      nsCOMPtr<nsIAsyncShutdownClient> barrier = media::GetShutdownBarrier();
-      nsresult rv = barrier->AddBlocker(
+      nsresult rv = media::GetShutdownBarrier()->AddBlocker(
           gMediaStreamGraphShutdownBlocker, NS_LITERAL_STRING(__FILE__),
           __LINE__, NS_LITERAL_STRING("MediaStreamGraph shutdown"));
       MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
