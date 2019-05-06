@@ -542,9 +542,10 @@ nsresult nsDocumentEncoder::FlushText(nsAString& aString, bool aForce) {
 
 static bool IsTextNode(nsINode* aNode) { return aNode && aNode->IsText(); }
 
-nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* aRange, nsINode* aNode,
+nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
+                                                nsINode* const aNode,
                                                 nsAString& aString,
-                                                int32_t aDepth) {
+                                                const int32_t aDepth) {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
@@ -583,6 +584,8 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* aRange, nsINode* aNode,
         rv = SerializeNodeStart(aNode, 0, endOffset, aString);
         NS_ENSURE_SUCCESS(rv, rv);
       }
+      rv = SerializeNodeEnd(aNode, aString);
+      NS_ENSURE_SUCCESS(rv, rv);
     } else {
       if (aNode != mCommonParent) {
         if (IncludeInContext(aNode)) {
@@ -758,6 +761,8 @@ nsresult nsDocumentEncoder::SerializeRangeToString(nsRange* aRange,
     }
     rv = SerializeNodeStart(startContainer, startOffset, endOffset,
                             aOutputString);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = SerializeNodeEnd(startContainer, aOutputString);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     rv = SerializeRangeNodes(aRange, mCommonParent, aOutputString, 0);
