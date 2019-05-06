@@ -175,6 +175,11 @@ add_task(async function testExtensionList() {
   info("Wait for the second pending uninstal add-ons startup");
   await addon2Started;
 
+  ok(getCardByAddonId(disabledSection, addon.id),
+     "The card for the first extension is in the disabled section");
+  ok(getCardByAddonId(enabledSection, addon2.id),
+     "The card for the second extension is in the enabled section");
+
   await extension2.unload();
   await extension.unload();
 
