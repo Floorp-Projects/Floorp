@@ -3239,12 +3239,6 @@ void APZCTreeManager::CollectTransformsForChromeMainThread(
   if (!controller) {
     return;
   }
-  if (controller->IsRemote() && !gfxPrefs::FissionApzMatricesWithGpuProcess()) {
-    // Avoid IPC errors in the GPU process case until
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1533673
-    // is resolved.
-    return;
-  }
   nsTArray<MatrixMessage> messages;
   {
     RecursiveMutexAutoLock lock(mTreeLock);

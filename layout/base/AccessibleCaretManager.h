@@ -212,6 +212,7 @@ class AccessibleCaretManager {
 
   // Start the selection scroll timer if the caret is being dragged out of
   // the scroll port.
+  MOZ_CAN_RUN_SCRIPT
   void StartSelectionAutoScrollTimer(const nsPoint& aPoint) const;
   void StopSelectionAutoScrollTimer() const;
 

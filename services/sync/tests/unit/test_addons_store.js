@@ -136,7 +136,7 @@ const proxyService = Cc["@mozilla.org/network/protocol-proxy-service;1"]
   .getService(Ci.nsIProtocolProxyService);
 
 const proxyFilter = {
-  proxyInfo: proxyService.newProxyInfo("http", "localhost", HTTP_PORT, 0, 4096, null),
+  proxyInfo: proxyService.newProxyInfo("http", "localhost", HTTP_PORT, "", "", 0, 4096, null),
 
   applyFilter(service, channel, defaultProxyInfo, callback) {
     if (channel.URI.host === "example.com") {

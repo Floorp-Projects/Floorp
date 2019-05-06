@@ -121,6 +121,8 @@ const double DOUBLE_INTEGRAL_PRECISION_LIMIT = uint64_t(1) << 53;
 template <typename CharT>
 extern double ParseDecimalNumber(const mozilla::Range<const CharT> chars);
 
+enum class IntegerSeparatorHandling : bool { None, SkipUnderscore };
+
 /*
  * Compute the positive integer of the given base described immediately at the
  * start of the range [start, end) -- no whitespace-skipping, no magical
@@ -130,13 +132,18 @@ extern double ParseDecimalNumber(const mozilla::Range<const CharT> chars);
  * base is 10 or a power of two the returned integer is the closest possible
  * double; otherwise extremely large integers may be slightly inaccurate.
  *
+ * The |separatorHandling| controls whether or not numeric separators can be
+ * part of integer string. If the option is enabled, all '_' characters in the
+ * string are ignored. Underscore characters must not appear directly next to
+ * each other, e.g. '1__2' will lead to an assertion.
+ *
  * If [start, end) does not begin with a number with the specified base,
  * *dp == 0 and *endp == start upon return.
  */
 template <typename CharT>
-extern MOZ_MUST_USE bool GetPrefixInteger(JSContext* cx, const CharT* start,
-                                          const CharT* end, int base,
-                                          const CharT** endp, double* dp);
+extern MOZ_MUST_USE bool GetPrefixInteger(
+    JSContext* cx, const CharT* start, const CharT* end, int base,
+    IntegerSeparatorHandling separatorHandling, const CharT** endp, double* dp);
 
 inline const char16_t* ToRawChars(const char16_t* units) { return units; }
 
@@ -149,16 +156,16 @@ inline const unsigned char* ToRawChars(const mozilla::Utf8Unit* units) {
 }
 
 /**
- * Like the prior function, but [start, end) must all be digits in the given
+ * Like GetPrefixInteger, but [start, end) must all be digits in the given
  * base (and so this function doesn't take a useless outparam).
  */
 template <typename CharT>
-extern MOZ_MUST_USE bool GetFullInteger(JSContext* cx, const CharT* start,
-                                        const CharT* end, int base,
-                                        double* dp) {
+extern MOZ_MUST_USE bool GetFullInteger(
+    JSContext* cx, const CharT* start, const CharT* end, int base,
+    IntegerSeparatorHandling separatorHandling, double* dp) {
   decltype(ToRawChars(start)) realEnd;
-  if (GetPrefixInteger(cx, ToRawChars(start), ToRawChars(end), base, &realEnd,
-                       dp)) {
+  if (GetPrefixInteger(cx, ToRawChars(start), ToRawChars(end), base,
+                       separatorHandling, &realEnd, dp)) {
     MOZ_ASSERT(end == static_cast<const void*>(realEnd));
     return true;
   }
@@ -166,13 +173,23 @@ extern MOZ_MUST_USE bool GetFullInteger(JSContext* cx, const CharT* start,
 }
 
 /*
- * This is like GetPrefixInteger, but it only deals with base 10 and doesn't
- * have an |endp| outparam.  It should only be used when the characters are
- * known to only contain digits.
+ * This is like GetPrefixInteger, but only deals with base 10, always ignores
+ * '_', and doesn't have an |endp| outparam. It should only be used when the
+ * characters are known to match |DecimalIntegerLiteral|, cf. ES2020, 11.8.3
+ * Numeric Literals.
  */
 template <typename CharT>
 extern MOZ_MUST_USE bool GetDecimalInteger(JSContext* cx, const CharT* start,
                                            const CharT* end, double* dp);
+
+/*
+ * This is like GetDecimalInteger, but also allows non-integer numbers. It
+ * should only be used when the characters are known to match |DecimalLiteral|,
+ * cf. ES2020, 11.8.3 Numeric Literals.
+ */
+template <typename CharT>
+extern MOZ_MUST_USE bool GetDecimalNonInteger(JSContext* cx, const CharT* start,
+                                              const CharT* end, double* dp);
 
 extern MOZ_MUST_USE bool StringToNumber(JSContext* cx, JSString* str,
                                         double* result);
@@ -243,18 +260,6 @@ extern MOZ_MUST_USE bool js_strtod(JSContext* cx, const CharT* begin,
                                    double* d);
 
 namespace js {
-
-/**
- * Like js_strtod, but for when you don't require a |dEnd| argument *and* it's
- * possible that the number in the string will not occupy the full [begin, end)
- * range.
- */
-template <typename CharT>
-extern MOZ_MUST_USE bool StringToDouble(JSContext* cx, const CharT* begin,
-                                        const CharT* end, double* d) {
-  decltype(ToRawChars(begin)) dummy;
-  return js_strtod(cx, ToRawChars(begin), ToRawChars(end), &dummy, d);
-}
 
 /**
  * Like js_strtod, but for when the number always constitutes the entire range

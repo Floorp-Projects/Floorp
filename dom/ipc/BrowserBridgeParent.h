@@ -13,6 +13,10 @@
 namespace mozilla {
 namespace dom {
 
+/**
+ * BrowserBridgeParent implements the parent actor part of the PBrowserBridge
+ * protocol. See PBrowserBridge for more information.
+ */
 class BrowserBridgeParent : public PBrowserBridgeParent {
  public:
   NS_INLINE_DECL_REFCOUNTING(BrowserBridgeParent);
@@ -55,6 +59,9 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
 
   mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
                                             const bool& aForDocumentNavigation);
+
+  mozilla::ipc::IPCResult RecvDispatchSynthesizedMouseEvent(
+      const WidgetMouseEvent& aEvent);
 
   mozilla::ipc::IPCResult RecvActivate();
 

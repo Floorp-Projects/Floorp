@@ -121,3 +121,4 @@ TEST_DIRS += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk3', 'cocoa', 'windows'):
     TEST_DIRS += ['plugins/test']
 
+SPHINX_TREES['dom'] = 'docs'

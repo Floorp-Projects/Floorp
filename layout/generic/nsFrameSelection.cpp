@@ -1189,7 +1189,8 @@ nsresult nsFrameSelection::StartAutoScrollTimer(nsIFrame* aFrame,
     return NS_ERROR_NULL_POINTER;
   }
 
-  return mDomSelections[index]->StartAutoScrollTimer(aFrame, aPoint, aDelay);
+  RefPtr<Selection> selection = mDomSelections[index];
+  return selection->StartAutoScrollTimer(aFrame, aPoint, aDelay);
 }
 
 void nsFrameSelection::StopAutoScrollTimer() {

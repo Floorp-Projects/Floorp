@@ -77,6 +77,7 @@ class AppTrustDomain final : public mozilla::pkix::TrustDomain {
   /*out*/ UniqueCERTCertList& mCertChain;
   void* mPinArg;  // non-owning!
   UniqueCERTCertificate mTrustedRoot;
+  UniqueCERTCertificate mAddonsIntermediate;
 
   static StaticMutex sMutex;
   static UniquePtr<unsigned char[]> sDevImportedDERData;

@@ -1601,8 +1601,15 @@ RequestReader.prototype =
 
 
     var fullPath = request[1];
-    var serverIdentity = this._connection.server.identity;
 
+    if (metadata._method == "CONNECT") {
+      metadata._path = "CONNECT";
+      metadata._scheme = "https";
+      [metadata._host, metadata._port] = fullPath.split(":");
+      return;
+    }
+
+    var serverIdentity = this._connection.server.identity;
     var scheme, host, port;
 
     if (fullPath.charAt(0) != "/") {
@@ -2268,7 +2275,7 @@ ServerHandler.prototype =
   //
   registerPathHandler(path, handler) {
     // XXX true path validation!
-    if (path.charAt(0) != "/")
+    if (path.charAt(0) != "/" && path != "CONNECT")
       throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
 
     this._handlerToField(handler, this._overridePaths, path);

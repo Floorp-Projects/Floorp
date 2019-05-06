@@ -73,6 +73,7 @@ class AddonsControls extends Component {
 
   render() {
     const { debugDisabled } = this.props;
+    const isXpinstallEnabled = Services.prefs.getBoolPref("xpinstall.enabled", true);
 
     return dom.div({ className: "addons-top" },
       dom.div({ className: "addons-controls" },
@@ -93,10 +94,10 @@ class AddonsControls extends Component {
             Strings.GetStringFromName("addonDebugging.learnMore")
           ),
         ),
-        dom.button({
+        isXpinstallEnabled ? dom.button({
           id: "load-addon-from-file",
           onClick: this.loadAddonFromFile,
-        }, Strings.GetStringFromName("loadTemporaryAddon2"))
+        }, Strings.GetStringFromName("loadTemporaryAddon2")) : null,
       ),
       AddonsInstallError({
         error: this.state.installError,

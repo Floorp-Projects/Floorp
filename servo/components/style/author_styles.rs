@@ -18,6 +18,7 @@ use crate::stylist::CascadeData;
 
 /// A set of author stylesheets and their computed representation, such as the
 /// ones used for ShadowRoot.
+#[derive(MallocSizeOf)]
 pub struct AuthorStyles<S>
 where
     S: StylesheetInDocument + PartialEq + 'static,

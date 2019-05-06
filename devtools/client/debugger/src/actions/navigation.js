@@ -34,6 +34,7 @@ import type { Action, ThunkArgs } from "./types";
  */
 export function willNavigate(event: Object) {
   return function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
+    sourceQueue.clear();
     sourceMaps.clearSourceMaps();
     clearWasmStates();
     clearDocuments();
@@ -42,18 +43,11 @@ export function willNavigate(event: Object) {
     clearScopes();
     clearSources();
     client.detachWorkers();
-    dispatch(navigate(event.url));
-  };
-}
-
-export function navigate(url: string) {
-  return async function({ dispatch, getState }: ThunkArgs) {
-    sourceQueue.clear();
     const thread = getMainThread(getState());
 
     dispatch({
       type: "NAVIGATE",
-      mainThread: { ...thread, url }
+      mainThread: { ...thread, url: event.url }
     });
   };
 }

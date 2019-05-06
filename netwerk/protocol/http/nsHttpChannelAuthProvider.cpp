@@ -1547,6 +1547,15 @@ void nsHttpChannelAuthProvider::SetAuthorizationHeader(
   nsAutoCString suffix;
   if (header == nsHttp::Proxy_Authorization) {
     continuationState = &mProxyAuthContinuationState;
+
+    if (mProxyInfo) {
+      // Let this be overriden by anything from the cache.
+      auto const& pa = mProxyInfo->ProxyAuthorizationHeader();
+      if (!pa.IsEmpty()) {
+        rv = mAuthChannel->SetProxyCredentials(pa);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+      }
+    }
   } else {
     continuationState = &mAuthContinuationState;
 

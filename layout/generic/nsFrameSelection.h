@@ -367,7 +367,7 @@ class nsFrameSelection final {
    *
    * @param aDelay is the timer's interval.
    */
-  /*unsafe*/
+  MOZ_CAN_RUN_SCRIPT
   nsresult StartAutoScrollTimer(nsIFrame* aFrame, const nsPoint& aPoint,
                                 uint32_t aDelay);
 

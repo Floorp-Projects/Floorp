@@ -99,7 +99,7 @@ interface nsIProtocolProxyService : nsISupports
      * the given URI should be loaded using the HTTP protocol handler, which
      * also supports nsIProxiedProtocolHandler.
      *
-     * @see nsIProxiedProtocolHandler::newProxiedChannel 
+     * @see nsIProxiedProtocolHandler::newProxiedChannel
      */
     nsICancelable asyncResolve(in nsISupports aChannelOrURI, in unsigned long aFlags,
                                in nsIProtocolProxyCallback aCallback,
@@ -139,7 +139,10 @@ interface nsIProtocolProxyService : nsISupports
      *        parameter may be null.
      */
     nsIProxyInfo newProxyInfo(in ACString aType, in AUTF8String aHost,
-                              in long aPort, in unsigned long aFlags,
+                              in long aPort,
+                              in ACString aProxyAuthorizationHeader,
+                              in ACString aConnectionIsolationKey,
+                              in unsigned long aFlags,
                               in unsigned long aFailoverTimeout,
                               in nsIProxyInfo aFailoverProxy);
 
@@ -178,6 +181,8 @@ interface nsIProtocolProxyService : nsISupports
     nsIProxyInfo newProxyInfoWithAuth(in ACString aType, in AUTF8String aHost,
                                       in long aPort,
                                       in ACString aUsername, in ACString aPassword,
+                                      in ACString aProxyAuthorizationHeader,
+                                      in ACString aConnectionIsolationKey,
                                       in unsigned long aFlags,
                                       in unsigned long aFailoverTimeout,
                                       in nsIProxyInfo aFailoverProxy);
@@ -271,7 +276,7 @@ interface nsIProtocolProxyService : nsISupports
      /**
       * These values correspond to the possible integer values for the
       * network.proxy.type preference.
-      */ 
+      */
      const unsigned long PROXYCONFIG_DIRECT   = 0;
      const unsigned long PROXYCONFIG_MANUAL   = 1;
      const unsigned long PROXYCONFIG_PAC      = 2;

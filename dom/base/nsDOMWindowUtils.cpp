@@ -378,8 +378,7 @@ nsDOMWindowUtils::UpdateLayerTree() {
     presShell->FlushPendingNotifications(
         ChangesToFlush(FlushType::Display, false /* flush animations */));
     RefPtr<nsViewManager> vm = presShell->GetViewManager();
-    nsView* view = vm->GetRootView();
-    if (view) {
+    if (nsView* view = vm->GetRootView()) {
       nsAutoScriptBlocker scriptBlocker;
       presShell->Paint(
           view, view->GetBounds(),

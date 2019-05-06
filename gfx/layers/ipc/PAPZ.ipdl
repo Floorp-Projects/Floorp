@@ -47,7 +47,6 @@ sync protocol PAPZ
   manager PCompositorBridge;
 
 parent:
-
   async __delete__();
 
 child:
@@ -71,6 +70,7 @@ child:
 
   async NotifyAsyncAutoscrollRejected(ViewID aScrollId);
 
+both:
   async Destroy();
 };
 

@@ -153,6 +153,7 @@ class Selection final : public nsSupportsWeakReference,
   // Otherwise, if SCROLL_DO_FLUSH is also in aFlags, then this method will
   // flush layout and you MUST hold a strong ref on 'this' for the duration
   // of this call.  This might destroy arbitrary layout objects.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult ScrollIntoView(SelectionRegion aRegion,
                           ScrollAxis aVertical = ScrollAxis(),
                           ScrollAxis aHorizontal = ScrollAxis(),
@@ -209,7 +210,7 @@ class Selection final : public nsSupportsWeakReference,
 
   NS_IMETHOD Repaint(nsPresContext* aPresContext);
 
-  // Note: StartAutoScrollTimer might destroy arbitrary frames etc.
+  MOZ_CAN_RUN_SCRIPT
   nsresult StartAutoScrollTimer(nsIFrame* aFrame, const nsPoint& aPoint,
                                 uint32_t aDelay);
 
@@ -377,7 +378,7 @@ class Selection final : public nsSupportsWeakReference,
                             bool aAllowAdjacent,
                             nsTArray<RefPtr<nsRange>>& aReturn,
                             mozilla::ErrorResult& aRv);
-
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void ScrollIntoView(int16_t aRegion, bool aIsSynchronous,
                       WhereToScroll aVPercent, WhereToScroll aHPercent,
                       mozilla::ErrorResult& aRv);
@@ -587,8 +588,7 @@ class Selection final : public nsSupportsWeakReference,
  private:
   friend class ::nsAutoScrollTimer;
 
-  // Note: DoAutoScroll might destroy arbitrary frames etc.
-  nsresult DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint);
+  MOZ_CAN_RUN_SCRIPT nsresult DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint);
 
   // We are not allowed to be in nodes whose root is not our document
   bool HasSameRoot(nsINode& aNode);

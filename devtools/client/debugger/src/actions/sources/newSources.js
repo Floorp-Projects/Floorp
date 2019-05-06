@@ -43,7 +43,7 @@ import {
 
 import { prefs } from "../../utils/prefs";
 import sourceQueue from "../../utils/source-queue";
-import { ContextError } from "../../utils/context";
+import { validateNavigateContext, ContextError } from "../../utils/context";
 
 import type {
   Source,
@@ -59,30 +59,36 @@ function loadSourceMaps(cx: Context, sources: Source[]) {
   return async function({
     dispatch,
     sourceMaps
-  }: ThunkArgs): Promise<Promise<Source>[]> {
-    const sourceList = await Promise.all(
-      sources.map(async ({ id }) => {
-        const originalSources = await dispatch(loadSourceMap(cx, id));
-        sourceQueue.queueSources(
-          originalSources.map(data => ({
-            type: "original",
-            data
-          }))
-        );
-        return originalSources;
-      })
-    );
+  }: ThunkArgs): Promise<?(Promise<Source>[])> {
+    try {
+      const sourceList = await Promise.all(
+        sources.map(async ({ id }) => {
+          const originalSources = await dispatch(loadSourceMap(cx, id));
+          sourceQueue.queueSources(
+            originalSources.map(data => ({
+              type: "original",
+              data
+            }))
+          );
+          return originalSources;
+        })
+      );
 
-    await sourceQueue.flush();
+      await sourceQueue.flush();
 
-    // We would like to sync breakpoints after we are done
-    // loading source maps as sometimes generated and original
-    // files share the same paths.
-    for (const source of sources) {
-      dispatch(checkPendingBreakpoints(cx, source.id));
+      // We would like to sync breakpoints after we are done
+      // loading source maps as sometimes generated and original
+      // files share the same paths.
+      for (const source of sources) {
+        dispatch(checkPendingBreakpoints(cx, source.id));
+      }
+
+      return flatten(sourceList);
+    } catch (error) {
+      if (!(error instanceof ContextError)) {
+        throw error;
+      }
     }
-
-    return flatten(sourceList);
   };
 }
 
@@ -137,6 +143,7 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
       return [];
     }
 
+    validateNavigateContext(getState(), cx);
     return urls.map(url => ({
       id: generatedToOriginalId(source.id, url),
       url

@@ -3576,17 +3576,15 @@ nsDisplayBackgroundImage::GetInitData(nsDisplayListBuilder* aBuilder,
   if (isRasterImage) {
     image = state.mImageRenderer.GetImage();
   }
-  return InitData{aBuilder,         aFrame,
-                  aBackgroundStyle, image,
-                  aBackgroundRect,  state.mFillArea,
-                  state.mDestArea,  aLayer,
-                  isRasterImage,    shouldFixToViewport};
+  return InitData{aBuilder,        aBackgroundStyle, image,
+                  aBackgroundRect, state.mFillArea,  state.mDestArea,
+                  aLayer,          isRasterImage,    shouldFixToViewport};
 }
 
 nsDisplayBackgroundImage::nsDisplayBackgroundImage(
-    nsDisplayListBuilder* aBuilder, const InitData& aInitData,
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aInitData,
     nsIFrame* aFrameForBounds)
-    : nsDisplayImageContainer(aBuilder, aInitData.frame),
+    : nsDisplayImageContainer(aBuilder, aFrame),
       mBackgroundStyle(aInitData.backgroundStyle),
       mImage(aInitData.image),
       mDependentFrame(nullptr),
@@ -3897,13 +3895,11 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
         DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
         bgImageClip.Clear();
         if (aSecondaryReferenceFrame) {
-          nsDisplayBackgroundImage::InitData tableData = bgData;
-          nsIFrame* styleFrame = tableData.frame;
-          tableData.frame = aSecondaryReferenceFrame;
           bgItem = MakeDisplayItem<nsDisplayTableBackgroundImage>(
-              aBuilder, tableData, styleFrame);
+              aBuilder, aSecondaryReferenceFrame, bgData, aFrame);
         } else {
-          bgItem = MakeDisplayItem<nsDisplayBackgroundImage>(aBuilder, bgData);
+          bgItem = MakeDisplayItem<nsDisplayBackgroundImage>(aBuilder, aFrame,
+                                                             bgData);
         }
       }
       if (bgItem) {
@@ -3922,14 +3918,11 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
     } else {
       nsDisplayBackgroundImage* bgItem;
       if (aSecondaryReferenceFrame) {
-        nsDisplayBackgroundImage::InitData tableData = bgData;
-        nsIFrame* styleFrame = tableData.frame;
-        tableData.frame = aSecondaryReferenceFrame;
-
         bgItem = MakeDisplayItem<nsDisplayTableBackgroundImage>(
-            aBuilder, tableData, styleFrame);
+            aBuilder, aSecondaryReferenceFrame, bgData, aFrame);
       } else {
-        bgItem = MakeDisplayItem<nsDisplayBackgroundImage>(aBuilder, bgData);
+        bgItem =
+            MakeDisplayItem<nsDisplayBackgroundImage>(aBuilder, aFrame, bgData);
       }
       if (bgItem) {
         bgItem->SetDependentFrame(aBuilder, dependentFrame);
@@ -4411,8 +4404,9 @@ nsRect nsDisplayBackgroundImage::GetBoundsInternal(
 }
 
 nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(
-    nsDisplayListBuilder* aBuilder, const InitData& aData, nsIFrame* aCellFrame)
-    : nsDisplayBackgroundImage(aBuilder, aData, aCellFrame),
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aData,
+    nsIFrame* aCellFrame)
+    : nsDisplayBackgroundImage(aBuilder, aFrame, aData, aCellFrame),
       mStyleFrame(aCellFrame),
       mTableType(GetTableTypeFromFrame(mStyleFrame)) {
   if (aBuilder->IsRetainingDisplayList()) {
@@ -5743,7 +5737,7 @@ void nsDisplayWrapList::MergeDisplayListFromItem(nsDisplayListBuilder* aBuilder,
   // Create a new nsDisplayWrapList using a copy-constructor. This is done
   // to preserve the information about bounds.
   nsDisplayWrapList* wrapper =
-      MakeDisplayItem<nsDisplayWrapList>(aBuilder, *wrappedItem);
+      MakeClone<nsDisplayWrapList>(aBuilder, wrappedItem);
   MOZ_ASSERT(wrapper);
 
   // Set the display list pointer of the new wrapper item to the display list

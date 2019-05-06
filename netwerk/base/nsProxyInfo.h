@@ -32,12 +32,18 @@ class nsProxyInfo final : public nsIProxyInfo {
   NS_DECL_NSIPROXYINFO
 
   // Cheap accessors for use within Necko
-  const nsCString& Host() { return mHost; }
-  int32_t Port() { return mPort; }
-  const char* Type() { return mType; }
-  uint32_t Flags() { return mFlags; }
-  const nsCString& Username() { return mUsername; }
-  const nsCString& Password() { return mPassword; }
+  const nsCString& Host() const { return mHost; }
+  int32_t Port() const { return mPort; }
+  const char* Type() const { return mType; }
+  uint32_t Flags() const { return mFlags; }
+  const nsCString& Username() const { return mUsername; }
+  const nsCString& Password() const { return mPassword; }
+  const nsCString& ProxyAuthorizationHeader() const {
+    return mProxyAuthorizationHeader;
+  }
+  const nsCString& ConnectionIsolationKey() const {
+    return mConnectionIsolationKey;
+  }
 
   bool IsDirect();
   bool IsHTTP();
@@ -61,6 +67,8 @@ class nsProxyInfo final : public nsIProxyInfo {
   nsCString mHost;
   nsCString mUsername;
   nsCString mPassword;
+  nsCString mProxyAuthorizationHeader;
+  nsCString mConnectionIsolationKey;
   int32_t mPort;
   uint32_t mFlags;
   uint32_t mResolveFlags;
