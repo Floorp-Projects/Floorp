@@ -3730,7 +3730,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
 
     // Try attaching a regular call stub, but only if the CacheIR attempt didn't
     // add any stubs.
-    if (!handled && !deferred) {
+    if (!handled && !deferred && JitOptions.disableCacheIRCalls) {
       bool createSingleton =
           ObjectGroup::useSingletonForNewObject(cx, script, pc);
       if (!TryAttachCallStub(cx, stub, script, pc, op, argc, vp, constructing,
@@ -3879,7 +3879,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
 
     // Try attaching a regular call stub, but only if the CacheIR attempt didn't
     // add any stubs.
-    if (!handled) {
+    if (!handled && JitOptions.disableCacheIRCalls) {
       if (!TryAttachCallStub(cx, stub, script, pc, op, 1, vp, constructing,
                              true, false, &handled)) {
         return false;
