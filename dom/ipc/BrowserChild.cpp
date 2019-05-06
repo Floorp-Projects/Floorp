@@ -1634,7 +1634,7 @@ void BrowserChild::HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
   if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     nsCOMPtr<Document> document(GetTopLevelDocument());
     postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
-        mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
+        mPuppetWidget, document, aEvent, aGuid.mLayersId, aInputBlockId);
   }
 
   InputAPZContext context(aGuid, aInputBlockId, nsEventStatus_eIgnore,
@@ -1727,7 +1727,7 @@ void BrowserChild::DispatchWheelEvent(const WidgetWheelEvent& aEvent,
     nsCOMPtr<Document> document(GetTopLevelDocument());
     UniquePtr<DisplayportSetListener> postLayerization =
         APZCCallbackHelper::SendSetTargetAPZCNotification(
-            mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
+            mPuppetWidget, document, aEvent, aGuid.mLayersId, aInputBlockId);
     if (postLayerization && postLayerization->Register()) {
       Unused << postLayerization.release();
     }
@@ -1800,7 +1800,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
     }
     UniquePtr<DisplayportSetListener> postLayerization =
         APZCCallbackHelper::SendSetTargetAPZCNotification(
-            mPuppetWidget, document, localEvent, aGuid, aInputBlockId);
+            mPuppetWidget, document, localEvent, aGuid.mLayersId, aInputBlockId);
     if (postLayerization && postLayerization->Register()) {
       Unused << postLayerization.release();
     }

@@ -663,10 +663,10 @@ using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
 // the target list. If the frame doesn't have a displayport, set one.
 // Return whether or not a displayport was set.
 static bool PrepareForSetTargetAPZCNotification(
-    nsIWidget* aWidget, const ScrollableLayerGuid& aGuid, nsIFrame* aRootFrame,
+    nsIWidget* aWidget, const LayersId& aLayersId, nsIFrame* aRootFrame,
     const LayoutDeviceIntPoint& aRefPoint,
     nsTArray<SLGuidAndRenderRoot>* aTargets) {
-  SLGuidAndRenderRoot guid(aGuid.mLayersId, 0,
+  SLGuidAndRenderRoot guid(aLayersId, 0,
                            ScrollableLayerGuid::NULL_SCROLL_ID,
                            wr::RenderRoot::Default);
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
@@ -820,7 +820,7 @@ void DisplayportSetListener::DidRefresh() {
 UniquePtr<DisplayportSetListener>
 APZCCallbackHelper::SendSetTargetAPZCNotification(
     nsIWidget* aWidget, dom::Document* aDocument, const WidgetGUIEvent& aEvent,
-    const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId) {
+    const LayersId& aLayersId, uint64_t aInputBlockId) {
   if (!aWidget || !aDocument) {
     return nullptr;
   }
@@ -846,15 +846,15 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(
       if (const WidgetTouchEvent* touchEvent = aEvent.AsTouchEvent()) {
         for (size_t i = 0; i < touchEvent->mTouches.Length(); i++) {
           waitForRefresh |= PrepareForSetTargetAPZCNotification(
-              aWidget, aGuid, rootFrame, touchEvent->mTouches[i]->mRefPoint,
+              aWidget, aLayersId, rootFrame, touchEvent->mTouches[i]->mRefPoint,
               &targets);
         }
       } else if (const WidgetWheelEvent* wheelEvent = aEvent.AsWheelEvent()) {
         waitForRefresh = PrepareForSetTargetAPZCNotification(
-            aWidget, aGuid, rootFrame, wheelEvent->mRefPoint, &targets);
+            aWidget, aLayersId, rootFrame, wheelEvent->mRefPoint, &targets);
       } else if (const WidgetMouseEvent* mouseEvent = aEvent.AsMouseEvent()) {
         waitForRefresh = PrepareForSetTargetAPZCNotification(
-            aWidget, aGuid, rootFrame, mouseEvent->mRefPoint, &targets);
+            aWidget, aLayersId, rootFrame, mouseEvent->mRefPoint, &targets);
       }
       // TODO: Do other types of events need to be handled?
 
