@@ -394,6 +394,7 @@ class nsView final : public nsIWidgetListener {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool PaintWindow(nsIWidget* aWidget,
                            LayoutDeviceIntRegion aRegion) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void DidPaintWindow() override;
   virtual void DidCompositeWindow(
       mozilla::layers::TransactionId aTransactionId,

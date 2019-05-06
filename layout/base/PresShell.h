@@ -1034,13 +1034,13 @@ class PresShell final : public nsStubDocumentObserver,
    * Fires on the presshell for the painted widget.
    * This is issued at a time when it's safe to modify widget geometry.
    */
-  void WillPaintWindow();
+  MOZ_CAN_RUN_SCRIPT void WillPaintWindow();
   /**
    * Notify that we called Paint with PaintFlags::PaintComposite.
    * Fires on the presshell for the painted widget.
    * This is issued at a time when it's safe to modify widget geometry.
    */
-  void DidPaintWindow();
+  MOZ_CAN_RUN_SCRIPT void DidPaintWindow();
 
   bool IsVisible();
   MOZ_CAN_RUN_SCRIPT
