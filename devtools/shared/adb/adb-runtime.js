@@ -6,6 +6,7 @@
 
 const { RuntimeTypes } = require("devtools/client/webide/modules/runtime-types");
 const { prepareTCPConnection } = require("devtools/shared/adb/commands/index");
+const { shell } = require("devtools/shared/adb/commands/index");
 
 class AdbRuntime {
   constructor(adbDevice, socketPath) {
@@ -13,6 +14,16 @@ class AdbRuntime {
 
     this._adbDevice = adbDevice;
     this._socketPath = socketPath;
+  }
+
+  async init() {
+    const packageName = this._packageName();
+    const query = `dumpsys package ${packageName} | grep versionName`;
+    const versionNameString = await shell(this._adbDevice.id, query);
+    const matches = versionNameString.match(/versionName=([\d.]+)/);
+    if (matches && matches[1]) {
+      this._versionName = matches[1];
+    }
   }
 
   get id() {
@@ -29,6 +40,10 @@ class AdbRuntime {
 
   get deviceName() {
     return this._adbDevice.name;
+  }
+
+  get versionName() {
+    return this._versionName;
   }
 
   get shortName() {
