@@ -167,7 +167,7 @@ class APZCCallbackHelper {
    */
   static UniquePtr<DisplayportSetListener> SendSetTargetAPZCNotification(
       nsIWidget* aWidget, mozilla::dom::Document* aDocument,
-      const WidgetGUIEvent& aEvent, const ScrollableLayerGuid& aGuid,
+      const WidgetGUIEvent& aEvent, const LayersId& aLayersId,
       uint64_t aInputBlockId);
 
   /* Figure out the allowed touch behaviors of each touch point in |aEvent|
