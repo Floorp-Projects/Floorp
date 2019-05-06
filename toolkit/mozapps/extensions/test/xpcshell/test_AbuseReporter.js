@@ -8,6 +8,12 @@ const {
 } = ChromeUtils.import("resource://gre/modules/AbuseReporter.jsm");
 
 const {ClientID} = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const {
+  TelemetryController,
+} = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
+const {
+  TelemetryTestUtils,
+} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
 const APPNAME = "XPCShell";
 const APPVERSION = "1";
@@ -15,6 +21,7 @@ const ADDON_ID = "test-addon@tests.mozilla.org";
 const ADDON_ID2 = "test-addon2@tests.mozilla.org";
 const FAKE_INSTALL_INFO = {source: "fake-install-method"};
 const REPORT_OPTIONS = {reportEntryPoint: "menu"};
+const TELEMETRY_EVENTS_FILTERS = {category: "addonsManager", method: "report"};
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "49");
 
@@ -90,6 +97,18 @@ async function assertBaseReportData({reportData, addon}) {
 add_task(async function test_setup() {
   Services.prefs.setCharPref("extensions.abuseReport.url", "http://test.addons.org/api/report/");
   await promiseStartupManager();
+  // Telemetry test setup needed to ensure that the builtin events are defined
+  // and they can be collected and verified.
+  await TelemetryController.testSetup();
+
+  // This is actually only needed on Android, because it does not properly support unified telemetry
+  // and so, if not enabled explicitly here, it would make these tests to fail when running on a
+  // non-Nightly build.
+  const oldCanRecordBase = Services.telemetry.canRecordBase;
+  Services.telemetry.canRecordBase = true;
+  registerCleanupFunction(() => {
+    Services.telemetry.canRecordBase = oldCanRecordBase;
+  });
 });
 
 add_task(async function test_addon_report_data() {
@@ -122,9 +141,17 @@ add_task(async function test_addon_report_data() {
 });
 
 add_task(async function test_report_on_not_installed_addon() {
+  Services.telemetry.clearEvents();
+
   await assertRejectsAbuseReportError(
     AbuseReporter.createAbuseReport(ADDON_ID, REPORT_OPTIONS),
     "ERROR_ADDON_NOTFOUND");
+
+  TelemetryTestUtils.assertEvents([{
+    object: REPORT_OPTIONS.reportEntryPoint,
+    value: ADDON_ID,
+    extra: {error_type: "ERROR_ADDON_NOTFOUND"},
+  }], TELEMETRY_EVENTS_FILTERS);
 });
 
 // This tests verifies the mapping between the addon installTelemetryInfo
@@ -165,6 +192,8 @@ add_task(async function test_addon_install_method_mapping() {
 });
 
 add_task(async function test_report_create_and_submit() {
+  Services.telemetry.clearEvents();
+
   // Override the test api server request handler, to be able to
   // intercept the submittions to the test api server.
   let reportSubmitted;
@@ -201,10 +230,17 @@ add_task(async function test_report_create_and_submit() {
           `Got the expected submitted value for "${expectedKey}"`);
   }
 
+  TelemetryTestUtils.assertEvents([{
+    object: reportEntryPoint,
+    value: ADDON_ID,
+    extra: {addon_type: "extension"},
+  }], TELEMETRY_EVENTS_FILTERS);
+
   await extension.unload();
 });
 
 add_task(async function test_error_recent_submit() {
+  Services.telemetry.clearEvents();
   await clearAbuseReportState();
 
   let reportSubmitted;
@@ -214,7 +250,9 @@ add_task(async function test_error_recent_submit() {
   };
 
   const {extension} = await installTestExtension();
-  const report = await AbuseReporter.createAbuseReport(ADDON_ID, REPORT_OPTIONS);
+  const report = await AbuseReporter.createAbuseReport(ADDON_ID, {
+    reportEntryPoint: "uninstall",
+  });
 
   const {extension: extension2} = await installTestExtension({
     manifest: {
@@ -231,6 +269,22 @@ add_task(async function test_error_recent_submit() {
   equal(reportSubmitted.reason, "reason1",
         "Server only received the data from the first submission");
 
+  TelemetryTestUtils.assertEvents([
+    {
+      object: "uninstall",
+      value: ADDON_ID,
+      extra: {addon_type: "extension"},
+    },
+    {
+      object: REPORT_OPTIONS.reportEntryPoint,
+      value: ADDON_ID2,
+      extra: {
+        addon_type: "extension",
+        error_type: "ERROR_RECENT_SUBMIT",
+      },
+    },
+  ], TELEMETRY_EVENTS_FILTERS);
+
   await extension.unload();
   await extension2.unload();
 });
@@ -242,6 +296,7 @@ add_task(async function test_submission_server_error() {
     responseStatus, expectedErrorType, expectRequest = true
   ) {
     info(`Test expected AbuseReportError on response status "${responseStatus}"`);
+    Services.telemetry.clearEvents();
     await clearAbuseReportState();
 
     let requestReceived = false;
@@ -262,6 +317,16 @@ add_task(async function test_submission_server_error() {
     }
     equal(requestReceived, expectRequest,
           `${expectRequest ? "" : "Not "}received a request as expected`);
+
+    TelemetryTestUtils.assertEvents([{
+      object: REPORT_OPTIONS.reportEntryPoint,
+      value: ADDON_ID,
+      extra: {
+        addon_type: "extension",
+        error_type: typeof expectedErrorType === "string" ?
+          expectedErrorType : "ERROR_UNKNOWN",
+      },
+    }], TELEMETRY_EVENTS_FILTERS);
   }
 
   await testErrorCode(500, "ERROR_SERVER");
@@ -285,6 +350,7 @@ add_task(async function set_test_abusereport_url() {
 });
 
 add_task(async function test_submission_aborting() {
+  Services.telemetry.clearEvents();
   await clearAbuseReportState();
 
   const {extension} = await installTestExtension();
@@ -321,6 +387,12 @@ add_task(async function test_submission_aborting() {
   report.abort();
 
   await assertRejectsAbuseReportError(promiseResult, "ERROR_ABORTED_SUBMIT");
+
+  TelemetryTestUtils.assertEvents([{
+    object: REPORT_OPTIONS.reportEntryPoint,
+    value: ADDON_ID,
+    extra: {addon_type: "extension", error_type: "ERROR_ABORTED_SUBMIT"},
+  }], TELEMETRY_EVENTS_FILTERS);
 
   await extension.unload();
 
