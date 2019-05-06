@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.android.synthetic.main.fragment_about.*
 import org.mozilla.fenix.R
 import org.mozilla.geckoview.BuildConfig
@@ -28,7 +29,7 @@ class AboutFragment : Fragment() {
 
         val aboutText = try {
             val packageInfo = requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
-            val geckoVersion = packageInfo.versionCode.toString() + " \uD83E\uDD8E " +
+            val geckoVersion = PackageInfoCompat.getLongVersionCode(packageInfo).toString() + " \uD83E\uDD8E " +
                     BuildConfig.MOZ_APP_VERSION + "-" + BuildConfig.MOZ_APP_BUILDID
             String.format(
                 "%s (Build #%s)",
