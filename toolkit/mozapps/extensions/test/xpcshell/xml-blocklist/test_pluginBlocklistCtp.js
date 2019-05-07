@@ -8,7 +8,7 @@ var gNotifier = null;
 var gPluginHost = null;
 
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-gTestserver.registerDirectory("/data/", do_get_file("data"));
+gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 var PLUGINS = [{
   // severity=0, vulnerabilitystatus=0 -> outdated

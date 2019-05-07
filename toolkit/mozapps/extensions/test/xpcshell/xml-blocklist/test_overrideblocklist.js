@@ -8,9 +8,9 @@ const FILE_BLOCKLIST                  = "blocklist.xml";
 
 const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
 
-const OLD = do_get_file("data/test_overrideblocklist/old.xml");
-const NEW = do_get_file("data/test_overrideblocklist/new.xml");
-const ANCIENT = do_get_file("data/test_overrideblocklist/ancient.xml");
+const OLD = do_get_file("../data/test_overrideblocklist/old.xml");
+const NEW = do_get_file("../data/test_overrideblocklist/new.xml");
+const ANCIENT = do_get_file("../data/test_overrideblocklist/ancient.xml");
 
 const gAppDir = FileUtils.getFile(KEY_APPDIR, []);
 

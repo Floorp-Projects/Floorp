@@ -32,7 +32,7 @@ Services.prefs.setBoolPref("extensions.webextPermissionPrompts", false);
 
 var testserver = createHttpServer({hosts: ["example.com"]});
 
-testserver.registerDirectory("/data/", do_get_file("data"));
+testserver.registerDirectory("/data/", do_get_file("../data"));
 
 const XPIS = {};
 

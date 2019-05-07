@@ -3,13 +3,13 @@
  */
 
 // This should eventually be moved to head_addons.js
-// Test whether a machine which is newer than the equal
-// blacklist entry is allowed.
+// Test whether a new-enough driver bypasses the blacklist, even if the rest of
+// the attributes match the blacklist entry.
 // Uses test_gfxBlacklist.xml
 
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gPort = gTestserver.identity.primaryPort;
-gTestserver.registerDirectory("/data/", do_get_file("data"));
+gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -35,9 +35,9 @@ async function run_test() {
   // Set the vendor/device ID, etc, to match the test file.
   switch (Services.appinfo.OS) {
     case "WINNT":
-      gfxInfo.spoofVendorID("0xdcdc");
+      gfxInfo.spoofVendorID("0xabcd");
       gfxInfo.spoofDeviceID("0x1234");
-      gfxInfo.spoofDriverVersion("8.52.322.1112");
+      gfxInfo.spoofDriverVersion("8.52.322.2202");
       // Windows 7
       gfxInfo.spoofOSVersion(0x60001);
       break;
@@ -46,58 +46,27 @@ async function run_test() {
       do_test_finished();
       return;
     case "Darwin":
-      // We don't support driver versions on OS X.
+      // We don't support driver versions on Darwin.
       do_test_finished();
       return;
     case "Android":
-      gfxInfo.spoofVendorID("dcdc");
-      gfxInfo.spoofDeviceID("uiop");
+      gfxInfo.spoofVendorID("abcd");
+      gfxInfo.spoofDeviceID("wxyz");
       gfxInfo.spoofDriverVersion("6");
       break;
   }
 
   do_test_pending();
 
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "15.0", "8");
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   await promiseStartupManager();
 
   function checkBlacklist() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    // Make sure unrelated features aren't affected
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_LAYERS);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_OPENGL_LAYERS);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_ANGLE);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_HARDWARE_VIDEO_DECODING);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_DECODE);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_ENCODE);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_MSAA);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_ANGLE);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_CANVAS2D_ACCELERATION);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
     do_test_finished();
   }

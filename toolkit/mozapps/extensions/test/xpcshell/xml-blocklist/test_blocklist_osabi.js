@@ -6,7 +6,7 @@
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gPort = testserver.identity.primaryPort;
 
-testserver.registerDirectory("/data/", do_get_file("data"));
+testserver.registerDirectory("/data/", do_get_file("../data"));
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");

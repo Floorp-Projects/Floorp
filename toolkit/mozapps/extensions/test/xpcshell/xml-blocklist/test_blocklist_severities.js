@@ -6,7 +6,7 @@
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-gTestserver.registerDirectory("/data/", do_get_file("data"));
+gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 // Workaround for Bug 658720 - URL formatter can leak during xpcshell tests
 const PREF_BLOCKLIST_ITEM_URL = "extensions.blocklist.itemURL";
@@ -77,7 +77,7 @@ var ADDONS = [{
 // right state.
 // Make sure to do this before we touch the plugin service, since that
 // will force a blocklist load.
-copyBlocklistToProfile(do_get_file("data/bug455906_start.xml"));
+copyBlocklistToProfile(do_get_file("../data/bug455906_start.xml"));
 
 var PLUGINS = [
   // Tests how the blocklist affects a disabled plugin

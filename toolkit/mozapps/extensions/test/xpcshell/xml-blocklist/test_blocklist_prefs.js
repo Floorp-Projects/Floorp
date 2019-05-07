@@ -10,7 +10,7 @@ const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/bloc
 var testserver = createHttpServer({hosts: ["example.com"]});
 gPort = testserver.identity.primaryPort;
 
-testserver.registerDirectory("/data/", do_get_file("data"));
+testserver.registerDirectory("/data/", do_get_file("../data"));
 
 // A window watcher to handle the blocklist UI.
 // Don't need the full interface, attempts to call other methods will just

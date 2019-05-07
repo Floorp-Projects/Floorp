@@ -18,7 +18,7 @@ function get_test_plugintag() {
 add_task(async function checkFlashOnlyPluginState() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  copyBlocklistToProfile(do_get_file("data/test_bug514327_2.xml"));
+  copyBlocklistToProfile(do_get_file("../data/test_bug514327_2.xml"));
 
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
 
