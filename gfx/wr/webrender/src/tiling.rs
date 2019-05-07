@@ -573,8 +573,6 @@ impl RenderTarget for ColorRenderTarget {
                     }
                 }
             }
-            #[cfg(test)]
-            RenderTaskKind::Test(..) => {}
         }
     }
 
@@ -726,8 +724,6 @@ impl RenderTarget for AlphaRenderTarget {
                     render_tasks.get_task_address(task.children[0]),
                 );
             }
-            #[cfg(test)]
-            RenderTaskKind::Test(..) => {}
         }
     }
 
@@ -876,8 +872,6 @@ impl TextureCacheRenderTarget {
             RenderTaskKind::Scaling(..) => {
                 panic!("BUG: unexpected task kind for texture cache target");
             }
-            #[cfg(test)]
-            RenderTaskKind::Test(..) => {}
         }
     }
 
