@@ -19,6 +19,7 @@ class UsbRuntime {
     this.isFenix = adbRuntime.isFenix;
     this.isUnavailable = false;
     this.isUnplugged = false;
+    this.versionName = adbRuntime.versionName;
   }
 }
 
@@ -36,6 +37,7 @@ class UnavailableUsbRuntime {
     this.isFenix = false;
     this.isUnavailable = true;
     this.isUnplugged = false;
+    this.versionName = null;
   }
 }
 
@@ -53,6 +55,7 @@ class UnpluggedUsbRuntime {
     this.isFenix = false;
     this.isUnavailable = true;
     this.isUnplugged = true;
+    this.versionName = null;
   }
 }
 

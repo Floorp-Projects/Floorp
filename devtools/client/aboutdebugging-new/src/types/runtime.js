@@ -105,6 +105,10 @@ const runtimeExtra = {
   // device name
   // unavailable on this-firefox and network-location runtimes
   deviceName: PropTypes.string,
+
+  // version of the application coming from ADB, only available via USB. Useful for Fenix
+  // runtimes, because the version can't be retrieved from Service.appInfo.
+  adbPackageVersion: PropTypes.string,
 };
 
 const runtime = {
