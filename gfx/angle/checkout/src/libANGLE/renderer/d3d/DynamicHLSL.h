@@ -67,13 +67,19 @@ struct PixelShaderOutputVariable
     PixelShaderOutputVariable(GLenum typeIn,
                               const std::string &nameIn,
                               const std::string &sourceIn,
+                              size_t outputLocationIn,
                               size_t outputIndexIn)
-        : type(typeIn), name(nameIn), source(sourceIn), outputIndex(outputIndexIn)
+        : type(typeIn),
+          name(nameIn),
+          source(sourceIn),
+          outputLocation(outputLocationIn),
+          outputIndex(outputIndexIn)
     {}
 
     GLenum type = GL_NONE;
     std::string name;
     std::string source;
+    size_t outputLocation = 0;
     size_t outputIndex = 0;
 };
 
