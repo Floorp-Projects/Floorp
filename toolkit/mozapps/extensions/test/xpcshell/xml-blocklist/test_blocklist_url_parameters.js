@@ -13,7 +13,7 @@ const PREF_APP_UPDATE_CHANNEL         = "app.update.channel";
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 
 async function updateBlocklist(file) {
-  let blocklistUpdated = TestUtils.topicObserved("blocklist-updated");
+  let blocklistUpdated = TestUtils.topicObserved("addon-blocklist-updated");
   Blocklist.notify();
   return blocklistUpdated;
 }

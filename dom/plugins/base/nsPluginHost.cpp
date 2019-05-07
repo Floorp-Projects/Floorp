@@ -268,18 +268,27 @@ class BlocklistPromiseHandler final
     sPendingBlocklistStateRequests--;
     // If this was the only remaining pending request, check if we need to write
     // state and if so update the child processes.
-    if (!sPendingBlocklistStateRequests &&
-        sPluginBlocklistStatesChangedSinceLastWrite) {
-      sPluginBlocklistStatesChangedSinceLastWrite = false;
+    if (!sPendingBlocklistStateRequests) {
+      if (sPluginBlocklistStatesChangedSinceLastWrite) {
+        sPluginBlocklistStatesChangedSinceLastWrite = false;
 
-      RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
-      // Write the changed list to disk:
-      host->WritePluginInfo();
+        RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+        // Write the changed list to disk:
+        host->WritePluginInfo();
 
-      // We update blocklist info in content processes asynchronously
-      // by just sending a new plugin list to content.
-      host->IncrementChromeEpoch();
-      host->SendPluginsToContent();
+        // We update blocklist info in content processes asynchronously
+        // by just sending a new plugin list to content.
+        host->IncrementChromeEpoch();
+        host->SendPluginsToContent();
+      }
+
+      // Now notify observers that we're done updating plugin state.
+      nsCOMPtr<nsIObserverService> obsService =
+          mozilla::services::GetObserverService();
+      if (obsService) {
+        obsService->NotifyObservers(
+            nullptr, "plugin-blocklist-updates-finished", nullptr);
+      }
     }
   }
 
@@ -358,7 +367,7 @@ nsPluginHost::nsPluginHost()
   if (obsService) {
     obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     if (XRE_IsParentProcess()) {
-      obsService->AddObserver(this, "blocklist-updated", false);
+      obsService->AddObserver(this, "plugin-blocklist-updated", false);
     }
   }
 
@@ -3305,7 +3314,7 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports* aSubject, const char* aTopic,
       LoadPlugins();
     }
   }
-  if (XRE_IsParentProcess() && !strcmp("blocklist-updated", aTopic)) {
+  if (XRE_IsParentProcess() && !strcmp("plugin-blocklist-updated", aTopic)) {
     // The blocklist has updated. Asynchronously get blocklist state for all
     // items. The promise resolution handler takes care of checking if anything
     // changed, and writing an updated state to file, as well as sending data to

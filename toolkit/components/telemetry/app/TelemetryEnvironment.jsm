@@ -291,7 +291,7 @@ const SEARCH_ENGINE_MODIFIED_TOPIC = "browser-search-engine-modified";
 const SEARCH_SERVICE_TOPIC = "browser-search-service";
 const SESSIONSTORE_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
-const BLOCKLIST_LOADED_TOPIC = "blocklist-loaded";
+const BLOCKLIST_LOADED_TOPIC = "plugin-blocklist-loaded";
 const AUTO_UPDATE_PREF_CHANGE_TOPIC = "auto-update-config-change";
 
 /**

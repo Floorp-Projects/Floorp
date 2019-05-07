@@ -2,24 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const testserver = createHttpServer();
-gPort = testserver.identity.primaryPort;
-testserver.registerDirectory("/data/", do_get_file("../data"));
-
-
 function load_blocklist(aFile) {
-  return new Promise((resolve, reject) => {
-    Services.obs.addObserver(function observer() {
-      Services.obs.removeObserver(observer, "addon-blocklist-updated");
-
-      resolve();
-    }, "addon-blocklist-updated");
-
-    Services.prefs.setCharPref("extensions.blocklist.url", `http://localhost:${gPort}/data/${aFile}`);
-    var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                    getService(Ci.nsITimerCallback);
-    blocklist.notify(null);
-  });
+  return AddonTestUtils.loadBlocklistData(do_get_file("../data"), aFile);
 }
 
 // Tests that an appDisabled add-on that becomes softBlocked remains disabled
@@ -49,7 +33,7 @@ add_task(async function test_softblock() {
   Assert.ok(s1.appDisabled);
   Assert.ok(!s1.isActive);
 
-  await load_blocklist("test_softblocked1.xml");
+  await load_blocklist("test_softblocked1");
 
   Assert.ok(s1.softDisabled);
   Assert.ok(s1.appDisabled);

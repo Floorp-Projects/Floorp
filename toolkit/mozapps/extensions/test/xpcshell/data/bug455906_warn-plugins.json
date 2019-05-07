@@ -1,0 +1,10 @@
+[
+  {
+    "matchName": "^test_bug455906",
+    "versionRange": [
+      {
+        "severity": "-1"
+      }
+    ]
+  }
+]

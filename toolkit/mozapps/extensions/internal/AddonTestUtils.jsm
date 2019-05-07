@@ -709,6 +709,60 @@ var AddonTestUtils = {
   },
 
   /**
+   * Load the following data into the *real* blocklist providers.
+   * While `overrideBlocklist` replaces the blocklist entirely with a mock
+   * that returns dummy data, this method instead loads data into the actual
+   * blocklist, fires update methods as would happen if this data came from
+   * an actual blocklist update, etc.
+   *
+   * @param {nsIFile} dir
+   *        The directory in which the files live.
+   * @param {string} prefix
+   *        a prefix for the files which ought to be loaded.
+   *        This method will suffix -extensions.json and -plugins.json
+   *        to the prefix it is given, and attempt to load both.
+   *        Insofar as either exists, their data will be dumped into
+   *        the respective store, and the respective update handlers
+   *        will be called.
+   */
+  async loadBlocklistData(dir, prefix) {
+    const bsPass = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
+    const blocklistMapping = {
+      "extensions": bsPass.ExtensionBlocklistRS,
+      "plugins": bsPass.PluginBlocklistRS,
+    };
+
+    for (const [fileSuffix, blocklistObj] of Object.entries(blocklistMapping)) {
+      const fileName = `${prefix}-${fileSuffix}.json`;
+      let jsonStr = await OS.File.read(OS.Path.join(dir.path, fileName), {encoding: "UTF-8"}).catch(() => {});
+      if (!jsonStr) {
+        continue;
+      }
+      this.info(`Loading ${fileName}`);
+
+      let newData = JSON.parse(jsonStr);
+      if (!Array.isArray(newData)) {
+        throw new Error("Expected an array of new items to put in the " + fileSuffix + " blocklist!");
+      }
+      for (let item of newData) {
+        if (!item.id) {
+          item.id = uuidGen.generateUUID().number.slice(1, -1);
+        }
+        if (!item.last_modified) {
+          item.last_modified = Date.now();
+        }
+      }
+      await blocklistObj._ensureInitialized();
+      let collection = await blocklistObj._client.openCollection();
+      await collection.clear();
+      await collection.loadDump(newData);
+      // We manually call _onUpdate... which is evil, but at the moment kinto doesn't have
+      // a better abstraction unless you want to mock your own http server to do the update.
+      await blocklistObj._onUpdate();
+    }
+  },
+
+  /**
    * Starts up the add-on manager as if it was started by the application.
    *
    * @param {string} [newVersion]

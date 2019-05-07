@@ -1,0 +1,336 @@
+[
+  {
+    "_comment": "Always blocked",
+    "matchName": "^test_bug449027_2$",
+    "versionRange": []
+  },
+  {
+    "_comment": "Always blocked",
+    "matchName": "^test_bug449027_3$",
+    "versionRange": [
+      {}
+    ]
+  },
+  {
+    "_comment": "Not blocked since neither version range matches",
+    "matchName": "^test_bug449027_4$",
+    "versionRange": [
+      {
+        "minVersion": "6"
+      },
+      {
+        "maxVersion": "4"
+      }
+    ]
+  },
+  {
+    "_comment": "Invalid version range, should not block",
+    "matchName": "^test_bug449027_5$",
+    "versionRange": [
+      {
+        "maxVersion": "4",
+        "minVersion": "6"
+      }
+    ]
+  },
+  {
+    "_comment": "Should block all of these",
+    "matchName": "^test_bug449027_6$",
+    "versionRange": [
+      {
+        "maxVersion": "8",
+        "minVersion": "7"
+      },
+      {
+        "maxVersion": "6",
+        "minVersion": "5"
+      },
+      {
+        "maxVersion": "4"
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_7$",
+    "versionRange": [
+      {
+        "maxVersion": "4"
+      },
+      {
+        "maxVersion": "5",
+        "minVersion": "4"
+      },
+      {
+        "maxVersion": "7",
+        "minVersion": "6"
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_8$",
+    "versionRange": [
+      {
+        "maxVersion": "2",
+        "minVersion": "2"
+      },
+      {
+        "maxVersion": "6",
+        "minVersion": "4"
+      },
+      {
+        "maxVersion": "8",
+        "minVersion": "7"
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_9$",
+    "versionRange": [
+      {
+        "minVersion": "4"
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_10$",
+    "versionRange": [
+      {
+        "minVersion": "5"
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_11$",
+    "versionRange": [
+      {
+        "maxVersion": "6"
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_12$",
+    "versionRange": [
+      {
+        "maxVersion": "5"
+      }
+    ]
+  },
+  {
+    "_comment": "This should block all versions for any application",
+    "matchName": "^test_bug449027_13$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {}
+        ]
+      }
+    ]
+  },
+  {
+    "_comment": "Shouldn't block",
+    "matchName": "^test_bug449027_14$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "foo@bar.com"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_comment": "Should block for any version of the app",
+    "matchName": "^test_bug449027_15$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_comment": "Should still block",
+    "matchName": "^test_bug449027_16$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_comment": "Not blocked since neither version range matches",
+    "matchName": "^test_bug449027_17$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "minVersion": "4"
+          },
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "2"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_comment": "Invalid version range, should not block",
+    "matchName": "^test_bug449027_18$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "4",
+            "minVersion": "6"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "_comment": "Should block all of these",
+    "matchName": "^test_bug449027_19$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "foo@bar.com"
+          },
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "6",
+            "minVersion": "5"
+          },
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "4",
+            "minVersion": "3"
+          },
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "2"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_20$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "2"
+          },
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "3",
+            "minVersion": "2"
+          },
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "5",
+            "minVersion": "4"
+          },
+          {
+            "guid": "foo@bar.com"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_21$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "1",
+            "minVersion": "1"
+          },
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "4",
+            "minVersion": "2"
+          },
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "6",
+            "minVersion": "5"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_22$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "foo@bar.com"
+          },
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "minVersion": "3"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_23$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "minVersion": "2"
+          },
+          {
+            "guid": "foo@bar.com"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_24$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "3"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchName": "^test_bug449027_25$",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "4"
+          }
+        ]
+      }
+    ]
+  }
+]
