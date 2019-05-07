@@ -8,7 +8,7 @@ use api::{ColorU, GlyphIndex, GlyphDimensions, SyntheticItalics};
 use api::units::*;
 use euclid::approxeq::ApproxEq;
 use internal_types::ResourceCacheError;
-use wr_malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
+use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use platform::font::FontContext;
 use rayon::ThreadPool;
 use std::cmp;
