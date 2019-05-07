@@ -23,6 +23,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ParentSHistory.h"
+#include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsStubMutationObserver.h"
@@ -445,6 +446,10 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void FireErrorEvent();
   nsresult ReallyStartLoadingInternal();
 
+  // Returns true if we have a remote browser or else attempts to create a
+  // remote browser and returns true if successful.
+  bool EnsureRemoteBrowser();
+
   // Return true if remote browser created; nothing else to do
   bool TryRemoteBrowser();
 
@@ -492,11 +497,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // target process.
   uint64_t mPendingSwitchID;
 
-  RefPtr<BrowserParent> mBrowserParent;
   uint64_t mChildID;
-
-  // This is used when this refers to a remote sub frame
-  RefPtr<mozilla::dom::BrowserBridgeChild> mBrowserBridgeChild;
+  RefPtr<mozilla::dom::RemoteBrowser> mRemoteBrowser;
 
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;
