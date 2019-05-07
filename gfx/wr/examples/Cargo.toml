@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
+edition = "2018"
 
 [[bin]]
 name = "alpha_perf"
