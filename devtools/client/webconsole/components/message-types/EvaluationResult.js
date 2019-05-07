@@ -20,11 +20,6 @@ EvaluationResult.propTypes = {
   timestampsVisible: PropTypes.bool.isRequired,
   serviceContainer: PropTypes.object,
   maybeScrollToBottom: PropTypes.func,
-  open: PropTypes.bool,
-};
-
-EvaluationResult.defaultProps = {
-  open: false,
 };
 
 function EvaluationResult(props) {
@@ -34,7 +29,6 @@ function EvaluationResult(props) {
     serviceContainer,
     timestampsVisible,
     maybeScrollToBottom,
-    open,
   } = props;
 
   const {
@@ -45,7 +39,6 @@ function EvaluationResult(props) {
     id: messageId,
     indent,
     exceptionDocURL,
-    stacktrace,
     frame,
     timeStamp,
     parameters,
@@ -79,7 +72,6 @@ function EvaluationResult(props) {
   const topLevelClasses = ["cm-s-mozilla"];
 
   return Message({
-    dispatch,
     source,
     type,
     level,
@@ -89,9 +81,6 @@ function EvaluationResult(props) {
     messageId,
     serviceContainer,
     exceptionDocURL,
-    stacktrace,
-    collapsible: Array.isArray(stacktrace),
-    open,
     frame,
     timeStamp,
     parameters,
