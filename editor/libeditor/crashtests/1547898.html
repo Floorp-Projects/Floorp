@@ -1,0 +1,16 @@
+<html>
+<head>
+    <script>
+      function jsfuzzer () {
+        window.find('1')
+        const selection = window.getSelection()
+        selection.extend(document.getElementById('list_item'))
+        document.getElementById('list_item').contentEditable = 'true'
+        document.execCommand('indent', false)
+      }
+    </script>
+</head>
+<body onload=jsfuzzer()>
+<li id="list_item">16</li>
+</body>
+</html>
