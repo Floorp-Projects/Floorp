@@ -56,6 +56,7 @@ namespace jit {
   _(BoxNonStrictThis, js::BoxNonStrictThis)                                    \
   _(BuiltinProtoOperation, js::BuiltinProtoOperation)                          \
   _(CallNativeGetter, js::jit::CallNativeGetter)                               \
+  _(CallNativeGetterByValue, js::jit::CallNativeGetterByValue)                 \
   _(CallNativeSetter, js::jit::CallNativeSetter)                               \
   _(CharCodeAt, js::jit::CharCodeAt)                                           \
   _(CheckClassHeritageOperation, js::CheckClassHeritageOperation)              \
