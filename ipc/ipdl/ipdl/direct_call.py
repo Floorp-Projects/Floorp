@@ -17,8 +17,6 @@ DIRECT_CALL_OVERRIDES = {
         "BackgroundMutableFileParentBase", "mozilla/dom/filehandle/ActorsParent.h"
     ),
 
-    ("PBrowser", "parent"): ("BrowserParent", "mozilla/dom/BrowserParent.h"),
-
     ("PChromiumCDM", "parent"): ("ChromiumCDMParent", "ChromiumCDMParent.h"),
 
     ("PCompositorBridge", "parent"): (
@@ -573,10 +571,6 @@ VIRTUAL_CALL_CLASSES = set([
     ("PHttpChannel", "parent"),
     ("PSessionStorageObserver", "child"),
     ("PSessionStorageObserver", "parent"),
-
-    # Recv* methods are MOZ_CAN_RUN_SCRIPT and OnMessageReceived is not, so
-    # it's not allowed to call them.
-    ("PBrowser", "child"),
 
     # can't be included safely for compilation error reasons
     ("PGMPContent", "parent"),
