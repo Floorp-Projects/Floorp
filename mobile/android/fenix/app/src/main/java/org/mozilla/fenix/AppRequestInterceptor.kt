@@ -9,12 +9,43 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.utils.Settings
+import java.net.MalformedURLException
+import java.net.URL
 
 class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+        adjustTrackingProtection(uri, context)
         // Accounts uses interception to check for a "success URL" in the sign-in flow to finalize authentication.
         return context.components.services.accountsAuthFeature.interceptor.onLoadRequest(session, uri)
+    }
+
+    private fun adjustTrackingProtection(url: String, context: Context) {
+        val host = try {
+            URL(url).host
+        } catch (e: MalformedURLException) {
+            url
+        }
+        val trackingProtectionException = ExceptionDomains.load(context).contains(host)
+        val trackingProtectionEnabled = Settings.getInstance(context).shouldUseTrackingProtection
+        val core = context.components.core
+        if (trackingProtectionException || !trackingProtectionEnabled) {
+            with(core.sessionManager) {
+                selectedSession?.let {
+                    getEngineSession(it)?.disableTrackingProtection()
+                }
+            }
+        } else {
+            val policy = core.createTrackingProtectionPolicy(normalMode = true)
+            core.engine.settings.trackingProtectionPolicy = policy
+            with(core.sessionManager) {
+                selectedSession?.let {
+                    getEngineSession(it)?.enableTrackingProtection(policy)
+                }
+            }
+        }
     }
 
     override fun onErrorRequest(
@@ -27,8 +58,10 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         val htmlResource = getPageForRiskLevel(riskLevel)
         val cssResource = getStyleForRiskLevel(riskLevel)
 
-        return RequestInterceptor.ErrorResponse(ErrorPages
-            .createErrorPage(context, errorType, uri = uri, htmlResource = htmlResource, cssResource = cssResource))
+        return RequestInterceptor.ErrorResponse(
+            ErrorPages
+                .createErrorPage(context, errorType, uri = uri, htmlResource = htmlResource, cssResource = cssResource)
+        )
     }
 
     private fun getPageForRiskLevel(riskLevel: RiskLevel): Int {

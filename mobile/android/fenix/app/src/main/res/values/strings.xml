@@ -167,6 +167,10 @@
     <string name="preferences_tracking_protection_description">Block content and scripts that track you online</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Exceptions</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Tracking Protection is off for these websites</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Turn on for all sites</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>

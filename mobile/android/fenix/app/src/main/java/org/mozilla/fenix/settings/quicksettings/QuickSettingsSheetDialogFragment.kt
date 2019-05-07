@@ -27,13 +27,15 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
+import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.settings.PhoneFeature
-import org.mozilla.fenix.utils.Settings
+import java.net.MalformedURLException
+import java.net.URL
 import kotlin.coroutines.CoroutineContext
 
 private const val KEY_URL = "KEY_URL"
@@ -174,19 +176,17 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
     private fun arePermissionsGranted(requestCode: Int, grantResults: IntArray) =
         requestCode == REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS && grantResults.all { it == PERMISSION_GRANTED }
 
-    private fun toggleTrackingProtection(trackingEnabled: Boolean, context: Context) {
-        with(requireComponents.core) {
-            val policy =
-                createTrackingProtectionPolicy(trackingEnabled)
-            Settings.getInstance(context).setTrackingProtection(trackingEnabled)
-            engine.settings.trackingProtectionPolicy = policy
-
-            with(sessionManager) {
-                sessions.forEach {
-                    getEngineSession(it)?.enableTrackingProtection(
-                        policy
-                    )
-                }
+    private fun toggleTrackingProtection(context: Context, url: String) {
+        val host = try {
+            URL(url).host
+        } catch (e: MalformedURLException) {
+            url
+        }
+        launch {
+            if (!ExceptionDomains.load(context).contains(host)) {
+                ExceptionDomains.add(context, host)
+            } else {
+                ExceptionDomains.remove(context, listOf(host))
             }
         }
     }
@@ -209,7 +209,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
                     }
                     is QuickSettingsAction.ToggleTrackingProtection -> {
                         val trackingEnabled = it.trackingProtection
-                        context?.let { toggleTrackingProtection(trackingEnabled, it) }
+                        context?.let { context: Context -> toggleTrackingProtection(context, url) }
                         launch(Dispatchers.Main) {
                             getManagedEmitter<QuickSettingsChange>().onNext(
                                 QuickSettingsChange.Change(

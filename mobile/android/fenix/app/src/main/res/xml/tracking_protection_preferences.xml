@@ -2,8 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <SwitchPreference
         android:defaultValue="true"
         android:icon="@drawable/ic_tracking_protection"
@@ -11,7 +10,6 @@
         android:summary="@string/preferences_tracking_protection_description"
         android:title="@string/preferences_tracking_protection" />
     <Preference
-        app:isPreferenceVisible="false"
         android:icon="@drawable/ic_internet"
         android:key="@string/pref_key_tracking_protection_exceptions"
         android:title="@string/preferences_tracking_protection_exceptions" />

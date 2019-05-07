@@ -667,7 +667,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 val quickSettingsSheet = QuickSettingsSheetDialogFragment.newInstance(
                     url = session.url,
                     isSecured = session.securityInfo.secure,
-                    isTrackingProtectionOn = Settings.getInstance(context!!).shouldUseTrackingProtection,
+                    isTrackingProtectionOn = session.trackerBlockingEnabled,
                     sitePermissions = sitePermissions,
                     gravity = getAppropriateLayoutGravity()
                 )

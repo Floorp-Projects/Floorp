@@ -290,5 +290,13 @@
     <fragment
         android:id="@+id/trackingProtectionFragment"
         android:name="org.mozilla.fenix.settings.TrackingProtectionFragment"
-        android:label="TrackingProtectionFragment" />
+        android:label="TrackingProtectionFragment" >
+        <action
+            android:id="@+id/action_trackingProtectionFragment_to_exceptionsFragment"
+            app:destination="@id/exceptionsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/exceptionsFragment"
+        android:name="org.mozilla.fenix.exceptions.ExceptionsFragment"
+        android:label="ExceptionsFragment" />
 </navigation>
