@@ -186,11 +186,10 @@ function load_cert(cert, trust) {
 
 function fetch_blocklist() {
   Services.prefs.setBoolPref("services.settings.load_dump", false);
-  Services.prefs.setBoolPref("services.settings.verify_signature", false);
   Services.prefs.setCharPref("services.settings.server",
                              `http://localhost:${port}/v1`);
 
-  BlocklistClients.initialize();
+  BlocklistClients.initialize({ verifySignature: false });
 
   return RemoteSettings.pollChanges();
 }
