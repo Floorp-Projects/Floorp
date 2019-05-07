@@ -7,6 +7,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include <algorithm>
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EventStateManager.h"
@@ -23,6 +24,8 @@
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/PromiseDebugging.h"
+#include "mozilla/dom/PromiseRejectionEvent.h"
+#include "mozilla/dom/PromiseRejectionEventBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsapi.h"
 #include "js/Debug.h"
@@ -128,7 +131,6 @@ void CycleCollectedJSContext::InitializeCommon() {
   NS_GetCurrentThread()->SetCanInvokeJS(true);
 
   JS::SetJobQueue(mJSContext, this);
-
   JS::SetPromiseRejectionTrackerCallback(mJSContext,
                                          PromiseRejectionTrackerCallback, this);
   mUncaughtRejections.init(mJSContext,
@@ -332,16 +334,60 @@ CycleCollectedJSContext::saveJobQueue(JSContext* cx) {
 void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
     JSContext* aCx, JS::HandleObject aPromise,
     JS::PromiseRejectionHandlingState state, void* aData) {
-#ifdef DEBUG
   CycleCollectedJSContext* self = static_cast<CycleCollectedJSContext*>(aData);
-#endif  // DEBUG
+
   MOZ_ASSERT(aCx == self->Context());
   MOZ_ASSERT(Get() == self);
 
+  // TODO: Bug 1549351 - Promise rejection event should not be sent for
+  // cross-origin scripts
+
+  PromiseArray& aboutToBeNotified = self->mAboutToBeNotifiedRejectedPromises;
+  PromiseHashtable& unhandled = self->mPendingUnhandledRejections;
+  uint64_t promiseID = JS::GetPromiseID(aPromise);
+
   if (state == JS::PromiseRejectionHandlingState::Unhandled) {
     PromiseDebugging::AddUncaughtRejection(aPromise);
+    if (mozilla::StaticPrefs::dom_promise_rejection_events_enabled()) {
+      RefPtr<Promise> promise =
+          Promise::CreateFromExisting(xpc::NativeGlobal(aPromise), aPromise);
+      aboutToBeNotified.AppendElement(promise);
+      unhandled.Put(promiseID, promise);
+    }
   } else {
     PromiseDebugging::AddConsumedRejection(aPromise);
+    if (mozilla::StaticPrefs::dom_promise_rejection_events_enabled()) {
+      for (size_t i = 0; i < aboutToBeNotified.Length(); i++) {
+        if (aboutToBeNotified[i] &&
+            aboutToBeNotified[i]->PromiseObj() == aPromise) {
+          // To avoid large amounts of memmoves, we don't shrink the vector
+          // here. Instead, we filter out nullptrs when iterating over the
+          // vector later.
+          aboutToBeNotified[i] = nullptr;
+          DebugOnly<bool> isFound = unhandled.Remove(promiseID);
+          MOZ_ASSERT(isFound);
+          return;
+        }
+      }
+      RefPtr<Promise> promise;
+      unhandled.Remove(promiseID, getter_AddRefs(promise));
+      if (!promise) {
+        nsIGlobalObject* global = xpc::NativeGlobal(aPromise);
+        if (nsCOMPtr<EventTarget> owner = do_QueryInterface(global)) {
+          PromiseRejectionEventInit init;
+          init.mPromise = Promise::CreateFromExisting(global, aPromise);
+          init.mReason = JS::GetPromiseResult(aPromise);
+
+          RefPtr<PromiseRejectionEvent> event =
+              PromiseRejectionEvent::Constructor(
+                  owner, NS_LITERAL_STRING("rejectionhandled"), init);
+
+          RefPtr<AsyncEventDispatcher> asyncDispatcher =
+              new AsyncEventDispatcher(owner, event);
+          asyncDispatcher->PostDOMEvent();
+        }
+      }
+    }
   }
 }
 
@@ -447,6 +493,13 @@ void CycleCollectedJSContext::AfterProcessTask(uint32_t aRecursionDepth) {
 
 void CycleCollectedJSContext::AfterProcessMicrotasks() {
   MOZ_ASSERT(mJSContext);
+  // Notify unhandled promise rejections:
+  // https://html.spec.whatwg.org/multipage/webappapis.html#notify-about-rejected-promises
+  if (mAboutToBeNotifiedRejectedPromises.Length()) {
+    RefPtr<NotifyUnhandledRejections> runnable = new NotifyUnhandledRejections(
+        this, std::move(mAboutToBeNotifiedRejectedPromises));
+    NS_DispatchToCurrentThread(runnable);
+  }
   // Cleanup Indexed Database transactions:
   // https://html.spec.whatwg.org/multipage/webappapis.html#perform-a-microtask-checkpoint
   CleanupIDBTransactions(RecursionDepth());
@@ -641,4 +694,63 @@ void CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint() {
   AfterProcessMicrotasks();
 }
 
+NS_IMETHODIMP CycleCollectedJSContext::NotifyUnhandledRejections::Run() {
+  MOZ_ASSERT(mozilla::StaticPrefs::dom_promise_rejection_events_enabled());
+
+  for (size_t i = 0; i < mUnhandledRejections.Length(); ++i) {
+    RefPtr<Promise>& promise = mUnhandledRejections[i];
+    if (!promise) {
+      continue;
+    }
+
+    JS::RootedObject promiseObj(mCx->RootingCx(), promise->PromiseObj());
+    MOZ_ASSERT(JS::IsPromiseObject(promiseObj));
+
+    // Only fire unhandledrejection if the promise is still not handled;
+    uint64_t promiseID = JS::GetPromiseID(promiseObj);
+    if (!JS::GetPromiseIsHandled(promiseObj)) {
+      if (nsCOMPtr<EventTarget> target =
+              do_QueryInterface(promise->GetParentObject())) {
+        PromiseRejectionEventInit init;
+        init.mPromise = promise;
+        init.mReason = JS::GetPromiseResult(promiseObj);
+        init.mCancelable = true;
+
+        RefPtr<PromiseRejectionEvent> event =
+            PromiseRejectionEvent::Constructor(
+                target, NS_LITERAL_STRING("unhandledrejection"), init);
+        // We don't use the result of dispatching event here to check whether to
+        // report the Promise to console.
+        target->DispatchEvent(*event);
+      }
+    }
+
+    if (!JS::GetPromiseIsHandled(promiseObj)) {
+      DebugOnly<bool> isFound =
+          mCx->mPendingUnhandledRejections.Remove(promiseID);
+      MOZ_ASSERT(isFound);
+    }
+
+    // If a rejected promise is being handled in "unhandledrejection" event
+    // handler, it should be removed from the table in
+    // PromiseRejectionTrackerCallback.
+    MOZ_ASSERT(!mCx->mPendingUnhandledRejections.Lookup(promiseID));
+  }
+  return NS_OK;
+}
+
+nsresult CycleCollectedJSContext::NotifyUnhandledRejections::Cancel() {
+  MOZ_ASSERT(mozilla::StaticPrefs::dom_promise_rejection_events_enabled());
+
+  for (size_t i = 0; i < mUnhandledRejections.Length(); ++i) {
+    RefPtr<Promise>& promise = mUnhandledRejections[i];
+    if (!promise) {
+      continue;
+    }
+
+    JS::RootedObject promiseObj(mCx->RootingCx(), promise->PromiseObj());
+    mCx->mPendingUnhandledRejections.Remove(JS::GetPromiseID(promiseObj));
+  }
+  return NS_OK;
+}
 }  // namespace mozilla
