@@ -2703,6 +2703,27 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
     return;
   }
 
+  // If we are scrolling the RCD-RSF, and a visual scroll update is pending,
+  // cancel it; otherwise, it will clobber this scroll.
+  if (IsRootScrollFrameOfDocument() && presContext->IsRootContentDocument()) {
+    PresShell* ps = presContext->GetPresShell();
+    if (const auto& visualScrollUpdate = ps->GetPendingVisualScrollUpdate()) {
+      if (visualScrollUpdate->mVisualScrollOffset != aPt) {
+        // Only clobber if the scroll was originated by the main thread.
+        // Respect the priority of origins (an "eRestore" layout scroll should
+        // not clobber an "eMainThread" visual scroll.)
+        bool shouldClobber =
+            aOrigin == nsGkAtoms::other ||
+            (aOrigin == nsGkAtoms::restore &&
+             visualScrollUpdate->mUpdateType == FrameMetrics::eRestore);
+        if (shouldClobber) {
+          ps->AcknowledgePendingVisualScrollUpdate();
+          ps->ClearPendingVisualScrollUpdate();
+        }
+      }
+    }
+  }
+
   bool needFrameVisibilityUpdate = mLastUpdateFramesPos == nsPoint(-1, -1);
 
   nsPoint dist(std::abs(pt.x - mLastUpdateFramesPos.x),
