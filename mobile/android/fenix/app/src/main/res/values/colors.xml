@@ -41,7 +41,7 @@
     <color name="primary_text_private_theme">#FBFBFE</color>
     <color name="secondary_text_private_theme">#A7A2B7</color>
     <color name="contrast_text_private_theme">@color/primary_text_light_theme</color>
-    <color name="foundation_private_theme">#492E85</color>
+    <color name="foundation_private_theme">#1D1133</color>
     <color name="inset_private_theme">#362A5C</color>
     <color name="above_private_theme">#291D4F</color>
     <color name="accent_private_theme">#E6E6EA</color>
