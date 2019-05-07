@@ -1302,7 +1302,7 @@ def bundled_fonts_default(target):
 
 @depends(build_project)
 def allow_bundled_fonts(project):
-    return project == 'browser'
+    return project == 'browser' or project == 'comm/mail'
 
 option('--enable-bundled-fonts', default=bundled_fonts_default,
        when=allow_bundled_fonts,
