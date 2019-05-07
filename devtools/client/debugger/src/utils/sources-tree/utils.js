@@ -13,7 +13,7 @@ import { getURL } from "./getURL";
 const IGNORED_URLS = ["debugger eval code", "XStringBundle"];
 
 export function nodeHasChildren(item: TreeNode): boolean {
-  return Array.isArray(item.contents) && item.type === "directory";
+  return Array.isArray(item.contents) && item.type == "directory";
 }
 
 export function isExactUrlMatch(pathPart: string, debuggeeUrl: string) {
