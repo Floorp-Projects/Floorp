@@ -201,26 +201,6 @@ class SearchConfigTest {
   }
 
   /**
-   * Helper function to determine if an engine matches within a list.
-   * Due to Amazon's current complex setup with three different identifiers,
-   * if the identifier is 'amazon', then we do a startsWith match. Otherwise
-   * we expect the names to equal.
-   *
-   * @param {Array} engines
-   *   The list of engines to check.
-   * @param {string} identifier
-   *   The identifier to look for in the list.
-   * @returns {boolean}
-   *   Returns true if the engine is found within the list.
-   */
-  _enginesMatch(engines, identifier) {
-    if (identifier == "amazon") {
-      return !!engines.find(engine => engine.startsWith(identifier));
-    }
-    return engines.includes(identifier);
-  }
-
-  /**
    * Asserts whether the engines rules defined in the configuration are met.
    *
    * @param {Array} engines
@@ -237,11 +217,10 @@ class SearchConfigTest {
     const config = this._config[section];
     const hasIncluded = "included" in config;
     const hasExcluded = "excluded" in config;
-    const identifierIncluded = this._enginesMatch(engines, this._config.identifier);
 
     // If there's not included/excluded, then this shouldn't be the default anywhere.
     if (section == "default" && !hasIncluded && !hasExcluded) {
-      Assert.ok(!identifierIncluded,
+      Assert.ok(!engines.includes(this._config.identifier),
         `Should not be ${section} for any locale/region,
          currently set for ${infoString}`);
       return;
@@ -256,10 +235,12 @@ class SearchConfigTest {
      !this._localeRegionInSection(config.excluded, region, locale));
 
     if (included || notExcluded) {
-      Assert.ok(identifierIncluded, `Should be ${section} for ${infoString}`);
+      Assert.ok(engines.includes(this._config.identifier),
+        `Should be ${section} for ${infoString}`);
       return;
     }
-    Assert.ok(!identifierIncluded, `Should not be ${section} for ${infoString}`);
+    Assert.ok(!engines.includes(this._config.identifier),
+      `Should not be ${section} for ${infoString}`);
   }
 
   /**
