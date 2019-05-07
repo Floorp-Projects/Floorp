@@ -11850,6 +11850,7 @@
     "expires_in_version": "never",
     "keyed": true,
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Count of use of audio/video codecs in HTMLMediaElements and WebAudio. Those with 'resource' prefix are approximate; report based on HTTP ContentType or sniffing. Those with 'webaudio' prefix are for WebAudio."
   },
   "FX_SANITIZE_TOTAL": {
