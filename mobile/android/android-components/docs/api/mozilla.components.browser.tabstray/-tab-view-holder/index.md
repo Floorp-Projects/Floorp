@@ -2,7 +2,7 @@
 
 # TabViewHolder
 
-`class TabViewHolder : ViewHolder, `[`Observer`](../../mozilla.components.browser.session/-session/-observer/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabViewHolder.kt#L21)
+`class TabViewHolder : ViewHolder, `[`Observer`](../../mozilla.components.browser.session/-session/-observer/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabViewHolder.kt#L22)
 
 A RecyclerView ViewHolder implementation for "tab" items.
 

@@ -9,16 +9,23 @@ a suitable dialogs based on [Session.Observer.onAppPermissionRequested](../../mo
 [Session.Observer.onContentPermissionRequested](../../mozilla.components.browser.session/-session/-observer/on-content-permission-requested.md)  events.
 Once the dialog is closed the [PermissionRequest](../../mozilla.components.concept.engine.permission/-permission-request/index.md) will be consumed.
 
+### Types
+
+| Name | Summary |
+|---|---|
+| [PromptsStyling](-prompts-styling/index.md) | `data class PromptsStyling` |
+
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SitePermissionsFeature(anchorView: `[`View`](https://developer.android.com/reference/android/view/View.html)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, storage: `[`SitePermissionsStorage`](../-site-permissions-storage/index.md)` = SitePermissionsStorage(anchorView.context), sitePermissionsRules: `[`SitePermissionsRules`](../-site-permissions-rules/index.md)`? = null, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../-on-need-to-request-permissions.md)`)`<br>This feature will subscribe to the currently selected [Session](../../mozilla.components.browser.session/-session/index.md) and display a suitable dialogs based on [Session.Observer.onAppPermissionRequested](../../mozilla.components.browser.session/-session/-observer/on-app-permission-requested.md) or [Session.Observer.onContentPermissionRequested](../../mozilla.components.browser.session/-session/-observer/on-content-permission-requested.md)  events. Once the dialog is closed the [PermissionRequest](../../mozilla.components.concept.engine.permission/-permission-request/index.md) will be consumed. |
+| [&lt;init&gt;](-init-.md) | `SitePermissionsFeature(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, storage: `[`SitePermissionsStorage`](../-site-permissions-storage/index.md)` = SitePermissionsStorage(context), sitePermissionsRules: `[`SitePermissionsRules`](../-site-permissions-rules/index.md)`? = null, fragmentManager: FragmentManager, promptsStyling: `[`PromptsStyling`](-prompts-styling/index.md)`? = null, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../-on-need-to-request-permissions.md)`)`<br>This feature will subscribe to the currently selected [Session](../../mozilla.components.browser.session/-session/index.md) and display a suitable dialogs based on [Session.Observer.onAppPermissionRequested](../../mozilla.components.browser.session/-session/-observer/on-app-permission-requested.md) or [Session.Observer.onContentPermissionRequested](../../mozilla.components.browser.session/-session/-observer/on-content-permission-requested.md)  events. Once the dialog is closed the [PermissionRequest](../../mozilla.components.concept.engine.permission/-permission-request/index.md) will be consumed. |
 
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [promptsStyling](prompts-styling.md) | `var promptsStyling: `[`PromptsStyling`](-prompts-styling/index.md)`?`<br>optional styling for prompts. |
 | [sitePermissionsRules](site-permissions-rules.md) | `var sitePermissionsRules: `[`SitePermissionsRules`](../-site-permissions-rules/index.md)`?`<br>indicates how permissions should behave per permission category. |
 
 ### Functions
