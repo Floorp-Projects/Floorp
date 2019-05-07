@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_tabs_BrowserParent_h
-#define mozilla_tabs_BrowserParent_h
+#ifndef mozilla_dom_BrowserParent_h
+#define mozilla_dom_BrowserParent_h
 
 #include "js/TypeDecls.h"
 #include "LiveResizeListener.h"
@@ -116,14 +116,78 @@ class BrowserParent final : public PBrowserParent,
                 uint32_t aChromeFlags,
                 BrowserBridgeParent* aBrowserBridgeParent = nullptr);
 
+  // Call from LayoutStatics only
+  static void InitializeStatics();
+
+  /**
+   * Returns the focused BrowserParent or nullptr if chrome or another app
+   * is focused.
+   */
+  static BrowserParent* GetFocused();
+
+  static BrowserParent* GetFrom(nsFrameLoader* aFrameLoader);
+
+  static BrowserParent* GetFrom(nsIRemoteTab* aBrowserParent);
+
+  static BrowserParent* GetFrom(PBrowserParent* aBrowserParent);
+
+  static BrowserParent* GetFrom(nsIContent* aContent);
+
+  static BrowserParent* GetBrowserParentFromLayersId(
+      layers::LayersId aLayersId);
+
+  static TabId GetTabIdFrom(nsIDocShell* docshell);
+
+  static bool AreRecordReplayTabsActive() {
+    return gNumActiveRecordReplayTabs != 0;
+  }
+
+  const TabId GetTabId() const { return mTabId; }
+
+  ContentParent* Manager() const { return mManager; }
+
+  CanonicalBrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
+
+  already_AddRefed<nsILoadContext> GetLoadContext();
+
   Element* GetOwnerElement() const { return mFrameElement; }
-  already_AddRefed<nsPIDOMWindowOuter> GetParentWindowOuter();
-
-  void SetOwnerElement(Element* aElement);
-
-  void CacheFrameLoader(nsFrameLoader* aFrameLoader);
 
   nsIBrowserDOMWindow* GetBrowserDOMWindow() const { return mBrowserDOMWindow; }
+
+  // Returns the BrowserBridgeParent if this BrowserParent is for an
+  // out-of-process iframe and nullptr otherwise.
+  BrowserBridgeParent* GetBrowserBridgeParent() const {
+    return mBrowserBridgeParent;
+  }
+
+  already_AddRefed<nsPIDOMWindowOuter> GetParentWindowOuter();
+
+  already_AddRefed<nsIWidget> GetTopLevelWidget();
+
+  // Returns the closest widget for our frameloader's content.
+  already_AddRefed<nsIWidget> GetWidget() const;
+
+  // Returns the top-level widget for our frameloader's document.
+  already_AddRefed<nsIWidget> GetDocWidget() const;
+
+  nsIXULBrowserWindow* GetXULBrowserWindow();
+
+  /**
+   * Return the top level doc accessible parent for this tab.
+   */
+  a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
+
+  layout::RenderFrame* GetRenderFrame();
+
+  ShowInfo GetShowInfo();
+
+  /**
+   * Let managees query if Destroy() is already called so they don't send out
+   * messages when the PBrowser actor is being destroyed.
+   */
+  bool IsDestroyed() const { return mIsDestroyed; }
+
+  void SetOwnerElement(Element* aElement);
 
   void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow) {
     mBrowserDOMWindow = aBrowserDOMWindow;
@@ -135,13 +199,7 @@ class BrowserParent final : public PBrowserParent,
     aFrameScripts.SwapElements(mDelayedFrameScripts);
   }
 
-  already_AddRefed<nsILoadContext> GetLoadContext();
-
-  already_AddRefed<nsIWidget> GetTopLevelWidget();
-
-  nsIXULBrowserWindow* GetXULBrowserWindow();
-
-  CanonicalBrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
+  void CacheFrameLoader(nsFrameLoader* aFrameLoader);
 
   void Destroy();
 
@@ -339,11 +397,6 @@ class BrowserParent final : public PBrowserParent,
       const uint64_t& aParentID, const uint32_t& aMsaaID,
       const IAccessibleHolder& aDocCOMProxy) override;
 
-  /**
-   * Return the top level doc accessible parent for this tab.
-   */
-  a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
-
   PWindowGlobalParent* AllocPWindowGlobalParent(const WindowGlobalInit& aInit);
 
   bool DeallocPWindowGlobalParent(PWindowGlobalParent* aActor);
@@ -496,41 +549,6 @@ class BrowserParent final : public PBrowserParent,
                              nsIPrincipal* aRequestingPrincipal,
                              const uint32_t& aContentPolicyType);
 
-  // Call from LayoutStatics only
-  static void InitializeStatics();
-
-  /**
-   * Returns the focused BrowserParent or nullptr if chrome or another app
-   * is focused.
-   */
-  static BrowserParent* GetFocused();
-
-  static BrowserParent* GetFrom(nsFrameLoader* aFrameLoader);
-
-  static BrowserParent* GetFrom(nsIRemoteTab* aBrowserParent);
-
-  static BrowserParent* GetFrom(PBrowserParent* aBrowserParent);
-
-  static BrowserParent* GetFrom(nsIContent* aContent);
-
-  static TabId GetTabIdFrom(nsIDocShell* docshell);
-
-  ContentParent* Manager() const { return mManager; }
-
-  /**
-   * Let managees query if Destroy() is already called so they don't send out
-   * messages when the PBrowser actor is being destroyed.
-   */
-  bool IsDestroyed() const { return mIsDestroyed; }
-
-  // Returns the closest widget for our frameloader's content.
-  already_AddRefed<nsIWidget> GetWidget() const;
-
-  // Returns the top-level widget for our frameloader's document.
-  already_AddRefed<nsIWidget> GetDocWidget() const;
-
-  const TabId GetTabId() const { return mTabId; }
-
   // Helper for transforming a point
   LayoutDeviceIntPoint TransformPoint(
       const LayoutDeviceIntPoint& aPoint,
@@ -608,12 +626,6 @@ class BrowserParent final : public PBrowserParent,
   bool TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
                              LayoutDeviceIntRect* aDragRect);
 
-  layout::RenderFrame* GetRenderFrame();
-
-  // Returns the BrowserBridgeParent if this BrowserParent is for an
-  // out-of-process iframe and nullptr otherwise.
-  BrowserBridgeParent* GetBrowserBridgeParent() const;
-
   mozilla::ipc::IPCResult RecvEnsureLayersConnected(
       CompositorOptions* aCompositorOptions);
 
@@ -624,13 +636,7 @@ class BrowserParent final : public PBrowserParent,
   void SetReadyToHandleInputEvents() { mIsReadyToHandleInputEvents = true; }
   bool IsReadyToHandleInputEvents() { return mIsReadyToHandleInputEvents; }
 
-  static bool AreRecordReplayTabsActive() {
-    return gNumActiveRecordReplayTabs != 0;
-  }
-
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
-
-  ShowInfo GetShowInfo();
 
  protected:
   bool ReceiveMessage(
@@ -645,9 +651,6 @@ class BrowserParent final : public PBrowserParent,
   virtual mozilla::ipc::IPCResult Recv__delete__() override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
-
-  nsCOMPtr<Element> mFrameElement;
-  nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 
   mozilla::ipc::IPCResult RecvRemotePaintIsReady();
 
@@ -677,19 +680,6 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvQueryVisitedState(
       InfallibleTArray<URIParams>&& aURIs);
 
-  ContentCacheInParent mContentCache;
-
-  nsIntRect mRect;
-  ScreenIntSize mDimensions;
-  hal::ScreenOrientation mOrientation;
-  float mDPI;
-  int32_t mRounding;
-  CSSToLayoutDeviceScale mDefaultScale;
-  bool mUpdatedDimensions;
-  nsSizeMode mSizeMode;
-  LayoutDeviceIntPoint mClientOffset;
-  LayoutDeviceIntPoint mChromeOffset;
-
  private:
   void SuppressDisplayport(bool aEnabled);
 
@@ -700,13 +690,9 @@ class BrowserParent final : public PBrowserParent,
   already_AddRefed<nsFrameLoader> GetFrameLoader(
       bool aUseCachedFrameLoaderAfterDestroy = false) const;
 
-  RefPtr<ContentParent> mManager;
   void TryCacheDPIAndScale();
 
   bool AsyncPanZoomEnabled() const;
-
-  // Cached value indicating the docshell active state of the remote browser.
-  bool mDocShellIsActive;
 
   // Update state prior to routing an APZ-aware event to the child process.
   // |aOutTargetGuid| will contain the identifier
@@ -720,31 +706,43 @@ class BrowserParent final : public PBrowserParent,
                                    uint64_t* aOutInputBlockId,
                                    nsEventStatus* aOutApzResponse);
 
-  // When true, we've initiated normal shutdown and notified our managing
-  // PContent.
-  bool mMarkedDestroying;
-  // When true, the BrowserParent is invalid and we should not send IPC messages
-  // anymore.
-  bool mIsDestroyed;
+  // When dropping links we perform a roundtrip from
+  // Parent (SendRealDragEvent) -> Child -> Parent (RecvDropLinks)
+  // and have to ensure that the child did not modify links to be loaded.
+  bool QueryDropLinksForVerification();
 
-  uint32_t mChromeFlags;
+ private:
+  // This is used when APZ needs to find the BrowserParent associated with a
+  // layer to dispatch events.
+  typedef nsDataHashtable<nsUint64HashKey, BrowserParent*>
+      LayerToBrowserParentTable;
+  static LayerToBrowserParentTable* sLayerToBrowserParentTable;
 
-  nsTArray<nsTArray<IPCDataTransferItem>> mInitialDataTransferItems;
+  static void AddBrowserParentToTable(layers::LayersId aLayersId,
+                                      BrowserParent* aBrowserParent);
 
-  RefPtr<gfx::DataSourceSurface> mDnDVisualization;
-  bool mDragValid;
-  LayoutDeviceIntRect mDragRect;
-  nsCOMPtr<nsIPrincipal> mDragPrincipal;
+  static void RemoveBrowserParentFromTable(layers::LayersId aLayersId);
 
+  // Keeps track of which BrowserParent has keyboard focus
+  static StaticAutoPtr<nsTArray<BrowserParent*>> sFocusStack;
+
+  static void PushFocus(BrowserParent* aBrowserParent);
+
+  static void PopFocus(BrowserParent* aBrowserParent);
+
+  TabId mTabId;
+
+  RefPtr<ContentParent> mManager;
+  // The root browsing context loaded in this BrowserParent.
+  RefPtr<CanonicalBrowsingContext> mBrowsingContext;
   nsCOMPtr<nsILoadContext> mLoadContext;
-
+  nsCOMPtr<Element> mFrameElement;
+  nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
   // We keep a strong reference to the frameloader after we've sent the
   // Destroy message and before we've received __delete__. This allows us to
   // dispatch message manager messages during this time.
   RefPtr<nsFrameLoader> mFrameLoader;
-
-  // The root browsing context loaded in this BrowserParent.
-  RefPtr<CanonicalBrowsingContext> mBrowsingContext;
+  uint32_t mChromeFlags;
 
   // Pointer back to BrowserBridgeParent if there is one associated with
   // this BrowserParent. This is non-owning to avoid cycles and is managed
@@ -752,7 +750,30 @@ class BrowserParent final : public PBrowserParent,
   // to this BrowserParent.
   BrowserBridgeParent* mBrowserBridgeParent;
 
-  TabId mTabId;
+  ContentCacheInParent mContentCache;
+
+  layout::RenderFrame mRenderFrame;
+  LayersObserverEpoch mLayerTreeEpoch;
+
+  Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
+
+  nsIntRect mRect;
+  ScreenIntSize mDimensions;
+  hal::ScreenOrientation mOrientation;
+  float mDPI;
+  int32_t mRounding;
+  CSSToLayoutDeviceScale mDefaultScale;
+  bool mUpdatedDimensions;
+  nsSizeMode mSizeMode;
+  LayoutDeviceIntPoint mClientOffset;
+  LayoutDeviceIntPoint mChromeOffset;
+
+  nsTArray<nsTArray<IPCDataTransferItem>> mInitialDataTransferItems;
+
+  RefPtr<gfx::DataSourceSurface> mDnDVisualization;
+  bool mDragValid;
+  LayoutDeviceIntRect mDragRect;
+  nsCOMPtr<nsIPrincipal> mDragPrincipal;
 
   // When loading a new tab or window via window.open, the child is
   // responsible for loading the URL it wants into the new BrowserChild. When
@@ -788,45 +809,26 @@ class BrowserParent final : public PBrowserParent,
   nsCOMPtr<imgIContainer> mCustomCursor;
   uint32_t mCustomCursorHotspotX, mCustomCursorHotspotY;
 
+  nsTArray<nsString> mVerifyDropLinks;
+
+#ifdef DEBUG
+  int32_t mActiveSupressDisplayportCount = 0;
+#endif
+
+  // Cached value indicating the docshell active state of the remote browser.
+  bool mDocShellIsActive;
+
+  // When true, we've initiated normal shutdown and notified our managing
+  // PContent.
+  bool mMarkedDestroying;
+  // When true, the BrowserParent is invalid and we should not send IPC messages
+  // anymore.
+  bool mIsDestroyed;
   // True if the cursor changes from the BrowserChild should change the widget
   // cursor.  This happens whenever the cursor is in the tab's region.
   bool mTabSetsCursor;
 
   bool mHasContentOpener;
-
-  // When dropping links we perform a roundtrip from
-  // Parent (SendRealDragEvent) -> Child -> Parent (RecvDropLinks)
-  // and have to ensure that the child did not modify links to be loaded.
-  bool QueryDropLinksForVerification();
-  nsTArray<nsString> mVerifyDropLinks;
-
-#ifdef DEBUG
-  int32_t mActiveSupressDisplayportCount;
-#endif
-
- private:
-  // This is used when APZ needs to find the BrowserParent associated with a
-  // layer to dispatch events.
-  typedef nsDataHashtable<nsUint64HashKey, BrowserParent*>
-      LayerToBrowserParentTable;
-  static LayerToBrowserParentTable* sLayerToBrowserParentTable;
-
-  static void AddBrowserParentToTable(layers::LayersId aLayersId,
-                                      BrowserParent* aBrowserParent);
-
-  static void RemoveBrowserParentFromTable(layers::LayersId aLayersId);
-
-  // Keeps track of which BrowserParent has keyboard focus
-  static StaticAutoPtr<nsTArray<BrowserParent*>> sFocusStack;
-
-  static void PushFocus(BrowserParent* aBrowserParent);
-
-  static void PopFocus(BrowserParent* aBrowserParent);
-
-  layout::RenderFrame mRenderFrame;
-  LayersObserverEpoch mLayerTreeEpoch;
-
-  Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
 
   // If this flag is set, then the tab's layers will be preserved even when
   // the tab's docshell is inactive.
@@ -868,10 +870,6 @@ class BrowserParent final : public PBrowserParent,
 
   // Update whether this is an active record/replay tab.
   void SetIsActiveRecordReplayTab(bool aIsActive);
-
- public:
-  static BrowserParent* GetBrowserParentFromLayersId(
-      layers::LayersId aLayersId);
 };
 
 struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {
@@ -897,4 +895,4 @@ struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_tabs_BrowserParent_h
+#endif  // mozilla_dom_BrowserParent_h
