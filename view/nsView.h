@@ -26,6 +26,67 @@ namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
+/**
+ * nsView's serve two main purposes: 1) a bridge between nsIFrame's and
+ * nsIWidget's, 2) linking the frame tree of a(n) (in-process) subdocument with
+ * its parent document frame tree. Historically views were used for more things,
+ * but their role has been reduced, and could be reduced to nothing in the
+ * future (bug 337801 tracks removing views). Views are generally associated
+ * with a frame. A view that does not have a frame is called an anonymous view.
+ * Some frames also have associated widgets (think os level windows). If a frame
+ * has a widget it must also have a view, but not all frames with views will
+ * have widgets.
+ *
+ * Only five types of frames can have a view: root frames (ViewportFrame),
+ * subdocument frames (nsSubDocumentFrame), plugin frames (nsPluginFrame),
+ * menu popup frames (nsMenuPopupFrame), and list control frames
+ * (nsListControlFrame). Root frames and subdocument frames have views to link
+ * the two documents together (the frame trees do not link up otherwise).
+ * Plugin frames, menu popup frames, and list control frames have views because
+ * they (sometimes) need to create widgets (although plugins with widgets might
+ * be going away/gone?). Menu popup frames handles xul popups, which is anything
+ * where we need content to go over top the main window at an os level. List
+ * control frames handle select popups/dropdowns in non-e10s mode.
+ *
+ * The term "root view" refers to the root view of a document. Just like root
+ * frames, root views can have parent views. Only the root view of the root
+ * document in the process will not have a parent.
+ *
+ * All views are created by their frames except root views. Root views are
+ * special. Root views are created in nsDocumentViewer::MakeWindow before the
+ * root frame is created, so the root view will not have a frame very early in
+ * document creation.
+ *
+ * Subdocument frames and plugin frames have an anonymous (no frame associated
+ * with it) inner view that is a child of their "outer" view. On a plugin frame
+ * with a widget the inner view would be associated with the widget (as opposed
+ * to the outer view).
+ *
+ * On a subdocument frame the inner view serves as the parent of the
+ * root view of the subdocument. The outer and inner view of the subdocument
+ * frame belong to the subdocument frame and hence to the parent document. The
+ * root view of the subdocument belongs to the subdocument.
+ * nsLayoutUtils::GetCrossDocParentFrame and nsPresContext::GetParentPresContext
+ * depend on this view structure and are the main way that we traverse across
+ * the document boundary in layout.
+ *
+ * When the load of a new document is started in the subdocument, the creation
+ * of the new subdocument and destruction of the old subdocument are not
+ * linked. (This creation and destruction is handled in nsDocumentViewer.cpp.)
+ * This means that the old and new document will both exist at the same time
+ * during the loading of the new document. During this period the inner view of
+ * the subdocument parent will be the parent of two root views. This means that
+ * during this period there is a choice for which subdocument we draw,
+ * nsSubDocumentFrame::GetSubdocumentPresShellForPainting is what makes that
+ * choice. Note that this might not be a totally free choice, ie there might be
+ * hidden dependencies and bugs if the way we choose is changed.
+ *
+ * One thing that is special about the root view of a chrome window is that
+ * instead of creating a widget for the view, they can "attach" to the
+ * existing widget that was created by appshell code or something else. (see
+ * nsDocumentViewer::ShouldAttachToTopLevel)
+ */
+
 // Enumerated type to indicate the visibility of a layer.
 // hide - the layer is not shown.
 // show - the layer is shown irrespective of the visibility of
