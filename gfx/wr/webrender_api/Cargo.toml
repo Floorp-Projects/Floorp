@@ -26,7 +26,7 @@ serde = { version = "=1.0.88", features = ["rc"] }
 serde_derive = { version = "=1.0.88", features = ["deserialize_in_place"] }
 serde_bytes = "0.10"
 time = "0.1"
-wr_malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of" }
+malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of", package = "wr_malloc_size_of" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.6"

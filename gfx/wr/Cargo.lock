@@ -1643,6 +1643,7 @@ dependencies = [
  "core-text 13.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cstr 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "dwrote 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euclid 0.19.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "freetype 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fxhash 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.6.17 (registry+https://github.com/rust-lang/crates.io-index)",
