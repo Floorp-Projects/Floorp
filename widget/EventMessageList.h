@@ -108,6 +108,8 @@ NS_EVENT_MESSAGE_FIRST_LAST(ePointerEvent, ePointerMove, ePointerLostCapture)
 
 NS_EVENT_MESSAGE(eContextMenu)
 
+NS_EVENT_MESSAGE(eCueChange)
+
 NS_EVENT_MESSAGE(eLoad)
 NS_EVENT_MESSAGE(eUnload)
 NS_EVENT_MESSAGE(eHashChange)

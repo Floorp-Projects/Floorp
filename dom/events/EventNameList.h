@@ -163,8 +163,7 @@ EVENT(close, eClose, EventNameType_HTMLXUL, eBasicEventClass)
 EVENT(contextmenu, eContextMenu, EventNameType_HTMLXUL, eMouseEventClass)
 NON_IDL_EVENT(mouselongtap, eMouseLongTap, EventNameType_HTMLXUL,
               eMouseEventClass)
-// Not supported yet
-// EVENT(cuechange)
+EVENT(cuechange, eCueChange, EventNameType_All, eBasicEventClass)
 EVENT(dblclick, eMouseDoubleClick, EventNameType_HTMLXUL, eMouseEventClass)
 EVENT(drag, eDrag, EventNameType_HTMLXUL, eDragEventClass)
 EVENT(dragend, eDragEnd, EventNameType_HTMLXUL, eDragEventClass)
