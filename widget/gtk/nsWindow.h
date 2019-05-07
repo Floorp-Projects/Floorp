@@ -272,6 +272,7 @@ class nsWindow final : public nsBaseWidget {
   GtkWidget* GetMozContainerWidget();
   GdkWindow* GetGdkWindow() { return mGdkWindow; }
   GtkWidget* GetGtkWidget() { return mShell; }
+  nsIFrame* GetFrame();
   bool IsDestroyed() { return mIsDestroyed; }
 
   void DispatchDragEvent(mozilla::EventMessage aMsg,
@@ -609,10 +610,10 @@ class nsWindow final : public nsBaseWidget {
 
   void ForceTitlebarRedraw();
 
-  // This is used by Wayland backend to keep strict popup window hierarchy.
-  GtkWindow* GetPopupParentWindow();
-
   bool IsWaylandPopup();
+  GtkWidget* ConfigureWaylandPopupWindows();
+  void CloseWaylandTooltips();
+  void CloseWaylandWindow();
 
   /**
    * |mIMContext| takes all IME related stuff.
