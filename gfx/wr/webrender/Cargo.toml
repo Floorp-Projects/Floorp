@@ -6,6 +6,7 @@ license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
 description = "A GPU accelerated 2D renderer for web content"
 build = "build.rs"
+edition = "2018"
 
 [features]
 default = ["freetype-lib"]
