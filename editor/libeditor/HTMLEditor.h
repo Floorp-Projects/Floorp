@@ -208,8 +208,8 @@ class HTMLEditor final : public TextEditor,
   /**
    * Indent or outdent content around Selection.
    */
-  nsresult IndentAsAction();
-  nsresult OutdentAsAction();
+  MOZ_CAN_RUN_SCRIPT nsresult IndentAsAction();
+  MOZ_CAN_RUN_SCRIPT nsresult OutdentAsAction();
 
   /**
    * event callback when a mouse button is pressed
@@ -788,6 +788,7 @@ class HTMLEditor final : public TextEditor,
   nsresult SetInlinePropertyOnNode(nsIContent& aNode, nsAtom& aProperty,
                                    nsAtom* aAttribute, const nsAString& aValue);
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
                                 nsAtom* aProperty, nsAtom* aAttribute,
                                 nsIContent** aOutLeftNode = nullptr,
@@ -951,9 +952,8 @@ class HTMLEditor final : public TextEditor,
   nsresult ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
                       nsAtom* aProperty, nsAtom* aAttribute);
 
-  nsresult SetPositionToAbsolute(Element& aElement);
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetPositionToStatic(Element& aElement);
+  MOZ_CAN_RUN_SCRIPT nsresult SetPositionToAbsolute(Element& aElement);
+  MOZ_CAN_RUN_SCRIPT nsresult SetPositionToStatic(Element& aElement);
 
   /**
    * OnModifyDocument() is called when the editor is changed.  This should
@@ -1510,6 +1510,7 @@ class HTMLEditor final : public TextEditor,
    * @param aEditSubAction      Must be EditSubAction::eIndent or
    *                            EditSubAction::eOutdent.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult IndentOrOutdentAsSubAction(EditSubAction aEditSubAction);
 
   MOZ_CAN_RUN_SCRIPT
@@ -2085,6 +2086,7 @@ class HTMLEditor final : public TextEditor,
    * @param aTagName            A block level element name.  Must NOT be
    *                            nsGkAtoms::dt nor nsGkAtoms::dd.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertBasicBlockWithTransaction(nsAtom& aTagName);
 
   /**
@@ -2109,6 +2111,7 @@ class HTMLEditor final : public TextEditor,
 
   nsresult PromoteInlineRange(nsRange& aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
+  MOZ_CAN_RUN_SCRIPT
   nsresult SplitStyleAboveRange(nsRange* aRange, nsAtom* aProperty,
                                 nsAtom* aAttribute);
   MOZ_CAN_RUN_SCRIPT

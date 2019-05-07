@@ -1462,9 +1462,9 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
 
         // is it a return?
         if (subStr.Equals(newlineStr)) {
-          RefPtr<Element> brElement =
-              HTMLEditorRef().InsertBrElementWithTransaction(currentPoint,
-                                                             nsIEditor::eNone);
+          RefPtr<Element> brElement = MOZ_KnownLive(HTMLEditorRef())
+                                          .InsertBrElementWithTransaction(
+                                              currentPoint, nsIEditor::eNone);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -1834,7 +1834,8 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
     EditorRawDOMPoint endOfBlockParent;
     endOfBlockParent.SetToEndOf(blockParent);
     RefPtr<Element> brElement =
-        HTMLEditorRef().InsertBrElementWithTransaction(endOfBlockParent);
+        MOZ_KnownLive(HTMLEditorRef())
+            .InsertBrElementWithTransaction(endOfBlockParent);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -1921,7 +1922,8 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
   // First, insert a <br> element.
   RefPtr<Element> brElement;
   if (IsPlaintextEditor()) {
-    brElement = HTMLEditorRef().InsertBrElementWithTransaction(aPointToBreak);
+    brElement = MOZ_KnownLive(HTMLEditorRef())
+                    .InsertBrElementWithTransaction(aPointToBreak);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -1946,9 +1948,10 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
         HTMLEditor::GetLinkElement(pointToBreak.GetContainer());
     if (linkNode) {
       SplitNodeResult splitLinkNodeResult =
-          HTMLEditorRef().SplitNodeDeepWithTransaction(
-              *linkNode, pointToBreak,
-              SplitAtEdges::eDoNotCreateEmptyContainer);
+          MOZ_KnownLive(HTMLEditorRef())
+              .SplitNodeDeepWithTransaction(
+                  *linkNode, pointToBreak,
+                  SplitAtEdges::eDoNotCreateEmptyContainer);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -2094,8 +2097,10 @@ EditActionResult HTMLEditRules::SplitMailCites() {
   }
 
   SplitNodeResult splitCiteNodeResult =
-      HTMLEditorRef().SplitNodeDeepWithTransaction(
-          *citeNode, pointToSplit, SplitAtEdges::eDoNotCreateEmptyContainer);
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitNodeDeepWithTransaction(
+              *citeNode, pointToSplit,
+              SplitAtEdges::eDoNotCreateEmptyContainer);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -2124,8 +2129,8 @@ EditActionResult HTMLEditRules::SplitMailCites() {
       EditorRawDOMPoint endOfPreviousNodeOfSplitPoint;
       endOfPreviousNodeOfSplitPoint.SetToEndOf(previousNodeOfSplitPoint);
       RefPtr<Element> invisibleBrElement =
-          HTMLEditorRef().InsertBrElementWithTransaction(
-              endOfPreviousNodeOfSplitPoint);
+          MOZ_KnownLive(HTMLEditorRef())
+              .InsertBrElementWithTransaction(endOfPreviousNodeOfSplitPoint);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -2139,7 +2144,8 @@ EditActionResult HTMLEditRules::SplitMailCites() {
   // cite node, <br> should be inserted before the current cite.
   EditorRawDOMPoint pointToInsertBrNode(splitCiteNodeResult.SplitPoint());
   RefPtr<Element> brElement =
-      HTMLEditorRef().InsertBrElementWithTransaction(pointToInsertBrNode);
+      MOZ_KnownLive(HTMLEditorRef())
+          .InsertBrElementWithTransaction(pointToInsertBrNode);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -2189,8 +2195,8 @@ EditActionResult HTMLEditRules::SplitMailCites() {
           wsType == WSType::special ||
           // In case we're at the very end.
           wsType == WSType::thisBlock) {
-        brElement = HTMLEditorRef().InsertBrElementWithTransaction(
-            pointToCreateNewBrNode);
+        brElement = MOZ_KnownLive(HTMLEditorRef())
+                        .InsertBrElementWithTransaction(pointToCreateNewBrNode);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -3177,8 +3183,9 @@ nsresult HTMLEditRules::InsertBRIfNeeded() {
     if (HTMLEditorRef().CanContainTag(*atStartOfSelection.GetContainer(),
                                       *nsGkAtoms::br)) {
       RefPtr<Element> brElement =
-          HTMLEditorRef().InsertBrElementWithTransaction(atStartOfSelection,
-                                                         nsIEditor::ePrevious);
+          MOZ_KnownLive(HTMLEditorRef())
+              .InsertBrElementWithTransaction(atStartOfSelection,
+                                              nsIEditor::ePrevious);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -3498,9 +3505,11 @@ EditActionResult HTMLEditRules::TryToJoinBlocksWithTransaction(
         nsCOMPtr<nsINode> previousContentParent =
             previousContent.GetContainer();
         int32_t previousContentOffset = previousContent.Offset();
-        rv = HTMLEditorRef().SplitStyleAbovePoint(
-            address_of(previousContentParent), &previousContentOffset, nullptr,
-            nullptr, nullptr, getter_AddRefs(splittedPreviousContent));
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .SplitStyleAbovePoint(address_of(previousContentParent),
+                                       &previousContentOffset, nullptr, nullptr,
+                                       nullptr,
+                                       getter_AddRefs(splittedPreviousContent));
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -3797,7 +3806,8 @@ nsresult HTMLEditRules::DidDeleteSelection() {
       }
       if (atCiteNode.IsSet() && seenBR) {
         RefPtr<Element> brElement =
-            HTMLEditorRef().InsertBrElementWithTransaction(atCiteNode);
+            MOZ_KnownLive(HTMLEditorRef())
+                .InsertBrElementWithTransaction(atCiteNode);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4081,7 +4091,8 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
           }
           ErrorResult error;
           nsCOMPtr<nsIContent> newLeftNode =
-              HTMLEditorRef().SplitNodeWithTransaction(atCurNode, error);
+              MOZ_KnownLive(HTMLEditorRef())
+                  .SplitNodeWithTransaction(atCurNode, error);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             error.SuppressException();
             return NS_ERROR_EDITOR_DESTROYED;
@@ -4442,9 +4453,10 @@ nsresult HTMLEditRules::MakeBasicBlock(nsAtom& blockType) {
       }
       // Do the splits!
       SplitNodeResult splitNodeResult =
-          HTMLEditorRef().SplitNodeDeepWithTransaction(
-              *curBlock, pointToInsertBlock,
-              SplitAtEdges::eDoNotCreateEmptyContainer);
+          MOZ_KnownLive(HTMLEditorRef())
+              .SplitNodeDeepWithTransaction(
+                  *curBlock, pointToInsertBlock,
+                  SplitAtEdges::eDoNotCreateEmptyContainer);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -4453,8 +4465,8 @@ nsresult HTMLEditRules::MakeBasicBlock(nsAtom& blockType) {
       }
       EditorRawDOMPoint pointToInsertBrNode(splitNodeResult.SplitPoint());
       // Put a <br> element at the split point
-      brContent =
-          HTMLEditorRef().InsertBrElementWithTransaction(pointToInsertBrNode);
+      brContent = MOZ_KnownLive(HTMLEditorRef())
+                      .InsertBrElementWithTransaction(pointToInsertBrNode);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -4572,7 +4584,8 @@ nsresult HTMLEditRules::DidMakeBasicBlock() {
   if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = InsertMozBRIfNeeded(*atStartOfSelection.Container());
+  nsresult rv =
+      InsertMozBRIfNeeded(MOZ_KnownLive(*atStartOfSelection.Container()));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4805,8 +4818,8 @@ nsresult HTMLEditRules::IndentAroundSelectionWithCSS() {
             atCurNode.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(*containerName,
-                                                        atCurNode);
+            MaybeSplitAncestorsForInsertWithTransaction(
+                MOZ_KnownLive(*containerName), atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -5077,8 +5090,8 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
             atCurNode.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(*containerName,
-                                                        atCurNode);
+            MaybeSplitAncestorsForInsertWithTransaction(
+                MOZ_KnownLive(*containerName), atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -5139,8 +5152,8 @@ nsresult HTMLEditRules::IndentAroundSelectionWithHTML() {
             atListItem.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(*containerName,
-                                                        atListItem);
+            MaybeSplitAncestorsForInsertWithTransaction(
+                MOZ_KnownLive(*containerName), atListItem);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -5637,9 +5650,10 @@ SplitRangeOffFromNodeResult HTMLEditRules::SplitRangeOffFromBlock(
 
   // Split at the start.
   SplitNodeResult splitAtStartResult =
-      HTMLEditorRef().SplitNodeDeepWithTransaction(
-          aBlockElement, EditorRawDOMPoint(&aStartOfMiddleElement),
-          SplitAtEdges::eDoNotCreateEmptyContainer);
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitNodeDeepWithTransaction(
+              aBlockElement, EditorRawDOMPoint(&aStartOfMiddleElement),
+              SplitAtEdges::eDoNotCreateEmptyContainer);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -5651,8 +5665,10 @@ SplitRangeOffFromNodeResult HTMLEditRules::SplitRangeOffFromBlock(
   DebugOnly<bool> advanced = atAfterEnd.AdvanceOffset();
   NS_WARNING_ASSERTION(advanced, "Failed to advance offset after the end node");
   SplitNodeResult splitAtEndResult =
-      HTMLEditorRef().SplitNodeDeepWithTransaction(
-          aBlockElement, atAfterEnd, SplitAtEdges::eDoNotCreateEmptyContainer);
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitNodeDeepWithTransaction(
+              aBlockElement, atAfterEnd,
+              SplitAtEdges::eDoNotCreateEmptyContainer);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -5804,9 +5820,10 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
     if (RefPtr<Text> text = node->GetAsText()) {
       // if we are in a text node, split it
       SplitNodeResult splitTextNodeResult =
-          HTMLEditorRef().SplitNodeDeepWithTransaction(
-              *text, EditorRawDOMPoint(text, offset),
-              SplitAtEdges::eAllowToCreateEmptyContainer);
+          MOZ_KnownLive(HTMLEditorRef())
+              .SplitNodeDeepWithTransaction(
+                  *text, EditorRawDOMPoint(text, offset),
+                  SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -6349,7 +6366,8 @@ nsresult HTMLEditRules::MaybeDeleteTopMostEmptyAncestor(
       // AfterEdit().
       if (!HTMLEditUtils::IsList(atBlockParent.GetContainer())) {
         RefPtr<Element> brElement =
-            HTMLEditorRef().InsertBrElementWithTransaction(atBlockParent);
+            MOZ_KnownLive(HTMLEditorRef())
+                .InsertBrElementWithTransaction(atBlockParent);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -7115,7 +7133,8 @@ nsresult HTMLEditRules::GetNodesForOperation(
         // Split the text node.
         ErrorResult error;
         nsCOMPtr<nsIContent> newLeftNode =
-            HTMLEditorRef().SplitNodeWithTransaction(atEnd, error);
+            MOZ_KnownLive(HTMLEditorRef())
+                .SplitNodeWithTransaction(atEnd, error);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           error.SuppressException();
           return NS_ERROR_EDITOR_DESTROYED;
@@ -7445,10 +7464,12 @@ nsresult HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& aRangeItem) {
   //     GetHighestInlineParent(), isn't it?
   if (endInline && !isCollapsed) {
     SplitNodeResult splitEndInlineResult =
-        HTMLEditorRef().SplitNodeDeepWithTransaction(
-            *endInline,
-            EditorRawDOMPoint(aRangeItem.mEndContainer, aRangeItem.mEndOffset),
-            SplitAtEdges::eDoNotCreateEmptyContainer);
+        MOZ_KnownLive(HTMLEditorRef())
+            .SplitNodeDeepWithTransaction(
+                *endInline,
+                EditorRawDOMPoint(aRangeItem.mEndContainer,
+                                  aRangeItem.mEndOffset),
+                SplitAtEdges::eDoNotCreateEmptyContainer);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -7468,11 +7489,12 @@ nsresult HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& aRangeItem) {
 
   if (startInline) {
     SplitNodeResult splitStartInlineResult =
-        HTMLEditorRef().SplitNodeDeepWithTransaction(
-            *startInline,
-            EditorRawDOMPoint(aRangeItem.mStartContainer,
-                              aRangeItem.mStartOffset),
-            SplitAtEdges::eDoNotCreateEmptyContainer);
+        MOZ_KnownLive(HTMLEditorRef())
+            .SplitNodeDeepWithTransaction(
+                *startInline,
+                EditorRawDOMPoint(aRangeItem.mStartContainer,
+                                  aRangeItem.mStartOffset),
+                SplitAtEdges::eDoNotCreateEmptyContainer);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -7517,8 +7539,10 @@ nsresult HTMLEditRules::BustUpInlinesAtBRs(
       return NS_ERROR_FAILURE;
     }
     SplitNodeResult splitNodeResult =
-        HTMLEditorRef().SplitNodeDeepWithTransaction(
-            *nextNode, atBrNode, SplitAtEdges::eAllowToCreateEmptyContainer);
+        MOZ_KnownLive(HTMLEditorRef())
+            .SplitNodeDeepWithTransaction(
+                *nextNode, atBrNode,
+                SplitAtEdges::eAllowToCreateEmptyContainer);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -7711,9 +7735,10 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
 
   // Split the header
   SplitNodeResult splitHeaderResult =
-      HTMLEditorRef().SplitNodeDeepWithTransaction(
-          aHeader, EditorRawDOMPoint(node, aOffset),
-          SplitAtEdges::eAllowToCreateEmptyContainer);
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitNodeDeepWithTransaction(
+              aHeader, EditorRawDOMPoint(node, aOffset),
+              SplitAtEdges::eAllowToCreateEmptyContainer);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -7772,8 +7797,8 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
 
       // Append a <br> to it
       RefPtr<Element> brElement =
-          HTMLEditorRef().InsertBrElementWithTransaction(
-              EditorRawDOMPoint(pNode, 0));
+          MOZ_KnownLive(HTMLEditorRef())
+              .InsertBrElementWithTransaction(EditorRawDOMPoint(pNode, 0));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -7942,8 +7967,8 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
       if (doesCRCreateNewP) {
         ErrorResult error;
         nsCOMPtr<nsIContent> newLeftDivOrP =
-            HTMLEditorRef().SplitNodeWithTransaction(pointToSplitParentDivOrP,
-                                                     error);
+            MOZ_KnownLive(HTMLEditorRef())
+                .SplitNodeWithTransaction(pointToSplitParentDivOrP, error);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           error.SuppressException();
           return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
@@ -7987,7 +8012,8 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
       return EditActionResult(NS_OK);
     }
 
-    brContent = HTMLEditorRef().InsertBrElementWithTransaction(pointToInsertBR);
+    brContent = MOZ_KnownLive(HTMLEditorRef())
+                    .InsertBrElementWithTransaction(pointToInsertBR);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -8033,9 +8059,10 @@ nsresult HTMLEditRules::SplitParagraph(
 
   // Split the paragraph.
   SplitNodeResult splitDivOrPResult =
-      HTMLEditorRef().SplitNodeDeepWithTransaction(
-          aParentDivOrP, EditorRawDOMPoint(selNode, selOffset),
-          SplitAtEdges::eAllowToCreateEmptyContainer);
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitNodeDeepWithTransaction(
+              aParentDivOrP, EditorRawDOMPoint(selNode, selOffset),
+              SplitAtEdges::eAllowToCreateEmptyContainer);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -8074,11 +8101,11 @@ nsresult HTMLEditRules::SplitParagraph(
   // moz-<br> will be exposed as <br> with Element.innerHTML.  Therefore,
   // we can use normal <br> elements for placeholder in this case.
   // Note that Chromium also behaves so.
-  rv = InsertBRIfNeeded(*splitDivOrPResult.GetPreviousNode());
+  rv = InsertBRIfNeeded(MOZ_KnownLive(*splitDivOrPResult.GetPreviousNode()));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  rv = InsertBRIfNeeded(*splitDivOrPResult.GetNextNode());
+  rv = InsertBRIfNeeded(MOZ_KnownLive(*splitDivOrPResult.GetNextNode()));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8128,8 +8155,8 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
       // We need to split the list!
       EditorRawDOMPoint atListItem(&aListItem);
       ErrorResult error;
-      leftListNode =
-          HTMLEditorRef().SplitNodeWithTransaction(atListItem, error);
+      leftListNode = MOZ_KnownLive(HTMLEditorRef())
+                         .SplitNodeWithTransaction(atListItem, error);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         error.SuppressException();
         return NS_ERROR_EDITOR_DESTROYED;
@@ -8190,8 +8217,8 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
 
       // Append a <br> to it
       RefPtr<Element> brElement =
-          HTMLEditorRef().InsertBrElementWithTransaction(
-              EditorRawDOMPoint(pNode, 0));
+          MOZ_KnownLive(HTMLEditorRef())
+              .InsertBrElementWithTransaction(EditorRawDOMPoint(pNode, 0));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -8230,9 +8257,10 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
 
   // Now split the list item.
   SplitNodeResult splitListItemResult =
-      HTMLEditorRef().SplitNodeDeepWithTransaction(
-          aListItem, EditorRawDOMPoint(selNode, aOffset),
-          SplitAtEdges::eAllowToCreateEmptyContainer);
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitNodeDeepWithTransaction(
+              aListItem, EditorRawDOMPoint(selNode, aOffset),
+              SplitAtEdges::eAllowToCreateEmptyContainer);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -8784,7 +8812,7 @@ SplitNodeResult HTMLEditRules::MaybeSplitAncestorsForInsertWithTransaction(
   }
 
   // Look for a node that can legally contain the tag.
-  EditorRawDOMPoint pointToInsert(aStartOfDeepestRightNode);
+  EditorDOMPoint pointToInsert(aStartOfDeepestRightNode);
   for (; pointToInsert.IsSet();
        pointToInsert.Set(pointToInsert.GetContainer())) {
     // We cannot split active editing host and its ancestor.  So, there is
@@ -8809,9 +8837,11 @@ SplitNodeResult HTMLEditRules::MaybeSplitAncestorsForInsertWithTransaction(
   }
 
   SplitNodeResult splitNodeResult =
-      HTMLEditorRef().SplitNodeDeepWithTransaction(
-          *pointToInsert.GetChild(), aStartOfDeepestRightNode,
-          SplitAtEdges::eAllowToCreateEmptyContainer);
+      MOZ_KnownLive(HTMLEditorRef())
+          .SplitNodeDeepWithTransaction(
+              MOZ_KnownLive(*pointToInsert.GetChild()),
+              aStartOfDeepestRightNode,
+              SplitAtEdges::eAllowToCreateEmptyContainer);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return SplitNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -9592,8 +9622,8 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
       // We are deleting a cite that has just a br.  We want to delete cite,
       // but preserve br.
       RefPtr<Element> brElement =
-          HTMLEditorRef().InsertBrElementWithTransaction(
-              EditorRawDOMPoint(delNode));
+          MOZ_KnownLive(HTMLEditorRef())
+              .InsertBrElementWithTransaction(EditorRawDOMPoint(delNode));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -9724,7 +9754,8 @@ nsresult HTMLEditRules::PopListItem(nsIContent& aListItem, bool* aOutOfList) {
     }
     MOZ_ASSERT(atListItem.IsSetAndValid());
     ErrorResult error;
-    leftListNode = HTMLEditorRef().SplitNodeWithTransaction(atListItem, error);
+    leftListNode = MOZ_KnownLive(HTMLEditorRef())
+                       .SplitNodeWithTransaction(atListItem, error);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       error.SuppressException();
       return NS_ERROR_EDITOR_DESTROYED;
@@ -10314,7 +10345,8 @@ nsresult HTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsINode& aNode,
       pointToInsert.Set(&aNode, 0);
     }
     RefPtr<Element> brElement =
-        HTMLEditorRef().InsertBrElementWithTransaction(pointToInsert);
+        MOZ_KnownLive(HTMLEditorRef())
+            .InsertBrElementWithTransaction(pointToInsert);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -10620,8 +10652,8 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
             atCurNode.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(*containerName,
-                                                        atCurNode);
+            MaybeSplitAncestorsForInsertWithTransaction(
+                MOZ_KnownLive(*containerName), atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -10689,8 +10721,8 @@ nsresult HTMLEditRules::PrepareToMakeElementAbsolutePosition(
             atListItem.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type
         SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(*containerName,
-                                                        atListItem);
+            MaybeSplitAncestorsForInsertWithTransaction(
+                MOZ_KnownLive(*containerName), atListItem);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }

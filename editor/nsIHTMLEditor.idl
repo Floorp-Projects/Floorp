@@ -211,6 +211,7 @@ interface nsIHTMLEditor : nsISupports
    * SetParagraphFormat       Insert a block paragraph tag around selection
    * @param aParagraphFormat  "p", "h1" to "h6", "address", "pre", or "blockquote"
    */
+  [can_run_script]
   void setParagraphFormat(in AString aParagraphFormat);
 
   /**
@@ -283,6 +284,7 @@ interface nsIHTMLEditor : nsISupports
    * Document me!
    *
    */
+  [can_run_script]
   void makeOrChangeList(in AString aListType, in boolean entireList,
                         in AString aBulletType);
 
@@ -298,6 +300,7 @@ interface nsIHTMLEditor : nsISupports
    * Document me!
    *
    */
+  [can_run_script]
   void indent(in AString aIndent);
 
   /**

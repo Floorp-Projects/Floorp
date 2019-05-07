@@ -439,7 +439,7 @@ nsresult IndentCommand::DoCommand(Command aCommand,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
-  nsresult rv = htmlEditor->IndentAsAction();
+  nsresult rv = MOZ_KnownLive(htmlEditor)->IndentAsAction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -483,7 +483,7 @@ nsresult OutdentCommand::DoCommand(Command aCommand,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_OK;
   }
-  nsresult rv = htmlEditor->OutdentAsAction();
+  nsresult rv = MOZ_KnownLive(htmlEditor)->OutdentAsAction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

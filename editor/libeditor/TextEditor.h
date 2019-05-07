@@ -354,7 +354,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    *                            <br> node, returns nullptr.
    */
   template <typename PT, typename CT>
-  already_AddRefed<Element> InsertBrElementWithTransaction(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> InsertBrElementWithTransaction(
       const EditorDOMPointBase<PT, CT>& aPointToInsert,
       EDirection aSelect = eNone);
 
