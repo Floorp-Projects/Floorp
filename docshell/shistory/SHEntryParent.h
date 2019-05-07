@@ -57,6 +57,10 @@ class LegacySHEntry final : public nsSHEntry {
 
   uint64_t GetSharedStateID() const { return mShared->GetID(); }
 
+  dom::SHEntrySharedParentState* GetSharedState() const {
+    return mShared.get();
+  }
+
  private:
   friend class SHEntryParent;
   friend class ContentParent;

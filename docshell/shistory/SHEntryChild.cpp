@@ -48,6 +48,24 @@ void SHEntryChildShared::Remove(uint64_t aSharedID) {
   }
 }
 
+void SHEntryChildShared::EvictContentViewers(
+    const nsTArray<uint64_t>& aToEvictSharedStateIDs) {
+  MOZ_ASSERT(sSHEntryChildSharedTable,
+             "we have content viewers to evict, but the table hasn't been "
+             "initialized yet");
+  for (auto iter = aToEvictSharedStateIDs.begin();
+       iter != aToEvictSharedStateIDs.end(); ++iter) {
+    RefPtr<SHEntryChildShared> shared = sSHEntryChildSharedTable->Get(*iter);
+    MOZ_ASSERT(shared, "shared entry can't be null");
+    nsCOMPtr<nsIContentViewer> viewer = shared->mContentViewer;
+    if (viewer) {
+      shared->SetContentViewer(nullptr);
+      shared->SyncPresentationState();
+      viewer->Destroy();
+    }
+  }
+}
+
 SHEntryChildShared::SHEntryChildShared(uint64_t aID) : mID(aID) {}
 
 SHEntryChildShared::~SHEntryChildShared() {

@@ -172,7 +172,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
 
   // Evict content viewers in this window which don't lie in the "safe" range
   // around aIndex.
-  void EvictOutOfRangeWindowContentViewers(int32_t aIndex);
+  virtual void EvictOutOfRangeWindowContentViewers(int32_t aIndex);
   void EvictContentViewerForEntry(nsISHEntry* aEntry);
   static void GloballyEvictContentViewers();
   static void GloballyEvictAllContentViewers();
@@ -190,17 +190,17 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   // otherwise comparison is done to aIndex - 1.
   bool RemoveDuplicate(int32_t aIndex, bool aKeepNext);
 
+ protected:
   // Length of mEntries.
   int32_t Length() { return int32_t(mEntries.Length()); }
 
- protected:
   bool mIsRemote;
-
+  nsTArray<nsCOMPtr<nsISHEntry>> mEntries;  // entries are never null
  private:
   // Track all bfcache entries and evict on expiration.
   mozilla::UniquePtr<HistoryTracker> mHistoryTracker;
 
-  nsTArray<nsCOMPtr<nsISHEntry>> mEntries;  // entries are never null
+  
   int32_t mIndex;                           // -1 means "no index"
   int32_t mRequestedIndex;                  // -1 means "no requested index"
 

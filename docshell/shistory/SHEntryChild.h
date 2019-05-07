@@ -42,6 +42,8 @@ class SHEntryChildShared final : public nsIBFCacheEntry,
   static uint64_t CreateSharedID() {
     return nsContentUtils::GenerateProcessSpecificId(++sNextSharedID);
   }
+  static void EvictContentViewers(
+      const nsTArray<uint64_t>& aToEvictSharedStateIDs);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIBFCACHEENTRY
