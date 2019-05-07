@@ -30,6 +30,7 @@
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
+#include "mozilla/dom/BrowserBridgeHost.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/ChildProcessMessageManager.h"
@@ -2007,7 +2008,7 @@ void ContentChild::UpdateCookieStatus(nsIChannel* aChannel) {
   csChild->TrackCookieLoad(aChannel);
 }
 
-already_AddRefed<BrowserBridgeChild> ContentChild::CreateBrowser(
+already_AddRefed<RemoteBrowser> ContentChild::CreateBrowser(
     nsFrameLoader* aFrameLoader, const TabContext& aContext,
     const nsString& aRemoteType, BrowsingContext* aBrowsingContext) {
   MOZ_ASSERT(XRE_IsContentProcess());
@@ -2054,7 +2055,9 @@ already_AddRefed<BrowserBridgeChild> ContentChild::CreateBrowser(
       aBrowsingContext, chromeFlags);
   browserBridge->mIPCOpen = true;
 
-  return browserBridge.forget();
+  RefPtr<BrowserBridgeHost> browserBridgeHost =
+      new BrowserBridgeHost(browserBridge);
+  return browserBridgeHost.forget();
 }
 
 PScriptCacheChild* ContentChild::AllocPScriptCacheChild(

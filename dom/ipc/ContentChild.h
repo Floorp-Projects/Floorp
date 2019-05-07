@@ -13,6 +13,7 @@
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/PContentChild.h"
+#include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ipc/Shmem.h"
@@ -162,7 +163,7 @@ class ContentChild final : public PContentChild,
 
   static void UpdateCookieStatus(nsIChannel* aChannel);
 
-  static already_AddRefed<BrowserBridgeChild> CreateBrowser(
+  static already_AddRefed<RemoteBrowser> CreateBrowser(
       nsFrameLoader* aFrameLoader, const TabContext& aContext,
       const nsString& aRemoteType, BrowsingContext* aBrowsingContext);
 

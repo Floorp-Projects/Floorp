@@ -1083,12 +1083,10 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
 }
 
 /*static*/
-BrowserParent* ContentParent::CreateBrowser(const TabContext& aContext,
-                                            Element* aFrameElement,
-                                            BrowsingContext* aBrowsingContext,
-                                            ContentParent* aOpenerContentParent,
-                                            BrowserParent* aSameTabGroupAs,
-                                            uint64_t aNextRemoteTabId) {
+already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
+    const TabContext& aContext, Element* aFrameElement,
+    BrowsingContext* aBrowsingContext, ContentParent* aOpenerContentParent,
+    BrowserParent* aSameTabGroupAs, uint64_t aNextRemoteTabId) {
   AUTO_PROFILER_LABEL("ContentParent::CreateBrowser", OTHER);
 
   if (!sCanLaunchSubprocesses) {
@@ -1105,10 +1103,11 @@ BrowserParent* ContentParent::CreateBrowser(const TabContext& aContext,
     if (BrowserParent* parent =
             sNextBrowserParents.GetAndRemove(aNextRemoteTabId)
                 .valueOr(nullptr)) {
+      RefPtr<BrowserHost> browserHost = new BrowserHost(parent);
       MOZ_ASSERT(!parent->GetOwnerElement(),
                  "Shouldn't have an owner elemnt before");
       parent->SetOwnerElement(aFrameElement);
-      return parent;
+      return browserHost.forget();
     }
   }
 
@@ -1216,8 +1215,9 @@ BrowserParent* ContentParent::CreateBrowser(const TabContext& aContext,
       Unused << browserParent->SendAwaitLargeAlloc();
     }
 
+    RefPtr<BrowserHost> browserHost = new BrowserHost(browserParent);
     browserParent->SetOwnerElement(aFrameElement);
-    return browserParent;
+    return browserHost.forget();
   }
   return nullptr;
 }
