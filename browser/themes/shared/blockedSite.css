@@ -14,8 +14,6 @@ body {
 
 .title {
   background-image: url("chrome://global/skin/icons/blocked.svg");
-  fill: currentColor;
-  -moz-context-properties: fill;
 }
 
 .title-text {
