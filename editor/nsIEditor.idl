@@ -102,6 +102,7 @@ interface nsIEditor  : nsISupports
    *                      doubt, pass eStrip -- eNoStrip is only for if you're
    *                      about to insert text or similar right after.
    */
+  [can_run_script]
   void deleteSelection(in short action, in short stripWrappers);
 
 
@@ -265,6 +266,7 @@ interface nsIEditor  : nsISupports
     * What about mixed selections?
     * What are the clipboard formats?
     */
+  [can_run_script]
   void cut();
 
   /** Can we cut? True if the doc is modifiable, and we have a non-
@@ -439,6 +441,7 @@ interface nsIEditor  : nsISupports
    * deleteNode removes aChild from aParent.
    * @param aChild    The node to delete
    */
+  [can_run_script]
   void deleteNode(in Node child);
 
   /**

@@ -217,7 +217,7 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    * @param aCancel             Returns true if the operation is canceled.
    *                            This can be nullptr.
    */
-  MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
 
   /**
    * Called before deleting selected content.
@@ -253,7 +253,7 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    * This method may remove empty text node and makes guarantee that caret
    * is never at left of <br> element.
    */
-  MOZ_MUST_USE nsresult DidDeleteSelection();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
 
   nsresult WillSetTextProperty(bool* aCancel, bool* aHandled);
 

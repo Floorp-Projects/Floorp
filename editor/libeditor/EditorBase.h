@@ -923,7 +923,7 @@ class EditorBase : public nsIEditor,
    *
    * @param aNode       The node which will be removed form the DOM tree.
    */
-  nsresult DeleteNodeWithTransaction(nsINode& aNode);
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteNodeWithTransaction(nsINode& aNode);
 
   /**
    * InsertNodeWithTransaction() inserts aContentToInsert before the child

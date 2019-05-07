@@ -55,6 +55,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   // Overrides of nsIEditor
   NS_IMETHOD GetDocumentIsEmpty(bool* aDocumentIsEmpty) override;
 
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD DeleteSelection(EDirection aAction,
                              EStripWrappers aStripWrappers) override;
 
@@ -67,7 +68,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD Redo(uint32_t aCount) final;
 
-  NS_IMETHOD Cut() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Cut() override;
   bool CanCut() const;
   NS_IMETHOD Copy() override;
   bool CanCopy() const;
@@ -167,6 +168,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteSelectionAsAction(EDirection aDirection,
                                    EStripWrappers aStripWrappers);
 
@@ -202,7 +204,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * InsertLineBreakAsAction() is called when user inputs a line break with
    * Enter or something.
    */
-  virtual nsresult InsertLineBreakAsAction();
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertLineBreakAsAction();
 
   /**
    * OnCompositionStart() is called when editor receives eCompositionStart
@@ -304,6 +306,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteSelectionAsSubAction(EDirection aDirection,
                                       EStripWrappers aStripWrappers);
 
@@ -315,6 +318,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult DeleteSelectionWithTransaction(
       EDirection aAction, EStripWrappers aStripWrappers);
 
@@ -324,13 +328,14 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    *
    * @ param aString   The string to be set.
    */
-  nsresult SetTextAsSubAction(const nsAString& aString);
+  MOZ_CAN_RUN_SCRIPT nsresult SetTextAsSubAction(const nsAString& aString);
 
   /**
    * ReplaceSelectionAsSubAction() replaces selection with aString.
    *
    * @param aString    The string to replace.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult ReplaceSelectionAsSubAction(const nsAString& aString);
 
   /**
@@ -493,6 +498,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aTag                The element name to be created.
    * @return                    Created new element.
    */
+  MOZ_CAN_RUN_SCRIPT
   already_AddRefed<Element> DeleteSelectionAndCreateElement(nsAtom& aTag);
 
   /**
@@ -502,7 +508,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * adjusted to be collapsed right before or after the node instead (which is
    * always possible, since the node was split).
    */
-  nsresult DeleteSelectionAndPrepareToCreateNode();
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteSelectionAndPrepareToCreateNode();
 
   /**
    * Shared outputstring; returns whether selection is collapsed and resulting

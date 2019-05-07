@@ -177,6 +177,7 @@ class MOZ_STACK_CLASS WSRunObject final {
 
   // ScrubBlockBoundary removes any non-visible whitespace at the specified
   // location relative to a block node.
+  MOZ_CAN_RUN_SCRIPT
   static nsresult ScrubBlockBoundary(HTMLEditor* aHTMLEditor,
                                      BlockBoundary aBoundary, nsINode* aBlock,
                                      int32_t aOffset = -1);
@@ -387,8 +388,9 @@ class MOZ_STACK_CLASS WSRunObject final {
    * Removes any nodes between them.
    */
   template <typename PT1, typename CT1, typename PT2, typename CT2>
-  nsresult DeleteRange(const EditorDOMPointBase<PT1, CT1>& aStartPoint,
-                       const EditorDOMPointBase<PT2, CT2>& aEndPoint);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteRange(const EditorDOMPointBase<PT1, CT1>& aStartPoint,
+              const EditorDOMPointBase<PT2, CT2>& aEndPoint);
 
   /**
    * GetNextCharPoint() returns next character's point of aPoint.  If there is
@@ -497,7 +499,7 @@ class MOZ_STACK_CLASS WSRunObject final {
   MOZ_CAN_RUN_SCRIPT
   nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode, int32_t aOffset);
 
-  nsresult Scrub();
+  MOZ_CAN_RUN_SCRIPT nsresult Scrub();
   bool IsBlockNode(nsINode* aNode);
 
   EditorRawDOMPoint StartPoint() const {
