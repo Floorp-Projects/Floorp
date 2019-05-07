@@ -7,30 +7,30 @@ use api::{DocumentLayer, FilterData, FilterOp, ImageFormat, LineOrientation};
 use api::units::*;
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
-use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
-use clip::ClipStore;
-use clip_scroll_tree::{ClipScrollTree};
-use debug_render::DebugItem;
-use device::{Texture};
+use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
+use crate::clip::ClipStore;
+use crate::clip_scroll_tree::{ClipScrollTree};
+use crate::debug_render::DebugItem;
+use crate::device::{Texture};
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
-use frame_builder::FrameGlobalResources;
-use gpu_cache::{GpuCache};
-use gpu_types::{BorderInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
-use gpu_types::{TransformData, TransformPalette, ZBufferIdGenerator};
-use internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex, TextureSource};
+use crate::frame_builder::FrameGlobalResources;
+use crate::gpu_cache::{GpuCache};
+use crate::gpu_types::{BorderInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
+use crate::gpu_types::{TransformData, TransformPalette, ZBufferIdGenerator};
+use crate::internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex, TextureSource};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
-use picture::{RecordedDirtyRegion, SurfaceInfo};
-use prim_store::gradient::GRADIENT_FP_STOPS;
-use prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
-use profiler::FrameProfileCounters;
-use render_backend::{DataStores, FrameId};
-use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
-use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree, ScalingTask};
-use resource_cache::ResourceCache;
+use crate::picture::{RecordedDirtyRegion, SurfaceInfo};
+use crate::prim_store::gradient::GRADIENT_FP_STOPS;
+use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
+use crate::profiler::FrameProfileCounters;
+use crate::render_backend::{DataStores, FrameId};
+use crate::render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
+use crate::render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree, ScalingTask};
+use crate::resource_cache::ResourceCache;
 use std::{cmp, usize, f32, i32, mem};
-use texture_allocator::{ArrayAllocationTracker, FreeRectSlice};
+use crate::texture_allocator::{ArrayAllocationTracker, FreeRectSlice};
 
 
 const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);

@@ -86,9 +86,9 @@ pub trait Example {
     );
     fn on_event(
         &mut self,
-        winit::WindowEvent,
-        &RenderApi,
-        DocumentId,
+        _: winit::WindowEvent,
+        _: &RenderApi,
+        _: DocumentId,
     ) -> bool {
         false
     }

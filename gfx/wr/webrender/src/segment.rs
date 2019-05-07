@@ -4,9 +4,9 @@
 
 use api::{BorderRadius, ClipMode};
 use api::units::*;
-use prim_store::EdgeAaSegmentMask;
+use crate::prim_store::EdgeAaSegmentMask;
 use std::{cmp, usize};
-use util::{extract_inner_rect_safe, RectHelpers};
+use crate::util::{extract_inner_rect_safe, RectHelpers};
 use smallvec::SmallVec;
 
 bitflags! {
@@ -635,7 +635,7 @@ fn emit_segment_if_needed(
 mod test {
     use api::{BorderRadius, ClipMode};
     use api::units::{LayoutPoint, LayoutRect, LayoutSize};
-    use prim_store::EdgeAaSegmentMask;
+    use crate::prim_store::EdgeAaSegmentMask;
     use super::{Segment, SegmentBuilder};
     use std::cmp;
 

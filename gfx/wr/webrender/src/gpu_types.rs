@@ -4,13 +4,13 @@
 
 use api::{DocumentLayer, PremultipliedColorF};
 use api::units::*;
-use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
-use gpu_cache::{GpuCacheAddress, GpuDataRequest};
-use internal_types::FastHashMap;
-use prim_store::EdgeAaSegmentMask;
-use render_task::RenderTaskAddress;
+use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use crate::gpu_cache::{GpuCacheAddress, GpuDataRequest};
+use crate::internal_types::FastHashMap;
+use crate::prim_store::EdgeAaSegmentMask;
+use crate::render_task::RenderTaskAddress;
 use std::i32;
-use util::{TransformedRectKind, MatrixHelpers};
+use crate::util::{TransformedRectKind, MatrixHelpers};
 
 // Contains type that must exactly match the same structures declared in GLSL.
 

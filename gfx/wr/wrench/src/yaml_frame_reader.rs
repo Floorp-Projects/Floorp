@@ -6,8 +6,8 @@ use clap;
 use euclid::SideOffsets2D;
 use image;
 use image::GenericImageView;
-use parse_function::parse_function;
-use premultiply::premultiply;
+use crate::parse_function::parse_function;
+use crate::premultiply::premultiply;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
@@ -15,10 +15,10 @@ use std::path::{Path, PathBuf};
 use std::usize;
 use webrender::api::*;
 use webrender::api::units::*;
-use wrench::{FontDescriptor, Wrench, WrenchThing};
-use yaml_helper::{StringEnum, YamlHelper, make_perspective};
+use crate::wrench::{FontDescriptor, Wrench, WrenchThing};
+use crate::yaml_helper::{StringEnum, YamlHelper, make_perspective};
 use yaml_rust::{Yaml, YamlLoader};
-use PLATFORM_DEFAULT_FACE_NAME;
+use crate::PLATFORM_DEFAULT_FACE_NAME;
 
 macro_rules! try_intersect {
     ($first: expr, $second: expr) => {

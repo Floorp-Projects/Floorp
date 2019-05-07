@@ -6,13 +6,13 @@ use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle}
 use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation, ScrollSensitivity};
 use api::units::*;
 use euclid::TypedTransform3D;
-use gpu_types::TransformPalette;
-use internal_types::{FastHashMap, FastHashSet};
-use print_tree::{PrintableTree, PrintTree, PrintTreePrinter};
-use scene::SceneProperties;
-use spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo, ScrollFrameKind};
+use crate::gpu_types::TransformPalette;
+use crate::internal_types::{FastHashMap, FastHashSet};
+use crate::print_tree::{PrintableTree, PrintTree, PrintTreePrinter};
+use crate::scene::SceneProperties;
+use crate::spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo, ScrollFrameKind};
 use std::{ops, u32};
-use util::{LayoutToWorldFastTransform, MatrixHelpers, ScaleOffset};
+use crate::util::{LayoutToWorldFastTransform, MatrixHelpers, ScaleOffset};
 
 pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 

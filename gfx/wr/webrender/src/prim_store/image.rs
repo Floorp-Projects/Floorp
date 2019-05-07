@@ -8,23 +8,23 @@ use api::{
     PremultipliedColorF, Shadow, YuvColorSpace, YuvFormat,
 };
 use api::units::*;
-use display_list_flattener::{CreateShadow, IsVisible};
-use frame_builder::FrameBuildingState;
-use gpu_cache::{GpuCache, GpuDataRequest};
-use intern::{Internable, InternDebug, Handle as InternHandle};
-use internal_types::LayoutPrimitiveInfo;
-use prim_store::{
+use crate::display_list_flattener::{CreateShadow, IsVisible};
+use crate::frame_builder::FrameBuildingState;
+use crate::gpu_cache::{GpuCache, GpuDataRequest};
+use crate::intern::{Internable, InternDebug, Handle as InternHandle};
+use crate::internal_types::LayoutPrimitiveInfo;
+use crate::prim_store::{
     EdgeAaSegmentMask, OpacityBindingIndex, PrimitiveInstanceKind,
     PrimitiveOpacity, PrimitiveSceneData, PrimKey, PrimKeyCommonData,
     PrimTemplate, PrimTemplateCommonData, PrimitiveStore, SegmentInstanceIndex,
     SizeKey, InternablePrimitive,
 };
-use render_task::{
+use crate::render_task::{
     BlitSource, RenderTask, RenderTaskCacheEntryHandle, RenderTaskCacheKey,
     RenderTaskCacheKeyKind
 };
-use resource_cache::{ImageRequest, ResourceCache};
-use util::pack_as_float;
+use crate::resource_cache::{ImageRequest, ResourceCache};
+use crate::util::pack_as_float;
 
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]

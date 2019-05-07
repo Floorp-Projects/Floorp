@@ -10,7 +10,7 @@ extern crate winit;
 #[path = "common/boilerplate.rs"]
 mod boilerplate;
 
-use boilerplate::Example;
+use crate::boilerplate::Example;
 use gleam::gl;
 use webrender::api::*;
 use webrender::api::units::*;

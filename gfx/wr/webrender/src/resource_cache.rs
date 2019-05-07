@@ -12,25 +12,25 @@ use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
 use api::{BlobImageData, BlobImageKey, MemoryReport, VoidPtrToSizeFn};
 use api::units::*;
 #[cfg(feature = "capture")]
-use capture::ExternalCaptureImage;
+use crate::capture::ExternalCaptureImage;
 #[cfg(feature = "replay")]
-use capture::PlainExternalImage;
+use crate::capture::PlainExternalImage;
 #[cfg(any(feature = "replay", feature = "png"))]
-use capture::CaptureConfig;
-use device::TextureFilter;
+use crate::capture::CaptureConfig;
+use crate::device::TextureFilter;
 use euclid::{point2, size2};
-use glyph_cache::GlyphCache;
+use crate::glyph_cache::GlyphCache;
 #[cfg(not(feature = "pathfinder"))]
-use glyph_cache::GlyphCacheEntry;
-use glyph_rasterizer::{BaseFontInstance, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
-use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
-use gpu_types::UvRectKind;
-use image::{compute_tile_size, compute_tile_range, for_each_tile_in_range};
-use internal_types::{FastHashMap, FastHashSet, TextureSource, TextureUpdateList};
-use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
-use render_backend::{FrameId, FrameStamp};
-use render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId};
-use render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle, RenderTaskTree};
+use crate::glyph_cache::GlyphCacheEntry;
+use crate::glyph_rasterizer::{BaseFontInstance, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
+use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
+use crate::gpu_types::UvRectKind;
+use crate::image::{compute_tile_size, compute_tile_range, for_each_tile_in_range};
+use crate::internal_types::{FastHashMap, FastHashSet, TextureSource, TextureUpdateList};
+use crate::profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
+use crate::render_backend::{FrameId, FrameStamp};
+use crate::render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId};
+use crate::render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle, RenderTaskTree};
 use smallvec::SmallVec;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::collections::hash_map::IterMut;
@@ -43,8 +43,8 @@ use std::os::raw::c_void;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
-use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
-use util::drain_filter;
+use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
+use crate::util::drain_filter;
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
 

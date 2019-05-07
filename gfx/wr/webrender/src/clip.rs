@@ -5,20 +5,20 @@
 use api::{BorderRadius, ClipIntern, ClipMode, ComplexClipRegion, ImageMask};
 use api::{BoxShadowClipMode, ImageKey, ImageRendering};
 use api::units::*;
-use border::{ensure_no_corner_overlap, BorderRadiusAu};
-use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
-use clip_scroll_tree::{CoordinateSystemId, ClipScrollTree, SpatialNodeIndex};
-use ellipse::Ellipse;
-use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
-use gpu_types::{BoxShadowStretchMode};
-use image::{self, Repetition};
-use intern;
-use prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTile};
-use prim_store::{PointKey, SizeKey, RectangleKey};
-use render_task::to_cache_size;
-use resource_cache::{ImageRequest, ResourceCache};
+use crate::border::{ensure_no_corner_overlap, BorderRadiusAu};
+use crate::box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
+use crate::clip_scroll_tree::{CoordinateSystemId, ClipScrollTree, SpatialNodeIndex};
+use crate::ellipse::Ellipse;
+use crate::gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
+use crate::gpu_types::{BoxShadowStretchMode};
+use crate::image::{self, Repetition};
+use crate::intern;
+use crate::prim_store::{ClipData, ImageMaskData, SpaceMapper, VisibleMaskImageTile};
+use crate::prim_store::{PointKey, SizeKey, RectangleKey};
+use crate::render_task::to_cache_size;
+use crate::resource_cache::{ImageRequest, ResourceCache};
 use std::{cmp, u32};
-use util::{extract_inner_rect_safe, project_rect, ScaleOffset};
+use crate::util::{extract_inner_rect_safe, project_rect, ScaleOffset};
 
 /*
 

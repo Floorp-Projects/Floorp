@@ -5,30 +5,30 @@
 use api::{ColorF, DebugFlags, DocumentLayer, FontRenderMode, PremultipliedColorF};
 use api::{PipelineId, RasterSpace};
 use api::units::*;
-use clip::{ClipDataStore, ClipStore, ClipChainStack};
-use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
-use display_list_flattener::{DisplayListFlattener};
-use gpu_cache::{GpuCache, GpuCacheHandle};
-use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
-use hit_test::{HitTester, HitTestingScene};
+use crate::clip::{ClipDataStore, ClipStore, ClipChainStack};
+use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use crate::display_list_flattener::{DisplayListFlattener};
+use crate::gpu_cache::{GpuCache, GpuCacheHandle};
+use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
+use crate::hit_test::{HitTester, HitTestingScene};
 #[cfg(feature = "replay")]
-use hit_test::HitTestingSceneStats;
-use internal_types::{FastHashMap, PlaneSplitter};
-use picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
-use picture::{RetainedTiles, TileCache, DirtyRegion};
-use prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
+use crate::hit_test::HitTestingSceneStats;
+use crate::internal_types::{FastHashMap, PlaneSplitter};
+use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
+use crate::picture::{RetainedTiles, TileCache, DirtyRegion};
+use crate::prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
 #[cfg(feature = "replay")]
-use prim_store::{PrimitiveStoreStats};
-use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
-use render_backend::{DataStores, FrameStamp};
-use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree, RenderTaskTreeCounters};
-use resource_cache::{ResourceCache};
-use scene::{ScenePipeline, SceneProperties};
-use scene_builder::DocumentStats;
-use segment::SegmentBuilder;
+use crate::prim_store::{PrimitiveStoreStats};
+use crate::profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
+use crate::render_backend::{DataStores, FrameStamp};
+use crate::render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree, RenderTaskTreeCounters};
+use crate::resource_cache::{ResourceCache};
+use crate::scene::{ScenePipeline, SceneProperties};
+use crate::scene_builder::DocumentStats;
+use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use std::sync::Arc;
-use tiling::{Frame, RenderPassKind, RenderTargetContext, RenderTarget};
+use crate::tiling::{Frame, RenderPassKind, RenderTargetContext, RenderTarget};
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]

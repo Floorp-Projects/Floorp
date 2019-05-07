@@ -22,31 +22,31 @@ use api::channel::{MsgReceiver, MsgSender, Payload};
 use api::CaptureBits;
 #[cfg(feature = "replay")]
 use api::CapturedDocument;
-use clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
+use crate::clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
 #[cfg(feature = "debugger")]
-use debug_server;
-use frame_builder::{FrameBuilder, FrameBuilderConfig};
-use glyph_rasterizer::{FontInstance};
-use gpu_cache::GpuCache;
-use hit_test::{HitTest, HitTester};
-use intern::DataStore;
-use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
+use crate::debug_server;
+use crate::frame_builder::{FrameBuilder, FrameBuilderConfig};
+use crate::glyph_rasterizer::{FontInstance};
+use crate::gpu_cache::GpuCache;
+use crate::hit_test::{HitTest, HitTester};
+use crate::intern::DataStore;
+use crate::internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
-use picture::RetainedTiles;
-use prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
-use prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
-use prim_store::interned::*;
-use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
-use record::ApiRecordingReceiver;
-use render_task::RenderTaskTreeCounters;
-use renderer::{AsyncPropertySampler, PipelineInfo};
-use resource_cache::ResourceCache;
+use crate::picture::RetainedTiles;
+use crate::prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
+use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
+use crate::prim_store::interned::*;
+use crate::profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
+use crate::record::ApiRecordingReceiver;
+use crate::render_task::RenderTaskTreeCounters;
+use crate::renderer::{AsyncPropertySampler, PipelineInfo};
+use crate::resource_cache::ResourceCache;
 #[cfg(feature = "replay")]
-use resource_cache::PlainCacheOwn;
+use crate::resource_cache::PlainCacheOwn;
 #[cfg(any(feature = "capture", feature = "replay"))]
-use resource_cache::PlainResources;
-use scene::{Scene, SceneProperties};
-use scene_builder::*;
+use crate::resource_cache::PlainResources;
+use crate::scene::{Scene, SceneProperties};
+use crate::scene_builder::*;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "debugger")]
@@ -59,9 +59,9 @@ use std::sync::mpsc::{channel, Sender, Receiver};
 use std::time::{UNIX_EPOCH, SystemTime};
 use std::u32;
 #[cfg(feature = "replay")]
-use tiling::Frame;
+use crate::tiling::Frame;
 use time::precise_time_ns;
-use util::{Recycler, VecHelper, drain_filter};
+use crate::util::{Recycler, VecHelper, drain_filter};
 
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -1588,7 +1588,7 @@ impl RenderBackend {
 
     #[cfg(feature = "debugger")]
     fn get_clip_scroll_tree_for_debugger(&self) -> String {
-        use print_tree::PrintableTree;
+        use crate::print_tree::PrintableTree;
 
         let mut debug_root = debug_server::ClipScrollTreeList::new();
 
@@ -1654,8 +1654,8 @@ impl RenderBackend {
         profile_counters: &mut BackendProfileCounters,
     ) -> DebugOutput {
         use std::fs;
-        use capture::CaptureConfig;
-        use render_task::dump_render_tasks_as_svg;
+        use crate::capture::CaptureConfig;
+        use crate::render_task::dump_render_tasks_as_svg;
 
         debug!("capture: saving {:?}", root);
         if !root.is_dir() {
@@ -1760,7 +1760,7 @@ impl RenderBackend {
         root: &PathBuf,
         profile_counters: &mut BackendProfileCounters,
     ) {
-        use capture::CaptureConfig;
+        use crate::capture::CaptureConfig;
 
         debug!("capture: loading {:?}", root);
         let backend = CaptureConfig::deserialize::<PlainRenderBackend, _>(root, "backend")

@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::{hash};
-use gpu_cache::{GpuCacheHandle};
-use frame_builder::FrameBuildingState;
-use gpu_cache::GpuDataRequest;
-use intern;
+use crate::gpu_cache::{GpuCacheHandle};
+use crate::frame_builder::FrameBuildingState;
+use crate::gpu_cache::GpuDataRequest;
+use crate::intern;
 use api::{FilterDataIntern, ComponentTransferFuncType};
 
 

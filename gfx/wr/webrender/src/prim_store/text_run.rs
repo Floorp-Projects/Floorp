@@ -4,24 +4,24 @@
 
 use api::{ColorF, GlyphInstance, RasterSpace, Shadow};
 use api::units::{DevicePixelScale, LayoutToWorldTransform, LayoutVector2D};
-use display_list_flattener::{CreateShadow, IsVisible};
-use frame_builder::FrameBuildingState;
-use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
-use gpu_cache::GpuCache;
-use intern;
-use internal_types::LayoutPrimitiveInfo;
-use picture::SurfaceInfo;
-use prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
-use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
-use render_task::{RenderTaskTree};
-use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
-use resource_cache::{ResourceCache};
-use util::{MatrixHelpers};
-use prim_store::{InternablePrimitive, PrimitiveInstanceKind};
+use crate::display_list_flattener::{CreateShadow, IsVisible};
+use crate::frame_builder::FrameBuildingState;
+use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
+use crate::gpu_cache::GpuCache;
+use crate::intern;
+use crate::internal_types::LayoutPrimitiveInfo;
+use crate::picture::SurfaceInfo;
+use crate::prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
+use crate::prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
+use crate::render_task::{RenderTaskTree};
+use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
+use crate::resource_cache::{ResourceCache};
+use crate::util::{MatrixHelpers};
+use crate::prim_store::{InternablePrimitive, PrimitiveInstanceKind};
 use std::ops;
 use std::sync::Arc;
-use storage;
-use util::PrimaryArc;
+use crate::storage;
+use crate::util::PrimaryArc;
 
 /// A run of glyphs, with associated font information.
 #[cfg_attr(feature = "capture", derive(Serialize))]

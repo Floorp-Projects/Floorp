@@ -7,16 +7,16 @@ use api::{
     LineOrientation, LineStyle, PremultipliedColorF, Shadow,
 };
 use api::units::{Au, LayoutSizeAu, LayoutVector2D};
-use display_list_flattener::{CreateShadow, IsVisible};
-use frame_builder::{FrameBuildingState};
-use gpu_cache::GpuDataRequest;
-use intern;
-use internal_types::LayoutPrimitiveInfo;
-use prim_store::{
+use crate::display_list_flattener::{CreateShadow, IsVisible};
+use crate::frame_builder::{FrameBuildingState};
+use crate::gpu_cache::GpuDataRequest;
+use crate::intern;
+use crate::internal_types::LayoutPrimitiveInfo;
+use crate::prim_store::{
     PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
     InternablePrimitive, PrimitiveSceneData, PrimitiveStore,
 };
-use prim_store::PrimitiveInstanceKind;
+use crate::prim_store::PrimitiveInstanceKind;
 
 
 #[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]

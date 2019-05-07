@@ -7,12 +7,12 @@ use api::{
     PropertyBinding, PropertyBindingId,
 };
 use api::units::{Au, LayoutSize, LayoutVector2D};
-use intern::ItemUid;
-use display_list_flattener::IsVisible;
-use intern::{Internable, InternDebug, Handle as InternHandle};
-use internal_types::LayoutPrimitiveInfo;
-use picture::PictureCompositeMode;
-use prim_store::{
+use crate::intern::ItemUid;
+use crate::display_list_flattener::IsVisible;
+use crate::intern::{Internable, InternDebug, Handle as InternHandle};
+use crate::internal_types::LayoutPrimitiveInfo;
+use crate::picture::PictureCompositeMode;
+use crate::prim_store::{
     PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
     PrimitiveInstanceKind, PrimitiveSceneData, PrimitiveStore, VectorKey,
     InternablePrimitive,

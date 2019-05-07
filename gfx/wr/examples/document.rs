@@ -11,7 +11,7 @@ extern crate winit;
 #[path = "common/boilerplate.rs"]
 mod boilerplate;
 
-use boilerplate::Example;
+use crate::boilerplate::Example;
 use euclid::TypedScale;
 use webrender::api::*;
 use webrender::api::units::*;

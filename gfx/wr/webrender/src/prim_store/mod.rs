@@ -8,52 +8,52 @@ use api::{PremultipliedColorF, PropertyBinding, Shadow, GradientStop};
 use api::{BoxShadowClipMode, LineStyle, LineOrientation};
 use api::{PrimitiveKeyKind, RasterSpace};
 use api::units::*;
-use border::{get_max_scale_for_border, build_border_instances};
-use border::BorderSegmentCacheKey;
-use box_shadow::{BLUR_SAMPLE_SCALE};
-use clip::{ClipStore};
-use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, VisibleFace};
-use clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem};
-use debug_colors;
-use debug_render::DebugItem;
-use display_list_flattener::{CreateShadow, IsVisible};
+use crate::border::{get_max_scale_for_border, build_border_instances};
+use crate::border::BorderSegmentCacheKey;
+use crate::box_shadow::{BLUR_SAMPLE_SCALE};
+use crate::clip::{ClipStore};
+use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, VisibleFace};
+use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem};
+use crate::debug_colors;
+use crate::debug_render::DebugItem;
+use crate::display_list_flattener::{CreateShadow, IsVisible};
 use euclid::{SideOffsets2D, TypedTransform3D, TypedRect, TypedScale, TypedSize2D, TypedPoint2D};
 use euclid::approxeq::ApproxEq;
-use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
-use frame_builder::{FrameVisibilityContext, FrameVisibilityState};
-use glyph_rasterizer::GlyphKey;
-use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
-use gpu_types::{BrushFlags, SnapOffsets};
-use image::{Repetition};
-use intern;
+use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
+use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
+use crate::glyph_rasterizer::GlyphKey;
+use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
+use crate::gpu_types::{BrushFlags, SnapOffsets};
+use crate::image::{Repetition};
+use crate::intern;
 use malloc_size_of::MallocSizeOf;
-use picture::{PictureCompositeMode, PicturePrimitive, SurfaceInfo};
-use picture::{ClusterIndex, PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedTiles};
-use prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
-use prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
-use prim_store::gradient::{LinearGradientPrimitive, LinearGradientDataHandle, RadialGradientDataHandle};
-use prim_store::image::{ImageDataHandle, ImageInstance, VisibleImageTile, YuvImageDataHandle};
-use prim_store::line_dec::LineDecorationDataHandle;
-use prim_store::picture::PictureDataHandle;
-use prim_store::text_run::{TextRunDataHandle, TextRunPrimitive};
+use crate::picture::{PictureCompositeMode, PicturePrimitive, SurfaceInfo};
+use crate::picture::{ClusterIndex, PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedTiles};
+use crate::prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
+use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
+use crate::prim_store::gradient::{LinearGradientPrimitive, LinearGradientDataHandle, RadialGradientDataHandle};
+use crate::prim_store::image::{ImageDataHandle, ImageInstance, VisibleImageTile, YuvImageDataHandle};
+use crate::prim_store::line_dec::LineDecorationDataHandle;
+use crate::prim_store::picture::PictureDataHandle;
+use crate::prim_store::text_run::{TextRunDataHandle, TextRunPrimitive};
 #[cfg(debug_assertions)]
-use render_backend::{FrameId};
-use render_backend::DataStores;
-use render_task::{RenderTask, RenderTaskCacheKey, to_cache_size};
-use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHandle};
-use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
-use resource_cache::{ImageProperties, ImageRequest};
-use scene::SceneProperties;
-use segment::SegmentBuilder;
+use crate::render_backend::{FrameId};
+use crate::render_backend::DataStores;
+use crate::render_task::{RenderTask, RenderTaskCacheKey, to_cache_size};
+use crate::render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHandle};
+use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
+use crate::resource_cache::{ImageProperties, ImageRequest};
+use crate::scene::SceneProperties;
+use crate::segment::SegmentBuilder;
 use std::{cmp, fmt, hash, ops, u32, usize, mem};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
-use storage;
-use texture_cache::TEXTURE_REGION_DIMENSIONS;
-use util::{ScaleOffset, MatrixHelpers, MaxRect, Recycler};
-use util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
-use util::{scale_factors, clamp_to_scale_factor};
-use internal_types::LayoutPrimitiveInfo;
+use crate::storage;
+use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
+use crate::util::{ScaleOffset, MatrixHelpers, MaxRect, Recycler};
+use crate::util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
+use crate::util::{scale_factors, clamp_to_scale_factor};
+use crate::internal_types::LayoutPrimitiveInfo;
 use smallvec::SmallVec;
 
 pub mod borders;
@@ -1699,7 +1699,7 @@ impl PrimitiveStore {
 
     #[allow(unused)]
     pub fn print_picture_tree(&self, root: PictureIndex) {
-        use print_tree::PrintTree;
+        use crate::print_tree::PrintTree;
         let mut pt = PrintTree::new("picture tree");
         self.pictures[root.0].print(&self.pictures, root, &mut pt);
     }
@@ -2262,7 +2262,7 @@ impl PrimitiveStore {
 
                         let stride = image_data.stretch_size + image_data.tile_spacing;
 
-                        let repetitions = ::image::repetitions(
+                        let repetitions = crate::image::repetitions(
                             &prim_rect,
                             &visible_rect,
                             stride,
@@ -2276,7 +2276,7 @@ impl PrimitiveStore {
                                 size: image_data.stretch_size,
                             };
 
-                            let tiles = ::image::tiles(
+                            let tiles = crate::image::tiles(
                                 &layout_image_rect,
                                 &visible_rect,
                                 &device_image_rect,
@@ -3170,7 +3170,7 @@ fn decompose_repeated_primitive(
     );
     let stride = *stretch_size + *tile_spacing;
 
-    let repetitions = ::image::repetitions(prim_local_rect, &visible_rect, stride);
+    let repetitions = crate::image::repetitions(prim_local_rect, &visible_rect, stride);
     for Repetition { origin, .. } in repetitions {
         let mut handle = GpuCacheHandle::new();
         let rect = LayoutRect {
