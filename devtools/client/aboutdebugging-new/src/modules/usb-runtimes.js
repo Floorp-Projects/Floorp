@@ -16,6 +16,7 @@ class UsbRuntime {
     this.deviceName = adbRuntime.deviceName;
     this.shortName = adbRuntime.shortName;
     this.socketPath = adbRuntime.socketPath;
+    this.isFenix = adbRuntime.isFenix;
     this.isUnavailable = false;
     this.isUnplugged = false;
   }
@@ -32,6 +33,7 @@ class UnavailableUsbRuntime {
     this.deviceName = adbDevice.name;
     this.shortName = "Unavailable runtime";
     this.socketPath = null;
+    this.isFenix = false;
     this.isUnavailable = true;
     this.isUnplugged = false;
   }
@@ -48,6 +50,7 @@ class UnpluggedUsbRuntime {
     this.deviceName = deviceName;
     this.shortName = "Unplugged runtime";
     this.socketPath = null;
+    this.isFenix = false;
     this.isUnavailable = true;
     this.isUnplugged = true;
   }
