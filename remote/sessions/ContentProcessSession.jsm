@@ -15,6 +15,9 @@ class ContentProcessSession {
     this.browsingContext = browsingContext;
     this.content = content;
     this.docShell = docShell;
+    // Most children or sibling classes are going to assume that docShell
+    // implements the following interface. So do the QI only once from here.
+    this.docShell.QueryInterface(Ci.nsIWebNavigation);
 
     this.domains = new Domains(this, ContentProcessDomains);
     this.messageManager.addMessageListener("remote:request", this);
