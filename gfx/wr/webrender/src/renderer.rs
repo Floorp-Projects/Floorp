@@ -5712,7 +5712,7 @@ impl Default for RendererOptions {
             enable_picture_caching: false,
             testing: false,
             gpu_supports_fast_clears: false,
-            allow_dual_source_blending: false,
+            allow_dual_source_blending: true,
             allow_advanced_blend_equation: false,
             allow_pixel_local_storage_support: false,
             // For backwards compatibility we set this to true by default, so
