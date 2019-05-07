@@ -28,7 +28,7 @@ use euclid::Size2D;
 use gamma_lut::{ColorLut, GammaLut};
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
 #[cfg(feature = "pathfinder")]
-use glyph_rasterizer::NativeFontHandleWrapper;
+use crate::glyph_rasterizer::NativeFontHandleWrapper;
 #[cfg(not(feature = "pathfinder"))]
 use glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
 use internal_types::{FastHashMap, ResourceCacheError};

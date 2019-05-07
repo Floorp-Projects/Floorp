@@ -20,11 +20,11 @@ use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING, FT_LOAD_VERTICAL
 use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES};
 use freetype::freetype::{FT_FACE_FLAG_MULTIPLE_MASTERS};
 use freetype::succeeded;
-use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey};
-use glyph_rasterizer::{GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
+use crate::glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey};
+use crate::glyph_rasterizer::{GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
 #[cfg(feature = "pathfinder")]
-use glyph_rasterizer::NativeFontHandleWrapper;
-use internal_types::{FastHashMap, ResourceCacheError};
+use crate::glyph_rasterizer::NativeFontHandleWrapper;
+use crate::internal_types::{FastHashMap, ResourceCacheError};
 #[cfg(any(not(target_os = "android"), feature = "no_static_freetype"))]
 use libc::{dlsym, RTLD_DEFAULT};
 use libc::free;

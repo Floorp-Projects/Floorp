@@ -11,7 +11,7 @@ use winit::{EventsLoop, Window, WindowBuilder};
 pub enum Context {}
 
 #[cfg(windows)]
-pub use ::egl::Context;
+pub use crate::egl::Context;
 
 impl Context {
     #[cfg(not(windows))]
