@@ -1358,6 +1358,15 @@ nsSHistory::GotoIndex(int32_t aIndex) {
   return LoadURI(loadResult);
 }
 
+NS_IMETHODIMP_(void)
+nsSHistory::EnsureCorrectEntryAtCurrIndex(nsISHEntry* aEntry) {
+  int index = mRequestedIndex == -1 ? mIndex : mRequestedIndex;
+  MOZ_ASSERT(mIndex > -1);
+  if (mEntries[index] != aEntry) {
+    ReplaceEntry(index, aEntry);
+  }
+}
+
 nsresult nsSHistory::GotoIndex(int32_t aIndex, LoadEntryResult& aLoadResult) {
   return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX, aLoadResult);
 }
