@@ -134,13 +134,7 @@ class Adb extends EventEmitter {
 
   async _getDeviceRuntimes(device) {
     const socketPaths = [...await device.getRuntimeSocketPaths()];
-    const runtimes = [];
-    for (const socketPath of socketPaths) {
-      const runtime = new AdbRuntime(device, socketPath);
-      await runtime.init();
-      runtimes.push(runtime);
-    }
-    return runtimes;
+    return socketPaths.map(socketPath => new AdbRuntime(device, socketPath));
   }
 }
 
