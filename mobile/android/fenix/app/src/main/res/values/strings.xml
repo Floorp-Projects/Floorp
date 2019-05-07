@@ -42,8 +42,6 @@
     <string name="browser_menu_settings">Settings</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_your_library">Your Library</string>
-    <!-- Deprecated: Browser menu button that opens a user's library -->
-    <string name="browser_menu_library">Library</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Desktop site</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -451,13 +449,15 @@
 
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Select All</string>
-    <!-- Text to prompt users to select the tabs to save in the "select tabs" stepof the collection creator -->
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">Select tabs to save</string>
 
-    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator -->
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
     <string name="create_collection_save_to_collection_tabs_selected">%d tabs selected</string>
 
-    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator -->
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
     <string name="create_collection_save_to_collection_tab_selected">%d tab selected</string>
 
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
