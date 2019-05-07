@@ -16,13 +16,6 @@ const test = new SearchConfigTest({
       },
     }],
   },
-  available: {
-    included: [{
-      locales: {
-        matches: ["az", "ru", "be", "kk", "tr"]
-      },
-    }],
-  },
 });
 
 add_task(async function setup() {
