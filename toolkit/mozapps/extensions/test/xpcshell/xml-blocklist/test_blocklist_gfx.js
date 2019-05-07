@@ -18,10 +18,11 @@ const SAMPLE_GFX_RECORD = {
   "versionRange": {"minVersion": 0, "maxVersion": "*"},
 };
 
+let jsmInternalObj = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
 
 function getBlocklist() {
-  Blocklist._clear();
-  return Blocklist;
+  jsmInternalObj.BlocklistXML._clear();
+  return jsmInternalObj.BlocklistXML;
 }
 
 async function updateBlocklistWithInput(input) {

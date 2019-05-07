@@ -45,10 +45,12 @@ function clearBlocklists() {
     blocklist.remove(true);
 }
 
+let jsmInternalObj = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
+
 async function reloadBlocklist() {
   Services.prefs.setBoolPref(PREF_BLOCKLIST_ENABLED, false);
   Services.prefs.setBoolPref(PREF_BLOCKLIST_ENABLED, true);
-  await Blocklist._lastUpdate;
+  await jsmInternalObj.BlocklistXML._lastUpdate;
 }
 
 function copyToApp(file) {
