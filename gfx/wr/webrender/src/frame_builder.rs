@@ -15,7 +15,7 @@ use crate::hit_test::{HitTester, HitTestingScene};
 use crate::hit_test::HitTestingSceneStats;
 use crate::internal_types::{FastHashMap, PlaneSplitter};
 use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
-use crate::picture::{RetainedTiles, TileCache, DirtyRegion};
+use crate::picture::{RetainedTiles, TileCache, DirtyRegion, SurfaceRenderTasks};
 use crate::prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
 #[cfg(feature = "replay")]
 use crate::prim_store::{PrimitiveStoreStats};
@@ -29,6 +29,7 @@ use crate::segment::SegmentBuilder;
 use std::{f32, mem};
 use std::sync::Arc;
 use crate::tiling::{Frame, RenderPassKind, RenderTargetContext, RenderTarget};
+use crate::util::MaxRect;
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -444,7 +445,10 @@ impl FrameBuilder {
             .surfaces
             .first_mut()
             .unwrap()
-            .surface = Some(root_render_task_id);
+            .render_tasks = Some(SurfaceRenderTasks {
+                root: root_render_task_id,
+                port: root_render_task_id,
+            });
 
         // Push a default dirty region which culls primitives
         // against the screen world rect, in absence of any
@@ -460,6 +464,7 @@ impl FrameBuilder {
             .pictures[self.root_pic_index.0]
             .take_context(
                 self.root_pic_index,
+                WorldRect::max_rect(),
                 root_spatial_node_index,
                 root_spatial_node_index,
                 ROOT_SURFACE_INDEX,
@@ -491,17 +496,6 @@ impl FrameBuilder {
         );
 
         frame_state.pop_dirty_region();
-
-        let child_tasks = frame_state
-            .surfaces[ROOT_SURFACE_INDEX.0]
-            .take_render_tasks();
-
-        for child_task_id in child_tasks {
-            frame_state.render_tasks.add_dependency(
-                root_render_task_id,
-                child_task_id,
-            );
-        }
 
         Some(root_render_task_id)
     }
