@@ -34,7 +34,6 @@ class nsHttpChunkedDecoder {
 
   nsHttpHeaderArray* TakeTrailers() { return mTrailers.forget(); }
 
-  // How mush data is still missing(needs to arrive) from the current chunk.
   uint32_t GetChunkRemaining() { return mChunkRemaining; }
 
  private:
