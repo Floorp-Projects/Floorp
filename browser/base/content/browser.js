@@ -7255,7 +7255,7 @@ var CanvasPermissionPromptHelper = {
   },
 
   // aSubject is an nsIBrowser (e10s) or an nsIDOMWindow (non-e10s).
-  // aData is an URL string.
+  // aData is an Origin string.
   observe(aSubject, aTopic, aData) {
     if (aTopic != this._permissionsPrompt &&
         aTopic != this._permissionsPromptHideDoorHanger) {
@@ -7270,7 +7270,6 @@ var CanvasPermissionPromptHelper = {
       browser = aSubject;
     }
 
-    let uri = Services.io.newURI(aData);
     if (gBrowser.selectedBrowser !== browser) {
       // Must belong to some other window.
       return;
@@ -7278,17 +7277,21 @@ var CanvasPermissionPromptHelper = {
 
     let message = gNavigatorBundle.getFormattedString("canvas.siteprompt", ["<>"], 1);
 
-    function setCanvasPermission(aURI, aPerm, aPersistent) {
-      Services.perms.add(aURI, "canvas", aPerm,
-                          aPersistent ? Ci.nsIPermissionManager.EXPIRE_NEVER
-                                      : Ci.nsIPermissionManager.EXPIRE_SESSION);
+    let principal = Services.scriptSecurityManager
+                            .createCodebasePrincipalFromOrigin(aData);
+
+    function setCanvasPermission(aPerm, aPersistent) {
+      Services.perms.addFromPrincipal(
+        principal, "canvas", aPerm,
+        aPersistent ? Ci.nsIPermissionManager.EXPIRE_NEVER
+                    : Ci.nsIPermissionManager.EXPIRE_SESSION);
     }
 
     let mainAction = {
       label: gNavigatorBundle.getString("canvas.allow"),
       accessKey: gNavigatorBundle.getString("canvas.allow.accesskey"),
       callback(state) {
-        setCanvasPermission(uri, Ci.nsIPermissionManager.ALLOW_ACTION,
+        setCanvasPermission(Ci.nsIPermissionManager.ALLOW_ACTION,
                             state && state.checkboxChecked);
       },
     };
@@ -7297,7 +7300,7 @@ var CanvasPermissionPromptHelper = {
       label: gNavigatorBundle.getString("canvas.notAllow"),
       accessKey: gNavigatorBundle.getString("canvas.notAllow.accesskey"),
       callback(state) {
-        setCanvasPermission(uri, Ci.nsIPermissionManager.DENY_ACTION,
+        setCanvasPermission(Ci.nsIPermissionManager.DENY_ACTION,
                             state && state.checkboxChecked);
       },
     }];
@@ -7313,7 +7316,7 @@ var CanvasPermissionPromptHelper = {
 
     let options = {
       checkbox,
-      name: uri.asciiHost,
+      name: principal.URI.host,
       learnMoreURL: Services.urlFormatter.formatURLPref("app.support.baseURL") + "fingerprint-permission",
       dismissed: aTopic == this._permissionsPromptHideDoorHanger,
     };

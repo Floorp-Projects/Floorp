@@ -620,9 +620,9 @@ parent:
      * This function is used to notify the parent that it should display a
      * canvas permission prompt.
      *
-     * @param aFirstPartyURI first party of the tab that is requesting access.
+     * @param aOrigin origin string of the document that is requesting access.
      */
-    async ShowCanvasPermissionPrompt(nsCString aFirstPartyURI,
+    async ShowCanvasPermissionPrompt(nsCString aOrigin,
                                      bool aHideDoorHanger);
 
     sync SetSystemFont(nsCString aFontName);
