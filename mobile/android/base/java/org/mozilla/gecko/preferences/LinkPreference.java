@@ -27,9 +27,6 @@ class LinkPreference extends Preference {
         mUrl = url;
     }
 
-    /**
-     * Open Default apps screen of Settings for API Levels>=24. Support URL will open for lower API levels
-     */
     @Override
     protected void onClick() {
         Tabs.getInstance().loadUrlInTab(mUrl);
