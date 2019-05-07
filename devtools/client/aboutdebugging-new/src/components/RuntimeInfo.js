@@ -37,7 +37,7 @@ class RuntimeInfo extends PureComponent {
       },
       dom.img(
         {
-          className: "main-heading__icon runtime-info__icon",
+          className: "main-heading__icon runtime-info__icon qa-runtime-icon",
           src: icon,
         }
       ),
