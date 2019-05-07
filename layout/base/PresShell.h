@@ -1193,13 +1193,20 @@ class PresShell final : public nsStubDocumentObserver,
 
   // Ask APZ in the next transaction to scroll to the given visual viewport
   // offset (relative to the document).
-  // Use this sparingly, as it will clobber JS-driven scrolling that happens
-  // in the same frame. This is mostly intended to be used in special
-  // situations like "first paint" or session restore.
+  // This is intended to be used when desired in cases where the browser
+  // internally triggers scrolling; scrolling triggered explicitly by web
+  // content (such as via window.scrollTo() should scroll the layout viewport
+  // only).
   // If scrolling "far away", i.e. not just within the existing layout
   // viewport, it's recommended to use both nsIScrollableFrame.ScrollTo*()
   // (via window.scrollTo if calling from JS) *and* this function; otherwise,
-  // temporary checkerboarding may result.
+  // temporary checkerboarding may result. If doing this:
+  //   * Be sure to call ScrollTo*() first, as a subsequent layout scroll
+  //     in the same transaction will cancel the pending visual scroll.
+  //   * Keep in mind that ScrollTo*() can tear down the pres shell and
+  //     frame tree. Depending on how the pres shell is obtained for the
+  //     subsequent ScrollToVisual() call, AutoWeakFrame or similar may
+  //     need to be used.
   // Please request APZ review if adding a new call site.
   void ScrollToVisual(const nsPoint& aVisualViewportOffset,
                       FrameMetrics::ScrollOffsetUpdateType aUpdateType,
