@@ -366,7 +366,7 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
-#ifdef NIGHTLY_BUILD
+#ifdef EARLY_BETA_OR_EARLIER
 # define PREF_VALUE  true
 #else
 # define PREF_VALUE  false
