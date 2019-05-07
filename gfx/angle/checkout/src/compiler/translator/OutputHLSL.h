@@ -43,6 +43,7 @@ class OutputHLSL : public TIntermTraverser
                const char *sourcePath,
                ShShaderOutput outputType,
                int numRenderTargets,
+               int maxDualSourceDrawBuffers,
                const std::vector<Uniform> &uniforms,
                ShCompileOptions compileOptions,
                sh::WorkGroupSize workGroupSize,
@@ -207,8 +208,10 @@ class OutputHLSL : public TIntermTraverser
     bool mUsesNestedBreak;
     bool mRequiresIEEEStrictCompiling;
     mutable bool mUseZeroArray;
+    bool mUsesSecondaryColor;
 
     int mNumRenderTargets;
+    int mMaxDualSourceDrawBuffers;
 
     int mUniqueIndex;  // For creating unique names
 
