@@ -1150,23 +1150,20 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * standard SpiderMonkey call state: a boolean success value |ok|, a return
    * value |rv|, and a context |cx| that may or may not have an exception set.
    * If an exception was pending on |cx|, it is cleared (and |ok| is asserted
-   * to be false). On exceptional returns, exnStack will be set to any stack
-   * associated with the original throw, if available.
+   * to be false).
    */
   static void resultToCompletion(JSContext* cx, bool ok, const Value& rv,
                                  ResumeMode* resumeMode,
-                                 MutableHandleValue value,
-                                 MutableHandleSavedFrame exnStack);
+                                 MutableHandleValue value);
 
   /*
    * Set |*result| to a JavaScript completion value corresponding to
    * |resumeMode| and |value|. |value| should be the return value or exception
-   * value, not wrapped as a debuggee value. When throwing an exception,
-   * |exnStack| may be set to the stack when the value was thrown. |cx| must be
-   * in the debugger compartment.
+   * value, not wrapped as a debuggee value. |cx| must be in the debugger
+   * compartment.
    */
   MOZ_MUST_USE bool newCompletionValue(JSContext* cx, ResumeMode resumeMode,
-                                       const Value& value, SavedFrame* exnStack,
+                                       const Value& value,
                                        MutableHandleValue result);
 
   /*
@@ -1414,8 +1411,7 @@ struct OnPopHandler : Handler {
    * specifying how execution should continue.
    */
   virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame,
-                     ResumeMode& resumeMode, MutableHandleValue vp,
-                     HandleSavedFrame exnStack) = 0;
+                     ResumeMode& resumeMode, MutableHandleValue vp) = 0;
 };
 
 class ScriptedOnPopHandler final : public OnPopHandler {
@@ -1425,8 +1421,7 @@ class ScriptedOnPopHandler final : public OnPopHandler {
   virtual void drop() override;
   virtual void trace(JSTracer* tracer) override;
   virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame,
-                     ResumeMode& resumeMode, MutableHandleValue vp,
-                     HandleSavedFrame exnStack) override;
+                     ResumeMode& resumeMode, MutableHandleValue vp) override;
 
  private:
   HeapPtr<JSObject*> object_;
@@ -1477,8 +1472,7 @@ class DebuggerFrame : public NativeObject {
                                 HandleObject bindings,
                                 const EvalOptions& options,
                                 ResumeMode& resumeMode,
-                                MutableHandleValue value,
-                                MutableHandleSavedFrame exnStack);
+                                MutableHandleValue value);
 
   bool isLive() const;
   OnStepHandler* onStepHandler() const;
@@ -1649,8 +1643,7 @@ class DebuggerObject : public NativeObject {
                                            HandleObject bindings,
                                            const EvalOptions& options,
                                            ResumeMode& resumeMode,
-                                           MutableHandleValue value,
-                                           MutableHandleSavedFrame exnStack);
+                                           MutableHandleValue value);
   static MOZ_MUST_USE bool makeDebuggeeValue(JSContext* cx,
                                              HandleDebuggerObject object,
                                              HandleValue value,

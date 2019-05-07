@@ -49,7 +49,6 @@ const webconsoleSpecPrototype = {
       exception: Option(0, "nullable:json"),
       exceptionMessage: Option(0, "nullable:string"),
       exceptionDocURL: Option(0, "nullable:string"),
-      exceptionStack: Option(0, "nullable:json"),
       frame: Option(0, "nullable:json"),
       helperResult: Option(0, "nullable:json"),
       input: Option(0, "nullable:string"),
