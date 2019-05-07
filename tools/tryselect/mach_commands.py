@@ -356,7 +356,7 @@ class TrySelect(MachCommandBase):
 
         The command requires either its own mercurial extension ("push-to-try",
         installable from mach vcs-setup) or a git repo using git-cinnabar
-        (installable from mach vcs-setup --git).
+        (installable from mach vcs-setup).
 
         """
         try:
