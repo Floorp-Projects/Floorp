@@ -260,4 +260,6 @@ interface nsISHistory: nsISupports
 
   [noscript]
   void Reload(in unsigned long aReloadFlags);
+
+  [notxpcom] void EnsureCorrectEntryAtCurrIndex(in nsISHEntry aEntry);
 };

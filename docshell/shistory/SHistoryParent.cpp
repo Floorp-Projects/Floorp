@@ -140,6 +140,12 @@ bool SHistoryParent::RecvRemoveDynEntries(int32_t aIndex,
   return true;
 }
 
+bool SHistoryParent::RecvEnsureCorrectEntryAtCurrIndex(PSHEntryParent* aEntry) {
+  mHistory->EnsureCorrectEntryAtCurrIndex(
+      static_cast<SHEntryParent*>(aEntry)->mEntry);
+  return true;
+}
+
 bool SHistoryParent::RecvRemoveEntries(nsTArray<nsID>&& aIds, int32_t aIndex,
                                        bool* aDidRemove) {
   mHistory->RemoveEntries(aIds, aIndex, aDidRemove);
