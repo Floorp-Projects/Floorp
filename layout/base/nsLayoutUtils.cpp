@@ -1579,16 +1579,6 @@ bool nsLayoutUtils::IsPrimaryStyleFrame(const nsIFrame* aFrame) {
   return aFrame->IsPrimaryFrame();
 }
 
-/* static */
-nsIFrame* nsLayoutUtils::GetRealPrimaryFrameFor(const nsIContent* aContent) {
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-  if (!frame) {
-    return nullptr;
-  }
-
-  return nsPlaceholderFrame::GetRealFrameFor(frame);
-}
-
 nsIFrame* nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
   NS_ASSERTION(aFrame->IsPlaceholderFrame(), "Must have a placeholder here");
   if (aFrame->GetStateBits() & PLACEHOLDER_FOR_FLOAT) {
