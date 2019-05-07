@@ -7900,8 +7900,7 @@ function* runIMEContentObserverTest()
     aElement.value = "";
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
-    // XXX Removing invisible <br> or something? The removed length is a line breaker length longer.
-    checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: getNativeText("ab\ncd\nef\ngh\n").length + kLFLen, addedLength: 0 });
+    checkTextChangeNotification(notifications[0], description, { offset: 0, removedLength: getNativeText("ab\ncd\nef\ngh\n").length, addedLength: 0 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 0, text: "" });
     checkPositionChangeNotification(notifications[2], description);
     ensureToRemovePostPositionChangeNotification(description, 3);

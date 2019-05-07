@@ -6666,34 +6666,27 @@ nsresult HTMLEditRules::NormalizeSelection() {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsINode> startNode = range->GetStartContainer();
-  if (NS_WARN_IF(!startNode)) {
+  EditorDOMPoint startPoint(range->StartRef());
+  if (NS_WARN_IF(!startPoint.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsINode> endNode = range->GetEndContainer();
-  if (NS_WARN_IF(!endNode)) {
+  EditorDOMPoint endPoint(range->EndRef());
+  if (NS_WARN_IF(!endPoint.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-  nsIContent* startChild = range->GetChildAtStartOffset();
-  nsIContent* endChild = range->GetChildAtEndOffset();
-  uint32_t startOffset = range->StartOffset();
-  uint32_t endOffset = range->EndOffset();
 
   // adjusted values default to original values
-  nsCOMPtr<nsINode> newStartNode = startNode;
-  uint32_t newStartOffset = startOffset;
-  nsCOMPtr<nsINode> newEndNode = endNode;
-  uint32_t newEndOffset = endOffset;
+  EditorDOMPoint newStartPoint(startPoint);
+  EditorDOMPoint newEndPoint(endPoint);
 
   // some locals we need for whitespace code
   WSType wsType;
 
   // let the whitespace code do the heavy lifting
-  WSRunObject wsEndObj(&HTMLEditorRef(), endNode,
-                       static_cast<int32_t>(endOffset));
+  WSRunObject wsEndObj(&HTMLEditorRef(), endPoint);
   // Is there any intervening visible whitespace?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
-  wsEndObj.PriorVisibleNode(EditorRawDOMPoint(endNode, endOffset), &wsType);
+  wsEndObj.PriorVisibleNode(endPoint, &wsType);
   if (wsType != WSType::text && wsType != WSType::normalWS) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
@@ -6702,40 +6695,27 @@ nsresult HTMLEditRules::NormalizeSelection() {
       nsINode* child =
           HTMLEditorRef().GetRightmostChild(wsEndObj.mStartReasonNode, true);
       if (child) {
-        int32_t offset = -1;
-        newEndNode = EditorBase::GetNodeLocation(child, &offset);
-        // offset *after* child
-        newEndOffset = static_cast<uint32_t>(offset + 1);
+        newEndPoint.SetAfter(child);
       }
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsEndObj.mStartReason == WSType::thisBlock) {
       // endpoint is just after start of this block
-      EditorRawDOMPoint atEnd(endNode, endChild, endOffset);
-      nsINode* child = HTMLEditorRef().GetPreviousEditableHTMLNode(atEnd);
+      nsINode* child = HTMLEditorRef().GetPreviousEditableHTMLNode(endPoint);
       if (child) {
-        int32_t offset = -1;
-        newEndNode = EditorBase::GetNodeLocation(child, &offset);
-        // offset *after* child
-        newEndOffset = static_cast<uint32_t>(offset + 1);
+        newEndPoint.SetAfter(child);
       }
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsEndObj.mStartReason == WSType::br) {
       // endpoint is just after break.  lets adjust it to before it.
-      int32_t offset = -1;
-      newEndNode =
-          EditorBase::GetNodeLocation(wsEndObj.mStartReasonNode, &offset);
-      newEndOffset = static_cast<uint32_t>(offset);
-      ;
+      newEndPoint.Set(wsEndObj.mStartReasonNode);
     }
   }
 
   // similar dealio for start of range
-  WSRunObject wsStartObj(&HTMLEditorRef(), startNode,
-                         static_cast<int32_t>(startOffset));
+  WSRunObject wsStartObj(&HTMLEditorRef(), startPoint);
   // Is there any intervening visible whitespace?  If so we can't push
   // selection past that, it would visibly change meaning of users selection.
-  wsStartObj.NextVisibleNode(EditorRawDOMPoint(startNode, startOffset),
-                             &wsType);
+  wsStartObj.NextVisibleNode(startPoint, &wsType);
   if (wsType != WSType::text && wsType != WSType::normalWS) {
     // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
@@ -6744,28 +6724,19 @@ nsresult HTMLEditRules::NormalizeSelection() {
       nsINode* child =
           HTMLEditorRef().GetLeftmostChild(wsStartObj.mEndReasonNode, true);
       if (child) {
-        int32_t offset = -1;
-        newStartNode = EditorBase::GetNodeLocation(child, &offset);
-        newStartOffset = static_cast<uint32_t>(offset);
+        newStartPoint.Set(child);
       }
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsStartObj.mEndReason == WSType::thisBlock) {
       // startpoint is just before end of this block
-      nsINode* child = HTMLEditorRef().GetNextEditableHTMLNode(
-          EditorRawDOMPoint(startNode, startChild, startOffset));
+      nsINode* child = HTMLEditorRef().GetNextEditableHTMLNode(startPoint);
       if (child) {
-        int32_t offset = -1;
-        newStartNode = EditorBase::GetNodeLocation(child, &offset);
-        newStartOffset = static_cast<uint32_t>(offset);
+        newStartPoint.Set(child);
       }
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsStartObj.mEndReason == WSType::br) {
       // startpoint is just before a break.  lets adjust it to after it.
-      int32_t offset = -1;
-      newStartNode =
-          EditorBase::GetNodeLocation(wsStartObj.mEndReasonNode, &offset);
-      // offset *after* break
-      newStartOffset = static_cast<uint32_t>(offset + 1);
+      newStartPoint.SetAfter(wsStartObj.mEndReasonNode);
     }
   }
 
@@ -6779,13 +6750,11 @@ nsresult HTMLEditRules::NormalizeSelection() {
   // start, or new start after old end.  If so then just leave things alone.
 
   int16_t comp;
-  comp = nsContentUtils::ComparePoints(startNode, startOffset, newEndNode,
-                                       newEndOffset);
+  comp = nsContentUtils::ComparePoints(startPoint, newEndPoint);
   if (comp == 1) {
     return NS_OK;  // New end before old start.
   }
-  comp = nsContentUtils::ComparePoints(newStartNode, newStartOffset, endNode,
-                                       endOffset);
+  comp = nsContentUtils::ComparePoints(newStartPoint, endPoint);
   if (comp == 1) {
     return NS_OK;  // New start after old end.
   }
@@ -6794,8 +6763,7 @@ nsresult HTMLEditRules::NormalizeSelection() {
   // to start point.  So, we cannot use Selection::SetStartAndEndInLimit() here.
   ErrorResult error;
   MOZ_KnownLive(SelectionRefPtr())
-      ->SetBaseAndExtentInLimiter(*newStartNode, newStartOffset, *newEndNode,
-                                  newEndOffset, error);
+      ->SetBaseAndExtentInLimiter(newStartPoint, newEndPoint, error);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     error.SuppressException();
     return NS_ERROR_EDITOR_DESTROYED;

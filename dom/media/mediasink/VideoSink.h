@@ -67,7 +67,7 @@ class VideoSink : public MediaSink {
   void SetSecondaryVideoContainer(VideoFrameContainer* aSecondary) override;
   void ClearSecondaryVideoContainer() override;
 
-  void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
+  nsCString GetDebugInfo() override;
 
  private:
   virtual ~VideoSink();

@@ -2176,6 +2176,13 @@ LayoutDeviceIntPoint BrowserParent::GetClientOffset() {
           nsLayoutUtils::WidgetToWidgetOffset(widget, docWidget));
 }
 
+void BrowserParent::StopIMEStateManagement() {
+  if (mIsDestroyed) {
+    return;
+  }
+  Unused << SendStopIMEStateManagement();
+}
+
 mozilla::ipc::IPCResult BrowserParent::RecvReplyKeyEvent(
     const WidgetKeyboardEvent& aEvent) {
   NS_ENSURE_TRUE(mFrameElement, IPC_OK());

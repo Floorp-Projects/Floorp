@@ -2448,8 +2448,24 @@ static bool ParseBlockSignature(WasmParseContext& c, AstExprType* type) {
   WasmToken token;
   AstValType vt;
 
-  if (!MaybeParseValType(c, &vt)) {
-    return false;
+  if (c.ts.getIf(WasmToken::OpenParen, &token)) {
+    if (c.ts.getIf(WasmToken::Result)) {
+      if (!ParseValType(c, &vt)) {
+        return false;
+      }
+      if (!c.ts.match(WasmToken::CloseParen, c.error)) {
+        return false;
+      }
+    } else {
+      c.ts.unget(token);
+      if (!MaybeParseValType(c, &vt)) {
+        return false;
+      }
+    }
+  } else {
+    if (!MaybeParseValType(c, &vt)) {
+      return false;
+    }
   }
 
   if (vt.isValid()) {

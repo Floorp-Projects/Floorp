@@ -188,9 +188,13 @@ void ProxyObject::nuke() {
       return cx->alreadyReportedOOM();
     }
 
-    MOZ_ASSERT(group->realm() == realm);
     realm->newProxyCache.add(group, shape);
   }
+
+  MOZ_ASSERT(group->realm() == realm);
+  MOZ_ASSERT(shape->zone() == cx->zone());
+  MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(group.address()));
+  MOZ_ASSERT(!IsAboutToBeFinalizedUnbarriered(shape.address()));
 
   gc::InitialHeap heap = GetInitialHeap(newKind, group);
   debugCheckNewObject(group, shape, allocKind, heap);

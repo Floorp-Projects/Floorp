@@ -652,7 +652,7 @@ input:-moz-focusring {
 }
 
 #device-form label > .viewport-dimension {
-  color: var(--theme-text-color-inactive);
+  color: var(--theme-body-color);
   display: flex;
   align-items: center;
 }
@@ -662,7 +662,7 @@ input:-moz-focusring {
   border: 1px solid;
   border-radius: 2px;
   text-align: center;
-  color: var(--theme-text-color-inactive);
+  color: var(--theme-body-color);
   transition: all 0.25s ease;
 }
 

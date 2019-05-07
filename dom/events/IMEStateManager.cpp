@@ -201,7 +201,7 @@ void IMEStateManager::OnFocusMovedBetweenBrowsers(BrowserParent* aBlur,
             ("  OnFocusMovedBetweenBrowsers(), notifying previous "
              "focused child process of parent process or another child process "
              "getting focus"));
-    Unused << aBlur->SendStopIMEStateManagement();
+    aBlur->StopIMEStateManagement();
   }
 
   if (sActiveIMEContentObserver) {

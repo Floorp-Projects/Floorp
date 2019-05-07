@@ -9,6 +9,8 @@ const oneOffsContainer = searchPopup.searchOneOffsContainer;
 
 add_task(async function test_setup() {
   await gCUITestUtils.addSearchBar();
+
+  await Services.search.init();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();
   });

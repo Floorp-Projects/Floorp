@@ -241,7 +241,7 @@ void DecodedStreamTrackListener::NotifyEnded() {
  * replaying after the input as ended. In the latter case, the new source is
  * not connected to streams created by captureStreamUntilEnded.
  */
-class DecodedStreamData final {
+class DecodedStreamData {
  public:
   DecodedStreamData(
       OutputStreamManager* aOutputStreamManager, PlaybackInfoInit&& aInit,
@@ -251,7 +251,7 @@ class DecodedStreamData final {
   ~DecodedStreamData();
   MediaEventSource<int64_t>& OnOutput();
   void Forget();
-  void GetDebugInfo(dom::DecodedStreamDataDebugInfo& aInfo);
+  nsCString GetDebugInfo();
 
   void WriteVideoToSegment(layers::Image* aImage, const TimeUnit& aStart,
                            const TimeUnit& aEnd,
@@ -337,19 +337,20 @@ MediaEventSource<int64_t>& DecodedStreamData::OnOutput() {
 
 void DecodedStreamData::Forget() { mListener->Forget(); }
 
-void DecodedStreamData::GetDebugInfo(dom::DecodedStreamDataDebugInfo& aInfo) {
-  aInfo.mInstance = NS_ConvertUTF8toUTF16(nsPrintfCString("%p", this));
-  aInfo.mAudioFramesWritten = mAudioFramesWritten;
-  aInfo.mStreamAudioWritten = mStreamAudioWritten;
-  aInfo.mNextAudioTime = mNextAudioTime.ToMicroseconds();
-  aInfo.mLastVideoStartTime =
+nsCString DecodedStreamData::GetDebugInfo() {
+  return nsPrintfCString(
+      "DecodedStreamData=%p mAudioFramesWritten=%" PRId64
+      " mStreamAudioWritten=%" PRId64 " mStreamVideoWritten=%" PRId64
+      " mNextAudioTime=%" PRId64 " mLastVideoStartTime=%" PRId64
+      " mLastVideoEndTime=%" PRId64
+      " mHaveSentFinishAudio=%d mHaveSentFinishVideo=%d",
+      this, mAudioFramesWritten, mStreamAudioWritten, mStreamVideoWritten,
+      mNextAudioTime.ToMicroseconds(),
       mLastVideoStartTime.valueOr(TimeUnit::FromMicroseconds(-1))
-          .ToMicroseconds();
-  aInfo.mLastVideoEndTime =
+          .ToMicroseconds(),
       mLastVideoEndTime.valueOr(TimeUnit::FromMicroseconds(-1))
-          .ToMicroseconds();
-  aInfo.mHaveSentFinishAudio = mHaveSentFinishAudio;
-  aInfo.mHaveSentFinishVideo = mHaveSentFinishVideo;
+          .ToMicroseconds(),
+      mHaveSentFinishAudio, mHaveSentFinishVideo);
 }
 
 DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
@@ -953,15 +954,18 @@ void DecodedStream::DisconnectListener() {
   mVideoFinishListener.Disconnect();
 }
 
-void DecodedStream::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
+nsCString DecodedStream::GetDebugInfo() {
   AssertOwnerThread();
   int64_t startTime = mStartTime.isSome() ? mStartTime->ToMicroseconds() : -1;
-  aInfo.mDecodedStream.mInstance =
-      NS_ConvertUTF8toUTF16(nsPrintfCString("%p", this));
-  aInfo.mDecodedStream.mStartTime = startTime;
-  aInfo.mDecodedStream.mLastOutputTime = mLastOutputTime.ToMicroseconds();
-  aInfo.mDecodedStream.mPlaying = mPlaying.Ref();
-  mData->GetDebugInfo(aInfo.mDecodedStream.mData);
+  auto str =
+      nsPrintfCString("DecodedStream=%p mStartTime=%" PRId64
+                      " mLastOutputTime=%" PRId64 " mPlaying=%d mData=%p",
+                      this, startTime, mLastOutputTime.ToMicroseconds(),
+                      mPlaying.Ref(), mData.get());
+  if (mData) {
+    AppendStringIfNotEmpty(str, mData->GetDebugInfo());
+  }
+  return std::move(str);
 }
 
 }  // namespace mozilla

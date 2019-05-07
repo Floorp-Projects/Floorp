@@ -22,7 +22,6 @@
 #  include "nsAutoPtr.h"
 #  include "PDMFactory.h"
 #  include "SeekTarget.h"
-#  include "mozilla/dom/MediaDebugInfoBinding.h"
 
 namespace mozilla {
 
@@ -179,9 +178,9 @@ class MediaFormatReader final
 
   RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy);
 
-  // Returns a MediaDebugInfo structure
+  // Returns a string describing the state of the decoder data.
   // Used for debugging purposes.
-  void GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo);
+  void GetMozDebugReaderData(nsACString& aString);
 
   // Switch the video decoder to NullDecoderModule. It might takes effective
   // since a few samples later depends on how much demuxed samples are already

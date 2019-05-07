@@ -5,11 +5,14 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
+const Services = require("Services");
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+loader.lazyRequireGetter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm", true);
 
 const {Toolbox} = require("devtools/client/framework/toolbox");
-
 const {gDevTools} = require("devtools/client/framework/devtools");
+
+const { PREFERENCES } = require("../constants");
 
 let addonToolbox = null;
 
@@ -85,6 +88,17 @@ exports.openTemporaryExtension = function(win, message) {
   return new Promise(resolve => {
     const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(win, message, Ci.nsIFilePicker.modeOpen);
+
+    // Try to set the last directory used as "displayDirectory".
+    try {
+      const lastDirPath =
+        Services.prefs.getCharPref(PREFERENCES.TEMPORARY_EXTENSION_PATH, "");
+      const lastDir = new FileUtils.File(lastDirPath);
+      fp.displayDirectory = lastDir;
+    } catch (e) {
+      // Empty or invalid value, nothing to handle.
+    }
+
     fp.open(res => {
       if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
         return;
@@ -96,6 +110,9 @@ exports.openTemporaryExtension = function(win, message) {
           !file.leafName.endsWith(".xpi") && !file.leafName.endsWith(".zip")) {
         file = file.parent;
       }
+
+      // We are about to resolve, store the path to the file for the next call.
+      Services.prefs.setCharPref(PREFERENCES.TEMPORARY_EXTENSION_PATH, file.path);
 
       resolve(file);
     });
