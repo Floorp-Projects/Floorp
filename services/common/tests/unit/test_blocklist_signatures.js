@@ -8,7 +8,6 @@ const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptak
 
 let server;
 
-const PREF_SETTINGS_VERIFY_SIGNATURE   = "services.settings.verify_signature";
 const PREF_SETTINGS_SERVER             = "services.settings.server";
 const PREF_SIGNATURE_ROOT              = "security.content.signature.root_hash";
 
@@ -591,10 +590,8 @@ add_task(async function test_check_signatures() {
 });
 
 function run_test() {
-  OneCRLBlocklistClient = BlocklistClients.initialize().OneCRLBlocklistClient;
-
-  // ensure signatures are enforced
-  Services.prefs.setBoolPref(PREF_SETTINGS_VERIFY_SIGNATURE, true);
+  // Signature verification is evabled by default.
+  ({OneCRLBlocklistClient} = BlocklistClients.initialize());
 
   // get a signature verifier to ensure nsNSSComponent is initialized
   Cc["@mozilla.org/security/contentsignatureverifier;1"]

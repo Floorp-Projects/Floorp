@@ -15,6 +15,7 @@ let remoteSecSetting;
 if (AppConstants.MOZ_NEW_CERT_STORAGE) {
   const {RemoteSecuritySettings} = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
   remoteSecSetting = new RemoteSecuritySettings();
+  remoteSecSetting.client.verifySignature = false;
 }
 
 let server;
@@ -89,7 +90,6 @@ function setupKintoPreloadServer(certGenerator, options = {
 }) {
   const dummyServerURL = `http://localhost:${server.identity.primaryPort}/v1`;
   Services.prefs.setCharPref("services.settings.server", dummyServerURL);
-  Services.prefs.setBoolPref("services.settings.verify_signature", false);
 
   const configPath = "/v1/";
   const recordsPath = "/v1/buckets/security-state/collections/intermediates/records";
