@@ -1,17 +1,6 @@
-const { Constructor: CC } = Components;
-
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-
-const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
-const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", null);
-
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-  "nsIBinaryInputStream", "setInputStream");
+const BlocklistGlobal = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
 
 const IS_ANDROID = AppConstants.platform == "android";
-
 
 let gBlocklistClients;
 let server;
@@ -29,6 +18,8 @@ async function clear_state() {
 
 
 function run_test() {
+  AddonTestUtils.createAppInfo("XPCShell", "xpcshell@tests.mozilla.org", "1", "");
+
   // Set up an HTTP Server
   server = new HttpServer();
   server.start(-1);
@@ -47,14 +38,15 @@ function run_test() {
   Services.prefs.setBoolPref("security.remote_settings.intermediates.enabled", false);
 
   // This will initialize the remote settings clients for blocklists.
-  BlocklistClients.initialize();
+  BlocklistGlobal.ExtensionBlocklistRS._ensureInitialized();
+  BlocklistGlobal.PluginBlocklistRS._ensureInitialized();
+  BlocklistGlobal.GfxBlocklistRS._ensureInitialized();
 
-  // FIXME: once all the clients are migrated to Blocklist.jsm, we should move
-  // the test there, too. This note is here so I don't forget.
+
   gBlocklistClients = [
-    {client: BlocklistClients.AddonBlocklistClient, testData: ["i808", "i720", "i539"]},
-    {client: BlocklistClients.PluginBlocklistClient, testData: ["p1044", "p32", "p28"]},
-    {client: BlocklistClients.GfxBlocklistClient, testData: ["g204", "g200", "g36"]},
+    {client: BlocklistGlobal.ExtensionBlocklistRS._client, testData: ["i808", "i720", "i539"]},
+    {client: BlocklistGlobal.PluginBlocklistRS._client, testData: ["p1044", "p32", "p28"]},
+    {client: BlocklistGlobal.GfxBlocklistRS._client, testData: ["g204", "g200", "g36"]},
   ];
 
   // Setup server fake responses.
@@ -92,18 +84,17 @@ function run_test() {
   server.registerPathHandler(pluginsRecordsPath, handleResponse);
 
 
-  run_next_test();
-
   registerCleanupFunction(function() {
     server.stop(() => { });
   });
+  promiseStartupManager().then(run_next_test);
 }
 
 add_task(async function test_initial_dump_is_loaded_as_synced_when_collection_is_empty() {
   const november2016 = 1480000000000;
 
   for (let {client} of gBlocklistClients) {
-    if (IS_ANDROID && client.collectionName != BlocklistClients.AddonBlocklistClient.collectionName) {
+    if (IS_ANDROID && client.collectionName != BlocklistGlobal.ExtensionBlocklistRS._client.collectionName) {
       // On Android we don't ship the dumps of plugins and gfx.
       continue;
     }
@@ -125,7 +116,7 @@ add_task(clear_state);
 
 add_task(async function test_initial_dump_is_loaded_when_using_get_on_empty_collection() {
   for (let {client} of gBlocklistClients) {
-    if (IS_ANDROID && client.collectionName != BlocklistClients.AddonBlocklistClient.collectionName) {
+    if (IS_ANDROID && client.collectionName != BlocklistGlobal.ExtensionBlocklistRS._client.collectionName) {
       // On Android we don't ship the dumps of plugins and gfx.
       continue;
     }
@@ -266,15 +257,17 @@ add_task(async function test_bucketname_changes_when_bucket_pref_changes() {
   for (const { client } of gBlocklistClients) {
     equal(client.bucketName, "blocklists");
   }
-  equal(BlocklistClients.PinningBlocklistClient.bucketName, "pinning");
+  equal(BlocklistGlobal.ExtensionBlocklistRS._client.bucketName, "addons");
 
   Services.prefs.setCharPref("services.blocklist.bucket", "blocklists-preview");
-  Services.prefs.setCharPref("services.blocklist.pinning.bucket", "pinning-preview");
+  Services.prefs.setCharPref("services.blocklist.addons.bucket", "addons-preview");
 
   for (const { client } of gBlocklistClients) {
     equal(client.bucketName, "blocklists-preview", client.identifier);
   }
-  equal(BlocklistClients.PinningBlocklistClient.bucketName, "pinning-preview");
+  equal(BlocklistGlobal.ExtensionBlocklistRS._client.bucketName, "addons-preview");
+  Services.prefs.clearUserPref("services.blocklist.bucket");
+  Services.prefs.clearUserPref("services.blocklist.addons.bucket");
 });
 add_task(clear_state);
 
