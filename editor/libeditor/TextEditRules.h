@@ -284,13 +284,12 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
   /**
    * Creates a trailing break in the text doc if there is not one already.
    */
-  MOZ_MUST_USE nsresult CreateTrailingBRIfNeeded();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateTrailingBRIfNeeded();
 
   /**
    * Creates a bogus <br> node if the root element has no editable content.
    */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult CreateBogusNodeIfNeeded();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateBogusNodeIfNeeded();
 
   /**
    * Returns a truncated insertion string if insertion would place us over
@@ -314,8 +313,8 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    *                        if couldn't create new <br> element.
    */
   template <typename PT, typename CT>
-  CreateElementResult CreateBR(
-      const EditorDOMPointBase<PT, CT>& aPointToInsert) {
+  MOZ_CAN_RUN_SCRIPT CreateElementResult
+  CreateBR(const EditorDOMPointBase<PT, CT>& aPointToInsert) {
     CreateElementResult ret = CreateBRInternal(aPointToInsert, false);
 #ifdef DEBUG
     // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
@@ -335,8 +334,8 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    *                        if couldn't create new <br> element.
    */
   template <typename PT, typename CT>
-  CreateElementResult CreateMozBR(
-      const EditorDOMPointBase<PT, CT>& aPointToInsert) {
+  MOZ_CAN_RUN_SCRIPT CreateElementResult
+  CreateMozBR(const EditorDOMPointBase<PT, CT>& aPointToInsert) {
     CreateElementResult ret = CreateBRInternal(aPointToInsert, true);
 #ifdef DEBUG
     // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
@@ -393,7 +392,7 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    *                            If it succeeded, never returns nullptr.
    */
   template <typename PT, typename CT>
-  CreateElementResult CreateBRInternal(
+  MOZ_CAN_RUN_SCRIPT CreateElementResult CreateBRInternal(
       const EditorDOMPointBase<PT, CT>& aPointToInsert, bool aCreateMozBR);
 
  protected:

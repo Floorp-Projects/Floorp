@@ -240,7 +240,8 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
   }
 
   RefPtr<Element> newBrElement =
-      mHTMLEditor->InsertBrElementWithTransaction(pointToInsert, aSelect);
+      MOZ_KnownLive(mHTMLEditor)
+          ->InsertBrElementWithTransaction(pointToInsert, aSelect);
   if (NS_WARN_IF(!newBrElement)) {
     return nullptr;
   }

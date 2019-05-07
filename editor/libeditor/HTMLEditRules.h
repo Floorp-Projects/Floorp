@@ -122,6 +122,7 @@ class HTMLEditRules : public TextEditRules {
    *
    * @param aNode               The node which may be inserted <br> elements.
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult MakeSureElemStartsAndEndsOnCR(nsINode& aNode);
 
   void DidCreateNode(Element& aNewElement);
@@ -262,7 +263,7 @@ class HTMLEditRules : public TextEditRules {
    * not be spastic.  If so, it inserts one.  Callers responsibility to only
    * call with collapsed selection.
    */
-  MOZ_MUST_USE nsresult InsertBRIfNeeded();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertBRIfNeeded();
 
   /**
    * CanContainParagraph() returns true if aElement can have a <p> element as
@@ -274,7 +275,7 @@ class HTMLEditRules : public TextEditRules {
    * Insert normal <br> element into aNode when aNode is a block and it has
    * no children.
    */
-  MOZ_MUST_USE nsresult InsertBRIfNeeded(nsINode& aNode) {
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertBRIfNeeded(nsINode& aNode) {
     return InsertBRIfNeededInternal(aNode, false);
   }
 
@@ -282,7 +283,7 @@ class HTMLEditRules : public TextEditRules {
    * Insert moz-<br> element (<br type="_moz">) into aNode when aNode is a
    * block and it has no children.
    */
-  MOZ_MUST_USE nsresult InsertMozBRIfNeeded(nsINode& aNode) {
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertMozBRIfNeeded(nsINode& aNode) {
     return InsertBRIfNeededInternal(aNode, true);
   }
 
@@ -296,6 +297,7 @@ class HTMLEditRules : public TextEditRules {
    *                        Otherwise, i.e., this should insert a normal <br>
    *                        element, false.
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult InsertBRIfNeededInternal(nsINode& aNode,
                                                  bool aInsertMozBR);
 
@@ -540,7 +542,7 @@ class HTMLEditRules : public TextEditRules {
    * contents.  This method inserts moz-<br> element if start container of
    * Selection needs it.
    */
-  MOZ_MUST_USE nsresult DidMakeBasicBlock();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidMakeBasicBlock();
 
   /**
    * Called before changing an element to absolute positioned.
@@ -783,6 +785,7 @@ class HTMLEditRules : public TextEditRules {
    * @param aStartOfMiddleElement   Start node of middle block element.
    * @param aEndOfMiddleElement     End node of middle block element.
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE SplitRangeOffFromNodeResult SplitRangeOffFromBlock(
       Element& aBlockElement, nsIContent& aStartOfMiddleElement,
       nsIContent& aEndOfMiddleElement);
@@ -990,6 +993,7 @@ class HTMLEditRules : public TextEditRules {
    *                            Will be modified to split point if they're
    *                            split.
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult BustUpInlinesAtRangeEndpoints(RangeItem& aRangeItem);
 
   /**
@@ -1084,7 +1088,8 @@ class HTMLEditRules : public TextEditRules {
    *                                    the point to insert the element.
    */
   template <typename PT, typename CT>
-  MOZ_MUST_USE SplitNodeResult MaybeSplitAncestorsForInsertWithTransaction(
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE SplitNodeResult
+  MaybeSplitAncestorsForInsertWithTransaction(
       nsAtom& aTag, const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode);
 
   /**
@@ -1169,7 +1174,7 @@ class HTMLEditRules : public TextEditRules {
    * InsertBRElementToEmptyListItemsAndTableCellsInChangedRange() inserts
    * <br> element into empty list item or table cell elements.
    */
-  MOZ_MUST_USE nsresult
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   InsertBRElementToEmptyListItemsAndTableCellsInChangedRange();
 
   /**
@@ -1187,7 +1192,8 @@ class HTMLEditRules : public TextEditRules {
    *
    * @param aAction     Maybe used to look for a good point to put caret.
    */
-  MOZ_MUST_USE nsresult AdjustSelection(nsIEditor::EDirection aAction);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  AdjustSelection(nsIEditor::EDirection aAction);
 
   /**
    * FindNearEditableNode() tries to find an editable node near aPoint.
@@ -1278,6 +1284,7 @@ class HTMLEditRules : public TextEditRules {
    * @param aStarts             true for trying to insert <br> to the start.
    *                            false for trying to insert <br> to the end.
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult MakeSureElemStartsOrEndsOnCR(nsINode& aNode,
                                                      bool aStarts);
 

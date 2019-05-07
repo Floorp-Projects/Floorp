@@ -1780,7 +1780,8 @@ CreateElementResult TextEditRules::CreateBRInternal(
   }
 
   RefPtr<Element> brElement =
-      TextEditorRef().InsertBrElementWithTransaction(aPointToInsert);
+      MOZ_KnownLive(TextEditorRef())
+          .InsertBrElementWithTransaction(aPointToInsert);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
   }

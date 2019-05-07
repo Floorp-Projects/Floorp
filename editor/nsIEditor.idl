@@ -419,6 +419,7 @@ interface nsIEditor  : nsISupports
    * @param aNewLeftNode         [OUT] the new node resulting from the split,
    *                             becomes aExistingRightNode's previous sibling.
    */
+  [can_run_script]
   void splitNode(in Node existingRightNode,
                  in long offset,
                  out Node newLeftNode);

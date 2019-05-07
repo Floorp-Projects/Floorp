@@ -1072,7 +1072,7 @@ class EditorBase : public nsIEditor,
    *                            error.
    */
   template <typename PT, typename CT>
-  already_AddRefed<nsIContent> SplitNodeWithTransaction(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<nsIContent> SplitNodeWithTransaction(
       const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
       ErrorResult& aResult);
 
@@ -1386,7 +1386,7 @@ class EditorBase : public nsIEditor,
    *                                    caller want to do it.
    */
   template <typename PT, typename CT>
-  SplitNodeResult SplitNodeDeepWithTransaction(
+  MOZ_CAN_RUN_SCRIPT SplitNodeResult SplitNodeDeepWithTransaction(
       nsIContent& aMostAncestorToSplit,
       const EditorDOMPointBase<PT, CT>& aDeepestStartOfRightNode,
       SplitAtEdges aSplitAtEdges);

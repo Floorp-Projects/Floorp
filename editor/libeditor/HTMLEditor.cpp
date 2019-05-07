@@ -1692,8 +1692,9 @@ EditorDOMPoint HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
   if (pointToInsert != aPointToInsert) {
     // We need to split some levels above the original selection parent.
     MOZ_ASSERT(pointToInsert.GetChild());
-    SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
-        *pointToInsert.GetChild(), aPointToInsert, aSplitAtEdges);
+    SplitNodeResult splitNodeResult =
+        SplitNodeDeepWithTransaction(MOZ_KnownLive(*pointToInsert.GetChild()),
+                                     aPointToInsert, aSplitAtEdges);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return EditorDOMPoint();
     }
@@ -2139,7 +2140,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList,
     if (pointToInsertList.GetContainer() != atStartOfSelection.GetContainer()) {
       // We need to split up to the child of parent.
       SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
-          *pointToInsertList.GetChild(), atStartOfSelection,
+          MOZ_KnownLive(*pointToInsertList.GetChild()), atStartOfSelection,
           SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
@@ -2316,7 +2317,7 @@ nsresult HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName) {
         atStartOfSelection.GetContainer()) {
       // We need to split up to the child of the point to insert a block.
       SplitNodeResult splitBlockResult = SplitNodeDeepWithTransaction(
-          *pointToInsertBlock.GetChild(), atStartOfSelection,
+          MOZ_KnownLive(*pointToInsertBlock.GetChild()), atStartOfSelection,
           SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitBlockResult.Failed())) {
         return splitBlockResult.Rv();
@@ -2457,8 +2458,8 @@ nsresult HTMLEditor::IndentOrOutdentAsSubAction(
         atStartOfSelection.GetContainer()) {
       // We need to split up to the child of parent.
       SplitNodeResult splitBlockquoteResult = SplitNodeDeepWithTransaction(
-          *pointToInsertBlockquote.GetChild(), atStartOfSelection,
-          SplitAtEdges::eAllowToCreateEmptyContainer);
+          MOZ_KnownLive(*pointToInsertBlockquote.GetChild()),
+          atStartOfSelection, SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitBlockquoteResult.Failed())) {
         return splitBlockquoteResult.Rv();
       }
