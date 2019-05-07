@@ -9627,21 +9627,21 @@
   },
   "MEDIA_RECORDER_RECORDING_DURATION": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "68",
+    "alert_emails": ["bvandyk@mozilla.com", "nohlmeier@mozilla.com"],
+    "expires_in_version": "72",
     "kind": "exponential",
     "high": 3600,
     "n_buckets": 100,
-    "bug_numbers": [1400757],
+    "bug_numbers": [1400757, 1429765, 1480589, 1532391],
     "description": "The length of time (in seconds) that a recording lasted. Recorded when a recorder stops"
   },
   "MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "68",
+    "alert_emails": ["bvandyk@mozilla.com", "nohlmeier@mozilla.com"],
+    "expires_in_version": "72",
     "kind": "enumerated",
     "n_values": 4,
-    "bug_numbers": [1400757],
+    "bug_numbers": [1400757, 1429765, 1480589, 1532391],
     "description": "Records the type of timeout that happened while attempting to init the encoder. Audio = 0, Video = 1. Recorded immediately following a timeout"
   },
   "DEVTOOLS_ENTRY_POINT": {
