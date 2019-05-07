@@ -1880,7 +1880,6 @@ pref("network.http.tcp_keepalive.long_lived_idle_time", 600);
 
 pref("network.http.enforce-framing.http1", false); // should be named "strict"
 pref("network.http.enforce-framing.soft", true);
-pref("network.http.enforce-framing.strict_chunked_encoding", true);
 
 // Max size, in bytes, for received HTTP response header.
 pref("network.http.max_response_header_size", 393216);
