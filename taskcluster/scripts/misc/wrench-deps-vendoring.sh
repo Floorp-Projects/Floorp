@@ -13,7 +13,7 @@ UPLOAD_DIR=$HOME/artifacts
 cd $WORKSPACE
 . $SRCDIR/taskcluster/scripts/misc/tooltool-download.sh
 export PATH=$PATH:$SRCDIR/rustc/bin
-cargo install --version 0.1.21 cargo-vendor
+cargo install --version 0.1.23 cargo-vendor
 cd $SRCDIR/gfx/wr/
 mkdir .cargo
 cargo vendor --relative-path --sync ./Cargo.lock > .cargo/config
