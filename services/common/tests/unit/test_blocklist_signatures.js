@@ -3,7 +3,7 @@
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", null);
+const { BlocklistClients } = ChromeUtils.import("resource://services-common/blocklist-clients.js");
 const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js");
 
 let server;
@@ -55,12 +55,12 @@ async function checkRecordCount(client, count) {
   Assert.equal(count, records.length);
 }
 
+let OneCRLBlocklistClient;
+
 // Check to ensure maybeSync is called with correct values when a changes
 // document contains information on when a collection was last modified
 add_task(async function test_check_signatures() {
   const port = server.identity.primaryPort;
-
-  const OneCRLBlocklistClient = BlocklistClients.OneCRLBlocklistClient;
 
   // Telemetry reports.
   const TELEMETRY_HISTOGRAM_KEY = OneCRLBlocklistClient.identifier;
@@ -591,7 +591,7 @@ add_task(async function test_check_signatures() {
 });
 
 function run_test() {
-  BlocklistClients.initialize();
+  OneCRLBlocklistClient = BlocklistClients.initialize().OneCRLBlocklistClient;
 
   // ensure signatures are enforced
   Services.prefs.setBoolPref(PREF_SETTINGS_VERIFY_SIGNATURE, true);

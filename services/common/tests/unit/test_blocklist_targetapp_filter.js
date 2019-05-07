@@ -1,4 +1,4 @@
-const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", null);
+const { BlocklistClients } = ChromeUtils.import("resource://services-common/blocklist-clients.js");
 const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
 
 const APP_ID = "xpcshell@tests.mozilla.org";

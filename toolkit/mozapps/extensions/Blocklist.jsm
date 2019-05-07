@@ -19,16 +19,23 @@ ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
                                "resource://gre/modules/AddonManager.jsm");
+// The remote settings updater is the new system in charge of fetching remote data
+// securely and efficiently. It will replace the current XML-based system.
+// See Bug 1257565 and Bug 1252456.
+ChromeUtils.defineModuleGetter(this, "BlocklistClients",
+                               "resource://services-common/blocklist-clients.js");
 ChromeUtils.defineModuleGetter(this, "CertUtils",
                                "resource://gre/modules/CertUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateUtils",
-                               "resource://gre/modules/UpdateUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "RemoteSettings",
+                               "resource://services-settings/remote-settings.js");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
                                "resource://gre/modules/ServiceRequest.jsm");
+ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+                               "resource://gre/modules/UpdateUtils.jsm");
 
   /**
 #    The blocklist XML file looks something like this:
@@ -89,13 +96,6 @@ ChromeUtils.defineModuleGetter(this, "ServiceRequest",
 #    </blocklist>
    */
 
-// The remote settings updater is the new system in charge of fetching remote data
-// securely and efficiently. It will replace the current XML-based system.
-// See Bug 1257565 and Bug 1252456.
-const BlocklistClients = {};
-ChromeUtils.defineModuleGetter(BlocklistClients, "initialize",
-                               "resource://services-common/blocklist-clients.js");
-
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_APPDIR                      = "XCurProcD";
@@ -122,6 +122,139 @@ const SEVERITY_OUTDATED               = 0;
 const VULNERABILITYSTATUS_NONE             = 0;
 const VULNERABILITYSTATUS_UPDATE_AVAILABLE = 1;
 const VULNERABILITYSTATUS_NO_UPDATE        = 2;
+
+// Kinto blocklist constants
+const PREF_BLOCKLIST_BUCKET                  = "services.blocklist.bucket";
+const PREF_BLOCKLIST_GFX_COLLECTION          = "services.blocklist.gfx.collection";
+const PREF_BLOCKLIST_GFX_CHECKED_SECONDS     = "services.blocklist.gfx.checked";
+const PREF_BLOCKLIST_GFX_SIGNER              = "services.blocklist.gfx.signer";
+
+/**
+ * The Graphics blocklist implementation. The JSON objects for graphics blocks look
+ * something like:
+ *
+ * {
+ *  "blockID": "g35",
+ *  "os": "WINNT 6.1",
+ *  "vendor": "0xabcd",
+ *  "devices": [
+ *    "0x2783",
+ *    "0x1234",
+ *  ],
+ *  "feature": " DIRECT2D ",
+ *  "featureStatus": " BLOCKED_DRIVER_VERSION ",
+ *  "driverVersion": " 8.52.322.2202 ",
+ *  "driverVersionComparator": " LESS_THAN ",
+ *  "versionRange": {"minVersion": "5.0", "maxVersion: "25.0"},
+ * }
+ *
+ * The RemoteSetttings client takes care of filtering out versions that don't apply.
+ * The code here stores entries in memory and sends them to the gfx component in
+ * serialized text form, using ',', '\t' and '\n' as separators.
+ *
+ * Note: we assign to the global to allow tests to reach the object directly.
+ */
+this.GfxBlocklistRS = {
+  _ensureInitialized() {
+    if (this._initialized || !gBlocklistEnabled) {
+      return;
+    }
+    this._initialized = true;
+    this._client = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION), {
+      bucketNamePref: PREF_BLOCKLIST_BUCKET,
+      lastCheckTimePref: PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
+      signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_SIGNER),
+      filterFunc: BlocklistClients.targetAppFilter,
+    });
+    this.checkForEntries = this.checkForEntries.bind(this);
+    this._client.on("sync", this.checkForEntries);
+  },
+
+  shutdown() {
+    if (this._client) {
+      this._client.off("sync", this.checkForEntries);
+    }
+  },
+
+  async checkForEntries() {
+    this._ensureInitialized();
+    if (!gBlocklistEnabled) {
+      return []; // return value expected by tests.
+    }
+    let entries = await this._client.get();
+    // Trim helper (spaces, tabs, no-break spaces..)
+    const trim = (s) => (s || "").replace(/(^[\s\uFEFF\xA0]+)|([\s\uFEFF\xA0]+$)/g, "");
+
+    entries = entries.map(entry => {
+      let props = [
+        "blockID", "driverVersion", "driverVersionMax", "driverVersionComparator",
+        "feature", "featureStatus", "os", "vendor", "devices",
+      ];
+      let rv = {};
+      for (let p of props) {
+        let val = entry[p];
+        // Ignore falsy values or empty arrays.
+        if (!val || (Array.isArray(val) && !val.length)) {
+          continue;
+        }
+        if (typeof val == "string") {
+          val = trim(val);
+        } else if (p == "devices") {
+          let invalidDevices = [];
+          let validDevices = [];
+          // We serialize the array of devices as a comma-separated string, so
+          // we need to ensure that none of the entries contain commas, also in
+          // the future.
+          val.forEach(v => v.includes(",") ? invalidDevices.push(v) : validDevices.push(v));
+          for (let dev of invalidDevices) {
+            const e = new Error(`Block ${entry.blockID} contains unsupported device: ${dev}`);
+            Cu.reportError(e);
+          }
+          if (!validDevices) {
+            continue;
+          }
+          val = validDevices;
+        }
+        rv[p] = val;
+      }
+      if (entry.versionRange) {
+        rv.versionRange = {
+          minVersion: trim(entry.versionRange.minVersion) || "0",
+          maxVersion: trim(entry.versionRange.maxVersion) || "*",
+        };
+      }
+      return rv;
+    });
+    if (entries.length) {
+      let sortedProps = [
+        "blockID", "devices", "driverVersion", "driverVersionComparator", "driverVersionMax",
+        "feature", "featureStatus", "hardware", "manufacturer", "model", "os", "osversion",
+        "product", "vendor", "versionRange",
+      ];
+      // Notify `GfxInfoBase`, by passing a string serialization.
+      let payload = [];
+      for (let gfxEntry of entries) {
+        let entryLines = [];
+        for (let key of sortedProps) {
+          if (gfxEntry[key]) {
+            let value = gfxEntry[key];
+            if (Array.isArray(value)) {
+              value = value.join(",");
+            } else if (value.maxVersion) {
+              // Both minVersion and maxVersion are always set on each entry.
+              value = value.minVersion + "," + value.maxVersion;
+            }
+            entryLines.push(key + ":" + value);
+          }
+        }
+        payload.push(entryLines.join("\t"));
+      }
+      Services.obs.notifyObservers(null, "blocklist-data-gfxItems", payload.join("\n"));
+    }
+    // The return value is only used by tests.
+    return entries;
+  },
+};
 
 const EXTENSION_BLOCK_FILTERS = ["id", "name", "creator", "homepageURL", "updateURL"];
 
@@ -1571,7 +1704,9 @@ BlocklistItemData.prototype = {
 
 let BlocklistRS = {
   _init() {
-    // ignore.
+  },
+  shutdown() {
+    GfxBlocklistRS.shutdown();
   },
   isLoaded: true,
 
@@ -1581,7 +1716,9 @@ let BlocklistRS = {
   },
 
   loadBlocklistAsync() {
-    // Ignore, but ensure that if we start the other service after this, we
+    // Need to ensure we notify gfx of new stuff.
+    GfxBlocklistRS.checkForEntries();
+    // Also ensure that if we start the other service after this, we
     // initialize it straight away.
     gLoadingWasTriggered = true;
   },

@@ -5,7 +5,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "initialize",
+  "BlocklistClients",
 ];
 
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
@@ -32,9 +32,6 @@ const PREF_BLOCKLIST_PINNING_BUCKET          = "services.blocklist.pinning.bucke
 const PREF_BLOCKLIST_PINNING_COLLECTION      = "services.blocklist.pinning.collection";
 const PREF_BLOCKLIST_PINNING_CHECKED_SECONDS = "services.blocklist.pinning.checked";
 const PREF_BLOCKLIST_PINNING_SIGNER          = "services.blocklist.pinning.signer";
-const PREF_BLOCKLIST_GFX_COLLECTION          = "services.blocklist.gfx.collection";
-const PREF_BLOCKLIST_GFX_CHECKED_SECONDS     = "services.blocklist.gfx.checked";
-const PREF_BLOCKLIST_GFX_SIGNER              = "services.blocklist.gfx.signer";
 
 class RevocationState {
   constructor(state) {
@@ -256,7 +253,6 @@ async function targetAppFilter(entry, environment) {
 }
 
 var AddonBlocklistClient;
-var GfxBlocklistClient;
 var OneCRLBlocklistClient;
 var PinningBlocklistClient;
 var PluginBlocklistClient;
@@ -284,13 +280,6 @@ function initialize() {
     filterFunc: targetAppFilter,
   });
 
-  GfxBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION), {
-    bucketNamePref: PREF_BLOCKLIST_BUCKET,
-    lastCheckTimePref: PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
-    signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_SIGNER),
-    filterFunc: targetAppFilter,
-  });
-
   PinningBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_COLLECTION), {
     bucketNamePref: PREF_BLOCKLIST_PINNING_BUCKET,
     lastCheckTimePref: PREF_BLOCKLIST_PINNING_CHECKED_SECONDS,
@@ -309,7 +298,6 @@ function initialize() {
       OneCRLBlocklistClient,
       AddonBlocklistClient,
       PluginBlocklistClient,
-      GfxBlocklistClient,
       PinningBlocklistClient,
       RemoteSecuritySettingsClient,
     };
@@ -319,7 +307,9 @@ function initialize() {
     OneCRLBlocklistClient,
     AddonBlocklistClient,
     PluginBlocklistClient,
-    GfxBlocklistClient,
     PinningBlocklistClient,
   };
 }
+
+let BlocklistClients = {initialize, targetAppFilter};
+

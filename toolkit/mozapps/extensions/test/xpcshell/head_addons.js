@@ -53,6 +53,8 @@ ChromeUtils.defineModuleGetter(this, "MockRegistry",
                                "resource://testing-common/MockRegistry.jsm");
 ChromeUtils.defineModuleGetter(this, "PromiseTestUtils",
                                "resource://testing-common/PromiseTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "RemoteSettings",
+                               "resource://services-settings/remote-settings.js");
 ChromeUtils.defineModuleGetter(this, "TestUtils",
                                "resource://testing-common/TestUtils.jsm");
 
@@ -969,6 +971,32 @@ function copyBlocklistToProfile(blocklistFile) {
     dest.remove(false);
   blocklistFile.copyTo(gProfD, "blocklist.xml");
   dest.lastModifiedTime = Date.now();
+}
+
+async function mockGfxBlocklistItemsFromDisk(path) {
+  Cu.importGlobalProperties(["fetch"]);
+  let response = await fetch(Services.io.newFileURI(do_get_file(path)).spec);
+  let json = await response.json();
+  return mockGfxBlocklistItems(json);
+}
+
+async function mockGfxBlocklistItems(items) {
+  const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+  let bsPass = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
+  const client = RemoteSettings(Services.prefs.getCharPref("services.blocklist.gfx.collection"), { bucketNamePref: "services.blocklist.bucket" });
+  const collection = await client.openCollection();
+  await collection.clear();
+  await collection.loadDump(items.map(item => {
+    if (item.id && item.last_modified) {
+      return item;
+    }
+    return Object.assign({
+      id: generateUUID().toString().replace(/[{}]/g, ""),
+      last_modified: Date.now(),
+    }, item);
+  }));
+  let rv = await bsPass.GfxBlocklistRS.checkForEntries();
+  return rv;
 }
 
 /**
