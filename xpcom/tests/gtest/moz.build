@@ -56,7 +56,6 @@ UNIFIED_SOURCES += [
     'TestThreadMetrics.cpp',
     'TestThreadPool.cpp',
     'TestThreadPoolListener.cpp',
-    'TestThreads.cpp',
     'TestThrottledEventQueue.cpp',
     'TestTimeStamp.cpp',
     'TestTokenizer.cpp',
@@ -66,6 +65,7 @@ UNIFIED_SOURCES += [
 if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
         'TestPipes.cpp',
+        'TestThreads.cpp',
     ]
 
 # skip the test on windows10-aarch64 due to perma-fail, bug 1422219
