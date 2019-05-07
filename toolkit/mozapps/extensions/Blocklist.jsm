@@ -283,36 +283,18 @@ function getDistributionPrefValue(aPrefName) {
   return Services.prefs.getDefaultBranch(null).getCharPref(aPrefName, "default");
 }
 
+let gLoadingWasTriggered = false;
+
 /**
  * Manages the Blocklist. The Blocklist is a representation of the contents of
  * blocklist.xml and allows us to remotely disable / re-enable blocklisted
  * items managed by the Extension Manager with an item's appDisabled property.
  * It also blocklists plugins with data from blocklist.xml.
  */
-var Blocklist = {
+var BlocklistXML = {
   _init() {
-    Services.obs.addObserver(this, "xpcom-shutdown");
-
-    gLoggingEnabled = Services.prefs.getBoolPref(PREF_EM_LOGGING_ENABLED, false);
-    gBlocklistEnabled = Services.prefs.getBoolPref(PREF_BLOCKLIST_ENABLED, true);
-    gBlocklistLevel = Math.min(Services.prefs.getIntPref(PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
-                               MAX_BLOCK_LEVEL);
-    Services.prefs.addObserver("extensions.blocklist.", this);
-    Services.prefs.addObserver(PREF_EM_LOGGING_ENABLED, this);
-
-    // Instantiate Remote Settings clients for blocklists.
-    // Their initialization right here serves two purposes:
-    // - Make sure they are instantiated (it's cheap) in order to be included in the synchronization process;
-    // - Pave the way for Bug 1257565 which will leverage remote settings instead of the XML file
-    //   to manage the blocklists state.
-    BlocklistClients.initialize();
-
-    // If the stub blocklist service deferred any queries because we
-    // weren't loaded yet, execute them now.
-    for (let entry of Services.blocklist.pluginQueries.splice(0)) {
-      entry.resolve(this.getPluginBlocklistState(entry.plugin,
-                                                 entry.appVersion,
-                                                 entry.toolkitVersion));
+    if (gLoadingWasTriggered) {
+      this.loadBlocklistAsync();
     }
   },
 
@@ -350,52 +332,23 @@ var Blocklist = {
   },
 
   shutdown() {
-    Services.obs.removeObserver(this, "xpcom-shutdown");
-    Services.prefs.removeObserver("extensions.blocklist.", this);
-    Services.prefs.removeObserver(PREF_EM_LOGGING_ENABLED, this);
   },
 
-  observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-    case "xpcom-shutdown":
-      this.shutdown();
-      break;
-    case "profile-after-change":
-      // We're only called here on non-Desktop-Firefox, and use this opportunity to try to
-      // load the blocklist asynchronously. On desktop Firefox, we load the list from
-      // nsBrowserGlue after sessionstore-windows-restored.
-      this.loadBlocklistAsync();
-      break;
-    case "nsPref:changed":
-      switch (aData) {
-        case PREF_EM_LOGGING_ENABLED:
-          gLoggingEnabled = Services.prefs.getBoolPref(PREF_EM_LOGGING_ENABLED, false);
-          break;
-        case PREF_BLOCKLIST_ENABLED:
-          gBlocklistEnabled = Services.prefs.getBoolPref(PREF_BLOCKLIST_ENABLED, true);
-          // This is a bit messy. Especially in tests, but in principle also by users toggling
-          // this preference repeatedly, plugin loads could race with each other if we don't
-          // enforce that they are applied sequentially.
-          // So we only update once the previous `_blocklistUpdated` call finishes running.
-          let lastUpdate = this._lastUpdate || undefined;
-          let newUpdate = this._lastUpdate = (async () => {
-            await lastUpdate;
-            this._clear();
-            await this.loadBlocklistAsync();
-            await this._blocklistUpdated(null, null);
-            if (newUpdate == this._lastUpdate) {
-              delete this._lastUpdate;
-            }
-          })().catch(Cu.reportError);
-          break;
-        case PREF_BLOCKLIST_LEVEL:
-          gBlocklistLevel = Math.min(Services.prefs.getIntPref(PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
-                                     MAX_BLOCK_LEVEL);
-          this._blocklistUpdated(null, null);
-          break;
+  _onBlocklistEnabledToggle() {
+    // This is a bit messy. Especially in tests, but in principle also by users toggling
+    // this preference repeatedly, plugin loads could race with each other if we don't
+    // enforce that they are applied sequentially.
+    // So we only update once the previous `_blocklistUpdated` call finishes running.
+    let lastUpdate = this._lastUpdate || undefined;
+    let newUpdate = this._lastUpdate = (async () => {
+      await lastUpdate;
+      this._clear();
+      await this.loadBlocklistAsync();
+      await this._blocklistUpdated(null, null);
+      if (newUpdate == this._lastUpdate) {
+        delete this._lastUpdate;
       }
-      break;
-    }
+    })().catch(Cu.reportError);
   },
 
   /**
@@ -1615,5 +1568,137 @@ BlocklistItemData.prototype = {
     return { minVersion, maxVersion };
   },
 };
+
+let BlocklistRS = {
+  _init() {
+    // ignore.
+  },
+  isLoaded: true,
+
+  notify() {
+    // ignore. We might miss a timer notification once if the XML impl. is disabled
+    // when the timer fires and subsequently gets enabled. That seems OK.
+  },
+
+  loadBlocklistAsync() {
+    // Ignore, but ensure that if we start the other service after this, we
+    // initialize it straight away.
+    gLoadingWasTriggered = true;
+  },
+
+  getPluginBlocklistState() {
+  },
+
+  getPluginBlockURL() {
+  },
+
+  getAddonBlocklistState() {
+  },
+
+  getAddonBlocklistEntry() {
+  },
+
+  _blocklistUpdated(oldAddons, oldPlugins) {
+  },
+
+  initializeClients() {
+    BlocklistClients.initialize();
+  },
+};
+
+const kSharedAPIs = [
+  "notify",
+  "loadBlocklistAsync",
+  "getPluginBlockURL",
+  "getPluginBlocklistState",
+  "getAddonBlocklistState",
+  "getAddonBlocklistEntry",
+  "_blocklistUpdated",
+];
+let Blocklist = {
+  _init() {
+    Services.obs.addObserver(this, "xpcom-shutdown");
+    gLoggingEnabled = Services.prefs.getBoolPref(PREF_EM_LOGGING_ENABLED, false);
+    gBlocklistEnabled = Services.prefs.getBoolPref(PREF_BLOCKLIST_ENABLED, true);
+    gBlocklistLevel = Math.min(Services.prefs.getIntPref(PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
+                               MAX_BLOCK_LEVEL);
+    Services.prefs.addObserver("extensions.blocklist.", this);
+    Services.prefs.addObserver(PREF_EM_LOGGING_ENABLED, this);
+
+    // Instantiate Remote Settings clients for blocklists.
+    // Their initialization right here serves two purposes:
+    // - Make sure they are instantiated (it's cheap) in order to be included in the synchronization process;
+    // - Ensure that onecrl and other consumers in there are loaded.
+    // Ideally, this should happen only when BlocklistRS is initialized.
+    BlocklistRS.initializeClients();
+    // Define forwarding functions:
+    for (let k of kSharedAPIs) {
+      this[k] = (...args) => this._impl[k](...args);
+    }
+
+    this.onUpdateImplementation();
+
+    // If the stub blocklist service deferred any queries because we
+    // weren't loaded yet, execute them now.
+    for (let entry of Services.blocklist.pluginQueries.splice(0)) {
+      entry.resolve(this.getPluginBlocklistState(entry.plugin,
+                                                 entry.appVersion,
+                                                 entry.toolkitVersion));
+    }
+  },
+  // the `isLoaded` property needs forwarding too:
+  get isLoaded() {
+    return this._impl.isLoaded;
+  },
+
+  onUpdateImplementation() {
+    this._impl = this.useXML ? BlocklistXML : BlocklistRS;
+    this._impl._init();
+  },
+
+  shutdown() {
+    Services.obs.removeObserver(this, "xpcom-shutdown");
+    Services.prefs.removeObserver("extensions.blocklist.", this);
+    Services.prefs.removeObserver(PREF_EM_LOGGING_ENABLED, this);
+  },
+
+  observe(subject, topic, prefName) {
+    switch (topic) {
+      case "xpcom-shutdown":
+        this.shutdown();
+        break;
+      case "profile-after-change":
+        // We're only called here on non-Desktop-Firefox, and use this opportunity to try to
+        // load the blocklist asynchronously. On desktop Firefox, we load the list from
+        // nsBrowserGlue after sessionstore-windows-restored.
+        this.loadBlocklistAsync();
+        break;
+      case "nsPref:changed":
+        switch (prefName) {
+          case PREF_EM_LOGGING_ENABLED:
+            gLoggingEnabled = Services.prefs.getBoolPref(PREF_EM_LOGGING_ENABLED, false);
+            break;
+          case PREF_BLOCKLIST_ENABLED:
+            gBlocklistEnabled = Services.prefs.getBoolPref(PREF_BLOCKLIST_ENABLED, true);
+            // Historically, this only does something if we're using the XML blocklist,
+            // so check:
+            if (this._impl == BlocklistXML) {
+              this._impl._onBlocklistEnabledToggle();
+            }
+            break;
+          case PREF_BLOCKLIST_LEVEL:
+            gBlocklistLevel = Math.min(Services.prefs.getIntPref(PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
+                                       MAX_BLOCK_LEVEL);
+            this._blocklistUpdated(null, null);
+            break;
+        }
+        break;
+    }
+  },
+};
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  Blocklist, "useXML", "extensions.blocklist.useXML", true,
+  () => Blocklist.onUpdateImplementation());
 
 Blocklist._init();
