@@ -19,7 +19,6 @@
 #include "nsIAudioChannelAgent.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TextTrackManager.h"
-#include "mozilla/dom/MediaDebugInfoBinding.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/MediaKeys.h"
 #include "mozilla/StateWatching.h"
@@ -293,7 +292,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // changed.
   void NotifyDecoderPrincipalChanged() final;
 
-  void GetEMEInfo(dom::EMEDebugInfo& aInfo);
+  void GetEMEInfo(nsString& aEMEInfo);
 
   class StreamCaptureTrackSource;
 
@@ -539,6 +538,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   bool AllowedToPlay() const;
 
   already_AddRefed<MediaSource> GetMozMediaSourceObject() const;
+  // Returns a string describing the state of the media player internal
+  // data. Used for debugging purposes.
+  void GetMozDebugReaderData(nsAString& aString);
 
   // Returns a promise which will be resolved after collecting debugging
   // data from decoder/reader/MDSM. Used for debugging purposes.
@@ -550,6 +552,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Returns a promise which will be resolved after collecting debugging
   // log associated with this element. Used for debugging purposes.
   already_AddRefed<Promise> MozRequestDebugLog(ErrorResult& aRv);
+
+  already_AddRefed<Promise> MozDumpDebugInfo();
 
   // For use by mochitests. Enabling pref "media.test.video-suspend"
   void SetVisible(bool aVisible);

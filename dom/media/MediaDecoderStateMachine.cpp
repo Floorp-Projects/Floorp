@@ -214,8 +214,7 @@ class MediaDecoderStateMachine::StateObject {
 
   virtual void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) {}
 
-  virtual void GetDebugInfo(
-      MediaDecoderStateMachineDecodingStateDebugInfo& aInfo) {}
+  virtual nsCString GetDebugInfo() { return nsCString(); }
 
   virtual void HandleLoopingChanged() {}
 
@@ -637,9 +636,8 @@ class MediaDecoderStateMachine::DecodingState
     }
   }
 
-  void GetDebugInfo(
-      MediaDecoderStateMachineDecodingStateDebugInfo& aInfo) override {
-    aInfo.mIsPrerolling = mIsPrerolling;
+  nsCString GetDebugInfo() override {
+    return nsPrintfCString("mIsPrerolling=%d", mIsPrerolling);
   }
 
   void HandleLoopingChanged() override { SetDecodingState(); }
@@ -3700,37 +3698,42 @@ uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const {
              : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
 }
 
-void MediaDecoderStateMachine::GetDebugInfo(
-    dom::MediaDecoderStateMachineDebugInfo& aInfo) {
+nsCString MediaDecoderStateMachine::GetDebugInfo() {
   MOZ_ASSERT(OnTaskQueue());
-  aInfo.mDuration =
+  int64_t duration =
       mDuration.Ref() ? mDuration.Ref().ref().ToMicroseconds() : -1;
-  aInfo.mMediaTime = GetMediaTime().ToMicroseconds();
-  aInfo.mClock = mMediaSink->IsStarted() ? GetClock().ToMicroseconds() : -1;
-  aInfo.mPlayState = (int32_t)mPlayState.Ref();
-  aInfo.mSentFirstFrameLoadedEvent = mSentFirstFrameLoadedEvent;
-  aInfo.mIsPlaying = IsPlaying();
-  aInfo.mAudioRequestStatus = NS_ConvertUTF8toUTF16(AudioRequestStatus());
-  aInfo.mVideoRequestStatus = NS_ConvertUTF8toUTF16(VideoRequestStatus());
-  aInfo.mDecodedAudioEndTime = mDecodedAudioEndTime.ToMicroseconds();
-  aInfo.mDecodedVideoEndTime = mDecodedVideoEndTime.ToMicroseconds();
-  aInfo.mAudioCompleted = mAudioCompleted;
-  aInfo.mVideoCompleted = mVideoCompleted;
-  mStateObj->GetDebugInfo(aInfo.mStateObj);
-  mMediaSink->GetDebugInfo(aInfo.mMediaSink);
+  auto str = nsPrintfCString(
+      "MDSM: duration=%" PRId64 " GetMediaTime=%" PRId64
+      " GetClock="
+      "%" PRId64
+      " mMediaSink=%p state=%s mPlayState=%d "
+      "mSentFirstFrameLoadedEvent=%d IsPlaying=%d mAudioStatus=%s "
+      "mVideoStatus=%s mDecodedAudioEndTime=%" PRId64
+      " mDecodedVideoEndTime=%" PRId64
+      " mAudioCompleted=%d "
+      "mVideoCompleted=%d %s",
+      duration, GetMediaTime().ToMicroseconds(),
+      mMediaSink->IsStarted() ? GetClock().ToMicroseconds() : -1,
+      mMediaSink.get(), ToStateStr(), mPlayState.Ref(),
+      mSentFirstFrameLoadedEvent, IsPlaying(), AudioRequestStatus(),
+      VideoRequestStatus(), mDecodedAudioEndTime.ToMicroseconds(),
+      mDecodedVideoEndTime.ToMicroseconds(), mAudioCompleted, mVideoCompleted,
+      mStateObj->GetDebugInfo().get());
+
+  AppendStringIfNotEmpty(str, mMediaSink->GetDebugInfo());
+
+  return std::move(str);
 }
 
-RefPtr<StateMachineDebugInfoPromise> MediaDecoderStateMachine::RequestDebugInfo(
-    dom::MediaDecoderStateMachineDebugInfo& aInfo) {
-  using PromiseType = StateMachineDebugInfoPromise;
+RefPtr<MediaDecoder::DebugInfoPromise>
+MediaDecoderStateMachine::RequestDebugInfo() {
+  using PromiseType = MediaDecoder::DebugInfoPromise;
   RefPtr<PromiseType::Private> p = new PromiseType::Private(__func__);
   RefPtr<MediaDecoderStateMachine> self = this;
   nsresult rv = OwnerThread()->Dispatch(
-      NS_NewRunnableFunction("MediaDecoderStateMachine::RequestDebugInfo",
-                             [self, p, &aInfo]() {
-                               self->GetDebugInfo(aInfo);
-                               p->Resolve(true, __func__);
-                             }),
+      NS_NewRunnableFunction(
+          "MediaDecoderStateMachine::RequestDebugInfo",
+          [self, p]() { p->Resolve(self->GetDebugInfo(), __func__); }),
       AbstractThread::TailDispatch);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   Unused << rv;

@@ -17,7 +17,6 @@
 #include "nsTHashtable.h"
 
 #include "MediaChannelStatistics.h"
-#include "mozilla/dom/MediaDebugInfoBinding.h"
 
 class nsIEventTarget;
 class nsIPrincipal;
@@ -360,7 +359,7 @@ class MediaCacheStream : public DecoderDoctorLifeLogger<MediaCacheStream> {
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  void GetDebugInfo(dom::MediaCacheStreamDebugInfo& aInfo);
+  nsCString GetDebugInfo();
 
  private:
   friend class MediaCache;

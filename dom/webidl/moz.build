@@ -640,7 +640,6 @@ WEBIDL_FILES = [
     'LoadURIOptions.webidl',
     'Location.webidl',
     'MediaCapabilities.webidl',
-    'MediaDebugInfo.webidl',
     'MediaDeviceInfo.webidl',
     'MediaDevices.webidl',
     'MediaElementAudioSourceNode.webidl',

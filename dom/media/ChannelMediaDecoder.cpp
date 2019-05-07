@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ChannelMediaDecoder.h"
-#include "ChannelMediaResource.h"
 #include "DecoderTraits.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
@@ -536,11 +535,12 @@ void ChannelMediaDecoder::MetadataLoaded(
   mResource->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
 }
 
-void ChannelMediaDecoder::GetDebugInfo(dom::MediaDecoderDebugInfo& aInfo) {
-  MediaDecoder::GetDebugInfo(aInfo);
+nsCString ChannelMediaDecoder::GetDebugInfo() {
+  nsCString str = MediaDecoder::GetDebugInfo();
   if (mResource) {
-    mResource->GetDebugInfo(aInfo.mResource);
+    AppendStringIfNotEmpty(str, mResource->GetDebugInfo());
   }
+  return str;
 }
 
 }  // namespace mozilla

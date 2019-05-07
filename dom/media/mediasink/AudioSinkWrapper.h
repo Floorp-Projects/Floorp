@@ -77,7 +77,7 @@ class AudioSinkWrapper : public MediaSink {
 
   void Shutdown() override;
 
-  void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
+  nsCString GetDebugInfo() override;
 
  private:
   virtual ~AudioSinkWrapper();

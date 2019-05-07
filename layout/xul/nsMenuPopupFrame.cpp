@@ -2502,7 +2502,7 @@ nsIWidget* nsMenuPopupFrame::GetParentMenuWidget() {
   nsMenuFrame* menuFrame = do_QueryFrame(GetParent());
   if (menuFrame) {
     nsMenuParent* parentPopup = menuFrame->GetMenuParent();
-    if (parentPopup && parentPopup->IsMenu()) {
+    if (parentPopup && (parentPopup->IsMenu() || parentPopup->IsMenuBar())) {
       return static_cast<nsMenuPopupFrame*>(parentPopup)->GetWidget();
     }
   }

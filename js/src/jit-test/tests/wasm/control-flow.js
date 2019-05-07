@@ -11,10 +11,12 @@ wasmEvalText('(module (func (local i32) (if (local.get 0) (nop))) (export "" 0))
 wasmEvalText('(module (func (local i32) (if (local.get 0) (nop) (nop))) (export "" 0))');
 
 // Expression values types are consistent
+// Also test that we support (result t) for `if`
 wasmFailValidateText('(module (func (result i32) (local f32) (if f32 (i32.const 42) (local.get 0) (i32.const 0))))', mismatchError("i32", "f32"));
 wasmFailValidateText('(module (func (result i32) (local f64) (if i32 (i32.const 42) (i32.const 0) (local.get 0))))', mismatchError("f64", "i32"));
+wasmFailValidateText('(module (func (result i64) (if (result i64) (i32.const 0) (i32.const 1) (i32.const 2))))', mismatchError("i32", "i64"));
 assertEq(wasmEvalText('(module (func (result i32) (if i32 (i32.const 42) (i32.const 1) (i32.const 2))) (export "" 0))').exports[""](), 1);
-assertEq(wasmEvalText('(module (func (result i32) (if i32 (i32.const 0) (i32.const 1) (i32.const 2))) (export "" 0))').exports[""](), 2);
+assertEq(wasmEvalText('(module (func (result i32) (if (result i32) (i32.const 0) (i32.const 1) (i32.const 2))) (export "" 0))').exports[""](), 2);
 
 // Even if we don't yield, sub expressions types still have to match.
 wasmFailValidateText('(module (func (param f32) (if i32 (i32.const 42) (i32.const 1) (local.get 0))) (export "" 0))', mismatchError('f32', 'i32'));
@@ -23,6 +25,7 @@ wasmFullPass('(module (func (drop (if i32 (i32.const 42) (i32.const 1) (i32.cons
 wasmFullPass('(module (func (param f32) (if (i32.const 42) (drop (i32.const 1)) (drop (local.get 0)))) (export "run" 0))', undefined, {}, 13.37);
 
 // Sub-expression values are returned
+// Also test that we support (result t) for `block`
 wasmFullPass(`(module
     (func
         (result i32)
@@ -31,7 +34,7 @@ wasmFullPass(`(module
             (block i32
                 (
                     if i32
-                    (block i32
+                    (block (result i32)
                         (drop (i32.const 3))
                         (drop (i32.const 5))
                         (i32.const 0)

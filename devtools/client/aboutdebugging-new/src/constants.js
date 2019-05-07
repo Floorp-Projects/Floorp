@@ -109,6 +109,8 @@ const PREFERENCES = {
   PROCESS_DEBUGGING_ENABLED: "devtools.aboutdebugging.process-debugging",
   // Preference that drives the display of hidden & system addons in about:debugging.
   SHOW_HIDDEN_ADDONS: "devtools.aboutdebugging.showHiddenAddons",
+  // Preference to store the last path used for loading a temporary extension.
+  TEMPORARY_EXTENSION_PATH: "devtools.aboutdebugging.tmpExtDirPath",
   // Preference that disables installing extensions when set to false.
   XPINSTALL_ENABLED: "xpinstall.enabled",
 };

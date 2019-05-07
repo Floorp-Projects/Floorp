@@ -646,17 +646,18 @@ void VideoSink::ClearSecondaryVideoContainer() {
   mSecondaryContainer = nullptr;
 }
 
-void VideoSink::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
+nsCString VideoSink::GetDebugInfo() {
   AssertOwnerThread();
-  aInfo.mVideoSink.mIsStarted = IsStarted();
-  aInfo.mVideoSink.mIsPlaying = IsPlaying();
-  aInfo.mVideoSink.mFinished = VideoQueue().IsFinished();
-  aInfo.mVideoSink.mSize = VideoQueue().GetSize();
-  aInfo.mVideoSink.mVideoFrameEndTime = mVideoFrameEndTime.ToMicroseconds();
-  aInfo.mVideoSink.mHasVideo = mHasVideo;
-  aInfo.mVideoSink.mVideoSinkEndRequestExists = mVideoSinkEndRequest.Exists();
-  aInfo.mVideoSink.mEndPromiseHolderIsEmpty = mEndPromiseHolder.IsEmpty();
-  mAudioSink->GetDebugInfo(aInfo);
+  auto str = nsPrintfCString(
+      "VideoSink: IsStarted=%d IsPlaying=%d VideoQueue(finished=%d "
+      "size=%zu) mVideoFrameEndTime=%" PRId64
+      " mHasVideo=%d "
+      "mVideoSinkEndRequest.Exists()=%d mEndPromiseHolder.IsEmpty()=%d",
+      IsStarted(), IsPlaying(), VideoQueue().IsFinished(),
+      VideoQueue().GetSize(), mVideoFrameEndTime.ToMicroseconds(), mHasVideo,
+      mVideoSinkEndRequest.Exists(), mEndPromiseHolder.IsEmpty());
+  AppendStringIfNotEmpty(str, mAudioSink->GetDebugInfo());
+  return std::move(str);
 }
 
 bool VideoSink::InitializeBlankImage() {

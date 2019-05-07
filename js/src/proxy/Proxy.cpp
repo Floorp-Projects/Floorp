@@ -772,6 +772,12 @@ JS_FRIEND_API JSObject* js::NewProxyObject(JSContext* cx,
                                            const BaseProxyHandler* handler,
                                            HandleValue priv, JSObject* proto_,
                                            const ProxyOptions& options) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  if (proto_ != TaggedProto::LazyProto) {
+    cx->check(proto_); // |priv| might be cross-compartment.
+  }
+
   if (options.lazyProto()) {
     MOZ_ASSERT(!proto_);
     proto_ = TaggedProto::LazyProto;
