@@ -37,7 +37,11 @@ NOTE: The collection and messages can also be created manually using the [admin 
 
 ```javascript
 Services.prefs.setStringPref("services.settings.server", "https://kinto.dev.mozaws.net/v1");
-Services.prefs.setBoolPref("services.settings.verify_signature", false);
+
+// Disable signature verification
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
+
+RemoteSettings("cfr").verifySignature = false;
 ```
 
 **3. Set ASRouter CFR pref to use Remote Settings provider and enable asrouter devtools.**

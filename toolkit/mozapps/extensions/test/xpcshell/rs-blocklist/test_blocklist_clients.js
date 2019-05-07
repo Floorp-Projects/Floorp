@@ -27,9 +27,6 @@ function run_test() {
   // Point the blocklist clients to use this local HTTP server.
   Services.prefs.setCharPref("services.settings.server",
                              `http://localhost:${server.identity.primaryPort}/v1`);
-  // Ensure that signature verification is disabled to prevent interference
-  // with basic certificate sync tests
-  Services.prefs.setBoolPref("services.settings.verify_signature", false);
 
   // Unfortunately security settings are coupled with blocklists clients,
   // this will be fixed in Bug 1526018
@@ -42,12 +39,15 @@ function run_test() {
   BlocklistGlobal.PluginBlocklistRS._ensureInitialized();
   BlocklistGlobal.GfxBlocklistRS._ensureInitialized();
 
-
   gBlocklistClients = [
     {client: BlocklistGlobal.ExtensionBlocklistRS._client, testData: ["i808", "i720", "i539"]},
     {client: BlocklistGlobal.PluginBlocklistRS._client, testData: ["p1044", "p32", "p28"]},
     {client: BlocklistGlobal.GfxBlocklistRS._client, testData: ["g204", "g200", "g36"]},
   ];
+  // Disable signature verification in these tests.
+  for (const c of gBlocklistClients) {
+    c.verifySignature = false;
+  }
 
   // Setup server fake responses.
   function handleResponse(request, response) {
