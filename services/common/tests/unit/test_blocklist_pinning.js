@@ -3,7 +3,7 @@
 const { Constructor: CC } = Components;
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", null);
+const {BlocklistClients} = ChromeUtils.import("resource://services-common/blocklist-clients.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
@@ -27,9 +27,7 @@ let server;
 // Some simple tests to demonstrate that the core preload sync operations work
 // correctly and that simple kinto operations are working as expected.
 add_task(async function test_something() {
-  BlocklistClients.initialize();
-
-  const PinningPreloadClient = BlocklistClients.PinningBlocklistClient;
+  const PinningPreloadClient = BlocklistClients.initialize().PinningBlocklistClient;
 
   const configPath = "/v1/";
   const recordsPath = "/v1/buckets/pinning/collections/pins/records";

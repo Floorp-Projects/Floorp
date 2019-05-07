@@ -322,7 +322,7 @@ For example, they leverage advanced customization options (bucket, content-signa
 
 .. code-block:: js
 
-    const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+    const {BlocklistClients} = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
 
     BlocklistClients.initialize();
 

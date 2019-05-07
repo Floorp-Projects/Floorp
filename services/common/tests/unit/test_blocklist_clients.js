@@ -49,6 +49,8 @@ function run_test() {
   // This will initialize the remote settings clients for blocklists.
   BlocklistClients.initialize();
 
+  // FIXME: once all the clients are migrated to Blocklist.jsm, we should move
+  // the test there, too. This note is here so I don't forget.
   gBlocklistClients = [
     {client: BlocklistClients.AddonBlocklistClient, testData: ["i808", "i720", "i539"]},
     {client: BlocklistClients.PluginBlocklistClient, testData: ["p1044", "p32", "p28"]},
