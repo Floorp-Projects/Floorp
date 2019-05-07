@@ -14,13 +14,11 @@ function formatDirectories(source, tree) {
 }
 
 function createSources(urls) {
-  return {
-    FakeThread: urls.reduce((sources, url, index) => {
-      const id = `a${index}`;
-      sources[id] = makeMockSource(url, id);
-      return sources;
-    }, {})
-  };
+  return urls.reduce((sources, url, index) => {
+    const id = `a${index}`;
+    sources[id] = makeMockSource(url, id);
+    return sources;
+  }, {});
 }
 
 describe("getDirectories", () => {
@@ -31,36 +29,14 @@ describe("getDirectories", () => {
       "http://b/c.js"
     ]);
 
-    const threads = [
-      {
-        actor: "FakeThread",
-        url: "http://a",
-        type: 1,
-        name: "FakeThread"
-      }
-    ];
-
     const debuggeeUrl = "http://a/";
     const { sourceTree } = createTree({
       sources,
       debuggeeUrl,
-      threads
+      projectRoot: ""
     });
-
-    expect(formatDirectories(sources.FakeThread.a0, sourceTree)).toEqual([
-      "FakeThread/a/b.js",
-      "FakeThread/a",
-      "FakeThread"
-    ]);
-    expect(formatDirectories(sources.FakeThread.a1, sourceTree)).toEqual([
-      "FakeThread/a/c.js",
-      "FakeThread/a",
-      "FakeThread"
-    ]);
-    expect(formatDirectories(sources.FakeThread.a2, sourceTree)).toEqual([
-      "FakeThread/b/c.js",
-      "FakeThread/b",
-      "FakeThread"
-    ]);
+    expect(formatDirectories(sources.a0, sourceTree)).toEqual(["a/b.js", "a"]);
+    expect(formatDirectories(sources.a1, sourceTree)).toEqual(["a/c.js", "a"]);
+    expect(formatDirectories(sources.a2, sourceTree)).toEqual(["b/c.js", "b"]);
   });
 });

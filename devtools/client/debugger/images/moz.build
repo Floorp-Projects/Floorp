@@ -46,6 +46,5 @@ DevToolsModules(
     'stepOver.svg',
     'tab.svg',
     'whole-word-match.svg',
-    'window.svg',
     'worker.svg',
 )
