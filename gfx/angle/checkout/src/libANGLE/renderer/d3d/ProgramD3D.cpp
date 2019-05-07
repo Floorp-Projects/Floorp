@@ -67,6 +67,20 @@ void GetDefaultInputLayoutFromShader(gl::Shader *vertexShader, gl::InputLayout *
     }
 }
 
+size_t GetMaxOutputIndex(const std::vector<PixelShaderOutputVariable> &shaderOutputVars,
+                         size_t location)
+{
+    size_t maxIndex = 0;
+    for (auto &outputVar : shaderOutputVars)
+    {
+        if (outputVar.outputLocation == location)
+        {
+            maxIndex = std::max(maxIndex, outputVar.outputIndex);
+        }
+    }
+    return maxIndex;
+}
+
 void GetDefaultOutputLayoutFromShader(
     const std::vector<PixelShaderOutputVariable> &shaderOutputVars,
     std::vector<GLenum> *outputLayoutOut)
@@ -75,8 +89,10 @@ void GetDefaultOutputLayoutFromShader(
 
     if (!shaderOutputVars.empty())
     {
-        outputLayoutOut->push_back(GL_COLOR_ATTACHMENT0 +
-                                   static_cast<unsigned int>(shaderOutputVars[0].outputIndex));
+        size_t location = shaderOutputVars[0].outputLocation;
+        size_t maxIndex = GetMaxOutputIndex(shaderOutputVars, location);
+        outputLayoutOut->assign(maxIndex + 1,
+                                GL_COLOR_ATTACHMENT0 + static_cast<unsigned int>(location));
     }
 }
 
@@ -475,6 +491,11 @@ bool ProgramD3DMetadata::usesBroadcast(const gl::State &data) const
     return (mAttachedShaders[gl::ShaderType::Fragment]->usesFragColor() &&
             mAttachedShaders[gl::ShaderType::Fragment]->usesMultipleRenderTargets() &&
             data.getClientMajorVersion() < 3);
+}
+
+bool ProgramD3DMetadata::usesSecondaryColor() const
+{
+    return mAttachedShaders[gl::ShaderType::Fragment]->usesSecondaryColor();
 }
 
 bool ProgramD3DMetadata::usesFragDepth() const
@@ -1160,6 +1181,7 @@ std::unique_ptr<rx::LinkEvent> ProgramD3D::load(const gl::Context *context,
         stream->readInt(&mPixelShaderKey[pixelShaderKeyIndex].type);
         stream->readString(&mPixelShaderKey[pixelShaderKeyIndex].name);
         stream->readString(&mPixelShaderKey[pixelShaderKeyIndex].source);
+        stream->readInt(&mPixelShaderKey[pixelShaderKeyIndex].outputLocation);
         stream->readInt(&mPixelShaderKey[pixelShaderKeyIndex].outputIndex);
     }
 
@@ -1442,6 +1464,7 @@ void ProgramD3D::save(const gl::Context *context, gl::BinaryOutputStream *stream
         stream->writeInt(variable.type);
         stream->writeString(variable.name);
         stream->writeString(variable.source);
+        stream->writeInt(variable.outputLocation);
         stream->writeInt(variable.outputIndex);
     }
 
@@ -2982,7 +3005,11 @@ void ProgramD3D::updateCachedOutputLayout(const gl::Context *context,
         {
             auto binding = colorbuffer->getBinding() == GL_BACK ? GL_COLOR_ATTACHMENT0
                                                                 : colorbuffer->getBinding();
-            mPixelShaderOutputLayoutCache.push_back(binding);
+            size_t maxIndex = binding != GL_NONE ? GetMaxOutputIndex(mPixelShaderKey,
+                                                                     binding - GL_COLOR_ATTACHMENT0)
+                                                 : 0;
+            mPixelShaderOutputLayoutCache.insert(mPixelShaderOutputLayoutCache.end(), maxIndex + 1,
+                                                 binding);
         }
         else
         {

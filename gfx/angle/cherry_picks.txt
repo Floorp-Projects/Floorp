@@ -1,3 +1,14 @@
+commit 5814bb88b10ef903abcf297f2de72619d853b4e9
+Author: Lee Salzman <lsalzman@mozilla.com>
+Date:   Tue Apr 30 23:42:31 2019 -0400
+
+    add support for EXT_blend_func_extended to D3D11
+    
+    Change-Id: Id66868851a490d0a68a7e76280720825c4844a45
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1591192
+    Commit-Queue: Geoff Lang <geofflang@chromium.org>
+    Reviewed-by: Shahbaz Youssefi <syoussefi@chromium.org>
+
 commit f2915830eaf4b2970c37d4baecf0dc8030c85dba
 Author: Jan Beich <jbeich@FreeBSD.org>
 Date:   Tue Apr 23 16:25:18 2019 -0700
