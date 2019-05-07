@@ -26,6 +26,8 @@ class LegacySHistory final : public nsSHistory {
  private:
   virtual ~LegacySHistory() {}
 
+  void EvictOutOfRangeWindowContentViewers(int32_t aIndex) override;
+
  public:
   LegacySHistory(mozilla::dom::CanonicalBrowsingContext* aRootBC,
                  const nsID& aDocShellID);
