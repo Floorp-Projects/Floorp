@@ -1,0 +1,44 @@
+Bug 1523526: Don't allow CFG on old releases of Windows for arm64
+
+There's a bug in ole32.dll on arm64 versions of Windows prior to 1809, that crashes our content processes if we enable CFG. We've reported the issue, but even if it gets fixed, we can't assume users will have the update.
+
+This patch uses process mitigation policy flags to disable CFG on arm64 before 1809. Based on testing, we only need to do this in the sandbox for child processes, and it's not strictly necessary for the launcher stub to set the flag on the main process. But I've included that anyway as a guard against some yet-undiscovered scenario that might hit the issue and make the browser unusable.
+
+The effects of this patch won't be visible until we actually enable CFG in a subsequent landing.
+
+Differential Revision: https://phabricator.services.mozilla.com/D29474
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
+--- a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
++++ b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
+@@ -354,6 +354,11 @@ void ConvertProcessMitigationsToPolicy(M
+         PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON;
+   }
+ 
++  if (flags & MITIGATION_CONTROL_FLOW_GUARD_DISABLE) {
++    *policy_flags |=
++        PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_OFF;
++  }
++
+   if (version < base::win::VERSION_WIN10)
+     return;
+ 
+diff --git a/security/sandbox/chromium/sandbox/win/src/security_level.h b/security/sandbox/chromium/sandbox/win/src/security_level.h
+--- a/security/sandbox/chromium/sandbox/win/src/security_level.h
++++ b/security/sandbox/chromium/sandbox/win/src/security_level.h
+@@ -255,6 +255,15 @@ const MitigationFlags MITIGATION_IMAGE_L
+ // PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON.
+ const MitigationFlags MITIGATION_IMAGE_LOAD_PREFER_SYS32 = 0x00100000;
+ 
++// Begin Mozilla-added flags.
++// Working down from the high bit to avoid conflict with new upstream flags.
++
++// Disable Control Flow Guard. This may seem more like an anti-mitigation, but
++// this flag allows code to make targeted changes to CFG to avoid bugs, while
++// leaving it enabled in the common case. Corresponds to
++// PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_ON.
++const MitigationFlags MITIGATION_CONTROL_FLOW_GUARD_DISABLE = 0x80000000;
++
+ }  // namespace sandbox
+ 
+ #endif  // SANDBOX_SRC_SECURITY_LEVEL_H_
