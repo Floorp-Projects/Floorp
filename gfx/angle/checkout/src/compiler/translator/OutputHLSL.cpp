@@ -233,6 +233,7 @@ OutputHLSL::OutputHLSL(sh::GLenum shaderType,
                        const char *sourcePath,
                        ShShaderOutput outputType,
                        int numRenderTargets,
+                       int maxDualSourceDrawBuffers,
                        const std::vector<Uniform> &uniforms,
                        ShCompileOptions compileOptions,
                        sh::WorkGroupSize workGroupSize,
@@ -249,6 +250,7 @@ OutputHLSL::OutputHLSL(sh::GLenum shaderType,
       mInsideFunction(false),
       mInsideMain(false),
       mNumRenderTargets(numRenderTargets),
+      mMaxDualSourceDrawBuffers(maxDualSourceDrawBuffers),
       mCurrentFunctionMetadata(nullptr),
       mWorkGroupSize(workGroupSize),
       mPerfDiagnostics(perfDiagnostics)
@@ -276,6 +278,7 @@ OutputHLSL::OutputHLSL(sh::GLenum shaderType,
     mUsesNestedBreak             = false;
     mRequiresIEEEStrictCompiling = false;
     mUseZeroArray                = false;
+    mUsesSecondaryColor          = false;
 
     mUniqueIndex = 0;
 
@@ -629,6 +632,8 @@ void OutputHLSL::header(TInfoSinkBase &out,
     {
         const bool usingMRTExtension =
             IsExtensionEnabled(mExtensionBehavior, TExtension::EXT_draw_buffers);
+        const bool usingBFEExtension =
+            IsExtensionEnabled(mExtensionBehavior, TExtension::EXT_blend_func_extended);
 
         out << "// Varyings\n";
         writeReferencedVaryings(out);
@@ -663,6 +668,23 @@ void OutputHLSL::header(TInfoSinkBase &out,
             }
 
             out << "};\n";
+
+            if (usingBFEExtension && mUsesSecondaryColor)
+            {
+                out << "static float4 gl_SecondaryColor[" << mMaxDualSourceDrawBuffers
+                    << "] = \n"
+                       "{\n";
+                for (int i = 0; i < mMaxDualSourceDrawBuffers; i++)
+                {
+                    out << "    float4(0, 0, 0, 0)";
+                    if (i + 1 != mMaxDualSourceDrawBuffers)
+                    {
+                        out << ",";
+                    }
+                    out << "\n";
+                }
+                out << "};\n";
+            }
         }
 
         if (mUsesFragDepth)
@@ -779,6 +801,11 @@ void OutputHLSL::header(TInfoSinkBase &out,
         if (mUsesFragData)
         {
             out << "#define GL_USES_FRAG_DATA\n";
+        }
+
+        if (mShaderVersion < 300 && usingBFEExtension && mUsesSecondaryColor)
+        {
+            out << "#define GL_USES_SECONDARY_COLOR\n";
         }
     }
     else if (mShaderType == GL_VERTEX_SHADER)
@@ -1106,6 +1133,16 @@ void OutputHLSL::visitSymbol(TIntermSymbol *node)
         {
             out << "gl_Color";
             mUsesFragData = true;
+        }
+        else if (qualifier == EvqSecondaryFragColorEXT)
+        {
+            out << "gl_SecondaryColor[0]";
+            mUsesSecondaryColor = true;
+        }
+        else if (qualifier == EvqSecondaryFragDataEXT)
+        {
+            out << "gl_SecondaryColor";
+            mUsesSecondaryColor = true;
         }
         else if (qualifier == EvqFragCoord)
         {
