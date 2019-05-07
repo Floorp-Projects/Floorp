@@ -47,7 +47,36 @@ class nsHttpConnectionInfo;
 class nsHttpTransaction;
 class AltSvcMapping;
 
-enum FrameCheckLevel { FRAMECHECK_LAX, FRAMECHECK_BARELY, FRAMECHECK_STRICT };
+/*
+ * FRAMECHECK_LAX - no check
+ * FRAMECHECK_BARELY - allows:
+ *                     1) that chunk-encoding does not have the last 0-size
+ *                     chunk. So, if a chunked-encoded transfer ends on exactly
+ *                     a chunk boundary we consider that fine. This will allows
+ *                     us to accept buggy servers that do not send the last
+ *                     chunk. It will make us not detect a certain amount of
+ *                     cut-offs.
+ *                     2) When receiving a gzipped response, we consider a
+ *                     gzip stream that doesn't end fine according to the gzip
+ *                     decompressing state machine to be a partial transfer.
+ *                     If a gzipped transfer ends fine according to the
+ *                     decompressor, we do not check for size unalignments.
+ *                     This allows to allow HTTP gzipped responses where the
+ *                     Content-Length is not the same as the actual contents.
+ *                     3) When receiving HTTP that isn't
+ *                     content-encoded/compressed (like in case 2) and not
+ *                     chunked (like in case 1), perform the size comparison
+ *                     between Content-Length: and the actual size received
+ *                     and consider a mismatch to mean a
+ *                     NS_ERROR_NET_PARTIAL_TRANSFER error.
+ * FRAMECHECK_STRICT_CHUNKED - This is the same as FRAMECHECK_BARELY only we
+ *                             enforce that the last 0-size chunk is received
+ *                             in case 1).
+ * FRAMECHECK_STRICT - we also do not allow case 2) and 3) from
+ *                     FRAMECHECK_BARELY.
+ */
+enum FrameCheckLevel { FRAMECHECK_LAX, FRAMECHECK_BARELY,
+                       FRAMECHECK_STRICT_CHUNKED, FRAMECHECK_STRICT };
 
 //-----------------------------------------------------------------------------
 // nsHttpHandler - protocol handler for HTTP and HTTPS
