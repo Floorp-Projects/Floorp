@@ -141,12 +141,12 @@ class IntegerRange {
 
 template <typename T, bool = IsUnsigned<T>::value>
 struct GeqZero {
-  static bool check(T t) { return t >= 0; }
+  static bool isNonNegative(T t) { return t >= 0; }
 };
 
 template <typename T>
 struct GeqZero<T, true> {
-  static bool check(T t) { return true; }
+  static bool isNonNegative(T t) { return true; }
 };
 
 }  // namespace detail
@@ -154,7 +154,7 @@ struct GeqZero<T, true> {
 template <typename IntType>
 detail::IntegerRange<IntType> IntegerRange(IntType aEnd) {
   static_assert(IsIntegral<IntType>::value, "value must be integral");
-  MOZ_ASSERT(detail::GeqZero<IntType>::check(aEnd),
+  MOZ_ASSERT(detail::GeqZero<IntType>::isNonNegative(aEnd),
              "Should never have negative value here");
   return detail::IntegerRange<IntType>(aEnd);
 }
