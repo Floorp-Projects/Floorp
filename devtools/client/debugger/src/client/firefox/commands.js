@@ -77,7 +77,10 @@ async function loadObjectProperties(root: Node) {
     root,
     createObjectClient
   );
-  return utils.node.makeNodesForProperties(properties, root);
+  return utils.node.getChildren({
+    item: root,
+    loadedProperties: new Map([[root.path, properties]])
+  });
 }
 
 function releaseActor(actor: String) {

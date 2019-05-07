@@ -22,3 +22,11 @@ function objects() {
 
   debugger;
 }
+
+function largeArray() {
+  let bs = [];
+  for (let i = 0; i <= 100; i++) {
+    bs.push({ a: 2, b: { c: 3 } });
+  }
+  debugger;
+}
