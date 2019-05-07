@@ -2673,7 +2673,7 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
 
   // Delete empty IME text node if there is one
   if (isIMETransaction && mComposition) {
-    Text* textNode = mComposition->GetContainerTextNode();
+    RefPtr<Text> textNode = mComposition->GetContainerTextNode();
     if (textNode && !textNode->Length()) {
       DeleteNodeWithTransaction(*textNode);
       mComposition->OnTextNodeRemoved();

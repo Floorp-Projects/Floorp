@@ -404,8 +404,9 @@ class HyperTextAccessible : public AccessibleWrap {
   void ReplaceText(const nsAString& aText);
   void InsertText(const nsAString& aText, int32_t aPosition);
   void CopyText(int32_t aStartPos, int32_t aEndPos);
-  void CutText(int32_t aStartPos, int32_t aEndPos);
-  void DeleteText(int32_t aStartPos, int32_t aEndPos);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void CutText(int32_t aStartPos, int32_t aEndPos);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DeleteText(int32_t aStartPos,
+                                              int32_t aEndPos);
   MOZ_CAN_RUN_SCRIPT
   void PasteText(int32_t aPosition);
 
