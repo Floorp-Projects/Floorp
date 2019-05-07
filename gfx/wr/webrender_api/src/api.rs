@@ -4,7 +4,7 @@
 
 extern crate serde_bytes;
 
-use channel::{self, MsgSender, Payload, PayloadSender, PayloadSenderHelperMethods};
+use crate::channel::{self, MsgSender, Payload, PayloadSender, PayloadSenderHelperMethods};
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
@@ -13,11 +13,11 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::u32;
 // local imports
-use {display_item as di, font};
-use color::{ColorU, ColorF};
-use display_list::{BuiltDisplayList, BuiltDisplayListDescriptor};
-use image::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey};
-use units::*;
+use crate::{display_item as di, font};
+use crate::color::{ColorU, ColorF};
+use crate::display_list::{BuiltDisplayList, BuiltDisplayListDescriptor};
+use crate::image::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey};
+use crate::units::*;
 
 
 pub type TileSize = u16;
@@ -1483,7 +1483,7 @@ pub struct DynamicProperties {
 pub trait RenderNotifier: Send {
     fn clone(&self) -> Box<RenderNotifier>;
     fn wake_up(&self);
-    fn new_frame_ready(&self, DocumentId, scrolled: bool, composite_needed: bool, render_time_ns: Option<u64>);
+    fn new_frame_ready(&self, _: DocumentId, scrolled: bool, composite_needed: bool, render_time_ns: Option<u64>);
     fn external_event(&self, _evt: ExternalEvent) {
         unimplemented!()
     }

@@ -11,7 +11,7 @@ extern crate winit;
 #[path = "common/boilerplate.rs"]
 mod boilerplate;
 
-use boilerplate::{Example, HandyDandyRectBuilder};
+use crate::boilerplate::{Example, HandyDandyRectBuilder};
 use euclid::TypedScale;
 use gleam::gl;
 use webrender::api::*;

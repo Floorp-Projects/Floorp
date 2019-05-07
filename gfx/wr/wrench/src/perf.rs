@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use NotifierEvent;
-use WindowWrapper;
+use crate::NotifierEvent;
+use crate::WindowWrapper;
 use serde_json;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
@@ -11,8 +11,8 @@ use std::io::{BufRead, BufReader};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
-use wrench::{Wrench, WrenchThing};
-use yaml_frame_reader::YamlFrameReader;
+use crate::wrench::{Wrench, WrenchThing};
+use crate::yaml_frame_reader::YamlFrameReader;
 
 const COLOR_DEFAULT: &str = "\x1b[0m";
 const COLOR_RED: &str = "\x1b[31m";

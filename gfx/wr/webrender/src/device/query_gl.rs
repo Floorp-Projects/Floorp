@@ -6,7 +6,7 @@ use gleam::gl;
 use std::mem;
 use std::rc::Rc;
 
-use device::GpuFrameId;
+use crate::device::GpuFrameId;
 
 #[derive(Copy, Clone, Debug)]
 pub enum GpuDebugMethod {

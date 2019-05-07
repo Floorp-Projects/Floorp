@@ -131,7 +131,7 @@ impl Context {
         };
 
         let (config_id, pixel_format) = unsafe {
-            try!(choose_fbconfig(display, &egl_version, api, version, pf_reqs))
+            r#try!(choose_fbconfig(display, &egl_version, api, version, pf_reqs))
         };
 
         Ok(ContextPrototype {
@@ -285,7 +285,7 @@ impl<'a> ContextPrototype<'a> {
     {
         let context = unsafe {
             if let Some(version) = self.version {
-                try!(create_context(self.display, &self.egl_version,
+                r#try!(create_context(self.display, &self.egl_version,
                                     &self.extensions, self.api, version, self.config_id,
                                     self.opengl.debug, self.opengl.robustness))
 

@@ -6,8 +6,8 @@ extern crate yaml_rust;
 
 use euclid::{TypedPoint2D, TypedRect, TypedSize2D, TypedTransform3D, TypedVector2D};
 use image::{save_buffer, ColorType};
-use premultiply::unpremultiply;
-use scene::{Scene, SceneProperties};
+use crate::premultiply::unpremultiply;
+use crate::scene::{Scene, SceneProperties};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -18,7 +18,7 @@ use webrender;
 use webrender::api::*;
 use webrender::api::channel::Payload;
 use webrender::api::units::*;
-use yaml_helper::StringEnum;
+use crate::yaml_helper::StringEnum;
 use yaml_rust::{Yaml, YamlEmitter};
 
 type Table = yaml_rust::yaml::Hash;
@@ -350,7 +350,7 @@ fn native_font_handle_to_yaml(
     let path = match *path_opt {
         Some(ref path) => { path.clone() },
         None => {
-            use cgfont_to_data;
+            use crate::cgfont_to_data;
             let bytes = cgfont_to_data::font_to_data(handle.0.clone()).unwrap();
             let (path_file, path) = rsrc.next_rsrc_paths(
                 "font",

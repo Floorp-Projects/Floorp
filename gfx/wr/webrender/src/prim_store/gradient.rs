@@ -7,19 +7,19 @@ use api::{
     PremultipliedColorF, LineOrientation,
 };
 use api::units::{LayoutPoint, LayoutSize, LayoutVector2D};
-use display_list_flattener::IsVisible;
+use crate::display_list_flattener::IsVisible;
 use euclid::approxeq::ApproxEq;
-use frame_builder::FrameBuildingState;
-use gpu_cache::{GpuCacheHandle, GpuDataRequest};
-use intern::{Internable, InternDebug, Handle as InternHandle};
-use internal_types::LayoutPrimitiveInfo;
-use prim_store::{BrushSegment, GradientTileRange, VectorKey};
-use prim_store::{PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData};
-use prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
-use prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
-use render_task::RenderTaskCacheEntryHandle;
+use crate::frame_builder::FrameBuildingState;
+use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
+use crate::intern::{Internable, InternDebug, Handle as InternHandle};
+use crate::internal_types::LayoutPrimitiveInfo;
+use crate::prim_store::{BrushSegment, GradientTileRange, VectorKey};
+use crate::prim_store::{PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData};
+use crate::prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
+use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
+use crate::render_task::RenderTaskCacheEntryHandle;
 use std::{hash, ops::{Deref, DerefMut}, mem};
-use util::pack_as_float;
+use crate::util::pack_as_float;
 
 /// The maximum number of stops a gradient may have to use the fast path.
 pub const GRADIENT_FP_STOPS: usize = 4;

@@ -5,13 +5,13 @@
 use api::{BorderRadius, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag};
 use api::PipelineId;
 use api::units::*;
-use clip::{ClipChainId, ClipDataStore, ClipNode, ClipItem, ClipStore};
-use clip::{rounded_rectangle_contains_point};
-use clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
-use internal_types::{FastHashMap, LayoutPrimitiveInfo};
+use crate::clip::{ClipChainId, ClipDataStore, ClipNode, ClipItem, ClipStore};
+use crate::clip::{rounded_rectangle_contains_point};
+use crate::clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
+use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo};
 use std::{ops, u32};
 use std::sync::Arc;
-use util::{LayoutToWorldFastTransform, WorldToLayoutFastTransform};
+use crate::util::{LayoutToWorldFastTransform, WorldToLayoutFastTransform};
 
 /// A copy of important clip scroll node data to use during hit testing. This a copy of
 /// data from the ClipScrollTree that will persist as a new frame is under construction,

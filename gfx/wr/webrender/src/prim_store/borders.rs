@@ -4,21 +4,21 @@
 
 use api::{NormalBorder, PremultipliedColorF, Shadow};
 use api::units::*;
-use border::create_border_segments;
-use border::NormalBorderAu;
-use display_list_flattener::{CreateShadow, IsVisible};
-use frame_builder::{FrameBuildingState};
-use gpu_cache::{GpuCache, GpuDataRequest};
-use intern;
-use internal_types::LayoutPrimitiveInfo;
-use prim_store::{
+use crate::border::create_border_segments;
+use crate::border::NormalBorderAu;
+use crate::display_list_flattener::{CreateShadow, IsVisible};
+use crate::frame_builder::{FrameBuildingState};
+use crate::gpu_cache::{GpuCache, GpuDataRequest};
+use crate::intern;
+use crate::internal_types::LayoutPrimitiveInfo;
+use crate::prim_store::{
     BorderSegmentInfo, BrushSegment, NinePatchDescriptor, PrimKey,
     PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
     PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData,
     PrimitiveStore, InternablePrimitive,
 };
-use resource_cache::{ImageRequest, ResourceCache};
-use storage;
+use crate::resource_cache::{ImageRequest, ResourceCache};
+use crate::storage;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]

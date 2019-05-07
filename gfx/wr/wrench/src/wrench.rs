@@ -3,15 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-use blob;
+use crate::blob;
 use crossbeam::sync::chase_lev;
 #[cfg(windows)]
 use dwrote;
 #[cfg(all(unix, not(target_os = "android")))]
 use font_loader::system_fonts;
 use winit::EventsLoopProxy;
-use json_frame_writer::JsonFrameWriter;
-use ron_frame_writer::RonFrameWriter;
+use crate::json_frame_writer::JsonFrameWriter;
+use crate::ron_frame_writer::RonFrameWriter;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -21,8 +21,8 @@ use webrender;
 use webrender::api::*;
 use webrender::api::units::*;
 use webrender::{DebugFlags, RenderResults, ShaderPrecacheFlags};
-use yaml_frame_writer::YamlFrameWriterReceiver;
-use {WindowWrapper, NotifierEvent};
+use crate::yaml_frame_writer::YamlFrameWriterReceiver;
+use crate::{WindowWrapper, NotifierEvent};
 
 // TODO(gw): This descriptor matches what we currently support for fonts
 //           but is quite a mess. We should at least document and
@@ -120,7 +120,7 @@ impl RenderNotifier for Notifier {
 pub trait WrenchThing {
     fn next_frame(&mut self);
     fn prev_frame(&mut self);
-    fn do_frame(&mut self, &mut Wrench) -> u32;
+    fn do_frame(&mut self, _: &mut Wrench) -> u32;
 }
 
 impl WrenchThing for CapturedDocument {

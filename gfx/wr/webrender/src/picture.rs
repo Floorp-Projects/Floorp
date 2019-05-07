@@ -6,39 +6,39 @@ use api::{FilterOp, MixBlendMode, PipelineId, PremultipliedColorF};
 use api::{PropertyBinding, PropertyBindingId};
 use api::{DebugFlags, RasterSpace, ColorF, ImageKey, ClipMode};
 use api::units::*;
-use box_shadow::{BLUR_SAMPLE_SCALE};
-use clip::{ClipChainId, ClipChainNode, ClipItem, ClipStore, ClipDataStore, ClipChainStack};
-use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
+use crate::box_shadow::{BLUR_SAMPLE_SCALE};
+use crate::clip::{ClipChainId, ClipChainNode, ClipItem, ClipStore, ClipDataStore, ClipChainStack};
+use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
     ClipScrollTree, CoordinateSystemId, SpatialNodeIndex, VisibleFace
 };
-use debug_colors;
+use crate::debug_colors;
 use euclid::{size2, vec3, TypedPoint2D, TypedScale, TypedSize2D};
 use euclid::approxeq::ApproxEq;
-use frame_builder::{FrameVisibilityContext, FrameVisibilityState};
-use intern::ItemUid;
-use internal_types::{FastHashMap, FastHashSet, PlaneSplitter};
-use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
-use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
-use gpu_types::{TransformPalette, UvRectKind};
+use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
+use crate::intern::ItemUid;
+use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter};
+use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
+use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
+use crate::gpu_types::{TransformPalette, UvRectKind};
 use plane_split::{Clipper, Polygon, Splitter};
-use prim_store::{CoordinateSpaceMapping, SpaceMapper};
-use prim_store::{PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
-use prim_store::{get_raster_rects, PrimitiveScratchBuffer, VectorKey, PointKey};
-use prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex, RectangleKey};
-use print_tree::PrintTreePrinter;
-use render_backend::DataStores;
-use render_task::{ClearMode, RenderTask, TileBlit};
-use render_task::{RenderTaskId, RenderTaskLocation};
-use resource_cache::ResourceCache;
-use scene::{FilterOpHelpers, SceneProperties};
-use scene_builder::Interners;
+use crate::prim_store::{CoordinateSpaceMapping, SpaceMapper};
+use crate::prim_store::{PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
+use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer, VectorKey, PointKey};
+use crate::prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex, RectangleKey};
+use crate::print_tree::PrintTreePrinter;
+use crate::render_backend::DataStores;
+use crate::render_task::{ClearMode, RenderTask, TileBlit};
+use crate::render_task::{RenderTaskId, RenderTaskLocation};
+use crate::resource_cache::ResourceCache;
+use crate::scene::{FilterOpHelpers, SceneProperties};
+use crate::scene_builder::Interners;
 use smallvec::SmallVec;
 use std::{mem, u16};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use texture_cache::TextureCacheHandle;
-use tiling::RenderTargetKind;
-use util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect, scale_factors};
-use ::filterdata::{FilterDataHandle};
+use crate::texture_cache::TextureCacheHandle;
+use crate::tiling::RenderTargetKind;
+use crate::util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect, scale_factors};
+use crate::filterdata::{FilterDataHandle};
 
 /*
  A picture represents a dynamically rendered image. It consists of:

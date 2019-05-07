@@ -8,9 +8,9 @@ use euclid::{size2, TypedRect, num::Zero};
 use std::ops::{Add, Sub};
 use std::sync::Arc;
 // local imports
-use api::{IdNamespace, TileSize};
-use font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
-use units::*;
+use crate::api::{IdNamespace, TileSize};
+use crate::font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
+use crate::units::*;
 
 /// An opaque identifier describing an image registered with WebRender.
 /// This is used as a handle to reference images, and is used as the
@@ -398,7 +398,7 @@ where
     pub fn map<F>(self, func: F) -> Self
         where F: FnOnce(TypedRect<T, U>) -> TypedRect<T, U>,
     {
-        use DirtyRect::*;
+        use crate::DirtyRect::*;
 
         match self {
             All        => All,
@@ -408,7 +408,7 @@ where
 
     /// Unions the dirty rects.
     pub fn union(&self, other: &Self) -> Self {
-        use DirtyRect::*;
+        use crate::DirtyRect::*;
 
         match (*self, *other) {
             (All, _) | (_, All)        => All,
@@ -418,7 +418,7 @@ where
 
     /// Intersects the dirty rects.
     pub fn intersection(&self, other: &Self) -> Self {
-        use DirtyRect::*;
+        use crate::DirtyRect::*;
 
         match (*self, *other) {
             (All, rect) | (rect, All)  => rect,
@@ -429,7 +429,7 @@ where
 
     /// Converts the dirty rect into a subrect of the given one via intersection.
     pub fn to_subrect_of(&self, rect: &TypedRect<T, U>) -> TypedRect<T, U> {
-        use DirtyRect::*;
+        use crate::DirtyRect::*;
 
         match *self {
             All              => *rect,

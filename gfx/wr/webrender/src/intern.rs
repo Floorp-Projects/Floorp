@@ -33,15 +33,15 @@
 //! stored inside each handle. This is then used for
 //! cache invalidation.
 
-use internal_types::FastHashMap;
+use crate::internal_types::FastHashMap;
 use malloc_size_of::MallocSizeOf;
-use profiler::ResourceProfileCounter;
+use crate::profiler::ResourceProfileCounter;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::{mem, ops, u64};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use util::VecHelper;
+use crate::util::VecHelper;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]

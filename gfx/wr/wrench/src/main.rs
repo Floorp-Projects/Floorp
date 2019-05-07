@@ -59,13 +59,13 @@ mod yaml_helper;
 #[cfg(target_os = "macos")]
 mod cgfont_to_data;
 
-use binary_frame_reader::BinaryFrameReader;
+use crate::binary_frame_reader::BinaryFrameReader;
 use gleam::gl;
 use glutin::GlContext;
-use perf::PerfHarness;
-use png::save_flipped;
-use rawtest::RawtestHarness;
-use reftest::{ReftestHarness, ReftestOptions};
+use crate::perf::PerfHarness;
+use crate::png::save_flipped;
+use crate::rawtest::RawtestHarness;
+use crate::reftest::{ReftestHarness, ReftestOptions};
 use std::fs;
 #[cfg(feature = "headless")]
 use std::ffi::CString;
@@ -82,8 +82,8 @@ use webrender::api::*;
 use webrender::api::units::*;
 use winit::dpi::{LogicalPosition, LogicalSize};
 use winit::VirtualKeyCode;
-use wrench::{Wrench, WrenchThing};
-use yaml_frame_reader::YamlFrameReader;
+use crate::wrench::{Wrench, WrenchThing};
+use crate::yaml_frame_reader::YamlFrameReader;
 
 lazy_static! {
     static ref PLATFORM_DEFAULT_FACE_NAME: String = String::from("Arial");

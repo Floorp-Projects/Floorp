@@ -16,13 +16,13 @@ use std::{io, mem, ptr, slice};
 use std::collections::HashMap;
 use time::precise_time_ns;
 // local imports
-use display_item as di;
-use api::{PipelineId, PropertyBinding};
-use gradient_builder::GradientBuilder;
-use color::ColorF;
-use font::{FontInstanceKey, GlyphInstance, GlyphOptions};
-use image::{ColorDepth, ImageKey};
-use units::*;
+use crate::display_item as di;
+use crate::api::{PipelineId, PropertyBinding};
+use crate::gradient_builder::GradientBuilder;
+use crate::color::ColorF;
+use crate::font::{FontInstanceKey, GlyphInstance, GlyphOptions};
+use crate::image::{ColorDepth, ImageKey};
+use crate::units::*;
 
 
 // We don't want to push a long text-run. If a text-run is too long, split it into several parts.
@@ -263,7 +263,7 @@ impl<'a> BuiltDisplayListIter<'a> {
     }
 
     pub fn next<'b>(&'b mut self) -> Option<DisplayItemRef<'a, 'b>> {
-        use DisplayItem::*;
+        use crate::DisplayItem::*;
 
         match self.peeking {
             Peek::IsPeeking => {
@@ -303,7 +303,7 @@ impl<'a> BuiltDisplayListIter<'a> {
     /// and may leave irrelevant ranges live (so a Clip may have GradientStops if
     /// for some reason you ask).
     pub fn next_raw<'b>(&'b mut self) -> Option<DisplayItemRef<'a, 'b>> {
-        use DisplayItem::*;
+        use crate::DisplayItem::*;
 
         if self.data.is_empty() {
             return None;
@@ -553,8 +553,8 @@ impl<'a, T: for<'de> Deserialize<'de>> ::std::iter::ExactSizeIterator for AuxIte
 #[cfg(feature = "serialize")]
 impl Serialize for BuiltDisplayList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use display_item::DisplayItem as Real;
-        use display_item::DebugDisplayItem as Debug;
+        use crate::display_item::DisplayItem as Real;
+        use crate::display_item::DebugDisplayItem as Debug;
 
         let mut seq = serializer.serialize_seq(None)?;
         let mut traversal = self.iter();
@@ -636,8 +636,8 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
     where
         D: Deserializer<'de>,
     {
-        use display_item::DisplayItem as Real;
-        use display_item::DebugDisplayItem as Debug;
+        use crate::display_item::DisplayItem as Real;
+        use crate::display_item::DebugDisplayItem as Debug;
 
         let list = Vec::<Debug>::deserialize(deserializer)?;
 

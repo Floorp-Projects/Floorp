@@ -5,7 +5,7 @@
 use api::TileSize;
 use api::units::*;
 use euclid::{point2, size2};
-use prim_store::EdgeAaSegmentMask;
+use crate::prim_store::EdgeAaSegmentMask;
 
 use std::i32;
 use std::ops::Range;

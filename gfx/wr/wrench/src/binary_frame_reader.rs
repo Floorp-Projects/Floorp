@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::{mem, process};
 use webrender::WEBRENDER_RECORDING_HEADER;
 use webrender::api::{ApiMsg, SceneMsg};
-use wrench::{Wrench, WrenchThing};
+use crate::wrench::{Wrench, WrenchThing};
 
 #[derive(Clone)]
 enum Item {

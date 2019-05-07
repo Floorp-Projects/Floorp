@@ -4,9 +4,9 @@
 
 // list of all interned primitives to match enumerate_interners!
 
-pub use prim_store::borders::{ImageBorder, NormalBorderPrim};
-pub use prim_store::image::{Image, YuvImage};
-pub use prim_store::line_dec::{LineDecoration};
-pub use prim_store::gradient::{LinearGradient, RadialGradient};
-pub use prim_store::picture::Picture;
-pub use prim_store::text_run::TextRun;
+pub use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
+pub use crate::prim_store::image::{Image, YuvImage};
+pub use crate::prim_store::line_dec::{LineDecoration};
+pub use crate::prim_store::gradient::{LinearGradient, RadialGradient};
+pub use crate::prim_store::picture::Picture;
+pub use crate::prim_store::text_run::TextRun;
