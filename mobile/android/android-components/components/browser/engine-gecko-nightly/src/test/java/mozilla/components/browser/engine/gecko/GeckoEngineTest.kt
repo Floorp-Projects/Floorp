@@ -102,6 +102,10 @@ class GeckoEngineTest {
         engine.settings.allowAutoplayMedia = false
         verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
+        assertFalse(engine.settings.suspendMediaWhenInactive)
+        engine.settings.suspendMediaWhenInactive = true
+        assertEquals(true, engine.settings.suspendMediaWhenInactive)
+
         // Specifying no ua-string default should result in GeckoView's default.
         assertEquals(GeckoSession.getDefaultUserAgent(), engine.settings.userAgentString)
         // It also should be possible to read and set a new default.
@@ -153,7 +157,8 @@ class GeckoEngineTest {
                 testingModeEnabled = true,
                 userAgentString = "test-ua",
                 preferredColorScheme = PreferredColorScheme.Light,
-                allowAutoplayMedia = false
+                allowAutoplayMedia = false,
+                suspendMediaWhenInactive = true
             ), runtime)
 
         verify(runtimeSettings).javaScriptEnabled = false
@@ -175,6 +180,7 @@ class GeckoEngineTest {
         assertEquals("test-ua", engine.settings.userAgentString)
         assertEquals(PreferredColorScheme.Light, engine.settings.preferredColorScheme)
         assertFalse(engine.settings.allowAutoplayMedia)
+        assertTrue(engine.settings.suspendMediaWhenInactive)
     }
 
     @Test

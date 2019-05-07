@@ -141,6 +141,11 @@ abstract class Settings {
      * Setting to control whether media is allowed to auto-play on page load.
      */
     open var allowAutoplayMedia: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether media should be suspended when the session is inactive.
+     */
+    open var suspendMediaWhenInactive: Boolean by UnsupportedSetting()
 }
 
 /**
@@ -170,7 +175,8 @@ data class DefaultSettings(
     override var supportMultipleWindows: Boolean = false,
     override var preferredColorScheme: PreferredColorScheme = PreferredColorScheme.System,
     override var testingModeEnabled: Boolean = false,
-    override var allowAutoplayMedia: Boolean = true
+    override var allowAutoplayMedia: Boolean = true,
+    override var suspendMediaWhenInactive: Boolean = false
 ) : Settings()
 
 class UnsupportedSetting<T> {

@@ -911,6 +911,40 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun settingSuspendMediaWhenInactive() {
+        val runtime = mock(GeckoRuntime::class.java)
+        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
+
+        var engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+        verify(geckoSession.settings, never()).suspendMediaWhenInactive = anyBoolean()
+
+        assertFalse(engineSession.settings.suspendMediaWhenInactive)
+        verify(geckoSession.settings).suspendMediaWhenInactive
+
+        engineSession.settings.suspendMediaWhenInactive = true
+        verify(geckoSession.settings).suspendMediaWhenInactive = true
+    }
+
+    @Test
+    fun settingSuspendMediaWhenInactiveDefault() {
+        val runtime = mock(GeckoRuntime::class.java)
+        `when`(runtime.settings).thenReturn(mock(GeckoRuntimeSettings::class.java))
+
+        GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+        verify(geckoSession.settings, never()).suspendMediaWhenInactive = anyBoolean()
+
+        GeckoEngineSession(runtime,
+            geckoSessionProvider = geckoSessionProvider,
+            defaultSettings = DefaultSettings())
+        verify(geckoSession.settings).suspendMediaWhenInactive = false
+
+        GeckoEngineSession(runtime,
+            geckoSessionProvider = geckoSessionProvider,
+            defaultSettings = DefaultSettings(suspendMediaWhenInactive = true))
+        verify(geckoSession.settings).suspendMediaWhenInactive = true
+    }
+
+    @Test
     fun unsupportedSettings() {
         val settings = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider).settings

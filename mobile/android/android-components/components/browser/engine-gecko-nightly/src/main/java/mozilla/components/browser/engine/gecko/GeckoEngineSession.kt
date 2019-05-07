@@ -69,6 +69,9 @@ class GeckoEngineSession(
         override var userAgentString: String?
             get() = geckoSession.settings.userAgentOverride
             set(value) { geckoSession.settings.userAgentOverride = value }
+        override var suspendMediaWhenInactive: Boolean
+            get() = geckoSession.settings.suspendMediaWhenInactive
+            set(value) { geckoSession.settings.suspendMediaWhenInactive = value }
     }
 
     private var initialLoad = true
@@ -604,12 +607,9 @@ class GeckoEngineSession(
         defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
         defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
         defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
-        defaultSettings?.testingModeEnabled?.let {
-            geckoSession.settings.fullAccessibilityTree = it
-        }
-        defaultSettings?.userAgentString?.let {
-            geckoSession.settings.userAgentOverride = it
-        }
+        defaultSettings?.testingModeEnabled?.let { geckoSession.settings.fullAccessibilityTree = it }
+        defaultSettings?.userAgentString?.let { geckoSession.settings.userAgentOverride = it }
+        defaultSettings?.suspendMediaWhenInactive?.let { geckoSession.settings.suspendMediaWhenInactive = it }
 
         geckoSession.open(runtime)
 

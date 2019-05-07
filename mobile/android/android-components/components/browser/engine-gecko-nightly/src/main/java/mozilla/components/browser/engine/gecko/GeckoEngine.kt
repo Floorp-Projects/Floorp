@@ -166,6 +166,10 @@ class GeckoEngine(
                     GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
                 }
             }
+
+        override var suspendMediaWhenInactive: Boolean
+            get() = defaultSettings?.suspendMediaWhenInactive ?: false
+            set(value) { defaultSettings?.suspendMediaWhenInactive = value }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
@@ -178,6 +182,7 @@ class GeckoEngine(
             this.userAgentString = it.userAgentString
             this.preferredColorScheme = it.preferredColorScheme
             this.allowAutoplayMedia = it.allowAutoplayMedia
+            this.suspendMediaWhenInactive = it.suspendMediaWhenInactive
         }
     }
 }

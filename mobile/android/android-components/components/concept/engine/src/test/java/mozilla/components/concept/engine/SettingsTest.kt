@@ -70,7 +70,9 @@ class SettingsTest {
             { settings.testingModeEnabled },
             { settings.testingModeEnabled = false },
             { settings.allowAutoplayMedia },
-            { settings.allowAutoplayMedia = false }
+            { settings.allowAutoplayMedia = false },
+            { settings.suspendMediaWhenInactive },
+            { settings.suspendMediaWhenInactive = false }
         )
     }
 
@@ -106,6 +108,7 @@ class SettingsTest {
         assertEquals(PreferredColorScheme.System, settings.preferredColorScheme)
         assertFalse(settings.testingModeEnabled)
         assertTrue(settings.allowAutoplayMedia)
+        assertFalse(settings.suspendMediaWhenInactive)
 
         val interceptor: RequestInterceptor = mock()
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
@@ -134,7 +137,8 @@ class SettingsTest {
             supportMultipleWindows = true,
             preferredColorScheme = PreferredColorScheme.Dark,
             testingModeEnabled = true,
-            allowAutoplayMedia = false)
+            allowAutoplayMedia = false,
+            suspendMediaWhenInactive = true)
 
         assertFalse(defaultSettings.domStorageEnabled)
         assertFalse(defaultSettings.javascriptEnabled)
@@ -160,5 +164,6 @@ class SettingsTest {
         assertEquals(PreferredColorScheme.Dark, defaultSettings.preferredColorScheme)
         assertTrue(defaultSettings.testingModeEnabled)
         assertFalse(defaultSettings.allowAutoplayMedia)
+        assertTrue(defaultSettings.suspendMediaWhenInactive)
     }
 }

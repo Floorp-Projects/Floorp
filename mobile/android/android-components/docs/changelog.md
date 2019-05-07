@@ -72,6 +72,16 @@ permalink: /changelog/
 * **browser-engine-system**
   * Added support for Authentication dialogs on SystemEngineView.
 
+* **concept-engine**, **browser-engine-gecko-nightly**
+  * Added `suspendMediaWhenInactive` setting to control whether media should be suspended when the session is inactive. The default is `false`.
+  ```kotlin
+  // To provide a default when creating the engine:
+  GeckoEngine(runtime, DefaultSettings(suspendMediaWhenInactive = true))
+
+  // To change the value for a specific session:
+  engineSession.settings.suspendMediaWhenInactive = true
+  ```  
+
 # 0.51.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.50.0...v0.51.0)
