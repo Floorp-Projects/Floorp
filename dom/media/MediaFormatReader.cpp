@@ -2953,7 +2953,7 @@ layers::ImageContainer* MediaFormatReader::GetImageContainer() {
                               : nullptr;
 }
 
-void MediaFormatReader::GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo) {
+void MediaFormatReader::GetMozDebugReaderData(nsACString& aString) {
   nsCString result;
   nsAutoCString audioDecoderName("unavailable");
   nsAutoCString videoDecoderName = audioDecoderName;
@@ -2982,76 +2982,70 @@ void MediaFormatReader::GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo) {
     }
   }
 
-  aInfo.mAudioDecoderName = NS_ConvertUTF8toUTF16(audioDecoderName);
-  aInfo.mAudioType = NS_ConvertUTF8toUTF16(audioType);
-  aInfo.mAudioChannels = audioInfo.mChannels;
-  aInfo.mAudioRate = audioInfo.mRate / 1000.0f;
-  aInfo.mAudioFramesDecoded = mAudio.mNumSamplesOutputTotal;
-
+  result += nsPrintfCString("Audio Decoder(%s, %u channels @ %0.1fkHz): %s\n",
+                            audioType.get(), audioInfo.mChannels,
+                            audioInfo.mRate / 1000.0f, audioDecoderName.get());
+  result += nsPrintfCString("Audio Frames Decoded: %" PRIu64 "\n",
+                            mAudio.mNumSamplesOutputTotal);
   if (HasAudio()) {
-    aInfo.mAudioState.mNeedInput = NeedInput(mAudio);
-    aInfo.mAudioState.mHasPromise = mAudio.HasPromise();
-    aInfo.mAudioState.mWaitingPromise = !mAudio.mWaitingPromise.IsEmpty();
-    aInfo.mAudioState.mHasDemuxRequest = mAudio.mDemuxRequest.Exists();
-    aInfo.mAudioState.mDemuxQueueSize =
-        uint32_t(mAudio.mQueuedSamples.Length());
-    aInfo.mAudioState.mHasDecoder = mAudio.mDecodeRequest.Exists();
-    aInfo.mAudioState.mTimeTreshold =
+    result += nsPrintfCString(
+        "Audio State: ni=%d no=%d wp=%d demuxr=%d demuxq=%u decoder=%d tt=%.1f "
+        "tths=%d in=%" PRIu64 " out=%" PRIu64
+        " qs=%u pending=%u wfd=%d eos=%d ds=%d wfk=%d sid=%u\n",
+        NeedInput(mAudio), mAudio.HasPromise(),
+        !mAudio.mWaitingPromise.IsEmpty(), mAudio.mDemuxRequest.Exists(),
+        uint32_t(mAudio.mQueuedSamples.Length()),
+        mAudio.mDecodeRequest.Exists(),
         mAudio.mTimeThreshold ? mAudio.mTimeThreshold.ref().Time().ToSeconds()
-                              : -1.0;
-    aInfo.mAudioState.mTimeTresholdHasSeeked =
-        mAudio.mTimeThreshold ? mAudio.mTimeThreshold.ref().mHasSeeked : false;
-    aInfo.mAudioState.mNumSamplesInput = mAudio.mNumSamplesInput;
-    aInfo.mAudioState.mNumSamplesOutput = mAudio.mNumSamplesOutput;
-    aInfo.mAudioState.mQueueSize = size_t(mAudio.mSizeOfQueue);
-    aInfo.mAudioState.mPending = mAudio.mOutput.Length();
-    aInfo.mAudioState.mWaitingForData = mAudio.mWaitingForData;
-    aInfo.mAudioState.mDemuxEOS = mAudio.mDemuxEOS;
-    aInfo.mAudioState.mDrainState = int32_t(mAudio.mDrainState);
-    aInfo.mAudioState.mWaitingForKey = mAudio.mWaitingForKey;
-    aInfo.mAudioState.mLastStreamSourceID = mAudio.mLastStreamSourceID;
+                              : -1.0,
+        mAudio.mTimeThreshold ? mAudio.mTimeThreshold.ref().mHasSeeked : -1,
+        mAudio.mNumSamplesInput, mAudio.mNumSamplesOutput,
+        unsigned(size_t(mAudio.mSizeOfQueue)),
+        unsigned(mAudio.mOutput.Length()), mAudio.mWaitingForData,
+        mAudio.mDemuxEOS, int32_t(mAudio.mDrainState), mAudio.mWaitingForKey,
+        mAudio.mLastStreamSourceID);
   }
 
-  aInfo.mVideoDecoderName = NS_ConvertUTF8toUTF16(videoDecoderName);
-  aInfo.mVideoType = NS_ConvertUTF8toUTF16(videoType);
-  aInfo.mVideoWidth =
-      videoInfo.mDisplay.width < 0 ? 0 : videoInfo.mDisplay.width;
-  aInfo.mVideoHeight =
-      videoInfo.mDisplay.height < 0 ? 0 : videoInfo.mDisplay.height;
-  aInfo.mVideoRate = mVideo.mMeanRate.Mean();
-  aInfo.mVideoHardwareAccelerated = VideoIsHardwareAccelerated();
-  aInfo.mVideoNumSamplesOutputTotal = mVideo.mNumSamplesOutputTotal;
-  aInfo.mVideoNumSamplesSkippedTotal = mVideo.mNumSamplesSkippedTotal;
+  result += nsPrintfCString(
+      "Video Decoder(%s, %dx%d @ %0.2f): %s\n", videoType.get(),
+      videoInfo.mDisplay.width < 0 ? 0 : videoInfo.mDisplay.width,
+      videoInfo.mDisplay.height < 0 ? 0 : videoInfo.mDisplay.height,
+      mVideo.mMeanRate.Mean(), videoDecoderName.get());
 
+  result +=
+      nsPrintfCString("Hardware Video Decoding: %s\n",
+                      VideoIsHardwareAccelerated() ? "enabled" : "disabled");
+  result += nsPrintfCString(
+      "Video Frames Decoded: %" PRIu64 " (skipped=%" PRIu64 ")\n",
+      mVideo.mNumSamplesOutputTotal, mVideo.mNumSamplesSkippedTotal);
   if (HasVideo()) {
-    aInfo.mVideoState.mNeedInput = NeedInput(mVideo);
-    aInfo.mVideoState.mHasPromise = mVideo.HasPromise();
-    aInfo.mVideoState.mWaitingPromise = !mVideo.mWaitingPromise.IsEmpty();
-    aInfo.mVideoState.mHasDemuxRequest = mVideo.mDemuxRequest.Exists();
-    aInfo.mVideoState.mDemuxQueueSize =
-        uint32_t(mVideo.mQueuedSamples.Length());
-    aInfo.mVideoState.mHasDecoder = mVideo.mDecodeRequest.Exists();
-    aInfo.mVideoState.mTimeTreshold =
+    result += nsPrintfCString(
+        "Video State: ni=%d no=%d wp=%d demuxr=%d demuxq=%u decoder=%d tt=%.1f "
+        "tths=%d in=%" PRIu64 " out=%" PRIu64
+        " qs=%u pending:%u wfd=%d eos=%d ds=%d wfk=%d sid=%u\n",
+        NeedInput(mVideo), mVideo.HasPromise(),
+        !mVideo.mWaitingPromise.IsEmpty(), mVideo.mDemuxRequest.Exists(),
+        uint32_t(mVideo.mQueuedSamples.Length()),
+        mVideo.mDecodeRequest.Exists(),
         mVideo.mTimeThreshold ? mVideo.mTimeThreshold.ref().Time().ToSeconds()
-                              : -1.0;
-    aInfo.mVideoState.mTimeTresholdHasSeeked =
-        mVideo.mTimeThreshold ? mVideo.mTimeThreshold.ref().mHasSeeked : false;
-    aInfo.mVideoState.mNumSamplesInput = mVideo.mNumSamplesInput;
-    aInfo.mVideoState.mNumSamplesOutput = mVideo.mNumSamplesOutput;
-    aInfo.mVideoState.mQueueSize = size_t(mVideo.mSizeOfQueue);
-    aInfo.mVideoState.mPending = mVideo.mOutput.Length();
-    aInfo.mVideoState.mWaitingForData = mVideo.mWaitingForData;
-    aInfo.mVideoState.mDemuxEOS = mVideo.mDemuxEOS;
-    aInfo.mVideoState.mDrainState = int32_t(mVideo.mDrainState);
-    aInfo.mVideoState.mWaitingForKey = mVideo.mWaitingForKey;
-    aInfo.mVideoState.mLastStreamSourceID = mVideo.mLastStreamSourceID;
+                              : -1.0,
+        mVideo.mTimeThreshold ? mVideo.mTimeThreshold.ref().mHasSeeked : -1,
+        mVideo.mNumSamplesInput, mVideo.mNumSamplesOutput,
+        unsigned(size_t(mVideo.mSizeOfQueue)),
+        unsigned(mVideo.mOutput.Length()), mVideo.mWaitingForData,
+        mVideo.mDemuxEOS, int32_t(mVideo.mDrainState), mVideo.mWaitingForKey,
+        mVideo.mLastStreamSourceID);
   }
 
-  // Looking at dropped frames
+  // Looking at dropped frames in details.
   FrameStatisticsData stats = mFrameStats->GetFrameStatisticsData();
-  aInfo.mFrameStats.mDroppedDecodedFrames = stats.mDroppedDecodedFrames;
-  aInfo.mFrameStats.mDroppedSinkFrames = stats.mDroppedSinkFrames;
-  aInfo.mFrameStats.mDroppedCompositorFrames = stats.mDroppedCompositorFrames;
+  result +=
+      nsPrintfCString("Dropped Frames: reader=%" PRIu64 " sink=%" PRIu64
+                      " compositor=%" PRIu64 "\n",
+                      stats.mDroppedDecodedFrames, stats.mDroppedSinkFrames,
+                      stats.mDroppedCompositorFrames);
+
+  aString += result;
 }
 
 void MediaFormatReader::SetVideoNullDecode(bool aIsNullDecode) {

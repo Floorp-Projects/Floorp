@@ -12,7 +12,6 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
-#include "mozilla/dom/MediaDebugInfoBinding.h"
 
 class nsIPrincipal;
 
@@ -109,7 +108,7 @@ class BaseMediaResource : public MediaResource,
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  virtual void GetDebugInfo(dom::MediaResourceDebugInfo& aInfo) {}
+  virtual nsCString GetDebugInfo() { return nsCString(); }
 
  protected:
   BaseMediaResource(MediaResourceCallback* aCallback, nsIChannel* aChannel,

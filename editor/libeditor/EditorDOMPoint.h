@@ -115,10 +115,11 @@ class EditorDOMPointBase final {
         mChild(aPointedNode),
         mOffset(mozilla::Some(aOffset)),
         mIsChildInitialized(true) {
-    MOZ_RELEASE_ASSERT(
+    MOZ_DIAGNOSTIC_ASSERT(
         aContainer, "This constructor shouldn't be used when pointing nowhere");
     MOZ_ASSERT(mOffset.value() <= mParent->Length());
-    MOZ_ASSERT(mChild || mParent->Length() == mOffset.value());
+    MOZ_ASSERT(mChild || mParent->Length() == mOffset.value() ||
+               !mParent->IsContainerNode());
     MOZ_ASSERT(!mChild || mParent == mChild->GetParentNode());
     MOZ_ASSERT(mParent->GetChildAt_Deprecated(mOffset.value()) == mChild);
   }

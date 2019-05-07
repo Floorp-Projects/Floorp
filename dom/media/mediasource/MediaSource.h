@@ -114,9 +114,9 @@ class MediaSource final : public DOMEventTargetHelper,
 
   nsIPrincipal* GetPrincipal() { return mPrincipal; }
 
-  // Returns a structure describing the state of the MediaSource internal
+  // Returns a string describing the state of the MediaSource internal
   // buffered data. Used for debugging purposes.
-  already_AddRefed<Promise> MozDebugReaderData(ErrorResult& aRv);
+  void GetMozDebugReaderData(nsAString& aString);
 
   bool HasLiveSeekableRange() const { return mLiveSeekableRange.isSome(); }
   media::TimeInterval LiveSeekableRange() const {
