@@ -66,7 +66,8 @@ class DecodedStream : public MediaSink {
   bool IsStarted() const override;
   bool IsPlaying() const override;
   void Shutdown() override;
-  void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
+
+  nsCString GetDebugInfo() override;
 
  protected:
   virtual ~DecodedStream();

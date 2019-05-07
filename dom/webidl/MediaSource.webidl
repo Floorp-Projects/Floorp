@@ -42,6 +42,6 @@ interface MediaSource : EventTarget {
   [Throws]
   void clearLiveSeekableRange();
   static boolean isTypeSupported(DOMString type);
-  [Throws, ChromeOnly]
-  Promise<MediaSourceDecoderDebugInfo> mozDebugReaderData();
+  [ChromeOnly]
+  readonly attribute DOMString mozDebugReaderData;
 };
