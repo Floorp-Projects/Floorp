@@ -8,10 +8,11 @@
 #define mozilla_dom_BrowserBridgeParent_h
 
 #include "mozilla/dom/PBrowserBridgeParent.h"
-#include "mozilla/dom/BrowserParent.h"
 
 namespace mozilla {
 namespace dom {
+
+class BrowserParent;
 
 /**
  * BrowserBridgeParent implements the parent actor part of the PBrowserBridge
@@ -30,15 +31,10 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
 
   BrowserParent* GetBrowserParent() { return mBrowserParent; }
 
-  CanonicalBrowsingContext* GetBrowsingContext() {
-    return mBrowserParent->GetBrowsingContext();
-  }
+  CanonicalBrowsingContext* GetBrowsingContext();
 
   // Get our manager actor.
-  BrowserParent* Manager() {
-    MOZ_ASSERT(mIPCOpen);
-    return static_cast<BrowserParent*>(PBrowserBridgeParent::Manager());
-  }
+  BrowserParent* Manager();
 
   // Tear down this BrowserBridgeParent.
   void Destroy();
