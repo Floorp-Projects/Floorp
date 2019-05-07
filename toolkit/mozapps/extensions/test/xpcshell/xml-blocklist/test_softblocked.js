@@ -4,7 +4,7 @@
 
 const testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
-testserver.registerDirectory("/data/", do_get_file("data"));
+testserver.registerDirectory("/data/", do_get_file("../data"));
 
 
 function load_blocklist(aFile) {
