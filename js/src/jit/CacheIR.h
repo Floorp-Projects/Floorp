@@ -326,7 +326,9 @@ extern const uint32_t ArgLengths[];
   _(LoadEnvironmentDynamicSlotResult, Id, Field)                               \
   _(LoadObjectResult, Id)                                                      \
   _(CallScriptedGetterResult, Id, Field, Byte)                                 \
+  _(CallScriptedGetterByValueResult, Id, Field, Byte)                          \
   _(CallNativeGetterResult, Id, Field)                                         \
+  _(CallNativeGetterByValueResult, Id, Field)                                  \
   _(CallProxyGetResult, Id, Field)                                             \
   _(CallProxyGetByValueResult, Id, Id)                                         \
   _(CallProxyHasPropResult, Id, Id, Byte)                                      \
@@ -1639,8 +1641,17 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(getter), StubField::Type::JSObject);
     buffer_.writeByte(cx_->realm() == getter->realm());
   }
+  void callScriptedGetterByValueResult(ValOperandId obj, JSFunction* getter) {
+    writeOpWithOperandId(CacheOp::CallScriptedGetterByValueResult, obj);
+    addStubField(uintptr_t(getter), StubField::Type::JSObject);
+    buffer_.writeByte(cx_->realm() == getter->realm());
+  }
   void callNativeGetterResult(ObjOperandId obj, JSFunction* getter) {
     writeOpWithOperandId(CacheOp::CallNativeGetterResult, obj);
+    addStubField(uintptr_t(getter), StubField::Type::JSObject);
+  }
+  void callNativeGetterByValueResult(ValOperandId obj, JSFunction* getter) {
+    writeOpWithOperandId(CacheOp::CallNativeGetterByValueResult, obj);
     addStubField(uintptr_t(getter), StubField::Type::JSObject);
   }
   void callProxyGetResult(ObjOperandId obj, jsid id) {
