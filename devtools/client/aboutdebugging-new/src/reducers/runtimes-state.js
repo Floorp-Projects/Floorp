@@ -105,7 +105,12 @@ function runtimesReducer(state = RuntimesState(), action) {
 
     case CONNECT_RUNTIME_SUCCESS: {
       const { id, runtimeDetails, type } = action.runtime;
-      remoteClientManager.setClient(id, type, runtimeDetails.clientWrapper.client);
+
+      // Update the remoteClientManager with the connected runtime.
+      const client = runtimeDetails.clientWrapper.client;
+      const runtimeInfo = runtimeDetails.info;
+      remoteClientManager.setClient(id, type, client, runtimeInfo);
+
       const updatedState = {
         isConnecting: false,
         isConnectionFailed: false,
