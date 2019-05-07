@@ -10,20 +10,21 @@ use euclid::{TypedPoint2D, TypedSize2D, TypedVector2D};
 use pathfinder_font_renderer;
 use pathfinder_partitioner::mesh::Mesh as PathfinderMesh;
 use pathfinder_path_utils::cubic_to_quadratic::CubicToQuadraticTransformer;
-use render_task::{RenderTask, RenderTaskTree, RenderTaskCache, RenderTaskCacheKey, RenderTaskCacheEntryHandle,
-                  RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
-use resource_cache::CacheItem;
+use crate::render_task::{RenderTask, RenderTaskTree, RenderTaskCache, RenderTaskCacheKey,
+                         RenderTaskCacheEntryHandle, RenderTaskCacheKeyKind, RenderTaskId,
+                         RenderTaskLocation};
+use crate::resource_cache::CacheItem;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex, MutexGuard};
-use glyph_rasterizer::AddFont;
-use internal_types::ResourceCacheError;
-use glyph_cache::{GlyphCache, GlyphCacheEntry, CachedGlyphInfo};
+use crate::glyph_rasterizer::AddFont;
+use crate::internal_types::ResourceCacheError;
+use crate::glyph_cache::{GlyphCache, GlyphCacheEntry, CachedGlyphInfo};
 use std::collections::hash_map::Entry;
 use std::f32;
-use glyph_rasterizer::{FontInstance, GlyphRasterizer, GlyphFormat, GlyphKey, FontContexts};
-use texture_cache::TextureCache;
-use gpu_cache::GpuCache;
-use profiler::TextureCacheProfileCounters;
+use crate::glyph_rasterizer::{FontInstance, GlyphRasterizer, GlyphFormat, GlyphKey, FontContexts};
+use crate::texture_cache::TextureCache;
+use crate::gpu_cache::GpuCache;
+use crate::profiler::TextureCacheProfileCounters;
 
 /// Should match macOS 10.13 High Sierra.
 ///
@@ -169,7 +170,7 @@ impl GlyphRasterizer {
         for glyph_key in glyph_keys {
             let mut cached_glyph_info = None;
             match glyph_key_cache.entry(glyph_key.clone()) {
-                Entry::Occupied(mut entry) => {
+                Entry::Occupied(entry) => {
                     let value = entry.into_mut();
                     match *value {
                         GlyphCacheEntry::Cached(ref glyph_info) => {
@@ -182,7 +183,7 @@ impl GlyphRasterizer {
             }
 
             if cached_glyph_info.is_none() {
-                let mut pathfinder_font_context = self.font_contexts.lock_pathfinder_context();
+                let pathfinder_font_context = self.font_contexts.lock_pathfinder_context();
 
                 let pathfinder_font_instance = pathfinder_font_renderer::FontInstance {
                     font_key: font.font_key.clone(),
@@ -285,8 +286,8 @@ fn request_render_task_from_pathfinder(
 
     // TODO(pcwalton): Fall back to CPU rendering if Pathfinder fails to collect the outline.
     let mut mesh = PathfinderMesh::new();
-    let outline = try!(font_context.glyph_outline(&pathfinder_font_instance,
-                                                  &pathfinder_glyph_key));
+    let outline = font_context.glyph_outline(&pathfinder_font_instance,
+                                             &pathfinder_glyph_key)?;
     let tolerance = CUBIC_TO_QUADRATIC_APPROX_TOLERANCE;
     mesh.push_stencil_segments(CubicToQuadraticTransformer::new(outline.iter(), tolerance));
     mesh.push_stencil_normals(CubicToQuadraticTransformer::new(outline.iter(), tolerance));

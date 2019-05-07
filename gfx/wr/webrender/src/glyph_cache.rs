@@ -3,17 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[cfg(feature = "pathfinder")]
-use api::units::DeviceIntPoint;
-use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
-use internal_types::FastHashMap;
-use render_task::RenderTaskCache;
+use crate::api::units::DeviceIntPoint;
+use crate::glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
+use crate::internal_types::FastHashMap;
+use crate::render_task::RenderTaskCache;
 #[cfg(feature = "pathfinder")]
-use render_task::RenderTaskCacheKey;
-use resource_cache::ResourceClassCache;
+use crate::render_task::RenderTaskCacheKey;
+use crate::resource_cache::ResourceClassCache;
 use std::sync::Arc;
-use texture_cache::{EvictionNotice, TextureCache};
+use crate::texture_cache::{EvictionNotice, TextureCache};
 #[cfg(not(feature = "pathfinder"))]
-use texture_cache::TextureCacheHandle;
+use crate::texture_cache::TextureCacheHandle;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]

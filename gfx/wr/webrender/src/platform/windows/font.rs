@@ -5,9 +5,9 @@
 use api::{FontInstanceFlags, FontKey, FontRenderMode, FontVariation};
 use api::{ColorU, GlyphDimensions, NativeFontHandle};
 use dwrote;
-use gamma_lut::ColorLut;
-use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
-use internal_types::{FastHashMap, FastHashSet, ResourceCacheError};
+use crate::gamma_lut::ColorLut;
+use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
+use crate::internal_types::{FastHashMap, FastHashSet, ResourceCacheError};
 use std::borrow::Borrow;
 use std::collections::hash_map::Entry;
 use std::hash::{Hash, Hasher};
@@ -17,11 +17,11 @@ use std::sync::{Arc, Mutex};
 cfg_if! {
     if #[cfg(feature = "pathfinder")] {
         use pathfinder_font_renderer::{PathfinderComPtr, IDWriteFontFace};
-        use glyph_rasterizer::NativeFontHandleWrapper;
+        use crate::glyph_rasterizer::NativeFontHandleWrapper;
     } else if #[cfg(not(feature = "pathfinder"))] {
         use api::FontInstancePlatformOptions;
-        use glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
-        use gamma_lut::GammaLut;
+        use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
+        use crate::gamma_lut::GammaLut;
     }
 }
 

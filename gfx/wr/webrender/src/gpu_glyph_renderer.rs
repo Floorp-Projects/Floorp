@@ -4,18 +4,18 @@
 
 //! GPU glyph rasterization using Pathfinder.
 
-use api::{ImageFormat, FontRenderMode, TextureTarget};
-use api::units::*;
-use debug_colors;
-use device::{DrawTarget, Device, Texture, TextureFilter, VAO};
+use crate::api::{ImageFormat, FontRenderMode, TextureTarget};
+use crate::api::units::*;
+use crate::debug_colors;
+use crate::device::{DrawTarget, Device, Texture, TextureFilter, VAO};
 use euclid::{Point2D, Size2D, Transform3D, TypedVector2D, Vector2D};
-use internal_types::RenderTargetInfo;
+use crate::internal_types::RenderTargetInfo;
 use pathfinder_gfx_utils::ShelfBinPacker;
-use profiler::GpuProfileTag;
-use renderer::{self, ImageBufferKind, Renderer, RendererError, RendererStats};
-use renderer::{TextureSampler, VertexArrayKind, ShaderPrecacheFlags};
-use shade::{LazilyCompiledShader, ShaderKind};
-use tiling::GlyphJob;
+use crate::profiler::GpuProfileTag;
+use crate::renderer::{self, ImageBufferKind, Renderer, RendererError, RendererStats};
+use crate::renderer::{TextureSampler, VertexArrayKind, ShaderPrecacheFlags};
+use crate::shade::{LazilyCompiledShader, ShaderKind};
+use crate::tiling::GlyphJob;
 
 // The area lookup table in uncompressed grayscale TGA format (TGA image format 3).
 static AREA_LUT_TGA_BYTES: &'static [u8] = include_bytes!("../res/area-lut.tga");
@@ -71,21 +71,18 @@ impl GpuGlyphRenderer {
                                                                     prim_vao);
 
         // Load Pathfinder vector graphics shaders.
-        let vector_stencil = try!{
+        let vector_stencil =
             LazilyCompiledShader::new(ShaderKind::VectorStencil,
                                       "pf_vector_stencil",
                                       &[ImageBufferKind::Texture2D.get_feature_string()],
                                       device,
-                                      precache_flags)
-        };
-        let vector_cover = try!{
+                                      precache_flags)?;
+        let vector_cover =
             LazilyCompiledShader::new(ShaderKind::VectorCover,
                                       "pf_vector_cover",
                                       &[ImageBufferKind::Texture2D.get_feature_string()],
                                       device,
-                                      precache_flags)
-        };
-
+                                      precache_flags)?;
         Ok(GpuGlyphRenderer {
             area_lut_texture,
             vector_stencil_vao,
