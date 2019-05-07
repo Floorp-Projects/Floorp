@@ -540,14 +540,9 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
     mBrowsingContext->SetEmbedderElement(mFrameElement);
   }
 
-  // Ensure all BrowserParent actors within BrowserBridges are also updated.
-  const auto& browserBridges = ManagedPBrowserBridgeParent();
-  for (auto iter = browserBridges.ConstIter(); !iter.Done(); iter.Next()) {
-    BrowserBridgeParent* browserBridge =
-        static_cast<BrowserBridgeParent*>(iter.Get()->GetKey());
-
-    browserBridge->GetBrowserParent()->SetOwnerElement(aElement);
-  }
+  VisitChildren([aElement](BrowserBridgeParent* aBrowser) {
+    aBrowser->GetBrowserParent()->SetOwnerElement(aElement);
+  });
 }
 
 NS_IMETHODIMP BrowserParent::GetOwnerElement(Element** aElement) {
