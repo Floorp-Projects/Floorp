@@ -1,4 +1,4 @@
-const { BlocklistClients } = ChromeUtils.import("resource://services-common/blocklist-clients.js");
+const BlocklistGlobal = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
 const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
 
 const APP_ID = "xpcshell@tests.mozilla.org";
@@ -22,9 +22,10 @@ async function createRecords(records) {
 
 
 function run_test() {
+  AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "58", "");
   // This will initialize the remote settings clients for blocklists,
   // with their specific options etc.
-  BlocklistClients.initialize();
+  BlocklistGlobal.PluginBlocklistRS._ensureInitialized();
   // Obtain one of the instantiated client for our tests.
   client = RemoteSettings("plugins", { bucketName: "blocklists" });
 
@@ -35,6 +36,7 @@ add_task(async function test_returns_all_without_target() {
   await createRecords([{
     matchName: "Adobe Flex",
   }, {
+    matchName: "foopydoo",
     versionRange: [],
   }, {
     matchName: "PDF reader",
@@ -51,6 +53,7 @@ add_task(async function test_returns_all_without_target() {
     }],
     matchFilename: "libnpjp2\\.so",
   }, {
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [],
       maxVersion: "1",
@@ -67,12 +70,14 @@ add_task(clear_state);
 add_task(async function test_returns_without_guid_or_with_matching_guid() {
   await createRecords([{
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
       }],
     }],
   }, {
     willMatch: false,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: "some-guid",
@@ -80,6 +85,7 @@ add_task(async function test_returns_without_guid_or_with_matching_guid() {
     }],
   }, {
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
@@ -87,6 +93,7 @@ add_task(async function test_returns_without_guid_or_with_matching_guid() {
     }],
   }, {
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: TOOLKIT_ID,
@@ -95,6 +102,7 @@ add_task(async function test_returns_without_guid_or_with_matching_guid() {
   }]);
 
   const list = await client.get();
+  info(JSON.stringify(list, null, 2));
   equal(list.length, 3);
   ok(list.every(e => e.willMatch));
 });
@@ -103,6 +111,7 @@ add_task(clear_state);
 add_task(async function test_returns_without_app_version_or_with_matching_version() {
   await createRecords([{
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
@@ -110,6 +119,7 @@ add_task(async function test_returns_without_app_version_or_with_matching_versio
     }],
   }, {
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
@@ -118,6 +128,7 @@ add_task(async function test_returns_without_app_version_or_with_matching_versio
     }],
   }, {
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
@@ -127,6 +138,7 @@ add_task(async function test_returns_without_app_version_or_with_matching_versio
     }],
   }, {
     willMatch: false,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
@@ -136,6 +148,7 @@ add_task(async function test_returns_without_app_version_or_with_matching_versio
     }],
   }, {
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: TOOLKIT_ID,
@@ -144,6 +157,7 @@ add_task(async function test_returns_without_app_version_or_with_matching_versio
     }],
   }, {
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: TOOLKIT_ID,
@@ -164,6 +178,7 @@ add_task(clear_state);
 add_task(async function test_multiple_version_and_target_applications() {
   await createRecords([{
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: "other-guid",
@@ -177,6 +192,7 @@ add_task(async function test_multiple_version_and_target_applications() {
     }],
   }, {
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: "other-guid",
@@ -189,6 +205,7 @@ add_task(async function test_multiple_version_and_target_applications() {
     }],
   }, {
     willMatch: false,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
@@ -214,6 +231,7 @@ add_task(clear_state);
 add_task(async function test_complex_version() {
   await createRecords([{
     willMatch: false,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
@@ -222,6 +240,7 @@ add_task(async function test_complex_version() {
     }],
   }, {
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,
@@ -230,6 +249,7 @@ add_task(async function test_complex_version() {
     }],
   }, {
     willMatch: true,
+    matchName: "foopydoo",
     versionRange: [{
       targetApplication: [{
         guid: APP_ID,

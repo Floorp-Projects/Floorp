@@ -4,3 +4,4 @@
   let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
   Services.prefs.setBoolPref("extensions.blocklist.useXML", false);
 }
+
