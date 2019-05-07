@@ -8985,16 +8985,10 @@ bool nsDisplayText::CreateWebRenderCommands(
   auto* f = static_cast<nsTextFrame*>(mFrame);
   auto appUnitsPerDevPixel = f->PresContext()->AppUnitsPerDevPixel();
 
-  // FIXME: the webrender backend is having a lot of snapping issues, and
-  // having it do inflation for us is causing problems. For now, we pass
-  // down the wrong bounds. Try to turn this back on when things are in
-  // better shape.
-  //
-  // nsRect bounds = f->WebRenderBounds() + ToReferenceFrame();
+  nsRect bounds = f->WebRenderBounds() + ToReferenceFrame();
   // Bug 748228
-  // bounds.Inflate(appUnitsPerDevPixel);
+  bounds.Inflate(appUnitsPerDevPixel);
 
-  nsRect bounds = mBounds;
   if (bounds.IsEmpty()) {
     return true;
   }
