@@ -130,6 +130,20 @@
     </popupnotificationcontent>
   </popupnotification>
 
+  <popupnotification id="appMenu-update-unsupported-notification"
+                     popupid="update-unsupported"
+                     data-lazy-l10n-id="appmenu-update-unsupported"
+                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                     closebuttonhidden="true"
+                     dropmarkerhidden="true"
+                     checkboxhidden="true"
+                     buttonhighlight="true"
+                     hidden="true">
+    <popupnotificationcontent id="update-unsupported-notification-content" orient="vertical">
+      <description id="update-unsupported-description" data-lazy-l10n-id="appmenu-update-unsupported-message"></description>
+    </popupnotificationcontent>
+  </popupnotification>
+
   <popupnotification id="appMenu-update-restart-notification"
                      popupid="update-restart"
                      data-lazy-l10n-id="appmenu-update-restart"
@@ -217,6 +231,7 @@
         <toolbarbutton class="panel-banner-item"
                        label-update-available="&updateAvailable.panelUI.label;"
                        label-update-manual="&updateManual.panelUI.label;"
+                       label-update-unsupported="&updateUnsupported.panelUI.label;"
                        label-update-restart="&updateRestart.panelUI.label2;"
                        oncommand="PanelUI._onBannerItemSelected(event)"
                        wrap="true"
