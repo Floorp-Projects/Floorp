@@ -82,6 +82,14 @@ class Mitmproxy(Playback):
             "ignore_mitmdump_exit_failure", False
         )
 
+        if self.config.get("playback_version") is None:
+            LOG.info("mitmproxy was not provided with a 'playback_version' "
+                     "getting 'playback_version' from 'playback_binary_manifest'")
+            if "4.0.4" in self.config["playback_binary_manifest"]:
+                self.config["playback_version"] = "4.0.4"
+            else:
+                self.config["playback_version"] = "2.0.2"
+
         # mozproxy_dir is where we will download all mitmproxy required files
         # when running locally it comes from obj_path via mozharness/mach
         if self.config.get("obj_path") is not None:
@@ -110,7 +118,6 @@ class Mitmproxy(Playback):
         self.download()
 
         # mitmproxy must be started before setup, so that the CA cert is available
-        self.mitmdump_path = os.path.join(self.mozproxy_dir, "mitmdump")
         self.start_mitmproxy_playback(self.mitmdump_path, self.browser_path)
 
         # In case the setup fails, we want to stop the process before raising.
@@ -125,12 +132,27 @@ class Mitmproxy(Playback):
         if not os.path.exists(self.mozproxy_dir):
             os.makedirs(self.mozproxy_dir)
 
-        LOG.info("downloading mitmproxy binary")
         _manifest = os.path.join(here, self.config["playback_binary_manifest"])
         transformed_manifest = transform_platform(_manifest, self.config["platform"])
-        tooltool_download(
-            transformed_manifest, self.config["run_local"], self.mozproxy_dir
-        )
+
+        # generate the mitmdump_path
+        self.mitmdump_path = os.path.join(self.mozproxy_dir, "mitmdump-%s" %
+                                          self.config["playback_version"], "mitmdump")
+
+        # Check if mitmproxy bin exists
+        if os.path.exists(self.mitmdump_path):
+            LOG.info("mitmproxy binary already exists. Skipping download")
+        else:
+            # Download and unpack mitmproxy binary
+            download_path = os.path.dirname(self.mitmdump_path)
+            LOG.info("create mitmproxy %s dir" % self.config["playback_version"])
+            if not os.path.exists(download_path):
+                os.makedirs(download_path)
+
+            LOG.info("downloading mitmproxy binary")
+            tooltool_download(
+                transformed_manifest, self.config["run_local"],
+                download_path)
 
         if "playback_pageset_manifest" in self.config:
             # we use one pageset for all platforms
