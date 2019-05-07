@@ -659,6 +659,7 @@
   <string name="pip_pause_button_title">&pip_pause_button_title;</string>
   <string name="pip_pause_button_description">&pip_pause_button_description;</string>
 
+  <string name="pref_notification_settings_link">&pref_notification_settings_link;</string>
   <string name="default_notification_channel2">&default_notification_channel2;</string>
   <string name="mls_notification_channel">&mls_notification_channel;</string>
   <string name="media_notification_channel2">&media_notification_channel2;</string>
