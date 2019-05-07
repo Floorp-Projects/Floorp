@@ -1905,7 +1905,10 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
   }
 
   const nsStyleText* textStyle2 = sc2->StyleText();
-  if (sc1 == sc2) return true;
+  if (textStyle1->mTextTransform != textStyle2->mTextTransform ||
+      textStyle1->EffectiveWordBreak() != textStyle2->EffectiveWordBreak()) {
+    return false;
+  }
 
   nsPresContext* pc = aFrame1->PresContext();
   MOZ_ASSERT(pc == aFrame2->PresContext());
@@ -1916,7 +1919,6 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
   nscoord letterSpacing2 = LetterSpacing(aFrame2);
   return fontStyle1->mFont == fontStyle2->mFont &&
          fontStyle1->mLanguage == fontStyle2->mLanguage &&
-         textStyle1->mTextTransform == textStyle2->mTextTransform &&
          nsLayoutUtils::GetTextRunFlagsForStyle(sc1, pc, fontStyle1, textStyle1,
                                                 letterSpacing1) ==
              nsLayoutUtils::GetTextRunFlagsForStyle(sc2, pc, fontStyle2,
@@ -2570,7 +2572,8 @@ void BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
                                                      const void* aTextPtr) {
   using mozilla::intl::LineBreaker;
 
-  auto wordBreak = mLineContainer->StyleText()->EffectiveWordBreak();
+  auto wordBreak =
+    mMappedFlows[0].mStartFrame->StyleText()->EffectiveWordBreak();
   switch (wordBreak) {
     case StyleWordBreak::BreakAll:
       mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_BreakAll);
