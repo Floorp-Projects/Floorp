@@ -393,13 +393,15 @@ nsresult TextEditRules::WillInsert(bool* aCancel) {
     return NS_OK;
   }
 
+  // A mutation event listener may recreate bogus node again during the
+  // call of DeleteNodeWithTransaction().  So, move it first.
+  nsCOMPtr<nsIContent> bogusNode(std::move(mBogusNode));
   DebugOnly<nsresult> rv =
-      TextEditorRef().DeleteNodeWithTransaction(*mBogusNode);
+      MOZ_KnownLive(TextEditorRef()).DeleteNodeWithTransaction(*bogusNode);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove the bogus node");
-  mBogusNode = nullptr;
   return NS_OK;
 }
 
@@ -425,8 +427,8 @@ EditActionResult TextEditRules::WillInsertLineBreak(int32_t aMaxLength) {
 
   // if the selection isn't collapsed, delete it.
   if (!SelectionRefPtr()->IsCollapsed()) {
-    rv = TextEditorRef().DeleteSelectionAsSubAction(nsIEditor::eNone,
-                                                    nsIEditor::eStrip);
+    rv = MOZ_KnownLive(TextEditorRef())
+             .DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -734,8 +736,8 @@ nsresult TextEditRules::WillInsertText(EditSubAction aEditSubAction,
 
   // if the selection isn't collapsed, delete it.
   if (!SelectionRefPtr()->IsCollapsed()) {
-    rv = TextEditorRef().DeleteSelectionAsSubAction(nsIEditor::eNone,
-                                                    nsIEditor::eStrip);
+    rv = MOZ_KnownLive(TextEditorRef())
+             .DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -1163,8 +1165,9 @@ nsresult TextEditRules::DeleteSelectionWithTransaction(
     }
   }
 
-  nsresult rv = TextEditorRef().DeleteSelectionWithTransaction(
-      aCollapsedAction, nsIEditor::eStrip);
+  nsresult rv =
+      MOZ_KnownLive(TextEditorRef())
+          .DeleteSelectionWithTransaction(aCollapsedAction, nsIEditor::eStrip);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -1180,7 +1183,7 @@ nsresult TextEditRules::DeleteSelectionWithTransaction(
 nsresult TextEditRules::DidDeleteSelection() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  EditorRawDOMPoint selectionStartPoint(
+  EditorDOMPoint selectionStartPoint(
       EditorBase::GetStartPoint(*SelectionRefPtr()));
   if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
     return NS_ERROR_FAILURE;
@@ -1189,8 +1192,9 @@ nsresult TextEditRules::DidDeleteSelection() {
   // Delete empty text nodes at selection.
   if (selectionStartPoint.IsInTextNode() &&
       !selectionStartPoint.GetContainer()->Length()) {
-    nsresult rv = TextEditorRef().DeleteNodeWithTransaction(
-        *selectionStartPoint.GetContainer());
+    nsresult rv = MOZ_KnownLive(TextEditorRef())
+                      .DeleteNodeWithTransaction(
+                          MOZ_KnownLive(*selectionStartPoint.GetContainer()));
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }

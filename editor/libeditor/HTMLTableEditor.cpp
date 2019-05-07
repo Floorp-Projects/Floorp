@@ -1362,7 +1362,7 @@ nsresult HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
         // so delete contents of cell instead of cell itself (We must have
         // reset colspan above).
         DebugOnly<nsresult> rv =
-            DeleteAllChildrenWithTransaction(*cellData.mElement);
+            DeleteAllChildrenWithTransaction(MOZ_KnownLive(*cellData.mElement));
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rv),
             "Failed to remove all children of the cell element");
@@ -1380,7 +1380,8 @@ nsresult HTMLEditor::DeleteTableColumnWithTransaction(Element& aTableElement,
     if (numberOfCellsInRow != 1) {
       // If removing cell is not the last cell of the row, we can just remove
       // it.
-      nsresult rv = DeleteNodeWithTransaction(*cellData.mElement);
+      nsresult rv =
+          DeleteNodeWithTransaction(MOZ_KnownLive(*cellData.mElement));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2771,7 +2772,7 @@ nsresult HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
     uint32_t len = aTargetCell->GetChildCount();
     if (len == 1 && IsEmptyCell(aTargetCell)) {
       // Delete the empty node
-      nsIContent* cellChild = aTargetCell->GetFirstChild();
+      nsCOMPtr<nsIContent> cellChild = aTargetCell->GetFirstChild();
       if (NS_WARN_IF(!cellChild)) {
         return NS_ERROR_FAILURE;
       }

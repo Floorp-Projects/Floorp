@@ -822,7 +822,7 @@ nsresult InsertLineBreakCommand::DoCommand(Command aCommand,
   if (!htmlEditor) {
     return NS_ERROR_FAILURE;
   }
-  return htmlEditor->InsertLineBreakAsAction();
+  return MOZ_KnownLive(htmlEditor)->InsertLineBreakAsAction();
 }
 
 nsresult InsertLineBreakCommand::DoCommandParams(

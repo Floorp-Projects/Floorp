@@ -170,7 +170,7 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    *                            This can be nullptr.
    */
-  MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
 
   /**
    * Called before inserting text.
@@ -197,7 +197,7 @@ class HTMLEditRules : public TextEditRules {
    * WillLoadHTML() is called before loading enter document from source.
    * This removes bogus node if there is.
    */
-  MOZ_MUST_USE nsresult WillLoadHTML();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillLoadHTML();
 
   /**
    * WillInsertParagraphSeparator() is called when insertParagraph command is
@@ -215,6 +215,7 @@ class HTMLEditRules : public TextEditRules {
    * If deleting the node fails (like if it's not editable), the caller should
    * proceed as usual, so don't return any errors.
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult DeleteNodeIfCollapsedText(nsINode& aNode);
 
   /**
@@ -254,7 +255,7 @@ class HTMLEditRules : public TextEditRules {
    * This method removes unnecessary empty nodes and/or inserts <br> if
    * necessary.
    */
-  MOZ_MUST_USE nsresult DidDeleteSelection();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidDeleteSelection();
 
   /**
    * InsertBRIfNeeded() determines if a br is needed for current selection to
@@ -387,7 +388,7 @@ class HTMLEditRules : public TextEditRules {
    *                            with its children.
    *
    */
-  MOZ_MUST_USE nsresult
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   DeleteElementsExceptTableRelatedElements(nsINode& aNode);
 
   /**
@@ -487,6 +488,7 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillRelativeChangeZIndex(int32_t aChange, bool* aCancel,
                                                  bool* aHandled);
 
@@ -882,6 +884,7 @@ class HTMLEditRules : public TextEditRules {
    * @param aHandled            Returns true if this method removes an empty
    *                            block ancestor of aStartNode.
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult MaybeDeleteTopMostEmptyAncestor(
       nsINode& aStartNode, Element& aEditingHostElement,
       nsIEditor::EDirection aAction, bool* aHandled);
@@ -1221,6 +1224,7 @@ class HTMLEditRules : public TextEditRules {
    *     we haven't touched it.  Cannot we remove this method and make
    *     guarantee that empty nodes won't be created?
    */
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult RemoveEmptyNodesInChangedRange();
 
   nsresult SelectionEndpointInNode(nsINode* aNode, bool* aResult);
