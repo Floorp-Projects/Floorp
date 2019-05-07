@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, ColorU};
-use debug_render::DebugRenderer;
-use device::query::{GpuSampler, GpuTimer, NamedTag};
+use crate::debug_render::DebugRenderer;
+use crate::device::query::{GpuSampler, GpuTimer, NamedTag};
 use euclid::{Point2D, Rect, Size2D, vec2};
-use internal_types::FastHashMap;
-use renderer::{MAX_VERTEX_TEXTURE_WIDTH, wr_has_been_initialized};
+use crate::internal_types::FastHashMap;
+use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, wr_has_been_initialized};
 use std::collections::vec_deque::VecDeque;
 use std::{f32, mem};
 use std::ffi::CStr;

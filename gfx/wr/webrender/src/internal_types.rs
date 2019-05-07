@@ -5,12 +5,12 @@
 use api::{DebugCommand, DocumentId, ExternalImageData, ExternalImageId};
 use api::{ImageFormat, ItemTag, NotificationRequest};
 use api::units::*;
-use device::TextureFilter;
-use renderer::PipelineInfo;
-use gpu_cache::GpuCacheUpdateList;
+use crate::device::TextureFilter;
+use crate::renderer::PipelineInfo;
+use crate::gpu_cache::GpuCacheUpdateList;
 use fxhash::FxHasher;
 use plane_split::BspSplitter;
-use profiler::BackendProfileCounters;
+use crate::profiler::BackendProfileCounters;
 use std::{usize, i32};
 use std::collections::{HashMap, HashSet};
 use std::f32;
@@ -19,10 +19,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 #[cfg(feature = "capture")]
-use capture::{CaptureConfig, ExternalCaptureImage};
+use crate::capture::{CaptureConfig, ExternalCaptureImage};
 #[cfg(feature = "replay")]
-use capture::PlainExternalImage;
-use tiling;
+use crate::capture::PlainExternalImage;
+use crate::tiling;
 
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
 pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;

@@ -12,7 +12,7 @@ use api::units::TexelRect;
 #[cfg(feature = "png")]
 use api::units::DeviceIntSize;
 #[cfg(feature = "capture")]
-use print_tree::{PrintableTree, PrintTree};
+use crate::print_tree::{PrintableTree, PrintTree};
 use ron;
 use serde;
 

@@ -49,10 +49,10 @@ mod gradient_builder;
 mod image;
 pub mod units;
 
-pub use api::*;
-pub use color::*;
-pub use display_item::*;
-pub use display_list::*;
-pub use font::*;
-pub use gradient_builder::*;
-pub use image::*;
+pub use crate::api::*;
+pub use crate::color::*;
+pub use crate::display_item::*;
+pub use crate::display_list::*;
+pub use crate::font::*;
+pub use crate::gradient_builder::*;
+pub use crate::image::*;

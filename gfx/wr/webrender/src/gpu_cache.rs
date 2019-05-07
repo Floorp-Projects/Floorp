@@ -29,10 +29,10 @@ use api::{DebugFlags, DocumentId, PremultipliedColorF};
 use api::IdNamespace;
 use api::units::TexelRect;
 use euclid::{HomogeneousVector, TypedRect};
-use internal_types::{FastHashMap, FastHashSet};
-use profiler::GpuCacheProfileCounters;
-use render_backend::{FrameStamp, FrameId};
-use renderer::MAX_VERTEX_TEXTURE_WIDTH;
+use crate::internal_types::{FastHashMap, FastHashSet};
+use crate::profiler::GpuCacheProfileCounters;
+use crate::render_backend::{FrameStamp, FrameId};
+use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use std::{mem, u16, u32};
 use std::num::NonZeroU32;
 use std::ops::Add;
@@ -141,7 +141,7 @@ impl From<TexelRect> for GpuBlockData {
 // implement this trait.
 pub trait ToGpuBlocks {
     // Request an arbitrary number of GPU data blocks.
-    fn write_gpu_blocks(&self, GpuDataRequest);
+    fn write_gpu_blocks(&self, _: GpuDataRequest);
 }
 
 // A handle to a GPU resource.

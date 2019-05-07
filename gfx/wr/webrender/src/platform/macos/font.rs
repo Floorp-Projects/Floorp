@@ -25,13 +25,13 @@ use core_text;
 use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use euclid::Size2D;
-use gamma_lut::{ColorLut, GammaLut};
-use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
+use crate::gamma_lut::{ColorLut, GammaLut};
+use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
 #[cfg(feature = "pathfinder")]
 use crate::glyph_rasterizer::NativeFontHandleWrapper;
 #[cfg(not(feature = "pathfinder"))]
-use glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
-use internal_types::{FastHashMap, ResourceCacheError};
+use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
+use crate::internal_types::{FastHashMap, ResourceCacheError};
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 

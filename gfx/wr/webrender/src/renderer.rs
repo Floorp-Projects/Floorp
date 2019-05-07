@@ -44,24 +44,24 @@ use api::channel;
 use api::units::*;
 pub use api::DebugFlags;
 use api::channel::{MsgSender, PayloadReceiverHelperMethods};
-use batch::{BatchKind, BatchTextures, BrushBatchKind, ClipBatchList};
+use crate::batch::{BatchKind, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
-use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
-use debug_colors;
-use debug_render::{DebugItem, DebugRenderer};
-use device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, PBO};
-use device::{DrawTarget, ExternalTexture, FBOId, ReadTarget, TextureSlot};
-use device::{ShaderError, TextureFilter, TextureFlags,
+use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
+use crate::debug_colors;
+use crate::debug_render::{DebugItem, DebugRenderer};
+use crate::device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, PBO};
+use crate::device::{DrawTarget, ExternalTexture, FBOId, ReadTarget, TextureSlot};
+use crate::device::{ShaderError, TextureFilter, TextureFlags,
              VertexUsageHint, VAO, VBO, CustomVAO};
-use device::{ProgramCache};
-use device::query::GpuTimer;
+use crate::device::{ProgramCache};
+use crate::device::query::GpuTimer;
 use euclid::rect;
 use euclid::{Transform3D, TypedScale};
-use frame_builder::{ChasePrimitive, FrameBuilderConfig};
+use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use gleam::gl;
-use glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
-use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
-use gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
+use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
+use crate::gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
+use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 #[cfg(feature = "pathfinder")]
 use crate::gpu_glyph_renderer::GpuGlyphRenderer;
 use crate::gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, TransformData, ResolveInstanceData};
@@ -70,21 +70,21 @@ use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSe
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use crate::internal_types::{RenderTargetInfo, SavedTargetIndex};
 use malloc_size_of::MallocSizeOfOps;
-use picture::{RecordedDirtyRegion, TileCache};
-use prim_store::DeferredResolve;
-use profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
+use crate::picture::{RecordedDirtyRegion, TileCache};
+use crate::prim_store::DeferredResolve;
+use crate::profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
-use profiler::{Profiler, ChangeIndicator};
-use device::query::{GpuProfiler, GpuDebugMethod};
+use crate::profiler::{Profiler, ChangeIndicator};
+use crate::device::query::{GpuProfiler, GpuDebugMethod};
 use rayon::{ThreadPool, ThreadPoolBuilder};
-use record::ApiRecordingReceiver;
-use render_backend::{FrameId, RenderBackend};
-use scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
-use shade::{Shaders, WrShaders};
+use crate::record::ApiRecordingReceiver;
+use crate::render_backend::{FrameId, RenderBackend};
+use crate::scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
+use crate::shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
-use render_task::{RenderTask, RenderTaskData, RenderTaskKind, RenderTaskTree};
-use resource_cache::ResourceCache;
-use util::drain_filter;
+use crate::render_task::{RenderTask, RenderTaskData, RenderTaskKind, RenderTaskTree};
+use crate::resource_cache::ResourceCache;
+use crate::util::drain_filter;
 
 use std;
 use std::cmp;
@@ -101,19 +101,19 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{channel, Receiver};
 use std::thread;
 use std::cell::RefCell;
-use texture_cache::TextureCache;
+use crate::texture_cache::TextureCache;
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use tiling::{AlphaRenderTarget, ColorRenderTarget};
-use tiling::{BlitJob, BlitJobSource, RenderPassKind, RenderTargetList};
-use tiling::{Frame, RenderTarget, RenderTargetKind, TextureCacheRenderTarget};
+use crate::tiling::{AlphaRenderTarget, ColorRenderTarget};
+use crate::tiling::{BlitJob, BlitJobSource, RenderPassKind, RenderTargetList};
+use crate::tiling::{Frame, RenderTarget, RenderTargetKind, TextureCacheRenderTarget};
 #[cfg(not(feature = "pathfinder"))]
-use tiling::GlyphJob;
+use crate::tiling::GlyphJob;
 use time::precise_time_ns;
 
 cfg_if! {
     if #[cfg(feature = "debugger")] {
         use serde_json;
-        use debug_server;
+        use crate::debug_server;
     }
 }
 
@@ -358,7 +358,7 @@ pub struct PackedVertex {
 }
 
 pub(crate) mod desc {
-    use device::{VertexAttribute, VertexAttributeKind, VertexDescriptor};
+    use crate::device::{VertexAttribute, VertexAttributeKind, VertexDescriptor};
 
     pub const PRIM_INSTANCES: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[
@@ -2173,7 +2173,7 @@ impl Renderer {
         device.update_vao_indices(&prim_vao, &quad_indices, VertexUsageHint::Static);
         device.update_vao_main_vertices(&prim_vao, &quad_vertices, VertexUsageHint::Static);
 
-        let gpu_glyph_renderer = try!(GpuGlyphRenderer::new(&mut device,
+        let gpu_glyph_renderer = r#try!(GpuGlyphRenderer::new(&mut device,
                                                             &prim_vao,
                                                             options.precache_flags));
 

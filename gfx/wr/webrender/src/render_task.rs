@@ -7,33 +7,33 @@ use api::{LineStyle, LineOrientation, ClipMode, DirtyRect};
 use api::units::*;
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
-use border::BorderSegmentCacheKey;
-use box_shadow::{BoxShadowCacheKey};
-use clip::{ClipDataStore, ClipItem, ClipStore, ClipNodeRange, ClipNodeFlags};
-use clip_scroll_tree::SpatialNodeIndex;
-use device::TextureFilter;
+use crate::border::BorderSegmentCacheKey;
+use crate::box_shadow::{BoxShadowCacheKey};
+use crate::clip::{ClipDataStore, ClipItem, ClipStore, ClipNodeRange, ClipNodeFlags};
+use crate::clip_scroll_tree::SpatialNodeIndex;
+use crate::device::TextureFilter;
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
-use frame_builder::FrameBuilderConfig;
-use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
-use glyph_rasterizer::GpuGlyphCacheKey;
-use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
-use gpu_types::{BorderInstance, ImageSource, UvRectKind, SnapOffsets};
-use internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex};
+use crate::frame_builder::FrameBuilderConfig;
+use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
+use crate::glyph_rasterizer::GpuGlyphCacheKey;
+use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
+use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind, SnapOffsets};
+use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex};
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
-use prim_store::PictureIndex;
-use prim_store::image::ImageCacheKey;
-use prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
-use prim_store::line_dec::LineDecorationCacheKey;
+use crate::prim_store::PictureIndex;
+use crate::prim_store::image::ImageCacheKey;
+use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
+use crate::prim_store::line_dec::LineDecorationCacheKey;
 #[cfg(feature = "debugger")]
-use print_tree::{PrintTreePrinter};
-use render_backend::FrameId;
-use resource_cache::{CacheItem, ResourceCache};
+use crate::print_tree::{PrintTreePrinter};
+use crate::render_backend::FrameId;
+use crate::resource_cache::{CacheItem, ResourceCache};
 use std::{ops, mem, usize, f32, i32, u32};
-use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
-use tiling::{RenderPass, RenderTargetIndex};
-use tiling::{RenderTargetKind};
+use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
+use crate::tiling::{RenderPass, RenderTargetIndex};
+use crate::tiling::{RenderTargetKind};
 use std::io;
 
 

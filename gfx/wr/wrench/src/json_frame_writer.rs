@@ -7,7 +7,7 @@
 #![allow(dead_code)]
 
 use image::{save_buffer, ColorType};
-use premultiply::unpremultiply;
+use crate::premultiply::unpremultiply;
 use serde_json;
 use std::collections::HashMap;
 use std::io::Write;

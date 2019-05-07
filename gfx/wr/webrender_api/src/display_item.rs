@@ -5,11 +5,11 @@
 use euclid::SideOffsets2D;
 use std::ops::Not;
 // local imports
-use font;
-use api::{PipelineId, PropertyBinding};
-use color::ColorF;
-use image::{ColorDepth, ImageKey};
-use units::*;
+use crate::font;
+use crate::api::{PipelineId, PropertyBinding};
+use crate::color::ColorF;
+use crate::image::{ColorDepth, ImageKey};
+use crate::units::*;
 
 // Maximum blur radius.
 // Taken from nsCSSRendering.cpp in Gecko.

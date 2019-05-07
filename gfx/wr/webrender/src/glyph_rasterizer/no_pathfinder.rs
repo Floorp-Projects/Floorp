@@ -6,20 +6,20 @@
 //! compiled regularly (i.e. any configuration without feature = "pathfinder")
 
 use api::{ImageDescriptor, ImageFormat, DirtyRect};
-use device::TextureFilter;
+use crate::device::TextureFilter;
 use euclid::size2;
-use gpu_types::UvRectKind;
+use crate::gpu_types::UvRectKind;
 use rayon::prelude::*;
 use std::sync::{Arc, MutexGuard};
-use platform::font::FontContext;
-use glyph_rasterizer::{FontInstance, FontContexts, GlyphKey};
-use glyph_rasterizer::{GlyphRasterizer, GlyphRasterJob, GlyphRasterJobs};
-use glyph_cache::{GlyphCache, CachedGlyphInfo, GlyphCacheEntry};
-use resource_cache::CachedImageData;
-use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
-use gpu_cache::GpuCache;
-use render_task::{RenderTaskTree, RenderTaskCache};
-use profiler::TextureCacheProfileCounters;
+use crate::platform::font::FontContext;
+use crate::glyph_rasterizer::{FontInstance, FontContexts, GlyphKey};
+use crate::glyph_rasterizer::{GlyphRasterizer, GlyphRasterJob, GlyphRasterJobs};
+use crate::glyph_cache::{GlyphCache, CachedGlyphInfo, GlyphCacheEntry};
+use crate::resource_cache::CachedImageData;
+use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
+use crate::gpu_cache::GpuCache;
+use crate::render_task::{RenderTaskTree, RenderTaskCache};
+use crate::profiler::TextureCacheProfileCounters;
 use std::collections::hash_map::Entry;
 
 impl FontContexts {

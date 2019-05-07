@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use euclid::{Angle, TypedSize2D};
-use parse_function::parse_function;
+use crate::parse_function::parse_function;
 use std::f32;
 use std::str::FromStr;
 use webrender::api::*;
@@ -75,7 +75,7 @@ fn string_to_color(color: &str) -> Option<ColorF> {
 }
 
 pub trait StringEnum: Sized {
-    fn from_str(&str) -> Option<Self>;
+    fn from_str(_: &str) -> Option<Self>;
     fn as_str(&self) -> &'static str;
 }
 

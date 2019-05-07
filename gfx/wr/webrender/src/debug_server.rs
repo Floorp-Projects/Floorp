@@ -5,8 +5,8 @@
 use api::{ApiMsg, DebugCommand, DebugFlags};
 use api::channel::MsgSender;
 use api::units::DeviceIntSize;
-use print_tree::PrintTreePrinter;
-use renderer;
+use crate::print_tree::PrintTreePrinter;
+use crate::renderer;
 use std::sync::mpsc::{channel, Receiver};
 use std::sync::mpsc::Sender;
 use std::thread;

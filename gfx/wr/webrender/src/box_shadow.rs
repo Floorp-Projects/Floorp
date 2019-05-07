@@ -5,14 +5,14 @@
 use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, PrimitiveKeyKind};
 use api::MAX_BLUR_RADIUS;
 use api::units::*;
-use clip::ClipItemKey;
-use display_list_flattener::DisplayListFlattener;
-use gpu_cache::GpuCacheHandle;
-use gpu_types::BoxShadowStretchMode;
-use prim_store::ScrollNodeAndClipChain;
-use render_task::RenderTaskCacheEntryHandle;
-use util::RectHelpers;
-use internal_types::LayoutPrimitiveInfo;
+use crate::clip::ClipItemKey;
+use crate::display_list_flattener::DisplayListFlattener;
+use crate::gpu_cache::GpuCacheHandle;
+use crate::gpu_types::BoxShadowStretchMode;
+use crate::prim_store::ScrollNodeAndClipChain;
+use crate::render_task::RenderTaskCacheEntryHandle;
+use crate::util::RectHelpers;
+use crate::internal_types::LayoutPrimitiveInfo;
 
 #[derive(Debug, Clone, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
