@@ -2258,7 +2258,7 @@ bool BytecodeEmitter::allocateResumeIndex(ptrdiff_t offset,
   static constexpr uint32_t MaxResumeIndex = JS_BITMASK(24);
 
   static_assert(
-      MaxResumeIndex < uint32_t(AbstractGeneratorObject::RESUME_INDEX_CLOSING),
+      MaxResumeIndex < uint32_t(AbstractGeneratorObject::RESUME_INDEX_RUNNING),
       "resumeIndex should not include magic AbstractGeneratorObject "
       "resumeIndex values");
   static_assert(

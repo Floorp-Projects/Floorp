@@ -966,7 +966,7 @@ static bool intrinsic_GeneratorIsRunning(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args[0].isObject());
 
   GeneratorObject* genObj = &args[0].toObject().as<GeneratorObject>();
-  args.rval().setBoolean(genObj->isRunning() || genObj->isClosing());
+  args.rval().setBoolean(genObj->isRunning());
   return true;
 }
 

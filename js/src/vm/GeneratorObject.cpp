@@ -100,7 +100,7 @@ bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
 
 void AbstractGeneratorObject::finalSuspend(HandleObject obj) {
   auto* genObj = &obj->as<AbstractGeneratorObject>();
-  MOZ_ASSERT(genObj->isRunning() || genObj->isClosing());
+  MOZ_ASSERT(genObj->isRunning());
   genObj->setClosed();
 }
 
@@ -139,6 +139,7 @@ bool js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
                                 Handle<AbstractGeneratorObject*> genObj,
                                 HandleValue arg,
                                 GeneratorResumeKind resumeKind) {
+  MOZ_ASSERT(genObj->isRunning());
   if (resumeKind == GeneratorResumeKind::Throw) {
     cx->setPendingExceptionAndCaptureStack(arg);
   } else {
@@ -149,7 +150,6 @@ bool js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
 
     RootedValue closing(cx, MagicValue(JS_GENERATOR_CLOSING));
     cx->setPendingException(closing, nullptr);
-    genObj->setClosing();
   }
   return false;
 }
@@ -309,7 +309,7 @@ bool AbstractGeneratorObject::isAfterAwait() {
 }
 
 bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
-  if (isClosed() || isClosing() || isRunning()) {
+  if (isClosed() || isRunning()) {
     return false;
   }
 
