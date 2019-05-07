@@ -3311,7 +3311,8 @@ static nscoord ComputeWhereToScroll(WhereToScroll aWhereToScroll,
  * stop there, even if it could get closer to the desired position by
  * moving the visual viewport within the layout viewport.
  */
-static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
+static void ScrollToShowRect(PresShell* aPresShell,
+                             nsIScrollableFrame* aFrameAsScrollable,
                              const nsRect& aRect, ScrollAxis aVertical,
                              ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
   nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
@@ -3377,10 +3378,25 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
     if (gfxPrefs::ScrollBehaviorEnabled() && smoothScroll) {
       scrollMode = ScrollMode::SmoothMsd;
     }
+    nsIFrame* frame = do_QueryFrame(aFrameAsScrollable);
+    AutoWeakFrame weakFrame(frame);
     aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
                                  aScrollFlags & ScrollFlags::ScrollSnap
                                      ? nsIScrollbarMediator::ENABLE_SNAP
                                      : nsIScrollbarMediator::DISABLE_SNAP);
+    if (!weakFrame.IsAlive()) {
+      return;
+    }
+
+    // If this is the RCD-RSF, also call ScrollToVisual() since we want to
+    // scroll the rect into view visually, and that may require scrolling
+    // the visual viewport in scenarios where there is not enough layout
+    // scroll range.
+    if (aFrameAsScrollable->IsRootScrollFrameOfDocument() &&
+        aPresShell->GetPresContext()->IsRootContentDocument()) {
+      aPresShell->ScrollToVisual(scrollPt, FrameMetrics::eMainThread,
+                                 scrollMode);
+    }
   }
 }
 
@@ -3545,7 +3561,8 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
         targetRect = targetRect.Intersect(sf->GetScrolledRect());
       }
 
-      ScrollToShowRect(sf, targetRect, aVertical, aHorizontal, aScrollFlags);
+      ScrollToShowRect(this, sf, targetRect, aVertical, aHorizontal,
+                       aScrollFlags);
 
       nsPoint newPosition = sf->LastScrollDestination();
       // If the scroll position increased, that means our content moved up,
