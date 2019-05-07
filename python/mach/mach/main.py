@@ -260,7 +260,7 @@ To see more help for a specific command, run:
                 mod = imp.new_module(b'mach.commands')
                 sys.modules[b'mach.commands'] = mod
 
-            module_name = 'mach.commands.%s' % uuid.uuid1().get_hex()
+            module_name = 'mach.commands.%s' % uuid.uuid4().get_hex()
 
         try:
             imp.load_source(module_name, path)
