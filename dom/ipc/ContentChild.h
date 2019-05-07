@@ -691,6 +691,8 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvDestroySHEntrySharedState(const uint64_t& aID);
 
+  mozilla::ipc::IPCResult RecvEvictContentViewers(nsTArray<uint64_t>&& aToEvictSharedStateIDs);
+
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
   //

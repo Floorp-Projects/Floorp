@@ -8,6 +8,10 @@
 #include "mozilla/dom/SHEntryParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentProcessManager.h"
+#include "nsTHashtable.h"
+#include "mozilla/Logging.h"
+
+extern mozilla::LazyLogModule gSHistoryLog;
 
 namespace mozilla {
 namespace dom {
@@ -131,8 +135,7 @@ bool SHistoryParent::RecvNotifyOnHistoryReload(bool* aOk) {
 }
 
 bool SHistoryParent::RecvEvictOutOfRangeContentViewers(int32_t aIndex) {
-  // FIXME Implement this!
-  return true;
+  return NS_SUCCEEDED(mHistory->EvictOutOfRangeContentViewers(aIndex));
 }
 
 bool SHistoryParent::RecvEvictAllContentViewers() {
@@ -234,6 +237,98 @@ bool SHistoryParent::RecvEvict(nsTArray<PSHEntryParent*>&& aEntries) {
     }
   }
   return true;
+}
+
+void LegacySHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
+  if (aIndex < 0) {
+    return;
+  }
+  NS_ENSURE_TRUE_VOID(aIndex < Length());
+
+  // Calculate the range that's safe from eviction.
+  int32_t startSafeIndex, endSafeIndex;
+  WindowIndices(aIndex, &startSafeIndex, &endSafeIndex);
+
+  // See nsSHistory::EvictOutOfRangeWindowContentViewers for more comments.
+
+  MOZ_LOG(gSHistoryLog, mozilla::LogLevel::Debug,
+          ("EvictOutOfRangeWindowContentViewers(index=%d), "
+           "Length()=%d. Safe range [%d, %d]",
+           aIndex, Length(), startSafeIndex, endSafeIndex));
+
+  // Collect content viewers within safe range so we don't accidentally evict
+  // one of them if it appears outside this range.
+  nsTHashtable<nsUint64HashKey> safeSharedStateIDs;
+  for (int32_t i = startSafeIndex; i <= endSafeIndex; i++) {
+    RefPtr<LegacySHEntry> entry =
+        static_cast<LegacySHEntry*>(mEntries[i].get());
+    MOZ_ASSERT(entry);
+    safeSharedStateIDs.PutEntry(entry->GetSharedStateID());
+  }
+
+  // Iterate over entries that are not within safe range and save the IDs
+  // of shared state and content parents into a hashtable.
+  // Format of the hashtable: content parent -> list of shared state IDs
+  nsDataHashtable<nsPtrHashKey<PContentParent>, nsTHashtable<nsUint64HashKey>>
+      toEvict;
+  for (int32_t i = 0; i < Length(); i++) {
+    if (i >= startSafeIndex && i <= endSafeIndex) {
+      continue;
+    }
+    RefPtr<LegacySHEntry> entry =
+        static_cast<LegacySHEntry*>(mEntries[i].get());
+    dom::SHEntrySharedParentState* sharedParentState = entry->GetSharedState();
+    uint64_t id = entry->GetSharedStateID();
+    PContentParent* parent =
+        static_cast<SHEntrySharedParent*>(sharedParentState)
+            ->GetContentParent();
+    MOZ_ASSERT(parent);
+    if (!safeSharedStateIDs.Contains(id)) {
+      nsTHashtable<nsUint64HashKey>& ids = toEvict.GetOrInsert(parent);
+      ids.PutEntry(id);
+    }
+  }
+  if (toEvict.Count() == 0) {
+    return;
+  }
+  // Remove dynamically created children from entries that will be evicted
+  // later. We are iterating over the mEntries (instead of toEvict) to gain
+  // access to each nsSHEntry because toEvict only contains content parents and
+  // IDs of SHEntrySharedParentState
+
+  // (It's important that the condition checks Length(), rather than a cached
+  // copy of Length(), because the length might change between iterations due to
+  // RemoveDynEntries call.)
+  for (int32_t i = 0; i < Length(); i++) {
+    RefPtr<LegacySHEntry> entry =
+        static_cast<LegacySHEntry*>(mEntries[i].get());
+    MOZ_ASSERT(entry);
+    uint64_t id = entry->GetSharedStateID();
+    if (!safeSharedStateIDs.Contains(id)) {
+      // When dropping bfcache, we have to remove associated dynamic entries as
+      // well.
+      int32_t index = GetIndexOfEntry(entry);
+      if (index != -1) {
+        RemoveDynEntries(index, entry);
+      }
+    }
+  }
+
+  // Iterate over the 'toEvict' hashtable to get the IDs of content viewers to
+  // evict for each parent
+  for (auto iter = toEvict.ConstIter(); !iter.Done(); iter.Next()) {
+    auto parent = iter.Key();
+    const nsTHashtable<nsUint64HashKey>& ids = iter.Data();
+
+    // Convert ids into an array because we don't have support for passing
+    // nsTHashtable over IPC
+    AutoTArray<uint64_t, 4> evictArray;
+    for (auto iter = ids.ConstIter(); !iter.Done(); iter.Next()) {
+      evictArray.AppendElement(iter.Get()->GetKey());
+    }
+
+    Unused << parent->SendEvictContentViewers(evictArray);
+  }
 }
 
 }  // namespace dom
