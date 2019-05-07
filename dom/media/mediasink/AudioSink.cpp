@@ -498,15 +498,14 @@ uint32_t AudioSink::DrainConverter(uint32_t aMaxFrames) {
   return data->Frames();
 }
 
-void AudioSink::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
+nsCString AudioSink::GetDebugInfo() {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  aInfo.mAudioSink.mStartTime = mStartTime.ToMicroseconds();
-  aInfo.mAudioSink.mLastGoodPosition = mLastGoodPosition.ToMicroseconds();
-  aInfo.mAudioSink.mIsPlaying = mPlaying;
-  aInfo.mAudioSink.mOutputRate = mOutputRate;
-  aInfo.mAudioSink.mWritten = mWritten;
-  aInfo.mAudioSink.mHasErrored = bool(mErrored);
-  aInfo.mAudioSink.mPlaybackComplete = bool(mPlaybackComplete);
+  return nsPrintfCString(
+      "AudioSink: StartTime=%" PRId64 " LastGoodPosition=%" PRId64
+      " Playing=%d  OutputRate=%u Written=%" PRId64
+      " Errored=%d PlaybackComplete=%d",
+      mStartTime.ToMicroseconds(), mLastGoodPosition.ToMicroseconds(), mPlaying,
+      mOutputRate, mWritten, bool(mErrored), bool(mPlaybackComplete));
 }
 
 }  // namespace mozilla
