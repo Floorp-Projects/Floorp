@@ -6,6 +6,7 @@
 package org.mozilla.gecko.preferences;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -237,6 +238,7 @@ public class GeckoPreferences
         }
     }
 
+    @SuppressLint("PrivateResource")
     private void updateHomeAsUpIndicator() {
         final ActionBar actionBar = getSupportActionBar();
         if (actionBar == null) {
