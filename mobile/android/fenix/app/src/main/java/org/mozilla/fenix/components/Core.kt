@@ -25,6 +25,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import org.mozilla.fenix.AppRequestInterceptor
+import org.mozilla.fenix.test.Mockable
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -33,9 +34,10 @@ import java.util.concurrent.TimeUnit
 /**
  * Component group for all core browser functionality.
  */
+@Mockable
 class Core(private val context: Context) {
 
-    private val runtime by lazy {
+    protected val runtime by lazy {
         val builder = GeckoRuntimeSettings.Builder()
 
         testConfig?.let {

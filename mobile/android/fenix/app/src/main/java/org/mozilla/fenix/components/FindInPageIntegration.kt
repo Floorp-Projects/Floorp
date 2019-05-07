@@ -16,7 +16,9 @@ import mozilla.components.feature.findinpage.view.FindInPageBar
 import mozilla.components.feature.findinpage.view.FindInPageView
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import org.mozilla.fenix.test.Mockable
 
+@Mockable
 class FindInPageIntegration(
     private val sessionManager: SessionManager,
     private val view: FindInPageView,

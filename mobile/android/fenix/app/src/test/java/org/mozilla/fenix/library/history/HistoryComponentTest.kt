@@ -10,8 +10,8 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.reactivex.Observer
 import io.reactivex.observers.TestObserver
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.Before
+import org.junit.Test
 import org.mozilla.fenix.TestUtils.bus
 import org.mozilla.fenix.TestUtils.owner
 import org.mozilla.fenix.TestUtils.setRxSchedulers
@@ -25,7 +25,7 @@ class HistoryComponentTest {
     private lateinit var historyObserver: TestObserver<HistoryState>
     private lateinit var emitter: Observer<HistoryChange>
 
-    @BeforeEach
+    @Before
     fun setup() {
         MockKAnnotations.init(this)
         setRxSchedulers()

@@ -73,6 +73,7 @@ android {
 
     testOptions {
         execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        unitTests.includeAndroidResources = true
     }
 
     flavorDimensions "abi"
@@ -122,7 +123,7 @@ android.applicationVariants.all { variant ->
     if (hasTest) {
         apply plugin: 'kotlin-allopen'
         allOpen {
-            annotation("org.mozilla.fenix.test.Mockable")
+            annotation("org.mozilla.fenix.test.OpenClass")
         }
     }
 
@@ -373,9 +374,11 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
 
-    testImplementation Deps.junit_jupiter_api
-    testImplementation Deps.junit_jupiter_params
-    testImplementation Deps.junit_jupiter_engine
+    testImplementation Deps.junit
+    testImplementation Deps.robolectric
+    debugImplementation Deps.fragment_testing
+    testImplementation Deps.megazord_forUnitTests
+    testImplementation Deps.places_forUnitTests
 
     testImplementation Deps.mockito_core
     androidTestImplementation Deps.mockito_android

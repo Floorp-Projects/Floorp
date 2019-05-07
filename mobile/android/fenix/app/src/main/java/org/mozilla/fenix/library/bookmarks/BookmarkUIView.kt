@@ -92,23 +92,24 @@ class BookmarkUIView(
     fun getSelected(): Set<BookmarkNode> = bookmarkAdapter.selected
 
     private fun setToolbarColors(foreground: Int, background: Int) {
-        val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
+        val toolbar = activity?.findViewById<Toolbar>(R.id.navigationToolbar)
         val colorFilter = PorterDuffColorFilter(
             ContextCompat.getColor(context, foreground), PorterDuff.Mode.SRC_IN
         )
-        toolbar.setBackgroundColor(ContextCompat.getColor(context, background))
-        toolbar.setTitleTextColor(ContextCompat.getColor(context, foreground))
-
-        themeToolbar(
-            toolbar, foreground,
-            background, colorFilter
-        )
+        toolbar?.run {
+            setBackgroundColor(ContextCompat.getColor(context, background))
+            setTitleTextColor(ContextCompat.getColor(context, foreground))
+            themeToolbar(
+                toolbar, foreground,
+                background, colorFilter
+            )
+        }
     }
 
     private fun setUIForSelectingMode(
         mode: BookmarkState.Mode.Selecting
     ) {
-        (activity as? AppCompatActivity)?.title =
+        activity?.title =
             context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
         setToolbarColors(
             R.color.white_color,

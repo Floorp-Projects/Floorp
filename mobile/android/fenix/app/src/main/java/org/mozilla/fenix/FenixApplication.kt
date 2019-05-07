@@ -28,16 +28,20 @@ import org.mozilla.fenix.utils.Settings
 import java.io.File
 
 @SuppressLint("Registered")
+@Suppress("TooManyFunctions")
 open class FenixApplication : Application() {
     lateinit var fretboard: Fretboard
     lateinit var experimentLoader: Deferred<Boolean>
     var experimentLoaderComplete: Boolean = false
 
-    val components by lazy { Components(this) }
+    open val components by lazy { Components(this) }
 
     override fun onCreate() {
         super.onCreate()
+        setupApplication()
+    }
 
+    open fun setupApplication() {
         // loadExperiments does things that run in parallel with the rest of setup.
         // Call the function as early as possible so there's maximum overlap.
         experimentLoader = loadExperiments()

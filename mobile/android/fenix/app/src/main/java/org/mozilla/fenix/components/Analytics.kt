@@ -19,6 +19,7 @@ import org.mozilla.fenix.components.metrics.AdjustMetricsService
 import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.LeanplumMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.test.Mockable
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION
@@ -26,6 +27,7 @@ import org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION
 /**
  * Component group for all functionality related to analytics e.g. crash reporting and telemetry.
  */
+@Mockable
 class Analytics(
     private val context: Context
 ) {

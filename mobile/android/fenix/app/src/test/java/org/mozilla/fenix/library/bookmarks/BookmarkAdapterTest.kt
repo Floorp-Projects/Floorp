@@ -14,8 +14,8 @@ import io.reactivex.Observer
 import io.reactivex.observers.TestObserver
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.Before
+import org.junit.Test
 import org.mozilla.fenix.TestUtils.setRxSchedulers
 
 internal class BookmarkAdapterTest {
@@ -23,7 +23,7 @@ internal class BookmarkAdapterTest {
     private lateinit var bookmarkAdapter: BookmarkAdapter
     private lateinit var emitter: Observer<BookmarkAction>
 
-    @BeforeEach
+    @Before
     fun setup() {
         setRxSchedulers()
         emitter = TestObserver<BookmarkAction>()

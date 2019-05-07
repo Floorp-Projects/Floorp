@@ -13,8 +13,8 @@ import io.reactivex.observers.TestObserver
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.Before
+import org.junit.Test
 import org.mozilla.fenix.TestUtils
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.UIView
@@ -26,7 +26,7 @@ class BookmarkComponentTest {
     private lateinit var bookmarkObserver: TestObserver<BookmarkState>
     private lateinit var emitter: Observer<BookmarkChange>
 
-    @BeforeEach
+    @Before
     fun setup() {
         MockKAnnotations.init(this)
         TestUtils.setRxSchedulers()

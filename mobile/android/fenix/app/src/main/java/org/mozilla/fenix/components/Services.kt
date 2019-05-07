@@ -7,10 +7,12 @@ package org.mozilla.fenix.components
 import mozilla.components.feature.accounts.FirefoxAccountsAuthFeature
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.FxaAccountManager
+import org.mozilla.fenix.test.Mockable
 
 /**
  * Component group which encapsulates foreground-friendly services.
  */
+@Mockable
 class Services(
     private val accountManager: FxaAccountManager,
     private val tabsUseCases: TabsUseCases

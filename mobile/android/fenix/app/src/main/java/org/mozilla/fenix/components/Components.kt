@@ -5,10 +5,12 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import org.mozilla.fenix.test.Mockable
 
 /**
  * Provides access to all components.
  */
+@Mockable
 class Components(private val context: Context) {
     val backgroundServices by lazy { BackgroundServices(context, core.historyStorage, core.bookmarksStorage) }
     val services by lazy { Services(backgroundServices.accountManager, useCases.tabsUseCases) }

@@ -23,15 +23,17 @@ private object Versions {
     const val androidx_fragment = "1.1.0-alpha07"
     const val androidx_navigation = "2.1.0-alpha02"
     const val androidx_recyclerview = "1.1.0-alpha04"
+    const val androidx_testing = "1.1.0-alpha07"
 
     const val appservices_gradle_plugin = "0.4.4"
     const val mozilla_android_components = "0.52.0-SNAPSHOT"
+    const val mozilla_appservices = "0.27.0"
 
     const val autodispose = "1.1.0"
     const val adjust = "4.11.4"
     const val installreferrer = "1.0"
 
-    const val junit_jupiter = "5.3.2"
+    const val junit = "4.12"
     const val mockito = "2.23.0"
     const val mockk = "1.9.kotlin12"
     const val glide = "4.9.0"
@@ -44,7 +46,7 @@ private object Versions {
     const val tools_test_rules = "1.1.1"
     const val tools_test_runner = "1.1.1"
     const val uiautomator = "2.1.3"
-    const val test_tools = "1.0.2"
+    const val robolectric = "4.2"
 
     const val google_ads_id_version = "16.0.0"
 }
@@ -146,10 +148,7 @@ object Deps {
     const val adjust = "com.adjust.sdk:adjust-android:${Versions.adjust}"
     const val installreferrer = "com.android.installreferrer:installreferrer:${Versions.installreferrer}"
 
-    const val junit_jupiter_api = "org.junit.jupiter:junit-jupiter-api:${Versions.junit_jupiter}"
-    const val junit_jupiter_params = "org.junit.jupiter:junit-jupiter-params:${Versions.junit_jupiter}"
-    const val junit_jupiter_engine = "org.junit.jupiter:junit-jupiter-engine:${Versions.junit_jupiter}"
-
+    const val junit = "junit:junit:${Versions.junit}"
     const val mockito_core = "org.mockito:mockito-core:${Versions.mockito}"
     const val mockito_android = "org.mockito:mockito-android:${Versions.mockito}"
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
@@ -167,6 +166,10 @@ object Deps {
     const val tools_test_rules = "com.android.support.test:rules:${Versions.tools_test_rules}"
     const val tools_test_runner = "com.android.support.test:runner:${Versions.tools_test_runner}"
     const val uiautomator = "com.android.support.test.uiautomator:uiautomator-v18:${Versions.uiautomator}"
+    const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
+    const val fragment_testing = "androidx.fragment:fragment-testing:${Versions.androidx_testing}"
+    const val megazord_forUnitTests = "org.mozilla.appservices:fenix-megazord-forUnitTests:${Versions.mozilla_appservices}"
+    const val places_forUnitTests = "org.mozilla.appservices:places-forUnitTests:${Versions.mozilla_appservices}"
 
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"
 }

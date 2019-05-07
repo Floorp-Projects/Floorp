@@ -14,11 +14,13 @@ import mozilla.components.feature.sync.BackgroundSyncManager
 import mozilla.components.feature.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FxaAccountManager
+import org.mozilla.fenix.test.Mockable
 
 /**
  * Component group for background services. These are the components that need to be accessed from within a
  * background worker.
  */
+@Mockable
 class BackgroundServices(
     context: Context,
     historyStorage: PlacesHistoryStorage,

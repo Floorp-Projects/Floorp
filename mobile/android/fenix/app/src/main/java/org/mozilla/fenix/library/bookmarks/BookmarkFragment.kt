@@ -58,8 +58,8 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     private lateinit var job: Job
     private lateinit var bookmarkComponent: BookmarkComponent
     private lateinit var signInComponent: SignInComponent
-    private var currentRoot: BookmarkNode? = null
-    private val navigation by lazy { Navigation.findNavController(requireActivity(), R.id.container) }
+    var currentRoot: BookmarkNode? = null
+    private val navigation by lazy { Navigation.findNavController(requireView()) }
     private val onDestinationChangedListener =
         NavController.OnDestinationChangedListener { _, destination, args ->
             if (destination.id != R.id.bookmarkFragment ||
@@ -67,6 +67,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
             )
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.ClearSelection)
         }
+    lateinit var initialJob: Job
 
     override val coroutineContext: CoroutineContext
         get() = Main + job
@@ -81,19 +82,23 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         job = Job()
-        (activity as AppCompatActivity).title = getString(R.string.library_bookmarks)
+        activity?.title = getString(R.string.library_bookmarks)
         setHasOptionsMenu(true)
     }
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).supportActionBar?.show()
+        (activity as? AppCompatActivity)?.supportActionBar?.show()
         checkIfSignedIn()
 
         navigation.addOnDestinationChangedListener(onDestinationChangedListener)
         val currentGuid = BookmarkFragmentArgs.fromBundle(arguments!!).currentRoot.ifEmpty { BookmarkRoot.Mobile.id }
 
-        launch(IO) {
+        initialJob = loadInitialBookmarkFolder(currentGuid)
+    }
+
+    private fun loadInitialBookmarkFolder(currentGuid: String): Job {
+        return launch(IO) {
             currentRoot = requireComponents.core.bookmarksStorage.getTree(currentGuid) as BookmarkNode
 
             launch(Main) {
@@ -322,7 +327,8 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     override fun onProfileUpdated(profile: Profile) {
     }
 
-    private fun getSelectedBookmarks() = (bookmarkComponent.uiView as BookmarkUIView).getSelected()
+    fun getBookmarks() = (bookmarkComponent.uiView as BookmarkUIView).tree?.children
+    fun getSelectedBookmarks() = (bookmarkComponent.uiView as BookmarkUIView).getSelected()
 
     private suspend fun deleteSelectedBookmarks(
         selected: Set<BookmarkNode> = getSelectedBookmarks(),

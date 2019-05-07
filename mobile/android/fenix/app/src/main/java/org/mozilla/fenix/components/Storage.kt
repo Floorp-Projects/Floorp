@@ -9,7 +9,9 @@ import androidx.paging.DataSource
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage
+import org.mozilla.fenix.test.Mockable
 
+@Mockable
 class Storage(private val context: Context) {
 
     private val permissionsStorage by lazy {

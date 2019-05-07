@@ -5,18 +5,20 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.fenix.components
 
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import android.view.LayoutInflater
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.TextViewCompat
+import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fenix_snackbar.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.test.Mockable
 
+@Mockable
 class FenixSnackbar private constructor(
     parent: ViewGroup,
     content: View,

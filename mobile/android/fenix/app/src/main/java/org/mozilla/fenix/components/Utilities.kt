@@ -11,10 +11,12 @@ import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.test.Mockable
 
 /**
  * Component group for miscellaneous components.
  */
+@Mockable
 class Utilities(
     private val context: Context,
     private val sessionManager: SessionManager,

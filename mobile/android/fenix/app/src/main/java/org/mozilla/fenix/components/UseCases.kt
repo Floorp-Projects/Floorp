@@ -10,11 +10,13 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import org.mozilla.fenix.test.Mockable
 
 /**
  * Component group for all use cases. Use cases are provided by feature
  * modules and can be triggered by UI interactions.
  */
+@Mockable
 class UseCases(
     private val context: Context,
     private val sessionManager: SessionManager,
