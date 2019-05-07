@@ -775,7 +775,7 @@ JS_FRIEND_API JSObject* js::NewProxyObject(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   if (proto_ != TaggedProto::LazyProto) {
-    cx->check(proto_); // |priv| might be cross-compartment.
+    cx->check(proto_);  // |priv| might be cross-compartment.
   }
 
   if (options.lazyProto()) {
