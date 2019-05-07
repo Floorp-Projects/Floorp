@@ -30,8 +30,6 @@ const SWAPPED_BROWSER_STATE = [
   "_characterSet",
   "_contentPrincipal",
   "_imageDocument",
-  "_fullZoom",
-  "_textZoom",
   "_isSyntheticDocument",
   "_innerWindowID",
 ];
