@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <org.mozilla.gecko.preferences.NotificationSettingsLinkPreference
+        android:key="android.not_a_preference.notifications.settings_link"
+        android:title="@string/pref_notification_settings_link" />
     <SwitchPreference android:key="android.not_a_preference.notifications.whats_new"
         android:title="@string/pref_whats_new_notification"
         android:summary="@string/pref_whats_new_notification_summary"
