@@ -99,6 +99,7 @@ devtools.jar:
     skin/breadcrumbs.css (themes/breadcrumbs.css)
     skin/chart.css (themes/chart.css)
     skin/widgets.css (themes/widgets.css)
+    skin/images/alerticon-unused.svg (themes/images/alerticon-unused.svg)
     skin/rules.css (themes/rules.css)
     skin/images/command-paintflashing.svg (themes/images/command-paintflashing.svg)
     skin/images/command-screenshot.svg (themes/images/command-screenshot.svg)
