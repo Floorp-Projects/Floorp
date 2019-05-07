@@ -97,11 +97,11 @@ class SearchConfigTest {
     // when updating the requested/available locales.
     for (let region of regions) {
       for (let locale of locales) {
-        const infoString = `region: "${region}" locale: "${locale}"`;
-        info(`Checking ${infoString}`);
+        info(`Checking region: "${region}" locale: "${locale}"`);
         await this._reinit(region, locale);
 
-        this._assertDefaultEngines(region, locale, infoString);
+        this._assertDefaultEngines(region, locale);
+        await this._assertAvailableEngines(region, locale);
       }
     }
 
@@ -189,12 +189,58 @@ class SearchConfigTest {
    */
   _localeRegionInSection(section, region, locale) {
     for (const {regions, locales} of section) {
-      if (regions.includes(region) &&
-          this._localeIncludes(locales, locale)) {
+      // If we only specify a regions or locales section then
+      // it is always considered included in the other section.
+      const inRegions = !regions || regions.includes(region);
+      const inLocales = !locales || this._localeIncludes(locales, locale);
+      if (inRegions && inLocales) {
         return true;
       }
     }
     return false;
+  }
+
+  /**
+   * Asserts whether the engines rules defined in the configuration are met.
+   *
+   * @param {Array} engines
+   *   The list of engines to check.
+   * @param {string} region
+   *   The two-letter region code.
+   * @param {string} locale
+   *   The two-letter locale code.
+   * @param {string} section
+   *   The section of the configuration to check.
+   */
+  _assertEngineRules(engines, region, locale, section) {
+    const infoString = `region: "${region}" locale: "${locale}"`;
+    const config = this._config[section];
+    const hasIncluded = "included" in config;
+    const hasExcluded = "excluded" in config;
+
+    // If there's not included/excluded, then this shouldn't be the default anywhere.
+    if (section == "default" && !hasIncluded && !hasExcluded) {
+      Assert.ok(!engines.includes(this._config.identifier),
+        `Should not be ${section} for any locale/region,
+         currently set for ${infoString}`);
+      return;
+    }
+
+    // If there's no included section, we assume the engine is default everywhere
+    // and we should apply the exclusions instead.
+    let included = (hasIncluded &&
+      this._localeRegionInSection(config.included, region, locale));
+
+    let notExcluded = (hasExcluded &&
+     !this._localeRegionInSection(config.excluded, region, locale));
+
+    if (included || notExcluded) {
+      Assert.ok(engines.includes(this._config.identifier),
+        `Should be ${section} for ${infoString}`);
+      return;
+    }
+    Assert.ok(!engines.includes(this._config.identifier),
+      `Should not be ${section} for ${infoString}`);
   }
 
   /**
@@ -204,37 +250,23 @@ class SearchConfigTest {
    *   The two-letter region code.
    * @param {string} locale
    *   The two-letter locale code.
-   * @param {string} infoString
-   *   An additional message to output with assertions.
    */
-  _assertDefaultEngines(region, locale, infoString) {
-    // We use the originalDefaultEngine here as due to the way we run the tests
-    // the default engine may not have changed.
+  _assertDefaultEngines(region, locale) {
     const identifier = Services.search.originalDefaultEngine.identifier;
+    this._assertEngineRules([identifier], region, locale, "default");
+  }
 
-    // If there's not included/excluded, then this shouldn't be the default anywhere.
-    if (!("included" in this._config.default) &&
-        !("excluded" in this._config.default)) {
-      Assert.notEqual(identifier,
-        this._config.identifier,
-        `Should not be set as the default engine for any locale/region,
-         currently set for ${infoString}`);
-      return;
-    }
-
-    // If there's no included section, we assume the engine is default everywhere
-    // and we should apply the exclusions instead.
-    if (("included" in this._config.default &&
-        this._localeRegionInSection(this._config.default.included, region, locale)) ||
-        ("excluded" in this._config.default &&
-         !this._localeRegionInSection(this._config.default.excluded, region, locale))) {
-      Assert.equal(identifier,
-        this._config.identifier,
-        `Should be set as the default engine for ${infoString}`);
-      return;
-    }
-    Assert.notEqual(identifier,
-      this._config.identifier,
-      `Should not be set as the default engine for ${infoString}`);
+  /**
+   * Asserts whether the engine is correctly available or not.
+   *
+   * @param {string} region
+   *   The two-letter region code.
+   * @param {string} locale
+   *   The two-letter locale code.
+   */
+  async _assertAvailableEngines(region, locale) {
+    const engines = await Services.search.getVisibleEngines();
+    const engineNames = engines.map(engine => engine._shortName);
+    this._assertEngineRules(engineNames, region, locale, "available");
   }
 }
