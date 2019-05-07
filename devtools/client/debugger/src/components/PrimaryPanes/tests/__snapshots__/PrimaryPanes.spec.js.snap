@@ -57,9 +57,6 @@ exports[`PrimaryPanes with custom root renders custom root source list 1`] = `
           </span>
         </button>
       </div>
-      <Connect(SourcesTree)
-        threads={Array []}
-      />
     </div>
     <Connect(Outline)
       alphabetizeOutline={false}
@@ -126,9 +123,6 @@ exports[`PrimaryPanes with custom root renders empty custom root source list 1`]
           </span>
         </button>
       </div>
-      <Connect(SourcesTree)
-        threads={Array []}
-      />
     </div>
     <Connect(Outline)
       alphabetizeOutline={false}

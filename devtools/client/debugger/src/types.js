@@ -447,15 +447,13 @@ export type Scope = {|
 export type MainThread = {
   +actor: ThreadId,
   +url: string,
-  +type: number,
-  +name: string
+  +type: number
 };
 
 export type Worker = {
   +actor: ThreadId,
   +url: string,
-  +type: number,
-  +name: string
+  +type: number
 };
 
 export type Thread = MainThread & Worker;

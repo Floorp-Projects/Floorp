@@ -68,9 +68,8 @@ export type SourcesMap = { [SourceId]: Source };
 type SourcesContentMap = {
   [SourceId]: AsyncValue<SourceContent> | null
 };
-export type SourcesMapByThread = { [ThreadId]: SourcesMap };
-
 export type BreakpointPositionsMap = { [SourceId]: BreakpointPositions };
+export type SourcesMapByThread = { [ThreadId]: SourcesMap };
 type SourceActorMap = { [SourceId]: Array<SourceActorId> };
 
 type UrlsMap = { [string]: SourceId[] };
@@ -853,10 +852,9 @@ const getDisplayedSourceIDs: GetDisplayedSourceIDsSelector = createSelector(
     return sourceIDsByThread;
   }
 );
-
 type GetDisplayedSourcesSelector = (
   OuterState & SourceActorOuterState
-) => SourcesMapByThread;
+) => { [ThreadId]: { [SourceId]: Source } };
 export const getDisplayedSources: GetDisplayedSourcesSelector = createSelector(
   state => state.sources.sources,
   getDisplayedSourceIDs,
@@ -875,6 +873,17 @@ export const getDisplayedSources: GetDisplayedSourcesSelector = createSelector(
     return result;
   }
 );
+
+export function getDisplayedSourcesForThread(
+  state: OuterState & SourceActorOuterState,
+  thread: string
+): SourcesMap {
+  return getDisplayedSources(state)[thread] || {};
+}
+
+export function getFocusedSourceItem(state: OuterState): ?FocusItem {
+  return state.sources.focusedItem;
+}
 
 export function getSourceActorsForSource(
   state: OuterState & SourceActorOuterState,
