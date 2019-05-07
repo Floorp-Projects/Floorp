@@ -80,12 +80,6 @@ LOCAL_INCLUDES += [
     '/xpcom/threads',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    LOCAL_INCLUDES += [
-        '/xpcom/base',
-    ]
-
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
