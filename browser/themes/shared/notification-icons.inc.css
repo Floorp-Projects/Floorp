@@ -381,3 +381,8 @@ html|*#webRTC-previewVideo {
   background: #74BF43 url(chrome://browser/skin/notification-icons/update.svg) no-repeat center;
   border-radius: 50%;
 }
+
+.popup-notification-icon[popupid="update-unsupported"] {
+  background: #FFE900 url(chrome://browser/skin/notification-icons/update.svg) no-repeat center;
+  border-radius: 50%;
+}
