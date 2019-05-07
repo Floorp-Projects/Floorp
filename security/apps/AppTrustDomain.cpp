@@ -134,7 +134,8 @@ nsresult AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot) {
     SECItem intermediateDER = {
         siBuffer,
         const_cast<uint8_t*>(addonsPublicIntermediate),
-        mozilla::ArrayLength(addonsPublicIntermediate),
+        static_cast<unsigned int>(
+            mozilla::ArrayLength(addonsPublicIntermediate)),
     };
     mAddonsIntermediate.reset(CERT_NewTempCertificate(
         CERT_GetDefaultCertDB(), &intermediateDER, nullptr, false, true));
