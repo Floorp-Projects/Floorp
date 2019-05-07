@@ -4,17 +4,33 @@
  */
 
 /**
- * This test is mainly to verify that local storage directories are not removed
- * during local storage archive upgrade from version 2 to version 3.
- * See bug 1513937.
+ * This test is mainly to verify that local storage directories are removed
+ * during local storage archive upgrade from version 3 to version 4.
+ * See bug 1549654.
  */
 
 async function testSteps() {
   const lsDirs = [
-    "storage/default/http+++example.com/ls",
     "storage/default/http+++localhost/ls",
     "storage/default/http+++www.mozilla.org/ls",
+    "storage/default/http+++example.com/ls",
   ];
+
+  const principalInfos = [
+    "http://localhost",
+    "http://www.mozilla.org",
+    "http://example.com",
+  ];
+
+  const data = [
+    { key: "foo0", value: "bar" },
+    { key: "foo1", value: "A" },
+    { key: "foo2", value: "A".repeat(100) },
+  ];
+
+  function getLocalStorage(principal) {
+    return Services.domStorageManager.createStorage(null, principal, "");
+  }
 
   info("Clearing");
 
@@ -34,13 +50,13 @@ async function testSteps() {
   // - storage.sqlite
   // - webappsstore.sqlite
   // The file create_db.js in the package was run locally (with a build with
-  // local storage archive version 2), specifically it was temporarily added to
+  // local storage archive version 3), specifically it was temporarily added to
   // xpcshell.ini and then executed:
   //   mach xpcshell-test --interactive dom/localstorage/test/unit/create_db.js
   // Note: to make it become the profile in the test, additional manual steps
   // are needed.
   // 1. Remove the folder "storage/temporary".
-  installPackage("localStorageArchive3upgrade_profile");
+  installPackage("localStorageArchive4upgrade_profile");
 
   info("Checking ls dirs");
 
@@ -60,6 +76,20 @@ async function testSteps() {
     let dir = getRelativeFile(lsDir);
 
     exists = dir.exists();
-    ok(exists, "ls directory does exist");
+    ok(!exists, "ls directory doesn't exist");
+  }
+
+  info("Getting storages");
+
+  let storages = [];
+  for (let i = 0; i < principalInfos.length; i++) {
+    let storage = getLocalStorage(getPrincipal(principalInfos[i]));
+    storages.push(storage);
+  }
+
+  info("Verifying data");
+
+  for (let i = 0; i < storages.length; i++) {
+    is(storages[i].getItem(data[i].key), data[i].value, "Correct value");
   }
 }
