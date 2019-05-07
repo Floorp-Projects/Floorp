@@ -66,7 +66,7 @@ abuse-report-deceptive-example = Example: Misleading description or imagery
 abuse-report-broken-reason-extension = Doesn’t work, breaks websites, or slows { -brand-product-name } down
 abuse-report-broken-reason-theme = Doesn’t work or breaks browser display
 abuse-report-broken-example =
-  Example: Feature are slow, hard to use, or don’t work; parts of websites won’t load or look unusual
+  Example: Features are slow, hard to use, or don’t work; parts of websites won’t load or look unusual
 abuse-report-broken-suggestions-extension =
   It sounds like you’ve identified a bug. In addition to submitting a report here, the best way
   to get a functionality issue resolved is to contact the extension developer.
