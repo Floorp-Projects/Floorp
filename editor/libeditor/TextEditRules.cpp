@@ -922,12 +922,38 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
   }
 
   RefPtr<Element> rootElement = TextEditorRef().GetRoot();
-  uint32_t count = rootElement->GetChildCount();
+  nsIContent* firstChild = rootElement->GetFirstChild();
 
-  // handles only when there is only one node and it's a text node, or empty.
-
-  if (count > 1) {
-    return NS_OK;
+  // We can use this fast path only when:
+  //  - we need to insert a text node.
+  //  - we need to replace content of existing text node.
+  // Additionally, for avoiding odd result, we should check whether we're in
+  // usual condition.
+  if (IsSingleLineEditor()) {
+    // If we're a single line text editor, i.e., <input>, there is only bogus-
+    // <br> element.  Otherwise, there should be only one text node.  But note
+    // that even if there is a bogus node, it's already been removed by
+    // WillInsert().  So, at here, there should be only one text node or no
+    // children.
+    if (firstChild &&
+        (!EditorBase::IsTextNode(firstChild) || firstChild->GetNextSibling())) {
+      return NS_OK;
+    }
+  } else {
+    // If we're a multiline text editor, i.e., <textarea>, there is a moz-<br>
+    // element followed by scrollbar/resizer elements.  Otherwise, a text node
+    // is followed by them.
+    if (!firstChild) {
+      return NS_OK;
+    }
+    if (EditorBase::IsTextNode(firstChild)) {
+      if (!firstChild->GetNextSibling() ||
+          !TextEditUtils::IsMozBR(firstChild->GetNextSibling())) {
+        return NS_OK;
+      }
+    } else if (!TextEditUtils::IsMozBR(firstChild)) {
+      return NS_OK;
+    }
   }
 
   nsAutoString tString(*aString);
@@ -939,7 +965,7 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
     HandleNewLines(tString);
   }
 
-  if (!count) {
+  if (!firstChild || !EditorBase::IsTextNode(firstChild)) {
     if (tString.IsEmpty()) {
       *aHandled = true;
       return NS_OK;
@@ -968,19 +994,27 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
     return NS_OK;
   }
 
-  nsINode* curNode = rootElement->GetFirstChild();
-  if (NS_WARN_IF(!EditorBase::IsTextNode(curNode))) {
-    return NS_OK;
-  }
-
   // Even if empty text, we don't remove text node and set empty text
   // for performance
-  rv = TextEditorRef().SetTextImpl(tString, *curNode->GetAsText());
+  RefPtr<Text> textNode = firstChild->GetAsText();
+  if (MOZ_UNLIKELY(NS_WARN_IF(!textNode))) {
+    return NS_OK;
+  }
+  rv = TextEditorRef().SetTextImpl(tString, *textNode);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  // If we replaced non-empty value with empty string, we need to delete the
+  // text node.
+  if (tString.IsEmpty()) {
+    DebugOnly<nsresult> rvIgnored = DidDeleteSelection();
+    MOZ_ASSERT(rvIgnored != NS_ERROR_EDITOR_DESTROYED);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "DidDeleteSelection() failed");
   }
 
   *aHandled = true;
