@@ -66,6 +66,7 @@ class ShaderD3D : public ShaderImpl
     bool usesMultipleRenderTargets() const { return mUsesMultipleRenderTargets; }
     bool usesFragColor() const { return mUsesFragColor; }
     bool usesFragData() const { return mUsesFragData; }
+    bool usesSecondaryColor() const { return mUsesSecondaryColor; }
     bool usesFragCoord() const { return mUsesFragCoord; }
     bool usesFrontFacing() const { return mUsesFrontFacing; }
     bool usesPointSize() const { return mUsesPointSize; }
@@ -81,6 +82,7 @@ class ShaderD3D : public ShaderImpl
     bool mUsesMultipleRenderTargets;
     bool mUsesFragColor;
     bool mUsesFragData;
+    bool mUsesSecondaryColor;
     bool mUsesFragCoord;
     bool mUsesFrontFacing;
     bool mUsesPointSize;

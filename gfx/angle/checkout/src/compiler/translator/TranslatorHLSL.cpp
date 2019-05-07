@@ -42,6 +42,8 @@ void TranslatorHLSL::translate(TIntermBlock *root,
 {
     const ShBuiltInResources &resources = getResources();
     int numRenderTargets                = resources.EXT_draw_buffers ? resources.MaxDrawBuffers : 1;
+    int maxDualSourceDrawBuffers =
+        resources.EXT_blend_func_extended ? resources.MaxDualSourceDrawBuffers : 0;
 
     sh::AddDefaultReturnStatements(root);
 
@@ -135,10 +137,10 @@ void TranslatorHLSL::translate(TIntermBlock *root,
         sh::RewriteAtomicFunctionExpressions(root, &getSymbolTable(), getShaderVersion());
     }
 
-    sh::OutputHLSL outputHLSL(getShaderType(), getShaderVersion(), getExtensionBehavior(),
-                              getSourcePath(), getOutputType(), numRenderTargets, getUniforms(),
-                              compileOptions, getComputeShaderLocalSize(), &getSymbolTable(),
-                              perfDiagnostics, mShaderStorageBlocks);
+    sh::OutputHLSL outputHLSL(
+        getShaderType(), getShaderVersion(), getExtensionBehavior(), getSourcePath(),
+        getOutputType(), numRenderTargets, maxDualSourceDrawBuffers, getUniforms(), compileOptions,
+        getComputeShaderLocalSize(), &getSymbolTable(), perfDiagnostics, mShaderStorageBlocks);
 
     outputHLSL.output(root, getInfoSink().obj);
 
