@@ -69,9 +69,8 @@ extern crate serde;
 #[macro_use]
 extern crate thread_profiler;
 
-extern crate wr_malloc_size_of;
+extern crate malloc_size_of;
 extern crate svg_fmt;
-use wr_malloc_size_of as malloc_size_of;
 
 #[macro_use]
 mod profiler;
@@ -170,6 +169,7 @@ extern crate dwrote;
 
 extern crate bincode;
 extern crate byteorder;
+pub extern crate euclid;
 extern crate fxhash;
 extern crate gleam;
 extern crate num_traits;
@@ -193,7 +193,7 @@ extern crate time;
 #[cfg(feature = "debugger")]
 extern crate ws;
 #[cfg(feature = "debugger")]
-extern crate image as image_loader;
+extern crate image_loader;
 #[cfg(feature = "debugger")]
 extern crate base64;
 #[cfg(all(feature = "capture", feature = "png"))]
@@ -202,7 +202,7 @@ extern crate png;
 extern crate rand;
 
 #[macro_use]
-pub extern crate webrender_api;
+pub extern crate api;
 extern crate webrender_build;
 
 #[doc(hidden)]
@@ -217,5 +217,4 @@ pub use renderer::{ExternalImageSource, GpuProfile, GraphicsApi, GraphicsApiInfo
 pub use renderer::{Renderer, RendererOptions, RenderResults, RendererStats, SceneBuilderHooks};
 pub use renderer::{ThreadListener, ShaderPrecacheFlags, MAX_VERTEX_TEXTURE_WIDTH};
 pub use shade::{Shaders, WrShaders};
-pub use webrender_api as api;
-pub use webrender_api::euclid;
+pub use api as webrender_api;

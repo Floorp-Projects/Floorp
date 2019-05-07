@@ -37,8 +37,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate time;
 
-extern crate wr_malloc_size_of;
-use wr_malloc_size_of as malloc_size_of;
+extern crate malloc_size_of;
 
 mod api;
 pub mod channel;

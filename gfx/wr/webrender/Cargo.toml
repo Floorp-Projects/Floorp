@@ -11,10 +11,10 @@ build = "build.rs"
 default = ["freetype-lib"]
 freetype-lib = ["freetype/servo-freetype-sys"]
 profiler = ["thread_profiler/thread_profiler"]
-debugger = ["ws", "serde_json", "serde", "image", "base64"]
-capture = ["webrender_api/serialize", "ron", "serde", "smallvec/serde"]
-replay = ["webrender_api/deserialize", "ron", "serde"]
-display_list_stats = ["webrender_api/display_list_stats"]
+debugger = ["ws", "serde_json", "serde", "image_loader", "base64"]
+capture = ["api/serialize", "ron", "serde", "smallvec/serde"]
+replay = ["api/deserialize", "ron", "serde"]
+display_list_stats = ["api/display_list_stats"]
 pathfinder = ["pathfinder_font_renderer", "pathfinder_gfx_utils", "pathfinder_partitioner", "pathfinder_path_utils"]
 serialize_program = ["serde", "webrender_build/serialize_program"]
 no_static_freetype = []
@@ -29,9 +29,10 @@ bitflags = "1.0"
 byteorder = "1.0"
 cfg-if = "0.1.2"
 cstr = "0.1.2"
+euclid = { version = "0.19.5", features = ["serde"] }
 fxhash = "0.2.1"
 gleam = "0.6.17"
-image = { optional = true, version = "0.21", default-features = false, features = ["png_codec"] }
+image_loader = { optional = true, version = "0.21", package = "image", default-features = false, features = ["png_codec"] }
 lazy_static = "1"
 log = "0.4"
 malloc_size_of_derive = "0.1"
@@ -46,9 +47,9 @@ sha2 = "0.8"
 smallvec = "0.6"
 thread_profiler = "0.1.1"
 time = "0.1"
-webrender_api = { version = "0.60.0", path = "../webrender_api" }
+api = { version = "0.60.0", path = "../webrender_api", package = "webrender_api" }
 webrender_build = { version = "0.0.1", path = "../webrender_build" }
-wr_malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of" }
+malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of", package = "wr_malloc_size_of" }
 ws = { optional = true, version = "0.7.3" }
 svg_fmt = "0.4"
 
