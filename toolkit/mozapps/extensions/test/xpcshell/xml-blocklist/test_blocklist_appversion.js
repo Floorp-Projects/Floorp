@@ -6,7 +6,7 @@
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-testserver.registerDirectory("/data/", do_get_file("data"));
+testserver.registerDirectory("/data/", do_get_file("../data"));
 
 var ADDONS = [{
   id: "test_bug449027_1@tests.mozilla.org",

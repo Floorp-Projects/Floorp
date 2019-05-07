@@ -9,7 +9,7 @@
 
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gPort = gTestserver.identity.primaryPort;
-gTestserver.registerDirectory("/data/", do_get_file("data"));
+gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -32,21 +32,28 @@ async function run_test() {
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
   gfxInfo.fireTestProcess();
 
-  gfxInfo.spoofVendorID("0xabcd");
-  gfxInfo.spoofDeviceID("0x6666");
-
-  // Spoof the OS version so it matches the test file.
+  // Set the vendor/device ID, etc, to match the test file.
   switch (Services.appinfo.OS) {
     case "WINNT":
+      gfxInfo.spoofVendorID("0xabcd");
+      gfxInfo.spoofDeviceID("0x1234");
+      gfxInfo.spoofDriverVersion("8.52.322.2201");
       // Windows 7
       gfxInfo.spoofOSVersion(0x60001);
       break;
     case "Linux":
+      gfxInfo.spoofVendorID("0xabcd");
+      gfxInfo.spoofDeviceID("0x1234");
       break;
     case "Darwin":
+      gfxInfo.spoofVendorID("0xabcd");
+      gfxInfo.spoofDeviceID("0x1234");
       gfxInfo.spoofOSVersion(0x1090);
       break;
     case "Android":
+      gfxInfo.spoofVendorID("abcd");
+      gfxInfo.spoofDeviceID("asdf");
+      gfxInfo.spoofDriverVersion("5");
       break;
   }
 
@@ -56,15 +63,13 @@ async function run_test() {
   await promiseStartupManager();
 
   function checkBlacklist() {
-    var driverVersion = gfxInfo.adapterDriverVersion;
-    if (driverVersion) {
-      var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
-      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DEVICE);
+    var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
-      // Make sure unrelated features aren't affected
-      status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
-      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
-    }
+    // Make sure unrelated features aren't affected
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+
     do_test_finished();
   }
 

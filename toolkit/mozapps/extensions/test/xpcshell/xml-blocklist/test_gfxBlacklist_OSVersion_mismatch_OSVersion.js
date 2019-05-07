@@ -3,13 +3,13 @@
  */
 
 // This should eventually be moved to head_addons.js
-// Test whether blocklists specifying new OSeswcorrectly don't block if driver
-// versions are appropriately up-to-date.
+// Test whether old OS versions are not matched when the blacklist contains
+// only new OS versions.
 // Uses test_gfxBlacklist_OS.xml
 
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gPort = gTestserver.identity.primaryPort;
-gTestserver.registerDirectory("/data/", do_get_file("data"));
+gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -33,21 +33,22 @@ async function run_test() {
   gfxInfo.fireTestProcess();
 
   // Set the vendor/device ID, etc, to match the test file.
-  gfxInfo.spoofDriverVersion("8.52.322.2202");
+  gfxInfo.spoofDriverVersion("8.52.322.2201");
   gfxInfo.spoofVendorID("0xabcd");
   gfxInfo.spoofDeviceID("0x1234");
 
   // Spoof the version of the OS appropriately to test the test file.
   switch (Services.appinfo.OS) {
     case "WINNT":
-      // Windows 8
-      gfxInfo.spoofOSVersion(0x60002);
+      // Windows 7
+      gfxInfo.spoofOSVersion(0x60001);
       break;
     case "Linux":
       // We don't have any OS versions on Linux, just "Linux".
       do_test_finished();
       return;
     case "Darwin":
+      // Lion
       gfxInfo.spoofOSVersion(0x1080);
       break;
     case "Android":

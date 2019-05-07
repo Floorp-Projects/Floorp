@@ -3,13 +3,13 @@
  */
 
 // This should eventually be moved to head_addons.js
-// Test whether a machine which differs only on device ID, but otherwise
-// exactly matches the blacklist entry, is not blocked.
+// Test whether a machine which exactly matches the greater-than-or-equal
+// blacklist entry is successfully blocked.
 // Uses test_gfxBlacklist.xml
 
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gPort = gTestserver.identity.primaryPort;
-gTestserver.registerDirectory("/data/", do_get_file("data"));
+gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -35,25 +35,24 @@ async function run_test() {
   // Set the vendor/device ID, etc, to match the test file.
   switch (Services.appinfo.OS) {
     case "WINNT":
-      gfxInfo.spoofVendorID("0xabcd");
-      gfxInfo.spoofDeviceID("0x9876");
-      gfxInfo.spoofDriverVersion("8.52.322.2201");
+      gfxInfo.spoofVendorID("0xabab");
+      gfxInfo.spoofDeviceID("0x1234");
+      gfxInfo.spoofDriverVersion("8.52.322.2202");
       // Windows 7
       gfxInfo.spoofOSVersion(0x60001);
       break;
     case "Linux":
-      gfxInfo.spoofVendorID("0xabcd");
-      gfxInfo.spoofDeviceID("0x9876");
-      break;
+      // We don't support driver versions on Linux.
+      do_test_finished();
+      return;
     case "Darwin":
-      gfxInfo.spoofVendorID("0xabcd");
-      gfxInfo.spoofDeviceID("0x9876");
-      gfxInfo.spoofOSVersion(0x1090);
-      break;
+      // We don't support driver versions on Darwin.
+      do_test_finished();
+      return;
     case "Android":
-      gfxInfo.spoofVendorID("abcd");
-      gfxInfo.spoofDeviceID("aabb");
-      gfxInfo.spoofDriverVersion("5");
+      gfxInfo.spoofVendorID("abab");
+      gfxInfo.spoofDeviceID("ghjk");
+      gfxInfo.spoofDriverVersion("7");
       break;
   }
 
@@ -64,12 +63,10 @@ async function run_test() {
 
   function checkBlacklist() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
+    // Make sure unrelated features aren't affected
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
-    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
-
-    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_CANVAS2D_ACCELERATION);
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     do_test_finished();

@@ -3,13 +3,13 @@
  */
 
 // This should eventually be moved to head_addons.js
-// Test whether old OS versions are not matched when the blacklist contains
-// only new OS versions.
-// Uses test_gfxBlacklist_OS.xml
+// Test whether a machine which differs only on vendor, but otherwise
+// exactly matches the blacklist entry, is not blocked.
+// Uses test_gfxBlacklist.xml
 
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gPort = gTestserver.identity.primaryPort;
-gTestserver.registerDirectory("/data/", do_get_file("data"));
+gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -33,29 +33,28 @@ async function run_test() {
   gfxInfo.fireTestProcess();
 
   // Set the vendor/device ID, etc, to match the test file.
-  gfxInfo.spoofDriverVersion("8.52.322.2201");
-  gfxInfo.spoofVendorID("0xabcd");
-  gfxInfo.spoofDeviceID("0x1234");
-
-  // Spoof the version of the OS appropriately to test the test file.
   switch (Services.appinfo.OS) {
     case "WINNT":
+      gfxInfo.spoofVendorID("0xdcba");
+      gfxInfo.spoofDeviceID("0x1234");
+      gfxInfo.spoofDriverVersion("8.52.322.2201");
       // Windows 7
       gfxInfo.spoofOSVersion(0x60001);
       break;
     case "Linux":
-      // We don't have any OS versions on Linux, just "Linux".
-      do_test_finished();
-      return;
+      gfxInfo.spoofVendorID("0xdcba");
+      gfxInfo.spoofDeviceID("0x1234");
+      break;
     case "Darwin":
-      // Lion
-      gfxInfo.spoofOSVersion(0x1080);
+      gfxInfo.spoofVendorID("0xdcba");
+      gfxInfo.spoofDeviceID("0x1234");
+      gfxInfo.spoofOSVersion(0x1090);
       break;
     case "Android":
-      // On Android, the driver version is used as the OS version (because
-      // there's so many of them).
-      do_test_finished();
-      return;
+      gfxInfo.spoofVendorID("dcba");
+      gfxInfo.spoofDeviceID("asdf");
+      gfxInfo.spoofDriverVersion("5");
+      break;
   }
 
   do_test_pending();
@@ -64,13 +63,11 @@ async function run_test() {
   await promiseStartupManager();
 
   function checkBlacklist() {
-    if (Services.appinfo.OS == "WINNT") {
-      var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
-      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
-    } else if (Services.appinfo.OS == "Darwin") {
-      status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_OPENGL_LAYERS);
-      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
-    }
+    var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     do_test_finished();
   }
@@ -81,5 +78,5 @@ async function run_test() {
     executeSoon(checkBlacklist);
   }, "blocklist-data-gfxItems");
 
-  load_blocklist("test_gfxBlacklist_OSVersion.xml");
+  load_blocklist("test_gfxBlacklist.xml");
 }

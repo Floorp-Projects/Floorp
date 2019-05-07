@@ -8,7 +8,7 @@ const nsIBLS = Ci.nsIBlocklistService;
 
 var gBlocklist = null;
 var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-gTestserver.registerDirectory("/data/", do_get_file("data"));
+gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 var PLUGINS = [{
   // Tests a plugin whose state goes from not-blocked, to outdated
@@ -67,7 +67,7 @@ add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   // initialize the blocklist with no entries
-  copyBlocklistToProfile(do_get_file("data/test_bug514327_3_empty.xml"));
+  copyBlocklistToProfile(do_get_file("../data/test_bug514327_3_empty.xml"));
 
   await promiseStartupManager();
 

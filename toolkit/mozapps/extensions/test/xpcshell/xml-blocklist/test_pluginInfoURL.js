@@ -32,7 +32,7 @@ const PLUGINS = [
  * copying the blocklist file to the profile folder.
  */
 add_task(async function setup() {
-  copyBlocklistToProfile(do_get_file("data/pluginInfoURL_block.xml"));
+  copyBlocklistToProfile(do_get_file("../data/pluginInfoURL_block.xml"));
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   await promiseStartupManager();
