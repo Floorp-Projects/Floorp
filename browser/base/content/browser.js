@@ -4154,6 +4154,13 @@ const BrowserSearch = {
   },
 
   addEngine(browser, engine, uri) {
+    if (!this._searchInitComplete) {
+      // We haven't finished initialising search yet. This means we can't
+      // call getEngineByName here. Since this is only on start-up and unlikely
+      // to happen in the normal case, we'll just return early rather than
+      // trying to handle it asynchronously.
+      return;
+    }
     // Check to see whether we've already added an engine with this title
     if (browser.engines) {
       if (browser.engines.some(e => e.title == engine.title))
