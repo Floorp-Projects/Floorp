@@ -18,9 +18,8 @@ const test = new SearchConfigTest({
       // ],
       locales: {
         matches: [
-          "ach", "af", "an", "ar", "ast", "az", "bn", "bn-BD",
-          "bn-ID", "ca", "cak", "da", "de", "dsb", "el", "en-CA",
-          "en-GB", "en-US", "en-ZA", "eo", "es-CL", "es-ES",
+          "ach", "af", "an", "ar", "ast", "az", "ca", "cak", "da", "de",
+          "dsb", "el", "eo", "es-CL", "es-ES",
           "es-MX", "eu", "fa", "ff", "fi", "fr", "fy-NL", "gn",
           "gu-IN", "hi-IN", "hr", "hsb", "ia", "is", "it",
           "ja-JP-mac", "ja", "ka", "kab", "km", "kn", "lij", "lo",
@@ -29,6 +28,7 @@ const test = new SearchConfigTest({
           "sq", "sr", "sv-SE", "th", "tl", "trs", "uk", "ur", "uz",
           "wo", "xh", "zh-CN",
         ],
+        startsWith: ["bn", "en"],
       },
     }],
   },
