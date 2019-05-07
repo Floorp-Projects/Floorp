@@ -1649,6 +1649,8 @@ void GenerateCaps(ID3D11Device *device,
     extensions->textureBorderClamp = true;
     extensions->textureMultisample = true;
     extensions->provokingVertex    = true;
+    extensions->blendFuncExtended        = true;
+    extensions->maxDualSourceDrawBuffers = 1;
 
     // D3D11 Feature Level 10_0+ uses SV_IsFrontFace in HLSL to emulate gl_FrontFacing.
     // D3D11 Feature Level 9_3 doesn't support SV_IsFrontFace, and has no equivalent, so can't
@@ -1750,6 +1752,18 @@ D3D11_BLEND ConvertBlendFunc(GLenum glBlend, bool isAlpha)
             break;
         case GL_SRC_ALPHA_SATURATE:
             d3dBlend = D3D11_BLEND_SRC_ALPHA_SAT;
+            break;
+        case GL_SRC1_COLOR_EXT:
+            d3dBlend = (isAlpha ? D3D11_BLEND_SRC1_ALPHA : D3D11_BLEND_SRC1_COLOR);
+            break;
+        case GL_SRC1_ALPHA_EXT:
+            d3dBlend = D3D11_BLEND_SRC1_ALPHA;
+            break;
+        case GL_ONE_MINUS_SRC1_COLOR_EXT:
+            d3dBlend = (isAlpha ? D3D11_BLEND_INV_SRC1_ALPHA : D3D11_BLEND_INV_SRC1_COLOR);
+            break;
+        case GL_ONE_MINUS_SRC1_ALPHA_EXT:
+            d3dBlend = D3D11_BLEND_INV_SRC1_ALPHA;
             break;
         default:
             UNREACHABLE();
