@@ -4,6 +4,7 @@
 
 .bracket-arrow {
   position: absolute;
+  pointer-events: none;
 }
 
 .bracket-arrow::before,
