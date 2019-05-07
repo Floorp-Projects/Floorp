@@ -497,6 +497,13 @@ static const char *const
                                   "ocspResponder",
                                   "stepUp",
                                   "msTrustListSigning",
+                                  "x509Any",
+                                  "ipsecIKE",
+                                  "ipsecIKEEnd",
+                                  "ipsecIKEIntermediate",
+                                  "ipsecEnd",
+                                  "ipsecTunnel",
+                                  "ipsecUser",
                                   NULL };
 
 static SECStatus
@@ -517,6 +524,10 @@ AddExtKeyUsage(void *extHandle, const char *userSuppliedValue)
 
     while (1) {
         if (!userSuppliedValue) {
+            /*
+             * none of the 'new' extended key usage options work with the prompted menu. This is so
+             * old scripts can continue to work.
+             */
             if (PrintChoicesAndGetAnswer(
                     "\t\t0 - Server Auth\n"
                     "\t\t1 - Client Auth\n"
@@ -571,6 +582,45 @@ AddExtKeyUsage(void *extHandle, const char *userSuppliedValue)
                 break;
             case 7:
                 rv = AddOidToSequence(os, SEC_OID_MS_EXT_KEY_USAGE_CTL_SIGNING);
+                break;
+            /*
+             * These new usages can only be added explicitly by the userSuppliedValues. This allows old
+             * scripts which used '>7' as an exit value to continue to work.
+             */
+            case 8:
+                if (!userSuppliedValue)
+                    goto endloop;
+                rv = AddOidToSequence(os, SEC_OID_X509_ANY_EXT_KEY_USAGE);
+                break;
+            case 9:
+                if (!userSuppliedValue)
+                    goto endloop;
+                rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_IPSEC_IKE);
+                break;
+            case 10:
+                if (!userSuppliedValue)
+                    goto endloop;
+                rv = AddOidToSequence(os, SEC_OID_IPSEC_IKE_END);
+                break;
+            case 11:
+                if (!userSuppliedValue)
+                    goto endloop;
+                rv = AddOidToSequence(os, SEC_OID_IPSEC_IKE_INTERMEDIATE);
+                break;
+            case 12:
+                if (!userSuppliedValue)
+                    goto endloop;
+                rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_IPSEC_END);
+                break;
+            case 13:
+                if (!userSuppliedValue)
+                    goto endloop;
+                rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_IPSEC_TUNNEL);
+                break;
+            case 14:
+                if (!userSuppliedValue)
+                    goto endloop;
+                rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_IPSEC_USER);
                 break;
             default:
                 goto endloop;
