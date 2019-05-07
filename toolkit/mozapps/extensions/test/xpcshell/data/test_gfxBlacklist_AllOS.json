@@ -1,0 +1,837 @@
+[
+  {
+    "blockID": "g1",
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT2D ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g2",
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "22.0a1"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_9_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "16.0a1"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_10_LAYERS",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "16.0a1", "maxVersion": "22.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_10_1_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "12.0", "maxVersion": "16.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " OPENGL_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g11",
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "14.0b2", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_OPENGL ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_ANGLE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL2 ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "12.0", "maxVersion": "16.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_MSAA ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"maxVersion": "13.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " STAGEFRIGHT ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_ENCODE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_DECODE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "17.2a2", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_11_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "13.2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " HARDWARE_VIDEO_DECODING ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "All",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "10.5", "maxVersion": "13.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_11_ANGLE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g1",
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT2D ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g2",
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "22.0a1"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_9_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "16.0a1"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_10_LAYERS",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "16.0a1", "maxVersion": "22.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_10_1_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "12.0", "maxVersion": "16.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " OPENGL_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g11",
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "14.0b2", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_OPENGL ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_ANGLE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL2 ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "12.0", "maxVersion": "16.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_MSAA ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"maxVersion": "13.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " STAGEFRIGHT ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_ENCODE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_DECODE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "17.2a2", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_11_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "13.2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " HARDWARE_VIDEO_DECODING ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Darwin 13",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "10.5", "maxVersion": "13.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_11_ANGLE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g1",
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT2D ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g2",
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "22.0a1"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_9_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "16.0a1"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_10_LAYERS",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "16.0a1", "maxVersion": "22.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_10_1_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "12.0", "maxVersion": "16.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " OPENGL_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g11",
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "14.0b2", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_OPENGL ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_ANGLE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL2 ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "12.0", "maxVersion": "16.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_MSAA ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"maxVersion": "13.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " STAGEFRIGHT ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_ENCODE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_DECODE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "17.2a2", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_11_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "13.2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " HARDWARE_VIDEO_DECODING ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Linux",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "10.5", "maxVersion": "13.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_11_ANGLE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g1",
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT2D ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g2",
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "22.0a1"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_9_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "16.0a1"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_10_LAYERS",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "16.0a1", "maxVersion": "22.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_10_1_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "12.0", "maxVersion": "16.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " OPENGL_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "blockID": "g11",
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "14.0b2", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_OPENGL ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_ANGLE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL2 ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "12.0", "maxVersion": "16.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBGL_MSAA ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"maxVersion": "13.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " STAGEFRIGHT ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_ENCODE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "42.0", "maxVersion": "13.0b2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " WEBRTC_HW_ACCELERATION_DECODE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "17.2a2", "maxVersion": "15.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_11_LAYERS ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "15.0", "maxVersion": "13.2"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " HARDWARE_VIDEO_DECODING ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  },
+
+  {
+    "os": "Android",
+    "vendor": "0xabcd",
+    "versionRange": {"minVersion": "10.5", "maxVersion": "13.0"},
+    "devices": [
+      "0x2783",
+      "0x1234",
+      "0x2782"
+    ],
+    "feature": " DIRECT3D_11_ANGLE ",
+    "featureStatus": " BLOCKED_DRIVER_VERSION "
+  }
+]

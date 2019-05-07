@@ -1,7 +1,7 @@
 const { Constructor: CC } = Components;
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", null);
+const {BlocklistClients} = ChromeUtils.import("resource://services-common/blocklist-clients.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
@@ -19,9 +19,7 @@ add_task(async function test_something() {
   const dummyServerURL = `http://localhost:${server.identity.primaryPort}/v1`;
   Services.prefs.setCharPref("services.settings.server", dummyServerURL);
 
-  BlocklistClients.initialize();
-
-  const OneCRLBlocklistClient = BlocklistClients.OneCRLBlocklistClient;
+  const {OneCRLBlocklistClient} = BlocklistClients.initialize();
 
   // register a handler
   function handleResponse(request, response) {

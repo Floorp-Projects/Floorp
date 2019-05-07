@@ -1732,7 +1732,7 @@ BrowserGlue.prototype = {
       RFPHelper.init();
     });
 
-    Services.tm.idleDispatchToMainThread(() => {
+    ChromeUtils.idleDispatch(() => {
       Blocklist.loadBlocklistAsync();
     });
 
