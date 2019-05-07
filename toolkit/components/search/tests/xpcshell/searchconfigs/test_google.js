@@ -23,6 +23,11 @@ const test = new SearchConfigTest({
       },
     }],
   },
+  available: {
+    excluded: [
+      // Should be available everywhere.
+    ],
+  },
 });
 
 add_task(async function setup() {
