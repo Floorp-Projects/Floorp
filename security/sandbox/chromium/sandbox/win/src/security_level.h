@@ -255,6 +255,15 @@ const MitigationFlags MITIGATION_IMAGE_LOAD_NO_LOW_LABEL = 0x00080000;
 // PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON.
 const MitigationFlags MITIGATION_IMAGE_LOAD_PREFER_SYS32 = 0x00100000;
 
+// Begin Mozilla-added flags.
+// Working down from the high bit to avoid conflict with new upstream flags.
+
+// Disable Control Flow Guard. This may seem more like an anti-mitigation, but
+// this flag allows code to make targeted changes to CFG to avoid bugs, while
+// leaving it enabled in the common case. Corresponds to
+// PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_ON.
+const MitigationFlags MITIGATION_CONTROL_FLOW_GUARD_DISABLE = 0x80000000;
+
 }  // namespace sandbox
 
 #endif  // SANDBOX_SRC_SECURITY_LEVEL_H_
