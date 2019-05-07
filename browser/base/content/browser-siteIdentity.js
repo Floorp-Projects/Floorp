@@ -795,6 +795,9 @@ var gIdentityHandler = {
   },
 
   setURI(uri) {
+    if (uri.schemeIs("view-source")) {
+      uri = Services.io.newURI(uri.spec.replace(/^view-source:/i, ""));
+    }
     this._uri = uri;
 
     try {
