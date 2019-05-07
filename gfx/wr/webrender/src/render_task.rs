@@ -638,6 +638,8 @@ pub enum RenderTaskKind {
     Border(BorderTask),
     LineDecoration(LineDecorationTask),
     Gradient(GradientTask),
+    #[cfg(test)]
+    Test(RenderTargetKind),
 }
 
 impl RenderTaskKind {
@@ -655,6 +657,8 @@ impl RenderTaskKind {
             RenderTaskKind::Border(..) => "Border",
             RenderTaskKind::LineDecoration(..) => "LineDecoration",
             RenderTaskKind::Gradient(..) => "Gradient",
+            #[cfg(test)]
+            RenderTaskKind::Test(..) => "Test",
         }
     }
 }
@@ -699,6 +703,21 @@ impl RenderTask {
             children,
             kind,
             clear_mode,
+            saved_index: None,
+        }
+    }
+
+    #[cfg(test)]
+    pub fn new_test(
+        target: RenderTargetKind,
+        location: RenderTaskLocation,
+        children: Vec<RenderTaskId>,
+    ) -> Self {
+        RenderTask {
+            location,
+            children,
+            kind: RenderTaskKind::Test(target),
+            clear_mode: ClearMode::Transparent,
             saved_index: None,
         }
     }
@@ -1146,6 +1165,11 @@ impl RenderTask {
             RenderTaskKind::Blit(..) => {
                 UvRectKind::Rect
             }
+
+            #[cfg(test)]
+            RenderTaskKind::Test(..) => {
+                unreachable!("Unexpected render task");
+            }
         }
     }
 
@@ -1203,6 +1227,11 @@ impl RenderTask {
             RenderTaskKind::Blit(..) => {
                 [0.0; 3]
             }
+
+            #[cfg(test)]
+            RenderTaskKind::Test(..) => {
+                unreachable!();
+            }
         };
 
         let (mut target_rect, target_index) = self.get_target_rect();
@@ -1246,6 +1275,10 @@ impl RenderTask {
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Glyph(..) => {
                 panic!("texture handle not supported for this task kind");
+            }
+            #[cfg(test)]
+            RenderTaskKind::Test(..) => {
+                panic!("RenderTask tests aren't expected to exercise this code");
             }
         }
     }
@@ -1322,6 +1355,9 @@ impl RenderTask {
             RenderTaskKind::Blit(..) => {
                 RenderTargetKind::Color
             }
+
+            #[cfg(test)]
+            RenderTaskKind::Test(kind) => kind,
         }
     }
 
@@ -1349,6 +1385,10 @@ impl RenderTask {
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Glyph(..) => {
                 return;
+            }
+            #[cfg(test)]
+            RenderTaskKind::Test(..) => {
+                panic!("RenderTask tests aren't expected to exercise this code");
             }
         };
 
@@ -1411,6 +1451,10 @@ impl RenderTask {
             }
             RenderTaskKind::Gradient(..) => {
                 pt.new_level("Gradient".to_owned());
+            }
+            #[cfg(test)]
+            RenderTaskKind::Test(..) => {
+                pt.new_level("Test".to_owned());
             }
         }
 
@@ -1873,4 +1917,176 @@ fn dump_task_dependency_link(
                 .stroke(Stroke::Color(rgb(100, 100, 100), 3.0))
         ).unwrap();
     }
+}
+
+#[cfg(test)]
+use euclid::{size2, rect};
+
+#[cfg(test)]
+fn dyn_location(w: i32, h: i32) -> RenderTaskLocation {
+    RenderTaskLocation::Dynamic(None, size2(w, h))
+}
+
+
+#[test]
+fn diamond_task_graph() {
+    // A simple diamon shaped task graph.
+    //
+    //     [b1]
+    //    /    \
+    // [a]      [main_pic]
+    //    \    /
+    //     [b2]
+
+    let color = RenderTargetKind::Color;
+
+    let counters = RenderTaskTreeCounters::new();
+    let mut tasks = RenderTaskTree::new(FrameId::first(), &counters);
+
+    let a = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), Vec::new()));
+    let b1 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), vec![a]));
+    let b2 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), vec![a]));
+
+    let main_pic = tasks.add(RenderTask::new_test(
+        color,
+        RenderTaskLocation::Fixed(rect(0, 0, 3200, 1800)),
+        vec![b1, b2],
+    ));
+
+    let initial_number_of_tasks = tasks.tasks.len();
+
+    let passes = tasks.generate_passes(Some(main_pic), size2(3200, 1800), true);
+
+    // We should not have added any blits.
+    assert_eq!(tasks.tasks.len(), initial_number_of_tasks);
+
+    assert_eq!(passes.len(), 3);
+    assert_eq!(passes[0].tasks, vec![a]);
+
+    assert_eq!(passes[1].tasks.len(), 2);
+    assert!(passes[1].tasks.contains(&b1));
+    assert!(passes[1].tasks.contains(&b2));
+
+    assert_eq!(passes[2].tasks, vec![main_pic]);
+}
+
+#[test]
+fn blur_task_graph() {
+    // This test simulates a complicated shadow stack effect with target allocation
+    // conflicts to resolve.
+
+    let color = RenderTargetKind::Color;
+
+    let counters = RenderTaskTreeCounters::new();
+    let mut tasks = RenderTaskTree::new(FrameId::first(), &counters);
+
+    let pic = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), Vec::new()));
+    let scale1 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), vec![pic]));
+    let scale2 = tasks.add(RenderTask::new_test(color, dyn_location(160, 160), vec![scale1]));
+    let scale3 = tasks.add(RenderTask::new_test(color, dyn_location(80, 80), vec![scale2]));
+    let scale4 = tasks.add(RenderTask::new_test(color, dyn_location(40, 40), vec![scale3]));
+
+    let vblur1 = tasks.add(RenderTask::new_test(color, dyn_location(40, 40), vec![scale4]));
+    let hblur1 = tasks.add(RenderTask::new_test(color, dyn_location(40, 40), vec![vblur1]));
+
+    let vblur2 = tasks.add(RenderTask::new_test(color, dyn_location(40, 40), vec![scale4]));
+    let hblur2 = tasks.add(RenderTask::new_test(color, dyn_location(40, 40), vec![vblur2]));
+
+    // Insert a task that is an even number of passes away from its dependency.
+    // This means the source and destination are on the same target and we have to resolve
+    // this conflict by automatically inserting a blit task.
+    let vblur3 = tasks.add(RenderTask::new_test(color, dyn_location(80, 80), vec![scale3]));
+    let hblur3 = tasks.add(RenderTask::new_test(color, dyn_location(80, 80), vec![vblur3]));
+
+    // Insert a task that is an odd number > 1 of passes away from its dependency.
+    // This should force us to mark the dependency "for saving" to keep its content valid
+    // until the task can access it. 
+    let vblur4 = tasks.add(RenderTask::new_test(color, dyn_location(160, 160), vec![scale2]));
+    let hblur4 = tasks.add(RenderTask::new_test(color, dyn_location(160, 160), vec![vblur4]));
+
+    let main_pic = tasks.add(RenderTask::new_test(
+        color,
+        RenderTaskLocation::Fixed(rect(0, 0, 3200, 1800)),
+        vec![hblur1, hblur2, hblur3, hblur4],
+    ));
+
+    let initial_number_of_tasks = tasks.tasks.len();
+
+    let passes = tasks.generate_passes(Some(main_pic), size2(3200, 1800), true);
+
+    // We should have added a single blit task.
+    assert_eq!(tasks.tasks.len(), initial_number_of_tasks + 1);
+
+    // vblur3's dependency to scale3 should be replaced by a blit.
+    let blit = tasks[vblur3].children[0];
+    assert!(blit != scale3);
+
+    match tasks[blit].kind {
+        RenderTaskKind::Blit(..) => {}
+        _ => { panic!("This should be a blit task."); }
+    }
+
+    assert_eq!(passes.len(), 8);
+
+    assert_eq!(passes[0].tasks, vec![pic]);
+    assert_eq!(passes[1].tasks, vec![scale1]);
+    assert_eq!(passes[2].tasks, vec![scale2]);
+    assert_eq!(passes[3].tasks, vec![scale3]);
+
+    assert_eq!(passes[4].tasks.len(), 2);
+    assert!(passes[4].tasks.contains(&scale4));
+    assert!(passes[4].tasks.contains(&blit));
+
+    assert_eq!(passes[5].tasks.len(), 4);
+    assert!(passes[5].tasks.contains(&vblur1));
+    assert!(passes[5].tasks.contains(&vblur2));
+    assert!(passes[5].tasks.contains(&vblur3));
+    assert!(passes[5].tasks.contains(&vblur4));
+
+    assert_eq!(passes[6].tasks.len(), 4);
+    assert!(passes[6].tasks.contains(&hblur1));
+    assert!(passes[6].tasks.contains(&hblur2));
+    assert!(passes[6].tasks.contains(&hblur3));
+    assert!(passes[6].tasks.contains(&hblur4));
+
+    assert_eq!(passes[7].tasks, vec![main_pic]);
+
+    // See vblur4's comment above. 
+    assert!(tasks[scale2].saved_index.is_some());
+}
+
+#[test]
+fn culled_tasks() {
+    // This test checks that tasks that do not contribute to the frame don't appear in the
+    // generated passes.
+
+    let color = RenderTargetKind::Color;
+
+    let counters = RenderTaskTreeCounters::new();
+    let mut tasks = RenderTaskTree::new(FrameId::first(), &counters);
+
+    let a1 = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), Vec::new()));
+    let _a2 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), vec![a1]));
+
+    let b1 = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), Vec::new()));
+    let b2 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), vec![b1]));
+    let _b3 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), vec![b2]));
+
+    let main_pic = tasks.add(RenderTask::new_test(
+        color,
+        RenderTaskLocation::Fixed(rect(0, 0, 3200, 1800)),
+        vec![b2],
+    ));
+
+    let initial_number_of_tasks = tasks.tasks.len();
+
+    let passes = tasks.generate_passes(Some(main_pic), size2(3200, 1800), true);
+
+    // We should not have added any blits.
+    assert_eq!(tasks.tasks.len(), initial_number_of_tasks);
+
+    assert_eq!(passes.len(), 3);
+    assert_eq!(passes[0].tasks, vec![b1]);
+    assert_eq!(passes[1].tasks, vec![b2]);
+    assert_eq!(passes[2].tasks, vec![main_pic]);
 }
