@@ -3551,7 +3551,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
 #  if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   MOZ_ASSERT(IsInitializedForPrintPreview(),
              "For print preview nsIWebBrowserPrint must be from "
-             "docshell.printPreview!");
+             "docshell.initOrReusePrintPreviewViewer!");
 
   NS_ENSURE_ARG_POINTER(aChildDOMWin);
   nsresult rv = NS_OK;
