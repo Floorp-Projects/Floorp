@@ -102,16 +102,21 @@ interface HTMLMediaElement : HTMLElement {
 partial interface HTMLMediaElement {
   [Func="HasDebuggerOrTabsPrivilege"]
   readonly attribute MediaSource? mozMediaSourceObject;
-
+  [Func="HasDebuggerOrTabsPrivilege"]
+  readonly attribute DOMString mozDebugReaderData;
   [Func="HasDebuggerOrTabsPrivilege", NewObject]
-  Promise<HTMLMediaElementDebugInfo> mozRequestDebugInfo();
+  Promise<DOMString> mozRequestDebugInfo();
 
   [Func="HasDebuggerOrTabsPrivilege", NewObject]
   static void mozEnableDebugLog();
   [Func="HasDebuggerOrTabsPrivilege", NewObject]
   Promise<DOMString> mozRequestDebugLog();
 
+  [Pref="media.test.dumpDebugInfo"]
+  Promise<void> mozDumpDebugInfo();
+
   attribute MediaStream? srcObject;
+
   attribute boolean mozPreservesPitch;
 
   // NB: for internal use with the video controls:
