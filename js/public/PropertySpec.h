@@ -205,13 +205,6 @@ struct JSPropertySpec {
                               JSPropertySpec::Accessor::noAccessor()));
   }
 
-  // Because reinterpret_cast cannot be used in constexpr, expose the
-  // static method to convert JS::SymbolCode to `name` parameter for
-  // {nativeAccessors, selfHostedAccessors,int32Value,stringValue}.
-  static const char* symbolToName(JS::SymbolCode symbol) {
-    return reinterpret_cast<const char*>(uint32_t(symbol) + 1);
-  }
-
   bool isAccessor() const { return !(flags & JSPROP_INTERNAL_USE_BIT); }
   JS_PUBLIC_API bool getValue(JSContext* cx,
                               JS::MutableHandle<JS::Value> value) const;
@@ -256,6 +249,20 @@ struct JSPropertySpec {
   }
 };
 
+// JSPropertySpec::{nativeAccessors, selfHostedAccessors,int32Value,
+// stringValue} methods require symbol names to be casted to `const char*`,
+// and the cast is `reinterpret_cast`.
+//
+// Provide a macro for the cast because of the following reasons:
+//
+//   * `reinterpret_cast` cannot be used in constexpr
+//   * using non-constexpr static method in parameter disables constexpr of
+//     above methods
+//   * top-level `reinterpret_cast` doesn't disable constexpr of above methods
+//
+#define SYMBOL_TO_PROPERTY_NAME(symbol) \
+  reinterpret_cast<const char*>(uint32_t(symbol) + 1)
+
 #define JS_CHECK_ACCESSOR_FLAGS(flags)                                         \
   (static_cast<std::enable_if<((flags) & ~(JSPROP_ENUMERATE |                  \
                                            JSPROP_PERMANENT)) == 0>::type>(0), \
@@ -267,9 +274,9 @@ struct JSPropertySpec {
 #define JS_PSGS(name, getter, setter, flags)                            \
   JSPropertySpec::nativeAccessors(name, JS_CHECK_ACCESSOR_FLAGS(flags), \
                                   getter, nullptr, setter, nullptr)
-#define JS_SYM_GET(symbol, getter, flags)                     \
-  JSPropertySpec::nativeAccessors(                            \
-      JSPropertySpec::symbolToName(::JS::SymbolCode::symbol), \
+#define JS_SYM_GET(symbol, getter, flags)                \
+  JSPropertySpec::nativeAccessors(                       \
+      SYMBOL_TO_PROPERTY_NAME(::JS::SymbolCode::symbol), \
       JS_CHECK_ACCESSOR_FLAGS(flags), getter, nullptr)
 #define JS_SELF_HOSTED_GET(name, getterName, flags)                         \
   JSPropertySpec::selfHostedAccessors(name, JS_CHECK_ACCESSOR_FLAGS(flags), \
@@ -277,15 +284,15 @@ struct JSPropertySpec {
 #define JS_SELF_HOSTED_GETSET(name, getterName, setterName, flags)          \
   JSPropertySpec::selfHostedAccessors(name, JS_CHECK_ACCESSOR_FLAGS(flags), \
                                       getterName, setterName)
-#define JS_SELF_HOSTED_SYM_GET(symbol, getterName, flags)     \
-  JSPropertySpec::selfHostedAccessors(                        \
-      JSPropertySpec::symbolToName(::JS::SymbolCode::symbol), \
+#define JS_SELF_HOSTED_SYM_GET(symbol, getterName, flags) \
+  JSPropertySpec::selfHostedAccessors(                    \
+      SYMBOL_TO_PROPERTY_NAME(::JS::SymbolCode::symbol),  \
       JS_CHECK_ACCESSOR_FLAGS(flags), getterName)
 #define JS_STRING_PS(name, string, flags) \
   JSPropertySpec::stringValue(name, flags, string)
 #define JS_STRING_SYM_PS(symbol, string, flags) \
   JSPropertySpec::stringValue(                  \
-      JSPropertySpec::symbolToName(::JS::SymbolCode::symbol), flags, string)
+      SYMBOL_TO_PROPERTY_NAME(::JS::SymbolCode::symbol), flags, string)
 #define JS_INT32_PS(name, value, flags) \
   JSPropertySpec::int32Value(name, flags, value)
 #define JS_PS_END JSPropertySpec::sentinel()
