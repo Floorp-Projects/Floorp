@@ -305,6 +305,11 @@ SHistoryChild::RemoveDynEntries(int32_t aIndex, nsISHEntry* aEntry) {
 }
 
 NS_IMETHODIMP_(void)
+SHistoryChild::EnsureCorrectEntryAtCurrIndex(nsISHEntry* aEntry) {
+  SendEnsureCorrectEntryAtCurrIndex(static_cast<SHEntryChild*>(aEntry));
+}
+
+NS_IMETHODIMP_(void)
 SHistoryChild::RemoveDynEntriesForBFCacheEntry(nsIBFCacheEntry* aBFEntry) {
   MaybeNewPSHEntry entry;
   int32_t index;
