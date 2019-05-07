@@ -7,8 +7,6 @@ const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 const nsIBLS = Ci.nsIBlocklistService;
 
 var gBlocklist = null;
-var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-gTestserver.registerDirectory("/data/", do_get_file("../data"));
 
 var PLUGINS = [{
   // Tests a plugin whose state goes from not-blocked, to outdated
@@ -48,16 +46,6 @@ var BlocklistPrompt = {
 };
 
 
-async function loadBlocklist(file) {
-  let blocklistUpdated = TestUtils.topicObserved("plugin-blocklist-updated");
-
-  Services.prefs.setCharPref("extensions.blocklist.url",
-                             "http://example.com/data/" + file);
-  Blocklist.notify();
-
-  await blocklistUpdated;
-}
-
 let factory = XPCOMUtils.generateSingletonFactory(function() { return BlocklistPrompt; });
 Cm.registerFactory(Components.ID("{26d32654-30c7-485d-b983-b4d2568aebba}"),
                    "Blocklist Prompt",
@@ -66,10 +54,10 @@ Cm.registerFactory(Components.ID("{26d32654-30c7-485d-b983-b4d2568aebba}"),
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  // initialize the blocklist with no entries
-  copyBlocklistToProfile(do_get_file("../data/test_bug514327_3_empty.xml"));
 
   await promiseStartupManager();
+  // initialize the blocklist with no entries
+  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "test_bug514327_3_empty");
 
   gBlocklist = Services.blocklist;
 
@@ -85,7 +73,7 @@ add_task(async function setup() {
 
 add_task(async function test_part_1() {
   // update blocklist with data that marks the plugin as outdated
-  await loadBlocklist("test_bug514327_3_outdated_1.xml");
+  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "test_bug514327_3_outdated_1");
 
   // plugin should now be marked as outdated
   Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_OUTDATED);
@@ -93,7 +81,7 @@ add_task(async function test_part_1() {
 
 add_task(async function test_part_2() {
   // update blocklist with data that marks the plugin as outdated
-  await loadBlocklist("test_bug514327_3_outdated_2.xml");
+  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "test_bug514327_3_outdated_2");
 
   // plugin should still be marked as outdated
   Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_OUTDATED);

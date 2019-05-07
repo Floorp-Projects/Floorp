@@ -1,0 +1,10 @@
+[
+  {
+    "guid": "softblock1@tests.mozilla.org",
+    "versionRange": [
+      {
+        "severity": "1"
+      }
+    ]
+  }
+]

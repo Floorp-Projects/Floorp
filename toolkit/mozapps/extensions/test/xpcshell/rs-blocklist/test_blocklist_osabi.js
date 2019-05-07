@@ -3,11 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-gPort = testserver.identity.primaryPort;
-
-testserver.registerDirectory("/data/", do_get_file("../data"));
-
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
@@ -137,17 +132,6 @@ const ADDONS = [
 
 const ADDON_IDS = ADDONS.map(a => a.id);
 
-async function loadBlocklist(file) {
-  let blocklistUpdated = TestUtils.topicObserved("addon-blocklist-updated");
-
-  Services.prefs.setCharPref("extensions.blocklist.url",
-                             "http://example.com/data/" + file);
-  Blocklist.notify();
-
-  return blocklistUpdated;
-}
-
-
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   await promiseStartupManager();
@@ -170,7 +154,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_1() {
-  await loadBlocklist("test_bug393285.xml");
+  await AddonTestUtils.loadBlocklistData(do_get_file("../data"), "test_bug393285");
 
   let addons = await getAddons(ADDON_IDS);
   async function isBlocklisted(addon, appVer, toolkitVer) {

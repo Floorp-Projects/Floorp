@@ -5,9 +5,6 @@
 
 const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
-var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-testserver.registerDirectory("/data/", do_get_file("../data"));
-
 var ADDONS = [{
   id: "test_bug449027_1@tests.mozilla.org",
   name: "Bug 449027 Addon Test 1",
@@ -237,16 +234,6 @@ var BlocklistPrompt = {
 };
 
 
-async function loadBlocklist(file) {
-  let blocklistUpdated = TestUtils.topicObserved("addon-blocklist-updated");
-
-  Services.prefs.setCharPref("extensions.blocklist.url",
-                             "http://example.com/data/" + file);
-  Blocklist.notify();
-
-  await blocklistUpdated;
-}
-
 let factory = XPCOMUtils.generateSingletonFactory(function() { return BlocklistPrompt; });
 Cm.registerFactory(Components.ID("{26d32654-30c7-485d-b983-b4d2568aebba}"),
                    "Blocklist Prompt",
@@ -321,7 +308,7 @@ add_task(async function test() {
  * Load the toolkit based blocks
  */
 add_task(async function test_pt2() {
-  await loadBlocklist("test_bug449027_toolkit.xml");
+  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "test_bug449027_toolkit");
 
   await checkState("toolkitBlocks", "start");
 });
@@ -330,7 +317,7 @@ add_task(async function test_pt2() {
  * Load the application based blocks
  */
 add_task(async function test_pt3() {
-  await loadBlocklist("test_bug449027_app.xml");
+  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "test_bug449027_app");
 
   await checkState("appBlocks", "toolkitBlocks");
 });
