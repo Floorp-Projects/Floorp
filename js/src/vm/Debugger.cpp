@@ -1668,7 +1668,7 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
     // bytecode, so we have to simulate that here. For async generators, our
     // C++ implementation of AsyncGeneratorResolve will do this. So don't do it
     // twice:
-    if (!frame.callee()->isAsync()) {
+    if (!genObj->is<AsyncGeneratorObject>()) {
       JSObject* pair = CreateIterResultObject(cx, vp, true);
       if (!pair) {
         getAndClearExceptionThenThrow();
@@ -1679,6 +1679,12 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
 
     // 2.  The generator must be closed.
     genObj->setClosed();
+
+    // Async generators have additionally bookkeeping which must be adjusted
+    // when switching over to the closed state.
+    if (genObj->is<AsyncGeneratorObject>()) {
+      genObj->as<AsyncGeneratorObject>().setCompleted();
+    }
   } else if (frame.callee()->isAsync()) {
     if (AbstractGeneratorObject* genObj =
             GetGeneratorObjectForFrame(cx, frame)) {
