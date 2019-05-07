@@ -134,9 +134,9 @@ mod platform {
     #[cfg(target_os = "macos")]
     pub use platform::macos::font;
     #[cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))]
-    pub use platform::unix::font;
+    pub use crate::platform::unix::font;
     #[cfg(target_os = "windows")]
-    pub use platform::windows::font;
+    pub use crate::platform::windows::font;
 
     #[cfg(target_os = "macos")]
     pub mod macos {
