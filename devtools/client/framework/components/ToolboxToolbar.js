@@ -98,7 +98,7 @@ class ToolboxToolbar extends Component {
       visibleToolboxButtonCount: PropTypes.number,
       // Data to show debug target info, if needed
       debugTargetData: PropTypes.shape({
-        runtimeInfo: PropTypes.object.isRequired,
+        deviceDescription: PropTypes.object.isRequired,
         targetType: PropTypes.string.isRequired,
       }),
     };
