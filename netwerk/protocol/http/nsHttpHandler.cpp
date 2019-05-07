@@ -1826,23 +1826,16 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
   }
 
   if (PREF_CHANGED(HTTP_PREF("enforce-framing.http1")) ||
-      PREF_CHANGED(HTTP_PREF("enforce-framing.soft")) ||
-      PREF_CHANGED(HTTP_PREF("enforce-framing.strict_chunked_encoding"))) {
+      PREF_CHANGED(HTTP_PREF("enforce-framing.soft"))) {
     rv = Preferences::GetBool(HTTP_PREF("enforce-framing.http1"), &cVar);
     if (NS_SUCCEEDED(rv) && cVar) {
       mEnforceH1Framing = FRAMECHECK_STRICT;
     } else {
-      rv = Preferences::GetBool(
-          HTTP_PREF("enforce-framing.strict_chunked_encoding"), &cVar);
+      rv = Preferences::GetBool(HTTP_PREF("enforce-framing.soft"), &cVar);
       if (NS_SUCCEEDED(rv) && cVar) {
-        mEnforceH1Framing = FRAMECHECK_STRICT_CHUNKED;
+        mEnforceH1Framing = FRAMECHECK_BARELY;
       } else {
-        rv = Preferences::GetBool(HTTP_PREF("enforce-framing.soft"), &cVar);
-        if (NS_SUCCEEDED(rv) && cVar) {
-          mEnforceH1Framing = FRAMECHECK_BARELY;
-        } else {
-          mEnforceH1Framing = FRAMECHECK_LAX;
-        }
+        mEnforceH1Framing = FRAMECHECK_LAX;
       }
     }
   }

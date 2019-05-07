@@ -1129,23 +1129,8 @@ void nsHttpTransaction::Close(nsresult reason) {
     if ((mHttpResponseCode / 100 == 2) && (mHttpVersion >= HttpVersion::v1_1)) {
       FrameCheckLevel clevel = gHttpHandler->GetEnforceH1Framing();
       if (clevel >= FRAMECHECK_BARELY) {
-        // If clevel == FRAMECHECK_STRICT mark any incomplete response as
-        // partial.
-        // if clevel == FRAMECHECK_BARELY: 1) mark a chunked-encoded response
-        // that do not ends on exactly a chunk boundary as partial; We are not
-        // strict about the last 0-size chunk and do not mark as parial
-        // responses that do not have the last 0-size chunk but do end on a
-        // chunk boundary. (check mChunkedDecoder->GetChunkRemaining() != 0)
-        // 2) mark a transfer that is partial and it is not chunk-encoded or
-        // gzip-encoded or other content-encoding as partial. (check
-        // !mChunkedDecoder && !mContentDecoding && mContentDecodingCheck))
-        // if clevel == FRAMECHECK_STRICT_CHUNKED mark a chunked-encoded
-        // response that ends on exactly a chunk boundary also as partial.
-        // Here a response must have the last 0-size chunk.
         if ((clevel == FRAMECHECK_STRICT) ||
-            (mChunkedDecoder &&
-             (mChunkedDecoder->GetChunkRemaining() ||
-              (clevel == FRAMECHECK_STRICT_CHUNKED))) ||
+            (mChunkedDecoder && mChunkedDecoder->GetChunkRemaining()) ||
             (!mChunkedDecoder && !mContentDecoding && mContentDecodingCheck)) {
           reason = NS_ERROR_NET_PARTIAL_TRANSFER;
           LOG(("Partial transfer, incomplete HTTP response received: %s",
