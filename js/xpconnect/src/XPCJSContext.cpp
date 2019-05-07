@@ -663,24 +663,6 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
     return true;
   }
 
-  // Check if we're waiting to cancel JS when going back/forward in a tab.
-  if (sTabIdToCancelContentJS) {
-    if (nsIBrowserChild* browserChild = win->GetBrowserChild()) {
-      uint64_t tabId;
-      browserChild->GetTabId(&tabId);
-      if (sTabIdToCancelContentJS == tabId) {
-        // Don't add this page to the BF cache, since we're cancelling its JS.
-        if (Document* doc = win->GetExtantDoc()) {
-          if (Document* topLevelDoc = doc->GetTopLevelContentDocument()) {
-            topLevelDoc->DisallowBFCaching();
-          }
-        }
-        sTabIdToCancelContentJS = 0;
-        return false;
-      }
-    }
-  }
-
   // If there's no limit, or we're within the limit, let it go.
   if (limit == 0 || duration.ToSeconds() < limit / 2.0) {
     return true;
@@ -1236,11 +1218,6 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
 }
 
 // static
-void XPCJSContext::SetTabIdToCancelContentJS(uint64_t aTabId) {
-  sTabIdToCancelContentJS = aTabId;
-}
-
-// static
 uint32_t XPCJSContext::sInstanceCount;
 
 // static
@@ -1256,9 +1233,6 @@ WatchdogManager* XPCJSContext::GetWatchdogManager() {
   sWatchdogInstance = new WatchdogManager();
   return sWatchdogInstance;
 }
-
-// static
-mozilla::Atomic<uint64_t> XPCJSContext::sTabIdToCancelContentJS(0);
 
 // static
 void XPCJSContext::InitTLS() { MOZ_RELEASE_ASSERT(gTlsContext.init()); }
