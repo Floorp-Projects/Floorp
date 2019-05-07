@@ -988,7 +988,10 @@ impl BrushSegment {
                 );
 
                 let clip_task_id = frame_state.render_tasks.add(clip_task);
-                frame_state.surfaces[surface_index.0].tasks.push(clip_task_id);
+                frame_state.render_tasks.add_dependency(
+                    frame_state.surfaces[surface_index.0].render_tasks.unwrap().port,
+                    clip_task_id,
+                );
                 ClipMaskKind::Mask(clip_task_id)
             }
             None => {
@@ -2470,8 +2473,13 @@ impl PrimitiveStore {
                 PrimitiveInstanceKind::Picture { pic_index ,.. } => {
                     let pic = &mut self.pictures[pic_index.0];
 
+                    let clipped_prim_bounding_rect = scratch
+                        .prim_info[prim_instance.visibility_info.0 as usize]
+                        .clipped_world_rect;
+
                     match pic.take_context(
                         pic_index,
+                        clipped_prim_bounding_rect,
                         pic_context.surface_spatial_node_index,
                         pic_context.raster_spatial_node_index,
                         pic_context.surface_index,
@@ -2483,6 +2491,8 @@ impl PrimitiveStore {
                             if prim_instance.is_chased() {
                                 println!("\tculled for carrying an invisible composite filter");
                             }
+
+                            prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
 
                             return false;
                         }
@@ -3071,9 +3081,6 @@ impl PrimitiveStore {
                 let pic = &mut self.pictures[pic_index.0];
                 let prim_info = &scratch.prim_info[prim_instance.visibility_info.0 as usize];
                 if pic.prepare_for_render(
-                    *pic_index,
-                    prim_info.clipped_world_rect,
-                    pic_context.surface_index,
                     frame_context,
                     frame_state,
                     data_stores,
@@ -3747,7 +3754,10 @@ impl PrimitiveInstance {
                 let clip_task_index = ClipTaskIndex(scratch.clip_mask_instances.len() as _);
                 scratch.clip_mask_instances.push(ClipMaskKind::Mask(clip_task_id));
                 prim_info.clip_task_index = clip_task_index;
-                frame_state.surfaces[pic_context.surface_index.0].tasks.push(clip_task_id);
+                frame_state.render_tasks.add_dependency(
+                    frame_state.surfaces[pic_context.surface_index.0].render_tasks.unwrap().port,
+                    clip_task_id,
+                );
             }
         }
     }
