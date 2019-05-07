@@ -119,7 +119,7 @@ public class GeckoDisplay {
         ThreadUtils.assertOnUiThread();
 
         if (mSession != null) {
-            mSession.setFixedBottomOffset(clippingHeight);
+            mSession.mCompositor.setFixedBottomOffset(clippingHeight);
         }
     }
 
