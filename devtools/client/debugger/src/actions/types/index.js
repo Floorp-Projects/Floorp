@@ -71,7 +71,10 @@ type NavigateAction =
   | {| +type: "CONNECT", +mainThread: MainThread, +canRewind: boolean |}
   | {| +type: "NAVIGATE", +mainThread: MainThread |};
 
-export type FocusItem = TreeNode;
+export type FocusItem = {
+  thread: string,
+  item: TreeNode
+};
 
 export type SourceTreeAction =
   | {| +type: "SET_EXPANDED_STATE", +thread: string, +expanded: any |}

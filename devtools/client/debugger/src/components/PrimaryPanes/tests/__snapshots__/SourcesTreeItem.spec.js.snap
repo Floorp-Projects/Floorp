@@ -75,11 +75,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -126,13 +121,6 @@ Object {
               "relativeUrl": "http://mdn.com/one.js",
               "url": "http://mdn.com/one.js",
             }
-          }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
           }
           toggleBlackBox={[MockFunction]}
         />,
@@ -210,11 +198,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -302,11 +285,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -355,13 +333,6 @@ Object {
               "relativeUrl": "http://mdn.com/one.js",
               "url": "http://mdn.com/one.js",
             }
-          }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
           }
           toggleBlackBox={[MockFunction]}
         />,
@@ -446,11 +417,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -467,20 +433,8 @@ Object {
     <span
       className="img no-arrow"
     />
-    <Connect(SourceIcon)
-      source={
-        Object {
-          "id": "server1.conn13.child1/39",
-          "introductionType": undefined,
-          "introductionUrl": null,
-          "isBlackBoxed": false,
-          "isExtension": false,
-          "isPrettyPrinted": false,
-          "isWasm": false,
-          "relativeUrl": "http://mdn.com/one.js",
-          "url": "http://mdn.com/one.js",
-        }
-      }
+    <AccessibleImage
+      className="globe-small"
     />
     <span
       className="label"
@@ -533,11 +487,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -587,13 +536,6 @@ Object {
               "url": "http://mdn.com/one.js",
             }
           }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
-          }
           toggleBlackBox={[MockFunction]}
         />,
         "_forcedUpdate": false,
@@ -607,20 +549,8 @@ Object {
           <span
             className="img no-arrow"
           />
-          <Connect(SourceIcon)
-            source={
-              Object {
-                "id": "server1.conn13.child1/39",
-                "introductionType": undefined,
-                "introductionUrl": null,
-                "isBlackBoxed": false,
-                "isExtension": false,
-                "isPrettyPrinted": false,
-                "isWasm": false,
-                "relativeUrl": "http://mdn.com/one.js",
-                "url": "http://mdn.com/one.js",
-              }
-            }
+          <AccessibleImage
+            className="globe-small"
           />
           <span
             className="label"
@@ -672,11 +602,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -694,7 +619,7 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="folder"
+      className="globe-small debuggee"
     />
     <span
       className="label"
@@ -737,11 +662,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -781,13 +701,6 @@ Object {
               "url": "http://mdn.com/one.js",
             }
           }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
-          }
           toggleBlackBox={[MockFunction]}
         />,
         "_forcedUpdate": false,
@@ -802,7 +715,7 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="folder"
+            className="globe-small debuggee"
           />
           <span
             className="label"
@@ -844,11 +757,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -866,7 +774,7 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="folder"
+      className="globe-small debuggee"
     />
     <span
       className="label"
@@ -910,11 +818,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -955,13 +858,6 @@ Object {
               "url": "http://mdn.com/one.js",
             }
           }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
-          }
           toggleBlackBox={[MockFunction]}
         />,
         "_forcedUpdate": false,
@@ -976,7 +872,7 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="folder"
+            className="globe-small debuggee"
           />
           <span
             className="label"
@@ -1019,11 +915,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -1033,7 +924,7 @@ exports[`SourceTreeItem renderItem should show focused item for folder with expa
 Object {
   "component": <div
     className="node focused"
-    key="domain/subfolder"
+    key="folder/"
     onClick={[Function]}
     onContextMenu={[Function]}
   >
@@ -1041,7 +932,7 @@ Object {
       className="arrow expanded"
     />
     <AccessibleImage
-      className="globe-small"
+      className="folder"
     />
     <span
       className="label"
@@ -1067,7 +958,7 @@ Object {
       "item": Object {
         "contents": Array [],
         "name": "folder",
-        "path": "domain/subfolder",
+        "path": "folder/",
         "type": "directory",
       },
       "projectRoot": "",
@@ -1075,11 +966,6 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": null,
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -1099,7 +985,7 @@ Object {
             Object {
               "contents": Array [],
               "name": "folder",
-              "path": "domain/subfolder",
+              "path": "folder/",
               "type": "directory",
             }
           }
@@ -1108,13 +994,6 @@ Object {
           setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={null}
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
-          }
           toggleBlackBox={[MockFunction]}
         />,
         "_forcedUpdate": false,
@@ -1129,7 +1008,7 @@ Object {
             className="arrow expanded"
           />
           <AccessibleImage
-            className="globe-small"
+            className="folder"
           />
           <span
             className="label"
@@ -1154,7 +1033,7 @@ Object {
     "item": Object {
       "contents": Array [],
       "name": "folder",
-      "path": "domain/subfolder",
+      "path": "folder/",
       "type": "directory",
     },
     "projectRoot": "",
@@ -1162,11 +1041,6 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": null,
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -1226,11 +1100,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -1268,13 +1137,6 @@ Object {
               "relativeUrl": "http://mdn.com/one.js",
               "url": "http://mdn.com/one.js",
             }
-          }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
           }
           toggleBlackBox={[MockFunction]}
         />,
@@ -1331,11 +1193,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -1345,7 +1202,7 @@ exports[`SourceTreeItem renderItem should show icon for folder with arrow 1`] = 
 Object {
   "component": <div
     className="node"
-    key="domain/subfolder"
+    key="folder/"
     onClick={[Function]}
     onContextMenu={[Function]}
   >
@@ -1377,7 +1234,7 @@ Object {
       "item": Object {
         "contents": Array [],
         "name": "folder",
-        "path": "domain/subfolder",
+        "path": "folder/",
         "type": "directory",
       },
       "projectRoot": "",
@@ -1385,11 +1242,6 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": null,
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -1407,7 +1259,7 @@ Object {
             Object {
               "contents": Array [],
               "name": "folder",
-              "path": "domain/subfolder",
+              "path": "folder/",
               "type": "directory",
             }
           }
@@ -1416,13 +1268,6 @@ Object {
           setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={null}
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
-          }
           toggleBlackBox={[MockFunction]}
         />,
         "_forcedUpdate": false,
@@ -1460,7 +1305,7 @@ Object {
     "item": Object {
       "contents": Array [],
       "name": "folder",
-      "path": "domain/subfolder",
+      "path": "folder/",
       "type": "directory",
     },
     "projectRoot": "",
@@ -1468,11 +1313,6 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": null,
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -1482,7 +1322,7 @@ exports[`SourceTreeItem renderItem should show icon for folder with expanded arr
 Object {
   "component": <div
     className="node"
-    key="domain/subfolder"
+    key="folder/"
     onClick={[Function]}
     onContextMenu={[Function]}
   >
@@ -1490,7 +1330,7 @@ Object {
       className="arrow expanded"
     />
     <AccessibleImage
-      className="globe-small"
+      className="folder"
     />
     <span
       className="label"
@@ -1516,7 +1356,7 @@ Object {
       "item": Object {
         "contents": Array [],
         "name": "folder",
-        "path": "domain/subfolder",
+        "path": "folder/",
         "type": "directory",
       },
       "projectRoot": "",
@@ -1524,11 +1364,6 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": null,
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -1548,7 +1383,7 @@ Object {
             Object {
               "contents": Array [],
               "name": "folder",
-              "path": "domain/subfolder",
+              "path": "folder/",
               "type": "directory",
             }
           }
@@ -1557,13 +1392,6 @@ Object {
           setExpanded={[MockFunction]}
           setProjectDirectoryRoot={[MockFunction]}
           source={null}
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
-          }
           toggleBlackBox={[MockFunction]}
         />,
         "_forcedUpdate": false,
@@ -1578,7 +1406,7 @@ Object {
             className="arrow expanded"
           />
           <AccessibleImage
-            className="globe-small"
+            className="folder"
           />
           <span
             className="label"
@@ -1603,7 +1431,7 @@ Object {
     "item": Object {
       "contents": Array [],
       "name": "folder",
-      "path": "domain/subfolder",
+      "path": "folder/",
       "type": "directory",
     },
     "projectRoot": "",
@@ -1611,11 +1439,6 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": null,
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -1633,7 +1456,7 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="folder"
+      className="extension"
     />
     <span
       className="label"
@@ -1676,11 +1499,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -1720,13 +1538,6 @@ Object {
               "url": "http://mdn.com/one.js",
             }
           }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
-          }
           toggleBlackBox={[MockFunction]}
         />,
         "_forcedUpdate": false,
@@ -1741,7 +1552,7 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="folder"
+            className="extension"
           />
           <span
             className="label"
@@ -1783,11 +1594,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -1847,11 +1653,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -1889,13 +1690,6 @@ Object {
               "relativeUrl": "http://mdn.com/one.js",
               "url": "http://mdn.com/one.js",
             }
-          }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
           }
           toggleBlackBox={[MockFunction]}
         />,
@@ -1952,11 +1746,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -2038,11 +1827,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -2090,13 +1874,6 @@ Object {
               "relativeUrl": "http://mdn.com/one.js",
               "url": "http://mdn.com/one.js",
             }
-          }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
           }
           toggleBlackBox={[MockFunction]}
         />,
@@ -2175,11 +1952,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -2262,11 +2034,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -2315,13 +2082,6 @@ Object {
               "relativeUrl": "http://mdn.com/one.js",
               "url": "http://mdn.com/one.js",
             }
-          }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
           }
           toggleBlackBox={[MockFunction]}
         />,
@@ -2401,11 +2161,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }
@@ -2487,11 +2242,6 @@ Object {
         "relativeUrl": "http://mdn.com/one.js",
         "url": "http://mdn.com/one.js",
       },
-      "threads": Array [
-        Object {
-          "name": "Main Thread",
-        },
-      ],
       "toggleBlackBox": [MockFunction],
     },
     "refs": Object {},
@@ -2539,13 +2289,6 @@ Object {
               "relativeUrl": "http://mdn.com/one.js",
               "url": "http://mdn.com/one.js",
             }
-          }
-          threads={
-            Array [
-              Object {
-                "name": "Main Thread",
-              },
-            ]
           }
           toggleBlackBox={[MockFunction]}
         />,
@@ -2624,11 +2367,6 @@ Object {
       "relativeUrl": "http://mdn.com/one.js",
       "url": "http://mdn.com/one.js",
     },
-    "threads": Array [
-      Object {
-        "name": "Main Thread",
-      },
-    ],
     "toggleBlackBox": [MockFunction],
   },
 }

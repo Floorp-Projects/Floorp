@@ -430,12 +430,11 @@ export class QuickOpenModal extends Component<Props, State> {
 /* istanbul ignore next: ignoring testing of redux connection stuff */
 function mapStateToProps(state) {
   const selectedSource = getSelectedSource(state);
-  const displayedSources = getDisplayedSourcesList(state);
 
   return {
     cx: getContext(state),
     enabled: getQuickOpenEnabled(state),
-    sources: formatSources(displayedSources, getTabs(state)),
+    sources: formatSources(getDisplayedSourcesList(state), getTabs(state)),
     selectedSource,
     selectedContentLoaded: selectedSource
       ? !!getSourceContent(state, selectedSource.id)

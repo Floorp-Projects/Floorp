@@ -10,12 +10,9 @@
  */
 
 import { sortBy } from "lodash";
-import { createSelector } from "reselect";
-
 import { getDisplayName } from "../utils/workers";
 
-import type { Selector } from "./types";
-import type { MainThread, WorkerList, Thread } from "../types";
+import type { MainThread, WorkerList } from "../types";
 import type { Action } from "../actions/types";
 
 export type DebuggeeState = {
@@ -24,10 +21,7 @@ export type DebuggeeState = {
 };
 
 export function initialDebuggeeState(): DebuggeeState {
-  return {
-    workers: [],
-    mainThread: { actor: "", url: "", type: -1, name: "" }
-  };
+  return { workers: [], mainThread: { actor: "", url: "", type: -1 } };
 }
 
 export default function debuggee(
@@ -38,10 +32,13 @@ export default function debuggee(
     case "CONNECT":
       return {
         ...state,
-        mainThread: { ...action.mainThread, name: L10N.getStr("mainThread") }
+        mainThread: action.mainThread
       };
     case "INSERT_WORKERS":
-      return insertWorkers(state, action.workers);
+      return {
+        ...state,
+        workers: [...state.workers, ...action.workers]
+      };
     case "REMOVE_WORKERS":
       const { workers } = action;
       return {
@@ -56,18 +53,6 @@ export default function debuggee(
     default:
       return state;
   }
-}
-
-function insertWorkers(state, workers) {
-  const formatedWorkers = workers.map(worker => ({
-    ...worker,
-    name: getDisplayName(worker)
-  }));
-
-  return {
-    ...state,
-    workers: [...state.workers, ...formatedWorkers]
-  };
 }
 
 export const getWorkers = (state: OuterState) => state.debuggee.workers;
@@ -86,10 +71,8 @@ export function getDebuggeeUrl(state: OuterState): string {
   return getMainThread(state).url;
 }
 
-export const getThreads: Selector<Thread[]> = createSelector(
-  getMainThread,
-  getWorkers,
-  (mainThread, workers) => [mainThread, ...sortBy(workers, getDisplayName)]
-);
+export function getThreads(state: OuterState) {
+  return [getMainThread(state), ...sortBy(getWorkers(state), getDisplayName)];
+}
 
 type OuterState = { debuggee: DebuggeeState };

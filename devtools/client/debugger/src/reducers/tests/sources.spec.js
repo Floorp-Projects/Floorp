@@ -81,6 +81,7 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         cx: mockcx,
+        // coercing to a Source for the purpose of this test
         sources: ((mockedSources: any): Source[])
       }),
       sourceActors: undefined
@@ -93,8 +94,9 @@ describe("sources selectors", () => {
       sources: update(state.sources, insertAction),
       sourceActors: updateSourceActors(state.sourceActors, insertAction)
     };
-    const threadSources = getDisplayedSources(state);
-    expect(Object.values(threadSources.foo)).toHaveLength(3);
+    const selectedDisplayedSources = getDisplayedSources(state);
+    const threadSources = selectedDisplayedSources.foo;
+    expect(Object.values(threadSources)).toHaveLength(3);
   });
 
   it("should omit all extensions when chrome preference enabled", () => {
@@ -104,6 +106,7 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         cx: mockcx,
+        // coercing to a Source for the purpose of this test
         sources: ((mockedSources: any): Source[])
       }),
       sourceActors: undefined
@@ -118,7 +121,8 @@ describe("sources selectors", () => {
       sources: update(state.sources, insertAction),
       sourceActors: updateSourceActors(state.sourceActors, insertAction)
     };
-    const threadSources = getDisplayedSources(state);
-    expect(Object.values(threadSources.foo)).toHaveLength(1);
+    const selectedDisplayedSources = getDisplayedSources(state);
+    const threadSources = selectedDisplayedSources.foo;
+    expect(Object.values(threadSources)).toHaveLength(1);
   });
 });
