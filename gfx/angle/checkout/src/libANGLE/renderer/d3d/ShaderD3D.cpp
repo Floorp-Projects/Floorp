@@ -80,6 +80,7 @@ void ShaderD3D::uncompile()
     mUsesMultipleRenderTargets   = false;
     mUsesFragColor               = false;
     mUsesFragData                = false;
+    mUsesSecondaryColor          = false;
     mUsesFragCoord               = false;
     mUsesFrontFacing             = false;
     mUsesPointSize               = false;
@@ -207,6 +208,7 @@ bool ShaderD3D::postTranslateCompile(gl::ShCompilerInstance *compiler, std::stri
 
     mUsesMultipleRenderTargets = translatedSource.find("GL_USES_MRT") != std::string::npos;
     mUsesFragColor             = translatedSource.find("GL_USES_FRAG_COLOR") != std::string::npos;
+    mUsesSecondaryColor        = translatedSource.find("GL_USES_SECONDARY_COLOR") != std::string::npos;
     mUsesFragData              = translatedSource.find("GL_USES_FRAG_DATA") != std::string::npos;
     mUsesFragCoord             = translatedSource.find("GL_USES_FRAG_COORD") != std::string::npos;
     mUsesFrontFacing           = translatedSource.find("GL_USES_FRONT_FACING") != std::string::npos;

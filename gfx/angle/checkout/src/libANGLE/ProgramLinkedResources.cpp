@@ -32,20 +32,6 @@ LinkedUniform *FindUniform(std::vector<LinkedUniform> &list, const std::string &
     return nullptr;
 }
 
-int GetUniformLocationBinding(const ProgramBindings &uniformLocationBindings,
-                              const sh::Uniform &uniform)
-{
-    int binding = uniformLocationBindings.getBinding(uniform.name);
-    if (uniform.isArray() && binding == -1)
-    {
-        // Bindings for array uniforms can be set either with or without [0] in the end.
-        ASSERT(angle::EndsWith(uniform.name, "[0]"));
-        std::string nameWithoutIndex = uniform.name.substr(0u, uniform.name.length() - 3u);
-        return uniformLocationBindings.getBinding(nameWithoutIndex);
-    }
-    return binding;
-}
-
 template <typename VarT>
 void SetActive(std::vector<VarT> *list, const std::string &name, ShaderType shaderType, bool active)
 {
@@ -664,7 +650,7 @@ bool UniformLinker::indexUniforms(InfoLog &infoLog, const ProgramBindings &unifo
             continue;
         }
 
-        int preSetLocation = GetUniformLocationBinding(uniformLocationBindings, uniform);
+        int preSetLocation = uniformLocationBindings.getBinding(uniform);
         int shaderLocation = uniform.location;
 
         if (shaderLocation != -1)
@@ -740,7 +726,7 @@ bool UniformLinker::gatherUniformLocationsAndCheckConflicts(
             continue;
         }
 
-        int apiBoundLocation = GetUniformLocationBinding(uniformLocationBindings, uniform);
+        int apiBoundLocation = uniformLocationBindings.getBinding(uniform);
         int shaderLocation   = uniform.location;
 
         if (shaderLocation != -1)
@@ -785,7 +771,7 @@ bool UniformLinker::gatherUniformLocationsAndCheckConflicts(
     // from the shader. Other uniforms should not be assigned to those locations.
     for (const auto &locationBinding : uniformLocationBindings)
     {
-        GLuint location = locationBinding.second;
+        GLuint location = locationBinding.second.location;
         if (reservedLocations.find(location) == reservedLocations.end())
         {
             ignoredLocations->insert(location);
