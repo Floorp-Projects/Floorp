@@ -247,10 +247,20 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             view = view
         )
 
+        val accentHighContrastColor = DefaultThemeManager.resolveAttribute(R.attr.accentHighContrast, requireContext())
+
         sitePermissionsFeature.set(
             feature = SitePermissionsFeature(
-                anchorView = view.findInPageView,
-                sessionManager = sessionManager
+                context = requireContext(),
+                sessionManager = sessionManager,
+                fragmentManager = requireFragmentManager(),
+                promptsStyling = SitePermissionsFeature.PromptsStyling(
+                    gravity = getAppropriateLayoutGravity(),
+                    shouldWidthMatchParent = true,
+                    positiveButtonBackgroundColor = accentHighContrastColor,
+                    positiveButtonTextColor = R.color.photonWhite
+                ),
+                sessionId = customTabSessionId
             ) { permissions ->
                 requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
             },
@@ -658,7 +668,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                     url = session.url,
                     isSecured = session.securityInfo.secure,
                     isTrackingProtectionOn = Settings.getInstance(context!!).shouldUseTrackingProtection,
-                    sitePermissions = sitePermissions
+                    sitePermissions = sitePermissions,
+                    gravity = getAppropriateLayoutGravity()
                 )
                 quickSettingsSheet.sitePermissions = sitePermissions
                 quickSettingsSheet.show(
