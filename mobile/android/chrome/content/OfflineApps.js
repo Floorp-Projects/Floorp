@@ -9,10 +9,11 @@ var OfflineApps = {
       return;
 
     let tab = BrowserApp.getTabForWindow(aContentWindow);
+    let principal = aContentWindow.document.nodePrincipal;
     let currentURI = aContentWindow.document.documentURIObject;
 
     // Don't bother showing UI if the user has already made a decision
-    if (Services.perms.testExactPermission(currentURI, "offline-app") != Services.perms.UNKNOWN_ACTION)
+    if (Services.perms.testExactPermissionFromPrincipal(principal, "offline-app") != Services.perms.UNKNOWN_ACTION)
       return;
 
     try {
@@ -50,7 +51,7 @@ var OfflineApps = {
   },
 
   allowSite: function(aDocument) {
-    Services.perms.add(aDocument.documentURIObject, "offline-app", Services.perms.ALLOW_ACTION);
+    Services.perms.addFromPrincipal(aDocument.nodePrincipal, "offline-app", Services.perms.ALLOW_ACTION);
 
     // When a site is enabled while loading, manifest resources will
     // start fetching immediately.  This one time we need to do it
@@ -59,7 +60,7 @@ var OfflineApps = {
   },
 
   disallowSite: function(aDocument) {
-    Services.perms.add(aDocument.documentURIObject, "offline-app", Services.perms.DENY_ACTION);
+    Services.perms.addFromPrincipal(aDocument.nodePrincipal, "offline-app", Services.perms.DENY_ACTION);
   },
 
   _startFetching: function(aDocument) {
