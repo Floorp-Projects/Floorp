@@ -14,10 +14,10 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
     toolbox.debugTargetInfo.connection.usb
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label qa-runtime-info"
   >
     <img
-      className="channel-icon"
+      className="channel-icon qa-runtime-icon"
       src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
     />
     <b
@@ -66,10 +66,10 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     toolbox.debugTargetInfo.connection.usb
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label qa-runtime-info"
   >
     <img
-      className="channel-icon"
+      className="channel-icon qa-runtime-icon"
       src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
     />
     <b
@@ -118,10 +118,10 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     toolbox.debugTargetInfo.connection.usb
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label qa-runtime-info"
   >
     <img
-      className="channel-icon"
+      className="channel-icon qa-runtime-icon"
       src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
     />
     <b
@@ -170,10 +170,10 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     toolbox.debugTargetInfo.connection.usb
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label qa-runtime-info"
   >
     <img
-      className="channel-icon"
+      className="channel-icon qa-runtime-icon"
       src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
     />
     <b
@@ -222,10 +222,10 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     toolbox.debugTargetInfo.connection.usb
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label qa-runtime-info"
   >
     <img
-      className="channel-icon"
+      className="channel-icon qa-runtime-icon"
       src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
     />
     <b
@@ -265,10 +265,10 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
   className="debug-target-info qa-debug-target-info"
 >
   <span
-    className="iconized-label"
+    className="iconized-label qa-runtime-info"
   >
     <img
-      className="channel-icon"
+      className="channel-icon qa-runtime-icon"
       src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
     />
     <b
@@ -306,10 +306,10 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
   className="debug-target-info qa-debug-target-info"
 >
   <span
-    className="iconized-label"
+    className="iconized-label qa-runtime-info"
   >
     <img
-      className="channel-icon"
+      className="channel-icon qa-runtime-icon"
       src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
     />
     <b
