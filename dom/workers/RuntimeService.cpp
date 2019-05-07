@@ -71,6 +71,10 @@
 #include "OSFileConstants.h"
 #include "xpcpublic.h"
 
+#if defined(XP_MACOSX)
+# include "nsMacUtilsImpl.h"
+#endif
+
 #include "Principal.h"
 #include "WorkerDebuggerManager.h"
 #include "WorkerError.h"
@@ -2150,7 +2154,17 @@ uint32_t RuntimeService::ClampedHardwareConcurrency() const {
   // No need to loop here: if compareExchange fails, that just means that some
   // other worker has initialized numberOfProcessors, so we're good to go.
   if (!clampedHardwareConcurrency) {
-    int32_t numberOfProcessors = PR_GetNumberOfProcessors();
+    int32_t numberOfProcessors = 0;
+#if defined(XP_MACOSX)
+    if (nsMacUtilsImpl::IsTCSMAvailable()) {
+      // On failure, zero is returned from GetPhysicalCPUCount()
+      // and we fallback to PR_GetNumberOfProcessors below.
+      numberOfProcessors = nsMacUtilsImpl::GetPhysicalCPUCount();
+    }
+#endif
+    if (numberOfProcessors == 0) {
+      numberOfProcessors = PR_GetNumberOfProcessors();
+    }
     if (numberOfProcessors <= 0) {
       numberOfProcessors = 1;  // Must be one there somewhere
     }
