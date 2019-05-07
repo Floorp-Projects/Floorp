@@ -38,7 +38,7 @@ interface GlobalEventHandlers {
            attribute EventHandler onclick;
            attribute EventHandler onclose;
            attribute EventHandler oncontextmenu;
-           //(Not implemented)attribute EventHandler oncuechange;
+           attribute EventHandler oncuechange;
            attribute EventHandler ondblclick;
            attribute EventHandler ondrag;
            attribute EventHandler ondragend;
