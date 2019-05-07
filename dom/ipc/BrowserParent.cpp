@@ -3250,6 +3250,21 @@ void BrowserParent::NavigateByKey(bool aForward, bool aForDocumentNavigation) {
 }
 
 NS_IMETHODIMP
+BrowserParent::GetWindowGlobalParents(
+    nsTArray<RefPtr<WindowGlobalParent>>& aWindowGlobalParents) {
+  VisitAll([&aWindowGlobalParents](BrowserParent* aBrowser) {
+    const auto& windowGlobalParents = aBrowser->ManagedPWindowGlobalParent();
+    for (auto iter = windowGlobalParents.ConstIter(); !iter.Done();
+         iter.Next()) {
+      WindowGlobalParent* windowGlobalParent =
+          static_cast<WindowGlobalParent*>(iter.Get()->GetKey());
+      aWindowGlobalParents.AppendElement(windowGlobalParent);
+    }
+  });
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BrowserParent::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal) {
   return Manager()->TransmitPermissionsForPrincipal(aPrincipal);
 }
