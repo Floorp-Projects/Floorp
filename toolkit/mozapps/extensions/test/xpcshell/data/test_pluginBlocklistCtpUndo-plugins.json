@@ -1,0 +1,13 @@
+[
+  {
+    "matchName": "^Test Plug-in",
+    "versionRange": [
+      {
+        "maxVersion": "*",
+        "minVersion": "0",
+        "severity": "0",
+        "vulnerabilityStatus": "2"
+      }
+    ]
+  }
+]

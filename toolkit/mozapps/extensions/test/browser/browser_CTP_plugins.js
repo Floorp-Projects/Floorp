@@ -4,15 +4,17 @@ function updateBlocklist(aCallback) {
   var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
                           .getService(Ci.nsITimerCallback);
   var observer = function() {
-    Services.obs.removeObserver(observer, "blocklist-updated");
+    Services.obs.removeObserver(observer, "plugin-blocklist-updated");
     SimpleTest.executeSoon(aCallback);
   };
-  Services.obs.addObserver(observer, "blocklist-updated");
+  Services.obs.addObserver(observer, "plugin-blocklist-updated");
   blocklistNotifier.notify(null);
 }
 
 var _originalBlocklistURL = null;
 function setAndUpdateBlocklist(aURL, aCallback) {
+  // FIXME needs to change blocklist differently.
+  // Tracked in https://bugzilla.mozilla.org/show_bug.cgi?id=1549548 .
   if (!_originalBlocklistURL) {
     _originalBlocklistURL = Services.prefs.getCharPref("extensions.blocklist.url");
   }

@@ -1,0 +1,10 @@
+[
+  {
+    "matchName": "Test Plug-in",
+    "versionRange": [
+      {
+        "severity": "0"
+      }
+    ]
+  }
+]

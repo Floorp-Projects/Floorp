@@ -1,0 +1,14 @@
+[
+  {
+    "matchName": "test_bug514327_2",
+    "versionRange": []
+  },
+  {
+    "matchName": "test_bug514327_outdated",
+    "versionRange": [
+      {
+        "severity": "0"
+      }
+    ]
+  }
+]

@@ -20,13 +20,6 @@ const PREF_SECURITY_SETTINGS_ONECRL_COLLECTION = "services.settings.security.one
 const PREF_SECURITY_SETTINGS_ONECRL_SIGNER     = "services.settings.security.onecrl.signer";
 const PREF_SECURITY_SETTINGS_ONECRL_CHECKED    = "services.settings.security.onecrl.checked";
 
-const PREF_BLOCKLIST_BUCKET                  = "services.blocklist.bucket";
-const PREF_BLOCKLIST_ADDONS_COLLECTION       = "services.blocklist.addons.collection";
-const PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS  = "services.blocklist.addons.checked";
-const PREF_BLOCKLIST_ADDONS_SIGNER           = "services.blocklist.addons.signer";
-const PREF_BLOCKLIST_PLUGINS_COLLECTION      = "services.blocklist.plugins.collection";
-const PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS = "services.blocklist.plugins.checked";
-const PREF_BLOCKLIST_PLUGINS_SIGNER          = "services.blocklist.plugins.signer";
 const PREF_BLOCKLIST_PINNING_ENABLED         = "services.blocklist.pinning.enabled";
 const PREF_BLOCKLIST_PINNING_BUCKET          = "services.blocklist.pinning.bucket";
 const PREF_BLOCKLIST_PINNING_COLLECTION      = "services.blocklist.pinning.collection";
@@ -193,6 +186,8 @@ async function updatePinningList({ data: { current: records } }) {
  * This custom filter function is used to limit the entries returned
  * by `RemoteSettings("...").get()` depending on the target app information
  * defined on entries.
+ *
+ * Note that this is async because `jexlFilterFunc` is async.
  */
 async function targetAppFilter(entry, environment) {
   // If the entry has a JEXL filter expression, it should prevail.
@@ -252,10 +247,8 @@ async function targetAppFilter(entry, environment) {
   return null;
 }
 
-var AddonBlocklistClient;
 var OneCRLBlocklistClient;
 var PinningBlocklistClient;
-var PluginBlocklistClient;
 var RemoteSecuritySettingsClient;
 
 function initialize() {
@@ -265,20 +258,6 @@ function initialize() {
     signerName: Services.prefs.getCharPref(PREF_SECURITY_SETTINGS_ONECRL_SIGNER),
   });
   OneCRLBlocklistClient.on("sync", updateCertBlocklist);
-
-  AddonBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_COLLECTION), {
-    bucketNamePref: PREF_BLOCKLIST_BUCKET,
-    lastCheckTimePref: PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS,
-    signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_SIGNER),
-    filterFunc: targetAppFilter,
-  });
-
-  PluginBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_COLLECTION), {
-    bucketNamePref: PREF_BLOCKLIST_BUCKET,
-    lastCheckTimePref: PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS,
-    signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_SIGNER),
-    filterFunc: targetAppFilter,
-  });
 
   PinningBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_COLLECTION), {
     bucketNamePref: PREF_BLOCKLIST_PINNING_BUCKET,
@@ -296,8 +275,6 @@ function initialize() {
 
     return {
       OneCRLBlocklistClient,
-      AddonBlocklistClient,
-      PluginBlocklistClient,
       PinningBlocklistClient,
       RemoteSecuritySettingsClient,
     };
@@ -305,8 +282,6 @@ function initialize() {
 
   return {
     OneCRLBlocklistClient,
-    AddonBlocklistClient,
-    PluginBlocklistClient,
     PinningBlocklistClient,
   };
 }

@@ -31,7 +31,7 @@ Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 Services.prefs.setBoolPref("extensions.webextPermissionPrompts", false);
 
 var testserver = createHttpServer({hosts: ["example.com"]});
-
+// Needed for updates:
 testserver.registerDirectory("/data/", do_get_file("../data"));
 
 const XPIS = {};
@@ -43,6 +43,10 @@ const ADDON_IDS = ["softblock1@tests.mozilla.org",
                    "hardblock@tests.mozilla.org",
                    "regexpblock@tests.mozilla.org"];
 
+// XXXgijs: according to https://bugzilla.mozilla.org/show_bug.cgi?id=1257565#c111
+// this code and the related code in Blocklist.jsm (specific to XML blocklist) is
+// dead code and can be removed. See https://bugzilla.mozilla.org/show_bug.cgi?id=1549550 .
+//
 // Don't need the full interface, attempts to call other methods will just
 // throw which is just fine
 var WindowWatcher = {
@@ -89,17 +93,8 @@ registrar.registerFactory(Components.ID("{f0863905-4dde-42e2-991c-2dc8209bc9ca}"
                           "Fake Install Prompt",
                           "@mozilla.org/addons/web-install-prompt;1", InstallConfirmFactory);
 
-const profileDir = gProfD.clone();
-profileDir.append("extensions");
-
 function Pload_blocklist(aFile) {
-  let blocklist_updated = TestUtils.topicObserved("addon-blocklist-updated");
-
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/blocklistchange/" + aFile);
-  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                  getService(Ci.nsITimerCallback);
-  blocklist.notify(null);
-  return blocklist_updated;
+  return AddonTestUtils.loadBlocklistData(do_get_file("../data/blocklistchange/"), aFile);
 }
 
 // Does a background update check for add-ons and returns a promise that
@@ -259,7 +254,7 @@ add_task(async function setup() {
 // Starts with add-ons unblocked and then switches application versions to
 // change add-ons to blocked and back
 add_task(async function run_app_update_test() {
-  await Pload_blocklist("app_update.xml");
+  await Pload_blocklist("app_update");
   await promiseRestartManager();
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
@@ -424,7 +419,7 @@ add_task(async function update_schema_5() {
 // Starts with add-ons unblocked and then loads new blocklists to change add-ons
 // to blocked and back again.
 add_task(async function run_blocklist_update_test() {
-  await Pload_blocklist("blocklist_update1.xml");
+  await Pload_blocklist("blocklist_update1");
   await promiseRestartManager();
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
@@ -436,7 +431,7 @@ add_task(async function run_blocklist_update_test() {
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 
-  await Pload_blocklist("blocklist_update2.xml");
+  await Pload_blocklist("blocklist_update2");
   await promiseRestartManager();
 
   [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
@@ -456,7 +451,7 @@ add_task(async function run_blocklist_update_test() {
 
   await promiseRestartManager();
 
-  await Pload_blocklist("blocklist_update2.xml");
+  await Pload_blocklist("blocklist_update2");
   await promiseRestartManager();
 
   [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
@@ -468,7 +463,7 @@ add_task(async function run_blocklist_update_test() {
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
 
-  await Pload_blocklist("blocklist_update1.xml");
+  await Pload_blocklist("blocklist_update1");
   await promiseRestartManager();
 
   [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
@@ -487,7 +482,7 @@ add_task(async function run_blocklist_update_test() {
 // Starts with add-ons unblocked and then new versions are installed outside of
 // the app to change them to blocked and back again.
 add_task(async function run_addon_change_test() {
-  await Pload_blocklist("addon_change.xml");
+  await Pload_blocklist("addon_change");
   await promiseRestartManager();
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
@@ -632,7 +627,7 @@ add_task(async function run_background_update_2_test() {
 // Starts with add-ons blocked and then simulates the user upgrading them to
 // unblocked versions.
 add_task(async function run_manual_update_test() {
-  await Pload_blocklist("manual_update.xml");
+  await Pload_blocklist("manual_update");
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
