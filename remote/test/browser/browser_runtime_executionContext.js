@@ -30,7 +30,8 @@ add_task(async function() {
   await testEvaluate(client, firstContext);
   const secondContext = await testNavigate(client, firstContext);
   await testNavigateBack(client, firstContext, secondContext);
-  await testNavigateViaLocation(client, firstContext);
+  const thirdContext = await testNavigateViaLocation(client, firstContext);
+  await testReload(client, thirdContext);
 
   await client.close();
   ok(true, "The client is closed");
@@ -63,6 +64,7 @@ async function testEvaluate({ Runtime }, previousContext) {
 
 async function testNavigate({ Runtime, Page }, previousContext) {
   info("Navigate to a new URL");
+
   const executionContextDestroyed = Runtime.executionContextDestroyed();
   const executionContextCreated = Runtime.executionContextCreated();
 
@@ -92,6 +94,7 @@ async function testNavigate({ Runtime, Page }, previousContext) {
 // context for it
 async function testNavigateBack({ Runtime }, firstContext, previousContext) {
   info("Navigate back to the previous document");
+
   const executionContextDestroyed = Runtime.executionContextDestroyed();
   const executionContextCreated = Runtime.executionContextCreated();
 
@@ -110,6 +113,8 @@ async function testNavigateBack({ Runtime }, firstContext, previousContext) {
 }
 
 async function testNavigateViaLocation({ Runtime }, previousContext) {
+  info("Navigate via window.location and Runtime.evaluate");
+
   const executionContextDestroyed = Runtime.executionContextDestroyed();
   const executionContextCreated = Runtime.executionContextCreated();
 
@@ -124,6 +129,29 @@ async function testNavigateViaLocation({ Runtime }, previousContext) {
   ok(context.auxData.isDefault, "The execution context is the default one");
   is(context.auxData.frameId, previousContext.auxData.frameId, "The execution context frame id is the same " +
     "the one returned by Page.navigate");
+
+  isnot(executionContextId, context.id, "The destroyed id is different from the " +
+    "created one");
+
+  return context;
+}
+
+async function testReload({ Runtime, Page }, previousContext) {
+  info("Test reloading via Page.reload");
+
+  const executionContextDestroyed = Runtime.executionContextDestroyed();
+  const executionContextCreated = Runtime.executionContextCreated();
+
+  await Page.reload();
+
+  const { executionContextId } = await executionContextDestroyed;
+  is(executionContextId, previousContext.id, "The destroyed event reports the previous context id");
+
+  const { context } = await executionContextCreated;
+  ok(!!context.id, "The execution context has an id");
+  ok(context.auxData.isDefault, "The execution context is the default one");
+  is(context.auxData.frameId, previousContext.auxData.frameId, "The execution context " +
+    "frame id is the same one");
 
   isnot(executionContextId, context.id, "The destroyed id is different from the " +
     "created one");

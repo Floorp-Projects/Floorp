@@ -7,6 +7,9 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
 
+const promises = new Set();
+const resolutions = new Map();
+
 add_task(async function() {
   // Open a test page, to prevent debugging the random default page
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
@@ -32,25 +35,50 @@ add_task(async function() {
   await Page.enable();
   ok(true, "Page domain has been enabled");
 
-  const promises = [];
-  const resolutions = new Map();
+  // Save the given `promise` resolution into the `promises` global Set
   function recordPromise(name, promise) {
     promise.then(event => {
       ok(true, `Received Page.${name}`);
       resolutions.set(name, event);
     });
-    promises.push(promise);
+    promises.add(promise);
   }
-  recordPromise("frameStoppedLoading", Page.frameStoppedLoading());
-  recordPromise("navigatedWithinDocument", Page.navigatedWithinDocument());
-  recordPromise("domContentEventFired", Page.domContentEventFired());
-  recordPromise("loadEventFired", Page.loadEventFired());
-  recordPromise("frameNavigated", Page.frameNavigated());
+  // Record all Page events that we assert in this test
+  function recordPromises() {
+    recordPromise("frameStoppedLoading", Page.frameStoppedLoading());
+    recordPromise("navigatedWithinDocument", Page.navigatedWithinDocument());
+    recordPromise("domContentEventFired", Page.domContentEventFired());
+    recordPromise("loadEventFired", Page.loadEventFired());
+    recordPromise("frameNavigated", Page.frameNavigated());
+  }
+
+  info("Test Page.navigate");
+  recordPromises();
+
   const url = "data:text/html;charset=utf-8,test-page";
   const { frameId } = await Page.navigate({ url });
   ok(true, "A new page has been loaded");
   ok(frameId, "Page.navigate returned a frameId");
 
+  await assertNavigationEvents({ url, frameId });
+
+  info("Test Page.reload");
+  recordPromises();
+
+  await Page.reload();
+  ok(true, "The page has been reloaded");
+
+  await assertNavigationEvents({ url, frameId });
+
+  await client.close();
+  ok(true, "The client is closed");
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  await RemoteAgent.close();
+});
+
+async function assertNavigationEvents({ url, frameId }) {
   // Wait for all the promises to resolve
   await Promise.all(promises);
 
@@ -70,26 +98,18 @@ add_task(async function() {
   const frameNavigated = resolutions.get("frameNavigated");
   ok(!frameNavigated.frame.parentId, "frameNavigated is for the top level document and" +
     " has a null parentId");
-  is(frameNavigated.frame.id, frameId, "frameNavigated id is the same than the one " +
-    "returned by Page.navigate");
+  is(frameNavigated.frame.id, frameId, "frameNavigated id is the right one");
   is(frameNavigated.frame.name, undefined, "frameNavigated name isn't implemented yet");
-  is(frameNavigated.frame.url, url, "frameNavigated url is the same being given to " +
-    "Page.navigate");
+  is(frameNavigated.frame.url, url, "frameNavigated url is the right one");
 
   const navigatedWithinDocument = resolutions.get("navigatedWithinDocument");
   is(navigatedWithinDocument.frameId, frameId, "navigatedWithinDocument frameId is " +
-    "the same than the one returned by Page.navigate");
-  is(navigatedWithinDocument.url, url, "navigatedWithinDocument url is the same than " +
-    "the one being given to Page.navigate");
+    "the same one");
+  is(navigatedWithinDocument.url, url, "navigatedWithinDocument url is the same one");
 
   const frameStoppedLoading = resolutions.get("frameStoppedLoading");
-  is(frameStoppedLoading.frameId, frameId, "frameStoppedLoading frameId is the same " +
-    "than the one returned by Page.navigate");
+  is(frameStoppedLoading.frameId, frameId, "frameStoppedLoading frameId is the same one");
 
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-
-  await RemoteAgent.close();
-});
+  promises.clear();
+  resolutions.clear();
+}
