@@ -2006,29 +2006,19 @@ public class GeckoAppShell {
             return;
         }
 
-        if (sPreviousAudioMode == AudioManager.MODE_INVALID) {
-            sPreviousAudioMode = am.getMode();
-        }
-
         try {
             if (on)  {
                 Log.e(LOGTAG, "Setting communication mode ON");
-                sPreviousAudioMode = am.getMode();
                 am.startBluetoothSco();
                 am.setBluetoothScoOn(true);
-                am.setMode(AudioManager.MODE_IN_COMMUNICATION);
             } else {
                 Log.e(LOGTAG, "Setting communication mode OFF");
-                am.setMode(sPreviousAudioMode);
-                sPreviousAudioMode = AudioManager.MODE_INVALID;
                 am.stopBluetoothSco();
                 am.setBluetoothScoOn(false);
             }
         } catch (SecurityException e) {
             Log.e(LOGTAG, "could not set communication mode", e);
         }
-
-        am.setSpeakerphoneOn(!on);
     }
 
     private static String getLanguageTag(final Locale locale) {
