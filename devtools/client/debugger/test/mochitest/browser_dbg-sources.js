@@ -18,15 +18,15 @@ add_task(async function() {
   } = dbg;
 
   // Expand nodes and make sure more sources appear.
-  await assertSourceCount(dbg, 2);
-  await clickElement(dbg, "sourceDirectoryLabel", 2);
-
-  await assertSourceCount(dbg, 7);
+  await assertSourceCount(dbg, 3);
   await clickElement(dbg, "sourceDirectoryLabel", 3);
+
   await assertSourceCount(dbg, 8);
+  await clickElement(dbg, "sourceDirectoryLabel", 4);
+  await assertSourceCount(dbg, 9);
 
   const selected = waitForDispatch(dbg, "SET_SELECTED_LOCATION");
-  await clickElement(dbg, "sourceNode", 4);
+  await clickElement(dbg, "sourceNode", 5);
   await selected;
   await waitForSelectedSource(dbg);
 
@@ -34,12 +34,12 @@ add_task(async function() {
   await waitForElementWithSelector(dbg, ".sources-list .focused");
 
   const focusedNode = findElementWithSelector(dbg, ".sources-list .focused");
-  const fourthNode = findElement(dbg, "sourceNode", 4);
+  const fourthNode = findElement(dbg, "sourceNode", 5);
   const selectedSource = getSelectedSource().url;
 
   ok(fourthNode.classList.contains("focused"), "4th node is focused");
   ok(selectedSource.includes("nested-source.js"), "nested-source is selected");
-  await assertNodeIsFocused(dbg, 4);
+  await assertNodeIsFocused(dbg, 5);
   await waitForSelectedSource(dbg, "nested-source");
 
   // Make sure new sources appear in the list.
@@ -49,10 +49,10 @@ add_task(async function() {
     content.document.body.appendChild(script);
   });
 
-  await waitForSourceCount(dbg, 9);
-  await assertNodeIsFocused(dbg, 4);
+  await waitForSourceCount(dbg, 10);
+  await assertNodeIsFocused(dbg, 5);
   is(
-    getSourceNodeLabel(dbg, 7),
+    getSourceNodeLabel(dbg, 8),
     "math.min.js",
     "math.min.js - The dynamic script exists"
   );

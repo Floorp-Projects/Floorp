@@ -2,29 +2,16 @@
 
 exports[`SourcesTree After changing expanded nodes Shows the tree with four.js, five.js and six.js expanded 1`] = `
 <div
-  className="sources-pane thread"
+  className="sources-pane"
   key="pane"
 >
-  <div
-    className="node thread-header"
-    key="thread-header"
-  >
-    <AccessibleImage
-      className="file"
-    />
-    <span
-      className="label"
-    >
-      Main Thread
-    </span>
-  </div>
   <div
     className="sources-list"
     key="tree"
   >
     <ManagedTree
       autoExpandAll={false}
-      autoExpandDepth={0}
+      autoExpandDepth={1}
       expanded={
         Array [
           "four.js",
@@ -51,22 +38,9 @@ exports[`SourcesTree After changing expanded nodes Shows the tree with four.js, 
 
 exports[`SourcesTree Should show a 'No Sources' message if there are no sources 1`] = `
 <div
-  className="sources-pane thread"
+  className="sources-pane"
   key="pane"
 >
-  <div
-    className="node thread-header"
-    key="thread-header"
-  >
-    <AccessibleImage
-      className="file"
-    />
-    <span
-      className="label"
-    >
-      Main Thread
-    </span>
-  </div>
   <div
     className="no-sources-message"
     key="empty"
@@ -78,22 +52,9 @@ exports[`SourcesTree Should show a 'No Sources' message if there are no sources 
 
 exports[`SourcesTree Should show the tree with nothing expanded 1`] = `
 <div
-  className="sources-pane thread"
+  className="sources-pane"
   key="pane"
 >
-  <div
-    className="node thread-header"
-    key="thread-header"
-  >
-    <AccessibleImage
-      className="file"
-    />
-    <span
-      className="label"
-    >
-      Main Thread
-    </span>
-  </div>
   <div
     className="sources-list"
     key="tree"
@@ -120,29 +81,16 @@ exports[`SourcesTree Should show the tree with nothing expanded 1`] = `
 
 exports[`SourcesTree When loading initial source Shows the tree with one.js, two.js and three.js expanded 1`] = `
 <div
-  className="sources-pane thread"
+  className="sources-pane"
   key="pane"
 >
-  <div
-    className="node thread-header"
-    key="thread-header"
-  >
-    <AccessibleImage
-      className="file"
-    />
-    <span
-      className="label"
-    >
-      Main Thread
-    </span>
-  </div>
   <div
     className="sources-list"
     key="tree"
   >
     <ManagedTree
       autoExpandAll={false}
-      autoExpandDepth={0}
+      autoExpandDepth={1}
       expanded={
         Array [
           "one.js",
@@ -169,22 +117,9 @@ exports[`SourcesTree When loading initial source Shows the tree with one.js, two
 
 exports[`SourcesTree on receiving new props updates highlighted items updates highlightItems if selectedSource changes 1`] = `
 <div
-  className="sources-pane thread"
+  className="sources-pane"
   key="pane"
 >
-  <div
-    className="node thread-header"
-    key="thread-header"
-  >
-    <AccessibleImage
-      className="file"
-    />
-    <span
-      className="label"
-    >
-      Main Thread
-    </span>
-  </div>
   <div
     className="sources-list"
     key="tree"
@@ -212,7 +147,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               "url": "http://mdn.com/three.js",
             },
             "name": "three.js",
-            "path": "mdn.com/three.js",
+            "path": "FakeThread/mdn.com/three.js",
             "type": "source",
           },
           Object {
@@ -231,7 +166,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   "url": "http://mdn.com/four.js",
                 },
                 "name": "four.js",
-                "path": "mdn.com/four.js",
+                "path": "FakeThread/mdn.com/four.js",
                 "type": "source",
               },
               Object {
@@ -248,7 +183,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   "url": "http://mdn.com/four.js",
                 },
                 "name": "four.js",
-                "path": "mdn.com/four.js",
+                "path": "FakeThread/mdn.com/four.js",
                 "type": "source",
               },
               Object {
@@ -265,7 +200,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   "url": "http://mdn.com/one.js",
                 },
                 "name": "one.js",
-                "path": "mdn.com/one.js",
+                "path": "FakeThread/mdn.com/one.js",
                 "type": "source",
               },
               Object {
@@ -282,7 +217,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   "url": "http://mdn.com/three.js",
                 },
                 "name": "three.js",
-                "path": "mdn.com/three.js",
+                "path": "FakeThread/mdn.com/three.js",
                 "type": "source",
               },
               Object {
@@ -299,12 +234,111 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                   "url": "http://mdn.com/two.js",
                 },
                 "name": "two.js",
-                "path": "mdn.com/two.js",
+                "path": "FakeThread/mdn.com/two.js",
                 "type": "source",
               },
             ],
             "name": "mdn.com",
-            "path": "mdn.com",
+            "path": "FakeThread/mdn.com",
+            "type": "directory",
+          },
+          Object {
+            "contents": Array [
+              Object {
+                "contents": Array [
+                  Object {
+                    "contents": Object {
+                      "id": "server1.conn13.child1/42",
+                      "introductionType": undefined,
+                      "introductionUrl": null,
+                      "isBlackBoxed": false,
+                      "isExtension": false,
+                      "isPrettyPrinted": false,
+                      "isWasm": false,
+                      "relativeUrl": "http://mdn.com/four.js",
+                      "sourceMapURL": "data:application/json?charset=utf?dsffewrsf",
+                      "url": "http://mdn.com/four.js",
+                    },
+                    "name": "four.js",
+                    "path": "FakeThread/mdn.com/four.js",
+                    "type": "source",
+                  },
+                  Object {
+                    "contents": Object {
+                      "id": "server1.conn13.child1/42/originalSource-sha",
+                      "introductionType": undefined,
+                      "introductionUrl": null,
+                      "isBlackBoxed": false,
+                      "isExtension": false,
+                      "isPrettyPrinted": false,
+                      "isWasm": false,
+                      "relativeUrl": "http://mdn.com/four.js",
+                      "sourceMapURL": null,
+                      "url": "http://mdn.com/four.js",
+                    },
+                    "name": "four.js",
+                    "path": "FakeThread/mdn.com/four.js",
+                    "type": "source",
+                  },
+                  Object {
+                    "contents": Object {
+                      "id": "server1.conn13.child1/39",
+                      "introductionType": undefined,
+                      "introductionUrl": null,
+                      "isBlackBoxed": false,
+                      "isExtension": false,
+                      "isPrettyPrinted": false,
+                      "isWasm": false,
+                      "relativeUrl": "http://mdn.com/one.js",
+                      "sourceMapURL": null,
+                      "url": "http://mdn.com/one.js",
+                    },
+                    "name": "one.js",
+                    "path": "FakeThread/mdn.com/one.js",
+                    "type": "source",
+                  },
+                  Object {
+                    "contents": Object {
+                      "id": "server1.conn13.child1/41",
+                      "introductionType": undefined,
+                      "introductionUrl": null,
+                      "isBlackBoxed": false,
+                      "isExtension": false,
+                      "isPrettyPrinted": false,
+                      "isWasm": false,
+                      "relativeUrl": "http://mdn.com/three.js",
+                      "sourceMapURL": null,
+                      "url": "http://mdn.com/three.js",
+                    },
+                    "name": "three.js",
+                    "path": "FakeThread/mdn.com/three.js",
+                    "type": "source",
+                  },
+                  Object {
+                    "contents": Object {
+                      "id": "server1.conn13.child1/40",
+                      "introductionType": undefined,
+                      "introductionUrl": null,
+                      "isBlackBoxed": false,
+                      "isExtension": false,
+                      "isPrettyPrinted": false,
+                      "isWasm": false,
+                      "relativeUrl": "http://mdn.com/two.js",
+                      "sourceMapURL": null,
+                      "url": "http://mdn.com/two.js",
+                    },
+                    "name": "two.js",
+                    "path": "FakeThread/mdn.com/two.js",
+                    "type": "source",
+                  },
+                ],
+                "name": "mdn.com",
+                "path": "FakeThread/mdn.com",
+                "type": "directory",
+              },
+            ],
+            "name": "FakeThread",
+            "path": "FakeThread",
             "type": "directory",
           },
         ]

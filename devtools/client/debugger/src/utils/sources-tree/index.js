@@ -11,11 +11,10 @@
 
 export { addToTree } from "./addToTree";
 export { collapseTree } from "./collapseTree";
-export { createTree } from "./createTree";
 export { formatTree } from "./formatTree";
 export { getDirectories } from "./getDirectories";
 export { getFilenameFromPath, getURL } from "./getURL";
-export { sortEntireTree, sortTree } from "./sortTree";
-export { updateTree } from "./updateTree";
+export { sortTree } from "./sortTree";
+export { createTree, updateTree } from "./updateTree";
 
 export * from "./utils";

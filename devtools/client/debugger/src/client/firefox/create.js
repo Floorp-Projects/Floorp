@@ -77,6 +77,7 @@ export function createWorker(actor: string, url: string) {
     actor,
     url,
     // Ci.nsIWorkerDebugger.TYPE_DEDICATED
-    type: 0
+    type: 0,
+    name: ""
   };
 }
