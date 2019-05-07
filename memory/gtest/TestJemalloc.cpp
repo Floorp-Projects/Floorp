@@ -85,25 +85,31 @@ TEST(Jemalloc, UsableSizeInAdvance)
 static int gStaticVar;
 
 bool InfoEq(jemalloc_ptr_info_t& aInfo, PtrInfoTag aTag, void* aAddr,
-            size_t aSize) {
-  return aInfo.tag == aTag && aInfo.addr == aAddr && aInfo.size == aSize;
+            size_t aSize, arena_id_t arenaId) {
+  return aInfo.tag == aTag && aInfo.addr == aAddr && aInfo.size == aSize
+#ifdef MOZ_DEBUG
+         && aInfo.arenaId == arenaId
+#endif
+      ;
 }
 
-bool InfoEqFreedPage(jemalloc_ptr_info_t& aInfo, void* aAddr,
-                     size_t aPageSize) {
+bool InfoEqFreedPage(jemalloc_ptr_info_t& aInfo, void* aAddr, size_t aPageSize,
+                     arena_id_t arenaId) {
   size_t pageSizeMask = aPageSize - 1;
 
   return jemalloc_ptr_is_freed_page(&aInfo) &&
          aInfo.addr == (void*)(uintptr_t(aAddr) & ~pageSizeMask) &&
-         aInfo.size == aPageSize;
+         aInfo.size == aPageSize
+#ifdef MOZ_DEBUG
+         && aInfo.arenaId == arenaId
+#endif
+      ;
 }
 
 TEST(Jemalloc, PtrInfo)
 {
-  // Some things might be running in other threads, so ensure our assumptions
-  // (e.g. about isFreedSmall and isFreedPage ratios below) are not altered by
-  // other threads.
-  jemalloc_thread_local_arena(true);
+  arena_id_t arenaId = moz_create_arena();
+  ASSERT_TRUE(arenaId != 0);
 
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
@@ -115,34 +121,34 @@ TEST(Jemalloc, PtrInfo)
   // sizes.
   size_t small_max = stats.page_size / 2;
   for (size_t n = 0; n <= small_max; n += 8) {
-    auto p = (char*)malloc(n);
+    auto p = (char*)moz_arena_malloc(arenaId, n);
     size_t usable = moz_malloc_size_of(p);
     ASSERT_TRUE(small.append(p));
     for (size_t j = 0; j < usable; j++) {
       jemalloc_ptr_info(&p[j], &info);
-      ASSERT_TRUE(InfoEq(info, TagLiveSmall, p, usable));
+      ASSERT_TRUE(InfoEq(info, TagLiveSmall, p, usable, arenaId));
     }
   }
 
   // Similar for large (2KiB + 1 KiB .. 1MiB - 8KiB) allocations.
   for (size_t n = small_max + 1_KiB; n <= stats.large_max; n += 1_KiB) {
-    auto p = (char*)malloc(n);
+    auto p = (char*)moz_arena_malloc(arenaId, n);
     size_t usable = moz_malloc_size_of(p);
     ASSERT_TRUE(large.append(p));
     for (size_t j = 0; j < usable; j += 347) {
       jemalloc_ptr_info(&p[j], &info);
-      ASSERT_TRUE(InfoEq(info, TagLiveLarge, p, usable));
+      ASSERT_TRUE(InfoEq(info, TagLiveLarge, p, usable, arenaId));
     }
   }
 
   // Similar for huge (> 1MiB - 8KiB) allocations.
   for (size_t n = stats.chunksize; n <= 10_MiB; n += 512_KiB) {
-    auto p = (char*)malloc(n);
+    auto p = (char*)moz_arena_malloc(arenaId, n);
     size_t usable = moz_malloc_size_of(p);
     ASSERT_TRUE(huge.append(p));
     for (size_t j = 0; j < usable; j += 567) {
       jemalloc_ptr_info(&p[j], &info);
-      ASSERT_TRUE(InfoEq(info, TagLiveHuge, p, usable));
+      ASSERT_TRUE(InfoEq(info, TagLiveHuge, p, usable, arenaId));
     }
   }
 
@@ -161,9 +167,9 @@ TEST(Jemalloc, PtrInfo)
     for (size_t k = 0; k < usable; k++) {
       jemalloc_ptr_info(&p[k], &info);
       // There are two valid outcomes here.
-      if (InfoEq(info, TagFreedSmall, p, usable)) {
+      if (InfoEq(info, TagFreedSmall, p, usable, arenaId)) {
         isFreedSmall++;
-      } else if (InfoEqFreedPage(info, &p[k], stats.page_size)) {
+      } else if (InfoEqFreedPage(info, &p[k], stats.page_size, arenaId)) {
         isFreedPage++;
       } else {
         ASSERT_TRUE(false);
@@ -184,7 +190,7 @@ TEST(Jemalloc, PtrInfo)
     free(p);
     for (size_t k = 0; k < usable; k += 357) {
       jemalloc_ptr_info(&p[k], &info);
-      ASSERT_TRUE(InfoEqFreedPage(info, &p[k], stats.page_size));
+      ASSERT_TRUE(InfoEqFreedPage(info, &p[k], stats.page_size, arenaId));
     }
   }
 
@@ -196,34 +202,34 @@ TEST(Jemalloc, PtrInfo)
     free(p);
     for (size_t k = 0; k < usable; k += 587) {
       jemalloc_ptr_info(&p[k], &info);
-      ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
+      ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U, 0U));
     }
   }
 
   // Null ptr.
   jemalloc_ptr_info(nullptr, &info);
-  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
+  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U, 0U));
 
   // Near-null ptr.
   jemalloc_ptr_info((void*)0x123, &info);
-  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
+  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U, 0U));
 
   // Maximum address.
   jemalloc_ptr_info((void*)uintptr_t(-1), &info);
-  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
+  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U, 0U));
 
   // Stack memory.
   int stackVar;
   jemalloc_ptr_info(&stackVar, &info);
-  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
+  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U, 0U));
 
   // Code memory.
   jemalloc_ptr_info((const void*)&jemalloc_ptr_info, &info);
-  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
+  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U, 0U));
 
   // Static memory.
   jemalloc_ptr_info(&gStaticVar, &info);
-  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
+  ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U, 0U));
 
   // Chunk header.
   UniquePtr<int> p = MakeUnique<int>();
@@ -232,7 +238,7 @@ TEST(Jemalloc, PtrInfo)
   size_t chunkHeaderSize = stats.chunksize - stats.large_max - stats.page_size;
   for (size_t i = 0; i < chunkHeaderSize; i += 64) {
     jemalloc_ptr_info(&chunk[i], &info);
-    ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
+    ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U, 0U));
   }
 
   // Run header.
@@ -240,7 +246,7 @@ TEST(Jemalloc, PtrInfo)
   char* run = (char*)(uintptr_t(p.get()) & ~page_sizeMask);
   for (size_t i = 0; i < 4 * sizeof(void*); i++) {
     jemalloc_ptr_info(&run[i], &info);
-    ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U));
+    ASSERT_TRUE(InfoEq(info, TagUnknown, nullptr, 0U, 0U));
   }
 
   // Entire chunk. It's impossible to check what is put into |info| for all of
@@ -249,7 +255,8 @@ TEST(Jemalloc, PtrInfo)
     jemalloc_ptr_info(&chunk[i], &info);
   }
 
-  jemalloc_thread_local_arena(false);
+  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+  // moz_dispose_arena(arenaId);
 }
 
 size_t sSizes[] = {1,      42,      79,      918,     1.5_KiB,
@@ -622,7 +629,8 @@ TEST(Jemalloc, JunkPoison)
 #  endif
 }
 
-TEST(Jemalloc, GuardRegion) {
+TEST(Jemalloc, GuardRegion)
+{
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
@@ -648,7 +656,7 @@ TEST(Jemalloc, GuardRegion) {
   void* last_ptr_in_chunk = ptr_list[ptr_list.length() - 1];
   void* extra_ptr = moz_arena_malloc(arena, stats.page_size);
   void* guard_page = (void*)ALIGNMENT_CEILING(
-    (uintptr_t)last_ptr_in_chunk + stats.page_size, stats.page_size);
+      (uintptr_t)last_ptr_in_chunk + stats.page_size, stats.page_size);
   jemalloc_ptr_info_t info;
   jemalloc_ptr_info(guard_page, &info);
   ASSERT_TRUE(jemalloc_ptr_is_freed_page(&info));
