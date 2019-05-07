@@ -169,7 +169,7 @@ class SearchConfigTest {
       return true;
     }
     if ("startsWith" in locales) {
-      return locales.startsWith.find(element => element.startsWith(locale));
+      return !!locales.startsWith.find(element => locale.startsWith(element));
     }
 
     return false;
