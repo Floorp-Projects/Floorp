@@ -203,6 +203,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 requireContext(),
                 sessionManager = sessionManager,
                 fragmentManager = childFragmentManager,
+                sessionId = customTabSessionId,
                 onNeedToRequestPermissions = { permissions ->
                     requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
                 }),
