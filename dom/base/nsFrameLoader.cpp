@@ -109,6 +109,8 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
+#include "mozilla/dom/BrowserHost.h"
+#include "mozilla/dom/BrowserBridgeHost.h"
 
 #include "mozilla/dom/HTMLBodyElement.h"
 
@@ -155,7 +157,7 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsFrameLoader, mBrowsingContext,
                                       mMessageManager, mChildMessageManager,
-                                      mParentSHistory, mBrowserParent)
+                                      mParentSHistory)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
@@ -172,7 +174,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mOwnerContent(aOwner),
       mDetachedSubdocFrame(nullptr),
       mPendingSwitchID(0),
-      mBrowserParent(nullptr),
       mChildID(0),
       mDepthTooGreat(false),
       mIsTopLevelContent(false),
@@ -197,7 +198,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mOwnerContent(aOwner),
       mDetachedSubdocFrame(nullptr),
       mPendingSwitchID(0),
-      mBrowserParent(nullptr),
       mChildID(0),
       mDepthTooGreat(false),
       mIsTopLevelContent(false),
@@ -543,28 +543,16 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
   AUTO_PROFILER_LABEL("nsFrameLoader::ReallyStartLoadingInternal", OTHER);
 
   if (IsRemoteFrame()) {
-    if (!mBrowserParent && !mBrowserBridgeChild && !TryRemoteBrowser()) {
+    if (!EnsureRemoteBrowser()) {
       NS_WARNING("Couldn't create child process for iframe.");
       return NS_ERROR_FAILURE;
     }
 
     if (mPendingSwitchID) {
-      if (mBrowserBridgeChild) {
-        Unused << mBrowserBridgeChild->SendResumeLoad(mPendingSwitchID);
-      } else {
-        mBrowserParent->ResumeLoad(mPendingSwitchID);
-      }
-
+      mRemoteBrowser->ResumeLoad(mPendingSwitchID);
       mPendingSwitchID = 0;
     } else {
-      if (mBrowserBridgeChild) {
-        nsAutoCString spec;
-        mURIToLoad->GetSpec(spec);
-        Unused << mBrowserBridgeChild->SendLoadURL(spec);
-      } else {
-        // FIXME get error codes from child
-        mBrowserParent->LoadURL(mURIToLoad);
-      }
+      mRemoteBrowser->LoadURL(mURIToLoad);
     }
 
     if (!mRemoteBrowserShown) {
@@ -1029,7 +1017,7 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
   NS_ASSERTION(IsRemoteFrame(),
                "ShowRemote only makes sense on remote frames.");
 
-  if (!mBrowserParent && !mBrowserBridgeChild && !TryRemoteBrowser()) {
+  if (!EnsureRemoteBrowser()) {
     NS_ERROR("Couldn't create child process.");
     return false;
   }
@@ -1048,7 +1036,8 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       return false;
     }
 
-    if (mBrowserBridgeChild) {
+    if (RefPtr<BrowserBridgeChild> browserBridgeChild =
+            GetBrowserBridgeChild()) {
       nsCOMPtr<nsISupports> container =
           mOwnerContent->OwnerDoc()->GetContainer();
       nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
@@ -1057,13 +1046,13 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       nsSizeMode sizeMode =
           mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
 
-      Unused << mBrowserBridgeChild->SendShow(
+      Unused << browserBridgeChild->SendShow(
           size, ParentWindowIsActive(mOwnerContent->OwnerDoc()), sizeMode);
       mRemoteBrowserShown = true;
       return true;
     }
 
-    if (!mBrowserParent->Show(
+    if (!mRemoteBrowser->Show(
             size, ParentWindowIsActive(mOwnerContent->OwnerDoc()))) {
       return false;
     }
@@ -1079,11 +1068,7 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
 
     // Don't show remote iframe if we are waiting for the completion of reflow.
     if (!aFrame || !(aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-      if (mBrowserParent) {
-        mBrowserParent->UpdateDimensions(dimensions, size);
-      } else if (mBrowserBridgeChild) {
-        mBrowserBridgeChild->UpdateDimensions(dimensions, size);
-      }
+      mRemoteBrowser->UpdateDimensions(dimensions, size);
     }
   }
 
@@ -1793,7 +1778,7 @@ void nsFrameLoader::StartDestroy() {
   // Retain references to the <browser> element and the frameloader in case we
   // receive any messages from the message manager on the frame. These
   // references are dropped in DestroyComplete.
-  if (mChildMessageManager || mBrowserParent) {
+  if (mChildMessageManager || mRemoteBrowser) {
     mOwnerContentStrong = mOwnerContent;
     if (auto* browserParent = GetBrowserParent()) {
       browserParent->CacheFrameLoader(this);
@@ -1905,13 +1890,8 @@ void nsFrameLoader::DestroyDocShell() {
   // Ask the BrowserChild to fire the frame script "unload" event, destroy its
   // docshell, and finally destroy the PBrowser actor. This eventually leads to
   // nsFrameLoader::DestroyComplete being called.
-  if (mBrowserParent) {
-    mBrowserParent->Destroy();
-  }
-
-  if (mBrowserBridgeChild) {
-    Unused << mBrowserBridgeChild->Send__delete__(mBrowserBridgeChild);
-    mBrowserBridgeChild = nullptr;
+  if (mRemoteBrowser) {
+    mRemoteBrowser->DestroyStart();
   }
 
   // Fire the "unload" event if we're in-process.
@@ -1944,7 +1924,7 @@ void nsFrameLoader::DestroyComplete() {
   // case, StartDestroy might not have been called.
 
   // Drop the strong references created in StartDestroy.
-  if (mChildMessageManager || mBrowserParent) {
+  if (mChildMessageManager || mRemoteBrowser) {
     mOwnerContentStrong = nullptr;
     if (auto* browserParent = GetBrowserParent()) {
       browserParent->CacheFrameLoader(nullptr);
@@ -1955,15 +1935,9 @@ void nsFrameLoader::DestroyComplete() {
   }
 
   // Call BrowserParent::Destroy if we haven't already (in case of a crash).
-  if (mBrowserParent) {
-    mBrowserParent->SetOwnerElement(nullptr);
-    mBrowserParent->Destroy();
-    mBrowserParent = nullptr;
-  }
-
-  if (mBrowserBridgeChild) {
-    Unused << mBrowserBridgeChild->Send__delete__(mBrowserBridgeChild);
-    mBrowserBridgeChild = nullptr;
+  if (mRemoteBrowser) {
+    mRemoteBrowser->DestroyComplete();
+    mRemoteBrowser = nullptr;
   }
 
   if (mMessageManager) {
@@ -2487,7 +2461,7 @@ nsresult nsFrameLoader::GetWindowDimensions(nsIntRect& aRect) {
 
 nsresult nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame* aIFrame) {
   if (IsRemoteFrame()) {
-    if (mBrowserParent || mBrowserBridgeChild) {
+    if (mRemoteBrowser) {
       ScreenIntSize size = aIFrame->GetSubdocumentSize();
       // If we were not able to show remote frame before, we should probably
       // retry now to send correct showInfo.
@@ -2497,11 +2471,7 @@ nsresult nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame* aIFrame) {
       nsIntRect dimensions;
       NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), NS_ERROR_FAILURE);
       mLazySize = size;
-      if (mBrowserParent) {
-        mBrowserParent->UpdateDimensions(dimensions, size);
-      } else if (mBrowserBridgeChild) {
-        mBrowserBridgeChild->UpdateDimensions(dimensions, size);
-      }
+      mRemoteBrowser->UpdateDimensions(dimensions, size);
     }
     return NS_OK;
   }
@@ -2590,8 +2560,13 @@ static Tuple<ContentParent*, BrowserParent*> GetContentParent(
   return ReturnTuple(nullptr, nullptr);
 }
 
+bool nsFrameLoader::EnsureRemoteBrowser() {
+  MOZ_ASSERT(IsRemoteFrame());
+  return mRemoteBrowser || TryRemoteBrowser();
+}
+
 bool nsFrameLoader::TryRemoteBrowser() {
-  NS_ASSERTION(!mBrowserParent && !mBrowserBridgeChild,
+  NS_ASSERTION(!mRemoteBrowser,
                "TryRemoteBrowser called with a remote browser already?");
 
   if (!mOwnerContent) {
@@ -2713,16 +2688,16 @@ bool nsFrameLoader::TryRemoteBrowser() {
   if (XRE_IsContentProcess()) {
     mBrowsingContext->SetEmbedderElement(mOwnerContent);
 
-    mBrowserBridgeChild = ContentChild::CreateBrowser(
+    mRemoteBrowser = ContentChild::CreateBrowser(
         this, context, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
         mBrowsingContext);
-    return !!mBrowserBridgeChild;
+    return !!mRemoteBrowser;
   }
 
-  mBrowserParent = ContentParent::CreateBrowser(
+  mRemoteBrowser = ContentParent::CreateBrowser(
       context, ownerElement, mBrowsingContext, openerContentParent,
       sameTabGroupAs, nextRemoteTabId);
-  if (!mBrowserParent) {
+  if (!mRemoteBrowser) {
     return false;
   }
 
@@ -2790,11 +2765,26 @@ bool nsFrameLoader::IsRemoteFrame() {
 }
 
 BrowserParent* nsFrameLoader::GetBrowserParent() const {
-  return mBrowserParent;
+  if (!mRemoteBrowser) {
+    return nullptr;
+  }
+  RefPtr<BrowserHost> browserHost = mRemoteBrowser->AsBrowserHost();
+  if (!browserHost) {
+    return nullptr;
+  }
+  return browserHost->GetActor();
 }
 
 BrowserBridgeChild* nsFrameLoader::GetBrowserBridgeChild() const {
-  return mBrowserBridgeChild;
+  if (!mRemoteBrowser) {
+    return nullptr;
+  }
+  RefPtr<BrowserBridgeHost> browserBridgeHost =
+      mRemoteBrowser->AsBrowserBridgeHost();
+  if (!browserBridgeHost) {
+    return nullptr;
+  }
+  return browserBridgeHost->GetActor();
 }
 
 mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
@@ -3048,14 +3038,14 @@ already_AddRefed<Element> nsFrameLoader::GetOwnerElement() {
 }
 
 void nsFrameLoader::InitializeFromBrowserParent(BrowserParent* aBrowserParent) {
-  MOZ_ASSERT(!mBrowserParent);
+  MOZ_ASSERT(!mRemoteBrowser);
   mIsRemoteFrame = true;
-  mBrowserParent = aBrowserParent;
-  mChildID = mBrowserParent ? mBrowserParent->Manager()->ChildID() : 0;
+  mRemoteBrowser = new BrowserHost(aBrowserParent);
+  mChildID = aBrowserParent ? aBrowserParent->Manager()->ChildID() : 0;
   MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
-  mBrowserParent->InitRendering();
+  aBrowserParent->InitRendering();
   ShowRemoteFrame(ScreenIntSize(0, 0));
 }
 
@@ -3285,18 +3275,13 @@ already_AddRefed<mozilla::dom::Promise> nsFrameLoader::DrawSnapshot(
 }
 
 already_AddRefed<nsIRemoteTab> nsFrameLoader::GetRemoteTab() {
-  return do_AddRef(mBrowserParent);
+  return do_AddRef(GetBrowserParent());
 }
 
 already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
   nsCOMPtr<nsILoadContext> loadContext;
-  if (IsRemoteFrame() &&
-      (mBrowserParent || mBrowserBridgeChild || TryRemoteBrowser())) {
-    if (mBrowserParent) {
-      loadContext = mBrowserParent->GetLoadContext();
-    } else {
-      loadContext = mBrowserBridgeChild->GetLoadContext();
-    }
+  if (IsRemoteFrame() && EnsureRemoteBrowser()) {
+    loadContext = mRemoteBrowser->GetLoadContext();
   } else {
     loadContext = do_GetInterface(ToSupports(GetDocShell(IgnoreErrors())));
   }
@@ -3305,13 +3290,8 @@ already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
 
 already_AddRefed<BrowsingContext> nsFrameLoader::GetBrowsingContext() {
   RefPtr<BrowsingContext> browsingContext;
-  if (IsRemoteFrame() &&
-      (mBrowserParent || mBrowserBridgeChild || TryRemoteBrowser())) {
-    if (mBrowserParent) {
-      browsingContext = mBrowserParent->GetBrowsingContext();
-    } else {
-      browsingContext = mBrowserBridgeChild->GetBrowsingContext();
-    }
+  if (IsRemoteFrame() && EnsureRemoteBrowser()) {
+    browsingContext = mRemoteBrowser->GetBrowsingContext();
   } else if (GetDocShell(IgnoreErrors())) {
     browsingContext = GetDocShell()->GetBrowsingContext();
   }
@@ -3381,34 +3361,41 @@ void nsFrameLoader::StartPersistence(
 
 void nsFrameLoader::MaybeUpdatePrimaryBrowserParent(
     BrowserParentChange aChange) {
-  if (mBrowserParent && mOwnerContent) {
-    nsCOMPtr<nsIDocShell> docShell = mOwnerContent->OwnerDoc()->GetDocShell();
-    if (!docShell) {
-      return;
-    }
+  if (!mOwnerContent) {
+    return;
+  }
 
-    int32_t parentType = docShell->ItemType();
-    if (parentType != nsIDocShellTreeItem::typeChrome) {
-      return;
-    }
+  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  if (!browserParent) {
+    return;
+  }
 
-    nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
-    docShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
-    if (!parentTreeOwner) {
-      return;
-    }
+  nsCOMPtr<nsIDocShell> docShell = mOwnerContent->OwnerDoc()->GetDocShell();
+  if (!docShell) {
+    return;
+  }
 
-    if (!mObservingOwnerContent) {
-      mOwnerContent->AddMutationObserver(this);
-      mObservingOwnerContent = true;
-    }
+  int32_t parentType = docShell->ItemType();
+  if (parentType != nsIDocShellTreeItem::typeChrome) {
+    return;
+  }
 
-    parentTreeOwner->RemoteTabRemoved(mBrowserParent);
-    if (aChange == eBrowserParentChanged) {
-      bool isPrimary = mOwnerContent->AttrValueIs(
-          kNameSpaceID_None, nsGkAtoms::primary, nsGkAtoms::_true, eIgnoreCase);
-      parentTreeOwner->RemoteTabAdded(mBrowserParent, isPrimary);
-    }
+  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+  docShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+  if (!parentTreeOwner) {
+    return;
+  }
+
+  if (!mObservingOwnerContent) {
+    mOwnerContent->AddMutationObserver(this);
+    mObservingOwnerContent = true;
+  }
+
+  parentTreeOwner->RemoteTabRemoved(browserParent);
+  if (aChange == eBrowserParentChanged) {
+    bool isPrimary = mOwnerContent->AttrValueIs(
+        kNameSpaceID_None, nsGkAtoms::primary, nsGkAtoms::_true, eIgnoreCase);
+    parentTreeOwner->RemoteTabAdded(browserParent, isPrimary);
   }
 }
 
