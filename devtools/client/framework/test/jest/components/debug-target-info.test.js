@@ -32,12 +32,14 @@ const TEST_TOOLBOX = {
     name: "Test Tab Name",
     url: "http://some.target/url",
   },
+  doc: {},
 };
 
 const TEST_TOOLBOX_NO_NAME = {
   target: {
     url: "http://some.target/without/a/name",
   },
+  doc: {},
 };
 
 const USB_DEVICE_DESCRIPTION = {

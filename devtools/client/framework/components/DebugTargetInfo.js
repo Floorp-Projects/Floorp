@@ -154,9 +154,9 @@ class DebugTargetInfo extends PureComponent {
 
     return dom.span(
       {
-        className: "iconized-label",
+        className: "iconized-label qa-runtime-info",
       },
-      dom.img({ src: icon, className: "channel-icon" }),
+      dom.img({ src: icon, className: "channel-icon qa-runtime-icon" }),
       dom.b({ className: "devtools-ellipsis-text" }, this.getRuntimeText()),
       dom.span({ className: "devtools-ellipsis-text" }, deviceName),
     );
