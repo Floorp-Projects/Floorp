@@ -72,8 +72,13 @@
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
-.urlbarView-title[overflow]:-moz-locale-dir(rtl) {
+.urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl) {
   mask-image: linear-gradient(to right, transparent, black 2em);
+}
+
+.urlbarView-title[isurl]:-moz-locale-dir(rtl),
+.urlbarView-url:-moz-locale-dir(rtl) {
+  direction: ltr !important;
 }
 
 .urlbarView-row:hover {
@@ -154,10 +159,6 @@
 .urlbarView-url {
   overflow: hidden;
   color: var(--urlbar-popup-url-color);
-}
-
-.urlbarView-url:-moz-locale-dir(rtl) {
-  direction: ltr !important;
 }
 
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-title-separator::before,
