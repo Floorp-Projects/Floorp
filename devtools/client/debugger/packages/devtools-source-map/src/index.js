@@ -16,7 +16,7 @@ import type {
   SourceId
 } from "../../../src/types";
 import type { SourceMapConsumer } from "source-map";
-import type { locationOptions } from "./source-map";
+import type { LocationOptions } from "./source-map";
 
 export const dispatcher = new WorkerDispatcher();
 
@@ -80,12 +80,13 @@ export const getAllGeneratedLocations = async (
 
 export const getOriginalLocation = async (
   location: SourceLocation,
-  options: locationOptions = {}
+  options: LocationOptions = {}
 ): Promise<SourceLocation> => _getOriginalLocation(location, options);
 
 export const getOriginalLocations = async (
+  sourceId: SourceId,
   locations: SourceLocation[],
-  options: locationOptions = {}
+  options: LocationOptions = {}
 ): Promise<SourceLocation[]> =>
   dispatcher.invoke("getOriginalLocations", locations, options);
 
