@@ -129,7 +129,7 @@ class RaptorRunner(MozbuildObject):
             'obj_path': self.topobjdir,
             'log_name': 'raptor',
             'virtualenv_path': self.virtualenv_path,
-            'pypi_url': 'http://pypi.python.org/simple',
+            'pypi_url': 'http://pypi.org/simple',
             'base_work_dir': self.mozharness_dir,
             'exes': {
                 'python': self.python_interp,
