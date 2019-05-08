@@ -47,7 +47,8 @@ add_task(async function() {
   ].join("\n");
 
   await waitForClipboardPromise(function setup() {
-    getContextMenuItem(monitor, "request-list-context-copy-request-headers").click();
+    monitor.panelWin.parent.document
+      .querySelector("#request-list-context-copy-request-headers").click();
   }, function validate(result) {
     // Sometimes, a "Cookie" header is left over from other tests. Remove it:
     result = String(result).replace(/Cookie: [^\n]+\n/, "");
@@ -69,7 +70,8 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[0]);
 
   await waitForClipboardPromise(function setup() {
-    getContextMenuItem(monitor, "response-list-context-copy-response-headers").click();
+    monitor.panelWin.parent.document
+      .querySelector("#response-list-context-copy-response-headers").click();
   }, function validate(result) {
     // Fake the "Last-Modified" and "Date" headers because they will vary:
     result = String(result)

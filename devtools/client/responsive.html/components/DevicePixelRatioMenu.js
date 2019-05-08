@@ -53,6 +53,7 @@ class DevicePixelRatioMenu extends PureComponent {
 
     showMenu(menuItems, {
       button: event.target,
+      useTopLevelWindow: true,
     });
   }
 

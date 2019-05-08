@@ -28,6 +28,13 @@ class NetworkThrottlingMenu extends PureComponent {
     return {
       networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
       onChangeNetworkThrottling: PropTypes.func.isRequired,
+      useTopLevelWindow: PropTypes.bool,
+    };
+  }
+
+  static get defaultProps() {
+    return {
+      useTopLevelWindow: false,
     };
   }
 
@@ -40,6 +47,7 @@ class NetworkThrottlingMenu extends PureComponent {
     const {
       networkThrottling,
       onChangeNetworkThrottling,
+      useTopLevelWindow,
     } = this.props;
 
     const menuItems = throttlingProfiles.map(profile => {
@@ -60,7 +68,7 @@ class NetworkThrottlingMenu extends PureComponent {
       click: () => onChangeNetworkThrottling(false, ""),
     });
 
-    showMenu(menuItems, { button: event.target });
+    showMenu(menuItems, { button: event.target, useTopLevelWindow });
   }
 
   render() {

@@ -297,7 +297,8 @@ async function openContextMenu(hud, element) {
   const onConsoleMenuOpened = hud.ui.wrapper.once("menu-open");
   synthesizeContextMenuEvent(element);
   await onConsoleMenuOpened;
-  return _getContextMenu(hud);
+  const doc = hud.chromeWindow.document;
+  return doc.getElementById("webconsole-menu");
 }
 
 /**
@@ -309,7 +310,8 @@ async function openContextMenu(hud, element) {
  * @return promise
  */
 function hideContextMenu(hud) {
-  const popup = _getContextMenu(hud);
+  const doc = hud.chromeWindow.document;
+  const popup = doc.getElementById("webconsole-menu");
   if (!popup) {
     return Promise.resolve();
   }
@@ -317,12 +319,6 @@ function hideContextMenu(hud) {
   const onPopupHidden = once(popup, "popuphidden");
   popup.hidePopup();
   return onPopupHidden;
-}
-
-function _getContextMenu(hud) {
-  const toolbox = gDevTools.getToolbox(hud.target);
-  const doc = toolbox ? toolbox.topWindow.document : hud.chromeWindow.document;
-  return doc.getElementById("webconsole-menu");
 }
 
 function loadDocument(url, browser = gBrowser.selectedBrowser) {

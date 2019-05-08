@@ -6,7 +6,6 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 
@@ -60,11 +59,11 @@ Menu.prototype.insert = function(pos, menuItem) {
  *
  * @param {int} x
  * @param {int} y
- * @param {Document} doc
+ * @param Toolbox toolbox
  */
-Menu.prototype.popupWithZoom = function(x, y, doc) {
-  const zoom = getCurrentZoom(doc);
-  this.popup(x * zoom, y * zoom, doc);
+Menu.prototype.popupWithZoom = function(x, y, toolbox) {
+  const zoom = getCurrentZoom(toolbox.doc);
+  this.popup(x * zoom, y * zoom, toolbox);
 };
 
 /**
@@ -76,15 +75,11 @@ Menu.prototype.popupWithZoom = function(x, y, doc) {
  *
  * @param {int} screenX
  * @param {int} screenY
- * @param {Document} doc
- *        The document that should own the context menu.
+ * @param Toolbox toolbox (non standard)
+ *        Needed so we in which window to inject XUL
  */
-Menu.prototype.popup = function(screenX, screenY, doc) {
-  // The context-menu will be created in the topmost window to preserve keyboard
-  // navigation (see Bug 1543940).
-  // Keep a reference on the window owning the menu to hide the popup on unload.
-  const win = doc.defaultView;
-  doc = DevToolsUtils.getTopWindow(doc.defaultView).document;
+Menu.prototype.popup = function(screenX, screenY, toolbox) {
+  const doc = toolbox.doc;
 
   let popupset = doc.querySelector("popupset");
   if (!popupset) {
@@ -110,15 +105,9 @@ Menu.prototype.popup = function(screenX, screenY, doc) {
   }
   this._createMenuItems(popup);
 
-  // The context menu will be created in the topmost chrome window. Hide it manually when
-  // the owner document is unloaded.
-  const onWindowUnload = () => popup.hidePopup();
-  win.addEventListener("unload", onWindowUnload);
-
   // Remove the menu from the DOM once it's hidden.
   popup.addEventListener("popuphidden", (e) => {
     if (e.target === popup) {
-      win.removeEventListener("unload", onWindowUnload);
       popup.remove();
       this.emit("close");
     }
@@ -168,11 +157,6 @@ Menu.prototype._createMenuItems = function(parent) {
       parent.appendChild(menuitem);
     }
   });
-};
-
-Menu.getMenuElementById = function(id, doc) {
-  const menuDoc = DevToolsUtils.getTopWindow(doc.defaultView).document;
-  return menuDoc.getElementById(id);
 };
 
 Menu.setApplicationMenu = () => {

@@ -27,7 +27,8 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[0]);
 
   await waitForClipboardPromise(function setup() {
-    getContextMenuItem(monitor, "request-list-context-copy-image-as-data-uri").click();
+    monitor.panelWin.parent.document
+      .querySelector("#request-list-context-copy-image-as-data-uri").click();
   }, function check(text) {
     return text.startsWith("data:") && !/undefined/.test(text);
   });

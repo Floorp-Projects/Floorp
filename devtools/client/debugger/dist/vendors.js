@@ -2610,12 +2610,12 @@ function showMenu(evt, items) {
   });
 
   if (inToolbox()) {
-    menu.popup(evt.screenX, evt.screenY, window.parent.document);
+    menu.popup(evt.screenX, evt.screenY, { doc: window.parent.document });
     return;
   }
 
   menu.on("open", (_, popup) => onShown(menu, popup));
-  menu.popup(evt.clientX, evt.clientY, document);
+  menu.popup(evt.clientX, evt.clientY, { doc: document });
 }
 
 function createSubMenu(subItems) {
@@ -2712,11 +2712,6 @@ function inToolbox() {
   }
 }
 
-// Copied from m-c DevToolsUtils.
-function getTopWindow(win) {
-  return win.windowRoot ? win.windowRoot.ownerGlobal : win.top;
-}
-
 /**
  * A partial implementation of the Menu API provided by electron:
  * https://github.com/electron/electron/blob/master/docs/api/menu.md.
@@ -2768,16 +2763,11 @@ Menu.prototype.insert = function (pos, menuItem) {
  *
  * @param {int} screenX
  * @param {int} screenY
- * @param {Document} doc
- *        The document that should own the context menu.
+ * @param Toolbox toolbox (non standard)
+ *        Needed so we in which window to inject XUL
  */
-Menu.prototype.popup = function (screenX, screenY, doc) {
-  // The context-menu will be created in the topmost window to preserve keyboard
-  // navigation. See Bug 1543940. Keep a reference on the window owning the menu to hide
-  // the popup on unload.
-  const win = doc.defaultView;
-  doc = getTopWindow(doc.defaultView).document;
-
+Menu.prototype.popup = function (screenX, screenY, toolbox) {
+  let doc = toolbox.doc;
   let popupset = doc.querySelector("popupset");
   if (!popupset) {
     popupset = doc.createXULElement("popupset");
@@ -2800,15 +2790,9 @@ Menu.prototype.popup = function (screenX, screenY, doc) {
   }
   this._createMenuItems(popup);
 
-  // The context menu will be created in the topmost chrome window. Hide it manually when
-  // the owner document is unloaded.
-  const onWindowUnload = () => popup.hidePopup();
-  win.addEventListener("unload", onWindowUnload);
-
   // Remove the menu from the DOM once it's hidden.
   popup.addEventListener("popuphidden", e => {
     if (e.target === popup) {
-      win.removeEventListener("unload", onWindowUnload);
       popup.remove();
       this.emit("close", popup);
     }

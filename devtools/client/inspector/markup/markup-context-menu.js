@@ -752,7 +752,7 @@ class MarkupContextMenu {
       menu.append(menuitem);
     }
 
-    menu.popup(screenX, screenY, this.toolbox.doc);
+    menu.popup(screenX, screenY, this.toolbox);
     return menu;
   }
 
@@ -768,8 +768,7 @@ class MarkupContextMenu {
     const hasA11YProps = await this.walker.hasAccessibilityProperties(
       this.selection.nodeFront);
     if (hasA11YProps) {
-      const menuItemEl = Menu.getMenuElementById(menuItem.id, this.toolbox.doc);
-      menuItemEl.disabled = menuItem.disabled = false;
+      this.toolbox.doc.getElementById(menuItem.id).disabled = menuItem.disabled = false;
     }
 
     this.inspector.emit("node-menu-updated");

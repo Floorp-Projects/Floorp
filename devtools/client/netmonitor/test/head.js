@@ -730,14 +730,14 @@ function testColumnsAlignment(headers, requestList) {
 }
 
 async function hideColumn(monitor, column) {
-  const { document } = monitor.panelWin;
+  const { document, parent } = monitor.panelWin;
 
   info(`Clicking context-menu item for ${column}`);
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelector(".requests-list-headers"));
 
   const onHeaderRemoved = waitForDOM(document, `#requests-list-${column}-button`, 0);
-  getContextMenuItem(monitor, `request-list-header-${column}-toggle`).click();
+  parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
   await onHeaderRemoved;
 
   ok(!document.querySelector(`#requests-list-${column}-button`),
@@ -745,14 +745,14 @@ async function hideColumn(monitor, column) {
 }
 
 async function showColumn(monitor, column) {
-  const { document } = monitor.panelWin;
+  const { document, parent } = monitor.panelWin;
 
   info(`Clicking context-menu item for ${column}`);
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelector(".requests-list-headers"));
 
   const onHeaderAdded = waitForDOM(document, `#requests-list-${column}-button`, 1);
-  getContextMenuItem(monitor, `request-list-header-${column}-toggle`).click();
+  parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
   await onHeaderAdded;
 
   ok(document.querySelector(`#requests-list-${column}-button`),
@@ -866,13 +866,4 @@ function queryTelemetryEvents(query) {
 
   // Return the `extra` field (which is event[5]e).
   return filtersChangedEvents.map(event => event[5]);
-}
-
-/**
- * Retrieve the context menu element corresponding to the provided id, for the provided
- * netmonitor instance.
- */
-function getContextMenuItem(monitor, id) {
-  const Menu = require("devtools/client/framework/menu");
-  return Menu.getMenuElementById(id, monitor.panelWin.document);
 }

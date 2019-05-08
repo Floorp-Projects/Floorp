@@ -28,7 +28,7 @@ add_task(async function() {
   synthesizeContextMenuEvent(searchField);
   await onContextMenuOpen;
 
-  let searchContextMenu = toolbox.getTextBoxContextMenu();
+  let searchContextMenu = toolbox.doc.getElementById("toolbox-menu");
   ok(searchContextMenu,
     "The search filter context menu is loaded in the rule view");
 
@@ -62,7 +62,7 @@ add_task(async function() {
   synthesizeContextMenuEvent(searchField);
   await onContextMenuOpen;
 
-  searchContextMenu = toolbox.getTextBoxContextMenu();
+  searchContextMenu = toolbox.doc.getElementById("toolbox-menu");
   cmdCopy = searchContextMenu.querySelector("#editmenu-copy");
   await waitForClipboardPromise(() => cmdCopy.click(), TEST_INPUT);
 
@@ -76,7 +76,7 @@ add_task(async function() {
   synthesizeContextMenuEvent(searchField);
   await onContextMenuOpen;
 
-  searchContextMenu = toolbox.getTextBoxContextMenu();
+  searchContextMenu = toolbox.doc.getElementById("toolbox-menu");
   cmdUndo = searchContextMenu.querySelector("#editmenu-undo");
   cmdDelete = searchContextMenu.querySelector("#editmenu-delete");
   cmdSelectAll = searchContextMenu.querySelector("#editmenu-selectAll");
