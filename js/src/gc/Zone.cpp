@@ -241,7 +241,7 @@ void Zone::discardJitCode(FreeOp* fop,
     // Warm-up counter for scripts are reset on GC. After discarding code we
     // need to let it warm back up to get information such as which
     // opcodes are setting array holes or accessing getter properties.
-    script->resetWarmUpCounter();
+    script->resetWarmUpCounterForGC();
 
     // Clear the BaselineScript's control flow graph. The LifoAlloc is purged
     // below.
