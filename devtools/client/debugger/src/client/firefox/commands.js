@@ -264,7 +264,7 @@ type EvaluateParam = { thread: string, frameId: ?FrameId };
 function evaluate(
   script: ?Script,
   { thread, frameId }: EvaluateParam = {}
-): Promise<{ result: ?Object }> {
+): Promise<{ result: Grip | null }> {
   const params = { thread, frameActor: frameId };
   if (!tabTarget || !script) {
     return Promise.resolve({ result: null });
