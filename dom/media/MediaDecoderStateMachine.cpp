@@ -3274,12 +3274,12 @@ bool MediaDecoderStateMachine::HasLowBufferedData(const TimeUnit& aThreshold) {
   // decoded all audio/video samples.
   TimeUnit endOfDecodedVideo = (HasVideo() && !VideoQueue().IsFinished())
                                    ? mDecodedVideoEndTime
-                                   : TimeUnit::FromInfinity();
+                                   : TimeUnit::FromNegativeInfinity();
   TimeUnit endOfDecodedAudio = (HasAudio() && !AudioQueue().IsFinished())
                                    ? mDecodedAudioEndTime
-                                   : TimeUnit::FromInfinity();
+                                   : TimeUnit::FromNegativeInfinity();
 
-  auto endOfDecodedData = std::min(endOfDecodedVideo, endOfDecodedAudio);
+  auto endOfDecodedData = std::max(endOfDecodedVideo, endOfDecodedAudio);
   if (Duration() < endOfDecodedData) {
     // Our duration is not up to date. No point buffering.
     return false;

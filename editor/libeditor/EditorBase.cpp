@@ -2378,8 +2378,8 @@ void EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
   RefPtr<nsDOMAttributeMap> destAttributes = destElement->Attributes();
   while (RefPtr<Attr> attr = destAttributes->Item(0)) {
     if (isDestElementInBody) {
-      RemoveAttributeWithTransaction(destElement,
-                                     *attr->NodeInfo()->NameAtom());
+      RemoveAttributeWithTransaction(
+          destElement, MOZ_KnownLive(*attr->NodeInfo()->NameAtom()));
     } else {
       destElement->UnsetAttr(kNameSpaceID_None, attr->NodeInfo()->NameAtom(),
                              true);
@@ -2673,7 +2673,7 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
 
   // Delete empty IME text node if there is one
   if (isIMETransaction && mComposition) {
-    Text* textNode = mComposition->GetContainerTextNode();
+    RefPtr<Text> textNode = mComposition->GetContainerTextNode();
     if (textNode && !textNode->Length()) {
       DeleteNodeWithTransaction(*textNode);
       mComposition->OnTextNodeRemoved();

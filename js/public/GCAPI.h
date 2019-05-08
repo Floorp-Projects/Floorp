@@ -138,10 +138,30 @@ typedef enum JSGCParamKey {
   JSGC_MARK_STACK_LIMIT = 10,
 
   /**
-   * GCs less than this far apart in time will be considered 'high-frequency
-   * GCs'.
+   * The "do we collect?" decision depends on various parameters and can be
+   * summarised as:
    *
-   * See setGCLastBytes in jsgc.cpp.
+   *    ZoneSize * 1/UsageFactor > Max(ThresholdBase, LastSize) * GrowthFactor
+   *
+   * Where
+   *   ZoneSize: Current size of this zone.
+   *   LastSize: Heap size immediately after the most recent collection.
+   *   ThresholdBase: The JSGC_ALLOCATION_THRESHOLD parameter
+   *   GrowthFactor: A number above 1, calculated based on some of the
+   *                 following parameters.
+   *                 See computeZoneHeapGrowthFactorForHeapSize() in GC.cpp
+   *   UsageFactor: JSGC_ALLOCATION_THRESHOLD_FACTOR or
+   *                JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT or 1.0 for
+   *                non-incremental collections.
+   *
+   * The RHS of the equation above is calculated and sets
+   * zone->threshold.gcTriggerBytes(). When usage.gcBytes() surpasses
+   * threshold.gcTriggerBytes() for a zone, the zone may be scheduled for a GC.
+   */
+
+  /**
+   * GCs less than this far apart in milliseconds will be considered
+   * 'high-frequency GCs'.
    *
    * Pref: javascript.options.mem.gc_high_frequency_time_limit_ms
    * Default: HighFrequencyThreshold
@@ -149,7 +169,7 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_TIME_LIMIT = 11,
 
   /**
-   * Start of dynamic heap growth.
+   * Start of dynamic heap growth (MB).
    *
    * Pref: javascript.options.mem.gc_high_frequency_low_limit_mb
    * Default: HighFrequencyLowLimitBytes
@@ -157,7 +177,7 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_LOW_LIMIT = 12,
 
   /**
-   * End of dynamic heap growth.
+   * End of dynamic heap growth (MB).
    *
    * Pref: javascript.options.mem.gc_high_frequency_high_limit_mb
    * Default: HighFrequencyHighLimitBytes
@@ -165,7 +185,7 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_HIGH_LIMIT = 13,
 
   /**
-   * Upper bound of heap growth.
+   * Upper bound of heap growth percentage.
    *
    * Pref: javascript.options.mem.gc_high_frequency_heap_growth_max
    * Default: HighFrequencyHeapGrowthMax
@@ -173,7 +193,7 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX = 14,
 
   /**
-   * Lower bound of heap growth.
+   * Lower bound of heap growth percentage.
    *
    * Pref: javascript.options.mem.gc_high_frequency_heap_growth_min
    * Default: HighFrequencyHeapGrowthMin
@@ -181,7 +201,7 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN = 15,
 
   /**
-   * Heap growth for low frequency GCs.
+   * Heap growth percentage for low frequency GCs.
    *
    * Pref: javascript.options.mem.gc_low_frequency_heap_growth
    * Default: LowFrequencyHeapGrowth
@@ -206,11 +226,9 @@ typedef enum JSGCParamKey {
   JSGC_DYNAMIC_MARK_SLICE = 18,
 
   /**
-   * Lower limit after which we limit the heap growth.
+   * Lower limit for collecting a zone.
    *
-   * The base value used to compute zone->threshold.gcTriggerBytes(). When
-   * usage.gcBytes() surpasses threshold.gcTriggerBytes() for a zone, the
-   * zone may be scheduled for a GC, depending on the exact circumstances.
+   * Zones smaller than this size will not normally be collected.
    *
    * Pref: javascript.options.mem.gc_allocation_threshold_mb
    * Default GCZoneAllocThresholdBase
@@ -244,7 +262,10 @@ typedef enum JSGCParamKey {
   JSGC_COMPACTING_ENABLED = 23,
 
   /**
-   * Factor for triggering a GC based on JSGC_ALLOCATION_THRESHOLD
+   * Percentage for triggering a GC based on zone->threshold.gcTriggerBytes().
+   *
+   * When the heap reaches this percentage of the allocation threshold an
+   * incremental collection is started.
    *
    * Default: ZoneAllocThresholdFactorDefault
    * Pref: None
@@ -252,8 +273,10 @@ typedef enum JSGCParamKey {
   JSGC_ALLOCATION_THRESHOLD_FACTOR = 25,
 
   /**
-   * Factor for triggering a GC based on JSGC_ALLOCATION_THRESHOLD.
-   * Used if another GC (in different zones) is already running.
+   * Percentage for triggering a GC based on zone->threshold.gcTriggerBytes().
+   *
+   * Used instead of the above percentage if if another GC (in different zones)
+   * is already running.
    *
    * Default: ZoneAllocThresholdFactorAvoidInterruptDefault
    * Pref: None
@@ -262,7 +285,7 @@ typedef enum JSGCParamKey {
 
   /**
    * Attempt to run a minor GC in the idle time if the free space falls
-   * below this threshold.
+   * below this number of bytes.
    *
    * Default: NurseryChunkUsableSize / 4
    * Pref: None
@@ -270,8 +293,8 @@ typedef enum JSGCParamKey {
   JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION = 27,
 
   /**
-   * If this percentage of the nursery is tenured, then proceed to examine which
-   * groups we should pretenure.
+   * If this percentage of the nursery is tenured and the nursery is at least
+   * 4MB, then proceed to examine which groups we should pretenure.
    *
    * Default: PretenureThreshold
    * Pref: None

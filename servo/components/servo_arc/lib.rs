@@ -21,7 +21,7 @@
 //!
 //! [1]: https://bugzilla.mozilla.org/show_bug.cgi?id=1360883
 
-// The semantics of `Arc` are alread documented in the Rust docs, so we don't
+// The semantics of `Arc` are already documented in the Rust docs, so we don't
 // duplicate those here.
 #![allow(missing_docs)]
 
@@ -86,10 +86,14 @@ const STATIC_REFCOUNT: usize = usize::MAX;
 /// See the documentation for [`Arc`] in the standard library. Unlike the
 /// standard library `Arc`, this `Arc` does not support weak reference counting.
 ///
+/// See the discussion in https://github.com/rust-lang/rust/pull/60594 for the
+/// usage of PhantomData.
+///
 /// [`Arc`]: https://doc.rust-lang.org/stable/std/sync/struct.Arc.html
 #[repr(C)]
 pub struct Arc<T: ?Sized> {
     p: ptr::NonNull<ArcInner<T>>,
+    phantom: PhantomData<T>,
 }
 
 /// An `Arc` that is known to be uniquely owned
@@ -169,6 +173,7 @@ impl<T> Arc<T> {
         unsafe {
             Arc {
                 p: ptr::NonNull::new_unchecked(Box::into_raw(x)),
+                phantom: PhantomData,
             }
         }
     }
@@ -198,6 +203,7 @@ impl<T> Arc<T> {
         let ptr = (ptr as *const u8).offset(-offset_of!(ArcInner<T>, data));
         Arc {
             p: ptr::NonNull::new_unchecked(ptr as *mut ArcInner<T>),
+            phantom: PhantomData,
         }
     }
 
@@ -224,6 +230,7 @@ impl<T> Arc<T> {
 
         Arc {
             p: ptr::NonNull::new_unchecked(ptr),
+            phantom: PhantomData,
         }
     }
 
@@ -334,6 +341,7 @@ impl<T: ?Sized> Clone for Arc<T> {
         unsafe {
             Arc {
                 p: ptr::NonNull::new_unchecked(self.ptr()),
+                phantom: PhantomData,
             }
         }
     }
@@ -687,6 +695,7 @@ impl<H, T> Arc<HeaderSlice<H, [T]>> {
         unsafe {
             Arc {
                 p: ptr::NonNull::new_unchecked(ptr),
+                phantom: PhantomData,
             }
         }
     }
@@ -767,7 +776,8 @@ type HeaderSliceWithLength<H, T> = HeaderSlice<HeaderWithLength<H>, T>;
 /// via `HeaderSliceWithLength`.
 #[repr(C)]
 pub struct ThinArc<H, T> {
-    ptr: *mut ArcInner<HeaderSliceWithLength<H, [T; 1]>>,
+    ptr: ptr::NonNull<ArcInner<HeaderSliceWithLength<H, [T; 1]>>>,
+    phantom: PhantomData<(H, T)>,
 }
 
 unsafe impl<H: Sync + Send, T: Sync + Send> Send for ThinArc<H, T> {}
@@ -796,7 +806,8 @@ impl<H, T> ThinArc<H, T> {
         // Synthesize transient Arc, which never touches the refcount of the ArcInner.
         let transient = unsafe {
             NoDrop::new(Arc {
-                p: ptr::NonNull::new_unchecked(thin_to_thick(self.ptr)),
+                p: ptr::NonNull::new_unchecked(thin_to_thick(self.ptr.as_ptr())),
+                phantom: PhantomData,
             })
         };
 
@@ -851,7 +862,7 @@ impl<H, T> ThinArc<H, T> {
         if is_static {
             ptr::null()
         } else {
-            self.ptr as *const ArcInner<T> as *const c_void
+            self.ptr.as_ptr() as *const ArcInner<T> as *const c_void
         }
     }
 }
@@ -861,7 +872,7 @@ impl<H, T> Deref for ThinArc<H, T> {
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        unsafe { &(*thin_to_thick(self.ptr)).data }
+        unsafe { &(*thin_to_thick(self.ptr.as_ptr())).data }
     }
 }
 
@@ -875,7 +886,7 @@ impl<H, T> Clone for ThinArc<H, T> {
 impl<H, T> Drop for ThinArc<H, T> {
     #[inline]
     fn drop(&mut self) {
-        let _ = Arc::from_thin(ThinArc { ptr: self.ptr });
+        let _ = Arc::from_thin(ThinArc { ptr: self.ptr, phantom: PhantomData, });
     }
 }
 
@@ -893,7 +904,10 @@ impl<H, T> Arc<HeaderSliceWithLength<H, [T]>> {
         mem::forget(a);
         let thin_ptr = fat_ptr as *mut [usize] as *mut usize;
         ThinArc {
-            ptr: thin_ptr as *mut ArcInner<HeaderSliceWithLength<H, [T; 1]>>,
+            ptr: unsafe {
+                ptr::NonNull::new_unchecked(thin_ptr as *mut ArcInner<HeaderSliceWithLength<H, [T; 1]>>)
+            },
+            phantom: PhantomData,
         }
     }
 
@@ -901,11 +915,12 @@ impl<H, T> Arc<HeaderSliceWithLength<H, [T]>> {
     /// is not modified.
     #[inline]
     pub fn from_thin(a: ThinArc<H, T>) -> Self {
-        let ptr = thin_to_thick(a.ptr);
+        let ptr = thin_to_thick(a.ptr.as_ptr());
         mem::forget(a);
         unsafe {
             Arc {
                 p: ptr::NonNull::new_unchecked(ptr),
+                phantom: PhantomData,
             }
         }
     }

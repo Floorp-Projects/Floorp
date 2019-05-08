@@ -55,9 +55,11 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   // Overrides of nsIEditor
   NS_IMETHOD GetDocumentIsEmpty(bool* aDocumentIsEmpty) override;
 
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD DeleteSelection(EDirection aAction,
                              EStripWrappers aStripWrappers) override;
 
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD SetDocumentCharacterSet(const nsACString& characterSet) override;
 
   // If there are some good name to create non-virtual Undo()/Redo() methods,
@@ -67,7 +69,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD Redo(uint32_t aCount) final;
 
-  NS_IMETHOD Cut() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Cut() override;
   bool CanCut() const;
   NS_IMETHOD Copy() override;
   bool CanCopy() const;
@@ -167,6 +169,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteSelectionAsAction(EDirection aDirection,
                                    EStripWrappers aStripWrappers);
 
@@ -202,7 +205,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * InsertLineBreakAsAction() is called when user inputs a line break with
    * Enter or something.
    */
-  virtual nsresult InsertLineBreakAsAction();
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertLineBreakAsAction();
 
   /**
    * OnCompositionStart() is called when editor receives eCompositionStart
@@ -304,6 +307,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteSelectionAsSubAction(EDirection aDirection,
                                       EStripWrappers aStripWrappers);
 
@@ -315,6 +319,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult DeleteSelectionWithTransaction(
       EDirection aAction, EStripWrappers aStripWrappers);
 
@@ -324,13 +329,14 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    *
    * @ param aString   The string to be set.
    */
-  nsresult SetTextAsSubAction(const nsAString& aString);
+  MOZ_CAN_RUN_SCRIPT nsresult SetTextAsSubAction(const nsAString& aString);
 
   /**
    * ReplaceSelectionAsSubAction() replaces selection with aString.
    *
    * @param aString    The string to replace.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult ReplaceSelectionAsSubAction(const nsAString& aString);
 
   /**
@@ -349,7 +355,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    *                            <br> node, returns nullptr.
    */
   template <typename PT, typename CT>
-  already_AddRefed<Element> InsertBrElementWithTransaction(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> InsertBrElementWithTransaction(
       const EditorDOMPointBase<PT, CT>& aPointToInsert,
       EDirection aSelect = eNone);
 
@@ -493,6 +499,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aTag                The element name to be created.
    * @return                    Created new element.
    */
+  MOZ_CAN_RUN_SCRIPT
   already_AddRefed<Element> DeleteSelectionAndCreateElement(nsAtom& aTag);
 
   /**
@@ -502,7 +509,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * adjusted to be collapsed right before or after the node instead (which is
    * always possible, since the node was split).
    */
-  nsresult DeleteSelectionAndPrepareToCreateNode();
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteSelectionAndPrepareToCreateNode();
 
   /**
    * Shared outputstring; returns whether selection is collapsed and resulting
@@ -516,7 +523,8 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   bool FireClipboardEvent(EventMessage aEventMessage, int32_t aSelectionType,
                           bool* aActionTaken = nullptr);
 
-  bool UpdateMetaCharset(Document& aDocument, const nsACString& aCharacterSet);
+  MOZ_CAN_RUN_SCRIPT bool UpdateMetaCharset(Document& aDocument,
+                                            const nsACString& aCharacterSet);
 
   /**
    * EnsureComposition() should be called by composition event handlers.  This
