@@ -97,10 +97,6 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["el"] += [
   '_locales/el/messages.json'
 ]
 
-FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["en_GB"] += [
-  '_locales/en_GB/messages.json'
-]
-
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["_locales"]["en_US"] += [
   '_locales/en_US/messages.json'
 ]
