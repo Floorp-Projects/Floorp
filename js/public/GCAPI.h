@@ -160,8 +160,8 @@ typedef enum JSGCParamKey {
    */
 
   /**
-   * GCs less than this far apart in time will be considered 'high-frequency
-   * GCs'.
+   * GCs less than this far apart in milliseconds will be considered
+   * 'high-frequency GCs'.
    *
    * Pref: javascript.options.mem.gc_high_frequency_time_limit_ms
    * Default: HighFrequencyThreshold
@@ -169,7 +169,7 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_TIME_LIMIT = 11,
 
   /**
-   * Start of dynamic heap growth.
+   * Start of dynamic heap growth (MB).
    *
    * Pref: javascript.options.mem.gc_high_frequency_low_limit_mb
    * Default: HighFrequencyLowLimitBytes
@@ -177,7 +177,7 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_LOW_LIMIT = 12,
 
   /**
-   * End of dynamic heap growth.
+   * End of dynamic heap growth (MB).
    *
    * Pref: javascript.options.mem.gc_high_frequency_high_limit_mb
    * Default: HighFrequencyHighLimitBytes
@@ -185,7 +185,7 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_HIGH_LIMIT = 13,
 
   /**
-   * Upper bound of heap growth.
+   * Upper bound of heap growth percentage.
    *
    * Pref: javascript.options.mem.gc_high_frequency_heap_growth_max
    * Default: HighFrequencyHeapGrowthMax
@@ -193,7 +193,7 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX = 14,
 
   /**
-   * Lower bound of heap growth.
+   * Lower bound of heap growth percentage.
    *
    * Pref: javascript.options.mem.gc_high_frequency_heap_growth_min
    * Default: HighFrequencyHeapGrowthMin
@@ -201,7 +201,7 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN = 15,
 
   /**
-   * Heap growth for low frequency GCs.
+   * Heap growth percentage for low frequency GCs.
    *
    * Pref: javascript.options.mem.gc_low_frequency_heap_growth
    * Default: LowFrequencyHeapGrowth
@@ -285,7 +285,7 @@ typedef enum JSGCParamKey {
 
   /**
    * Attempt to run a minor GC in the idle time if the free space falls
-   * below this threshold.
+   * below this number of bytes.
    *
    * Default: NurseryChunkUsableSize / 4
    * Pref: None
