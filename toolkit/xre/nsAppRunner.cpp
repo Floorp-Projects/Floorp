@@ -4907,7 +4907,7 @@ bool XRE_Win32kCallsAllowed() {
 
 // If you add anything to this enum, please update about:support to reflect it
 enum {
-  // kE10sEnabledByUser = 0, removed when ending non-e10s support
+  kE10sEnabledByUser = 0,
   kE10sEnabledByDefault = 1,
   kE10sDisabledByUser = 2,
   // kE10sDisabledInSafeMode = 3, was removed in bug 1172491.
@@ -4919,6 +4919,9 @@ enum {
   // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
   // kE10sDisabledForOperatingSystem = 10, removed due to xp-eol
 };
+
+const char* kForceEnableE10sPref = "browser.tabs.remote.force-enable";
+const char* kForceDisableE10sPref = "browser.tabs.remote.force-disable";
 
 namespace mozilla {
 
@@ -4934,28 +4937,25 @@ bool BrowserTabsRemoteAutostart() {
     return gBrowserTabsRemoteAutostart;
   }
 
-#if defined(MOZILLA_OFFICIAL) && MOZ_BUILD_APP_IS_BROWSER
-  bool allowSingleProcessOutsideAutomation = false;
-#else
-  bool allowSingleProcessOutsideAutomation = true;
-#endif
-
+  bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", true);
   int status = kE10sEnabledByDefault;
-  if (allowSingleProcessOutsideAutomation || xpc::IsInAutomation()) {
-    bool optInPref =
-        Preferences::GetBool("browser.tabs.remote.autostart", true);
 
-    if (optInPref) {
-      gBrowserTabsRemoteAutostart = true;
-    } else {
-      status = kE10sDisabledByUser;
-    }
-  } else {
+  if (optInPref) {
     gBrowserTabsRemoteAutostart = true;
+  } else {
+    status = kE10sDisabledByUser;
+  }
+
+  // Uber override pref for manual testing purposes
+  if (Preferences::GetBool(kForceEnableE10sPref, false)) {
+    gBrowserTabsRemoteAutostart = true;
+    status = kE10sEnabledByUser;
   }
 
   // Uber override pref for emergency blocking
-  if (gBrowserTabsRemoteAutostart && EnvHasValue("MOZ_FORCE_DISABLE_E10S")) {
+  if (gBrowserTabsRemoteAutostart &&
+      (Preferences::GetBool(kForceDisableE10sPref, false) ||
+       EnvHasValue("MOZ_FORCE_DISABLE_E10S"))) {
     gBrowserTabsRemoteAutostart = false;
     status = kE10sForceDisabled;
   }
