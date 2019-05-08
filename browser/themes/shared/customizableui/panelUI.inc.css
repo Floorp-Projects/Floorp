@@ -68,8 +68,8 @@
 
 #PanelUI-menu-button[badge-status="update-available"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="update-manual"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
-#PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+#PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+#PanelUI-menu-button[badge-status="update-unsupported"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   border-radius: 50%;
   box-shadow: none;
   /* "!important" is necessary to override the rule in toolbarbutton.css */
@@ -79,8 +79,25 @@
   min-height: 12px;
 }
 
-.panel-banner-item[notificationid^=update]::after {
+#PanelUI-menu-button[badge-status="update-available"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+#PanelUI-menu-button[badge-status="update-manual"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+#PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+}
+
+#PanelUI-menu-button[badge-status="update-unsupported"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  background: #FFE900 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+}
+
+.panel-banner-item[notificationid="update-available"]::after,
+.panel-banner-item[notificationid="update-manual"]::after,
+.panel-banner-item[notificationid="update-restart"]::after {
+  background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  border-radius: 50%;
+}
+
+.panel-banner-item[notificationid="update-unsupported"]::after {
+  background: #FFE900 url(chrome://browser/skin/update-badge.svg) no-repeat center;
   border-radius: 50%;
 }
 
@@ -940,7 +957,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 
 :root[lwt-popup-brighttext] .panel-banner-item:not([disabled]) {
   background-color: rgba(48,230,11,.1);
-  color: #F9F9FA !important;
+  color: @appmenuWarningColorBrightText@ !important;
 }
 
 :root[lwt-popup-brighttext] .panel-banner-item:not([disabled]):hover {
@@ -949,6 +966,30 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 
 :root[lwt-popup-brighttext] .panel-banner-item:not([disabled]):active {
   background-color: rgba(48,230,11,.2);
+}
+
+.panel-banner-item[notificationid="update-unsupported"] {
+  background-color: @appmenuWarningBackgroundColor@;
+}
+
+.panel-banner-item[notificationid="update-unsupported"]:not([disabled]):hover {
+  background-color: @appmenuWarningBackgroundColorHover@;
+}
+
+.panel-banner-item[notificationid="update-unsupported"]:not([disabled]):hover:active {
+  background-color: @appmenuWarningBackgroundColorActive@;
+}
+
+:root[lwt-popup-brighttext] .panel-banner-item[notificationid="update-unsupported"]:not([disabled]) {
+  background-color: @appmenuWarningBackgroundColorBrightText@;
+}
+
+:root[lwt-popup-brighttext] .panel-banner-item[notificationid="update-unsupported"]:not([disabled]):hover {
+  background-color: @appmenuWarningBackgroundColorHoverBrightText@;
+}
+
+:root[lwt-popup-brighttext] .panel-banner-item[notificationid="update-unsupported"]:not([disabled]):active {
+  background-color: @appmenuWarningBackgroundColorActiveBrightText@;
 }
 
 #customization-palette .toolbarbutton-multiline-text,

@@ -11,6 +11,7 @@ const { CONNECTION_TYPES } =
 add_task(async function testRemoteClientManager() {
   for (const type of Object.values(CONNECTION_TYPES)) {
     const fakeClient = createFakeClient();
+    const runtimeInfo = {};
     const clientId = "clientId";
     const remoteId = remoteClientManager.getRemoteId(clientId, type);
 
@@ -24,14 +25,18 @@ add_task(async function testRemoteClientManager() {
       `[${type}]: getClient returns null if no client was set`);
     equal(remoteClientManager.getClientByRemoteId(remoteId), null,
       `[${type}]: getClientByRemoteId returns null if no client was set`);
+    equal(remoteClientManager.getRuntimeInfoByRemoteId(remoteId), null,
+      `[${type}]: getRuntimeInfoByRemoteId returns null if no client was set`);
 
-    remoteClientManager.setClient(clientId, type, fakeClient);
+    remoteClientManager.setClient(clientId, type, fakeClient, runtimeInfo);
     equal(remoteClientManager.hasClient(clientId, type), true,
       `[${type}]: hasClient returns true`);
     equal(remoteClientManager.getClient(clientId, type), fakeClient,
       `[${type}]: getClient returns the correct client`);
     equal(remoteClientManager.getClientByRemoteId(remoteId), fakeClient,
       `[${type}]: getClientByRemoteId returns the correct client`);
+    equal(remoteClientManager.getRuntimeInfoByRemoteId(remoteId), runtimeInfo,
+      `[${type}]: getRuntimeInfoByRemoteId returns the correct object`);
 
     remoteClientManager.removeClient(clientId, type);
     equal(remoteClientManager.hasClient(clientId, type), false,
@@ -40,7 +45,28 @@ add_task(async function testRemoteClientManager() {
       `[${type}]: getClient returns null after removing the client`);
     equal(remoteClientManager.getClientByRemoteId(remoteId), null,
       `[${type}]: getClientByRemoteId returns null after removing the client`);
+    equal(remoteClientManager.getRuntimeInfoByRemoteId(), null,
+      `[${type}]: getRuntimeInfoByRemoteId returns null after removing the client`);
   }
+
+  // Test various fallback scenarios for APIs relying on remoteId, when called without a
+  // remoteId, we expect to get the information for the local this-firefox runtime.
+  const { THIS_FIREFOX } = CONNECTION_TYPES;
+  const thisFirefoxClient = createFakeClient();
+  const thisFirefoxInfo = {};
+  remoteClientManager.setClient(THIS_FIREFOX, THIS_FIREFOX, thisFirefoxClient,
+    thisFirefoxInfo);
+
+  equal(remoteClientManager.getClientByRemoteId(), thisFirefoxClient,
+    `[fallback]: getClientByRemoteId returns this-firefox if remoteId is null`);
+  equal(remoteClientManager.getRuntimeInfoByRemoteId(), thisFirefoxInfo,
+    `[fallback]: getRuntimeInfoByRemoteId returns this-firefox if remoteId is null`);
+
+  const otherRemoteId = remoteClientManager.getRemoteId("clientId", CONNECTION_TYPES.USB);
+  equal(remoteClientManager.getClientByRemoteId(otherRemoteId), null,
+    `[fallback]: getClientByRemoteId does not fallback if remoteId is non-null`);
+  equal(remoteClientManager.getRuntimeInfoByRemoteId(otherRemoteId), null,
+    `[fallback]: getRuntimeInfoByRemoteId does not fallback if remoteId is non-null`);
 });
 
 add_task(async function testRemoteClientManagerWithUnknownType() {

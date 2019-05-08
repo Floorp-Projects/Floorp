@@ -149,9 +149,9 @@ config = {
         "mochitest-plain-gpu": ["--subsuite=gpu"],
         "mochitest-plain-chunked": ["--chunk-by-dir=4"],
         "mochitest-media": ["--subsuite=media"],
-        "mochitest-chrome": ["--flavor=chrome"],
+        "mochitest-chrome": ["--flavor=chrome", "--disable-e10s"],
         "mochitest-chrome-gpu": ["--flavor=chrome", "--subsuite=gpu", "--disable-e10s"],
-        "mochitest-chrome-chunked": ["--flavor=chrome", "--chunk-by-dir=4"],
+        "mochitest-chrome-chunked": ["--flavor=chrome", "--chunk-by-dir=4", "--disable-e10s"],
         "mochitest-browser-chrome": ["--flavor=browser"],
         "mochitest-browser-chrome-chunked": ["--flavor=browser", "--chunk-by-runtime"],
         "mochitest-browser-chrome-screenshots": ["--flavor=browser", "--subsuite=screenshots"],
@@ -163,7 +163,7 @@ config = {
         "mochitest-webgl2-deqp": ["--subsuite=webgl2-deqp"],
         "mochitest-devtools-chrome": ["--flavor=browser", "--subsuite=devtools"],
         "mochitest-devtools-chrome-chunked": ["--flavor=browser", "--subsuite=devtools", "--chunk-by-runtime"],
-        "mochitest-a11y": ["--flavor=a11y"],
+        "mochitest-a11y": ["--flavor=a11y", "--disable-e10s"],
     },
     # local reftest suites
     "all_reftest_suites": {

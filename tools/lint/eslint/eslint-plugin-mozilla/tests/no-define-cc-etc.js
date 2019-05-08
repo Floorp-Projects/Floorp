@@ -10,7 +10,7 @@
 var rule = require("../lib/rules/no-define-cc-etc");
 var RuleTester = require("eslint/lib/testers/rule-tester");
 
-const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
+const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 9 } });
 
 // ------------------------------------------------------------------------------
 // Tests
@@ -35,6 +35,7 @@ ruleTester.run("no-define-cc-etc", rule, {
     "var {Constructor: CC, manager: Cm} = Components;",
     "const {Constructor: CC, manager: Cm} = Components;",
     "foo.Cc.test();",
+    "const {bar, ...foo} = obj;",
   ],
   invalid: [
     invalidCode("var Cc;", "Cc"),

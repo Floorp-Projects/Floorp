@@ -12,7 +12,15 @@ const test = new SearchConfigTest({
       ],
       locales: {
         matches: ["ru", "tr", "be", "kk"],
-        startsWith: ["en"],
+        // We don't currently enforce this.
+        // startsWith: ["en"],
+      },
+    }],
+  },
+  available: {
+    included: [{
+      locales: {
+        matches: ["az", "ru", "be", "kk", "tr"],
       },
     }],
   },

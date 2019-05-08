@@ -2540,7 +2540,7 @@ nsresult EditorBase::InsertTextWithTransaction(
   // In some cases, the node may be the anonymous div elemnt or a mozBR
   // element.  Let's try to look for better insertion point in the nearest
   // text node if there is.
-  EditorRawDOMPoint pointToInsert = FindBetterInsertionPoint(aPointToInsert);
+  EditorDOMPoint pointToInsert = FindBetterInsertionPoint(aPointToInsert);
 
   // If a neighboring text node already exists, use that
   if (!pointToInsert.IsInTextNode()) {
@@ -2573,7 +2573,7 @@ nsresult EditorBase::InsertTextWithTransaction(
       NS_ENSURE_TRUE(newOffset.isValid(), NS_ERROR_FAILURE);
     }
     nsresult rv = InsertTextIntoTextNodeWithTransaction(
-        aStringToInsert, *pointToInsert.GetContainerAsText(),
+        aStringToInsert, MOZ_KnownLive(*pointToInsert.GetContainerAsText()),
         pointToInsert.Offset());
     NS_ENSURE_SUCCESS(rv, rv);
     if (aPointAfterInsertedString) {
@@ -2588,7 +2588,7 @@ nsresult EditorBase::InsertTextWithTransaction(
     NS_ENSURE_TRUE(newOffset.isValid(), NS_ERROR_FAILURE);
     // we are inserting text into an existing text node.
     nsresult rv = InsertTextIntoTextNodeWithTransaction(
-        aStringToInsert, *pointToInsert.GetContainerAsText(),
+        aStringToInsert, MOZ_KnownLive(*pointToInsert.GetContainerAsText()),
         pointToInsert.Offset());
     NS_ENSURE_SUCCESS(rv, rv);
     if (aPointAfterInsertedString) {

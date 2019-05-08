@@ -411,7 +411,7 @@ pref("permissions.default.geo", 0);
 pref("permissions.default.desktop-notification", 0);
 pref("permissions.default.shortcuts", 0);
 
-#ifdef NIGHTLY_BUILD
+#ifdef EARLY_BETA_OR_EARLIER
 pref("permissions.desktop-notification.postPrompt.enabled", true);
 #else
 pref("permissions.desktop-notification.postPrompt.enabled", false);

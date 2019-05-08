@@ -2618,7 +2618,7 @@ UpdateService.prototype = {
         this._showPrompt(update);
       }
 
-      Services.obs.notifyObservers(null, "update-available", "unsupported");
+      Services.obs.notifyObservers(update, "update-available", "unsupported");
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_UNSUPPORTED);
       return;
     }

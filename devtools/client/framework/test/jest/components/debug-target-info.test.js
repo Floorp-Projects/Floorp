@@ -32,31 +32,33 @@ const TEST_TOOLBOX = {
     name: "Test Tab Name",
     url: "http://some.target/url",
   },
+  doc: {},
 };
 
 const TEST_TOOLBOX_NO_NAME = {
   target: {
     url: "http://some.target/without/a/name",
   },
+  doc: {},
 };
 
 const USB_DEVICE_DESCRIPTION = {
-  brandName: "usbRuntimeBrandName",
-  channel: "release",
   deviceName: "usbDeviceName",
+  icon: "chrome://devtools/skin/images/aboutdebugging-firefox-release.svg",
+  name: "usbRuntimeBrandName",
   version: "1.0.0",
 };
 
 const THIS_FIREFOX_DEVICE_DESCRIPTION = {
-  brandName: "thisFirefoxRuntimeBrandName",
-  channel: "release",
+  icon: "chrome://devtools/skin/images/aboutdebugging-firefox-release.svg",
   version: "1.0.0",
+  name: "thisFirefoxRuntimeBrandName",
 };
 
 const USB_TARGET_INFO = {
   debugTargetData: {
     connectionType: CONNECTION_TYPES.USB,
-    deviceDescription: USB_DEVICE_DESCRIPTION,
+    runtimeInfo: USB_DEVICE_DESCRIPTION,
     targetType: DEBUG_TARGET_TYPES.TAB,
   },
   toolbox: TEST_TOOLBOX,
@@ -66,7 +68,7 @@ const USB_TARGET_INFO = {
 const THIS_FIREFOX_TARGET_INFO = {
   debugTargetData: {
     connectionType: CONNECTION_TYPES.THIS_FIREFOX,
-    deviceDescription: THIS_FIREFOX_DEVICE_DESCRIPTION,
+    runtimeInfo: THIS_FIREFOX_DEVICE_DESCRIPTION,
     targetType: DEBUG_TARGET_TYPES.TAB,
   },
   toolbox: TEST_TOOLBOX,
@@ -76,7 +78,7 @@ const THIS_FIREFOX_TARGET_INFO = {
 const THIS_FIREFOX_NO_NAME_TARGET_INFO = {
   debugTargetData: {
     connectionType: CONNECTION_TYPES.THIS_FIREFOX,
-    deviceDescription: THIS_FIREFOX_DEVICE_DESCRIPTION,
+    runtimeInfo: THIS_FIREFOX_DEVICE_DESCRIPTION,
     targetType: DEBUG_TARGET_TYPES.TAB,
   },
   toolbox: TEST_TOOLBOX_NO_NAME,

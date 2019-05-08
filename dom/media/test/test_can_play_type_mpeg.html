@@ -96,7 +96,12 @@ function check_mp4(v, enabled) {
     check(codec, "probably");
     ok(MediaSource.isTypeSupported(codec), "VP9 in MP4 should be supported in MSE");
   });
-  check("video/mp4; codecs=\"av1\"", "probably");
+
+  if (IsAndroid()) {
+    check("video/mp4; codecs=\"av1\"", "");
+  } else {
+    check("video/mp4; codecs=\"av1\"", "probably");
+  }
 }
 
 function check_mp3(v, enabled) {
@@ -136,6 +141,10 @@ function getPref(name) {
     pref = SpecialPowers.getBoolPref(name);
   } catch(ex) { }
   return pref;
+}
+
+function IsAndroid() {
+  return getAndroidVersion() >= 0;
 }
 
 function IsSupportedAndroid() {

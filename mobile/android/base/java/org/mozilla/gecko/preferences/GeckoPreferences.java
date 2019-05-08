@@ -6,6 +6,7 @@
 package org.mozilla.gecko.preferences;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -154,6 +155,7 @@ public class GeckoPreferences
     private static final String PREFS_FAQ_LINK = NON_PREF_PREFIX + "faq.link";
     private static final String PREFS_FEEDBACK_LINK = NON_PREF_PREFIX + "feedback.link";
     private static final String PREFS_SCREEN_NOTIFICATIONS = NON_PREF_PREFIX + "notifications_screen";
+    private static final String PREFS_NOTIFICATIONS_SETTINGS_LINK = NON_PREF_PREFIX + "notifications.settings_link";
     public static final String PREFS_NOTIFICATIONS_WHATS_NEW = NON_PREF_PREFIX + "notifications.whats_new";
     public static final String PREFS_NOTIFICATIONS_FEATURES_TIPS = NON_PREF_PREFIX + "notifications.features.tips";
     public static final String PREFS_APP_UPDATE_LAST_BUILD_ID = "app.update.last_build_id";
@@ -237,6 +239,7 @@ public class GeckoPreferences
         }
     }
 
+    @SuppressLint("PrivateResource")
     private void updateHomeAsUpIndicator() {
         final ActionBar actionBar = getSupportActionBar();
         if (actionBar == null) {
@@ -843,6 +846,12 @@ public class GeckoPreferences
                     }
                 } else if (PREFS_COMPACT_TABS.equals(key)) {
                     if (HardwareUtils.isTablet()) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_NOTIFICATIONS_SETTINGS_LINK.equals(key)) {
+                    if (!showNotificationSettingsLink()) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -1531,8 +1540,14 @@ public class GeckoPreferences
         return GeckoPreferences.getBooleanPref(context, PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
     }
 
+    private static boolean showNotificationSettingsLink() {
+        // Notification channels are available starting from Oreo.
+        return AppConstants.Versions.feature26Plus;
+    }
+
     private static boolean haveNotificationsPreferences(@NonNull Context context) {
-        return SwitchBoard.isInExperiment(context, Experiments.WHATSNEW_NOTIFICATION) ||
+        return showNotificationSettingsLink() ||
+                SwitchBoard.isInExperiment(context, Experiments.WHATSNEW_NOTIFICATION) ||
                 MmaDelegate.isMmaExperimentEnabled(context);
     }
 }

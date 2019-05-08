@@ -18,10 +18,10 @@ class DebugTargetInfo extends PureComponent {
     return {
       debugTargetData: PropTypes.shape({
         connectionType: PropTypes.oneOf(Object.values(CONNECTION_TYPES)).isRequired,
-        deviceDescription: PropTypes.shape({
-          brandName: PropTypes.string.isRequired,
-          channel: PropTypes.string.isRequired,
+        runtimeInfo: PropTypes.shape({
           deviceName: PropTypes.string,
+          icon: PropTypes.string.isRequired,
+          name: PropTypes.string.isRequired,
           version: PropTypes.string.isRequired,
         }).isRequired,
         targetType: PropTypes.oneOf(Object.values(DEBUG_TARGET_TYPES)).isRequired,
@@ -58,12 +58,12 @@ class DebugTargetInfo extends PureComponent {
 
   getRuntimeText() {
     const { debugTargetData, L10N } = this.props;
-    const { brandName, version } = debugTargetData.deviceDescription;
+    const { name, version } = debugTargetData.runtimeInfo;
     const { connectionType } = debugTargetData;
 
     return (connectionType === CONNECTION_TYPES.THIS_FIREFOX)
       ? L10N.getFormatStr("toolbox.debugTargetInfo.runtimeLabel.thisFirefox", version)
-      : L10N.getFormatStr("toolbox.debugTargetInfo.runtimeLabel", brandName, version);
+      : L10N.getFormatStr("toolbox.debugTargetInfo.runtimeLabel", name, version);
   }
 
   getAssetsForConnectionType() {
@@ -143,18 +143,20 @@ class DebugTargetInfo extends PureComponent {
   }
 
   renderRuntime() {
-    const { channel, deviceName } = this.props.debugTargetData.deviceDescription;
+    if (!this.props.debugTargetData.runtimeInfo) {
+      // Skip the runtime render if no runtimeInfo is available.
+      // Runtime info is retrieved from the remote-client-manager, which might not be
+      // setup if about:devtools-toolbox was not opened from about:debugging.
+      return null;
+    }
 
-    const channelIcon =
-      (channel === "release" || channel === "beta" || channel === "aurora") ?
-      `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg` :
-      "chrome://devtools/skin/images/aboutdebugging-firefox-nightly.svg";
+    const { icon, deviceName } = this.props.debugTargetData.runtimeInfo;
 
     return dom.span(
       {
-        className: "iconized-label",
+        className: "iconized-label qa-runtime-info",
       },
-      dom.img({ src: channelIcon, className: "channel-icon" }),
+      dom.img({ src: icon, className: "channel-icon qa-runtime-icon" }),
       dom.b({ className: "devtools-ellipsis-text" }, this.getRuntimeText()),
       dom.span({ className: "devtools-ellipsis-text" }, deviceName),
     );
