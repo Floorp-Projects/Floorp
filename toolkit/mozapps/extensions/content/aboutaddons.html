@@ -139,14 +139,19 @@
       <div class="addon-detail-row addon-detail-row-rating">
         <label data-l10n-id="addon-detail-rating-label"></label>
         <div class="addon-detail-rating">
-          <span class="addon-detail-rating-star"></span>
-          <span class="addon-detail-rating-star"></span>
-          <span class="addon-detail-rating-star"></span>
-          <span class="addon-detail-rating-star"></span>
-          <span class="addon-detail-rating-star"></span>
+          <five-star-rating></five-star-rating>
           <a target="_blank"></a>
         </div>
       </div>
+    </template>
+
+    <template name="five-star-rating">
+      <link rel="stylesheet" href="chrome://mozapps/content/extensions/rating-star.css">
+      <span class="rating-star"></span>
+      <span class="rating-star"></span>
+      <span class="rating-star"></span>
+      <span class="rating-star"></span>
+      <span class="rating-star"></span>
     </template>
 
     <template name="panel-list">

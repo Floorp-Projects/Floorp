@@ -31,4 +31,5 @@ toolkit.jar:
   content/mozapps/extensions/message-bar.js                     (content/message-bar.js)
   content/mozapps/extensions/panel-list.css                     (content/panel-list.css)
   content/mozapps/extensions/panel-item.css                     (content/panel-item.css)
+  content/mozapps/extensions/rating-star.css                    (content/rating-star.css)
 #endif

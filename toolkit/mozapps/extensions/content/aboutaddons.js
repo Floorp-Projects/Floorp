@@ -576,6 +576,67 @@ class PluginOptions extends HTMLElement {
 }
 customElements.define("plugin-options", PluginOptions);
 
+class FiveStarRating extends HTMLElement {
+  static get observedAttributes() {
+    return ["rating"];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({mode: "open"});
+    this.shadowRoot.append(importTemplate("five-star-rating"));
+  }
+
+  set rating(v) {
+    this.setAttribute("rating", v);
+  }
+
+  get rating() {
+    let v = parseFloat(this.getAttribute("rating"), 10);
+    if (v >= 0 && v <= 5) {
+      return v;
+    }
+    return 0;
+  }
+
+  get ratingBuckets() {
+    // 0    <= x <  0.25 = empty
+    // 0.25 <= x <  0.75 = half
+    // 0.75 <= x <= 1    = full
+    // ... et cetera, until x <= 5.
+    let {rating} = this;
+    return [0, 1, 2, 3, 4].map(ratingStart => {
+      let distanceToFull = rating - ratingStart;
+      if (distanceToFull < 0.25) {
+        return "empty";
+      }
+      if (distanceToFull < 0.75) {
+        return "half";
+      }
+      return "full";
+    });
+  }
+
+  connectedCallback() {
+    this.renderRating();
+  }
+
+  attributeChangedCallback() {
+    this.renderRating();
+  }
+
+  renderRating() {
+    let starElements = this.shadowRoot.querySelectorAll(".rating-star");
+    for (let [i, part] of this.ratingBuckets.entries()) {
+      starElements[i].setAttribute("fill", part);
+    }
+    document.l10n.setAttributes(this, "five-star-rating", {
+      rating: this.rating,
+    });
+  }
+}
+customElements.define("five-star-rating", FiveStarRating);
+
 class AddonDetails extends HTMLElement {
   connectedCallback() {
     if (this.children.length == 0) {
@@ -695,14 +756,7 @@ class AddonDetails extends HTMLElement {
     // Rating.
     let ratingRow = this.querySelector(".addon-detail-row-rating");
     if (addon.averageRating) {
-      let stars = ratingRow.querySelectorAll(".addon-detail-rating-star");
-      for (let i = 0; i < stars.length; i++) {
-        let fill = "";
-        if (addon.averageRating > i) {
-          fill = addon.averageRating > i + 0.5 ? "full" : "half";
-        }
-        stars[i].setAttribute("fill", fill);
-      }
+      ratingRow.querySelector("five-star-rating").rating = addon.averageRating;
       let reviews = ratingRow.querySelector("a");
       reviews.href = addon.reviewURL;
       document.l10n.setAttributes(reviews, "addon-detail-reviews-link", {
