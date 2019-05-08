@@ -87,16 +87,8 @@ static void DebuggerObject_trace(JSTracer* trc, JSObject* obj);
 static void DebuggerScript_trace(JSTracer* trc, JSObject* obj);
 static void DebuggerSource_trace(JSTracer* trc, JSObject* obj);
 
-enum {
-  JSSLOT_DEBUGFRAME_OWNER,
-  JSSLOT_DEBUGFRAME_ARGUMENTS,
-  JSSLOT_DEBUGFRAME_ONSTEP_HANDLER,
-  JSSLOT_DEBUGFRAME_ONPOP_HANDLER,
-  JSSLOT_DEBUGFRAME_COUNT
-};
-
 inline js::Debugger* js::DebuggerFrame::owner() const {
-  JSObject* dbgobj = &getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).toObject();
+  JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
   return Debugger::fromJSObject(dbgobj);
 }
 
@@ -114,7 +106,7 @@ const ClassOps DebuggerFrame::classOps_ = {nullptr, /* addProperty */
 
 const Class DebuggerFrame::class_ = {
     "Frame",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGFRAME_COUNT) |
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
         JSCLASS_BACKGROUND_FINALIZE,
     &DebuggerFrame::classOps_};
 
@@ -651,13 +643,13 @@ Debugger::~Debugger() {
   }
 }
 
-JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGFRAME_OWNER) ==
+JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
                  unsigned(JSSLOT_DEBUGSCRIPT_OWNER));
-JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGFRAME_OWNER) ==
+JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
                  unsigned(JSSLOT_DEBUGSOURCE_OWNER));
-JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGFRAME_OWNER) ==
+JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
                  unsigned(JSSLOT_DEBUGOBJECT_OWNER));
-JS_STATIC_ASSERT(unsigned(JSSLOT_DEBUGFRAME_OWNER) ==
+JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
                  unsigned(DebuggerEnvironment::OWNER_SLOT));
 
 /* static */
@@ -2379,7 +2371,7 @@ ResumeMode Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp) {
             continue;
           }
           if (frame.script() == trappingScript &&
-              !frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER)
+              !frameobj->getReservedSlot(DebuggerFrame::ONSTEP_HANDLER_SLOT)
                    .isUndefined()) {
             liveStepperCount++;
           }
@@ -2423,7 +2415,7 @@ ResumeMode Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp) {
 
           if (!genObj.callee().isInterpretedLazy() &&
               genObj.callee().nonLazyScript() == trappingScript &&
-              !frameObj.getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER)
+              !frameObj.getReservedSlot(DebuggerFrame::ONSTEP_HANDLER_SLOT)
                    .isUndefined()) {
             suspendedStepperCount++;
           }
@@ -8966,8 +8958,8 @@ bool DebuggerFrame::resume(const FrameIter& iter) {
 }
 
 bool DebuggerFrame::hasAnyLiveHooks() const {
-  return !getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() ||
-         !getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER).isUndefined();
+  return !getReservedSlot(ONSTEP_HANDLER_SLOT).isUndefined() ||
+         !getReservedSlot(ONPOP_HANDLER_SLOT).isUndefined();
 }
 
 /* static */
@@ -8992,7 +8984,7 @@ DebuggerFrame* DebuggerFrame::create(JSContext* cx, HandleObject proto,
   }
   frame->setPrivate(data);
 
-  frame->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*debugger));
+  frame->setReservedSlot(OWNER_SLOT, ObjectValue(*debugger));
 
   return frame;
 }
@@ -9279,7 +9271,7 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
   }
 
   // Now that the step mode switch has succeeded, we can install the handler.
-  frame->setReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER,
+  frame->setReservedSlot(ONSTEP_HANDLER_SLOT,
                          handler ? PrivateValue(handler) : UndefinedValue());
   return true;
 }
@@ -9287,7 +9279,7 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
 /* static */
 bool DebuggerFrame::getArguments(JSContext* cx, HandleDebuggerFrame frame,
                                  MutableHandleDebuggerArguments result) {
-  Value argumentsv = frame->getReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS);
+  Value argumentsv = frame->getReservedSlot(ARGUMENTS_SLOT);
   if (!argumentsv.isUndefined()) {
     result.set(argumentsv.isObject()
                    ? &argumentsv.toObject().as<DebuggerArguments>()
@@ -9313,8 +9305,7 @@ bool DebuggerFrame::getArguments(JSContext* cx, HandleDebuggerFrame frame,
   }
 
   result.set(arguments);
-  frame->setReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS,
-                         ObjectOrNullValue(result));
+  frame->setReservedSlot(ARGUMENTS_SLOT, ObjectOrNullValue(result));
   return true;
 }
 
@@ -9506,13 +9497,13 @@ bool DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame,
 bool DebuggerFrame::isLive() const { return !!getPrivate(); }
 
 OnStepHandler* DebuggerFrame::onStepHandler() const {
-  Value value = getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER);
+  Value value = getReservedSlot(ONSTEP_HANDLER_SLOT);
   return value.isUndefined() ? nullptr
                              : static_cast<OnStepHandler*>(value.toPrivate());
 }
 
 OnPopHandler* DebuggerFrame::onPopHandler() const {
-  Value value = getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER);
+  Value value = getReservedSlot(ONPOP_HANDLER_SLOT);
   return value.isUndefined() ? nullptr
                              : static_cast<OnPopHandler*>(value.toPrivate());
 }
@@ -9525,7 +9516,7 @@ void DebuggerFrame::setOnPopHandler(OnPopHandler* handler) {
     prior->drop();
   }
 
-  setReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER,
+  setReservedSlot(ONPOP_HANDLER_SLOT,
                   handler ? PrivateValue(handler) : UndefinedValue());
 }
 
@@ -9580,7 +9571,7 @@ void DebuggerFrame::freeFrameIterData(FreeOp* fop) {
 static void DebuggerFrame_maybeDecrementFrameScriptStepModeCount(
     FreeOp* fop, AbstractFramePtr frame, NativeObject* frameobj) {
   // If this frame has an onStep handler, decrement the script's count.
-  if (frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER)
+  if (frameobj->getReservedSlot(DebuggerFrame::ONSTEP_HANDLER_SLOT)
           .isUndefined()) {
     return;
   }
@@ -9640,7 +9631,7 @@ static DebuggerFrame* DebuggerFrame_checkThis(JSContext* cx,
   // is distinguished by having a nullptr private value. Also, forbid popped
   // frames.
   if (!frame->getPrivate() &&
-      frame->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).isUndefined()) {
+      frame->getReservedSlot(DebuggerFrame::OWNER_SLOT).isUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Frame",
                               fnname, "prototype object");
