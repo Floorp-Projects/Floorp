@@ -51,8 +51,8 @@ if CONFIG['MOZ_DAV1D_ASM']:
                 CFLAGS += ['-mpreferred-stack-boundary=4']
                 for ep in entrypoint_source_files:
                     SOURCES[ep].flags += ['-mincoming-stack-boundary=2']
-    elif CONFIG['CPU_ARCH'] == 'x86_64':
-        # The default stack alignment in x86_64 is 16 bytes.
+    elif CONFIG['CPU_ARCH'] in ('x86_64', 'aarch64'):
+        # The default stack alignment is 16 bytes.
         stack_alignment = 16
     else:
         error('Cpu arch %s is not expected' % CONFIG['CPU_ARCH'])
