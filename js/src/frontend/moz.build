@@ -27,6 +27,7 @@ UNIFIED_SOURCES += [
     'BytecodeCompiler.cpp',
     'BytecodeControlStructures.cpp',
     'BytecodeEmitter.cpp',
+    'BytecodeSection.cpp',
     'CallOrNewEmitter.cpp',
     'CForEmitter.cpp',
     'DefaultEmitter.cpp',
