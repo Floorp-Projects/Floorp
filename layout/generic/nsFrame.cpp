@@ -4249,7 +4249,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
 
   if (!mouseEvent->IsAlt()) {
     for (nsIContent* content = mContent; content;
-         content = content->GetParent()) {
+         content = content->GetFlattenedTreeParent()) {
       if (nsContentUtils::ContentIsDraggable(content) &&
           !content->IsEditable()) {
         // coordinate stuff is the fix for bug #55921

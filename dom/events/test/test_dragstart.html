@@ -68,6 +68,9 @@ function afterDragTests()
 //  synthesizeMouse(draggable, 15, 15, { type: "mousemove" });
 //  sendMouseEventsForDrag("input");
 
+  // draggable element inside a shadow root
+  sendMouseEventsForShadowRootDrag();
+
   // next, check if the draggable attribute can be used to adjust the drag target
   gDragInfo = { target: $("dragtrue"), testid: "draggable true node" };
   sendMouseEventsForDrag("dragtrue");
@@ -79,13 +82,20 @@ function afterDragTests()
   sendMouseEventsForDrag("spanfalse");
 
   synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
-  if (gExtraDragTests == 4)
+  if (gExtraDragTests == 5)
     SimpleTest.finish();
 }
 
 function sendMouseEventsForDrag(nodeid)
 {
   var draggable = $(nodeid);
+  synthesizeMouse(draggable, 3, 3, { type: "mousedown" });
+  synthesizeMouse(draggable, 10, 10, { type: "mousemove" });
+  synthesizeMouse(draggable, 12, 12, { type: "mousemove" });
+}
+function sendMouseEventsForShadowRootDrag()
+{
+  var draggable = $("shadow_host_containing_draggable").shadowRoot.firstElementChild;
   synthesizeMouse(draggable, 3, 3, { type: "mousedown" });
   synthesizeMouse(draggable, 10, 10, { type: "mousemove" });
   synthesizeMouse(draggable, 12, 12, { type: "mousemove" });
@@ -454,6 +464,18 @@ function doDragStartInput(event)
 //  event.preventDefault();
 }
 
+
+function doDragStartInShadowRoot(event)
+{
+  is(event.type, "dragstart", "shadow root dragstart event type");
+  is(event.target, $("shadow_host_containing_draggable"), "shadow root dragstart event target");
+  is(event.bubbles, true, "shadow root dragstart event bubbles");
+  is(event.cancelable, true, "shadow root dragstart event cancelable");
+
+  event.preventDefault();
+
+  gExtraDragTests++;
+}
 function doDragStartSynthetic(event)
 {
   is(event.type, "dragstart", "synthetic dragstart event type");
@@ -596,5 +618,13 @@ function expectError(fn, eid, testid)
 <div id="synthetic" ondragstart="doDragStartSynthetic(event)">Synthetic Event Dispatch</div>
 <div id="synthetic2" ondragover="doDragOverSynthetic(event)">Synthetic Event Dispatch</div>
 
+<div draggable="true" id="shadow_host_containing_draggable"></div>
+
+<script>
+shadow_host_containing_draggable.attachShadow({ mode: 'open' }).innerHTML = 
+`<span>Inside shadow root</span>`;
+shadow_host_containing_draggable.addEventListener("dragstart", doDragStartInShadowRoot);
+
+</script>
 </body>
 </html>
