@@ -22,6 +22,8 @@ class RemoteSpellcheckEngineChild
   RefPtr<GenericPromise> SetCurrentDictionaryFromList(
       const nsTArray<nsString>& aList);
 
+  RefPtr<CheckWordPromise> CheckWords(const nsTArray<nsString>& aWords);
+
  private:
   mozSpellChecker* mOwner;
 };
