@@ -14,7 +14,6 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES['services-settings'] += [
-    'Attachments.jsm',
     'remote-settings.js',
     'RemoteSettingsClient.jsm',
     'RemoteSettingsComponents.jsm',
