@@ -1325,8 +1325,9 @@ nsresult WSRunObject::DeleteRange(
 
   if (aStartPoint.GetContainer() == aEndPoint.GetContainer() &&
       aStartPoint.IsInTextNode()) {
+    RefPtr<Text> textNode = aStartPoint.GetContainerAsText();
     return htmlEditor->DeleteTextWithTransaction(
-        *aStartPoint.GetContainerAsText(), aStartPoint.Offset(),
+        *textNode, aStartPoint.Offset(),
         aEndPoint.Offset() - aStartPoint.Offset());
   }
 

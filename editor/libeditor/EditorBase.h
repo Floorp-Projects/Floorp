@@ -1287,6 +1287,7 @@ class EditorBase : public nsIEditor,
    * @param aOffset             Start offset of removing text in aCharData.
    * @param aLength             Length of removing text.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteTextWithTransaction(dom::CharacterData& aCharacterData,
                                      uint32_t aOffset, uint32_t aLength);
 
