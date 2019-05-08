@@ -32,5 +32,5 @@ async function openTextBoxContextMenu(toolbox, element) {
   const onConsoleMenuOpened = toolbox.once("menu-open");
   synthesizeContextMenuEvent(element);
   await onConsoleMenuOpened;
-  return toolbox.doc.getElementById("toolbox-menu");
+  return toolbox.getTextBoxContextMenu();
 }

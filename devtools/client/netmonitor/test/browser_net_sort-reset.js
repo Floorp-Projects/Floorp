@@ -17,7 +17,7 @@ add_task(async function() {
   // of the heavy dom manipulation associated with sorting.
   requestLongerTimeout(2);
 
-  const { parent, document, store, windowRequire } = monitor.panelWin;
+  const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   const {
     getDisplayedRequests,
@@ -69,7 +69,7 @@ add_task(async function() {
   info("Testing sort reset using context menu 'Reset Sorting'");
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelector("#requests-list-contentSize-button"));
-  parent.document.querySelector("#request-list-header-reset-sorting").click();
+  getContextMenuItem(monitor, "request-list-header-reset-sorting").click();
   testHeaders();
   await testContents([0, 2, 4, 3, 1]);
 
@@ -78,7 +78,7 @@ add_task(async function() {
   info("Testing sort reset using context menu 'Reset Columns'");
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelector("#requests-list-contentSize-button"));
-  parent.document.querySelector("#request-list-header-reset-columns").click();
+  getContextMenuItem(monitor, "request-list-header-reset-columns").click();
   testHeaders();
   // add columns because verifyRequestItemTarget expects some extra columns
   showColumn(monitor, "protocol");

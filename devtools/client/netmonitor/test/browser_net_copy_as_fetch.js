@@ -53,8 +53,8 @@ add_task(async function() {
       document.querySelectorAll(".request-list-item")[0]);
 
     /* Ensure that the copy as fetch option is always visible */
-    const copyAsFetchNode = monitor.panelWin.parent.document
-      .querySelector("#request-list-context-copy-as-fetch");
+    const copyAsFetchNode = getContextMenuItem(monitor,
+      "request-list-context-copy-as-fetch");
     is(!!copyAsFetchNode, true,
       "The \"Copy as Fetch\" context menu item should not be hidden.");
 

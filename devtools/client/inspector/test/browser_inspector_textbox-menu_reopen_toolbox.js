@@ -31,7 +31,7 @@ async function checkContextMenuOnSearchbox(inspector, toolbox) {
   synthesizeContextMenuEvent(searchbox);
   await onContextMenu;
 
-  const textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  const textboxContextMenu = toolbox.getTextBoxContextMenu();
   info("Wait until menu items are rendered");
   const pasteElement = textboxContextMenu.querySelector("#editmenu-paste");
   await waitUntil(() => !!pasteElement.getAttribute("label"));

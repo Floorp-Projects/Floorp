@@ -110,11 +110,13 @@ window.onload = async function() {
     renderAccessibilityRow(defaultProps, defaultState);
     let row = document.getElementById(ROW_ID);
 
+    info("Get topmost document where the context meny will be rendered");
+    const menuDoc = document.defaultView.windowRoot.ownerGlobal.document;
     await withMockEnv(async function() {
       Simulate.contextMenu(row);
 
-      const menu = document.getElementById("accessibility-row-contextmenu");
-      const printtojsonMenuItem = document.getElementById("menu-printtojson");
+      const menu = menuDoc.getElementById("accessibility-row-contextmenu");
+      const printtojsonMenuItem = menuDoc.getElementById("menu-printtojson");
 
       ok(menu, "Accessibility row context menu is open");
       ok(printtojsonMenuItem, "Print to JSON menu item is visible");
@@ -149,7 +151,7 @@ window.onload = async function() {
 
     info("Check contextmenu listener is not called when context menu is not supported.");
     Simulate.contextMenu(row);
-    let menu = document.getElementById("accessibility-row-contextmenu");
+    let menu = menuDoc.getElementById("accessibility-row-contextmenu");
     ok(!menu, "contextmenu event handler was never called.");
 
     info("Check accessibility row when no context menu is available.");
@@ -157,7 +159,7 @@ window.onload = async function() {
     row = document.getElementById(ROW_ID);
 
     Simulate.contextMenu(row);
-    menu = document.getElementById("accessibility-row-contextmenu");
+    menu = menuDoc.getElementById("accessibility-row-contextmenu");
     ok(!menu, "contextmenu event handler was never called.");
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
