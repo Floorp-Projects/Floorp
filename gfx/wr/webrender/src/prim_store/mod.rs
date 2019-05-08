@@ -162,7 +162,7 @@ impl<F, T> CoordinateSpaceMapping<F, T> {
                 CoordinateSpaceMapping::Transform(
                     relative.flattened.with_source::<F>().with_destination::<T>()
                 ),
-                relative.visible_face,
+                VisibleFace::from_bool(relative.flattened.is_backface_visible())
             )
         }
     }
@@ -3088,7 +3088,7 @@ impl PrimitiveStore {
                     if let Some(ref mut splitter) = pic_state.plane_splitter {
                         PicturePrimitive::add_split_plane(
                             splitter,
-                            frame_state.transforms,
+                            frame_context.clip_scroll_tree,
                             prim_instance.spatial_node_index,
                             pic.snapped_local_rect,
                             &prim_info.combined_local_clip_rect,

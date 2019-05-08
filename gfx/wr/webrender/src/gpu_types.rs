@@ -470,7 +470,7 @@ struct RelativeTransformKey {
 //           specifying a coordinate system that the transform
 //           should be relative to.
 pub struct TransformPalette {
-    pub transforms: Vec<TransformData>,
+    transforms: Vec<TransformData>,
     metadata: Vec<TransformMetadata>,
     map: FastHashMap<RelativeTransformKey, usize>,
 }
@@ -483,6 +483,10 @@ impl TransformPalette {
             metadata: Vec::new(),
             map: FastHashMap::default(),
         }
+    }
+
+    pub fn finish(self) -> Vec<TransformData> {
+        self.transforms
     }
 
     pub fn allocate(&mut self, count: usize) {
@@ -543,24 +547,6 @@ impl TransformPalette {
                     )
                 })
         }
-    }
-
-    pub fn get_world_transform(
-        &self,
-        index: SpatialNodeIndex,
-    ) -> LayoutToWorldTransform {
-        self.transforms[index.0 as usize]
-            .transform
-            .with_destination::<WorldPixel>()
-    }
-
-    pub fn get_world_inv_transform(
-        &self,
-        index: SpatialNodeIndex,
-    ) -> WorldToLayoutTransform {
-        self.transforms[index.0 as usize]
-            .inv_transform
-            .with_source::<WorldPixel>()
     }
 
     // Get a transform palette id for the given spatial node.

@@ -92,6 +92,17 @@ impl ops::Not for VisibleFace {
     }
 }
 
+impl VisibleFace {
+    /// A convenient constructor from methods like `is_backface_visible()`
+    pub fn from_bool(is_backface: bool) -> Self {
+        if is_backface {
+            VisibleFace::Back
+        } else {
+            VisibleFace::Front
+        }
+    }
+}
+
 pub struct ClipScrollTree {
     /// Nodes which determine the positions (offsets and transforms) for primitives
     /// and clips.
@@ -142,10 +153,8 @@ pub struct TransformUpdateState {
 pub struct RelativeTransform<U> {
     /// The flattened transform, produces Z = 0 at all times.
     pub flattened: TypedTransform3D<f32, LayoutPixel, U>,
-    /// Visible face of the original transform.
-    pub visible_face: VisibleFace,
     /// True if the original transform had perspective.
-    pub is_perspective: bool,
+    pub has_perspective: bool,
 }
 
 impl ClipScrollTree {
@@ -198,9 +207,7 @@ impl ClipScrollTree {
         assert!(child_index.0 >= parent_index.0);
         let child = &self.spatial_nodes[child_index.0 as usize];
         let parent = &self.spatial_nodes[parent_index.0 as usize];
-
-        let mut visible_face = VisibleFace::Front;
-        let mut is_perspective = false;
+        let mut has_perspective = false;
 
         if child.coordinate_system_id == parent.coordinate_system_id {
             return RelativeTransform {
@@ -208,8 +215,7 @@ impl ClipScrollTree {
                     .inverse()
                     .accumulate(&child.coordinate_system_relative_scale_offset)
                     .to_transform(),
-                visible_face,
-                is_perspective,
+                has_perspective,
             }
         }
 
@@ -223,17 +229,16 @@ impl ClipScrollTree {
 
         while coordinate_system_id != parent.coordinate_system_id {
             let coord_system = &self.coord_systems[coordinate_system_id.0 as usize];
-            let transform_style_changed = coord_system.transform_style != transform_style;
 
             if coord_system.transform_style == TransformStyle::Flat {
-                is_perspective |= transform.has_perspective_component();
-                if transform_style_changed {
+                has_perspective |= transform.has_perspective_component();
+                if transform_style != TransformStyle::Flat {
                     //Note: this function makes the transform to ignore the Z coordinate of inputs
                     // *even* for computing the X and Y coordinates of the output.
                     //transform = transform.project_to_2d();
                     transform.m13 = 0.0;
                     transform.m23 = 0.0;
-                    transform.m33 = 0.0;
+                    transform.m33 = 1.0;
                     transform.m43 = 0.0;
                 }
             }
@@ -243,24 +248,17 @@ impl ClipScrollTree {
             transform_style = coord_system.transform_style;
         }
 
-        visible_face = if transform.is_backface_visible() {
-            VisibleFace::Back
-        } else {
-            VisibleFace::Front
-        };
-
-        is_perspective |= transform.has_perspective_component();
+        has_perspective |= transform.has_perspective_component();
 
         transform = transform.post_mul(
             &parent.coordinate_system_relative_scale_offset
                 .inverse()
-                .to_transform()
+                .to_transform(),
         );
 
         RelativeTransform {
             flattened: transform,
-            visible_face,
-            is_perspective,
+            has_perspective,
         }
     }
 
@@ -272,8 +270,7 @@ impl ClipScrollTree {
         let relative = self.get_relative_transform(index, ROOT_SPATIAL_NODE_INDEX);
         RelativeTransform {
             flattened: relative.flattened.with_destination::<WorldPixel>(),
-            visible_face: relative.visible_face,
-            is_perspective: relative.is_perspective,
+            has_perspective: relative.has_perspective,
         }
     }
 
@@ -582,8 +579,12 @@ impl ClipScrollTree {
             Some(index) => index,
             None => return VisibleFace::Front
         };
-        self.get_relative_transform(node_index, parent_index)
-            .visible_face
+        VisibleFace::from_bool(
+            self
+                .get_relative_transform(node_index, parent_index)
+                .flattened
+                .is_backface_visible()
+        )
     }
 
     #[allow(dead_code)]
