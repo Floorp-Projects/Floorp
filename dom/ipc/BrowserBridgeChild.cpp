@@ -26,38 +26,6 @@ BrowserBridgeChild::BrowserBridgeChild(nsFrameLoader* aFrameLoader,
 
 BrowserBridgeChild::~BrowserBridgeChild() {}
 
-void BrowserBridgeChild::UpdateDimensions(const nsIntRect& aRect,
-                                          const mozilla::ScreenIntSize& aSize) {
-  MOZ_DIAGNOSTIC_ASSERT(mIPCOpen);
-
-  RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
-  nsCOMPtr<nsIWidget> widget = nsContentUtils::WidgetForContent(owner);
-  if (!widget) {
-    widget = nsContentUtils::WidgetForDocument(owner->OwnerDoc());
-  }
-  MOZ_DIAGNOSTIC_ASSERT(widget);
-
-  CSSToLayoutDeviceScale widgetScale = widget->GetDefaultScale();
-
-  LayoutDeviceIntRect devicePixelRect = ViewAs<LayoutDevicePixel>(
-      aRect, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
-  LayoutDeviceIntSize devicePixelSize = ViewAs<LayoutDevicePixel>(
-      aSize, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
-
-  // XXX What are clientOffset and chromeOffset used for? Are they meaningful
-  // for nested iframes with transforms?
-  LayoutDeviceIntPoint clientOffset;
-  LayoutDeviceIntPoint chromeOffset;
-
-  CSSRect unscaledRect = devicePixelRect / widgetScale;
-  CSSSize unscaledSize = devicePixelSize / widgetScale;
-  hal::ScreenOrientation orientation = hal::eScreenOrientation_Default;
-  DimensionInfo di(unscaledRect, unscaledSize, orientation, clientOffset,
-                   chromeOffset);
-
-  Unused << SendUpdateDimensions(di);
-}
-
 void BrowserBridgeChild::NavigateByKey(bool aForward,
                                        bool aForDocumentNavigation) {
   Unused << SendNavigateByKey(aForward, aForDocumentNavigation);
