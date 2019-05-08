@@ -238,7 +238,7 @@ StyleInspectorMenu.prototype = {
     });
     menu.append(menuitemSources);
 
-    menu.popup(screenX, screenY, this.inspector.toolbox.doc);
+    menu.popup(screenX, screenY, this.inspector._toolbox);
     return menu;
   },
 
