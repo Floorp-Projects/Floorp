@@ -9533,9 +9533,8 @@ void DebuggerFrame::setOnPopHandler(OnPopHandler* handler) {
                   handler ? PrivateValue(handler) : UndefinedValue());
 }
 
-static bool DebuggerFrame_requireLive(JSContext* cx,
-                                      HandleDebuggerFrame frame) {
-  if (!frame->isLive()) {
+bool DebuggerFrame::requireLive(JSContext* cx) {
+  if (!isLive()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_DEBUG_NOT_LIVE, "Debugger.Frame");
     return false;
@@ -9623,15 +9622,14 @@ void DebuggerFrame::trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
-static DebuggerFrame* DebuggerFrame_checkThis(JSContext* cx,
-                                              const CallArgs& args,
-                                              const char* fnname,
-                                              bool checkLive) {
+/* static */
+DebuggerFrame* DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args,
+                                        const char* fnname, bool checkLive) {
   JSObject* thisobj = NonNullObject(cx, args.thisv());
   if (!thisobj) {
     return nullptr;
   }
-  if (thisobj->getClass() != &DebuggerFrame::class_) {
+  if (thisobj->getClass() != &class_) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Frame",
                               fnname, thisobj->getClass()->name);
@@ -9645,7 +9643,7 @@ static DebuggerFrame* DebuggerFrame_checkThis(JSContext* cx,
   // is distinguished by having a nullptr private value. Also, forbid popped
   // frames.
   if (!frame->getPrivate() &&
-      frame->getReservedSlot(DebuggerFrame::OWNER_SLOT).isUndefined()) {
+      frame->getReservedSlot(OWNER_SLOT).isUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Frame",
                               fnname, "prototype object");
@@ -9653,7 +9651,7 @@ static DebuggerFrame* DebuggerFrame_checkThis(JSContext* cx,
   }
 
   if (checkLive) {
-    if (!DebuggerFrame_requireLive(cx, frame)) {
+    if (!frame->requireLive(cx)) {
       return nullptr;
     }
   }
@@ -9667,10 +9665,10 @@ static DebuggerFrame* DebuggerFrame_checkThis(JSContext* cx,
  *
  * Methods that need the AbstractFramePtr should use THIS_FRAME.
  */
-#define THIS_DEBUGGER_FRAME(cx, argc, vp, fnname, args, frame)                \
-  CallArgs args = CallArgsFromVp(argc, vp);                                   \
-  RootedDebuggerFrame frame(cx,                                               \
-                            DebuggerFrame_checkThis(cx, args, fnname, true)); \
+#define THIS_DEBUGGER_FRAME(cx, argc, vp, fnname, args, frame)                 \
+  CallArgs args = CallArgsFromVp(argc, vp);                                    \
+  RootedDebuggerFrame frame(cx,                                                \
+                            DebuggerFrame::checkThis(cx, args, fnname, true)); \
   if (!frame) return false;
 
 #define THIS_FRAME(cx, argc, vp, fnname, args, thisobj, iter, frame) \
@@ -9974,8 +9972,7 @@ bool DebuggerFrame::offsetGetter(JSContext* cx, unsigned argc, Value* vp) {
 /* static */
 bool DebuggerFrame::liveGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedDebuggerFrame frame(
-      cx, DebuggerFrame_checkThis(cx, args, "get live", false));
+  RootedDebuggerFrame frame(cx, checkThis(cx, args, "get live", false));
   if (!frame) {
     return false;
   }
