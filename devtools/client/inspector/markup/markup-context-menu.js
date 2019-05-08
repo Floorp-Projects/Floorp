@@ -768,7 +768,8 @@ class MarkupContextMenu {
     const hasA11YProps = await this.walker.hasAccessibilityProperties(
       this.selection.nodeFront);
     if (hasA11YProps) {
-      this.toolbox.doc.getElementById(menuItem.id).disabled = menuItem.disabled = false;
+      const menuItemEl = Menu.getMenuElementById(menuItem.id, this.toolbox.doc);
+      menuItemEl.disabled = menuItem.disabled = false;
     }
 
     this.inspector.emit("node-menu-updated");
