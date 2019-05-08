@@ -78,9 +78,9 @@ class PromptFeature(
     private val activity: Activity? = null,
     private val fragment: Fragment? = null,
     private val sessionManager: SessionManager,
+    private var sessionId: String? = null,
     private val fragmentManager: FragmentManager,
     private val onNeedToRequestPermissions: OnNeedToRequestPermissions
-
 ) : LifecycleAwareFeature {
 
     init {
@@ -101,7 +101,7 @@ class PromptFeature(
      * and displays a dialog when needed.
      */
     override fun start() {
-        observer.observeSelected()
+        observer.observeIdOrSelected(sessionId)
 
         fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
             // There's still a [PromptDialogFragment] visible from the last time. Re-attach this feature so that the

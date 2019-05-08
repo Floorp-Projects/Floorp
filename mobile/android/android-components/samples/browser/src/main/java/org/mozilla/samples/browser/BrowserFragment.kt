@@ -117,6 +117,7 @@ class BrowserFragment : Fragment(), BackHandler {
             feature = PromptFeature(
                 fragment = this,
                 sessionManager = components.sessionManager,
+                sessionId = sessionId,
                 fragmentManager = requireFragmentManager(),
                 onNeedToRequestPermissions = { permissions ->
                     requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
@@ -130,6 +131,7 @@ class BrowserFragment : Fragment(), BackHandler {
             feature = SitePermissionsFeature(
                 context = requireContext(),
                 sessionManager = components.sessionManager,
+                sessionId = sessionId,
                 fragmentManager = requireFragmentManager()
             ) { permissions ->
                 requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)

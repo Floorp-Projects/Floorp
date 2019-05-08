@@ -47,6 +47,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
@@ -70,7 +71,26 @@ class PromptFeatureTest {
         mockFragmentManager = mockFragmentManager()
 
         mockSessionManager = Mockito.spy(SessionManager(engine))
-        promptFeature = PromptFeature(null, mock(), mockSessionManager, mockFragmentManager) { }
+        promptFeature = PromptFeature(null, mock(), mockSessionManager, null, mockFragmentManager) { }
+    }
+
+    @Test
+    fun `PromptFeatures act on a given session or the selected session`() {
+        val session = Session("custom-tab")
+        `when`(mockSessionManager.findSessionById(session.id)).thenReturn(session)
+
+        promptFeature = PromptFeature(null, mock(), mockSessionManager, session.id, mockFragmentManager) { }
+        promptFeature.start()
+
+        verify(mockSessionManager).findSessionById(session.id)
+
+        val selected = Session("browser-tab")
+        `when`(mockSessionManager.selectedSession).thenReturn(selected)
+
+        promptFeature = PromptFeature(null, mock(), mockSessionManager, null, mockFragmentManager) { }
+        promptFeature.start()
+
+        verify(mockSessionManager).selectedSession
     }
 
     @Test
@@ -113,7 +133,7 @@ class PromptFeatureTest {
         mockFragmentManager = mock()
         doReturn(fragment).`when`(mockFragmentManager).findFragmentByTag(any())
 
-        promptFeature = PromptFeature(mock(), null, mockSessionManager, mockFragmentManager) { }
+        promptFeature = PromptFeature(mock(), null, mockSessionManager, null, mockFragmentManager) { }
 
         promptFeature.start()
         verify(fragment).feature = promptFeature
@@ -134,7 +154,7 @@ class PromptFeatureTest {
         doReturn(transaction).`when`(fragmentManager).beginTransaction()
         doReturn(transaction).`when`(transaction).remove(fragment)
 
-        val feature = PromptFeature(null, mock(), mockSessionManager, fragmentManager) { }
+        val feature = PromptFeature(null, mock(), mockSessionManager, null, fragmentManager) { }
 
         feature.start()
         verify(fragmentManager).beginTransaction()
@@ -153,7 +173,7 @@ class PromptFeatureTest {
         doReturn(transaction).`when`(fragmentManager).beginTransaction()
         doReturn(transaction).`when`(transaction).remove(fragment)
 
-        val feature = PromptFeature(mock(), mock(), mockSessionManager, fragmentManager) { }
+        val feature = PromptFeature(mock(), mock(), mockSessionManager, null, fragmentManager) { }
 
         feature.start()
         verify(fragmentManager).beginTransaction()
@@ -472,7 +492,7 @@ class PromptFeatureTest {
 
     @Test(expected = IllegalStateException::class)
     fun `Initializing a PromptFeature without giving an activity or fragment reference will throw an exception`() {
-        promptFeature = PromptFeature(null, null, mockSessionManager, mockFragmentManager) { }
+        promptFeature = PromptFeature(null, null, mockSessionManager, null, mockFragmentManager) { }
     }
 
     @Test
@@ -482,12 +502,12 @@ class PromptFeatureTest {
         val intent = Intent()
         val code = 1
 
-        promptFeature = PromptFeature(mockActivity, null, mockSessionManager, mockFragmentManager) { }
+        promptFeature = PromptFeature(mockActivity, null, mockSessionManager, null, mockFragmentManager) { }
 
         promptFeature.startActivityForResult(intent, code)
         verify(mockActivity).startActivityForResult(intent, code)
 
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) { }
+        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) { }
 
         promptFeature.startActivityForResult(intent, code)
         verify(mockFragment).startActivityForResult(intent, code)
@@ -502,7 +522,7 @@ class PromptFeatureTest {
         val filePickerRequest = PromptRequest.File(emptyArray(), false, { _, _ -> }, { _, _ -> }) {}
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) {
+        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) {
             onRequestPermissionWasCalled = true
         }
 
@@ -521,7 +541,7 @@ class PromptFeatureTest {
         val filePickerRequest = PromptRequest.File(emptyArray(), false, { _, _ -> }, { _, _ -> }) {}
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) {
+        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) {
             onRequestPermissionWasCalled = true
         }
 
@@ -555,7 +575,7 @@ class PromptFeatureTest {
     @Test
     fun `buildFileChooserIntent with allowMultipleFiles true and not empty mimeTypes will create an intent with EXTRA_ALLOW_MULTIPLE and EXTRA_MIME_TYPES`() {
 
-        promptFeature = PromptFeature(null, mock(), mockSessionManager, mockFragmentManager) { }
+        promptFeature = PromptFeature(null, mock(), mockSessionManager, null, mockFragmentManager) { }
 
         val intent = promptFeature.buildFileChooserIntent(true, arrayOf("image/jpeg"))
 
@@ -1006,6 +1026,6 @@ class PromptFeatureTest {
 
         doReturn(context).`when`(mockFragment).requireContext()
 
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, mockFragmentManager) {}
+        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) {}
     }
 }

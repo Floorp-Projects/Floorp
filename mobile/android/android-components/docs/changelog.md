@@ -135,6 +135,11 @@ permalink: /changelog/
   accountManager.register(accountObserver, owner = this, autoPause = true)
   accountManager.registerForDeviceEvents(deviceEventsObserver, owner = this, autoPause = true)
   ```
+  
+* **feature-prompts**
+  * ⚠️ **This is a breaking API change**:
+  * `PromptFeature` constructor adds an optional `sessionId`. This should use the custom tab session id if available. 
+
 
 # 0.51.0
 
