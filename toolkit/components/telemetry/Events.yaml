@@ -74,6 +74,22 @@ activity_stream:
       session_id: The ID of the Activity Stream session in which the event occurred
       page: about:home or about_newtab - the page where the event occurred
       user_prefs: An integer representaing a user's A-S settings.
+  enroll:
+    objects: ["preference_study"]
+    release_channel_collection: opt-out
+    description: >
+      Sent when a user gets enrolled in a preference study.
+    bug_numbers: [1549784]
+    notification_emails:
+      - "najiang@mozilla.com"
+      - "edilee@mozilla.com"
+    record_in_processes: ["main"]
+    expiry_version: never
+    extra_keys:
+      experimentType: >
+        For preference_study recipes, the type of experiment this is ("exp" or "exp-highpop").
+      branch: >
+        For preference_study recipes, the slug of the branch that was chosen for this client.
 
 addonsManager:
   install:
