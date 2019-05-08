@@ -101,9 +101,10 @@ static void SimpleParseKeyValuePairs(
 #if defined(XP_WIN)
 namespace {
 nsresult GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
-                    nsAutoCString& aRevision) {
+                    nsAutoCString& aRevision, nsAutoCString& aType) {
   aModel.Truncate();
   aRevision.Truncate();
+  aType.Truncate();
 
   nsCOMPtr<nsIFile> profDir;
   nsresult rv =
@@ -149,6 +150,36 @@ nsresult GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
     free(deviceOutput);
     return NS_ERROR_FAILURE;
   }
+
+  queryParameters.PropertyId = StorageDeviceTrimProperty;
+  bytesRead = 0;
+  bool isSSD = false;
+  DEVICE_TRIM_DESCRIPTOR trimDescriptor = {sizeof(DEVICE_TRIM_DESCRIPTOR)};
+  if (::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY, &queryParameters,
+                        sizeof(queryParameters), &trimDescriptor,
+                        sizeof(trimDescriptor), &bytesRead, nullptr)) {
+    if (trimDescriptor.TrimEnabled) {
+      isSSD = true;
+    }
+  }
+
+  if (isSSD) {
+    // Get Seek Penalty
+    queryParameters.PropertyId = StorageDeviceSeekPenaltyProperty;
+    bytesRead = 0;
+    DEVICE_SEEK_PENALTY_DESCRIPTOR seekPenaltyDescriptor = {
+      sizeof(DEVICE_SEEK_PENALTY_DESCRIPTOR)};
+    if (::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY, &queryParameters,
+          sizeof(queryParameters), &seekPenaltyDescriptor,
+          sizeof(seekPenaltyDescriptor), &bytesRead, nullptr)) {
+      // It is possible that the disk has TrimEnabled, but also IncursSeekPenalty;
+      // In this case, this is an HDD
+      if (seekPenaltyDescriptor.IncursSeekPenalty) {
+        isSSD = false;
+      }
+    }
+  }
+
   // Some HDDs are including product ID info in the vendor field. Since PNP
   // IDs include vendor info and product ID concatenated together, we'll do
   // that here and interpret the result as a unique ID for the HDD model.
@@ -165,6 +196,11 @@ nsresult GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
     aRevision = reinterpret_cast<char*>(deviceOutput) +
                 deviceOutput->ProductRevisionOffset;
     aRevision.CompressWhitespace();
+  }
+  if (isSSD) {
+    aType = "SSD";
+  } else {
+    aType = "HDD";
   }
   free(deviceOutput);
   return NS_OK;
@@ -782,19 +818,24 @@ nsresult nsSystemInfo::Init() {
       return rv;
     }
   }
-  nsAutoCString hddModel, hddRevision;
-  if (NS_SUCCEEDED(GetHDDInfo(NS_GRE_DIR, hddModel, hddRevision))) {
+  nsAutoCString hddModel, hddRevision, hddType;
+  if (NS_SUCCEEDED(GetHDDInfo(NS_GRE_DIR, hddModel, hddRevision, hddType))) {
     rv = SetPropertyAsACString(NS_LITERAL_STRING("binHDDModel"), hddModel);
     NS_ENSURE_SUCCESS(rv, rv);
     rv =
         SetPropertyAsACString(NS_LITERAL_STRING("binHDDRevision"), hddRevision);
     NS_ENSURE_SUCCESS(rv, rv);
+    rv = SetPropertyAsACString(NS_LITERAL_STRING("binHDDType"), hddType);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  if (NS_SUCCEEDED(GetHDDInfo(NS_WIN_WINDOWS_DIR, hddModel, hddRevision))) {
+  if (NS_SUCCEEDED(
+          GetHDDInfo(NS_WIN_WINDOWS_DIR, hddModel, hddRevision, hddType))) {
     rv = SetPropertyAsACString(NS_LITERAL_STRING("winHDDModel"), hddModel);
     NS_ENSURE_SUCCESS(rv, rv);
     rv =
         SetPropertyAsACString(NS_LITERAL_STRING("winHDDRevision"), hddRevision);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = SetPropertyAsACString(NS_LITERAL_STRING("winHDDType"), hddType);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1062,8 +1103,9 @@ nsSystemInfo::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 nsresult nsSystemInfo::GetProfileHDDInfo() {
-  nsAutoCString hddModel, hddRevision;
-  nsresult rv = GetHDDInfo(NS_APP_USER_PROFILE_50_DIR, hddModel, hddRevision);
+  nsAutoCString hddModel, hddRevision, hddType;
+  nsresult rv =
+      GetHDDInfo(NS_APP_USER_PROFILE_50_DIR, hddModel, hddRevision, hddType);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1073,6 +1115,10 @@ nsresult nsSystemInfo::GetProfileHDDInfo() {
   }
   rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDRevision"),
                              hddRevision);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDType"), hddType);
   return rv;
 }
 

@@ -1718,14 +1718,17 @@ EnvironmentCache.prototype = {
       profile: { // hdd where the profile folder is located
         model: getSysinfoProperty("profileHDDModel", null),
         revision: getSysinfoProperty("profileHDDRevision", null),
+        type: getSysinfoProperty("profileHDDType", null),
       },
       binary:  { // hdd where the application binary is located
         model: getSysinfoProperty("binHDDModel", null),
         revision: getSysinfoProperty("binHDDRevision", null),
+        type: getSysinfoProperty("binHDDType", null),
       },
       system:  { // hdd where the system files are located
         model: getSysinfoProperty("winHDDModel", null),
         revision: getSysinfoProperty("winHDDRevision", null),
+        type: getSysinfoProperty("winHDDType", null),
       },
     };
   },
