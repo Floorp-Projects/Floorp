@@ -1875,10 +1875,6 @@ void HTMLMediaElement::AbortExistingLoads() {
 
   mIsRunningSelectResource = false;
 
-  if (mTextTrackManager) {
-    mTextTrackManager->NotifyReset();
-  }
-
   mEventDeliveryPaused = false;
   mPendingEvents.Clear();
   mCurrentLoadPlayTime.Reset();
@@ -5520,6 +5516,13 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState) {
       ("%p Ready state changed to %s", this, gReadyStateToString[aState]));
 
   DDLOG(DDLogCategory::Property, "ready_state", gReadyStateToString[aState]);
+
+  // https://html.spec.whatwg.org/multipage/media.html#text-track-cue-active-flag
+  // The user agent must synchronously unset cues' active flag whenever the
+  // media element's readyState is changed back to HAVE_NOTHING.
+  if (mReadyState == HAVE_NOTHING && mTextTrackManager) {
+    mTextTrackManager->NotifyReset();
+  }
 
   if (mNetworkState == NETWORK_EMPTY) {
     return;

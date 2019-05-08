@@ -824,8 +824,14 @@ void TextTrackManager::NotifyCueUpdated(TextTrackCue* aCue) {
 }
 
 void TextTrackManager::NotifyReset() {
+  // https://html.spec.whatwg.org/multipage/media.html#text-track-cue-active-flag
+  // This will unset all cues' active flag and update the cue display.
   WEBVTT_LOG("NotifyReset");
   mLastTimeMarchesOnCalled = media::TimeUnit::Zero();
+  for (uint32_t idx = 0; idx < mTextTracks->Length(); ++idx) {
+    (*mTextTracks)[idx]->SetCuesInactive();
+  }
+  UpdateCueDisplay();
 }
 
 void TextTrackManager::ReportTelemetryForTrack(TextTrack* aTextTrack) const {

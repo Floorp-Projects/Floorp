@@ -222,7 +222,10 @@ void TextTrack::SetTrackElement(HTMLTrackElement* aTrackElement) {
   mTrackElement = aTrackElement;
 }
 
-void TextTrack::SetCuesInactive() { mCueList->SetCuesInactive(); }
+void TextTrack::SetCuesInactive() {
+  WEBVTT_LOG("SetCuesInactive");
+  mCueList->SetCuesInactive();
+}
 
 void TextTrack::NotifyCueUpdated(TextTrackCue* aCue) {
   WEBVTT_LOG("NotifyCueUpdated, cue=%p", aCue);
