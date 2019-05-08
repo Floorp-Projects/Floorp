@@ -85,8 +85,8 @@ class nsPrintJob final : public nsIObserver,
   void DestroyPrintingData();
 
   nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
-                      nsIDocShell* aContainer,
-                      mozilla::dom::Document* aDocument, float aScreenDPI);
+                      nsIDocShell* aDocShell, mozilla::dom::Document* aDocument,
+                      float aScreenDPI);
 
   nsresult GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, int32_t& aCount);
 
@@ -234,7 +234,7 @@ class nsPrintJob final : public nsIObserver,
   RefPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
 
-  nsWeakPtr mContainer;
+  nsWeakPtr mDocShell;
   WeakFrame mPageSeqFrame;
 
   // We are the primary owner of our nsPrintData member vars.  These vars
