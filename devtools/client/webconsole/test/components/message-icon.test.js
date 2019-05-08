@@ -18,4 +18,12 @@ describe("MessageIcon component:", () => {
     expect(rendered.attr("title")).toBe("Error");
     expect(rendered.attr("aria-live")).toBe("off");
   });
+
+  it("renders logpoint items", () => {
+    const rendered = render(MessageIcon({
+      level: MESSAGE_LEVEL.LOG,
+      type: "logPoint",
+    }));
+    expect(rendered.hasClass("logpoint")).toBe(true);
+  });
 });

@@ -144,6 +144,7 @@ class Message extends Component {
       executionPoint,
       serviceContainer,
       inWarningGroup,
+      type,
     } = this.props;
 
     if (inWarningGroup) {
@@ -155,6 +156,7 @@ class Message extends Component {
       onRewindClick: (serviceContainer.canRewind() && executionPoint)
         ? () => serviceContainer.jumpToExecutionPoint(executionPoint, messageId)
         : null,
+      type,
     });
   }
 

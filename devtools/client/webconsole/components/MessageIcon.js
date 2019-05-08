@@ -25,7 +25,7 @@ const CONSTANT_ICONS = Object.entries(l10nLevels).reduce((acc, [key, l10nLabel])
   return acc;
 }, {});
 
-function getIconElement(level, onRewindClick) {
+function getIconElement(level, onRewindClick, type) {
   let title = l10n.getStr(l10nLevels[level] || level);
   const classnames = ["icon"];
 
@@ -34,26 +34,38 @@ function getIconElement(level, onRewindClick) {
     classnames.push("rewindable");
   }
 
-  return dom.span({
+  if (type && type === "logPoint") {
+    title = l10n.getStr("logpoint.title");
+    classnames.push("logpoint");
+  }
+
+  { return dom.span({
     className: classnames.join(" "),
     onClick: onRewindClick,
     title,
     "aria-live": "off",
-  });
+  }); }
 }
 
 MessageIcon.displayName = "MessageIcon";
 MessageIcon.propTypes = {
   level: PropTypes.string.isRequired,
   onRewindClick: PropTypes.function,
+  type: PropTypes.string,
 };
 
 function MessageIcon(props) {
-  const { level, onRewindClick } = props;
+  const { level, onRewindClick, type } = props;
 
-  return onRewindClick
-    ? getIconElement(level, onRewindClick)
-    : CONSTANT_ICONS[level] || getIconElement(level);
+  if (onRewindClick) {
+    return getIconElement(level, onRewindClick, type);
+  }
+
+  if (type) {
+    return getIconElement(level, null, type);
+  }
+
+  return CONSTANT_ICONS[level] || getIconElement(level);
 }
 
 module.exports = MessageIcon;
