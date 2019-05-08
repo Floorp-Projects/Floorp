@@ -2258,7 +2258,10 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
 
   MOZ_DIAGNOSTIC_ASSERT(worker->PrincipalIsValid());
 
-  UniquePtr<SerializedStackHolder> stack = GetCurrentStackForNetMonitor(aCx);
+  UniquePtr<SerializedStackHolder> stack;
+  if (worker->IsWatchedByDevtools()) {
+    stack = GetCurrentStackForNetMonitor(aCx);
+  }
 
   RefPtr<CompileScriptRunnable> compiler =
       new CompileScriptRunnable(worker, std::move(stack), aScriptURL);

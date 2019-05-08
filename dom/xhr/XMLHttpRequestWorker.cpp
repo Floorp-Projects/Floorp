@@ -1788,8 +1788,10 @@ void XMLHttpRequestWorker::Open(const nsACString& aMethod,
   mProxy->mOuterEventStreamId++;
 
   UniquePtr<SerializedStackHolder> stack;
-  if (JSContext* cx = nsContentUtils::GetCurrentJSContext()) {
-    stack = GetCurrentStackForNetMonitor(cx);
+  if (mWorkerPrivate->IsWatchedByDevtools()) {
+    if (JSContext* cx = nsContentUtils::GetCurrentJSContext()) {
+      stack = GetCurrentStackForNetMonitor(cx);
+    }
   }
 
   RefPtr<OpenRunnable> runnable = new OpenRunnable(
