@@ -244,9 +244,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   }
 
   // nsIGlobalObject
-  JSObject* GetGlobalJSObject() final {
-    return GetWrapper();
-  }
+  JSObject* GetGlobalJSObject() final { return GetWrapper(); }
   JSObject* GetGlobalJSObjectPreserveColor() const final {
     return GetWrapperPreserveColor();
   }
@@ -915,8 +913,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   already_AddRefed<nsWindowRoot> GetWindowRoot(mozilla::ErrorResult& aError);
 
   bool ShouldReportForServiceWorkerScope(const nsAString& aScope);
-
-  void PropagateClearSiteDataReload(const nsACString& aOrigin);
 
   already_AddRefed<mozilla::dom::InstallTriggerImpl> GetInstallTrigger();
 
