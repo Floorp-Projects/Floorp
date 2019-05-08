@@ -11,6 +11,8 @@ const Services = require("Services");
 
 const { l10n } = require("../modules/l10n");
 
+const { isSupportedDebugTargetPane } = require("../modules/debug-target-support");
+
 const {
   openTemporaryExtension,
   uninstallAddon,
@@ -23,6 +25,7 @@ const {
 
 const {
   DEBUG_TARGETS,
+  DEBUG_TARGET_PANE,
   REQUEST_EXTENSIONS_FAILURE,
   REQUEST_EXTENSIONS_START,
   REQUEST_EXTENSIONS_SUCCESS,
@@ -162,10 +165,13 @@ function requestTabs() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_TABS_START });
 
+    const runtime = getCurrentRuntime(getState().runtimes);
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const tabs = await clientWrapper.listTabs({ favicons: true });
+      const isSupported = isSupportedDebugTargetPane(runtime.runtimeDetails.info.type,
+                                                     DEBUG_TARGET_PANE.TAB);
+      const tabs = isSupported ? (await clientWrapper.listTabs({ favicons: true })) : [];
 
       dispatch({ type: REQUEST_TABS_SUCCESS, tabs });
     } catch (e) {
