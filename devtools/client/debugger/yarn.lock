@@ -3270,15 +3270,17 @@ devtools-config@^0.0.16:
   version "0.0.16"
   resolved "https://registry.yarnpkg.com/devtools-config/-/devtools-config-0.0.16.tgz#e7251788422f42a16aa1372b6adbebfcb7a74994"
 
-devtools-connection@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/devtools-connection/-/devtools-connection-1.0.6.tgz#f099c23ec7b16620214756739fd58ae9a5c6eedb"
+devtools-connection@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/devtools-connection/-/devtools-connection-1.0.7.tgz#16f23256f842dce339038cdc273c49c473ef83e0"
+  integrity sha512-SrBHnM4nVhTrSfI4WnqcmppDOwB5iQvoEjqVNpwv63puGdKGtcdfWqv4+4gqfRYKHrdGB8tJfWJV2n+EyXb1Xw==
 
-devtools-contextmenu@~1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/devtools-contextmenu/-/devtools-contextmenu-1.0.3.tgz#3a13a555a493df5c4f0123d414bee287e4625122"
+devtools-contextmenu@~1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/devtools-contextmenu/-/devtools-contextmenu-1.0.5.tgz#b9f9687ada3030b5813d947c4288d7e976c9578a"
+  integrity sha512-e5QPL/P6vIkpdI3KU9G7OoTqoMF7joERZhq97ZKU0qgqczsbZh/OeM9scR1cQ4vrckN75WUzw+/Ucmly+kn2lw==
   dependencies:
-    devtools-modules "~1.1.1"
+    devtools-modules "~1.1.2"
 
 devtools-environment@^0.0.5:
   version "0.0.5"
@@ -3288,9 +3290,10 @@ devtools-environment@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/devtools-environment/-/devtools-environment-0.0.6.tgz#11584f5b1ead784c2356d8da647a630fed591a4e"
 
-devtools-launchpad@^0.0.150:
-  version "0.0.150"
-  resolved "https://registry.yarnpkg.com/devtools-launchpad/-/devtools-launchpad-0.0.150.tgz#3091dacceb061583dc053512b836232afa5de3d5"
+devtools-launchpad@^0.0.152:
+  version "0.0.152"
+  resolved "https://registry.yarnpkg.com/devtools-launchpad/-/devtools-launchpad-0.0.152.tgz#bbd9526c0933adb3d61baa9bb5d56231adc1e318"
+  integrity sha512-OX/c1LmYLV4BDlTGqTe/zMJvtLdp0vn9WXuTkRXmbSBELMT3ojNv1CAvX3r90iMEeE8PO20bF0IQMUAE/OqjMw==
   dependencies:
     amd-loader "0.0.8"
     autoprefixer "^7.1.2"
@@ -3315,83 +3318,12 @@ devtools-launchpad@^0.0.150:
     css-loader "^0.26.1"
     debug "^3.1.0"
     devtools-config "^0.0.16"
-    devtools-connection "^1.0.6"
-    devtools-contextmenu "~1.0.3"
+    devtools-connection "^1.0.7"
+    devtools-contextmenu "~1.0.5"
     devtools-environment "^0.0.5"
     devtools-license-check "^0.7.0"
     devtools-mc-assets "^0.0.7"
-    devtools-modules "~1.1.1"
-    devtools-sprintf-js "^1.0.3"
-    express "^4.13.4"
-    express-static "^1.2.5"
-    extract-text-webpack-plugin "^3.0.0"
-    fs-extra "^2.0.0"
-    fuzzaldrin-plus "^0.4.0"
-    geckodriver "=1.12.2"
-    immutable "^3.7.6"
-    json-loader "^0.5.4"
-    md5 "^2.2.1"
-    mime-types "^2.1.18"
-    minimist "^1.2.0"
-    mustache "^2.2.1"
-    node-static "^0.7.7"
-    postcss "^6.0.6"
-    postcss-class-namespace "^0.1.0"
-    postcss-loader "^2.0.6"
-    postcss-url-mapper "^1.2.0"
-    prop-types "^15.6.0"
-    properties-parser "^0.3.1"
-    ps-node "^0.1.4"
-    raw-loader "^0.5.1"
-    react "^16.4.1"
-    react-dom "^16.4.1"
-    react-dom-factories "^1.0.2"
-    react-redux "^5.0.6"
-    redux "^3.7.2"
-    selenium-webdriver "=3.6.0"
-    style-loader "^0.18.2"
-    svg-inline-loader "^0.8.0"
-    svg-inline-react "3.0.0"
-    url-loader "^0.5.9"
-    webpack "^3.3.0"
-    webpack-dev-middleware "^1.11.0"
-    webpack-env-loader-plugin "^1.0.0"
-    webpack-hot-middleware "^2.18.2"
-    ws "^1.0.1"
-
-devtools-launchpad@^0.0.151:
-  version "0.0.151"
-  resolved "https://registry.yarnpkg.com/devtools-launchpad/-/devtools-launchpad-0.0.151.tgz#b7b3a5592b0b4369566e1a82802252a3f55b93f3"
-  dependencies:
-    amd-loader "0.0.8"
-    autoprefixer "^7.1.2"
-    babel-cli "^6.7.5"
-    babel-core "^6.25.0"
-    babel-eslint "^7.1.0"
-    babel-loader "^7.1.1"
-    babel-plugin-module-resolver "^2.2.0"
-    babel-plugin-transform-async-to-generator "^6.16.0"
-    babel-plugin-transform-flow-strip-types "^6.14.0"
-    babel-plugin-transform-runtime "^6.7.5"
-    babel-plugin-webpack-alias "^2.1.1"
-    babel-polyfill "^6.7.4"
-    babel-preset-es2015 "^6.24.1"
-    babel-preset-react "^6.24.1"
-    babel-register "^6.18.0"
-    body-parser "^1.15.2"
-    check-node-version "^3.2.0"
-    chrome-remote-interface "0.17.0"
-    classnames "^2.2.5"
-    co "=4.6.0"
-    css-loader "^0.26.1"
-    debug "^3.1.0"
-    devtools-config "^0.0.16"
-    devtools-connection "^1.0.6"
-    devtools-contextmenu "~1.0.3"
-    devtools-environment "^0.0.5"
-    devtools-license-check "^0.7.0"
-    devtools-mc-assets "^0.0.7"
-    devtools-modules "~1.1.1"
+    devtools-modules "~1.1.2"
     devtools-sprintf-js "^1.0.3"
     express "^4.13.4"
     express-static "^1.2.5"
@@ -3479,9 +3411,10 @@ devtools-modules@~1.1.0:
     devtools-services "0.0.1"
     punycode "^2.1.0"
 
-devtools-modules@~1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/devtools-modules/-/devtools-modules-1.1.1.tgz#c93a1ed858d93d48b61f3f470d39460805f07bfe"
+devtools-modules@~1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/devtools-modules/-/devtools-modules-1.1.2.tgz#3a1f2134469858330461a62ede80fe361dd2174f"
+  integrity sha512-RW1AVqQOXkrBCxHQcIUR5dn7oeECoCzFhdQlGQ+fTRZYVGkdmDv2GEmR3P/s+31ae4khxjKs6g9I7is7vFynWg==
   dependencies:
     devtools-services "0.0.1"
     punycode "^2.1.0"
@@ -3573,6 +3506,11 @@ domain-browser@^1.1.1:
 domelementtype@1, domelementtype@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/domelementtype/-/domelementtype-1.3.0.tgz#b17aed82e8ab59e52dd9c19b1756e0fc187204c2"
+
+domelementtype@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/domelementtype/-/domelementtype-1.3.1.tgz#d048c44b37b0d10a7f2a3d5fee3f4333d790481f"
+  integrity sha512-BSKB+TSpMpFI/HOxCNr1O8aMOTZ8hT3pM3GQ0w/mWRmkhEDSFJkkyzz4XQsBV44BChwGkrDfMyjVD0eA2aFV3w==
 
 domelementtype@~1.1.1:
   version "1.1.3"
@@ -4000,6 +3938,15 @@ eslint-plugin-mozilla@1.1.3:
   resolved "https://registry.yarnpkg.com/eslint-plugin-mozilla/-/eslint-plugin-mozilla-1.1.3.tgz#412da74dc772f61c0c6ec0cccb925ec19680a011"
   dependencies:
     htmlparser2 "3.10.0"
+    ini-parser "0.0.2"
+    sax "1.2.4"
+
+eslint-plugin-mozilla@1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-mozilla/-/eslint-plugin-mozilla-1.2.1.tgz#8aa80dca43bd45f300188d4ee53bc5a983aac0ba"
+  integrity sha512-i6SAWTPgKI6T50L6Gy41efR3StjPGR3IWkFOW/4aGsJtpl+OmJVaOmUfhp5PGis3ZbDisNvQ/vzLiNicAWC7nw==
+  dependencies:
+    htmlparser2 "3.10.1"
     ini-parser "0.0.2"
     sax "1.2.4"
 
@@ -4673,9 +4620,10 @@ flatten@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/flatten/-/flatten-1.0.2.tgz#dae46a9d78fbe25292258cc1e780a41d95c03782"
 
-flow-bin@0.96.0:
-  version "0.96.0"
-  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.96.0.tgz#3b0379d97304dc1879ae6db627cd2d6819998661"
+flow-bin@0.97.0:
+  version "0.97.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.97.0.tgz#036ffcfc27503367a9d906ec9d843a0aa6f6bb83"
+  integrity sha512-jXjD05gkatLuC4+e28frH1hZoRwr1iASP6oJr61Q64+kR4kmzaS+AdFBhYgoYS5kpoe4UzwDebWK8ETQFNh00w==
 
 flush-write-stream@^1.0.0:
   version "1.0.3"
@@ -5419,6 +5367,18 @@ htmlparser2@3.10.0:
     entities "^1.1.1"
     inherits "^2.0.1"
     readable-stream "^3.0.6"
+
+htmlparser2@3.10.1:
+  version "3.10.1"
+  resolved "https://registry.yarnpkg.com/htmlparser2/-/htmlparser2-3.10.1.tgz#bd679dc3f59897b6a34bb10749c855bb53a9392f"
+  integrity sha512-IgieNijUMbkDovyoKObU1DUhm1iwNYE/fuifEoEHfd1oZKZDaONBSkal7Y01shxsM49R4XaMdGez3WnF9UfiCQ==
+  dependencies:
+    domelementtype "^1.3.1"
+    domhandler "^2.3.0"
+    domutils "^1.5.1"
+    entities "^1.1.1"
+    inherits "^2.0.1"
+    readable-stream "^3.1.1"
 
 htmlparser2@^3.9.1, htmlparser2@^3.9.2:
   version "3.9.2"
@@ -9426,6 +9386,15 @@ readable-stream@1.0:
 readable-stream@^3.0.6:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-3.1.1.tgz#ed6bbc6c5ba58b090039ff18ce670515795aeb06"
+  dependencies:
+    inherits "^2.0.3"
+    string_decoder "^1.1.1"
+    util-deprecate "^1.0.1"
+
+readable-stream@^3.1.1:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-3.3.0.tgz#cb8011aad002eb717bf040291feba8569c986fb9"
+  integrity sha512-EsI+s3k3XsW+fU8fQACLN59ky34AZ14LoeVZpYwmZvldCFo0r0gnelwF2TcMjLor/BTL5aDJVBMkss0dthToPw==
   dependencies:
     inherits "^2.0.3"
     string_decoder "^1.1.1"

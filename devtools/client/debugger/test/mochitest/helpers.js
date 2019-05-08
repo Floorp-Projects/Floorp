@@ -1380,13 +1380,13 @@ async function clickGutter(dbg, line) {
 
 function selectContextMenuItem(dbg, selector) {
   // the context menu is in the toolbox window
-  const doc = dbg.toolbox.win.document;
+  const doc = dbg.toolbox.topDoc;
 
   // there are several context menus, we want the one with the menu-api
   const popup = doc.querySelector('menupopup[menu-api="true"]');
 
   const item = popup.querySelector(selector);
-  return EventUtils.synthesizeMouseAtCenter(item, {}, dbg.toolbox.win);
+  return EventUtils.synthesizeMouseAtCenter(item, {}, dbg.toolbox.topWindow);
 }
 
 async function typeInPanel(dbg, text) {
