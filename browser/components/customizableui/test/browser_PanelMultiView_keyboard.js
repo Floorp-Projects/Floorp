@@ -13,6 +13,7 @@ let gAnchor;
 let gPanel;
 let gPanelMultiView;
 let gMainView;
+let gMainContext;
 let gMainButton1;
 let gMainMenulist;
 let gMainTextbox;
@@ -74,11 +75,16 @@ add_task(async function setup() {
   gMainView = document.createXULElement("panelview");
   gMainView.id = "testMainView";
   gPanelMultiView.appendChild(gMainView);
+  gMainContext = document.createXULElement("menupopup");
+  gMainContext.id = "gMainContext";
+  gMainView.appendChild(gMainContext);
+  gMainContext.appendChild(document.createXULElement("menuitem"));
   gMainButton1 = document.createXULElement("button");
   gMainButton1.id = "gMainButton1";
   gMainView.appendChild(gMainButton1);
   // We use this for anchoring subviews, so it must have a label.
   gMainButton1.setAttribute("label", "gMainButton1");
+  gMainButton1.setAttribute("context", "gMainContext");
   gMainMenulist = document.createXULElement("menulist");
   gMainMenulist.id = "gMainMenulist";
   gMainView.appendChild(gMainMenulist);
@@ -331,5 +337,29 @@ add_task(async function testTabArrowsBrowser() {
   expectFocusAfterKey("Tab", docButton);
   // Make sure tab leaves the document and reaches the Back button.
   expectFocusAfterKey("Tab", backButton);
+  await hidePopup();
+});
+
+// Test that the arrow keys aren't overridden in context menus.
+add_task(async function testArowsContext() {
+  await openPopup();
+  await expectFocusAfterKey("ArrowDown", gMainButton1);
+  let shown = BrowserTestUtils.waitForEvent(gMainContext, "popupshown");
+  // There's no cross-platform way to open a context menu from the keyboard.
+  gMainContext.openPopup();
+  await shown;
+  let item = gMainContext.children[0];
+  ok(!item.getAttribute("_moz-menuactive"),
+     "First context menu item initially inactive");
+  let active = BrowserTestUtils.waitForEvent(item, "DOMMenuItemActive");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  await active;
+  ok(item.getAttribute("_moz-menuactive"),
+     "First context menu item active after ArrowDown");
+  is(document.activeElement, gMainButton1,
+     "gMainButton1 still focused after ArrowDown");
+  let hidden = BrowserTestUtils.waitForEvent(gMainContext, "popuphidden");
+  gMainContext.hidePopup();
+  await hidden;
   await hidePopup();
 });
