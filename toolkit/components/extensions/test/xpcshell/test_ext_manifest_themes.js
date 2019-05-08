@@ -23,6 +23,5 @@ async function test_theme_property(property) {
 add_task(async function test_manifest_themes() {
   await test_theme_property("images");
   await test_theme_property("colors");
-  await test_theme_property("icons");
   await test_theme_property("unrecognized_key");
 });

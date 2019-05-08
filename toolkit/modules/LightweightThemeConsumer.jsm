@@ -7,7 +7,6 @@ var EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
-const ICONS = Services.prefs.getStringPref("extensions.webextensions.themes.icons.buttons", "").split(",");
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
@@ -205,18 +204,6 @@ LightweightThemeConsumer.prototype = {
       root.setAttribute("lwtheme-image", "true");
     } else {
       root.removeAttribute("lwtheme-image");
-    }
-
-    if (active && theme.icons) {
-      let activeIcons = Object.keys(theme.icons).join(" ");
-      root.setAttribute("lwthemeicons", activeIcons);
-    } else {
-      root.removeAttribute("lwthemeicons");
-    }
-
-    for (let icon of ICONS) {
-      let value = theme.icons ? theme.icons[`--${icon}-icon`] : null;
-      _setImage(root, active, `--${icon}-icon`, value);
     }
 
     this._setExperiment(active, themeData.experiment, theme.experimental);
