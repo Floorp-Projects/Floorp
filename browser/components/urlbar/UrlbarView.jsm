@@ -725,15 +725,17 @@ class UrlbarView {
   }
 
   _on_overflow(event) {
-    if (event.target.classList.contains("urlbarView-url") ||
-        event.target.classList.contains("urlbarView-title")) {
+    if (event.detail == 1 &&
+        (event.target.classList.contains("urlbarView-url") ||
+         event.target.classList.contains("urlbarView-title"))) {
       event.target.toggleAttribute("overflow", true);
     }
   }
 
   _on_underflow(event) {
-    if (event.target.classList.contains("urlbarView-url") ||
-        event.target.classList.contains("urlbarView-title")) {
+    if (event.detail == 1 &&
+        (event.target.classList.contains("urlbarView-url") ||
+         event.target.classList.contains("urlbarView-title"))) {
       event.target.toggleAttribute("overflow", false);
     }
   }
