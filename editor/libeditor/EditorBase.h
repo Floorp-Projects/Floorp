@@ -1178,6 +1178,7 @@ class EditorBase : public nsIEditor,
    * @param aSourceElement      Element node which provides the value of
    *                            aAttribute in aDestElement.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult CloneAttributeWithTransaction(nsAtom& aAttribute,
                                          Element& aDestElement,
                                          Element& aSourceElement);

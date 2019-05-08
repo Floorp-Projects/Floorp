@@ -377,6 +377,7 @@ interface nsIEditor  : nsISupports
    * @param aSourceElement the source element to copy attributes from
    * @exception NS_ERROR_NULL_POINTER at least one of the elements is null
    */
+  [can_run_script]
   void cloneAttribute(in AString aAttribute,
                       in Element aDestElement, in Element aSourceElement);
 
