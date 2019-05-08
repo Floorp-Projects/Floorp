@@ -36,7 +36,7 @@ template <>
 struct ParamTraits<nsContentUtils::StorageAccess>
     : public ContiguousEnumSerializer<
           nsContentUtils::StorageAccess,
-          nsContentUtils::StorageAccess::ePartitionedOrDeny,
+          nsContentUtils::StorageAccess::ePartitionForeignOrDeny,
           nsContentUtils::StorageAccess::eNumValues> {};
 }  // namespace IPC
 
