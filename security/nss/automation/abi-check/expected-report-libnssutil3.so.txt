@@ -1,0 +1,17 @@
+
+1 function with some indirect sub-type change:
+
+  [C]'function SECStatus NSS_GetAlgorithmPolicy(SECOidTag, PRUint32*)' at secoid.c:2234:1 has some indirect sub-type changes:
+    parameter 1 of type 'typedef SECOidTag' has sub-type changes:
+      underlying type 'enum __anonymous_enum__' at secoidt.h:34:1 changed:
+        type size hasn't changed
+        3 enumerator insertions:
+          '__anonymous_enum__::SEC_OID_EXT_KEY_USAGE_IPSEC_END' value '361'
+          '__anonymous_enum__::SEC_OID_EXT_KEY_USAGE_IPSEC_TUNNEL' value '362'
+          '__anonymous_enum__::SEC_OID_EXT_KEY_USAGE_IPSEC_USER' value '363'
+
+        1 enumerator change:
+          '__anonymous_enum__::SEC_OID_TOTAL' from value '361' to '364' at secoidt.h:34:1
+
+
+

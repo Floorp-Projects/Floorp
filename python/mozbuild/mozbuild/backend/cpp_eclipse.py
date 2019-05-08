@@ -212,10 +212,10 @@ class CppEclipseBackend(CommonBackend):
 
     def _remove_noindex(self):
         # Below we remove the config file that temporarily disabled the indexer
-        # while we were importing the project. Unfornutanely, CDT doesn't
+        # while we were importing the project. Unfortunately, CDT doesn't
         # notice indexer settings changes in config files when it restarts. To
         # work around that we remove the index database here to force it to:
-        for f in glob.glob(os.path.join(self._workspace_lang_dir, "*.pdom")):
+        for f in glob.glob(os.path.join(self._workspace_lang_dir, "Gecko.*.pdom")):
             os.remove(f)
 
         noindex_path = os.path.join(self._project_dir, '.settings/org.eclipse.cdt.core.prefs')
