@@ -42,6 +42,13 @@ add_task(async function testContentBlockingStandardDefinition() {
   ok(!Services.prefs.prefHasUserValue(CM_PREF), `${CM_PREF} pref has the default value`);
   ok(!Services.prefs.prefHasUserValue(NCB_PREF), `${NCB_PREF} pref has the default value`);
 
+  defaults.setStringPref(STANDARD_DEF_PREF, "tp,-tpPrivate,fp,-cm,cookieBehavior5");
+  is(Services.prefs.getBoolPref(TP_PREF), true, `${TP_PREF} pref has been set to true`);
+  is(Services.prefs.getBoolPref(TP_PBM_PREF), false, `${TP_PBM_PREF} pref has been set to true`);
+  is(Services.prefs.getBoolPref(FP_PREF), true, `${CM_PREF} pref has been set to true`);
+  is(Services.prefs.getBoolPref(CM_PREF), false, `${CM_PREF} pref has been set to true`);
+  is(Services.prefs.getIntPref(NCB_PREF), Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN, `${NCB_PREF} has been set to BEHAVIOR_REJECT_TRACKER`);
+
   defaults.setStringPref(STANDARD_DEF_PREF, "-tpPrivate,-fp,-cm,-tp,cookieBehavior2");
   is(Services.prefs.getBoolPref(TP_PREF), false, `${TP_PREF} pref has been set to false`);
   is(Services.prefs.getBoolPref(TP_PBM_PREF), false, `${TP_PBM_PREF} pref has been set to false`);
