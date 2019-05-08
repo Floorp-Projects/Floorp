@@ -10,7 +10,7 @@ add_task(async function() {
   const { monitor, tab } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  const { document, store, parent, connector, windowRequire } = monitor.panelWin;
+  const { document, store, connector, windowRequire } = monitor.panelWin;
   const { requestData } = connector;
   const {
     getSortedRequests,
@@ -34,28 +34,28 @@ add_task(async function() {
   let columns = store.getState().ui.columns;
   for (const column in columns) {
     if (columns[column]) {
-      await testVisibleColumnContextMenuItem(column, document, parent);
+      await testVisibleColumnContextMenuItem(column, document, monitor);
       testColumnsAlignment(headers, requestsContainer);
-      await testHiddenColumnContextMenuItem(column, document, parent);
+      await testHiddenColumnContextMenuItem(column, document, monitor);
     } else {
-      await testHiddenColumnContextMenuItem(column, document, parent);
+      await testHiddenColumnContextMenuItem(column, document, monitor);
       testColumnsAlignment(headers, requestsContainer);
-      await testVisibleColumnContextMenuItem(column, document, parent);
+      await testVisibleColumnContextMenuItem(column, document, monitor);
     }
   }
 
   columns = store.getState().ui.columns;
   for (const column in columns) {
     if (columns[column]) {
-      await testVisibleColumnContextMenuItem(column, document, parent);
+      await testVisibleColumnContextMenuItem(column, document, monitor);
       // Right click on the white-space for the context menu to appear
       // and toggle column visibility
-      await testWhiteSpaceContextMenuItem(column, document, parent);
+      await testWhiteSpaceContextMenuItem(column, document, monitor);
     }
   }
 });
 
-async function testWhiteSpaceContextMenuItem(column, document, parent) {
+async function testWhiteSpaceContextMenuItem(column, document, monitor) {
   ok(!document.querySelector(`#requests-list-${column}-button`),
      `Column ${column} should be hidden`);
 
@@ -65,10 +65,10 @@ async function testWhiteSpaceContextMenuItem(column, document, parent) {
 
   // Wait for next tick to do stuff async and force repaint.
   await waitForTick();
-  await toggleAndCheckColumnVisibility(column, document, parent);
+  await toggleAndCheckColumnVisibility(column, document, monitor);
 }
 
-async function testVisibleColumnContextMenuItem(column, document, parent) {
+async function testVisibleColumnContextMenuItem(column, document, monitor) {
   ok(document.querySelector(`#requests-list-${column}-button`),
      `Column ${column} should be visible`);
 
@@ -79,7 +79,7 @@ async function testVisibleColumnContextMenuItem(column, document, parent) {
 
   await waitForTick();
 
-  const menuItem = parent.document.querySelector(`#request-list-header-${column}-toggle`);
+  const menuItem = getContextMenuItem(monitor, `request-list-header-${column}-toggle`);
 
   is(menuItem.getAttribute("type"), "checkbox",
      `${column} menu item should have type="checkbox" attribute`);
@@ -97,7 +97,7 @@ async function testVisibleColumnContextMenuItem(column, document, parent) {
      `Column ${column} should be hidden`);
 }
 
-async function testHiddenColumnContextMenuItem(column, document, parent) {
+async function testHiddenColumnContextMenuItem(column, document, monitor) {
   ok(!document.querySelector(`#requests-list-${column}-button`),
      `Column ${column} should be hidden`);
 
@@ -107,11 +107,11 @@ async function testHiddenColumnContextMenuItem(column, document, parent) {
     document.querySelector("#requests-list-waterfall-button"));
 
   await waitForTick();
-  await toggleAndCheckColumnVisibility(column, document, parent);
+  await toggleAndCheckColumnVisibility(column, document, monitor);
 }
 
-async function toggleAndCheckColumnVisibility(column, document, parent) {
-  const menuItem = parent.document.querySelector(`#request-list-header-${column}-toggle`);
+async function toggleAndCheckColumnVisibility(column, document, monitor) {
+  const menuItem = getContextMenuItem(monitor, `request-list-header-${column}-toggle`);
 
   is(menuItem.getAttribute("type"), "checkbox",
      `${column} menu item should have type="checkbox" attribute`);

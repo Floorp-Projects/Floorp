@@ -11,7 +11,7 @@ add_task(async function() {
   const { monitor, tab } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  const { document, store, parent, windowRequire } = monitor.panelWin;
+  const { document, store, windowRequire } = monitor.panelWin;
   const { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
 
   const prefBefore = Prefs.visibleColumns;
@@ -29,7 +29,7 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelector("#requests-list-contentSize-button"));
 
-  parent.document.querySelector("#request-list-header-reset-columns").click();
+  getContextMenuItem(monitor, "request-list-header-reset-columns").click();
   await onRequestsFinished;
 
   ok(JSON.stringify(prefBefore) === JSON.stringify(Prefs.visibleColumns),

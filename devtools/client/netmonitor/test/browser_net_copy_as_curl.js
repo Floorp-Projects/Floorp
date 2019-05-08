@@ -133,8 +133,8 @@ add_task(async function() {
       document.querySelectorAll(".request-list-item")[0]);
 
     /* Ensure that the copy as cURL option is always visible */
-    const copyUrlParamsNode = monitor.panelWin.parent.document
-      .querySelector("#request-list-context-copy-as-curl");
+    const copyUrlParamsNode = getContextMenuItem(monitor,
+      "request-list-context-copy-as-curl");
     is(!!copyUrlParamsNode, true,
       "The \"Copy as cURL\" context menu item should not be hidden.");
 

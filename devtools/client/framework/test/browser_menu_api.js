@@ -82,13 +82,13 @@ async function testMenuPopup(toolbox) {
 
   menu.popup(0, 0, toolbox.doc);
 
-  ok(toolbox.doc.querySelector("#menu-popup"), "A popup is in the DOM");
+  ok(toolbox.topDoc.querySelector("#menu-popup"), "A popup is in the DOM");
 
   const menuSeparators =
-    toolbox.doc.querySelectorAll("#menu-popup > menuseparator");
+    toolbox.topDoc.querySelectorAll("#menu-popup > menuseparator");
   is(menuSeparators.length, 1, "A separator is in the menu");
 
-  const menuItems = toolbox.doc.querySelectorAll("#menu-popup > menuitem");
+  const menuItems = toolbox.topDoc.querySelectorAll("#menu-popup > menuitem");
   is(menuItems.length, MENU_ITEMS.length, "Correct number of menuitems");
 
   is(menuItems[0].id, MENU_ITEMS[0].id, "Correct id for menuitem");
@@ -109,11 +109,11 @@ async function testMenuPopup(toolbox) {
 
   await once(menu, "open");
   const closed = once(menu, "close");
-  EventUtils.synthesizeMouseAtCenter(menuItems[0], {}, toolbox.win);
+  EventUtils.synthesizeMouseAtCenter(menuItems[0], {}, toolbox.topWindow);
   await closed;
   ok(clickFired, "Click has fired");
 
-  ok(!toolbox.doc.querySelector("#menu-popup"), "Popup removed from the DOM");
+  ok(!toolbox.topDoc.querySelector("#menu-popup"), "Popup removed from the DOM");
 }
 
 async function testSubmenu(toolbox) {
@@ -144,11 +144,11 @@ async function testSubmenu(toolbox) {
   }));
 
   menu.popup(0, 0, toolbox.doc);
-  ok(toolbox.doc.querySelector("#menu-popup"), "A popup is in the DOM");
-  is(toolbox.doc.querySelectorAll("#menu-popup > menuitem").length, 0,
+  ok(toolbox.topDoc.querySelector("#menu-popup"), "A popup is in the DOM");
+  is(toolbox.topDoc.querySelectorAll("#menu-popup > menuitem").length, 0,
     "No menuitem children");
 
-  const menus = toolbox.doc.querySelectorAll("#menu-popup > menu");
+  const menus = toolbox.topDoc.querySelectorAll("#menu-popup > menu");
   is(menus.length, 2, "Correct number of menus");
   ok(!menus[0].hasAttribute("label"), "No label: should be set by localization");
   ok(!menus[0].hasAttribute("disabled"), "Correct disabled state");
@@ -180,7 +180,7 @@ async function testSubmenu(toolbox) {
   await shown;
 
   info("Clicking the submenu item");
-  EventUtils.synthesizeMouseAtCenter(subMenuItems[0], {}, toolbox.win);
+  EventUtils.synthesizeMouseAtCenter(subMenuItems[0], {}, toolbox.topWindow);
 
   await closed;
   ok(clickFired, "Click has fired");
