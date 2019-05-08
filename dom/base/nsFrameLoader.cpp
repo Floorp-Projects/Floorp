@@ -2599,13 +2599,10 @@ bool nsFrameLoader::TryRemoteBrowser() {
     return false;
   }
 
-  BrowserParent* openingTab =
-      BrowserParent::GetFrom(parentDocShell->GetOpener());
   RefPtr<ContentParent> openerContentParent;
   RefPtr<BrowserParent> sameTabGroupAs;
-
-  if (openingTab && openingTab->Manager()) {
-    openerContentParent = openingTab->Manager();
+  if (auto* host = BrowserHost::GetFrom(parentDocShell->GetOpener())) {
+    openerContentParent = host->GetActor()->Manager();
   }
 
   // <iframe mozbrowser> gets to skip these checks.
@@ -3367,12 +3364,12 @@ void nsFrameLoader::StartPersistence(
 
 void nsFrameLoader::MaybeUpdatePrimaryBrowserParent(
     BrowserParentChange aChange) {
-  if (!mOwnerContent) {
+  if (!mOwnerContent || !mRemoteBrowser) {
     return;
   }
 
-  RefPtr<BrowserParent> browserParent = GetBrowserParent();
-  if (!browserParent) {
+  RefPtr<BrowserHost> browserHost = mRemoteBrowser->AsBrowserHost();
+  if (!browserHost) {
     return;
   }
 
@@ -3397,11 +3394,11 @@ void nsFrameLoader::MaybeUpdatePrimaryBrowserParent(
     mObservingOwnerContent = true;
   }
 
-  parentTreeOwner->RemoteTabRemoved(browserParent);
+  parentTreeOwner->RemoteTabRemoved(browserHost);
   if (aChange == eBrowserParentChanged) {
     bool isPrimary = mOwnerContent->AttrValueIs(
         kNameSpaceID_None, nsGkAtoms::primary, nsGkAtoms::_true, eIgnoreCase);
-    parentTreeOwner->RemoteTabAdded(browserParent, isPrimary);
+    parentTreeOwner->RemoteTabAdded(browserHost, isPrimary);
   }
 }
 
