@@ -1435,6 +1435,14 @@ class DebuggerFrame : public NativeObject {
  public:
   static const Class class_;
 
+  enum {
+    OWNER_SLOT = 0,
+    ARGUMENTS_SLOT,
+    ONSTEP_HANDLER_SLOT,
+    ONPOP_HANDLER_SLOT,
+    RESERVED_SLOTS,
+  };
+
   static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor,
                                  Handle<GlobalObject*> global);
   static DebuggerFrame* create(JSContext* cx, HandleObject proto,
