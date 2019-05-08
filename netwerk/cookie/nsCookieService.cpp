@@ -4856,7 +4856,7 @@ nsresult nsCookieService::RemoveCookiesFromRootDomain(
       RefPtr<nsCookie> cookie = iter.Cookie();
 
       bool hasRootDomain = false;
-      rv = mTLDService->HasRootDomain(cookie->Host(), aHost, &hasRootDomain);
+      rv = mTLDService->HasRootDomain(cookie->RawHost(), aHost, &hasRootDomain);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!hasRootDomain) {
