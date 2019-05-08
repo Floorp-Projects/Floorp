@@ -4454,9 +4454,12 @@ static bool MaybeParseOwnerIndex(WasmParseContext& c) {
   return true;
 }
 
-static AstExpr* ParseInitializerExpression(WasmParseContext& c) {
-  if (!c.ts.match(WasmToken::OpenParen, c.error)) {
-    return nullptr;
+static AstExpr* ParseInitializerConstExpression(WasmParseContext& c) {
+  bool need_rparen = false;
+
+  // For const initializer expressions, the parens are optional.
+  if (c.ts.getIf(WasmToken::OpenParen)) {
+    need_rparen = true;
   }
 
   AstExpr* initExpr = ParseExprInsideParens(c);
@@ -4464,7 +4467,7 @@ static AstExpr* ParseInitializerExpression(WasmParseContext& c) {
     return nullptr;
   }
 
-  if (!c.ts.match(WasmToken::CloseParen, c.error)) {
+  if (need_rparen && !c.ts.match(WasmToken::CloseParen, c.error)) {
     return nullptr;
   }
 
@@ -4480,8 +4483,16 @@ static bool ParseInitializerExpressionOrPassive(WasmParseContext& c,
   }
 #endif
 
-  AstExpr* initExpr = ParseInitializerExpression(c);
+  if (!c.ts.match(WasmToken::OpenParen, c.error)) {
+    return false;
+  }
+
+  AstExpr* initExpr = ParseExprInsideParens(c);
   if (!initExpr) {
+    return false;
+  }
+
+  if (!c.ts.match(WasmToken::CloseParen, c.error)) {
     return false;
   }
 
@@ -5119,7 +5130,7 @@ static bool ParseGlobal(WasmParseContext& c, AstModule* module) {
     return false;
   }
 
-  AstExpr* init = ParseInitializerExpression(c);
+  AstExpr* init = ParseInitializerConstExpression(c);
   if (!init) {
     return false;
   }
