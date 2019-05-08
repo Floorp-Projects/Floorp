@@ -3367,6 +3367,15 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       cbSize.emplace(LogicalSize(wm, aState.mReflowInput.ComputedISize(),
                                  cbReflowInput->ComputedBSize())
                          .ConvertTo(frame->GetWritingMode(), wm));
+
+      // If a ColumnSetWrapper is in a balancing column content, it may be
+      // pushed or pulled back and forth between column contents. Always add
+      // NS_FRAME_HAS_DIRTY_CHILDREN bit to it so that its ColumnSet children
+      // can have a chance to reflow under current block size constraint.
+      if (aState.mReflowInput.mFlags.mIsColumnBalancing &&
+          frame->IsColumnSetWrapperFrame()) {
+        frame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+      }
     }
 
     blockReflowInput.emplace(
