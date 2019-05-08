@@ -334,7 +334,8 @@ class Raptor(object):
         # convert timeout to seconds and account for page cycles
         timeout = int(timeout / 1000) * int(test.get('page_cycles', 1))
         # account for the pause the raptor webext runner takes after browser startup
-        timeout += (int(self.post_startup_delay / 1000) + 3)
+        # and the time an exception is propagated through the framework
+        timeout += (int(self.post_startup_delay / 1000) + 10)
 
         # if geckoProfile enabled, give browser more time for profiling
         if self.config['gecko_profile'] is True:
@@ -864,6 +865,10 @@ class RaptorAndroid(Raptor):
             if self.debug_mode and self.config['run_local']:
                 self.log.info("* debug-mode enabled - please shutdown the browser manually...")
                 self.runner.wait(timeout=None)
+
+            # break test execution if a exception is present
+            if len(self.results_handler.page_timeout_list) > 0:
+                break
 
     def run_test_warm(self, test, timeout=None):
         self.log.info("test %s is running in warm mode; browser will NOT be restarted between "
