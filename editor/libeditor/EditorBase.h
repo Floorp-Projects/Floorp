@@ -1085,6 +1085,7 @@ class EditorBase : public nsIEditor,
    * @param aRightNode  The node which will be new container of the content of
    *                    aLeftNode.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult JoinNodesWithTransaction(nsINode& aLeftNode, nsINode& aRightNode);
 
   /**
@@ -1403,6 +1404,7 @@ class EditorBase : public nsIEditor,
    *                    aLeftNode.
    * @return            The point of the first child of the last right node.
    */
+  MOZ_CAN_RUN_SCRIPT
   EditorDOMPoint JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
                                               nsIContent& aRightNode);
 
