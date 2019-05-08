@@ -53,8 +53,11 @@ var enforcePref;
 
 function run_test()
 {
-  enforcePref = Services.prefs.getBoolPref("network.http.enforce-framing.soft");
+  enforceSoftPref = Services.prefs.getBoolPref("network.http.enforce-framing.soft");
   Services.prefs.setBoolPref("network.http.enforce-framing.soft", false);
+
+  enforceStrictChunkedPref = Services.prefs.getBoolPref("network.http.enforce-framing.strict_chunked_encoding");
+  Services.prefs.setBoolPref("network.http.enforce-framing.strict_chunked_encoding", false);
 
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);
@@ -77,6 +80,7 @@ function firstTimeThrough(request, buffer)
 function finish_test(request, buffer)
 {
   Assert.equal(buffer, responseBody);
-  Services.prefs.setBoolPref("network.http.enforce-framing.soft", enforcePref);
+  Services.prefs.setBoolPref("network.http.enforce-framing.soft", enforceSoftPref);
+  Services.prefs.setBoolPref("network.http.enforce-framing.strict_chunked_encoding", enforceStrictChunkedPref);
   httpServer.stop(do_test_finished);
 }

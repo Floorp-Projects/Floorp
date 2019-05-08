@@ -19,6 +19,7 @@ var testPathBase = "/cl_hdrs";
 var prefs;
 var enforcePrefStrict;
 var enforcePrefSoft;
+var enforcePrefStrictChunked;
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 registerCleanupFunction(() => {
@@ -30,6 +31,9 @@ function run_test()
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   enforcePrefStrict = prefs.getBoolPref("network.http.enforce-framing.http1");
   enforcePrefSoft = prefs.getBoolPref("network.http.enforce-framing.soft");
+  enforcePrefStrictChunked = prefs.getBoolPref(
+      "network.http.enforce-framing.strict_chunked_encoding");
+
   prefs.setBoolPref("network.http.enforce-framing.http1", true);
 
   httpserver.start(-1);
@@ -100,6 +104,8 @@ function endTests()
   // restore the prefs to pre-test values
   prefs.setBoolPref("network.http.enforce-framing.http1", enforcePrefStrict);
   prefs.setBoolPref("network.http.enforce-framing.soft", enforcePrefSoft);
+  prefs.setBoolPref("network.http.enforce-framing.strict_chunked_encoding",
+                    enforcePrefStrictChunked);
   httpserver.stop(do_test_finished);
 }
 
@@ -175,6 +181,8 @@ function completeTest2(request, data, ctx)
   // test 3 requires the enforce-framing prefs to be false
   prefs.setBoolPref("network.http.enforce-framing.http1", false);
   prefs.setBoolPref("network.http.enforce-framing.soft", false);
+  prefs.setBoolPref("network.http.enforce-framing.strict_chunked_encoding",
+                    false);
   run_test_number(3);
 }
 
