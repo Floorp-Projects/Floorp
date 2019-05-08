@@ -293,8 +293,8 @@ typedef enum JSGCParamKey {
   JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION = 27,
 
   /**
-   * If this percentage of the nursery is tenured, then proceed to examine which
-   * groups we should pretenure.
+   * If this percentage of the nursery is tenured and the nursery is at least
+   * 4MB, then proceed to examine which groups we should pretenure.
    *
    * Default: PretenureThreshold
    * Pref: None
