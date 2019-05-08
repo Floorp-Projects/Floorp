@@ -57,10 +57,12 @@ addon-list .addon.card {
 
 /* Theme preview image. */
 .card-heading-image {
+  /* If the width, height or aspect ratio changes, don't forget to update the
+   * getScreenshotUrlForAddon function in aboutaddons.js */
   width: var(--section-width);
-  /* This is a magic number for the aspect ratio we get from AMO. */
-  height: 89px;
-  object-fit: cover;
+  /* Adjust height so that the image preserves the aspect ratio from AMO.
+   * For details, see https://bugzilla.mozilla.org/show_bug.cgi?id=1546123 */
+  height: calc(var(--section-width) * 92 / 680);
 }
 
 .card-heading-icon {
