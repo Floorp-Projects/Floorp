@@ -78,5 +78,6 @@ internal object RustPlacesConnection : Connection {
     override fun close() = synchronized(this) {
         check(api != null) { "must call init first" }
         api!!.close()
+        api = null
     }
 }
