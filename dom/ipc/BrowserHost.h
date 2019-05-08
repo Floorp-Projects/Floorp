@@ -47,6 +47,7 @@ class BrowserHost : public RemoteBrowser, public nsIRemoteTab {
   // Get the IPDL actor for the root BrowserParent. This method should be
   // avoided and consumers migrated to use this class.
   BrowserParent* GetActor() { return mRoot; }
+  ContentParent* GetContentParent() const { return mRoot->Manager(); }
 
   BrowserHost* AsBrowserHost() override { return this; }
   BrowserBridgeHost* AsBrowserBridgeHost() override { return nullptr; }

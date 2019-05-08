@@ -68,93 +68,125 @@ void BrowserHost::UpdateDimensions(const nsIntRect& aRect,
 /* attribute boolean docShellIsActive; */
 NS_IMETHODIMP
 BrowserHost::GetDocShellIsActive(bool* aDocShellIsActive) {
-  return mRoot->GetDocShellIsActive(aDocShellIsActive);
+  *aDocShellIsActive = mRoot->GetDocShellIsActive();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 BrowserHost::SetDocShellIsActive(bool aDocShellIsActive) {
-  return mRoot->SetDocShellIsActive(aDocShellIsActive);
+  mRoot->SetDocShellIsActive(aDocShellIsActive);
+  return NS_OK;
 }
 
 /* attribute boolean renderLayers; */
 NS_IMETHODIMP
 BrowserHost::GetRenderLayers(bool* aRenderLayers) {
-  return mRoot->GetRenderLayers(aRenderLayers);
+  *aRenderLayers = mRoot->GetRenderLayers();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 BrowserHost::SetRenderLayers(bool aRenderLayers) {
-  return mRoot->SetRenderLayers(aRenderLayers);
+  mRoot->SetRenderLayers(aRenderLayers);
+  return NS_OK;
 }
 
 /* readonly attribute boolean hasLayers; */
 NS_IMETHODIMP
 BrowserHost::GetHasLayers(bool* aHasLayers) {
-  return mRoot->GetHasLayers(aHasLayers);
+  *aHasLayers = mRoot->GetHasLayers();
+  return NS_OK;
 }
 
 /* void forceRepaint (); */
 NS_IMETHODIMP
-BrowserHost::ForceRepaint(void) { return mRoot->ForceRepaint(); }
+BrowserHost::ForceRepaint(void) {
+  mRoot->ForceRepaint();
+  return NS_OK;
+}
 
 /* void resolutionChanged (); */
 NS_IMETHODIMP
 BrowserHost::NotifyResolutionChanged(void) {
-  return mRoot->NotifyResolutionChanged();
+  mRoot->NotifyResolutionChanged();
+  return NS_OK;
 }
 
 /* void deprioritize (); */
 NS_IMETHODIMP
-BrowserHost::Deprioritize(void) { return mRoot->Deprioritize(); }
+BrowserHost::Deprioritize(void) {
+  mRoot->Deprioritize();
+  return NS_OK;
+}
 
 /* void preserveLayers (in boolean aPreserveLayers); */
 NS_IMETHODIMP
 BrowserHost::PreserveLayers(bool aPreserveLayers) {
-  return mRoot->PreserveLayers(aPreserveLayers);
+  mRoot->PreserveLayers(aPreserveLayers);
+  return NS_OK;
 }
 
 /* readonly attribute uint64_t tabId; */
 NS_IMETHODIMP
-BrowserHost::GetTabId(uint64_t* aTabId) { return mRoot->GetTabId(aTabId); }
+BrowserHost::GetTabId(uint64_t* aTabId) {
+  *aTabId = mRoot->GetTabId();
+  return NS_OK;
+}
 
 /* readonly attribute uint64_t contentProcessId; */
 NS_IMETHODIMP
 BrowserHost::GetContentProcessId(uint64_t* aContentProcessId) {
-  return mRoot->GetContentProcessId(aContentProcessId);
+  *aContentProcessId = GetContentParent()->ChildID();
+  return NS_OK;
 }
 
 /* readonly attribute int32_t osPid; */
 NS_IMETHODIMP
-BrowserHost::GetOsPid(int32_t* aOsPid) { return mRoot->GetOsPid(aOsPid); }
+BrowserHost::GetOsPid(int32_t* aOsPid) {
+  *aOsPid = GetContentParent()->Pid();
+  return NS_OK;
+}
 
 /* readonly attribute boolean hasContentOpener; */
 NS_IMETHODIMP
 BrowserHost::GetHasContentOpener(bool* aHasContentOpener) {
-  return mRoot->GetHasContentOpener(aHasContentOpener);
+  *aHasContentOpener = mRoot->GetHasContentOpener();
+  return NS_OK;
 }
 
 /* readonly attribute boolean hasPresented; */
 NS_IMETHODIMP
 BrowserHost::GetHasPresented(bool* aHasPresented) {
-  return mRoot->GetHasPresented(aHasPresented);
+  *aHasPresented = mRoot->GetHasPresented();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 BrowserHost::GetWindowGlobalParents(
     nsTArray<RefPtr<WindowGlobalParent>>& aWindowGlobalParents) {
-  return mRoot->GetWindowGlobalParents(aWindowGlobalParents);
+  mRoot->VisitAll([&aWindowGlobalParents](BrowserParent* aBrowser) {
+    const auto& windowGlobalParents = aBrowser->ManagedPWindowGlobalParent();
+    for (auto iter = windowGlobalParents.ConstIter(); !iter.Done();
+         iter.Next()) {
+      WindowGlobalParent* windowGlobalParent =
+          static_cast<WindowGlobalParent*>(iter.Get()->GetKey());
+      aWindowGlobalParents.AppendElement(windowGlobalParent);
+    }
+  });
+  return NS_OK;
 }
 
 /* void transmitPermissionsForPrincipal (in nsIPrincipal aPrincipal); */
 NS_IMETHODIMP
 BrowserHost::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal) {
-  return mRoot->TransmitPermissionsForPrincipal(aPrincipal);
+  return GetContentParent()->TransmitPermissionsForPrincipal(aPrincipal);
 }
 
 /* readonly attribute boolean hasBeforeUnload; */
 NS_IMETHODIMP
 BrowserHost::GetHasBeforeUnload(bool* aHasBeforeUnload) {
-  return mRoot->GetHasBeforeUnload(aHasBeforeUnload);
+  *aHasBeforeUnload = mRoot->GetHasBeforeUnload();
+  return NS_OK;
 }
 
 /* readonly attribute Element ownerElement; */
@@ -170,34 +202,80 @@ NS_IMETHODIMP
 BrowserHost::StartApzAutoscroll(float aAnchorX, float aAnchorY,
                                 nsViewID aScrollId, uint32_t aPresShellId,
                                 bool* _retval) {
-  return mRoot->StartApzAutoscroll(aAnchorX, aAnchorY, aScrollId, aPresShellId,
-                                   _retval);
+  *_retval =
+      mRoot->StartApzAutoscroll(aAnchorX, aAnchorY, aScrollId, aPresShellId);
+  return NS_OK;
 }
 
 /* void stopApzAutoscroll (in nsViewID aScrollId, in uint32_t aPresShellId); */
 NS_IMETHODIMP
 BrowserHost::StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId) {
-  return mRoot->StopApzAutoscroll(aScrollId, aPresShellId);
+  mRoot->StopApzAutoscroll(aScrollId, aPresShellId);
+  return NS_OK;
 }
 
 /* bool saveRecording (in AString aFileName); */
 NS_IMETHODIMP
 BrowserHost::SaveRecording(const nsAString& aFileName, bool* _retval) {
-  return mRoot->SaveRecording(aFileName, _retval);
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_NewLocalFile(aFileName, false, getter_AddRefs(file));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return GetContentParent()->SaveRecording(file, _retval);
 }
 
 /* Promise getContentBlockingLog (); */
 NS_IMETHODIMP
-BrowserHost::GetContentBlockingLog(::mozilla::dom::Promise** _retval) {
-  return mRoot->GetContentBlockingLog(_retval);
+BrowserHost::GetContentBlockingLog(::mozilla::dom::Promise** aPromise) {
+  NS_ENSURE_ARG_POINTER(aPromise);
+
+  *aPromise = nullptr;
+  if (!mRoot->GetOwnerElement()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult rv;
+  RefPtr<Promise> jsPromise = Promise::Create(
+      mRoot->GetOwnerElement()->OwnerDoc()->GetOwnerGlobal(), rv);
+  if (rv.Failed()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<Promise> copy(jsPromise);
+  copy.forget(aPromise);
+
+  auto cblPromise = mRoot->SendGetContentBlockingLog();
+  cblPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [jsPromise](Tuple<nsCString, bool>&& aResult) {
+        if (Get<1>(aResult)) {
+          NS_ConvertUTF8toUTF16 utf16(Get<0>(aResult));
+          jsPromise->MaybeResolve(std::move(utf16));
+        } else {
+          jsPromise->MaybeRejectWithUndefined();
+        }
+      },
+      [jsPromise](ResponseRejectReason&& aReason) {
+        jsPromise->MaybeRejectWithUndefined();
+      });
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 BrowserHost::MaybeCancelContentJSExecutionFromScript(
     nsIRemoteTab::NavigationType aNavigationType,
     JS::Handle<JS::Value> aCancelContentJSOptions, JSContext* aCx) {
-  return mRoot->MaybeCancelContentJSExecutionFromScript(
-      aNavigationType, aCancelContentJSOptions, aCx);
+  dom::CancelContentJSOptions cancelContentJSOptions;
+  if (!cancelContentJSOptions.Init(aCx, aCancelContentJSOptions)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (StaticPrefs::dom_ipc_cancel_content_js_when_navigating()) {
+    GetContentParent()->CancelContentJSExecutionIfRunning(
+        mRoot, aNavigationType, cancelContentJSOptions);
+  }
+  return NS_OK;
 }
 
 }  // namespace dom

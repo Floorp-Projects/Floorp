@@ -694,12 +694,7 @@ void ParticularProcessPriorityManager::OnBrowserParentDestroyed(
     return;
   }
 
-  uint64_t tabId;
-  if (NS_WARN_IF(NS_FAILED(browserParent->GetTabId(&tabId)))) {
-    return;
-  }
-
-  mActiveBrowserParents.RemoveEntry(tabId);
+  mActiveBrowserParents.RemoveEntry(browserParent->GetTabId());
 
   ResetPriority();
 }
