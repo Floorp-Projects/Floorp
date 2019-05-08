@@ -11,7 +11,7 @@ internal object GeckoVersions {
     /**
      * GeckoView Beta Version.
      */
-    const val beta_version = "67.0.20190505015947"
+    const val beta_version = "67.0.20190506235559"
 
     /**
      * GeckoView Release Version.
