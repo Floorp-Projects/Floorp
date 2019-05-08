@@ -62,13 +62,13 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   virtual ~nsDocumentEncoder();
 
   void Initialize(bool aClearCachedSerializer = true);
-  nsresult SerializeNodeStart(nsINode* aNode, int32_t aStartOffset,
+  nsresult SerializeNodeStart(nsINode& aOriginalNode, int32_t aStartOffset,
                               int32_t aEndOffset, nsAString& aStr,
-                              nsINode* aOriginalNode = nullptr);
+                              nsINode* aFixupNode = nullptr);
   nsresult SerializeToStringRecursive(nsINode* aNode, nsAString& aStr,
                                       bool aDontSerializeRoot,
                                       uint32_t aMaxLength = 0);
-  nsresult SerializeNodeEnd(nsINode* aNode, nsAString& aStr);
+  nsresult SerializeNodeEnd(nsINode& aNode, nsAString& aStr);
   // This serializes the content of aNode.
   nsresult SerializeToStringIterative(nsINode* aNode, nsAString& aStr);
   nsresult SerializeRangeToString(nsRange* aRange, nsAString& aOutputString);
@@ -296,34 +296,59 @@ nsDocumentEncoder::GetMimeType(nsAString& aMimeType) {
 
 bool nsDocumentEncoder::IncludeInContext(nsINode* aNode) { return false; }
 
-nsresult nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
-                                               int32_t aStartOffset,
-                                               int32_t aEndOffset,
-                                               nsAString& aStr,
-                                               nsINode* aOriginalNode) {
-  if (mNeedsPreformatScanning && aNode->IsElement()) {
-    mSerializer->ScanElementForPreformat(aNode->AsElement());
-  }
-
-  if (!IsVisibleNode(aNode)) return NS_OK;
-
-  nsINode* node = nullptr;
-  nsCOMPtr<nsINode> fixedNodeKungfuDeathGrip;
-
-  // Caller didn't do fixup, so we'll do it ourselves
-  if (!aOriginalNode) {
-    aOriginalNode = aNode;
+class FixupNodeDeterminer {
+ public:
+  FixupNodeDeterminer(nsIDocumentEncoderNodeFixup* aNodeFixup,
+                      nsINode* aFixupNode, nsINode& aOriginalNode)
+      : mIsSerializationOfFixupChildrenNeeded{false},
+        mNodeFixup(aNodeFixup),
+        mOriginalNode(aOriginalNode) {
     if (mNodeFixup) {
-      bool dummy;
-      mNodeFixup->FixupNode(aNode, &dummy,
-                            getter_AddRefs(fixedNodeKungfuDeathGrip));
-      node = fixedNodeKungfuDeathGrip;
+      if (aFixupNode) {
+        mFixupNode = aFixupNode;
+      } else {
+        mNodeFixup->FixupNode(&mOriginalNode,
+                              &mIsSerializationOfFixupChildrenNeeded,
+                              getter_AddRefs(mFixupNode));
+      }
     }
   }
 
-  // Either there was no fixed-up node,
-  // or the caller did fixup themselves and aNode is already fixed
-  if (!node) node = aNode;
+  bool IsSerializationOfFixupChildrenNeeded() const {
+    return mIsSerializationOfFixupChildrenNeeded;
+  }
+
+  /**
+   * @return The fixup node, if available, otherwise the original node. The
+   * former is kept alive by this object.
+   */
+  nsINode& GetFixupNodeFallBackToOriginalNode() const {
+    return mFixupNode ? *mFixupNode : mOriginalNode;
+  }
+
+ private:
+  bool mIsSerializationOfFixupChildrenNeeded;
+  nsIDocumentEncoderNodeFixup* mNodeFixup;
+  nsCOMPtr<nsINode> mFixupNode;
+  nsINode& mOriginalNode;
+};
+
+nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
+                                               int32_t aStartOffset,
+                                               int32_t aEndOffset,
+                                               nsAString& aStr,
+                                               nsINode* aFixupNode) {
+  if (mNeedsPreformatScanning && aOriginalNode.IsElement()) {
+    mSerializer->ScanElementForPreformat(aOriginalNode.AsElement());
+  }
+
+  if (!IsVisibleNode(&aOriginalNode)) {
+    return NS_OK;
+  }
+
+  FixupNodeDeterminer fixupNodeDeterminer{mNodeFixup, aFixupNode,
+                                          aOriginalNode};
+  nsINode* node = &fixupNodeDeterminer.GetFixupNodeFallBackToOriginalNode();
 
   if (node->IsElement()) {
     if ((mFlags & (nsIDocumentEncoder::OutputPreformatted |
@@ -331,7 +356,7 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
         nsLayoutUtils::IsInvisibleBreak(node)) {
       return NS_OK;
     }
-    Element* originalElement = Element::FromNodeOrNull(aOriginalNode);
+    Element* originalElement = aOriginalNode.AsElement();
     mSerializer->AppendElementStart(node->AsElement(), originalElement, aStr);
     return NS_OK;
   }
@@ -367,15 +392,17 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
   return NS_OK;
 }
 
-nsresult nsDocumentEncoder::SerializeNodeEnd(nsINode* aNode, nsAString& aStr) {
-  if (mNeedsPreformatScanning && aNode->IsElement()) {
-    mSerializer->ForgetElementForPreformat(aNode->AsElement());
+nsresult nsDocumentEncoder::SerializeNodeEnd(nsINode& aNode, nsAString& aStr) {
+  if (mNeedsPreformatScanning && aNode.IsElement()) {
+    mSerializer->ForgetElementForPreformat(aNode.AsElement());
   }
 
-  if (!IsVisibleNode(aNode)) return NS_OK;
+  if (!IsVisibleNode(&aNode)) {
+    return NS_OK;
+  }
 
-  if (aNode->IsElement()) {
-    mSerializer->AppendElementEnd(aNode->AsElement(), aStr);
+  if (aNode.IsElement()) {
+    mSerializer->AppendElementEnd(aNode.AsElement(), aStr);
   }
   return NS_OK;
 }
@@ -391,18 +418,11 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
   if (!IsVisibleNode(aNode)) return NS_OK;
 
   nsresult rv = NS_OK;
-  bool serializeClonedChildren = false;
-  nsINode* maybeFixedNode = nullptr;
 
-  // Keep the node from FixupNode alive.
-  nsCOMPtr<nsINode> fixedNodeKungfuDeathGrip;
-  if (mNodeFixup) {
-    mNodeFixup->FixupNode(aNode, &serializeClonedChildren,
-                          getter_AddRefs(fixedNodeKungfuDeathGrip));
-    maybeFixedNode = fixedNodeKungfuDeathGrip;
-  }
-
-  if (!maybeFixedNode) maybeFixedNode = aNode;
+  MOZ_ASSERT(aNode, "aNode shouldn't be nullptr.");
+  FixupNodeDeterminer fixupNodeDeterminer{mNodeFixup, nullptr, *aNode};
+  nsINode* maybeFixedNode =
+      &fixupNodeDeterminer.GetFixupNodeFallBackToOriginalNode();
 
   if ((mFlags & SkipInvisibleContent) &&
       !(mFlags & OutputNonTextContentAsPlaceholder)) {
@@ -421,11 +441,13 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
       MOZ_ASSERT(aMaxLength >= aStr.Length());
       endOffset = aMaxLength - aStr.Length();
     }
-    rv = SerializeNodeStart(maybeFixedNode, 0, endOffset, aStr, aNode);
+    rv = SerializeNodeStart(*aNode, 0, endOffset, aStr, maybeFixedNode);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsINode* node = serializeClonedChildren ? maybeFixedNode : aNode;
+  nsINode* node = fixupNodeDeterminer.IsSerializationOfFixupChildrenNeeded()
+                      ? maybeFixedNode
+                      : aNode;
 
   for (nsINode* child = nsNodeUtils::GetFirstChildOfTemplateOrNode(node); child;
        child = child->GetNextSibling()) {
@@ -434,7 +456,7 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
   }
 
   if (!aDontSerializeRoot) {
-    rv = SerializeNodeEnd(maybeFixedNode, aStr);
+    rv = SerializeNodeEnd(*maybeFixedNode, aStr);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -448,11 +470,11 @@ nsresult nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
   nsINode* node = nsNodeUtils::GetFirstChildOfTemplateOrNode(aNode);
   while (node) {
     nsINode* current = node;
-    rv = SerializeNodeStart(current, 0, -1, aStr, current);
+    rv = SerializeNodeStart(*current, 0, -1, aStr, current);
     NS_ENSURE_SUCCESS(rv, rv);
     node = nsNodeUtils::GetFirstChildOfTemplateOrNode(current);
     while (!node && current && current != aNode) {
-      rv = SerializeNodeEnd(current, aStr);
+      rv = SerializeNodeEnd(*current, aStr);
       NS_ENSURE_SUCCESS(rv, rv);
       // Check if we have siblings.
       node = current->GetNextSibling();
@@ -577,14 +599,14 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
     if (IsTextNode(aNode)) {
       if (startNode == content) {
         int32_t startOffset = aRange->StartOffset();
-        rv = SerializeNodeStart(aNode, startOffset, -1, aString);
+        rv = SerializeNodeStart(*aNode, startOffset, -1, aString);
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
         int32_t endOffset = aRange->EndOffset();
-        rv = SerializeNodeStart(aNode, 0, endOffset, aString);
+        rv = SerializeNodeStart(*aNode, 0, endOffset, aString);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-      rv = SerializeNodeEnd(aNode, aString);
+      rv = SerializeNodeEnd(*aNode, aString);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       if (aNode != mCommonParent) {
@@ -597,7 +619,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
         if ((endNode == content) && !mHaltRangeHint) mEndDepth++;
 
         // serialize the start of this node
-        rv = SerializeNodeStart(aNode, 0, -1, aString);
+        rv = SerializeNodeStart(*aNode, 0, -1, aString);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -653,7 +675,7 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
 
       // serialize the end of this node
       if (aNode != mCommonParent) {
-        rv = SerializeNodeEnd(aNode, aString);
+        rv = SerializeNodeEnd(*aNode, aString);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -682,7 +704,7 @@ nsresult nsDocumentEncoder::SerializeRangeContextStart(
 
     // Either a general inclusion or as immediate context
     if (IncludeInContext(node) || i < j) {
-      rv = SerializeNodeStart(node, 0, -1, aString);
+      rv = SerializeNodeStart(*node, 0, -1, aString);
       serializedContext->AppendElement(node);
       if (NS_FAILED(rv)) break;
     }
@@ -702,7 +724,7 @@ nsresult nsDocumentEncoder::SerializeRangeContextEnd(nsAString& aString) {
 
   nsresult rv = NS_OK;
   for (nsINode* node : Reversed(serializedContext)) {
-    rv = SerializeNodeEnd(node, aString);
+    rv = SerializeNodeEnd(*node, aString);
 
     if (NS_FAILED(rv)) break;
   }
@@ -759,10 +781,10 @@ nsresult nsDocumentEncoder::SerializeRangeToString(nsRange* aRange,
         if (!parent || !IsVisibleNode(parent)) return NS_OK;
       }
     }
-    rv = SerializeNodeStart(startContainer, startOffset, endOffset,
+    rv = SerializeNodeStart(*startContainer, startOffset, endOffset,
                             aOutputString);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = SerializeNodeEnd(startContainer, aOutputString);
+    rv = SerializeNodeEnd(*startContainer, aOutputString);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     rv = SerializeRangeNodes(aRange, mCommonParent, aOutputString, 0);
@@ -861,7 +883,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
       NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
       if (node != prevNode) {
         if (prevNode) {
-          rv = SerializeNodeEnd(prevNode, output);
+          rv = SerializeNodeEnd(*prevNode, output);
           NS_ENSURE_SUCCESS(rv, rv);
         }
         nsCOMPtr<nsIContent> content = do_QueryInterface(node);
@@ -878,7 +900,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
             mDisableContextSerialize = true;
           }
 
-          rv = SerializeNodeStart(node, 0, -1, output);
+          rv = SerializeNodeStart(*node, 0, -1, output);
           NS_ENSURE_SUCCESS(rv, rv);
           prevNode = node;
         } else if (prevNode) {
@@ -899,7 +921,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
     mStartDepth = firstRangeStartDepth;
 
     if (prevNode) {
-      rv = SerializeNodeEnd(prevNode, output);
+      rv = SerializeNodeEnd(*prevNode, output);
       NS_ENSURE_SUCCESS(rv, rv);
       mDisableContextSerialize = false;
       rv = SerializeRangeContextEnd(output);
@@ -1266,12 +1288,12 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
   i = count;
   while (i > 0) {
     node = mCommonAncestors.ElementAt(--i);
-    SerializeNodeStart(node, 0, -1, aContextString);
+    SerializeNodeStart(*node, 0, -1, aContextString);
   }
   // i = 0; guaranteed by above
   while (i < count) {
     node = mCommonAncestors.ElementAt(i++);
-    SerializeNodeEnd(node, aContextString);
+    SerializeNodeEnd(*node, aContextString);
   }
 
   // encode range info : the start and end depth of the selection, where the
