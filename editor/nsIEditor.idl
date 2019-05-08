@@ -102,6 +102,7 @@ interface nsIEditor  : nsISupports
    *                      doubt, pass eStrip -- eNoStrip is only for if you're
    *                      about to insert text or similar right after.
    */
+  [can_run_script]
   void deleteSelection(in short action, in short stripWrappers);
 
 
@@ -114,6 +115,7 @@ interface nsIEditor  : nsISupports
   readonly attribute boolean documentModified;
 
   /** Sets the current 'Save' document character set */
+  [can_run_script]  // setter only
   attribute ACString documentCharacterSet;
 
   /** to be used ONLY when we need to override the doc's modification
@@ -265,6 +267,7 @@ interface nsIEditor  : nsISupports
     * What about mixed selections?
     * What are the clipboard formats?
     */
+  [can_run_script]
   void cut();
 
   /** Can we cut? True if the doc is modifiable, and we have a non-
@@ -338,6 +341,7 @@ interface nsIEditor  : nsISupports
    * @param aAttribute  the string representation of the attribute to set
    * @param aValue      the value to set aAttribute to
    */
+  [can_run_script]
   void setAttribute(in Element aElement, in AString attributestr,
                     in AString attvalue);
 
@@ -362,6 +366,7 @@ interface nsIEditor  : nsISupports
    * @param aElement      the content element to operate on
    * @param aAttribute    the string representation of the attribute to get
    */
+  [can_run_script]
   void removeAttribute(in Element aElement,
                        in AString aAttribute);
 
@@ -375,6 +380,7 @@ interface nsIEditor  : nsISupports
    * @param aSourceElement the source element to copy attributes from
    * @exception NS_ERROR_NULL_POINTER at least one of the elements is null
    */
+  [can_run_script]
   void cloneAttribute(in AString aAttribute,
                       in Element aDestElement, in Element aSourceElement);
 
@@ -417,6 +423,7 @@ interface nsIEditor  : nsISupports
    * @param aNewLeftNode         [OUT] the new node resulting from the split,
    *                             becomes aExistingRightNode's previous sibling.
    */
+  [can_run_script]
   void splitNode(in Node existingRightNode,
                  in long offset,
                  out Node newLeftNode);
@@ -431,6 +438,7 @@ interface nsIEditor  : nsISupports
    *                      of the same type.  However, a text node can be
    *                      merged only with another text node.
    */
+  [can_run_script]
   void joinNodes(in Node leftNode,
                  in Node rightNode,
                  in Node parent);
@@ -439,6 +447,7 @@ interface nsIEditor  : nsISupports
    * deleteNode removes aChild from aParent.
    * @param aChild    The node to delete
    */
+  [can_run_script]
   void deleteNode(in Node child);
 
   /**

@@ -16,22 +16,26 @@ class _BookmarkPanelHub {
     this._trigger = {id: "bookmark-panel"};
     this._handleMessageRequest = null;
     this._addImpression = null;
+    this._dispatch = null;
     this._initalized = false;
     this._response = null;
     this._l10n = null;
 
     this.messageRequest = this.messageRequest.bind(this);
     this.toggleRecommendation = this.toggleRecommendation.bind(this);
+    this.sendUserEventTelemetry = this.sendUserEventTelemetry.bind(this);
     this.collapseMessage = this.collapseMessage.bind(this);
   }
 
   /**
    * @param {function} handleMessageRequest
    * @param {function} addImpression
+   * @param {function} dispatch - Used for sending user telemetry information
    */
-  init(handleMessageRequest, addImpression) {
+  init(handleMessageRequest, addImpression, dispatch) {
     this._handleMessageRequest = handleMessageRequest;
     this._addImpression = addImpression;
+    this._dispatch = dispatch;
     this._l10n = new DOMLocalization([
       "browser/branding/sync-brand.ftl",
       "browser/newtab/asrouter.ftl",
@@ -44,6 +48,7 @@ class _BookmarkPanelHub {
     this._initalized = false;
     this._handleMessageRequest = null;
     this._addImpression = null;
+    this._dispatch = null;
     this._response = null;
   }
 
@@ -83,6 +88,7 @@ class _BookmarkPanelHub {
     if (response && response.content) {
       this.showMessage(response.content, target, win);
       this.sendImpression();
+      this.sendUserEventTelemetry("IMPRESSION");
     } else {
       this.hideMessage(target);
     }
@@ -111,6 +117,7 @@ class _BookmarkPanelHub {
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
           csp: null,
         });
+        this.sendUserEventTelemetry("CLICK");
       });
       recommendation.style.color = message.color;
       recommendation.style.background = `-moz-linear-gradient(-45deg, ${message.background_color_1} 0%, ${message.background_color_2} 70%)`;
@@ -119,6 +126,7 @@ class _BookmarkPanelHub {
       close.setAttribute("aria-label", "close");
       this._l10n.setAttributes(close, message.close_button.tooltiptext);
       close.addEventListener("click", e => {
+        this.sendUserEventTelemetry("DISMISS");
         this.collapseMessage();
         target.close(e);
       });
@@ -180,6 +188,17 @@ class _BookmarkPanelHub {
 
   sendImpression() {
     this._addImpression(this._response);
+  }
+
+  sendUserEventTelemetry(event) {
+    this._sendTelemetry({message_id: this._response.id, bucket_id: this._response.id, event});
+  }
+
+  _sendTelemetry(ping) {
+    this._dispatch({
+      type: "DOORHANGER_TELEMETRY",
+      data: {action: "cfr_user_event", source: "CFR", ...ping},
+    });
   }
 }
 

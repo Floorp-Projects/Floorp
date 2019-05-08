@@ -27,6 +27,10 @@
 #include "nsServiceManagerUtils.h"
 #include "nsNetCID.h"
 
+#if defined(XP_MACOSX)
+#  include "nsMacUtilsImpl.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -681,6 +685,10 @@ nsresult ProxyAutoConfig::Init(const nsCString& aPACURI,
 nsresult ProxyAutoConfig::SetupJS() {
   mJSNeedsSetup = false;
   MOZ_ASSERT(!GetRunning(), "JIT is running");
+
+#if defined(XP_MACOSX)
+  nsMacUtilsImpl::EnableTCSMIfAvailable();
+#endif
 
   delete mJSContext;
   mJSContext = nullptr;

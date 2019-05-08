@@ -42,6 +42,7 @@ async function getAddonInfo() {
 
 const L10N = new Localization([
   "branding/brand.ftl",
+  "browser/branding/brandings.ftl",
   "browser/branding/sync-brand.ftl",
   "browser/newtab/onboarding.ftl",
 ]);
@@ -148,6 +149,7 @@ const ONBOARDING_MESSAGES = async () => ([
     targeting: "trailheadInterrupt == 'join'",
     trigger: {id: "firstRun"},
     includeBundle: {length: 3, template: "onboarding", trigger: {id: "showOnboarding"}},
+    utm_term: "trailhead-join",
     content: {
       className: "joinCohort",
       title: {string_id: "onboarding-welcome-body"},
@@ -177,6 +179,7 @@ const ONBOARDING_MESSAGES = async () => ([
     targeting: "trailheadInterrupt == 'sync'",
     trigger: {id: "firstRun"},
     includeBundle: {length: 3, template: "onboarding", trigger: {id: "showOnboarding"}},
+    utm_term: "trailhead-sync",
     content: {
       className: "syncCohort",
       title: {property_id: "firstrun_title"},
@@ -201,6 +204,7 @@ const ONBOARDING_MESSAGES = async () => ([
     targeting: "trailheadInterrupt == 'cards'",
     trigger: {id: "firstRun"},
     includeBundle: {length: 3, template: "onboarding", trigger: {id: "showOnboarding"}},
+    utm_term: "trailhead-cards",
   },
   {
     id: "TRAILHEAD_4",
@@ -241,7 +245,8 @@ const ONBOARDING_MESSAGES = async () => ([
         label: {string_id: "onboarding-data-sync-button"},
         action: {
           type: "OPEN_URL",
-          data: {args: "https://accounts.firefox.com/?service=sync&action=email&context=fx_desktop_v3&entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun", where: "tabshifted"},
+          addFlowParams: true,
+          data: {args: "https://accounts.firefox.com/?service=sync&action=email&context=fx_desktop_v3&entrypoint=activity-stream-firstrun&style=trailhead", where: "tabshifted"},
         },
       },
     },
@@ -274,11 +279,11 @@ const ONBOARDING_MESSAGES = async () => ([
     bundled: 3,
     order: 1,
     content: {
-      title: {string_id: "onboarding-private-browsing-title"},
-      text: {string_id: "onboarding-private-browsing-text"},
+      title: {string_id: "onboarding-browse-privately-title"},
+      text: {string_id: "onboarding-browse-privately-text"},
       icon: "private",
       primary_button: {
-        label: {string_id: "onboarding-private-browsing-button"},
+        label: {string_id: "onboarding-browse-privately-button"},
         action: {type: "OPEN_PRIVATE_BROWSER_WINDOW"},
       },
     },
@@ -298,7 +303,7 @@ const ONBOARDING_MESSAGES = async () => ([
         label: {string_id: "onboarding-firefox-send-button"},
         action: {
           type: "OPEN_URL",
-          data: {args: "https://send.firefox.com/?utm_source=activity-stream?utm_medium=referral?utm_campaign=firstrun", where: "tabshifted"},
+          data: {args: "https://send.firefox.com/", where: "tabshifted"},
         },
       },
     },
@@ -329,25 +334,6 @@ const ONBOARDING_MESSAGES = async () => ([
     id: "TRAILHEAD_CARD_7",
     template: "onboarding",
     bundled: 3,
-    content: {
-      title: {string_id: "onboarding-privacy-right-title"},
-      text: {string_id: "onboarding-privacy-right-text"},
-      icon: "pledge",
-      primary_button: {
-        label: {string_id: "onboarding-privacy-right-button"},
-        action: {
-          type: "OPEN_URL",
-          data: {args: "https://www.mozilla.org/?privacy-right", where: "tabshifted"},
-        },
-      },
-    },
-    targeting: "trailheadTriplet == 'unused'",
-    trigger: {id: "showOnboarding"},
-  },
-  {
-    id: "TRAILHEAD_CARD_8",
-    template: "onboarding",
-    bundled: 3,
     order: 3,
     content: {
       title: {string_id: "onboarding-send-tabs-title"},
@@ -365,7 +351,7 @@ const ONBOARDING_MESSAGES = async () => ([
     trigger: {id: "showOnboarding"},
   },
   {
-    id: "TRAILHEAD_CARD_9",
+    id: "TRAILHEAD_CARD_8",
     template: "onboarding",
     bundled: 3,
     order: 2,
@@ -385,7 +371,7 @@ const ONBOARDING_MESSAGES = async () => ([
     trigger: {id: "showOnboarding"},
   },
   {
-    id: "TRAILHEAD_CARD_10",
+    id: "TRAILHEAD_CARD_9",
     template: "onboarding",
     bundled: 3,
     order: 3,
@@ -405,7 +391,7 @@ const ONBOARDING_MESSAGES = async () => ([
     trigger: {id: "showOnboarding"},
   },
   {
-    id: "TRAILHEAD_CARD_11",
+    id: "TRAILHEAD_CARD_10",
     template: "onboarding",
     bundled: 3,
     order: 4,

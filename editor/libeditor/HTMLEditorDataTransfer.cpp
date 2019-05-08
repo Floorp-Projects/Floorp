@@ -338,7 +338,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     if (wsObj.mEndReasonNode && TextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
         !IsVisibleBRElement(wsObj.mEndReasonNode)) {
       AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
-      rv = DeleteNodeWithTransaction(*wsObj.mEndReasonNode);
+      rv = DeleteNodeWithTransaction(MOZ_KnownLive(*wsObj.mEndReasonNode));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -350,7 +350,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
     // Are we in a text node? If so, split it.
     if (pointToInsert.IsInTextNode()) {
       SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
-          *pointToInsert.GetContainerAsContent(), pointToInsert,
+          MOZ_KnownLive(*pointToInsert.GetContainerAsContent()), pointToInsert,
           SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
@@ -469,7 +469,8 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
                         !pointToInsert.GetContainer()->GetParentNode())) {
                   // Is it an orphan node?
                 } else {
-                  DeleteNodeWithTransaction(*pointToInsert.GetContainer());
+                  DeleteNodeWithTransaction(
+                      MOZ_KnownLive(*pointToInsert.GetContainer()));
                   pointToInsert.Set(pointToInsert.GetContainer());
                 }
               }

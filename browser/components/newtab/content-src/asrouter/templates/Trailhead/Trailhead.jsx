@@ -6,13 +6,21 @@ import React from "react";
 
 const FLUENT_FILES = [
   "branding/brand.ftl",
+  "browser/branding/brandings.ftl",
   "browser/branding/sync-brand.ftl",
-  // These are finalized strings exposed to localizers
   "browser/newtab/onboarding.ftl",
-  // These are WIP/in-development strings that only get used if the string
-  // doesn't already exist in onboarding.ftl above
-  "trailhead.ftl",
 ];
+
+// From resource://devtools/client/shared/focus.js
+const FOCUSABLE_SELECTOR = [
+  "a[href]:not([tabindex='-1'])",
+  "button:not([disabled]):not([tabindex='-1'])",
+  "iframe:not([tabindex='-1'])",
+  "input:not([disabled]):not([tabindex='-1'])",
+  "select:not([disabled]):not([tabindex='-1'])",
+  "textarea:not([disabled]):not([tabindex='-1'])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(", ");
 
 export class _Trailhead extends React.PureComponent {
   constructor(props) {
@@ -20,8 +28,10 @@ export class _Trailhead extends React.PureComponent {
     this.closeModal = this.closeModal.bind(this);
     this.hideCardPanel = this.hideCardPanel.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
+    this.onStartBlur = this.onStartBlur.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.onInputInvalid = this.onInputInvalid.bind(this);
+    this.onCardAction = this.onCardAction.bind(this);
 
     this.state = {
       emailInput: "",
@@ -34,6 +44,10 @@ export class _Trailhead extends React.PureComponent {
     this.didFetch = false;
   }
 
+  get dialog() {
+    return this.props.document.getElementById("trailheadDialog");
+  }
+
   async componentWillMount() {
     FLUENT_FILES.forEach(file => {
       const link = document.head.appendChild(document.createElement("link"));
@@ -44,8 +58,9 @@ export class _Trailhead extends React.PureComponent {
     if (this.props.fxaEndpoint && !this.didFetch) {
       try {
         this.didFetch = true;
-        const fxaParams = "entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun&utm_term=trailhead&form_type=email";
-        const response = await fetch(`${this.props.fxaEndpoint}/metrics-flow?${fxaParams}`, {credentials: "omit"});
+        const url = new URL(`${this.props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
+        this.addUtmParams(url);
+        const response = await fetch(url, {credentials: "omit"});
         if (response.status === 200) {
           const {flowId, flowBeginTime} = await response.json();
           this.setState({flowId, flowBeginTime});
@@ -60,14 +75,20 @@ export class _Trailhead extends React.PureComponent {
 
   componentDidMount() {
     // We need to remove hide-main since we should show it underneath everything that has rendered
-    global.document.body.classList.remove("hide-main");
+    this.props.document.body.classList.remove("hide-main");
 
     // Add inline-onboarding class to disable fixed search header and fixed positioned settings icon
-    global.document.body.classList.add("inline-onboarding");
+    this.props.document.body.classList.add("inline-onboarding");
 
-    if (!this.props.message.content) {
+    // The rest of the page is "hidden" when the modal is open
+    if (this.props.message.content) {
+      this.props.document.getElementById("root").setAttribute("aria-hidden", "true");
+
+      // Start with focus in the email input box
+      this.dialog.querySelector("input[name=email]").focus();
+    } else {
       // No modal overlay, let the user scroll and deal them some cards.
-      global.document.body.classList.remove("welcome");
+      this.props.document.body.classList.remove("welcome");
 
       if (this.props.message.includeBundle || this.props.message.cards) {
         this.revealCards();
@@ -75,8 +96,8 @@ export class _Trailhead extends React.PureComponent {
     }
   }
 
-  componentDidUnmount() {
-    global.document.body.classList.remove("inline-onboarding");
+  componentWillUnmount() {
+    this.props.document.body.classList.remove("inline-onboarding");
   }
 
   onInputChange(e) {
@@ -84,6 +105,16 @@ export class _Trailhead extends React.PureComponent {
     this.setState({emailInput: e.target.value});
     error.classList.remove("active");
     e.target.classList.remove("invalid");
+  }
+
+  onStartBlur(event) {
+    // Make sure focus stays within the dialog when tabbing from the button
+    const {dialog} = this;
+    if (event.relatedTarget &&
+        !(dialog.compareDocumentPosition(event.relatedTarget) &
+          dialog.DOCUMENT_POSITION_CONTAINED_BY)) {
+      dialog.querySelector(FOCUSABLE_SELECTOR).focus();
+    }
   }
 
   onSubmit() {
@@ -94,7 +125,8 @@ export class _Trailhead extends React.PureComponent {
 
   closeModal() {
     global.removeEventListener("visibilitychange", this.closeModal);
-    global.document.body.classList.remove("welcome");
+    this.props.document.body.classList.remove("welcome");
+    this.props.document.getElementById("root").removeAttribute("aria-hidden");
     this.setState({isModalOpen: false});
     this.revealCards();
     this.props.dispatch(ac.UserEvent({event: "SKIPPED_SIGNIN", ...this._getFormInfo()}));
@@ -131,18 +163,55 @@ export class _Trailhead extends React.PureComponent {
     return str.value;
   }
 
+  /**
+   * Takes in a url as a string or URL object and returns a URL object with the
+   * utm_* parameters added to it. If a URL object is passed in, the paraemeters
+   * are added to it (the return value can be ignored in that case as it's the
+   * same object).
+   */
+  addUtmParams(url, isCard = false) {
+    let returnUrl = url;
+    if (typeof returnUrl === "string") {
+      returnUrl = new URL(url);
+    }
+    returnUrl.searchParams.append("utm_source", "activity-stream");
+    returnUrl.searchParams.append("utm_campaign", "firstrun");
+    returnUrl.searchParams.append("utm_medium", "referral");
+    returnUrl.searchParams.append("utm_term", `${this.props.message.utm_term}${isCard ? "-card" : ""}`);
+    return returnUrl;
+  }
+
+  onCardAction(action) {
+    let actionUpdates = {};
+
+    if (action.type === "OPEN_URL") {
+      let url = new URL(action.data.args);
+      this.addUtmParams(url, true);
+
+      if (action.addFlowParams) {
+        url.searchParams.append("flow_id", this.state.flowId);
+        url.searchParams.append("flow_begin_time", this.state.flowBeginTime);
+      }
+
+      actionUpdates = {data: {...action.data, args: url}};
+    }
+
+    this.props.onAction({...action, ...actionUpdates});
+  }
+
   render() {
     const {props} = this;
-    const {bundle: cards, content} = props.message;
+    const {bundle: cards, content, utm_term} = props.message;
     const innerClassName = [
       "trailhead",
       content && content.className,
     ].filter(v => v).join(" ");
     return (<>
-    {this.state.isModalOpen && content ? <ModalOverlayWrapper innerClassName={innerClassName} onClose={this.closeModal}>
+    {this.state.isModalOpen && content ? <ModalOverlayWrapper innerClassName={innerClassName} onClose={this.closeModal} id="trailheadDialog" headerId="trailheadHeader">
       <div className="trailheadInner">
         <div className="trailheadContent">
-          <h1 data-l10n-id={content.title.string_id}>{this.getStringValue(content.title)}</h1>
+          <h1 data-l10n-id={content.title.string_id}
+            id="trailheadHeader">{this.getStringValue(content.title)}</h1>
           {content.subtitle &&
             <p data-l10n-id={content.subtitle.string_id}>{this.getStringValue(content.subtitle)}</p>
           }
@@ -154,7 +223,7 @@ export class _Trailhead extends React.PureComponent {
               </li>
             ))}
           </ul>
-          <a className="trailheadLearn" data-l10n-id={content.learn.text.string_id} href={content.learn.url}>
+          <a className="trailheadLearn" data-l10n-id={content.learn.text.string_id} href={this.addUtmParams(content.learn.url)}>
             {this.getStringValue(content.learn.text)}
           </a>
         </div>
@@ -168,9 +237,10 @@ export class _Trailhead extends React.PureComponent {
             <input name="entrypoint" type="hidden" value="activity-stream-firstrun" />
             <input name="utm_source" type="hidden" value="activity-stream" />
             <input name="utm_campaign" type="hidden" value="firstrun" />
-            <input name="utm_term" type="hidden" value="trailhead" />
+            <input name="utm_term" type="hidden" value={utm_term} />
             <input name="flow_id" type="hidden" value={this.state.flowId} />
             <input name="flow_begin_time" type="hidden" value={this.state.flowBeginTime} />
+            <input name="style" type="hidden" value="trailhead" />
             <p data-l10n-id="onboarding-join-form-email-error" className="error" />
             <input
               data-l10n-id={content.form.email.string_id}
@@ -182,9 +252,9 @@ export class _Trailhead extends React.PureComponent {
               onChange={this.onInputChange} />
             <p className="trailheadTerms" data-l10n-id="onboarding-join-form-legal">
               <a data-l10n-name="terms"
-                href="https://accounts.firefox.com/legal/terms" />
+                href={this.addUtmParams("https://accounts.firefox.com/legal/terms")} />
               <a data-l10n-name="privacy"
-                href="https://accounts.firefox.com/legal/privacy" />
+                href={this.addUtmParams("https://accounts.firefox.com/legal/privacy")} />
             </p>
             <button data-l10n-id={content.form.button.string_id} type="submit">
               {this.getStringValue(content.form.button)}
@@ -195,17 +265,19 @@ export class _Trailhead extends React.PureComponent {
 
       <button className="trailheadStart"
         data-l10n-id={content.skipButton.string_id}
+        onBlur={this.onStartBlur}
         onClick={this.closeModal}>{this.getStringValue(content.skipButton)}</button>
     </ModalOverlayWrapper> : null}
     {(cards && cards.length) ? <div className={`trailheadCards ${this.state.showCardPanel ? "expanded" : "collapsed"}`}>
-      <div className="trailheadCardsInner">
+      <div className="trailheadCardsInner"
+        aria-hidden={!this.state.showCards}>
         <h1 data-l10n-id="onboarding-welcome-header" />
         <div className={`trailheadCardGrid${this.state.showCards ? " show" : ""}`}>
         {cards.map(card => (
           <OnboardingCard key={card.id}
             className="trailheadCard"
             sendUserActionTelemetry={props.sendUserActionTelemetry}
-            onAction={props.onAction}
+            onAction={this.onCardAction}
             UISurface="TRAILHEAD"
             {...card} />
         ))}
