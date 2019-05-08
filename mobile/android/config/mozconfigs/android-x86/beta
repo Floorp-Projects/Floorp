@@ -11,7 +11,6 @@ ac_add_options --with-android-min-sdk=16
 ac_add_options --with-branding=mobile/android/branding/beta
 
 export MOZILLA_OFFICIAL=1
-export MOZ_TELEMETRY_REPORTING=1
 export MOZ_ANDROID_POCKET=1
 
 export AR="$topsrcdir/clang/bin/llvm-ar"

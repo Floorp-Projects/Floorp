@@ -8,7 +8,6 @@ ac_add_options --with-android-min-sdk=21
 ac_add_options --target=x86_64-linux-android
 
 export MOZILLA_OFFICIAL=1
-export MOZ_TELEMETRY_REPORTING=1
 export MOZ_ANDROID_POCKET
 
 ac_add_options --with-branding=mobile/android/branding/beta

@@ -641,7 +641,7 @@ def check_places_and_android_history(places, android_history):
         die('Cannot use MOZ_ANDROID_HISTORY alongside MOZ_PLACES.')
 
 
-option(env='MOZ_TELEMETRY_REPORTING',
+option(env='MOZ_TELEMETRY_REPORTING', default=mozilla_official,
        help='Enable telemetry reporting')
 
 set_define('MOZ_TELEMETRY_REPORTING', True, when='MOZ_TELEMETRY_REPORTING')

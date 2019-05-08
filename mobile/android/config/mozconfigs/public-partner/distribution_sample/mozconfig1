@@ -17,6 +17,5 @@ ac_add_options --with-branding=mobile/android/branding/nightly
 ac_add_options --with-android-distribution-directory=/builds/worker/workspace/build/partner
 
 export MOZILLA_OFFICIAL=1
-export MOZ_TELEMETRY_REPORTING=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"

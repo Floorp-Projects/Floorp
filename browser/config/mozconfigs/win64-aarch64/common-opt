@@ -14,8 +14,6 @@ ac_add_options --with-mozilla-api-keyfile=${WORKSPACE}/mozilla-desktop-geoloc-ap
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
-export MOZ_TELEMETRY_REPORTING=1
-
 . $topsrcdir/build/win64-aarch64/mozconfig.vs-latest
 
 # Package js shell.
