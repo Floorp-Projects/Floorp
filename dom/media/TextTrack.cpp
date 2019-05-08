@@ -318,11 +318,18 @@ void TextTrack::GetCurrentCuesAndOtherCues(
                  cue->StartTime(), cue->EndTime());
       aCurrentCues->AddCue(*cue);
     } else {
-      // Negative length cue, which is possible because user can set cue's end
-      // time arbitrary.
+      // As the spec didn't have a restriction for the negative duration, it
+      // does happen sometime if user sets it explictly. It would be treated as
+      // a `missing cue` later in the `TimeMarchesOn` but it won't be displayed.
       if (cue->EndTime() < cue->StartTime()) {
-        WEBVTT_LOG("[BAD TIME] skip cue %p [%f:%f] with negative length", cue,
-                   cue->StartTime(), cue->EndTime());
+        // Add cue into `otherCue` only when its start time is contained by the
+        // current time interval.
+        if (aInterval.Contains(
+                media::TimeUnit::FromSeconds(cue->StartTime()))) {
+          WEBVTT_LOG("[Negative duration] Add cue %p [%f:%f] to other cue list",
+                     cue, cue->StartTime(), cue->EndTime());
+          aOtherCues->AddCue(*cue);
+        }
         continue;
       }
       media::TimeInterval cueInterval(
