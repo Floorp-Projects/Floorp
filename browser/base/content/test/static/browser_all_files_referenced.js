@@ -175,8 +175,6 @@ var whitelist = [
    platforms: ["linux", "win"]},
   // Referenced by the webcompat system addon for localization
   {file: "resource://gre/localization/en-US/toolkit/about/aboutCompat.ftl"},
-  // Bug 1547016 activity-stream conditionally/dynamically references
-  {file: "resource://app/localization/en-US/browser/branding/brandings.ftl"},
 ];
 
 if (!AppConstants.MOZ_NEW_NOTIFICATION_STORE) {
