@@ -673,34 +673,25 @@ class BrowserParent final : public PBrowserParent,
 
   void SkipBrowsingContextDetach();
 
-  NS_IMETHOD GetDocShellIsActive(bool* aDocShellIsActive);
-  NS_IMETHOD SetDocShellIsActive(bool aDocShellIsActive);
-  NS_IMETHOD GetRenderLayers(bool* aRenderLayers);
-  NS_IMETHOD SetRenderLayers(bool aRenderLayers);
-  NS_IMETHOD GetHasLayers(bool* aHasLayers);
-  NS_IMETHOD ForceRepaint(void);
-  NS_IMETHOD NotifyResolutionChanged(void);
-  NS_IMETHOD Deprioritize(void);
-  NS_IMETHOD PreserveLayers(bool aPreserveLayers);
-  NS_IMETHOD GetTabId(uint64_t* aTabId);
-  NS_IMETHOD GetContentProcessId(uint64_t* aContentProcessId);
-  NS_IMETHOD GetOsPid(int32_t* aOsPid);
-  NS_IMETHOD GetHasContentOpener(bool* aHasContentOpener);
-  NS_IMETHOD GetHasPresented(bool* aHasPresented);
-  NS_IMETHOD GetWindowGlobalParents(
-      nsTArray<RefPtr<WindowGlobalParent>>& aWindowGlobalParents);
-  NS_IMETHOD TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal);
-  NS_IMETHOD GetHasBeforeUnload(bool* aHasBeforeUnload);
-  NS_IMETHOD GetOwnerElement(mozilla::dom::Element** aOwnerElement);
-  NS_IMETHOD StartApzAutoscroll(float aAnchorX, float aAnchorY,
-                                nsViewID aScrollId, uint32_t aPresShellId,
-                                bool* _retval);
-  NS_IMETHOD StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
-  NS_IMETHOD SaveRecording(const nsAString& aFileName, bool* _retval);
-  NS_IMETHOD GetContentBlockingLog(::mozilla::dom::Promise** _retval);
-  NS_IMETHOD MaybeCancelContentJSExecutionFromScript(
-      nsIRemoteTab::NavigationType aNavigationType,
-      JS::Handle<JS::Value> aCancelContentJSOptions, JSContext* aCx);
+  bool GetDocShellIsActive();
+  void SetDocShellIsActive(bool aDocShellIsActive);
+
+  bool GetHasPresented();
+  bool GetHasLayers();
+  bool GetRenderLayers();
+  void SetRenderLayers(bool aRenderLayers);
+  void PreserveLayers(bool aPreserveLayers);
+  void ForceRepaint();
+  void NotifyResolutionChanged();
+
+  void Deprioritize();
+
+  bool GetHasContentOpener();
+  bool GetHasBeforeUnload();
+
+  bool StartApzAutoscroll(float aAnchorX, float aAnchorY, nsViewID aScrollId,
+                          uint32_t aPresShellId);
+  void StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
 
  protected:
   friend BrowserBridgeParent;
