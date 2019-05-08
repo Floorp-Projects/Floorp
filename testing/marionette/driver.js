@@ -2217,7 +2217,7 @@ GeckoDriver.prototype.getElementProperty = async function(cmd) {
   switch (this.context) {
     case Context.Chrome:
       let el = this.curBrowser.seenEls.get(webEl);
-      return el[name];
+      return evaluate.toJSON(el[name], this.curBrowser.seenEls);
 
     case Context.Content:
       return this.listener.getElementProperty(webEl, name);
