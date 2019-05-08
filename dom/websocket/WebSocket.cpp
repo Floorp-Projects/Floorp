@@ -1362,14 +1362,17 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     return nullptr;
   }
 
-  UniquePtr<SerializedStackHolder> stack =
-      GetCurrentStackForNetMonitor(aGlobal.Context());
-
   if (NS_IsMainThread()) {
     MOZ_ASSERT(principal);
 
     nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(global);
     nsPIDOMWindowOuter* outerWindow = ownerWindow->GetOuterWindow();
+
+    UniquePtr<SerializedStackHolder> stack;
+    nsIDocShell* docShell = outerWindow->GetDocShell();
+    if (docShell && docShell->GetWatchedByDevtools()) {
+      stack = GetCurrentStackForNetMonitor(aGlobal.Context());
+    }
 
     uint64_t windowID = 0;
     nsCOMPtr<nsPIDOMWindowOuter> topWindow = outerWindow->GetScriptableTop();
@@ -1387,6 +1390,12 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
   } else {
     MOZ_ASSERT(!aTransportProvider && aNegotiatedExtensions.IsEmpty(),
                "not yet implemented");
+
+    UniquePtr<SerializedStackHolder> stack;
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    if (workerPrivate->IsWatchedByDevtools()) {
+      stack = GetCurrentStackForNetMonitor(aGlobal.Context());
+    }
 
     RefPtr<AsyncOpenRunnable> runnable =
         new AsyncOpenRunnable(webSocket->mImpl, std::move(stack));
