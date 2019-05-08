@@ -3177,6 +3177,7 @@ class Document : public nsINode,
   };
 
   Document* GetTopLevelContentDocument();
+  const Document* GetTopLevelContentDocument() const;
 
   // Returns the associated XUL window if this is a top-level chrome document,
   // null otherwise.

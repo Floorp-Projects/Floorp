@@ -24,6 +24,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
 #include "nsPIDOMWindow.h"
@@ -108,9 +109,9 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     return nullptr;
   }
 
-  if (storageAllowed ==
-          nsContentUtils::StorageAccess::ePartitionTrackersOrDeny &&
-      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+  if (ShouldPartitionStorage(storageAllowed) &&
+      !StoragePartitioningEnabled(storageAllowed,
+                                  window->GetExtantDoc()->CookieSettings())) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -180,8 +181,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   // Here, the StoragePrincipal is always equal to the SharedWorker's principal
   // because the channel is not opened yet, and, because of this, it's not
   // classified. We need to force the correct originAttributes.
-  if (storageAllowed ==
-      nsContentUtils::StorageAccess::ePartitionTrackersOrDeny) {
+  if (ShouldPartitionStorage(storageAllowed)) {
     nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(window);
     if (!sop) {
       aRv.Throw(NS_ERROR_FAILURE);
