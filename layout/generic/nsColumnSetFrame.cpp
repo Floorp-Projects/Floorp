@@ -816,7 +816,6 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       child = nullptr;
       break;
     } else {
-      ++columnCount;
       // Make sure that the column has a next-in-flow. If not, we must
       // create one to hold the overflowing stuff, even if we're just
       // going to put it on our overflow list and let *our*
@@ -856,7 +855,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
         colData.mHasExcessBSize = true;
       }
 
-      if (columnCount >= aConfig.mBalanceColCount) {
+      if (columnCount >= aConfig.mBalanceColCount - 1) {
         // No more columns allowed here. Stop.
         aStatus.SetNextInFlowNeedsReflow();
         kidNextInFlow->AddStateBits(NS_FRAME_IS_DIRTY);
@@ -884,6 +883,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
     // Advance to the next column
     child = child->GetNextSibling();
+    ++columnCount;
 
     if (child) {
       childOrigin.I(wm) += aConfig.mColISize + aConfig.mColGap;
