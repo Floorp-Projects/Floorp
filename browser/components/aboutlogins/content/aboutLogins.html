@@ -1,0 +1,60 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';"/>
+    <title data-l10n-id="about-logins-page-title"></title>
+    <link rel="localization" href="browser/aboutLogins.ftl">
+    <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
+    <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
+    <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
+    <script defer="defer" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
+  </head>
+  <body>
+    <login-list data-l10n-id="login-list"
+                data-l10n-attrs="login-list-header"></login-list>
+    <login-item data-l10n-id="login-item"
+                data-l10n-attrs="login-item-hostname, login-item-password, login-item-username, login-item-time-created, login-item-delete"></login-item>
+
+    <template id="login-list-template">
+      <h2></h2>
+      <pre>
+      </pre>
+    </template>
+
+    <template id="login-list-item-template">
+      <style>
+        :host(.selected) {
+          font-weight: bold;
+        }
+      </style>
+      <span class="login-list-item-hostname"></span>
+      <span class="login-list-item-username"></span>
+    </template>
+
+    <template id="login-item-template">
+      <h2 data-l10n-id="login-item-header"></h2>
+      <label>
+        <span class="hostname-label"></span>
+        <input name="hostname"/>
+      </label>
+      <label>
+        <span class="username-label"></span>
+        <input name="username"/>
+      </label>
+      <label>
+        <span class="password-label"></span>
+        <input type="password" name="password"/>
+      </label>
+      <p>
+        <span class="time-created-label"></span>
+        <span class="time-created"></span>
+      </p>
+      <button class="delete-button"></button>
+    </template>
+  </body>
+</html>

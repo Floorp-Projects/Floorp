@@ -24,6 +24,7 @@ class AboutRedirector : public nsIAboutModule {
   virtual ~AboutRedirector() {}
 
  private:
+  static bool sAboutLoginsEnabled;
   static bool sNewTabPageEnabled;
 };
 
