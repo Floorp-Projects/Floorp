@@ -22,8 +22,7 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[5]);
 
   await waitForClipboardPromise(function setup() {
-    monitor.panelWin.parent.document
-      .querySelector("#request-list-context-copy-image-as-data-uri").click();
+    getContextMenuItem(monitor, "request-list-context-copy-image-as-data-uri").click();
   }, TEST_IMAGE_DATA_URI);
 
   ok(true, "Clipboard contains the currently selected image as data uri.");

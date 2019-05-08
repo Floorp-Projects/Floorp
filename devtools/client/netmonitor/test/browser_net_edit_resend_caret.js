@@ -15,8 +15,7 @@ add_task(async function() {
   const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  const { document, store, windowRequire, parent } = monitor.panelWin;
-  const parentDocument = parent.document;
+  const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
@@ -34,7 +33,7 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
 
   // Open "New Request" form
-  const contextResend =  parentDocument.querySelector("#request-list-context-resend");
+  const contextResend = getContextMenuItem(monitor, "request-list-context-resend");
   contextResend.click();
   await waitUntil(() => document.querySelector("#custom-headers-value"));
   const headersTextarea = document.querySelector("#custom-headers-value");

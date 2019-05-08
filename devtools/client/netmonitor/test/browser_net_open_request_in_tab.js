@@ -12,7 +12,6 @@ add_task(async function() {
   info("Starting test...");
 
   const { document, store, windowRequire } = monitor.panelWin;
-  const contextMenuDoc = monitor.panelWin.parent.document;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let newTab;
 
@@ -46,16 +45,15 @@ add_task(async function() {
 
   // OpenLastRequestInTab by ContextMenu
   async function openLastRequestInTab() {
-    const wait = waitForDOM(contextMenuDoc, "#request-list-context-newtab");
     const requestItems = document.querySelectorAll(".request-list-item");
     const lastRequest = requestItems[requestItems.length - 1];
     EventUtils.sendMouseEvent({ type: "mousedown" }, lastRequest);
     EventUtils.sendMouseEvent({ type: "contextmenu" }, lastRequest);
-    await wait;
+    await waitUntil(() =>
+      getContextMenuItem(monitor, "request-list-context-newtab"));
 
     const onTabOpen = once(gBrowser.tabContainer, "TabOpen", false);
-    monitor.panelWin.parent.document
-      .querySelector("#request-list-context-newtab").click();
+    getContextMenuItem(monitor, "request-list-context-newtab").click();
     await onTabOpen;
     info("A new tab has been opened");
 

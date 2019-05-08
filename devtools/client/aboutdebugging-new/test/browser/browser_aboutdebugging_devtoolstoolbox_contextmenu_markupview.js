@@ -15,7 +15,7 @@ add_task(async function() {
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const { devtoolsDocument, devtoolsTab, devtoolsWindow } =
+  const { devtoolsTab, devtoolsWindow } =
     await openAboutDevtoolsToolbox(document, tab, window);
 
   info("Select inspector tool");
@@ -29,7 +29,7 @@ add_task(async function() {
                                      markupDocument.ownerGlobal);
 
   info("Check whether proper context menu of markup view will be shown");
-  await waitUntil(() => devtoolsDocument.querySelector("#node-menu-edithtml"));
+  await waitUntil(() => toolbox.topDoc.querySelector("#node-menu-edithtml"));
   ok(true, "Context menu of markup view should be shown");
 
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);

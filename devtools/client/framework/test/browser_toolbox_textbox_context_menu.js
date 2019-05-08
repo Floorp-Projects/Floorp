@@ -33,7 +33,7 @@ add_task(async function checkMenuEntryStates() {
   synthesizeContextMenuEvent(inspector.searchBox);
   await onContextMenuPopup;
 
-  const textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  const textboxContextMenu = toolbox.getTextBoxContextMenu();
   ok(textboxContextMenu, "The textbox context menu is loaded in the toolbox");
 
   const cmdUndo = textboxContextMenu.querySelector("#editmenu-undo");
@@ -84,7 +84,7 @@ add_task(async function automaticallyBindTexbox() {
 });
 
 async function checkNonTextInput(input, toolbox) {
-  let textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  let textboxContextMenu = toolbox.getTextBoxContextMenu();
   ok(!textboxContextMenu, "The menu is closed");
 
   info("Simulating context click on the non text input and expecting no menu to open");
@@ -95,12 +95,12 @@ async function checkNonTextInput(input, toolbox) {
   info("Waiting for event");
   await eventBubbledUp;
 
-  textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  textboxContextMenu = toolbox.getTextBoxContextMenu();
   ok(!textboxContextMenu, "The menu is still closed");
 }
 
 async function checkTextBox(textBox, toolbox) {
-  let textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  let textboxContextMenu = toolbox.getTextBoxContextMenu();
   ok(!textboxContextMenu, "The menu is closed");
 
   info("Simulating context click on the textbox and expecting the menu to open");
@@ -108,7 +108,7 @@ async function checkTextBox(textBox, toolbox) {
   synthesizeContextMenuEvent(textBox);
   await onContextMenu;
 
-  textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  textboxContextMenu = toolbox.getTextBoxContextMenu();
   ok(textboxContextMenu, "The menu is now visible");
 
   info("Closing the menu");
@@ -116,6 +116,6 @@ async function checkTextBox(textBox, toolbox) {
   EventUtils.sendKey("ESCAPE", toolbox.win);
   await onContextMenuHidden;
 
-  textboxContextMenu = toolbox.doc.getElementById("toolbox-menu");
+  textboxContextMenu = toolbox.getTextBoxContextMenu();
   ok(!textboxContextMenu, "The menu is closed again");
 }

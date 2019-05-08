@@ -12,7 +12,7 @@ add_task(async function() {
   const { monitor, tab } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  const { document, store, parent, windowRequire } = monitor.panelWin;
+  const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
@@ -51,8 +51,7 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "contextmenu" },
       document.querySelector(`#requests-list-${column}-button`));
 
-    const menuItem =
-      parent.document.querySelector(`#request-list-header-${column}-toggle`);
+    const menuItem = getContextMenuItem(monitor, `request-list-header-${column}-toggle`);
     ok(menuItem.disabled, "Last visible column menu item should be disabled.");
   }
 });
