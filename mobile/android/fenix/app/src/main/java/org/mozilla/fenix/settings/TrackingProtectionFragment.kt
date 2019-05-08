@@ -55,8 +55,8 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             val exceptions =
                 it.getPreferenceKey(R.string.pref_key_tracking_protection_exceptions)
             val preferenceExceptions = findPreference<Preference>(exceptions)
-            preferenceExceptions.shouldDisableView = true
-            preferenceExceptions.isEnabled = !exceptionsEmpty
+            preferenceExceptions?.shouldDisableView = true
+            preferenceExceptions?.isEnabled = !exceptionsEmpty
             preferenceExceptions?.onPreferenceClickListener = getClickListenerForExceptions()
         }
     }
