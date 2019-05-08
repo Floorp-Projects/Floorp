@@ -102,6 +102,9 @@
 using namespace mozilla;
 using namespace mozilla::css;
 
+#define PREF_LEGACY_STYLESHEET_CUSTOMIZATION \
+  "toolkit.legacyUserProfileCustomizations.stylesheets"
+
 NS_IMPL_ISUPPORTS(nsLayoutStylesheetCache, nsIObserver, nsIMemoryReporter)
 
 nsresult nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
@@ -441,6 +444,21 @@ void nsLayoutStylesheetCache::InitFromProfile() {
                 eLogToConsole);
 
   if (XRE_IsParentProcess()) {
+    if (mUserChromeSheet || mUserContentSheet) {
+      // Bug 1541233 aims to avoid stat'ing or loading userContent.css or
+      // userChrome.css during start-up by default. After that point,
+      // PREF_LEGACY_STYLESHEET_CUSTOMIZATION pref is how users can opt-in
+      // to continuing to use userChrome.css or userContent.css.
+      //
+      // Before bug 1541233 lands though, we'll ship a release which
+      // continues to look for those files on start-up and sets a pref.
+      // That way, in a subsequent release when loading those files is
+      // off by default, those users will still get their userChrome.css
+      // and userContent.css customizations without having to manually
+      // set the pref themselves.
+      Preferences::SetBool(PREF_LEGACY_STYLESHEET_CUSTOMIZATION, true);
+    }
+
     // We're interested specifically in potential chrome customizations,
     // so we only need data points from the parent process
     Telemetry::Accumulate(Telemetry::USER_CHROME_CSS_LOADED,
