@@ -1,57 +1,57 @@
 <!doctype html>
+<title>ResizeObserver tests</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="./resources/resizeTestHelper.js"></script>
-<p>ResizeObserver tests</p>
-<div id="target1" style="width:100px;height:100px;">t1</div>
-<div id="target2" style="width:100px;height:100px;">t2</div>
-<img id="target3" style="width:100px;height:100px;">
-<iframe src="./resources/iframe.html" width="300px" height="100px" style="display:block"></iframe>
+<div id="log"></div>
 <script>
 'use strict';
-
-let t1 = document.querySelector('#target1');
-let t2 = document.querySelector('#target2');
 
 // allow uncaught exception because ResizeObserver posts exceptions
 // to window error handler when limit is exceeded.
 setup({allow_uncaught_exception: true});
 
 function test0() {
+  let t = createAndAppendElement("div");
+  t.style.width = "100px";
+
   let helper = new ResizeTestHelper(
     "test0: simple observation",
   [
     {
       setup: observer => {
-        observer.observe(t1);
-        t1.style.width = "5px";
+        observer.observe(t);
+        t.style.width = "5px";
       },
       notify: entries => {
         assert_equals(entries.length, 1, "1 pending notification");
-        assert_equals(entries[0].target, t1, "target is t1");
+        assert_equals(entries[0].target, t, "target is t");
         assert_equals(entries[0].contentRect.width, 5, "target width");
       }
     }
   ]);
-  return helper.start();
+  return helper.start(() => t.remove());
 }
 
 function test1() {
+  let t = createAndAppendElement("div");
+  t.style.width = "100px";
+
   let helper = new ResizeTestHelper(
     "test1: multiple observation on same element trigger only one",
   [
     {
       setup: observer => {
-        observer.observe(t1);
-        observer.observe(t1);
-        t1.style.width = "10px";
+        observer.observe(t);
+        observer.observe(t);
+        t.style.width = "10px";
       },
       notify: entries => {
         assert_equals(entries.length, 1, "1 pending notification");
       }
     }
   ]);
-  return helper.start();
+  return helper.start(() => t.remove());
 }
 
 function test2() {
@@ -67,6 +67,11 @@ function test2() {
 }
 
 function test3() {
+  let t1 = createAndAppendElement("div");
+  let t2 = createAndAppendElement("div");
+  t1.style.width = "100px";
+  t2.style.width = "100px";
+
   let helper = new ResizeTestHelper(
     "test3: disconnect stops all notifications", [
     {
@@ -84,10 +89,18 @@ function test3() {
       }
     }
   ]);
-  return helper.start();
+  return helper.start(() => {
+    t1.remove();
+    t2.remove();
+  });
 }
 
 function test4() {
+  let t1 = createAndAppendElement("div");
+  let t2 = createAndAppendElement("div");
+  t1.style.width = "100px";
+  t2.style.width = "100px";
+
   let helper = new ResizeTestHelper(
     "test4: unobserve target stops notifications, unobserve non-observed does nothing", [
     {
@@ -105,61 +118,83 @@ function test4() {
       }
     }
   ]);
-  return helper.start();
+  return helper.start(() => {
+    t1.remove();
+    t2.remove();
+  });
 }
 
 function test5() {
-  let t3 = document.querySelector('#target3');
+  let img = createAndAppendElement("img");
+  img.style.width = "15px";
+  img.style.height = "15px";
+  img.src = "resources/image.png";
+
   var helper = new ResizeTestHelper("test5: observe img",[
     {
       setup: observer => {
-        observer.observe(t3);
+        observer.observe(img);
       },
       notify: entries => {
       }
     },
     {
       setup: observer => {
-        t3.style.width = "100.5px";
+        img.style.width = "15.5px";
       },
       notify: entries => {
         assert_equals(entries.length, 1);
-        assert_equals(entries[0].contentRect.width, 100.5);
+        assert_equals(entries[0].contentRect.width, 15.5);
       }
     }
   ]);
-  return helper.start();
+  return new Promise((resolve, reject) => {
+    img.onload = () => resolve();
+  }).then(() => {
+    return helper.start(() => img.remove());
+  });
 }
 
 function test6() {
-  let resolvePromise;
-  let promise = new Promise((resolve) => {
-    resolvePromise = resolve;
-  });
-  let test = async_test('test6: iframe notifications');
-  let testRequested = false;
-  let iframe = document.querySelector('iframe');
-  window.addEventListener('message', event => {
-    switch(event.data) {
-    case 'readyToTest':
-      if (!testRequested) {
-        iframe.contentWindow.postMessage('startTest', '*');
-        testRequested = true;
-      }
-    break;
-    case 'success':
-    case 'fail':
-      window.requestAnimationFrame(() => {
-        test.step( () => {
-          assert_equals(event.data, 'success');
-          test.done();
-          resolvePromise();
+  let iframe = createAndAppendElement("iframe");
+  iframe.src = "./resources/iframe.html";
+  iframe.width = "300px";
+  iframe.height = "100px";
+  iframe.style.display = "block";
+
+  return new Promise(function(resolve, reject) {
+    iframe.onload = () => resolve();
+  }).then(() => {
+    let resolvePromise;
+    let promise = new Promise((resolve) => {
+      resolvePromise = resolve;
+    });
+    let test = async_test('test6: iframe notifications');
+    let testRequested = false;
+    test.add_cleanup(() => iframe.remove());
+
+    window.addEventListener('message', event => {
+      switch(event.data) {
+      case 'readyToTest':
+        if (!testRequested) {
+          iframe.contentWindow.postMessage('startTest', '*');
+          testRequested = true;
+        }
+      break;
+      case 'success':
+      case 'fail':
+        window.requestAnimationFrame(() => {
+          test.step( () => {
+            assert_equals(event.data, 'success');
+            test.done();
+            resolvePromise();
+          });
         });
-      });
-    break;
-    }
-  }, false);
-  return promise;
+      break;
+      }
+    }, false);
+    return promise;
+  });
 }
 
 function test7() {
@@ -181,7 +216,12 @@ function test7() {
      });
     }
   );
-  ro.observe(t1);
+
+  let t = createAndAppendElement("div");
+  t.style.width = "100px";
+  harnessTest.add_cleanup(() => t.remove());
+
+  ro.observe(t);
 
   return new Promise( (resolve, reject) => {
     resolvePromise = resolve;
@@ -195,13 +235,13 @@ test(_ => {
 }, "ResizeObserver implemented")
 
 test0()
-  .then(() => { return test1(); })
-  .then(() => { return test2(); })
-  .then(() => { return test3(); })
-  .then(() => { return test4(); })
-  .then(() => { return test5(); })
-  .then(() => { return test6(); })
-  .then(() => { return test7(); })
-  .then(() => { guard.done(); });
+  .then(() => test1())
+  .then(() => test2())
+  .then(() => test3())
+  .then(() => test4())
+  .then(() => test5())
+  .then(() => test6())
+  .then(() => test7())
+  .then(() => guard.done());
 
 </script>
