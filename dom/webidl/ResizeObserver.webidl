@@ -7,13 +7,21 @@
  * https://drafts.csswg.org/resize-observer/
  */
 
+enum ResizeObserverBoxOptions {
+    "border-box",
+    "content-box"
+};
+
+dictionary ResizeObserverOptions {
+    ResizeObserverBoxOptions box = "content-box";
+};
+
 [Constructor(ResizeObserverCallback callback),
  Exposed=Window,
  Pref="layout.css.resizeobserver.enabled"]
 interface ResizeObserver {
-    // Bug 1545239: Add "optional ResizeObserverOptions" in observe.
     [Throws]
-    void observe(Element target);
+    void observe(Element target, optional ResizeObserverOptions options);
     [Throws]
     void unobserve(Element target);
     void disconnect();
@@ -22,10 +30,16 @@ interface ResizeObserver {
 callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
 
 [Constructor(Element target),
- ChromeOnly,
  Pref="layout.css.resizeobserver.enabled"]
 interface ResizeObserverEntry {
     readonly attribute Element target;
     readonly attribute DOMRectReadOnly contentRect;
-    // Bug 1545239: Add borderBoxSize and contentBoxSize attributes.
+    readonly attribute ResizeObserverSize borderBoxSize;
+    readonly attribute ResizeObserverSize contentBoxSize;
+};
+
+[Pref="layout.css.resizeobserver.enabled"]
+interface ResizeObserverSize {
+    readonly attribute unrestricted double inlineSize;
+    readonly attribute unrestricted double blockSize;
 };
