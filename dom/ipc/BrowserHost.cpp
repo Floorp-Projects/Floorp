@@ -18,6 +18,10 @@ BrowserHost::BrowserHost(BrowserParent* aParent) : mRoot(aParent) {
   mRoot->SetBrowserHost(this);
 }
 
+BrowserHost* BrowserHost::GetFrom(nsIRemoteTab* aRemoteTab) {
+  return static_cast<BrowserHost*>(aRemoteTab);
+}
+
 mozilla::layers::LayersId BrowserHost::GetLayersId() const {
   return mRoot->GetRenderFrame()->GetLayersId();
 }
@@ -29,6 +33,10 @@ BrowsingContext* BrowserHost::GetBrowsingContext() const {
 nsILoadContext* BrowserHost::GetLoadContext() const {
   RefPtr<nsILoadContext> loadContext = mRoot->GetLoadContext();
   return loadContext;
+}
+
+a11y::DocAccessibleParent* BrowserHost::GetTopLevelDocAccessible() const {
+  return mRoot->GetTopLevelDocAccessible();
 }
 
 void BrowserHost::LoadURL(nsIURI* aURI) { mRoot->LoadURL(aURI); }
