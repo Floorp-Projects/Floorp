@@ -61,7 +61,6 @@ class nsPrintSettings : public nsIPrintSettings {
   bool mIsCancelled;
   bool mSaveOnCancel;
   bool mPrintSilent;
-  bool mPrintPreview;
   bool mShrinkToFit;
   bool mShowPrintProgress;
   int32_t mPrintPageDelay;

@@ -662,6 +662,41 @@ of the attribute codes:
 		critical
 	</para>
 	</listitem>
+	<listitem>
+	<para>
+		x509Any
+	</para>
+	</listitem>
+	<listitem>
+	<para>
+		ipsecIKE
+	</para>
+	</listitem>
+	<listitem>
+	<para>
+		ipsecIKEEnd
+	</para>
+	</listitem>
+	<listitem>
+	<para>
+		ipsecIKEIntermediate
+	</para>
+	</listitem>
+	<listitem>
+	<para>
+		ipsecEnd
+	</para>
+	</listitem>
+	<listitem>
+	<para>
+		ipsecTunnel
+	</para>
+	</listitem>
+	<listitem>
+	<para>
+		ipsecUser
+	</para>
+	</listitem>
 	</itemizedlist>
 <para>X.509 certificate extensions are described in RFC 5280.</para></listitem>
       </varlistentry>

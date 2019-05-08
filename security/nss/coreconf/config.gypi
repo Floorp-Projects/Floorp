@@ -166,6 +166,11 @@
           '-lc',
         ],
       }],
+      [ 'OS=="android"', {
+        'libraries': [
+          '-llog',
+        ],
+      }],
       [ 'fuzz==1', {
         'variables': {
           'debug_optimization_level%': '1',
