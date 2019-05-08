@@ -516,6 +516,9 @@ class AndroidEmulator(object):
             EMULATOR_HOME_DIR, 'avd', self.avd_info.name + '.ini')
         if force and os.path.exists(avd):
             shutil.rmtree(avd)
+        if force:
+            for f in glob.glob(os.path.join(EMULATOR_HOME_DIR, 'AVD*.checksum')):
+                os.remove(f)
         if not os.path.exists(avd):
             if os.path.exists(ini_file):
                 os.remove(ini_file)
