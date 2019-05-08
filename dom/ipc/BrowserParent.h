@@ -86,7 +86,6 @@ class StructuredCloneData;
  */
 class BrowserParent final : public PBrowserParent,
                             public nsIDOMEventListener,
-                            public nsIRemoteTab,
                             public nsIAuthPromptProvider,
                             public nsIKeyEventInPluginCallback,
                             public nsSupportsWeakReference,
@@ -104,12 +103,10 @@ class BrowserParent final : public PBrowserParent,
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIAUTHPROMPTPROVIDER
-  // nsIRemoteTab
-  NS_DECL_NSIREMOTETAB
   // nsIDOMEventListener interfaces
   NS_DECL_NSIDOMEVENTLISTENER
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(BrowserParent, nsIRemoteTab)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(BrowserParent, nsIDOMEventListener)
 
   BrowserParent(ContentParent* aManager, const TabId& aTabId,
                 const TabContext& aContext,
@@ -126,8 +123,6 @@ class BrowserParent final : public PBrowserParent,
   static BrowserParent* GetFocused();
 
   static BrowserParent* GetFrom(nsFrameLoader* aFrameLoader);
-
-  static BrowserParent* GetFrom(nsIRemoteTab* aBrowserParent);
 
   static BrowserParent* GetFrom(PBrowserParent* aBrowserParent);
 
@@ -677,6 +672,35 @@ class BrowserParent final : public PBrowserParent,
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
   void SkipBrowsingContextDetach();
+
+  NS_IMETHOD GetDocShellIsActive(bool* aDocShellIsActive);
+  NS_IMETHOD SetDocShellIsActive(bool aDocShellIsActive);
+  NS_IMETHOD GetRenderLayers(bool* aRenderLayers);
+  NS_IMETHOD SetRenderLayers(bool aRenderLayers);
+  NS_IMETHOD GetHasLayers(bool* aHasLayers);
+  NS_IMETHOD ForceRepaint(void);
+  NS_IMETHOD NotifyResolutionChanged(void);
+  NS_IMETHOD Deprioritize(void);
+  NS_IMETHOD PreserveLayers(bool aPreserveLayers);
+  NS_IMETHOD GetTabId(uint64_t* aTabId);
+  NS_IMETHOD GetContentProcessId(uint64_t* aContentProcessId);
+  NS_IMETHOD GetOsPid(int32_t* aOsPid);
+  NS_IMETHOD GetHasContentOpener(bool* aHasContentOpener);
+  NS_IMETHOD GetHasPresented(bool* aHasPresented);
+  NS_IMETHOD GetWindowGlobalParents(
+      nsTArray<RefPtr<WindowGlobalParent>>& aWindowGlobalParents);
+  NS_IMETHOD TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal);
+  NS_IMETHOD GetHasBeforeUnload(bool* aHasBeforeUnload);
+  NS_IMETHOD GetOwnerElement(mozilla::dom::Element** aOwnerElement);
+  NS_IMETHOD StartApzAutoscroll(float aAnchorX, float aAnchorY,
+                                nsViewID aScrollId, uint32_t aPresShellId,
+                                bool* _retval);
+  NS_IMETHOD StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
+  NS_IMETHOD SaveRecording(const nsAString& aFileName, bool* _retval);
+  NS_IMETHOD GetContentBlockingLog(::mozilla::dom::Promise** _retval);
+  NS_IMETHOD MaybeCancelContentJSExecutionFromScript(
+      nsIRemoteTab::NavigationType aNavigationType,
+      JS::Handle<JS::Value> aCancelContentJSOptions, JSContext* aCx);
 
  protected:
   friend BrowserBridgeParent;
