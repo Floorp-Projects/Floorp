@@ -640,6 +640,23 @@ def check_places_and_android_history(places, android_history):
     if places and android_history:
         die('Cannot use MOZ_ANDROID_HISTORY alongside MOZ_PLACES.')
 
+
+option(env='MOZ_TELEMETRY_REPORTING',
+       help='Enable telemetry reporting')
+
+set_define('MOZ_TELEMETRY_REPORTING', True, when='MOZ_TELEMETRY_REPORTING')
+add_old_configure_assignment(
+    'MOZ_TELEMETRY_REPORTING', True, when='MOZ_TELEMETRY_REPORTING')
+
+
+@depends('MOZ_TELEMETRY_REPORTING', milestone.is_nightly, fennec_nightly)
+def telemetry_on_by_default(reporting, is_nightly, fennec_nightly):
+    return reporting and (is_nightly or fennec_nightly)
+
+
+set_define('MOZ_TELEMETRY_ON_BY_DEFAULT', True, when=telemetry_on_by_default)
+
+
 # gpsd support
 # ==============================================================
 option('--enable-gpsd', env='MOZ_GPSD',
