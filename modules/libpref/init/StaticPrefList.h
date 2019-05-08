@@ -720,6 +720,12 @@ VARCACHE_PREF(
   bool, false
 )
 
+VARCACHE_PREF(
+  "dom.metaElement.setCookie.allowed",
+   dom_metaElement_setCookie_allowed,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------
