@@ -68,6 +68,36 @@ const Agent = {
     await importDumpIDB(bucket, collection, records);
     return records.length;
   },
+
+  /**
+   * Check that the specified file matches the expected size and SHA-256 hash.
+   * @param {String} fileUrl file URL to read from
+   * @param {Number} size expected file size
+   * @param {String} size expected file SHA-256 as hex string
+   * @returns {boolean}
+   */
+  async checkFileHash(fileUrl, size, hash) {
+    let resp;
+    try {
+      resp = await fetch(fileUrl);
+    } catch (e) {
+      // File does not exist.
+      return false;
+    }
+    // Has expected size? (saves computing hash)
+    const fileSize = parseInt(resp.headers.get("Content-Length"), 10);
+    if (fileSize !== size) {
+      return false;
+    }
+    // Has expected content?
+    const buffer = await resp.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
+    const hashBytes = new Uint8Array(hashBuffer);
+    const toHex = b => b.toString(16).padStart(2, "0");
+    const hashStr = Array.from(hashBytes, toHex).join("");
+    return hashStr == hash;
+  },
 };
 
 /**
