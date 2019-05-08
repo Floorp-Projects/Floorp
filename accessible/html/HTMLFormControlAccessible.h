@@ -98,9 +98,18 @@ class HTMLTextFieldAccessible final : public HyperTextAccessibleWrap {
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   /**
-   * Return a XUL widget element this input is part of.
+   * Return a widget element this input is part of, for example, XUL:textbox or
+   * HTML:input@type="number".
    */
-  nsIContent* BindingParent() const { return mContent->GetBindingParent(); }
+  nsIContent* BindingOrWidgetParent() const {
+    nsIContent * el = mContent->GetBindingParent();
+    if (el) {
+      return el;
+    }
+    // XUL textboxes custom elements implementation.
+    ErrorResult rv;
+    return Elm()->Closest(NS_LITERAL_STRING("textbox"), rv);
+  }
 };
 
 /**
