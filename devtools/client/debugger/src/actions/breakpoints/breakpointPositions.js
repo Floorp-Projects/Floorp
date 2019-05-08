@@ -39,7 +39,13 @@ async function mapLocations(
   generatedLocations: SourceLocation[],
   { sourceMaps }: ThunkArgs
 ) {
+  if (generatedLocations.length == 0) {
+    return [];
+  }
+
+  const { sourceId } = generatedLocations[0];
   const originalLocations = await sourceMaps.getOriginalLocations(
+    sourceId,
     generatedLocations
   );
 

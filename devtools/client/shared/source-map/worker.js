@@ -4111,20 +4111,20 @@ async function getAllGeneratedLocations(location, originalSource) {
   }));
 }
 
-function getOriginalLocations(locations, options = {}) {
-  return Promise.all(locations.map(location => getOriginalLocation(location, options)));
+async function getOriginalLocations(sourceId, locations, options = {}) {
+  if (locations.some(location => location.sourceId != sourceId)) {
+    throw new Error("Generated locations must belong to the same source");
+  }
+
+  const map = await getSourceMap(sourceId);
+  if (!map) {
+    return locations;
+  }
+
+  return locations.map(location => getOriginalLocationSync(map, location, options));
 }
 
-async function getOriginalLocation(location, { search } = {}) {
-  if (!isGeneratedId(location.sourceId)) {
-    return location;
-  }
-
-  const map = await getSourceMap(location.sourceId);
-  if (!map) {
-    return location;
-  }
-
+function getOriginalLocationSync(map, location, { search } = {}) {
   // First check for an exact match
   let match = map.originalPositionFor({
     line: location.line,
@@ -4161,6 +4161,19 @@ async function getOriginalLocation(location, { search } = {}) {
     line,
     column
   };
+}
+
+async function getOriginalLocation(location, options = {}) {
+  if (!isGeneratedId(location.sourceId)) {
+    return location;
+  }
+
+  const map = await getSourceMap(location.sourceId);
+  if (!map) {
+    return location;
+  }
+
+  return getOriginalLocationSync(map, location, options);
 }
 
 async function getOriginalSourceText(originalSource) {
