@@ -667,6 +667,8 @@ NS_IMPL_ISUPPORTS(SyntheticDiversionListener, nsIStreamListener);
 
 void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
                                         nsISupports* aContext) {
+  nsresult rv;
+
   LOG(("HttpChannelChild::DoOnStartRequest [this=%p]\n", this));
 
   // In theory mListener should not be null, but in practice sometimes it is.
@@ -681,7 +683,13 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
                                          static_cast<nsIChannel*>(this));
   }
 
-  nsresult rv = mListener->OnStartRequest(aRequest);
+  if (mListener) {
+    nsCOMPtr<nsIStreamListener> listener(mListener);
+    rv = listener->OnStartRequest(aRequest);
+  } else {
+    rv = NS_ERROR_UNEXPECTED;
+  }
+
   mOnStartRequestCalled = true;
   if (NS_FAILED(rv)) {
     Cancel(rv);
@@ -980,9 +988,12 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
   LOG(("HttpChannelChild::DoOnDataAvailable [this=%p]\n", this));
   if (mCanceled) return;
 
-  nsresult rv = mListener->OnDataAvailable(aRequest, aStream, offset, count);
-  if (NS_FAILED(rv)) {
-    CancelOnMainThread(rv);
+  if (mListener) {
+    nsCOMPtr<nsIStreamListener> listener(mListener);
+    nsresult rv = listener->OnDataAvailable(aRequest, aStream, offset, count);
+    if (NS_FAILED(rv)) {
+      CancelOnMainThread(rv);
+    }
   }
 }
 
@@ -1248,7 +1259,8 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   // In theory mListener should not be null, but in practice sometimes it is.
   MOZ_ASSERT(mListener);
   if (mListener) {
-    mListener->OnStopRequest(aRequest, mStatus);
+    nsCOMPtr<nsIStreamListener> listener(mListener);
+    listener->OnStopRequest(aRequest, mStatus);
   }
   mOnStopRequestCalled = true;
 
@@ -1537,6 +1549,79 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvFinishInterceptedRedirect() {
 }
 
 void HttpChannelChild::DeleteSelf() { Send__delete__(this); }
+
+class ContinueDoNotifyListenerEvent
+    : public NeckoTargetChannelEvent<HttpChannelChild> {
+ public:
+  explicit ContinueDoNotifyListenerEvent(HttpChannelChild* child)
+      : NeckoTargetChannelEvent<HttpChannelChild>(child) {}
+  void Run() override { mChild->ContinueDoNotifyListener(); }
+};
+
+void HttpChannelChild::DoNotifyListener() {
+  LOG(("HttpChannelChild::DoNotifyListener this=%p", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // In case nsHttpChannel::OnStartRequest wasn't called (e.g. due to flag
+  // LOAD_ONLY_IF_MODIFIED) we want to set mAfterOnStartRequestBegun to true
+  // before notifying listener.
+  if (!mAfterOnStartRequestBegun) {
+    mAfterOnStartRequestBegun = true;
+  }
+
+  if (mListener && !mOnStartRequestCalled) {
+    nsCOMPtr<nsIStreamListener> listener = mListener;
+    listener->OnStartRequest(this);
+  }
+  mOnStartRequestCalled = true;
+
+  mEventQ->RunOrEnqueue(new ContinueDoNotifyListenerEvent(this));
+}
+
+void HttpChannelChild::ContinueDoNotifyListener() {
+  LOG(("HttpChannelChild::ContinueDoNotifyListener this=%p", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Make sure mIsPending is set to false. At this moment we are done from
+  // the point of view of our consumer and we have to report our self
+  // as not-pending.
+  mIsPending = false;
+
+  if (mListener && !mOnStopRequestCalled) {
+    nsCOMPtr<nsIStreamListener> listener = mListener;
+    listener->OnStopRequest(this, mStatus);
+
+    mOnStopRequestCalled = true;
+  }
+
+  // notify "http-on-stop-request" observers
+  gHttpHandler->OnStopRequest(this);
+
+  // This channel has finished its job, potentially release any tail-blocked
+  // requests with this.
+  RemoveAsNonTailRequest();
+
+  // We have to make sure to drop the references to listeners and callbacks
+  // no longer needed.
+  ReleaseListeners();
+
+  DoNotifyListenerCleanup();
+
+  // If this is a navigation, then we must let the docshell flush the reports
+  // to the console later.  The LoadDocument() is pointing at the detached
+  // document that started the navigation.  We want to show the reports on the
+  // new document.  Otherwise the console is wiped and the user never sees
+  // the information.
+  if (!IsNavigation()) {
+    if (mLoadGroup) {
+      FlushConsoleReports(mLoadGroup);
+    } else if (mLoadInfo) {
+      RefPtr<dom::Document> doc;
+      mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
+      FlushConsoleReports(doc);
+    }
+  }
+}
 
 void HttpChannelChild::FinishInterceptedRedirect() {
   nsresult rv;
