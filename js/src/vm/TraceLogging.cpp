@@ -903,6 +903,24 @@ size_t JS::TraceLoggerDurationImpl::NextChunk(JSContext* cx, size_t* dataIndex,
             return 0;
           }
         }
+
+        // If we reach the end of the list, use the last event as the end
+        // event for all events remaining on the stack.
+        if (j == events.size() - 1) {
+          while (!eventStack.empty()) {
+            uint32_t prev = eventStack.popCopy();
+            double delta =
+                (events[j].time - events[prev].time).ToMicroseconds();
+            if (prev == *dataIndex) {
+              MOZ_ASSERT(eventStack.empty());
+              duration = delta;
+            } else {
+              if (!eventMap.putNew(prev, delta)) {
+                return 0;
+              }
+            }
+          }
+        }
       }
     }
 
