@@ -72,6 +72,10 @@ add_task(async function subdialog_cleanup() {
 });
 
 add_task(async function test_openPasswordManagement_overrideURI() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["signon.management.page.enabled", true],
+  ]});
+
   Services.prefs.setStringPref(PREF_MANAGEMENT_URI, "about:logins?filter=%DOMAIN%");
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
 

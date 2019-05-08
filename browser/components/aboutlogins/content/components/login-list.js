@@ -59,6 +59,12 @@ class LoginList extends HTMLElement {
   }
 
   loginModified(login) {
+    for (let i = 0; i < this._logins.length; i++) {
+      if (this._logins[i].guid == login.guid) {
+        this._logins[i] = login;
+        break;
+      }
+    }
     let pre = this.shadowRoot.querySelector("pre");
     for (let loginListItem of pre.children) {
       if (loginListItem.getAttribute("guid") == login.guid) {

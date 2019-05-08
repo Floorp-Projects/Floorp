@@ -16,3 +16,6 @@ EXTRA_JS_MODULES += [
 FINAL_TARGET_FILES.actors += [
     'AboutLoginsChild.jsm',
 ]
+
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']

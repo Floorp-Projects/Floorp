@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the login-list component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the login-list component</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="login-list-item.js"></script>
+  <script src="login-list.js"></script>
+  <script src="aboutlogins_common.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+  <iframe id="templateFrame" src="aboutLogins.html"
+          sandbox="allow-same-origin"></iframe>
+</div>
+<pre id="test">
+</pre>
+<script>
+/** Test the login-list component **/
+
+let gLoginList;
+const TEST_LOGIN_1 = {
+  guid: "123456789",
+  hostname: "https://example.com",
+  username: "user1",
+  password: "pass1",
+};
+const TEST_LOGIN_2 = {
+  guid: "987654321",
+  hostname: "https://example.com",
+  username: "user2",
+  password: "pass2",
+};
+
+add_task(async function setup() {
+  let templateFrame = document.getElementById("templateFrame");
+  let displayEl = document.getElementById("display");
+  importDependencies(templateFrame, displayEl);
+
+  gLoginList = document.createElement("login-list");
+  displayEl.appendChild(gLoginList);
+});
+
+add_task(async function test_empty_list() {
+  ok(gLoginList, "loginList exists");
+  is(gLoginList.textContent, "", "Initially empty");
+});
+
+add_task(async function test_populated_list() {
+  gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2]);
+  await asyncElementRendered();
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  is(loginListItems.length, 2, "Both logins should be displayed");
+  is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
+  is(loginListItems[0].shadowRoot.querySelector(".login-list-item-hostname").textContent, TEST_LOGIN_1.hostname,
+     "login-list-item hostname should match");
+  is(loginListItems[0].shadowRoot.querySelector(".login-list-item-username").textContent, TEST_LOGIN_1.username,
+     "login-list-item username should match");
+});
+
+add_task(async function test_login_modified() {
+  let modifiedLogin = Object.assign(TEST_LOGIN_1, {username: "user11"});
+  gLoginList.loginModified(modifiedLogin);
+  await asyncElementRendered();
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  is(loginListItems.length, 2, "Both logins should be displayed");
+  is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item should have correct guid attribute");
+  is(loginListItems[0].shadowRoot.querySelector(".login-list-item-hostname").textContent, TEST_LOGIN_1.hostname,
+     "login-list-item hostname should match");
+  is(loginListItems[0].shadowRoot.querySelector(".login-list-item-username").textContent, modifiedLogin.username,
+     "login-list-item username should have been updated");
+  is(loginListItems[1].shadowRoot.querySelector(".login-list-item-username").textContent, TEST_LOGIN_2.username,
+     "login-list-item2 username should remain unchanged");
+});
+
+add_task(async function test_login_added() {
+  let newLogin = Object.assign({}, TEST_LOGIN_1, {username: "user22", guid: "111222"});
+  gLoginList.loginAdded(newLogin);
+  await asyncElementRendered();
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  is(loginListItems.length, 3, "New login should be added to the list");
+  is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
+  is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
+  is(loginListItems[2].getAttribute("guid"), newLogin.guid, "login-list-item3 should have correct guid attribute");
+  is(loginListItems[2].shadowRoot.querySelector(".login-list-item-hostname").textContent, newLogin.hostname,
+     "login-list-item hostname should match");
+  is(loginListItems[2].shadowRoot.querySelector(".login-list-item-username").textContent, newLogin.username,
+     "login-list-item username should have been updated");
+});
+
+add_task(async function test_login_removed() {
+  gLoginList.loginRemoved({guid: "111222"});
+  await asyncElementRendered();
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  is(loginListItems.length, 2, "New login should be removed from the list");
+  is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
+  is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
+});
+</script>
+
+</body>
+</html>

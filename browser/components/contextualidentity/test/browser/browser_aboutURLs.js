@@ -5,6 +5,10 @@
 requestLongerTimeout(2);
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["signon.management.page.enabled", true],
+  ]});
+
   let aboutURLs = [];
 
   // List of about: URLs that may cause problem, so we skip them in this test.
