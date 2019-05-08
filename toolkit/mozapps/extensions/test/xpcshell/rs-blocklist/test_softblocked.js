@@ -2,10 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function load_blocklist(aFile) {
-  return AddonTestUtils.loadBlocklistData(do_get_file("../data"), aFile);
-}
-
 // Tests that an appDisabled add-on that becomes softBlocked remains disabled
 // when becoming appEnabled
 add_task(async function test_softblock() {
@@ -33,7 +29,16 @@ add_task(async function test_softblock() {
   Assert.ok(s1.appDisabled);
   Assert.ok(!s1.isActive);
 
-  await load_blocklist("test_softblocked1");
+  await AddonTestUtils.loadBlocklistRawData({extensions: [
+    {
+      "guid": "softblock1@tests.mozilla.org",
+      "versionRange": [
+        {
+          "severity": "1",
+        },
+      ],
+    },
+  ]});
 
   Assert.ok(s1.softDisabled);
   Assert.ok(s1.appDisabled);

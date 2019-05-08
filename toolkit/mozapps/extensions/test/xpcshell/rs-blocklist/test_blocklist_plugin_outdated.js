@@ -30,6 +30,35 @@ var PLUGINS = [{
 
 mockPluginHost(PLUGINS);
 
+const BLOCKLIST_DATA = {
+  empty: {
+  },
+  outdated_1: {
+    plugins: [
+      {
+        matchName: "test_bug514327_1",
+        versionRange: [],
+      },
+      {
+        matchName: "test_bug514327_outdated",
+        versionRange: [{severity: "0"}],
+      },
+    ],
+  },
+  outdated_2: {
+    plugins: [
+      {
+        matchName: "test_bug514327_2",
+        versionRange: [],
+      },
+      {
+        matchName: "test_bug514327_outdated",
+        versionRange: [{severity: "0"}],
+      },
+    ],
+  },
+};
+
 var BlocklistPrompt = {
   get wrappedJSObject() { return this; },
 
@@ -57,7 +86,7 @@ add_task(async function setup() {
 
   await promiseStartupManager();
   // initialize the blocklist with no entries
-  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "test_bug514327_3_empty");
+  await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA.empty);
 
   gBlocklist = Services.blocklist;
 
@@ -73,7 +102,7 @@ add_task(async function setup() {
 
 add_task(async function test_part_1() {
   // update blocklist with data that marks the plugin as outdated
-  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "test_bug514327_3_outdated_1");
+  await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA.outdated_1);
 
   // plugin should now be marked as outdated
   Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_OUTDATED);
@@ -81,7 +110,7 @@ add_task(async function test_part_1() {
 
 add_task(async function test_part_2() {
   // update blocklist with data that marks the plugin as outdated
-  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "test_bug514327_3_outdated_2");
+  await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA.outdated_2);
 
   // plugin should still be marked as outdated
   Assert.equal(await gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9"), nsIBLS.STATE_OUTDATED);

@@ -709,11 +709,8 @@ var AddonTestUtils = {
   },
 
   /**
-   * Load the following data into the *real* blocklist providers.
-   * While `overrideBlocklist` replaces the blocklist entirely with a mock
-   * that returns dummy data, this method instead loads data into the actual
-   * blocklist, fires update methods as would happen if this data came from
-   * an actual blocklist update, etc.
+   * Load the data from the specified files into the *real* blocklist providers.
+   * Loads using loadBlocklistRawData, which will treat this as an update.
    *
    * @param {nsIFile} dir
    *        The directory in which the files live.
@@ -726,23 +723,44 @@ var AddonTestUtils = {
    *        will be called.
    */
   async loadBlocklistData(dir, prefix) {
+    let loadedData = {};
+    for (let fileSuffix of ["extensions", "plugins"]) {
+      const fileName = `${prefix}-${fileSuffix}.json`;
+      let jsonStr = await OS.File.read(OS.Path.join(dir.path, fileName), {encoding: "UTF-8"}).catch(() => {});
+      if (!jsonStr) {
+         continue;
+      }
+      this.info(`Loaded ${fileName}`);
+
+      loadedData[fileSuffix] = JSON.parse(jsonStr);
+    }
+    return this.loadBlocklistRawData(loadedData);
+  },
+
+  /**
+   * Load the following data into the *real* blocklist providers.
+   * While `overrideBlocklist` replaces the blocklist entirely with a mock
+   * that returns dummy data, this method instead loads data into the actual
+   * blocklist, fires update methods as would happen if this data came from
+   * an actual blocklist update, etc.
+   *
+   * @param {object} data
+   *        The data to load.
+   */
+  async loadBlocklistRawData(data) {
     const bsPass = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
     const blocklistMapping = {
       "extensions": bsPass.ExtensionBlocklistRS,
       "plugins": bsPass.PluginBlocklistRS,
     };
 
-    for (const [fileSuffix, blocklistObj] of Object.entries(blocklistMapping)) {
-      const fileName = `${prefix}-${fileSuffix}.json`;
-      let jsonStr = await OS.File.read(OS.Path.join(dir.path, fileName), {encoding: "UTF-8"}).catch(() => {});
-      if (!jsonStr) {
+    for (const [dataProp, blocklistObj] of Object.entries(blocklistMapping)) {
+      let newData = data[dataProp];
+      if (!newData) {
         continue;
       }
-      this.info(`Loading ${fileName}`);
-
-      let newData = JSON.parse(jsonStr);
       if (!Array.isArray(newData)) {
-        throw new Error("Expected an array of new items to put in the " + fileSuffix + " blocklist!");
+        throw new Error("Expected an array of new items to put in the " + dataProp + " blocklist!");
       }
       for (let item of newData) {
         if (!item.id) {

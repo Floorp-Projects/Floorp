@@ -72,7 +72,33 @@ async function run_test() {
 
     Services.obs.removeObserver(blacklistAdded, "blocklist-data-gfxItems");
     Services.obs.addObserver(blacklistRemoved, "blocklist-data-gfxItems");
-    mockGfxBlocklistItemsFromDisk("../data/test_gfxBlacklist2.json");
+    mockGfxBlocklistItems([
+      {
+        os: "WINNT 6.1",
+        vendor: "0xabcd",
+        devices: [
+          "0x2783",
+          "0x2782",
+        ],
+        feature: " DIRECT2D ",
+        featureStatus: " BLOCKED_DRIVER_VERSION ",
+        driverVersion: " 8.52.322.2202 ",
+        driverVersionComparator: " LESS_THAN ",
+      },
+      {
+        os: "WINNT 6.0",
+        vendor: "0xdcba",
+        devices: [
+          "0x2783",
+          "0x1234",
+          "0x2782",
+        ],
+        feature: " DIRECT3D_9_LAYERS ",
+        featureStatus: " BLOCKED_DRIVER_VERSION ",
+        driverVersion: " 8.52.322.2202 ",
+        driverVersionComparator: " LESS_THAN ",
+      },
+    ]);
   }
 
   function blacklistRemoved(aSubject, aTopic, aData) {

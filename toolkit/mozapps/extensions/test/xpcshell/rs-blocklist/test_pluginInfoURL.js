@@ -27,6 +27,76 @@ const PLUGINS = [
   new MockPlugin("test_newVersion", "3", Ci.nsIPluginTag.STATE_ENABLED),
 ];
 
+const BLOCKLIST_DATA = [
+  {
+    "matchName": "^test_with_infoURL",
+    "matchVersion": "^5",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "*",
+            "minVersion": "1",
+          },
+        ],
+      },
+    ],
+    "blockID": "test_plugin_wInfoURL",
+    "infoURL": "http://test.url.com/",
+  },
+  {
+    "matchName": "^test_with_altInfoURL",
+    "matchVersion": "^5",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "*",
+            "minVersion": "1",
+          },
+        ],
+      },
+    ],
+    "blockID": "test_plugin_wAltInfoURL",
+    "infoURL": "http://alt.test.url.com/",
+  },
+  {
+    "matchName": "^test_no_infoURL",
+    "versionRange": [
+      {
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "*",
+            "minVersion": "1",
+          },
+        ],
+      },
+    ],
+    "blockID": "test_plugin_noInfoURL",
+  },
+  {
+    "matchName": "^test_newVersion",
+    "versionRange": [
+      {
+        "maxVersion": "2",
+        "minVersion": "1",
+        "targetApplication": [
+          {
+            "guid": "xpcshell@tests.mozilla.org",
+            "maxVersion": "*",
+            "minVersion": "1",
+          },
+        ],
+      },
+    ],
+    "blockID": "test_plugin_newVersion",
+    "infoURL": "http://test.url2.com/",
+  },
+];
+
 /**
  * The entry point of the unit tests, which is also responsible of
  * copying the blocklist file to the profile folder.
@@ -34,7 +104,7 @@ const PLUGINS = [
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   await promiseStartupManager();
-  await AddonTestUtils.loadBlocklistData(do_get_file("../data"), "pluginInfoURL_block");
+  await AddonTestUtils.loadBlocklistRawData({plugins: BLOCKLIST_DATA});
 });
 
 /**
