@@ -69,10 +69,10 @@ add_test(function test_toJSON_types() {
   deepEqual([], evaluate.toJSON([]));
 
   // elements
-  ok(WebElement.isReference(evaluate.toJSON(domEl, seenEls)));
-  ok(WebElement.isReference(evaluate.toJSON(svgEl, seenEls)));
-  ok(WebElement.isReference(evaluate.toJSON(xulEl, seenEls)));
-  ok(WebElement.isReference(evaluate.toJSON(xblEl, seenEls)));
+  ok(evaluate.toJSON(domEl, seenEls) instanceof WebElement);
+  ok(evaluate.toJSON(svgEl, seenEls) instanceof WebElement);
+  ok(evaluate.toJSON(xulEl, seenEls) instanceof WebElement);
+  ok(evaluate.toJSON(xblEl, seenEls) instanceof WebElement);
 
   // toJSON
   equal("foo", evaluate.toJSON({toJSON() { return "foo"; }}));
@@ -91,7 +91,7 @@ add_test(function test_toJSON_sequences() {
   equal(null, actual[0]);
   equal(true, actual[1]);
   deepEqual([], actual[2]);
-  ok(WebElement.isReference(actual[3]));
+  ok(actual[3] instanceof WebElement);
   equal("foo", actual[4]);
   deepEqual({bar: "baz"}, actual[5]);
 
@@ -112,7 +112,7 @@ add_test(function test_toJSON_objects() {
   equal(null, actual.null);
   equal(true, actual.boolean);
   deepEqual([], actual.array);
-  ok(WebElement.isReference(actual.webElement));
+  ok(actual.webElement instanceof WebElement);
   equal("foo", actual.toJSON);
   deepEqual({"bar": "baz"}, actual.object);
 
