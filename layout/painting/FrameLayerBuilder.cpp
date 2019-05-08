@@ -6465,7 +6465,7 @@ gfxSize FrameLayerBuilder::GetPaintedLayerScaleForFrame(nsIFrame* aFrame) {
 
 #ifdef MOZ_DUMP_PAINTING
 static void DebugPaintItem(DrawTarget& aDrawTarget, nsPresContext* aPresContext,
-                           nsDisplayItem* aItem,
+                           nsPaintedDisplayItem* aItem,
                            nsDisplayListBuilder* aBuilder) {
   bool snap;
   Rect bounds = NSRectToRect(aItem->GetBounds(aBuilder, &snap),
@@ -6990,6 +6990,11 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
       continue;
     }
 
+    const bool paintAsLayer = cdi.mInactiveLayerManager;
+    nsPaintedDisplayItem* paintedItem = item->AsPaintedDisplayItem();
+    MOZ_ASSERT(paintAsLayer || paintedItem,
+               "The display item does not support painting");
+
     const DisplayItemClip* itemClip = GetItemClip(item, temporaryClip);
     bool itemPaintsOwnClip = false;
 
@@ -6998,7 +7003,8 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
       itemClipTracker.Restore();
 
       // Check if the item supports painting with clip.
-      itemPaintsOwnClip = item->CanPaintWithClip(*itemClip);
+      itemPaintsOwnClip =
+          paintAsLayer ? false : paintedItem->CanPaintWithClip(*itemClip);
 
       if (!itemPaintsOwnClip) {
         // Item does not support painting with clip, set the clip.
@@ -7011,27 +7017,31 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
       itemClipTracker.Restore();
     }
 
-    if (cdi.mInactiveLayerManager) {
+    if (paintAsLayer) {
       bool saved = aDrawTarget.GetPermitSubpixelAA();
       PaintInactiveLayer(aBuilder, cdi.mInactiveLayerManager, item, aContext,
                          aContext);
       aDrawTarget.SetPermitSubpixelAA(saved);
-    } else {
-      nsIFrame* frame = item->Frame();
-      if (aBuilder->IsPaintingToWindow()) {
-        frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
-      }
+      continue;
+    }
+
+    nsIFrame* frame = item->Frame();
+    if (aBuilder->IsPaintingToWindow()) {
+      frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
+    }
+
 #ifdef MOZ_DUMP_PAINTING
-      if (gfxEnv::DumpPaintItems()) {
-        DebugPaintItem(aDrawTarget, aPresContext, item, aBuilder);
-      } else
+    if (gfxEnv::DumpPaintItems()) {
+      DebugPaintItem(aDrawTarget, aPresContext, paintedItem, aBuilder);
+      continue;
+    }
 #endif
-          if (itemPaintsOwnClip) {
-        MOZ_ASSERT(itemClip);
-        item->PaintWithClip(aBuilder, aContext, *itemClip);
-      } else {
-        item->Paint(aBuilder, aContext);
-      }
+
+    if (itemPaintsOwnClip) {
+      MOZ_ASSERT(itemClip);
+      paintedItem->PaintWithClip(aBuilder, aContext, *itemClip);
+    } else {
+      paintedItem->Paint(aBuilder, aContext);
     }
   }
 
