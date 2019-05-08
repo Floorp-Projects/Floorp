@@ -78,6 +78,8 @@ class Breakpoint extends PureComponent<Props> {
     const { breakpoint, openConditionalPanel } = this.props;
     if (breakpoint.options.condition) {
       openConditionalPanel(this.selectedLocation);
+    } else if (breakpoint.options.logValue) {
+      openConditionalPanel(this.selectedLocation, true);
     }
   };
 
