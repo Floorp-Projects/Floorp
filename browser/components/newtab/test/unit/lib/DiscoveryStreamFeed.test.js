@@ -332,7 +332,7 @@ describe("DiscoveryStreamFeed", () => {
       assert.calledWith(feed.cache.set, "feeds", {"foo.com": {"data": "data", "lastUpdated": 0}});
     });
 
-    it("should send at.DISCOVERY_STREAM_FEEDS_UPDATE with new feed data",
+    it("should send feed update events with new feed data",
       async () => {
         sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
         sandbox.spy(feed.store, "dispatch");
@@ -344,9 +344,12 @@ describe("DiscoveryStreamFeed", () => {
 
         await feed.loadComponentFeeds(feed.store.dispatch);
 
-        assert.calledWith(feed.store.dispatch, {
+        assert.calledWith(feed.store.dispatch.firstCall, {
+          type: at.DISCOVERY_STREAM_FEED_UPDATE,
+          data: {feed: null, url: "foo.com"},
+        });
+        assert.calledWith(feed.store.dispatch.secondCall, {
           type: at.DISCOVERY_STREAM_FEEDS_UPDATE,
-          data: {"foo.com": null},
         });
       });
 
@@ -1597,7 +1600,7 @@ describe("DiscoveryStreamFeed", () => {
         const fakeDiscoveryStream = {DiscoveryStream: {layout: fakeLayout}};
         sandbox.stub(feed.store, "getState").returns(fakeDiscoveryStream);
         sandbox.stub(feed, "rotate").callsFake(val => val);
-        sandbox.stub(feed, "scoreItems").callsFake(val => val);
+        sandbox.stub(feed, "scoreItems").callsFake(val => ({data: val, filtered: []}));
         sandbox.stub(feed, "cleanUpTopRecImpressionPref").callsFake(val => val);
 
         const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now(), data: "data"}}};
@@ -1613,9 +1616,9 @@ describe("DiscoveryStreamFeed", () => {
         await feed.refreshAll({isStartup: true});
 
         assert.calledOnce(feed.fetchFromEndpoint);
-        // Once from cache, once to update the store
-        assert.calledTwice(feed.store.dispatch);
-        assert.equal(feed.store.dispatch.firstCall.args[0].type, at.DISCOVERY_STREAM_FEEDS_UPDATE);
+        // Once from cache, once to update the feed, once to update that all feeds are done.
+        assert.calledThrice(feed.store.dispatch);
+        assert.equal(feed.store.dispatch.secondCall.args[0].type, at.DISCOVERY_STREAM_FEEDS_UPDATE);
       });
     });
   });

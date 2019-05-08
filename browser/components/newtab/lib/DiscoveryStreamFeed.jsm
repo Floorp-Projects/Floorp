@@ -266,7 +266,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    *                     the scope for isStartup and the promises object.
    *                     Combines feed results and promises for each component with a feed.
    */
-  buildFeedPromise({newFeedsPromises, newFeeds}, isStartup) {
+  buildFeedPromise({newFeedsPromises, newFeeds}, isStartup, sendUpdate) {
     return component => {
       const {url} = component.feed;
 
@@ -275,8 +275,16 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         // we then fill in with the proper object inside the promise.
         newFeeds[url] = {};
         const feedPromise = this.getComponentFeed(url, isStartup);
+
         feedPromise.then(feed => {
           newFeeds[url] = this.filterRecommendations(feed);
+          sendUpdate({
+            type: at.DISCOVERY_STREAM_FEED_UPDATE,
+            data: {
+              feed: newFeeds[url],
+              url,
+            },
+          });
 
           // We grab affinities off the first feed for the moment.
           // Ideally this would be returned from the server on the layout,
@@ -293,7 +301,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         }).catch(/* istanbul ignore next */ error => {
           Cu.reportError(`Error trying to load component feed ${url}: ${error}`);
         });
-
         newFeedsPromises.push(feedPromise);
       }
     };
@@ -317,11 +324,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    * @returns {Function} We return a function so we can contain the scope for isStartup.
    *                     Reduces feeds into promises and feed data.
    */
-  reduceFeedComponents(isStartup) {
+  reduceFeedComponents(isStartup, sendUpdate) {
     return (accumulator, row) => {
       row.components
         .filter(component => component && component.feed)
-        .forEach(this.buildFeedPromise(accumulator, isStartup));
+        .forEach(this.buildFeedPromise(accumulator, isStartup, sendUpdate));
       return accumulator;
     };
   }
@@ -334,14 +341,14 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    * @returns {Object} An object with newFeedsPromises (Array) and newFeeds (Object),
    *                   we can Promise.all newFeedsPromises to get completed data in newFeeds.
    */
-  buildFeedPromises(layout, isStartup) {
+  buildFeedPromises(layout, isStartup, sendUpdate) {
     const initialData = {
       newFeedsPromises: [],
       newFeeds: {},
     };
     return layout
       .filter(row => row && row.components)
-      .reduce(this.reduceFeedComponents(isStartup), initialData);
+      .reduce(this.reduceFeedComponents(isStartup, sendUpdate), initialData);
   }
 
   async loadComponentFeeds(sendUpdate, isStartup) {
@@ -355,7 +362,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     // was issued to fetch the component feed in `getComponentFeed()`.
     this.componentFeedFetched = false;
     const start = perfService.absNow();
-    const {newFeedsPromises, newFeeds} = this.buildFeedPromises(DiscoveryStream.layout, isStartup);
+    const {newFeedsPromises, newFeeds} = this.buildFeedPromises(DiscoveryStream.layout, isStartup, sendUpdate);
 
     // Each promise has a catch already built in, so no need to catch here.
     await Promise.all(newFeedsPromises);
@@ -365,7 +372,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       this.componentFeedRequestTime = Math.round(perfService.absNow() - start);
     }
     await this.cache.set("feeds", newFeeds);
-    sendUpdate({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: newFeeds});
+    sendUpdate({
+      type: at.DISCOVERY_STREAM_FEEDS_UPDATE,
+    });
   }
 
   async loadSpocs(sendUpdate, isStartup) {
@@ -615,6 +624,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   async getComponentFeed(feedUrl, isStartup) {
     const cachedData = await this.cache.get() || {};
     const {feeds} = cachedData;
+
     let feed = feeds ? feeds[feedUrl] : null;
     if (this.isExpired({cachedData, key: "feed", url: feedUrl, isStartup})) {
       const feedResponse = await this.fetchFromEndpoint(feedUrl);
@@ -626,7 +636,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         feed = {
           lastUpdated: Date.now(),
           data: {
-            ...feedResponse,
+            settings: feedResponse.settings,
             recommendations,
           },
         };
@@ -673,8 +683,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     this.loadAffinityScoresCache();
     await this.loadLayout(dispatch, isStartup);
     await Promise.all([
-      this.loadComponentFeeds(dispatch, isStartup).catch(error => Cu.reportError(`Error trying to load component feeds: ${error}`)),
       this.loadSpocs(dispatch, isStartup).catch(error => Cu.reportError(`Error trying to load spocs feed: ${error}`)),
+      this.loadComponentFeeds(dispatch, isStartup).catch(error => Cu.reportError(`Error trying to load component feeds: ${error}`)),
     ]);
     if (isStartup) {
       await this._maybeUpdateCachedData();
@@ -1032,7 +1042,7 @@ defaultLayoutResp = {
         {
           "type": "CardGrid",
           "properties": {
-            "items": 4,
+            "items": 3,
           },
           "header": {
             "title": "",
@@ -1045,7 +1055,7 @@ defaultLayoutResp = {
             "probability": 1,
             "positions": [
               {
-                "index": 3,
+                "index": 2,
               },
             ],
           },
@@ -1062,19 +1072,21 @@ defaultLayoutResp = {
           },
           "feed": {
             "embed_reference": null,
-            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=4&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
+            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=4&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
             "items": 4,
             "has_numbers": false,
             "has_images": true,
-            "border": "no-border",
+          },
+          "styles": {
+            ".ds-header": "margin-top: 4px;",
           },
           "spocs": {
             "probability": 1,
             "positions": [
               {
-                "index": 3,
+                "index": 2,
               },
             ],
           },
@@ -1091,13 +1103,15 @@ defaultLayoutResp = {
           },
           "feed": {
             "embed_reference": null,
-            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=5&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
+            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=5&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
             "items": 4,
             "has_numbers": false,
             "has_images": true,
-            "border": "no-border",
+          },
+          "styles": {
+            ".ds-header": "margin-top: 4px;",
           },
         },
       ],
@@ -1112,13 +1126,15 @@ defaultLayoutResp = {
           },
           "feed": {
             "embed_reference": null,
-            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=8&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
+            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=8&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
             "items": 4,
             "has_numbers": false,
             "has_images": true,
-            "border": "no-border",
+          },
+          "styles": {
+            ".ds-header": "margin-top: 4px;",
           },
           "spocs": {
             "probability": 1,
@@ -1141,13 +1157,15 @@ defaultLayoutResp = {
           },
           "feed": {
             "embed_reference": null,
-            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=2&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
+            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=2&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
+          },
+          "styles": {
+            ".ds-header": "margin-top: 4px;",
           },
           "properties": {
             "items": 4,
             "has_numbers": false,
             "has_images": true,
-            "border": "no-border",
           },
         },
       ],
@@ -1162,13 +1180,15 @@ defaultLayoutResp = {
           },
           "feed": {
             "embed_reference": null,
-            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=1&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
+            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=1&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
             "items": 4,
             "has_numbers": false,
             "has_images": true,
-            "border": "no-border",
+          },
+          "styles": {
+            ".ds-header": "margin-top: 4px;",
           },
         },
       ],
@@ -1183,13 +1203,15 @@ defaultLayoutResp = {
           },
           "feed": {
             "embed_reference": null,
-            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=7&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
+            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=7&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
             "items": 4,
             "has_numbers": false,
             "has_images": true,
-            "border": "no-border",
+          },
+          "styles": {
+            ".ds-header": "margin-top: 4px;",
           },
           "spocs": {
             "probability": 1,

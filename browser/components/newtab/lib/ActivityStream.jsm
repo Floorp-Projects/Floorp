@@ -160,7 +160,7 @@ const PREFS_CONFIG = new Map([
     value: "topsites,topstories,highlights",
   }],
   ["improvesearch.noDefaultSearchTile", {
-    title: "Experiment to remove tiles that are the same as the default search",
+    title: "Remove tiles that are the same as the default search",
     value: true,
   }],
   ["improvesearch.topSiteSearchShortcuts.searchEngines", {
@@ -215,7 +215,7 @@ const PREFS_CONFIG = new Map([
     title: "Configuration for CFR FxA Messages provider",
     value: JSON.stringify({
       id: "cfr-fxa",
-      enabled: false,
+      enabled: true,
       type: "remote-settings",
       bucket: "cfr-fxa",
       frequency: {custom: [{period: "daily", cap: 1}]},

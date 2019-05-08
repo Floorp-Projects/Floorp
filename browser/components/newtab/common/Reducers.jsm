@@ -495,8 +495,20 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ...prevState,
         feeds: {
           ...prevState.feeds,
-          data: action.data || prevState.feeds.data,
           loaded: true,
+        },
+      };
+    case at.DISCOVERY_STREAM_FEED_UPDATE:
+      const newData = {};
+      newData[action.data.url] = action.data.feed;
+      return {
+        ...prevState,
+        feeds: {
+          ...prevState.feeds,
+          data: {
+            ...prevState.feeds.data,
+            ...newData,
+          },
         },
       };
     case at.DISCOVERY_STREAM_SPOCS_CAPS:

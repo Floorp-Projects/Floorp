@@ -1600,12 +1600,14 @@ describe("ASRouter", () => {
 
     describe(".setupTrailhead", () => {
       let getBoolPrefStub;
+      let setStringPrefStub;
 
       beforeEach(() => {
         getBoolPrefStub = sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF).returns(true);
+        setStringPrefStub = sandbox.stub(global.Services.prefs, "setStringPref");
       });
 
-      const configWithExperiment = {experiment: "interrupt", interrupt: "join", triplet: "privacy"};
+      const configWithExperiment = {experiment: "interrupts", interrupt: "join", triplet: "privacy"};
       const configWithoutExperiment = {experiment: "", interrupt: "control", triplet: ""};
 
       it("should generates an experiment/branch configuration and update Router.state", async () => {
@@ -1642,6 +1644,7 @@ describe("ASRouter", () => {
         await Router.setupTrailhead();
 
         assert.calledOnce(global.TelemetryEnvironment.setExperimentActive);
+        assert.calledWith(setStringPrefStub, TRAILHEAD_CONFIG.INTERRUPTS_EXPERIMENT_PREF, "join");
       });
       it("should not set an active experiment if no experiment is defined", async () => {
         sandbox.stub(Router, "_generateTrailheadBranches").resolves(configWithoutExperiment);
@@ -1650,6 +1653,7 @@ describe("ASRouter", () => {
         await Router.setupTrailhead();
 
         assert.notCalled(global.TelemetryEnvironment.setExperimentActive);
+        assert.notCalled(setStringPrefStub);
       });
     });
 

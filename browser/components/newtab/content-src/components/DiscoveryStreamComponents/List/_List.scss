@@ -220,10 +220,10 @@ $item-line-height: 20;
   .ds-list-item-context {
     @include limit-visibile-lines(1, $item-line-height, $item-font-size);
     @include dark-theme-only {
-      color: $teal-10;
+      color: $grey-40;
     }
 
-    color: $teal-80;
+    color: $grey-50;
     font-size: 13px;
     text-overflow: ellipsis;
   }

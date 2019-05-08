@@ -1279,15 +1279,6 @@ describe("Top Sites Feed", () => {
       assert.equal(defaultSearchTopsite.tippyTopIcon, "icon.png");
       assert.equal(defaultSearchTopsite.backgroundColor, "#fff");
     });
-    it("should not overlap with improvesearch.noDefaultSearchTile and still provide search tiles", async () => {
-      feed.store.state.Prefs.values["improvesearch.noDefaultSearchTile"] = true;
-      links = [{url: "google.com"}];
-
-      const urlsReturned = await feed.getLinksWithDefaults();
-
-      const defaultSearchTopsite = urlsReturned.find(s => s.url === "google.com");
-      assert.isTrue(defaultSearchTopsite.searchTopSite);
-    });
     it("should dispatch UPDATE_SEARCH_SHORTCUTS on updateCustomSearchShortcuts", async () => {
       feed.store.state.Prefs.values["improvesearch.noDefaultSearchTile"] = true;
       await feed.updateCustomSearchShortcuts();

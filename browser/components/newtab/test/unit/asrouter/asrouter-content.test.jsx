@@ -51,6 +51,7 @@ describe("ASRouterUISurface", () => {
     sandbox = sinon.createSandbox();
     headerPortal = document.createElement("div");
     footerPortal = document.createElement("div");
+    sandbox.stub(footerPortal, "querySelector").returns(footerPortal);
     fakeDocument = {
       location: {href: ""},
       _listeners: new Set(),
@@ -70,6 +71,9 @@ describe("ASRouterUISurface", () => {
       },
       removeEventListener(event, listener) {
         this._listeners.delete(listener);
+      },
+      get body() {
+        return document.createElement("body");
       },
       getElementById(id) {
         return id === "header-asrouter-container" ? headerPortal : footerPortal;

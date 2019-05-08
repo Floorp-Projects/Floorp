@@ -684,17 +684,9 @@ describe("Reducers", () => {
       const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_CONFIG_CHANGE, data: {enabled: true}});
       assert.deepEqual(state.config, {enabled: true});
     });
-    it("should load feeds with DISCOVERY_STREAM_FEEDS_UPDATE", () => {
-      const data = {
-        "https://foo.com/feed1": {lastUpdated: 123, data: [1, 2, 3]},
-      };
-
-      const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data});
-
-      assert.deepEqual(state.feeds, {
-        data,
-        loaded: true,
-      });
+    it("should set feeds as loaded with DISCOVERY_STREAM_FEEDS_UPDATE", () => {
+      const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_FEEDS_UPDATE});
+      assert.isTrue(state.feeds.loaded);
     });
     it("should set spoc_endpoint with DISCOVERY_STREAM_SPOCS_ENDPOINT", () => {
       const state = DiscoveryStream(undefined, {type: at.DISCOVERY_STREAM_SPOCS_ENDPOINT, data: "foo.com"});
