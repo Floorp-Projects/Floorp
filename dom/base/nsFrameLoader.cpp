@@ -3275,7 +3275,13 @@ already_AddRefed<mozilla::dom::Promise> nsFrameLoader::DrawSnapshot(
 }
 
 already_AddRefed<nsIRemoteTab> nsFrameLoader::GetRemoteTab() {
-  return do_AddRef(GetBrowserParent());
+  if (!mRemoteBrowser) {
+    return nullptr;
+  }
+  if (auto* browserHost = mRemoteBrowser->AsBrowserHost()) {
+    return do_AddRef(browserHost);
+  }
+  return nullptr;
 }
 
 already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
