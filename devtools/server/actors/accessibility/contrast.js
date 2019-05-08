@@ -12,6 +12,7 @@ loader.lazyRequireGetter(this, "addPseudoClassLock", "devtools/server/actors/hig
 loader.lazyRequireGetter(this, "removePseudoClassLock", "devtools/server/actors/highlighters/utils/markup", true);
 loader.lazyRequireGetter(this, "DevToolsWorker", "devtools/shared/worker/worker", true);
 loader.lazyRequireGetter(this, "accessibility", "devtools/shared/constants", true);
+loader.lazyRequireGetter(this, "InspectorActorUtils", "devtools/server/actors/inspector/utils");
 
 const WORKER_URL = "resource://devtools/server/actors/accessibility/worker.js";
 const HIGHLIGHTED_PSEUDO_CLASS = ":-moz-devtools-highlighted";
@@ -41,6 +42,9 @@ function getTextProperties(node) {
   const opacity = parseFloat(computedStyles.opacity);
 
   let { r, g, b, a } = colorUtils.colorToRGBA(color, true);
+  // If the element has opacity in addition to background alpha value, take it
+  // into account. TODO: this does not handle opacity set on ancestor elements
+  // (see bug https://bugzilla.mozilla.org/show_bug.cgi?id=1544721).
   a = opacity * a;
   const textRgbaColor = new colorUtils.CssColor(`rgba(${r}, ${g}, ${b}, ${a})`, true);
   // TODO: For cases where text color is transparent, it likely comes from the color of
@@ -58,11 +62,11 @@ function getTextProperties(node) {
     size >= (isBoldText ? BOLD_LARGE_TEXT_MIN_PIXELS : LARGE_TEXT_MIN_PIXELS);
 
   return {
-    // Blend text color taking its alpha into account asuming white background.
-    color: colorUtils.blendColors([r, g, b, a]),
+    color: [r, g, b, a],
     isLargeText,
     isBoldText,
     size,
+    opacity,
   };
 }
 
@@ -156,7 +160,7 @@ async function getContrastRatioFor(node, options = {}) {
     };
   }
 
-  const { color, isLargeText, isBoldText, size } = props;
+  const { color, isLargeText, isBoldText, size, opacity } = props;
   const bounds = getBounds(options.win, options.bounds);
   const zoom = 1 / getCurrentZoom(options.win);
   // When calculating colour contrast, we traverse image data for text nodes that are
@@ -195,8 +199,33 @@ async function getContrastRatioFor(node, options = {}) {
   }, [ dataText.buffer, dataBackground.buffer ]);
 
   if (!rgba) {
+    // Fallback (original) contrast calculation algorithm. It tries to get the
+    // closest background colour for the node and use it to calculate contrast.
+    const backgroundColor = InspectorActorUtils.getClosestBackgroundColor(node);
+    const backgroundImage = InspectorActorUtils.getClosestBackgroundImage(node);
+
+    if (backgroundImage !== "none") {
+      // Both approaches failed, at this point we don't have a better one yet.
+      return {
+        error: true,
+      };
+    }
+
+    let { r, g, b, a } = colorUtils.colorToRGBA(backgroundColor, true);
+    // If the element has opacity in addition to background alpha value, take it
+    // into account. TODO: this does not handle opacity set on ancestor
+    // elements (see bug https://bugzilla.mozilla.org/show_bug.cgi?id=1544721).
+    if (opacity < 1) {
+      a = opacity * a;
+    }
+
+    const value = colorUtils.calculateContrastRatio([r, g, b, a], color);
     return {
-      error: true,
+      value,
+      color,
+      backgroundColor: [r, g, b, a],
+      isLargeText,
+      score: getContrastRatioScore(value, isLargeText),
     };
   }
 
