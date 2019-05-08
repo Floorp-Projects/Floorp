@@ -93,11 +93,11 @@ nsIFrame* NS_NewGroupBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGroupBoxFrame)
 
-class nsDisplayXULGroupBorder final : public nsDisplayItem {
+class nsDisplayXULGroupBorder final : public nsPaintedDisplayItem {
  public:
   nsDisplayXULGroupBorder(nsDisplayListBuilder* aBuilder,
                           nsGroupBoxFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULGroupBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING

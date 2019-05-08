@@ -1682,11 +1682,11 @@ nscoord nsMathMLChar::GetMaxWidth(nsIFrame* aForFrame, DrawTarget* aDrawTarget,
   return std::max(bm.width, bm.rightBearing) - std::min(0, bm.leftBearing);
 }
 
-class nsDisplayMathMLSelectionRect final : public nsDisplayItem {
+class nsDisplayMathMLSelectionRect final : public nsPaintedDisplayItem {
  public:
   nsDisplayMathMLSelectionRect(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                                const nsRect& aRect)
-      : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
+      : nsPaintedDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLSelectionRect);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1713,12 +1713,12 @@ void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
   drawTarget->FillRect(rect, ColorPattern(ToDeviceColor(bgColor)));
 }
 
-class nsDisplayMathMLCharForeground final : public nsDisplayItem {
+class nsDisplayMathMLCharForeground final : public nsPaintedDisplayItem {
  public:
   nsDisplayMathMLCharForeground(nsDisplayListBuilder* aBuilder,
                                 nsIFrame* aFrame, nsMathMLChar* aChar,
                                 uint16_t aIndex, bool aIsSelected)
-      : nsDisplayItem(aBuilder, aFrame),
+      : nsPaintedDisplayItem(aBuilder, aFrame),
         mChar(aChar),
         mIndex(aIndex),
         mIsSelected(aIsSelected) {
@@ -1767,11 +1767,11 @@ class nsDisplayMathMLCharForeground final : public nsDisplayItem {
 };
 
 #ifdef DEBUG
-class nsDisplayMathMLCharDebug final : public nsDisplayItem {
+class nsDisplayMathMLCharDebug final : public nsPaintedDisplayItem {
  public:
   nsDisplayMathMLCharDebug(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                            const nsRect& aRect)
-      : nsDisplayItem(aBuilder, aFrame), mRect(aRect) {
+      : nsPaintedDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharDebug);
   }
 #  ifdef NS_BUILD_REFCNT_LOGGING

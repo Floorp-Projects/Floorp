@@ -701,12 +701,12 @@ void nsMathMLmencloseFrame::SetAdditionalComputedStyle(
     mMathMLChar[aIndex].SetComputedStyle(aComputedStyle);
 }
 
-class nsDisplayNotation final : public nsDisplayItem {
+class nsDisplayNotation final : public nsPaintedDisplayItem {
  public:
   nsDisplayNotation(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     const nsRect& aRect, nscoord aThickness,
                     nsMencloseNotation aType)
-      : nsDisplayItem(aBuilder, aFrame),
+      : nsPaintedDisplayItem(aBuilder, aFrame),
         mRect(aRect),
         mThickness(aThickness),
         mType(aType) {
