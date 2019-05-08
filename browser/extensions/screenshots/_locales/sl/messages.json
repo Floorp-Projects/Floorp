@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "Prenesi"
   },
+  "downloadScreenshotTitle": {
+    "message": "Prenesi posnetek zaslona"
+  },
   "downloadOnlyNotice": {
     "message": "Trenutno ste v načinu samo za prenos."
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopiraj"
+  },
+  "copyScreenshotTitle": {
+    "message": "Kopiraj posnetek zaslona v odložišče"
   },
   "notificationImageCopiedTitle": {
     "message": "Posnetek kopiran"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Ne vemo točno, kaj se je pravkar zgodilo. Bi radi poskusili znova ali pa zajeli posnetek kakšne druge strani?"
   },
-  "tourBodyIntro": {
-    "message": "Zajemite, shranite in delite zaslonske posnetke, ne da bi zapustili Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Zajemite, kopirajte in delite zaslonske posnetke, ne da bi zapustili Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Nov način shranjevanja"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "V zgornjem desnem kotu izberite gumb za zajem vidnega območja v oknu ali celotne strani."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Kot vi želite"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Shranite obrezane posnetke na splet za lažje deljenje ali jih prenesite na svoj računalnik. Vse zajete posnetke lahko najdete s klikom na gumb Moji posnetki."
-  },
-  "tourHeaderAccounts": {
-    "message": "Posnetki za na pot"
-  },
-  "tourBodyAccounts": {
-    "message": "Prijavite se s Firefox Računom za dostop do posnetkov na vseh svojih napravah in trajno shranjevanje priljubljenih posnetkov."
   },
   "tourSkip": {
     "message": "Preskoči"
