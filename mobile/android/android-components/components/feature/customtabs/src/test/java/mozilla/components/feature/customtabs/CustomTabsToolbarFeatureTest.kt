@@ -7,9 +7,13 @@
 package mozilla.components.feature.customtabs
 
 import android.app.PendingIntent
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.ImageButton
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
@@ -19,6 +23,7 @@ import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.browser.session.tab.CustomTabMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
@@ -42,6 +47,9 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class CustomTabsToolbarFeatureTest {
 
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `start without sessionId invokes nothing`() {
         val sessionManager: SessionManager = spy(SessionManager(mock()))
@@ -63,7 +71,7 @@ class CustomTabsToolbarFeatureTest {
 
         `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
         `when`(session.customTabConfig).thenReturn(mock())
-        doNothing().`when`(feature).addCloseButton(null)
+        doNothing().`when`(feature).addCloseButton(session, null)
 
         feature.start()
 
@@ -160,7 +168,26 @@ class CustomTabsToolbarFeatureTest {
 
         feature.initialize(session)
 
-        verify(feature).addCloseButton(null)
+        verify(feature).addCloseButton(session, null)
+    }
+
+    @Test
+    fun `close button invokes callback and removes session`() {
+        val session: Session = mock()
+        val sessionManager: SessionManager = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        var closeClicked = false
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, "") { closeClicked = true })
+
+        `when`(session.customTabConfig).thenReturn(mock())
+
+        feature.initialize(session)
+
+        val button = extractActionView(toolbar, context.getString(R.string.mozac_feature_customtabs_exit_button))
+        button?.performClick()
+
+        assertTrue(closeClicked)
+        verify(sessionManager).remove(session)
     }
 
     @Test
@@ -470,5 +497,25 @@ class CustomTabsToolbarFeatureTest {
         session.notifyObservers { onTitleChanged(session, title) }
 
         assertEquals(title, toolbar.title)
+    }
+
+    private fun extractActionView(
+        browserToolbar: BrowserToolbar,
+        contentDescription: String
+    ): ImageButton? {
+        var actionView: ImageButton? = null
+
+        browserToolbar.forEach { group ->
+            val viewGroup = group as ViewGroup
+
+            viewGroup.forEach inner@{
+                if (it is ImageButton && it.contentDescription == contentDescription) {
+                    actionView = it
+                    return@inner
+                }
+            }
+        }
+
+        return actionView
     }
 }

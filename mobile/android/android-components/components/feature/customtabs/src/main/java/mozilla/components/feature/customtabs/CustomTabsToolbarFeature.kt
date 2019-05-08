@@ -65,7 +65,7 @@ class CustomTabsToolbarFeature(
             // Change the toolbar colour
             updateToolbarColor(config.toolbarColor)
             // Add navigation close action
-            addCloseButton(config.closeButtonIcon)
+            addCloseButton(session, config.closeButtonIcon)
             // Add action button
             addActionButton(session, config.actionButtonConfig)
             // Show share button
@@ -90,7 +90,7 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun addCloseButton(bitmap: Bitmap?) {
+    internal fun addCloseButton(session: Session, bitmap: Bitmap?) {
         val drawableIcon = bitmap?.let { BitmapDrawable(context.resources, it) } ?: ContextCompat.getDrawable(
             context,
             R.drawable.mozac_ic_close
@@ -103,6 +103,7 @@ class CustomTabsToolbarFeature(
                 it, context.getString(R.string.mozac_feature_customtabs_exit_button)
             ) {
                 emitCloseFact()
+                sessionManager.remove(session)
                 closeListener.invoke()
             }
             toolbar.addNavigationAction(button)

@@ -57,6 +57,10 @@ permalink: /changelog/
         val positiveButtonTextColor: Int? = null
     )
   ```
+
+* **feature-customtabs**
+  * Fix session not being removed when the close button was clicked.
+
 * **service-glean**
    * ⚠️ **This is a breaking API change**: Custom pings must be explicitly
      registered with Glean at startup time. See
@@ -80,7 +84,7 @@ permalink: /changelog/
 
   // To change the value for a specific session:
   engineSession.settings.suspendMediaWhenInactive = true
-  ```  
+  ```
 
 * **service-firefox-accounts**
   * ⚠️ **This is a breaking API change**:
