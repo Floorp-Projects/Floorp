@@ -214,14 +214,14 @@
     "de": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-d", "amazondotcom-de", "bing", "ddg", "ebay-de", "ecosia", "leo_ende_de", "wikipedia-de"
+          "google-b-d", "amazon-de", "bing", "ddg", "ebay-de", "ecosia", "leo_ende_de", "wikipedia-de"
         ]
       }
     },
     "dsb": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-d", "bing", "amazondotcom-de", "ddg", "ebay-de", "leo_ende_de", "wikipedia-dsb"
+          "google-b-d", "bing", "amazon-de", "ddg", "ebay-de", "leo_ende_de", "wikipedia-dsb"
         ]
       }
     },
@@ -396,7 +396,7 @@
     "hsb": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-d", "bing", "amazondotcom-de", "ddg", "ebay-de", "leo_ende_de", "wikipedia-hsb"
+          "google-b-d", "bing", "amazon-de", "ddg", "ebay-de", "leo_ende_de", "wikipedia-hsb"
         ]
       }
     },
