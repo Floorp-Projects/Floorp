@@ -57,10 +57,10 @@ Options
     .. code-block:: js
 
         const subset = await RemoteSettings("a-key").get({
-        filters: {
-            "property": "value"
-        },
-        order: "-weight"
+          filters: {
+            property: "value"
+          },
+          order: "-weight"
         });
 
 * ``syncIfEmpty``: implicit synchronization if local data is empty (default: ``true``).
@@ -98,19 +98,56 @@ The ``sync`` event allows to be notified when the remote settings are changed on
 File attachments
 ----------------
 
-When an entry has a file attached to it, it has an ``attachment`` attribute, which contains the file related information (url, hash, size, mimetype, etc.). Remote files are not downloaded automatically.
+When an entry has a file attached to it, it has an ``attachment`` attribute, which contains the file related information (url, hash, size, mimetype, etc.).
+
+Remote files are not downloaded automatically. In order to keep attachments in sync, the provided helper can be leveraged like this:
 
 .. code-block:: js
 
-    const data = await RemoteSettings("a-key").get();
+    const client = RemoteSettings("a-key");
 
-    data.filter(d => d.attachment)
-        .forEach(async ({ attachment: { url, filename, size } }) => {
-          if (size < OS.freeDiskSpace) {
-            // Planned feature, see Bug 1501214
-            await downloadLocally(url, filename);
-          }
-        });
+    client.on("sync", async ({ data: { created, updated, deleted } }) => {
+      const toDelete = deleted.filter(d => d.attachment);
+      const toDownload = created
+        .concat(updated.map(u => u.new))
+        .filter(d => d.attachment);
+
+      // Remove local files of deleted records
+      await Promise.all(toDelete.map(entry => client.attachments.delete(entry)));
+      // Download attachments
+      const fileURLs = await Promise.all(
+        toDownload.map(entry => client.attachments.download(entry, { retries: 2 }))
+      );
+
+      // Open downloaded files...
+      const fileContents = await Promise.all(
+        fileURLs.map(async url => {
+          const r = await fetch(url);
+          return r.blob();
+        })
+      );
+    });
+
+The provided helper will:
+- fetch the remote binary content
+- check the file size
+- check the content SHA256 hash
+- do nothing if the file is already present and sound locally.
+
+.. important::
+
+    The following aspects are not taken care of (yet! help welcome):
+
+    - check available disk space
+    - preserve bandwidth
+    - resume downloads of large files
+
+.. notes::
+
+    The ``download()`` method does not return a file path but instead a ``file://`` URL which points to the locally-downloaded file.
+    This will allow us to package attachments as part of a Firefox release (see `Bug 1542177 <https://bugzilla.mozilla.org/show_bug.cgi?id=1542177>`_)
+    and return them to calling code as ``resource://`` from within a package archive.
+
 
 .. _services/initial-data:
 
@@ -333,4 +370,3 @@ Then, in order to access a specific client instance, the bucket must be specifie
     const collection = await RemoteSettings("addons", { bucketName: "blocklists" }).openCollection();
 
 And in the storage inspector, the IndexedDB internal store will be prefixed with ``blocklists`` instead of ``main`` (eg. ``blocklists/addons``).
-
