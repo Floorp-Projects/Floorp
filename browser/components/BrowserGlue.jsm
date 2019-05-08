@@ -30,6 +30,23 @@ let ACTORS = {
 };
 
 let LEGACY_ACTORS = {
+  AboutLogins: {
+    child: {
+      matches: ["about:logins"],
+      module: "resource:///actors/AboutLoginsChild.jsm",
+      events: {
+        "AboutLoginsDeleteLogin": {wantUntrusted: true},
+        "AboutLoginsInit": {wantUntrusted: true},
+      },
+      messages: [
+        "AboutLogins:AllLogins",
+        "AboutLogins:LoginAdded",
+        "AboutLogins:LoginModified",
+        "AboutLogins:LoginRemoved",
+      ],
+    },
+  },
+
   AboutReader: {
     child: {
       module: "resource:///actors/AboutReaderChild.jsm",
@@ -448,6 +465,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 // eslint-disable-next-line no-unused-vars
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutLoginsParent: "resource:///modules/AboutLoginsParent.jsm",
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
   ContentClick: "resource:///modules/ContentClick.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
@@ -526,6 +544,8 @@ const listeners = {
   },
 
   mm: {
+    "AboutLogins:DeleteLogin": ["AboutLoginsParent"],
+    "AboutLogins:Subscribe": ["AboutLoginsParent"],
     "Content:Click": ["ContentClick"],
     "ContentSearch": ["ContentSearch"],
     "FormValidation:ShowPopup": ["FormValidationHandler"],

@@ -1747,6 +1747,7 @@ pref("extensions.pocket.site", "getpocket.com");
 pref("signon.schemeUpgrades", true);
 pref("signon.privateBrowsingCapture.enabled", true);
 pref("signon.showAutoCompleteFooter", true);
+pref("signon.management.page.enabled", false);
 
 // Enable the "Simplify Page" feature in Print Preview. This feature
 // is disabled by default in toolkit.
