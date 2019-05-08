@@ -1014,9 +1014,10 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
   void ReportHashStats();
 
-  // Reports first party cache isolation telemetry, clears data stored in the
-  // index entries and bumps a telemetry report ID.
-  void DoBaseDomainAccessTelemetryReport();
+  // Reports telemetry about cache, i.e. size, entry count, content type stats
+  // and first party cache isolation stats. Clears first party cache isolation
+  // counters stored in the index entries and bumps a telemetry report ID.
+  void DoTelemetryReport();
 
   static mozilla::StaticRefPtr<CacheIndex> gInstance;
   static StaticMutex sLock;

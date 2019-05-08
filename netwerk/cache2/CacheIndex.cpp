@@ -3920,7 +3920,7 @@ void CacheIndex::UpdateTotalBytesWritten(uint32_t aBytesWritten) {
   if (index->mTotalBytesWritten >= kTelemetryReportBytesLimit &&
       index->mState == READY && !index->mIndexNeedsUpdate &&
       !index->mShuttingDown) {
-    index->DoBaseDomainAccessTelemetryReport();
+    index->DoTelemetryReport();
 
     index->mTotalBytesWritten = 0;
     CacheObserver::SetCacheAmountWritten(0);
@@ -3934,7 +3934,7 @@ void CacheIndex::UpdateTotalBytesWritten(uint32_t aBytesWritten) {
   }
 }
 
-void CacheIndex::DoBaseDomainAccessTelemetryReport() {
+void CacheIndex::DoTelemetryReport() {
   static const nsLiteralCString
       contentTypeNames[nsICacheEntry::CONTENT_TYPE_LAST] = {
           NS_LITERAL_CSTRING("UNKNOWN"),    NS_LITERAL_CSTRING("OTHER"),
@@ -4021,7 +4021,30 @@ void CacheIndex::DoBaseDomainAccessTelemetryReport() {
           round(static_cast<double>(countIncByType[i]) * 100.0 /
                 static_cast<double>(countByType[i])));
     }
+
+    if (size > 0) {
+      Telemetry::Accumulate(Telemetry::NETWORK_CACHE_SIZE_SHARE,
+                            contentTypeNames[i],
+                            round(static_cast<double>(sizeByType[i]) * 100.0 /
+                                  static_cast<double>(size)));
+    }
+
+    if (count > 0) {
+      Telemetry::Accumulate(Telemetry::NETWORK_CACHE_ENTRY_COUNT_SHARE,
+                            contentTypeNames[i],
+                            round(static_cast<double>(countByType[i]) * 100.0 /
+                                  static_cast<double>(count)));
+    }
   }
+
+  nsCString probeKey;
+  if (CacheObserver::SmartCacheSizeEnabled()) {
+    probeKey = NS_LITERAL_CSTRING("SMARTSIZE");
+  } else {
+    probeKey = NS_LITERAL_CSTRING("USERDEFINEDSIZE");
+  }
+  Telemetry::Accumulate(Telemetry::NETWORK_CACHE_ENTRY_COUNT, probeKey, count);
+  Telemetry::Accumulate(Telemetry::NETWORK_CACHE_SIZE, probeKey, size >> 10);
 
   // Change telemetry report ID. This will invalidate eTLD+1 access data stored
   // in all cache entries.
