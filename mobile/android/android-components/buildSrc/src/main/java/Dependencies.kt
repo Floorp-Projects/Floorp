@@ -21,6 +21,7 @@ object Versions {
     const val sentry = "1.7.21"
     const val okhttp = "3.13.1"
     const val zxing = "3.3.0"
+    const val jna = "5.2.0"
 
     const val mozilla_appservices = "0.27.0"
     const val servo = "0.0.1.20181017.aa95911"
@@ -92,8 +93,10 @@ object Dependencies {
     const val tools_linttests = "com.android.tools.lint:lint-tests:${Versions.lint}"
 
     const val mozilla_fxa = "org.mozilla.appservices:fxaclient:${Versions.mozilla_appservices}"
+    const val mozilla_support = "org.mozilla.appservices:support:${Versions.mozilla_appservices}"
     const val mozilla_sync_logins = "org.mozilla.appservices:logins:${Versions.mozilla_appservices}"
     const val mozilla_places = "org.mozilla.appservices:places:${Versions.mozilla_appservices}"
+    const val mozilla_places_forUnitTests = "org.mozilla.appservices:places-forUnitTests:${Versions.mozilla_appservices}"
     const val mozilla_rustlog = "org.mozilla.appservices:rustlog:${Versions.mozilla_appservices}"
     const val mozilla_servo_arm = "org.mozilla.servoview:servoview-armv7:${Versions.servo}"
     const val mozilla_servo_x86 = "org.mozilla.servoview:servoview-x86:${Versions.servo}"
@@ -102,4 +105,5 @@ object Dependencies {
     const val thirdparty_okhttp_urlconnection = "com.squareup.okhttp3:okhttp-urlconnection:${Versions.okhttp}"
     const val thirdparty_sentry = "io.sentry:sentry-android:${Versions.sentry}"
     const val thirdparty_zxing = "com.google.zxing:core:${Versions.zxing}"
+    const val thirdparty_jna = "net.java.dev.jna:jna:${Versions.jna}@jar"
 }
