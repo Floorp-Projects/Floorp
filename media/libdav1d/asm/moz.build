@@ -55,6 +55,9 @@ elif CONFIG['CPU_ARCH'] == 'x86_64':
         # The rest of the platforms are all Linux flavors
         # Linux,OpenBSD,NetBSD,FreeBSD,DragonFly,SunOS
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/linux/' % TOPSRCDIR]
+elif CONFIG['CPU_ARCH'] == 'aarch64':
+    stack_alignment = 16
+    ASFLAGS += ['-I%s/dist/include/dav1d/' % TOPOBJDIR]
 else:
     error('Cpu arch %s is not expected' % CONFIG['CPU_ARCH'])
 
@@ -144,19 +147,11 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     # BITDEPTH c file
     relative_path = '../../../third_party/dav1d/src/arm/'
     bitdepth_basenames = [
+        'cdef_init_tmpl.c',
+        'loopfilter_init_tmpl.c',
         'looprestoration_init_tmpl.c',
         'mc_init_tmpl.c',
     ]
-
-    if CONFIG['CPU_ARCH'] == 'aarch64':
-        bitdepth_basenames += [
-            '64/looprestoration.',
-            '64/mc.S',
-        ]
-    elif CONFIG['CPU_ARCH'] == 'arm':
-        bitdepth_basenames += [
-            '32/mc.S',
-        ]
 
     GENERATED_FILES += [
         '16bd_%s' % p for p in bitdepth_basenames
@@ -188,11 +183,22 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
 
     # BITDEPTH .S files
     if CONFIG['CPU_ARCH'] == 'aarch64':
-        SOURCES += ['../../../third_party/dav1d/src/arm/64/mc.S']
+        SOURCES += [
+            '../../../third_party/dav1d/src/arm/64/cdef.S',
+            '../../../third_party/dav1d/src/arm/64/loopfilter.S',
+            '../../../third_party/dav1d/src/arm/64/looprestoration.S',
+            '../../../third_party/dav1d/src/arm/64/mc.S',
+        ]
     elif CONFIG['CPU_ARCH'] == 'arm':
-        SOURCES += ['../../../third_party/dav1d/src/arm/32/mc.S']
+        SOURCES += [
+            '../../../third_party/dav1d/src/arm/32/looprestoration.S',
+            '../../../third_party/dav1d/src/arm/32/mc.S',
+        ]
 
-USE_NASM = True
+if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+    USE_NASM = True
+elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] == 'WINNT':
+    USE_INTEGRATED_CLANGCL_AS = True
 
 FINAL_LIBRARY = 'gkmedias'
 
