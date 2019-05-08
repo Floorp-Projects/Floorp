@@ -1559,6 +1559,25 @@ bool CallNativeGetter(JSContext* cx, HandleFunction callee, HandleObject obj,
   return true;
 }
 
+bool CallNativeGetterByValue(JSContext* cx, HandleFunction callee,
+                             HandleValue receiver, MutableHandleValue result) {
+  AutoRealm ar(cx, callee);
+
+  MOZ_ASSERT(callee->isNative());
+  JSNative natfun = callee->native();
+
+  JS::AutoValueArray<2> vp(cx);
+  vp[0].setObject(*callee.get());
+  vp[1].set(receiver);
+
+  if (!natfun(cx, 0, vp.begin())) {
+    return false;
+  }
+
+  result.set(vp[0]);
+  return true;
+}
+
 bool CallNativeSetter(JSContext* cx, HandleFunction callee, HandleObject obj,
                       HandleValue rhs) {
   AutoRealm ar(cx, callee);

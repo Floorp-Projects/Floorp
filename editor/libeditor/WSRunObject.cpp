@@ -289,8 +289,9 @@ nsresult WSRunObject::InsertText(Document& aDocument,
     } else if (afterRun->mType == WSType::normalWS) {
       // Try to change an nbsp to a space, if possible, just to prevent nbsp
       // proliferation
-      nsresult rv = CheckLeadingNBSP(afterRun, pointToInsert.GetContainer(),
-                                     pointToInsert.Offset());
+      nsresult rv = CheckLeadingNBSP(
+          afterRun, MOZ_KnownLive(pointToInsert.GetContainer()),
+          pointToInsert.Offset());
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -413,8 +414,8 @@ nsresult WSRunObject::DeleteWSBackward() {
     nsCOMPtr<nsINode> startNode = startNodeText.get();
     nsCOMPtr<nsINode> endNode = endNodeText.get();
     nsresult rv = WSRunObject::PrepareToDeleteRange(
-        mHTMLEditor, address_of(startNode), &startOffset, address_of(endNode),
-        &endOffset);
+        MOZ_KnownLive(mHTMLEditor), address_of(startNode), &startOffset,
+        address_of(endNode), &endOffset);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // finally, delete that ws
@@ -432,8 +433,8 @@ nsresult WSRunObject::DeleteWSBackward() {
     int32_t startOffset = point.mOffset;
     int32_t endOffset = point.mOffset + 1;
     nsresult rv = WSRunObject::PrepareToDeleteRange(
-        mHTMLEditor, address_of(node), &startOffset, address_of(node),
-        &endOffset);
+        MOZ_KnownLive(mHTMLEditor), address_of(node), &startOffset,
+        address_of(node), &endOffset);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // finally, delete that ws
@@ -476,8 +477,8 @@ nsresult WSRunObject::DeleteWSForward() {
     // Adjust surrounding ws
     nsCOMPtr<nsINode> startNode(startNodeText), endNode(endNodeText);
     nsresult rv = WSRunObject::PrepareToDeleteRange(
-        mHTMLEditor, address_of(startNode), &startOffset, address_of(endNode),
-        &endOffset);
+        MOZ_KnownLive(mHTMLEditor), address_of(startNode), &startOffset,
+        address_of(endNode), &endOffset);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Finally, delete that ws
@@ -495,8 +496,8 @@ nsresult WSRunObject::DeleteWSForward() {
     int32_t startOffset = point.mOffset;
     int32_t endOffset = point.mOffset + 1;
     nsresult rv = WSRunObject::PrepareToDeleteRange(
-        mHTMLEditor, address_of(node), &startOffset, address_of(node),
-        &endOffset);
+        MOZ_KnownLive(mHTMLEditor), address_of(node), &startOffset,
+        address_of(node), &endOffset);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Finally, delete that ws
@@ -1501,7 +1502,8 @@ nsresult WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces(
   // First, insert an NBSP.
   AutoTransactionsConserveSelection dontChangeMySelection(*htmlEditor);
   nsresult rv = htmlEditor->InsertTextIntoTextNodeWithTransaction(
-      nsDependentSubstring(&kNBSP, 1), *aPoint.mTextNode, aPoint.mOffset, true);
+      nsDependentSubstring(&kNBSP, 1), MOZ_KnownLive(*aPoint.mTextNode),
+      aPoint.mOffset, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1833,7 +1835,7 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
       AutoTransactionsConserveSelection dontChangeMySelection(*htmlEditor);
       nsAutoString spaceStr(char16_t(32));
       nsresult rv = htmlEditor->InsertTextIntoTextNodeWithTransaction(
-          spaceStr, *thePoint.mTextNode, thePoint.mOffset, true);
+          spaceStr, MOZ_KnownLive(*thePoint.mTextNode), thePoint.mOffset, true);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1926,7 +1928,7 @@ nsresult WSRunObject::ReplacePreviousNBSPIfUnncessary(
   AutoTransactionsConserveSelection dontChangeMySelection(*htmlEditor);
   nsAutoString spaceStr(char16_t(32));
   nsresult rv = htmlEditor->InsertTextIntoTextNodeWithTransaction(
-      spaceStr, *thePoint.mTextNode, thePoint.mOffset, true);
+      spaceStr, MOZ_KnownLive(*thePoint.mTextNode), thePoint.mOffset, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1973,7 +1975,7 @@ nsresult WSRunObject::CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
     AutoTransactionsConserveSelection dontChangeMySelection(*htmlEditor);
     nsAutoString spaceStr(char16_t(32));
     nsresult rv = htmlEditor->InsertTextIntoTextNodeWithTransaction(
-        spaceStr, *thePoint.mTextNode, thePoint.mOffset, true);
+        spaceStr, MOZ_KnownLive(*thePoint.mTextNode), thePoint.mOffset, true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

@@ -65,12 +65,15 @@ class Page extends ContentProcessDomain {
       referrerURI: referrer,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     };
-    this.docShell.QueryInterface(Ci.nsIWebNavigation);
     this.docShell.loadURI(url, opts);
 
     return {
       frameId: this.content.windowUtils.outerWindowID,
     };
+  }
+
+  async reload() {
+    this.docShell.reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
   }
 
   getFrameTree() {

@@ -124,34 +124,44 @@ class Mocks {
    *        The id of the runtime.
    * @param {Object} optional object used to create the fake runtime & device
    *        - channel: {String} Release channel, for instance "release", "nightly"
+   *        - clientWrapper: {ClientWrapper} optional ClientWrapper for this runtime
    *        - deviceId: {String} Device id
    *        - deviceName: {String} Device name
+   *        - isFenix: {Boolean} set by ADB if the package name matches a Fenix package
    *        - name: {String} Application name, for instance "Firefox"
    *        - shortName: {String} Short name for the device
    *        - socketPath: {String} (should only be used for connecting, so not here)
    *        - version: {String} Version, for instance "63.0a"
+   *        - versionName: {String} Version return by ADB "63.0a"
    * @return {Object} Returns the mock client created for this runtime so that methods
    * can be overridden on it.
    */
   createUSBRuntime(id, runtimeInfo = {}) {
     // Add a new runtime to the list of scanned runtimes.
     this._usbRuntimes.push({
-      id: id,
-      socketPath: runtimeInfo.socketPath || "test/path",
       deviceId: runtimeInfo.deviceId || "test device id",
       deviceName: runtimeInfo.deviceName || "test device name",
+      id: id,
+      isFenix: runtimeInfo.isFenix,
       shortName: runtimeInfo.shortName || "testshort",
+      socketPath: runtimeInfo.socketPath || "test/path",
+      versionName: runtimeInfo.versionName || "1.0",
     });
 
     // Add a valid client that can be returned for this particular runtime id.
-    const mockUsbClient = createClientMock();
-    mockUsbClient.getDeviceDescription = () => {
-      return {
-        channel: runtimeInfo.channel || "release",
-        name: runtimeInfo.name || "TestBrand",
-        version: runtimeInfo.version || "1.0",
+    let mockUsbClient = runtimeInfo.clientWrapper;
+    if (!mockUsbClient) {
+      // If no clientWrapper was provided, create a mock client here.
+      mockUsbClient = createClientMock();
+      mockUsbClient.getDeviceDescription = () => {
+        return {
+          channel: runtimeInfo.channel || "release",
+          name: runtimeInfo.name || "TestBrand",
+          version: runtimeInfo.version || "1.0",
+        };
       };
-    };
+    }
+
     this._clients[RUNTIMES.USB][id] = mockUsbClient;
 
     return mockUsbClient;

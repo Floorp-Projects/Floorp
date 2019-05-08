@@ -28,6 +28,11 @@ body.dark {
   color: #eeeeee;
 }
 
+body.sepia {
+  color: #5b4636;
+  background-color: #f4ecd8;
+}
+
 body.sans-serif {
   font-family: sans-serif;
 }
@@ -69,6 +74,18 @@ body.dark > .container > .header > .credits {
   color: #aaaaaa;
 }
 
+body.sepia > .container > .header > .domain {
+  border-bottom-color: #5b4636;
+}
+
+body.sepia > .container > .header > h1 {
+  color: #5b4636;
+}
+
+body.sepia > .container > .header > .credits {
+  color: #5b4636;
+}
+
 body.light > .container > .content .caption,
 body.light > .container > .content .wp-caption-text,
 body.light > .container > .content figcaption {
@@ -81,6 +98,12 @@ body.dark > .container > .content figcaption {
   color: #aaaaaa;
 }
 
+body.sepia > .container > .content .caption,
+body.sepia > .container > .content .wp-caption-text,
+body.sepia > .container > .content figcaption {
+  color: #5b4636;
+}
+
 body.light > .container > .content blockquote {
   color: #898989 !important;
   border-left-color: #d0d0d0 !important;
@@ -88,6 +111,11 @@ body.light > .container > .content blockquote {
 
 body.dark > .container > .content blockquote {
   color: #aaaaaa !important;
+  border-left-color: #777777 !important;
+}
+
+body.sepia > .container > .content blockquote {
+  color: #5b4636 !important;
   border-left-color: #777777 !important;
 }
 
@@ -313,6 +341,11 @@ body.dark > .container > .content blockquote {
 .dark-button {
   color: #eeeeee;
   background-color: #333333;
+}
+
+.sepia-button {
+  color: #5b4636;
+  background-color: #f4ecd8;
 }
 
 .auto-button {

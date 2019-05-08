@@ -50,6 +50,7 @@ inline void nsIContent::SetPrimaryFrame(nsIFrame* aFrame) {
                "Losing track of existing primary frame");
 
   if (aFrame) {
+    MOZ_ASSERT(!aFrame->IsPlaceholderFrame());
     if (MOZ_LIKELY(!IsHTMLElement(nsGkAtoms::area)) ||
         aFrame->GetContent() == this) {
       aFrame->SetIsPrimaryFrame(true);

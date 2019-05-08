@@ -402,6 +402,13 @@ android-hw-p2-8-0-android-aarch64/opt:
         - android-hw-aarch64-raptor
         - android-hw-aarch64-raptor-power
 
+android-hw-p2-8-0-android-aarch64/pgo:
+    build-platform: android-aarch64-pgo/opt
+    test-sets:
+        - android-hw-aarch64-opt-unittests
+        - android-hw-aarch64-raptor
+        - android-hw-aarch64-raptor-power
+
 android-hw-p2-8-0-arm7-api-16-nightly/opt:
     build-platform: android-api-16-nightly/opt
     test-sets:

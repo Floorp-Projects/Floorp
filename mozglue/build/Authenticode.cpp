@@ -31,6 +31,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
@@ -41,6 +42,8 @@
 #include <wincrypt.h>
 #include <wintrust.h>
 #include <mscat.h>
+
+#include <string.h>
 
 namespace {
 
@@ -307,11 +310,26 @@ bool SignedBinary::VerifySignature(const wchar_t* aFilePath) {
     return false;
   }
 
+  static const mozilla::DynamicallyLinkedFunctionPtr<decltype(
+      &::CryptCATAdminReleaseCatalogContext)>
+    pCryptCATAdminReleaseCatalogContext(L"wintrust.dll",
+                                        "CryptCATAdminReleaseCatalogContext");
+  if (!pCryptCATAdminReleaseCatalogContext) {
+    return false;
+  }
+
   HCATINFO catInfoHdl = pCryptCATAdminEnumCatalogFromHash(
       rawCatAdmin, hashBuf.get(), hashLen, 0, nullptr);
   if (!catInfoHdl) {
     return false;
   }
+
+  // We can't use UniquePtr for this because the deleter function requires two
+  // parameters.
+  auto cleanCatInfoHdl = mozilla::MakeScopeExit(
+    [rawCatAdmin, catInfoHdl]() -> void {
+    pCryptCATAdminReleaseCatalogContext(rawCatAdmin, catInfoHdl, 0);
+  });
 
   // We found a catalog! Now query for the path to the catalog file.
 
@@ -336,6 +354,13 @@ bool SignedBinary::VerifySignature(const wchar_t* aFilePath) {
   if (!::CryptBinaryToStringW(hashBuf.get(), hashLen,
                               CRYPT_STRING_HEXRAW | CRYPT_STRING_NOCRLF,
                               strHashBuf.get(), &strHashBufLen)) {
+    return false;
+  }
+
+  // Ensure that the tag is uppercase for WinVerifyTrust
+  // NB: CryptBinaryToStringW overwrites strHashBufLen with the length excluding
+  //     the null terminator, so we need to add it back for this call.
+  if (_wcsupr_s(strHashBuf.get(), strHashBufLen + 1)) {
     return false;
   }
 

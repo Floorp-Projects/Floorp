@@ -134,9 +134,6 @@ if $NEED_WINDOW_MANAGER; then
     # This is read by xsession to select the window manager
     echo DESKTOP_SESSION=ubuntu > $HOME/.xsessionrc
 
-    # note that doing anything with this display before running Xsession will cause sadness (like,
-    # crashes in compiz). Make sure that X has enough time to start
-    sleep 15
     # DISPLAY has already been set above
     # XXX: it would be ideal to add a semaphore logic to make sure that the
     # window manager is ready
