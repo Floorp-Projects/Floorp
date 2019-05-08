@@ -39,7 +39,7 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
 
   // Open "New Request" form and resend.
-  monitor.panelWin.parent.document.querySelector("#request-list-context-resend").click();
+  getContextMenuItem(monitor, "request-list-context-resend").click();
   await waitUntil(() => document.querySelector("#custom-request-send-button"));
   document.querySelector("#custom-request-send-button").click();
 
