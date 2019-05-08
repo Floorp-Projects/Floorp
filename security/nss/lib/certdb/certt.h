@@ -416,6 +416,19 @@ struct CERTDistNamesStr {
     void *head; /* private */
 };
 
+/*
+ * NS_CERT_TYPE defines are used in two areas:
+ * 1) The old NSS Cert Type Extension, which is a certificate extension in the
+ * actual cert. It was created before the x509 Extended Key Usage Extension,
+ * which has now taken over it's function. This field is only 8 bits wide
+ * 2) The nsCertType entry in the CERTCertificate structure. This field is
+ * 32 bits wide.
+ * Any entries in this table greater than 0x80 will not be able to be encoded
+ * in an NSS Cert Type Extension, but can still be represented internally in
+ * the nsCertType field.
+ */
+#define NS_CERT_TYPE_IPSEC_CA (0x200)         /* outside the NS Cert Type Extenstion */
+#define NS_CERT_TYPE_IPSEC (0x100)            /* outside the NS Cert Type Extenstion */
 #define NS_CERT_TYPE_SSL_CLIENT (0x80)        /* bit 0 */
 #define NS_CERT_TYPE_SSL_SERVER (0x40)        /* bit 1 */
 #define NS_CERT_TYPE_EMAIL (0x20)             /* bit 2 */
@@ -430,11 +443,12 @@ struct CERTDistNamesStr {
 
 #define NS_CERT_TYPE_APP                                                      \
     (NS_CERT_TYPE_SSL_CLIENT | NS_CERT_TYPE_SSL_SERVER | NS_CERT_TYPE_EMAIL | \
-     NS_CERT_TYPE_OBJECT_SIGNING)
+     NS_CERT_TYPE_IPSEC | NS_CERT_TYPE_OBJECT_SIGNING)
 
-#define NS_CERT_TYPE_CA                            \
-    (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA | \
-     NS_CERT_TYPE_OBJECT_SIGNING_CA | EXT_KEY_USAGE_STATUS_RESPONDER)
+#define NS_CERT_TYPE_CA                                                \
+    (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA |                     \
+     NS_CERT_TYPE_OBJECT_SIGNING_CA | EXT_KEY_USAGE_STATUS_RESPONDER | \
+     NS_CERT_TYPE_IPSEC_CA)
 typedef enum SECCertUsageEnum {
     certUsageSSLClient = 0,
     certUsageSSLServer = 1,
