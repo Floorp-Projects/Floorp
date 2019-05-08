@@ -240,17 +240,17 @@ class MOZ_STACK_CLASS SplitNodeResult final {
    * by this instance.  Therefore, the life time of both container node
    * and child node are guaranteed while using the result temporarily.
    */
-  EditorRawDOMPoint SplitPoint() const {
+  EditorDOMPoint SplitPoint() const {
     if (Failed()) {
-      return EditorRawDOMPoint();
+      return EditorDOMPoint();
     }
     if (mGivenSplitPoint.IsSet()) {
-      return EditorRawDOMPoint(mGivenSplitPoint);
+      return EditorDOMPoint(mGivenSplitPoint);
     }
     if (!mPreviousNode) {
-      return EditorRawDOMPoint(mNextNode);
+      return EditorDOMPoint(mNextNode);
     }
-    EditorRawDOMPoint point(mPreviousNode);
+    EditorDOMPoint point(mPreviousNode);
     DebugOnly<bool> advanced = point.AdvanceOffset();
     NS_WARNING_ASSERTION(advanced,
                          "Failed to advance offset to after previous node");
