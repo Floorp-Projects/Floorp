@@ -1455,7 +1455,6 @@ class DebuggerFrame : public NativeObject {
   static DebuggerFrame* create(JSContext* cx, HandleObject proto,
                                const FrameIter& iter,
                                HandleNativeObject debugger);
-  void freeFrameIterData(FreeOp* fop);
 
   static MOZ_MUST_USE bool getArguments(JSContext* cx,
                                         HandleDebuggerFrame frame,
@@ -1553,6 +1552,9 @@ class DebuggerFrame : public NativeObject {
 
  public:
   FrameIter::Data* frameIterData() const;
+  void freeFrameIterData(FreeOp* fop);
+  void maybeDecrementFrameScriptStepModeCount(FreeOp* fop,
+                                              AbstractFramePtr frame);
 };
 
 class DebuggerObject : public NativeObject {
