@@ -105,6 +105,15 @@ CookieSettings::GetCookieBehavior(uint32_t* aCookieBehavior) {
 }
 
 NS_IMETHODIMP
+CookieSettings::GetRejectThirdPartyTrackers(bool* aRejectThirdPartyTrackers) {
+  *aRejectThirdPartyTrackers =
+      mCookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+      mCookieBehavior ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
                                  uint32_t* aCookiePermission) {
   MOZ_ASSERT(NS_IsMainThread());
