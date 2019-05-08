@@ -12,7 +12,6 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.appservices.places.BookmarkRoot
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -24,7 +23,6 @@ import org.mozilla.fenix.TestUtils
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class BookmarkFragmentTest {

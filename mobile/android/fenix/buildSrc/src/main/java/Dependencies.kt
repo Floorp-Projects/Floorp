@@ -23,7 +23,7 @@ private object Versions {
     const val androidx_fragment = "1.1.0-alpha07"
     const val androidx_navigation = "2.1.0-alpha02"
     const val androidx_recyclerview = "1.1.0-alpha04"
-    const val androidx_testing = "1.1.0-alpha07"
+    const val androidx_testing = "1.1.0-alpha08"
 
     const val appservices_gradle_plugin = "0.4.4"
     const val mozilla_android_components = "0.52.0-SNAPSHOT"

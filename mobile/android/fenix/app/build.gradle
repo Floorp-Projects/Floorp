@@ -376,7 +376,7 @@ dependencies {
 
     testImplementation Deps.junit
     testImplementation Deps.robolectric
-    debugImplementation Deps.fragment_testing
+    implementation Deps.fragment_testing
     testImplementation Deps.megazord_forUnitTests
     testImplementation Deps.places_forUnitTests
 
