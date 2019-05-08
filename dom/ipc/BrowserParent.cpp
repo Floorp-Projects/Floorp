@@ -545,11 +545,6 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
   });
 }
 
-NS_IMETHODIMP BrowserParent::GetOwnerElement(Element** aElement) {
-  *aElement = do_AddRef(GetOwnerElement()).take();
-  return NS_OK;
-}
-
 void BrowserParent::CacheFrameLoader(nsFrameLoader* aFrameLoader) {
   mFrameLoader = aFrameLoader;
 }
@@ -2968,9 +2963,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvRespondStartSwipeEvent(
   return IPC_OK();
 }
 
-// defined in nsIRemoteTab
-NS_IMETHODIMP
-BrowserParent::SetDocShellIsActive(bool isActive) {
+bool BrowserParent::GetDocShellIsActive() { return mDocShellIsActive; }
+
+void BrowserParent::SetDocShellIsActive(bool isActive) {
   mDocShellIsActive = isActive;
   SetRenderLayers(isActive);
   Unused << SendSetDocShellIsActive(isActive);
@@ -2996,18 +2991,15 @@ BrowserParent::SetDocShellIsActive(bool isActive) {
   if (Manager()->IsRecordingOrReplaying()) {
     SetIsActiveRecordReplayTab(isActive);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-BrowserParent::GetDocShellIsActive(bool* aIsActive) {
-  *aIsActive = mDocShellIsActive;
-  return NS_OK;
-}
+bool BrowserParent::GetHasPresented() { return mHasPresented; }
 
-NS_IMETHODIMP
-BrowserParent::SetRenderLayers(bool aEnabled) {
+bool BrowserParent::GetHasLayers() { return mHasLayers; }
+
+bool BrowserParent::GetRenderLayers() { return mRenderLayers; }
+
+void BrowserParent::SetRenderLayers(bool aEnabled) {
   if (mActiveInPriorityManager != aEnabled) {
     mActiveInPriorityManager = aEnabled;
     // Let's inform the priority manager. This operation can end up with the
@@ -3030,54 +3022,18 @@ BrowserParent::SetRenderLayers(bool aEnabled) {
           }));
     }
 
-    return NS_OK;
+    return;
   }
 
   // Preserve layers means that attempts to stop rendering layers
   // will be ignored.
   if (!aEnabled && mPreserveLayers) {
-    return NS_OK;
+    return;
   }
 
   mRenderLayers = aEnabled;
 
   SetRenderLayersInternal(aEnabled, false /* aForceRepaint */);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserParent::GetRenderLayers(bool* aResult) {
-  *aResult = mRenderLayers;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserParent::GetHasLayers(bool* aResult) {
-  *aResult = mHasLayers;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserParent::Deprioritize() {
-  if (mActiveInPriorityManager) {
-    ProcessPriorityManager::TabActivityChanged(this, false);
-    mActiveInPriorityManager = false;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserParent::ForceRepaint() {
-  if (!mActiveInPriorityManager) {
-    // If a tab is left and then returned to very rapidly, it can be
-    // deprioritized without losing its loaded status. In this case we won't
-    // go through SetRenderLayers.
-    mActiveInPriorityManager = true;
-    ProcessPriorityManager::TabActivityChanged(this, true);
-  }
-
-  SetRenderLayersInternal(true /* aEnabled */, true /* aForceRepaint */);
-  return NS_OK;
 }
 
 void BrowserParent::SetRenderLayersInternal(bool aEnabled, bool aForceRepaint) {
@@ -3095,72 +3051,98 @@ void BrowserParent::SetRenderLayersInternal(bool aEnabled, bool aForceRepaint) {
   }
 }
 
-NS_IMETHODIMP
-BrowserParent::PreserveLayers(bool aPreserveLayers) {
+void BrowserParent::PreserveLayers(bool aPreserveLayers) {
   mPreserveLayers = aPreserveLayers;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-BrowserParent::SaveRecording(const nsAString& aFilename, bool* aRetval) {
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_NewLocalFile(aFilename, false, getter_AddRefs(file));
-  if (NS_FAILED(rv)) {
-    return rv;
+void BrowserParent::ForceRepaint() {
+  if (!mActiveInPriorityManager) {
+    // If a tab is left and then returned to very rapidly, it can be
+    // deprioritized without losing its loaded status. In this case we won't
+    // go through SetRenderLayers.
+    mActiveInPriorityManager = true;
+    ProcessPriorityManager::TabActivityChanged(this, true);
   }
-  return Manager()->SaveRecording(file, aRetval);
+
+  SetRenderLayersInternal(true /* aEnabled */, true /* aForceRepaint */);
 }
 
-NS_IMETHODIMP
-BrowserParent::GetContentBlockingLog(Promise** aPromise) {
-  NS_ENSURE_ARG_POINTER(aPromise);
-
-  *aPromise = nullptr;
-  if (!mFrameElement) {
-    return NS_ERROR_FAILURE;
+void BrowserParent::NotifyResolutionChanged() {
+  if (!mIsDestroyed) {
+    // TryCacheDPIAndScale()'s cache is keyed off of
+    // mDPI being greater than 0, so this invalidates it.
+    mDPI = -1;
+    TryCacheDPIAndScale();
+    // If mDPI was set to -1 to invalidate it and then TryCacheDPIAndScale
+    // fails to cache the values, then mDefaultScale.scale might be invalid.
+    // We don't want to send that value to content. Just send -1 for it too in
+    // that case.
+    Unused << SendUIResolutionChanged(mDPI, mRounding,
+                                      mDPI < 0 ? -1.0 : mDefaultScale.scale);
   }
-
-  ErrorResult rv;
-  RefPtr<Promise> jsPromise =
-      Promise::Create(mFrameElement->OwnerDoc()->GetOwnerGlobal(), rv);
-  if (rv.Failed()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<Promise> copy(jsPromise);
-  copy.forget(aPromise);
-
-  auto cblPromise = SendGetContentBlockingLog();
-  cblPromise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [jsPromise](Tuple<nsCString, bool>&& aResult) {
-        if (Get<1>(aResult)) {
-          NS_ConvertUTF8toUTF16 utf16(Get<0>(aResult));
-          jsPromise->MaybeResolve(std::move(utf16));
-        } else {
-          jsPromise->MaybeRejectWithUndefined();
-        }
-      },
-      [jsPromise](ResponseRejectReason&& aReason) {
-        jsPromise->MaybeRejectWithUndefined();
-      });
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-BrowserParent::MaybeCancelContentJSExecutionFromScript(
-    nsIRemoteTab::NavigationType aNavigationType,
-    JS::Handle<JS::Value> aCancelContentJSOptions, JSContext* aCx) {
-  dom::CancelContentJSOptions cancelContentJSOptions;
-  if (!cancelContentJSOptions.Init(aCx, aCancelContentJSOptions)) {
-    return NS_ERROR_INVALID_ARG;
+void BrowserParent::Deprioritize() {
+  if (mActiveInPriorityManager) {
+    ProcessPriorityManager::TabActivityChanged(this, false);
+    mActiveInPriorityManager = false;
   }
-  if (StaticPrefs::dom_ipc_cancel_content_js_when_navigating()) {
-    Manager()->CancelContentJSExecutionIfRunning(this, aNavigationType,
-                                                 cancelContentJSOptions);
+}
+
+bool BrowserParent::GetHasContentOpener() { return mHasContentOpener; }
+
+void BrowserParent::SetHasContentOpener(bool aHasContentOpener) {
+  mHasContentOpener = aHasContentOpener;
+}
+
+bool BrowserParent::GetHasBeforeUnload() { return mHasBeforeUnload; }
+
+bool BrowserParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
+                                       nsViewID aScrollId,
+                                       uint32_t aPresShellId) {
+  if (!AsyncPanZoomEnabled()) {
+    return false;
   }
-  return NS_OK;
+
+  bool success = false;
+  if (mRenderFrame.IsInitialized()) {
+    layers::LayersId layersId = mRenderFrame.GetLayersId();
+    if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
+      SLGuidAndRenderRoot guid(layersId, aPresShellId, aScrollId,
+                               gfxUtils::GetContentRenderRoot());
+
+      // The anchor coordinates that are passed in are relative to the origin
+      // of the screen, but we are sending them to APZ which only knows about
+      // coordinates relative to the widget, so convert them accordingly.
+      CSSPoint anchorCss{aAnchorX, aAnchorY};
+      LayoutDeviceIntPoint anchor =
+          RoundedToInt(anchorCss * widget->GetDefaultScale());
+      anchor -= widget->WidgetToScreenOffset();
+
+      success = widget->StartAsyncAutoscroll(
+          ViewAs<ScreenPixel>(
+              anchor, PixelCastJustification::LayoutDeviceIsScreenForBounds),
+          guid);
+    }
+  }
+  return success;
+}
+
+void BrowserParent::StopApzAutoscroll(nsViewID aScrollId,
+                                      uint32_t aPresShellId) {
+  if (!AsyncPanZoomEnabled()) {
+    return;
+  }
+
+  if (mRenderFrame.IsInitialized()) {
+    layers::LayersId layersId = mRenderFrame.GetLayersId();
+    if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
+      SLGuidAndRenderRoot guid(layersId, aPresShellId, aScrollId,
+                               gfxUtils::GetContentRenderRoot());
+
+      widget->StopAsyncAutoscroll(guid);
+    }
+  }
 }
 
 void BrowserParent::SuppressDisplayport(bool aEnabled) {
@@ -3180,85 +3162,8 @@ void BrowserParent::SuppressDisplayport(bool aEnabled) {
   Unused << SendSuppressDisplayport(aEnabled);
 }
 
-NS_IMETHODIMP
-BrowserParent::GetTabId(uint64_t* aId) {
-  *aId = GetTabId();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserParent::GetContentProcessId(uint64_t* aId) {
-  *aId = Manager()->GetChildID();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserParent::GetOsPid(int32_t* aId) {
-  *aId = Manager()->Pid();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserParent::GetHasContentOpener(bool* aResult) {
-  *aResult = mHasContentOpener;
-  return NS_OK;
-}
-
-void BrowserParent::SetHasContentOpener(bool aHasContentOpener) {
-  mHasContentOpener = aHasContentOpener;
-}
-
-NS_IMETHODIMP
-BrowserParent::GetHasPresented(bool* aResult) {
-  *aResult = mHasPresented;
-  return NS_OK;
-}
-
 void BrowserParent::NavigateByKey(bool aForward, bool aForDocumentNavigation) {
   Unused << SendNavigateByKey(aForward, aForDocumentNavigation);
-}
-
-NS_IMETHODIMP
-BrowserParent::GetWindowGlobalParents(
-    nsTArray<RefPtr<WindowGlobalParent>>& aWindowGlobalParents) {
-  VisitAll([&aWindowGlobalParents](BrowserParent* aBrowser) {
-    const auto& windowGlobalParents = aBrowser->ManagedPWindowGlobalParent();
-    for (auto iter = windowGlobalParents.ConstIter(); !iter.Done();
-         iter.Next()) {
-      WindowGlobalParent* windowGlobalParent =
-          static_cast<WindowGlobalParent*>(iter.Get()->GetKey());
-      aWindowGlobalParents.AppendElement(windowGlobalParent);
-    }
-  });
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserParent::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal) {
-  return Manager()->TransmitPermissionsForPrincipal(aPrincipal);
-}
-
-NS_IMETHODIMP
-BrowserParent::GetHasBeforeUnload(bool* aResult) {
-  *aResult = mHasBeforeUnload;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserParent::NotifyResolutionChanged() {
-  if (!mIsDestroyed) {
-    // TryCacheDPIAndScale()'s cache is keyed off of
-    // mDPI being greater than 0, so this invalidates it.
-    mDPI = -1;
-    TryCacheDPIAndScale();
-    // If mDPI was set to -1 to invalidate it and then TryCacheDPIAndScale
-    // fails to cache the values, then mDefaultScale.scale might be invalid.
-    // We don't want to send that value to content. Just send -1 for it too in
-    // that case.
-    Unused << SendUIResolutionChanged(mDPI, mRounding,
-                                      mDPI < 0 ? -1.0 : mDefaultScale.scale);
-  }
-  return NS_OK;
 }
 
 void BrowserParent::LayerTreeUpdate(const LayersObserverEpoch& aEpoch,
@@ -3676,58 +3581,6 @@ void BrowserParent::StartPersistence(
     aRv.Throw(NS_ERROR_FAILURE);
   }
   // (The actor will be destroyed on constructor failure.)
-}
-
-NS_IMETHODIMP
-BrowserParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
-                                  nsViewID aScrollId, uint32_t aPresShellId,
-                                  bool* aOutRetval) {
-  if (!AsyncPanZoomEnabled()) {
-    *aOutRetval = false;
-    return NS_OK;
-  }
-
-  bool success = false;
-  if (mRenderFrame.IsInitialized()) {
-    layers::LayersId layersId = mRenderFrame.GetLayersId();
-    if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
-      SLGuidAndRenderRoot guid(layersId, aPresShellId, aScrollId,
-                               gfxUtils::GetContentRenderRoot());
-
-      // The anchor coordinates that are passed in are relative to the origin
-      // of the screen, but we are sending them to APZ which only knows about
-      // coordinates relative to the widget, so convert them accordingly.
-      CSSPoint anchorCss{aAnchorX, aAnchorY};
-      LayoutDeviceIntPoint anchor =
-          RoundedToInt(anchorCss * widget->GetDefaultScale());
-      anchor -= widget->WidgetToScreenOffset();
-
-      success = widget->StartAsyncAutoscroll(
-          ViewAs<ScreenPixel>(
-              anchor, PixelCastJustification::LayoutDeviceIsScreenForBounds),
-          guid);
-    }
-  }
-  *aOutRetval = success;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrowserParent::StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId) {
-  if (!AsyncPanZoomEnabled()) {
-    return NS_OK;
-  }
-
-  if (mRenderFrame.IsInitialized()) {
-    layers::LayersId layersId = mRenderFrame.GetLayersId();
-    if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
-      SLGuidAndRenderRoot guid(layersId, aPresShellId, aScrollId,
-                               gfxUtils::GetContentRenderRoot());
-
-      widget->StopAsyncAutoscroll(guid);
-    }
-  }
-  return NS_OK;
 }
 
 void BrowserParent::SkipBrowsingContextDetach() {
