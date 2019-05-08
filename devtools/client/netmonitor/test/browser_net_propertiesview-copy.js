@@ -33,16 +33,14 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     objectRow);
   await waitForClipboardPromise(function setup() {
-    monitor.panelWin.parent.document
-      .querySelector("#properties-view-context-menu-copy").click();
+    getContextMenuItem(monitor, "properties-view-context-menu-copy").click();
   }, `{"obj":{"type":"string"}}`);
 
   /* Test for copy all */
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     objectRow);
   await waitForClipboardPromise(function setup() {
-    monitor.panelWin.parent.document
-      .querySelector("#properties-view-context-menu-copyall").click();
+    getContextMenuItem(monitor, "properties-view-context-menu-copyall").click();
   }, `{"JSON":{"obj":{"type":"string"}},` +
     `"Response payload":{"EDITOR_CONFIG":{"text":` +
     `"{\\"obj\\": {\\"type\\": \\"string\\" }}","mode":"application/json"}}}`);
@@ -51,8 +49,7 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     stringRow);
   await waitForClipboardPromise(function setup() {
-    monitor.panelWin.parent.document
-      .querySelector("#properties-view-context-menu-copy").click();
+    getContextMenuItem(monitor, "properties-view-context-menu-copy").click();
   }, "type: string");
 
   await teardown(monitor);
@@ -100,8 +97,7 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "contextmenu" },
       cur);
     await waitForClipboardPromise(function setup() {
-      monitor.panelWin.parent.document
-        .querySelector("#properties-view-context-menu-copy").click();
+      getContextMenuItem(monitor, "properties-view-context-menu-copy").click();
     }, JSON.stringify(expectedResponseCookies[i]));
   }
 
@@ -111,8 +107,7 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "contextmenu" },
       cur);
     await waitForClipboardPromise(function setup() {
-      monitor.panelWin.parent.document
-        .querySelector("#properties-view-context-menu-copy").click();
+      getContextMenuItem(monitor, "properties-view-context-menu-copy").click();
     }, expectedRequestCookies[i]);
   }
 

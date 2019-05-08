@@ -53,8 +53,8 @@ add_task(async function() {
       document.querySelectorAll(".request-list-item")[0]);
 
     /* Ensure that the use as fetch option is always visible */
-    const useAsFetchNode = monitor.panelWin.parent.document
-      .querySelector("#request-list-context-use-as-fetch");
+    const useAsFetchNode = getContextMenuItem(monitor,
+      "request-list-context-use-as-fetch");
     is(!!useAsFetchNode, true,
       "The \"Use as Fetch\" context menu item should not be hidden.");
 

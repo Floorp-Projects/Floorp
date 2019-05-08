@@ -32,12 +32,6 @@ class NetworkThrottlingMenu extends PureComponent {
     };
   }
 
-  static get defaultProps() {
-    return {
-      useTopLevelWindow: false,
-    };
-  }
-
   constructor(props) {
     super(props);
     this.onShowThrottlingMenu = this.onShowThrottlingMenu.bind(this);
@@ -68,7 +62,7 @@ class NetworkThrottlingMenu extends PureComponent {
       click: () => onChangeNetworkThrottling(false, ""),
     });
 
-    showMenu(menuItems, { button: event.target, useTopLevelWindow });
+    showMenu(menuItems, { button: event.target });
   }
 
   render() {
