@@ -674,6 +674,7 @@ nsChangeHint nsStyleColumn::CalcDifference(
 nsStyleSVG::nsStyleSVG(const Document& aDocument)
     : mFill(eStyleSVGPaintType_Color),  // Will be initialized to NS_RGB(0,0,0)
       mStroke(eStyleSVGPaintType_None),
+      mMozContextProperties{{}, {0}},
       mStrokeDashoffset(LengthPercentage::Zero()),
       mStrokeWidth(LengthPercentage::FromPixels(1.0f)),
       mFillOpacity(1.0f),
@@ -688,7 +689,6 @@ nsStyleSVG::nsStyleSVG(const Document& aDocument)
       mStrokeLinecap(NS_STYLE_STROKE_LINECAP_BUTT),
       mStrokeLinejoin(NS_STYLE_STROKE_LINEJOIN_MITER),
       mTextAnchor(NS_STYLE_TEXT_ANCHOR_START),
-      mContextPropsBits(0),
       mContextFlags(
           (eStyleSVGOpacitySource_Normal << FILL_OPACITY_SOURCE_SHIFT) |
           (eStyleSVGOpacitySource_Normal << STROKE_OPACITY_SOURCE_SHIFT)) {
@@ -704,7 +704,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
       mMarkerMid(aSource.mMarkerMid),
       mMarkerStart(aSource.mMarkerStart),
       mStrokeDasharray(aSource.mStrokeDasharray),
-      mContextProps(aSource.mContextProps),
+      mMozContextProperties(aSource.mMozContextProperties),
       mStrokeDashoffset(aSource.mStrokeDashoffset),
       mStrokeWidth(aSource.mStrokeWidth),
       mFillOpacity(aSource.mFillOpacity),
@@ -719,7 +719,6 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
       mStrokeLinecap(aSource.mStrokeLinecap),
       mStrokeLinejoin(aSource.mStrokeLinejoin),
       mTextAnchor(aSource.mTextAnchor),
-      mContextPropsBits(aSource.mContextPropsBits),
       mContextFlags(aSource.mContextFlags) {
   MOZ_COUNT_CTOR(nsStyleSVG);
 }
@@ -797,12 +796,12 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const {
       mShapeRendering != aNewData.mShapeRendering ||
       mStrokeDasharray != aNewData.mStrokeDasharray ||
       mContextFlags != aNewData.mContextFlags ||
-      mContextPropsBits != aNewData.mContextPropsBits) {
+      mMozContextProperties.bits != aNewData.mMozContextProperties.bits) {
     return hint | nsChangeHint_RepaintFrame;
   }
 
   if (!hint) {
-    if (mContextProps != aNewData.mContextProps) {
+    if (mMozContextProperties.idents != aNewData.mMozContextProperties.idents) {
       hint = nsChangeHint_NeutralChange;
     }
   }

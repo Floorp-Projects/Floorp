@@ -6411,3 +6411,8 @@ pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Drop(
 pub unsafe extern "C" fn Servo_CloneBasicShape(v: &computed::basic_shape::BasicShape) -> *mut computed::basic_shape::BasicShape {
     Box::into_raw(Box::new(v.clone()))
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_StyleArcSlice_EmptyPtr() -> *mut c_void {
+    style_traits::arc_slice::ArcSlice::<u64>::leaked_empty_ptr()
+}

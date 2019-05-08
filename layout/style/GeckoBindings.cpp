@@ -1619,18 +1619,6 @@ void Gecko_nsStyleSVG_CopyDashArray(nsStyleSVG* aDst, const nsStyleSVG* aSrc) {
   aDst->mStrokeDasharray = aSrc->mStrokeDasharray;
 }
 
-void Gecko_nsStyleSVG_SetContextPropertiesLength(nsStyleSVG* aSvg,
-                                                 uint32_t aLen) {
-  aSvg->mContextProps.Clear();
-  aSvg->mContextProps.SetLength(aLen);
-}
-
-void Gecko_nsStyleSVG_CopyContextProperties(nsStyleSVG* aDst,
-                                            const nsStyleSVG* aSrc) {
-  aDst->mContextProps = aSrc->mContextProps;
-  aDst->mContextPropsBits = aSrc->mContextPropsBits;
-}
-
 URLValue* Gecko_URLValue_Create(StyleStrong<RawServoCssUrlData> aCssUrl,
                                 CORSMode aCORSMode) {
   RefPtr<URLValue> url = new URLValue(aCssUrl.Consume(), aCORSMode);
