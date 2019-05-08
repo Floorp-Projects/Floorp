@@ -638,7 +638,7 @@ TEST(TestCookie, TestCookieMain)
   EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
   SetACookie(cookieService, "http://parser.test/", nullptr, " =eight", nullptr);
   GetACookie(cookieService, "http://parser.test/", nullptr, cookie);
-  EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "eight"));
+  EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
   SetACookie(cookieService, "http://parser.test/", nullptr, "test=six",
              nullptr);
   GetACookie(cookieService, "http://parser.test/", nullptr, cookie);
