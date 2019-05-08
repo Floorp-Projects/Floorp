@@ -620,7 +620,8 @@ void TextTrackManager::TimeMarchesOn() {
   WEBVTT_LOG("TimeMarchesOn");
 
   // Early return if we don't have any TextTracks or shutting down.
-  if (!mTextTracks || mTextTracks->Length() == 0 || IsShutdown()) {
+  if (!mTextTracks || mTextTracks->Length() == 0 || IsShutdown() ||
+      !mMediaElement) {
     return;
   }
 
@@ -630,9 +631,8 @@ void TextTrackManager::TimeMarchesOn() {
   }
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
 
-  if (mMediaElement &&
-      (!(mMediaElement->GetPlayedOrSeeked()) || mMediaElement->Seeking())) {
-    WEBVTT_LOG("TimeMarchesOn seeking or post return");
+  if (mMediaElement->Seeking()) {
+    WEBVTT_LOG("TimeMarchesOn return during seeking");
     return;
   }
 
