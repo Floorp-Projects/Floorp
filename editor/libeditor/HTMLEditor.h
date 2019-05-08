@@ -139,7 +139,7 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
 
-  NS_IMETHOD DeleteNode(nsINode* aNode) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) override;
 
   NS_IMETHOD InsertLineBreak() override;
 
@@ -180,7 +180,7 @@ class HTMLEditor final : public TextEditor,
    * InsertLineBreakAsAction() is called when user inputs a line break with
    * Shift + Enter or something.
    */
-  virtual nsresult InsertLineBreakAsAction() override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertLineBreakAsAction() override;
 
   /**
    * InsertParagraphSeparatorAsAction() is called when user tries to separate
@@ -208,8 +208,8 @@ class HTMLEditor final : public TextEditor,
   /**
    * Indent or outdent content around Selection.
    */
-  nsresult IndentAsAction();
-  nsresult OutdentAsAction();
+  MOZ_CAN_RUN_SCRIPT nsresult IndentAsAction();
+  MOZ_CAN_RUN_SCRIPT nsresult OutdentAsAction();
 
   /**
    * event callback when a mouse button is pressed
@@ -482,6 +482,7 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aString   the string to be inserted
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertTextWithQuotations(const nsAString& aStringToInsert);
 
  protected:  // May be called by friends.
@@ -502,6 +503,7 @@ class HTMLEditor final : public TextEditor,
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult DeleteSelectionWithTransaction(
       EDirection aAction, EStripWrappers aStripWrappers) override;
 
@@ -512,7 +514,7 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aNode       The node to be removed from the DOM tree.
    */
-  nsresult DeleteNodeWithTransaction(nsINode& aNode);
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteNodeWithTransaction(nsINode& aNode);
 
   /**
    * DeleteTextWithTransaction() removes text in the range from aCharData if
@@ -709,7 +711,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * Join together any adjacent editable text nodes in the range.
    */
-  nsresult CollapseAdjacentTextNodes(nsRange* aRange);
+  MOZ_CAN_RUN_SCRIPT nsresult CollapseAdjacentTextNodes(nsRange* aRange);
 
   /**
    * IsInVisibleTextFrames() returns true if all text in aText is in visible
@@ -786,6 +788,7 @@ class HTMLEditor final : public TextEditor,
   nsresult SetInlinePropertyOnNode(nsIContent& aNode, nsAtom& aProperty,
                                    nsAtom* aAttribute, const nsAString& aValue);
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
                                 nsAtom* aProperty, nsAtom* aAttribute,
                                 nsIContent** aOutLeftNode = nullptr,
@@ -949,9 +952,8 @@ class HTMLEditor final : public TextEditor,
   nsresult ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
                       nsAtom* aProperty, nsAtom* aAttribute);
 
-  nsresult SetPositionToAbsolute(Element& aElement);
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetPositionToStatic(Element& aElement);
+  MOZ_CAN_RUN_SCRIPT nsresult SetPositionToAbsolute(Element& aElement);
+  MOZ_CAN_RUN_SCRIPT nsresult SetPositionToStatic(Element& aElement);
 
   /**
    * OnModifyDocument() is called when the editor is changed.  This should
@@ -1486,6 +1488,7 @@ class HTMLEditor final : public TextEditor,
    * selection.  If there is non-collapsed selection ranges, the selected
    * ranges is deleted first.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertBrElementAtSelectionWithTransaction();
 
   /**
@@ -1496,6 +1499,7 @@ class HTMLEditor final : public TextEditor,
    * with <span _moz_quote="true">, and each chunk not starting with ">" is
    * inserted as normal text.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertTextWithQuotationsInternal(const nsAString& aStringToInsert);
 
   /**
@@ -1506,6 +1510,7 @@ class HTMLEditor final : public TextEditor,
    * @param aEditSubAction      Must be EditSubAction::eIndent or
    *                            EditSubAction::eOutdent.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult IndentOrOutdentAsSubAction(EditSubAction aEditSubAction);
 
   MOZ_CAN_RUN_SCRIPT
@@ -1541,6 +1546,7 @@ class HTMLEditor final : public TextEditor,
    * or calls into nsTextEditor to set the page background.
    */
   nsresult SetCSSBackgroundColorWithTransaction(const nsAString& aColor);
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetHTMLBackgroundColorWithTransaction(const nsAString& aColor);
 
   virtual void InitializeSelectionAncestorLimit(
@@ -1866,6 +1872,7 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aElement        The element whose children you want to remove.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteAllChildrenWithTransaction(Element& aElement);
 
   /**
@@ -1881,10 +1888,11 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aTableElement   The <table> element which you want to remove.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteTableElementAndChildrenWithTransaction(Element& aTableElement);
 
-  nsresult SetColSpan(Element* aCell, int32_t aColSpan);
-  nsresult SetRowSpan(Element* aCell, int32_t aRowSpan);
+  MOZ_CAN_RUN_SCRIPT nsresult SetColSpan(Element* aCell, int32_t aColSpan);
+  MOZ_CAN_RUN_SCRIPT nsresult SetRowSpan(Element* aCell, int32_t aRowSpan);
 
   /**
    * Helper used to get nsTableWrapperFrame for a table.
@@ -1939,15 +1947,16 @@ class HTMLEditor final : public TextEditor,
                              int32_t aColIndex, int32_t aRowSpanAbove,
                              int32_t aRowSpanBelow, Element** aNewCell);
 
-  nsresult CopyCellBackgroundColor(Element* aDestCell, Element* aSourceCell);
+  MOZ_CAN_RUN_SCRIPT nsresult CopyCellBackgroundColor(Element* aDestCell,
+                                                      Element* aSourceCell);
 
   /**
    * Reduce rowspan/colspan when cells span into nonexistent rows/columns.
    */
-  nsresult FixBadRowSpan(Element* aTable, int32_t aRowIndex,
-                         int32_t& aNewRowCount);
-  nsresult FixBadColSpan(Element* aTable, int32_t aColIndex,
-                         int32_t& aNewColCount);
+  MOZ_CAN_RUN_SCRIPT nsresult FixBadRowSpan(Element* aTable, int32_t aRowIndex,
+                                            int32_t& aNewRowCount);
+  MOZ_CAN_RUN_SCRIPT nsresult FixBadColSpan(Element* aTable, int32_t aColIndex,
+                                            int32_t& aNewColCount);
 
   /**
    * XXX NormalizeTableInternal() is broken.  If it meets a cell which has
@@ -1971,7 +1980,7 @@ class HTMLEditor final : public TextEditor,
   static Element* GetEnclosingTable(nsINode* aNode);
 
   // Methods for handling plaintext quotations
-  nsresult PasteAsPlaintextQuotation(int32_t aSelectionType);
+  MOZ_CAN_RUN_SCRIPT nsresult PasteAsPlaintextQuotation(int32_t aSelectionType);
 
   /**
    * Insert a string as quoted text, replacing the selected text (if any).
@@ -1982,6 +1991,7 @@ class HTMLEditor final : public TextEditor,
    * @return aNodeInserted  The node spanning the insertion, if applicable.
    *                        If aAddCites is false, this will be null.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertAsPlaintextQuotation(const nsAString& aQuotedText,
                                       bool aAddCites, nsINode** aNodeInserted);
 
@@ -2078,6 +2088,7 @@ class HTMLEditor final : public TextEditor,
    * @param aTagName            A block level element name.  Must NOT be
    *                            nsGkAtoms::dt nor nsGkAtoms::dd.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertBasicBlockWithTransaction(nsAtom& aTagName);
 
   /**
@@ -2102,6 +2113,7 @@ class HTMLEditor final : public TextEditor,
 
   nsresult PromoteInlineRange(nsRange& aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
+  MOZ_CAN_RUN_SCRIPT
   nsresult SplitStyleAboveRange(nsRange* aRange, nsAtom* aProperty,
                                 nsAtom* aAttribute);
   MOZ_CAN_RUN_SCRIPT

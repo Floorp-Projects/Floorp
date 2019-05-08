@@ -197,7 +197,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_OPT_OUT", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_FILL", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_FEED_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_OPT_OUT", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_FILL", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 } // These are acceptable actions for AS Router messages to have. They can show up
 // as call-to-action buttons in snippets, onboarding tour, etc.
@@ -2201,6 +2201,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_8___default.a.Pur
 
     if (message.template === "trailhead") {
       return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(_templates_Trailhead_Trailhead__WEBPACK_IMPORTED_MODULE_13__["Trailhead"], {
+        document: this.props.document,
         message: message,
         onAction: ASRouterUtils.executeAction,
         onDoneButton: this.dismissBundle(this.state.bundle.bundle),
@@ -2729,7 +2730,10 @@ class ModalOverlayWrapper extends react__WEBPACK_IMPORTED_MODULE_0___default.a.P
       onClick: props.onClose,
       role: "presentation"
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `modalOverlayInner active ${props.innerClassName || ""}`
+      className: `modalOverlayInner active ${props.innerClassName || ""}`,
+      "aria-labelledby": props.headerId,
+      id: props.id,
+      role: "dialog"
     }, props.children));
   }
 
@@ -2988,6 +2992,7 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
     this.initScene = this.initScene.bind(this);
     this.removeOverlay = this.removeOverlay.bind(this);
     this.onInputInvalid = this.onInputInvalid.bind(this);
+    this.utmParams = "utm_source=activity-stream&utm_campaign=firstrun&utm_medium=referral&utm_term=trailhead-control";
     this.state = {
       emailInput: "",
       overlayRemoved: false,
@@ -3001,8 +3006,8 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
     if (this.props.fxa_endpoint && !this.didFetch) {
       try {
         this.didFetch = true;
-        const fxaParams = "entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun&form_type=email";
-        const response = await fetch(`${this.props.fxa_endpoint}/metrics-flow?${fxaParams}`, {
+        const fxaParams = "entrypoint=activity-stream-firstrun&form_type=email";
+        const response = await fetch(`${this.props.fxa_endpoint}/metrics-flow?${fxaParams}&${this.utmParams}`, {
           credentials: "omit"
         });
 
@@ -3121,14 +3126,14 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
     }
 
     let termsLink = react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
-      href: `${this.props.fxa_endpoint}/legal/terms`,
+      href: `${this.props.fxa_endpoint}/legal/terms?${this.utmParams}`,
       target: "_blank",
       rel: "noopener noreferrer"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
       id: "firstrun_terms_of_service"
     }));
     let privacyLink = react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
-      href: `${this.props.fxa_endpoint}/legal/privacy`,
+      href: `${this.props.fxa_endpoint}/legal/privacy?${this.utmParams}`,
       target: "_blank",
       rel: "noopener noreferrer"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
@@ -3154,7 +3159,7 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
       id: "firstrun_content"
     })), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
       className: "firstrun-link",
-      href: "https://www.mozilla.org/firefox/features/sync/",
+      href: `https://www.mozilla.org/firefox/features/sync/?${this.utmParams}`,
       target: "_blank",
       rel: "noopener noreferrer"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_1__["FormattedMessage"], {
@@ -3199,6 +3204,14 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
       name: "utm_campaign",
       type: "hidden",
       value: "firstrun"
+    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+      name: "utm_medium",
+      type: "hidden",
+      value: "referral"
+    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+      name: "utm_term",
+      type: "hidden",
+      value: "trailhead-control"
     }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
       name: "flow_id",
       type: "hidden",
@@ -3279,18 +3292,19 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 
 
-const FLUENT_FILES = ["branding/brand.ftl", "browser/branding/sync-brand.ftl", // These are finalized strings exposed to localizers
-"browser/newtab/onboarding.ftl", // These are WIP/in-development strings that only get used if the string
-// doesn't already exist in onboarding.ftl above
-"trailhead.ftl"];
+const FLUENT_FILES = ["branding/brand.ftl", "browser/branding/brandings.ftl", "browser/branding/sync-brand.ftl", "browser/newtab/onboarding.ftl"]; // From resource://devtools/client/shared/focus.js
+
+const FOCUSABLE_SELECTOR = ["a[href]:not([tabindex='-1'])", "button:not([disabled]):not([tabindex='-1'])", "iframe:not([tabindex='-1'])", "input:not([disabled]):not([tabindex='-1'])", "select:not([disabled]):not([tabindex='-1'])", "textarea:not([disabled]):not([tabindex='-1'])", "[tabindex]:not([tabindex='-1'])"].join(", ");
 class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.closeModal = this.closeModal.bind(this);
     this.hideCardPanel = this.hideCardPanel.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
+    this.onStartBlur = this.onStartBlur.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.onInputInvalid = this.onInputInvalid.bind(this);
+    this.onCardAction = this.onCardAction.bind(this);
     this.state = {
       emailInput: "",
       isModalOpen: true,
@@ -3300,6 +3314,10 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       flowBeginTime: 0
     };
     this.didFetch = false;
+  }
+
+  get dialog() {
+    return this.props.document.getElementById("trailheadDialog");
   }
 
   async componentWillMount() {
@@ -3312,8 +3330,9 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
     if (this.props.fxaEndpoint && !this.didFetch) {
       try {
         this.didFetch = true;
-        const fxaParams = "entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun&utm_term=trailhead&form_type=email";
-        const response = await fetch(`${this.props.fxaEndpoint}/metrics-flow?${fxaParams}`, {
+        const url = new URL(`${this.props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
+        this.addUtmParams(url);
+        const response = await fetch(url, {
           credentials: "omit"
         });
 
@@ -3348,13 +3367,17 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
 
   componentDidMount() {
     // We need to remove hide-main since we should show it underneath everything that has rendered
-    global.document.body.classList.remove("hide-main"); // Add inline-onboarding class to disable fixed search header and fixed positioned settings icon
+    this.props.document.body.classList.remove("hide-main"); // Add inline-onboarding class to disable fixed search header and fixed positioned settings icon
 
-    global.document.body.classList.add("inline-onboarding");
+    this.props.document.body.classList.add("inline-onboarding"); // The rest of the page is "hidden" when the modal is open
 
-    if (!this.props.message.content) {
+    if (this.props.message.content) {
+      this.props.document.getElementById("root").setAttribute("aria-hidden", "true"); // Start with focus in the email input box
+
+      this.dialog.querySelector("input[name=email]").focus();
+    } else {
       // No modal overlay, let the user scroll and deal them some cards.
-      global.document.body.classList.remove("welcome");
+      this.props.document.body.classList.remove("welcome");
 
       if (this.props.message.includeBundle || this.props.message.cards) {
         this.revealCards();
@@ -3362,8 +3385,8 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
     }
   }
 
-  componentDidUnmount() {
-    global.document.body.classList.remove("inline-onboarding");
+  componentWillUnmount() {
+    this.props.document.body.classList.remove("inline-onboarding");
   }
 
   onInputChange(e) {
@@ -3373,6 +3396,17 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
     });
     error.classList.remove("active");
     e.target.classList.remove("invalid");
+  }
+
+  onStartBlur(event) {
+    // Make sure focus stays within the dialog when tabbing from the button
+    const {
+      dialog
+    } = this;
+
+    if (event.relatedTarget && !(dialog.compareDocumentPosition(event.relatedTarget) & dialog.DOCUMENT_POSITION_CONTAINED_BY)) {
+      dialog.querySelector(FOCUSABLE_SELECTOR).focus();
+    }
   }
 
   onSubmit() {
@@ -3385,7 +3419,8 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
 
   closeModal() {
     global.removeEventListener("visibilitychange", this.closeModal);
-    global.document.body.classList.remove("welcome");
+    this.props.document.body.classList.remove("welcome");
+    this.props.document.getElementById("root").removeAttribute("aria-hidden");
     this.setState({
       isModalOpen: false
     });
@@ -3439,6 +3474,51 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
 
     return str.value;
   }
+  /**
+   * Takes in a url as a string or URL object and returns a URL object with the
+   * utm_* parameters added to it. If a URL object is passed in, the paraemeters
+   * are added to it (the return value can be ignored in that case as it's the
+   * same object).
+   */
+
+
+  addUtmParams(url, isCard = false) {
+    let returnUrl = url;
+
+    if (typeof returnUrl === "string") {
+      returnUrl = new URL(url);
+    }
+
+    returnUrl.searchParams.append("utm_source", "activity-stream");
+    returnUrl.searchParams.append("utm_campaign", "firstrun");
+    returnUrl.searchParams.append("utm_medium", "referral");
+    returnUrl.searchParams.append("utm_term", `${this.props.message.utm_term}${isCard ? "-card" : ""}`);
+    return returnUrl;
+  }
+
+  onCardAction(action) {
+    let actionUpdates = {};
+
+    if (action.type === "OPEN_URL") {
+      let url = new URL(action.data.args);
+      this.addUtmParams(url, true);
+
+      if (action.addFlowParams) {
+        url.searchParams.append("flow_id", this.state.flowId);
+        url.searchParams.append("flow_begin_time", this.state.flowBeginTime);
+      }
+
+      actionUpdates = {
+        data: { ...action.data,
+          args: url
+        }
+      };
+    }
+
+    this.props.onAction({ ...action,
+      ...actionUpdates
+    });
+  }
 
   render() {
     const {
@@ -3446,18 +3526,22 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
     } = this;
     const {
       bundle: cards,
-      content
+      content,
+      utm_term
     } = props.message;
     const innerClassName = ["trailhead", content && content.className].filter(v => v).join(" ");
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, this.state.isModalOpen && content ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_components_ModalOverlay_ModalOverlay__WEBPACK_IMPORTED_MODULE_2__["ModalOverlayWrapper"], {
       innerClassName: innerClassName,
-      onClose: this.closeModal
+      onClose: this.closeModal,
+      id: "trailheadDialog",
+      headerId: "trailheadHeader"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "trailheadInner"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "trailheadContent"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h1", {
-      "data-l10n-id": content.title.string_id
+      "data-l10n-id": content.title.string_id,
+      id: "trailheadHeader"
     }, this.getStringValue(content.title)), content.subtitle && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
       "data-l10n-id": content.subtitle.string_id
     }, this.getStringValue(content.subtitle)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("ul", {
@@ -3472,7 +3556,7 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
     }, this.getStringValue(item.text))))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       className: "trailheadLearn",
       "data-l10n-id": content.learn.text.string_id,
-      href: content.learn.url
+      href: this.addUtmParams(content.learn.url)
     }, this.getStringValue(content.learn.text))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: "trailheadForm"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", {
@@ -3512,7 +3596,7 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "utm_term",
       type: "hidden",
-      value: "trailhead"
+      value: utm_term
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "flow_id",
       type: "hidden",
@@ -3521,6 +3605,10 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       name: "flow_begin_time",
       type: "hidden",
       value: this.state.flowBeginTime
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
+      name: "style",
+      type: "hidden",
+      value: "trailhead"
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
       "data-l10n-id": "onboarding-join-form-email-error",
       className: "error"
@@ -3537,21 +3625,23 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       "data-l10n-id": "onboarding-join-form-legal"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       "data-l10n-name": "terms",
-      href: "https://accounts.firefox.com/legal/terms"
+      href: this.addUtmParams("https://accounts.firefox.com/legal/terms")
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("a", {
       "data-l10n-name": "privacy",
-      href: "https://accounts.firefox.com/legal/privacy"
+      href: this.addUtmParams("https://accounts.firefox.com/legal/privacy")
     })), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       "data-l10n-id": content.form.button.string_id,
       type: "submit"
     }, this.getStringValue(content.form.button))))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "trailheadStart",
       "data-l10n-id": content.skipButton.string_id,
+      onBlur: this.onStartBlur,
       onClick: this.closeModal
     }, this.getStringValue(content.skipButton))) : null, cards && cards.length ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       className: `trailheadCards ${this.state.showCardPanel ? "expanded" : "collapsed"}`
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
-      className: "trailheadCardsInner"
+      className: "trailheadCardsInner",
+      "aria-hidden": !this.state.showCards
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h1", {
       "data-l10n-id": "onboarding-welcome-header"
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
@@ -3560,7 +3650,7 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       key: card.id,
       className: "trailheadCard",
       sendUserActionTelemetry: props.sendUserActionTelemetry,
-      onAction: props.onAction,
+      onAction: this.onCardAction,
       UISurface: "TRAILHEAD"
     }, card)))), this.state.showCardPanel && react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "icon icon-dismiss",
@@ -8338,45 +8428,53 @@ const selectLayoutRender = (state, prefs, rickRollCache) => {
   let bufferRollCache = []; // Records the chosen and unchosen spocs by the probability selection.
 
   let chosenSpocs = new Set();
-  let unchosenSpocs = new Set(); // rickRollCache stores random probability values for each spoc position. This cache is empty
-  // on page refresh and gets filled with random values on first render inside maybeInjectSpocs.
+  let unchosenSpocs = new Set();
 
-  const isFirstRun = !rickRollCache.length;
+  function rollForSpocs(data, spocsConfig) {
+    const recommendations = [...data.recommendations];
 
-  function maybeInjectSpocs(data, spocsConfig) {
-    if (data && spocsConfig && spocsConfig.positions && spocsConfig.positions.length && spocs.data.spocs && spocs.data.spocs.length) {
-      const recommendations = [...data.recommendations];
+    for (let position of spocsConfig.positions) {
+      const spoc = spocs.data.spocs[spocIndex];
 
-      for (let position of spocsConfig.positions) {
-        const spoc = spocs.data.spocs[spocIndex];
-
-        if (!spoc) {
-          break;
-        } // Cache random number for a position
+      if (!spoc) {
+        break;
+      } // Cache random number for a position
 
 
-        let rickRoll;
+      let rickRoll;
 
-        if (isFirstRun) {
-          rickRoll = Math.random();
-          rickRollCache.push(rickRoll);
-        } else {
-          rickRoll = rickRollCache.shift();
-          bufferRollCache.push(rickRoll);
-        }
-
-        if (rickRoll <= spocsConfig.probability) {
-          spocIndex++;
-          recommendations.splice(position.index, 0, spoc);
-          chosenSpocs.add(spoc);
-        } else {
-          unchosenSpocs.add(spoc);
-        }
+      if (!rickRollCache.length) {
+        rickRoll = Math.random();
+        bufferRollCache.push(rickRoll);
+      } else {
+        rickRoll = rickRollCache.shift();
+        bufferRollCache.push(rickRoll);
       }
 
-      return { ...data,
-        recommendations
-      };
+      if (rickRoll <= spocsConfig.probability) {
+        spocIndex++;
+        recommendations.splice(position.index, 0, spoc);
+        chosenSpocs.add(spoc);
+      } else {
+        unchosenSpocs.add(spoc);
+      }
+    }
+
+    return { ...data,
+      recommendations
+    };
+  }
+
+  function maybeInjectSpocs(data, spocsConfig) {
+    // Do we ever expect to possibly have a spoc.
+    if (data && spocsConfig && spocsConfig.positions && spocsConfig.positions.length) {
+      // We expect a spoc, spocs are loaded, but the server returned no spocs.
+      if (!spocs.data.spocs || !spocs.data.spocs.length) {
+        return data;
+      } // We expect a spoc, spocs are loaded, and we have spocs available.
+
+
+      return rollForSpocs(data, spocsConfig);
     }
 
     return data;
@@ -8394,56 +8492,77 @@ const selectLayoutRender = (state, prefs, rickRollCache) => {
     filterArray.push(...DS_COMPONENTS);
   }
 
-  const layoutRender = layout.map(row => ({ ...row,
-    // Loops through desired components and adds a .data property
-    // containing data from feeds
-    components: row.components.filter(c => !filterArray.includes(c.type)).map(component => {
-      if (!component.feed || !feeds.data[component.feed.url]) {
-        return component;
-      }
+  const handleComponent = component => {
+    positions[component.type] = positions[component.type] || 0;
+    let {
+      data
+    } = feeds.data[component.feed.url];
 
-      positions[component.type] = positions[component.type] || 0;
-      let {
-        data
-      } = feeds.data[component.feed.url];
-
-      if (component && component.properties && component.properties.offset) {
-        data = { ...data,
-          recommendations: data.recommendations.slice(component.properties.offset)
-        };
-      }
-
-      data = maybeInjectSpocs(data, component.spocs); // If empty, fill rickRollCache with random probability values from bufferRollCache
-
-      if (!rickRollCache.length) {
-        rickRollCache.push(...bufferRollCache);
-      }
-
-      let items = 0;
-
-      if (component.properties && component.properties.items) {
-        items = Math.min(component.properties.items, data.recommendations.length);
-      } // loop through a component items
-      // Store the items position sequentially for multiple components of the same type.
-      // Example: A second card grid starts pos offset from the last card grid.
-
-
-      for (let i = 0; i < items; i++) {
-        data.recommendations[i].pos = positions[component.type]++;
-      }
-
-      return { ...component,
-        data
+    if (component && component.properties && component.properties.offset) {
+      data = { ...data,
+        recommendations: data.recommendations.slice(component.properties.offset)
       };
-    })
-  })).filter(row => row.components.length); // Generate the payload for the SPOCS Fill ping. Note that a SPOC could be rejected
+    }
+
+    data = maybeInjectSpocs(data, component.spocs);
+    let items = 0;
+
+    if (component.properties && component.properties.items) {
+      items = Math.min(component.properties.items, data.recommendations.length);
+    } // loop through a component items
+    // Store the items position sequentially for multiple components of the same type.
+    // Example: A second card grid starts pos offset from the last card grid.
+
+
+    for (let i = 0; i < items; i++) {
+      data.recommendations[i].pos = positions[component.type]++;
+    }
+
+    return { ...component,
+      data
+    };
+  };
+
+  const renderLayout = () => {
+    const renderedLayoutArray = [];
+
+    for (const row of layout.filter(r => r.components.length)) {
+      let components = [];
+      renderedLayoutArray.push({ ...row,
+        components
+      });
+
+      for (const component of row.components.filter(c => !filterArray.includes(c.type))) {
+        if (component.feed) {
+          const spocsConfig = component.spocs; // Are we still waiting on a feed/spocs, render what we have, and bail out early.
+
+          if (!feeds.data[component.feed.url] || spocsConfig && spocsConfig.positions && spocsConfig.positions.length && !spocs.loaded) {
+            return renderedLayoutArray;
+          }
+
+          components.push(handleComponent(component));
+        } else {
+          components.push(component);
+        }
+      }
+    }
+
+    return renderedLayoutArray;
+  };
+
+  const layoutRender = renderLayout(layout); // If empty, fill rickRollCache with random probability values from bufferRollCache
+
+  if (!rickRollCache.length) {
+    rickRollCache.push(...bufferRollCache);
+  } // Generate the payload for the SPOCS Fill ping. Note that a SPOC could be rejected
   // by the `probability_selection` first, then gets chosen for the next position. For
   // all other SPOCS that never went through the probabilistic selection, its reason will
   // be "out_of_position".
 
+
   let spocsFill = [];
 
-  if (spocs.data.spocs) {
+  if (spocs.loaded && feeds.loaded && spocs.data.spocs) {
     const chosenSpocsFill = [...chosenSpocs].map(spoc => ({
       id: spoc.id,
       reason: "n/a",
@@ -8679,17 +8798,12 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
     } = selectLayoutRender(this.props.DiscoveryStream, this.props.Prefs.values, rickRollCache);
     const {
       config,
-      feeds,
-      spocs
-    } = this.props.DiscoveryStream;
-
-    if (!spocs.loaded || !feeds.loaded) {
-      return null;
-    } // Send SPOCS Fill if any. Note that it should not send it again if the same
+      spocs,
+      feeds
+    } = this.props.DiscoveryStream; // Send SPOCS Fill if any. Note that it should not send it again if the same
     // page gets re-rendered by state changes.
 
-
-    if (spocsFill.length && !this._spocsFillSent) {
+    if (spocs.loaded && feeds.loaded && spocsFill.length && !this._spocsFillSent) {
       this.props.dispatch(Actions["actionCreators"].DiscoveryStreamSpocsFill({
         spoc_fills: spocsFill
       }));
@@ -8722,7 +8836,12 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
     }; // Get "topstories" Section state for default values
 
 
-    const topStories = this.props.Sections.find(s => s.id === "topstories"); // Extract TopSites to render before the rest and Message to use for header
+    const topStories = this.props.Sections.find(s => s.id === "topstories");
+
+    if (!topStories) {
+      return null;
+    } // Extract TopSites to render before the rest and Message to use for header
+
 
     const topSites = extractComponent("TopSites");
     const message = extractComponent("Message") || {
@@ -8765,6 +8884,10 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
     }, external_React_default.a.createElement("div", {
       className: "ds-column-grid"
     }, row.components.map((component, componentIndex) => {
+      if (!component) {
+        return null;
+      }
+
       styles[rowIndex] = [...(styles[rowIndex] || []), component.styles];
       return external_React_default.a.createElement("div", {
         key: `component-${componentIndex}`
@@ -11786,7 +11909,7 @@ class CachedIterable {
 
 }
 // CONCATENATED MODULE: ./node_modules/fluent/src/fallback.js
-function _asyncIterator(iterable) { var method; if (typeof Symbol !== "undefined") { if (Symbol.asyncIterator) { method = iterable[Symbol.asyncIterator]; if (method != null) return method.call(iterable); } if (Symbol.iterator) { method = iterable[Symbol.iterator]; if (method != null) return method.call(iterable); } } throw new TypeError("Object is not async iterable"); }
+function _asyncIterator(iterable) { var method; if (typeof Symbol === "function") { if (Symbol.asyncIterator) { method = iterable[Symbol.asyncIterator]; if (method != null) return method.call(iterable); } if (Symbol.iterator) { method = iterable[Symbol.iterator]; if (method != null) return method.call(iterable); } } throw new TypeError("Object is not async iterable"); }
 
 /*
  * @overview
@@ -13231,8 +13354,18 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
     case Actions["actionTypes"].DISCOVERY_STREAM_FEEDS_UPDATE:
       return { ...prevState,
         feeds: { ...prevState.feeds,
-          data: action.data || prevState.feeds.data,
           loaded: true
+        }
+      };
+
+    case Actions["actionTypes"].DISCOVERY_STREAM_FEED_UPDATE:
+      const newData = {};
+      newData[action.data.url] = action.data.feed;
+      return { ...prevState,
+        feeds: { ...prevState.feeds,
+          data: { ...prevState.feeds.data,
+            ...newData
+          }
         }
       };
 

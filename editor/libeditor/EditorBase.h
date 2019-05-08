@@ -923,7 +923,7 @@ class EditorBase : public nsIEditor,
    *
    * @param aNode       The node which will be removed form the DOM tree.
    */
-  nsresult DeleteNodeWithTransaction(nsINode& aNode);
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteNodeWithTransaction(nsINode& aNode);
 
   /**
    * InsertNodeWithTransaction() inserts aContentToInsert before the child
@@ -1072,7 +1072,7 @@ class EditorBase : public nsIEditor,
    *                            error.
    */
   template <typename PT, typename CT>
-  already_AddRefed<nsIContent> SplitNodeWithTransaction(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<nsIContent> SplitNodeWithTransaction(
       const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
       ErrorResult& aResult);
 
@@ -1085,6 +1085,7 @@ class EditorBase : public nsIEditor,
    * @param aRightNode  The node which will be new container of the content of
    *                    aLeftNode.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult JoinNodesWithTransaction(nsINode& aLeftNode, nsINode& aRightNode);
 
   /**
@@ -1177,6 +1178,7 @@ class EditorBase : public nsIEditor,
    * @param aSourceElement      Element node which provides the value of
    *                            aAttribute in aDestElement.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult CloneAttributeWithTransaction(nsAtom& aAttribute,
                                          Element& aDestElement,
                                          Element& aSourceElement);
@@ -1187,6 +1189,7 @@ class EditorBase : public nsIEditor,
    * @param aElement        Element node which will lose aAttribute.
    * @param aAttribute      Attribute name to be removed from aElement.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult RemoveAttributeWithTransaction(Element& aElement,
                                           nsAtom& aAttribute);
 
@@ -1202,6 +1205,7 @@ class EditorBase : public nsIEditor,
    * @param aAttribute      Attribute name to be set.
    * @param aValue          Attribute value be set to aAttribute.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetAttributeWithTransaction(Element& aElement, nsAtom& aAttribute,
                                        const nsAString& aValue);
 
@@ -1386,7 +1390,7 @@ class EditorBase : public nsIEditor,
    *                                    caller want to do it.
    */
   template <typename PT, typename CT>
-  SplitNodeResult SplitNodeDeepWithTransaction(
+  MOZ_CAN_RUN_SCRIPT SplitNodeResult SplitNodeDeepWithTransaction(
       nsIContent& aMostAncestorToSplit,
       const EditorDOMPointBase<PT, CT>& aDeepestStartOfRightNode,
       SplitAtEdges aSplitAtEdges);
@@ -1403,6 +1407,7 @@ class EditorBase : public nsIEditor,
    *                    aLeftNode.
    * @return            The point of the first child of the last right node.
    */
+  MOZ_CAN_RUN_SCRIPT
   EditorDOMPoint JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
                                               nsIContent& aRightNode);
 

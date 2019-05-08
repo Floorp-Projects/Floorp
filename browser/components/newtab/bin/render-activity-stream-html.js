@@ -100,9 +100,9 @@ function templateHTML(options, html) {
     <link rel="stylesheet" href="${options.baseUrl}css/activity-stream.css" />
   </head>
   <body class="activity-stream">
-    <div id="header-asrouter-container"></div>
+    <div id="header-asrouter-container" role="presentation"></div>
     <div id="root">${isPrerendered ? html : "<!-- Regular React Rendering -->"}</div>
-    <div id="footer-asrouter-container"></div>${options.noscripts ? "" : scriptRender}
+    <div id="footer-asrouter-container" role="presentation"></div>${options.noscripts ? "" : scriptRender}
   </body>
 </html>
 `;

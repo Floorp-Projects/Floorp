@@ -42,7 +42,7 @@ const SECTION_ID = "topsites";
 const ROWS_PREF = "topSitesRows";
 
 // Search experiment stuff
-const NO_DEFAULT_SEARCH_TILE_EXP_PREF = "improvesearch.noDefaultSearchTile";
+const FILTER_DEFAULT_SEARCH_PREF = "improvesearch.noDefaultSearchTile";
 const SEARCH_FILTERS = [
   "google",
   "search.yahoo",
@@ -87,7 +87,7 @@ this.TopSitesFeed = class TopSitesFeed {
   observe(subj, topic, data) {
     // We should update the current top sites if the search engine has been changed since
     // the search engine that gets filtered out of top sites has changed.
-    if (topic === "browser-search-engine-modified" && data === "engine-default" && this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
+    if (topic === "browser-search-engine-modified" && data === "engine-default" && this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF]) {
       delete this._currentSearchHostname;
       this._currentSearchHostname = getShortURLForCurrentSearch();
       this.refresh({broadcast: true});
@@ -127,20 +127,14 @@ this.TopSitesFeed = class TopSitesFeed {
   }
 
   /**
-   * isExperimentOnAndLinkFilteredSearch - is the experiment on and does a given hostname match the user's default search engine?
+   * shouldFilterSearchTile - is default filtering enabled and does a given hostname match the user's default search engine?
    *
    * @param {string} hostname a top site hostname, such as "amazon" or "foo"
    * @returns {bool}
    */
-  isExperimentOnAndLinkFilteredSearch(hostname) {
-    if (!this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
-      return false;
-    }
-    // If TopSite Search Shortcuts is enabled we don't want to filter those sites out
-    if (this.store.getState().Prefs.values[SEARCH_SHORTCUTS_EXPERIMENT] && getSearchProvider(hostname)) {
-      return false;
-    }
-    if (SEARCH_FILTERS.includes(hostname) || hostname === this._currentSearchHostname) {
+  shouldFilterSearchTile(hostname) {
+    if (this.store.getState().Prefs.values[FILTER_DEFAULT_SEARCH_PREF] &&
+      (SEARCH_FILTERS.includes(hostname) || hostname === this._currentSearchHostname)) {
       return true;
     }
     return false;
@@ -227,7 +221,7 @@ this.TopSitesFeed = class TopSitesFeed {
     });
     for (let link of cache) {
       const hostname = shortURL(link);
-      if (!this.isExperimentOnAndLinkFilteredSearch(hostname)) {
+      if (!this.shouldFilterSearchTile(hostname)) {
         frecent.push({
           ...(searchShortcutsExperiment ? await this.topSiteToSearchTopSite(link) : link),
           hostname,
@@ -241,7 +235,7 @@ this.TopSitesFeed = class TopSitesFeed {
       const searchProvider = getSearchProvider(shortURL(link));
       if (NewTabUtils.blockedLinks.isBlocked({url: link.url})) {
         continue;
-      } else if (this.isExperimentOnAndLinkFilteredSearch(link.hostname)) {
+      } else if (this.shouldFilterSearchTile(link.hostname)) {
         continue;
         // If we've previously blocked a search shortcut, remove the default top site
         // that matches the hostname
@@ -670,7 +664,7 @@ this.TopSitesFeed = class TopSitesFeed {
             this.refreshDefaults(action.data.value);
             break;
           case ROWS_PREF:
-          case NO_DEFAULT_SEARCH_TILE_EXP_PREF:
+          case FILTER_DEFAULT_SEARCH_PREF:
           case SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF:
             this.refresh({broadcast: true});
             break;

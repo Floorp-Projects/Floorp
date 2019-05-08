@@ -19,7 +19,7 @@ use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
-use crate::gpu_types::{TransformPalette, UvRectKind};
+use crate::gpu_types::UvRectKind;
 use plane_split::{Clipper, Polygon, Splitter};
 use crate::prim_store::{CoordinateSpaceMapping, SpaceMapper};
 use crate::prim_store::{PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
@@ -2789,15 +2789,16 @@ impl PicturePrimitive {
     /// given plane splitter.
     pub fn add_split_plane(
         splitter: &mut PlaneSplitter,
-        transforms: &TransformPalette,
+        clip_scroll_tree: &ClipScrollTree,
         prim_spatial_node_index: SpatialNodeIndex,
         original_local_rect: LayoutRect,
         combined_local_clip_rect: &LayoutRect,
         world_rect: WorldRect,
         plane_split_anchor: usize,
     ) -> bool {
-        let transform = transforms
-            .get_world_transform(prim_spatial_node_index);
+        let transform = clip_scroll_tree
+            .get_world_transform(prim_spatial_node_index)
+            .flattened;
         let matrix = transform.cast();
 
         // Apply the local clip rect here, before splitting. This is
@@ -2815,8 +2816,11 @@ impl PicturePrimitive {
         let world_rect = world_rect.cast();
 
         if transform.is_simple_translation() {
-            let inv_transform = transforms
-                .get_world_inv_transform(prim_spatial_node_index);
+            let inv_transform = clip_scroll_tree
+                .get_world_transform(prim_spatial_node_index)
+                .flattened
+                .inverse()
+                .expect("Simple translation, really?");
             let polygon = Polygon::from_transformed_rect_with_inverse(
                 local_rect,
                 &matrix,
@@ -2847,7 +2851,8 @@ impl PicturePrimitive {
     pub fn resolve_split_planes(
         &mut self,
         splitter: &mut PlaneSplitter,
-        frame_state: &mut FrameBuildingState,
+        gpu_cache: &mut GpuCache,
+        clip_scroll_tree: &ClipScrollTree,
     ) {
         let ordered = match self.context_3d {
             Picture3DContext::In { root_data: Some(ref mut list), .. } => list,
@@ -2859,7 +2864,15 @@ impl PicturePrimitive {
         // Z axis is directed at the screen, `sort` is ascending, and we need back-to-front order.
         for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
             let spatial_node_index = self.prim_list.prim_instances[poly.anchor].spatial_node_index;
-            let transform = frame_state.transforms.get_world_inv_transform(spatial_node_index);
+            let transform = match clip_scroll_tree
+                .get_world_transform(spatial_node_index)
+                .flattened
+                .inverse()
+            {
+                Some(transform) => transform,
+                // logging this would be a bit too verbose
+                None => continue,
+            };
 
             let local_points = [
                 transform.transform_point3d(&poly.points[0].cast()).unwrap(),
@@ -2871,8 +2884,8 @@ impl PicturePrimitive {
                 [local_points[0].x, local_points[0].y, local_points[1].x, local_points[1].y].into(),
                 [local_points[2].x, local_points[2].y, local_points[3].x, local_points[3].y].into(),
             ];
-            let gpu_handle = frame_state.gpu_cache.push_per_frame_blocks(&gpu_blocks);
-            let gpu_address = frame_state.gpu_cache.get_address(&gpu_handle);
+            let gpu_handle = gpu_cache.push_per_frame_blocks(&gpu_blocks);
+            let gpu_address = gpu_cache.get_address(&gpu_handle);
 
             ordered.push(OrderedPictureChild {
                 anchor: poly.anchor,
@@ -3002,7 +3015,7 @@ impl PicturePrimitive {
             // rasterization root should be established.
             let establishes_raster_root = frame_context.clip_scroll_tree
                 .get_relative_transform(surface_spatial_node_index, parent_raster_node_index)
-                .is_perspective;
+                .has_perspective;
 
             // Disallow subpixel AA if an intermediate surface is needed.
             // TODO(lsalzman): allow overriding parent if intermediate surface is opaque
@@ -3172,7 +3185,11 @@ impl PicturePrimitive {
         let mut pic_state_for_children = self.take_state();
 
         if let Some(ref mut splitter) = pic_state_for_children.plane_splitter {
-            self.resolve_split_planes(splitter, frame_state);
+            self.resolve_split_planes(
+                splitter,
+                &mut frame_state.gpu_cache,
+                &frame_context.clip_scroll_tree,
+            );
         }
 
         let raster_config = match self.raster_config {

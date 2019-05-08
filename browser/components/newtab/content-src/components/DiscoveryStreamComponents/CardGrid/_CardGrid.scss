@@ -49,7 +49,7 @@ $col4-header-font-size: 14;
       background: none;
 
       .meta {
-        padding: 16px 0;
+        padding: 12px 0;
       }
     }
   }
@@ -79,7 +79,7 @@ $col4-header-font-size: 14;
     }
 
     &.ds-card-grid-divisible-by-4 .title {
-      @include limit-visibile-lines(3, 20, 14);
+      @include limit-visibile-lines(3, 20, 15);
     }
   }
 

@@ -9,10 +9,12 @@
 
 #include "nsIMacUtils.h"
 #include "nsString.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 
+using mozilla::Atomic;
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 
@@ -33,6 +35,10 @@ class nsMacUtilsImpl final : public nsIMacUtils {
 #  endif /* DEBUG */
 #endif   /* MOZ_SANDBOX */
 
+  static void EnableTCSMIfAvailable();
+  static bool IsTCSMAvailable();
+  static uint32_t GetPhysicalCPUCount();
+
  private:
   ~nsMacUtilsImpl() {}
 
@@ -47,6 +53,18 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   static StaticAutoPtr<nsCString> sCachedAppPath;
   // For thread safe setting/checking of sCachedAppPath
   static StaticMutex sCachedAppPathMutex;
+#endif
+
+  enum TCSMStatus {
+    TCSM_Unknown = 0,
+    TCSM_Available,
+    TCSM_Unavailable
+  };
+  static mozilla::Atomic<nsMacUtilsImpl::TCSMStatus> sTCSMStatus;
+
+  static nsresult EnableTCSM();
+#if defined(DEBUG)
+  static bool IsTCSMEnabled();
 #endif
 };
 
