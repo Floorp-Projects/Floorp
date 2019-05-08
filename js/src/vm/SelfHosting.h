@@ -20,6 +20,19 @@ namespace js {
  */
 bool IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name);
 
+/*
+ * Returns the name of the function's binding in the self-hosted global.
+ *
+ * This returns a non-null value only when:
+ *   * This is a top level function declaration in the self-hosted global.
+ *   * And either:
+ *     * This function is not cloned and `_SetCanonicalName` has been called to
+ *       set a different function name.
+ *     * This function is cloned.
+ *
+ * For functions not cloned and not `_SetCanonicalName`ed, use
+ * `fun->explicitName()` instead.
+ */
 JSAtom* GetSelfHostedFunctionName(JSFunction* fun);
 
 bool IsCallSelfHostedNonGenericMethod(NativeImpl impl);
