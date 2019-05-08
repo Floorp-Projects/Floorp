@@ -73,7 +73,6 @@ class DeviceSelector extends PureComponent {
 
     showMenu(menuItems, {
       button: event.target,
-      useTopLevelWindow: true,
     });
   }
 
