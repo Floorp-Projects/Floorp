@@ -13,4 +13,7 @@ ac_add_options --enable-optimize="-O1"
 export MOZ_PACKAGE_JSSHELL=1
 export MOZ_PKG_SPECIAL=asan
 
+# Disable telemetry
+ac_add_options MOZ_TELEMETRY_REPORTING=
+
 . "$topsrcdir/build/mozconfig.common.override"

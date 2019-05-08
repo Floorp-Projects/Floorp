@@ -1,7 +1,7 @@
 . "$topsrcdir/browser/config/mozconfigs/win64/nightly-asan"
 
 # Disable telemetry
-unset MOZ_TELEMETRY_REPORTING
+ac_add_options MOZ_TELEMETRY_REPORTING=
 
 ac_add_options --disable-crashreporter
 
