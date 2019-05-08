@@ -1960,9 +1960,6 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
 
   gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
   JSFunction::Flags flags;
-#ifdef DEBUG
-  bool isGlobalSelfHostedBuiltin = false;
-#endif
   switch (kind) {
     case FunctionSyntaxKind::Expression:
       flags = (generatorKind == GeneratorKind::NotGenerator &&
@@ -1993,12 +1990,9 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
       break;
     default:
       MOZ_ASSERT(kind == FunctionSyntaxKind::Statement);
-#ifdef DEBUG
       if (isSelfHosting && !inFunctionBox) {
-        isGlobalSelfHostedBuiltin = true;
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       }
-#endif
       flags = (generatorKind == GeneratorKind::NotGenerator &&
                        asyncKind == FunctionAsyncKind::SyncFunction
                    ? JSFunction::INTERPRETED_NORMAL
@@ -2012,12 +2006,6 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
   }
   if (isSelfHosting) {
     fun->setIsSelfHostedBuiltin();
-#ifdef DEBUG
-    if (isGlobalSelfHostedBuiltin) {
-      fun->setExtendedSlot(HAS_SELFHOSTED_CANONICAL_NAME_SLOT,
-                           BooleanValue(false));
-    }
-#endif
   }
   return fun;
 }
