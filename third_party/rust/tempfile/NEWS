@@ -1,0 +1,70 @@
+3.0.1
+=====
+
+* Restore NamedTempFile::new_in
+
+3.0.0
+=====
+
+* Adds temporary directory support (@KodrAus)
+* Allow closing named temporary files without deleting them (@jasonwhite)
+
+2.2.0
+=====
+
+* Redox Support
+
+2.1.6
+=====
+
+* Remove build script and bump minimum rustc version to 1.9.0
+
+2.1.5
+=====
+
+* Don't build platform-specific dependencies on all platforms.
+* Cleanup some documentation.
+
+2.1.4
+=====
+
+* Fix crates.io tags. No interesting changes.
+
+2.1.3
+=====
+
+Export `PersistError`.
+
+2.1.2
+=====
+
+Add `Read`/`Write`/`Seek` impls on `&NamedTempFile`. This mirrors the
+implementations on `&File`. One can currently just deref to a `&File` but these
+implementations are more discoverable.
+
+2.1.1
+=====
+
+Add LFS Support.
+
+2.1.0
+=====
+
+* Implement `AsRef<File>` for `NamedTempFile` allowing named temporary files to
+  be borrowed as `File`s.
+* Add a method to convert a `NamedTempFile` to an unnamed temporary `File`. 
+
+2.0.1
+=====
+
+* Arm bugfix
+
+2.0.0
+=====
+
+This release replaces `TempFile` with a `tempfile()` function that returnes
+`std::fs::File` objects. These are significantly more useful because most rust
+libraries expect normal `File` objects.
+
+To continue supporting shared temporary files, this new version adds a
+`reopen()` method to `NamedTempFile`.
