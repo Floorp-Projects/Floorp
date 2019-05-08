@@ -68,7 +68,7 @@ add_task(async function test_cancel_search() {
   let startedPromise = promiseControllerNotification(controller, "onQueryStarted");
   let cancelPromise = promiseControllerNotification(controller, "onQueryCancelled");
 
-  await controller.startQuery(context);
+  controller.startQuery(context);
 
   let params = await startedPromise;
 

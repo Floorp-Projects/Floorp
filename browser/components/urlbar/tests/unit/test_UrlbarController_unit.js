@@ -149,11 +149,11 @@ add_task(function test_handle_query_starts_search() {
   sandbox.resetHistory();
 });
 
-add_task(function test_handle_query_starts_search_sets_allowAutofill() {
+add_task(async function test_handle_query_starts_search_sets_allowAutofill() {
   let originalValue = Services.prefs.getBoolPref("browser.urlbar.autoFill");
   Services.prefs.setBoolPref("browser.urlbar.autoFill", !originalValue);
 
-  controller.startQuery(createContext());
+  await controller.startQuery(createContext());
 
   Assert.equal(fPM.startQuery.callCount, 1,
     "Should have called startQuery once");
@@ -172,9 +172,6 @@ add_task(function test_handle_query_starts_search_sets_allowAutofill() {
 });
 
 add_task(function test_cancel_query() {
-  // Ensure the controller doesn't have any previous queries.
-  delete controller._lastQueryContext;
-
   const context = createContext();
   controller.startQuery(context);
 
@@ -204,4 +201,45 @@ add_task(function test_receiveResults() {
     "Should have called onQueryResults with the context");
 
   sandbox.resetHistory();
+});
+
+add_task(async function test_notifications_order() {
+  // Clear any pending notifications.
+  const context = createContext();
+  await controller.startQuery(context);
+
+  // Check that when multiple queries are executed, the notifications arrive
+  // in the proper order.
+  let collectingListener = new Proxy({}, {
+    _notifications: [],
+    get(target, name) {
+      if (name == "notifications") {
+        return this._notifications;
+      }
+      return () => {
+        this._notifications.push(name);
+      };
+    },
+  });
+  controller.addQueryListener(collectingListener);
+  controller.startQuery(context);
+  Assert.deepEqual(["onQueryStarted"], collectingListener.notifications,
+                   "Check onQueryStarted is fired synchronously");
+  controller.startQuery(context);
+  Assert.deepEqual(["onQueryStarted", "onQueryCancelled", "onQueryFinished",
+                    "onQueryStarted"],
+                   collectingListener.notifications,
+                   "Check order of notifications");
+  controller.cancelQuery();
+  Assert.deepEqual(["onQueryStarted", "onQueryCancelled", "onQueryFinished",
+                    "onQueryStarted", "onQueryCancelled", "onQueryFinished"],
+                   collectingListener.notifications,
+                   "Check order of notifications");
+  await controller.startQuery(context);
+  controller.cancelQuery();
+  Assert.deepEqual(["onQueryStarted", "onQueryCancelled", "onQueryFinished",
+                    "onQueryStarted", "onQueryCancelled", "onQueryFinished",
+                    "onQueryStarted", "onQueryFinished"],
+                   collectingListener.notifications,
+                   "Check order of notifications");
 });

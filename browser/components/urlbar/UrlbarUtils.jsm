@@ -121,12 +121,6 @@ var UrlbarUtils = {
     CANCELED: 4,
   },
 
-  // This defines possible reasons for canceling a query.
-  CANCEL_REASON: {
-    // 1 is intentionally left in case we want a none/undefined/other later.
-    BLUR: 2,
-  },
-
   // Limit the length of titles and URLs we display so layout doesn't spend too
   // much time building text runs.
   MAX_TEXT_LENGTH: 255,

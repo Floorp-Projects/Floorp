@@ -198,7 +198,7 @@ add_task(async function oneOffClick() {
   // stricter. Even if it looks like a url, we should search.
   let typedValue = "foo.bar";
   await promiseAutocompleteResultPopup(typedValue);
-  await waitForAutocompleteResultAt(1);
+  await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   assertState(0, -1, typedValue);
 
   let oneOffs = oneOffSearchButtons.getSelectableButtons(true);
@@ -219,7 +219,7 @@ add_task(async function oneOffReturn() {
   // stricter. Even if it looks like a url, we should search.
   let typedValue = "foo.bar";
   await promiseAutocompleteResultPopup(typedValue, window, true);
-  await waitForAutocompleteResultAt(1);
+  await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   assertState(0, -1, typedValue);
 
   // Alt+Down to select the first one-off.
@@ -246,7 +246,7 @@ add_task(async function collapsedOneOffs() {
 
   let typedValue = "foo";
   await promiseAutocompleteResultPopup(typedValue, window, true);
-  await waitForAutocompleteResultAt(0);
+  await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   assertState(0, -1);
   Assert.ok(oneOffSearchButtons.buttons.collapsed,
     "The one-off buttons should be collapsed");
@@ -255,25 +255,23 @@ add_task(async function collapsedOneOffs() {
   await hidePopup();
 });
 
-
 // The one-offs should be hidden when searching with an "@engine" search engine
 // alias.
 add_task(async function hiddenWhenUsingSearchAlias() {
   let typedValue = "@example";
   await promiseAutocompleteResultPopup(typedValue, window, true);
-  await waitForAutocompleteResultAt(0);
+  await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(UrlbarTestUtils.getOneOffSearchButtonsVisible(window), false,
     "Should not be showing the one-off buttons");
   await hidePopup();
 
   typedValue = "not an engine alias";
   await promiseAutocompleteResultPopup(typedValue, window, true);
-  await waitForAutocompleteResultAt(0);
+  await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(UrlbarTestUtils.getOneOffSearchButtonsVisible(window), true,
     "Should be showing the one-off buttons");
   await hidePopup();
 });
-
 
 function assertState(result, oneOff, textValue = undefined) {
   Assert.equal(UrlbarTestUtils.getSelectedIndex(window), result,

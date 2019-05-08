@@ -180,28 +180,29 @@ class UrlbarView {
 
   /**
    * Closes the autocomplete popup, cancelling the query if necessary.
-   *
-   * @param {UrlbarUtils.CANCEL_REASON} [cancelReason]
-   *   Indicates if this close is being triggered as a result of a user action
-   *   which would cancel a query, e.g. on blur.
    */
-  close(cancelReason) {
-    this.controller.cancelQuery(cancelReason);
+  close() {
+    this.controller.cancelQuery();
     this.panel.hidePopup();
   }
 
   // UrlbarController listener methods.
   onQueryStarted(queryContext) {
+    this._queryWasCancelled = false;
     this._startRemoveStaleRowsTimer();
   }
 
   onQueryCancelled(queryContext) {
+    this._queryWasCancelled = true;
     this._cancelRemoveStaleRowsTimer();
   }
 
   onQueryFinished(queryContext) {
     this._cancelRemoveStaleRowsTimer();
-    this._removeStaleRows();
+    // If the query has not been canceled, remove stale rows immediately.
+    if (!this._queryWasCancelled) {
+      this._removeStaleRows();
+    }
   }
 
   onQueryResults(queryContext) {
@@ -753,6 +754,7 @@ class UrlbarView {
     this.window.removeEventListener("resize", this);
     this.removeAccessibleFocus();
     this.input.inputField.setAttribute("aria-expanded", "false");
+    this._rows.textContent = "";
   }
 
   _on_resize() {
