@@ -477,7 +477,7 @@ add_task(async function testStaticTheme() {
   ok(preview, "There is a preview");
   is(preview.src, "http://example.com/preview.png", "The preview URL is set");
   is(preview.width, "664", "The width is set");
-  is(preview.height, "89", "The height is set");
+  is(preview.height, "90", "The height is set");
   is(preview.hidden, false, "The preview is visible");
 
   // Load the detail view.
@@ -492,7 +492,7 @@ add_task(async function testStaticTheme() {
   ok(preview, "There is a preview");
   is(preview.src, "http://example.com/preview.png", "The preview URL is set");
   is(preview.width, "664", "The width is set");
-  is(preview.height, "89", "The height is set");
+  is(preview.height, "90", "The height is set");
   is(preview.hidden, false, "The preview is visible");
 
   let rows = Array.from(card.querySelectorAll(".addon-detail-row"));
