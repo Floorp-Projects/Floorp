@@ -42,6 +42,14 @@
 #  define HAVE_ASM 0
 #endif
 
+#if ARCH_AARCH64 == 1
+// Those values are copied from the auto generated
+// config file produced by stand alone dav1d build.
+#define HAVE_AS_FUNC 0
+#define HAVE_GETAUXVAL 1
+#define PIC 3
+#endif
+
 // The following macros are defined from autoconf
 // according to the system configuration.
 // (HAVE_MEMALIGN | HAVE_ALIGNED_MALLOC | HAVE_POSIX_MEMALIGN)
