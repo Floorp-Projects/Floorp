@@ -23,8 +23,6 @@ interface WindowGlobalParent {
 
   readonly attribute WindowGlobalChild? childActor; // in-process only
 
-  readonly attribute RemoteTab? remoteTab; // out-of-process only
-
   // Information about the currently loaded document.
   readonly attribute Principal documentPrincipal;
   readonly attribute URI? documentURI;
