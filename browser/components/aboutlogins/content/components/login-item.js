@@ -72,8 +72,7 @@ class LoginItem extends HTMLElement {
   handleEvent(event) {
     switch (event.type) {
       case "AboutLoginsLoginSelected": {
-        this._login = event.detail;
-        this.render();
+        this.setLogin(event.detail);
         break;
       }
       case "click": {
@@ -86,6 +85,11 @@ class LoginItem extends HTMLElement {
         break;
       }
     }
+  }
+
+  setLogin(login) {
+    this._login = login;
+    this.render();
   }
 
   loginAdded(login) {
