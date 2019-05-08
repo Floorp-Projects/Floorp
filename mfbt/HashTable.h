@@ -1610,13 +1610,14 @@ class HashTable : private AllocPolicy {
 
   enum FailureBehavior { DontReportFailure = false, ReportFailure = true };
 
+  // Fake a struct that we're going to alloc. See the comments in
+  // HashTableEntry about how the table is laid out, and why it's safe.
+  struct FakeSlot {
+    unsigned char c[sizeof(HashNumber) + sizeof(typename Entry::NonConstT)];
+  };
+
   static char* createTable(AllocPolicy& aAllocPolicy, uint32_t aCapacity,
                            FailureBehavior aReportFailure = ReportFailure) {
-    // Fake a struct that we're going to alloc. See the comments in
-    // HashTableEntry about how the table is laid out, and why it's safe.
-    struct FakeSlot {
-      unsigned char c[sizeof(HashNumber) + sizeof(typename Entry::NonConstT)];
-    };
 
     FakeSlot* fake =
         aReportFailure
@@ -1639,7 +1640,13 @@ class HashTable : private AllocPolicy {
         slot.toEntry()->destroyStoredT();
       }
     });
-    aAllocPolicy.free_(aOldTable, aCapacity);
+    freeTable(aAllocPolicy, aOldTable, aCapacity);
+  }
+
+  static void freeTable(AllocPolicy& aAllocPolicy, char* aOldTable,
+                        uint32_t aCapacity) {
+    FakeSlot* fake = reinterpret_cast<FakeSlot*>(aOldTable);
+    aAllocPolicy.free_(fake, aCapacity);
   }
 
  public:
@@ -1825,7 +1832,7 @@ class HashTable : private AllocPolicy {
     });
 
     // All entries have been destroyed, no need to destroyTable.
-    this->free_(oldTable, oldCapacity);
+    freeTable(*this, oldTable, oldCapacity);
     return Rehashed;
   }
 
@@ -1965,7 +1972,7 @@ class HashTable : private AllocPolicy {
   void compact() {
     if (empty()) {
       // Free the entry storage.
-      this->free_(mTable, capacity());
+      freeTable(*this, mTable, capacity());
       mGen++;
       mHashShift = hashShift(0);  // gives minimum capacity on regrowth
       mTable = nullptr;
