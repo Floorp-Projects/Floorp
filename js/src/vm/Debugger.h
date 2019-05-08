@@ -1489,6 +1489,12 @@ class DebuggerFrame : public NativeObject {
                                 MutableHandleValue value,
                                 MutableHandleSavedFrame exnStack);
 
+  MOZ_MUST_USE bool requireLive(JSContext* cx);
+  static MOZ_MUST_USE DebuggerFrame* checkThis(JSContext* cx,
+                                               const CallArgs& args,
+                                               const char* fnname,
+                                               bool checkLive);
+
   bool isLive() const;
   OnStepHandler* onStepHandler() const;
   OnPopHandler* onPopHandler() const;
