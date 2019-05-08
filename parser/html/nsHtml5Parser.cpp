@@ -40,7 +40,7 @@ nsHtml5Parser::nsHtml5Parser()
       mDocWriteSpeculativeLastWasCR(false),
       mBlocked(0),
       mDocWriteSpeculatorActive(false),
-      mInsertionPointPushLevel(0),
+      mScriptNestingLevel(0),
       mDocumentClosed(false),
       mInDocumentWrite(false),
       mInsertionPointPermanentlyUndefined(false),
@@ -527,12 +527,16 @@ void nsHtml5Parser::Reset() { MOZ_ASSERT_UNREACHABLE("Don't call this!"); }
 
 bool nsHtml5Parser::IsInsertionPointDefined() {
   return !mExecutor->IsFlushing() && !mInsertionPointPermanentlyUndefined &&
-         (!GetStreamParser() || mInsertionPointPushLevel);
+         (!GetStreamParser() || mScriptNestingLevel != 0);
 }
 
-void nsHtml5Parser::PushDefinedInsertionPoint() { ++mInsertionPointPushLevel; }
+void nsHtml5Parser::IncrementScriptNestingLevel() { ++mScriptNestingLevel; }
 
-void nsHtml5Parser::PopDefinedInsertionPoint() { --mInsertionPointPushLevel; }
+void nsHtml5Parser::DecrementScriptNestingLevel() { --mScriptNestingLevel; }
+
+bool nsHtml5Parser::HasNonzeroScriptNestingLevel() const {
+  return mScriptNestingLevel != 0;
+}
 
 void nsHtml5Parser::MarkAsNotScriptCreated(const char* aCommand) {
   MOZ_ASSERT(!mStreamListener, "Must not call this twice.");

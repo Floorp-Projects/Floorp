@@ -667,9 +667,11 @@ void nsParser::HandleParserContinueEvent(nsParserContinueEvent* ev) {
 
 bool nsParser::IsInsertionPointDefined() { return false; }
 
-void nsParser::PushDefinedInsertionPoint() {}
+void nsParser::IncrementScriptNestingLevel() {}
 
-void nsParser::PopDefinedInsertionPoint() {}
+void nsParser::DecrementScriptNestingLevel() {}
+
+bool nsParser::HasNonzeroScriptNestingLevel() const { return false; }
 
 void nsParser::MarkAsNotScriptCreated(const char* aCommand) {}
 

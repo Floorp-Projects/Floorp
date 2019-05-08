@@ -176,16 +176,24 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
 
   /**
    * Call immediately before starting to evaluate a parser-inserted script or
-   * in general when the spec says to define an insertion point.
+   * in general when the spec says to increment the script nesting level.
    */
-  virtual void PushDefinedInsertionPoint() override;
+  void IncrementScriptNestingLevel() final;
 
   /**
    * Call immediately after having evaluated a parser-inserted script or
    * generally want to restore to the state before the last
-   * PushDefinedInsertionPoint call.
+   * IncrementScriptNestingLevel call.
    */
-  virtual void PopDefinedInsertionPoint() override;
+  void DecrementScriptNestingLevel() final;
+
+  /**
+   * True if this is an HTML5 parser whose script nesting level (in
+   * the sense of
+   * <https://html.spec.whatwg.org/multipage/parsing.html#script-nesting-level>)
+   * is nonzero.
+   */
+  bool HasNonzeroScriptNestingLevel() const final;
 
   /**
    * Marks the HTML5 parser as not a script-created parser: Prepares the
@@ -274,10 +282,10 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
   bool mDocWriteSpeculatorActive;
 
   /**
-   * The number of PushDefinedInsertionPoint calls we've seen without a
-   * matching PopDefinedInsertionPoint.
+   * The number of IncrementScriptNestingLevel calls we've seen without a
+   * matching DecrementScriptNestingLevel.
    */
-  int32_t mInsertionPointPushLevel;
+  int32_t mScriptNestingLevel;
 
   /**
    * True if document.close() has been called.

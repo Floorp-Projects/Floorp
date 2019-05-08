@@ -190,7 +190,7 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
   void BeginEvaluating() {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
     if (parser) {
-      parser->PushDefinedInsertionPoint();
+      parser->IncrementScriptNestingLevel();
     }
   }
 
@@ -200,7 +200,7 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
   void EndEvaluating() {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
     if (parser) {
-      parser->PopDefinedInsertionPoint();
+      parser->DecrementScriptNestingLevel();
     }
   }
 
