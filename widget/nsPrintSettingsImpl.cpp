@@ -26,7 +26,6 @@ nsPrintSettings::nsPrintSettings()
       mIsCancelled(false),
       mSaveOnCancel(true),
       mPrintSilent(false),
-      mPrintPreview(false),
       mShrinkToFit(true),
       mShowPrintProgress(true),
       mPrintPageDelay(50),

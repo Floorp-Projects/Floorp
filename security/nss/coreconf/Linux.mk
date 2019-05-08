@@ -135,6 +135,10 @@ ifeq ($(KERNEL),Linux)
 endif
 OS_LIBS			= $(OS_PTHREAD) -ldl -lc
 
+ifeq ($(OS_TARGET),Android)
+	OS_LIBS		+= -llog
+endif
+
 ifdef USE_PTHREADS
 	DEFINES		+= -D_REENTRANT
 endif

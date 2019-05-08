@@ -267,6 +267,10 @@
                   'inputs/': [['exclude', 'freeblpriv']],
                   'outputs/': [['exclude', 'freeblpriv']]
                 }],
+                ['disable_dbm==1', {
+                  'inputs/': [['exclude', 'nssdbm3']],
+                  'outputs/': [['exclude', 'nssdbm3']]
+                }],
               ],
               'action': ['<(python)', '<(DEPTH)/coreconf/shlibsign.py', '<@(_inputs)']
             }

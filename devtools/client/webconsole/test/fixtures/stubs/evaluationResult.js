@@ -37,8 +37,7 @@ stubPreparedMessages.set(`new Date(0)`, new ConsoleMessage({
       }
     }
   ],
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":null}",
-  "stacktrace": null,
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
   "frame": null,
   "groupId": null,
   "cssSelectors": "",
@@ -65,8 +64,16 @@ stubPreparedMessages.set(`asdf()`, new ConsoleMessage({
       "type": "undefined"
     }
   ],
-  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":null}",
-  "stacktrace": null,
+  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":[{\"filename\":\"debugger eval code\",\"sourceId\":\"server1.conn0.child1/source23\",\"lineNumber\":1,\"columnNumber\":1,\"functionName\":null}]}",
+  "stacktrace": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server1.conn0.child1/source23",
+      "lineNumber": 1,
+      "columnNumber": 1,
+      "functionName": null
+    }
+  ],
   "frame": {
     "source": "debugger eval code",
     "line": 1,
@@ -99,8 +106,51 @@ stubPreparedMessages.set(`1 + @`, new ConsoleMessage({
       "type": "undefined"
     }
   ],
-  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":null}",
-  "stacktrace": null,
+  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":[{\"filename\":\"resource://devtools/server/actors/webconsole/eval-with-debugger.js\",\"sourceId\":null,\"lineNumber\":134,\"columnNumber\":28,\"functionName\":\"getEvalResult\"},{\"filename\":\"resource://devtools/server/actors/webconsole/eval-with-debugger.js\",\"sourceId\":null,\"lineNumber\":105,\"columnNumber\":18,\"functionName\":\"exports.evalWithDebugger\"},{\"filename\":\"resource://devtools/server/actors/webconsole.js\",\"sourceId\":null,\"lineNumber\":1005,\"columnNumber\":22,\"functionName\":\"evaluateJS\"},{\"filename\":\"self-hosted\",\"sourceId\":null,\"lineNumber\":1005,\"columnNumber\":17,\"functionName\":\"evaluateJS\"},{\"filename\":\"resource://devtools/server/main.js\",\"sourceId\":null,\"lineNumber\":1291,\"columnNumber\":58,\"functionName\":\"onPacket\"},{\"filename\":\"resource://devtools/shared/transport/child-transport.js\",\"sourceId\":null,\"lineNumber\":66,\"columnNumber\":16,\"functionName\":\"receiveMessage\"}]}",
+  "stacktrace": [
+    {
+      "filename": "resource://devtools/server/actors/webconsole/eval-with-debugger.js",
+      "sourceId": null,
+      "lineNumber": 134,
+      "columnNumber": 28,
+      "functionName": "getEvalResult"
+    },
+    {
+      "filename": "resource://devtools/server/actors/webconsole/eval-with-debugger.js",
+      "sourceId": null,
+      "lineNumber": 105,
+      "columnNumber": 18,
+      "functionName": "exports.evalWithDebugger"
+    },
+    {
+      "filename": "resource://devtools/server/actors/webconsole.js",
+      "sourceId": null,
+      "lineNumber": 1005,
+      "columnNumber": 22,
+      "functionName": "evaluateJS"
+    },
+    {
+      "filename": "self-hosted",
+      "sourceId": null,
+      "lineNumber": 1005,
+      "columnNumber": 17,
+      "functionName": "evaluateJS"
+    },
+    {
+      "filename": "resource://devtools/server/main.js",
+      "sourceId": null,
+      "lineNumber": 1291,
+      "columnNumber": 58,
+      "functionName": "onPacket"
+    },
+    {
+      "filename": "resource://devtools/shared/transport/child-transport.js",
+      "sourceId": null,
+      "lineNumber": 66,
+      "columnNumber": 16,
+      "functionName": "receiveMessage"
+    }
+  ],
   "frame": {
     "source": "debugger eval code",
     "line": 1,
@@ -153,8 +203,7 @@ stubPreparedMessages.set(`inspect({a: 1})`, new ConsoleMessage({
       }
     }
   ],
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj35\",\"class\":\"Object\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":1,\"preview\":{\"kind\":\"Object\",\"ownProperties\":{\"a\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":1}},\"ownSymbols\":[],\"ownPropertiesLength\":1,\"ownSymbolsLength\":0,\"safeGetterValues\":{}}}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":null}",
-  "stacktrace": null,
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj35\",\"class\":\"Object\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":1,\"preview\":{\"kind\":\"Object\",\"ownProperties\":{\"a\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":1}},\"ownSymbols\":[],\"ownPropertiesLength\":1,\"ownSymbolsLength\":0,\"safeGetterValues\":{}}}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
   "frame": null,
   "groupId": null,
   "cssSelectors": "",
@@ -181,8 +230,7 @@ stubPreparedMessages.set(`cd(document)`, new ConsoleMessage({
       "type": "undefined"
     }
   ],
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"Cannot cd() to the given window. Invalid argument.\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":null}",
-  "stacktrace": null,
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"Cannot cd() to the given window. Invalid argument.\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
   "frame": null,
   "groupId": null,
   "cssSelectors": "",
@@ -208,8 +256,7 @@ stubPreparedMessages.set(`undefined`, new ConsoleMessage({
       "type": "undefined"
     }
   ],
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":null}",
-  "stacktrace": null,
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
   "frame": null,
   "groupId": null,
   "cssSelectors": "",
@@ -241,9 +288,22 @@ stubPreparedMessages.set(`longString message Error`, new ConsoleMessage({
       "type": "undefined"
     }
   ],
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":{\"type\":\"longString\",\"initial\":\"Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon\",\"length\":110007,\"actor\":\"server1.conn0.child1/longString37\"},\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":null}",
-  "stacktrace": null,
-  "frame": null,
+  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"sourceId\":\"server1.conn0.child1/source30\",\"line\":1,\"column\":7},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":{\"type\":\"longString\",\"initial\":\"Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon\",\"length\":110007,\"actor\":\"server1.conn0.child1/longString37\"},\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":[{\"filename\":\"debugger eval code\",\"sourceId\":\"server1.conn0.child1/source30\",\"lineNumber\":1,\"columnNumber\":7,\"functionName\":null}]}",
+  "stacktrace": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server1.conn0.child1/source30",
+      "lineNumber": 1,
+      "columnNumber": 7,
+      "functionName": null
+    }
+  ],
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server1.conn0.child1/source30",
+    "line": 1,
+    "column": 7
+  },
   "groupId": null,
   "cssSelectors": "",
   "userProvidedStyles": null,
@@ -269,9 +329,22 @@ stubPreparedMessages.set(`eval throw ""`, new ConsoleMessage({
       "type": "undefined"
     }
   ],
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"Error\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":null}",
-  "stacktrace": null,
-  "frame": null,
+  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"sourceId\":\"server1.conn0.child1/source23\",\"line\":1,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"Error\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":[{\"filename\":\"debugger eval code\",\"sourceId\":\"server1.conn0.child1/source23\",\"lineNumber\":1,\"columnNumber\":1,\"functionName\":null}]}",
+  "stacktrace": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server1.conn0.child1/source23",
+      "lineNumber": 1,
+      "columnNumber": 1,
+      "functionName": null
+    }
+  ],
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server1.conn0.child1/source23",
+    "line": 1,
+    "column": 1
+  },
   "groupId": null,
   "cssSelectors": "",
   "userProvidedStyles": null,
@@ -297,9 +370,22 @@ stubPreparedMessages.set(`eval throw "tomato"`, new ConsoleMessage({
       "type": "undefined"
     }
   ],
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"Error: tomato\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":null}",
-  "stacktrace": null,
-  "frame": null,
+  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"sourceId\":\"server1.conn0.child1/source23\",\"line\":1,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"Error: tomato\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":[{\"filename\":\"debugger eval code\",\"sourceId\":\"server1.conn0.child1/source23\",\"lineNumber\":1,\"columnNumber\":1,\"functionName\":null}]}",
+  "stacktrace": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server1.conn0.child1/source23",
+      "lineNumber": 1,
+      "columnNumber": 1,
+      "functionName": null
+    }
+  ],
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server1.conn0.child1/source23",
+    "line": 1,
+    "column": 1
+  },
   "groupId": null,
   "cssSelectors": "",
   "userProvidedStyles": null,
@@ -358,6 +444,15 @@ stubPackets.set(`asdf()`, {
   },
   "exceptionMessage": "ReferenceError: asdf is not defined",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server1.conn0.child1/source23",
+      "lineNumber": 1,
+      "columnNumber": 1,
+      "functionName": null
+    }
+  ],
   "errorMessageName": "JSMSG_NOT_DEFINED",
   "frame": {
     "source": "debugger eval code",
@@ -395,6 +490,50 @@ stubPackets.set(`1 + @`, {
   },
   "exceptionMessage": "SyntaxError: illegal character",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
+  "exceptionStack": [
+    {
+      "filename": "resource://devtools/server/actors/webconsole/eval-with-debugger.js",
+      "sourceId": null,
+      "lineNumber": 134,
+      "columnNumber": 28,
+      "functionName": "getEvalResult"
+    },
+    {
+      "filename": "resource://devtools/server/actors/webconsole/eval-with-debugger.js",
+      "sourceId": null,
+      "lineNumber": 105,
+      "columnNumber": 18,
+      "functionName": "exports.evalWithDebugger"
+    },
+    {
+      "filename": "resource://devtools/server/actors/webconsole.js",
+      "sourceId": null,
+      "lineNumber": 1005,
+      "columnNumber": 22,
+      "functionName": "evaluateJS"
+    },
+    {
+      "filename": "self-hosted",
+      "sourceId": null,
+      "lineNumber": 1005,
+      "columnNumber": 17,
+      "functionName": "evaluateJS"
+    },
+    {
+      "filename": "resource://devtools/server/main.js",
+      "sourceId": null,
+      "lineNumber": 1291,
+      "columnNumber": 58,
+      "functionName": "onPacket"
+    },
+    {
+      "filename": "resource://devtools/shared/transport/child-transport.js",
+      "sourceId": null,
+      "lineNumber": 66,
+      "columnNumber": 16,
+      "functionName": "receiveMessage"
+    }
+  ],
   "errorMessageName": "JSMSG_ILLEGAL_CHARACTER",
   "frame": {
     "source": "debugger eval code",
@@ -510,7 +649,21 @@ stubPackets.set(`longString message Error`, {
     "length": 110007,
     "actor": "server1.conn0.child1/longString37"
   },
-  "frame": null,
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server1.conn0.child1/source30",
+      "lineNumber": 1,
+      "columnNumber": 7,
+      "functionName": null
+    }
+  ],
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server1.conn0.child1/source30",
+    "line": 1,
+    "column": 7
+  },
   "helperResult": null,
   "notes": null
 });
@@ -524,7 +677,21 @@ stubPackets.set(`eval throw ""`, {
   "timestamp": 1517990289517,
   "exception": "",
   "exceptionMessage": "",
-  "frame": null,
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server1.conn0.child1/source23",
+      "lineNumber": 1,
+      "columnNumber": 1,
+      "functionName": null
+    }
+  ],
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server1.conn0.child1/source23",
+    "line": 1,
+    "column": 1
+  },
   "helperResult": null,
   "notes": null
 });
@@ -538,7 +705,21 @@ stubPackets.set(`eval throw "tomato"`, {
   "timestamp": 1517990289520,
   "exception": "tomato",
   "exceptionMessage": "tomato",
-  "frame": null,
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server1.conn0.child1/source23",
+      "lineNumber": 1,
+      "columnNumber": 1,
+      "functionName": null
+    }
+  ],
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server1.conn0.child1/source23",
+    "line": 1,
+    "column": 1
+  },
   "helperResult": null,
   "notes": null
 });

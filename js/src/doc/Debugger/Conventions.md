@@ -76,9 +76,10 @@ following forms:
 :   The code completed normally, returning <i>value</i>. <i>Value</i> is a
     debuggee value.
 
-<code>{ throw: <i>value</i> }</code>
+<code>{ throw: <i>value</i>, stack: <i>stack</i> }</code>
 :   The code threw <i>value</i> as an exception. <i>Value</i> is a debuggee
-    value.
+    value.  <i>stack</i> is a `SavedFrame` representing the location from which
+    the value was thrown, and may be missing.
 
 `null`
 :   The code was terminated, as if by the "slow script" dialog box.
@@ -108,7 +109,11 @@ resumption value has one of the following forms:
 
 <code>{ throw: <i>value</i> }</code>
 :   Throw <i>value</i> as an exception from the current bytecode
-    instruction. <i>Value</i> must be a debuggee value.
+    instruction. <i>Value</i> must be a debuggee value. Note that unlike
+    completion values, resumption values do not specify a stack.  When
+    initiating an exceptional return from a handler, the current debuggee stack
+    will be used. If a handler wants to avoid modifying the stack of an
+    already-thrown exception, it should return `undefined`.
 
 `null`
 :   Terminate the debuggee, as if it had been cancelled by the "slow script"
