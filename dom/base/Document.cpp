@@ -28,6 +28,7 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/URLExtraData.h"
 #include <algorithm>
 
@@ -3479,9 +3480,8 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
-  if (storageAccess ==
-          nsContentUtils::StorageAccess::ePartitionTrackersOrDeny &&
-      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+  if (ShouldPartitionStorage(storageAccess) &&
+      !StoragePartitioningEnabled(storageAccess, CookieSettings())) {
     return;
   }
 
@@ -3540,9 +3540,8 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
-  if (storageAccess ==
-          nsContentUtils::StorageAccess::ePartitionTrackersOrDeny &&
-      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+  if (ShouldPartitionStorage(storageAccess) &&
+      !StoragePartitioningEnabled(storageAccess, CookieSettings())) {
     return;
   }
 
@@ -11583,6 +11582,40 @@ Document* Document::GetTopLevelContentDocument() {
   return parent;
 }
 
+const Document* Document::GetTopLevelContentDocument() const {
+  const Document* parent;
+
+  if (!mLoadedAsData) {
+    parent = this;
+  } else {
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
+    if (!window) {
+      return nullptr;
+    }
+
+    parent = window->GetExtantDoc();
+    if (!parent) {
+      return nullptr;
+    }
+  }
+
+  do {
+    if (parent->IsTopLevelContentDocument()) {
+      break;
+    }
+
+    // If we ever have a non-content parent before we hit a toplevel content
+    // parent, then we're never going to find one.  Just bail.
+    if (!parent->IsContentDocument()) {
+      return nullptr;
+    }
+
+    parent = parent->GetParentDocument();
+  } while (parent);
+
+  return parent;
+}
+
 static bool MightBeChromeScheme(nsIURI* aURI) {
   MOZ_ASSERT(aURI);
   bool isChrome = true;
@@ -13024,17 +13057,26 @@ nsICookieSettings* Document::CookieSettings() {
 }
 
 nsIPrincipal* Document::EffectiveStoragePrincipal() const {
-  if (!StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+  const Document* toplevel = GetTopLevelContentDocument();
+  nsPIDOMWindowInner* inner = GetInnerWindow();
+  if (!toplevel || !inner) {
     return NodePrincipal();
   }
 
-  nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForDocument(this);
+  // We use the lower-level AntiTrackingCommon API here to ensure this
+  // check doesn't send notifications.
+  uint32_t rejectedReason = 0;
+  if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+          inner, toplevel->GetDocumentURI(), &rejectedReason)) {
+    return NodePrincipal();
+  }
 
   // Let's use the storage principal only if we need to partition the cookie
   // jar. When the permission is granted, access will be different and the
   // normal principal will be used.
-  if (access != nsContentUtils::StorageAccess::ePartitionTrackersOrDeny) {
+  if (!ShouldPartitionStorage(rejectedReason) ||
+      !StoragePartitioningEnabled(
+          rejectedReason, const_cast<Document*>(this)->CookieSettings())) {
     return NodePrincipal();
   }
 

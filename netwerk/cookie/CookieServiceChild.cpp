@@ -148,6 +148,7 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
   bool isForeign = false;
   bool isTrackingResource = false;
   bool firstPartyStorageAccessGranted = false;
+  uint32_t rejectedReason = 0;
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
@@ -160,7 +161,6 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
     // Check first-party storage access even for non-tracking resources, since
     // we will need the result when computing the access rights for the reject
     // foreign cookie behavior mode.
-    uint32_t rejectedReason = 0;
     if (isForeign && AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
                          httpChannel, uri, &rejectedReason)) {
       firstPartyStorageAccessGranted = true;
@@ -182,8 +182,8 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, uri);
   SendPrepareCookieList(uriParams, isForeign, isTrackingResource,
-                        firstPartyStorageAccessGranted, isSafeTopLevelNav,
-                        isSameSiteForeign, attrs);
+                        firstPartyStorageAccessGranted, rejectedReason,
+                        isSafeTopLevelNav, isSameSiteForeign, attrs);
 }
 
 mozilla::ipc::IPCResult CookieServiceChild::RecvRemoveAll() {
@@ -283,8 +283,9 @@ void CookieServiceChild::PrefChanged(nsIPrefBranch* aPrefBranch) {
 
 void CookieServiceChild::GetCookieStringFromCookieHashTable(
     nsIURI* aHostURI, bool aIsForeign, bool aIsTrackingResource,
-    bool aFirstPartyStorageAccessGranted, bool aIsSafeTopLevelNav,
-    bool aIsSameSiteForeign, nsIChannel* aChannel, nsCString& aCookieString) {
+    bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
+    bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, nsIChannel* aChannel,
+    nsCString& aCookieString) {
   nsCOMPtr<nsIEffectiveTLDService> TLDService =
       do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   NS_ASSERTION(TLDService, "Can't get TLDService");
@@ -323,7 +324,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
   CookieStatus cookieStatus = nsCookieService::CheckPrefs(
       cookieSettings, mThirdPartySession, mThirdPartyNonsecureSession, aHostURI,
       aIsForeign, aIsTrackingResource, aFirstPartyStorageAccessGranted, nullptr,
-      CountCookiesFromHashTable(baseDomain, attrs), attrs, nullptr);
+      CountCookiesFromHashTable(baseDomain, attrs), attrs, &aRejectedReason);
 
   if (cookieStatus != STATUS_ACCEPTED &&
       cookieStatus != STATUS_ACCEPT_SESSION) {
@@ -489,6 +490,7 @@ nsresult CookieServiceChild::GetCookieStringInternal(nsIURI* aHostURI,
 
   bool isTrackingResource = false;
   bool firstPartyStorageAccessGranted = false;
+  uint32_t rejectedReason = 0;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     isTrackingResource = httpChannel->IsTrackingResource();
@@ -496,7 +498,7 @@ nsresult CookieServiceChild::GetCookieStringInternal(nsIURI* aHostURI,
     // we will need the result when computing the access rights for the reject
     // foreign cookie behavior mode.
     if (isForeign && AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-                         httpChannel, aHostURI, nullptr)) {
+                         httpChannel, aHostURI, &rejectedReason)) {
       firstPartyStorageAccessGranted = true;
     }
   }
@@ -507,7 +509,7 @@ nsresult CookieServiceChild::GetCookieStringInternal(nsIURI* aHostURI,
   nsAutoCString result;
   GetCookieStringFromCookieHashTable(
       aHostURI, isForeign, isTrackingResource, firstPartyStorageAccessGranted,
-      isSafeTopLevelNav, isSameSiteForeign, aChannel, result);
+      rejectedReason, isSafeTopLevelNav, isSameSiteForeign, aChannel, result);
 
   if (!result.IsEmpty()) *aCookieString = ToNewCString(result);
 
@@ -537,6 +539,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
 
   bool isTrackingResource = false;
   bool firstPartyStorageAccessGranted = false;
+  uint32_t rejectedReason = 0;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     isTrackingResource = httpChannel->IsTrackingResource();
@@ -544,7 +547,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
     // we will need the result when computing the access rights for the reject
     // foreign cookie behavior mode.
     if (isForeign && AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-                         httpChannel, aHostURI, nullptr)) {
+                         httpChannel, aHostURI, &rejectedReason)) {
       firstPartyStorageAccessGranted = true;
     }
   }
@@ -577,8 +580,8 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
   if (mIPCOpen) {
     SendSetCookieString(hostURIParams, channelURIParams, optionalLoadInfoArgs,
                         isForeign, isTrackingResource,
-                        firstPartyStorageAccessGranted, attrs, cookieString,
-                        stringServerTime, aFromHttp);
+                        firstPartyStorageAccessGranted, rejectedReason, attrs,
+                        cookieString, stringServerTime, aFromHttp);
   }
 
   bool requireHostMatch;
@@ -593,7 +596,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
       cookieSettings, mThirdPartySession, mThirdPartyNonsecureSession, aHostURI,
       isForeign, isTrackingResource, firstPartyStorageAccessGranted,
       aCookieString, CountCookiesFromHashTable(baseDomain, attrs), attrs,
-      nullptr);
+      &rejectedReason);
 
   if (cookieStatus != STATUS_ACCEPTED &&
       cookieStatus != STATUS_ACCEPT_SESSION) {
