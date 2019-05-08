@@ -68,7 +68,7 @@ function showMenu(items, options) {
   if (options.useTopLevelWindow) {
     doc = getTopLevelWindow(window).document;
   } else {
-    doc = window.parent.document;
+    doc = window.document;
   }
 
   menu.popup(screenX, screenY, doc);
