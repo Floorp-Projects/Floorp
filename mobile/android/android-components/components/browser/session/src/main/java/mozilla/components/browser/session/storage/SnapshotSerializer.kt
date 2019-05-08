@@ -26,22 +26,25 @@ class SnapshotSerializer {
 
         val sessions = JSONArray()
         snapshot.sessions.forEachIndexed { index, sessionWithState ->
-            val sessionJson = JSONObject()
-            sessionJson.put(Keys.SESSION_KEY, serializeSession(sessionWithState.session))
-
-            val engineSessionState = if (sessionWithState.engineSessionState != null) {
-                sessionWithState.engineSessionState.toJSON()
-            } else {
-                sessionWithState.engineSession?.saveState()?.toJSON() ?: JSONObject()
-            }
-
-            sessionJson.put(Keys.ENGINE_SESSION_KEY, engineSessionState)
-
-            sessions.put(index, sessionJson)
+            sessions.put(index, itemToJSON(sessionWithState))
         }
         json.put(Keys.SESSION_STATE_TUPLES_KEY, sessions)
 
         return json.toString()
+    }
+
+    fun itemToJSON(item: SessionManager.Snapshot.Item): JSONObject {
+        val sessionJson = JSONObject()
+        sessionJson.put(Keys.SESSION_KEY, serializeSession(item.session))
+
+        val engineSessionState = if (item.engineSessionState != null) {
+            item.engineSessionState.toJSON()
+        } else {
+            item.engineSession?.saveState()?.toJSON() ?: JSONObject()
+        }
+        sessionJson.put(Keys.ENGINE_SESSION_KEY, engineSessionState)
+
+        return sessionJson
     }
 
     fun fromJSON(engine: Engine, json: String): SessionManager.Snapshot {
@@ -53,16 +56,20 @@ class SnapshotSerializer {
         val sessionStateTuples = jsonRoot.getJSONArray(Keys.SESSION_STATE_TUPLES_KEY)
         for (i in 0 until sessionStateTuples.length()) {
             val sessionStateTupleJson = sessionStateTuples.getJSONObject(i)
-            val session = deserializeSession(sessionStateTupleJson.getJSONObject(Keys.SESSION_KEY))
-            val state = engine.createSessionState(sessionStateTupleJson.getJSONObject(Keys.ENGINE_SESSION_KEY))
-
-            tuples.add(SessionManager.Snapshot.Item(session, engineSession = null, engineSessionState = state))
+            tuples.add(itemFromJSON(engine, sessionStateTupleJson))
         }
 
         return SessionManager.Snapshot(
             sessions = tuples,
             selectedSessionIndex = selectedSessionIndex
         )
+    }
+
+    fun itemFromJSON(engine: Engine, json: JSONObject): SessionManager.Snapshot.Item {
+        val session = deserializeSession(json.getJSONObject(Keys.SESSION_KEY))
+        val state = engine.createSessionState(json.getJSONObject(Keys.ENGINE_SESSION_KEY))
+
+        return SessionManager.Snapshot.Item(session, engineSession = null, engineSessionState = state)
     }
 }
 

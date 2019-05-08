@@ -49,13 +49,7 @@ class LegacySessionManager(
         val sessionStateTuples = values.asSequence()
                 .filter { !it.isCustomTabSession() }
                 .filter { !it.private }
-                .map { session ->
-                    SessionManager.Snapshot.Item(
-                        session,
-                        session.engineSessionHolder.engineSession,
-                        session.engineSessionHolder.engineSessionState
-                    )
-                }
+                .map { session -> createSessionSnapshot(session) }
                 .toList()
 
         // We might have some sessions (private, custom tab) but none we'd include in the snapshot.
@@ -82,6 +76,14 @@ class LegacySessionManager(
         SessionManager.Snapshot(
             sessions = sessionStateTuples,
             selectedSessionIndex = selectedIndexAfterFiltering
+        )
+    }
+
+    fun createSessionSnapshot(session: Session): SessionManager.Snapshot.Item {
+        return SessionManager.Snapshot.Item(
+            session,
+            session.engineSessionHolder.engineSession,
+            session.engineSessionHolder.engineSessionState
         )
     }
 
@@ -183,24 +185,20 @@ class LegacySessionManager(
 
     /**
      * Restores sessions from the provided [Snapshot].
+     *
      * Notification behaviour is as follows:
      * - onSessionAdded notifications will not fire,
-     * - onSessionSelected notification will fire exactly once if the snapshot isn't empty,
+     * - onSessionSelected notification will fire exactly once if the snapshot isn't empty (See [updateSelection]
+     *   parameter),
      * - once snapshot has been restored, and appropriate session has been selected, onSessionsRestored
      *   notification will fire.
      *
      * @param snapshot A [Snapshot] which may be produced by [createSnapshot].
+     * @param updateSelection Whether the selected session should be updated from the restored snapshot.
      */
-    fun restore(snapshot: SessionManager.Snapshot) = synchronized(values) {
+    fun restore(snapshot: SessionManager.Snapshot, updateSelection: Boolean = true) = synchronized(values) {
         if (snapshot.sessions.isEmpty()) {
             return
-        }
-
-        // Let's be forgiving about incoming illegal selection indices, but strict about what we
-        // produce ourselves in `createSnapshot`.
-        val sessionTupleToSelect = snapshot.sessions.getOrElse(snapshot.selectedSessionIndex) {
-            // Default to the first session if we received an illegal selection index.
-            snapshot.sessions[0]
         }
 
         snapshot.sessions.forEach {
@@ -212,7 +210,16 @@ class LegacySessionManager(
                 viaRestore = true)
         }
 
-        select(sessionTupleToSelect.session)
+        if (updateSelection) {
+            // Let's be forgiving about incoming illegal selection indices, but strict about what we
+            // produce ourselves in `createSnapshot`.
+            val sessionTupleToSelect = snapshot.sessions.getOrElse(snapshot.selectedSessionIndex) {
+                // Default to the first session if we received an illegal selection index.
+                snapshot.sessions[0]
+            }
+
+            select(sessionTupleToSelect.session)
+        }
 
         notifyObservers { onSessionsRestored() }
     }

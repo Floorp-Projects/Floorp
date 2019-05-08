@@ -17,7 +17,8 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.json.JSONObject
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -108,26 +109,58 @@ class AtomicFileKtTest {
 
         // Read it back
         val restoredSnapshot = file.readSnapshot(engine)
-        Assert.assertNotNull(restoredSnapshot)
-        Assert.assertEquals(3, restoredSnapshot!!.sessions.size)
-        Assert.assertEquals(0, restoredSnapshot.selectedSessionIndex)
+        assertNotNull(restoredSnapshot)
+        assertEquals(3, restoredSnapshot!!.sessions.size)
+        assertEquals(0, restoredSnapshot.selectedSessionIndex)
 
-        Assert.assertEquals(session1, restoredSnapshot.sessions[0].session)
-        Assert.assertEquals(session1.url, restoredSnapshot.sessions[0].session.url)
-        Assert.assertEquals(session1.id, restoredSnapshot.sessions[0].session.id)
+        assertEquals(session1, restoredSnapshot.sessions[0].session)
+        assertEquals(session1.url, restoredSnapshot.sessions[0].session.url)
+        assertEquals(session1.id, restoredSnapshot.sessions[0].session.id)
         assertNull(restoredSnapshot.sessions[0].session.parentId)
 
-        Assert.assertEquals(session2, restoredSnapshot.sessions[1].session)
-        Assert.assertEquals(session2.url, restoredSnapshot.sessions[1].session.url)
-        Assert.assertEquals(session2.id, restoredSnapshot.sessions[1].session.id)
+        assertEquals(session2, restoredSnapshot.sessions[1].session)
+        assertEquals(session2.url, restoredSnapshot.sessions[1].session.url)
+        assertEquals(session2.id, restoredSnapshot.sessions[1].session.id)
         assertNull(restoredSnapshot.sessions[1].session.parentId)
 
-        Assert.assertEquals(session3, restoredSnapshot.sessions[2].session)
-        Assert.assertEquals(session3.url, restoredSnapshot.sessions[2].session.url)
-        Assert.assertEquals(session3.id, restoredSnapshot.sessions[2].session.id)
-        Assert.assertEquals("session1", restoredSnapshot.sessions[2].session.parentId)
+        assertEquals(session3, restoredSnapshot.sessions[2].session)
+        assertEquals(session3.url, restoredSnapshot.sessions[2].session.url)
+        assertEquals(session3.id, restoredSnapshot.sessions[2].session.id)
+        assertEquals("session1", restoredSnapshot.sessions[2].session.parentId)
 
         val restoredEngineSession = restoredSnapshot.sessions[0].engineSessionState
-        Assert.assertNotNull(restoredEngineSession)
+        assertNotNull(restoredEngineSession)
+    }
+
+    @Test
+    fun `Read snapshot item should contain session of written snapshot item`() {
+        val session = Session("https://www.mozilla.org", id = "session")
+
+        val engineSessionState = object : EngineSessionState {
+            override fun toJSON() = JSONObject()
+        }
+
+        val engineSession = Mockito.mock(EngineSession::class.java)
+        Mockito.`when`(engineSession.saveState()).thenReturn(engineSessionState)
+
+        val engine = Mockito.mock(Engine::class.java)
+        Mockito.`when`(engine.name()).thenReturn("gecko")
+        Mockito.`when`(engine.createSession()).thenReturn(Mockito.mock(EngineSession::class.java))
+        Mockito.`when`(engine.createSessionState(any())).thenReturn(engineSessionState)
+
+        val item = SessionManager.Snapshot.Item(session, engineSession)
+
+        val file = AtomicFile(File.createTempFile(
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString()))
+
+        file.writeSnapshotItem(item)
+
+        val restoredItem = file.readSnapshotItem(engine)
+        assertNotNull(restoredItem!!)
+        assertNotNull(restoredItem.engineSessionState!!)
+
+        assertEquals("session", restoredItem.session.id)
+        assertEquals("https://www.mozilla.org", restoredItem.session.url)
     }
 }

@@ -33,6 +33,11 @@ class SessionManager(
     fun createSnapshot(): Snapshot = delegate.createSnapshot()
 
     /**
+     * Produces a [Snapshot.Item] of a single [Session], suitable for restoring via [SessionManager.restore].
+     */
+    fun createSessionSnapshot(session: Session): Snapshot.Item = delegate.createSessionSnapshot(session)
+
+    /**
      * Gets the currently selected session if there is one.
      *
      * Only one session can be selected at a given time.
@@ -81,15 +86,18 @@ class SessionManager(
 
     /**
      * Restores sessions from the provided [Snapshot].
+     *
      * Notification behaviour is as follows:
      * - onSessionAdded notifications will not fire,
-     * - onSessionSelected notification will fire exactly once if the snapshot isn't empty,
+     * - onSessionSelected notification will fire exactly once if the snapshot isn't empty (See [updateSelection]
+     *   parameter),
      * - once snapshot has been restored, and appropriate session has been selected, onSessionsRestored
      *   notification will fire.
      *
      * @param snapshot A [Snapshot] which may be produced by [createSnapshot].
+     * @param updateSelection Whether the selected session should be updated from the restored snapshot.
      */
-    fun restore(snapshot: Snapshot) = delegate.restore(snapshot)
+    fun restore(snapshot: Snapshot, updateSelection: Boolean = true) = delegate.restore(snapshot, updateSelection)
 
     /**
      * Gets the linked engine session for the provided session (if it exists).
@@ -158,6 +166,7 @@ class SessionManager(
 
         companion object {
             fun empty() = Snapshot(emptyList(), NO_SELECTION)
+            fun singleItem(item: Item) = Snapshot(listOf(item), NO_SELECTION)
         }
     }
 

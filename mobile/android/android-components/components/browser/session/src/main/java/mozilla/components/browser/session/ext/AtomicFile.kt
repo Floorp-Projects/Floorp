@@ -9,6 +9,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SnapshotSerializer
 import mozilla.components.concept.engine.Engine
 import org.json.JSONException
+import org.json.JSONObject
 import java.io.FileOutputStream
 import java.io.IOException
 
@@ -19,22 +20,14 @@ fun AtomicFile.readSnapshot(
     engine: Engine,
     serializer: SnapshotSerializer = SnapshotSerializer()
 ): SessionManager.Snapshot? {
-    return try {
-        openRead().use {
-            val json = it.bufferedReader().use { reader -> reader.readText() }
+    return readAndDeserialize { json ->
+        val snapshot = serializer.fromJSON(engine, json)
 
-            val snapshot = serializer.fromJSON(engine, json)
-
-            if (snapshot.isEmpty()) {
-                null
-            } else {
-                snapshot
-            }
+        if (snapshot.isEmpty()) {
+            null
+        } else {
+            snapshot
         }
-    } catch (_: IOException) {
-        null
-    } catch (_: JSONException) {
-        null
     }
 }
 
@@ -45,13 +38,40 @@ fun AtomicFile.writeSnapshot(
     snapshot: SessionManager.Snapshot,
     serializer: SnapshotSerializer = SnapshotSerializer()
 ): Boolean {
+    return writeString { serializer.toJSON(snapshot) }
+}
+
+/**
+ * Reads a single [SessionManager.Snapshot.Item] from this [AtomicFile]. Returns `null` if no snapshot item could be
+ * read.
+ */
+fun AtomicFile.readSnapshotItem(
+    engine: Engine,
+    serializer: SnapshotSerializer = SnapshotSerializer()
+): SessionManager.Snapshot.Item? {
+    return readAndDeserialize { json ->
+        serializer.itemFromJSON(engine, JSONObject(json))
+    }
+}
+
+/**
+ * Saves a single [SessionManager.Snapshot.Item] to this [AtomicFile].
+ */
+fun AtomicFile.writeSnapshotItem(
+    item: SessionManager.Snapshot.Item,
+    serializer: SnapshotSerializer = SnapshotSerializer()
+): Boolean {
+    return writeString {
+        serializer.itemToJSON(item).toString()
+    }
+}
+
+private fun AtomicFile.writeString(block: () -> String): Boolean {
     var outputStream: FileOutputStream? = null
 
     return try {
-        val json = serializer.toJSON(snapshot)
-
         outputStream = startWrite()
-        outputStream.write(json.toByteArray())
+        outputStream.write(block().toByteArray())
         finishWrite(outputStream)
         true
     } catch (_: IOException) {
@@ -60,5 +80,18 @@ fun AtomicFile.writeSnapshot(
     } catch (_: JSONException) {
         failWrite(outputStream)
         false
+    }
+}
+
+private fun <T> AtomicFile.readAndDeserialize(block: (String) -> T): T? {
+    return try {
+        openRead().use {
+            val json = it.bufferedReader().use { reader -> reader.readText() }
+            block(json)
+        }
+    } catch (_: IOException) {
+        null
+    } catch (_: JSONException) {
+        null
     }
 }
