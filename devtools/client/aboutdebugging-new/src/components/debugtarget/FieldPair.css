@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .fieldpair {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto;
   border-top: 1px solid var(--grey-20);
   padding-block: calc(var(--base-unit) * 2);
   padding-inline: calc(var(--base-unit) * 4) calc(var(--base-unit) * 2);
