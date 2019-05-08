@@ -87,7 +87,7 @@ class ChangesContextMenu {
     });
     menu.append(menuitemSelectAll);
 
-    menu.popup(screenX, screenY, this.inspector.toolbox);
+    menu.popup(screenX, screenY, this.inspector.toolbox.doc);
     return menu;
   }
 

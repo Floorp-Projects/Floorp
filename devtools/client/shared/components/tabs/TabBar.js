@@ -300,7 +300,7 @@ class Tabbar extends Component {
     const screenX = target.ownerDocument.defaultView.mozInnerScreenX;
     const screenY = target.ownerDocument.defaultView.mozInnerScreenY;
     menu.popupWithZoom(rect.left + screenX, rect.bottom + screenY,
-                       { doc: this.props.menuDocument });
+      this.props.menuDocument);
 
     return menu;
   }
