@@ -3,10 +3,14 @@
 
 #include <regex>
 #include "json/json.h"
+#include "json/reader.h"
 #include "mozilla/net/MozURL.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsNetUtil.h"
 #include "nsIFile.h"
+#include "nsIURI.h"
+#include "nsStreamUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
