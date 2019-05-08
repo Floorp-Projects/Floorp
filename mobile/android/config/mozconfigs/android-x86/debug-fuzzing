@@ -1,8 +1,10 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/android-x86/debug"
 
 # Remove unwanted environment variables from the 'debug' mozconfig.
-unset MOZ_TELEMETRY_REPORTING
 unset MOZ_ANDROID_POCKET
+
+# Disable Telemetry
+ac_add_options MOZ_TELEMETRY_REPORTING=
 
 ac_add_options --enable-fuzzing
 

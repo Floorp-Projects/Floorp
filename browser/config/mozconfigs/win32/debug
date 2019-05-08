@@ -9,9 +9,6 @@ ac_add_options --enable-debug
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
-# Enable Telemetry
-export MOZ_TELEMETRY_REPORTING=1
-
 . $topsrcdir/build/win32/mozconfig.vs-latest
 
 # Package js shell.

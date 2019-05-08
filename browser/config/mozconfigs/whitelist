@@ -35,12 +35,10 @@ whitelist['release']['win64'] += ['export MOZ_PGO=1']
 
 whitelist['release']['linux32'] += [
     'export MOZILLA_OFFICIAL=1',
-    'export MOZ_TELEMETRY_REPORTING=1',
     'export MOZ_PGO=1',
 ]
 whitelist['release']['linux64'] += [
     'export MOZILLA_OFFICIAL=1',
-    'export MOZ_TELEMETRY_REPORTING=1',
     '. "$topsrcdir/build/mozconfig.pgo"',
 ]
 

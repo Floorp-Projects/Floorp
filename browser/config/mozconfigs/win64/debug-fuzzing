@@ -1,7 +1,7 @@
 . "$topsrcdir/browser/config/mozconfigs/win64/debug"
 
 # Disable telemetry. All network activity is undesirable in fuzzing.
-unset MOZ_TELEMETRY_REPORTING
+ac_add_options MOZ_TELEMETRY_REPORTING=
 
 ac_add_options --enable-fuzzing
 

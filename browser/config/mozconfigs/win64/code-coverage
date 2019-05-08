@@ -13,9 +13,6 @@ ac_add_options --enable-rust-tests
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
-# Enable Telemetry
-export MOZ_TELEMETRY_REPORTING=1
-
 . $topsrcdir/build/win64/mozconfig.vs-latest
 
 # Package js shell.

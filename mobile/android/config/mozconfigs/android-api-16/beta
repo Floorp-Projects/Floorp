@@ -12,7 +12,6 @@ ac_add_options --target=arm-linux-androideabi
 ac_add_options --with-branding=mobile/android/branding/beta
 
 export MOZILLA_OFFICIAL=1
-export MOZ_TELEMETRY_REPORTING=1
 export MOZ_ANDROID_MMA=1
 export MOZ_ANDROID_POCKET=1
 

@@ -12,9 +12,6 @@ fi
 
 export MOZILLA_OFFICIAL=1
 
-# Enable Telemetry
-export MOZ_TELEMETRY_REPORTING=1
-
 # Don't autoclobber l10n, as this can lead to missing binaries and broken builds
 # Bug 1283438
 mk_add_options AUTOCLOBBER=

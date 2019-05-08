@@ -13,7 +13,6 @@ export RANLIB="$topsrcdir/clang/bin/llvm-ranlib"
 export MOZ_LTO=1
 
 export MOZILLA_OFFICIAL=1
-export MOZ_TELEMETRY_REPORTING=1
 export MOZ_ANDROID_POCKET=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
