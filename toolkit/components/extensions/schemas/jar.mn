@@ -6,6 +6,9 @@ toolkit.jar:
 % content extensions %content/extensions/
     content/extensions/schemas/alarms.json
     content/extensions/schemas/browser_settings.json
+#ifndef ANDROID
+    content/extensions/schemas/captive_portal.json
+#endif
     content/extensions/schemas/clipboard.json
     content/extensions/schemas/content_scripts.json
     content/extensions/schemas/contextual_identities.json

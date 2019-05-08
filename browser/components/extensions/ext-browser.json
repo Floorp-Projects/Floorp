@@ -24,6 +24,14 @@
       ["browsingData"]
     ]
   },
+  "captivePortal": {
+    "url": "chrome://extensions/content/parent/ext-captivePortal.js",
+    "schema": "chrome://extensions/content/schemas/captive_portal.json",
+    "scopes": ["addon_parent"],
+    "paths": [
+      ["captivePortal"]
+    ]
+  },
   "chrome_settings_overrides": {
     "url": "chrome://browser/content/parent/ext-chrome-settings-overrides.js",
     "scopes": [],
