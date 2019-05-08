@@ -3180,6 +3180,41 @@ class nsDisplayList {
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::PaintedLayer PaintedLayer;
 
+  template <typename T>
+  class Iterator {
+   public:
+    Iterator() : mItem(nullptr) {}
+    ~Iterator() = default;
+    Iterator(const Iterator& aOther) = default;
+    Iterator& operator=(const Iterator& aOther) = default;
+
+    explicit Iterator(const nsDisplayList* aList) : mItem(aList->GetBottom()) {}
+    explicit Iterator(const nsDisplayItem* aItem) : mItem(aItem) {}
+
+    Iterator& operator++() {
+      mItem = mItem ? mItem->GetAbove() : mItem;
+      return *this;
+    }
+
+    bool operator==(const Iterator& aOther) const {
+      return mItem == aOther.mItem;
+    }
+
+    bool operator!=(const Iterator& aOther) const {
+      return !operator==(aOther);
+    }
+
+    T* operator*() { return mItem; }
+
+   private:
+    T* mItem;
+  };
+
+  using DisplayItemIterator = Iterator<nsDisplayItem>;
+
+  DisplayItemIterator begin() const { return DisplayItemIterator(this); }
+  DisplayItemIterator end() const { return DisplayItemIterator(); }
+
   /**
    * Create an empty list.
    */
@@ -3491,7 +3526,7 @@ class nsDisplayList {
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder) {
     nsRegion result;
     bool snap;
-    for (nsDisplayItem* item = GetBottom(); item; item = item->GetAbove()) {
+    for (nsDisplayItem* item : *this) {
       result.OrWith(item->GetOpaqueRegion(aBuilder, &snap));
     }
     return result;
@@ -3502,7 +3537,7 @@ class nsDisplayList {
    */
   nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const {
     nsRect bounds;
-    for (nsDisplayItem* item = GetBottom(); item; item = item->GetAbove()) {
+    for (nsDisplayItem* item : *this) {
       bounds.UnionRect(bounds, item->GetComponentAlphaBounds(aBuilder));
     }
     return bounds;
