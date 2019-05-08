@@ -59,11 +59,11 @@ Menu.prototype.insert = function(pos, menuItem) {
  *
  * @param {int} x
  * @param {int} y
- * @param Toolbox toolbox
+ * @param {Document} doc
  */
-Menu.prototype.popupWithZoom = function(x, y, toolbox) {
-  const zoom = getCurrentZoom(toolbox.doc);
-  this.popup(x * zoom, y * zoom, toolbox);
+Menu.prototype.popupWithZoom = function(x, y, doc) {
+  const zoom = getCurrentZoom(doc);
+  this.popup(x * zoom, y * zoom, doc);
 };
 
 /**
@@ -75,12 +75,10 @@ Menu.prototype.popupWithZoom = function(x, y, toolbox) {
  *
  * @param {int} screenX
  * @param {int} screenY
- * @param Toolbox toolbox (non standard)
- *        Needed so we in which window to inject XUL
+ * @param {Document} doc
+ *        The document that should own the context menu.
  */
-Menu.prototype.popup = function(screenX, screenY, toolbox) {
-  const doc = toolbox.doc;
-
+Menu.prototype.popup = function(screenX, screenY, doc) {
   let popupset = doc.querySelector("popupset");
   if (!popupset) {
     popupset = doc.createXULElement("popupset");
