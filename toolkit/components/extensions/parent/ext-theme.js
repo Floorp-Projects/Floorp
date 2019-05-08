@@ -13,8 +13,6 @@ var {
   getWinUtils,
 } = ExtensionUtils;
 
-const ICONS = Services.prefs.getStringPref("extensions.webextensions.themes.icons.buttons", "").split(",");
-
 const onUpdatedEmitter = new EventEmitter();
 
 // Represents an empty theme for convenience of use
@@ -47,10 +45,12 @@ class Theme {
     if (startupData && startupData.lwtData) {
       Object.assign(this, startupData);
     } else {
-      this.lwtStyles = {
-        icons: {},
-      };
+      // TODO(ntim): clean this in bug 1550090
+      this.lwtStyles = {};
       this.lwtDarkStyles = null;
+      if (darkDetails) {
+        this.lwtDarkStyles = {};
+      }
 
       if (experiment) {
         if (extension.experimentsAllowed) {
@@ -85,9 +85,6 @@ class Theme {
     if (!this.lwtData) {
       this.loadDetails(this.details, this.lwtStyles);
       if (this.darkDetails) {
-        this.lwtDarkStyles = {
-          icons: {},
-        };
         this.loadDetails(this.darkDetails, this.lwtDarkStyles);
       }
 
@@ -135,10 +132,6 @@ class Theme {
 
     if (details.images) {
       this.loadImages(details.images, styles);
-    }
-
-    if (details.icons) {
-      this.loadIcons(details.icons, styles);
     }
 
     if (details.properties) {
@@ -274,34 +267,6 @@ class Theme {
           break;
         }
       }
-    }
-  }
-
-  /**
-   * Helper method for loading icons found in the extension's manifest.
-   *
-   * @param {Object} icons Dictionary mapping icon properties to extension URLs.
-   * @param {Object} styles Styles object in which to store the colors.
-   */
-  loadIcons(icons, styles) {
-    const {baseURI} = this.extension;
-
-    if (!Services.prefs.getBoolPref("extensions.webextensions.themes.icons.enabled")) {
-      // Return early if icons are disabled.
-      return;
-    }
-
-    for (let icon of Object.getOwnPropertyNames(icons)) {
-      let val = icons[icon];
-      // We also have to compare against the baseURI spec because
-      // `val` might have been resolved already. Resolving "" against
-      // the baseURI just produces that URI, so check for equality.
-      if (!val || val == baseURI.spec || !ICONS.includes(icon)) {
-        continue;
-      }
-      let variableName = `--${icon}-icon`;
-      let resolvedURL = baseURI.resolve(val);
-      styles.icons[variableName] = resolvedURL;
     }
   }
 

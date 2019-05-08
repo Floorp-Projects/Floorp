@@ -1421,5 +1421,3 @@ toolbarpaletteitem > toolbaritem {
 toolbar[keyNav=true]:not([collapsed=true]):not([customizing=true]) toolbartabstop {
   -moz-user-focus: normal;
 }
-
-%include theme-vars.inc.css
