@@ -44,11 +44,6 @@ namespace mozilla {
 
 using namespace dom;
 
-template CreateElementResult TextEditRules::CreateBRInternal(
-    const EditorDOMPoint& aPointToInsert, bool aCreateMozBR);
-template CreateElementResult TextEditRules::CreateBRInternal(
-    const EditorRawDOMPoint& aPointToInsert, bool aCreateMozBR);
-
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if (IsReadonly() || IsDisabled()) {            \
     *aCancel = true;                             \
@@ -982,7 +977,7 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
     }
     nsresult rv = MOZ_KnownLive(TextEditorRef())
                       .InsertNodeWithTransaction(
-                          *newNode, EditorRawDOMPoint(rootElement, 0));
+                          *newNode, EditorDOMPoint(rootElement, 0));
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -1473,7 +1468,7 @@ nsresult TextEditRules::CreateTrailingBRIfNeeded() {
 
   if (!lastChild->IsHTMLElement(nsGkAtoms::br)) {
     AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
-    EditorRawDOMPoint endOfRoot;
+    EditorDOMPoint endOfRoot;
     endOfRoot.SetToEndOf(rootElement);
     CreateElementResult createMozBrResult = CreateMozBR(endOfRoot);
     if (NS_WARN_IF(createMozBrResult.Failed())) {
@@ -1558,8 +1553,8 @@ nsresult TextEditRules::CreateBogusNodeIfNeeded() {
 
   // Put the node in the document.
   nsresult rv = MOZ_KnownLive(TextEditorRef())
-                    .InsertNodeWithTransaction(
-                        *newBrElement, EditorRawDOMPoint(rootElement, 0));
+                    .InsertNodeWithTransaction(*newBrElement,
+                                               EditorDOMPoint(rootElement, 0));
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -1770,9 +1765,8 @@ void TextEditRules::FillBufWithPWChars(nsAString* aOutString, int32_t aLength) {
   }
 }
 
-template <typename PT, typename CT>
 CreateElementResult TextEditRules::CreateBRInternal(
-    const EditorDOMPointBase<PT, CT>& aPointToInsert, bool aCreateMozBR) {
+    const EditorDOMPoint& aPointToInsert, bool aCreateMozBR) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {

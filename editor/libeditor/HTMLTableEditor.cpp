@@ -2799,8 +2799,8 @@ nsresult HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      rv = InsertNodeWithTransaction(
-          *cellChild, EditorRawDOMPoint(aTargetCell, insertIndex));
+      rv = InsertNodeWithTransaction(*cellChild,
+                                     EditorDOMPoint(aTargetCell, insertIndex));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }

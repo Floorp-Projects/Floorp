@@ -1087,10 +1087,9 @@ class HTMLEditRules : public TextEditRules {
    * @return                            When succeeded, SplitPoint() returns
    *                                    the point to insert the element.
    */
-  template <typename PT, typename CT>
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE SplitNodeResult
   MaybeSplitAncestorsForInsertWithTransaction(
-      nsAtom& aTag, const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode);
+      nsAtom& aTag, const EditorDOMPoint& aStartOfDeepestRightNode);
 
   /**
    * JoinNearestEditableNodesWithTransaction() joins two editable nodes which

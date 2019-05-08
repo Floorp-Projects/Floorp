@@ -312,9 +312,8 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    * @return                Returns created <br> element or an error code
    *                        if couldn't create new <br> element.
    */
-  template <typename PT, typename CT>
   MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreateBR(const EditorDOMPointBase<PT, CT>& aPointToInsert) {
+  CreateBR(const EditorDOMPoint& aPointToInsert) {
     CreateElementResult ret = CreateBRInternal(aPointToInsert, false);
 #ifdef DEBUG
     // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
@@ -333,9 +332,8 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    * @return                Returns created <br> element or an error code
    *                        if couldn't create new <br> element.
    */
-  template <typename PT, typename CT>
   MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreateMozBR(const EditorDOMPointBase<PT, CT>& aPointToInsert) {
+  CreateMozBR(const EditorDOMPoint& aPointToInsert) {
     CreateElementResult ret = CreateBRInternal(aPointToInsert, true);
 #ifdef DEBUG
     // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
@@ -391,9 +389,8 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    * @return                    Returns created <br> element and error code.
    *                            If it succeeded, never returns nullptr.
    */
-  template <typename PT, typename CT>
-  MOZ_CAN_RUN_SCRIPT CreateElementResult CreateBRInternal(
-      const EditorDOMPointBase<PT, CT>& aPointToInsert, bool aCreateMozBR);
+  MOZ_CAN_RUN_SCRIPT CreateElementResult
+  CreateBRInternal(const EditorDOMPoint& aPointToInsert, bool aCreateMozBR);
 
  protected:
   /**
