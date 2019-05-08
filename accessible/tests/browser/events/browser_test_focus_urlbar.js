@@ -152,9 +152,13 @@ async function runTests() {
   await focused;
   testStates(textBox, STATE_FOCUSED);
 
-  info("Ensuring autocomplete focus on down arrow (4)");
+  info("Ensuring autocomplete focus on arrow down & up");
   focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
   EventUtils.synthesizeKey("KEY_ArrowDown");
+  // With the quantumbar enabled, we only get one result here, and arrow down
+  // selects a one-off search button. We arrow back up to re-select the
+  // autocomplete result.
+  EventUtils.synthesizeKey("KEY_ArrowUp");
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);
 
