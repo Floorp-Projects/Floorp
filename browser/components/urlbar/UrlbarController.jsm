@@ -297,8 +297,8 @@ class UrlbarController {
       case KeyEvent.DOM_VK_TAB:
         if (this.view.isOpen) {
           if (executeAction) {
-            this.view.selectBy(1, { reverse: event.shiftKey });
             this.userSelectionBehavior = "tab";
+            this.view.selectBy(1, { reverse: event.shiftKey });
           }
           event.preventDefault();
         }
@@ -347,7 +347,7 @@ class UrlbarController {
             event.preventDefault();
           }
         } else if (executeAction) {
-          this.view.removeAccessibleFocus();
+          this.userSelectionBehavior = "none";
         }
         break;
     }
