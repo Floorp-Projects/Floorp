@@ -1891,8 +1891,8 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT
   nsresult DeleteTableElementAndChildrenWithTransaction(Element& aTableElement);
 
-  nsresult SetColSpan(Element* aCell, int32_t aColSpan);
-  nsresult SetRowSpan(Element* aCell, int32_t aRowSpan);
+  MOZ_CAN_RUN_SCRIPT nsresult SetColSpan(Element* aCell, int32_t aColSpan);
+  MOZ_CAN_RUN_SCRIPT nsresult SetRowSpan(Element* aCell, int32_t aRowSpan);
 
   /**
    * Helper used to get nsTableWrapperFrame for a table.
@@ -1947,15 +1947,16 @@ class HTMLEditor final : public TextEditor,
                              int32_t aColIndex, int32_t aRowSpanAbove,
                              int32_t aRowSpanBelow, Element** aNewCell);
 
-  nsresult CopyCellBackgroundColor(Element* aDestCell, Element* aSourceCell);
+  MOZ_CAN_RUN_SCRIPT nsresult CopyCellBackgroundColor(Element* aDestCell,
+                                                      Element* aSourceCell);
 
   /**
    * Reduce rowspan/colspan when cells span into nonexistent rows/columns.
    */
-  nsresult FixBadRowSpan(Element* aTable, int32_t aRowIndex,
-                         int32_t& aNewRowCount);
-  nsresult FixBadColSpan(Element* aTable, int32_t aColIndex,
-                         int32_t& aNewColCount);
+  MOZ_CAN_RUN_SCRIPT nsresult FixBadRowSpan(Element* aTable, int32_t aRowIndex,
+                                            int32_t& aNewRowCount);
+  MOZ_CAN_RUN_SCRIPT nsresult FixBadColSpan(Element* aTable, int32_t aColIndex,
+                                            int32_t& aNewColCount);
 
   /**
    * XXX NormalizeTableInternal() is broken.  If it meets a cell which has

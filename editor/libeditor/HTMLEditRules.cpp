@@ -4168,8 +4168,9 @@ nsresult HTMLEditRules::MakeList(nsAtom& aListType, bool aEntireList,
         return NS_ERROR_FAILURE;
       }
       if (aBulletType && !aBulletType->IsEmpty()) {
-        rv = HTMLEditorRef().SetAttributeWithTransaction(
-            *curElement, *nsGkAtoms::type, *aBulletType);
+        rv = MOZ_KnownLive(HTMLEditorRef())
+                 .SetAttributeWithTransaction(*curElement, *nsGkAtoms::type,
+                                              *aBulletType);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
