@@ -37,6 +37,7 @@ UNIFIED_SOURCES += [
     'TestMP4Demuxer.cpp',
     'TestOpusParser.cpp',
     'TestRust.cpp',
+    'TestTimeUnit.cpp',
     'TestVideoSegment.cpp',
     'TestVideoUtils.cpp',
     'TestVPXDecoding.cpp',
