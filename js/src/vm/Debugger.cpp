@@ -2365,7 +2365,8 @@ ResumeMode Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp) {
   // The converse --- ensuring that we do receive traps when we should --- can
   // be done with unit tests.
   if (iter.hasScript()) {
-    uint32_t stepperCount = 0;
+    uint32_t liveStepperCount = 0;
+    uint32_t suspendedStepperCount = 0;
     JSScript* trappingScript = iter.script();
     GlobalObject* global = cx->global();
     if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
@@ -2380,12 +2381,58 @@ ResumeMode Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp) {
           if (frame.script() == trappingScript &&
               !frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER)
                    .isUndefined()) {
-            stepperCount++;
+            liveStepperCount++;
+          }
+        }
+
+        // Also count hooks set on suspended generator frames.
+        for (GeneratorWeakMap::Range r = dbg->generatorFrames.all(); !r.empty();
+             r.popFront()) {
+          AbstractGeneratorObject& genObj =
+              r.front().key()->as<AbstractGeneratorObject>();
+          DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
+
+          // Live Debugger.Frames were already counted in dbg->frames loop.
+          if (frameObj.isLive()) {
+            continue;
+          }
+
+          // It is possible to have entries in generatorFrames that are not
+          // live, but also not suspended:
+          //
+          // In a generator script prologue, between the 'GENERATOR'
+          // instruction, which creates the generator object, and the
+          // 'SETALIASEDVAR .generator' instruction, which stores it in its
+          // designated spot in the frame, we are in an odd state. 'GENERATOR'
+          // has called onNewGenerator, adding an entry to generatorFrames
+          // mapping the generator object to its Debugger.Frame; but
+          // GetGeneratorObjectForFrame cannot yet find that generator object
+          // given a frame pointer. This means that if Debugger forces a return
+          // between those two instructions, slowPathOnLeaveFrame cannot find
+          // the generator object in order to clean up its generatorFramse
+          // entry.
+          //
+          // When this has occurred, the table entry will get cleaned up once
+          // the generator object gets GC'd, which should be soon since nobody
+          // got a chance to look at it. But it does mean that we need to verify
+          // that the generator is actually suspended before we attribute a step
+          // count to it.
+          if (!genObj.isSuspended()) {
+            continue;
+          }
+
+          if (!genObj.callee().isInterpretedLazy() &&
+              genObj.callee().nonLazyScript() == trappingScript &&
+              !frameObj.getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER)
+                   .isUndefined()) {
+            suspendedStepperCount++;
           }
         }
       }
     }
-    MOZ_ASSERT(stepperCount == trappingScript->stepModeCount());
+
+    MOZ_ASSERT(liveStepperCount + suspendedStepperCount ==
+               trappingScript->stepModeCount());
   }
 #endif
 
