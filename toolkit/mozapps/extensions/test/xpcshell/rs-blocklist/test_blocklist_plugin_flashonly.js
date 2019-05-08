@@ -20,7 +20,14 @@ add_task(async function checkFlashOnlyPluginState() {
 
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
 
-  await AddonTestUtils.loadBlocklistData(do_get_file("../data"), "test_bug514327_2");
+  await AddonTestUtils.loadBlocklistRawData({
+    plugins: [
+      {
+        matchName: "Test Plug-in",
+        versionRange: [{severity: "0"}],
+      },
+    ],
+  });
 
   var plugin = get_test_plugintag();
   if (!plugin)

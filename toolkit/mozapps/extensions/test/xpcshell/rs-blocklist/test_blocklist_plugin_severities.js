@@ -32,11 +32,27 @@ var PLUGINS = [{
   outdated: false,
 }];
 
+let BLOCKLIST_DATA = {
+  plugins: [
+    {
+      matchName: "^test_bug514327_1",
+      versionRange: [],
+    },
+    {
+      matchName: "^test_bug514327_2",
+      versionRange: [{severity: "0"}],
+    },
+    {
+      matchName: "^test_bug514327_3",
+      versionRange: [{severity: "0"}],
+    },
+  ],
+};
 
 add_task(async function checkBlocklistSeverities() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "test_bug514327_1");
+  await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA);
 
   var {blocklist} = Services;
 
