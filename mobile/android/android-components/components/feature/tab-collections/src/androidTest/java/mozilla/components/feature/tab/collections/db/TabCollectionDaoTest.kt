@@ -54,8 +54,8 @@ class TabCollectionDaoTest {
 
         assertEquals(2, pagedList.size)
 
-        assertEquals("Collection Two", pagedList[0]!!.title)
-        assertEquals("Collection One", pagedList[1]!!.title)
+        assertEquals("Collection Two", pagedList[0]!!.collection.title)
+        assertEquals("Collection One", pagedList[1]!!.collection.title)
     }
 
     @Test
@@ -81,8 +81,8 @@ class TabCollectionDaoTest {
 
         assertEquals(2, pagedList.size)
 
-        assertEquals("Updated collection", pagedList[0]!!.title)
-        assertEquals("Collection Two", pagedList[1]!!.title)
+        assertEquals("Updated collection", pagedList[0]!!.collection.title)
+        assertEquals("Collection Two", pagedList[1]!!.collection.title)
     }
 
     @Test
@@ -107,7 +107,7 @@ class TabCollectionDaoTest {
 
         assertEquals(2, pagedList.size)
 
-        assertEquals("Collection Three", pagedList[0]!!.title)
-        assertEquals("Collection One", pagedList[1]!!.title)
+        assertEquals("Collection Three", pagedList[0]!!.collection.title)
+        assertEquals("Collection One", pagedList[1]!!.collection.title)
     }
 }

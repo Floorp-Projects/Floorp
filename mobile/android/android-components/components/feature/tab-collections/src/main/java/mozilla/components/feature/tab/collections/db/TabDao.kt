@@ -7,7 +7,6 @@ package mozilla.components.feature.tab.collections.db
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
-import androidx.room.Query
 
 /**
  * Internal DAO for accessing [TabEntity] instances.
@@ -19,7 +18,4 @@ internal interface TabDao {
 
     @Delete
     fun deleteTab(tab: TabEntity)
-
-    @Query("SELECT * FROM tabs WHERE tab_collection_id = :tabCollectionId ORDER BY created_at ASC")
-    fun getTabsOfCollection(tabCollectionId: Long): List<TabEntity>
 }

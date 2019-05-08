@@ -25,6 +25,11 @@ internal interface TabCollectionDao {
     @Update
     fun updateTabCollection(collection: TabCollectionEntity)
 
-    @Query("SELECT * FROM tab_collections ORDER BY created_at DESC")
-    fun getTabCollectionsPaged(): DataSource.Factory<Int, TabCollectionEntity>
+    @Query("""
+        SELECT *
+        FROM tab_collections LEFT JOIN tabs ON tab_collections.id = tab_collection_id
+        GROUP BY tab_collections.id
+        ORDER BY created_at DESC
+    """)
+    fun getTabCollectionsPaged(): DataSource.Factory<Int, TabCollectionWithTabs>
 }
