@@ -177,7 +177,22 @@ class nsLineBreaker {
    * Set word-break mode for linebreaker.  This is set by word-break property.
    * @param aMode is LineBreaker::kWordBreak_* value.
    */
-  void SetWordBreak(uint8_t aMode) { mWordBreak = aMode; }
+  void SetWordBreak(uint8_t aMode) {
+    // If current word is non-empty and mode is changing, flush the breaker.
+    if (aMode != mWordBreak && !mCurrentWord.IsEmpty()) {
+      nsresult rv = FlushCurrentWord();
+      if (NS_FAILED(rv)) {
+        NS_WARNING("FlushCurrentWord failed, line-breaks may be wrong");
+      }
+      // If previous mode was break-all, we should allow a break here.
+      // XXX (jfkthame) css-text spec seems unclear on this, raised question in
+      // https://github.com/w3c/csswg-drafts/issues/3897
+      if (mWordBreak == mozilla::intl::LineBreaker::kWordBreak_BreakAll) {
+        mBreakHere = true;
+      }
+    }
+    mWordBreak = aMode;
+  }
 
  private:
   // This is a list of text sources that make up the "current word" (i.e.,
