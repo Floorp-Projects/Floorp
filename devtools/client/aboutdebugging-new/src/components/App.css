@@ -20,7 +20,8 @@
   --sidebar-width: 280px;
   --app-top-padding: 70px;
   --app-bottom-padding: 40px;
-  --app-left-padding: 34px;
+  --app-left-padding: 32px;
+  --app-right-padding: 32px;
 
   box-sizing: border-box;
   width: 100vw;
@@ -57,6 +58,8 @@
 
 .page {
   max-width: var(--page-width);
+  min-width: min-content;
   font-size: var(--body-20-font-size);
   font-weight: var(--body-20-font-weight);
+  padding-inline-end: var(--app-right-padding);
 }
