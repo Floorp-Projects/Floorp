@@ -14,7 +14,7 @@ extern crate bits;
 extern crate lazy_static;
 extern crate rand;
 extern crate regex;
-extern crate tempdir;
+extern crate tempfile;
 
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, File};
@@ -30,7 +30,7 @@ use self::{
     lazy_static::lazy_static,
     rand::{thread_rng, Rng},
     regex::bytes::Regex,
-    tempdir::TempDir,
+    tempfile::{Builder, TempDir},
 };
 use super::{
     super::{BitsJobState, Error},
@@ -252,7 +252,7 @@ macro_rules! test {
         #[test]
         fn $name() {
             let $param = stringify!($name);
-            let $tmpdir = &TempDir::new($param).unwrap();
+            let $tmpdir = &Builder::new().prefix($param).tempdir().unwrap();
 
             let result = panic::catch_unwind(|| $body);
 
