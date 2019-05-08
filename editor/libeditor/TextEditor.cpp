@@ -64,11 +64,6 @@ namespace mozilla {
 
 using namespace dom;
 
-template already_AddRefed<Element> TextEditor::InsertBrElementWithTransaction(
-    const EditorDOMPoint& aPointToInsert, EDirection aSelect);
-template already_AddRefed<Element> TextEditor::InsertBrElementWithTransaction(
-    const EditorRawDOMPoint& aPointToInsert, EDirection aSelect);
-
 TextEditor::TextEditor()
     : mWrapColumn(0),
       mMaxTextLength(-1),
@@ -242,9 +237,8 @@ TextEditor::SetDocumentCharacterSet(const nsACString& characterSet) {
   }
 
   // Create a new meta charset tag
-  EditorRawDOMPoint atStartOfHeadNode(headNode, 0);
   RefPtr<Element> metaElement =
-      CreateNodeWithTransaction(*nsGkAtoms::meta, atStartOfHeadNode);
+      CreateNodeWithTransaction(*nsGkAtoms::meta, EditorDOMPoint(headNode, 0));
   if (NS_WARN_IF(!metaElement)) {
     return NS_OK;
   }
@@ -436,10 +430,8 @@ nsresult TextEditor::InsertLineBreakAsAction() {
   return NS_OK;
 }
 
-template <typename PT, typename CT>
 already_AddRefed<Element> TextEditor::InsertBrElementWithTransaction(
-    const EditorDOMPointBase<PT, CT>& aPointToInsert,
-    EDirection aSelect /* = eNone */) {
+    const EditorDOMPoint& aPointToInsert, EDirection aSelect /* = eNone */) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
@@ -869,7 +861,7 @@ already_AddRefed<Element> TextEditor::DeleteSelectionAndCreateElement(
     return nullptr;
   }
 
-  EditorRawDOMPoint pointToInsert(SelectionRefPtr()->AnchorRef());
+  EditorDOMPoint pointToInsert(SelectionRefPtr()->AnchorRef());
   if (!pointToInsert.IsSet()) {
     return nullptr;
   }

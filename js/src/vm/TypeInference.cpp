@@ -1569,7 +1569,7 @@ bool js::FinishCompilation(JSContext* cx, HandleScript script,
   }
 
   if (!succeeded) {
-    script->resetWarmUpCounter();
+    script->resetWarmUpCounterToDelayIonCompilation();
     *isValidOut = false;
     return true;
   }
@@ -2679,9 +2679,7 @@ void TypeZone::addPendingRecompile(JSContext* cx, JSScript* script) {
   CancelOffThreadIonCompile(script);
 
   // Let the script warm up again before attempting another compile.
-  if (jit::IsBaselineEnabled(cx)) {
-    script->resetWarmUpCounter();
-  }
+  script->resetWarmUpCounterToDelayIonCompilation();
 
   if (script->hasIonScript()) {
     addPendingRecompile(

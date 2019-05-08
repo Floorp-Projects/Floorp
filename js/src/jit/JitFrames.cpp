@@ -215,7 +215,7 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
           // Ion can compile try-catch, but bailing out to catch
           // exceptions is slow. Reset the warm-up counter so that if we
           // catch many exceptions we won't Ion-compile the script.
-          script->resetWarmUpCounter();
+          script->resetWarmUpCounterToDelayIonCompilation();
 
           if (*hitBailoutException) {
             break;
@@ -373,7 +373,7 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
         // Ion can compile try-catch, but bailing out to catch
         // exceptions is slow. Reset the warm-up counter so that if we
         // catch many exceptions we won't Ion-compile the script.
-        script->resetWarmUpCounter();
+        script->resetWarmUpCounterToDelayIonCompilation();
 
         // Resume at the start of the catch block.
         rfe->kind = ResumeFromException::RESUME_CATCH;

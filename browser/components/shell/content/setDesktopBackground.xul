@@ -64,7 +64,12 @@
 
     <vbox align="center">
       <!-- default to 16:9, will be adjusted to match user's actual screen -->
-      <html:canvas id="screen" width="202" height="114" role="presentation"/>
+      <stack>
+        <html:canvas id="screen" width="202" height="114" role="presentation"/>
+        <vbox pack="center">
+          <html:p id="preview-unavailable" hidden="">&previewUnavailable;</html:p>
+        </vbox>
+      </stack>
       <image id="monitor-base"/>
     </vbox>
 

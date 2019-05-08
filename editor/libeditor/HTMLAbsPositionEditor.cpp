@@ -519,7 +519,7 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
   nsINode* parentNode = aElement.GetParentNode();
   if (parentNode->GetChildCount() == 1) {
     RefPtr<Element> newBrElement =
-        InsertBrElementWithTransaction(EditorRawDOMPoint(parentNode, 0));
+        InsertBrElementWithTransaction(EditorDOMPoint(parentNode, 0));
     if (NS_WARN_IF(!newBrElement)) {
       return NS_ERROR_FAILURE;
     }

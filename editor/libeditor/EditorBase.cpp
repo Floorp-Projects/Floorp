@@ -123,30 +123,6 @@ using namespace widget;
  * mozilla::EditorBase
  *****************************************************************************/
 
-template already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
-    nsAtom& aTag, const EditorDOMPoint& aPointToInsert);
-template already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
-    nsAtom& aTag, const EditorRawDOMPoint& aPointToInsert);
-template nsresult EditorBase::InsertNodeWithTransaction(
-    nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert);
-template nsresult EditorBase::InsertNodeWithTransaction(
-    nsIContent& aContentToInsert, const EditorRawDOMPoint& aPointToInsert);
-template already_AddRefed<nsIContent> EditorBase::SplitNodeWithTransaction(
-    const EditorDOMPoint& aStartOfRightNode, ErrorResult& aError);
-template already_AddRefed<nsIContent> EditorBase::SplitNodeWithTransaction(
-    const EditorRawDOMPoint& aStartOfRightNode, ErrorResult& aError);
-template SplitNodeResult EditorBase::SplitNodeDeepWithTransaction(
-    nsIContent& aMostAncestorToSplit,
-    const EditorDOMPoint& aStartOfDeepestRightNode, SplitAtEdges aSplitAtEdges);
-template SplitNodeResult EditorBase::SplitNodeDeepWithTransaction(
-    nsIContent& aMostAncestorToSplit,
-    const EditorRawDOMPoint& aStartOfDeepestRightNode,
-    SplitAtEdges aSplitAtEdges);
-template nsresult EditorBase::MoveNodeWithTransaction(
-    nsIContent& aContent, const EditorDOMPoint& aPointToInsert);
-template nsresult EditorBase::MoveNodeWithTransaction(
-    nsIContent& aContent, const EditorRawDOMPoint& aPointToInsert);
-
 EditorBase::EditorBase()
     : mEditActionData(nullptr),
       mPlaceholderName(nullptr),
@@ -1342,9 +1318,8 @@ EditorBase::SetSpellcheckUserOverride(bool enable) {
   return NS_OK;
 }
 
-template <typename PT, typename CT>
 already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
-    nsAtom& aTagName, const EditorDOMPointBase<PT, CT>& aPointToInsert) {
+    nsAtom& aTagName, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
@@ -1414,18 +1389,16 @@ EditorBase::InsertNode(nsINode* aNodeToInsert, nsINode* aContainer,
       aOffset < 0
           ? static_cast<int32_t>(aContainer->Length())
           : std::min(aOffset, static_cast<int32_t>(aContainer->Length()));
-  nsresult rv = InsertNodeWithTransaction(
-      *contentToInsert, EditorRawDOMPoint(aContainer, offset));
+  nsresult rv = InsertNodeWithTransaction(*contentToInsert,
+                                          EditorDOMPoint(aContainer, offset));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
 
-template <typename PT, typename CT>
 nsresult EditorBase::InsertNodeWithTransaction(
-    nsIContent& aContentToInsert,
-    const EditorDOMPointBase<PT, CT>& aPointToInsert) {
+    nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
@@ -1472,7 +1445,7 @@ EditorBase::SplitNode(nsINode* aNode, int32_t aOffset, nsINode** aNewLeftNode) {
       std::min(std::max(aOffset, 0), static_cast<int32_t>(aNode->Length()));
   ErrorResult error;
   nsCOMPtr<nsIContent> newNode =
-      SplitNodeWithTransaction(EditorRawDOMPoint(aNode, offset), error);
+      SplitNodeWithTransaction(EditorDOMPoint(aNode, offset), error);
   newNode.forget(aNewLeftNode);
   if (NS_WARN_IF(error.Failed())) {
     return EditorBase::ToGenericNSResult(error.StealNSResult());
@@ -1480,9 +1453,8 @@ EditorBase::SplitNode(nsINode* aNode, int32_t aOffset, nsINode** aNewLeftNode) {
   return NS_OK;
 }
 
-template <typename PT, typename CT>
 already_AddRefed<nsIContent> EditorBase::SplitNodeWithTransaction(
-    const EditorDOMPointBase<PT, CT>& aStartOfRightNode, ErrorResult& aError) {
+    const EditorDOMPoint& aStartOfRightNode, ErrorResult& aError) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!aStartOfRightNode.IsSet()) ||
@@ -1712,7 +1684,7 @@ already_AddRefed<Element> EditorBase::ReplaceContainerWithTransactionInternal(
       }
 
       rv = InsertNodeWithTransaction(
-          *child, EditorRawDOMPoint(newContainer, newContainer->Length()));
+          *child, EditorDOMPoint(newContainer, newContainer->Length()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
       }
@@ -1764,8 +1736,8 @@ nsresult EditorBase::RemoveContainerWithTransaction(Element& aElement) {
     // use offset here because previous child might have been moved to
     // container.
     rv = InsertNodeWithTransaction(
-        *child, EditorRawDOMPoint(pointToInsertChildren.GetContainer(),
-                                  pointToInsertChildren.Offset()));
+        *child, EditorDOMPoint(pointToInsertChildren.GetContainer(),
+                               pointToInsertChildren.Offset()));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1820,8 +1792,7 @@ already_AddRefed<Element> EditorBase::InsertContainerWithTransactionInternal(
 
   {
     AutoTransactionsConserveSelection conserveSelection(*this);
-    rv =
-        InsertNodeWithTransaction(aContent, EditorRawDOMPoint(newContainer, 0));
+    rv = InsertNodeWithTransaction(aContent, EditorDOMPoint(newContainer, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -1836,9 +1807,8 @@ already_AddRefed<Element> EditorBase::InsertContainerWithTransactionInternal(
   return newContainer.forget();
 }
 
-template <typename PT, typename CT>
 nsresult EditorBase::MoveNodeWithTransaction(
-    nsIContent& aContent, const EditorDOMPointBase<PT, CT>& aPointToInsert) {
+    nsIContent& aContent, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   EditorDOMPoint oldPoint(&aContent);
@@ -1852,8 +1822,7 @@ nsresult EditorBase::MoveNodeWithTransaction(
   }
 
   // Notify our internal selection state listener
-  EditorDOMPoint newPoint(aPointToInsert);
-  AutoMoveNodeSelNotify selNotify(RangeUpdaterRef(), oldPoint, newPoint);
+  AutoMoveNodeSelNotify selNotify(RangeUpdaterRef(), oldPoint, aPointToInsert);
 
   // Hold a reference so aNode doesn't go away when we remove it (bug 772282)
   nsresult rv = DeleteNodeWithTransaction(aContent);
@@ -1862,7 +1831,7 @@ nsresult EditorBase::MoveNodeWithTransaction(
   }
 
   // Mutation event listener could break insertion point. Let's check it.
-  EditorRawDOMPoint pointToInsert(selNotify.ComputeInsertionPoint());
+  EditorDOMPoint pointToInsert(selNotify.ComputeInsertionPoint());
   if (NS_WARN_IF(!pointToInsert.IsSet())) {
     return NS_ERROR_FAILURE;
   }
@@ -3728,10 +3697,9 @@ bool EditorBase::IsPreformatted(nsINode* aNode) {
   return styleText->WhiteSpaceIsSignificant();
 }
 
-template <typename PT, typename CT>
 SplitNodeResult EditorBase::SplitNodeDeepWithTransaction(
     nsIContent& aMostAncestorToSplit,
-    const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode,
+    const EditorDOMPoint& aStartOfDeepestRightNode,
     SplitAtEdges aSplitAtEdges) {
   MOZ_ASSERT(aStartOfDeepestRightNode.IsSetAndValid());
   MOZ_ASSERT(
