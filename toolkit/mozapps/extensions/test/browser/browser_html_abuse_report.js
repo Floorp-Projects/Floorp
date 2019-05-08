@@ -720,24 +720,28 @@ add_task(async function test_abuse_report_suggestions_theme() {
 // This test case verifies the message bars created on other
 // scenarios (e.g. report creation and submissions errors).
 add_task(async function test_abuse_report_message_bars() {
-  const EXT_ID = "test-extension-errors@mochi.test";
-  const EXT_ID2 = "test-extension-errors-2@mochi.test";
+  const EXT_ID = "test-extension-report@mochi.test";
+  const EXT_ID2 = "test-extension-report-2@mochi.test";
+  const THEME_ID = "test-theme-report@mochi.test";
   const extension = await installTestExtension(EXT_ID);
   const extension2 = await installTestExtension(EXT_ID2);
+  const theme = await installTestExtension(THEME_ID, "theme");
 
-  async function assertMessageBars(expectedMessageBarIds, test) {
+  async function assertMessageBars(
+    expectedMessageBarIds, testSetup, testMessageBarDetails
+  ) {
     await openAboutAddons();
     const expectedLength = expectedMessageBarIds.length;
     const onMessageBarsCreated = promiseMessageBars(expectedLength);
     // Reset the timestamp of the last report between tests.
     AbuseReporter._lastReportTimestamp = null;
-    const cleanup = await test();
+    await testSetup();
     info(`Waiting for ${expectedLength} message-bars to be created`);
     const barDetails = await onMessageBarsCreated;
     Assert.deepEqual(barDetails.map(d => d.definitionId), expectedMessageBarIds,
                      "Got the expected message bars");
-    if (cleanup) {
-      await cleanup();
+    if (testMessageBarDetails) {
+      await testMessageBarDetails(barDetails);
     }
     await closeAboutAddons();
   }
@@ -815,24 +819,41 @@ add_task(async function test_abuse_report_message_bars() {
     triggerSubmitAbuseReport("fake-reason", "fake-message");
   });
 
-  await assertMessageBars(["submitting", "submitted"], async () => {
-    info("Test message bars on report opened from browserAction context menu");
-    setTestRequestHandler(200, "{}");
-    triggerNewAbuseReport(EXT_ID, "toolbar_context_menu");
-    await promiseAbuseReportRendered();
-    triggerSubmitAbuseReport("fake-reason", "fake-message");
-  });
+  for (const extId of [EXT_ID, THEME_ID]) {
+    await assertMessageBars(["submitting", "submitted"], async () => {
+      info(`Test message bars on ${extId} reported from toolbar contextmenu`);
+      setTestRequestHandler(200, "{}");
+      triggerNewAbuseReport(extId, "toolbar_context_menu");
+      await promiseAbuseReportRendered();
+      triggerSubmitAbuseReport("fake-reason", "fake-message");
+    }, ([submittingDetails, submittedDetails]) => {
+      const buttonsL10nId = Array.from(
+        submittedDetails.messagebar.querySelectorAll("button")
+      ).map(el => el.getAttribute("data-l10n-id"));
+      if (extId === THEME_ID) {
+        ok(buttonsL10nId.every(id => id.endsWith("-theme")),
+           "submitted bar actions should use the Fluent id for themes");
+      } else {
+        ok(buttonsL10nId.every(id => id.endsWith("-extension")),
+           "submitted bar actions should use the Fluent id for extensions");
+      }
+    });
+  }
 
-  await assertMessageBars(["submitting", "submitted-and-removed"], async () => {
-    info("Test message bars on report opened from addon removal");
-    setTestRequestHandler(200, "{}");
-    triggerNewAbuseReport(EXT_ID2, "uninstall");
-    await promiseAbuseReportRendered();
-    triggerSubmitAbuseReport("fake-reason", "fake-message");
-  });
+  for (const extId of [EXT_ID2, THEME_ID]) {
+    const testFn = async () => {
+      info(`Test message bars on ${extId} reported opened from addon removal`);
+      setTestRequestHandler(200, "{}");
+      triggerNewAbuseReport(extId, "uninstall");
+      await promiseAbuseReportRendered();
+      triggerSubmitAbuseReport("fake-reason", "fake-message");
+    };
+    await assertMessageBars(["submitting", "submitted-and-removed"], testFn);
+  }
 
   await extension.unload();
   await extension2.unload();
+  await theme.unload();
 });
 
 add_task(async function test_trigger_abusereport_from_aboutaddons_menu() {
