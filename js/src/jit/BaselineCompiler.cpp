@@ -766,21 +766,35 @@ bool BaselineCodeGen<Handler>::emitStackCheck() {
   return true;
 }
 
+static void EmitCallFrameIsDebuggeeCheck(MacroAssembler& masm) {
+  masm.Push(BaselineFrameReg);
+  masm.setupUnalignedABICall(R0.scratchReg());
+  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.passABIArg(R0.scratchReg());
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::FrameIsDebuggeeCheck));
+  masm.Pop(BaselineFrameReg);
+}
+
 template <>
 void BaselineCompilerCodeGen::emitIsDebuggeeCheck() {
   if (handler.compileDebugInstrumentation()) {
-    masm.Push(BaselineFrameReg);
-    masm.setupUnalignedABICall(R0.scratchReg());
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
-    masm.passABIArg(R0.scratchReg());
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::FrameIsDebuggeeCheck));
-    masm.Pop(BaselineFrameReg);
+    EmitCallFrameIsDebuggeeCheck(masm);
   }
 }
 
 template <>
 void BaselineInterpreterCodeGen::emitIsDebuggeeCheck() {
-  MOZ_CRASH("NYI: interpreter emitIsDebuggeeCheck");
+  // Use a toggled jump to call FrameIsDebuggeeCheck only if the debugger is
+  // enabled.
+  //
+  // TODO(bug 1522394): consider having a cx->realm->isDebuggee guard before the
+  // call. Consider moving the callWithABI out-of-line.
+
+  Label skipCheck;
+  CodeOffset toggleOffset = masm.toggledJump(&skipCheck);
+  EmitCallFrameIsDebuggeeCheck(masm);
+  masm.bind(&skipCheck);
+  handler.setDebuggeeCheckOffset(toggleOffset);
 }
 
 template <>
@@ -1050,7 +1064,44 @@ void BaselineCompilerCodeGen::emitInitFrameFields() {
 
 template <>
 void BaselineInterpreterCodeGen::emitInitFrameFields() {
-  MOZ_CRASH("NYI: interpreter emitInitFrameFields");
+  Register scratch1 = R0.scratchReg();
+  Register scratch2 = R2.scratchReg();
+
+  masm.store32(Imm32(BaselineFrame::RUNNING_IN_INTERPRETER),
+               frame.addressOfFlags());
+
+  // Initialize interpreterScript.
+  Label notFunction, done;
+  masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
+  masm.branchTestPtr(Assembler::NonZero, scratch1, Imm32(CalleeTokenScriptBit),
+                     &notFunction);
+  {
+    // CalleeToken_Function or CalleeToken_FunctionConstructing.
+    masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
+    masm.loadPtr(Address(scratch1, JSFunction::offsetOfScript()), scratch1);
+    masm.jump(&done);
+  }
+  masm.bind(&notFunction);
+  {
+    // CalleeToken_Script.
+    masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
+  }
+  masm.bind(&done);
+  masm.storePtr(scratch1, frame.addressOfInterpreterScript());
+
+  // Initialize interpreterICEntry.
+  masm.loadPtr(Address(scratch1, JSScript::offsetOfTypes()), scratch2);
+  masm.loadPtr(Address(scratch2, TypeScript::offsetOfICScript()), scratch2);
+  masm.computeEffectiveAddress(Address(scratch2, ICScript::offsetOfICEntries()),
+                               scratch2);
+  masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
+
+  // Initialize interpreterPC.
+  masm.loadPtr(Address(scratch1, JSScript::offsetOfScriptData()), scratch1);
+  masm.load32(Address(scratch1, SharedScriptData::offsetOfCodeOffset()),
+              scratch2);
+  masm.addPtr(scratch2, scratch1);
+  masm.storePtr(scratch1, frame.addressOfInterpreterPC());
 }
 
 template <>
@@ -6071,7 +6122,27 @@ bool BaselineCompilerCodeGen::emit_JSOP_JUMPTARGET() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_JUMPTARGET() {
-  MOZ_CRASH("NYI: interpreter JSOP_JUMPTARGET");
+  Register scratch1 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
+
+  // Load icIndex in scratch1.
+  LoadInt32Operand(masm, PCRegAtStart, scratch1);
+
+  // scratch1 := scratch1 * sizeof(ICEntry)
+  static_assert(sizeof(ICEntry) == 8 || sizeof(ICEntry) == 16,
+                "shift below depends on ICEntry size");
+  uint32_t shift = (sizeof(ICEntry) == 16) ? 4 : 3;
+  masm.lshiftPtr(Imm32(shift), scratch1);
+
+  // Compute ICEntry* and store to frame->interpreterICEntry.
+  loadScript(scratch2);
+  masm.loadPtr(Address(scratch2, JSScript::offsetOfTypes()), scratch2);
+  masm.loadPtr(Address(scratch2, TypeScript::offsetOfICScript()), scratch2);
+  masm.computeEffectiveAddress(
+      BaseIndex(scratch2, scratch1, TimesOne, ICScript::offsetOfICEntries()),
+      scratch2);
+  masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
+  return true;
 }
 
 template <typename Handler>
