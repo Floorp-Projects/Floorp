@@ -10,8 +10,10 @@ UNIFIED_SOURCES += [
     'TestHttpAuthUtils.cpp',
     'TestIsValidIp.cpp',
     'TestMIMEInputStream.cpp',
+    'TestMozURL.cpp',
     'TestProtocolProxyService.cpp',
     'TestReadStreamToString.cpp',
+    'TestServerTimingHeader.cpp',
     'TestStandardURL.cpp',
 ]
 
@@ -23,14 +25,12 @@ if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
         'TestURIMutator.cpp',
     ]
 
-if CONFIG['OS_TARGET'] != 'Android':
-    UNIFIED_SOURCES += [
-        'TestMozURL.cpp',
-        'TestServerTimingHeader.cpp',
-    ]
-
 TEST_HARNESS_FILES.gtest += [
     'urltestdata.json',
+]
+
+USE_LIBS += [
+    'jsoncpp',
 ]
 
 TEST_DIRS += [
