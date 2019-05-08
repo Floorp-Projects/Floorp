@@ -2549,10 +2549,6 @@ static FeatureState& WebRenderHardwareQualificationStatus(
     if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
       featureWebRenderQualified.Disable(FeatureStatus::Blocked,
                                         "No qualified hardware", aOutFailureId);
-    } else if (aHasBattery) {
-      featureWebRenderQualified.Disable(
-          FeatureStatus::Blocked, "Has battery",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
     } else {
       nsAutoString adapterVendorID;
       gfxInfo->GetAdapterVendorID(adapterVendorID);
@@ -2566,7 +2562,27 @@ static FeatureState& WebRenderHardwareQualificationStatus(
             FeatureStatus::Blocked, "Bad device id",
             NS_LITERAL_CSTRING("FEATURE_FAILURE_BAD_DEVICE_ID"));
       } else {
-        if (adapterVendorID == u"0x10de") {
+#ifdef NIGHTLY_BUILD
+        // For Intel devices, if we have a battery, ignore it if the screen is
+        // small enough. Note that we always check for a battery with NVIDIA
+        // because we do not have a limited/curated set of devices to support
+        // WebRender on.
+        const int32_t kMaxPixelsBattery = 1920 * 1200;  // WUXGA
+        const int32_t screenPixels = aScreenSize.width * aScreenSize.height;
+        bool disableForBattery = aHasBattery;
+        if (adapterVendorID == u"0x8086" && screenPixels > 0 &&
+            screenPixels <= kMaxPixelsBattery) {
+          disableForBattery = false;
+        }
+#else
+        bool disableForBattery = aHasBattery;
+#endif
+
+        if (disableForBattery) {
+          featureWebRenderQualified.Disable(
+              FeatureStatus::Blocked, "Has battery",
+              NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
+        } else if (adapterVendorID == u"0x10de") {
           if (deviceID < 0x6c0) {
             // 0x6c0 is the lowest Fermi device id. Unfortunately some Tesla
             // devices that don't support D3D 10.1 have higher deviceIDs. They
@@ -2674,13 +2690,12 @@ static FeatureState& WebRenderHardwareQualificationStatus(
           else {
             // Performance is not great on 4k screens with WebRender + Linux.
             // Disable it for now if it is too large.
-            const int32_t maxPixels = 3440 * 1440;  // UWQHD
-            int32_t pixels = aScreenSize.width * aScreenSize.height;
-            if (pixels > maxPixels) {
+            const int32_t kMaxPixelsLinux = 3440 * 1440;  // UWQHD
+            if (screenPixels > kMaxPixelsLinux) {
               featureWebRenderQualified.Disable(
                   FeatureStatus::Blocked, "Screen size too large",
                   NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_TOO_LARGE"));
-            } else if (pixels <= 0) {
+            } else if (screenPixels <= 0) {
               featureWebRenderQualified.Disable(
                   FeatureStatus::Blocked, "Screen size unknown",
                   NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
