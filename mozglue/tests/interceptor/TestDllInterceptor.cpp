@@ -605,6 +605,9 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
   }
 #endif
 
+  CredHandle credHandle;
+  memset(&credHandle, 0, sizeof(CredHandle));
+
   if (TEST_HOOK(user32.dll, GetWindowInfo, Equals, FALSE) &&
 #if defined(_M_X64)
       TEST_HOOK(user32.dll, SetWindowLongPtrA, Equals, 0) &&
@@ -691,10 +694,11 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK(wininet.dll, InternetQueryOptionA, Equals, FALSE) &&
 
       TEST_HOOK(sspicli.dll, AcquireCredentialsHandleA, NotEquals, SEC_E_OK) &&
-      TEST_HOOK(sspicli.dll, QueryCredentialsAttributesA, NotEquals,
-                SEC_E_OK) &&
+      TEST_HOOK_PARAMS(sspicli.dll, QueryCredentialsAttributesA, Equals,
+                       SEC_E_INVALID_HANDLE, &credHandle, 0, nullptr) &&
 #if !defined(_M_ARM64)
-      TEST_HOOK(sspicli.dll, FreeCredentialsHandle, NotEquals, SEC_E_OK) &&
+      TEST_HOOK_PARAMS(sspicli.dll, FreeCredentialsHandle, Equals,
+                       SEC_E_INVALID_HANDLE, &credHandle) &&
 #endif
       TEST_DETOUR_SKIP_EXEC(kernel32.dll, BaseThreadInitThunk) &&
       TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) &&
