@@ -11,8 +11,17 @@
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/dom/BrowserParent.h"
 
+class nsPIDOMWindowOuter;
+
 namespace mozilla {
+
+namespace a11y {
+class DocAccessibleParent;
+}  // namespace a11y
+
 namespace dom {
+
+class Element;
 
 /**
  * BrowserHost manages a remote browser from the chrome process.
@@ -29,6 +38,8 @@ class BrowserHost : public RemoteBrowser, public nsIRemoteTab {
 
   explicit BrowserHost(BrowserParent* aParent);
 
+  static BrowserHost* GetFrom(nsIRemoteTab* aRemoteTab);
+
   NS_DECL_ISUPPORTS
   // nsIRemoteTab
   NS_DECL_NSIREMOTETAB
@@ -43,6 +54,12 @@ class BrowserHost : public RemoteBrowser, public nsIRemoteTab {
   LayersId GetLayersId() const override;
   BrowsingContext* GetBrowsingContext() const override;
   nsILoadContext* GetLoadContext() const override;
+
+  Element* GetOwnerElement() const { return mRoot->GetOwnerElement(); }
+  already_AddRefed<nsPIDOMWindowOuter> GetParentWindowOuter() const {
+    return mRoot->GetParentWindowOuter();
+  }
+  a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
 
   void LoadURL(nsIURI* aURI) override;
   void ResumeLoad(uint64_t aPendingSwitchId) override;
