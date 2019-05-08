@@ -455,6 +455,11 @@ CONST_OID pkixExtendedKeyUsageServerAuth[] = { PKIX_KEY_USAGE, 1 };
 CONST_OID pkixExtendedKeyUsageClientAuth[] = { PKIX_KEY_USAGE, 2 };
 CONST_OID pkixExtendedKeyUsageCodeSign[] = { PKIX_KEY_USAGE, 3 };
 CONST_OID pkixExtendedKeyUsageEMailProtect[] = { PKIX_KEY_USAGE, 4 };
+/* IPsecEnd, IPsecTunnel, and IPsecUser are deprecated, but still in use
+ * (see RFC4945) */
+CONST_OID pkixExtendedKeyUsageIPsecEnd[] = { PKIX_KEY_USAGE, 5 };
+CONST_OID pkixExtendedKeyUsageIPsecTunnel[] = { PKIX_KEY_USAGE, 6 };
+CONST_OID pkixExtendedKeyUsageIPsecUser[] = { PKIX_KEY_USAGE, 7 };
 CONST_OID pkixExtendedKeyUsageTimeStamp[] = { PKIX_KEY_USAGE, 8 };
 CONST_OID pkixOCSPResponderExtendedKeyUsage[] = { PKIX_KEY_USAGE, 9 };
 /* 17 replaces 5 + 6 + 7 (declared obsolete in RFC 4945) */
@@ -1777,6 +1782,18 @@ const static SECOidData oids[SEC_OID_TOTAL] = {
     OD(ipsecIKEIntermediate,
        SEC_OID_IPSEC_IKE_INTERMEDIATE,
        "IPsec IKE Intermediate",
+       CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
+    OD(pkixExtendedKeyUsageIPsecEnd,
+       SEC_OID_EXT_KEY_USAGE_IPSEC_END,
+       "IPsec Tunnel",
+       CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
+    OD(pkixExtendedKeyUsageIPsecTunnel,
+       SEC_OID_EXT_KEY_USAGE_IPSEC_TUNNEL,
+       "IPsec Tunnel",
+       CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
+    OD(pkixExtendedKeyUsageIPsecUser,
+       SEC_OID_EXT_KEY_USAGE_IPSEC_USER,
+       "IPsec User",
        CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
 };
 
