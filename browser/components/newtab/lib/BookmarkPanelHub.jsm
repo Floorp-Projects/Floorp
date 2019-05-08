@@ -9,6 +9,8 @@ ChromeUtils.defineModuleGetter(this, "FxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 class _BookmarkPanelHub {
   constructor() {
@@ -62,7 +64,7 @@ class _BookmarkPanelHub {
    * @returns {obj|null} response object or null if no messages matched
    */
   async messageRequest(target, win) {
-    if (this._response && this._response.url === target.url && this._response.content) {
+    if (this._response && this._response.win === win && this._response.url === target.url && this._response.content) {
       this.showMessage(this._response.content, target, win);
       return true;
     }
@@ -88,7 +90,7 @@ class _BookmarkPanelHub {
     if (response && response.content) {
       this.showMessage(response.content, target, win);
       this.sendImpression();
-      this.sendUserEventTelemetry("IMPRESSION");
+      this.sendUserEventTelemetry("IMPRESSION", win);
     } else {
       this.hideMessage(target);
     }
@@ -117,7 +119,7 @@ class _BookmarkPanelHub {
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
           csp: null,
         });
-        this.sendUserEventTelemetry("CLICK");
+        this.sendUserEventTelemetry("CLICK", win);
       });
       recommendation.style.color = message.color;
       recommendation.style.background = `-moz-linear-gradient(-45deg, ${message.background_color_1} 0%, ${message.background_color_2} 70%)`;
@@ -126,7 +128,7 @@ class _BookmarkPanelHub {
       close.setAttribute("aria-label", "close");
       this._l10n.setAttributes(close, message.close_button.tooltiptext);
       close.addEventListener("click", e => {
-        this.sendUserEventTelemetry("DISMISS");
+        this.sendUserEventTelemetry("DISMISS", win);
         this.collapseMessage();
         target.close(e);
       });
@@ -190,8 +192,11 @@ class _BookmarkPanelHub {
     this._addImpression(this._response);
   }
 
-  sendUserEventTelemetry(event) {
-    this._sendTelemetry({message_id: this._response.id, bucket_id: this._response.id, event});
+  sendUserEventTelemetry(event, win) {
+    // Only send pings for non private browsing windows
+    if (!PrivateBrowsingUtils.isBrowserPrivate(win.ownerGlobal.gBrowser.selectedBrowser)) {
+      this._sendTelemetry({message_id: this._response.id, bucket_id: this._response.id, event});
+    }
   }
 
   _sendTelemetry(ping) {
