@@ -10525,21 +10525,6 @@ bool nsContentUtils::
 }
 
 /* static */
-uint32_t nsContentUtils::GetNodeDepth(nsINode* aNode) {
-  uint32_t depth = 1;
-
-  MOZ_ASSERT(aNode, "Node shouldn't be null");
-
-  // Use GetFlattenedTreeParentNode to bypass the shadow root and cross the
-  // shadow boundary to calculate the node depth without the shadow root.
-  while ((aNode = aNode->GetFlattenedTreeParentNode())) {
-    ++depth;
-  }
-
-  return depth;
-}
-
-/* static */
 bool nsContentUtils::IsURIInPrefList(nsIURI* aURI, const char* aPrefName) {
   MOZ_ASSERT(aPrefName);
 
