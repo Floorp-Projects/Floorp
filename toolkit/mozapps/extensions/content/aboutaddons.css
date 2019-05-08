@@ -261,33 +261,6 @@ addon-details {
   display: flex;
 }
 
-.addon-detail-rating-star {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background: url("chrome://browser/skin/bookmark-hollow.svg");
-}
-
-.addon-detail-rating-star[fill="full"] {
-  background: url("chrome://browser/skin/bookmark.svg");
-}
-
-.addon-detail-rating-star[fill="half"] {
-  background: url("chrome://browser/skin/bookmark.svg");
-  width: 8px;
-  margin-inline-end: 8px;
-}
-
-.addon-detail-rating-star[fill="half"]::after {
-  content: "";
-  display: inline-block;
-  background: url("chrome://browser/skin/bookmark-hollow.svg");
-  background-position: 8px;
-  width: 8px;
-  height: 16px;
-  margin-left: 8px;
-}
-
 .addon-detail-rating > a {
   margin-inline-start: 8px;
 }
