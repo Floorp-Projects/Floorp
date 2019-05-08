@@ -56,12 +56,10 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
      */
     public static Throwable getRootException(final Throwable exc) {
         Throwable cause;
-        Throwable result = exc;
         for (cause = exc; cause != null; cause = cause.getCause()) {
-          result = cause;
         }
 
-        return result;
+        return cause;
     }
 
     /**
