@@ -367,6 +367,10 @@ privacy-policy = Privacy Policy
 # Variables:
 #   $author (string) - The name of the add-on developer.
 created-by-author = by <a data-l10n-name="author">{ $author }</a>
+# Shows the number of daily users of the add-on.
+# Variables:
+#   $dailyUsers (number) - The number of daily users.
+user-count = Users: { $dailyUsers }
 install-extension-button = Add to { -brand-product-name }
 install-theme-button = Install Theme
 # The label of the button that appears after installing an add-on. Upon click,

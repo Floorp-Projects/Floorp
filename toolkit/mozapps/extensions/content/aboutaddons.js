@@ -208,6 +208,9 @@ class DiscoAddonWrapper {
     this.screenshots = repositoryAddon.screenshots;
     this.sourceURI = repositoryAddon.sourceURI;
     this.creator = repositoryAddon.creator;
+    this.averageRating = repositoryAddon.averageRating;
+
+    this.dailyUsers = details.addon.average_daily_users;
 
     this.editorialHeading = details.heading_text;
     this.editorialDescription = details.description_text;
@@ -1277,7 +1280,23 @@ class RecommendedAddonCard extends HTMLElement {
         addon.editorialHeading;
     }
 
-    // TODO: Append ratings and user count to description.
+    let hasStats = false;
+    if (addon.averageRating) {
+      hasStats = true;
+      card.querySelector("five-star-rating").rating = addon.averageRating;
+    } else {
+      card.querySelector("five-star-rating").hidden = true;
+    }
+
+    if (addon.dailyUsers) {
+      hasStats = true;
+      let userCountElem = card.querySelector(".disco-user-count");
+      document.l10n.setAttributes(userCountElem, "user-count", {
+        dailyUsers: addon.dailyUsers,
+      });
+    }
+
+    card.querySelector(".disco-description-statistics").hidden = !hasStats;
   }
 
   registerButtons(card, addon) {
