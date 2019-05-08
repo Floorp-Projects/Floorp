@@ -502,7 +502,8 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
       return NS_ERROR_FAILURE;
     }
     // Just set the attribute on it.
-    return SetAttributeWithTransaction(*aNode.AsElement(), *aAttribute, aValue);
+    return SetAttributeWithTransaction(MOZ_KnownLive(*aNode.AsElement()),
+                                       *aAttribute, aValue);
   }
 
   // ok, chuck it in its very own container

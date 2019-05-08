@@ -59,6 +59,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   NS_IMETHOD DeleteSelection(EDirection aAction,
                              EStripWrappers aStripWrappers) override;
 
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD SetDocumentCharacterSet(const nsACString& characterSet) override;
 
   // If there are some good name to create non-virtual Undo()/Redo() methods,
@@ -522,7 +523,8 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   bool FireClipboardEvent(EventMessage aEventMessage, int32_t aSelectionType,
                           bool* aActionTaken = nullptr);
 
-  bool UpdateMetaCharset(Document& aDocument, const nsACString& aCharacterSet);
+  MOZ_CAN_RUN_SCRIPT bool UpdateMetaCharset(Document& aDocument,
+                                            const nsACString& aCharacterSet);
 
   /**
    * EnsureComposition() should be called by composition event handlers.  This

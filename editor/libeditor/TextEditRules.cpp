@@ -1795,8 +1795,9 @@ CreateElementResult TextEditRules::CreateBRInternal(
   }
 
   // XXX Why do we need to set this attribute with transaction?
-  nsresult rv = TextEditorRef().SetAttributeWithTransaction(
-      *brElement, *nsGkAtoms::type, NS_LITERAL_STRING("_moz"));
+  nsresult rv = MOZ_KnownLive(TextEditorRef())
+                    .SetAttributeWithTransaction(*brElement, *nsGkAtoms::type,
+                                                 NS_LITERAL_STRING("_moz"));
   // XXX Don't we need to remove the new <br> element from the DOM tree
   //     in these case?
   if (NS_WARN_IF(!CanHandleEditAction())) {

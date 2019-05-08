@@ -115,6 +115,7 @@ interface nsIEditor  : nsISupports
   readonly attribute boolean documentModified;
 
   /** Sets the current 'Save' document character set */
+  [can_run_script]  // setter only
   attribute ACString documentCharacterSet;
 
   /** to be used ONLY when we need to override the doc's modification
@@ -340,6 +341,7 @@ interface nsIEditor  : nsISupports
    * @param aAttribute  the string representation of the attribute to set
    * @param aValue      the value to set aAttribute to
    */
+  [can_run_script]
   void setAttribute(in Element aElement, in AString attributestr,
                     in AString attvalue);
 
