@@ -513,8 +513,6 @@ child:
     async UpdateAppLocales(nsCString[] appLocales);
     async UpdateRequestedLocales(nsCString[] requestedLocales);
 
-    async ClearSiteDataReloadNeeded(nsString origin);
-
     async RegisterStringBundles(StringBundleDescriptor[] stringBundles);
 
     async UpdateSharedData(FileDescriptor mapFile, uint32_t aSize,
