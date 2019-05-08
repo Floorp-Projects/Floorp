@@ -3835,6 +3835,9 @@ bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
   if (equalsFound) {
     aCookieAttributes.name = tokenString;
     aCookieAttributes.value = tokenValue;
+    if (aCookieAttributes.name.IsEmpty()) {
+      aDiscard = true;
+    }
   } else {
     aDiscard = true;
   }
