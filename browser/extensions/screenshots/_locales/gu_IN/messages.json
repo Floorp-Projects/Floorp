@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "ડાઉનલોડ"
   },
+  "downloadScreenshotTitle": {
+    "message": "સ્ક્રીનશૉટ ડાઉનલોડ કરો"
+  },
   "downloadOnlyNotice": {
     "message": "તમે હાલમા ફક્ત ડાઉનલોડ-કરો પ્રકારમાં છો."
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "નકલ કરો"
+  },
+  "copyScreenshotTitle": {
+    "message": "ક્લિપબોર્ડ પર સ્ક્રીનશોટ કૉપિ કરો"
   },
   "notificationImageCopiedTitle": {
     "message": "શોટ નકલ કર્યો"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "અમે ખાતરી નથીકે શું માત્ર થયું છે . ફરી પ્રયાસ કરો અથવા એક અલગ પૃષ્ઠ એક શોટ લેવા માટે કાળજી કરો?"
   },
-  "tourBodyIntro": {
-    "message": "લેવા, સાચવેલા, અને વહેંચાયેલ સ્ક્રીનશૉટ્સ Firefox છોડ્યાં વિના."
+  "tourBodyIntroServerless": {
+    "message": "Firefox છોડ્યાં વિના સ્ક્રીનશોટ લો, કૉપિ કરો અને ડાઉનલોડ કરો."
   },
   "tourHeaderPageAction": {
     "message": "સાચવવાનો એક નવો રસ્તો"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "ઉપર જમણા બટનો પસંદ કરો વિન્ડોમાં દૃશ્યમાન વિસ્તાર મેળવવા માટે અથવા આખુ પાનું કેપ્ચર કરવા માટે."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "તમને જે ગમે"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "સરળ શેરિંગ માટે વેબ પર તમારા કપાઈ શોટ સાચવો, અથવા તેમને તમારા કમ્પ્યુટર પર ડાઉનલોડ કરો. તમે બધા શોટ મેળવવા માટે મારું શોટ્સ બટન પર ક્લિક કરી પણ શકો છો બધા શોટ તમે લીધેલા શોધવા માટે."
-  },
-  "tourHeaderAccounts": {
-    "message": "સ્ક્રીનશોટસ ઉપયોગ માટે તૈયાર છે"
-  },
-  "tourBodyAccounts": {
-    "message": "તમારા બધા ઉપકરણો પર તમારા શોટ્સને ઍક્સેસ કરવા માટે અને તમારા મનપસંદ શોટ્સ કાયમ માટે સાચવવા માટે તમારા Firefox એકાઉન્ટથી સાઇન ઇન કરો."
   },
   "tourSkip": {
     "message": "છોડવા"

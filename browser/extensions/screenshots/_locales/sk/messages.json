@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "Prevziať"
   },
+  "downloadScreenshotTitle": {
+    "message": "Prevziať snímku obrazovky"
+  },
   "downloadOnlyNotice": {
     "message": "Ste v režime len na prevzatie."
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopírovať"
+  },
+  "copyScreenshotTitle": {
+    "message": "Skopírovať snímok do schránky"
   },
   "notificationImageCopiedTitle": {
     "message": "Snímka bola skopírovaná"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Nie sme si istí, čo sa práve stalo. Chcete tú skúsiť znova alebo chcete vytvoriť snímku inej stránky?"
   },
-  "tourBodyIntro": {
-    "message": "Tvorte, ukladajte a zdieľajte snímky obrazovky bez toho, aby ste museli opustiť Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Tvorte, kopírujte a preberajte snímky obrazovky bez toho, aby ste museli opustiť Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Nový spôsob ukladania"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Kliknutím na tlačidlo v pravom hornom rohu môžete zachytiť viditeľnú časť stránky. Pomocou ďalšieho tlačidla zachytíte celú stránku."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Urobte to, čo chcete"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Uložte si orezanú snímku na web, aby ste ju mohli ľahšie zdieľať alebo si ju prevziať do počítača. Môžete si taktiež pozrieť všetky vaše snímky - stačí, ak kliknete na tlačidlo Moje snímky."
-  },
-  "tourHeaderAccounts": {
-    "message": "Snímky stránok vždy so sebou"
-  },
-  "tourBodyAccounts": {
-    "message": "Prihláste sa so svojím účtom Firefox a majte prístup ku všetkým svojich snímkam zo všetkých vašich zariadení."
   },
   "tourSkip": {
     "message": "Preskočiť"

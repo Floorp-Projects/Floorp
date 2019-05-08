@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "Endir"
   },
+  "downloadScreenshotTitle": {
+    "message": "Ekran görüntüsünü endir"
+  },
   "downloadOnlyNotice": {
     "message": "Hazırda Ancaq-Endirmə rejimindəsiniz."
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Köçür"
+  },
+  "copyScreenshotTitle": {
+    "message": "Ekran görüntüsünü mübadilə buferinə köçür"
   },
   "notificationImageCopiedTitle": {
     "message": "Görüntü Köçürüldü"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Nə baş verdiyindən əmin deyilik. Bir daha yoxlayın və ya başqa səhifənin ekran görüntüsünü alaraq işləyib işləmədiyinə əmin olun."
   },
-  "tourBodyIntro": {
-    "message": "Firefoxu tərk etmədən ekran görüntüləri alın, saxlayın və paylaşın."
+  "tourBodyIntroServerless": {
+    "message": "Firefox səyyahınızı tərk etmədən ekran görüntülərinizi çəkin, köçürün və endirin."
   },
   "tourHeaderPageAction": {
     "message": "Saxlamağın yeni yolu"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Sadəcə pəncərədə görünən hissəni və ya bütün səhifəni çəkmək üçün sağ üstdəki düymələrdən birini seçin."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "İstədiyiniz kimi"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Kəsdiyiniz hissələri rahat paylaşmaq üçün internetdə saxlayın və ya kompüterinizə endirin. Həmçinin Ekran Görüntülərim düyməsinə basaraq çəkdiyiniz bütün ekran görüntülərini görə bilərsiz."
-  },
-  "tourHeaderAccounts": {
-    "message": "Ekran Görüntülərin həmişə yanında"
-  },
-  "tourBodyAccounts": {
-    "message": "Firefox Hesabınız ilə daxil olun və istənilən yerdə bütün alətlərinizdən görüntülərinizi görün və seçdiklərinizi daimi olaraq saxlayın."
   },
   "tourSkip": {
     "message": "Ötür"
