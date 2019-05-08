@@ -42,6 +42,7 @@ async function getAddonInfo() {
 
 const L10N = new Localization([
   "branding/brand.ftl",
+  "browser/branding/brandings.ftl",
   "browser/branding/sync-brand.ftl",
   "browser/newtab/onboarding.ftl",
 ]);
