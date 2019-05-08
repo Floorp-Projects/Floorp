@@ -137,22 +137,24 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
 
   bool isTrackingResource = false;
   bool storageAccessGranted = false;
+  uint32_t rejectedReason = 0;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
     isTrackingResource = httpChannel->IsTrackingResource();
     // Check first-party storage access even for non-tracking resources, since
     // we will need the result when computing the access rights for the reject
     // foreign cookie behavior mode.
-    if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
-                                                                uri, nullptr)) {
+    if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+            httpChannel, uri, &rejectedReason)) {
       storageAccessGranted = true;
     }
   }
 
   nsTArray<nsCookie*> foundCookieList;
-  mCookieService->GetCookiesForURI(
-      uri, aChannel, isForeign, isTrackingResource, storageAccessGranted,
-      isSafeTopLevelNav, aIsSameSiteForeign, false, attrs, foundCookieList);
+  mCookieService->GetCookiesForURI(uri, aChannel, isForeign, isTrackingResource,
+                                   storageAccessGranted, rejectedReason,
+                                   isSafeTopLevelNav, aIsSameSiteForeign, false,
+                                   attrs, foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
   SerialializeCookieList(foundCookieList, matchingCookiesList, uri);
   Unused << SendTrackCookiesLoad(matchingCookiesList, attrs);
@@ -182,7 +184,8 @@ void CookieServiceParent::SerialializeCookieList(
 mozilla::ipc::IPCResult CookieServiceParent::RecvPrepareCookieList(
     const URIParams& aHost, const bool& aIsForeign,
     const bool& aIsTrackingResource,
-    const bool& aFirstPartyStorageAccessGranted, const bool& aIsSafeTopLevelNav,
+    const bool& aFirstPartyStorageAccessGranted,
+    const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
     const bool& aIsSameSiteForeign, const OriginAttributes& aAttrs) {
   nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
 
@@ -193,8 +196,8 @@ mozilla::ipc::IPCResult CookieServiceParent::RecvPrepareCookieList(
   // child process already does the necessary reporting in this case for us.
   mCookieService->GetCookiesForURI(
       hostURI, nullptr, aIsForeign, aIsTrackingResource,
-      aFirstPartyStorageAccessGranted, aIsSafeTopLevelNav, aIsSameSiteForeign,
-      false, aAttrs, foundCookieList);
+      aFirstPartyStorageAccessGranted, aRejectedReason, aIsSafeTopLevelNav,
+      aIsSameSiteForeign, false, aAttrs, foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
   SerialializeCookieList(foundCookieList, matchingCookiesList, hostURI);
   Unused << SendTrackCookiesLoad(matchingCookiesList, aAttrs);
@@ -210,7 +213,8 @@ mozilla::ipc::IPCResult CookieServiceParent::RecvSetCookieString(
     const URIParams& aHost, const Maybe<URIParams>& aChannelURI,
     const Maybe<LoadInfoArgs>& aLoadInfoArgs, const bool& aIsForeign,
     const bool& aIsTrackingResource,
-    const bool& aFirstPartyStorageAccessGranted, const OriginAttributes& aAttrs,
+    const bool& aFirstPartyStorageAccessGranted,
+    const uint32_t& aRejectedReason, const OriginAttributes& aAttrs,
     const nsCString& aCookieString, const nsCString& aServerTime,
     const bool& aFromHttp) {
   if (!mCookieService) return IPC_OK();
@@ -249,7 +253,8 @@ mozilla::ipc::IPCResult CookieServiceParent::RecvSetCookieString(
   mProcessingCookie = true;
   mCookieService->SetCookieStringInternal(
       hostURI, aIsForeign, aIsTrackingResource, aFirstPartyStorageAccessGranted,
-      cookieString, aServerTime, aFromHttp, aAttrs, dummyChannel);
+      aRejectedReason, cookieString, aServerTime, aFromHttp, aAttrs,
+      dummyChannel);
   mProcessingCookie = false;
   return IPC_OK();
 }
