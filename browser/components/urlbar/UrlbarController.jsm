@@ -13,7 +13,6 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
-  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
@@ -95,42 +94,53 @@ class UrlbarController {
     // Cancel any running query.
     this.cancelQuery();
 
-    this._lastQueryContext = queryContext;
+    // Wrap the external queryContext, to track a unique object, in case
+    // the external consumer reuses the same context multiple times.
+    // This also allows to add properties without polluting the context.
+    // Note this can't be null-ed or deleted once a query is done, because it's
+    // used by handleDeleteEntry and handleKeyNavigation, that can run after
+    // a query is cancelled or finished.
+    let contextWrapper = this._lastQueryContextWrapper = {queryContext};
 
     queryContext.lastResultCount = 0;
     TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, queryContext);
     TelemetryStopwatch.start(TELEMETRY_6_FIRST_RESULTS, queryContext);
 
+    // For proper functionality we must ensure this notification is fired
+    // synchronously, as soon as startQuery is invoked, but after any
+    // notifications related to the previous query.
     this._notify("onQueryStarted", queryContext);
     await this.manager.startQuery(queryContext, this);
-    this._notify("onQueryFinished", queryContext);
+    // If the query has been cancelled, onQueryFinished was notified already.
+    // Note this._lastQueryContextWrapper may have changed in the meanwhile.
+    if (contextWrapper === this._lastQueryContextWrapper &&
+        !contextWrapper.done) {
+      contextWrapper.done = true;
+      // TODO (Bug 1549936) this is necessary to avoid leaks in PB tests.
+      this.manager.cancelQuery(queryContext);
+      this._notify("onQueryFinished", queryContext);
+    }
     return queryContext;
   }
 
   /**
    * Cancels an in-progress query. Note, queries may continue running if they
    * can't be cancelled.
-   *
-   * @param {UrlbarUtils.CANCEL_REASON} [reason]
-   *   The reason the query was cancelled.
    */
-  cancelQuery(reason) {
-    if (!this._lastQueryContext ||
-        this._lastQueryContext._cancelled) {
+  cancelQuery() {
+    // If the query finished already, don't handle cancel.
+    if (!this._lastQueryContextWrapper || this._lastQueryContextWrapper.done) {
       return;
     }
 
-    TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, this._lastQueryContext);
-    TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, this._lastQueryContext);
+    this._lastQueryContextWrapper.done = true;
 
-    this.manager.cancelQuery(this._lastQueryContext);
-    this._lastQueryContext._cancelled = true;
-    this._notify("onQueryCancelled", this._lastQueryContext);
-
-    if (reason == UrlbarUtils.CANCEL_REASON.BLUR &&
-        ExtensionSearchHandler.hasActiveInputSession()) {
-      ExtensionSearchHandler.handleInputCancelled();
-    }
+    let {queryContext} = this._lastQueryContextWrapper;
+    TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, queryContext);
+    TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, queryContext);
+    this.manager.cancelQuery(queryContext);
+    this._notify("onQueryCancelled", queryContext);
+    this._notify("onQueryFinished", queryContext);
   }
 
   /**
@@ -255,17 +265,15 @@ class UrlbarController {
       return;
     }
 
-    if (this.view.isOpen && executeAction) {
-      let queryContext = this._lastQueryContext;
-      if (queryContext) {
-        let handled = this.view.oneOffSearchButtons.handleKeyPress(
-          event,
-          queryContext.results.length,
-          this.view.allowEmptySelection,
-          queryContext.searchString);
-        if (handled) {
-          return;
-        }
+    if (this.view.isOpen && executeAction && this._lastQueryContextWrapper) {
+      let {queryContext} = this._lastQueryContextWrapper;
+      let handled = this.view.oneOffSearchButtons.handleKeyPress(
+        event,
+        queryContext.results.length,
+        this.view.allowEmptySelection,
+        queryContext.searchString);
+      if (handled) {
+        return;
       }
     }
 
@@ -496,7 +504,7 @@ class UrlbarController {
    * @returns {boolean} Returns true if the deletion was acted upon.
    */
   _handleDeleteEntry() {
-    if (!this._lastQueryContext) {
+    if (!this._lastQueryContextWrapper) {
       Cu.reportError("Cannot delete - the latest query is not present");
       return false;
     }
@@ -507,13 +515,14 @@ class UrlbarController {
       return false;
     }
 
-    let index = this._lastQueryContext.results.indexOf(selectedResult);
+    let {queryContext} = this._lastQueryContextWrapper;
+    let index = queryContext.results.indexOf(selectedResult);
     if (!index) {
       Cu.reportError("Failed to find the selected result in the results");
       return false;
     }
 
-    this._lastQueryContext.results.splice(index, 1);
+    queryContext.results.splice(index, 1);
     this._notify("onQueryResultRemoved", index);
 
     PlacesUtils.history.remove(selectedResult.payload.url).catch(Cu.reportError);

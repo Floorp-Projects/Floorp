@@ -456,21 +456,16 @@ class UrlbarAbstraction {
     }
     let details = {};
     if (this.quantumbar) {
-      let context = await this.urlbar.lastQueryContextPromise;
-      if (index >= context.results.length) {
-        throw new Error("Requested index not found in results");
-      }
-      let {url, postData} = UrlbarUtils.getUrlFromResult(context.results[index]);
+      let result = element.result;
+      let {url, postData} = UrlbarUtils.getUrlFromResult(result);
       details.url = url;
       details.postData = postData;
-      details.type = context.results[index].type;
-      details.heuristic = context.results[index].heuristic;
-      details.autofill = !!context.results[index].autofill;
+      details.type = result.type;
+      details.heuristic = result.heuristic;
+      details.autofill = !!result.autofill;
       details.image = element.getElementsByClassName("urlbarView-favicon")[0].src;
-      details.title = context.results[index].title;
-      details.tags = "tags" in context.results[index].payload ?
-        context.results[index].payload.tags :
-        [];
+      details.title = result.title;
+      details.tags = "tags" in result.payload ? result.payload.tags : [];
       let actions = element.getElementsByClassName("urlbarView-action");
       let urls = element.getElementsByClassName("urlbarView-url");
       let typeIcon = element.querySelector(".urlbarView-type-icon");
@@ -490,13 +485,13 @@ class UrlbarAbstraction {
       };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
         details.searchParams = {
-          engine: context.results[index].payload.engine,
-          keyword: context.results[index].payload.keyword,
-          query: context.results[index].payload.query,
-          suggestion: context.results[index].payload.suggestion,
+          engine: result.payload.engine,
+          keyword: result.payload.keyword,
+          query: result.payload.query,
+          suggestion: result.payload.suggestion,
         };
       } else if (details.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
-        details.keyword = context.results[index].payload.keyword;
+        details.keyword = result.payload.keyword;
       }
     } else {
       details.url = this.urlbar.controller.getFinalCompleteValueAt(index);
