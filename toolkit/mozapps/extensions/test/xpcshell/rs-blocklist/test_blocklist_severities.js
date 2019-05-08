@@ -123,10 +123,88 @@ function createAddon(addon) {
   });
 }
 
-async function loadBlocklist(file, callback) {
+const BLOCKLIST_DATA = {
+  start: {
+    // Block 4-6 and a dummy:
+    extensions: [
+      {
+        guid: "test_bug455906_4@tests.mozilla.org",
+        versionRange: [{severity: "-1"}],
+      },
+      {
+        guid: "test_bug455906_5@tests.mozilla.org",
+        versionRange: [{severity: "1"}],
+      },
+      {
+        guid: "test_bug455906_6@tests.mozilla.org",
+        versionRange: [{severity: "2"}],
+      },
+      {
+        guid: "dummy_bug455906_1@tests.mozilla.org",
+        versionRange: [],
+      },
+    ],
+    // Block 4-6:
+    plugins: [
+      {
+        matchName: "^test_bug455906_4$",
+        versionRange: [{severity: "0"}],
+      },
+      {
+        matchName: "^test_bug455906_5$",
+        versionRange: [{severity: "1"}],
+      },
+      {
+        matchName: "^test_bug455906_6$",
+        versionRange: [{severity: "2"}],
+      },
+    ],
+  },
+  warn: {
+    // warn for all test add-ons:
+    extensions: ADDONS.filter(a => a.id.startsWith("test_")).map(a => ({
+      guid: a.id,
+      versionRange: [{severity: "-1"}],
+    })),
+    // warn for all plugins with a regex:
+    plugins: [
+      {
+        matchName: "^test_bug455906",
+        versionRange: [{severity: "-1"}],
+      },
+    ],
+  },
+  block: {
+    // block all test add-ons:
+    extensions: ADDONS.filter(a => a.id.startsWith("test_")).map(a => ({
+      guid: a.id,
+      blockID: a.id,
+      versionRange: [],
+    })),
+    // block all plugins with a regex:
+    plugins: [
+      {
+        matchName: "^test_bug455906",
+        versionRange: [],
+        blockID: "test_bug455906_plugin",
+      },
+    ],
+  },
+  empty: {
+    // Block a dummy so there's a change:
+    extensions: [{
+      guid: "dummy_bug455906_2@tests.mozilla.org",
+      versionRange: [],
+    }],
+    // Need an empty list to force clearing things:
+    plugins: [],
+  },
+};
+
+async function loadBlocklist(id, callback) {
   gNotificationCheck = callback;
 
-  await AddonTestUtils.loadBlocklistData(do_get_file("../data"), file);
+  await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA[id]);
 }
 
 async function check_plugin_state(plugin) {
@@ -173,7 +251,7 @@ add_task(async function setup() {
   // right state.
   // Make sure to do this before we touch the plugin service, since that
   // will force a blocklist load.
-  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "bug455906_start");
+  await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA.start);
   mockPluginHost(PLUGINS);
 
 
@@ -211,7 +289,7 @@ add_task(async function test_1() {
   await promiseRestartManager();
   await checkInitialState();
 
-  await loadBlocklist("bug455906_warn", args => {
+  await loadBlocklist("warn", args => {
     dump("Checking notification pt 2\n");
     // Note: in the XML version, this notifies for 4 items - 2 add-ons and 2 plugins.
     // This test is artificial, we don't notify for add-ons anymore, see
@@ -271,14 +349,14 @@ add_task(async function test_1() {
   PLUGINS[5].enabledState = Ci.nsIPluginTag.STATE_ENABLED;
 
   await promiseRestartManager();
-  await loadBlocklist("bug455906_start");
+  await loadBlocklist("start");
 });
 
 add_task(async function test_pt3() {
   await promiseRestartManager();
   await checkInitialState();
 
-  await loadBlocklist("bug455906_block", args => {
+  await loadBlocklist("block", args => {
     dump("Checking notification pt 3\n");
     equal(args.list.length, 3);
 
@@ -354,7 +432,7 @@ add_task(async function test_pt3() {
   equal(await check_plugin_state(PLUGINS[5]), "false,true");
 
   // Back to starting state
-  await loadBlocklist("bug455906_start");
+  await loadBlocklist("start");
 });
 
 add_task(async function test_pt4() {
@@ -365,7 +443,7 @@ add_task(async function test_pt4() {
   await promiseRestartManager();
   await checkInitialState();
 
-  await loadBlocklist("bug455906_empty", args => {
+  await loadBlocklist("empty", args => {
     dump("Checking notification pt 4\n");
     // See note in other callback - we no longer notify for non-blocked add-ons.
     ok(false, "Should not get a notification as there are no blocked plugins.");

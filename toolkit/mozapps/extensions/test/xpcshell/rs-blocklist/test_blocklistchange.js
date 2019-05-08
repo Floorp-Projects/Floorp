@@ -43,6 +43,167 @@ const ADDON_IDS = ["softblock1@tests.mozilla.org",
                    "hardblock@tests.mozilla.org",
                    "regexpblock@tests.mozilla.org"];
 
+const BLOCK_APP = [{
+  guid: "xpcshell@tests.mozilla.org",
+  maxVersion: "2.*",
+  minVersion: "2",
+}];
+
+function softBlockApp(id) {
+  return {
+    guid: `${id}@tests.mozilla.org`,
+    versionRange: [{
+      severity: "1",
+      targetApplication: BLOCK_APP,
+    }],
+  };
+}
+
+function softBlockAddonChange(id) {
+  return {
+    guid: `${id}@tests.mozilla.org`,
+    versionRange: [{
+      severity: "1",
+      minVersion: "2",
+      maxVersion: "3",
+    }],
+  };
+}
+
+function softBlockUpdate2(id) {
+  return {
+    guid: `${id}@tests.mozilla.org`,
+    versionRange: [{severity: "1"}],
+  };
+}
+
+function softBlockManual(id) {
+  return {
+    guid: `${id}@tests.mozilla.org`,
+    versionRange: [{
+      maxVersion: "2",
+      minVersion: "1",
+      severity: "1",
+    }],
+  };
+}
+
+const BLOCKLIST_DATA = {
+  app_update: [
+    softBlockApp("softblock1"),
+    softBlockApp("softblock2"),
+    softBlockApp("softblock3"),
+    softBlockApp("softblock4"),
+    softBlockApp("softblock5"),
+    {
+      guid: "hardblock@tests.mozilla.org",
+      versionRange: [
+        {
+          targetApplication: BLOCK_APP,
+        },
+      ],
+    },
+    {
+      guid: "/^RegExp/",
+      versionRange: [
+        {
+          severity: "1",
+          targetApplication: BLOCK_APP,
+        },
+      ],
+    },
+    {
+      guid: "/^RegExp/i",
+      versionRange: [
+        {
+          targetApplication: BLOCK_APP,
+        },
+      ],
+    },
+  ],
+  addon_change: [
+    softBlockAddonChange("softblock1"),
+    softBlockAddonChange("softblock2"),
+    softBlockAddonChange("softblock3"),
+    softBlockAddonChange("softblock4"),
+    softBlockAddonChange("softblock5"),
+    {
+      guid: "hardblock@tests.mozilla.org",
+      versionRange: [
+        {
+          maxVersion: "3",
+          minVersion: "2",
+        },
+      ],
+    },
+    {
+      _comment: "Two RegExp matches, so test flags work - first shouldn't match.",
+      guid: "/^RegExp/",
+      versionRange: [
+        {
+          maxVersion: "3",
+          minVersion: "2",
+          severity: "1",
+        },
+      ],
+    },
+    {
+      guid: "/^RegExp/i",
+      versionRange: [
+        {
+          maxVersion: "3",
+          minVersion: "2",
+          severity: "2",
+        },
+      ],
+    },
+  ],
+  blocklist_update2: [
+    softBlockUpdate2("softblock1"),
+    softBlockUpdate2("softblock2"),
+    softBlockUpdate2("softblock3"),
+    softBlockUpdate2("softblock4"),
+    softBlockUpdate2("softblock5"),
+    {
+      guid: "hardblock@tests.mozilla.org",
+      versionRange: [],
+    },
+    {
+      guid: "/^RegExp/",
+      versionRange: [{severity: "1"}],
+    },
+    {
+      guid: "/^RegExp/i",
+      versionRange: [],
+    },
+  ],
+  manual_update: [
+    softBlockManual("softblock1"),
+    softBlockManual("softblock2"),
+    softBlockManual("softblock3"),
+    softBlockManual("softblock4"),
+    softBlockManual("softblock5"),
+    {
+      guid: "hardblock@tests.mozilla.org",
+      versionRange: [
+        {
+          maxVersion: "2",
+          minVersion: "1",
+        },
+      ],
+    },
+    {
+      guid: "/^RegExp/i",
+      versionRange: [
+        {
+          maxVersion: "2",
+          minVersion: "1",
+        },
+      ],
+    },
+  ],
+};
+
 // XXXgijs: according to https://bugzilla.mozilla.org/show_bug.cgi?id=1257565#c111
 // this code and the related code in Blocklist.jsm (specific to XML blocklist) is
 // dead code and can be removed. See https://bugzilla.mozilla.org/show_bug.cgi?id=1549550 .
@@ -93,8 +254,8 @@ registrar.registerFactory(Components.ID("{f0863905-4dde-42e2-991c-2dc8209bc9ca}"
                           "Fake Install Prompt",
                           "@mozilla.org/addons/web-install-prompt;1", InstallConfirmFactory);
 
-function Pload_blocklist(aFile) {
-  return AddonTestUtils.loadBlocklistData(do_get_file("../data/blocklistchange/"), aFile);
+function Pload_blocklist(aId) {
+  return AddonTestUtils.loadBlocklistRawData({extensions: BLOCKLIST_DATA[aId]});
 }
 
 // Does a background update check for add-ons and returns a promise that
@@ -419,7 +580,7 @@ add_task(async function update_schema_5() {
 // Starts with add-ons unblocked and then loads new blocklists to change add-ons
 // to blocked and back again.
 add_task(async function run_blocklist_update_test() {
-  await Pload_blocklist("blocklist_update1");
+  await AddonTestUtils.loadBlocklistRawData({extensions: []});
   await promiseRestartManager();
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
@@ -463,7 +624,7 @@ add_task(async function run_blocklist_update_test() {
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
 
-  await Pload_blocklist("blocklist_update1");
+  await AddonTestUtils.loadBlocklistRawData({extensions: []});
   await promiseRestartManager();
 
   [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);

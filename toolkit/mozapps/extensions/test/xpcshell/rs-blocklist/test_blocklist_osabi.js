@@ -132,6 +132,91 @@ const ADDONS = [
 
 const ADDON_IDS = ADDONS.map(a => a.id);
 
+const BLOCKLIST_DATA = [
+  {
+    guid: "test_bug393285_2@tests.mozilla.org",
+    versionRange: [],
+  },
+  {
+    guid: "test_bug393285_3a@tests.mozilla.org",
+    versionRange: [{maxVersion: "1.0", minVersion: "1.0"}],
+  },
+  {
+    guid: "test_bug393285_3b@tests.mozilla.org",
+    versionRange: [{maxVersion: "1.0", minVersion: "1.0"}],
+  },
+  {
+    guid: "test_bug393285_4@tests.mozilla.org",
+    versionRange: [
+      {
+        maxVersion: "1.0",
+        minVersion: "1.0",
+        targetApplication: [
+          {
+            guid: "xpcshell@tests.mozilla.org",
+            maxVersion: "1.0",
+            minVersion: "1.0",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    guid: "test_bug393285_5@tests.mozilla.org",
+    os: "Darwin",
+    versionRange: [],
+  },
+  {
+    guid: "test_bug393285_6@tests.mozilla.org",
+    os: "XPCShell",
+    versionRange: [],
+  },
+  {
+    guid: "test_bug393285_7@tests.mozilla.org",
+    os: "Darwin,XPCShell,WINNT",
+    versionRange: [],
+  },
+  {
+    guid: "test_bug393285_8@tests.mozilla.org",
+    xpcomabi: "x86-msvc",
+    versionRange: [],
+  },
+  {
+    guid: "test_bug393285_9@tests.mozilla.org",
+    xpcomabi: "noarch-spidermonkey",
+    versionRange: [],
+  },
+  {
+    guid: "test_bug393285_10@tests.mozilla.org",
+    xpcomabi: "ppc-gcc3,noarch-spidermonkey,x86-msvc",
+    versionRange: [],
+  },
+  {
+    guid: "test_bug393285_11@tests.mozilla.org",
+    os: "Darwin",
+    xpcomabi: "ppc-gcc3,x86-msvc",
+    versionRange: [],
+  },
+  {
+    guid: "test_bug393285_12@tests.mozilla.org",
+    os: "Darwin",
+    xpcomabi: "ppc-gcc3,noarch-spidermonkey,x86-msvc",
+    versionRange: [],
+  },
+  {
+    guid: "test_bug393285_13@tests.mozilla.org",
+    os: "XPCShell",
+    xpcomabi: "ppc-gcc3,x86-msvc",
+    versionRange: [],
+  },
+  {
+    guid: "test_bug393285_14@tests.mozilla.org",
+    os: "XPCShell,WINNT",
+    xpcomabi: "ppc-gcc3,x86-msvc,noarch-spidermonkey",
+    versionRange: [],
+  },
+];
+
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   await promiseStartupManager();
@@ -154,7 +239,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_1() {
-  await AddonTestUtils.loadBlocklistData(do_get_file("../data"), "test_bug393285");
+  await AddonTestUtils.loadBlocklistRawData({extensions: BLOCKLIST_DATA});
 
   let addons = await getAddons(ADDON_IDS);
   async function isBlocklisted(addon, appVer, toolkitVer) {

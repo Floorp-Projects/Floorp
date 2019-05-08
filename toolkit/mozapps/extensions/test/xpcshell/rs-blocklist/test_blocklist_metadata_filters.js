@@ -5,8 +5,44 @@
 // Tests blocking of extensions by ID, name, creator, homepageURL, updateURL
 // and RegExps for each. See bug 897735.
 
-const profileDir = gProfD.clone();
-profileDir.append("extensions");
+const BLOCKLIST_DATA = {
+  extensions: [
+    {
+      guid: null,
+      name: "/^Mozilla Corp\\.$/",
+      versionRange: [
+        {
+          severity: "1",
+          targetApplication: [
+            {
+              guid: "xpcshell@tests.mozilla.org",
+              maxVersion: "2.*",
+              minVersion: "1",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      guid: "/block2/",
+      name: "/^Moz/",
+      homepageURL: "/\\.dangerous\\.com/",
+      updateURL: "/\\.dangerous\\.com/",
+      versionRange: [
+        {
+          severity: "3",
+          targetApplication: [
+            {
+              guid: "xpcshell@tests.mozilla.org",
+              maxVersion: "2.*",
+              minVersion: "1",
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
@@ -62,7 +98,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_blocks() {
-  await AddonTestUtils.loadBlocklistData(do_get_file("../data/"), "test_blocklist_metadata_filters_1");
+  await AddonTestUtils.loadBlocklistRawData(BLOCKLIST_DATA);
 
   let [a1, a2, a3] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
                                                         "block2@tests.mozilla.org",
