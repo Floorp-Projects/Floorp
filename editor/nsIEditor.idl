@@ -364,6 +364,7 @@ interface nsIEditor  : nsISupports
    * @param aElement      the content element to operate on
    * @param aAttribute    the string representation of the attribute to get
    */
+  [can_run_script]
   void removeAttribute(in Element aElement,
                        in AString aAttribute);
 

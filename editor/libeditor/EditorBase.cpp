@@ -2378,8 +2378,8 @@ void EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
   RefPtr<nsDOMAttributeMap> destAttributes = destElement->Attributes();
   while (RefPtr<Attr> attr = destAttributes->Item(0)) {
     if (isDestElementInBody) {
-      RemoveAttributeWithTransaction(destElement,
-                                     *attr->NodeInfo()->NameAtom());
+      RemoveAttributeWithTransaction(
+          destElement, MOZ_KnownLive(*attr->NodeInfo()->NameAtom()));
     } else {
       destElement->UnsetAttr(kNameSpaceID_None, attr->NodeInfo()->NameAtom(),
                              true);
