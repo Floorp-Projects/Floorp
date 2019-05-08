@@ -5972,16 +5972,6 @@ AbortReasonOr<bool> PrototypeHasIndexedProperty(IonBuilder* builder,
   return false;
 }
 
-// Whether Array.prototype, or an object on its proto chain, has an indexed
-// property.
-AbortReasonOr<bool> jit::ArrayPrototypeHasIndexedProperty(IonBuilder* builder,
-                                                          JSScript* script) {
-  if (JSObject* proto = script->global().maybeGetArrayPrototype()) {
-    return PrototypeHasIndexedProperty(builder, proto);
-  }
-  return true;
-}
-
 // Whether obj or any of its prototypes have an indexed property.
 AbortReasonOr<bool> jit::TypeCanHaveExtraIndexedProperties(
     IonBuilder* builder, TemporaryTypeSet* types) {
