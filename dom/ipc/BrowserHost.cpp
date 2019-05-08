@@ -15,27 +15,43 @@ namespace dom {
 BrowserHost::BrowserHost(BrowserParent* aParent) : mRoot(aParent) {}
 
 mozilla::layers::LayersId BrowserHost::GetLayersId() const {
-  return LayersId{0};
+  return mRoot->GetRenderFrame()->GetLayersId();
 }
 
-BrowsingContext* BrowserHost::GetBrowsingContext() const { return nullptr; }
+BrowsingContext* BrowserHost::GetBrowsingContext() const {
+  return mRoot->GetBrowsingContext();
+}
 
-nsILoadContext* BrowserHost::GetLoadContext() const { return nullptr; }
+nsILoadContext* BrowserHost::GetLoadContext() const {
+  RefPtr<nsILoadContext> loadContext = mRoot->GetLoadContext();
+  return loadContext;
+}
 
-void BrowserHost::LoadURL(nsIURI* aURI) {}
+void BrowserHost::LoadURL(nsIURI* aURI) { mRoot->LoadURL(aURI); }
 
-void BrowserHost::ResumeLoad(uint64_t aPendingSwitchId) {}
+void BrowserHost::ResumeLoad(uint64_t aPendingSwitchId) {
+  mRoot->ResumeLoad(aPendingSwitchId);
+}
 
-void BrowserHost::DestroyStart() {}
+void BrowserHost::DestroyStart() { mRoot->Destroy(); }
 
-void BrowserHost::DestroyComplete() {}
+void BrowserHost::DestroyComplete() {
+  if (!mRoot) {
+    return;
+  }
+  mRoot->SetOwnerElement(nullptr);
+  mRoot->Destroy();
+  mRoot = nullptr;
+}
 
 bool BrowserHost::Show(const ScreenIntSize& aSize, bool aParentIsActive) {
-  return true;
+  return mRoot->Show(aSize, aParentIsActive);
 }
 
 void BrowserHost::UpdateDimensions(const nsIntRect& aRect,
-                                   const ScreenIntSize& aSize) {}
+                                   const ScreenIntSize& aSize) {
+  mRoot->UpdateDimensions(aRect, aSize);
+}
 
 }  // namespace dom
 }  // namespace mozilla

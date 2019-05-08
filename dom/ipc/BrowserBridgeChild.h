@@ -29,14 +29,12 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   }
 
   mozilla::layers::LayersId GetLayersId() { return mLayersId; }
+  nsFrameLoader* GetFrameLoader() const { return mFrameLoader; }
 
   BrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
 
   // XXX(nika): We should have a load context here. (bug 1532664)
   nsILoadContext* GetLoadContext() { return nullptr; }
-
-  void UpdateDimensions(const nsIntRect& aRect,
-                        const mozilla::ScreenIntSize& aSize);
 
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
