@@ -58,7 +58,7 @@ export function connect(url: string, actor: string, canRewind: boolean) {
     dispatch(
       ({
         type: "CONNECT",
-        mainThread: { url, actor, type: -1 },
+        mainThread: { url, actor, type: -1, name: "" },
         canRewind
       }: Action)
     );
