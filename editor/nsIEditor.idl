@@ -434,6 +434,7 @@ interface nsIEditor  : nsISupports
    *                      of the same type.  However, a text node can be
    *                      merged only with another text node.
    */
+  [can_run_script]
   void joinNodes(in Node leftNode,
                  in Node rightNode,
                  in Node parent);
