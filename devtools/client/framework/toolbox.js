@@ -175,7 +175,6 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this._onToolSelected = this._onToolSelected.bind(this);
   this._onTargetClosed = this._onTargetClosed.bind(this);
-  this._onContextMenu = this._onContextMenu.bind(this);
   this.updateToolboxButtonsVisibility = this.updateToolboxButtonsVisibility.bind(this);
   this.updateToolboxButtons = this.updateToolboxButtons.bind(this);
   this.selectTool = this.selectTool.bind(this);
@@ -515,6 +514,21 @@ Toolbox.prototype = {
       Services.prefs.addObserver("devtools.serviceWorkers.testing.enabled",
                                  this._applyServiceWorkersTestingSettings);
 
+      // Register listener for handling context menus in standard
+      // input elements: <input> and <textarea>.
+      // There is also support for custom input elements using
+      // .devtools-input class (e.g. CodeMirror instances).
+      this.doc.addEventListener("contextmenu", (e) => {
+        if (e.originalTarget.closest("input[type=text]") ||
+            e.originalTarget.closest("input[type=search]") ||
+            e.originalTarget.closest("input:not([type])") ||
+            e.originalTarget.closest(".devtools-input") ||
+            e.originalTarget.closest("textarea")) {
+          e.stopPropagation();
+          e.preventDefault();
+          this.openTextBoxContextMenu(e.screenX, e.screenY);
+        }
+      });
       // Get the DOM element to mount the ToolboxController to.
       this._componentMount = this.doc.getElementById("toolbox-toolbar-mount");
 
@@ -638,7 +652,6 @@ Toolbox.prototype = {
 
     this._chromeEventHandler.addEventListener("keypress", this._splitConsoleOnKeypress);
     this._chromeEventHandler.addEventListener("focus", this._onFocus, true);
-    this._chromeEventHandler.addEventListener("contextmenu", this._onContextMenu);
   },
 
   _removeChromeEventHandlerEvents: function() {
@@ -654,7 +667,6 @@ Toolbox.prototype = {
     this._chromeEventHandler.removeEventListener("keypress",
       this._splitConsoleOnKeypress);
     this._chromeEventHandler.removeEventListener("focus", this._onFocus, true);
-    this._chromeEventHandler.removeEventListener("contextmenu", this._onContextMenu);
 
     this._chromeEventHandler = null;
   },
@@ -783,21 +795,6 @@ Toolbox.prototype = {
     if (this._windowHostShortcuts) {
       this._windowHostShortcuts.destroy();
       this._windowHostShortcuts = null;
-    }
-  },
-
-  _onContextMenu: function(e) {
-    // Handle context menu events in standard input elements: <input> and <textarea>.
-    // Also support for custom input elements using .devtools-input class
-    // (e.g. CodeMirror instances).
-    if (e.originalTarget.closest("input[type=text]") ||
-        e.originalTarget.closest("input[type=search]") ||
-        e.originalTarget.closest("input:not([type])") ||
-        e.originalTarget.closest(".devtools-input") ||
-        e.originalTarget.closest("textarea")) {
-      e.stopPropagation();
-      e.preventDefault();
-      this.openTextBoxContextMenu(e.screenX, e.screenY);
     }
   },
 
