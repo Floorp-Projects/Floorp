@@ -636,6 +636,19 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         FastTransform::Offset(offset)
     }
 
+    #[allow(unused)]
+    pub fn with_scale_offset(scale_offset: ScaleOffset) -> Self {
+        if scale_offset.scale == Vector2D::new(1.0, 1.0) {
+            FastTransform::Offset(TypedVector2D::from_untyped(&scale_offset.offset))
+        } else {
+            FastTransform::Transform {
+                transform: scale_offset.to_transform(),
+                inverse: Some(scale_offset.inverse().to_transform()),
+                is_2d: true,
+            }
+        }
+    }
+
     #[inline(always)]
     pub fn with_transform(transform: TypedTransform3D<f32, Src, Dst>) -> Self {
         if transform.is_simple_2d_translation() {
@@ -683,30 +696,66 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         }
     }
 
-    #[inline(always)]
-    pub fn pre_mul<NewSrc>(
-        &self,
-        other: &FastTransform<NewSrc, Src>
-    ) -> FastTransform<NewSrc, Dst> {
-        match (self, other) {
-            (&FastTransform::Offset(ref offset), &FastTransform::Offset(ref other_offset)) => {
-                let offset = TypedVector2D::from_untyped(&offset.to_untyped());
-                FastTransform::Offset(offset + *other_offset)
+    pub fn post_mul<NewDst>(&self, other: &FastTransform<Dst, NewDst>) -> FastTransform<Src, NewDst> {
+        match *self {
+            FastTransform::Offset(offset) => match *other {
+                FastTransform::Offset(other_offset) => {
+                    FastTransform::Offset(offset + other_offset * TypedScale::<_, _, Src>::new(1.0))
+                }
+                FastTransform::Transform { transform: ref other_transform, .. } => {
+                    FastTransform::with_transform(
+                        other_transform
+                            .with_source::<Src>()
+                            .pre_translate(offset.to_3d())
+                    )
+                }
             }
-            _ => {
-                let new_transform = self.to_transform().pre_mul(&other.to_transform());
-                FastTransform::with_transform(new_transform)
+            FastTransform::Transform { ref transform, ref inverse, is_2d } => match *other {
+                FastTransform::Offset(other_offset) => {
+                    FastTransform::with_transform(
+                        transform
+                            .post_translate(other_offset.to_3d())
+                            .with_destination::<NewDst>()
+                    )
+                }
+                FastTransform::Transform { transform: ref other_transform, inverse: ref other_inverse, is_2d: other_is_2d } => {
+                    FastTransform::Transform {
+                        transform: transform.post_mul(other_transform),
+                        inverse: inverse.as_ref().and_then(|self_inv|
+                            other_inverse.as_ref().map(|other_inv| self_inv.pre_mul(other_inv))
+                        ),
+                        is_2d: is_2d & other_is_2d,
+                    }
+                }
             }
         }
     }
 
-    #[inline(always)]
+    pub fn pre_mul<NewSrc>(
+        &self,
+        other: &FastTransform<NewSrc, Src>
+    ) -> FastTransform<NewSrc, Dst> {
+        other.post_mul(self)
+    }
+
     pub fn pre_translate(&self, other_offset: &TypedVector2D<f32, Src>) -> Self {
         match *self {
             FastTransform::Offset(ref offset) =>
                 FastTransform::Offset(*offset + *other_offset),
             FastTransform::Transform { transform, .. } =>
                 FastTransform::with_transform(transform.pre_translate(other_offset.to_3d()))
+        }
+    }
+
+    pub fn post_translate(&self, other_offset: &TypedVector2D<f32, Dst>) -> Self {
+        match *self {
+            FastTransform::Offset(ref offset) => {
+                FastTransform::Offset(*offset + *other_offset * TypedScale::<_, _, Src>::new(1.0))
+            }
+            FastTransform::Transform { ref transform, .. } => {
+                let transform = transform.post_translate(other_offset.to_3d());
+                FastTransform::with_transform(transform)
+            }
         }
     }
 
@@ -737,19 +786,6 @@ impl<Src, Dst> FastTransform<Src, Dst> {
                 Some(TypedPoint2D::from_untyped(&new_point.to_untyped()))
             }
             FastTransform::Transform { ref transform, .. } => transform.transform_point2d(point),
-        }
-    }
-
-    pub fn post_translate(&self, new_offset: TypedVector2D<f32, Dst>) -> Self {
-        match *self {
-            FastTransform::Offset(offset) => {
-                let offset = offset.to_untyped() + new_offset.to_untyped();
-                FastTransform::Offset(TypedVector2D::from_untyped(&offset))
-            }
-            FastTransform::Transform { ref transform, .. } => {
-                let transform = transform.post_translate(new_offset.to_3d());
-                FastTransform::with_transform(transform)
-            }
         }
     }
 

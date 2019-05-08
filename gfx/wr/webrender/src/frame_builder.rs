@@ -641,7 +641,7 @@ impl FrameBuilder {
             layer,
             profile_counters,
             passes,
-            transform_palette: transform_palette.transforms,
+            transform_palette: transform_palette.finish(),
             render_tasks,
             deferred_resolves,
             gpu_cache_frame_id,
