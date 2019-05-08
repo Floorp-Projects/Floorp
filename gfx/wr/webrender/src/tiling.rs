@@ -7,7 +7,7 @@ use api::{DocumentLayer, FilterData, FilterOp, ImageFormat, LineOrientation};
 use api::units::*;
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
-use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
+use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image, BatchBuilder};
 use crate::clip::ClipStore;
 use crate::clip_scroll_tree::{ClipScrollTree};
 use crate::debug_render::DebugItem;
@@ -374,6 +374,10 @@ pub struct ColorRenderTarget {
     // we can set a scissor rect and only clear to the
     // used portion of the target as an optimization.
     pub used_rect: DeviceIntRect,
+    // This is used to build batches for this render target. In future,
+    // this will be used to support splitting a single picture primitive
+    // list into multiple batch sets.
+    batch_builder: BatchBuilder,
 }
 
 impl RenderTarget for ColorRenderTarget {
@@ -392,6 +396,7 @@ impl RenderTarget for ColorRenderTarget {
             alpha_tasks: Vec::new(),
             screen_size,
             used_rect: DeviceIntRect::zero(),
+            batch_builder: BatchBuilder::new(),
         }
     }
 
@@ -425,20 +430,20 @@ impl RenderTarget for ColorRenderTarget {
 
                     let (target_rect, _) = task.get_target_rect();
 
-                    let scisor_rect = if pic_task.can_merge {
+                    let scissor_rect = if pic_task.can_merge {
                         None
                     } else {
                         Some(target_rect)
                     };
 
-                    let mut batch_builder = AlphaBatchBuilder::new(
+                    let mut alpha_batch_builder = AlphaBatchBuilder::new(
                         self.screen_size,
-                        scisor_rect,
                         ctx.break_advanced_blend_batches,
                     );
 
-                    batch_builder.add_pic_to_batch(
+                    self.batch_builder.add_pic_to_batch(
                         pic,
+                        &mut alpha_batch_builder,
                         *task_id,
                         ctx,
                         gpu_cache,
@@ -450,10 +455,11 @@ impl RenderTarget for ColorRenderTarget {
                         z_generator,
                     );
 
-                    batch_builder.build(
+                    alpha_batch_builder.build(
                         &mut self.alpha_batch_containers,
                         &mut merged_batches,
                         target_rect,
+                        scissor_rect,
                     );
                 }
                 _ => {

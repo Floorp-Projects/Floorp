@@ -466,15 +466,12 @@ struct SegmentInstanceData {
 pub struct AlphaBatchBuilder {
     pub batch_lists: Vec<BatchList>,
     screen_size: DeviceIntSize,
-    task_scissor_rect: Option<DeviceIntRect>,
-    glyph_fetch_buffer: Vec<GlyphFetchResult>,
     break_advanced_blend_batches: bool,
 }
 
 impl AlphaBatchBuilder {
     pub fn new(
         screen_size: DeviceIntSize,
-        task_scissor_rect: Option<DeviceIntRect>,
         break_advanced_blend_batches: bool,
     ) -> Self {
         let batch_lists = vec![
@@ -488,9 +485,7 @@ impl AlphaBatchBuilder {
 
         AlphaBatchBuilder {
             batch_lists,
-            task_scissor_rect,
             screen_size,
-            glyph_fetch_buffer: Vec::new(),
             break_advanced_blend_batches,
         }
     }
@@ -513,7 +508,6 @@ impl AlphaBatchBuilder {
     }
 
     fn can_merge(&self) -> bool {
-        self.task_scissor_rect.is_none() &&
         self.batch_lists.len() == 1
     }
 
@@ -522,12 +516,13 @@ impl AlphaBatchBuilder {
         batch_containers: &mut Vec<AlphaBatchContainer>,
         merged_batches: &mut AlphaBatchContainer,
         task_rect: DeviceIntRect,
+        task_scissor_rect: Option<DeviceIntRect>,
     ) {
         for batch_list in &mut self.batch_lists {
             batch_list.finalize();
         }
 
-        if self.can_merge() {
+        if task_scissor_rect.is_none() && self.can_merge() {
             let batch_list = self.batch_lists.pop().unwrap();
             debug_assert!(batch_list.tile_blits.is_empty());
             merged_batches.merge(batch_list, &task_rect);
@@ -536,7 +531,7 @@ impl AlphaBatchBuilder {
                 batch_containers.push(AlphaBatchContainer {
                     alpha_batches: batch_list.alpha_batch_list.batches,
                     opaque_batches: batch_list.opaque_batch_list.batches,
-                    task_scissor_rect: self.task_scissor_rect,
+                    task_scissor_rect,
                     regions: batch_list.regions,
                     tile_blits: batch_list.tile_blits,
                     task_rect,
@@ -544,10 +539,31 @@ impl AlphaBatchBuilder {
             }
         }
     }
+}
 
+/// Supports (recursively) adding a list of primitives and pictures to an alpha batch
+/// builder. In future, it will support multiple dirty regions / slices, allowing the
+/// contents of a picture to be spliced into multiple batch builders.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct BatchBuilder {
+    /// A temporary buffer that is used during glyph fetching, stored here
+    /// to reduce memory allocations.
+    glyph_fetch_buffer: Vec<GlyphFetchResult>,
+}
+
+impl BatchBuilder {
+    pub fn new() -> Self {
+        BatchBuilder {
+            glyph_fetch_buffer: Vec::new(),
+        }
+    }
+
+    /// Add a picture to a given batch builder.
     pub fn add_pic_to_batch(
         &mut self,
         pic: &PicturePrimitive,
+        batcher: &mut AlphaBatchBuilder,
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
@@ -564,6 +580,7 @@ impl AlphaBatchBuilder {
         for prim_instance in &pic.prim_list.prim_instances {
             self.add_prim_to_batch(
                 prim_instance,
+                batcher,
                 ctx,
                 gpu_cache,
                 render_tasks,
@@ -585,6 +602,7 @@ impl AlphaBatchBuilder {
     fn add_prim_to_batch(
         &mut self,
         prim_instance: &PrimitiveInstance,
+        batcher: &mut AlphaBatchBuilder,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskTree,
@@ -676,7 +694,7 @@ impl AlphaBatchBuilder {
                     user_data: 0,
                 });
 
-                self.current_batch_list().push_single_instance(
+                batcher.current_batch_list().push_single_instance(
                     batch_key,
                     bounding_rect,
                     z_id,
@@ -744,6 +762,7 @@ impl AlphaBatchBuilder {
 
                 let border_data = &prim_data.kind;
                 self.add_segmented_prim_to_batch(
+                    batcher,
                     Some(border_data.brush_segments.as_slice()),
                     common_data.opacity,
                     &batch_params,
@@ -765,8 +784,7 @@ impl AlphaBatchBuilder {
                 // The GPU cache data is stored in the template and reused across
                 // frames and display lists.
                 let prim_data = &ctx.data_stores.text_run[data_handle];
-                let glyph_fetch_buffer = &mut self.glyph_fetch_buffer;
-                let alpha_batch_list = &mut self.batch_lists.last_mut().unwrap().alpha_batch_list;
+                let alpha_batch_list = &mut batcher.batch_lists.last_mut().unwrap().alpha_batch_list;
                 let prim_cache_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
 
                 let prim_header = PrimitiveHeader {
@@ -788,7 +806,7 @@ impl AlphaBatchBuilder {
                 ctx.resource_cache.fetch_glyphs(
                     run.used_font.clone(),
                     &glyph_keys,
-                    glyph_fetch_buffer,
+                    &mut self.glyph_fetch_buffer,
                     gpu_cache,
                     |texture_id, mut glyph_format, glyphs| {
                         debug_assert_ne!(texture_id, TextureSource::Invalid);
@@ -972,7 +990,7 @@ impl AlphaBatchBuilder {
                     user_data: segment_user_data,
                 });
 
-                self.current_batch_list().push_single_instance(
+                batcher.current_batch_list().push_single_instance(
                     batch_key,
                     bounding_rect,
                     z_id,
@@ -1068,7 +1086,7 @@ impl AlphaBatchBuilder {
                                 z_id,
                             );
 
-                            self.current_batch_list().push_single_instance(
+                            batcher.current_batch_list().push_single_instance(
                                 key,
                                 &prim_info.clip_chain.pic_clip_rect,
                                 z_id,
@@ -1113,6 +1131,7 @@ impl AlphaBatchBuilder {
                                 if !tile_cache.is_enabled {
                                     self.add_pic_to_batch(
                                         picture,
+                                        batcher,
                                         task_id,
                                         ctx,
                                         gpu_cache,
@@ -1200,7 +1219,7 @@ impl AlphaBatchBuilder {
                                         // use this API to get an appropriate batch for each tile, since
                                         // the batch textures may be different. The batch list internally
                                         // caches the current batch if the key hasn't changed.
-                                        let batch = self.current_batch_list().set_params_and_get_batch(
+                                        let batch = batcher.current_batch_list().set_params_and_get_batch(
                                             key,
                                             bounding_rect,
                                             z_id,
@@ -1239,13 +1258,14 @@ impl AlphaBatchBuilder {
                                             })
                                             .collect();
 
-                                        self.push_new_batch_list(
+                                        batcher.push_new_batch_list(
                                             batch_regions,
                                             tile_blits,
                                         );
 
                                         self.add_pic_to_batch(
                                             picture,
+                                            batcher,
                                             task_id,
                                             ctx,
                                             gpu_cache,
@@ -1257,7 +1277,7 @@ impl AlphaBatchBuilder {
                                             z_generator,
                                         );
 
-                                        self.push_new_batch_list(
+                                        batcher.push_new_batch_list(
                                             Vec::new(),
                                             Vec::new(),
                                         );
@@ -1296,7 +1316,7 @@ impl AlphaBatchBuilder {
                                             user_data: uv_rect_address.as_int(),
                                         };
 
-                                        self.current_batch_list().push_single_instance(
+                                        batcher.current_batch_list().push_single_instance(
                                             key,
                                             bounding_rect,
                                             z_id,
@@ -1387,14 +1407,14 @@ impl AlphaBatchBuilder {
                                             user_data: content_uv_rect_address,
                                         };
 
-                                        self.current_batch_list().push_single_instance(
+                                        batcher.current_batch_list().push_single_instance(
                                             shadow_key,
                                             bounding_rect,
                                             z_id_shadow,
                                             PrimitiveInstanceData::from(shadow_instance),
                                         );
 
-                                        self.current_batch_list().push_single_instance(
+                                        batcher.current_batch_list().push_single_instance(
                                             content_key,
                                             bounding_rect,
                                             z_id_content,
@@ -1473,7 +1493,7 @@ impl AlphaBatchBuilder {
                                             user_data: 0,
                                         };
 
-                                        self.current_batch_list().push_single_instance(
+                                        batcher.current_batch_list().push_single_instance(
                                             key,
                                             bounding_rect,
                                             z_id,
@@ -1522,7 +1542,7 @@ impl AlphaBatchBuilder {
                                     user_data: 0,
                                 };
 
-                                self.current_batch_list().push_single_instance(
+                                batcher.current_batch_list().push_single_instance(
                                     key,
                                     bounding_rect,
                                     z_id,
@@ -1557,7 +1577,7 @@ impl AlphaBatchBuilder {
                                     user_data: uv_rect_address.as_int(),
                                 };
 
-                                self.current_batch_list().push_single_instance(
+                                batcher.current_batch_list().push_single_instance(
                                     key,
                                     bounding_rect,
                                     z_id,
@@ -1597,7 +1617,7 @@ impl AlphaBatchBuilder {
                                     user_data: 0,
                                 };
 
-                                self.current_batch_list().push_single_instance(
+                                batcher.current_batch_list().push_single_instance(
                                     key,
                                     bounding_rect,
                                     z_id,
@@ -1658,6 +1678,7 @@ impl AlphaBatchBuilder {
                                 let specified_blend_mode = BlendMode::PremultipliedAlpha;
 
                                 self.add_segmented_prim_to_batch(
+                                    batcher,
                                     segments,
                                     opacity,
                                     &batch_params,
@@ -1679,6 +1700,7 @@ impl AlphaBatchBuilder {
                         // no composition operation), recurse and add to the current batch list.
                         self.add_pic_to_batch(
                             picture,
+                            batcher,
                             task_id,
                             ctx,
                             gpu_cache,
@@ -1747,6 +1769,7 @@ impl AlphaBatchBuilder {
                 );
 
                 self.add_segmented_prim_to_batch(
+                    batcher,
                     Some(border_data.brush_segments.as_slice()),
                     common_data.opacity,
                     &batch_params,
@@ -1809,6 +1832,7 @@ impl AlphaBatchBuilder {
                 );
 
                 self.add_segmented_prim_to_batch(
+                    batcher,
                     segments,
                     opacity,
                     &batch_params,
@@ -1917,6 +1941,7 @@ impl AlphaBatchBuilder {
                 );
 
                 self.add_segmented_prim_to_batch(
+                    batcher,
                     segments,
                     prim_common_data.opacity,
                     &batch_params,
@@ -2022,6 +2047,7 @@ impl AlphaBatchBuilder {
                     );
 
                     self.add_segmented_prim_to_batch(
+                        batcher,
                         segments,
                         opacity,
                         &batch_params,
@@ -2089,7 +2115,7 @@ impl AlphaBatchBuilder {
                                     kind: BatchKind::Brush(batch_kind),
                                     textures,
                                 };
-                                self.current_batch_list().push_single_instance(
+                                batcher.current_batch_list().push_single_instance(
                                     batch_key,
                                     bounding_rect,
                                     z_id,
@@ -2170,7 +2196,7 @@ impl AlphaBatchBuilder {
                         user_data: segment_user_data,
                     });
 
-                    self.current_batch_list().push_single_instance(
+                    batcher.current_batch_list().push_single_instance(
                         batch_key,
                         bounding_rect,
                         z_id,
@@ -2204,6 +2230,7 @@ impl AlphaBatchBuilder {
                     };
 
                     self.add_segmented_prim_to_batch(
+                        batcher,
                         segments,
                         prim_data.opacity,
                         &batch_params,
@@ -2233,7 +2260,7 @@ impl AlphaBatchBuilder {
                         bounding_rect,
                         clip_task_address,
                         gpu_cache,
-                        self.current_batch_list(),
+                        batcher.current_batch_list(),
                         &prim_header,
                         prim_headers,
                         z_id,
@@ -2290,6 +2317,7 @@ impl AlphaBatchBuilder {
                     };
 
                     self.add_segmented_prim_to_batch(
+                        batcher,
                         segments,
                         prim_data.opacity,
                         &batch_params,
@@ -2319,7 +2347,7 @@ impl AlphaBatchBuilder {
                         bounding_rect,
                         clip_task_address,
                         gpu_cache,
-                        self.current_batch_list(),
+                        batcher.current_batch_list(),
                         &prim_header,
                         prim_headers,
                         z_id,
@@ -2332,6 +2360,7 @@ impl AlphaBatchBuilder {
     /// Add a single segment instance to a batch.
     fn add_segment_to_batch(
         &mut self,
+        batcher: &mut AlphaBatchBuilder,
         segment: &BrushSegment,
         segment_data: &SegmentInstanceData,
         segment_index: i32,
@@ -2380,7 +2409,7 @@ impl AlphaBatchBuilder {
             textures: segment_data.textures,
         };
 
-        self.current_batch_list().push_single_instance(
+        batcher.current_batch_list().push_single_instance(
             batch_key,
             bounding_rect,
             z_id,
@@ -2391,6 +2420,7 @@ impl AlphaBatchBuilder {
     /// Add any segment(s) from a brush to batches.
     fn add_segmented_prim_to_batch(
         &mut self,
+        batcher: &mut AlphaBatchBuilder,
         brush_segments: Option<&[BrushSegment]>,
         prim_opacity: PrimitiveOpacity,
         params: &BrushBatchParameters,
@@ -2415,6 +2445,7 @@ impl AlphaBatchBuilder {
                     .enumerate()
                 {
                     self.add_segment_to_batch(
+                        batcher,
                         segment,
                         segment_data,
                         segment_index as i32,
@@ -2439,6 +2470,7 @@ impl AlphaBatchBuilder {
                     .enumerate()
                 {
                     self.add_segment_to_batch(
+                        batcher,
                         segment,
                         segment_data,
                         segment_index as i32,
@@ -2475,7 +2507,7 @@ impl AlphaBatchBuilder {
                     prim_header_index,
                     user_data: segment_data.user_data,
                 });
-                self.current_batch_list().push_single_instance(
+                batcher.current_batch_list().push_single_instance(
                     batch_key,
                     bounding_rect,
                     z_id,
@@ -3160,3 +3192,4 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
         )
     }
 }
+

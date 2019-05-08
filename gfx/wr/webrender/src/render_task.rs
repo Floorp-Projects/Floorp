@@ -543,7 +543,6 @@ impl BlurTask {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScalingTask {
     pub target_kind: RenderTargetKind,
-    pub uv_rect_handle: GpuCacheHandle,
     uv_rect_kind: UvRectKind,
 }
 
@@ -1106,7 +1105,6 @@ impl RenderTask {
             vec![src_task_id],
             RenderTaskKind::Scaling(ScalingTask {
                 target_kind,
-                uv_rect_handle: GpuCacheHandle::new(),
                 uv_rect_kind,
             }),
             ClearMode::DontCare,
