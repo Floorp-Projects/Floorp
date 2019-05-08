@@ -256,7 +256,7 @@ class WebConsoleWrapper {
 
         // Emit the "menu-open" event for testing.
         menu.once("open", () => this.emit("menu-open"));
-        menu.popup(screenX, screenY, { doc: this.hud.chromeWindow.document });
+        menu.popup(screenX, screenY, this.hud.chromeWindow.document);
 
         return menu;
       };
@@ -266,7 +266,7 @@ class WebConsoleWrapper {
         const menu = createEditContextMenu(window, "webconsole-menu");
         // Emit the "menu-open" event for testing.
         menu.once("open", () => this.emit("menu-open"));
-        menu.popup(screenX, screenY, { doc: this.hud.chromeWindow.document });
+        menu.popup(screenX, screenY, this.hud.chromeWindow.document);
 
         return menu;
       };
