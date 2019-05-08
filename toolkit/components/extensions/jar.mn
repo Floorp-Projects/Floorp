@@ -10,6 +10,9 @@ toolkit.jar:
     content/extensions/parent/ext-alarms.js (parent/ext-alarms.js)
     content/extensions/parent/ext-backgroundPage.js (parent/ext-backgroundPage.js)
     content/extensions/parent/ext-browserSettings.js (parent/ext-browserSettings.js)
+#ifndef ANDROID
+    content/extensions/parent/ext-captivePortal.js (parent/ext-captivePortal.js)
+#endif
     content/extensions/parent/ext-contentScripts.js (parent/ext-contentScripts.js)
     content/extensions/parent/ext-contextualIdentities.js (parent/ext-contextualIdentities.js)
     content/extensions/parent/ext-clipboard.js (parent/ext-clipboard.js)
