@@ -148,13 +148,13 @@ static bool IsFrameDescendantOfAny(
   return false;
 }
 
-class nsDisplayTextOverflowMarker final : public nsDisplayItem {
+class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
  public:
   nsDisplayTextOverflowMarker(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               const nsRect& aRect, nscoord aAscent,
                               const nsStyleTextOverflowSide* aStyle,
                               uint32_t aLineNumber, uint16_t aIndex)
-      : nsDisplayItem(aBuilder, aFrame),
+      : nsPaintedDisplayItem(aBuilder, aFrame),
         mRect(aRect),
         mStyle(*aStyle),
         mAscent(aAscent),

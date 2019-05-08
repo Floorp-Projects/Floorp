@@ -60,11 +60,11 @@ bool nsButtonFrameRenderer::isDisabled() {
       NS_EVENT_STATE_DISABLED);
 }
 
-class nsDisplayButtonBoxShadowOuter : public nsDisplayItem {
+class nsDisplayButtonBoxShadowOuter : public nsPaintedDisplayItem {
  public:
   nsDisplayButtonBoxShadowOuter(nsDisplayListBuilder* aBuilder,
                                 nsIFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayButtonBoxShadowOuter);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -184,11 +184,11 @@ bool nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
   return true;
 }
 
-class nsDisplayButtonBorder final : public nsDisplayItem {
+class nsDisplayButtonBorder final : public nsPaintedDisplayItem {
  public:
   nsDisplayButtonBorder(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                         nsButtonFrameRenderer* aRenderer)
-      : nsDisplayItem(aBuilder, aFrame), mBFR(aRenderer) {
+      : nsPaintedDisplayItem(aBuilder, aFrame), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -290,11 +290,11 @@ nsRect nsDisplayButtonBorder::GetBounds(nsDisplayListBuilder* aBuilder,
                    ToReferenceFrame();
 }
 
-class nsDisplayButtonForeground final : public nsDisplayItem {
+class nsDisplayButtonForeground final : public nsPaintedDisplayItem {
  public:
   nsDisplayButtonForeground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             nsButtonFrameRenderer* aRenderer)
-      : nsDisplayItem(aBuilder, aFrame), mBFR(aRenderer) {
+      : nsPaintedDisplayItem(aBuilder, aFrame), mBFR(aRenderer) {
     MOZ_COUNT_CTOR(nsDisplayButtonForeground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING

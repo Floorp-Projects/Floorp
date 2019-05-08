@@ -353,10 +353,10 @@ class nsDisplayPluginGeometry : public nsDisplayItemGenericGeometry {
   virtual bool InvalidateForSyncDecodeImages() const override { return true; }
 };
 
-class nsDisplayPlugin final : public nsDisplayItem {
+class nsDisplayPlugin final : public nsPaintedDisplayItem {
  public:
   nsDisplayPlugin(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayPlugin);
     aBuilder->SetContainsPluginItem();
   }

@@ -38,10 +38,10 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-class nsDisplayTableCellSelection final : public nsDisplayItem {
+class nsDisplayTableCellSelection final : public nsPaintedDisplayItem {
  public:
   nsDisplayTableCellSelection(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableCellSelection);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING

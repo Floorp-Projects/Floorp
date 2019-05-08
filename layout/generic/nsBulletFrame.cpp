@@ -543,10 +543,10 @@ bool BulletRenderer::CreateWebRenderCommandsForText(
   return textDrawer->Finish();
 }
 
-class nsDisplayBullet final : public nsDisplayItem {
+class nsDisplayBullet final : public nsPaintedDisplayItem {
  public:
   nsDisplayBullet(nsDisplayListBuilder* aBuilder, nsBulletFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBullet);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -604,8 +604,8 @@ class nsDisplayBullet final : public nsDisplayItem {
       aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
     }
 
-    return nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
-                                                    aInvalidRegion);
+    return nsPaintedDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
+                                                           aInvalidRegion);
   }
 
  protected:

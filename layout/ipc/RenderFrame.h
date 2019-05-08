@@ -89,7 +89,7 @@ class RenderFrame final {
  * A nsDisplayRemote will graft a remote frame's shadow layer tree (for a given
  * nsFrameLoader) into its parent frame's layer tree.
  */
-class nsDisplayRemote final : public nsDisplayItem {
+class nsDisplayRemote final : public nsPaintedDisplayItem {
   typedef mozilla::dom::TabId TabId;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::layers::EventRegionsOverride EventRegionsOverride;

@@ -42,11 +42,11 @@ static inline bool IsTableCell(mozilla::LayoutFrameType frameType) {
          frameType == mozilla::LayoutFrameType::BCTableCell;
 }
 
-class nsDisplayTableItem : public nsDisplayItem {
+class nsDisplayTableItem : public nsPaintedDisplayItem {
  public:
   nsDisplayTableItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      bool aDrawsBackground = true)
-      : nsDisplayItem(aBuilder, aFrame),
+      : nsPaintedDisplayItem(aBuilder, aFrame),
         mPartHasFixedBackground(false),
         mDrawsBackground(aDrawsBackground) {}
 
