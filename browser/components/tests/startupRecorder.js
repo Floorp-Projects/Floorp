@@ -165,6 +165,12 @@ startupRecorder.prototype = {
         }
         paints = null;
 
+        let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+        if (!env.exists("MOZ_PROFILER_STARTUP")) {
+          this._resolve();
+          this._resolve = null;
+          return;
+        }
 
         Services.profiler.getProfileDataAsync().then(profileData => {
           this.data.profile = profileData;
