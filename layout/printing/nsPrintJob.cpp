@@ -534,14 +534,14 @@ void nsPrintJob::DestroyPrintingData() { mPrt = nullptr; }
 
 //--------------------------------------------------------
 nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
-                                nsIDocShell* aContainer, Document* aDocument,
+                                nsIDocShell* aDocShell, Document* aDocument,
                                 float aScreenDPI) {
   NS_ENSURE_ARG_POINTER(aDocViewerPrint);
-  NS_ENSURE_ARG_POINTER(aContainer);
+  NS_ENSURE_ARG_POINTER(aDocShell);
   NS_ENSURE_ARG_POINTER(aDocument);
 
   mDocViewerPrint = aDocViewerPrint;
-  mContainer = do_GetWeakReference(aContainer);
+  mDocShell = do_GetWeakReference(aDocShell);
   mDocument = aDocument;
   mScreenDPI = aScreenDPI;
 
@@ -572,7 +572,7 @@ nsresult nsPrintJob::Cancelled() {
 // No return code - if this fails, there isn't much we can do
 void nsPrintJob::SuppressPrintPreviewUserEvents() {
   if (!mPrt->mPPEventSuppressor) {
-    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mContainer);
+    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
     if (!docShell) {
       return;
     }
@@ -738,13 +738,13 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   bool isSelection = IsThereARangeSelection(printData->mCurrentFocusWin);
 
   // Get the docshell for this documentviewer
-  nsCOMPtr<nsIDocShell> webContainer(do_QueryReferent(mContainer, &rv));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   {
     if (aIsPrintPreview) {
       nsCOMPtr<nsIContentViewer> viewer;
-      webContainer->GetContentViewer(getter_AddRefs(viewer));
+      docShell->GetContentViewer(getter_AddRefs(viewer));
       if (viewer && viewer->GetDocument() &&
           viewer->GetDocument()->IsShowing()) {
         viewer->GetDocument()->OnPageHide(false, nullptr);
@@ -753,14 +753,14 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     nsAutoScriptBlocker scriptBlocker;
     printData->mPrintObject = MakeUnique<nsPrintObject>();
-    rv = printData->mPrintObject->Init(webContainer, aDoc, aIsPrintPreview);
+    rv = printData->mPrintObject->Init(docShell, aDoc, aIsPrintPreview);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_TRUE(
         printData->mPrintDocList.AppendElement(printData->mPrintObject.get()),
         NS_ERROR_OUT_OF_MEMORY);
 
-    printData->mIsParentAFrameSet = IsParentAFrameSet(webContainer);
+    printData->mIsParentAFrameSet = IsParentAFrameSet(docShell);
     printData->mPrintObject->mFrameType =
         printData->mIsParentAFrameSet ? eFrameSet : eDoc;
 
@@ -791,7 +791,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   MapContentToWebShells(printData->mPrintObject, printData->mPrintObject);
 
   printData->mIsIFrameSelected = IsThereAnIFrameSelected(
-      webContainer, printData->mCurrentFocusWin, printData->mIsParentAFrameSet);
+      docShell, printData->mCurrentFocusWin, printData->mIsParentAFrameSet);
 
   // Setup print options for UI
   if (printData->mIsParentAFrameSet) {
@@ -1045,7 +1045,7 @@ nsresult nsPrintJob::PrintPreview(
     nsIWebProgressListener* aWebProgressListener) {
   // Get the DocShell and see if it is busy
   // (We can't Print Preview this document if it is still busy)
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   NS_ENSURE_STATE(docShell);
 
   auto busyFlags = docShell->GetBusyFlags();
@@ -1066,23 +1066,22 @@ nsresult nsPrintJob::PrintPreview(
 
 //----------------------------------------------------------------------------------
 bool nsPrintJob::IsFramesetDocument() const {
-  nsCOMPtr<nsIDocShell> webContainer(do_QueryReferent(mContainer));
-  return IsParentAFrameSet(webContainer);
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
+  return IsParentAFrameSet(docShell);
 }
 
 //----------------------------------------------------------------------------------
 bool nsPrintJob::IsIFrameSelected() {
   // Get the docshell for this documentviewer
-  nsCOMPtr<nsIDocShell> webContainer(do_QueryReferent(mContainer));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   // Get the currently focused window
   nsCOMPtr<nsPIDOMWindowOuter> currentFocusWin = FindFocusedDOMWindow();
-  if (currentFocusWin && webContainer) {
+  if (currentFocusWin && docShell) {
     // Get whether the doc contains a frameset
     // Also, check to see if the currently focus docshell
     // is a child of this docshell
     bool isParentFrameSet;
-    return IsThereAnIFrameSelected(webContainer, currentFocusWin,
-                                   isParentFrameSet);
+    return IsThereAnIFrameSelected(docShell, currentFocusWin, isParentFrameSet);
   }
   return false;
 }
@@ -2852,7 +2851,7 @@ bool nsPrintJob::IsWindowsInOurSubTree(nsPIDOMWindowOuter* window) const {
 
     if (docShell) {
       // get this DocViewer docshell
-      nsCOMPtr<nsIDocShell> thisDVDocShell(do_QueryReferent(mContainer));
+      nsCOMPtr<nsIDocShell> thisDVDocShell(do_QueryReferent(mDocShell));
       while (!found) {
         if (docShell) {
           if (docShell == thisDVDocShell) {
