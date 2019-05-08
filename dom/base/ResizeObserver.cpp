@@ -145,13 +145,17 @@ void ResizeObserver::Observe(Element& aTarget,
   RefPtr<ResizeObservation> observation;
 
   if (mObservationMap.Get(&aTarget, getter_AddRefs(observation))) {
-    // Already observed this target, so return.
-    // Note: Based on the spec, we should unobserve it first. However, calling
-    // Unobserve() will remove original ResizeObservation and then add a new
-    // one, this may cause an unexpected result because ResizeObservation stores
-    // the last reported size which should be kept to make sure IsActive()
-    // returns the correct result.
-    return;
+    if (observation->BoxOptions() == aOptions.mBox) {
+      // Already observed this target and the observed box is the same, so
+      // return.
+      // Note: Based on the spec, we should unobserve it first. However,
+      // calling Unobserve() when we observe the same box will remove original
+      // ResizeObservation and then add a new one, this may cause an unexpected
+      // result because ResizeObservation stores the mLastReportedSize which
+      // should be kept to make sure IsActive() returns the correct result.
+      return;
+    }
+    Unobserve(aTarget, aRv);
   }
 
   nsIFrame* frame = aTarget.GetPrimaryFrame();
