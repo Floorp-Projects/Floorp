@@ -44,6 +44,8 @@ function getTestExpectationFromApiResult(result) {
     authorName: result.addon.authors[0].name,
     editorialHead: result.heading_text,
     editorialBody: result.description_text,
+    dailyUsers: result.addon.average_daily_users,
+    rating: result.addon.ratings.average,
   };
 }
 
@@ -339,6 +341,24 @@ add_task(async function discopane_with_real_api_data() {
          "Has extension install button");
       checkContent(".disco-description-intro", expectations.editorialHead);
       checkContent(".disco-description-main", expectations.editorialBody);
+
+      let ratingElem = card.querySelector("five-star-rating");
+      if (expectations.rating) {
+        is(ratingElem.rating, expectations.rating, "Expected rating value");
+        ok(ratingElem.offsetWidth, "Rating element is visible");
+      } else {
+        is(ratingElem.offsetWidth, 0, "Rating element is not visible");
+      }
+
+      let userCountElem = card.querySelector(".disco-user-count");
+      if (expectations.dailyUsers) {
+        Assert.deepEqual(
+          win.document.l10n.getAttributes(userCountElem),
+          {id: "user-count", args: {dailyUsers: expectations.dailyUsers}},
+          "Card count should be rendered");
+      } else {
+        is(userCountElem.offsetWidth, 0, "User count element is not visible");
+      }
     }
   }
 

@@ -157,6 +157,14 @@ recommended-addon-card .addon-description:not(:empty) {
   font-weight: normal;
 }
 
+.disco-description-statistics {
+  margin-top: 1em;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  grid-column-gap: 2em;
+  align-items: center;
+}
+
 .disco-cta-button {
   font-size: 14px;
   flex-shrink: 0;

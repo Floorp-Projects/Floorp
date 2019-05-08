@@ -8,6 +8,10 @@
   align-content: center;
 }
 
+:host([hidden]) {
+  display: none;
+}
+
 .rating-star {
   display: inline-block;
   width: var(--rating-star-size);
