@@ -66,8 +66,8 @@ add_task(async function() {
       document.querySelectorAll(".request-list-item")[index]);
     EventUtils.sendMouseEvent({ type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]);
-    const copyUrlParamsNode = monitor.panelWin.parent.document
-      .querySelector("#request-list-context-copy-url-params");
+    const copyUrlParamsNode = getContextMenuItem(monitor,
+      "request-list-context-copy-url-params");
     is(!!copyUrlParamsNode, !hidden,
       "The \"Copy URL Parameters\" context menu item should" + (hidden ? " " : " not ") +
         "be hidden.");
@@ -79,8 +79,7 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]);
     await waitForClipboardPromise(function setup() {
-      monitor.panelWin.parent.document
-        .querySelector("#request-list-context-copy-url-params").click();
+      getContextMenuItem(monitor, "request-list-context-copy-url-params").click();
     }, queryString);
     ok(true, "The url query string copied from the selected item is correct.");
   }
@@ -90,8 +89,8 @@ add_task(async function() {
       document.querySelectorAll(".request-list-item")[index]);
     EventUtils.sendMouseEvent({ type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]);
-    const copyPostDataNode = monitor.panelWin.parent.document
-      .querySelector("#request-list-context-copy-post-data");
+    const copyPostDataNode = getContextMenuItem(monitor,
+      "request-list-context-copy-post-data");
     is(!!copyPostDataNode, !hidden,
       "The \"Copy POST Data\" context menu item should" + (hidden ? " " : " not ") +
         "be hidden.");
@@ -102,8 +101,8 @@ add_task(async function() {
       document.querySelectorAll(".request-list-item")[index]);
     EventUtils.sendMouseEvent({ type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]);
-    const copyPostDataNode = monitor.panelWin.parent.document
-      .querySelector("#request-list-context-copy-post-data");
+    const copyPostDataNode = getContextMenuItem(monitor,
+      "request-list-context-copy-post-data");
     is(copyPostDataNode.attributes.label.value, "Copy " + method + " Data",
       "The \"Copy Data\" context menu item should have label - Copy " + method + " Data");
   }
@@ -122,8 +121,7 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "contextmenu" },
       document.querySelectorAll(".request-list-item")[index]);
     await waitForClipboardPromise(function setup() {
-      monitor.panelWin.parent.document
-        .querySelector("#request-list-context-copy-post-data").click();
+      getContextMenuItem(monitor, "request-list-context-copy-post-data").click();
     }, postData);
     ok(true, "The post data string copied from the selected item is correct.");
   }

@@ -11,11 +11,10 @@ add_task(async function() {
   const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  const { document, store, windowRequire, parent } = monitor.panelWin;
+  const { document, store, windowRequire } = monitor.panelWin;
   const {
     getSelectedRequest,
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
-  const parentDocument = parent.document;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
@@ -38,7 +37,7 @@ add_task(async function() {
     info("Captured normal request");
     // Mark as blocked
     EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
-    const contextBlock = parentDocument.querySelector("#request-list-context-block-url");
+    const contextBlock = getContextMenuItem(monitor, "request-list-context-block-url");
     contextBlock.click();
     info("Set request to blocked");
   }
@@ -64,7 +63,7 @@ add_task(async function() {
     // Mark as unblocked
     EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
     const contextUnblock =
-      parentDocument.querySelector("#request-list-context-unblock-url");
+      getContextMenuItem(monitor, "request-list-context-unblock-url");
     contextUnblock.click();
     info("Set request to unblocked");
   }
