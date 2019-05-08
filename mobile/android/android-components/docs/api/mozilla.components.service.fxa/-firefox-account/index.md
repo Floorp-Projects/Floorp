@@ -2,7 +2,7 @@
 
 # FirefoxAccount
 
-`class FirefoxAccount : `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L28)
+`class FirefoxAccount : `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L29)
 
 FirefoxAccount represents the authentication state of a client.
 
@@ -20,6 +20,7 @@ FirefoxAccount represents the authentication state of a client.
 | [beginPairingFlow](begin-pairing-flow.md) | `fun beginPairingFlow(pairingUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, scopes: `[`Array`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): Deferred<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>` |
 | [close](close.md) | `fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [completeOAuthFlow](complete-o-auth-flow.md) | `fun completeOAuthFlow(code: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, state: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Authenticates the current account using the code and state parameters fetched from the redirect URL reached after completing the sign in flow triggered by [beginOAuthFlow](begin-o-auth-flow.md). |
+| [deviceConstellation](device-constellation.md) | `fun deviceConstellation(): `[`DeviceConstellation`](../../mozilla.components.concept.sync/-device-constellation/index.md) |
 | [getAccessToken](get-access-token.md) | `fun getAccessToken(singleScope: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<`[`AccessTokenInfo`](../../mozilla.components.concept.sync/-access-token-info/index.md)`>`<br>Tries to fetch an access token for the given scope. |
 | [getConnectionSuccessURL](get-connection-success-u-r-l.md) | `fun getConnectionSuccessURL(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Fetches the connection success url. |
 | [getProfile](get-profile.md) | `fun getProfile(ignoreCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): Deferred<`[`Profile`](../../mozilla.components.concept.sync/-profile/index.md)`>`<br>Fetches the profile object for the current client either from the existing cached account, or from the server (requires the client to have access to the profile scope).`fun getProfile(): Deferred<`[`Profile`](../../mozilla.components.concept.sync/-profile/index.md)`>`<br>Convenience method to fetch the profile from a cached account by default, but fall back to retrieval from the server. |

@@ -11,7 +11,7 @@ authentication flow.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `FirefoxAccountsAuthFeature(accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa/-fxa-account-manager/index.md)`, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, redirectUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.Main)`<br>Ties together an account manager with a session manager/tabs implementation, facilitating an authentication flow. |
+| [&lt;init&gt;](-init-.md) | `FirefoxAccountsAuthFeature(accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, redirectUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.Main)`<br>Ties together an account manager with a session manager/tabs implementation, facilitating an authentication flow. |
 
 ### Properties
 

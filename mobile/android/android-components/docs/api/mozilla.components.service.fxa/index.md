@@ -6,17 +6,10 @@
 
 | Name | Summary |
 |---|---|
-| [AccountState](-account-state/index.md) | `enum class AccountState` |
 | [AccountStorage](-account-storage/index.md) | `interface AccountStorage` |
 | [FirefoxAccount](-firefox-account/index.md) | `class FirefoxAccount : `[`OAuthAccount`](../mozilla.components.concept.sync/-o-auth-account/index.md)<br>FirefoxAccount represents the authentication state of a client. |
-| [FxaAccountManager](-fxa-account-manager/index.md) | `open class FxaAccountManager : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)`, `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`AccountObserver`](../mozilla.components.concept.sync/-account-observer/index.md)`>`<br>An account manager which encapsulates various internal details of an account lifecycle and provides an observer interface along with a public API for interacting with an account. The internal state machine abstracts over state space as exposed by the fxaclient library, not the internal states experienced by lower-level representation of a Firefox Account; those are opaque to us. |
+| [FxaDeviceConstellation](-fxa-device-constellation/index.md) | `class FxaDeviceConstellation : `[`DeviceConstellation`](../mozilla.components.concept.sync/-device-constellation/index.md)`, `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`DeviceEventsObserver`](../mozilla.components.concept.sync/-device-events-observer/index.md)`>`<br>Provides an implementation of [DeviceConstellation](../mozilla.components.concept.sync/-device-constellation/index.md) backed by a [FirefoxAccount](#). |
 | [SharedPrefAccountStorage](-shared-pref-account-storage/index.md) | `class SharedPrefAccountStorage : `[`AccountStorage`](-account-storage/index.md) |
-
-### Exceptions
-
-| Name | Summary |
-|---|---|
-| [FailedToLoadAccountException](-failed-to-load-account-exception/index.md) | `class FailedToLoadAccountException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Propagated via [AccountObserver.onError](../mozilla.components.concept.sync/-account-observer/on-error.md) if we fail to load a locally stored account during initialization. No action is necessary from consumers. Account state has been re-initialized. |
 
 ### Type Aliases
 
@@ -35,8 +28,14 @@
 | Name | Summary |
 |---|---|
 | [mozilla.appservices.fxaclient.AccessTokenInfo](mozilla.appservices.fxaclient.-access-token-info/index.md) |  |
+| [mozilla.appservices.fxaclient.AccountEvent.TabReceived](mozilla.appservices.fxaclient.-account-event.-tab-received/index.md) |  |
+| [mozilla.appservices.fxaclient.Device](mozilla.appservices.fxaclient.-device/index.md) |  |
+| [mozilla.appservices.fxaclient.Device.Capability](mozilla.appservices.fxaclient.-device.-capability/index.md) |  |
+| [mozilla.appservices.fxaclient.Device.PushSubscription](mozilla.appservices.fxaclient.-device.-push-subscription/index.md) |  |
+| [mozilla.appservices.fxaclient.Device.Type](mozilla.appservices.fxaclient.-device.-type/index.md) |  |
 | [mozilla.appservices.fxaclient.Profile](mozilla.appservices.fxaclient.-profile/index.md) |  |
 | [mozilla.appservices.fxaclient.ScopedKey](mozilla.appservices.fxaclient.-scoped-key/index.md) |  |
+| [mozilla.appservices.fxaclient.TabHistoryEntry](mozilla.appservices.fxaclient.-tab-history-entry/index.md) |  |
 
 ### Properties
 
@@ -44,3 +43,9 @@
 |---|---|
 | [FXA_STATE_KEY](-f-x-a_-s-t-a-t-e_-k-e-y.md) | `const val FXA_STATE_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [FXA_STATE_PREFS_KEY](-f-x-a_-s-t-a-t-e_-p-r-e-f-s_-k-e-y.md) | `const val FXA_STATE_PREFS_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [into](into.md) | `fun `[`DeviceType`](../mozilla.components.concept.sync/-device-type/index.md)`.into(): Type`<br>`fun `[`DeviceCapability`](../mozilla.components.concept.sync/-device-capability/index.md)`.into(): Capability`<br>`fun `[`DevicePushSubscription`](../mozilla.components.concept.sync/-device-push-subscription/index.md)`.into(): PushSubscription`<br>`fun `[`Device`](../mozilla.components.concept.sync/-device/index.md)`.into(): Device`<br>`fun `[`TabData`](../mozilla.components.concept.sync/-tab-data/index.md)`.into(): TabHistoryEntry`<br>`fun `[`TabReceived`](../mozilla.components.concept.sync/-device-event/-tab-received/index.md)`.into(): TabReceived` |

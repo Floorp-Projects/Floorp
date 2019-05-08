@@ -116,6 +116,7 @@
 | [mozilla.components.service.fretboard.source.kinto](mozilla.components.service.fretboard.source.kinto/index.md) |  |
 | [mozilla.components.service.fretboard.storage.flatfile](mozilla.components.service.fretboard.storage.flatfile/index.md) |  |
 | [mozilla.components.service.fxa](mozilla.components.service.fxa/index.md) |  |
+| [mozilla.components.service.fxa.manager](mozilla.components.service.fxa.manager/index.md) |  |
 | [mozilla.components.service.glean](mozilla.components.service.glean/index.md) |  |
 | [mozilla.components.service.glean.config](mozilla.components.service.glean.config/index.md) |  |
 | [mozilla.components.service.glean.debug](mozilla.components.service.glean.debug/index.md) |  |

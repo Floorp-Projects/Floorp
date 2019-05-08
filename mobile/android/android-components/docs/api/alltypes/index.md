@@ -9,7 +9,7 @@
 | [mozilla.components.concept.sync.AccessTokenInfo](../mozilla.components.concept.sync/-access-token-info/index.md) | The result of authentication with FxA via an OAuth flow. |
 | [mozilla.appservices.fxaclient.AccessTokenInfo](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-access-token-info/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [mozilla.components.concept.sync.AccountObserver](../mozilla.components.concept.sync/-account-observer/index.md) | Observer interface which lets its users monitor account state changes and major events. |
-| [mozilla.components.service.fxa.AccountState](../mozilla.components.service.fxa/-account-state/index.md) |  |
+| [mozilla.components.service.fxa.manager.AccountState](../mozilla.components.service.fxa.manager/-account-state/index.md) | States of the [FxaAccountManager](../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md). |
 | [mozilla.components.service.fxa.AccountStorage](../mozilla.components.service.fxa/-account-storage/index.md) |  |
 | [mozilla.components.browser.session.action.Action](../mozilla.components.browser.session.action/-action.md) | Generic interface for actions to be dispatched on a [BrowserStore](../mozilla.components.browser.session.store/-browser-store/index.md). |
 | [mozilla.components.support.base.facts.Action](../mozilla.components.support.base.facts/-action/index.md) | A user or system action that causes [Fact](../mozilla.components.support.base.facts/-fact/index.md) instances to be emitted. |
@@ -73,6 +73,7 @@
 | [mozilla.components.support.utils.Browsers](../mozilla.components.support.utils/-browsers/index.md) | Helpful tools for dealing with other browsers on this device. |
 | [mozilla.components.concept.push.Bus](../mozilla.components.concept.push/-bus/index.md) | Interface for a basic bus that is implemented by MessageBus so that classes can observe particular event types. |
 | [kotlin.ByteArray](../mozilla.components.support.ktx.kotlin/kotlin.-byte-array/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
+| [mozilla.appservices.fxaclient.Device.Capability](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-capability/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [kotlin.Char](../mozilla.components.support.ktx.kotlin/kotlin.-char/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
 | [mozilla.components.concept.engine.prompt.Choice](../mozilla.components.concept.engine.prompt/-choice/index.md) | Value type that represents a select option, optgroup or menuitem html element. |
 | [mozilla.components.concept.fetch.Client](../mozilla.components.concept.fetch/-client/index.md) | A generic [Client](../mozilla.components.concept.fetch/-client/index.md) for fetching resources via HTTP/s. |
@@ -85,6 +86,7 @@
 | [mozilla.components.service.experiments.Configuration](../mozilla.components.service.experiments/-configuration/index.md) | The Configuration class describes how to configure Experiments. |
 | [mozilla.components.service.glean.config.Configuration](../mozilla.components.service.glean.config/-configuration/index.md) | The Configuration class describes how to configure the Glean. |
 | [mozilla.components.browser.storage.sync.Connection](../mozilla.components.browser.storage.sync/-connection/index.md) | A slight abstraction over [PlacesApi](#). |
+| [mozilla.components.concept.sync.ConstellationState](../mozilla.components.concept.sync/-constellation-state/index.md) | Describes current device and other devices in the constellation. |
 | [mozilla.components.support.base.observer.Consumable](../mozilla.components.support.base.observer/-consumable/index.md) | A generic wrapper for values that can get consumed. |
 | [mozilla.components.support.base.observer.ConsumableStream](../mozilla.components.support.base.observer/-consumable-stream/index.md) | A generic wrapper for a stream of values that can be consumed. Values will be consumed first in, first out. |
 | [android.content.Context](../mozilla.components.support.ktx.android.content/android.content.-context/index.md) (extensions in package mozilla.components.support.ktx.android.content) |  |
@@ -115,7 +117,18 @@
 | [org.mozilla.telemetry.measurement.DefaultSearchMeasurement](../org.mozilla.telemetry.measurement/-default-search-measurement/index.md) |  |
 | [mozilla.components.concept.engine.DefaultSettings](../mozilla.components.concept.engine/-default-settings/index.md) | [Settings](../mozilla.components.concept.engine/-settings/index.md) implementation used to set defaults for [Engine](../mozilla.components.concept.engine/-engine/index.md) and [EngineSession](../mozilla.components.concept.engine/-engine-session/index.md). |
 | [mozilla.components.browser.awesomebar.layout.DefaultSuggestionLayout](../mozilla.components.browser.awesomebar.layout/-default-suggestion-layout/index.md) | Default implementation of [SuggestionLayout](../mozilla.components.browser.awesomebar.layout/-suggestion-layout/index.md) to be used by [BrowserAwesomeBar](../mozilla.components.browser.awesomebar/-browser-awesome-bar/index.md). |
+| [mozilla.components.concept.sync.Device](../mozilla.components.concept.sync/-device/index.md) | Describes a device in the [DeviceConstellation](../mozilla.components.concept.sync/-device-constellation/index.md). |
+| [mozilla.appservices.fxaclient.Device](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device/index.md) (extensions in package mozilla.components.service.fxa) |  |
+| [mozilla.components.concept.sync.DeviceCapability](../mozilla.components.concept.sync/-device-capability/index.md) | Capabilities that a [Device](../mozilla.components.concept.sync/-device/index.md) may have. |
+| [mozilla.components.concept.sync.DeviceConstellation](../mozilla.components.concept.sync/-device-constellation/index.md) | Describes available interactions with the current device and other devices associated with an [OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md). |
+| [mozilla.components.concept.sync.DeviceConstellationObserver](../mozilla.components.concept.sync/-device-constellation-observer/index.md) | Allows monitoring constellation state. |
+| [mozilla.components.concept.sync.DeviceEvent](../mozilla.components.concept.sync/-device-event/index.md) | Incoming device events, targeted at the current device. |
+| [mozilla.components.concept.sync.DeviceEventOutgoing](../mozilla.components.concept.sync/-device-event-outgoing/index.md) | Outgoing device events, targeted at other devices. |
+| [mozilla.components.concept.sync.DeviceEventsObserver](../mozilla.components.concept.sync/-device-events-observer/index.md) | Allows monitoring events targeted at the current device. |
 | [org.mozilla.telemetry.measurement.DeviceMeasurement](../org.mozilla.telemetry.measurement/-device-measurement/index.md) |  |
+| [mozilla.components.concept.sync.DevicePushSubscription](../mozilla.components.concept.sync/-device-push-subscription/index.md) | Describes an Autopush-compatible push channel subscription. |
+| [mozilla.components.service.fxa.manager.DeviceTuple](../mozilla.components.service.fxa.manager/-device-tuple/index.md) | Helper data class that wraps common device initialization parameters. |
+| [mozilla.components.concept.sync.DeviceType](../mozilla.components.concept.sync/-device-type/index.md) | Describes a type of the physical device in the constellation. |
 | [mozilla.components.browser.domains.Domain](../mozilla.components.browser.domains/-domain/index.md) | Class intended for internal use which encapsulates meta data about a domain. |
 | [mozilla.components.browser.domains.DomainAutoCompleteProvider](../mozilla.components.browser.domains/-domain-auto-complete-provider/index.md) | Provides autocomplete functionality for domains, based on a provided list of assets (see [Domains](../mozilla.components.browser.domains/-domains/index.md)) and/or a custom domain list managed by [CustomDomains](../mozilla.components.browser.domains/-custom-domains/index.md). |
 | [mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider](../mozilla.components.browser.domains.autocomplete/-domain-autocomplete-provider/index.md) |  |
@@ -161,7 +174,7 @@
 | [mozilla.components.support.base.facts.Fact](../mozilla.components.support.base.facts/-fact/index.md) | A fact describing a generic event that has occurred in a component. |
 | [mozilla.components.support.base.facts.FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) | A [FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) receives [Fact](../mozilla.components.support.base.facts/-fact/index.md) instances to process them further. |
 | [mozilla.components.support.base.facts.Facts](../mozilla.components.support.base.facts/-facts/index.md) | Global API for collecting [Fact](../mozilla.components.support.base.facts/-fact/index.md) objects and forwarding them to [FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) instances. |
-| [mozilla.components.service.fxa.FailedToLoadAccountException](../mozilla.components.service.fxa/-failed-to-load-account-exception/index.md) | Propagated via [AccountObserver.onError](../mozilla.components.concept.sync/-account-observer/on-error.md) if we fail to load a locally stored account during initialization. No action is necessary from consumers. Account state has been re-initialized. |
+| [mozilla.components.service.fxa.manager.FailedToLoadAccountException](../mozilla.components.service.fxa.manager/-failed-to-load-account-exception/index.md) | Propagated via [AccountObserver.onError](../mozilla.components.concept.sync/-account-observer/on-error.md) if we fail to load a locally stored account during initialization. No action is necessary from consumers. Account state has been re-initialized. |
 | [mozilla.components.tooling.fetch.tests.FetchTestCases](../mozilla.components.tooling.fetch.tests/-fetch-test-cases/index.md) | Generic test cases for concept-fetch implementations. |
 | [java.io.File](../mozilla.components.support.ktx.java.io/java.io.-file/index.md) (extensions in package mozilla.components.support.ktx.java.io) |  |
 | [org.mozilla.telemetry.storage.FileTelemetryStorage](../org.mozilla.telemetry.storage/-file-telemetry-storage/index.md) | TelemetryStorage implementation that stores pings as files on disk. |
@@ -176,7 +189,8 @@
 | [kotlin.Float](../mozilla.components.lib.jexl.ext/kotlin.-float/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
 | [mozilla.components.service.fretboard.Fretboard](../mozilla.components.service.fretboard/-fretboard/index.md) | Entry point of the library |
 | [mozilla.components.feature.session.FullScreenFeature](../mozilla.components.feature.session/-full-screen-feature/index.md) | Feature implementation for handling fullscreen mode (exiting and back button presses). |
-| [mozilla.components.service.fxa.FxaAccountManager](../mozilla.components.service.fxa/-fxa-account-manager/index.md) | An account manager which encapsulates various internal details of an account lifecycle and provides an observer interface along with a public API for interacting with an account. The internal state machine abstracts over state space as exposed by the fxaclient library, not the internal states experienced by lower-level representation of a Firefox Account; those are opaque to us. |
+| [mozilla.components.service.fxa.manager.FxaAccountManager](../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md) | An account manager which encapsulates various internal details of an account lifecycle and provides an observer interface along with a public API for interacting with an account. The internal state machine abstracts over state space as exposed by the fxaclient library, not the internal states experienced by lower-level representation of a Firefox Account; those are opaque to us. |
+| [mozilla.components.service.fxa.FxaDeviceConstellation](../mozilla.components.service.fxa/-fxa-device-constellation/index.md) | Provides an implementation of [DeviceConstellation](../mozilla.components.concept.sync/-device-constellation/index.md) backed by a [FirefoxAccount](#). |
 | [mozilla.components.service.fxa.FxaException](../mozilla.components.service.fxa/-fxa-exception.md) | High-level exception class for the exceptions thrown in the Rust library. |
 | [mozilla.components.service.fxa.FxaNetworkException](../mozilla.components.service.fxa/-fxa-network-exception.md) | Thrown on a network error. |
 | [mozilla.components.service.fxa.FxaPanicException](../mozilla.components.service.fxa/-fxa-panic-exception.md) | Thrown when the Rust library hits an assertion or panic (this is always a bug). |
@@ -313,6 +327,7 @@
 | [mozilla.components.support.base.android.Padding](../mozilla.components.support.base.android/-padding/index.md) | A representation of an Android Padding. |
 | [mozilla.components.concept.storage.PageObservation](../mozilla.components.concept.storage/-page-observation/index.md) |  |
 | [mozilla.components.lib.jexl.parser.ParserException](../mozilla.components.lib.jexl.parser/-parser-exception/index.md) |  |
+| [mozilla.components.service.fxa.manager.PeriodicRefreshManager](../mozilla.components.service.fxa.manager/-periodic-refresh-manager/index.md) |  |
 | [mozilla.components.concept.engine.permission.Permission](../mozilla.components.concept.engine.permission/-permission/index.md) | Represents all the different supported permission types. |
 | [mozilla.components.concept.engine.permission.PermissionRequest](../mozilla.components.concept.engine.permission/-permission-request/index.md) | Represents a permission request, used when engines need access to protected resources. Every request must be handled by either calling [grant](../mozilla.components.concept.engine.permission/-permission-request/grant.md) or [reject](../mozilla.components.concept.engine.permission/-permission-request/reject.md). |
 | [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
@@ -339,6 +354,7 @@
 | [mozilla.components.concept.push.PushMessage](../mozilla.components.concept.push/-push-message/index.md) | A push message holds the information needed to pass the message on to the appropriate receiver. |
 | [mozilla.components.concept.push.PushProcessor](../mozilla.components.concept.push/-push-processor/index.md) | A push notification processor that handles registration and new messages from the [PushService](../mozilla.components.concept.push/-push-service/index.md) provided. Starting Push in the Application's onCreate is recommended. |
 | [mozilla.components.concept.push.PushService](../mozilla.components.concept.push/-push-service/index.md) | Implemented by push services like Firebase Cloud Messaging and Amazon Device Messaging SDKs to allow the [PushProcessor](../mozilla.components.concept.push/-push-processor/index.md) to manage their lifecycle. |
+| [mozilla.appservices.fxaclient.Device.PushSubscription](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-push-subscription/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [mozilla.components.concept.push.PushType](../mozilla.components.concept.push/-push-type/index.md) | The different kinds of push messages. |
 | [mozilla.components.feature.qr.QrFeature](../mozilla.components.feature.qr/-qr-feature/index.md) | Feature implementation that provides QR scanning functionality via the [QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md). |
 | [mozilla.components.feature.qr.QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md) | A [Fragment](#) that displays a QR scanner. |
@@ -445,6 +461,9 @@
 | [mozilla.components.browser.engine.system.window.SystemWindowRequest](../mozilla.components.browser.engine.system.window/-system-window-request/index.md) | WebView-based implementation of [WindowRequest](../mozilla.components.concept.engine.window/-window-request/index.md). |
 | [mozilla.components.ui.tabcounter.TabCounter](../mozilla.components.ui.tabcounter/-tab-counter/index.md) |  |
 | [mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton](../mozilla.components.feature.tabs.toolbar/-tab-counter-toolbar-button/index.md) | A [Toolbar.Action](../mozilla.components.concept.toolbar/-toolbar/-action/index.md) implementation that shows a [TabCounter](../mozilla.components.ui.tabcounter/-tab-counter/index.md). |
+| [mozilla.components.concept.sync.TabData](../mozilla.components.concept.sync/-tab-data/index.md) |  |
+| [mozilla.appservices.fxaclient.TabHistoryEntry](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-tab-history-entry/index.md) (extensions in package mozilla.components.service.fxa) |  |
+| [mozilla.appservices.fxaclient.AccountEvent.TabReceived](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-account-event.-tab-received/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [mozilla.components.browser.tabstray.thumbnail.TabThumbnailView](../mozilla.components.browser.tabstray.thumbnail/-tab-thumbnail-view/index.md) |  |
 | [mozilla.components.browser.tabstray.TabTouchCallback](../mozilla.components.browser.tabstray/-tab-touch-callback/index.md) | An [ItemTouchHelper.Callback](#) for support gestures on tabs in the tray. |
 | [mozilla.components.browser.tabstray.TabViewHolder](../mozilla.components.browser.tabstray/-tab-view-holder/index.md) | A RecyclerView ViewHolder implementation for "tab" items. |
@@ -489,6 +508,7 @@
 | [mozilla.components.feature.toolbar.ToolbarPresenter](../mozilla.components.feature.toolbar/-toolbar-presenter/index.md) | Presenter implementation for a toolbar implementation in order to update the toolbar whenever the state of the selected session changes. |
 | [mozilla.components.lib.jexl.evaluator.Transform](../mozilla.components.lib.jexl.evaluator/-transform.md) |  |
 | [mozilla.components.browser.engine.system.matcher.Trie](../mozilla.components.browser.engine.system.matcher/-trie/index.md) | Simple implementation of a Trie, used for indexing URLs. |
+| [mozilla.appservices.fxaclient.Device.Type](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-type/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [mozilla.components.support.utils.URLStringUtils](../mozilla.components.support.utils/-u-r-l-string-utils/index.md) |  |
 | [mozilla.components.concept.engine.UnsupportedSetting](../mozilla.components.concept.engine/-unsupported-setting/index.md) |  |
 | [mozilla.components.concept.engine.UnsupportedSettingException](../mozilla.components.concept.engine/-unsupported-setting-exception/index.md) | Exception thrown by default if a setting is not supported by an engine or session. |

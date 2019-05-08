@@ -11,6 +11,16 @@
 | [AuthExceptionType](-auth-exception-type/index.md) | `enum class AuthExceptionType`<br>An auth-related exception type, for use with [AuthException](-auth-exception/index.md). |
 | [AuthInfo](-auth-info/index.md) | `data class AuthInfo`<br>A Firefox Sync friendly auth object which can be obtained from [OAuthAccount](-o-auth-account/index.md). |
 | [Avatar](-avatar/index.md) | `data class Avatar` |
+| [ConstellationState](-constellation-state/index.md) | `data class ConstellationState`<br>Describes current device and other devices in the constellation. |
+| [Device](-device/index.md) | `data class Device`<br>Describes a device in the [DeviceConstellation](-device-constellation/index.md). |
+| [DeviceCapability](-device-capability/index.md) | `enum class DeviceCapability`<br>Capabilities that a [Device](-device/index.md) may have. |
+| [DeviceConstellation](-device-constellation/index.md) | `interface DeviceConstellation : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`DeviceEventsObserver`](-device-events-observer/index.md)`>`<br>Describes available interactions with the current device and other devices associated with an [OAuthAccount](-o-auth-account/index.md). |
+| [DeviceConstellationObserver](-device-constellation-observer/index.md) | `interface DeviceConstellationObserver`<br>Allows monitoring constellation state. |
+| [DeviceEvent](-device-event/index.md) | `sealed class DeviceEvent`<br>Incoming device events, targeted at the current device. |
+| [DeviceEventOutgoing](-device-event-outgoing/index.md) | `sealed class DeviceEventOutgoing`<br>Outgoing device events, targeted at other devices. |
+| [DeviceEventsObserver](-device-events-observer/index.md) | `interface DeviceEventsObserver`<br>Allows monitoring events targeted at the current device. |
+| [DevicePushSubscription](-device-push-subscription/index.md) | `data class DevicePushSubscription`<br>Describes an Autopush-compatible push channel subscription. |
+| [DeviceType](-device-type/index.md) | `enum class DeviceType`<br>Describes a type of the physical device in the constellation. |
 | [OAuthAccount](-o-auth-account/index.md) | `interface OAuthAccount : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>Facilitates testing consumers of FirefoxAccount. |
 | [OAuthScopedKey](-o-auth-scoped-key/index.md) | `data class OAuthScopedKey`<br>Scoped key data. |
 | [Profile](-profile/index.md) | `data class Profile` |
@@ -20,6 +30,7 @@
 | [SyncStatus](-sync-status/index.md) | `sealed class SyncStatus`<br>Results of running a sync via [SyncableStore.sync](-syncable-store/sync.md). |
 | [SyncStatusObserver](-sync-status-observer/index.md) | `interface SyncStatusObserver`<br>An interface for consumers that wish to observer "sync lifecycle" events. |
 | [SyncableStore](-syncable-store/index.md) | `interface SyncableStore`<br>Describes a "sync" entry point for a storage layer. |
+| [TabData](-tab-data/index.md) | `data class TabData` |
 
 ### Exceptions
 

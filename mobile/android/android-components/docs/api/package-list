@@ -12,8 +12,14 @@ $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Int)mozilla.compo
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.String)mozilla.components.lib.jexl.ext/kotlin.-string/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexlArray(kotlin.collections.List((mozilla.components.lib.jexl.ext.toJexlArray.T)))mozilla.components.lib.jexl.ext/kotlin.collections.-list/to-jexl-array.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.AccessTokenInfo)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-access-token-info/into.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.AccountEvent.TabReceived)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-account-event.-tab-received/into.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device/into.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device.Capability)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-capability/into.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device.PushSubscription)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-push-subscription/into.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Device.Type)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-device.-type/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Profile)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-profile/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.ScopedKey)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-scoped-key/into.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.TabHistoryEntry)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-tab-history-entry/into.md
 $dokka.location:mozilla.components.support.android.test$awaitValue(androidx.lifecycle.LiveData((mozilla.components.support.android.test.awaitValue.T)), kotlin.Long, java.util.concurrent.TimeUnit)mozilla.components.support.android.test/androidx.lifecycle.-live-data/await-value.md
 $dokka.location:mozilla.components.support.android.test.espresso$assertHasFocus(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-has-focus.md
 $dokka.location:mozilla.components.support.android.test.espresso$assertIsChecked(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-checked.md
@@ -188,6 +194,7 @@ mozilla.components.service.fretboard.scheduler.workmanager
 mozilla.components.service.fretboard.source.kinto
 mozilla.components.service.fretboard.storage.flatfile
 mozilla.components.service.fxa
+mozilla.components.service.fxa.manager
 mozilla.components.service.glean
 mozilla.components.service.glean.config
 mozilla.components.service.glean.debug

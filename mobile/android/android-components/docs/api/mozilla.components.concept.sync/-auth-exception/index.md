@@ -2,7 +2,7 @@
 
 # AuthException
 
-`class AuthException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L15)
+`class AuthException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L19)
 
 An exception which may happen while obtaining auth information using [OAuthAccount](../-o-auth-account/index.md).
 

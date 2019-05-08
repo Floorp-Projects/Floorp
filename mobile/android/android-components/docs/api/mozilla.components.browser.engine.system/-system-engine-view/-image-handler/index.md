@@ -2,7 +2,7 @@
 
 # ImageHandler
 
-`class ImageHandler : `[`Handler`](https://developer.android.com/reference/android/os/Handler.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineView.kt#L585)
+`class ImageHandler : `[`Handler`](https://developer.android.com/reference/android/os/Handler.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineView.kt#L627)
 
 ### Constructors
 
