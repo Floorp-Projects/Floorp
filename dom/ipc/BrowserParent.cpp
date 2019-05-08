@@ -536,7 +536,7 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
 
   // Set our BrowsingContext's embedder if we're not embedded within a
   // BrowserBridgeParent.
-  if (!GetBrowserBridgeParent() && mBrowsingContext) {
+  if (!GetBrowserBridgeParent() && mBrowsingContext && mFrameElement) {
     mBrowsingContext->SetEmbedderElement(mFrameElement);
   }
 
