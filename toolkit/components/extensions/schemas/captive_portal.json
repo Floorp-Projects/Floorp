@@ -1,0 +1,69 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "captivePortal"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "captivePortal",
+    "description": "This API provides the ability detect the captive portal state of the users connection.",
+    "permissions": ["captivePortal"],
+    "functions": [
+      {
+        "name": "getState",
+        "type": "function",
+        "description": "Returns the current portal state, one of `unknown`, `not_captive`, `unlocked_portal`, `locked_portal`.",
+        "async": true,
+        "parameters": []
+      },
+      {
+        "name": "getLastChecked",
+        "type": "function",
+        "description": "Returns the time difference between NOW and the last time a request was completed in milliseconds.",
+        "async": true,
+        "parameters": []
+      }
+    ],
+    "events": [
+      {
+        "name": "onStateChanged",
+        "type": "function",
+        "description": "Fired when the captive portal state changes.",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "details",
+            "properties": {
+              "state": {
+                "type": "string",
+                "enum": ["unknown", "not_captive", "unlocked_portal", "locked_portal"],
+                "description": "The current captive portal state."
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "onConnectivityAvailable",
+        "type": "function",
+        "description": "This notification will be emitted when the captive portal service has determined that we can connect to the internet. The service will pass either `captive` if there is an unlocked captive portal present, or `clear` if no captive portal was detected.",
+        "parameters": [
+          {
+            "name": "status",
+            "enum": ["captive", "clear"],
+            "type": "string"
+          }
+        ]
+      }
+    ]
+  }
+]
