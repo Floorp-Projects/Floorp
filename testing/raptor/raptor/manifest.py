@@ -22,6 +22,7 @@ required_settings = [
     'measure',
     'page_cycles',
     'test_url',
+    'scenario_time',
     'type',
     'unit',
 ]
@@ -71,6 +72,8 @@ def validate_test_ini(test_details):
     for setting in required_settings:
         # measure setting not required for benchmark type tests
         if setting == 'measure' and test_details['type'] == 'benchmark':
+            continue
+        if setting == 'scenario_time' and test_details['type'] != 'scenario':
             continue
         if test_details.get(setting) is None:
             # if page-cycles is not specified, it's ok as long as browser-cycles is there
@@ -189,6 +192,9 @@ def write_test_settings_json(args, test_details, oskey):
     if test_details.get("newtab_per_cycle", None) is not None:
         test_settings['raptor-options']['newtab_per_cycle'] = \
             bool(test_details['newtab_per_cycle'])
+
+    if test_details['type'] == "scenario":
+        test_settings['raptor-options']['scenario_time'] = test_details['scenario_time']
 
     settings_file = os.path.join(tests_dir, test_details['name'] + '.json')
     try:

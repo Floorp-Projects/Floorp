@@ -70,7 +70,7 @@ class Output(object):
             suites.append(suite)
 
             # process results for pageloader type of tests
-            if test.type == "pageload":
+            if test.type in ("pageload", "scenario"):
                 # each test can report multiple measurements per pageload
                 # each measurement becomes a subtest inside the 'suite'
 
