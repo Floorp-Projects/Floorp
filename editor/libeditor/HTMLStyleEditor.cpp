@@ -804,12 +804,12 @@ nsresult HTMLEditor::RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
           return NS_ERROR_FAILURE;
         }
         nsresult rv = CloneAttributeWithTransaction(
-            *nsGkAtoms::style, *spanNode, *aNode.AsElement());
+            *nsGkAtoms::style, *spanNode, MOZ_KnownLive(*aNode.AsElement()));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
         rv = CloneAttributeWithTransaction(*nsGkAtoms::_class, *spanNode,
-                                           *aNode.AsElement());
+                                           MOZ_KnownLive(*aNode.AsElement()));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
