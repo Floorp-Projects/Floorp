@@ -829,8 +829,8 @@ nsresult HTMLEditor::RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
             return rv;
           }
         } else {
-          nsresult rv =
-              RemoveAttributeWithTransaction(*aNode.AsElement(), *aAttribute);
+          nsresult rv = RemoveAttributeWithTransaction(
+              MOZ_KnownLive(*aNode.AsElement()), *aAttribute);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }

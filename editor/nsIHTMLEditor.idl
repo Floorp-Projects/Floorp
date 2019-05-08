@@ -386,6 +386,7 @@ interface nsIHTMLEditor : nsISupports
    *
    * @param aColor  The HTML color string, such as "#ffccff" or "yellow"
    */
+  [can_run_script]
   void setBackgroundColor(in AString aColor);
 
   /**
