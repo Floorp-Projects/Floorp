@@ -209,7 +209,7 @@ export type TabTarget = {
       script: Script,
       func: Function,
       params?: { frameActor: ?FrameId }
-    ) => Promise<{ result: ?Object }>,
+    ) => Promise<{ result: Grip | null }>,
     autocomplete: (
       input: string,
       cursor: number,
@@ -277,9 +277,26 @@ export type TabClient = {
  * @memberof firefox
  * @static
  */
-// FIXME: need Grip definition
 export type Grip = {
-  actor: string
+  actor: string,
+  class: string,
+  displayClass: string,
+  displayName?: string,
+  parameterNames?: string[],
+  userDisplayName?: string,
+  name: string,
+  extensible: boolean,
+  location: {
+    url: string,
+    line: number,
+    column: number
+  },
+  frozen: boolean,
+  ownPropertyLength: number,
+  preview: Object,
+  sealed: boolean,
+  optimizedOut: boolean,
+  type: string
 };
 
 export type FunctionGrip = {|
