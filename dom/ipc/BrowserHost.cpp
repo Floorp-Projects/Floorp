@@ -74,7 +74,9 @@ BrowserHost::GetDocShellIsActive(bool* aDocShellIsActive) {
 
 NS_IMETHODIMP
 BrowserHost::SetDocShellIsActive(bool aDocShellIsActive) {
-  mRoot->SetDocShellIsActive(aDocShellIsActive);
+  VisitAll([&](BrowserParent* aBrowserParent) {
+    aBrowserParent->SetDocShellIsActive(aDocShellIsActive);
+  });
   return NS_OK;
 }
 
@@ -87,7 +89,9 @@ BrowserHost::GetRenderLayers(bool* aRenderLayers) {
 
 NS_IMETHODIMP
 BrowserHost::SetRenderLayers(bool aRenderLayers) {
-  mRoot->SetRenderLayers(aRenderLayers);
+  VisitAll([&](BrowserParent* aBrowserParent) {
+    aBrowserParent->SetRenderLayers(aRenderLayers);
+  });
   return NS_OK;
 }
 
@@ -101,28 +105,34 @@ BrowserHost::GetHasLayers(bool* aHasLayers) {
 /* void forceRepaint (); */
 NS_IMETHODIMP
 BrowserHost::ForceRepaint(void) {
-  mRoot->ForceRepaint();
+  VisitAll(
+      [](BrowserParent* aBrowserParent) { aBrowserParent->ForceRepaint(); });
   return NS_OK;
 }
 
 /* void resolutionChanged (); */
 NS_IMETHODIMP
 BrowserHost::NotifyResolutionChanged(void) {
-  mRoot->NotifyResolutionChanged();
+  VisitAll([](BrowserParent* aBrowserParent) {
+    aBrowserParent->NotifyResolutionChanged();
+  });
   return NS_OK;
 }
 
 /* void deprioritize (); */
 NS_IMETHODIMP
 BrowserHost::Deprioritize(void) {
-  mRoot->Deprioritize();
+  VisitAll(
+      [](BrowserParent* aBrowserParent) { aBrowserParent->Deprioritize(); });
   return NS_OK;
 }
 
 /* void preserveLayers (in boolean aPreserveLayers); */
 NS_IMETHODIMP
 BrowserHost::PreserveLayers(bool aPreserveLayers) {
-  mRoot->PreserveLayers(aPreserveLayers);
+  VisitAll([&](BrowserParent* aBrowserParent) {
+    aBrowserParent->PreserveLayers(aPreserveLayers);
+  });
   return NS_OK;
 }
 
@@ -164,7 +174,7 @@ BrowserHost::GetHasPresented(bool* aHasPresented) {
 NS_IMETHODIMP
 BrowserHost::GetWindowGlobalParents(
     nsTArray<RefPtr<WindowGlobalParent>>& aWindowGlobalParents) {
-  mRoot->VisitAll([&aWindowGlobalParents](BrowserParent* aBrowser) {
+  VisitAll([&](BrowserParent* aBrowser) {
     const auto& windowGlobalParents = aBrowser->ManagedPWindowGlobalParent();
     for (auto iter = windowGlobalParents.ConstIter(); !iter.Done();
          iter.Next()) {

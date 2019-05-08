@@ -62,6 +62,16 @@ class BrowserHost : public RemoteBrowser, public nsIRemoteTab {
   }
   a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
 
+  // Visit each BrowserParent in the tree formed by PBrowser and
+  // PBrowserBridge that is anchored by `mRoot`.
+  template <typename Callback>
+  void VisitAll(Callback aCallback) {
+    if (!mRoot) {
+      return;
+    }
+    mRoot->VisitAll(aCallback);
+  }
+
   void LoadURL(nsIURI* aURI) override;
   void ResumeLoad(uint64_t aPendingSwitchId) override;
   void DestroyStart() override;
