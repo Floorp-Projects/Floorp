@@ -10915,6 +10915,74 @@
     "n_buckets": 100,
     "description": "Number of unique sites accessing the cache entry keyed by content type."
   },
+  "NETWORK_CACHE_SIZE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1548472],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 4000,
+    "n_buckets": 100,
+    "keyed": true,
+    "keys": [
+      "SMARTSIZE",
+      "USERDEFINEDSIZE"
+    ],
+    "description": "Cache size in megabytes keyed by cache capacity calculation type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
+  },
+  "NETWORK_CACHE_ENTRY_COUNT" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1548472],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "keyed": true,
+    "keys": [
+      "SMARTSIZE",
+      "USERDEFINEDSIZE"
+    ],
+    "description": "Number of entries in the cache keyed by cache capacity calculation type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
+  },
+  "NETWORK_CACHE_SIZE_SHARE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1548472],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 99,
+    "keyed": true,
+    "keys": [
+      "UNKNOWN",
+      "OTHER",
+      "JAVASCRIPT",
+      "IMAGE",
+      "MEDIA",
+      "STYLESHEET",
+      "WASM"
+    ],
+    "description": "Percentage of the cache size occupied by given content type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
+  },
+  "NETWORK_CACHE_ENTRY_COUNT_SHARE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1548472],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 99,
+    "keyed": true,
+    "keys": [
+      "UNKNOWN",
+      "OTHER",
+      "JAVASCRIPT",
+      "IMAGE",
+      "MEDIA",
+      "STYLESHEET",
+      "WASM"
+    ],
+    "description": "Percentage of the entries with the given content type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
+  },
   "DATABASE_LOCKED_EXCEPTION": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "42",
