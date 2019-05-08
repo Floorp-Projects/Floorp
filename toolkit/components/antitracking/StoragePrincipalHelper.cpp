@@ -26,7 +26,7 @@ already_AddRefed<nsIURI> MaybeGetFirstPartyURI(nsIChannel* aChannel) {
   // jar.
   nsContentUtils::StorageAccess access =
       nsContentUtils::StorageAllowedForChannel(aChannel);
-  if (access != nsContentUtils::StorageAccess::ePartitionedOrDeny) {
+  if (access != nsContentUtils::StorageAccess::ePartitionTrackersOrDeny) {
     return nullptr;
   }
 
