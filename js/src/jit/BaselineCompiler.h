@@ -655,6 +655,7 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
 class BaselineInterpreterHandler {
   InterpreterFrameInfo frame_;
   Label interpretOp_;
+  CodeOffset debuggeeCheckOffset_;
 
  public:
   using FrameInfoT = InterpreterFrameInfo;
@@ -670,6 +671,11 @@ class BaselineInterpreterHandler {
   bool isDefinitelyLastOp() const { return false; }
   JSScript* maybeScript() const { return nullptr; }
   JSFunction* maybeFunction() const { return nullptr; }
+
+  void setDebuggeeCheckOffset(CodeOffset offset) {
+    debuggeeCheckOffset_ = offset;
+  }
+  CodeOffset debuggeeCheckOffset() const { return debuggeeCheckOffset_; }
 
   // Interpreter doesn't need to keep track of RetAddrEntries, so these methods
   // are no-ops.
