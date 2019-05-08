@@ -1421,11 +1421,11 @@ int32_t nsComboboxControlFrame::UpdateRecentIndex(int32_t aIndex) {
   return index;
 }
 
-class nsDisplayComboboxFocus : public nsDisplayItem {
+class nsDisplayComboboxFocus : public nsPaintedDisplayItem {
  public:
   nsDisplayComboboxFocus(nsDisplayListBuilder* aBuilder,
                          nsComboboxControlFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayComboboxFocus);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING

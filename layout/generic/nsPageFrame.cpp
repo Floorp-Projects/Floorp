@@ -440,10 +440,10 @@ static gfx::Matrix4x4 ComputePageTransform(nsIFrame* aFrame,
   return gfx::Matrix4x4::Scaling(scale, scale, 1);
 }
 
-class nsDisplayHeaderFooter final : public nsDisplayItem {
+class nsDisplayHeaderFooter final : public nsPaintedDisplayItem {
  public:
   nsDisplayHeaderFooter(nsDisplayListBuilder* aBuilder, nsPageFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayHeaderFooter);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING

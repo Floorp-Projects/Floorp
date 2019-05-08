@@ -2463,10 +2463,10 @@ nsresult nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-class nsDisplayTreeBody final : public nsDisplayItem {
+class nsDisplayTreeBody final : public nsPaintedDisplayItem {
  public:
   nsDisplayTreeBody(nsDisplayListBuilder* aBuilder, nsFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTreeBody);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -2480,7 +2480,7 @@ class nsDisplayTreeBody final : public nsDisplayItem {
 
   void Destroy(nsDisplayListBuilder* aBuilder) override {
     aBuilder->UnregisterThemeGeometry(this);
-    nsDisplayItem::Destroy(aBuilder);
+    nsPaintedDisplayItem::Destroy(aBuilder);
   }
 
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
@@ -2495,8 +2495,8 @@ class nsDisplayTreeBody final : public nsDisplayItem {
       aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
     }
 
-    nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
-                                             aInvalidRegion);
+    nsPaintedDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry,
+                                                    aInvalidRegion);
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,

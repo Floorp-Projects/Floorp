@@ -162,7 +162,7 @@ inline static bool IsTempLayerManager(mozilla::layers::LayerManager* aManager) {
 
 nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
                                  nsSubDocumentFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame),
+    : nsPaintedDisplayItem(aBuilder, aFrame),
       mTabId{0},
       mEventRegionsOverride(EventRegionsOverride::NoOverride) {
   bool frameIsPointerEventsNone = aFrame->StyleUI()->GetEffectivePointerEvents(

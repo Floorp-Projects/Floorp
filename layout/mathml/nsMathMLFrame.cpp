@@ -300,11 +300,11 @@ void nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
 }
 #endif
 
-class nsDisplayMathMLBar final : public nsDisplayItem {
+class nsDisplayMathMLBar final : public nsPaintedDisplayItem {
  public:
   nsDisplayMathMLBar(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      const nsRect& aRect, uint16_t aIndex)
-      : nsDisplayItem(aBuilder, aFrame), mRect(aRect), mIndex(aIndex) {
+      : nsPaintedDisplayItem(aBuilder, aFrame), mRect(aRect), mIndex(aIndex) {
     MOZ_COUNT_CTOR(nsDisplayMathMLBar);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING

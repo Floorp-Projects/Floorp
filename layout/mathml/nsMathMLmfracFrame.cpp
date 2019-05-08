@@ -569,11 +569,11 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
   return NS_OK;
 }
 
-class nsDisplayMathMLSlash : public nsDisplayItem {
+class nsDisplayMathMLSlash : public nsPaintedDisplayItem {
  public:
   nsDisplayMathMLSlash(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                        const nsRect& aRect, nscoord aThickness, bool aRTL)
-      : nsDisplayItem(aBuilder, aFrame),
+      : nsPaintedDisplayItem(aBuilder, aFrame),
         mRect(aRect),
         mThickness(aThickness),
         mRTL(aRTL) {

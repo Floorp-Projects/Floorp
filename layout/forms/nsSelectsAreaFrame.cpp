@@ -100,10 +100,10 @@ static nsListControlFrame* GetEnclosingListFrame(nsIFrame* aSelectsAreaFrame) {
   return nullptr;
 }
 
-class nsDisplayListFocus : public nsDisplayItem {
+class nsDisplayListFocus : public nsPaintedDisplayItem {
  public:
   nsDisplayListFocus(nsDisplayListBuilder* aBuilder, nsSelectsAreaFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayListFocus);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING

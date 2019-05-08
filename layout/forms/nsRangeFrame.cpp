@@ -148,10 +148,10 @@ void nsRangeFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
   }
 }
 
-class nsDisplayRangeFocusRing final : public nsDisplayItem {
+class nsDisplayRangeFocusRing final : public nsPaintedDisplayItem {
  public:
   nsDisplayRangeFocusRing(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayRangeFocusRing);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
