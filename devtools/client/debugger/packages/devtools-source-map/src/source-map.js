@@ -46,7 +46,7 @@ type Range = {
   }
 };
 
-export type locationOptions = {
+export type LocationOptions = {
   search?: "LEAST_UPPER_BOUND" | "GREATEST_LOWER_BOUND"
 };
 
@@ -261,28 +261,30 @@ async function getAllGeneratedLocations(
   }));
 }
 
-function getOriginalLocations(
+async function getOriginalLocations(
+  sourceId: string,
   locations: SourceLocation[],
-  options: locationOptions = {}
-) {
-  return Promise.all(
-    locations.map(location => getOriginalLocation(location, options))
+  options: LocationOptions = {}
+): Promise<SourceLocation[]> {
+  if (locations.some(location => location.sourceId != sourceId)) {
+    throw new Error("Generated locations must belong to the same source");
+  }
+
+  const map = await getSourceMap(sourceId);
+  if (!map) {
+    return locations;
+  }
+
+  return locations.map(location =>
+    getOriginalLocationSync(map, location, options)
   );
 }
 
-async function getOriginalLocation(
+function getOriginalLocationSync(
+  map,
   location: SourceLocation,
-  { search }: locationOptions = {}
-): Promise<SourceLocation> {
-  if (!isGeneratedId(location.sourceId)) {
-    return location;
-  }
-
-  const map = await getSourceMap(location.sourceId);
-  if (!map) {
-    return location;
-  }
-
+  { search }: LocationOptions = {}
+): SourceLocation {
   // First check for an exact match
   let match = map.originalPositionFor({
     line: location.line,
@@ -319,6 +321,22 @@ async function getOriginalLocation(
     line,
     column
   };
+}
+
+async function getOriginalLocation(
+  location: SourceLocation,
+  options: LocationOptions = {}
+): Promise<SourceLocation> {
+  if (!isGeneratedId(location.sourceId)) {
+    return location;
+  }
+
+  const map = await getSourceMap(location.sourceId);
+  if (!map) {
+    return location;
+  }
+
+  return getOriginalLocationSync(map, location, options);
 }
 
 async function getOriginalSourceText(
