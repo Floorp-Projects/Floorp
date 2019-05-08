@@ -6,6 +6,7 @@
 
 "use strict";
 
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 
@@ -79,6 +80,12 @@ Menu.prototype.popupWithZoom = function(x, y, doc) {
  *        The document that should own the context menu.
  */
 Menu.prototype.popup = function(screenX, screenY, doc) {
+  // The context-menu will be created in the topmost window to preserve keyboard
+  // navigation (see Bug 1543940).
+  // Keep a reference on the window owning the menu to hide the popup on unload.
+  const win = doc.defaultView;
+  doc = DevToolsUtils.getTopWindow(doc.defaultView).document;
+
   let popupset = doc.querySelector("popupset");
   if (!popupset) {
     popupset = doc.createXULElement("popupset");
@@ -103,9 +110,15 @@ Menu.prototype.popup = function(screenX, screenY, doc) {
   }
   this._createMenuItems(popup);
 
+  // The context menu will be created in the topmost chrome window. Hide it manually when
+  // the owner document is unloaded.
+  const onWindowUnload = () => popup.hidePopup();
+  win.addEventListener("unload", onWindowUnload);
+
   // Remove the menu from the DOM once it's hidden.
   popup.addEventListener("popuphidden", (e) => {
     if (e.target === popup) {
+      win.removeEventListener("unload", onWindowUnload);
       popup.remove();
       this.emit("close");
     }
@@ -155,6 +168,11 @@ Menu.prototype._createMenuItems = function(parent) {
       parent.appendChild(menuitem);
     }
   });
+};
+
+Menu.getMenuElementById = function(id, doc) {
+  const menuDoc = DevToolsUtils.getTopWindow(doc.defaultView).document;
+  return menuDoc.getElementById(id);
 };
 
 Menu.setApplicationMenu = () => {
