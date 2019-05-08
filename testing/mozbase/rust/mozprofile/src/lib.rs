@@ -1,4 +1,4 @@
-extern crate tempdir;
+extern crate tempfile;
 
 pub mod preferences;
 pub mod prefreader;

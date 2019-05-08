@@ -7,4 +7,4 @@ repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/ru
 license = "MPL-2.0"
 
 [dependencies]
-tempdir = "0.3.4"
+tempfile = "3"

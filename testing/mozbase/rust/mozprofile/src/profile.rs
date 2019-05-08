@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::Result as IoResult;
 use std::path::{Path, PathBuf};
-use tempdir::TempDir;
+use tempfile::{Builder, TempDir};
 
 #[derive(Debug)]
 pub struct Profile {
@@ -17,7 +17,7 @@ pub struct Profile {
 
 impl Profile {
     pub fn new() -> IoResult<Profile> {
-        let dir = TempDir::new("rust_mozprofile")?;
+        let dir = Builder::new().prefix("rust_mozprofile").tempdir()?;
         let path = dir.path().to_path_buf();
         let temp_dir = Some(dir);
         Ok(Profile {
