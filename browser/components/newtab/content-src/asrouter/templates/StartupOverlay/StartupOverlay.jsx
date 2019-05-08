@@ -13,6 +13,8 @@ export class _StartupOverlay extends React.PureComponent {
     this.removeOverlay = this.removeOverlay.bind(this);
     this.onInputInvalid = this.onInputInvalid.bind(this);
 
+    this.utmParams = "utm_source=activity-stream&utm_campaign=firstrun&utm_medium=referral&utm_term=trailhead-control";
+
     this.state = {
       emailInput: "",
       overlayRemoved: false,
@@ -26,8 +28,8 @@ export class _StartupOverlay extends React.PureComponent {
     if (this.props.fxa_endpoint && !this.didFetch) {
       try {
         this.didFetch = true;
-        const fxaParams = "entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun&form_type=email";
-        const response = await fetch(`${this.props.fxa_endpoint}/metrics-flow?${fxaParams}`, {credentials: "omit"});
+        const fxaParams = "entrypoint=activity-stream-firstrun&form_type=email";
+        const response = await fetch(`${this.props.fxa_endpoint}/metrics-flow?${fxaParams}&${this.utmParams}`, {credentials: "omit"});
         if (response.status === 200) {
           const {flowId, flowBeginTime} = await response.json();
           this.setState({flowId, flowBeginTime});
@@ -106,8 +108,8 @@ export class _StartupOverlay extends React.PureComponent {
       return null;
     }
 
-    let termsLink = (<a href={`${this.props.fxa_endpoint}/legal/terms`} target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_terms_of_service" /></a>);
-    let privacyLink = (<a href={`${this.props.fxa_endpoint}/legal/privacy`} target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_privacy_notice" /></a>);
+    let termsLink = (<a href={`${this.props.fxa_endpoint}/legal/terms?${this.utmParams}`} target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_terms_of_service" /></a>);
+    let privacyLink = (<a href={`${this.props.fxa_endpoint}/legal/privacy?${this.utmParams}`} target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_privacy_notice" /></a>);
 
     return (
       <div className={`overlay-wrapper ${this.state.show ? "show" : ""}`}>
@@ -117,7 +119,7 @@ export class _StartupOverlay extends React.PureComponent {
             <div className="firstrun-left-divider">
               <h1 className="firstrun-title"><FormattedMessage id="firstrun_title" /></h1>
               <p className="firstrun-content"><FormattedMessage id="firstrun_content" /></p>
-              <a className="firstrun-link" href="https://www.mozilla.org/firefox/features/sync/" target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_learn_more_link" /></a>
+              <a className="firstrun-link" href={`https://www.mozilla.org/firefox/features/sync/?${this.utmParams}`} target="_blank" rel="noopener noreferrer"><FormattedMessage id="firstrun_learn_more_link" /></a>
             </div>
             <div className="firstrun-sign-in">
               <p className="form-header"><FormattedMessage id="firstrun_form_header" /><span className="sub-header"><FormattedMessage id="firstrun_form_sub_header" /></span></p>
@@ -128,6 +130,8 @@ export class _StartupOverlay extends React.PureComponent {
                 <input name="entrypoint" type="hidden" value="activity-stream-firstrun" />
                 <input name="utm_source" type="hidden" value="activity-stream" />
                 <input name="utm_campaign" type="hidden" value="firstrun" />
+                <input name="utm_medium" type="hidden" value="referral" />
+                <input name="utm_term" type="hidden" value="trailhead-control" />
                 <input name="flow_id" type="hidden" value={this.state.flowId} />
                 <input name="flow_begin_time" type="hidden" value={this.state.flowBeginTime} />
                 <span className="error">{this.props.intl.formatMessage({id: "firstrun_invalid_input"})}</span>

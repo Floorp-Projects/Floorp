@@ -296,6 +296,7 @@ export class ASRouterUISurface extends React.PureComponent {
     const {message} = this.state;
     if (message.template === "trailhead") {
       return (<Trailhead
+        document={this.props.document}
         message={message}
         onAction={ASRouterUtils.executeAction}
         onDoneButton={this.dismissBundle(this.state.bundle.bundle)}
