@@ -39,15 +39,24 @@ class DelayedProvider extends UrlbarProvider {
   async startQuery(context, add) {
     Assert.ok(context, "context is passed-in");
     Assert.equal(typeof add, "function", "add is a callback");
-    this._context = context;
     this._add = add;
+    await new Promise(resolve => {
+      this._resultsAdded = resolve;
+    });
   }
   cancelQuery(context) {
-    Assert.ok(false, "cancelQuery should not be called");
+    // Nothing.
   }
-  addResults(matches) {
+  async addResults(matches, finish = true) {
+    // startQuery may have not been invoked yet, so wait for it
+    await TestUtils.waitForCondition(() => !!this._add,
+                                     "Waiting for the _add callback");
     for (const match of matches) {
       this._add(this, match);
+    }
+    if (finish) {
+      this._add = null;
+      this._resultsAdded();
     }
   }
 }
@@ -93,7 +102,7 @@ add_task(async function test_n_autocomplete_cancel() {
   Assert.ok(!TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
     "Should not have started first 6 results stopwatch");
 
-  await controller.startQuery(context);
+  controller.startQuery(context);
 
   Assert.ok(TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
     "Should have started first result stopwatch");
@@ -130,14 +139,14 @@ add_task(async function test_n_autocomplete_results() {
   Assert.ok(!TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
     "Should not have started first 6 results stopwatch");
 
-  await controller.startQuery(context);
+  controller.startQuery(context);
 
   Assert.ok(TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
     "Should have started first result stopwatch");
   Assert.ok(TelemetryStopwatch.running(TELEMETRY_6_FIRST_RESULTS, context),
     "Should have started first 6 results stopwatch");
 
-  provider.addResults([MATCH]);
+  await provider.addResults([MATCH], false);
   await resultsPromise;
 
   Assert.ok(!TelemetryStopwatch.running(TELEMETRY_1ST_RESULT, context),
@@ -155,11 +164,11 @@ add_task(async function test_n_autocomplete_results() {
   // Now add 5 more results, so that the first 6 results is triggered.
   for (let i = 0; i < 5; i++) {
     resultsPromise = promiseControllerNotification(controller, "onQueryResults");
-    provider.addResults([
+    await provider.addResults([
       new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
                        UrlbarUtils.RESULT_SOURCE.TABS,
                        { url: TEST_URL + "/i" }),
-    ]);
+    ], false);
     await resultsPromise;
   }
 
@@ -177,7 +186,7 @@ add_task(async function test_n_autocomplete_results() {
 
   // Add one more, to check neither are updated.
   resultsPromise = promiseControllerNotification(controller, "onQueryResults");
-  provider.addResults([
+  await provider.addResults([
     new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
                      UrlbarUtils.RESULT_SOURCE.TABS,
                      { url: TEST_URL + "/6" }),

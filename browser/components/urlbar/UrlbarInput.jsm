@@ -1270,10 +1270,17 @@ class UrlbarInput {
     // additional cleanup on blur.
     this._clearActionOverride();
     this.formatValue();
+
+    // The extension input sessions depends more on blur than on the fact we
+    // actually cancel a running query, so we do it here.
+    if (ExtensionSearchHandler.hasActiveInputSession()) {
+      ExtensionSearchHandler.handleInputCancelled();
+    }
+
     // Respect the autohide preference for easier inspecting/debugging via
     // the browser toolbox.
     if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
-      this.view.close(UrlbarUtils.CANCEL_REASON.BLUR);
+      this.view.close();
     }
     // We may have hidden popup notifications, show them again if necessary.
     if (this.getAttribute("pageproxystate") != "valid") {
