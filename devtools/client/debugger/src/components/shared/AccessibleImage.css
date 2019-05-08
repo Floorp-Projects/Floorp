@@ -80,6 +80,11 @@ html[dir="rtl"] .img.arrow {
   mask-size: 12px 12px;
 }
 
+.img.window {
+  mask-image: url(resource://devtools/client/debugger/images/window.svg);
+  mask-size: 12px 12px;
+}
+
 .img.file {
   mask-image: url(resource://devtools/client/debugger/images/file-small.svg);
   mask-size: 12px 12px;

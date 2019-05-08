@@ -18,8 +18,9 @@ function _collapseTree(node: TreeNode, depth: number): TreeNode {
       console.log(`Expected array at: ${node.path}`);
     }
 
-    // Node is not a root/domain node, and only contains 1 item.
-    if (depth > 1 && node.contents.length === 1) {
+    // Node is not a (1) thread and (2) root/domain node,
+    // and only contains 1 item.
+    if (depth > 2 && node.contents.length === 1) {
       const next = node.contents[0];
       // Do not collapse if the next node is a leaf node.
       if (next.type === "directory") {

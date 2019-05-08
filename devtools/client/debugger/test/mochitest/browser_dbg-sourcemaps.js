@@ -66,8 +66,8 @@ add_task(async function() {
   const bundleSrc = findSource(dbg, "bundle.js");
 
   // Check that the original sources appear in the source tree
-  await clickElement(dbg, "sourceDirectoryLabel", 3);
-  await assertSourceCount(dbg, 8);
+  await clickElement(dbg, "sourceDirectoryLabel", 4);
+  await assertSourceCount(dbg, 9);
 
   await selectSource(dbg, bundleSrc);
 
