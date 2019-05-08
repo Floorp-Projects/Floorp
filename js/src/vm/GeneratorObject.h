@@ -205,8 +205,17 @@ bool GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
 
 /**
  * Return the generator object associated with the given frame. The frame must
- * be a call frame for a generator. If the generator object hasn't been created
- * yet, or hasn't been stored in the stack slot yet, this returns null.
+ * be a call frame for a generator.
+ *
+ * This may return nullptr at certain points in the generator lifecycle:
+ *
+ * - While a generator call evaluates default argument values and performs
+ *   destructuring, which occurs before the generator object is created.
+ *
+ * - Between the `GENERATOR` instruction and the `SETALIASEDVAR .generator`
+ *   instruction, at which point the generator object does exist, but is held
+ *   only on the stack, and not the `.generator` pseudo-variable this function
+ *   consults.
  */
 AbstractGeneratorObject* GetGeneratorObjectForFrame(JSContext* cx,
                                                     AbstractFramePtr frame);
