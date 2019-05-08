@@ -214,13 +214,13 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
                 break
 
     if device_verified and install:
-        # Determine if Firefox is installed on the device; if not,
+        # Determine if test app is installed on the device; if not,
         # prompt to install. This feature allows a test command to
-        # launch an emulator, install Firefox, and proceed with testing
+        # launch an emulator, install the test app, and proceed with testing
         # in one operation. It is also a basic safeguard against other
-        # cases where testing is requested but Firefox installation has
+        # cases where testing is requested but test app installation has
         # been forgotten.
-        # If Firefox is installed, there is no way to determine whether
+        # If a test app is installed, there is no way to determine whether
         # the current build is installed, and certainly no way to
         # determine if the installed build is the desired build.
         # Installing every time (without prompting) is problematic because:
@@ -231,13 +231,16 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
         device = _get_device(build_obj.substs, device_serial)
         response = ''
         action = 'Re-install'
-        if not device.is_app_installed(app):
+        installed = device.is_app_installed(app)
+        if not installed:
             _log_info("It looks like %s is not installed on this device." % app)
             action = 'Install'
         if 'fennec' in app or 'firefox' in app:
             response = response = raw_input(
                 "%s Firefox? (Y/n) " % action).strip()
             if response.lower().startswith('y') or response == '':
+                if installed:
+                    device.uninstall_app(app)
                 _log_info("Installing Firefox. This may take a while...")
                 build_obj._run_make(directory=".", target='install',
                                     ensure_exit_code=False)
@@ -245,6 +248,8 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
             response = response = raw_input(
                 "%s geckoview AndroidTest? (Y/n) " % action).strip()
             if response.lower().startswith('y') or response == '':
+                if installed:
+                    device.uninstall_app(app)
                 _log_info("Installing geckoview AndroidTest. This may take a while...")
                 sub = 'geckoview:installWithGeckoBinariesDebugAndroidTest'
                 build_obj._mach_context.commands.dispatch('gradle',
@@ -254,18 +259,19 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
             response = response = raw_input(
                 "%s geckoview_example? (Y/n) " % action).strip()
             if response.lower().startswith('y') or response == '':
+                if installed:
+                    device.uninstall_app(app)
                 _log_info("Installing geckoview_example. This may take a while...")
                 sub = 'install-geckoview_example'
                 build_obj._mach_context.commands.dispatch('android',
                                                           subcommand=sub,
                                                           args=[],
                                                           context=build_obj._mach_context)
-        else:
-            if not device.is_app_installed(app):
-                response = raw_input(
-                    "It looks like %s is not installed on this device,\n"
-                    "but I don't know how to install it.\n"
-                    "Install it now, then hit Enter " % app)
+        elif not installed:
+            response = raw_input(
+                "It looks like %s is not installed on this device,\n"
+                "but I don't know how to install it.\n"
+                "Install it now, then hit Enter " % app)
 
     if device_verified and xre:
         # Check whether MOZ_HOST_BIN has been set to a valid xre; if not,
