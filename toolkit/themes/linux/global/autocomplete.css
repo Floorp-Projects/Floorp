@@ -55,7 +55,7 @@ panel[type="autocomplete-richlistbox"] {
   max-width: 16px;
   max-height: 16px;
   margin-inline-start: 6px;
-  margin-inline-end: 9px;
+  margin-inline-end: 8px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
   -moz-context-properties: fill;
   fill: currentColor;

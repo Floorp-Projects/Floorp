@@ -105,6 +105,12 @@
   visibility: hidden;
 }
 
+.urlbar-input {
+  /* Remove the 1px padding-left (and padding-right) so that the titles in the
+     urlbar popup align with the text in the input. */
+  padding: 0;
+}
+
 #urlbar-container {
   -moz-box-align: center;
 }
