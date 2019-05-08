@@ -116,6 +116,12 @@ option(env='FENNEC_NIGHTLY',
 set_config('FENNEC_NIGHTLY', depends_if('FENNEC_NIGHTLY')(lambda _: True))
 set_define('FENNEC_NIGHTLY', depends_if('FENNEC_NIGHTLY')(lambda _: True))
 
+
+@depends('FENNEC_NIGHTLY')
+def fennec_nightly(nightly):
+    return bool(nightly)
+
+
 imply_option('MOZ_SERVICES_HEALTHREPORT', True)
 imply_option('MOZ_ANDROID_HISTORY', True)
 imply_option('--enable-small-chunk-size', True)
