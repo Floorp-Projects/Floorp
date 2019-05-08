@@ -752,7 +752,7 @@ class MarkupContextMenu {
       menu.append(menuitem);
     }
 
-    menu.popup(screenX, screenY, this.toolbox);
+    menu.popup(screenX, screenY, this.toolbox.doc);
     return menu;
   }
 

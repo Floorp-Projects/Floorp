@@ -201,7 +201,7 @@ StyleEditorUI.prototype = {
       this._optionsButton.removeAttribute("open");
     });
 
-    this._optionsMenu.popup(screenX, screenY, this._toolbox);
+    this._optionsMenu.popup(screenX, screenY, this._toolbox.doc);
   },
 
   /**

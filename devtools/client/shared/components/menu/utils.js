@@ -71,7 +71,7 @@ function showMenu(items, options) {
     doc = window.parent.document;
   }
 
-  menu.popup(screenX, screenY, { doc });
+  menu.popup(screenX, screenY, doc);
 }
 
 module.exports = {

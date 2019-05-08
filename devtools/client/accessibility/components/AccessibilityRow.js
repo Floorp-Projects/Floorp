@@ -203,7 +203,7 @@ class AccessibilityRow extends Component {
       }));
     }
 
-    menu.popup(e.screenX, e.screenY, gToolbox);
+    menu.popup(e.screenX, e.screenY, gToolbox.doc);
 
     if (gTelemetry) {
       gTelemetry.scalarAdd(TELEMETRY_ACCESSIBLE_CONTEXT_MENU_OPENED, 1);
