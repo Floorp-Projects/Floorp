@@ -141,6 +141,7 @@ class HomeFragment : Fragment(), CoroutineScope {
             (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
         view.toolbar.compoundDrawablePadding = roundToInt
         view.toolbar.setOnClickListener {
+            invokePendingDeleteSessionJob()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
             Navigation.findNavController(it).navigate(directions)
 
@@ -206,6 +207,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                 showCollectionCreationFragment(action.selectedTabSessionId)
             }
             is TabAction.Select -> {
+                invokePendingDeleteSessionJob()
                 val session =
                     requireComponents.core.sessionManager.findSessionById(action.sessionId)
                 requireComponents.core.sessionManager.select(session!!)
@@ -241,11 +243,22 @@ class HomeFragment : Fragment(), CoroutineScope {
                 )
             }
             is TabAction.Add -> {
+                invokePendingDeleteSessionJob()
                 val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
             }
             is TabAction.ShareTabs -> {
                 ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1843")
+            }
+        }
+    }
+
+    private fun invokePendingDeleteSessionJob() {
+        deleteSessionJob?.let {
+            launch {
+                it.invoke()
+            }.invokeOnCompletion {
+                deleteSessionJob = null
             }
         }
     }
@@ -298,13 +311,20 @@ class HomeFragment : Fragment(), CoroutineScope {
     private fun setupHomeMenu() {
         homeMenu = HomeMenu(requireContext()) {
             when (it) {
-                HomeMenu.Item.Settings -> Navigation.findNavController(homeLayout).navigate(
-                    HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
-                )
-                HomeMenu.Item.Library -> Navigation.findNavController(homeLayout).navigate(
-                    HomeFragmentDirections.actionHomeFragmentToLibraryFragment()
-                )
+                HomeMenu.Item.Settings -> {
+                    invokePendingDeleteSessionJob()
+                    Navigation.findNavController(homeLayout).navigate(
+                        HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
+                    )
+                }
+                HomeMenu.Item.Library -> {
+                    invokePendingDeleteSessionJob()
+                    Navigation.findNavController(homeLayout).navigate(
+                        HomeFragmentDirections.actionHomeFragmentToLibraryFragment()
+                    )
+                }
                 HomeMenu.Item.Help -> {
+                    invokePendingDeleteSessionJob()
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getSumoURLForTopic(
                             context!!,
@@ -367,7 +387,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                     .map {
                         val selected =
                             it == sessionManager.selectedSession
-                        org.mozilla.fenix.home.sessioncontrol.Tab(
+                        Tab(
                             it.id,
                             it.url,
                             it.url.urlToTrimmedHost(),
@@ -408,7 +428,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                     .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
                     .map {
                         val selected = it == sessionManager.selectedSession
-                        org.mozilla.fenix.home.sessioncontrol.Tab(
+                        Tab(
                             it.id,
                             it.url,
                             it.url.urlToTrimmedHost(),
