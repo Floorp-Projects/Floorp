@@ -24,7 +24,8 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[3]);
 
   await waitForClipboardPromise(function setup() {
-    getContextMenuItem(monitor, "request-list-context-copy-response").click();
+    monitor.panelWin.parent.document
+      .querySelector("#request-list-context-copy-response").click();
   }, EXPECTED_RESULT);
 
   await teardown(monitor);

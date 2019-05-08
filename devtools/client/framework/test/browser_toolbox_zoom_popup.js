@@ -61,7 +61,7 @@ add_task(async function() {
 
   for (const menu of menuList) {
     const { buttonBounds, menuType, menuBounds, arrowBounds } =
-      await getButtonAndMenuInfo(toolbox, menu);
+      await getButtonAndMenuInfo(toolbox.doc, menu);
 
     switch (menuType) {
       case "native":
@@ -116,8 +116,7 @@ add_task(async function() {
  *         - arrowBounds {DOMRect|null} Bounds of the arrow. Only set when
  *                       menuType is "doorhanger", null otherwise.
  */
-async function getButtonAndMenuInfo(toolbox, menuButton) {
-  const { doc, topDoc } = toolbox;
+async function getButtonAndMenuInfo(doc, menuButton) {
   info("Show popup menu with click event.");
   EventUtils.sendMouseEvent(
     {
@@ -136,7 +135,7 @@ async function getButtonAndMenuInfo(toolbox, menuButton) {
     await waitUntil(() => menuPopup.classList.contains("tooltip-visible"));
   } else {
     menuType = "native";
-    const popupset = topDoc.querySelector("popupset");
+    const popupset = doc.querySelector("popupset");
     await waitUntil(() => {
       menuPopup = popupset.querySelector("menupopup[menu-api=\"true\"]");
       return !!menuPopup && menuPopup.state === "open";
