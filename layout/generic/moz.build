@@ -135,6 +135,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'AspectRatio.h',
     'AutoCopyListener.h',
+    'ColumnUtils.h',
     'CSSAlignUtils.h',
     'CSSOrderAwareFrameIterator.h',
     'FrameTypeList.h',
@@ -153,6 +154,7 @@ UNIFIED_SOURCES += [
     'BlockReflowInput.cpp',
     'BRFrame.cpp',
     'ColumnSetWrapperFrame.cpp',
+    'ColumnUtils.cpp',
     'CSSAlignUtils.cpp',
     'CSSOrderAwareFrameIterator.cpp',
     'DetailsFrame.cpp',
