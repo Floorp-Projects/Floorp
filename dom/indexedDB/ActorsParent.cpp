@@ -9500,7 +9500,7 @@ void DatabaseConnection::FinishWriteTransaction() {
 nsresult DatabaseConnection::StartSavepoint() {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
-  MOZ_DIAGNOSTIC_ASSERT(mUpdateRefcountFunction);
+  MOZ_ASSERT(mUpdateRefcountFunction);
   MOZ_ASSERT(mInWriteTransaction);
 
   AUTO_PROFILER_LABEL("DatabaseConnection::StartSavepoint", DOM);
@@ -10062,14 +10062,12 @@ nsresult DatabaseConnection::AutoSavepoint::Start(
   MOZ_ASSERT(connection);
   connection->AssertIsOnConnectionThread();
 
-#ifndef NIGHTLY_BUILD
   // This is just a quick fix for preventing accessing the nullptr. The cause is
   // probably because the connection was unexpectedly closed.
   if (!connection->GetUpdateRefcountFunction()) {
     NS_WARNING("The connection was closed for some reasons!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
-#endif
 
   MOZ_ASSERT(!mConnection);
   MOZ_ASSERT(!mDEBUGTransaction);
