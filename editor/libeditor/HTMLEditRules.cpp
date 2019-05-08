@@ -2457,8 +2457,9 @@ nsresult HTMLEditRules::WillDeleteSelection(
         return rv;
       }
       *aHandled = true;
-      rv = HTMLEditorRef().DeleteTextWithTransaction(
-          nodeAsText, std::min(so, eo), DeprecatedAbs(eo - so));
+      rv = MOZ_KnownLive(HTMLEditorRef())
+               .DeleteTextWithTransaction(nodeAsText, std::min(so, eo),
+                                          DeprecatedAbs(eo - so));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -3053,8 +3054,10 @@ nsresult HTMLEditRules::WillDeleteSelection(
           // Delete to last character
           OwningNonNull<CharacterData> dataNode =
               *static_cast<CharacterData*>(startNode.get());
-          rv = HTMLEditorRef().DeleteTextWithTransaction(
-              dataNode, startOffset, startNode->Length() - startOffset);
+          rv =
+              MOZ_KnownLive(HTMLEditorRef())
+                  .DeleteTextWithTransaction(dataNode, startOffset,
+                                             startNode->Length() - startOffset);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -3066,8 +3069,8 @@ nsresult HTMLEditRules::WillDeleteSelection(
           // Delete to first character
           OwningNonNull<CharacterData> dataNode =
               *static_cast<CharacterData*>(endNode.get());
-          rv =
-              HTMLEditorRef().DeleteTextWithTransaction(dataNode, 0, endOffset);
+          rv = MOZ_KnownLive(HTMLEditorRef())
+                   .DeleteTextWithTransaction(dataNode, 0, endOffset);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
