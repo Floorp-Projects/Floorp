@@ -518,3 +518,27 @@ wasmAssert(`(module
 
     // ADD NO MORE TESTS HERE!
 }
+
+// Standard wat syntax: the parens around the initializer expression are
+// optional.
+{
+    let i1 = wasmEvalText(
+        `(module
+           (global $g i32 i32.const 37)
+           (func (export "f") (result i32) (global.get $g)))`);
+    assertEq(i1.exports.f(), 37);
+
+    let i2 = wasmEvalText(
+        `(module
+           (global $g (mut f64) f64.const 42.0)
+           (func (export "f") (result f64) (global.get $g)))`);
+    assertEq(i2.exports.f(), 42);
+
+    let i3 = wasmEvalText(
+        `(module
+           (global $x (import "m" "x") i32)
+           (global $g i32 global.get $x)
+           (func (export "f") (result i32) (global.get $g)))`,
+        {m:{x:86}});
+    assertEq(i3.exports.f(), 86);
+}

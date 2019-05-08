@@ -35,8 +35,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gServerURL",
                                       "services.settings.server");
 XPCOMUtils.defineLazyPreferenceGetter(this, "gChangesPath",
                                       "services.settings.changes.path");
-XPCOMUtils.defineLazyPreferenceGetter(this, "gVerifySignature",
-                                      "services.settings.verify_signature", true);
 
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
@@ -189,6 +187,10 @@ class RemoteSettingsClient extends EventEmitter {
     this.localFields = localFields;
     this._lastCheckTimePref = lastCheckTimePref;
 
+    // This attribute allows signature verification to be disabled, when running tests
+    // or when pulling data from a dev server.
+    this.verifySignature = true;
+
     // The bucket preference value can be changed (eg. `main` to `main-preview`) in order
     // to preview the changes to be approved in a real client.
     this.bucketNamePref = bucketNamePref;
@@ -328,7 +330,7 @@ class RemoteSettingsClient extends EventEmitter {
 
       // If signature verification is enabled, then add a synchronization hook
       // for incoming changes that validates the signature.
-      if (this.signerName && gVerifySignature) {
+      if (this.verifySignature) {
         kintoCollection.hooks["incoming-changes"] = [async (payload, collection) => {
           await this._validateCollectionSignature(payload.changes,
                                                   payload.lastModified,

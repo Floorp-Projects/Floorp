@@ -936,10 +936,8 @@ class EditorBase : public nsIEditor,
    *                            container.  Otherwise, will insert the node
    *                            before child node referred by this.
    */
-  template <typename PT, typename CT>
-  MOZ_CAN_RUN_SCRIPT nsresult
-  InsertNodeWithTransaction(nsIContent& aContentToInsert,
-                            const EditorDOMPointBase<PT, CT>& aPointToInsert);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertNodeWithTransaction(
+      nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert);
 
   /**
    * ReplaceContainerWithTransaction() creates new element whose name is
@@ -1071,10 +1069,8 @@ class EditorBase : public nsIEditor,
    * @param aError              If succeed, returns no error.  Otherwise, an
    *                            error.
    */
-  template <typename PT, typename CT>
   MOZ_CAN_RUN_SCRIPT already_AddRefed<nsIContent> SplitNodeWithTransaction(
-      const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
-      ErrorResult& aResult);
+      const EditorDOMPoint& aStartOfRightNode, ErrorResult& aResult);
 
   /**
    * JoinNodesWithTransaction() joins aLeftNode and aRightNode.  Content of
@@ -1093,9 +1089,8 @@ class EditorBase : public nsIEditor,
    *
    * @param aContent        The node to be moved.
    */
-  template <typename PT, typename CT>
   MOZ_CAN_RUN_SCRIPT nsresult MoveNodeWithTransaction(
-      nsIContent& aContent, const EditorDOMPointBase<PT, CT>& aPointToInsert);
+      nsIContent& aContent, const EditorDOMPoint& aPointToInsert);
 
   /**
    * MoveNodeToEndWithTransaction() moves aContent to end of aNewContainer.
@@ -1107,7 +1102,7 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT
   nsresult MoveNodeToEndWithTransaction(nsIContent& aContent,
                                         nsINode& aNewContainer) {
-    EditorRawDOMPoint pointToInsert;
+    EditorDOMPoint pointToInsert;
     pointToInsert.SetToEndOf(&aNewContainer);
     return MoveNodeWithTransaction(aContent, pointToInsert);
   }
@@ -1243,9 +1238,8 @@ class EditorBase : public nsIEditor,
    *                        child node referred by this.
    * @return                The created new element node.
    */
-  template <typename PT, typename CT>
-  already_AddRefed<Element> CreateNodeWithTransaction(
-      nsAtom& aTag, const EditorDOMPointBase<PT, CT>& aPointToInsert);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> CreateNodeWithTransaction(
+      nsAtom& aTag, const EditorDOMPoint& aPointToInsert);
 
   /**
    * Create an aggregate transaction for delete selection.  The result may
@@ -1287,6 +1281,7 @@ class EditorBase : public nsIEditor,
    * @param aOffset             Start offset of removing text in aCharData.
    * @param aLength             Length of removing text.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteTextWithTransaction(dom::CharacterData& aCharacterData,
                                      uint32_t aOffset, uint32_t aLength);
 
@@ -1389,11 +1384,10 @@ class EditorBase : public nsIEditor,
    *                                    be good to insert something if the
    *                                    caller want to do it.
    */
-  template <typename PT, typename CT>
-  MOZ_CAN_RUN_SCRIPT SplitNodeResult SplitNodeDeepWithTransaction(
-      nsIContent& aMostAncestorToSplit,
-      const EditorDOMPointBase<PT, CT>& aDeepestStartOfRightNode,
-      SplitAtEdges aSplitAtEdges);
+  MOZ_CAN_RUN_SCRIPT SplitNodeResult
+  SplitNodeDeepWithTransaction(nsIContent& aMostAncestorToSplit,
+                               const EditorDOMPoint& aDeepestStartOfRightNode,
+                               SplitAtEdges aSplitAtEdges);
 
   /**
    * JoinNodesDeepWithTransaction() joins aLeftNode and aRightNode "deeply".

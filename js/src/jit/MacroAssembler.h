@@ -1636,11 +1636,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void cmp32Load32(Condition cond, Register lhs, const Address& rhs,
                           const Address& src, Register dest)
-      DEFINED_ON(arm, arm64, x86_shared);
+      DEFINED_ON(arm, arm64, mips_shared, x86_shared);
 
   inline void cmp32Load32(Condition cond, Register lhs, Register rhs,
                           const Address& src, Register dest)
-      DEFINED_ON(arm, arm64, x86_shared);
+      DEFINED_ON(arm, arm64, mips_shared, x86_shared);
 
   inline void cmp32MovePtr(Condition cond, Register lhs, Imm32 rhs,
                            Register src, Register dest)

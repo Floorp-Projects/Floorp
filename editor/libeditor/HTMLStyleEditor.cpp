@@ -364,7 +364,7 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
   nsCOMPtr<nsIContent> textNodeForTheRange = &aText;
 
   // Split at the end of the range.
-  EditorRawDOMPoint atEnd(textNodeForTheRange, aEndOffset);
+  EditorDOMPoint atEnd(textNodeForTheRange, aEndOffset);
   if (!atEnd.IsEndOfContainer()) {
     // We need to split off back of text node
     ErrorResult error;
@@ -375,7 +375,7 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
   }
 
   // Split at the start of the range.
-  EditorRawDOMPoint atStart(textNodeForTheRange, aStartOffset);
+  EditorDOMPoint atStart(textNodeForTheRange, aStartOffset);
   if (!atStart.IsStartOfContainer()) {
     // We need to split off front of text node
     ErrorResult error;
@@ -397,7 +397,7 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
     if (IsSimpleModifiableNode(sibling, &aProperty, aAttribute, &aValue)) {
       // Following sib is already right kind of inline node; slide this over
       return MoveNodeWithTransaction(*textNodeForTheRange,
-                                     EditorRawDOMPoint(sibling, 0));
+                                     EditorDOMPoint(sibling, 0));
     }
   }
 
@@ -453,7 +453,7 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
   }
   if (IsSimpleModifiableNode(nextSibling, &aProperty, aAttribute, &aValue)) {
     nsresult rv =
-        MoveNodeWithTransaction(aNode, EditorRawDOMPoint(nextSibling, 0));
+        MoveNodeWithTransaction(aNode, EditorDOMPoint(nextSibling, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -641,7 +641,7 @@ nsresult HTMLEditor::SplitStyleAbovePoint(
         isSet) {
       // Found a style node we need to split
       SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
-          *node, EditorRawDOMPoint(*aNode, *aOffset),
+          *node, EditorDOMPoint(*aNode, *aOffset),
           SplitAtEdges::eAllowToCreateEmptyContainer);
       NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
                            "Failed to split the node");
@@ -732,8 +732,7 @@ nsresult HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
     // leftNode.  This is so we you don't revert back to the previous style
     // if you happen to click at the end of a line.
     if (savedBR) {
-      rv =
-          MoveNodeWithTransaction(*savedBR, EditorRawDOMPoint(newSelParent, 0));
+      rv = MoveNodeWithTransaction(*savedBR, EditorDOMPoint(newSelParent, 0));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1641,7 +1640,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   nsCOMPtr<nsIContent> textNodeForTheRange = &aTextNode;
 
   // Split at the end of the range.
-  EditorRawDOMPoint atEnd(textNodeForTheRange, aEndOffset);
+  EditorDOMPoint atEnd(textNodeForTheRange, aEndOffset);
   if (!atEnd.IsEndOfContainer()) {
     // We need to split off back of text node
     ErrorResult error;
@@ -1652,7 +1651,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   }
 
   // Split at the start of the range.
-  EditorRawDOMPoint atStart(textNodeForTheRange, aStartOffset);
+  EditorDOMPoint atStart(textNodeForTheRange, aStartOffset);
   if (!atStart.IsStartOfContainer()) {
     // We need to split off front of text node
     ErrorResult error;
@@ -1678,7 +1677,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   if (sibling && sibling->IsHTMLElement(nodeType)) {
     // Following sib is already right kind of inline node; slide this over
     nsresult rv = MoveNodeWithTransaction(*textNodeForTheRange,
-                                          EditorRawDOMPoint(sibling, 0));
+                                          EditorDOMPoint(sibling, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1789,7 +1788,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     if (sibling && sibling->IsHTMLElement(atom)) {
       // following sib is already right kind of inline node; slide this over
       // into it
-      return MoveNodeWithTransaction(*aNode, EditorRawDOMPoint(sibling, 0));
+      return MoveNodeWithTransaction(*aNode, EditorDOMPoint(sibling, 0));
     }
 
     // else insert it above aNode

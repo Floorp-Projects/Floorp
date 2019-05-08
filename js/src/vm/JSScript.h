@@ -2662,10 +2662,12 @@ class JSScript : public js::gc::TenuredCell {
   static size_t offsetOfWarmUpCounter() {
     return offsetof(JSScript, warmUpCount);
   }
-  void resetWarmUpCounter() {
+  void resetWarmUpCounterForGC() {
     incWarmUpResetCounter();
     warmUpCount = 0;
   }
+
+  void resetWarmUpCounterToDelayIonCompilation();
 
   unsigned getWarmUpResetCount() const {
     constexpr uint32_t MASK = uint32_t(MutableFlags::WarmupResets_MASK);

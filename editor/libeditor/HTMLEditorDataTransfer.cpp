@@ -646,7 +646,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
         // in a BR that is not visible.  If so, the code above just placed
         // selection inside that.  So I split it instead.
         SplitNodeResult splitLinkResult = SplitNodeDeepWithTransaction(
-            *linkContent, EditorRawDOMPoint(selNode, selOffset),
+            *linkContent, EditorDOMPoint(selNode, selOffset),
             SplitAtEdges::eDoNotCreateEmptyContainer);
         NS_WARNING_ASSERTION(splitLinkResult.Succeeded(),
                              "Failed to split the link");

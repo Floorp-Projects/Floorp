@@ -354,10 +354,8 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @return                    The new <br> node.  If failed to create new
    *                            <br> node, returns nullptr.
    */
-  template <typename PT, typename CT>
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> InsertBrElementWithTransaction(
-      const EditorDOMPointBase<PT, CT>& aPointToInsert,
-      EDirection aSelect = eNone);
+      const EditorDOMPoint& aPointToInsert, EDirection aSelect = eNone);
 
   /**
    * Extends the selection for given deletion operation

@@ -30,6 +30,10 @@ void MacroAssembler::move16SignExtend(Register src, Register dest) {
   ma_seh(dest, src);
 }
 
+void MacroAssembler::loadAbiReturnAddress(Register dest) {
+  movePtr(ra, dest);
+}
+
 // ===============================================================
 // Logical instructions
 
@@ -795,6 +799,19 @@ void MacroAssembler::cmp32Move32(Condition cond, Register lhs,
                                  const Address& rhs, Register src,
                                  Register dest) {
   MOZ_CRASH();
+}
+
+void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
+                                 const Address& rhs, const Address& src,
+                                 Register dest) {
+  // This is never used, but must be present to facilitate linking on mips(64).
+  MOZ_CRASH("No known use cases");
+}
+
+void MacroAssembler::cmp32Load32(Condition cond, Register lhs, Register rhs,
+                                 const Address& src, Register dest) {
+  // This is never used, but must be present to facilitate linking on mips(64).
+  MOZ_CRASH("No known use cases");
 }
 
 void MacroAssembler::test32LoadPtr(Condition cond, const Address& addr,

@@ -435,23 +435,6 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
   add(lir, ins);
 }
 
-void LIRGenerator::visitWasmSelect(MWasmSelect* ins) {
-  if (ins->type() == MIRType::Int64) {
-    auto* lir = new (alloc()) LWasmSelectI64(
-        useInt64RegisterAtStart(ins->trueExpr()), useInt64(ins->falseExpr()),
-        useRegister(ins->condExpr()));
-
-    defineInt64ReuseInput(lir, ins, LWasmSelectI64::TrueExprIndex);
-    return;
-  }
-
-  auto* lir = new (alloc())
-      LWasmSelect(useRegisterAtStart(ins->trueExpr()), use(ins->falseExpr()),
-                  useRegister(ins->condExpr()));
-
-  defineReuseInput(lir, ins, LWasmSelect::TrueExprIndex);
-}
-
 void LIRGeneratorMIPSShared::lowerUDiv(MDiv* div) {
   MDefinition* lhs = div->getOperand(0);
   MDefinition* rhs = div->getOperand(1);
