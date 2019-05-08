@@ -286,19 +286,9 @@ SubDialog.prototype = {
     // Do this on load to wait for the CSS to load and apply before calculating the size.
     let docEl = this._frame.contentDocument.documentElement;
 
-    let titleBarHeight = this._titleBar.clientHeight +
-                         parseFloat(getComputedStyle(this._titleBar).borderBottomWidth);
-
     // These are deduced from styles which we don't change, so it's safe to get them now:
     let boxHorizontalBorder = 2 * parseFloat(getComputedStyle(this._box).borderLeftWidth);
-    let boxVerticalBorder = 2 * parseFloat(getComputedStyle(this._box).borderTopWidth);
     let frameHorizontalMargin = 2 * parseFloat(getComputedStyle(this._frame).marginLeft);
-    let frameVerticalMargin = 2 * parseFloat(getComputedStyle(this._frame).marginTop);
-
-    // The difference between the frame and box shouldn't change, either:
-    let boxRect = this._box.getBoundingClientRect();
-    let frameRect = this._frame.getBoundingClientRect();
-    let frameSizeDifference = (frameRect.top - boxRect.top) + (boxRect.bottom - frameRect.bottom);
 
     // Then determine and set a bunch of width stuff:
     let frameMinWidth = docEl.style.width;
@@ -317,6 +307,51 @@ SubDialog.prototype = {
     this._box.style.minWidth = "calc(" +
                                (boxHorizontalBorder + frameHorizontalMargin) +
                                "px + " + frameMinWidth + ")";
+
+    this.resizeVertically();
+
+    this._overlay.dispatchEvent(new CustomEvent("dialogopen", {
+      bubbles: true,
+      detail: { dialog: this },
+    }));
+    this._overlay.style.visibility = "visible";
+    this._overlay.style.opacity = ""; // XXX: focus hack continued from _onContentLoaded
+
+    if (this._box.getAttribute("resizable") == "true") {
+      this._onResize = this._onResize.bind(this);
+      this._resizeObserver = new MutationObserver(this._onResize);
+      this._resizeObserver.observe(this._box, {attributes: true});
+    }
+
+    this._trapFocus();
+
+    // Search within main document and highlight matched keyword.
+    gSearchResultsPane.searchWithinNode(this._titleElement, gSearchResultsPane.query);
+
+    // Search within sub-dialog document and highlight matched keyword.
+    gSearchResultsPane.searchWithinNode(this._frame.contentDocument.firstElementChild,
+      gSearchResultsPane.query);
+
+    // Creating tooltips for all the instances found
+    for (let node of gSearchResultsPane.listSearchTooltips) {
+      if (!node.tooltipNode) {
+        gSearchResultsPane.createSearchTooltip(node, gSearchResultsPane.query);
+      }
+    }
+  },
+
+  resizeVertically() {
+    let docEl = this._frame.contentDocument.documentElement;
+
+    let titleBarHeight = this._titleBar.clientHeight +
+                         parseFloat(getComputedStyle(this._titleBar).borderBottomWidth);
+    let boxVerticalBorder = 2 * parseFloat(getComputedStyle(this._box).borderTopWidth);
+    let frameVerticalMargin = 2 * parseFloat(getComputedStyle(this._frame).marginTop);
+
+    // The difference between the frame and box shouldn't change, either:
+    let boxRect = this._box.getBoundingClientRect();
+    let frameRect = this._frame.getBoundingClientRect();
+    let frameSizeDifference = (frameRect.top - boxRect.top) + (boxRect.bottom - frameRect.bottom);
 
     // Now do the same but for the height. We need to do this afterwards because otherwise
     // XUL assumes we'll optimize for height and gives us "wrong" values which then are no
@@ -360,35 +395,6 @@ SubDialog.prototype = {
     this._box.style.minHeight = "calc(" +
                                 (boxVerticalBorder + titleBarHeight + frameVerticalMargin) +
                                 "px + " + frameMinHeight + ")";
-
-    this._overlay.dispatchEvent(new CustomEvent("dialogopen", {
-      bubbles: true,
-      detail: { dialog: this },
-    }));
-    this._overlay.style.visibility = "visible";
-    this._overlay.style.opacity = ""; // XXX: focus hack continued from _onContentLoaded
-
-    if (this._box.getAttribute("resizable") == "true") {
-      this._onResize = this._onResize.bind(this);
-      this._resizeObserver = new MutationObserver(this._onResize);
-      this._resizeObserver.observe(this._box, {attributes: true});
-    }
-
-    this._trapFocus();
-
-    // Search within main document and highlight matched keyword.
-    gSearchResultsPane.searchWithinNode(this._titleElement, gSearchResultsPane.query);
-
-    // Search within sub-dialog document and highlight matched keyword.
-    gSearchResultsPane.searchWithinNode(this._frame.contentDocument.firstElementChild,
-      gSearchResultsPane.query);
-
-    // Creating tooltips for all the instances found
-    for (let node of gSearchResultsPane.listSearchTooltips) {
-      if (!node.tooltipNode) {
-        gSearchResultsPane.createSearchTooltip(node, gSearchResultsPane.query);
-      }
-    }
   },
 
   _onResize(mutations) {
