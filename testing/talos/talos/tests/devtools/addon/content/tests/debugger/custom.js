@@ -30,6 +30,8 @@ module.exports = async function() {
   await pauseDebuggerAndLog(tab, toolbox, EXPECTED_FUNCTION);
   await stepDebuggerAndLog(tab, toolbox, EXPECTED_FUNCTION);
 
+  await testProjectSearch(tab, toolbox);
+
   await closeToolboxAndLog("custom.jsdebugger", toolbox);
 
   Services.prefs.clearUserPref("devtools.debugger.features.map-scopes");
@@ -92,4 +94,16 @@ async function stepDebuggerAndLog(tab, toolbox, testFunction) {
     await resume(dbg);
     await garbageCollect();
   }
+}
+
+async function testProjectSearch(tab, toolbox) {
+  const panel = await toolbox.getPanelWhenReady("jsdebugger");
+  const dbg = await createContext(panel);
+  const cx = dbg.selectors.getContext(dbg.getState());
+
+  dump("Executing project search\n");
+  const test = runTest(`custom.jsdebugger.project-search.DAMP`);
+  await dbg.actions.searchSources(cx, "return");
+  test.done();
+  await garbageCollect();
 }
