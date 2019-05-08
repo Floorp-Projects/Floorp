@@ -3253,7 +3253,7 @@ Toolbox.prototype = {
     menu.once("open", () => this.emit("menu-open"));
     menu.once("close", () => this.emit("menu-close"));
 
-    menu.popup(x, y, { doc: this.doc });
+    menu.popup(x, y, this.doc);
   },
 
   /**
