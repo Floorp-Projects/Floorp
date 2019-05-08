@@ -1244,7 +1244,7 @@ class EditorBase : public nsIEditor,
    * @return                The created new element node.
    */
   template <typename PT, typename CT>
-  already_AddRefed<Element> CreateNodeWithTransaction(
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> CreateNodeWithTransaction(
       nsAtom& aTag, const EditorDOMPointBase<PT, CT>& aPointToInsert);
 
   /**

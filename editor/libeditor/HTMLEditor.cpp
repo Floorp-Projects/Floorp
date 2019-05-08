@@ -4564,7 +4564,7 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     if (!firstClonsedElement) {
       EditorRawDOMPoint atStartOfNewBlock(newBlock, 0);
       firstClonsedElement = lastClonedElement =
-          CreateNodeWithTransaction(*tagName, atStartOfNewBlock);
+          CreateNodeWithTransaction(MOZ_KnownLive(*tagName), atStartOfNewBlock);
       if (NS_WARN_IF(!firstClonsedElement)) {
         return NS_ERROR_FAILURE;
       }
