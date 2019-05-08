@@ -614,7 +614,6 @@ static const char* sObserverTopics[] = {
     "intl:requested-locales-changed",
     "cookie-changed",
     "private-cookie-changed",
-    "clear-site-data-reload-needed",
     NS_NETWORK_LINK_TYPE_TOPIC,
 };
 
@@ -3123,9 +3122,6 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
                (!nsCRT::strcmp(aData, u"changed"))) {
       cs->AddCookie(xpcCookie);
     }
-  } else if (!strcmp(aTopic, "clear-site-data-reload-needed")) {
-    // Rebroadcast "clear-site-data-reload-needed".
-    Unused << SendClearSiteDataReloadNeeded(nsString(aData));
   } else if (!strcmp(aTopic, NS_NETWORK_LINK_TYPE_TOPIC)) {
     UpdateNetworkLinkType();
   }

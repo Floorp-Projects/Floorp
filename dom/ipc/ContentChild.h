@@ -388,9 +388,6 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvUpdateRequestedLocales(
       nsTArray<nsCString>&& aRequestedLocales);
 
-  mozilla::ipc::IPCResult RecvClearSiteDataReloadNeeded(
-      const nsString& aOrigin);
-
   mozilla::ipc::IPCResult RecvAddPermission(const IPC::Permission& permission);
 
   mozilla::ipc::IPCResult RecvRemoveAllPermissions();
