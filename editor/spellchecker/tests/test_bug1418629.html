@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mozilla bug 1418629</title>
+  <link rel=stylesheet href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/AddTask.js"></script>
+  <script src="/tests/editor/libeditor/tests/spellcheck.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1418629">Mozilla Bug 1418629</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<input id="input1" autofocus spellcheck="true">
+
+<script>
+const {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+
+SimpleTest.waitForExplicitFinish();
+
+add_task(async function() {
+  await new Promise((resolve) => {
+    SimpleTest.waitForFocus(() => {
+      SimpleTest.executeSoon(resolve);
+    }, window);
+  });
+
+  let misspeltWords = [];
+  let input = document.getElementById("input1");
+
+  input.focus();
+  input.value = "";
+  synthesizeKey("d");
+  synthesizeKey("o");
+  synthesizeKey("e");
+  synthesizeKey("s");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  // isSpellingCheckOk is defined in spellcheck.js
+  // eslint-disable-next-line no-undef
+  ok(isSpellingCheckOk(SpecialPowers.wrap(input).editor, misspeltWords),
+     "no misspelt words");
+
+  synthesizeKey("n");
+  synthesizeKey("\'");
+  is(input.value, "doesn\'", "");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  // isSpellingCheckOk is defined in spellcheck.js
+  // eslint-disable-next-line no-undef
+  ok(isSpellingCheckOk(SpecialPowers.wrap(input).editor, misspeltWords),
+     "don't run spellchecker during inputting word");
+
+  synthesizeKey(" ");
+  is(input.value, "doesn\' ", "");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  misspeltWords.push("doesn\'");
+  // isSpellingCheckOk is defined in spellcheck.js
+  // eslint-disable-next-line no-undef
+  ok(isSpellingCheckOk(SpecialPowers.wrap(input).editor, misspeltWords),
+     "should run spellchecker");
+});
+
+async function test_with_twice_characters(ch) {
+  let misspeltWords = [];
+  let input = document.getElementById("input1");
+
+  input.focus();
+  input.value = "";
+  synthesizeKey("d");
+  synthesizeKey("o");
+  synthesizeKey("e");
+  synthesizeKey("s");
+  synthesizeKey("n");
+  synthesizeKey(ch);
+  synthesizeKey(ch);
+  is(input.value, "doesn" + ch + ch, "");
+
+  await new Promise((resolve) => { onSpellCheck(input, resolve); });
+  misspeltWords.push("doesn");
+  // isSpellingCheckOk is defined in spellcheck.js
+  // eslint-disable-next-line no-undef
+  ok(isSpellingCheckOk(SpecialPowers.wrap(input).editor, misspeltWords),
+     "should run spellchecker");
+}
+
+add_task(test_with_twice_characters.bind(null, "\'"));
+add_task(test_with_twice_characters.bind(null, String.fromCharCode(0x2019)));
+</script>
+</body>
+</html>
