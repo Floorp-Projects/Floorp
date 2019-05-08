@@ -168,7 +168,7 @@ tasks:
                 metadata:
                   name: Fenix - Decision task
                   description: Schedules the build and test tasks for Fenix.
-        - $if: 'tasks_for == "github-release"'
+        - $if: 'tasks_for == "github-release" && event["action"] == "published"'
           then:
             $mergeDeep:
               - {$eval: 'default_task_definition'}
