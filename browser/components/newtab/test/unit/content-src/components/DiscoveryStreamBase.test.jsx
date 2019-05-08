@@ -87,16 +87,16 @@ describe("<DiscoveryStreamBase>", () => {
     globals.restore();
   });
 
-  it("should render null if spocs not loaded", () => {
+  it("should render something if spocs are not loaded", () => {
     wrapper = mountComponent({spocs: {loaded: false, data: {spocs: null}}});
 
-    assert.equal(wrapper.type(), null);
+    assert.notEqual(wrapper.type(), null);
   });
 
-  it("should render null if feeds not loaded", () => {
+  it("should render something if feeds are not loaded", () => {
     wrapper = mountComponent({feeds: {loaded: false}});
 
-    assert.equal(wrapper.type(), null);
+    assert.notEqual(wrapper.type(), null);
   });
 
   it("should render nothing with no layout", () => {

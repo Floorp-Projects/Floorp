@@ -72,10 +72,11 @@ $excerpt-line-height: 20;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    padding: 16px;
+    padding: 12px;
 
     .info-wrap {
       flex-grow: 1;
+      margin: 0 0 12px;
     }
 
     .title {
@@ -92,11 +93,11 @@ $excerpt-line-height: 20;
     .context,
     .source {
       @include dark-theme-only {
-        color: $teal-10;
+        color: $grey-40;
       }
 
       font-size: 13px;
-      color: $teal-80;
+      color: $grey-50;
     }
   }
 
@@ -112,12 +113,12 @@ $excerpt-line-height: 20;
 
   p {
     @include dark-theme-only {
-      color: $grey-30;
+      color: $grey-10;
     }
 
     font-size: $excerpt-font-size * 1px;
     line-height: $excerpt-line-height * 1px;
-    color: $grey-50;
-    margin: 8px 0 0;
+    color: $grey-90;
+    margin: 0;
   }
 }

@@ -15,7 +15,12 @@ $card-header-in-hero-line-height: 20;
 
   .excerpt {
     @include limit-visibile-lines(3, 20, 14);
-    margin: 4px 0 8px;
+    @include dark-theme-only {
+      color: $grey-10;
+    }
+
+    color: $grey-90;
+    margin: 0 0 10px;
   }
 
   .ds-card:not(.placeholder) {
@@ -119,7 +124,7 @@ $card-header-in-hero-line-height: 20;
 
         @include limit-visibile-lines(4, 28, 22);
         color: $grey-90;
-        margin-bottom: 8px;
+        margin-bottom: 0;
       }
 
       .context {
@@ -132,11 +137,11 @@ $card-header-in-hero-line-height: 20;
 
       .source {
         @include dark-theme-only {
-          color: $teal-10;
+          color: $grey-40;
         }
 
         font-size: 13px;
-        color: $teal-80;
+        color: $grey-50;
         margin-bottom: 0;
         overflow-x: hidden;
         text-overflow: ellipsis;
@@ -212,7 +217,7 @@ $card-header-in-hero-line-height: 20;
       }
 
       .img {
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         height: 0;
         padding-top: 50%; // 2:1 aspect ratio
       }
