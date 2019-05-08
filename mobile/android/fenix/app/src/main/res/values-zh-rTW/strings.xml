@@ -38,7 +38,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">設定</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_library">收藏庫</string>
+    <string name="browser_menu_your_library">您的收藏庫</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">桌面版網站</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -47,6 +47,8 @@
     <string name="browser_menu_private_tab">隱私分頁</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">開新分頁</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">儲存至收藏集</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">回報網站問題</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -138,6 +140,8 @@
     <string name="preferences_sync_category">選擇要同步的內容</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">瀏覽紀錄</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">書籤</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">登出</string>
     <!-- Label indicating that sync is in progress -->
@@ -161,6 +165,11 @@
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">例外網站</string>
 
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">關閉針對下列網站的追蹤保護</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">對所有網站開啟</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for crash reporter -->
@@ -169,6 +178,14 @@
     <string name="preferences_mozilla_location_service">Mozilla Location Service</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preferences_fenix_health_report">%s 健康檢查報告</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">開啟 Sync</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">登入</string>
+    <!-- Preference for account creation -->
+    <string name="preferences_sync_create_account">註冊帳號</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -189,6 +206,10 @@
     <string name="quick_action_bookmark">加入書籤</string>
     <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
     <string name="quick_action_read">閱讀模式</string>
+    <!-- Button in the browser chrome to exit reader mode -->
+    <string name="quick_action_read_close">關閉</string>
+    <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
+    <string name="quick_action_read_appearance">外觀設定</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
         with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
     <string name="quick_action_sheet_handle">快速操作</string>
@@ -218,16 +239,26 @@
     <string name="content_description_close_button">關閉</string>
 
     <!-- Sessions -->
-    <!-- Title for the list of tabs in the current session -->
-    <string name="tabs_header_title">目前使用階段</string>
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">開啟分頁</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">隱私瀏覽階段</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">新增分頁</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">關閉分頁</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">開啟分頁選單</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">關閉所有分頁</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">分享分頁</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">儲存至收藏集</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">分頁選單</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">分享分頁</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">刪除</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
@@ -236,15 +267,24 @@
     <string name="current_session_share">分享</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">目前瀏覽階段圖片</string>
-    <!-- Text for the button to save a session -->
-    <string name="session_save">儲存瀏覽階段</string>
-    <!-- Text for the button to delete a session -->
-    <string name="session_delete">刪除瀏覽階段</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">儲存至收藏集</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">刪除收藏集</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">更名收藏集</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">開啟分頁</string>
     <!-- Text for the button to delete a single session -->
     <string name="session_item_delete">刪除</string>
     <!-- Text to tell the user how many more tabs this session has.
         The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
     <string name="session_items_more">還有 %1$d 個網站…</string>
+
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header">未開啟分頁</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">您開啟的分頁將顯示於此處。</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -267,7 +307,8 @@
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
-    <string name="tab_crash_title">抱歉，%1$s 無法還原該分頁</string>
+    <string name="tab_crash_title_2">很抱歉，%1$s 無法載入該頁面。</string>
+
     <!-- Description text displayed on the tab crash page -->
     <string name="tab_crash_description">您可在下面嘗試回復或關閉此分頁。</string>
     <!-- Send crash report checkbox text on the tab crash page -->
@@ -312,7 +353,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">用新隱私分頁開啟</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">刪除</string>
-    <!-- Bookmark multi select title in app bar -->
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">已選擇 ％1$d 筆書籤</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">編輯書籤</string>
@@ -358,11 +400,11 @@
     <string name="phone_feature_recommended">推薦</string>
     <!-- button that allows editing site permissions settings -->
     <string name="quick_settings_sheet_manage_site_permissions">管理網站權限</string>
-    <!-- Button label for clear all the information of a site permissions-->
+    <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">清除權限</string>
-    <!-- Button label for clear a site permissions-->
+    <!-- Button label for clearing a site permission-->
     <string name="clear_permission">清除權限</string>
-    <!-- Button label for clear all the information fall all sites-->
+    <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">清除所有網站的權限</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">攝影機</string>
@@ -382,10 +424,70 @@
     <string name="phone_feature_blocked_by_android">被 Android 封鎖</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">例外網站</string>
-    <!-- Action in Quick Settings dialog to report a site problem related to tracking protection -->
-    <string name="tracking_protection_report_problem">回報問題</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="tracking_protection_on">開啟</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">關閉</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">收藏集</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">沒有收藏集</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_collections_description">您的收藏集將顯示於此處。</string>
+
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">選擇分頁</string>
+
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">選擇收藏集</string>
+
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">為收藏集命名</string>
+
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">新增收藏集</string>
+
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">選擇全部</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">要儲存的分頁</string>
+
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">已選擇 %d 個分頁</string>
+
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">已選擇 %d 個分頁</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">已儲存分頁！</string>
+
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">已儲存分頁！</string>
+
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">關閉</string>
+
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">儲存</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator-->
+    <string name="create_collection_default_name">收藏集 %d</string>
+
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">已刪除收藏集</string>
+
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">已刪除分頁</string>
+
+    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <string name="snackbar_deleted_undo">還原</string>
+
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">允許 %1$s 開啟 %2$s</string>
+
 </resources>

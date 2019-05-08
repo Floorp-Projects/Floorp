@@ -39,7 +39,7 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">설정</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_library">라이브러리</string>
+    <string name="browser_menu_your_library">내 라이브러리</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">데스크탑 사이트</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -48,6 +48,8 @@
     <string name="browser_menu_private_tab">사생활 보호 탭</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="browser_menu_new_tab">새 탭</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">모음집에 저장</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
     <string name="browser_menu_report_issue">사이트 이슈 보고</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -138,6 +140,8 @@
     <string name="preferences_sync_category">동기화할 대상 선택</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">방문 기록</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">북마크</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">로그아웃</string>
     <!-- Label indicating that sync is in progress -->
@@ -162,6 +166,11 @@
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">예외 목록</string>
 
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">이 웹사이트에서 추적 방지 기능이 꺼져 있습니다.</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">모든 사이트에서 사용</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">데이터 수집</string>
     <!-- Preference switch for crash reporter -->
@@ -170,6 +179,14 @@
     <string name="preferences_mozilla_location_service">Mozilla 위치 서비스</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preferences_fenix_health_report">%s 상태 보고서</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Sync 켜기</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">로그인</string>
+    <!-- Preference for account creation -->
+    <string name="preferences_sync_create_account">계정 생성</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -190,6 +207,10 @@
     <string name="quick_action_bookmark">북마크</string>
     <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
     <string name="quick_action_read">읽기</string>
+    <!-- Button in the browser chrome to exit reader mode -->
+    <string name="quick_action_read_close">닫기</string>
+    <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
+    <string name="quick_action_read_appearance">모양</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
         with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
     <string name="quick_action_sheet_handle">빠른 실행</string>
@@ -219,16 +240,26 @@
     <string name="content_description_close_button">닫기</string>
 
     <!-- Sessions -->
-    <!-- Title for the list of tabs in the current session -->
-    <string name="tabs_header_title">현재 세션</string>
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">열린 탭</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">사생활 보호 세션</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">탭 추가</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">탭 닫기</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">탭 메뉴 열기</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">모든 탭 닫기</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">탭 공유</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">모음집에 저장</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">탭 메뉴</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">탭 공유</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">삭제</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
@@ -237,16 +268,25 @@
     <string name="current_session_share">공유</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">현재 세션 이미지</string>
-    <!-- Text for the button to save a session -->
-    <string name="session_save">세션 저장</string>
-    <!-- Text for the button to delete a session -->
-    <string name="session_delete">세션 삭제</string>
 
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">모음집에 저장</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">모음집 삭제</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">모음집 이름 변경</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">열린 탭</string>
     <!-- Text for the button to delete a single session -->
     <string name="session_item_delete">삭제</string>
     <!-- Text to tell the user how many more tabs this session has.
         The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
     <string name="session_items_more">사이트 %1$d개…</string>
+
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header">열린탭 없음</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">열린 탭이 여기에 표시됩니다.</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -269,7 +309,8 @@
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
-    <string name="tab_crash_title">죄송합니다. %1$s가 탭을 다시 가져올 수 없습니다</string>
+    <string name="tab_crash_title_2">죄송합니다. %1$s가 페이지를 열 수 없습니다.</string>
+
     <!-- Description text displayed on the tab crash page -->
     <string name="tab_crash_description">아래에서 탭을 복구하거나 닫을 수 있습니다.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
@@ -316,7 +357,8 @@
     <string name="bookmark_menu_delete_button">삭제</string>
 
 
-    <!-- Bookmark multi select title in app bar -->
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">북마크 %1$d개가 선택됨</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">북마크 편집</string>
@@ -364,11 +406,11 @@
     <string name="phone_feature_recommended">추천</string>
     <!-- button that allows editing site permissions settings -->
     <string name="quick_settings_sheet_manage_site_permissions">사이트 권한 관리</string>
-    <!-- Button label for clear all the information of a site permissions-->
+    <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">모든 권한 삭제</string>
-    <!-- Button label for clear a site permissions-->
+    <!-- Button label for clearing a site permission-->
     <string name="clear_permission">권한 삭제</string>
-    <!-- Button label for clear all the information fall all sites-->
+    <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">모든 사이트에 대해 권한 제거</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">카메라</string>
@@ -388,10 +430,70 @@
     <string name="phone_feature_blocked_by_android">Android에 의해 차단됨</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">예외 목록</string>
-    <!-- Action in Quick Settings dialog to report a site problem related to tracking protection -->
-    <string name="tracking_protection_report_problem">오류 보고</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="tracking_protection_on">켬</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">끔</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">모음집</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">모음집 없음</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_collections_description">모음집이 여기에 표시됩니다.</string>
+
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">탭 선택</string>
+
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">모음집 선택</string>
+
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">모음집 이름 지정</string>
+
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">새 모음집 추가</string>
+
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">모두 선택</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">저장할 탭 선택</string>
+
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d개의 탭 선택됨</string>
+
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d개의 탭 선택됨</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">탭이 저장되었습니다!</string>
+
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">탭이 저장되었습니다!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">닫기</string>
+
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">저장</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator-->
+    <string name="create_collection_default_name">모음집 %d개</string>
+
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">모음집 삭제됨</string>
+
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">탭 삭제됨</string>
+
+    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <string name="snackbar_deleted_undo">실행 취소</string>
+
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">%1$s가 %2$s를 열도록 허용</string>
+
 </resources>
