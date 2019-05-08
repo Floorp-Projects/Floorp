@@ -56,8 +56,8 @@ var Opts_IonEagerNoOffthreadCompilation =
 var Opts_Ion2NoOffthreadCompilation =
     {
       'ion.enable': 1,
-      'ion.warmup.trigger': 2,
-      'ion.full.warmup.trigger': 2,
+      'ion.warmup.trigger': 3,
+      'ion.full.warmup.trigger': 3,
       'baseline.enable': 1,
       'baseline.warmup.trigger': 1,
       'offthread-compilation.enable': 0
