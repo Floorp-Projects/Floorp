@@ -40,4 +40,20 @@ RemoteSpellcheckEngineChild::SetCurrentDictionaryFromList(
       });
 }
 
+RefPtr<CheckWordPromise> RemoteSpellcheckEngineChild::CheckWords(
+    const nsTArray<nsString>& aWords) {
+  RefPtr<mozSpellChecker> kungFuDeathGrip = mOwner;
+
+  return SendCheckAsync(aWords)->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [kungFuDeathGrip](nsTArray<bool>&& aIsMisspelled) {
+        return CheckWordPromise::CreateAndResolve(std::move(aIsMisspelled),
+                                                  __func__);
+      },
+      [kungFuDeathGrip](mozilla::ipc::ResponseRejectReason&& aReason) {
+        return CheckWordPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                 __func__);
+      });
+}
+
 }  // namespace mozilla
