@@ -145,10 +145,10 @@ sealed class Event {
                 }
 
             val countLabel: String
-                get() = "${source.searchEngine.identifier}.$label"
+                get() = "${source.searchEngine.name.toLowerCase()}_$label"
 
             val sourceLabel: String
-                get() = "${source.descriptor}.$label"
+                get() = "${source.descriptor}_$label"
         }
 
         override val extras: Map<String, String>?
