@@ -297,7 +297,8 @@ nsresult nsContentSink::ProcessHeaderData(nsAtom* aHeader,
 
   mDocument->SetHeaderData(aHeader, aValue);
 
-  if (aHeader == nsGkAtoms::setcookie) {
+  if (aHeader == nsGkAtoms::setcookie &&
+      StaticPrefs::dom_metaElement_setCookie_allowed()) {
     // Note: Necko already handles cookies set via the channel.  We can't just
     // call SetCookie on the channel because we want to do some security checks
     // here.
@@ -796,7 +797,8 @@ nsresult nsContentSink::ProcessMETATag(nsIContent* aContent) {
 
     // Don't allow setting cookies in <meta http-equiv> in cookie averse
     // documents.
-    if (nsGkAtoms::setcookie->Equals(header) && mDocument->IsCookieAverse()) {
+    if (nsGkAtoms::setcookie->Equals(header) && mDocument->IsCookieAverse() &&
+        StaticPrefs::dom_metaElement_setCookie_allowed()) {
       return NS_OK;
     }
 
