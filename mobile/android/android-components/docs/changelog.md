@@ -82,6 +82,56 @@ permalink: /changelog/
   engineSession.settings.suspendMediaWhenInactive = true
   ```  
 
+* **service-firefox-accounts**
+  * ⚠️ **This is a breaking API change**:
+  * `OAuthAccount` now has a new `deviceConstellation` method.
+  * `FxaAccountManager`'s constructor now takes a `DeviceTuple` parameter.
+  * Added integration with FxA devices and device events.
+  * First supported event type is Send Tab.
+  * It's now possible to receive and send tabs from/to devices in the `DeviceConstellation`.
+  * `samples-sync` application provides a detailed integration example of these new APIs.
+  * Brief example:
+  ```kotlin
+  val deviceConstellationObserver = object : DeviceConstellationObserver {
+    override fun onDevicesUpdate(constellation: ConstellationState) {
+        // Process the following:
+        // constellation.currentDevice
+        // constellation.otherDevices
+    }
+  }
+  val deviceEventsObserver = object : DeviceEventsObserver {
+    override fun onEvents(events: List<DeviceEvent>) {
+        events.filter { it is DeviceEvent.TabReceived }.forEach {
+            val tabReceivedEvent = it as DeviceEvent.TabReceived
+            // process received tab(s).
+        }
+    }
+  }
+  val accountObserver = object : AccountObserver {
+    // ... other methods ...
+    override fun onAuthenticated(account: OAuthAccount) {
+        account.deviceConstellation().registerDeviceObserver(
+            observer = deviceConstellationObserver,
+            owner = this@MainActivity,
+            autoPause = true
+        )
+    }
+  }
+  val accountManager = FxaAccountManager(
+    this,
+    Config.release(CLIENT_ID, REDIRECT_URL),
+    arrayOf("profile", "https://identity.mozilla.com/apps/oldsync"),
+    DeviceTuple(
+        name = "Doc Example App",
+        type = DeviceType.MOBILE,
+        capabilities = listOf(DeviceCapability.SEND_TAB)
+    ),
+    syncManager
+  )
+  accountManager.register(accountObserver, owner = this, autoPause = true)
+  accountManager.registerForDeviceEvents(deviceEventsObserver, owner = this, autoPause = true)
+  ```
+
 # 0.51.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.50.0...v0.51.0)
