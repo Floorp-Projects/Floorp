@@ -163,6 +163,30 @@ function nl2br(text) {
 }
 
 /**
+ * Select the screeenshot to display above an add-on card.
+ *
+ * @param {AddonWrapper|DiscoAddonWrapper} addon
+ * @returns {string|null}
+ *          The URL of the best fitting screenshot, if any.
+ */
+function getScreenshotUrlForAddon(addon) {
+  let {screenshots} = addon;
+  if (!screenshots || !screenshots.length) {
+    return null;
+  }
+
+  // The image size is defined at .card-heading-image in aboutaddons.css, and
+  // is based on the aspect ratio for a 680x92 image. Use the image if possible,
+  // and otherwise fall back to the first image and hope for the best.
+  let screenshot = screenshots.find(s => s.width === 680 && s.height === 92);
+  if (!screenshot) {
+    console.warn(`Did not find screenshot with desired size for ${addon.id}.`);
+    screenshot = screenshots[0];
+  }
+  return screenshot.url;
+}
+
+/**
  * Adds UTM parameters to a given URL, if it is an AMO URL.
  *
  * @param {string} contentAttribute
@@ -849,38 +873,6 @@ class AddonCard extends HTMLElement {
     }
   }
 
-  /**
-   * Determine which screenshot fits best into the given img element. The img
-   * should have a width and height set on it.
-   *
-   * @param {HTMLImageElement} img The <img> the screenshot is being set on.
-   */
-  screenshotForImg(img) {
-    let {addon} = this;
-    if (addon.screenshots && addon.screenshots[0]) {
-      let {width, height} = getComputedStyle(img);
-      let sectionWidth = parseInt(width, 10);
-      let sectionHeight = parseInt(height, 10);
-      let screenshots = addon.screenshots
-        // Only check screenshots with a width and height.
-        .filter(s => s.width && s.height)
-        // Sort the screenshots based how close their dimensions are to the
-        // requested size.
-        .sort((a, b) => {
-          let aCloseness =
-            Math.abs((a.width - sectionWidth) * (a.height - sectionHeight));
-          let bCloseness =
-            Math.abs((b.width - sectionWidth) * (b.height - sectionHeight));
-          if (aCloseness == bCloseness) {
-            return 0;
-          }
-          return aCloseness < bCloseness ? -1 : 1;
-        });
-      return screenshots[0];
-    }
-    return null;
-  }
-
   async handleEvent(e) {
     let {addon} = this;
     let action = e.target.getAttribute("action");
@@ -1081,9 +1073,9 @@ class AddonCard extends HTMLElement {
     let preview = card.querySelector(".card-heading-image");
     preview.hidden = true;
     if (addon.type == "theme") {
-      let screenshot = this.screenshotForImg(preview);
-      if (screenshot) {
-        preview.src = screenshot.url;
+      let screenshotUrl = getScreenshotUrlForAddon(addon);
+      if (screenshotUrl) {
+        preview.src = screenshotUrl;
         preview.hidden = false;
       }
     }
@@ -1245,10 +1237,9 @@ class RecommendedAddonCard extends HTMLElement {
     let preview = card.querySelector(".card-heading-image");
     preview.hidden = true;
     if (addon.type == "theme") {
-      let screenshot =
-        AddonCard.prototype.screenshotForImg.call({addon}, preview);
-      if (screenshot) {
-        preview.src = screenshot.url;
+      let screenshotUrl = getScreenshotUrlForAddon(addon);
+      if (screenshotUrl) {
+        preview.src = screenshotUrl;
         preview.hidden = false;
       }
     }
