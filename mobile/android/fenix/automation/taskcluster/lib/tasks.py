@@ -423,6 +423,7 @@ class TaskBuilder(object):
         payload = {
             "commit": True,
             "google_play_track": track,
+            "certificate_alias": 'fenix' if is_staging else 'fenix-{}'.format(track),
             "upstreamArtifacts": [
                 {
                     "paths": apks,
