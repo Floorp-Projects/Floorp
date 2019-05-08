@@ -15,12 +15,11 @@ info(`START: ${new Error().lineNumber}`);
   const document = window.document;
 
   await waitForSources(dbg, testUrl);
-//  yield waitForSourceCount(dbg, 6);
 
   info("Loaded, selecting the test script to debug");
   // First expand the domain
   const domain = [...document.querySelectorAll(".tree-node")].find(node => {
-    return node.textContent.trim() == "mozilla.org";
+    return node.querySelector(".label").textContent.trim() == "mozilla.org";
   });
   const arrow = domain.querySelector(".arrow");
   arrow.click();

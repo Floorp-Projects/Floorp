@@ -30,16 +30,10 @@ describe("blackbox", () => {
       throw new Error("foo should exist");
     }
 
-    const { thread } = selectors.getSourceActorsForSource(
-      getState(),
-      foo1Source.id
-    )[0];
-    const displayedSources = selectors.getDisplayedSourcesForThread(
-      getState(),
-      thread
+    const displayedSources = selectors.getDisplayedSources(getState());
+    expect(displayedSources.FakeThread[fooSource.id].isBlackBoxed).toEqual(
+      true
     );
-
-    expect(displayedSources[fooSource.id].isBlackBoxed).toEqual(true);
     expect(fooSource.isBlackBoxed).toEqual(true);
   });
 });

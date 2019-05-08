@@ -127,9 +127,7 @@ class PrimaryPanes extends Component<Props, State> {
   }
 
   renderThreadSources() {
-    return this.props.threads.map(({ actor }) => (
-      <SourcesTree thread={actor} key={actor} />
-    ));
+    return <SourcesTree threads={this.props.threads} />;
   }
 
   render() {

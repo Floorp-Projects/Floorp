@@ -14,25 +14,6 @@ import type { TreeDirectory } from "./types";
  * @memberof utils/sources-tree
  * @static
  */
-export function sortEntireTree(
-  tree: TreeDirectory,
-  debuggeeUrl: string = ""
-): TreeDirectory {
-  if (nodeHasChildren(tree)) {
-    const contents = sortTree(tree, debuggeeUrl).map((subtree: any) =>
-      sortEntireTree(subtree)
-    );
-    return { ...tree, contents };
-  }
-  return tree;
-}
-
-/**
- * Look at the nodes in the source tree, and determine the index of where to
- * insert a new node. The ordering is index -> folder -> file.
- * @memberof utils/sources-tree
- * @static
- */
 export function sortTree(tree: TreeDirectory, debuggeeUrl: string = "") {
   return (tree.contents: any).sort((previousNode, currentNode) => {
     const currentNodeIsDir = nodeHasChildren(currentNode);

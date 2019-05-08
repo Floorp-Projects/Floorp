@@ -49,6 +49,9 @@ add_task(async function() {
   const extension = await installAndStartExtension();
 
   let dbg = await initDebugger("doc-content-script-sources.html");
+  await clickElement(dbg, "sourceDirectoryLabel", 2);
+
+
   await selectContentScriptSources(dbg);
   await closeTab(dbg, "content_script.js");
 
@@ -57,6 +60,9 @@ add_task(async function() {
   await dbg.toolbox.destroy();
   const toolbox = await openToolboxForTab(gBrowser.selectedTab, "jsdebugger");
   dbg = createDebuggerContext(toolbox);
+
+  await clickElement(dbg, "sourceDirectoryLabel", 2);
+
   await selectContentScriptSources(dbg);
 
   await addBreakpoint(dbg, "content_script.js", 2);
