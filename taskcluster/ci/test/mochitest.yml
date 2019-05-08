@@ -222,11 +222,10 @@ mochitest-devtools-chrome:
             default: 5400
     chunks:
         by-test-platform:
-            linux64/debug: 16
-            linux64-ccov/debug: 16
-            windows10-64-ccov/debug: 10
-            macosx64-ccov/debug: 15
-            default: 8
+            .*-ccov/debug: 16
+            linux64/debug: 12
+            .*-asan/opt: 8
+            default: 5
     mozharness:
         mochitest-flavor: chrome
         chunked: true
