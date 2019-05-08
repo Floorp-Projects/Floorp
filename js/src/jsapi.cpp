@@ -1156,6 +1156,10 @@ JS_PUBLIC_API void JS_freeop(JSFreeOp* fop, void* p) {
 JS_PUBLIC_API void JS::AddAssociatedMemory(JSObject* obj, size_t nbytes,
                                            JS::MemoryUse use) {
   MOZ_ASSERT(obj);
+  if (!nbytes) {
+    return;
+  }
+
   Zone* zone = obj->zone();
   zone->updateMallocCounter(nbytes);
   zone->addCellMemory(obj, nbytes, use);
@@ -1165,6 +1169,10 @@ JS_PUBLIC_API void JS::AddAssociatedMemory(JSObject* obj, size_t nbytes,
 JS_PUBLIC_API void JS::RemoveAssociatedMemory(JSObject* obj, size_t nbytes,
                                               JS::MemoryUse use) {
   MOZ_ASSERT(obj);
+  if (!nbytes) {
+    return;
+  }
+
   obj->zoneFromAnyThread()->removeCellMemory(obj, nbytes, use);
 }
 
