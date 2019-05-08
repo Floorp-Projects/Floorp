@@ -118,6 +118,12 @@ export function setPreview(
           return;
         }
 
+        // Handle cases where the result is invisible to the debugger
+        // and not possible to preview. Bug 1548256
+        if (result.class && result.class.includes("InvisibleToDebugger")) {
+          return;
+        }
+
         const root = {
           name: expression,
           path: expression,

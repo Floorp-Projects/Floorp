@@ -24,6 +24,27 @@ function makeDependencies() {
   };
 }
 
+function makeGrip(actor = "") {
+  return {
+    actor,
+    class: "",
+    displayClass: "",
+    name: "",
+    extensible: true,
+    location: {
+      url: "",
+      line: 2,
+      column: 34
+    },
+    frozen: false,
+    ownPropertyLength: 1,
+    preview: {},
+    sealed: false,
+    optimizedOut: false,
+    type: ""
+  };
+}
+
 describe("firefox commands", () => {
   describe("getProperties", () => {
     it("empty response", async () => {
@@ -34,7 +55,7 @@ describe("firefox commands", () => {
       });
 
       setupCommands({ ...makeDependencies(), threadClient });
-      const props = await getProperties("", { actor: "" });
+      const props = await getProperties("", makeGrip());
       expect(props).toMatchSnapshot();
     });
 
@@ -49,7 +70,7 @@ describe("firefox commands", () => {
       });
 
       setupCommands({ ...makeDependencies(), threadClient });
-      const props = await getProperties("", { actor: "" });
+      const props = await getProperties("", makeGrip());
       expect(props).toMatchSnapshot();
     });
 
@@ -66,7 +87,7 @@ describe("firefox commands", () => {
       });
 
       setupCommands({ ...makeDependencies(), threadClient });
-      const props = await getProperties("", { actor: "" });
+      const props = await getProperties("", makeGrip());
       expect(props).toMatchSnapshot();
     });
 
@@ -82,7 +103,7 @@ describe("firefox commands", () => {
       });
 
       setupCommands({ ...makeDependencies(), threadClient });
-      const props = await getProperties("", { actor: "" });
+      const props = await getProperties("", makeGrip());
       expect(props).toMatchSnapshot();
     });
   });
