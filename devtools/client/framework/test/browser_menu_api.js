@@ -80,7 +80,7 @@ async function testMenuPopup(toolbox) {
     visible: false,
   }));
 
-  menu.popup(0, 0, toolbox);
+  menu.popup(0, 0, toolbox.doc);
 
   ok(toolbox.doc.querySelector("#menu-popup"), "A popup is in the DOM");
 
@@ -143,7 +143,7 @@ async function testSubmenu(toolbox) {
     disabled: true,
   }));
 
-  menu.popup(0, 0, toolbox);
+  menu.popup(0, 0, toolbox.doc);
   ok(toolbox.doc.querySelector("#menu-popup"), "A popup is in the DOM");
   is(toolbox.doc.querySelectorAll("#menu-popup > menuitem").length, 0,
     "No menuitem children");
