@@ -184,7 +184,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           extension.id, "homepage_override", homepageUrl);
       } else {
         let item = await ExtensionPreferencesManager.getSetting("homepage_override");
-        inControl = item.id == extension.id;
+        inControl = item && item.id == extension.id;
       }
       // We need to add the listener here too since onPrefsChanged won't trigger on a
       // restart (the prefs are already set).
@@ -204,7 +204,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       extension.on("add-permissions", async (ignoreEvent, permissions) => {
         if (permissions.permissions.includes("internal:privateBrowsingAllowed")) {
           let item = await ExtensionPreferencesManager.getSetting("homepage_override");
-          if (item.id == extension.id) {
+          if (item && item.id == extension.id) {
             Services.prefs.setBoolPref(HOMEPAGE_PRIVATE_ALLOWED, true);
           }
         }
@@ -213,7 +213,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       extension.on("remove-permissions", async (ignoreEvent, permissions) => {
         if (permissions.permissions.includes("internal:privateBrowsingAllowed")) {
           let item = await ExtensionPreferencesManager.getSetting("homepage_override");
-          if (item.id == extension.id) {
+          if (item && item.id == extension.id) {
             Services.prefs.setBoolPref(HOMEPAGE_PRIVATE_ALLOWED, false);
           }
         }
