@@ -525,6 +525,7 @@ class HTMLEditor final : public TextEditor,
    * @param aOffset             Start offset of removing text in aCharData.
    * @param aLength             Length of removing text.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteTextWithTransaction(dom::CharacterData& aTextNode,
                                      uint32_t aOffset, uint32_t aLength);
 
@@ -1478,9 +1479,8 @@ class HTMLEditor final : public TextEditor,
    * @return                  Returns inserted point if succeeded.
    *                          Otherwise, the result is not set.
    */
-  template <typename PT, typename CT>
   MOZ_CAN_RUN_SCRIPT EditorDOMPoint InsertNodeIntoProperAncestorWithTransaction(
-      nsIContent& aNode, const EditorDOMPointBase<PT, CT>& aPointToInsert,
+      nsIContent& aNode, const EditorDOMPoint& aPointToInsert,
       SplitAtEdges aSplitAtEdges);
 
   /**

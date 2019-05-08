@@ -769,6 +769,16 @@ def build_generic_worker_payload(config, task, task_def):
         'maxRunTime': worker['max-run-time'],
     }
 
+    if worker['os'] == 'windows':
+        task_def['payload']['onExitStatus'] = {
+            'retry': [
+                # These codes (on windows) indicate a process interruption,
+                # rather than a task run failure. See bug 1544403.
+                1073807364,  # process force-killed due to system shutdown
+                3221225786,  # sigint (any interrupt)
+            ]
+        }
+
     env = worker.get('env', {})
 
     if task.get('needs-sccache'):

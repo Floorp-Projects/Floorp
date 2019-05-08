@@ -251,12 +251,15 @@ var OneCRLBlocklistClient;
 var PinningBlocklistClient;
 var RemoteSecuritySettingsClient;
 
-function initialize() {
+function initialize(options = {}) {
+  const { verifySignature = true } = options;
+
   OneCRLBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_SECURITY_SETTINGS_ONECRL_COLLECTION), {
     bucketNamePref: PREF_SECURITY_SETTINGS_ONECRL_BUCKET,
     lastCheckTimePref: PREF_SECURITY_SETTINGS_ONECRL_CHECKED,
     signerName: Services.prefs.getCharPref(PREF_SECURITY_SETTINGS_ONECRL_SIGNER),
   });
+  OneCRLBlocklistClient.verifySignature = verifySignature;
   OneCRLBlocklistClient.on("sync", updateCertBlocklist);
 
   PinningBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_COLLECTION), {
@@ -264,6 +267,7 @@ function initialize() {
     lastCheckTimePref: PREF_BLOCKLIST_PINNING_CHECKED_SECONDS,
     signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_SIGNER),
   });
+  PinningBlocklistClient.verifySignature = verifySignature;
   PinningBlocklistClient.on("sync", updatePinningList);
 
   if (AppConstants.MOZ_NEW_CERT_STORAGE) {
@@ -272,6 +276,7 @@ function initialize() {
     // In Bug 1526018 this will move into its own service, as it's not quite like
     // the others.
     RemoteSecuritySettingsClient = new RemoteSecuritySettings();
+    RemoteSecuritySettingsClient.verifySignature = verifySignature;
 
     return {
       OneCRLBlocklistClient,

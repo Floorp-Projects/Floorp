@@ -240,9 +240,8 @@ class MOZ_STACK_CLASS WSRunObject final {
    * @return                The new <br> node.  If failed to create new <br>
    *                        node, returns nullptr.
    */
-  template <typename PT, typename CT>
   MOZ_CAN_RUN_SCRIPT already_AddRefed<dom::Element> InsertBreak(
-      Selection& aSelection, const EditorDOMPointBase<PT, CT>& aPointToInsert,
+      Selection& aSelection, const EditorDOMPoint& aPointToInsert,
       nsIEditor::EDirection aSelect);
 
   /**
@@ -387,10 +386,8 @@ class MOZ_STACK_CLASS WSRunObject final {
    * When aEndPoint is in a text node, removes the text data before the point.
    * Removes any nodes between them.
    */
-  template <typename PT1, typename CT1, typename PT2, typename CT2>
-  MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteRange(const EditorDOMPointBase<PT1, CT1>& aStartPoint,
-              const EditorDOMPointBase<PT2, CT2>& aEndPoint);
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteRange(const EditorDOMPoint& aStartPoint,
+                                          const EditorDOMPoint& aEndPoint);
 
   /**
    * GetNextCharPoint() returns next character's point of aPoint.  If there is
@@ -492,9 +489,8 @@ class MOZ_STACK_CLASS WSRunObject final {
    * @param aPoint      Current insertion point.  Its previous character is
    *                    unnecessary NBSP will be checked.
    */
-  template <typename PT, typename CT>
   MOZ_CAN_RUN_SCRIPT nsresult ReplacePreviousNBSPIfUnncessary(
-      WSFragment* aRun, const EditorDOMPointBase<PT, CT>& aPoint);
+      WSFragment* aRun, const EditorDOMPoint& aPoint);
 
   MOZ_CAN_RUN_SCRIPT
   nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode, int32_t aOffset);
@@ -502,11 +498,11 @@ class MOZ_STACK_CLASS WSRunObject final {
   MOZ_CAN_RUN_SCRIPT nsresult Scrub();
   bool IsBlockNode(nsINode* aNode);
 
-  EditorRawDOMPoint StartPoint() const {
-    return EditorRawDOMPoint(mStartNode, mStartOffset);
+  EditorDOMPoint StartPoint() const {
+    return EditorDOMPoint(mStartNode, mStartOffset);
   }
-  EditorRawDOMPoint EndPoint() const {
-    return EditorRawDOMPoint(mEndNode, mEndOffset);
+  EditorDOMPoint EndPoint() const {
+    return EditorDOMPoint(mEndNode, mEndOffset);
   }
 
   // The node passed to our constructor.

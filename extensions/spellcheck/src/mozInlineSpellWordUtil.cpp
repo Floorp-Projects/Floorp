@@ -418,8 +418,19 @@ CharClass WordSplitState::ClassifyCharacter(int32_t aIndex,
     if (mDOMWordText[aIndex - 1] == '.') return CHAR_CLASS_SEPARATOR;
 
     // now we know left char is a word-char, check the right-hand character
-    if (aIndex == int32_t(mDOMWordText.Length()) - 1)
+    if (aIndex == int32_t(mDOMWordText.Length() - 1)) {
+      if (mDOMWordText[aIndex] == '\'' || mDOMWordText[aIndex] == 0x2019) {
+        nsUGenCategory prevCategory =
+            mozilla::unicode::GetGenCategory(mDOMWordText[aIndex - 1]);
+        if (prevCategory == nsUGenCategory::kLetter ||
+            prevCategory == nsUGenCategory::kNumber) {
+          // If single quotation mark is last, we don't return separator yet.
+          return CHAR_CLASS_WORD;
+        }
+      }
       return CHAR_CLASS_SEPARATOR;
+    }
+
     if (ClassifyCharacter(aIndex + 1, false) != CHAR_CLASS_WORD)
       return CHAR_CLASS_SEPARATOR;
     // If the next charatcer is a word-char, make sure that it's not a

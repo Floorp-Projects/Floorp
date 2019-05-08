@@ -361,6 +361,8 @@ class ICScript {
 
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry);
+
+  static constexpr size_t offsetOfICEntries() { return sizeof(ICScript); }
 };
 
 class ICMonitoredStub;
