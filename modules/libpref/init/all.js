@@ -5180,7 +5180,7 @@ pref("extensions.webextensions.enablePerformanceCounters", true);
 // Maximum age in milliseconds of performance counters in children
 // When reached, the counters are sent to the main process and
 // reset, so we reduce memory footprint.
-pref("extensions.webextensions.performanceCountersMaxAge", 1000);
+pref("extensions.webextensions.performanceCountersMaxAge", 5000);
 
 // The HTML about:addons page.
 pref("extensions.htmlaboutaddons.enabled", false);
