@@ -45,6 +45,7 @@ DevToolsModules(
     'stepOut.svg',
     'stepOver.svg',
     'tab.svg',
+    'webconsole-logpoint.svg',
     'whole-word-match.svg',
     'window.svg',
     'worker.svg',
