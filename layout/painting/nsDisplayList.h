@@ -351,6 +351,8 @@ enum class nsDisplayListBuilderMode : uint8_t {
   GenerateGlyph,
 };
 
+class nsDisplayWrapList;
+
 /**
  * This manages a display list and is passed as a parameter to
  * nsIFrame::BuildDisplayList.
@@ -1108,7 +1110,7 @@ class nsDisplayListBuilder {
    * display item.
    * The display items in |aMergedItems| have to be mergeable with each other.
    */
-  nsDisplayItem* MergeItems(nsTArray<nsDisplayItem*>& aMergedItems);
+  nsDisplayWrapList* MergeItems(nsTArray<nsDisplayWrapList*>& aItems);
 
   /**
    * A helper class used to temporarily set nsDisplayListBuilder properties for
@@ -2112,7 +2114,6 @@ class nsDisplayItemLink {
 };
 
 class nsPaintedDisplayItem;
-class nsDisplayWrapList;
 
 /*
  * nsDisplayItemBase is a base-class for all display items. It is mainly
@@ -2813,37 +2814,6 @@ class nsDisplayItem : public nsDisplayItemBase {
    */
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion);
-
-  /**
-   * Checks if the given display item can be merged with this item.
-   * @return true if the merging is possible, otherwise false.
-   */
-  virtual bool CanMerge(const nsDisplayItem* aItem) const { return false; }
-
-  /**
-   * Try to merge with the other item (which is below us in the display
-   * list). This gets used by nsDisplayClip to coalesce clipping operations
-   * (optimization), by nsDisplayOpacity to merge rendering for the same
-   * content element into a single opacity group (correctness), and will be
-   * used by nsDisplayOutline to merge multiple outlines for the same element
-   * (also for correctness).
-   */
-  virtual void Merge(const nsDisplayItem* aItem) {}
-
-  /**
-   * Merges the given display list to this item.
-   */
-  virtual void MergeDisplayListFromItem(nsDisplayListBuilder* aBuilder,
-                                        const nsDisplayItem* aItem) {}
-
-  /**
-   * Appends the underlying frames of all display items that have been
-   * merged into this one (excluding  this item's own underlying frame)
-   * to aFrames.
-   */
-  virtual void GetMergedFrames(nsTArray<nsIFrame*>* aFrames) const {}
-
-  virtual bool HasMergedFrames() const { return false; }
 
   /**
    * Returns true if this item needs to have its geometry updated, despite
@@ -3800,98 +3770,6 @@ class RetainedDisplayList : public nsDisplayList {
   // Temporary state initialized during the preprocess pass
   // of RetainedDisplayListBuilder and then used during merging.
   nsTArray<OldItemInfo> mOldItems;
-};
-
-class FlattenedDisplayListIterator {
- public:
-  FlattenedDisplayListIterator(nsDisplayListBuilder* aBuilder,
-                               nsDisplayList* aList)
-      : FlattenedDisplayListIterator(aBuilder, aList, true) {}
-
-  ~FlattenedDisplayListIterator() { MOZ_ASSERT(!HasNext()); }
-
-  virtual bool HasNext() const { return mNext || !mStack.IsEmpty(); }
-
-  nsDisplayItem* GetNextItem() {
-    MOZ_ASSERT(mNext);
-
-    nsDisplayItem* current = mNext;
-    nsDisplayItem* next = current->GetAbove();
-
-    // Attempt to merge |next| with |current|.
-    if (next && current->CanMerge(next)) {
-      // Merging is possible, collect all the successive mergeable items.
-      AutoTArray<nsDisplayItem*, 2> willMerge{current};
-
-      do {
-        willMerge.AppendElement(next);
-      } while ((next = next->GetAbove()) && current->CanMerge(next));
-
-      current = mBuilder->MergeItems(willMerge);
-    }
-
-    // |mNext| will be either the first item that could not be merged with
-    // |current|, or nullptr.
-    mNext = next;
-    ResolveFlattening();
-
-    return current;
-  }
-
-  nsDisplayItem* PeekNext() { return mNext; }
-
- protected:
-  FlattenedDisplayListIterator(nsDisplayListBuilder* aBuilder,
-                               nsDisplayList* aList,
-                               const bool aResolveFlattening)
-      : mBuilder(aBuilder), mNext(aList->GetBottom()) {
-    if (aResolveFlattening) {
-      // This is done conditionally in case subclass overrides
-      // ShouldFlattenNextItem().
-      ResolveFlattening();
-    }
-  }
-
-  virtual void EnterChildList(nsDisplayItem* aContainerItem) {}
-  virtual void ExitChildList() {}
-
-  bool AtEndOfNestedList() const { return !mNext && mStack.Length() > 0; }
-
-  virtual bool ShouldFlattenNextItem() {
-    return mNext && mNext->ShouldFlattenAway(mBuilder);
-  }
-
-  void ResolveFlattening() {
-    // Handle the case where we reach the end of a nested list, or the current
-    // item should start a new nested list. Repeat this until we find an actual
-    // item, or the very end of the outer list.
-    while (AtEndOfNestedList() || ShouldFlattenNextItem()) {
-      if (AtEndOfNestedList()) {
-        ExitChildList();
-
-        // We reached the end of the list, pop the next item from the stack.
-        mNext = mStack.PopLastElement();
-      } else {
-        EnterChildList(mNext);
-
-        // This item wants to be flattened. Store the next item on the stack,
-        // and use the first item in the child list instead.
-        mStack.AppendElement(mNext->GetAbove());
-
-        nsDisplayList* childItems =
-            mNext->GetType() != DisplayItemType::TYPE_TRANSFORM
-                ? mNext->GetSameCoordinateSystemChildren()
-                : mNext->GetChildren();
-
-        mNext = childItems->GetBottom();
-      }
-    }
-  }
-
- private:
-  nsDisplayListBuilder* mBuilder;
-  nsDisplayItem* mNext;
-  AutoTArray<nsDisplayItem*, 16> mStack;
 };
 
 struct HitTestInfo {
@@ -5400,7 +5278,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
    * to the bottom of this item's contents.
    */
   void MergeDisplayListFromItem(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayItem* aItem) override;
+                                const nsDisplayWrapList* aItem);
 
   /**
    * Call this if the wrapped list is changed.
@@ -5452,19 +5330,34 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
 
   uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
-  bool CanMerge(const nsDisplayItem* aItem) const override { return false; }
+  /**
+   * Checks if the given display item can be merged with this item.
+   * @return true if the merging is possible, otherwise false.
+   */
+  virtual bool CanMerge(const nsDisplayItem* aItem) const { return false; }
 
-  void Merge(const nsDisplayItem* aItem) override {
+  /**
+   * Try to merge with the other item (which is below us in the display
+   * list). This gets used by nsDisplayClip to coalesce clipping operations
+   * (optimization), by nsDisplayOpacity to merge rendering for the same
+   * content element into a single opacity group (correctness), and will be
+   * used by nsDisplayOutline to merge multiple outlines for the same element
+   * (also for correctness).
+   */
+  virtual void Merge(const nsDisplayItem* aItem) {
     MOZ_ASSERT(CanMerge(aItem));
     MOZ_ASSERT(Frame() != aItem->Frame());
     MergeFromTrackingMergedFrames(static_cast<const nsDisplayWrapList*>(aItem));
   }
 
-  void GetMergedFrames(nsTArray<nsIFrame*>* aFrames) const override {
-    aFrames->AppendElements(mMergedFrames);
-  }
+  /**
+   * Returns the underlying frames of all display items that have been
+   * merged into this one (excluding this item's own underlying frame)
+   * to aFrames.
+   */
+  const nsTArray<nsIFrame*>& GetMergedFrames() const { return mMergedFrames; }
 
-  bool HasMergedFrames() const override { return !mMergedFrames.IsEmpty(); }
+  bool HasMergedFrames() const { return !mMergedFrames.IsEmpty(); }
 
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return true;
@@ -5563,6 +5456,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
 
  private:
   NS_DISPLAY_ALLOW_CLONING()
+  friend class nsDisplayListBuilder;
 };
 
 /**
@@ -6857,8 +6751,6 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
   bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                          nsRegion* aVisibleRegion) override;
 
-  bool CanMerge(const nsDisplayItem* aItem) const override { return false; }
-
   uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
   nsDisplayItemGeometry* AllocateGeometry(
@@ -7389,6 +7281,132 @@ class nsDisplayForeignObject : public nsDisplayWrapList {
       const StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
+};
+
+class FlattenedDisplayListIterator {
+ public:
+  FlattenedDisplayListIterator(nsDisplayListBuilder* aBuilder,
+                               nsDisplayList* aList)
+      : FlattenedDisplayListIterator(aBuilder, aList, true) {}
+
+  ~FlattenedDisplayListIterator() { MOZ_ASSERT(!HasNext()); }
+
+  virtual bool HasNext() const { return mNext || !mStack.IsEmpty(); }
+
+  nsDisplayItem* GetNextItem() {
+    MOZ_ASSERT(mNext);
+
+    nsDisplayItem* next = mNext;
+    mNext = next->GetAbove();
+
+    if (mNext) {
+      // There are more items in the same list, merging might be possible.
+      next = TryMergingFrom(next);
+    }
+
+    ResolveFlattening();
+
+    return next;
+  }
+
+  nsDisplayItem* PeekNext() { return mNext; }
+
+ protected:
+  FlattenedDisplayListIterator(nsDisplayListBuilder* aBuilder,
+                               nsDisplayList* aList,
+                               const bool aResolveFlattening)
+      : mBuilder(aBuilder), mNext(aList->GetBottom()) {
+    if (aResolveFlattening) {
+      // This is done conditionally in case subclass overrides
+      // ShouldFlattenNextItem().
+      ResolveFlattening();
+    }
+  }
+
+  virtual void EnterChildList(nsDisplayItem* aContainerItem) {}
+  virtual void ExitChildList() {}
+
+  bool AtEndOfNestedList() const { return !mNext && mStack.Length() > 0; }
+
+  virtual bool ShouldFlattenNextItem() {
+    return mNext && mNext->ShouldFlattenAway(mBuilder);
+  }
+
+  void ResolveFlattening() {
+    // Handle the case where we reach the end of a nested list, or the current
+    // item should start a new nested list. Repeat this until we find an actual
+    // item, or the very end of the outer list.
+    while (AtEndOfNestedList() || ShouldFlattenNextItem()) {
+      if (AtEndOfNestedList()) {
+        ExitChildList();
+
+        // We reached the end of the list, pop the next item from the stack.
+        mNext = mStack.PopLastElement();
+      } else {
+        EnterChildList(mNext);
+
+        // This item wants to be flattened. Store the next item on the stack,
+        // and use the first item in the child list instead.
+        mStack.AppendElement(mNext->GetAbove());
+
+        nsDisplayList* childItems =
+            mNext->GetType() != DisplayItemType::TYPE_TRANSFORM
+                ? mNext->GetSameCoordinateSystemChildren()
+                : mNext->GetChildren();
+
+        mNext = childItems->GetBottom();
+      }
+    }
+  }
+
+  /**
+   * Returns the the display item above |aCurrent| casted to nsDisplayWrapList,
+   * if possible.
+   */
+  nsDisplayWrapList* GetNextAsWrapList(nsDisplayItem* aCurrent) const {
+    MOZ_ASSERT(aCurrent);
+    nsDisplayItem* next = aCurrent->GetAbove();
+    return next ? next->AsDisplayWrapList() : nullptr;
+  }
+
+  /**
+   * Tries to merge display items starting from |aCurrent|.
+   * Updates the internal pointer to the next display item.
+   */
+  nsDisplayItem* TryMergingFrom(nsDisplayItem* aCurrent) {
+    MOZ_ASSERT(aCurrent);
+    MOZ_ASSERT(aCurrent->GetAbove());
+
+    nsDisplayWrapList* current = aCurrent->AsDisplayWrapList();
+    nsDisplayWrapList* next = mNext->AsDisplayWrapList();
+
+    if (!current || !next) {
+      // Either the current or the next item do not support merging.
+      return aCurrent;
+    }
+
+    // Attempt to merge |next| with |current|.
+    if (current->CanMerge(next)) {
+      // Merging is possible, collect all the successive mergeable items.
+      AutoTArray<nsDisplayWrapList*, 2> willMerge{current};
+
+      do {
+        willMerge.AppendElement(next);
+      } while ((next = GetNextAsWrapList(next)) && current->CanMerge(next));
+
+      current = mBuilder->MergeItems(willMerge);
+    }
+
+    // |mNext| will be either the first item that could not be merged with
+    // |current|, or nullptr.
+    mNext = next;
+    return current;
+  }
+
+ private:
+  nsDisplayListBuilder* mBuilder;
+  nsDisplayItem* mNext;
+  AutoTArray<nsDisplayItem*, 16> mStack;
 };
 
 namespace mozilla {

@@ -225,7 +225,8 @@ struct AssignedDisplayItem {
   AssignedDisplayItem(nsDisplayItem* aItem, LayerState aLayerState,
                       DisplayItemData* aData, const nsRect& aContentRect,
                       DisplayItemEntryType aType, const bool aHasOpacity,
-                      const RefPtr<TransformClipNode>& aTransform);
+                      const RefPtr<TransformClipNode>& aTransform,
+                      const bool aIsMerged);
   ~AssignedDisplayItem();
 
   nsDisplayItem* mItem;

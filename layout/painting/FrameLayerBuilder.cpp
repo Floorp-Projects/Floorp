@@ -285,9 +285,17 @@ void DisplayItemData::EndUpdate(nsAutoPtr<nsDisplayItemGeometry> aGeometry) {
 void DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
                                   bool aFirstUpdate,
                                   nsDisplayItem* aItem /* = nullptr */) {
-  BeginUpdate(aLayer, aState, aItem,
-              (aItem && !aFirstUpdate) ? aItem->IsReused() : false,
-              aItem ? aItem->HasMergedFrames() : false);
+  bool isReused = false;
+  bool isMerged = false;
+
+  if (aItem) {
+    isReused = !aFirstUpdate ? aItem->IsReused() : false;
+
+    const nsDisplayWrapList* wraplist = aItem->AsDisplayWrapList();
+    isMerged = wraplist && wraplist->HasMergedFrames();
+  }
+
+  BeginUpdate(aLayer, aState, aItem, isReused, isMerged);
 }
 
 void DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
@@ -328,20 +336,22 @@ void DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
                                   aItem->Frame()->GetVisualOverflowRect());
   }
 
-  AutoTArray<nsIFrame*, 4> mergedFrames;
-  aItem->GetMergedFrames(&mergedFrames);
-  for (uint32_t i = 0; i < mergedFrames.Length(); ++i) {
-    if (!copy.RemoveElement(mergedFrames[i])) {
-      AddFrame(mergedFrames[i]);
-      mChangedFrameInvalidations.Or(mChangedFrameInvalidations,
-                                    mergedFrames[i]->GetVisualOverflowRect());
+  if (aIsMerged) {
+    MOZ_ASSERT(aItem->AsDisplayWrapList());
+
+    for (nsIFrame* frame : aItem->AsDisplayWrapList()->GetMergedFrames()) {
+      if (!copy.RemoveElement(frame)) {
+        AddFrame(frame);
+        mChangedFrameInvalidations.Or(mChangedFrameInvalidations,
+                                      frame->GetVisualOverflowRect());
+      }
     }
   }
 
-  for (uint32_t i = 0; i < copy.Length(); i++) {
-    RemoveFrame(copy[i]);
+  for (nsIFrame* frame : copy) {
+    RemoveFrame(frame);
     mChangedFrameInvalidations.Or(mChangedFrameInvalidations,
-                                  copy[i]->GetVisualOverflowRect());
+                                  frame->GetVisualOverflowRect());
   }
 }
 
@@ -3740,10 +3750,13 @@ void PaintedLayerData::Accumulate(ContainerState* aState, nsDisplayItem* aItem,
 
   UpdateEffectStatus(aType, aOpacityIndices);
 
+  const bool isMerged = aItem->AsDisplayWrapList() &&
+                        aItem->AsDisplayWrapList()->HasMergedFrames();
+
   if (IsEffectEndMarker(aType)) {
     mAssignedDisplayItems.emplace_back(aItem, aLayerState, nullptr,
                                        aContentRect, aType, hasOpacity,
-                                       aTransform);
+                                       aTransform, isMerged);
     return;
   }
 
@@ -3751,14 +3764,14 @@ void PaintedLayerData::Accumulate(ContainerState* aState, nsDisplayItem* aItem,
       (oldClip == mItemClip) || (oldClip && *oldClip == *mItemClip);
 
   DisplayItemData* currentData =
-      aItem->HasMergedFrames() ? nullptr : aItem->GetDisplayItemData();
+      isMerged ? nullptr : aItem->GetDisplayItemData();
 
   DisplayItemData* oldData = aState->mLayerBuilder->GetOldLayerForFrame(
       aItem->Frame(), aItem->GetPerFrameKey(), currentData,
       aItem->GetDisplayItemDataLayerManager());
 
   mAssignedDisplayItems.emplace_back(aItem, aLayerState, oldData, aContentRect,
-                                     aType, hasOpacity, aTransform);
+                                     aType, hasOpacity, aTransform, isMerged);
 
   if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(aItem)) {
     mForceTransparentSurface = true;
@@ -5482,7 +5495,8 @@ void FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
 AssignedDisplayItem::AssignedDisplayItem(
     nsDisplayItem* aItem, LayerState aLayerState, DisplayItemData* aData,
     const nsRect& aContentRect, DisplayItemEntryType aType,
-    const bool aHasOpacity, const RefPtr<TransformClipNode>& aTransform)
+    const bool aHasOpacity, const RefPtr<TransformClipNode>& aTransform,
+    const bool aIsMerged)
     : mItem(aItem),
       mLayerState(aLayerState),
       mDisplayItemData(aData),
@@ -5490,7 +5504,7 @@ AssignedDisplayItem::AssignedDisplayItem(
       mTransform(aTransform),
       mType(aType),
       mReused(aItem->IsReused()),
-      mMerged(aItem->HasMergedFrames()),
+      mMerged(aIsMerged),
       mHasOpacity(aHasOpacity),
       mHasTransform(aTransform),
       mHasPaintRect(aItem->HasPaintRect()) {}
