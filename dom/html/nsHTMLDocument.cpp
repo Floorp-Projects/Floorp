@@ -1015,25 +1015,23 @@ Document* nsHTMLDocument::Open(const Optional<nsAString>& /* unused */,
     return nullptr;
   }
 
-  // Step 5 -- if we have an active parser, just no-op.
-  // If we already have a parser we ignore the document.open call.
+  // Step 5 -- if we have an active parser with a nonzero script nesting level,
+  // just no-op.
+  //
+  // If we have a parser that has a zero script nesting level, we need to
+  // properly terminate it before setting up a new parser.  See the similar code
+  // in WriteCommon that handles the !IsInsertionPointDefined() case and should
+  // stay in sync with this code.
+  if (mParser && !mParser->HasNonzeroScriptNestingLevel()) {
+    // Make sure we don't re-enter.
+    IgnoreOpensDuringUnload ignoreOpenGuard(this);
+    mParser->Terminate();
+    MOZ_RELEASE_ASSERT(!mParser, "mParser should have been null'd out");
+  }
+
+  // The mParserAborted check here is probably wrong.  Removing it is
+  // tracked in https://bugzilla.mozilla.org/show_bug.cgi?id=1475000
   if (mParser || mParserAborted) {
-    // The WHATWG spec used to say: "If the document has an active parser that
-    // isn't a script-created parser, and the insertion point associated with
-    // that parser's input stream is not undefined (that is, it does point to
-    // somewhere in the input stream), then the method does nothing. Abort these
-    // steps and return the Document object on which the method was invoked."
-    // Note that aborting a parser leaves the parser "active" with its insertion
-    // point "not undefined". We track this using mParserAborted, because
-    // aborting a parser nulls out mParser.
-    //
-    // Actually, the spec says something slightly different now, about having
-    // an "active parser whose script nesting level is greater than 0".  It
-    // does not mention insertion points at all.  Not sure whether it matters
-    // in practice.  It seems like "script nesting level" replaced the
-    // insertion point concept?  Anyway,
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1475000 is probably
-    // relevant here.
     return this;
   }
 
@@ -1323,7 +1321,9 @@ void nsHTMLDocument::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
       return;
     }
     // The spec doesn't tell us to ignore opens from here, but we need to
-    // ensure opens are ignored here.
+    // ensure opens are ignored here.  See similar code in Open() that handles
+    // the case of an existing parser which is not currently running script and
+    // should stay in sync with this code.
     IgnoreOpensDuringUnload ignoreOpenGuard(this);
     mParser->Terminate();
     MOZ_RELEASE_ASSERT(!mParser, "mParser should have been null'd out");
