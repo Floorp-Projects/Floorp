@@ -1884,6 +1884,13 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
     // or we're doing the initial forget skippables.
     FireForgetSkippable(suspected, false, aDeadline);
     didDoWork = true;
+  } else if (!isLateTimerFire && !aDeadline.IsNull()) {
+    MOZ_ASSERT(!didDoWork);
+    // If we're called during idle time, try to find some work to do by calling
+    // the method recursively, effectively bypassing some possible forget
+    // skippable calls.
+    sCCRunnerFireCount = numEarlyTimerFires;
+    return CCRunnerFired(aDeadline);
   }
 
   if (isLateTimerFire) {
