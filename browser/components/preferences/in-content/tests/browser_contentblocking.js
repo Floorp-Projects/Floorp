@@ -273,6 +273,9 @@ add_task(async function testContentBlockingStrictCategory() {
     case "cookieBehavior4":
       is(Services.prefs.getIntPref(NCB_PREF), Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER}`);
       break;
+    case "cookieBehavior5":
+      is(Services.prefs.getIntPref(NCB_PREF), Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN, `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`);
+      break;
     default:
       ok(false, "unknown option was added to the strict pref");
       break;
@@ -325,6 +328,7 @@ add_task(async function testContentBlockingCustomCategory() {
     nonDefaultNCB = Ci.nsICookieService.BEHAVIOR_REJECT;
     break;
   case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+  case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
     nonDefaultNCB = Ci.nsICookieService.BEHAVIOR_ACCEPT;
     break;
   default:
