@@ -13,7 +13,6 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabAction
 import org.mozilla.fenix.home.sessioncontrol.onNext
@@ -42,13 +41,13 @@ class TabHeaderViewHolder(
                 if (isPrivate) R.string.tabs_header_private_title else R.string.tab_header_label
             header_text.text = context.getString(headerTextResourceId)
 
-            add_tab_button.increaseTapArea(addTabButtonIncreaseDps)
-            add_tab_button.setOnClickListener {
-                actionEmitter.onNext(TabAction.Add)
+            add_tab_button.run {
+                setOnClickListener {
+                    actionEmitter.onNext(TabAction.Add)
+                }
             }
 
             tabs_overflow_button.run {
-                increaseTapArea(overflowButtonIncreaseDps)
                 setOnClickListener {
                     tabsMenu.menuBuilder
                         .build(view.context)
@@ -93,8 +92,5 @@ class TabHeaderViewHolder(
 
     companion object {
         const val LAYOUT_ID = R.layout.tab_header
-
-        const val addTabButtonIncreaseDps = 8
-        const val overflowButtonIncreaseDps = 8
     }
 }

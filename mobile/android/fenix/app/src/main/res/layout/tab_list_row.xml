@@ -49,7 +49,6 @@
             android:id="@+id/tab_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
             android:layout_marginStart="8dp"
             android:layout_marginBottom="8dp"
             android:ellipsize="end"
@@ -62,28 +61,17 @@
             app:layout_constraintTop_toBottomOf="@id/hostname"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <ImageView
+        <ImageButton
             android:id="@+id/close_tab_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_margin="13dp"
+            android:alpha="0.8"
             android:contentDescription="@string/close_tab"
             android:src="@drawable/ic_close"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageButton
-            android:id="@+id/tab_overflow_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/tab_menu"
-            android:src="@drawable/ic_menu"
-            android:layout_margin="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/close_tab_button"
-            app:layout_constraintBottom_toBottomOf="parent"/>
 
         <View
             android:id="@+id/selected_border"

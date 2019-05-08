@@ -22,6 +22,7 @@ import org.jetbrains.anko.backgroundColor
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.Tab
@@ -46,6 +47,7 @@ class TabInCollectionViewHolder(
     var isLastTab = false
 
     init {
+
         collection_tab_icon.clipToOutline = true
         collection_tab_icon.outlineProvider = object : ViewOutlineProvider() {
             override fun getOutline(view: View?, outline: Outline?) {
@@ -59,6 +61,7 @@ class TabInCollectionViewHolder(
             }
         }
 
+        collection_tab_close_button.increaseTapArea(buttonIncreaseDps)
         collection_tab_close_button.setOnClickListener {
             actionEmitter.onNext(CollectionAction.RemoveTab(collection, tab))
         }
@@ -93,6 +96,7 @@ class TabInCollectionViewHolder(
     }
 
     companion object {
+        const val buttonIncreaseDps = 12
         const val LAYOUT_ID = R.layout.tab_in_collection
     }
 }

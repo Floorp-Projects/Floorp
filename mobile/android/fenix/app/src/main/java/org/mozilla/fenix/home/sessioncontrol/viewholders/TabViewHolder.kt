@@ -50,6 +50,8 @@ class TabViewHolder(
                     actionEmitter.onNext(TabAction.Share(tab?.sessionId!!))
             }
         }
+
+        close_tab_button.increaseTapArea(buttonIncreaseDps)
         item_tab.setOnClickListener {
             actionEmitter.onNext(TabAction.Select(tab?.sessionId!!))
         }
@@ -76,15 +78,6 @@ class TabViewHolder(
                     view.height,
                     view.context.resources.pxToDp(favIconBorderRadiusInPx).toFloat()
                 )
-            }
-        }
-
-        tab_overflow_button.run {
-            increaseTapArea(buttonIncreaseDps)
-            setOnClickListener {
-                tabMenu.menuBuilder
-                    .build(view.context)
-                    .show(anchor = it)
             }
         }
     }
