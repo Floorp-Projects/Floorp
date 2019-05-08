@@ -120,10 +120,12 @@
       </div>
 
       <div class="header">
-          <div id="sectionTitle" class="header-name" data-l10n-id="about-telemetry-page-title">
-          </div>
-          <select id="processes" hidden="true"></select>
-          <input type="text" id="search" placeholder=""/>
+        <div id="sectionTitle" class="header-name" data-l10n-id="about-telemetry-page-title" />
+        <div id="sectionFilters">
+          <label id="storesLabel" for="stores" hidden="true" data-l10n-id="about-telemetry-current-store" />
+          <select id="stores" hidden="true"></select>
+          <input type="text" id="search" placeholder="" />
+        </div>
       </div>
 
       <div id="no-search-results" hidden="true" class="hidden">

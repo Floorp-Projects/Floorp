@@ -65,6 +65,17 @@ body:dir(rtl) #category-raw{
   flex-grow: 1;
 }
 
+#sectionFilters {
+  display: flex;
+  align-items: center;
+}
+
+#stores {
+  padding-top: 5px;
+  padding-left: 5px;
+  padding-bottom: 5px;
+}
+
 .heading > h3 {
   margin: 0;
   padding-bottom: 12px;
