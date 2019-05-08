@@ -512,7 +512,9 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     // merge any adjacent text nodes
     if (aEditSubAction != EditSubAction::eInsertText &&
         aEditSubAction != EditSubAction::eInsertTextComingFromIME) {
-      nsresult rv = HTMLEditorRef().CollapseAdjacentTextNodes(mDocChangeRange);
+      RefPtr<nsRange> docChangeRange = mDocChangeRange;
+      nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                        .CollapseAdjacentTextNodes(docChangeRange);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -2974,8 +2976,9 @@ nsresult HTMLEditRules::WillDeleteSelection(
             return rv;
           }
           // Join blocks
-          EditorDOMPoint pt = HTMLEditorRef().JoinNodesDeepWithTransaction(
-              *leftParent, *rightParent);
+          EditorDOMPoint pt =
+              MOZ_KnownLive(HTMLEditorRef())
+                  .JoinNodesDeepWithTransaction(*leftParent, *rightParent);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -8883,8 +8886,8 @@ nsresult HTMLEditRules::JoinNearestEditableNodesWithTransaction(
   // Separate join rules for differing blocks
   if (HTMLEditUtils::IsList(&aNodeLeft) || aNodeLeft.GetAsText()) {
     // For lists, merge shallow (wouldn't want to combine list items)
-    nsresult rv =
-        HTMLEditorRef().JoinNodesWithTransaction(aNodeLeft, aNodeRight);
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .JoinNodesWithTransaction(aNodeLeft, aNodeRight);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -8909,7 +8912,8 @@ nsresult HTMLEditRules::JoinNearestEditableNodesWithTransaction(
   }
 
   // For list items, divs, etc., merge smart
-  nsresult rv = HTMLEditorRef().JoinNodesWithTransaction(aNodeLeft, aNodeRight);
+  nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                    .JoinNodesWithTransaction(aNodeLeft, aNodeRight);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
