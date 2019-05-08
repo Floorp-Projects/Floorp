@@ -48,7 +48,7 @@ browser {
 
 .control-item {
   -moz-window-dragging: no-drag;
-  background: var(--btn-bg-color);
+  background-color: var(--btn-bg-color);
   border-radius: 4px;
   cursor: pointer;
   /**
