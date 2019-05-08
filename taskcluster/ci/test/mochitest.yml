@@ -312,8 +312,12 @@ mochitest-media:
     chunks:
         by-test-platform:
             android-em-7.*: 1
-            macosx64.*: 1
             windows10-64.*: 1
+            macosx64.*/opt: 2
+            macosx64.*/debug: 4
+            windows10-aarch64/.*: 2
+            windows7-32-shippable/.*: 2
+            linux64(-shippable|-devedition|-.*qr)/opt: 2
             default: 3
     mozharness:
         mochitest-flavor: plain
