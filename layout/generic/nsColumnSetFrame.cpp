@@ -479,10 +479,16 @@ nscoord nsColumnSetFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord iSize = 0;
   DISPLAY_MIN_INLINE_SIZE(this, iSize);
 
-  if (mFrames.FirstChild() && !StyleDisplay()->IsContainSize()) {
+  if (mFrames.FirstChild() && (StaticPrefs::layout_css_column_span_enabled() ||
+                               !StyleDisplay()->IsContainSize())) {
     // We want to ignore this in the case that we're size contained
     // because our children should not contribute to our
     // intrinsic size.
+    //
+    // Bug 1499281: When we remove the column-span pref, we can also remove the
+    // contain:size check since nsColumnSetFrame is no longer the outermost
+    // frame in a multicol container, and we need to handle size-containment at
+    // the level of the outermost frame for the contained element.
     iSize = mFrames.FirstChild()->GetMinISize(aRenderingContext);
   }
   const nsStyleColumn* colStyle = StyleColumn();
@@ -520,10 +526,17 @@ nscoord nsColumnSetFrame::GetPrefISize(gfxContext* aRenderingContext) {
   if (colStyle->mColumnWidth.IsLength()) {
     colISize =
         ColumnUtils::ClampUsedColumnWidth(colStyle->mColumnWidth.AsLength());
-  } else if (mFrames.FirstChild() && !StyleDisplay()->IsContainSize()) {
+  } else if (mFrames.FirstChild() &&
+             (StaticPrefs::layout_css_column_span_enabled() ||
+              !StyleDisplay()->IsContainSize())) {
     // We want to ignore this in the case that we're size contained
     // because our children should not contribute to our
     // intrinsic size.
+    //
+    // Bug 1499281: When we remove the column-span pref, we can also remove the
+    // contain:size check since nsColumnSetFrame is no longer the outermost
+    // frame in a multicol container, and we need to handle size-containment at
+    // the level of the outermost frame for the contained element.
     colISize = mFrames.FirstChild()->GetPrefISize(aRenderingContext);
   } else {
     colISize = 0;
