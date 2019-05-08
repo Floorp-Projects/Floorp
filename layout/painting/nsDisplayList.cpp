@@ -952,14 +952,14 @@ void nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
   animationInfo.TransferMutatedFlagToLayer(aLayer);
 }
 
-nsDisplayItem* nsDisplayListBuilder::MergeItems(
-    nsTArray<nsDisplayItem*>& aMergedItems) {
+nsDisplayWrapList* nsDisplayListBuilder::MergeItems(
+    nsTArray<nsDisplayWrapList*>& aItems) {
   // For merging, we create a temporary item by cloning the last item of the
   // mergeable items list. This ensures that the temporary item will have the
   // correct frame and bounds.
-  nsDisplayItem* merged = nullptr;
+  nsDisplayWrapList* merged = nullptr;
 
-  for (nsDisplayItem* item : Reversed(aMergedItems)) {
+  for (nsDisplayWrapList* item : Reversed(aItems)) {
     MOZ_ASSERT(item);
 
     if (!merged) {
@@ -5730,8 +5730,8 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
 
 nsDisplayWrapList::~nsDisplayWrapList() { MOZ_COUNT_DTOR(nsDisplayWrapList); }
 
-void nsDisplayWrapList::MergeDisplayListFromItem(nsDisplayListBuilder* aBuilder,
-                                                 const nsDisplayItem* aItem) {
+void nsDisplayWrapList::MergeDisplayListFromItem(
+    nsDisplayListBuilder* aBuilder, const nsDisplayWrapList* aItem) {
   const nsDisplayWrapList* wrappedItem = aItem->AsDisplayWrapList();
   MOZ_ASSERT(wrappedItem);
 
