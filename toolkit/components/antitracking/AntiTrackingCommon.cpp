@@ -786,12 +786,11 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     LOG(("Parent window has no doc"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
-  auto cookieBehavior = parentDoc->CookieSettings()->GetCookieBehavior();
-  if (cookieBehavior != nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+  if (!parentDoc->CookieSettings()->GetRejectThirdPartyTrackers()) {
     LOG(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
          "early",
-         cookieBehavior));
+         parentDoc->CookieSettings()->GetCookieBehavior()));
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
@@ -1617,11 +1616,9 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  auto cookieBehavior = parentDocument->CookieSettings()->GetCookieBehavior();
-  // TODO: Perhaps we need to do something special for
-  // nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN here?
-  if (cookieBehavior != nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    LOG(("Disabled by the pref (%d), bail out early", cookieBehavior));
+  if (!parentDocument->CookieSettings()->GetRejectThirdPartyTrackers()) {
+    LOG(("Disabled by the pref (%d), bail out early",
+         parentDocument->CookieSettings()->GetCookieBehavior()));
     return true;
   }
 

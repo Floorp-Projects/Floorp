@@ -22,6 +22,11 @@ interface nsICookieSettings : nsISupports
   [infallible] readonly attribute unsigned long cookieBehavior;
 
   /**
+   * Whether our cookie behavior mandates rejecting third-party trackers.
+   */
+  [infallible] readonly attribute boolean rejectThirdPartyTrackers;
+
+  /**
    * CookiePermission at the loading of the document for a particular
    * principal. It returns the same cookiePermission also in case it changes
    * during the life-time of the top document.
