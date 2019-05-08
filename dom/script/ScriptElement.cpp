@@ -25,11 +25,11 @@ ScriptElement::ScriptAvailable(nsresult aResult, nsIScriptElement* aElement,
   if (!aIsInlineClassicScript && NS_FAILED(aResult)) {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
     if (parser) {
-      parser->PushDefinedInsertionPoint();
+      parser->IncrementScriptNestingLevel();
     }
     nsresult rv = FireErrorEvent();
     if (parser) {
-      parser->PopDefinedInsertionPoint();
+      parser->DecrementScriptNestingLevel();
     }
     return rv;
   }

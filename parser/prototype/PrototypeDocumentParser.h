@@ -98,9 +98,11 @@ class PrototypeDocumentParser final : public nsIParser,
 
   virtual bool IsInsertionPointDefined() override { return false; }
 
-  virtual void PushDefinedInsertionPoint() override {}
+  void IncrementScriptNestingLevel() final {}
 
-  virtual void PopDefinedInsertionPoint() override {}
+  void DecrementScriptNestingLevel() final {}
+
+  bool HasNonzeroScriptNestingLevel() const final { return false; }
 
   virtual void MarkAsNotScriptCreated(const char* aCommand) override {}
 
