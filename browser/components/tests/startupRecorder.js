@@ -63,6 +63,7 @@ startupRecorder.prototype = {
     if (!Services.prefs.getBoolPref("browser.startup.record", false))
       return;
 
+    Services.profiler.AddMarker("startupRecorder:" + name);
     this.data.code[name] = {
       components: Cu.loadedComponents,
       modules: Cu.loadedModules,
@@ -163,8 +164,24 @@ startupRecorder.prototype = {
           Services.prefs.readStats((key, value) => this.data.prefStats[key] = value);
         }
         paints = null;
-        this._resolve();
-        this._resolve = null;
+
+        let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+        if (!env.exists("MOZ_PROFILER_STARTUP")) {
+          this._resolve();
+          this._resolve = null;
+          return;
+        }
+
+        Services.profiler.getProfileDataAsync().then(profileData => {
+          this.data.profile = profileData;
+          // There's no equivalent StartProfiler call in this file because the
+          // profiler is started using the MOZ_PROFILER_STARTUP environment
+          // variable in browser/base/content/test/performance/browser.ini
+          Services.profiler.StopProfiler();
+
+          this._resolve();
+          this._resolve = null;
+        });
       });
     } else {
       const topicsToNames = {

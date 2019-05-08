@@ -23,6 +23,10 @@ public class DefaultBrowserPreference extends LinkPreference {
         super(context, attrs, defStyle);
     }
 
+    /**
+     * Open Default apps screen of Settings for API Levels>=24.
+     * Support URL will open for lower API levels.
+     */
     @Override
     protected void onClick() {
         if (GeckoPreferences.PREFS_DEFAULT_BROWSER.equals(getKey()) && AppConstants.Versions.feature24Plus) {

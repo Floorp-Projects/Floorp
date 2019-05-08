@@ -209,19 +209,15 @@ public class GeckoApplication extends Application
                 db.expireHistory(getContentResolver(), BrowserContract.ExpirePriority.NORMAL);
             }
         });
-
-        GeckoNetworkManager.getInstance().stop();
     }
 
     public void onApplicationForeground() {
         if (mIsInitialResume) {
             GeckoBatteryManager.getInstance().start(this);
-            GeckoNetworkManager.getInstance().start(this);
             mIsInitialResume = false;
         } else if (mPausedGecko) {
             GeckoThread.onResume();
             mPausedGecko = false;
-            GeckoNetworkManager.getInstance().start(this);
         }
 
         mInBackground = false;

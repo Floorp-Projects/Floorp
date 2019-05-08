@@ -1043,8 +1043,9 @@ impl AlphaBatchBuilder {
                                 .expect("BUG: 3d primitive was not assigned a surface");
                             let (uv_rect_address, _) = render_tasks.resolve_surface(
                                 ctx.surfaces[raster_config.surface_index.0]
-                                    .surface
-                                    .expect("BUG: no surface"),
+                                    .render_tasks
+                                    .expect("BUG: no surface")
+                                    .root,
                                 gpu_cache,
                             );
 
@@ -1097,7 +1098,10 @@ impl AlphaBatchBuilder {
                             render_tasks,
                         ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
-                        let surface = ctx.surfaces[raster_config.surface_index.0].surface;
+                        let surface = ctx
+                            .surfaces[raster_config.surface_index.0]
+                            .render_tasks
+                            .map(|s| s.root);
 
                         match raster_config.composite_mode {
                             PictureCompositeMode::TileCache { .. } => {

@@ -479,8 +479,9 @@ class UrlbarView {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
     }
 
+    let title = item._elements.get("title");
     this._addTextContentWithHighlights(
-      item._elements.get("title"), result.title, result.titleHighlights);
+      title, result.title, result.titleHighlights);
 
     let tagsContainer = item._elements.get("tagsContainer");
     tagsContainer.textContent = "";
@@ -495,6 +496,7 @@ class UrlbarView {
     }
 
     let action = "";
+    let isVisitAction = false;
     let setURL = false;
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
@@ -510,21 +512,20 @@ class UrlbarView {
                                              [result.payload.engine], 1);
         break;
       case UrlbarUtils.RESULT_TYPE.KEYWORD:
-        if (result.payload.input.trim() == result.payload.keyword) {
-          action = bundle.GetStringFromName("visit");
-        }
+        isVisitAction = result.payload.input.trim() == result.payload.keyword;
         break;
       case UrlbarUtils.RESULT_TYPE.OMNIBOX:
         action = result.payload.content;
         break;
       default:
         if (result.heuristic) {
-          action = bundle.GetStringFromName("visit");
+          isVisitAction = true;
         } else {
           setURL = true;
         }
         break;
     }
+
     let url = item._elements.get("url");
     if (setURL) {
       this._addTextContentWithHighlights(url, result.payload.displayUrl,
@@ -532,7 +533,15 @@ class UrlbarView {
     } else {
       url.textContent = "";
     }
+
+    if (isVisitAction) {
+      action = bundle.GetStringFromName("visit");
+      title.setAttribute("isurl", "true");
+    } else {
+      title.removeAttribute("isurl");
+    }
     item._elements.get("action").textContent = action;
+
     item._elements.get("titleSeparator").hidden = !action && !setURL;
   }
 

@@ -3168,7 +3168,7 @@ impl Renderer {
         }
 
         if self.debug_flags.contains(DebugFlags::ECHO_DRIVER_MESSAGES) {
-            Device::echo_driver_messages(self.device.gl());
+            self.device.echo_driver_messages();
         }
 
         results.stats.texture_upload_kb = self.profile_counters.texture_data_uploaded.get();

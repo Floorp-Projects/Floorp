@@ -466,6 +466,12 @@ add_task(async function testPolicyCategorization() {
 
   // Cleanup after this particular test.
   if (Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE) {
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+      policies: {"Cookies": {
+          "Locked": false,
+        },
+      },
+    });
     await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
   }
   is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive at the end of the test");

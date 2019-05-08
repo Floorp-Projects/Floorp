@@ -18,7 +18,7 @@ Could not detect `git-cinnabar`.
 The `mach try` command requires git-cinnabar to be installed when
 pushing from git. Please install it by running:
 
-    $ ./mach vcs-setup --git
+    $ ./mach vcs-setup
 """.lstrip()
 
 HG_PUSH_TO_TRY_NOT_FOUND = """

@@ -434,15 +434,6 @@ class nsLayoutUtils {
    */
   static bool IsPrimaryStyleFrame(const nsIFrame* aFrame);
 
-  /**
-   * Gets the real primary frame associated with the content object.
-   *
-   * In the case of absolutely positioned elements and floated elements,
-   * the real primary frame is the frame that is out of the flow and not the
-   * placeholder frame.
-   */
-  static nsIFrame* GetRealPrimaryFrameFor(const nsIContent* aContent);
-
 #ifdef DEBUG
   // TODO: remove, see bug 598468.
   static bool gPreventAssertInCompareTreePosition;

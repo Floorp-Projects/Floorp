@@ -8,6 +8,30 @@ const test = new SearchConfigTest({
   default: {
     // Not included anywhere.
   },
+  available: {
+    included: [{
+      // regions: [
+        // These arent currently enforced.
+        // "au", "at", "be", "br", "ca", "fi", "fr", "de",
+        // "in", "ie", "it", "jp", "my", "mx", "nl", "nz",
+        // "no", "sg", "es", "se", "ch", "gb", "us",
+      // ],
+      locales: {
+        matches: [
+          "ach", "af", "an", "ar", "ast", "az", "ca", "cak", "da", "de",
+          "dsb", "el", "eo", "es-CL", "es-ES",
+          "es-MX", "eu", "fa", "ff", "fi", "fr", "fy-NL", "gn",
+          "gu-IN", "hi-IN", "hr", "hsb", "ia", "is", "it",
+          "ja-JP-mac", "ja", "ka", "kab", "km", "kn", "lij", "lo",
+          "lt", "mai", "mk", "ml", "ms", "my", "nb-NO", "ne-NP", "nl",
+          "nn-NO", "oc", "or", "pa-IN", "pt-BR", "rm", "ro", "son",
+          "sq", "sr", "sv-SE", "th", "tl", "trs", "uk", "ur", "uz",
+          "wo", "xh", "zh-CN",
+        ],
+        startsWith: ["bn", "en"],
+      },
+    }],
+  },
 });
 
 add_task(async function setup() {

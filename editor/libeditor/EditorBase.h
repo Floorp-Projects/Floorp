@@ -911,6 +911,7 @@ class EditorBase : public nsIEditor,
    *                            E.g., adjusting whitespaces during composition.
    *                            false, otherwise.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertTextIntoTextNodeWithTransaction(
       const nsAString& aStringToInsert, Text& aTextNode, int32_t aOffset,
       bool aSuppressIME = false);

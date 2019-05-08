@@ -1,3 +1,6 @@
+// |jit-test| crash; skip-if: getBuildConfiguration()['arm64']
+//
+// Test skipped on ARM64 due to bug 1549763.
 
 for (var actual = .5; actual < 100; actual++) {
   var test2 = {

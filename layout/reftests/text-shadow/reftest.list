@@ -5,7 +5,7 @@ random-if(Android) == basic-negcoord.xul basic-negcoord-ref.xul
 != blur.xul blur-notref.xul
 == color-inherit.xul color-inherit-ref.xul
 == multiple-noblur.xul multiple-noblur-ref.xul
-== blur-opacity.html blur-opacity-ref.html
+fuzzy-if(webrender&&gtkWidget,128-128,160-160) == blur-opacity.html blur-opacity-ref.html
 
 == basic.html basic-ref.html
 == basic-negcoord.html basic-negcoord-ref.html

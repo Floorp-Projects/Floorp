@@ -994,12 +994,16 @@ mediarecorder:
   recording_count:
     bug_numbers:
       - 1400757
+      - 1429765
+      - 1480589
+      - 1532391
     description: >
       The number of times a MediaRecorder has been started. Recorded when a MediaRecorder starts
-    expires: "68"
+    expires: "72"
     kind: uint
     notification_emails:
       - bvandyk@mozilla.com
+      - nohlmeier@mozilla.com
     release_channel_collection: opt-in
     record_in_processes:
       - main

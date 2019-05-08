@@ -5994,7 +5994,7 @@
     "bug_numbers": [893505],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the application update doorhanger type that was displayed.",
-    "labels": ["restart", "available", "manual"]
+    "labels": ["restart", "available", "manual", "unsupported"]
   },
   "UPDATE_NOTIFICATION_BADGE_SHOWN": {
     "record_in_processes": ["main"],
@@ -6004,7 +6004,7 @@
     "bug_numbers": [893505, 1365204],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the application update badge type that was displayed.",
-    "labels": ["restart", "available", "manual"]
+    "labels": ["restart", "available", "manual", "unsupported"]
   },
   "UPDATE_NOTIFICATION_DISMISSED": {
     "record_in_processes": ["main"],
@@ -6014,7 +6014,7 @@
     "bug_numbers": [893505],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the dismiss action was executed for this application update doorhanger type.",
-    "labels": ["restart", "available", "manual"]
+    "labels": ["restart", "available", "manual", "unsupported"]
   },
   "UPDATE_NOTIFICATION_MAIN_ACTION_DOORHANGER": {
     "record_in_processes": ["main"],
@@ -6024,7 +6024,7 @@
     "bug_numbers": [893505],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the main update action was initiated for this application update doorhanger type.",
-    "labels": ["restart", "available", "manual"]
+    "labels": ["restart", "available", "manual", "unsupported"]
   },
   "UPDATE_NOTIFICATION_MAIN_ACTION_MENU": {
     "record_in_processes": ["main"],
@@ -6034,7 +6034,7 @@
     "bug_numbers": [893505],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the update action was initiated from the PanelUI application update menu item.",
-    "labels": ["restart", "available", "manual"]
+    "labels": ["restart", "available", "manual", "unsupported"]
   },
   "UPDATE_CAN_USE_BITS_EXTERNAL": {
     "record_in_processes": ["main"],
@@ -9627,21 +9627,21 @@
   },
   "MEDIA_RECORDER_RECORDING_DURATION": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "68",
+    "alert_emails": ["bvandyk@mozilla.com", "nohlmeier@mozilla.com"],
+    "expires_in_version": "72",
     "kind": "exponential",
     "high": 3600,
     "n_buckets": 100,
-    "bug_numbers": [1400757],
+    "bug_numbers": [1400757, 1429765, 1480589, 1532391],
     "description": "The length of time (in seconds) that a recording lasted. Recorded when a recorder stops"
   },
   "MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "68",
+    "alert_emails": ["bvandyk@mozilla.com", "nohlmeier@mozilla.com"],
+    "expires_in_version": "72",
     "kind": "enumerated",
     "n_values": 4,
-    "bug_numbers": [1400757],
+    "bug_numbers": [1400757, 1429765, 1480589, 1532391],
     "description": "Records the type of timeout that happened while attempting to init the encoder. Audio = 0, Video = 1. Recorded immediately following a timeout"
   },
   "DEVTOOLS_ENTRY_POINT": {
@@ -11934,6 +11934,7 @@
     "expires_in_version": "never",
     "keyed": true,
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Count of use of audio/video codecs in HTMLMediaElements and WebAudio. Those with 'resource' prefix are approximate; report based on HTTP ContentType or sniffing. Those with 'webaudio' prefix are for WebAudio."
   },
   "FX_SANITIZE_TOTAL": {

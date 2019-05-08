@@ -58,7 +58,6 @@
   border-radius: 2px;
   display: flex;
   flex-direction: column;
-  text-align: left;
   height: 150px;
   cursor: pointer;
   position: relative;
@@ -74,7 +73,7 @@
 }
 
 #editBookmarkPanelRecommendationTitle {
-  font-size: 1.5rem;
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.25;
   margin-bottom: 6px;
@@ -82,7 +81,7 @@
 }
 
 #editBookmarkPanelRecommendationContent {
-  font-size: 1rem;
+  font-size: 11px;
   line-height: 1.5;
   margin: 0;
 }
@@ -102,13 +101,15 @@
 
 #editBookmarkPanelRecommendation #cfrClose {
   position: absolute;
-  right: 18px;
-  top: 18px;
+  padding: 3px 2px;
+  inset-inline-end: 16px;
+  top: 15px;
   width: 12px;
   height: 12px;
   background-image: url(chrome://browser/skin/stop.svg);
   background-size: 12px;
   background-repeat: no-repeat;
+  background-position: center;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;

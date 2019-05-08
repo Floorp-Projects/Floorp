@@ -68,6 +68,43 @@ async function assertShowingMessage(browser, videoID, expected) {
                "Video should be showing the expected state.");
 }
 
+/**
+ * Ensures that each of the videos loaded inside of a document in a
+ * <browser> have reached the HAVE_ENOUGH_DATA readyState.
+ *
+ * @param {Element} browser The <xul:browser> hosting the <video>(s)
+ *
+ * @return Promise
+ * @resolves When each <video> is in the HAVE_ENOUGH_DATA readyState.
+ */
+async function ensureVideosReady(browser) {
+  // PictureInPictureToggleChild waits for videos to fire their "canplay"
+  // event before considering them for the toggle, so we start by making
+  // sure each <video> has done this.
+  info(`Waiting for videos to be ready`);
+  await ContentTask.spawn(browser, null, async () => {
+    let videos = this.content.document.querySelectorAll("video");
+    for (let video of videos) {
+      if (video.readyState < content.HTMLMediaElement.HAVE_ENOUGH_DATA) {
+        await ContentTaskUtils.waitForEvent(video, "canplay");
+      }
+    }
+  });
+}
+
+/**
+ * Tests that the toggle opacity reaches or exceeds a certain threshold within
+ * a reasonable time.
+ *
+ * @param {Element} browser The <xul:browser> that has the <video> in it.
+ * @param {String} videoID The ID of the video element that we expect the toggle
+ * to appear on.
+ * @param {float} opacityThreshold The threshold that we expect the toggle opacity
+ * to reach or exceed within the time limit.
+ *
+ * @return Promise
+ * @resolves When the check has completed.
+ */
 async function toggleOpacityReachesThreshold(browser, videoID, opacityThreshold) {
   let args = { videoID, TOGGLE_ID, opacityThreshold };
   await ContentTask.spawn(browser, args, async args => {
@@ -82,6 +119,100 @@ async function toggleOpacityReachesThreshold(browser, videoID, opacityThreshold)
     }, `Toggle should have opacity >= ${opacityThreshold}`, 100, 100);
 
     ok(true, "Toggle reached target opacity.");
+  });
+}
+
+/**
+ * Tests that either all or none of the expected mousebutton events
+ * fire in web content when clicking on the page.
+ *
+ * Note: This function will only work on pages that load the
+ * click-event-helper.js script.
+ *
+ * @param {Element} browser The <xul:browser> that will receive the click
+ * event.
+ * @param {bool} isExpectingEvents True if we expect all of the normal
+ * mouse button events to fire. False if we expect none of them to fire.
+ *
+ * @return Promise
+ * @resolves When the check has completed.
+ */
+async function assertSawMouseEvents(browser, isExpectingEvents) {
+  const MOUSE_BUTTON_EVENTS = [
+    "pointerdown",
+    "mousedown",
+    "pointerup",
+    "mouseup",
+    "click",
+  ];
+
+  let mouseEvents = await ContentTask.spawn(browser, null, async () => {
+    return this.content.wrappedJSObject.getRecordedEvents();
+  });
+
+  let expectedEvents = isExpectingEvents ? MOUSE_BUTTON_EVENTS
+                                         : [];
+  Assert.deepEqual(mouseEvents, expectedEvents,
+                   "Expected to get the right mouse events.");
+}
+
+/**
+ * Ensures that a <video> inside of a <browser> is scrolled into view,
+ * and then returns the coordinates of its Picture-in-Picture toggle as well
+ * as whether or not the <video> element is showing the built-in controls.
+ *
+ * @param {Element} browser The <xul:browser> that has the <video> loaded in it.
+ * @param {String} videoID The ID of the video that has the toggle.
+ *
+ * @return Promise
+ * @resolves With the following Object structure:
+ *   {
+ *     toggleClientRect: {
+ *       top: <Number>,
+ *       right: <Number>,
+ *       left: <Number>,
+ *       bottom: <Number>,
+ *     },
+ *     controls: <Boolean>,
+ *   }
+ *
+ * Where toggleClientRect represents the client rectangle that the toggle is
+ * positioned in, and controls represents whether or not the video has the
+ * default control set displayed.
+ */
+async function prepareForToggleClick(browser, videoID) {
+  // For each video, make sure it's scrolled into view, and get the rect for
+  // the toggle while we're at it.
+  let args = { videoID, TOGGLE_ID };
+  return ContentTask.spawn(browser, args, async args => {
+    let { videoID, TOGGLE_ID } = args;
+    let video = content.document.getElementById(videoID);
+    video.scrollIntoView({ behaviour: "instant" });
+    let shadowRoot = video.openOrClosedShadowRoot;
+    let toggle = shadowRoot.getElementById(TOGGLE_ID);
+
+    if (!video.controls) {
+      // For no-controls <video> elements, an IntersectionObserver is used
+      // to know when we the PictureInPictureChild should begin tracking
+      // mousemove events. We don't exactly know when that IntersectionObserver
+      // will fire, so we poll a special testing function that will tell us when
+      // the video that we care about is being tracked.
+      let {PictureInPictureToggleChild} =
+        ChromeUtils.import("resource://gre/actors/PictureInPictureChild.jsm");
+      await ContentTaskUtils.waitForCondition(() => {
+        return PictureInPictureToggleChild.isTracking(video);
+      }, "Waiting for PictureInPictureToggleChild to be tracking the video.", 100, 100);
+    }
+    let rect = toggle.getBoundingClientRect();
+    return {
+      toggleClientRect: {
+        top: rect.top,
+        right: rect.right,
+        left: rect.left,
+        bottom: rect.bottom,
+      },
+      controls: video.controls,
+    };
   });
 }
 
@@ -109,50 +240,13 @@ async function testToggle(testURL, expectations) {
     gBrowser,
     url: testURL,
   }, async browser => {
-    let videoIDs = Object.keys(expectations);
+    await ensureVideosReady(browser);
 
-    // PictureInPictureToggleChild waits for videos to fire their "canplay"
-    // event before considering them for the toggle, so we start by making
-    // sure each <video> has done this.
-    info(`Waiting for videos to be ready`);
-    await ContentTask.spawn(browser, videoIDs, async videoIDs => {
-      for (let videoID of videoIDs) {
-        let video = content.document.getElementById(videoID);
-        if (video.readyState < content.HTMLMediaElement.HAVE_ENOUGH_DATA) {
-          await ContentTaskUtils.waitForEvent(video, "canplay");
-        }
-      }
-    });
-
-    for (let videoID of videoIDs) {
+    for (let [videoID, canToggle] of Object.entries(expectations)) {
       await SimpleTest.promiseFocus(browser);
       info(`Testing video with id: ${videoID}`);
 
-      // For each video, make sure it's scrolled into view, and get the rect for
-      // the toggle while we're at it.
-      let args = { videoID, TOGGLE_ID };
-      let toggleClientRect = await ContentTask.spawn(browser, args, async args => {
-        let { videoID, TOGGLE_ID } = args;
-        let video = content.document.getElementById(videoID);
-        video.scrollIntoView({ behaviour: "instant" });
-        let shadowRoot = video.openOrClosedShadowRoot;
-        let toggle = shadowRoot.getElementById(TOGGLE_ID);
-
-        if (!video.controls) {
-          // For no-controls <video> elements, an IntersectionObserver is used
-          // to know when we the PictureInPictureChild should begin tracking
-          // mousemove events. We don't exactly know when that IntersectionObserver
-          // will fire, so we poll a special testing function that will tell us when
-          // the video that we care about is being tracked.
-          let {PictureInPictureToggleChild} =
-            ChromeUtils.import("resource://gre/actors/PictureInPictureChild.jsm");
-          await ContentTaskUtils.waitForCondition(() => {
-            return PictureInPictureToggleChild.isTracking(video);
-          }, "Waiting for PictureInPictureToggleChild to be tracking the video.", 100, 100);
-        }
-        let rect = toggle.getBoundingClientRect();
-        return { top: rect.top, right: rect.right, left: rect.left, bottom: rect.bottom };
-      });
+      let { toggleClientRect, controls } = await prepareForToggleClick(browser, videoID);
 
       // Hover the mouse over the video to reveal the toggle.
       await BrowserTestUtils.synthesizeMouseAtCenter(`#${videoID}`, {
@@ -166,6 +260,9 @@ async function testToggle(testURL, expectations) {
       await toggleOpacityReachesThreshold(browser, videoID, HOVER_VIDEO_OPACITY);
 
       info("Hovering the toggle rect now.");
+      // The toggle center, because of how it slides out, is actually outside
+      // of the bounds of a click event. For now, we move the mouse in by a
+      // hard-coded 2 pixels along the x and y axis to achieve the hover.
       let toggleLeft = toggleClientRect.left + 2;
       let toggleTop = toggleClientRect.top + 2;
       await BrowserTestUtils.synthesizeMouseAtPoint(toggleLeft, toggleTop, {
@@ -177,16 +274,24 @@ async function testToggle(testURL, expectations) {
 
       await toggleOpacityReachesThreshold(browser, videoID, HOVER_TOGGLE_OPACITY);
 
-      if (expectations[videoID].canToggle) {
+      if (canToggle) {
         info("Clicking on toggle, and expecting a Picture-in-Picture window to open");
         let domWindowOpened = BrowserTestUtils.domWindowOpened(null);
         await BrowserTestUtils.synthesizeMouseAtPoint(toggleLeft, toggleTop, {}, browser);
         let win = await domWindowOpened;
         ok(win, "A Picture-in-Picture window opened.");
         await BrowserTestUtils.closeWindow(win);
+
+        // Make sure that clicking on the toggle resulted in no mouse button events
+        // being fired in content.
+        await assertSawMouseEvents(browser, false);
       } else {
         info("Clicking on toggle, and expecting no Picture-in-Picture window opens");
         await BrowserTestUtils.synthesizeMouseAtPoint(toggleLeft, toggleTop, {}, browser);
+
+        // For videos without the built-in controls, we expect that all mouse events
+        // should have fired - otherwise, the events are all suppressed.
+        await assertSawMouseEvents(browser, !controls);
 
         // The message to open the Picture-in-Picture window would normally be sent
         // immediately before this Promise resolved, so the window should have opened
@@ -200,6 +305,11 @@ async function testToggle(testURL, expectations) {
 
         ok(true, "No Picture-in-Picture window found.");
       }
+
+      // Click on the very top-left pixel of the document and ensure that we
+      // see all of the mouse events for it.
+      await BrowserTestUtils.synthesizeMouseAtPoint(1, 1, {}, browser);
+      assertSawMouseEvents(browser, true);
     }
   });
 }

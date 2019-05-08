@@ -59,7 +59,18 @@ const {
 const CONNECTION_TIMING_OUT_DELAY = 3000;
 const CONNECTION_CANCEL_DELAY = 13000;
 
-async function getRuntimeIcon(channel) {
+async function getRuntimeIcon(runtime, channel) {
+  if (runtime.isFenix) {
+    switch (channel) {
+      case "release":
+      case "beta":
+        return "chrome://devtools/skin/images/aboutdebugging-fenix.svg";
+      case "aurora":
+      default:
+        return "chrome://devtools/skin/images/aboutdebugging-fenix-nightly.svg";
+    }
+  }
+
   return (channel === "release" || channel === "beta" || channel === "aurora")
     ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
     : "chrome://devtools/skin/images/aboutdebugging-firefox-nightly.svg";
@@ -107,7 +118,7 @@ function connectRuntime(id) {
 
       const deviceDescription = await clientWrapper.getDeviceDescription();
       const compatibilityReport = await clientWrapper.checkVersionCompatibility();
-      const icon = await getRuntimeIcon(deviceDescription.channel);
+      const icon = await getRuntimeIcon(runtime, deviceDescription.channel);
 
       const {
         CHROME_DEBUG_ENABLED,
@@ -129,6 +140,19 @@ function connectRuntime(id) {
         await clientWrapper.getPreference(SERVICE_WORKERS_ENABLED, true);
       const serviceWorkersAvailable = serviceWorkersEnabled && !privateBrowsing;
 
+      // Fenix specific workarounds are needed until we can get proper server side APIs
+      // to detect Fenix and get the proper application names and versions.
+      // See https://github.com/mozilla-mobile/fenix/issues/2016.
+
+      // For Fenix runtimes, the ADB runtime name is more accurate than the one returned
+      // by the Device actor.
+      const runtimeName = runtime.isFenix ? runtime.name : deviceDescription.name;
+
+      // For Fenix runtimes, the version we should display is the application version
+      // retrieved from ADB, and not the Gecko version returned by the Device actor.
+      const version = runtime.isFenix ?
+        runtime.extra.adbPackageVersion : deviceDescription.version;
+
       const runtimeDetails = {
         clientWrapper,
         compatibilityReport,
@@ -137,10 +161,10 @@ function connectRuntime(id) {
         info: {
           deviceName: deviceDescription.deviceName,
           icon,
-          name: deviceDescription.name,
+          name: runtimeName,
           os: deviceDescription.os,
           type: runtime.type,
-          version: deviceDescription.version,
+          version,
         },
         isMultiE10s: deviceDescription.isMultiE10s,
         serviceWorkersAvailable,
@@ -345,6 +369,7 @@ function updateNetworkRuntimes(locations) {
       isConnectionFailed: false,
       isConnectionNotResponding: false,
       isConnectionTimeout: false,
+      isFenix: false,
       isUnavailable: false,
       isUnplugged: false,
       isUnknown: false,
@@ -366,11 +391,13 @@ function updateUSBRuntimes(adbRuntimes) {
       extra: {
         connectionParameters,
         deviceName: adbRuntime.deviceName,
+        adbPackageVersion: adbRuntime.versionName,
       },
       isConnecting: false,
       isConnectionFailed: false,
       isConnectionNotResponding: false,
       isConnectionTimeout: false,
+      isFenix: adbRuntime.isFenix,
       isUnavailable: adbRuntime.isUnavailable,
       isUnplugged: adbRuntime.isUnplugged,
       name: adbRuntime.shortName,

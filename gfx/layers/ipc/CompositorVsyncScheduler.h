@@ -120,6 +120,11 @@ class CompositorVsyncScheduler {
   // such a task already queued. Can be called from any thread.
   void PostVRTask(TimeStamp aTimestamp);
 
+  /**
+   * Cancel any VR task that has been scheduled but hasn't run yet.
+   */
+  void CancelCurrentVRTask();
+
   // This gets run at vsync time and "does" a composite (which really means
   // update internal state and call the owner to do the composite).
   void Composite(VsyncId aId, TimeStamp aVsyncTimestamp);
@@ -159,7 +164,7 @@ class CompositorVsyncScheduler {
   RefPtr<CancelableRunnable> mCurrentCompositeTask;
 
   mozilla::Monitor mCurrentVRTaskMonitor;
-  RefPtr<Runnable> mCurrentVRTask;
+  RefPtr<CancelableRunnable> mCurrentVRTask;
 };
 
 }  // namespace layers
