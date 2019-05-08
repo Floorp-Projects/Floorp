@@ -2030,8 +2030,7 @@ void RuntimeService::PropagateFirstPartyStorageAccessGranted(
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT_IF(
       aWindow->GetExtantDoc(),
-      aWindow->GetExtantDoc()->CookieSettings()->GetCookieBehavior() ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER);
+      aWindow->GetExtantDoc()->CookieSettings()->GetRejectThirdPartyTrackers());
 
   nsTArray<WorkerPrivate*> workers;
   GetWorkersForWindow(aWindow, workers);
@@ -2431,8 +2430,7 @@ void PropagateFirstPartyStorageAccessGrantedToWorkers(
   AssertIsOnMainThread();
   MOZ_ASSERT_IF(
       aWindow->GetExtantDoc(),
-      aWindow->GetExtantDoc()->CookieSettings()->GetCookieBehavior() ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER);
+      aWindow->GetExtantDoc()->CookieSettings()->GetRejectThirdPartyTrackers());
 
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {
