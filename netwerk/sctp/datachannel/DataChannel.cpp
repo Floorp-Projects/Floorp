@@ -299,7 +299,8 @@ DataChannelConnection::DataChannelConnection(DataConnectionListener* listener,
       mMaxMessageSizeSet(false),
       mMaxMessageSize(0),
       mAllocateEven(false),
-      mTransportHandler(aHandler) {
+      mTransportHandler(aHandler),
+      mDeferSend(false) {
   mCurrentStream = 0;
   mState = CLOSED;
   mSocket = nullptr;
@@ -844,11 +845,16 @@ void DataChannelConnection::SctpDtlsInput(const std::string& aTransportId,
   usrsctp_conninput(static_cast<void*>(this), packet.data(), packet.len(), 0);
 }
 
-void DataChannelConnection::SendPacket(nsAutoPtr<MediaPacket> packet) {
-  // LOG(("%p: SCTP/DTLS sent %ld bytes", this, len));
-  if (!mTransportId.empty() && mTransportHandler) {
-    mTransportHandler->SendPacket(mTransportId, std::move(*packet));
-  }
+void DataChannelConnection::SendPacket(std::unique_ptr<MediaPacket>&& packet) {
+  mSTS->Dispatch(NS_NewRunnableFunction(
+      "DataChannelConnection::SendPacket",
+      [this, self = RefPtr<DataChannelConnection>(this),
+       packet = std::move(packet)]() mutable {
+        // LOG(("%p: SCTP/DTLS sent %ld bytes", this, len));
+        if (!mTransportId.empty() && mTransportHandler) {
+          mTransportHandler->SendPacket(mTransportId, std::move(*packet));
+        }
+      }));
 }
 
 /* static */
@@ -873,17 +879,16 @@ int DataChannelConnection::SctpDtlsOutput(void* addr, void* buffer,
   // SCTP has an option for Apple, on IP connections only, to release at least
   // one of the locks before calling a packet output routine; with changes to
   // the underlying SCTP stack this might remove the need to use an async proxy.
-  nsAutoPtr<MediaPacket> packet(new MediaPacket);
+  std::unique_ptr<MediaPacket> packet(new MediaPacket);
   packet->SetType(MediaPacket::SCTP);
   packet->Copy(static_cast<const uint8_t*>(buffer), length);
 
-  // XXX It might be worthwhile to add an assertion against the thread
-  // somehow getting into the DataChannel/SCTP code again, as
-  // DISPATCH_SYNC is not fully blocking.  This may be tricky, as it
-  // needs to be a per-thread check, not a global.
-  peer->mSTS->Dispatch(WrapRunnable(RefPtr<DataChannelConnection>(peer),
-                                    &DataChannelConnection::SendPacket, packet),
-                       NS_DISPATCH_NORMAL);
+  if (NS_IsMainThread() && peer->mDeferSend) {
+    peer->mDeferredSend.emplace_back(std::move(packet));
+    return 0;
+  }
+
+  peer->SendPacket(std::move(packet));
   return 0;  // cheat!  Packets can always be dropped later anyways
 }
 #endif
@@ -1272,10 +1277,18 @@ bool DataChannelConnection::SendDeferredMessages() {
     //          likely the cause (an explicit EOR message partially sent whose
     //          remaining chunks are still being waited for).
     size_t written = 0;
+    mDeferSend = true;
     blocked = SendBufferedMessages(channel->mBufferedData, &written);
+    mDeferSend = false;
     if (written) {
       channel->DecrementBufferedAmount(written);
     }
+
+    for (auto&& packet : mDeferredSend) {
+      MOZ_ASSERT(written);
+      SendPacket(std::move(packet));
+    }
+    mDeferredSend.clear();
 
     // Update current stream index
     // Note: If ndata is not active, the outstanding data messages on this
@@ -2577,6 +2590,7 @@ int DataChannelConnection::SendMsgInternal(OutgoingMsg& msg, size_t* aWritten) {
     ssize_t written = usrsctp_sendv(
         mSocket, msg.GetData(), length, nullptr, 0, (void*)&msg.GetInfo(),
         (socklen_t)sizeof(struct sctp_sendv_spa), SCTP_SENDV_SPA, 0);
+
     if (written < 0) {
       error = errno;
       goto out;
@@ -2726,11 +2740,19 @@ int DataChannelConnection::SendDataMsgInternalOrBuffer(DataChannel& channel,
   MutexAutoLock lock(mLock);
   bool buffered;
   size_t written = 0;
+  mDeferSend = true;
   int error =
       SendMsgInternalOrBuffer(channel.mBufferedData, msg, buffered, &written);
+  mDeferSend = false;
   if (written) {
     channel.DecrementBufferedAmount(written);
   }
+
+  for (auto&& packet : mDeferredSend) {
+    MOZ_ASSERT(written);
+    SendPacket(std::move(packet));
+  }
+  mDeferredSend.clear();
 
   // Set pending type and stream index (if buffered)
   if (!error && buffered && !mPendingType) {
