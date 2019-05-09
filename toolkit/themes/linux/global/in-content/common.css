@@ -10,8 +10,12 @@ xul|tab[visuallyselected] {
   margin-bottom: 0;
 }
 
+/* Overriding appearance also avoids incorrect selection background color with
+   light text. */
 xul|button > xul|*.button-box,
-xul|menulist > xul|*.menulist-label-box {
+xul|menulist > xul|*.menulist-label-box,
+xul|*.radio-label-box,
+xul|*.checkbox-label-box {
   -moz-appearance: none;
 }
 
@@ -37,10 +41,6 @@ xul|checkbox[checked] > xul|*.checkbox-check,
 xul|*.radio-check[selected] {
   background-color: -moz-field;
   fill: -moz-fieldText;
-}
-
-xul|*.radio-label-box {
-  -moz-appearance: none;
 }
 
 xul|menulist:-moz-focusring > xul|*.menulist-label-box {
