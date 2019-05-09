@@ -6170,8 +6170,8 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
       }
       if (useCSS) {
         HTMLEditorRef().mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
-            curNode->AsElement(), nullptr, nsGkAtoms::align, &aAlignType,
-            false);
+            MOZ_KnownLive(curNode->AsElement()), nullptr, nsGkAtoms::align,
+            &aAlignType, false);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -10466,7 +10466,8 @@ nsresult HTMLEditRules::ChangeMarginStart(Element& aElement, bool aIncrease) {
 
   nsAtom& marginProperty = MarginPropertyAtomForIndent(aElement);
   nsAutoString value;
-  CSSEditUtils::GetSpecifiedProperty(aElement, marginProperty, value);
+  CSSEditUtils::GetSpecifiedProperty(aElement, MOZ_KnownLive(marginProperty),
+                                     value);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -10503,8 +10504,8 @@ nsresult HTMLEditRules::ChangeMarginStart(Element& aElement, bool aIncrease) {
     nsAutoString newValue;
     newValue.AppendFloat(f);
     newValue.Append(nsDependentAtomString(unit));
-    HTMLEditorRef().mCSSEditUtils->SetCSSProperty(aElement, marginProperty,
-                                                  newValue);
+    HTMLEditorRef().mCSSEditUtils->SetCSSProperty(
+        aElement, MOZ_KnownLive(marginProperty), newValue);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -10938,8 +10939,8 @@ nsresult HTMLEditRules::WillRelativeChangeZIndex(int32_t aChange, bool* aCancel,
     AutoSelectionRestorer restoreSelectionLater(HTMLEditorRef());
 
     int32_t zIndex;
-    nsresult rv =
-        HTMLEditorRef().RelativeChangeElementZIndex(*element, aChange, &zIndex);
+    nsresult rv = MOZ_KnownLive(HTMLEditorRef())
+                      .RelativeChangeElementZIndex(*element, aChange, &zIndex);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }

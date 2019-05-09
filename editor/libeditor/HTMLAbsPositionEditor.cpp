@@ -277,8 +277,9 @@ nsresult HTMLEditor::RefreshGrabberInternal() {
     return rv;
   }
 
+  RefPtr<Element> grabber = mGrabber.get();
   SetAnonymousElementPosition(mPositionedObjectX + 12, mPositionedObjectY - 14,
-                              mGrabber);
+                              grabber);
   return NS_OK;
 }
 
@@ -364,18 +365,23 @@ nsresult HTMLEditor::StartMoving() {
       NS_WARN_IF(!mAbsolutelyPositionedObject)) {
     return NS_ERROR_FAILURE;
   }
+  RefPtr<Element> positioningShadow = mPositioningShadow.get();
+  RefPtr<Element> absolutelyPositionedObject = mAbsolutelyPositionedObject;
   nsresult rv =
-      SetShadowPosition(*mPositioningShadow, *mAbsolutelyPositionedObject,
+      SetShadowPosition(*positioningShadow, *absolutelyPositionedObject,
                         mPositionedObjectX, mPositionedObjectY);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // make the shadow appear
   mPositioningShadow->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_class, true);
 
   // position it
-  mCSSEditUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::width,
+  positioningShadow = mPositioningShadow.get();
+  mCSSEditUtils->SetCSSPropertyPixels(*positioningShadow, *nsGkAtoms::width,
                                       mPositionedObjectWidth);
-  mCSSEditUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::height,
+  mCSSEditUtils->SetCSSPropertyPixels(*positioningShadow, *nsGkAtoms::height,
                                       mPositionedObjectHeight);
 
   mIsMoving = true;
@@ -424,7 +430,7 @@ nsresult HTMLEditor::EndMoving() {
 
   mGrabberClicked = false;
   mIsMoving = false;
-  nsresult rv = RefereshEditingUI();
+  nsresult rv = RefreshEditingUI();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

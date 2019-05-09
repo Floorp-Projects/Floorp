@@ -142,10 +142,10 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
   explicit nsTextEditorState(nsITextControlElement* aOwningElement);
   static nsTextEditorState* Construct(nsITextControlElement* aOwningElement,
                                       nsTextEditorState** aReusedState);
-  ~nsTextEditorState();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY ~nsTextEditorState();
 
   void Traverse(nsCycleCollectionTraversalCallback& cb);
-  void Unlink();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Unlink();
 
   void PrepareForReuse() {
     Unlink();
@@ -377,8 +377,8 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
 
   void ValueWasChanged(bool aNotify);
 
-  void DestroyEditor();
-  void Clear();
+  MOZ_CAN_RUN_SCRIPT void DestroyEditor();
+  MOZ_CAN_RUN_SCRIPT void Clear();
 
   nsresult InitializeRootNode();
 

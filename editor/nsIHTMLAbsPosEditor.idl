@@ -12,6 +12,7 @@ interface nsIHTMLAbsPosEditor : nsISupports
   /**
    * true if Absolute Positioning handling is enabled in the editor
    */
+  [can_run_script]  // Setter only.
   attribute boolean absolutePositioningEnabled;
 
 
@@ -35,5 +36,6 @@ interface nsIHTMLAbsPosEditor : nsISupports
    * even hiding it.
    * FYI: Current user in script is only BlueGriffon.
    */
+  [can_run_script]
   void refreshGrabber();
 };

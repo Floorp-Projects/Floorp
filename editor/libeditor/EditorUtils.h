@@ -406,19 +406,21 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
  * methods.
  ***************************************************************************/
 class MOZ_RAII AutoTransactionBatchExternal final {
- private:
-  OwningNonNull<EditorBase> mEditorBase;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
  public:
-  explicit AutoTransactionBatchExternal(
+  MOZ_CAN_RUN_SCRIPT explicit AutoTransactionBatchExternal(
       EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mEditorBase(aEditorBase) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    mEditorBase->BeginTransaction();
+    mEditorBase.BeginTransaction();
   }
 
-  ~AutoTransactionBatchExternal() { mEditorBase->EndTransaction(); }
+  MOZ_CAN_RUN_SCRIPT ~AutoTransactionBatchExternal() {
+    MOZ_KnownLive(mEditorBase).EndTransaction();
+  }
+
+ private:
+  EditorBase& mEditorBase;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_STACK_CLASS AutoRangeArray final {

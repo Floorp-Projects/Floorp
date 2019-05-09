@@ -356,7 +356,8 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mEditorStatus != eEditorCreationInProgress) {
-    mComposerCommandsUpdater->NotifyDocumentCreated();
+    RefPtr<ComposerCommandsUpdater> updater = mComposerCommandsUpdater;
+    updater->NotifyDocumentCreated();
     return NS_ERROR_FAILURE;
   }
 

@@ -180,7 +180,7 @@ class EditorBase : public nsIEditor,
    * PostCreate should be called after Init, and is the time that the editor
    * tells its documentStateObservers that the document has been created.
    */
-  nsresult PostCreate();
+  MOZ_CAN_RUN_SCRIPT nsresult PostCreate();
 
   /**
    * PreDestroy is called before the editor goes away, and gives the editor a
@@ -189,7 +189,7 @@ class EditorBase : public nsIEditor,
    * are being destroyed (so there is no need to modify any nsISelections,
    * nor is it safe to do so)
    */
-  virtual void PreDestroy(bool aDestroyingFrames);
+  MOZ_CAN_RUN_SCRIPT virtual void PreDestroy(bool aDestroyingFrames);
 
   bool IsInitialized() const { return !!mDocument; }
   bool Destroyed() const { return mDidPreDestroy; }
@@ -1405,7 +1405,7 @@ class EditorBase : public nsIEditor,
   EditorDOMPoint JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
                                               nsIContent& aRightNode);
 
-  nsresult DoTransactionInternal(nsITransaction* aTxn);
+  MOZ_CAN_RUN_SCRIPT nsresult DoTransactionInternal(nsITransaction* aTxn);
 
   virtual bool IsBlockNode(nsINode* aNode);
 
@@ -1783,7 +1783,7 @@ class EditorBase : public nsIEditor,
   void EndPlaceholderTransaction();
 
   void BeginUpdateViewBatch();
-  void EndUpdateViewBatch();
+  MOZ_CAN_RUN_SCRIPT void EndUpdateViewBatch();
 
   /**
    * Used by AutoTransactionBatch.  After calling BeginTransactionInternal(),
@@ -1793,7 +1793,7 @@ class EditorBase : public nsIEditor,
    *     use it instead?
    */
   void BeginTransactionInternal();
-  void EndTransactionInternal();
+  MOZ_CAN_RUN_SCRIPT void EndTransactionInternal();
 
  protected:  // Shouldn't be used by friend classes
   /**
@@ -1860,18 +1860,18 @@ class EditorBase : public nsIEditor,
   /**
    * Called after a transaction is done successfully.
    */
-  void DoAfterDoTransaction(nsITransaction* aTxn);
+  MOZ_CAN_RUN_SCRIPT void DoAfterDoTransaction(nsITransaction* aTxn);
 
   /**
    * Called after a transaction is undone successfully.
    */
 
-  void DoAfterUndoTransaction();
+  MOZ_CAN_RUN_SCRIPT void DoAfterUndoTransaction();
 
   /**
    * Called after a transaction is redone successfully.
    */
-  void DoAfterRedoTransaction();
+  MOZ_CAN_RUN_SCRIPT void DoAfterRedoTransaction();
 
   /**
    * Tell the doc state listeners that the doc state has changed.
@@ -1881,8 +1881,8 @@ class EditorBase : public nsIEditor,
     eDocumentToBeDestroyed,
     eDocumentStateChanged
   };
-  nsresult NotifyDocumentListeners(
-      TDocumentListenerNotification aNotificationType);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  NotifyDocumentListeners(TDocumentListenerNotification aNotificationType);
 
   /**
    * Make the given selection span the entire document.
@@ -2048,17 +2048,19 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_RAII AutoTransactionBatch final {
    public:
-    explicit AutoTransactionBatch(
+    MOZ_CAN_RUN_SCRIPT explicit AutoTransactionBatch(
         EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mEditorBase(aEditorBase) {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      mEditorBase->BeginTransactionInternal();
+      mEditorBase.BeginTransactionInternal();
     }
 
-    ~AutoTransactionBatch() { mEditorBase->EndTransactionInternal(); }
+    MOZ_CAN_RUN_SCRIPT ~AutoTransactionBatch() {
+      MOZ_KnownLive(mEditorBase).EndTransactionInternal();
+    }
 
    protected:
-    OwningNonNull<EditorBase> mEditorBase;
+    EditorBase& mEditorBase;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
@@ -2185,14 +2187,16 @@ class EditorBase : public nsIEditor,
    */
   class MOZ_RAII AutoUpdateViewBatch final {
    public:
-    explicit AutoUpdateViewBatch(
+    MOZ_CAN_RUN_SCRIPT explicit AutoUpdateViewBatch(
         EditorBase& aEditorBase MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : mEditorBase(aEditorBase) {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       mEditorBase.BeginUpdateViewBatch();
     }
 
-    ~AutoUpdateViewBatch() { mEditorBase.EndUpdateViewBatch(); }
+    MOZ_CAN_RUN_SCRIPT ~AutoUpdateViewBatch() {
+      MOZ_KnownLive(mEditorBase).EndUpdateViewBatch();
+    }
 
    protected:
     EditorBase& mEditorBase;
