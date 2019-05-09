@@ -177,7 +177,7 @@ CustomizeMode.prototype = {
     let lwthemeButton = this.$("customization-lwtheme-button");
     let lwthemeIcon = lwthemeButton.icon;
     let theme = (await AddonManager.getAddonsByTypes(["theme"])).find(addon => addon.isActive);
-    lwthemeIcon.style.backgroundImage = theme ? "url(" + theme.iconURL + ")" : "";
+    lwthemeIcon.style.backgroundImage = (theme && theme.iconURL) ? "url(" + theme.iconURL + ")" : "";
   },
 
   setTab(aTab) {
@@ -1341,7 +1341,7 @@ CustomizeMode.prototype = {
       let tbb = doc.createXULElement("toolbarbutton");
       tbb.theme = aTheme;
       tbb.setAttribute("label", aTheme.name);
-      tbb.setAttribute("image", aTheme.iconURL);
+      tbb.setAttribute("image", aTheme.iconURL || "chrome://mozapps/skin/extensions/themeGeneric.svg");
       if (aTheme.description)
         tbb.setAttribute("tooltiptext", aTheme.description);
       tbb.setAttribute("tabindex", "0");
@@ -1364,8 +1364,14 @@ CustomizeMode.prototype = {
     if (currentTheme) {
       importantThemes.add(currentTheme.id);
     }
+    let importantList = [];
+    for (let importantTheme of importantThemes) {
+      importantList.push(...themes.splice(themes.findIndex(theme => theme.id == importantTheme), 1));
+    }
 
-    themes.sort((a, b) => importantThemes.has(a.id) - importantThemes.has(b.id));
+    // Sort the remainder alphabetically:
+    themes.sort((a, b) => a.name.localeCompare(b.name));
+    themes = importantList.concat(themes);
 
     if (themes.length > MAX_THEME_COUNT)
       themes.length = MAX_THEME_COUNT;
@@ -1516,6 +1522,10 @@ CustomizeMode.prototype = {
         }
         break;
     }
+  },
+
+  async onInstalled(addon) {
+    await this.onEnabled(addon);
   },
 
   async onEnabled(addon) {
