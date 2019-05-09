@@ -11,7 +11,9 @@
 #  define SCTP_DTLS_SUPPORTED 1
 #endif
 
+#include <memory>
 #include <string>
+#include <vector>
 #include <errno.h>
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
@@ -229,7 +231,7 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
 #ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void* data);
-  void SendPacket(nsAutoPtr<MediaPacket> packet);
+  void SendPacket(std::unique_ptr<MediaPacket>&& packet);
   void SctpDtlsInput(const std::string& aTransportId, MediaPacket& packet);
   static int SctpDtlsOutput(void* addr, void* buffer, size_t length,
                             uint8_t tos, uint8_t set_df);
@@ -338,6 +340,11 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   nsCOMPtr<nsIThread> mInternalIOThread;
   uint8_t mPendingType;
   nsCString mRecvBuffer;
+
+  // Workaround to prevent a message from being received on main before the
+  // sender sees the decrease in bufferedAmount.
+  bool mDeferSend;
+  std::vector<std::unique_ptr<MediaPacket>> mDeferredSend;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool mShutdown;
