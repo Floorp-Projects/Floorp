@@ -8,9 +8,10 @@
 [scriptable, uuid(050cdc00-3b8e-11d3-9ce4-a458f454fcbc)]
 interface nsIDocumentStateListener : nsISupports
 {
-
-	void        NotifyDocumentCreated();
-	void        NotifyDocumentWillBeDestroyed();
-	void        NotifyDocumentStateChanged(in boolean nowDirty);
-
+  [can_run_script]
+  void NotifyDocumentCreated();
+  [can_run_script]
+  void NotifyDocumentWillBeDestroyed();
+  [can_run_script]
+  void NotifyDocumentStateChanged(in boolean nowDirty);
 };

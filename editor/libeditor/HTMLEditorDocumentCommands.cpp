@@ -174,7 +174,7 @@ nsresult SetDocumentStateCommand::DoCommandParams(
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
-      htmlEditor->EnableObjectResizer(enabled);
+      MOZ_KnownLive(htmlEditor)->EnableObjectResizer(enabled);
       return NS_OK;
     }
     case Command::ToggleInlineTableEditor: {
@@ -187,7 +187,7 @@ nsresult SetDocumentStateCommand::DoCommandParams(
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
-      htmlEditor->EnableInlineTableEditor(enabled);
+      MOZ_KnownLive(htmlEditor)->EnableInlineTableEditor(enabled);
       return NS_OK;
     }
     case Command::ToggleAbsolutePositionEditor: {
@@ -200,7 +200,7 @@ nsresult SetDocumentStateCommand::DoCommandParams(
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
-      htmlEditor->EnableAbsolutePositionEditor(enabled);
+      MOZ_KnownLive(htmlEditor)->EnableAbsolutePositionEditor(enabled);
       return NS_OK;
     }
     default:
