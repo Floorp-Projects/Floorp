@@ -1654,6 +1654,14 @@ class RTCPeerConnection {
       }
     }
 
+    if (label.length > 32767) {
+      const byteCounter = new TextEncoder("utf-8");
+      if (byteCounter.encode(label).length > 65535) {
+        throw new this._win.DOMException(
+            "label cannot be longer than 65535 bytes", "TypeError");
+      }
+    }
+
     if (!negotiated) {
       id = null;
     } else if (id === null) {
