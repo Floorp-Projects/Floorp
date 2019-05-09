@@ -533,8 +533,6 @@ ShmemTextureData* ShmemTextureData::Create(gfx::IntSize aSize,
       RGBDescriptor(aSize, aFormat, hasIntermediateBuffer);
 
   return new ShmemTextureData(descriptor, aMoz2DBackend, shm);
-
-  return nullptr;
 }
 
 TextureData* ShmemTextureData::CreateSimilar(
