@@ -147,15 +147,17 @@ open class HomeActivity : AppCompatActivity() {
         openToBrowser(BrowserDirection.FromGlobal, customTabSessionId)
     }
 
+    @Suppress("LongParameterList")
     fun openToBrowserAndLoad(
         searchTermOrURL: String,
         newTab: Boolean,
         from: BrowserDirection,
         customTabSessionId: String? = null,
-        engine: SearchEngine? = null
+        engine: SearchEngine? = null,
+        forceSearch: Boolean = false
     ) {
         openToBrowser(from, customTabSessionId)
-        load(searchTermOrURL, newTab, engine)
+        load(searchTermOrURL, newTab, engine, forceSearch)
     }
 
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
@@ -180,7 +182,7 @@ open class HomeActivity : AppCompatActivity() {
         navHost.navController.navigate(directions)
     }
 
-    private fun load(searchTermOrURL: String, newTab: Boolean, engine: SearchEngine?) {
+    private fun load(searchTermOrURL: String, newTab: Boolean, engine: SearchEngine?, forceSearch: Boolean) {
         val isPrivate = this.browsingModeManager.isPrivate
 
         val loadUrlUseCase = if (newTab) {
@@ -198,7 +200,7 @@ open class HomeActivity : AppCompatActivity() {
             } else components.useCases.searchUseCases.defaultSearch.invoke(searchTerms, engine)
         }
 
-        if (searchTermOrURL.isUrl()) {
+        if (!forceSearch && searchTermOrURL.isUrl()) {
             loadUrlUseCase.invoke(searchTermOrURL.toNormalizedUrl())
         } else {
             searchUseCase.invoke(searchTermOrURL)

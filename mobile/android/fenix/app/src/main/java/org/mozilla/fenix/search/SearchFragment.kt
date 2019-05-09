@@ -228,7 +228,8 @@ class SearchFragment : Fragment(), BackHandler {
                             searchTermOrURL = it.searchTerms,
                             newTab = sessionId == null,
                             from = BrowserDirection.FromSearch,
-                            engine = it.engine
+                            engine = it.engine,
+                            forceSearch = true
                         )
 
                         val engine = it.engine ?: requireComponents
