@@ -169,26 +169,21 @@ nsresult nsCSSFilterInstance::SetAttributesForContrast(
 
 nsresult nsCSSFilterInstance::SetAttributesForDropShadow(
     FilterPrimitiveDescription& aDescr) {
-  nsCSSShadowArray* shadows = mFilter.GetDropShadow();
-  if (!shadows || shadows->Length() != 1) {
-    MOZ_ASSERT_UNREACHABLE("Exactly one drop shadow should have been parsed.");
-    return NS_ERROR_FAILURE;
-  }
+  const auto& shadow = mFilter.GetDropShadow();
 
   DropShadowAttributes atts;
-  nsCSSShadowItem* shadow = shadows->ShadowAt(0);
 
   // Set drop shadow blur radius.
-  Size radiusInFilterSpace = BlurRadiusToFilterSpace(shadow->mRadius);
+  Size radiusInFilterSpace = BlurRadiusToFilterSpace(shadow.blur.ToAppUnits());
   atts.mStdDeviation = radiusInFilterSpace;
 
   // Set offset.
-  IntPoint offsetInFilterSpace =
-      OffsetToFilterSpace(shadow->mXOffset, shadow->mYOffset);
+  IntPoint offsetInFilterSpace = OffsetToFilterSpace(
+      shadow.horizontal.ToAppUnits(), shadow.vertical.ToAppUnits());
   atts.mOffset = offsetInFilterSpace;
 
   // Set color. If unspecified, use the CSS color property.
-  nscolor shadowColor = shadow->mColor.CalcColor(mShadowFallbackColor);
+  nscolor shadowColor = shadow.color.CalcColor(mShadowFallbackColor);
   atts.mColor = ToAttributeColor(shadowColor);
 
   aDescr.Attributes() = AsVariant(std::move(atts));

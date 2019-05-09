@@ -480,9 +480,12 @@ cbindgen-types = [
     { gecko = "StyleGenericBasicShape", servo = "values::generics::basic_shape::BasicShape" },
     { gecko = "StyleArcSlice", servo = "style_traits::arc_slice::ArcSlice" },
     { gecko = "StyleForgottenArcSlicePtr", servo = "style_traits::arc_slice::ForgottenArcSlicePtr" },
+    { gecko = "StyleOwnedSlice", servo = "style_traits::owned_slice::OwnedSlice" },
     { gecko = "StyleMozContextProperties", servo = "values::specified::svg::MozContextProperties" },
     { gecko = "StyleQuotes", servo = "values::specified::list::Quotes" },
     { gecko = "StyleOwnedStr", servo = "style_traits::owned_str::OwnedStr" },
+    { gecko = "StyleGenericBoxShadow", servo = "values::generics::effects::BoxShadow" },
+    { gecko = "StyleGenericSimpleShadow", servo = "values::generics::effects::SimpleShadow" },
 ]
 
 mapped-generic-types = [
