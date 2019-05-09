@@ -1158,19 +1158,9 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString& host,
 }
 
 nsresult NrUdpSocketIpc::SetAddress() {
-  uint16_t port;
-  if (NS_FAILED(socket_child_->GetLocalPort(&port))) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to get local port");
-    return NS_OK;
-  }
+  uint16_t port = socket_child_->LocalPort();
 
-  nsAutoCString address;
-  if (NS_FAILED(socket_child_->GetLocalAddress(address))) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to get local address");
-    return NS_OK;
-  }
+  nsAutoCString address(socket_child_->LocalAddress());
 
   PRNetAddr praddr;
   if (PR_SUCCESS != PR_InitializeNetAddr(PR_IpAddrAny, port, &praddr)) {
@@ -1542,12 +1532,7 @@ void NrUdpSocketIpc::connect_i(const nsACString& host, const uint16_t port) {
     return;
   }
 
-  if (NS_FAILED(socket_child_->Connect(proxy, host, port))) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to connect UDP socket");
-    mon.NotifyAll();
-    return;
-  }
+  socket_child_->Connect(proxy, host, port);
 }
 
 void NrUdpSocketIpc::sendto_i(const net::NetAddr& addr,
