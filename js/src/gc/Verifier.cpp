@@ -266,7 +266,7 @@ static bool IsMarkedOrAllocated(TenuredCell* cell) {
   return cell->isMarkedAny();
 }
 
-struct CheckEdgeTracer : public JS::CallbackTracer {
+struct CheckEdgeTracer final : public JS::CallbackTracer {
   VerifyNode* node;
   explicit CheckEdgeTracer(JSRuntime* rt)
       : JS::CallbackTracer(rt), node(nullptr) {}
