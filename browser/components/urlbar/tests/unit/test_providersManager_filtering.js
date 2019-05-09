@@ -250,3 +250,85 @@ add_task(async function test_nofilter_immediate() {
   Assert.deepEqual(context.results[0].source, UrlbarUtils.RESULT_SOURCE.TABS,
                    "Should find only a tab match");
 });
+
+add_task(async function test_nofilter_restrict() {
+  // Checks that even if a pref is disabled, we still return results on a
+  // restriction token.
+  let controller = new UrlbarController({
+    browserWindow: {
+      location: {
+        href: AppConstants.BROWSER_CHROME_URL,
+      },
+    },
+  });
+
+  let matches = [
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                     UrlbarUtils.RESULT_SOURCE.TABS,
+                     { url: "http://mozilla.org/foo_tab/" }),
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.URL,
+                     UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+                     { url: "http://mozilla.org/foo_bookmark/" }),
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.URL,
+                     UrlbarUtils.RESULT_SOURCE.HISTORY,
+                     { url: "http://mozilla.org/foo_history/" }),
+    new UrlbarResult(UrlbarUtils.RESULT_TYPE.SEARCH,
+                     UrlbarUtils.RESULT_SOURCE.SEARCH,
+                     { engine: "noengine" }),
+  ];
+
+  /**
+   * A test provider.
+   */
+  class TestProvider extends UrlbarProvider {
+    get name() {
+      return "MyProvider";
+    }
+    get type() {
+      return UrlbarUtils.PROVIDER_TYPE.IMMEDIATE;
+    }
+    get sources() {
+      return [
+        UrlbarUtils.RESULT_SOURCE.TABS,
+        UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        UrlbarUtils.RESULT_SOURCE.SEARCH,
+      ];
+    }
+    async startQuery(context, add) {
+      Assert.ok(true, "expected provider was invoked");
+      for (let match of matches) {
+        add(this, match);
+      }
+    }
+    cancelQuery(context) {}
+  }
+  UrlbarProvidersManager.registerProvider(new TestProvider());
+
+  let typeToPropertiesMap = new Map([
+    ["HISTORY", {source: "HISTORY", pref: "history"}],
+    ["BOOKMARK", {source: "BOOKMARKS", pref: "bookmark"}],
+    ["OPENPAGE", {source: "TABS", pref: "openpage"}],
+    ["SEARCH", {source: "SEARCH", pref: "searches"}],
+  ]);
+  for (let [type, token] of Object.entries(UrlbarTokenizer.RESTRICT)) {
+    let properties = typeToPropertiesMap.get(type);
+    if (!properties) {
+      continue;
+    }
+    info("Restricting on " + type);
+    let context = createContext(token + " foo", {
+      providers: ["MyProvider"],
+    });
+    // Disable the corresponding pref.
+    const pref = "browser.urlbar.suggest." + properties.pref;
+    info("Disabling " + pref);
+    Services.prefs.setBoolPref(pref, false);
+    await controller.startQuery(context, controller);
+    Assert.equal(context.results.length, 1, "Should find one result");
+    Assert.equal(context.results[0].source,
+                 UrlbarUtils.RESULT_SOURCE[properties.source],
+                 "Check result source");
+    Services.prefs.clearUserPref(pref);
+  }
+});
