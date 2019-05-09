@@ -119,7 +119,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   }
 
   function finish() {
-    opener.setTimeout("done()", 0);
+    opener.setTimeout(function() { this.done(); }, 0);
     var i = document.getElementById("ifr");
     i.remove(); // This is a crash test!
     window.close();
