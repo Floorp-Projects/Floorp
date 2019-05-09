@@ -313,7 +313,8 @@
 
 namespace js {
 
-#define JS_FOR_EACH_INTERNAL_MEMORY_USE(_)
+#define JS_FOR_EACH_INTERNAL_MEMORY_USE(_)      \
+  _(ArrayBufferContents)
 
 #define JS_FOR_EACH_MEMORY_USE(_)               \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_)              \

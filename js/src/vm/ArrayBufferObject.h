@@ -439,6 +439,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   void setDataPointer(BufferContents contents);
   void setByteLength(uint32_t length);
 
+  size_t associatedBytes() const;
+
   uint32_t flags() const;
   void setFlags(uint32_t flags);
 
