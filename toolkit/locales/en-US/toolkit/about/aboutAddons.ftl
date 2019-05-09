@@ -223,9 +223,9 @@ private-browsing-description2 =
     there. We’ve made this change to keep your private browsing private.
     <label data-l10n-name="private-browsing-learn-more">Learn how to manage extension settings</label>
 
-extensions-view-discover =
-    .name = Get Add-ons
-    .tooltiptext = { extensions-view-discover.name }
+extensions-view-discopane =
+    .name = Recommendations
+    .tooltiptext = { extensions-view-discopane.name }
 
 extensions-view-recent-updates =
     .name = Recent Updates
