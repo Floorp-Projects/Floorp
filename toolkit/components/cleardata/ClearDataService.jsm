@@ -362,10 +362,13 @@ const QuotaCleaner = {
     // Clear sessionStorage
     Services.obs.notifyObservers(null, "browser:purge-sessionStorage", aHost);
 
+    let exceptionThrown = false;
+
     // ServiceWorkers: they must be removed before cleaning QuotaManager.
-    return ServiceWorkerCleanUp.removeFromHost(aHost)
-      .then(_ => /* exceptionThrown = */ false, _ => /* exceptionThrown = */ true)
-      .then(exceptionThrown => {
+    return Promise.all([
+      ServiceWorkerCleanUp.removeFromHost("http://" + aHost).catch(_ => { exceptionThrown = true; }),
+      ServiceWorkerCleanUp.removeFromHost("https://" + aHost).catch(_ => { exceptionThrown = true; }),
+    ]).then(() => {
         // QuotaManager: In the event of a failure, we call reject to propagate
         // the error upwards.
 
