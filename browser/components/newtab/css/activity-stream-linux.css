@@ -2038,6 +2038,9 @@ main {
         margin-bottom: 0; }
         [lwt-newtab-brighttext] .ds-hero .wrapper .meta header {
           color: #FFF; }
+      .ds-hero .wrapper .meta .context,
+      .ds-hero .wrapper .meta .source {
+        margin: 0 0 4px; }
       .ds-hero .wrapper .meta .context {
         color: #008EA4; }
         [lwt-newtab-brighttext] .ds-hero .wrapper .meta .context {
@@ -2643,6 +2646,8 @@ main {
       line-height: 20px;
       max-height: 4.28571em;
       overflow: hidden; }
+    .ds-card .meta .source {
+      margin-bottom: 2px; }
     .ds-card .meta .context,
     .ds-card .meta .source {
       font-size: 13px;
@@ -3746,7 +3751,7 @@ a.firstrun-link {
     .trailhead.syncCohort .trailheadInner {
       grid-template-columns: 4fr 3fr; }
     .trailhead.syncCohort .trailheadContent .trailheadBenefits {
-      background: url("../data/content/assets/sync-devices.svg");
+      background: url("../data/content/assets/sync-devices-trailhead.svg");
       background-position: center center;
       background-repeat: no-repeat;
       background-size: contain;
@@ -3970,6 +3975,12 @@ a.firstrun-link {
     width: 100%;
     text-align: center; }
 
+.inline-onboarding.activity-stream.welcome {
+  overflow: scroll; }
+
+.inline-onboarding .modalOverlayInner {
+  position: absolute; }
+
 .inline-onboarding .outer-wrapper {
   position: relative; }
   .inline-onboarding .outer-wrapper .prefs-button button {
@@ -3977,10 +3988,3 @@ a.firstrun-link {
 
 .inline-onboarding .asrouter-toggle {
   position: absolute; }
-
-@media (max-height: 760px), (max-width: 924px) {
-  .activity-stream.welcome.inline-onboarding {
-    overflow: auto; }
-  .trailhead {
-    position: absolute;
-    top: 20px; } }

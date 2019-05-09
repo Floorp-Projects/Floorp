@@ -94,7 +94,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_move_down": "下移",
   "section_menu_action_privacy_notice": "隱私權公告",
   "firstrun_title": "Firefox 隨身帶著走",
-  "firstrun_content": "在您的任何裝置上取得書籤、瀏覽紀錄、密碼及其他設定。",
+  "firstrun_content": "在您的各種裝置上同步書籤、瀏覽紀錄、登入資訊及其他設定。",
   "firstrun_learn_more_link": "了解 Firefox Accounts 的更多資訊",
   "firstrun_form_header": "輸入您的電子郵件地址",
   "firstrun_form_sub_header": "繼續前往 Firefox Sync",

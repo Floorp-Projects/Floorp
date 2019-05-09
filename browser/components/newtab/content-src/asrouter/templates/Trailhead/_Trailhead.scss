@@ -63,7 +63,7 @@
 
     .trailheadContent {
       .trailheadBenefits {
-        background: url('#{$image-path}sync-devices.svg');
+        background: url('#{$image-path}sync-devices-trailhead.svg');
         background-position: center center;
         background-repeat: no-repeat;
         background-size: contain;
@@ -401,6 +401,14 @@
 }
 
 .inline-onboarding {
+  &.activity-stream.welcome {
+    overflow: scroll;
+  }
+
+  .modalOverlayInner {
+    position: absolute;
+  }
+
   .outer-wrapper {
     position: relative;
 
@@ -413,17 +421,5 @@
 
   .asrouter-toggle {
     position: absolute;
-  }
-}
-
-// If the window is too short or narrow, we need to allow scrolling so user can get to Start Browsing button.
-@media (max-height: 760px), (max-width: 924px) {
-  .activity-stream.welcome.inline-onboarding {
-    overflow: auto;
-  }
-
-  .trailhead {
-    position: absolute;
-    top: 20px;
   }
 }

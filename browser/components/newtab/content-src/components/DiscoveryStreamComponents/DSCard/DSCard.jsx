@@ -41,18 +41,13 @@ export class DSCard extends React.PureComponent {
           </div>
           <div className="meta">
             <div className="info-wrap">
+              <p className="source">{this.props.source}</p>
               <header className="title">{this.props.title}</header>
               {this.props.excerpt && <p className="excerpt">{this.props.excerpt}</p>}
             </div>
-            <p>
-              {this.props.context && (
-                <span>
-                  <span className="context">{this.props.context}</span>
-                  <br />
-                </span>
-              )}
-              <span className="source">{this.props.source}</span>
-            </p>
+            {this.props.context && (
+              <p className="context">{this.props.context}</p>
+            )}
           </div>
           <ImpressionStats
             campaignId={this.props.campaignId}
