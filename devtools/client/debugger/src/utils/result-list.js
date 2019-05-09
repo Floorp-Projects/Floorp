@@ -9,7 +9,8 @@ import { transitionTimeout } from "../components/shared/Modal";
 
 export function scrollList(
   resultList: Element[],
-  index: number
+  index: number,
+  delayed: boolean = false
 ): void {
   if (!resultList.hasOwnProperty(index)) {
     return;
@@ -19,11 +20,17 @@ export function scrollList(
 
   const scroll = () => {
     if (isFirefox()) {
-      resultEl.scrollIntoView({ block: "nearest", behavior: "auto" });
+      resultEl.scrollIntoView({ block: "center", behavior: "smooth" });
     } else {
       chromeScrollList(resultEl, index);
     }
   };
+
+  if (delayed) {
+    // Wait for Modal Transition timeout before scrolling to resultEl.
+    setTimeout(scroll, transitionTimeout + 10);
+    return;
+  }
 
   scroll();
 }
