@@ -15,6 +15,12 @@
                                                   android:title="@string/pref_sync"
                                                   android:persistent="false" />
 
+    <org.mozilla.gecko.preferences.DefaultBrowserPreference
+            android:key="android.not_a_preference.default_browser.link"
+            android:title="@string/pref_default_browser"
+            android:persistent="false"
+            url="https://support.mozilla.org/kb/make-firefox-default-browser-android?utm_source=inproduct&amp;utm_medium=settings&amp;utm_campaign=mobileandroid"/>
+
     <PreferenceScreen android:key="android.not_a_preference.general_home"
                       android:title="@string/pref_category_home"
                       android:summary="@string/pref_category_home_summary"
