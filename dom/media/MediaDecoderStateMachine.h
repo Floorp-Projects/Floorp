@@ -625,6 +625,8 @@ class MediaDecoderStateMachine
   void OnSuspendTimerResolved();
   void CancelSuspendTimer();
 
+  bool IsInSeamlessLooping() const;
+
   bool mCanPlayThrough = false;
 
   bool mIsLiveStream = false;
