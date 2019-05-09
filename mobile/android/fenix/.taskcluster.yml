@@ -45,7 +45,7 @@ tasks:
 
     trust_level:
       # Pull requests on main repository can't be trusted because anybody can open a PR on it, without a review
-      $if: 'tasks_for in ["github-push", "github-release", "cron"] && event.repository.html_url == "https://github.com/mitchhentges/fenix"'
+      $if: 'tasks_for in ["github-push", "github-release", "cron"] && event.repository.html_url == "https://github.com/mozilla-mobile/fenix"'
       then: 3
       else: 1
   in:
