@@ -15,7 +15,7 @@ private object Versions {
     const val leanplum = "4.3.1"
 
     const val androidx_appcompat = "1.1.0-alpha05"
-    const val androidx_constraint_layout = "2.0.0-alpha5"
+    const val androidx_constraint_layout = "2.0.0-beta1"
     const val androidx_preference = "1.1.0-alpha05"
     const val androidx_legacy = "1.0.0"
     const val androidx_annotation = "1.1.0-rc01"
@@ -24,6 +24,8 @@ private object Versions {
     const val androidx_navigation = "2.1.0-alpha03"
     const val androidx_recyclerview = "1.1.0-alpha05"
     const val androidx_testing = "1.1.0-alpha08"
+    const val androidx_core = "1.2.0-alpha01"
+    const val androidx_transition = "1.1.0-rc01"
 
     const val appservices_gradle_plugin = "0.4.4"
     const val mozilla_android_components = "0.52.0-SNAPSHOT"
@@ -139,6 +141,8 @@ object Deps {
     const val androidx_navigation_fragment = "androidx.navigation:navigation-fragment:${Versions.androidx_navigation}"
     const val androidx_navigation_ui = "androidx.navigation:navigation-ui:${Versions.androidx_navigation}"
     const val androidx_recyclerview = "androidx.recyclerview:recyclerview:${Versions.androidx_recyclerview}"
+    const val androidx_core = "androidx.core:core:${Versions.androidx_core}"
+    const val androidx_transition = "androidx.transition:transition:${Versions.androidx_transition}"
 
     const val autodispose = "com.uber.autodispose:autodispose:${Versions.autodispose}"
     const val autodispose_android = "com.uber.autodispose:autodispose-android:${Versions.autodispose}"

@@ -339,6 +339,8 @@ dependencies {
     implementation Deps.androidx_navigation_ui
     implementation Deps.androidx_recyclerview
     implementation Deps.androidx_lifecycle_viewmodel_ktx
+    implementation Deps.androidx_core
+    implementation Deps.androidx_transition
 
     implementation Deps.autodispose
 
