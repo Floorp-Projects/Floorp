@@ -2957,6 +2957,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mScrollSnapPointsY(eStyleUnit_None),
       mScrollSnapDestination(
           {LengthPercentage::Zero(), LengthPercentage::Zero()}),
+      mLineClamp(0),
       mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE),
       mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT),
       mTransformBox(StyleGeometryBox::BorderBox),
@@ -3022,6 +3023,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mScrollSnapPointsY(aSource.mScrollSnapPointsY),
       mScrollSnapDestination(aSource.mScrollSnapDestination),
       mScrollSnapCoordinate(aSource.mScrollSnapCoordinate),
+      mLineClamp(aSource.mLineClamp),
       mBackfaceVisibility(aSource.mBackfaceVisibility),
       mTransformStyle(aSource.mTransformStyle),
       mTransformBox(aSource.mTransformBox),
@@ -3217,6 +3219,10 @@ nsChangeHint nsStyleDisplay::CalcDifference(
       // but we don't need to reflow because we're not floating.
       hint |= nsChangeHint_NeutralChange;
     }
+  }
+
+  if (mLineClamp != aNewData.mLineClamp) {
+    hint |= NS_STYLE_HINT_REFLOW;
   }
 
   if (mVerticalAlign != aNewData.mVerticalAlign) {

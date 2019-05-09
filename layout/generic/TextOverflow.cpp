@@ -152,11 +152,11 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
  public:
   nsDisplayTextOverflowMarker(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               const nsRect& aRect, nscoord aAscent,
-                              const nsStyleTextOverflowSide* aStyle,
+                              nsStyleTextOverflowSide aStyle,
                               uint32_t aLineNumber, uint16_t aIndex)
       : nsPaintedDisplayItem(aBuilder, aFrame),
         mRect(aRect),
-        mStyle(*aStyle),
+        mStyle(aStyle),
         mAscent(aAscent),
         mIndex((aLineNumber << 1) + aIndex) {
     MOZ_COUNT_CTOR(nsDisplayTextOverflowMarker);
@@ -344,9 +344,10 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
 /* static */
 Maybe<TextOverflow> TextOverflow::WillProcessLines(
     nsDisplayListBuilder* aBuilder, nsIFrame* aBlockFrame) {
-  // Ignore 'text-overflow' for event and frame visibility processing.
+  // Ignore text-overflow and -webkit-line-clamp for event and frame visibility
+  // processing.
   if (aBuilder->IsForEventDelivery() || aBuilder->IsForFrameVisibility() ||
-      !CanHaveTextOverflow(aBlockFrame)) {
+      !CanHaveOverflowMarkers(aBlockFrame)) {
     return Nothing();
   }
   nsIScrollableFrame* scrollableFrame =
@@ -461,7 +462,7 @@ void TextOverflow::AnalyzeMarkerEdges(nsIFrame* aFrame,
           if (iendOverlap > 0) {
             snappedRect.ISize(mBlockWM) -= snappedIEnd;
           }
-          aAlignmentEdges->Accumulate(mBlockWM, snappedRect);
+          aAlignmentEdges->AccumulateInner(mBlockWM, snappedRect);
           *aFoundVisibleTextOrAtomic = true;
         }
       }
@@ -470,12 +471,15 @@ void TextOverflow::AnalyzeMarkerEdges(nsIFrame* aFrame,
     }
   } else if (!insideIStartEdge || !insideIEndEdge) {
     // frame is outside
+    if (!insideIStartEdge) {
+      aAlignmentEdges->AccumulateOuter(mBlockWM, borderRect);
+    }
     if (IsAtomicElement(aFrame, aFrameType)) {
       aFramesToHide->PutEntry(aFrame);
     }
   } else {
     // frame is inside
-    aAlignmentEdges->Accumulate(mBlockWM, borderRect);
+    aAlignmentEdges->AccumulateInner(mBlockWM, borderRect);
     if (aFrameType == LayoutFrameType::Text) {
       auto textFrame = static_cast<nsTextFrame*>(aFrame);
       if (textFrame->HasNonSuppressedText()) {
@@ -491,8 +495,8 @@ LogicalRect TextOverflow::ExamineLineFrames(nsLineBox* aLine,
                                             FrameHashtable* aFramesToHide,
                                             AlignmentEdges* aAlignmentEdges) {
   // No ellipsing for 'clip' style.
-  bool suppressIStart = mIStart.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
-  bool suppressIEnd = mIEnd.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
+  bool suppressIStart = mIStart.IsSuppressed();
+  bool suppressIEnd = mIEnd.IsSuppressed();
   if (mCanHaveInlineAxisScrollbar) {
     LogicalPoint pos(mBlockWM, mScrollableFrame->GetScrollPosition(),
                      mBlockSize);
@@ -504,7 +508,10 @@ LogicalRect TextOverflow::ExamineLineFrames(nsLineBox* aLine,
       suppressIStart = true;
     }
     if (pos.I(mBlockWM) >= scrollRange.IEnd(mBlockWM)) {
-      suppressIEnd = true;
+      // Except that we always want to display a -webkit-line-clamp ellipsis.
+      if (!mIEnd.mHasBlockEllipsis) {
+        suppressIEnd = true;
+      }
     }
   }
 
@@ -543,22 +550,29 @@ LogicalRect TextOverflow::ExamineLineFrames(nsLineBox* aLine,
 
   LogicalRect lineRect(mBlockWM, aLine->GetScrollableOverflowArea(),
                        mBlockSize);
-  const bool istartOverflow =
+  const bool istartWantsMarker =
       !suppressIStart &&
       lineRect.IStart(mBlockWM) < contentArea.IStart(mBlockWM);
-  const bool iendOverflow =
+  const bool iendWantsTextOverflowMarker =
       !suppressIEnd && lineRect.IEnd(mBlockWM) > contentArea.IEnd(mBlockWM);
-  if (!istartOverflow && !iendOverflow) {
-    // The line does not overflow on a side we should ellipsize.
+  const bool iendWantsBlockEllipsisMarker =
+      !suppressIEnd && mIEnd.mHasBlockEllipsis;
+  const bool iendWantsMarker =
+      iendWantsTextOverflowMarker || iendWantsBlockEllipsisMarker;
+  if (!istartWantsMarker && !iendWantsMarker) {
+    // We don't need any markers on this line.
     return nonSnappedContentArea;
   }
 
   int pass = 0;
   bool retryEmptyLine = true;
-  bool guessIStart = istartOverflow;
-  bool guessIEnd = iendOverflow;
-  mIStart.mActive = istartOverflow;
-  mIEnd.mActive = iendOverflow;
+  bool guessIStart = istartWantsMarker;
+  bool guessIEnd = iendWantsMarker;
+  mIStart.mActive = istartWantsMarker;
+  mIEnd.mActive = iendWantsMarker;
+  mIStart.mEdgeAligned = mCanHaveInlineAxisScrollbar && istartWantsMarker;
+  mIEnd.mEdgeAligned =
+      mCanHaveInlineAxisScrollbar && iendWantsTextOverflowMarker;
   bool clippedIStartMarker = false;
   bool clippedIEndMarker = false;
   do {
@@ -601,7 +615,8 @@ LogicalRect TextOverflow::ExamineLineFrames(nsLineBox* aLine,
                           &clippedMarkerEdges);
     }
     if (!foundVisibleTextOrAtomic && retryEmptyLine) {
-      aAlignmentEdges->mAssigned = false;
+      aAlignmentEdges->mAssignedInner = false;
+      aAlignmentEdges->mIEndOuter = 0;
       aFramesToHide->Clear();
       pass = -1;
       if (mIStart.IsNeeded() && mIStart.mActive && !clippedIStartMarker) {
@@ -635,9 +650,23 @@ LogicalRect TextOverflow::ExamineLineFrames(nsLineBox* aLine,
       // so examine the line again without suppressing markers.
       retryEmptyLine = false;
       mIStart.mISize = mIStart.mIntrinsicISize;
-      mIStart.mActive = guessIStart = istartOverflow;
+      mIStart.mActive = guessIStart = istartWantsMarker;
       mIEnd.mISize = mIEnd.mIntrinsicISize;
-      mIEnd.mActive = guessIEnd = iendOverflow;
+      mIEnd.mActive = guessIEnd = iendWantsMarker;
+      // If we wanted to place a block ellipsis but didn't, due to not having
+      // any visible content to align to or the line's content being scrolled
+      // out of view, then clip the ellipsis so that it looks like it is aligned
+      // with the out of view content.
+      if (mIEnd.IsNeeded() && mIEnd.mActive && mIEnd.mHasBlockEllipsis) {
+        NS_ASSERTION(nonSnappedContentArea.IStart(mBlockWM) >
+                         aAlignmentEdges->mIEndOuter,
+                     "Expected the alignment edge for the out of view content "
+                     "to be before the start of the content area");
+        mIEnd.mISize = std::max(
+            mIEnd.mIntrinsicISize - (nonSnappedContentArea.IStart(mBlockWM) -
+                                     aAlignmentEdges->mIEndOuter),
+            0);
+      }
       continue;
     }
     if (guessIStart == (mIStart.mActive && mIStart.IsNeeded()) &&
@@ -652,10 +681,10 @@ LogicalRect TextOverflow::ExamineLineFrames(nsLineBox* aLine,
     }
     NS_ASSERTION(pass == 0, "2nd pass should never guess wrong");
   } while (++pass != 2);
-  if (!istartOverflow || !mIStart.mActive) {
+  if (!istartWantsMarker || !mIStart.mActive) {
     mIStart.Reset();
   }
-  if (!iendOverflow || !mIEnd.mActive) {
+  if (!iendWantsMarker || !mIEnd.mActive) {
     mIEnd.Reset();
   }
   return nonSnappedContentArea;
@@ -663,13 +692,18 @@ LogicalRect TextOverflow::ExamineLineFrames(nsLineBox* aLine,
 
 void TextOverflow::ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine,
                                uint32_t aLineNumber) {
-  NS_ASSERTION(mIStart.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP ||
-                   mIEnd.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP,
-               "TextOverflow with 'clip' for both sides");
+  if (mIStart.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&
+      mIEnd.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&
+      !aLine->HasLineClampEllipsis()) {
+    return;
+  }
+
   mIStart.Reset();
   mIStart.mActive = mIStart.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP;
   mIEnd.Reset();
-  mIEnd.mActive = mIEnd.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP;
+  mIEnd.mHasBlockEllipsis = aLine->HasLineClampEllipsis();
+  mIEnd.mActive = mIEnd.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP ||
+                  aLine->HasLineClampEllipsis();
 
   FrameHashtable framesToHide(64);
   AlignmentEdges alignmentEdges;
@@ -680,11 +714,10 @@ void TextOverflow::ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine,
   if (!needIStart && !needIEnd) {
     return;
   }
-  NS_ASSERTION(
-      mIStart.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP || !needIStart,
-      "left marker for 'clip'");
-  NS_ASSERTION(mIEnd.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP || !needIEnd,
-               "right marker for 'clip'");
+  NS_ASSERTION(!mIStart.IsSuppressed() || !needIStart,
+               "left marker when not needed");
+  NS_ASSERTION(!mIEnd.IsSuppressed() || !needIEnd,
+               "right marker when not needed");
 
   // If there is insufficient space for both markers then keep the one on the
   // end side per the block's 'direction'.
@@ -699,11 +732,30 @@ void TextOverflow::ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine,
   if (needIEnd) {
     InflateIEnd(mBlockWM, &insideMarkersArea, -mIEnd.mISize);
   }
-  if (!mCanHaveInlineAxisScrollbar && alignmentEdges.mAssigned) {
+
+  if (alignmentEdges.mAssignedInner) {
+    if (mIStart.mEdgeAligned) {
+      alignmentEdges.mIStart = insideMarkersArea.IStart(mBlockWM);
+    }
+    if (mIEnd.mEdgeAligned) {
+      alignmentEdges.mIEnd = insideMarkersArea.IEnd(mBlockWM);
+    }
     LogicalRect alignmentRect(mBlockWM, alignmentEdges.mIStart,
                               insideMarkersArea.BStart(mBlockWM),
                               alignmentEdges.ISize(), 1);
     insideMarkersArea.IntersectRect(insideMarkersArea, alignmentRect);
+  } else {
+    // There was no content on the line that was visible at the current scolled
+    // position.  If we wanted to place a block ellipsis but failed due to
+    // having no visible content to align it to, we still need to ensure it
+    // is displayed.  It goes at the start of the line, even though it's an
+    // IEnd marker, since that is the side of the line that the content has
+    // been scrolled past.  We set the insideMarkersArea to a zero-sized
+    // rectangle placed next to the scrolled-out-of-view content.
+    if (mIEnd.mHasBlockEllipsis) {
+      insideMarkersArea = LogicalRect(mBlockWM, alignmentEdges.mIEndOuter,
+                                      insideMarkersArea.BStart(mBlockWM), 0, 1);
+    }
   }
 
   // Clip and remove display items as needed at the final marker edges.
@@ -762,16 +814,28 @@ void TextOverflow::PruneDisplayListContents(
 }
 
 /* static */
-bool TextOverflow::HasClippedOverflow(nsIFrame* aBlockFrame) {
+bool TextOverflow::HasClippedTextOverflow(nsIFrame* aBlockFrame) {
   const nsStyleTextReset* style = aBlockFrame->StyleTextReset();
   return style->mTextOverflow.mLeft.mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&
          style->mTextOverflow.mRight.mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
 }
 
 /* static */
-bool TextOverflow::CanHaveTextOverflow(nsIFrame* aBlockFrame) {
+bool TextOverflow::HasBlockEllipsis(nsIFrame* aBlockFrame) {
+  nsBlockFrame* f = do_QueryFrame(aBlockFrame);
+  return f && f->HasAnyStateBits(NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS);
+}
+
+/* static */
+bool TextOverflow::CanHaveOverflowMarkers(nsIFrame* aBlockFrame) {
+  // Treat a line with a -webkit-line-clamp ellipsis as a kind of text
+  // overflow.
+  if (aBlockFrame->HasAnyStateBits(NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS)) {
+    return true;
+  }
+
   // Nothing to do for text-overflow:clip or if 'overflow-x/y:visible'.
-  if (HasClippedOverflow(aBlockFrame) ||
+  if (HasClippedTextOverflow(aBlockFrame) ||
       IsInlineAxisOverflowVisible(aBlockFrame)) {
     return false;
   }
@@ -815,8 +879,8 @@ void TextOverflow::CreateMarkers(const nsLineBox* aLine, bool aCreateIStart,
     ClipMarker(aContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
                markerRect, clipState);
     mMarkerList.AppendNewToTop<nsDisplayTextOverflowMarker>(
-        mBuilder, mBlock, markerRect, aLine->GetLogicalAscent(), mIStart.mStyle,
-        aLineNumber, 0);
+        mBuilder, mBlock, markerRect, aLine->GetLogicalAscent(),
+        *mIStart.mStyle, aLineNumber, 0);
   }
 
   if (aCreateIEnd) {
@@ -831,7 +895,9 @@ void TextOverflow::CreateMarkers(const nsLineBox* aLine, bool aCreateIStart,
     ClipMarker(aContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
                markerRect, clipState);
     mMarkerList.AppendNewToTop<nsDisplayTextOverflowMarker>(
-        mBuilder, mBlock, markerRect, aLine->GetLogicalAscent(), mIEnd.mStyle,
+        mBuilder, mBlock, markerRect, aLine->GetLogicalAscent(),
+        mIEnd.mHasBlockEllipsis ? nsStyleTextOverflowSide::Ellipsis()
+                                : *mIEnd.mStyle,
         aLineNumber, 1);
   }
 }
@@ -841,7 +907,13 @@ void TextOverflow::Marker::SetupString(nsIFrame* aFrame) {
     return;
   }
 
-  if (mStyle->mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS) {
+  // A limitation here is that at the IEnd of a line, we only ever render one of
+  // a text-overflow marker and a -webkit-line-clamp block ellipsis.  Since we
+  // don't track the block ellipsis string and the text-overflow marker string
+  // separately, if both apply to the element, we will always use "…" as the
+  // string for text-overflow.
+  if (HasBlockEllipsis(aFrame) ||
+      mStyle->mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS) {
     gfxTextRun* textRun = GetEllipsisTextRun(aFrame);
     if (textRun) {
       mISize = textRun->GetAdvanceWidth();

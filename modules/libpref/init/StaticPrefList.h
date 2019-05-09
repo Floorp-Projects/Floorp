@@ -1340,6 +1340,13 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for -webkit-line-clamp enabled?
+VARCACHE_PREF(
+  "layout.css.webkit-line-clamp.enabled",
+  layout_css_webkit_line_clamp_enabled,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // JavaScript prefs
 //---------------------------------------------------------------------------
