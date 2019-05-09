@@ -10,11 +10,6 @@ interface nsIInputStream;
 interface nsIPrincipal;
 interface nsIEventTarget;
 
-[uuid(1e6ad73b-6c05-4d78-9a88-2d357b88f58b)]
-interface nsIUDPSocketChild : nsISupports
-{
-};
-
 /*
  * Internal interface for callback from chrome process
  */
