@@ -143,9 +143,6 @@ void WorkerThread::SetWorker(const WorkerThreadFriendKey& /* aKey */,
 }
 
 void WorkerThread::IncrementDispatchCounter() {
-  if (!mozilla::StaticPrefs::dom_performance_enable_scheduler_timing()) {
-    return;
-  }
   MutexAutoLock lock(mLock);
   if (mWorkerPrivate) {
     PerformanceCounter* performanceCounter =
