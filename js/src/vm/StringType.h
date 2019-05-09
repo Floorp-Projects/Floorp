@@ -1043,6 +1043,8 @@ class JSFlatString : public JSLinearString {
   MOZ_ALWAYS_INLINE JSAtom* morphAtomizedStringIntoPermanentAtom(
       js::HashNumber hash);
 
+  inline size_t allocSize() const;
+
   inline void finalize(js::FreeOp* fop);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -1240,8 +1242,6 @@ class JSAtom : public JSFlatString {
  public:
   /* Returns the PropertyName for this.  isIndex() must be false. */
   inline js::PropertyName* asPropertyName();
-
-  inline void finalize(js::FreeOp* fop);
 
   MOZ_ALWAYS_INLINE
   bool isPermanent() const { return JSString::isPermanentAtom(); }
