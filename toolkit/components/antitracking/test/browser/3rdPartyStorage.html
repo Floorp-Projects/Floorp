@@ -19,6 +19,8 @@ function is(a, b, msg) {
   ok(a === b, msg);
 }
 
+let areWeFourthParty = location.search == "?4th";
+
 onmessage = function(e) {
   let data = e.data;
   let runnableStr = `(() => {return (${data});})();`;
@@ -32,7 +34,11 @@ onmessage = function(e) {
     await runnable.call(this, this, win, false /* allowed */);
     /* import-globals-from storageAccessAPIHelpers.js */
     await callRequestStorageAccess();
-    await runnable.call(this, this, win, true /* allowed */);
+    // If we're "fourth party" (which is true when running dynamic FPI tests)
+    // then assume that the storage access API doesn't grant first-party
+    // storage yet.
+    // TODO: Make sure storage access API is available for dynamic FPI too.
+    await runnable.call(this, this, win, !areWeFourthParty /* allowed */);
 
     win.close();
     parent.postMessage({ type: "finish" }, "*");
