@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Bewaar de verhalen die u interessant vindt in Pocket, en stimuleer uw gedachten met boeiende leesstof.",
   "highlights_empty_state": "Begin met surfen, en we tonen hier een aantal geweldige artikelen, video’s en andere pagina’s die u onlangs hebt bezocht of waarvoor u een bladwijzer hebt gemaakt.",
   "topstories_empty_state": "U bent weer bij. Kijk later nog eens voor meer topverhalen van {provider}. Kunt u niet wachten? Selecteer een populair onderwerp voor meer geweldige verhalen van het hele web.",
-  "manual_migration_explanation2": "Probeer Firefox met de bladwijzers, geschiedenis en wachtwoorden van een andere browser.",
-  "manual_migration_cancel_button": "Nee bedankt",
-  "manual_migration_import_button": "Nu importeren",
   "error_fallback_default_info": "Oeps, er is iets misgegaan bij het laden van deze inhoud.",
   "error_fallback_default_refresh_suggestion": "Vernieuw de pagina om het opnieuw te proberen.",
   "section_menu_action_remove_section": "Sectie verwijderen",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacyverklaring",
   "firstrun_continue_to_login": "Doorgaan",
   "firstrun_skip_login": "Deze stap overslaan",
-  "context_menu_title": "Menu openen"
+  "context_menu_title": "Menu openen",
+  "manual_migration_explanation2": "Probeer Firefox met de bladwijzers, geschiedenis en wachtwoorden van een andere browser.",
+  "manual_migration_cancel_button": "Nee bedankt",
+  "manual_migration_import_button": "Nu importeren"
 };

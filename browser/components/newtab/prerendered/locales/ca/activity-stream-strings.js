@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Deseu els vostres articles preferits al Pocket i gaudiu d'altres recomanacions fascinants.",
   "highlights_empty_state": "Comenceu a navegar i aquí us mostrarem els millors articles, vídeos i altres pàgines que hàgiu visitat o afegit a les adreces d'interès recentment.",
   "topstories_empty_state": "Ja esteu al dia. Torneu més tard per veure més articles populars de {provider}. No podeu esperar? Trieu un tema popular per descobrir els articles més interessants de tot el web.",
-  "manual_migration_explanation2": "Proveu el Firefox amb les adreces d'interès, l'historial i les contrasenyes d'un altre navegador.",
-  "manual_migration_cancel_button": "No, gràcies",
-  "manual_migration_import_button": "Importa-ho ara",
   "error_fallback_default_info": "Vaja, s'ha produït un error en carregar aquest contingut.",
   "error_fallback_default_refresh_suggestion": "Actualitzeu la pàgina per tornar-ho a provar.",
   "section_menu_action_remove_section": "Elimina la secció",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Avís de privadesa",
   "firstrun_continue_to_login": "Continua",
   "firstrun_skip_login": "Omet aquest pas",
-  "context_menu_title": "Obre el menú"
+  "context_menu_title": "Obre el menú",
+  "manual_migration_explanation2": "Proveu el Firefox amb les adreces d'interès, l'historial i les contrasenyes d'un altre navegador.",
+  "manual_migration_cancel_button": "No, gràcies",
+  "manual_migration_import_button": "Importa-ho ara"
 };

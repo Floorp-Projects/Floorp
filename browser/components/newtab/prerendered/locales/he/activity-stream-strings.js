@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ניתן להתחיל בגלישה ואנו נציג בפניך מספר כתבות, סרטונים ועמודים שונים מעולים בהם ביקרת לאחרונה או שהוספת לסימניות.",
   "topstories_empty_state": "התעדכנת בכל הסיפורים. כדאי לנסות שוב מאוחר יותר כדי לקבל עוד סיפורים מובילים מאת {provider}. לא רוצה לחכות? ניתן לבחור נושא נפוץ כדי למצוא עוד סיפורים נפלאים מרחבי הרשת.",
-  "manual_migration_explanation2": "ניתן להתנסות ב־Firefox עם הסימניות, ההיסטוריה והססמאות מדפדפן אחר.",
-  "manual_migration_cancel_button": "לא תודה",
-  "manual_migration_import_button": "ייבוא כעת",
   "error_fallback_default_info": "אופס, משהו השתבש בעת טעינת התוכן הזה.",
   "error_fallback_default_refresh_suggestion": "נא לרענן את הדף כדי לנסות שוב.",
   "section_menu_action_remove_section": "הסרת מדור",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "הצהרת הפרטיות",
   "firstrun_continue_to_login": "המשך",
   "firstrun_skip_login": "דילוג על שלב זה",
-  "context_menu_title": "פתיחת תפריט"
+  "context_menu_title": "פתיחת תפריט",
+  "manual_migration_explanation2": "ניתן להתנסות ב־Firefox עם הסימניות, ההיסטוריה והססמאות מדפדפן אחר.",
+  "manual_migration_cancel_button": "לא תודה",
+  "manual_migration_import_button": "ייבוא כעת"
 };

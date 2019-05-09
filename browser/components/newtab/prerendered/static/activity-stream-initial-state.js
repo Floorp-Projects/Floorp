@@ -20,7 +20,6 @@ window.gActivityStreamPrerenderedState = {
   "Prefs": {
     "initialized": true,
     "values": {
-      "migrationExpired": true,
       "feeds.topsites": true,
       "showSearch": true,
       "topSitesRows": 1,

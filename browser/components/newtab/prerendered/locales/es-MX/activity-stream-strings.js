@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Guarda las historias que quieras en Pocket y llena tu mente con fascinantes lecturas.",
   "highlights_empty_state": "Empieza a navegar, y nosotros te mostraremos aquí algunos de los mejores artículos, videos y otras páginas que hayas visitado recientemente o marcado.",
   "topstories_empty_state": "Ya estás al día. Vuelve luego y busca más historias de {provider}. ¿No puedes esperar? Selecciona un tema popular y encontrarás más historias interesantes por toda la web.",
-  "manual_migration_explanation2": "Prueba Firefox con los marcadores, historial y contraseñas de otro navegador.",
-  "manual_migration_cancel_button": "No, gracias",
-  "manual_migration_import_button": "Importar ahora",
   "error_fallback_default_info": "Ups, algo salió mal mientras se cargaba el contenido.",
   "error_fallback_default_refresh_suggestion": "Actualiza la página e intenta de nuevo.",
   "section_menu_action_remove_section": "Eliminar sección",
@@ -111,5 +108,8 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "Continuar",
   "firstrun_skip_login": "Saltar este paso",
   "context_menu_title": "Abrir menú",
+  "manual_migration_explanation2": "Prueba Firefox con los marcadores, historial y contraseñas de otro navegador.",
+  "manual_migration_cancel_button": "No, gracias",
+  "manual_migration_import_button": "Importar ahora",
   "pocket_learn_more": "Saber más"
 };

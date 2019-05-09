@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Gem dine yndlingshistorier i Pocket og hav dem altid ved hånden.",
   "highlights_empty_state": "Gå i gang med at browse, så vil vi vise dig nogle af de artikler, videoer og andre sider, du har besøgt eller gemt et bogmærke til for nylig.",
   "topstories_empty_state": "Der er ikke flere nye historier. Kom tilbage senere for at se flere tophistorier fra {provider}. Kan du ikke vente? Vælg et populært emne og find flere spændende historier fra hele verden.",
-  "manual_migration_explanation2": "Prøv Firefox med bogmærkerne, historikken og adgangskoderne fra en anden browser.",
-  "manual_migration_cancel_button": "Nej tak",
-  "manual_migration_import_button": "Importer nu",
   "error_fallback_default_info": "Hovsa. Noget gik galt ved indlæsning af indholdet.",
   "error_fallback_default_refresh_suggestion": "Prøv igen ved at genindlæse siden.",
   "section_menu_action_remove_section": "Fjern afsnit",
@@ -124,5 +121,8 @@ window.gActivityStreamStrings = {
   "settings_pane_done_button": "Færdig",
   "settings_pane_topstories_options_sponsored": "Vis sponsorerede historier",
   "pocket_learn_more": "Læs mere",
-  "pocket_description": "Opdag indhold af høj kvalitet, som du måske ellers ikke ville have opdaget. Indholdet kommer fra Pocket, der nu er en del af Mozilla."
+  "pocket_description": "Opdag indhold af høj kvalitet, som du måske ellers ikke ville have opdaget. Indholdet kommer fra Pocket, der nu er en del af Mozilla.",
+  "manual_migration_explanation2": "Prøv Firefox med bogmærkerne, historikken og adgangskoderne fra en anden browser.",
+  "manual_migration_cancel_button": "Nej tak",
+  "manual_migration_import_button": "Importer nu"
 };

@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Sekles tiqṣiḍin i tḥemmleḍ deg Pocket, sedhu allaɣ-ik s tɣuri ifazen.",
   "highlights_empty_state": "Bdu tuniginn sakin nekkni ad k-n-sken imagraden, tividyutin, akked isebtar nniḍen i γef terziḍ yakan neγ i tceṛḍeḍ dagi.",
   "topstories_empty_state": "Ulac wiyaḍ. Uɣal-d ticki s wugar n imagraden seg {provider}. Ur tebɣiḍ ara ad terǧuḍ? Fren asentel seg wid yettwasnen akken ad twaliḍ imagraden yelhan di Web.",
-  "manual_migration_explanation2": "Σreḍ Firefox s ticṛaḍ n isebtar, amazray akked awalen uffiren sγur ilinigen nniḍen.",
-  "manual_migration_cancel_button": "Ala, tanemmirt",
-  "manual_migration_import_button": "Kter tura",
   "error_fallback_default_info": "Ihuh, yella wayen yeḍran deg usali n ugbur-a.",
   "error_fallback_default_refresh_suggestion": "Sali-d aseter akken ad talseḍ aɛraḍ.",
   "section_menu_action_remove_section": "Kkes tigezmi",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Tasertit n tbaḍnit",
   "firstrun_continue_to_login": "Kemmel",
   "firstrun_skip_login": "Zgel amecwaṛ-agi",
-  "context_menu_title": "Ldi umuɣ"
+  "context_menu_title": "Ldi umuɣ",
+  "manual_migration_explanation2": "Σreḍ Firefox s ticṛaḍ n isebtar, amazray akked awalen uffiren sγur ilinigen nniḍen.",
+  "manual_migration_cancel_button": "Ala, tanemmirt",
+  "manual_migration_import_button": "Kter tura"
 };

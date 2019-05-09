@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Saglabājiet interesantus stāstus Pocket un barojiet savu prātu ar interesantu lasāmvielu.",
   "highlights_empty_state": "Sāciet pārlūkošanu un mēs šeit parādīsim lieliskus rakstus, video un citas apmeklētās lapas.",
   "topstories_empty_state": "Viss ir apskatīts! Atnāciet atpakaļ nedaudz vēlāk, lai redzētu populāros stāstus no {provider}. Nevarat sagaidīt? Izvēlieties kādu no tēmām jau tagad.",
-  "manual_migration_explanation2": "Izmēģiniet Firefox ar grāmatzīmēm, vēsturi un parolēm no cita pārlūka.",
-  "manual_migration_cancel_button": "Nē, paldies",
-  "manual_migration_import_button": "Importē tagad",
   "error_fallback_default_info": "Ak vai, ielādējot saturu kaut kas nogājis greizi.",
   "error_fallback_default_refresh_suggestion": "Pārlādējiet lapu, lai mēģinātu vēlreiz.",
   "section_menu_action_remove_section": "Aizvākt sadaļu",
@@ -111,5 +108,8 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "Turpināt",
   "firstrun_skip_login": "Izlaist šo soli",
   "context_menu_title": "Atvērt izvēlni",
-  "pocket_learn_more": "Uzzināt vairāk"
+  "pocket_learn_more": "Uzzināt vairāk",
+  "manual_migration_explanation2": "Izmēģiniet Firefox ar grāmatzīmēm, vēsturi un parolēm no cita pārlūka.",
+  "manual_migration_cancel_button": "Nē, paldies",
+  "manual_migration_import_button": "Importē tagad"
 };

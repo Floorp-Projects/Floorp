@@ -815,14 +815,6 @@ describe("Top Sites Feed", () => {
       feed.onAction({type: at.INIT});
       assert.calledOnce(feed.init);
     });
-    it("should call refresh on MIGRATION_COMPLETED action", async () => {
-      sinon.stub(feed, "refresh");
-
-      await feed.onAction({type: at.MIGRATION_COMPLETED});
-
-      assert.calledOnce(feed.refresh);
-      assert.calledWithExactly(feed.refresh, {broadcast: true});
-    });
     it("should call refresh on PLACES_LINK_BLOCKED action", async () => {
       sinon.stub(feed, "refresh");
       await feed.onAction({type: at.PLACES_LINK_BLOCKED});

@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "บันทึกเรื่องราวที่คุณรักลงใน Pocket และเติมเต็มสมองของคุณด้วยบทความที่น่าหลงใหล",
   "highlights_empty_state": "เริ่มการท่องเว็บและเราจะแสดงบทความ, วิดีโอ และหน้าอื่น ๆ บางส่วนที่ยอดเยี่ยมที่คุณได้เยี่ยมชมหรือเพิ่มที่คั่นหน้าไว้ล่าสุดที่นี่",
   "topstories_empty_state": "คุณได้อ่านเรื่องราวครบทั้งหมดแล้ว คุณสามารถกลับมาตรวจดูเรื่องราวเด่นจาก {provider} ได้ภายหลัง อดใจรอไม่ได้งั้นหรือ? เลือกหัวข้อยอดนิยมเพื่อค้นหาเรื่องราวที่ยอดเยี่ยมจากเว็บต่าง ๆ",
-  "manual_migration_explanation2": "ลอง Firefox ด้วยที่คั่นหน้า, ประวัติ และรหัสผ่านจากเบราว์เซอร์อื่น",
-  "manual_migration_cancel_button": "ไม่ ขอบคุณ",
-  "manual_migration_import_button": "นำเข้าตอนนี้",
   "error_fallback_default_info": "อุปส์ มีบางอย่างผิดพลาดในการโหลดเนื้อหานี้",
   "error_fallback_default_refresh_suggestion": "เรียกหน้าใหม่เพื่อลองอีกครั้ง",
   "section_menu_action_remove_section": "เอาส่วนออก",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "ประกาศความเป็นส่วนตัว",
   "firstrun_continue_to_login": "ดำเนินการต่อ",
   "firstrun_skip_login": "ข้ามขั้นตอนนี้",
-  "context_menu_title": "เปิดเมนู"
+  "context_menu_title": "เปิดเมนู",
+  "manual_migration_explanation2": "ลอง Firefox ด้วยที่คั่นหน้า, ประวัติ และรหัสผ่านจากเบราว์เซอร์อื่น",
+  "manual_migration_cancel_button": "ไม่ ขอบคุณ",
+  "manual_migration_import_button": "นำเข้าตอนนี้"
 };

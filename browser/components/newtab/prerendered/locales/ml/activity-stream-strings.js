@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ബ്രൗസിംഗ് ആരംഭിക്കുക, നിങ്ങൾ സമീപകാലത്ത് സന്ദർശിച്ചതോ ബുക്ക്മാർക്ക് ചെയ്തതോ ആയ മികച്ച ലേഖനങ്ങളിൽ നിന്നോ, വീഡിയോകളിൽ നിന്നോ, മറ്റു പേജുകളിൽ നിന്നോ ചിലത് ഞങ്ങൾ ഇവിടെ കാണിക്കും.",
   "topstories_empty_state": "നിങ്ങൾ ഇവിടെ വരെ എത്തി. {provider}ൽ നിന്നുള്ള കൂടുതൽ പ്രധാന വാർത്തകൾക്കായി പിന്നീട് വീണ്ടും പരിശോധിക്കുക. കാത്തിരിക്കാൻ പറ്റില്ലേ? വെബിൽ നിന്ന് കൂടുതൽ മികച്ച കഥകൾ കണ്ടെത്തുന്നതിന് ഒരു ജനപ്രിയ വിഷയം തിരഞ്ഞെടുക്കുക.",
-  "manual_migration_explanation2": "മറ്റൊരു ബ്രൗസറിൽ നിന്നുള്ള ബുക്ക്മാർക്കുകൾ, നാൾവഴികൾ, പാസ്വേഡുകൾ എന്നിവ ഉപയോഗിച്ച് ഫയർഫോക്സ് പരീക്ഷിക്കുക.",
-  "manual_migration_cancel_button": "വേണ്ട, നന്ദി",
-  "manual_migration_import_button": "ഇപ്പോൾ ഇറക്കുമതി ചെയ്യുക",
   "error_fallback_default_info": "Oops, something went wrong loading this content.",
   "error_fallback_default_refresh_suggestion": "Refresh page to try again.",
   "section_menu_action_remove_section": "Remove Section",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "Continue",
   "firstrun_skip_login": "Skip this step",
-  "context_menu_title": "Open menu"
+  "context_menu_title": "Open menu",
+  "manual_migration_explanation2": "മറ്റൊരു ബ്രൗസറിൽ നിന്നുള്ള ബുക്ക്മാർക്കുകൾ, നാൾവഴികൾ, പാസ്വേഡുകൾ എന്നിവ ഉപയോഗിച്ച് ഫയർഫോക്സ് പരീക്ഷിക്കുക.",
+  "manual_migration_cancel_button": "വേണ്ട, നന്ദി",
+  "manual_migration_import_button": "ഇപ്പോൾ ഇറക്കുമതി ചെയ്യുക"
 };

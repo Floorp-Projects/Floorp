@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",
   "topstories_empty_state": "You’ve caught up. Check back later for more top stories from {provider}. Can’t wait? Select a popular topic to find more great stories from around the web.",
-  "manual_migration_explanation2": "Firefox වෙනත් ගවේශයකය පිටය සලකුණු, අතීතය සහ මුරපද සමග උත්සාහ කර බලන්න.",
-  "manual_migration_cancel_button": "එපා, ස්තුතියි",
-  "manual_migration_import_button": "දැන් ආයාත කරන්න",
   "error_fallback_default_info": "අහෝ, මෙම අන්තර්ගතය පූර්ණයෙදී යම් වරදක් සිදුවිය.",
   "error_fallback_default_refresh_suggestion": "යළි උත්සාහ කිරීමට පිටුව යාවත්කාලීන කරන්න.",
   "section_menu_action_remove_section": "Remove Section",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "පෞද්ගලිකත්ව ප්‍රතිපත්තිය",
   "firstrun_continue_to_login": "ඉදිරියට",
   "firstrun_skip_login": "මෙම පියවර මගහරින්න",
-  "context_menu_title": "මෙනුව විවෘත කරන්න"
+  "context_menu_title": "මෙනුව විවෘත කරන්න",
+  "manual_migration_explanation2": "Firefox වෙනත් ගවේශයකය පිටය සලකුණු, අතීතය සහ මුරපද සමග උත්සාහ කර බලන්න.",
+  "manual_migration_cancel_button": "එපා, ස්තුතියි",
+  "manual_migration_import_button": "දැන් ආයාත කරන්න"
 };

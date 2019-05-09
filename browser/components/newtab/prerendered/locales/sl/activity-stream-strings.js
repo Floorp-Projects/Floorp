@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Shranite zgodbe, ki jih imate radi, v Pocket, in napolnite svoje misli z navdušujočim branjem.",
   "highlights_empty_state": "Začnite z brskanjem, mi pa vam bomo tu prikazovali odlične članke, videoposnetke ter druge strani, ki ste jih nedavno obiskali ali shranili med zaznamke.",
   "topstories_empty_state": "Zdaj ste seznanjeni z novicami. Vrnite se pozneje in si oglejte nove prispevke iz {provider}. Komaj čakate? Izberite priljubljeno temo in odkrijte več velikih zgodb na spletu.",
-  "manual_migration_explanation2": "Preskusite Firefox z zaznamki, zgodovino in gesli iz drugega brskalnika.",
-  "manual_migration_cancel_button": "Ne, hvala",
-  "manual_migration_import_button": "Uvozi zdaj",
   "error_fallback_default_info": "Ojoj, pri nalaganju te vsebine je šlo nekaj narobe.",
   "error_fallback_default_refresh_suggestion": "Osvežite stran za ponoven poskus.",
   "section_menu_action_remove_section": "Odstrani odsek",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Obvestilom o zasebnosti",
   "firstrun_continue_to_login": "Nadaljuj",
   "firstrun_skip_login": "Preskoči ta korak",
-  "context_menu_title": "Odpri meni"
+  "context_menu_title": "Odpri meni",
+  "manual_migration_explanation2": "Preskusite Firefox z zaznamki, zgodovino in gesli iz drugega brskalnika.",
+  "manual_migration_cancel_button": "Ne, hvala",
+  "manual_migration_import_button": "Uvozi zdaj"
 };

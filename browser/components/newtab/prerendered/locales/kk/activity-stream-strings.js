@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Өзіңіз ұнатқан хикаяларды Pocket ішіне сақтап, миіңізді тамаша оқумен толықтырыңыз.",
   "highlights_empty_state": "Шолуды бастаңыз, сіз жақында шолған немесе бетбелгілерге қосқан тамаша мақалалар, видеолар немесе басқа парақтардың кейбіреулері осында көрсетіледі.",
   "topstories_empty_state": "Дайын. {provider} ұсынған көбірек мақалаларды алу үшін кейінірек тексеріңіз. Күте алмайсыз ба? Интернеттен көбірек тамаша мақалаларды алу үшін әйгілі теманы таңдаңыз.",
-  "manual_migration_explanation2": "Firefox қолданбасын басқа браузер бетбелгілері, тарихы және парольдерімен қолданып көріңіз.",
-  "manual_migration_cancel_button": "Жоқ, рахмет",
-  "manual_migration_import_button": "Қазір импорттау",
   "error_fallback_default_info": "Қап, бұл құраманы жүктеу кезінде бірнәрсе қате кетті.",
   "error_fallback_default_refresh_suggestion": "Қайталап көру үшін, бетті жаңартыңыз.",
   "section_menu_action_remove_section": "Санатты өшіру",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Жекелік ескертуі",
   "firstrun_continue_to_login": "Жалғастыру",
   "firstrun_skip_login": "Бұл қадамды аттап кету",
-  "context_menu_title": "Мәзірді ашу"
+  "context_menu_title": "Мәзірді ашу",
+  "manual_migration_explanation2": "Firefox қолданбасын басқа браузер бетбелгілері, тарихы және парольдерімен қолданып көріңіз.",
+  "manual_migration_cancel_button": "Жоқ, рахмет",
+  "manual_migration_import_button": "Қазір импорттау"
 };
