@@ -74,7 +74,7 @@ struct _qcms_transform {
 	struct precache_output *output_table_g;
 	struct precache_output *output_table_b;
 
-	void (*transform_fn)(struct _qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length);
+	void (*transform_fn)(const struct _qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length);
 };
 
 struct matrix {
@@ -264,29 +264,29 @@ void precache_release(struct precache_output *p);
 bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
 bool get_rgb_colorants(struct matrix *colorants, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
 
-void qcms_transform_data_rgb_out_lut_sse2(qcms_transform *transform,
-                                          unsigned char *src,
+void qcms_transform_data_rgb_out_lut_sse2(const qcms_transform *transform,
+                                          const unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
-void qcms_transform_data_rgba_out_lut_sse2(qcms_transform *transform,
-                                          unsigned char *src,
+void qcms_transform_data_rgba_out_lut_sse2(const qcms_transform *transform,
+                                          const unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
-void qcms_transform_data_rgb_out_lut_sse1(qcms_transform *transform,
-                                          unsigned char *src,
+void qcms_transform_data_rgb_out_lut_sse1(const qcms_transform *transform,
+                                          const unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
-void qcms_transform_data_rgba_out_lut_sse1(qcms_transform *transform,
-                                          unsigned char *src,
+void qcms_transform_data_rgba_out_lut_sse1(const qcms_transform *transform,
+                                          const unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
 
-void qcms_transform_data_rgb_out_lut_altivec(qcms_transform *transform,
-                                             unsigned char *src,
+void qcms_transform_data_rgb_out_lut_altivec(const qcms_transform *transform,
+                                             const unsigned char *src,
                                              unsigned char *dest,
                                              size_t length);
-void qcms_transform_data_rgba_out_lut_altivec(qcms_transform *transform,
-                                              unsigned char *src,
+void qcms_transform_data_rgba_out_lut_altivec(const qcms_transform *transform,
+                                              const unsigned char *src,
                                               unsigned char *dest,
                                               size_t length);
 
@@ -310,28 +310,22 @@ long __cdecl _InterlockedDecrement(long volatile *);
 #endif
 
 
-#ifdef NATIVE_OUTPUT
-# define RGB_OUTPUT_COMPONENTS 4
-# define RGBA_OUTPUT_COMPONENTS 4
-# ifdef IS_LITTLE_ENDIAN
-#  define OUTPUT_A_INDEX 3
-#  define OUTPUT_R_INDEX 2
-#  define OUTPUT_G_INDEX 1
-#  define OUTPUT_B_INDEX 0
-# else
-#  define OUTPUT_A_INDEX 0
-#  define OUTPUT_R_INDEX 1
-#  define OUTPUT_G_INDEX 2
-#  define OUTPUT_B_INDEX 3
-# endif
-#else
-# define RGB_OUTPUT_COMPONENTS 3
-# define RGBA_OUTPUT_COMPONENTS 4
-# define OUTPUT_R_INDEX 0
-# define OUTPUT_G_INDEX 1
-# define OUTPUT_B_INDEX 2
-# define OUTPUT_A_INDEX 3
-#endif
+#define RGB_COMPONENTS 3
+#define RGBA_COMPONENTS 4
+
+#define RGBA_R_INDEX 0
+#define RGBA_G_INDEX 1
+#define RGBA_B_INDEX 2
+#define RGBA_A_INDEX 3
+
+#define BGRA_B_INDEX 0
+#define BGRA_G_INDEX 1
+#define BGRA_R_INDEX 2
+#define BGRA_A_INDEX 3
+
+#define NO_A_INDEX   0xFF
+
+#define A_INDEX_COMPONENTS(kAIndex)    ((kAIndex) == NO_A_INDEX ? RGB_COMPONENTS : RGBA_COMPONENTS)
 
 #ifdef __cplusplus
 }
