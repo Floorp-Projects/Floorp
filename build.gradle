@@ -138,7 +138,19 @@ ext.geckoBinariesOnlyIf = { task ->
     return true
 }
 
-task machBuildGeneratedAndroidCodeAndResources(type: Exec) {
+class MachExec extends Exec {
+    def MachExec() {
+        // Bug 1543982: When invoking `mach build` recursively, the outer `mach
+        // build` itself modifies the environment, causing configure to run
+        // again.  This tries to restore the environment that the outer `mach
+        // build` was invoked in.  See the comment in
+        // $topsrcdir/settings.gradle.
+        project.ext.mozconfig.mozconfig.env.unmodified.each { k, v -> environment.remove(k) }
+        environment project.ext.mozconfig.orig_mozconfig.env.unmodified
+    }
+}
+
+task machBuildGeneratedAndroidCodeAndResources(type: MachExec) {
     onlyIf rootProject.ext.geckoBinariesOnlyIf
 
     workingDir "${topsrcdir}"
@@ -164,7 +176,7 @@ task machBuildGeneratedAndroidCodeAndResources(type: Exec) {
 // generation/native code compilation.  So we have the special target for
 // Android-specific generated code, and the |mach build faster| target for all
 // the stuff that goes into the omnijar.
-task machBuildFaster(type: Exec) {
+task machBuildFaster(type: MachExec) {
     onlyIf rootProject.ext.geckoBinariesOnlyIf
 
     workingDir "${topsrcdir}"
@@ -185,7 +197,7 @@ task machBuildFaster(type: Exec) {
 }
 
 def createMachStagePackageTask(name) {
-    return task(name, type: Exec) {
+    return task(name, type: MachExec) {
         onlyIf rootProject.ext.geckoBinariesOnlyIf
 
         dependsOn rootProject.machBuildFaster
