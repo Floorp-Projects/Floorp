@@ -21,7 +21,7 @@ const {
 // The response must contain at least one theme, and one extension.
 const API_RESPONSE_FILE = RELATIVE_DIR + "discovery/api_response.json";
 
-const AMO_TEST_HOST = "addons.example.com";
+const AMO_TEST_HOST = "rewritten-for-testing.addons.allizom.org";
 
 const ArrayBufferInputStream =
   Components.Constructor("@mozilla.org/io/arraybuffer-input-stream;1",
@@ -319,6 +319,10 @@ add_task(async function discopane_with_real_api_data() {
     await win.document.l10n.translateFragment(card);
     checkContent(".disco-addon-author [data-l10n-name='author']",
                  expectations.authorName);
+
+    let amoListingLink = card.querySelector(".disco-addon-author a");
+    ok(amoListingLink.search.includes("utm_source=firefox-browser"),
+       `Listing link should have attribution parameter, url=${amoListingLink}`);
 
     let actions = getVisibleActions(card);
     is(actions.length, 1, "Card should only have one install button");
