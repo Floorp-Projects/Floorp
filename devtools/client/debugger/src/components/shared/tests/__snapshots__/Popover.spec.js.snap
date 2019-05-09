@@ -30,13 +30,13 @@ exports[`Popover mount popover 1`] = `
     onMouseLeave={[MockFunction]}
     style={
       Object {
-        "left": 510,
+        "left": 505,
         "top": 250,
       }
     }
   >
     <BracketArrow
-      left={-14}
+      left={-9}
       orientation="left"
       top={-202}
     >
@@ -45,7 +45,7 @@ exports[`Popover mount popover 1`] = `
         style={
           Object {
             "bottom": undefined,
-            "left": -14,
+            "left": -9,
             "top": -202,
           }
         }
@@ -160,13 +160,13 @@ exports[`Popover render 1`] = `
     onMouseLeave={[MockFunction]}
     style={
       Object {
-        "left": 510,
+        "left": 505,
         "top": 250,
       }
     }
   >
     <BracketArrow
-      left={-14}
+      left={-9}
       orientation="left"
       top={-202}
     >
@@ -175,7 +175,7 @@ exports[`Popover render 1`] = `
         style={
           Object {
             "bottom": undefined,
-            "left": -14,
+            "left": -9,
             "top": -202,
           }
         }
