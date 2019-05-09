@@ -1,6 +1,13 @@
 /* vim: set ts=8 sw=8 noexpandtab: */
+#ifndef QCMS_INT_H
+#define QCMS_INT_H
+
 #include "qcms.h"
 #include "qcmstypes.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* used as a lookup table for the output transformation.
  * we refcount them so we only need to have one around per output
@@ -204,7 +211,7 @@ struct tag_value {
 #define LAB_SIGNATURE  0x4C616220
 
 struct _qcms_profile {
-	uint32_t class;
+	uint32_t class_type;
 	uint32_t color_space;
 	uint32_t pcs;
 	qcms_intent rendering_intent;
@@ -254,8 +261,8 @@ static inline float uInt16Number_to_float(uInt16Number a)
 
 
 void precache_release(struct precache_output *p);
-qcms_bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
-qcms_bool get_rgb_colorants(struct matrix *colorants, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
+bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
+bool get_rgb_colorants(struct matrix *colorants, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
 
 void qcms_transform_data_rgb_out_lut_sse2(qcms_transform *transform,
                                           unsigned char *src,
@@ -283,7 +290,7 @@ void qcms_transform_data_rgba_out_lut_altivec(qcms_transform *transform,
                                               unsigned char *dest,
                                               size_t length);
 
-extern qcms_bool qcms_supports_iccv4;
+extern bool qcms_supports_iccv4;
 
 #ifdef _MSC_VER
 
@@ -324,4 +331,10 @@ long __cdecl _InterlockedDecrement(long volatile *);
 # define OUTPUT_G_INDEX 1
 # define OUTPUT_B_INDEX 2
 # define OUTPUT_A_INDEX 3
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

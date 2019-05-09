@@ -27,6 +27,10 @@
 #include <stdlib.h>
 #include <math.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define CLU(table,x,y,z) table[(x*len + y*x_len + z*xy_len)*3]
 
 //XXX: could use a bettername
@@ -88,12 +92,7 @@ void build_output_lut(struct curveType *trc,
                       uint16_t **output_gamma_lut, size_t *output_gamma_lut_length);
 
 struct matrix matrix_invert(struct matrix mat);
-qcms_bool compute_precache(struct curveType *trc, uint8_t *output);
-
-// Tested by GTest
-#ifdef  __cplusplus
-extern "C" {
-#endif
+bool compute_precache(struct curveType *trc, uint8_t *output);
 
 uint16_fract_t lut_inverse_interp16(uint16_t Value, uint16_t LutTable[], int length);
 
