@@ -199,6 +199,8 @@ class FontFaceSet final : public DOMEventTargetHelper,
   // For ServoStyleSet to know ahead of time whether a font is loadable.
   void CacheFontLoadability();
 
+  void MarkUserFontSetDirty();
+
  private:
   ~FontFaceSet();
 
@@ -278,7 +280,6 @@ class FontFaceSet final : public DOMEventTargetHelper,
                             uint8_t*& aBuffer, uint32_t& aBufferLength);
   nsresult LogMessage(gfxUserFontEntry* aUserFontEntry, const char* aMessage,
                       uint32_t aFlags, nsresult aStatus);
-  void MarkUserFontSetDirty();
 
   void InsertRuleFontFace(FontFace* aFontFace, StyleOrigin aOrigin,
                           nsTArray<FontFaceRecord>& aOldRecords,
