@@ -1427,21 +1427,6 @@ void Gecko_EnsureStyleTransitionArrayLength(void* aArray, size_t aLen) {
   EnsureStyleAutoArrayLength(base, aLen);
 }
 
-void Gecko_ClearWillChange(nsStyleDisplay* aDisplay, size_t aLength) {
-  aDisplay->mWillChange.Clear();
-  aDisplay->mWillChange.SetCapacity(aLength);
-}
-
-void Gecko_AppendWillChange(nsStyleDisplay* aDisplay, nsAtom* aAtom) {
-  aDisplay->mWillChange.AppendElement(aAtom);
-}
-
-void Gecko_CopyWillChangeFrom(nsStyleDisplay* aDest,
-                              const nsStyleDisplay* aSrc) {
-  aDest->mWillChange.Clear();
-  aDest->mWillChange.AppendElements(aSrc->mWillChange);
-}
-
 enum class KeyframeSearchDirection {
   Forwards,
   Backwards,
