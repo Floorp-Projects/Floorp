@@ -61,3 +61,12 @@ project(':thirdparty').projectDir = new File("${json.topsrcdir}/mobile/android/t
 // tries to configure the project even once, and as a side benefit
 // saves invoking |mach environment| multiple times.
 gradle.ext.mozconfig = json
+
+// Produced by `mach build`.  Bug 1543982: the mozconfig determined by `mach
+// environment` above can be different because `mach build` itself sets certain
+// critical environment variables including MOZ_OBJDIR, CC, and CXX.  We use
+// this record to patch up the environment when we recursively invoke `mach
+// build ...` commands from within Gradle.  This avoids invalidating configure
+// based on the changed environment variables.
+def orig = slurper.parse(new File(json.topobjdir, '.mozconfig.json'))
+gradle.ext.mozconfig.orig_mozconfig = orig.mozconfig
