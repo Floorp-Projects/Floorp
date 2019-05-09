@@ -123,13 +123,18 @@ export class _Trailhead extends React.PureComponent {
     global.addEventListener("visibilitychange", this.closeModal);
   }
 
-  closeModal() {
+  closeModal(ev) {
     global.removeEventListener("visibilitychange", this.closeModal);
     this.props.document.body.classList.remove("welcome");
     this.props.document.getElementById("root").removeAttribute("aria-hidden");
     this.setState({isModalOpen: false});
     this.revealCards();
-    this.props.dispatch(ac.UserEvent({event: "SKIPPED_SIGNIN", ...this._getFormInfo()}));
+
+    // If closeModal() was triggered by a visibilitychange event, the user actually
+    // submitted the email form so we don't send a SKIPPED_SIGNIN ping.
+    if (!ev || ev.type !== "visibilitychange") {
+      this.props.dispatch(ac.UserEvent({event: "SKIPPED_SIGNIN", ...this._getFormInfo()}));
+    }
   }
 
   /**
@@ -223,7 +228,7 @@ export class _Trailhead extends React.PureComponent {
               </li>
             ))}
           </ul>
-          <a className="trailheadLearn" data-l10n-id={content.learn.text.string_id} href={this.addUtmParams(content.learn.url)}>
+          <a className="trailheadLearn" data-l10n-id={content.learn.text.string_id} href={this.addUtmParams(content.learn.url)} target="_blank" rel="noopener noreferrer">
             {this.getStringValue(content.learn.text)}
           </a>
         </div>
@@ -247,13 +252,13 @@ export class _Trailhead extends React.PureComponent {
               placeholder={this.getStringValue(content.form.email)}
               name="email"
               type="email"
-              required="true"
+              required="required"
               onInvalid={this.onInputInvalid}
               onChange={this.onInputChange} />
             <p className="trailheadTerms" data-l10n-id="onboarding-join-form-legal">
-              <a data-l10n-name="terms"
+              <a data-l10n-name="terms" target="_blank" rel="noopener noreferrer"
                 href={this.addUtmParams("https://accounts.firefox.com/legal/terms")} />
-              <a data-l10n-name="privacy"
+              <a data-l10n-name="privacy" target="_blank" rel="noopener noreferrer"
                 href={this.addUtmParams("https://accounts.firefox.com/legal/privacy")} />
             </p>
             <button data-l10n-id={content.form.button.string_id} type="submit">

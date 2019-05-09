@@ -343,7 +343,7 @@ const ONBOARDING_MESSAGES = async () => ([
         label: {string_id: "onboarding-send-tabs-button"},
         action: {
           type: "OPEN_URL",
-          data: {args: "https://blog.mozilla.org/firefox/send-tabs-a-better-way/", where: "tabshifted"},
+          data: {args: "https://support.mozilla.org/kb/send-tab-firefox-desktop-mobile", where: "tabshifted"},
         },
       },
     },
