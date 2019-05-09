@@ -259,3 +259,12 @@ export function getTextForLine(codeMirror: Object, line: number): string {
 export function getCursorLine(codeMirror: Object): number {
   return codeMirror.getCursor().line;
 }
+
+export function getTokenEnd(codeMirror: Object, line: number, column: number) {
+  const token = codeMirror.getTokenAt({
+    line: line,
+    ch: column + 1
+  });
+
+  return token.end;
+}
