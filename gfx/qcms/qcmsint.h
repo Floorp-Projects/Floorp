@@ -272,11 +272,19 @@ void qcms_transform_data_rgba_out_lut_sse2(const qcms_transform *transform,
                                           const unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
+void qcms_transform_data_bgra_out_lut_sse2(const qcms_transform *transform,
+                                          const unsigned char *src,
+                                          unsigned char *dest,
+                                          size_t length);
 void qcms_transform_data_rgb_out_lut_sse1(const qcms_transform *transform,
                                           const unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
 void qcms_transform_data_rgba_out_lut_sse1(const qcms_transform *transform,
+                                          const unsigned char *src,
+                                          unsigned char *dest,
+                                          size_t length);
+void qcms_transform_data_bgra_out_lut_sse1(const qcms_transform *transform,
                                           const unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
@@ -286,6 +294,10 @@ void qcms_transform_data_rgb_out_lut_altivec(const qcms_transform *transform,
                                              unsigned char *dest,
                                              size_t length);
 void qcms_transform_data_rgba_out_lut_altivec(const qcms_transform *transform,
+                                              const unsigned char *src,
+                                              unsigned char *dest,
+                                              size_t length);
+void qcms_transform_data_bgra_out_lut_altivec(const qcms_transform *transform,
                                               const unsigned char *src,
                                               unsigned char *dest,
                                               size_t length);

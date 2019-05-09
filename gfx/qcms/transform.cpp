@@ -394,9 +394,14 @@ static void qcms_transform_data_gray_out_lut(const qcms_transform *transform, co
 	qcms_transform_data_gray_template_lut<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX>(transform, src, dest, length);
 }
 
-static void qcms_transform_data_graya_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+static void qcms_transform_data_graya_rgba_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_gray_template_lut<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX, RGBA_A_INDEX>(transform, src, dest, length);
+}
+
+static void qcms_transform_data_graya_bgra_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+{
+	qcms_transform_data_gray_template_lut<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
 }
 
 template <size_t kRIndex, size_t kGIndex, size_t kBIndex, size_t kAIndex = NO_A_INDEX>
@@ -432,9 +437,14 @@ static void qcms_transform_data_gray_out_precache(const qcms_transform *transfor
 	qcms_transform_data_gray_template_precache<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX>(transform, src, dest, length);
 }
 
-static void qcms_transform_data_graya_out_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+static void qcms_transform_data_graya_rgba_out_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_gray_template_precache<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX, RGBA_A_INDEX>(transform, src, dest, length);
+}
+
+static void qcms_transform_data_graya_bgra_out_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+{
+	qcms_transform_data_gray_template_precache<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
 }
 
 template <size_t kRIndex, size_t kGIndex, size_t kBIndex, size_t kAIndex = NO_A_INDEX>
@@ -489,6 +499,11 @@ static void qcms_transform_data_rgb_out_lut_precache(const qcms_transform *trans
 static void qcms_transform_data_rgba_out_lut_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_template_lut_precache<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX, RGBA_A_INDEX>(transform, src, dest, length);
+}
+
+static void qcms_transform_data_bgra_out_lut_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+{
+	qcms_transform_data_template_lut_precache<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
 }
 
 // Not used
@@ -739,6 +754,11 @@ static void qcms_transform_data_rgb_out_lut(const qcms_transform *transform, con
 static void qcms_transform_data_rgba_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_template_lut<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX, RGBA_A_INDEX>(transform, src, dest, length);
+}
+
+static void qcms_transform_data_bgra_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+{
+	qcms_transform_data_template_lut<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
 }
 
 #if 0
@@ -1088,19 +1108,30 @@ qcms_transform* qcms_transform_create(
 		qcms_profile *out, qcms_data_type out_type,
 		qcms_intent intent)
 {
-	bool precache = false;
+	// Ensure the requested input and output types make sense.
+	bool match = false;
+	if (in_type == QCMS_DATA_RGB_8) {
+		match = out_type == QCMS_DATA_RGB_8;
+	} else if (in_type == QCMS_DATA_RGBA_8) {
+		match = out_type == QCMS_DATA_RGBA_8;
+	} else if (in_type == QCMS_DATA_BGRA_8) {
+		match = out_type == QCMS_DATA_BGRA_8;
+	} else if (in_type == QCMS_DATA_GRAY_8) {
+		match = out_type == QCMS_DATA_RGB_8;
+	} else if (in_type == QCMS_DATA_GRAYA_8) {
+		match = out_type == QCMS_DATA_RGBA_8 || out_type == QCMS_DATA_BGRA_8;
+	}
+	if (!match) {
+		assert(0 && "input/output type");
+		return NULL;
+	}
 
         qcms_transform *transform = transform_alloc();
         if (!transform) {
 		return NULL;
 	}
-	if (out_type != QCMS_DATA_RGB_8 &&
-                out_type != QCMS_DATA_RGBA_8) {
-            assert(0 && "output type");
-	    qcms_transform_release(transform);
-            return NULL;
-        }
 
+	bool precache = false;
 	if (out->output_table_r &&
 			out->output_table_g &&
 			out->output_table_b) {
@@ -1146,52 +1177,60 @@ qcms_transform* qcms_transform_create(
 
         if (in->color_space == RGB_SIGNATURE) {
 		struct matrix in_matrix, out_matrix, result;
-
-		if (in_type != QCMS_DATA_RGB_8 &&
-                    in_type != QCMS_DATA_RGBA_8){
-                	assert(0 && "input type");
-			qcms_transform_release(transform);
-                	return NULL;
-            	}
 		if (precache) {
 #ifdef X86
 		    if (sse_version_available() >= 2) {
-			    if (in_type == QCMS_DATA_RGB_8)
+			    if (in_type == QCMS_DATA_RGB_8) {
 				    transform->transform_fn = qcms_transform_data_rgb_out_lut_sse2;
-			    else
+			    } else if (in_type == QCMS_DATA_RGBA_8) {
 				    transform->transform_fn = qcms_transform_data_rgba_out_lut_sse2;
+			    } else if (in_type == QCMS_DATA_BGRA_8) {
+				    transform->transform_fn = qcms_transform_data_bgra_out_lut_sse2;
+			    }
 
 #if !(defined(_MSC_VER) && defined(_M_AMD64))
                     /* Microsoft Compiler for x64 doesn't support MMX.
                      * SSE code uses MMX so that we disable on x64 */
 		    } else
 		    if (sse_version_available() >= 1) {
-			    if (in_type == QCMS_DATA_RGB_8)
+			    if (in_type == QCMS_DATA_RGB_8) {
 				    transform->transform_fn = qcms_transform_data_rgb_out_lut_sse1;
-			    else
+			    } else if (in_type == QCMS_DATA_RGBA_8) {
 				    transform->transform_fn = qcms_transform_data_rgba_out_lut_sse1;
+			    } else if (in_type == QCMS_DATA_BGRA_8) {
+				    transform->transform_fn = qcms_transform_data_bgra_out_lut_sse1;
+			    }
 #endif
 		    } else
 #endif
 #if (defined(__POWERPC__) || defined(__powerpc__) && !defined(__NO_FPRS__))
 		    if (have_altivec()) {
-			    if (in_type == QCMS_DATA_RGB_8)
+			    if (in_type == QCMS_DATA_RGB_8) {
 				    transform->transform_fn = qcms_transform_data_rgb_out_lut_altivec;
-			    else
+			    } else if (in_type == QCMS_DATA_RGBA_8) {
 				    transform->transform_fn = qcms_transform_data_rgba_out_lut_altivec;
+			    } else if (in_type == QCMS_DATA_BGRA_8) {
+				    transform->transform_fn = qcms_transform_data_bgra_out_lut_altivec;
+			    }
 		    } else
 #endif
 			{
-				if (in_type == QCMS_DATA_RGB_8)
+				if (in_type == QCMS_DATA_RGB_8) {
 					transform->transform_fn = qcms_transform_data_rgb_out_lut_precache;
-				else
+				} else if (in_type == QCMS_DATA_RGBA_8) {
 					transform->transform_fn = qcms_transform_data_rgba_out_lut_precache;
+				} else if (in_type == QCMS_DATA_BGRA_8) {
+					transform->transform_fn = qcms_transform_data_bgra_out_lut_precache;
+				}
 			}
 		} else {
-			if (in_type == QCMS_DATA_RGB_8)
+			if (in_type == QCMS_DATA_RGB_8) {
 				transform->transform_fn = qcms_transform_data_rgb_out_lut;
-			else
+			} else if (in_type == QCMS_DATA_RGBA_8) {
 				transform->transform_fn = qcms_transform_data_rgba_out_lut;
+			} else if (in_type == QCMS_DATA_BGRA_8) {
+				transform->transform_fn = qcms_transform_data_bgra_out_lut;
+			}
 		}
 
 		//XXX: avoid duplicating tables if we can
@@ -1237,13 +1276,6 @@ qcms_transform* qcms_transform_create(
 		transform->matrix[2][2] = result.m[2][2];
 
 	} else if (in->color_space == GRAY_SIGNATURE) {
-		if (in_type != QCMS_DATA_GRAY_8 &&
-				in_type != QCMS_DATA_GRAYA_8){
-			assert(0 && "input type");
-			qcms_transform_release(transform);
-			return NULL;
-		}
-
 		transform->input_gamma_table_gray = build_input_gamma_table(in->grayTRC);
 		if (!transform->input_gamma_table_gray) {
 			qcms_transform_release(transform);
@@ -1253,14 +1285,18 @@ qcms_transform* qcms_transform_create(
 		if (precache) {
 			if (in_type == QCMS_DATA_GRAY_8) {
 				transform->transform_fn = qcms_transform_data_gray_out_precache;
-			} else {
-				transform->transform_fn = qcms_transform_data_graya_out_precache;
+			} else if (out_type == QCMS_DATA_RGBA_8) {
+				transform->transform_fn = qcms_transform_data_graya_rgba_out_precache;
+			} else if (out_type == QCMS_DATA_BGRA_8) {
+				transform->transform_fn = qcms_transform_data_graya_bgra_out_precache;
 			}
 		} else {
 			if (in_type == QCMS_DATA_GRAY_8) {
 				transform->transform_fn = qcms_transform_data_gray_out_lut;
-			} else {
-				transform->transform_fn = qcms_transform_data_graya_out_lut;
+			} else if (out_type == QCMS_DATA_RGBA_8) {
+				transform->transform_fn = qcms_transform_data_graya_rgba_out_lut;
+			} else if (out_type == QCMS_DATA_BGRA_8) {
+				transform->transform_fn = qcms_transform_data_graya_bgra_out_lut;
 			}
 		}
 	} else {
@@ -1268,6 +1304,7 @@ qcms_transform* qcms_transform_create(
 		qcms_transform_release(transform);
 		return NULL;
 	}
+	assert(transform->transform_fn);
 	return transform;
 }
 
