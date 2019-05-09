@@ -40,8 +40,8 @@ if use_sse1:
     SOURCES['transform-sse1.c'].flags += CONFIG['SSE_FLAGS']
 
 if use_sse2:
-    SOURCES += ['transform-sse2.c']
-    SOURCES['transform-sse2.c'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES += ['transform-sse2.cpp']
+    SOURCES['transform-sse2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 if use_altivec:
     SOURCES += ['transform-altivec.c']
