@@ -246,8 +246,7 @@ class NrUdpSocketIpc : public NrSocketIpc {
                                   const nsACString& filename,
                                   uint32_t line_number);
   NS_IMETHODIMP CallListenerReceivedData(const nsACString& host, uint16_t port,
-                                         const uint8_t* data,
-                                         uint32_t data_length);
+                                         const nsTArray<uint8_t>& data);
   NS_IMETHODIMP CallListenerOpened();
   NS_IMETHODIMP CallListenerConnected();
   NS_IMETHODIMP CallListenerClosed();

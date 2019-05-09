@@ -129,13 +129,12 @@ class UDPSocket final : public DOMEventTargetHelper,
                       const uint16_t& aLocalPort);
 
   void HandleReceivedData(const nsACString& aRemoteAddress,
-                          const uint16_t& aRemotePort, const uint8_t* aData,
-                          const uint32_t& aDataLength);
+                          const uint16_t& aRemotePort,
+                          const nsTArray<uint8_t>& aData);
 
   nsresult DispatchReceivedData(const nsACString& aRemoteAddress,
                                 const uint16_t& aRemotePort,
-                                const uint8_t* aData,
-                                const uint32_t& aDataLength);
+                                const nsTArray<uint8_t>& aData);
 
   void CloseWithReason(nsresult aReason);
 

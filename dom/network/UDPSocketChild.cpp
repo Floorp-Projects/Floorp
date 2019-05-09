@@ -218,9 +218,8 @@ mozilla::ipc::IPCResult UDPSocketChild::RecvCallbackReceivedData(
   UDPSOCKET_LOG(("%s: %s:%u length %zu", __FUNCTION__,
                  aAddressInfo.addr().get(), aAddressInfo.port(),
                  aData.Length()));
-  nsresult rv = mSocket->CallListenerReceivedData(
-      aAddressInfo.addr(), aAddressInfo.port(), aData.Elements(),
-      aData.Length());
+  nsresult rv = mSocket->CallListenerReceivedData(aAddressInfo.addr(),
+                                                  aAddressInfo.port(), aData);
   mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return IPC_OK();
