@@ -121,6 +121,7 @@ interface nsIEditor  : nsISupports
   /** to be used ONLY when we need to override the doc's modification
     * state (such as when it's saved).
     */
+  [can_run_script]
   void resetModificationCount();
 
   /** Gets the modification count of the document we are editing.
@@ -134,6 +135,7 @@ interface nsIEditor  : nsISupports
     * @param  aModCount  the number of modifications by which
     *                    to increase or decrease the count
     */
+  [can_run_script]
   void incrementModificationCount(in long aModCount);
 
   /* ------------ Transaction methods -------------- */
@@ -149,6 +151,7 @@ interface nsIEditor  : nsISupports
     *
     * @param aTxn the transaction to execute
     */
+  [can_run_script]
   void doTransaction(in nsITransaction txn);
 
 
@@ -220,6 +223,7 @@ interface nsIEditor  : nsISupports
     * Calls to beginTransaction can be nested, as long as endTransaction
     * is called once per beginTransaction.
     */
+  [can_run_script]
   void endTransaction();
 
   /**
