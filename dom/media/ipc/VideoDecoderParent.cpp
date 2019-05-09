@@ -101,7 +101,6 @@ VideoDecoderParent::~VideoDecoderParent() {
 
 void VideoDecoderParent::Destroy() {
   MOZ_ASSERT(OnManagerThread());
-  mDecodeTaskQueue->AwaitShutdownAndIdle();
   mDestroyed = true;
   mIPDLSelfRef = nullptr;
 }
@@ -244,7 +243,15 @@ mozilla::ipc::IPCResult VideoDecoderParent::RecvShutdown() {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
   if (mDecoder) {
-    mDecoder->Shutdown();
+    RefPtr<VideoDecoderParent> self = this;
+    mDecoder->Shutdown()->Then(
+        mManagerTaskQueue, __func__,
+        [self](const ShutdownPromise::ResolveOrRejectValue& aValue) {
+          MOZ_ASSERT(aValue.IsResolve());
+          if (!self->mDestroyed) {
+            Unused << self->SendShutdownComplete();
+          }
+        });
   }
   mDecoder = nullptr;
   return IPC_OK();
@@ -264,9 +271,6 @@ void VideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (mDecoder) {
     mDecoder->Shutdown();
     mDecoder = nullptr;
-  }
-  if (mDecodeTaskQueue) {
-    mDecodeTaskQueue->BeginShutdown();
   }
 }
 
