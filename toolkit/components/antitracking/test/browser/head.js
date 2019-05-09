@@ -33,6 +33,7 @@ const TEST_3RD_PARTY_PAGE_WITH_SVG = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPar
 const TEST_4TH_PARTY_PAGE = TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 const TEST_ANOTHER_3RD_PARTY_PAGE = TEST_ANOTHER_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 const TEST_3RD_PARTY_STORAGE_PAGE = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdPartyStorage.html";
+const TEST_4TH_PARTY_STORAGE_PAGE = TEST_4TH_PARTY_DOMAIN + TEST_PATH + "3rdPartyStorage.html?4th";
 
 const BEHAVIOR_ACCEPT         = Ci.nsICookieService.BEHAVIOR_ACCEPT;
 const BEHAVIOR_REJECT         = Ci.nsICookieService.BEHAVIOR_REJECT;
@@ -49,5 +50,5 @@ Services.scriptloader.loadSubScript(
   this);
 
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/toolkit/components/antitracking/test/browser/storageprincipal_head.js",
+  "chrome://mochitests/content/browser/toolkit/components/antitracking/test/browser/partitionedstorage_head.js",
   this);
