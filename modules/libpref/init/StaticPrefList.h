@@ -726,12 +726,6 @@ VARCACHE_PREF(
   bool, false
 )
 
-VARCACHE_PREF(
-  "dom.separate_event_queue_for_post_message.enabled",
-  dom_separate_event_queue_for_post_message_enabled,
-  bool, true
-)
-
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------
