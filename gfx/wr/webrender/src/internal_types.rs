@@ -61,25 +61,20 @@ pub enum Filter {
 impl Filter {
     /// Ensure that the parameters for a filter operation
     /// are sensible.
-    pub fn sanitize(&self) -> Self {
+    pub fn sanitize(&mut self) {
         match self {
-            Filter::Blur(radius) => Filter::Blur(radius.min(MAX_BLUR_RADIUS)),
-            Filter::DropShadow(shadow) => Filter::DropShadow(Shadow {
-                offset: shadow.offset,
-                blur_radius: shadow.blur_radius.min(MAX_BLUR_RADIUS),
-                color: shadow.color
-            }),
-            Filter::DropShadowStack(ref stack) => {
-                let mut shadows = Vec::with_capacity(stack.len());
-                for shadow in stack {
-                    shadows.push(Shadow {
-                        blur_radius: shadow.blur_radius.min(MAX_BLUR_RADIUS),
-                        ..*shadow
-                    });
-                }
-                Filter::DropShadowStack(shadows)
+            Filter::Blur(ref mut radius) => {
+                *radius = radius.min(MAX_BLUR_RADIUS);
             }
-            filter => filter.clone(),
+            Filter::DropShadow(ref mut shadow) => {
+                shadow.blur_radius = shadow.blur_radius.min(MAX_BLUR_RADIUS);
+            }
+            Filter::DropShadowStack(ref mut stack) => {
+                for shadow in stack {
+                    shadow.blur_radius = shadow.blur_radius.min(MAX_BLUR_RADIUS);
+                }
+            }
+            _ => {},
         }
     }
 
