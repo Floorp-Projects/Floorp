@@ -37,6 +37,7 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
+    implementation project(':browser-session')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

@@ -73,6 +73,8 @@ open class DefaultComponents(private val applicationContext: Context) {
                 .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
                 .whenGoingToBackground()
                 .whenSessionsChange()
+
+            icons.install(engine, this)
         }
     }
 

@@ -7,13 +7,29 @@
   * meta data (e.g. sizes) and passes that to the app code.
   */
 
+/**
+ * Takes a DOMTokenList and returns a String array.
+ */
+function sizesToList(sizes) {
+    if (sizes == null) {
+        return []
+    }
+
+    if (!(sizes instanceof DOMTokenList)) {
+        return []
+    }
+
+    return Array.from(sizes)
+}
+
 function collect_link_icons(icons, rel) {
     document.querySelectorAll('link[rel="' + rel + '"]').forEach(
         function(currentValue, currentIndex, listObj) {
             icons.push({
                 'type': rel,
                 'href': currentValue.href,
-                'sizes': currentValue.sizes
+                'sizes': sizesToList(currentValue.sizes),
+                'mimeType': currentValue.type
             });
     })
 }
@@ -57,8 +73,9 @@ collect_meta_property_icons(icons, 'og:image:secure_url')
 collect_meta_name_icons(icons, 'twitter:image')
 collect_meta_name_icons(icons, 'msapplication-TileImage')
 
-// TODO: For now we are just logging the icons we found here. We need the Messaging API
-//       to actually be able to pass them to the Android world.
-// https://github.com/mozilla-mobile/android-components/issues/2243
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1518843
-console.log("browser-icons: (" + icons.length + ")", document.location.href, icons)
+let message = {
+    'url': document.location.href,
+    'icons': icons
+}
+
+browser.runtime.sendNativeMessage("MozacBrowserIcons", message);

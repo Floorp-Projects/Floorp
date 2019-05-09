@@ -14,6 +14,8 @@ import kotlinx.coroutines.async
 import mozilla.components.browser.icons.decoder.AndroidIconDecoder
 import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.decoder.IconDecoder
+import mozilla.components.browser.icons.extension.AllSessionsObserver
+import mozilla.components.browser.icons.extension.IconSessionObserver
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.generator.IconGenerator
 import mozilla.components.browser.icons.loader.DataUriIconLoader
@@ -26,6 +28,7 @@ import mozilla.components.browser.icons.preparer.MemoryIconPreparer
 import mozilla.components.browser.icons.processor.IconProcessor
 import mozilla.components.browser.icons.processor.MemoryIconProcessor
 import mozilla.components.browser.icons.utils.MemoryCache
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.support.base.log.logger.Logger
@@ -100,12 +103,16 @@ class BrowserIcons(
     /**
      * Installs the "icons" extension in the engine in order to dynamically load icons for loaded websites.
      */
-    fun install(engine: Engine) {
+    fun install(engine: Engine, sessionManager: SessionManager) {
         engine.installWebExtension(
             id = "mozacBrowserIcons",
             url = "resource://android/assets/extensions/browser-icons/",
-            onSuccess = {
+            allowContentMessaging = true,
+            onSuccess = { extension ->
                 Logger.debug("Installed browser-icons extension")
+
+                AllSessionsObserver.register(
+                    sessionManager, IconSessionObserver(this, sessionManager, extension))
             },
             onError = { _, throwable ->
                 Logger.error("Could not install browser-icons extension", throwable)

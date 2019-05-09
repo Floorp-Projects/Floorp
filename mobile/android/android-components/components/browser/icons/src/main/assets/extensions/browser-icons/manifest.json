@@ -8,5 +8,9 @@
       "js": ["icons.js"],
       "run_at": "document_end"
     }
+  ],
+  "permissions": [
+    "geckoViewAddons",
+    "nativeMessaging"
   ]
 }
