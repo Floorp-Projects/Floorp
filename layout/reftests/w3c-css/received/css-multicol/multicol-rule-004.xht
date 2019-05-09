@@ -1,12 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
-  <title>CSS Multi-column Layout Test: '-moz-column-fill: balance' and -moz-column-rule</title>
+  <title>CSS Multi-column Layout Test: 'column-fill: balance' and column-rule</title>
   <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" /> <!-- 2013-08-02 -->
   <link rel="help" href="http://www.w3.org/TR/css3-multicol/#column-gaps-and-rules" title="4. Column gaps and rules" />
   <link rel="match" href="multicol-rule-004-ref.xht" />
   <meta name="flags" content="ahem" />
-  <meta name="assert" content="This test checks that when '-moz-column-fill: balance' distributes equally inline content into column boxes in a way that does not completely fill column boxes, then -moz-column-rule must nevertheless still be painted entirely, that is for the whole length of column boxes, even though the whole inline content may not fill the whole length of the column boxes." />
+  <meta name="assert" content="This test checks that when 'column-fill: balance' distributes equally inline content into column boxes in a way that does not completely fill column boxes, then column-rule must nevertheless still be painted entirely, that is for the whole length of column boxes, even though the whole inline content may not fill the whole length of the column boxes." />
 <style type="text/css"><![CDATA[
 @font-face {
   font-family: Ahem;
@@ -41,10 +41,10 @@
   right: 80px;
   width: 13em;
 
-  -moz-column-count: 2;
-  -moz-column-fill: balance;
-  -moz-column-gap: 5em;
-  -moz-column-rule: green solid 5em;
+  column-count: 2;
+  column-fill: balance;
+  column-gap: 5em;
+  column-rule: green solid 5em;
   }
   ]]></style>
  </head>
