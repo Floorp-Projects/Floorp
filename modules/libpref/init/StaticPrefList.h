@@ -1473,12 +1473,6 @@ VARCACHE_PREF(
   bool, false
 )
 
-VARCACHE_PREF(
-  "media.wmf.vp9.enabled",
-   MediaWmfVp9Enabled,
-  RelaxedAtomicBool, true
-)
-
 #endif // MOZ_WMF
 
 // Whether to check the decoder supports recycling.
