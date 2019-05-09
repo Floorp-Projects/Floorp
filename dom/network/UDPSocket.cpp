@@ -467,7 +467,7 @@ nsresult UDPSocket::InitRemote(const nsAString& aLocalAddress,
                                const uint16_t& aLocalPort) {
   nsresult rv;
 
-  nsCOMPtr<nsIUDPSocketChild> sock = new dom::UDPSocketChild();
+  RefPtr<UDPSocketChild> sock = new UDPSocketChild();
 
   mListenerProxy = new ListenerProxy(this);
 
