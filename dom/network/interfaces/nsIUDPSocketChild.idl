@@ -10,46 +10,9 @@ interface nsIInputStream;
 interface nsIPrincipal;
 interface nsIEventTarget;
 
-%{ C++
-namespace mozilla {
-namespace net {
-union NetAddr;
-}
-}
-%}
-native NetAddr(mozilla::net::NetAddr);
-[ptr] native NetAddrPtr(mozilla::net::NetAddr);
-
 [uuid(1e6ad73b-6c05-4d78-9a88-2d357b88f58b)]
 interface nsIUDPSocketChild : nsISupports
 {
-  readonly attribute unsigned short localPort;
-  readonly attribute AUTF8String localAddress;
-  attribute AUTF8String filterName;
-
-  // Allow hosting this over PBackground instead of PNecko
-  [noscript] void setBackgroundSpinsEvents();
-
-  // Tell the chrome process to bind the UDP socket to a given local host and port
-  void bind(in nsIUDPSocketInternal socket, in nsIPrincipal principal,
-            in AUTF8String host, in unsigned short port,
-            in bool addressReuse, in bool loopback, in uint32_t recvBufferSize,
-            in uint32_t sendBufferSize,
-            [optional] in nsIEventTarget mainThreadTarget);
-
-  // Tell the chrome process to connect the UDP socket to a given remote host and port
-  void connect(in nsIUDPSocketInternal socket, in AUTF8String host, in unsigned short port);
-
-  // Send the given data to the given address.
-  [noscript] void sendWithAddress([const] in NetAddrPtr addr,
-                                  [const, array, size_is(byteLength)] in uint8_t bytes,
-                                  in unsigned long byteLength);
-  // Send input stream. This must be a buffered stream implementation.
-  void sendBinaryStream(in AUTF8String host, in unsigned short port, in nsIInputStream stream);
-
-  void close();
-  void joinMulticast(in AUTF8String multicastAddress, in AUTF8String iface);
-  void leaveMulticast(in AUTF8String multicastAddress, in AUTF8String iface);
 };
 
 /*

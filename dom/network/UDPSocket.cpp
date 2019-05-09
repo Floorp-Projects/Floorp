@@ -227,8 +227,7 @@ void UDPSocket::JoinMulticastGroup(const nsAString& aMulticastGroupAddress,
 
   MOZ_ASSERT(mSocketChild);
 
-  aRv = mSocketChild->JoinMulticast(address, EmptyCString());
-  NS_WARNING_ASSERTION(!aRv.Failed(), "JoinMulticast failed");
+  mSocketChild->JoinMulticast(address, EmptyCString());
 }
 
 void UDPSocket::LeaveMulticastGroup(const nsAString& aMulticastGroupAddress,
@@ -258,8 +257,7 @@ void UDPSocket::LeaveMulticastGroup(const nsAString& aMulticastGroupAddress,
 
   MOZ_ASSERT(mSocketChild);
 
-  aRv = mSocketChild->LeaveMulticast(address, EmptyCString());
-  NS_WARNING_ASSERTION(!aRv.Failed(), "mSocketChild->LeaveMulticast failed");
+  mSocketChild->LeaveMulticast(address, EmptyCString());
 }
 
 nsresult UDPSocket::DoPendingMcastCommand() {
@@ -692,13 +690,9 @@ UDPSocket::CallListenerOpened() {
   MOZ_ASSERT(mSocketChild);
 
   // Get real local address and local port
-  nsCString localAddress;
-  mSocketChild->GetLocalAddress(localAddress);
-  mLocalAddress = NS_ConvertUTF8toUTF16(localAddress);
+  mLocalAddress = NS_ConvertUTF8toUTF16(mSocketChild->LocalAddress());
 
-  uint16_t localPort;
-  mSocketChild->GetLocalPort(&localPort);
-  mLocalPort.SetValue(localPort);
+  mLocalPort.SetValue(mSocketChild->LocalPort());
 
   mReadyState = SocketReadyState::Open;
   nsresult rv = DoPendingMcastCommand();
