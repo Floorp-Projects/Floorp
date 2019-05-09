@@ -4550,9 +4550,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PDFDocumentProperties = void 0;
 
-var _ui_utils = __webpack_require__(2);
-
 var _pdfjsLib = __webpack_require__(4);
+
+var _ui_utils = __webpack_require__(2);
 
 const DEFAULT_FIELD_CONTENT = '-';
 const NON_METRIC_LOCALES = ['en-us', 'en-lr', 'my'];
@@ -4817,41 +4817,16 @@ class PDFDocumentProperties {
   }
 
   _parseDate(inputDate) {
-    if (!inputDate) {
-      return;
+    const dateObject = _pdfjsLib.PDFDateString.toDateObject(inputDate);
+
+    if (dateObject) {
+      const dateString = dateObject.toLocaleDateString();
+      const timeString = dateObject.toLocaleTimeString();
+      return this.l10n.get('document_properties_date_string', {
+        date: dateString,
+        time: timeString
+      }, '{{date}}, {{time}}');
     }
-
-    let dateToParse = inputDate;
-
-    if (dateToParse.substring(0, 2) === 'D:') {
-      dateToParse = dateToParse.substring(2);
-    }
-
-    let year = parseInt(dateToParse.substring(0, 4), 10);
-    let month = parseInt(dateToParse.substring(4, 6), 10) - 1;
-    let day = parseInt(dateToParse.substring(6, 8), 10);
-    let hours = parseInt(dateToParse.substring(8, 10), 10);
-    let minutes = parseInt(dateToParse.substring(10, 12), 10);
-    let seconds = parseInt(dateToParse.substring(12, 14), 10);
-    let utRel = dateToParse.substring(14, 15);
-    let offsetHours = parseInt(dateToParse.substring(15, 17), 10);
-    let offsetMinutes = parseInt(dateToParse.substring(18, 20), 10);
-
-    if (utRel === '-') {
-      hours += offsetHours;
-      minutes += offsetMinutes;
-    } else if (utRel === '+') {
-      hours -= offsetHours;
-      minutes -= offsetMinutes;
-    }
-
-    let date = new Date(Date.UTC(year, month, day, hours, minutes, seconds));
-    let dateString = date.toLocaleDateString();
-    let timeString = date.toLocaleTimeString();
-    return this.l10n.get('document_properties_date_string', {
-      date: dateString,
-      time: timeString
-    }, '{{date}}, {{time}}');
   }
 
   _parseLinearization(isLinearized) {
