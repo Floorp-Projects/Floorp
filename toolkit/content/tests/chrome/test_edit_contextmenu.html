@@ -14,21 +14,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1513343
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     SimpleTest.waitForExplicitFinish();
 
-    async function testElement(selector) {
+    async function runTest() {
       let win = window.open("file_edit_contextmenu.xul", "context-menu", "chrome,width=600,height=600");
       await new Promise(r => win.addEventListener("load", r, { once: true}));
       await SimpleTest.promiseFocus(win);
 
-      info("Testing " + selector);
-      let element = win.document.querySelector(selector);
-      ok(element, "element exists");
+      let textarea = win.document.querySelector("textarea");
+      ok(textarea, "textarea exists");
 
       info("Synthesizing a key so 'Undo' will be enabled");
-      element.focus();
+      textarea.focus();
       synthesizeKey("x", {}, win);
-      is(element.value, "x", "initial value");
+      is(textarea.value, "x", "initial value");
 
-      element.select();
+      textarea.select();
       synthesizeKey("c", { accelKey: true }, win); // copy to clipboard
       synthesizeKey("KEY_ArrowRight", {}, win); // drop selection to disable cut and copy context menu items
 
@@ -36,11 +35,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1513343
         info("Calling prevent default on the first contextmenu event");
         e.preventDefault();
       }, { once: true });
-      synthesizeMouseAtCenter(element, {type: "contextmenu"}, win);
+      synthesizeMouseAtCenter(textarea, {type: "contextmenu"}, win);
       ok(!win.document.getElementById("textbox-contextmenu"), "contextmenu with preventDefault() doesn't run");
 
       let popupshown = new Promise(r => win.addEventListener("popupshown", r, { once: true }));
-      synthesizeMouseAtCenter(element, {type: "contextmenu"}, win);
+      synthesizeMouseAtCenter(textarea, {type: "contextmenu"}, win);
       let contextmenu = win.document.getElementById("textbox-contextmenu");
       ok(contextmenu, "context menu exists after right click");
       await popupshown;
@@ -53,14 +52,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1513343
       ok(!contextmenu.querySelector("[command=cmd_selectAll]").hasAttribute("disabled"), "select all enabled");
 
       contextmenu.querySelector("[command=cmd_undo]").click();
-      is(element.value, "", "undo worked");
-      win.close();
-    }
+      is(textarea.value, "", "undo worked");
 
-    async function runTest() {
-      for (let selector of ["textarea", "input"]) {
-        await testElement(selector);
-      }
       SimpleTest.finish();
     }
 

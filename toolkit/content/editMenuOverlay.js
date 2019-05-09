@@ -64,7 +64,7 @@ window.addEventListener("contextmenu", (e) => {
   // its own context menu), because e.target will be the XBL binding parent in that case.
   let needsContextMenu = e.target.ownerDocument == document &&
                          !e.defaultPrevented &&
-                         ["textarea", "input"].includes(e.target.localName) &&
+                         e.target.localName == "textarea" &&
                          e.target.namespaceURI == "http://www.w3.org/1999/xhtml";
 
   if (!needsContextMenu) {
