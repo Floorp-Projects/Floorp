@@ -6041,6 +6041,10 @@ pref("dom.sidebar.enabled", true);
 // Turn on fission frameloader swapping
 pref("fission.rebuild_frameloaders_on_remoteness_change", true);
 
+// If true, preserve browsing contexts between process swaps. Should be set to
+// true in bug 1550571.
+pref("fission.preserve_browsing_contexts", false);
+
 // Support for legacy customizations that rely on checking the
 // user profile directory for these stylesheets:
 //  * userContent.css
