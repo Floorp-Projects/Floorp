@@ -2916,7 +2916,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOrient(StyleOrient::Inline),
       mIsolation(NS_STYLE_ISOLATION_AUTO),
       mTopLayer(NS_STYLE_TOP_LAYER_NONE),
-      mWillChangeBitField({0}),
+      mWillChange{{}, {0}},
       mTouchAction(StyleTouchAction_AUTO),
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
@@ -2983,7 +2983,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mOrient(aSource.mOrient),
       mIsolation(aSource.mIsolation),
       mTopLayer(aSource.mTopLayer),
-      mWillChangeBitField(aSource.mWillChangeBitField),
       mWillChange(aSource.mWillChange),
       mTouchAction(aSource.mTouchAction),
       mScrollBehavior(aSource.mScrollBehavior),
@@ -3290,7 +3289,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   // TODO(emilio): Should add xor to the generated cbindgen type.
   auto willChangeBitsChanged =
       StyleWillChangeBits{static_cast<decltype(StyleWillChangeBits::bits)>(
-          mWillChangeBitField.bits ^ aNewData.mWillChangeBitField.bits)};
+          mWillChange.bits.bits ^ aNewData.mWillChange.bits.bits)};
 
   if (willChangeBitsChanged &
       (StyleWillChangeBits_STACKING_CONTEXT | StyleWillChangeBits_SCROLL |
