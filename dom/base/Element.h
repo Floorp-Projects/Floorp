@@ -1300,6 +1300,16 @@ class Element : public FragmentOrElement {
               : 0;
   }
 
+  MOZ_CAN_RUN_SCRIPT double ClientHeightDouble() {
+    return nsPresContext::AppUnitsToDoubleCSSPixels(
+        GetClientAreaRect().Height());
+  }
+
+  MOZ_CAN_RUN_SCRIPT double ClientWidthDouble() {
+    return nsPresContext::AppUnitsToDoubleCSSPixels(
+        GetClientAreaRect().Width());
+  }
+
   already_AddRefed<Flex> GetAsFlexContainer();
   void GetGridFragments(nsTArray<RefPtr<Grid>>& aResult);
 

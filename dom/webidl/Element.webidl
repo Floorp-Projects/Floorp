@@ -313,3 +313,13 @@ partial interface Element {
   [ChromeOnly, Pure]
   sequence<Element> getElementsWithGrid();
 };
+
+// These variables are used in vtt.js, they are used for positioning vtt cues.
+partial interface Element {
+  // These two attributes are a double version of the clientHeight and the
+  // clientWidth.
+  [ChromeOnly]
+  readonly attribute double clientHeightDouble;
+  [ChromeOnly]
+  readonly attribute double clientWidthDouble;
+};
