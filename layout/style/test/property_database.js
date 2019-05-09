@@ -8541,6 +8541,17 @@ if (IsCSSPropertyPrefEnabled("layout.css.column-span.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.webkit-line-clamp.enabled")) {
+  gCSSProperties["-webkit-line-clamp"] = {
+    domProp: "webkitLineClamp",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "1", "2" ],
+    invalid_values: [ "auto", "0", "-1" ],
+  };
+}
+
 if (false) {
   // TODO These properties are chrome-only, and are not exposed via CSSOM.
   // We may still want to find a way to test them. See bug 1206999.

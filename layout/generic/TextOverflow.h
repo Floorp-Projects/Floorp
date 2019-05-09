@@ -64,14 +64,14 @@ class TextOverflow final {
    */
   nsDisplayList& GetMarkers() { return mMarkerList; }
 
-  /**
-   * @return true if aBlockFrmae has text-overflow:clip on both sides.
-   */
-  static bool HasClippedOverflow(nsIFrame* aBlockFrame);
-  /**
-   * @return true if aBlockFrame needs analysis for text overflow.
-   */
-  static bool CanHaveTextOverflow(nsIFrame* aBlockFrame);
+  // Returns whether aBlockFrame has text-overflow:clip on both sides.
+  static bool HasClippedTextOverflow(nsIFrame* aBlockFrame);
+
+  // Returns whether aBlockFrame has a block ellipsis on one of its lines.
+  static bool HasBlockEllipsis(nsIFrame* aBlockFrame);
+
+  // Returns whether aBlockFrame needs analysis for text overflow.
+  static bool CanHaveOverflowMarkers(nsIFrame* aBlockFrame);
 
   typedef nsTHashtable<nsPtrHashKey<nsIFrame>> FrameHashtable;
 
@@ -79,22 +79,36 @@ class TextOverflow final {
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::LogicalRect LogicalRect;
 
+  // Edges to align the IStart and IEnd markers to.
   struct AlignmentEdges {
-    AlignmentEdges() : mIStart(0), mIEnd(0), mAssigned(false) {}
-    void Accumulate(WritingMode aWM, const LogicalRect& aRect) {
-      if (MOZ_LIKELY(mAssigned)) {
+    AlignmentEdges()
+        : mIStart(0), mIEnd(0), mIEndOuter(0), mAssignedInner(false) {}
+    void AccumulateInner(WritingMode aWM, const LogicalRect& aRect) {
+      if (MOZ_LIKELY(mAssignedInner)) {
         mIStart = std::min(mIStart, aRect.IStart(aWM));
         mIEnd = std::max(mIEnd, aRect.IEnd(aWM));
       } else {
         mIStart = aRect.IStart(aWM);
         mIEnd = aRect.IEnd(aWM);
-        mAssigned = true;
+        mAssignedInner = true;
       }
     }
+    void AccumulateOuter(WritingMode aWM, const LogicalRect& aRect) {
+      mIEndOuter = std::max(mIEndOuter, aRect.IEnd(aWM));
+    }
     nscoord ISize() { return mIEnd - mIStart; }
+
+    // The outermost edges of all text and atomic inline-level frames that are
+    // inside the area between the markers.
     nscoord mIStart;
     nscoord mIEnd;
-    bool mAssigned;
+
+    // The closest IEnd edge of all text and atomic inline-level frames that
+    // fall completely before the IStart edge of the content area.  (Used to
+    // align a block ellipsis when there are no visible frames to align to.)
+    nscoord mIEndOuter;
+
+    bool mAssignedInner;
   };
 
   struct InnerClipEdges {
@@ -136,8 +150,10 @@ class TextOverflow final {
    * and the bounds of what will be displayed between the markers.
    * @param aLine the line we're processing
    * @param aFramesToHide frames that should have their display items removed
-   * @param aAlignmentEdges the outermost edges of all text and atomic
-   *   inline-level frames that are inside the area between the markers
+   * @param aAlignmentEdges edges the markers will be aligned to, including
+   *   the outermost edges of all text and atomic inline-level frames that
+   *   are inside the content area, and the closest IEnd edge of such a frame
+   *   outside the content area
    * @return the area inside which we should add any markers;
    *   this is the block's content area narrowed by any floats on this line.
    */
@@ -151,8 +167,10 @@ class TextOverflow final {
    * @param aContentArea the block's content area
    * @param aInsideMarkersArea the rectangle between the markers
    * @param aFramesToHide frames that should have their display items removed
-   * @param aAlignmentEdges the outermost edges of all text and atomic
-   *   inline-level frames that are inside the area between the markers
+   * @param aAlignmentEdges edges the markers will be aligned to, including
+   *   the outermost edges of all text and atomic inline-level frames that
+   *   are inside the content area, and the closest IEnd edge of such a frame
+   *   outside the content area
    * @param aFoundVisibleTextOrAtomic is set to true if a text or atomic
    *   inline-level frame is visible between the marker edges
    * @param aClippedMarkerEdges the innermost edges of all text and atomic
@@ -179,6 +197,10 @@ class TextOverflow final {
    * @param aAlignmentEdges the outermost edges of all text and atomic
    *   inline-level frames that are inside the area between the markers
    *                       inside aInsideMarkersArea
+   * @param aAlignmentEdges edges the markers will be aligned to, including
+   *   the outermost edges of all text and atomic inline-level frames that
+   *   are inside aInsideMarkersArea, and the closest IEnd edge of such a frame
+   *   outside the content area
    * @param aFoundVisibleTextOrAtomic is set to true if a text or atomic
    *   inline-level frame is visible between the marker edges
    * @param aClippedMarkerEdges the innermost edges of all text and atomic
@@ -234,7 +256,9 @@ class TextOverflow final {
       mStyle = &aStyle;
       mIntrinsicISize = 0;
       mHasOverflow = false;
+      mHasBlockEllipsis = false;
       mActive = false;
+      mEdgeAligned = false;
     }
 
     /**
@@ -242,22 +266,35 @@ class TextOverflow final {
      */
     void SetupString(nsIFrame* aFrame);
 
-    bool IsNeeded() const { return mHasOverflow; }
-    void Reset() { mHasOverflow = false; }
+    bool IsSuppressed() const {
+      return !mHasBlockEllipsis && mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
+    }
+    bool IsNeeded() const { return mHasOverflow || mHasBlockEllipsis; }
+    void Reset() {
+      mHasOverflow = false;
+      mHasBlockEllipsis = false;
+      mEdgeAligned = false;
+    }
 
     // The current width of the marker, the range is [0 .. mIntrinsicISize].
     nscoord mISize;
     // The intrinsic width of the marker.
     nscoord mIntrinsicISize;
-    // The style for this side.
+    // The text-overflow style for this side.  Ignored if we're rendering a
+    // block ellipsis.
     const nsStyleTextOverflowSide* mStyle;
     // True if there is visible overflowing inline content on this side.
     bool mHasOverflow;
-    // True if mMarkerString and mWidth have been setup from style.
+    // True if this side has a block ellipsis (from -webkit-line-clamp).
+    bool mHasBlockEllipsis;
+    // True if mISize and mIntrinsicISize have been setup from style.
     bool mInitialized;
-    // True if the style is text-overflow:clip on this side and the marker
+    // True if the style is not text-overflow:clip on this side and the marker
     // won't cause the line to become empty.
     bool mActive;
+    // True if this marker is aligned to the edge of the content box, so that
+    // when scrolling the marker doesn't jump around.
+    bool mEdgeAligned;
   };
 
   Marker mIStart;  // the inline start marker

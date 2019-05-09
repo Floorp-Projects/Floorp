@@ -1358,6 +1358,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
 struct nsStyleTextOverflowSide {
   nsStyleTextOverflowSide() : mType(NS_STYLE_TEXT_OVERFLOW_CLIP) {}
 
+  static nsStyleTextOverflowSide Ellipsis() {
+    nsStyleTextOverflowSide side;
+    side.mType = NS_STYLE_TEXT_OVERFLOW_ELLIPSIS;
+    return side;
+  }
+
   bool operator==(const nsStyleTextOverflowSide& aOther) const {
     return mType == aOther.mType && (mType != NS_STYLE_TEXT_OVERFLOW_STRING ||
                                      mString == aOther.mString);
@@ -1901,6 +1907,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   nsStyleCoord mScrollSnapPointsY;
   mozilla::Position mScrollSnapDestination;
   nsTArray<mozilla::Position> mScrollSnapCoordinate;
+  uint32_t mLineClamp;
 
   // mSpecifiedTransform is the list of transform functions as
   // specified, or null to indicate there is no transform.  (inherit or

@@ -267,6 +267,11 @@ class nsLineBox final : public nsLineLink {
   void ClearHadFloatPushed() { mFlags.mHadFloatPushed = false; }
   bool HadFloatPushed() const { return mFlags.mHadFloatPushed; }
 
+  // mHasLineClampEllipsis bit
+  void SetHasLineClampEllipsis() { mFlags.mHasLineClampEllipsis = true; }
+  void ClearHasLineClampEllipsis() { mFlags.mHasLineClampEllipsis = false; }
+  bool HasLineClampEllipsis() const { return mFlags.mHasLineClampEllipsis; }
+
  private:
   // Add a hash table for fast lookup when the line has more frames than this.
   static const uint32_t kMinChildCountForHashtable = 200;
@@ -608,6 +613,13 @@ class nsLineBox final : public nsLineLink {
     // that was pushed to a later column or page.
     bool mHadFloatPushed : 1;
     bool mHasHashedFrames : 1;
+    // Indicates that this line is the one identified by an ancestor block
+    // with -webkit-line-clamp on its legacy flex container, and that subsequent
+    // lines under that block are "clamped" away, and therefore we need to
+    // render a 'text-overflow: ellipsis'-like marker in this line.  At most one
+    // line in the set of lines found by LineClampLineIterator for a given
+    // block will have this flag set.
+    bool mHasLineClampEllipsis : 1;
     StyleClear mBreakType;
   };
 
