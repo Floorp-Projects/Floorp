@@ -42,6 +42,7 @@ async function getAddonInfo() {
 
 const L10N = new Localization([
   "branding/brand.ftl",
+  "browser/branding/brandings.ftl",
   "browser/branding/sync-brand.ftl",
   "browser/newtab/onboarding.ftl",
 ]);
@@ -99,7 +100,7 @@ const ONBOARDING_MESSAGES = async () => ([
         },
       },
     },
-    targeting: "attributionData.campaign != 'non-fx-button' && attributionData.source != 'addons.mozilla.org'",
+    targeting: "trailheadInterrupt == 'control' && attributionData.campaign != 'non-fx-button' && attributionData.source != 'addons.mozilla.org'",
     trigger: {id: "showOnboarding"},
   },
   {
@@ -119,7 +120,7 @@ const ONBOARDING_MESSAGES = async () => ([
         },
       },
     },
-    targeting: "providerCohorts.onboarding == 'ghostery'",
+    targeting: "trailheadInterrupt == 'control' && providerCohorts.onboarding == 'ghostery'",
     trigger: {id: "showOnboarding"},
   },
   {
@@ -139,7 +140,274 @@ const ONBOARDING_MESSAGES = async () => ([
         },
       },
     },
-    targeting: "attributionData.campaign == 'non-fx-button' && attributionData.source == 'addons.mozilla.org'",
+    targeting: "trailheadInterrupt == 'control' && attributionData.campaign == 'non-fx-button' && attributionData.source == 'addons.mozilla.org'",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "TRAILHEAD_1",
+    template: "trailhead",
+    targeting: "trailheadInterrupt == 'join'",
+    trigger: {id: "firstRun"},
+    includeBundle: {length: 3, template: "onboarding", trigger: {id: "showOnboarding"}},
+    utm_term: "trailhead-join",
+    content: {
+      className: "joinCohort",
+      title: {string_id: "onboarding-welcome-body"},
+      benefits: ["products", "knowledge", "privacy"].map(id => (
+        {
+          id,
+          title: {string_id: `onboarding-benefit-${id}-title`},
+          text: {string_id: `onboarding-benefit-${id}-text`},
+        }
+      )),
+      learn: {
+        text: {string_id: "onboarding-welcome-learn-more"},
+        url: "https://www.mozilla.org/firefox/accounts/",
+      },
+      form: {
+        title: {string_id: "onboarding-join-form-header"},
+        text: {string_id: "onboarding-join-form-body"},
+        email: {string_id: "onboarding-join-form-email"},
+        button: {string_id: "onboarding-join-form-continue"},
+      },
+      skipButton: {string_id: "onboarding-start-browsing-button-label"},
+    },
+  },
+  {
+    id: "TRAILHEAD_2",
+    template: "trailhead",
+    targeting: "trailheadInterrupt == 'sync'",
+    trigger: {id: "firstRun"},
+    includeBundle: {length: 3, template: "onboarding", trigger: {id: "showOnboarding"}},
+    utm_term: "trailhead-sync",
+    content: {
+      className: "syncCohort",
+      title: {property_id: "firstrun_title"},
+      subtitle: {property_id: "firstrun_content"},
+      benefits: [],
+      learn: {
+        text: {property_id: "firstrun_learn_more_link"},
+        url: "https://www.mozilla.org/firefox/accounts/",
+      },
+      form: {
+        title: {property_id: "firstrun_form_header"},
+        text: {property_id: "firstrun_form_sub_header"},
+        email: {property_id: "firstrun_email_input_placeholder"},
+        button: {property_id: "firstrun_continue_to_login"},
+      },
+      skipButton: {property_id: "firstrun_skip_login"},
+    },
+  },
+  {
+    id: "TRAILHEAD_3",
+    template: "trailhead",
+    targeting: "trailheadInterrupt == 'cards'",
+    trigger: {id: "firstRun"},
+    includeBundle: {length: 3, template: "onboarding", trigger: {id: "showOnboarding"}},
+    utm_term: "trailhead-cards",
+  },
+  {
+    id: "TRAILHEAD_4",
+    template: "trailhead",
+    targeting: "trailheadInterrupt == 'nofirstrun'",
+    trigger: {id: "firstRun"},
+  },
+  {
+    id: "TRAILHEAD_CARD_1",
+    template: "onboarding",
+    bundled: 3,
+    order: 2,
+    content: {
+      title: {string_id: "onboarding-tracking-protection-title"},
+      text: {string_id: "onboarding-tracking-protection-text"},
+      icon: "tracking",
+      primary_button: {
+        label: {string_id: "onboarding-tracking-protection-button"},
+        action: {
+          type: "OPEN_PREFERENCES_PAGE",
+          data: {category: "privacy-trackingprotection"},
+        },
+      },
+    },
+    targeting: "trailheadTriplet == 'privacy'",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "TRAILHEAD_CARD_2",
+    template: "onboarding",
+    bundled: 3,
+    order: 2,
+    content: {
+      title: {string_id: "onboarding-data-sync-title"},
+      text: {string_id: "onboarding-data-sync-text"},
+      icon: "devices",
+      primary_button: {
+        label: {string_id: "onboarding-data-sync-button"},
+        action: {
+          type: "OPEN_URL",
+          addFlowParams: true,
+          data: {args: "https://accounts.firefox.com/?service=sync&action=email&context=fx_desktop_v3&entrypoint=activity-stream-firstrun&style=trailhead", where: "tabshifted"},
+        },
+      },
+    },
+    targeting: "trailheadTriplet == 'supercharge'",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "TRAILHEAD_CARD_3",
+    template: "onboarding",
+    bundled: 3,
+    order: 3,
+    content: {
+      title: {string_id: "onboarding-firefox-monitor-title"},
+      text: {string_id: "onboarding-firefox-monitor-text"},
+      icon: "ffmonitor",
+      primary_button: {
+        label: {string_id: "onboarding-firefox-monitor-button"},
+        action: {
+          type: "OPEN_URL",
+          data: {args: "https://monitor.firefox.com/", where: "tabshifted"},
+        },
+      },
+    },
+    targeting: "trailheadTriplet in ['payoff', 'supercharge']",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "TRAILHEAD_CARD_4",
+    template: "onboarding",
+    bundled: 3,
+    order: 1,
+    content: {
+      title: {string_id: "onboarding-browse-privately-title"},
+      text: {string_id: "onboarding-browse-privately-text"},
+      icon: "private",
+      primary_button: {
+        label: {string_id: "onboarding-browse-privately-button"},
+        action: {type: "OPEN_PRIVATE_BROWSER_WINDOW"},
+      },
+    },
+    targeting: "trailheadTriplet == 'privacy'",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "TRAILHEAD_CARD_5",
+    template: "onboarding",
+    bundled: 3,
+    order: 5,
+    content: {
+      title: {string_id: "onboarding-firefox-send-title"},
+      text: {string_id: "onboarding-firefox-send-text"},
+      icon: "ffsend",
+      primary_button: {
+        label: {string_id: "onboarding-firefox-send-button"},
+        action: {
+          type: "OPEN_URL",
+          data: {args: "https://send.firefox.com/", where: "tabshifted"},
+        },
+      },
+    },
+    targeting: "trailheadTriplet == 'payoff'",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "TRAILHEAD_CARD_6",
+    template: "onboarding",
+    bundled: 3,
+    order: 1,
+    content: {
+      title: {string_id: "onboarding-mobile-phone-title"},
+      text: {string_id: "onboarding-mobile-phone-text"},
+      icon: "mobile",
+      primary_button: {
+        label: {string_id: "onboarding-mobile-phone-button"},
+        action: {
+          type: "OPEN_URL",
+          data: {args: "https://www.mozilla.org/firefox/mobile/", where: "tabshifted"},
+        },
+      },
+    },
+    targeting: "trailheadTriplet in ['supercharge', 'multidevice']",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "TRAILHEAD_CARD_7",
+    template: "onboarding",
+    bundled: 3,
+    order: 3,
+    content: {
+      title: {string_id: "onboarding-send-tabs-title"},
+      text: {string_id: "onboarding-send-tabs-text"},
+      icon: "sendtab",
+      primary_button: {
+        label: {string_id: "onboarding-send-tabs-button"},
+        action: {
+          type: "OPEN_URL",
+          data: {args: "https://support.mozilla.org/kb/send-tab-firefox-desktop-mobile", where: "tabshifted"},
+        },
+      },
+    },
+    targeting: "trailheadTriplet == 'multidevice'",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "TRAILHEAD_CARD_8",
+    template: "onboarding",
+    bundled: 3,
+    order: 2,
+    content: {
+      title: {string_id: "onboarding-pocket-anywhere-title"},
+      text: {string_id: "onboarding-pocket-anywhere-text"},
+      icon: "pocket",
+      primary_button: {
+        label: {string_id: "onboarding-pocket-anywhere-button"},
+        action: {
+          type: "OPEN_URL",
+          data: {args: "https://getpocket.com/firefox_learnmore", where: "tabshifted"},
+        },
+      },
+    },
+    targeting: "trailheadTriplet == 'multidevice'",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "TRAILHEAD_CARD_9",
+    template: "onboarding",
+    bundled: 3,
+    order: 3,
+    content: {
+      title: {string_id: "onboarding-lockwise-passwords-title"},
+      text: {string_id: "onboarding-lockwise-passwords-text"},
+      icon: "lockwise",
+      primary_button: {
+        label: {string_id: "onboarding-lockwise-passwords-button"},
+        action: {
+          type: "OPEN_URL",
+          data: {args: "https://lockwise.firefox.com/", where: "tabshifted"},
+        },
+      },
+    },
+    targeting: "trailheadTriplet == 'privacy'",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "TRAILHEAD_CARD_10",
+    template: "onboarding",
+    bundled: 3,
+    order: 4,
+    content: {
+      title: {string_id: "onboarding-facebook-container-title"},
+      text: {string_id: "onboarding-facebook-container-text"},
+      icon: "fbcont",
+      primary_button: {
+        label: {string_id: "onboarding-facebook-container-button"},
+        action: {
+          type: "OPEN_URL",
+          data: {args: "https://addons.mozilla.org/firefox/addon/facebook-container/", where: "tabshifted"},
+        },
+      },
+    },
+    targeting: "trailheadTriplet == 'payoff'",
     trigger: {id: "showOnboarding"},
   },
   {
@@ -217,16 +485,17 @@ const OnboardingMessageProvider = {
         } catch (e) {
           continue;
         }
-      }
 
-      const [primary_button_string, title_string, text_string] = await L10N.formatMessages([
-        {id: msg.content.primary_button.label.string_id},
-        {id: msg.content.title.string_id},
-        {id: msg.content.text.string_id, args: msg.content.text.args},
-      ]);
-      translatedMessage.content.primary_button.label = primary_button_string.value;
-      translatedMessage.content.title = title_string.value;
-      translatedMessage.content.text = text_string.value;
+        // We know we want to show this message, so translate message strings
+        const [primary_button_string, title_string, text_string] = await L10N.formatMessages([
+          {id: msg.content.primary_button.label.string_id},
+          {id: msg.content.title.string_id},
+          {id: msg.content.text.string_id, args: msg.content.text.args},
+        ]);
+        translatedMessage.content.primary_button.label = primary_button_string.value;
+        translatedMessage.content.title = title_string.value;
+        translatedMessage.content.text = text_string.value;
+      }
 
       // Translate any secondary buttons separately
       if (msg.content.secondary_button) {

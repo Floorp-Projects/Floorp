@@ -233,6 +233,19 @@ export const UTSessionPing = Joi.array().items(
   eventsTelemetryExtraKeys
 );
 
+export const trailheadEnrollExtraKeys = Joi.object().keys({
+  experimentType: Joi.string().required(),
+  branch: Joi.string().required(),
+}).options({allowUnknown: false});
+
+export const UTTrailheadEnrollPing = Joi.array().items(
+  Joi.string().required().valid("activity_stream"),
+  Joi.string().required().valid("enroll"),
+  Joi.string().required().valid("preference_study"),
+  Joi.string().required(),
+  trailheadEnrollExtraKeys
+);
+
 export function chaiAssertions(_chai, utils) {
   const {Assertion} = _chai;
 

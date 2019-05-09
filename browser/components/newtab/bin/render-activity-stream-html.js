@@ -104,8 +104,9 @@ for (const src of ${JSON.stringify(scripts, null, 2)}) {
     <link rel="stylesheet" href="${options.baseUrl}css/activity-stream.css" />
   </head>
   <body class="activity-stream">
+    <div id="header-asrouter-container" role="presentation"></div>
     <div id="root">${isPrerendered ? html : "<!-- Regular React Rendering -->"}</div>
-    <div id="footer-snippets-container" />${options.noscripts ? "" : scriptTag}
+    <div id="footer-asrouter-container" role="presentation"></div>${options.noscripts ? "" : scriptTag}
   </body>
 </html>
 `;

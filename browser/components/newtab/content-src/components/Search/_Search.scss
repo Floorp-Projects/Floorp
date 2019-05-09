@@ -246,7 +246,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 }
 
 @media (min-height: 701px) {
-  .fixed-search {
+  body:not(.inline-onboarding) .fixed-search {
     main {
       padding-top: 146px;
     }
