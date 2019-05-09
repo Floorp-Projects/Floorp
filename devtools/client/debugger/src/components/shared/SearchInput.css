@@ -17,7 +17,7 @@
   transition: border-color 200ms ease-in-out;
 }
 
-.search-outline.focused {
+.search-outline:focus-within {
   border-color: var(--blue-50);
 }
 
