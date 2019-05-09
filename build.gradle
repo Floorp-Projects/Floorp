@@ -107,6 +107,12 @@ class TaggedLogOutputStream extends org.apache.commons.exec.LogOutputStream {
 }
 
 ext.geckoBinariesOnlyIf = { task ->
+    // Never when Gradle was invoked within `mach build`.
+    if ('1' == System.env.GRADLE_INVOKED_WITHIN_MACH_BUILD) {
+        rootProject.logger.lifecycle("Skipping task ${task.path} because: within `mach build`")
+        return false
+    }
+
     // Never for official builds.
     if (mozconfig.substs.MOZILLA_OFFICIAL) {
         rootProject.logger.lifecycle("Skipping task ${task.path} because: MOZILLA_OFFICIAL")
