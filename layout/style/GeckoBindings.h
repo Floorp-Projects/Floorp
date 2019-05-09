@@ -532,7 +532,10 @@ void Gecko_NewShapeImage(mozilla::StyleShapeSource* shape);
 void Gecko_StyleShapeSource_SetURLValue(mozilla::StyleShapeSource* shape,
                                         mozilla::css::URLValue* uri);
 
-void Gecko_NewStyleSVGPath(mozilla::StyleShapeSource* shape);
+void Gecko_SetToSVGPath(
+    mozilla::StyleShapeSource* shape,
+    mozilla::StyleForgottenArcSlicePtr<mozilla::StylePathCommand>,
+    mozilla::StyleFillRule);
 
 void Gecko_SetStyleMotion(mozilla::UniquePtr<mozilla::StyleMotion>* aMotion,
                           mozilla::StyleMotion* aValue);

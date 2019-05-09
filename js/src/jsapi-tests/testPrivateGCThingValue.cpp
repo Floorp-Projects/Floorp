@@ -15,7 +15,7 @@
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
-class TestTracer : public JS::CallbackTracer {
+class TestTracer final : public JS::CallbackTracer {
   void onChild(const JS::GCCellPtr& thing) override {
     if (thing.asCell() == expectedCell && thing.kind() == expectedKind) {
       found = true;

@@ -1,0 +1,37 @@
+:host {
+  --rating-star-size: 1em;
+  --rating-star-spacing: 0.3ch;
+
+  display: inline-grid;
+  grid-template-columns: repeat(5, var(--rating-star-size));
+  grid-column-gap: var(--rating-star-spacing);
+  align-content: center;
+}
+
+:host([hidden]) {
+  display: none;
+}
+
+.rating-star {
+  display: inline-block;
+  width: var(--rating-star-size);
+  height: var(--rating-star-size);
+  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#empty");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100%;
+
+  fill: currentColor;
+  -moz-context-properties: fill;
+}
+
+.rating-star[fill="half"] {
+  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#half");
+}
+.rating-star[fill="full"] {
+  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#full");
+}
+
+.rating-star[fill="half"]:dir(rtl) {
+  transform: scaleX(-1);
+}

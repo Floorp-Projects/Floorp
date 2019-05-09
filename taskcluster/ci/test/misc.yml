@@ -73,6 +73,7 @@ telemetry-tests-client:
                 linux.*:
                     - remove_executables.py
                 windows.*: []
+                macosx.*: []
 
 test-verify:
     description: "Extra verification of tests modified on this push"

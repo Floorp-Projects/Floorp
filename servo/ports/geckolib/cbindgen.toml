@@ -7,7 +7,10 @@ header = """/* This Source Code Form is subject to the terms of the Mozilla Publ
 #ifdef __clang__
 #  pragma GCC diagnostic ignored "-Wreturn-type-c-linkage"
 #endif"""
-trailer = "#pragma GCC diagnostic pop"
+trailer = """
+#pragma GCC diagnostic pop
+#include "mozilla/ServoStyleConstsInlines.h"
+"""
 autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
  *   1. Get the latest cbindgen using `cargo install --force cbindgen`
@@ -26,7 +29,7 @@ includes = ["mozilla/ServoStyleConstsForwards.h"]
 
 [parse]
 parse_deps = true
-include = ["style", "cssparser", "style_traits"]
+include = ["style", "cssparser", "style_traits", "servo_arc"]
 
 [struct]
 derive_eq = true
@@ -121,6 +124,9 @@ include = [
   "VerticalAlign",
   "BasicShape",
   "ShapeRadius",
+  "ArcSlice",
+  "ForgottenArcSlicePtr",
+  "HeaderWithLength",
 ]
 item_types = ["enums", "structs", "typedefs", "functions"]
 renaming_overrides_prefixing = true
@@ -370,4 +376,15 @@ renaming_overrides_prefixing = true
   bool operator!=(const StyleOwnedSlice& other) const {
     return !(*this == other);
   }
+"""
+
+"ArcSlice" = """
+  StyleArcSlice() = delete;
+  inline StyleArcSlice(const StyleArcSlice& aOther);
+  inline explicit StyleArcSlice(const StyleForgottenArcSlicePtr<T>& aPtr);
+  inline ~StyleArcSlice();
+  inline Span<const T> AsSpan() const;
+  inline size_t Length() const;
+  inline bool operator==(const StyleArcSlice& other) const;
+  inline bool operator!=(const StyleArcSlice& other) const;
 """

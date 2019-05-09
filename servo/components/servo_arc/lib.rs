@@ -308,6 +308,9 @@ impl<T: ?Sized> Arc<T> {
 impl<T: ?Sized> Clone for Arc<T> {
     #[inline]
     fn clone(&self) -> Self {
+        // NOTE(emilio): If you change anything here, make sure that the
+        // implementation in layout/style/ServoStyleConstsInlines.h matches!
+        //
         // Using a relaxed ordering to check for STATIC_REFCOUNT is safe, since
         // `count` never changes between STATIC_REFCOUNT and other values.
         if self.inner().count.load(Relaxed) != STATIC_REFCOUNT {
@@ -416,6 +419,9 @@ impl<T: ?Sized> Arc<T> {
 impl<T: ?Sized> Drop for Arc<T> {
     #[inline]
     fn drop(&mut self) {
+        // NOTE(emilio): If you change anything here, make sure that the
+        // implementation in layout/style/ServoStyleConstsInlines.h matches!
+        //
         // Using a relaxed ordering to check for STATIC_REFCOUNT is safe, since
         // `count` never changes between STATIC_REFCOUNT and other values.
         if self.inner().count.load(Relaxed) == STATIC_REFCOUNT {
@@ -571,6 +577,7 @@ impl<T: Serialize> Serialize for Arc<T> {
 /// Structure to allow Arc-managing some fixed-sized data and a variably-sized
 /// slice in a single allocation.
 #[derive(Debug, Eq, PartialEq, PartialOrd)]
+#[repr(C)]
 pub struct HeaderSlice<H, T: ?Sized> {
     /// The fixed-sized data.
     pub header: H,
@@ -743,6 +750,7 @@ impl<H, T> Arc<HeaderSlice<H, [T]>> {
 /// Header data with an inline length. Consumers that use HeaderWithLength as the
 /// Header type in HeaderSlice can take advantage of ThinArc.
 #[derive(Debug, Eq, PartialEq, PartialOrd)]
+#[repr(C)]
 pub struct HeaderWithLength<H> {
     /// The fixed-sized data.
     pub header: H,
@@ -782,6 +790,13 @@ type HeaderSliceWithLength<H, T> = HeaderSlice<HeaderWithLength<H>, T>;
 pub struct ThinArc<H, T> {
     ptr: ptr::NonNull<ArcInner<HeaderSliceWithLength<H, [T; 0]>>>,
     phantom: PhantomData<(H, T)>,
+}
+
+
+impl<H: fmt::Debug, T: fmt::Debug> fmt::Debug for ThinArc<H, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(self.deref(), f)
+    }
 }
 
 unsafe impl<H: Sync + Send, T: Sync + Send> Send for ThinArc<H, T> {}
@@ -856,8 +871,12 @@ impl<H, T> ThinArc<H, T> {
     }
 
     /// Returns the address on the heap of the ThinArc itself -- not the T
-    /// within it -- for memory reporting.
-    ///
+    /// within it -- for memory reporting, and bindings.
+    #[inline]
+    pub fn ptr(&self) -> *const c_void {
+        self.ptr.as_ptr() as *const ArcInner<T> as *const c_void
+    }
+
     /// If this is a static ThinArc, this returns null.
     #[inline]
     pub fn heap_ptr(&self) -> *const c_void {
@@ -866,7 +885,7 @@ impl<H, T> ThinArc<H, T> {
         if is_static {
             ptr::null()
         } else {
-            self.ptr.as_ptr() as *const ArcInner<T> as *const c_void
+            self.ptr()
         }
     }
 }
