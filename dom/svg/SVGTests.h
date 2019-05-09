@@ -96,6 +96,7 @@ class SVGTests : public nsISupports {
   already_AddRefed<DOMSVGStringList> RequiredFeatures();
   already_AddRefed<DOMSVGStringList> RequiredExtensions();
   already_AddRefed<DOMSVGStringList> SystemLanguage();
+
   bool HasExtension(const nsAString& aExtension) const;
 
   virtual SVGElement* AsSVGElement() = 0;
