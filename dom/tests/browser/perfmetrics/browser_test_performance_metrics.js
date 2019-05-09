@@ -44,7 +44,6 @@ function postMessageToWorker(tab, message) {
 }
 
 add_task(async function test() {
-  // dom.performance.enable_scheduler_timing is set to true in browser.ini
   waitForExplicitFinish();
 
   // Load 3 pages and wait. The 3rd one has a worker

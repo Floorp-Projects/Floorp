@@ -1140,8 +1140,6 @@ class WorkerPrivate : public RelativeTimeline {
   // We expose some extra testing functions in that case.
   bool mIsInAutomation;
 
-  // This pointer will be null if dom.performance.enable_scheduler_timing is
-  // false (default value)
   RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
 
   nsString mID;
