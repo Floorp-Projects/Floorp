@@ -1310,6 +1310,11 @@ class Element : public FragmentOrElement {
         GetClientAreaRect().Width());
   }
 
+  // This function will return the block size of first line box, no matter if
+  // the box is 'block' or 'inline'. The return unit is pixel. If the element
+  // can't get a primary frame, we will return be zero.
+  double FirstLineBoxBSize() const;
+
   already_AddRefed<Flex> GetAsFlexContainer();
   void GetGridFragments(nsTArray<RefPtr<Grid>>& aResult);
 

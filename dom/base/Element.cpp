@@ -164,6 +164,7 @@
 
 #include "nsISpeculativeConnect.h"
 #include "nsIIOService.h"
+#include "nsBlockFrame.h"
 
 #include "DOMMatrix.h"
 
@@ -3156,8 +3157,8 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
       WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
       if (keyEvent && keyEvent->mKeyCode == NS_VK_RETURN) {
         nsEventStatus status = nsEventStatus_eIgnore;
-        rv = DispatchClickEvent(MOZ_KnownLive(aVisitor.mPresContext), keyEvent, this, false,
-                                nullptr, &status);
+        rv = DispatchClickEvent(MOZ_KnownLive(aVisitor.mPresContext), keyEvent,
+                                this, false, nullptr, &status);
         if (NS_SUCCEEDED(rv)) {
           aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
@@ -4398,6 +4399,18 @@ void Element::NoteDescendantsNeedFramesForServo() {
   // needs processing).
   NoteDirtyElement(this, NODE_DESCENDANTS_NEED_FRAMES);
   SetFlags(NODE_DESCENDANTS_NEED_FRAMES);
+}
+
+double Element::FirstLineBoxBSize() const {
+  const nsBlockFrame* frame = do_QueryFrame(GetPrimaryFrame());
+  if (!frame) {
+    return 0.0;
+  }
+  nsBlockFrame::ConstLineIterator line = frame->LinesBegin();
+  nsBlockFrame::ConstLineIterator lineEnd = frame->LinesEnd();
+  return line != lineEnd
+             ? nsPresContext::AppUnitsToDoubleCSSPixels(line->BSize())
+             : 0.0;
 }
 
 }  // namespace dom
