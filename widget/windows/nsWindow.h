@@ -664,7 +664,7 @@ class nsWindow final : public nsWindowBase {
   // Whether we we're created as a child window (aka ChildWindow) or not.
   bool mIsChildWindow : 1;
 
-  bool mCachedHitTestResult;
+  int32_t mCachedHitTestResult;
 
   // The point in time at which the last paint completed. We use this to avoid
   //  painting too rapidly in response to frequent input events.
