@@ -38,6 +38,7 @@ bitflags = true
 [enum]
 derive_helper_methods = true
 derive_const_casts = true
+derive_tagged_enum_destructor = true
 cast_assert_name = "MOZ_ASSERT"
 
 [export]
@@ -118,6 +119,8 @@ include = [
   "ColorOrAuto",
   "GradientItem",
   "VerticalAlign",
+  "BasicShape",
+  "ShapeRadius",
 ]
 item_types = ["enums", "structs", "typedefs", "functions"]
 renaming_overrides_prefixing = true
@@ -330,4 +333,41 @@ renaming_overrides_prefixing = true
   static inline StyleRGBA FromColor(nscolor);
 
   inline nscolor ToColor() const;
+"""
+
+"OwnedSlice" = """
+  StyleOwnedSlice() :
+    ptr((T*)alignof(T)),
+    len(0) {}
+
+  // NOTE(emilio): Could be implemented with some effort, but for now no copy.
+  StyleOwnedSlice(const StyleOwnedSlice& aOther) = delete;
+
+  ~StyleOwnedSlice() {
+    if (!len) {
+      return;
+    }
+    for (size_t i : IntegerRange(len)) {
+      ptr[i].~T();
+    }
+    free(ptr);
+    ptr = (T*)alignof(T);
+    len = 0;
+  }
+
+  Span<const T> AsSpan() const {
+    return MakeSpan(ptr, len);
+  }
+
+  size_t Length() const {
+    return AsSpan().Length();
+  }
+
+  bool operator==(const StyleOwnedSlice& other) const {
+    return AsSpan() == other.AsSpan();
+  }
+
+  bool operator!=(const StyleOwnedSlice& other) const {
+    return !(*this == other);
+  }
 """

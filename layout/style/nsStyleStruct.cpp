@@ -811,30 +811,6 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const {
 }
 
 // --------------------
-// StyleBasicShape
-
-StyleBasicShape::StyleBasicShape(StyleBasicShapeType aType)
-    : mType(aType),
-      mFillRule(StyleFillRule::Nonzero),
-      mPosition(Position::FromPercentage(0.5f)),
-      mRadius(ZeroBorderRadius()) {}
-
-nsCSSKeyword StyleBasicShape::GetShapeTypeName() const {
-  switch (mType) {
-    case StyleBasicShapeType::Polygon:
-      return eCSSKeyword_polygon;
-    case StyleBasicShapeType::Circle:
-      return eCSSKeyword_circle;
-    case StyleBasicShapeType::Ellipse:
-      return eCSSKeyword_ellipse;
-    case StyleBasicShapeType::Inset:
-      return eCSSKeyword_inset;
-  }
-  MOZ_ASSERT_UNREACHABLE("unexpected type");
-  return eCSSKeyword_UNKNOWN;
-}
-
-// --------------------
 // StyleShapeSource
 StyleShapeSource::StyleShapeSource() : mBasicShape() {}
 
@@ -957,10 +933,13 @@ void StyleShapeSource::DoCopy(const StyleShapeSource& aOther) {
       SetShapeImage(MakeUnique<nsStyleImage>(aOther.ShapeImage()));
       break;
 
-    case StyleShapeSourceType::Shape:
-      SetBasicShape(MakeUnique<StyleBasicShape>(aOther.BasicShape()),
-                    aOther.GetReferenceBox());
+    case StyleShapeSourceType::Shape: {
+      UniquePtr<StyleBasicShape> shape(Servo_CloneBasicShape(&aOther.BasicShape()));
+      // TODO(emilio): This could be a copy-ctor call like above if we teach
+      // cbindgen to generate copy-constructors for tagged unions.
+      SetBasicShape(std::move(shape), aOther.GetReferenceBox());
       break;
+    }
 
     case StyleShapeSourceType::Box:
       SetReferenceBox(aOther.GetReferenceBox());
