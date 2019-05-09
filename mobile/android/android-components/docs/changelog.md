@@ -141,6 +141,9 @@ permalink: /changelog/
   * `PromptFeature` constructor adds an optional `sessionId`. This should use the custom tab session id if available. 
 
 
+* **browser-session**
+  * Added `SessionManager.runWithSessionIdOrSelected(sessionId: String?)` run function block on a session ID. If the session does not exist, then uses the selected session.
+
 # 0.51.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.50.0...v0.51.0)
