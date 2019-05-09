@@ -234,7 +234,7 @@ bool MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget) {
   RefPtr<IDXGIFactory2> dxgiFactory2;
   if (gfxPrefs::Direct3D11UseDoubleBuffering() &&
       SUCCEEDED(dxgiFactory->QueryInterface(dxgiFactory2.StartAssignment())) &&
-      dxgiFactory2 && IsWin10OrLater()) {
+      dxgiFactory2 && IsWin10OrLater() && XRE_IsGPUProcess()) {
     // DXGI_SCALING_NONE is not available on Windows 7 with the Platform Update:
     // This looks awful for things like the awesome bar and browser window
     // resizing, so we don't use a flip buffer chain here. (Note when using
@@ -243,6 +243,9 @@ bool MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget) {
     // We choose not to run this on platforms earlier than Windows 10 because
     // it appears sometimes this breaks our ability to test ASAP compositing,
     // which breaks Talos.
+    //
+    // When the GPU process is disabled we don't have a compositor window which
+    // can lead to issues with Window re-use so we don't use this.
     DXGI_SWAP_CHAIN_DESC1 desc;
     ::ZeroMemory(&desc, sizeof(desc));
     desc.Width = 0;
@@ -375,6 +378,8 @@ void MLGSwapChainD3D11::UpdateBackBufferContents(ID3D11Texture2D* aBack) {
 }
 
 bool MLGSwapChainD3D11::ResizeBuffers(const IntSize& aSize) {
+  mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
+
   // We have to clear all references to the old backbuffer before resizing.
   mRT = nullptr;
 

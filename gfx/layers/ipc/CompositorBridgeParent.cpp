@@ -80,6 +80,7 @@
 #ifdef XP_WIN
 #  include "mozilla/layers/CompositorD3D11.h"
 #  include "mozilla/widget/WinCompositorWidget.h"
+#  include "mozilla/WindowsVersion.h"
 #endif
 #include "GeckoProfiler.h"
 #include "mozilla/ipc/ProtocolTypes.h"
@@ -1549,6 +1550,15 @@ RefPtr<Compositor> CompositorBridgeParent::NewCompositor(
 PLayerTransactionParent* CompositorBridgeParent::AllocPLayerTransactionParent(
     const nsTArray<LayersBackend>& aBackendHints, const LayersId& aId) {
   MOZ_ASSERT(!aId.IsValid());
+
+#ifdef XP_WIN
+  // This is needed to avoid freezing the window on a device crash on double
+  // buffering, see bug 1549674.
+  if (gfxPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater() &&
+      XRE_IsGPUProcess()) {
+    mWidget->AsWindows()->EnsureCompositorWindow();
+  }
+#endif
 
   InitializeLayerManager(aBackendHints);
 
