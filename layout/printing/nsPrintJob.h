@@ -62,8 +62,8 @@ class nsPrintJob final : public nsIObserver,
   // Our nsIWebBrowserPrint implementation defers to these methods.
   nsresult Print(nsIPrintSettings* aPrintSettings,
                  nsIWebProgressListener* aWebProgressListener);
-  nsresult PrintPreview(nsIPrintSettings* aPrintSettings,
-                        mozIDOMWindowProxy* aChildDOMWin,
+  nsresult PrintPreview(mozilla::dom::Document* aSourceDoc,
+                        nsIPrintSettings* aPrintSettings,
                         nsIWebProgressListener* aWebProgressListener);
   bool IsDoingPrint() const { return mIsDoingPrinting; }
   bool IsDoingPrintPreview() const { return mIsDoingPrintPreview; }

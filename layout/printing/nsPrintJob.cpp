@@ -1041,7 +1041,7 @@ nsresult nsPrintJob::Print(nsIPrintSettings* aPrintSettings,
 }
 
 nsresult nsPrintJob::PrintPreview(
-    nsIPrintSettings* aPrintSettings, mozIDOMWindowProxy* aChildDOMWin,
+    Document* aSourceDoc, nsIPrintSettings* aPrintSettings,
     nsIWebProgressListener* aWebProgressListener) {
   // Get the DocShell and see if it is busy
   // (We can't Print Preview this document if it is still busy)
@@ -1055,13 +1055,8 @@ nsresult nsPrintJob::PrintPreview(
     return NS_ERROR_FAILURE;
   }
 
-  auto* window = nsPIDOMWindowOuter::From(aChildDOMWin);
-  NS_ENSURE_STATE(window);
-  nsCOMPtr<Document> doc = window->GetDoc();
-  NS_ENSURE_STATE(doc);
-
   // Document is not busy -- go ahead with the Print Preview
-  return CommonPrint(true, aPrintSettings, aWebProgressListener, doc);
+  return CommonPrint(true, aPrintSettings, aWebProgressListener, aSourceDoc);
 }
 
 //----------------------------------------------------------------------------------
