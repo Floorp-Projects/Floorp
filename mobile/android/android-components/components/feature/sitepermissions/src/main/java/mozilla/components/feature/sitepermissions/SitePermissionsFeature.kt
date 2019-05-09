@@ -21,6 +21,7 @@ import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
+import mozilla.components.browser.session.runWithSessionIdOrSelected
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
 import mozilla.components.concept.engine.permission.Permission.ContentAudioMicrophone
@@ -99,8 +100,8 @@ class SitePermissionsFeature(
      * @see [onNeedToRequestPermissions].
      */
     fun onPermissionsResult(grantResults: IntArray) {
-        sessionManager.selectedSession?.apply {
-            appPermissionRequest.consume { permissionsRequest ->
+        sessionManager.runWithSessionIdOrSelected(sessionId) { session ->
+            session.appPermissionRequest.consume { permissionsRequest ->
 
                 val allPermissionWereGranted = grantResults.all { grantResult ->
                     grantResult == PackageManager.PERMISSION_GRANTED

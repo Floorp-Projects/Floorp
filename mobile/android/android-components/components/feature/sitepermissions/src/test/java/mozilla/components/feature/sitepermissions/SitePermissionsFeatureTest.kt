@@ -652,6 +652,32 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
+    fun `calling onPermissionsResult on a feature session with a sessionId will call grant on the permissionsRequest and consume it`() {
+        val session = Session("", id = "sessionIdCustomTabs")
+        sitePermissionFeature = SitePermissionsFeature(
+            context = context,
+            sessionId = "sessionIdCustomTabs",
+            sessionManager = mockSessionManager,
+            onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
+            storage = mockStorage,
+            fragmentManager = mockFragmentManager
+        )
+
+        mockSessionManager.add(session)
+
+        val mockPermissionRequest: PermissionRequest = mock()
+
+        sitePermissionFeature.start()
+
+        session.appPermissionRequest = Consumable.from(mockPermissionRequest)
+
+        sitePermissionFeature.onPermissionsResult(intArrayOf(PERMISSION_GRANTED))
+
+        verify(mockPermissionRequest).grant(emptyList())
+        assertTrue(session.appPermissionRequest.isConsumed())
+    }
+
+    @Test
     fun `calling onPermissionsResult with NOT all permissions granted will call reject on the permissionsRequest and consume it`() {
         val session = getSelectedSession()
         val mockPermissionRequest: PermissionRequest = mock()

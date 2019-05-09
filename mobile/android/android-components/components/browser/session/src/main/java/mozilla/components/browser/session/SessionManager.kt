@@ -224,21 +224,24 @@ fun SessionManager.runWithSession(
 }
 
 /**
- * Tries to find a session with the provided session ID or uses them selectedSession and runs the block if found.
+ * Tries to find a session with the provided session ID or uses the selected session and runs the block if found.
  *
  * @return True if the session was found and run successfully.
  */
-inline fun SessionManager.runWithSessionIdOrSelected(
+fun SessionManager.runWithSessionIdOrSelected(
     sessionId: String?,
-    block: SessionManager.(Session) -> Boolean
+    block: SessionManager.(Session) -> Unit
 ): Boolean {
+    var blockWasRun = false
     sessionId?.let {
         findSessionById(sessionId)?.let { session ->
-            return block(session)
+            block(session)
+            blockWasRun = true
         }
     }
     selectedSession?.let {
-        return block(it)
+        block(it)
+        blockWasRun = true
     }
-    return false
+    return blockWasRun
 }
