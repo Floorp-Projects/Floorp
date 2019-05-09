@@ -609,6 +609,7 @@ android-aarch64/debug:
 
 android-aarch64-nightly/opt:
     description: "Android 5.0 AArch64 Nightly"
+    use-pgo: android-api-16/pgo
     attributes:
         nightly: true
         enable-full-crashsymbols: true
@@ -653,7 +654,7 @@ android-aarch64-nightly/opt:
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        custom-build-variant-cfg: aarch64
+        custom-build-variant-cfg: aarch64-pgo
         tooltool-downloads: internal
     toolchains:
         - android-gradle-dependencies
