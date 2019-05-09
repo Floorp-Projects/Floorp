@@ -1482,7 +1482,7 @@ void NrUdpSocketIpc::create_i(const nsACString& host, const uint16_t port) {
   ASSERT_ON_THREAD(io_thread_);
 
   uint32_t minBuffSize = 0;
-  nsCOMPtr<nsIUDPSocketChild> socketChild = new dom::UDPSocketChild();
+  RefPtr<dom::UDPSocketChild> socketChild = new dom::UDPSocketChild();
 
   // This can spin the event loop; don't do that with the monitor held
   socketChild->SetBackgroundSpinsEvents();
@@ -1582,10 +1582,10 @@ static void ReleaseIOThread_s() { sThread->ReleaseUse(); }
 
 // close(), but transfer the socket_child_ reference to die as well
 // static
-void NrUdpSocketIpc::destroy_i(nsIUDPSocketChild* aChild,
+void NrUdpSocketIpc::destroy_i(dom::UDPSocketChild* aChild,
                                nsCOMPtr<nsIEventTarget>& aStsThread) {
-  RefPtr<nsIUDPSocketChild> socket_child_ref =
-      already_AddRefed<nsIUDPSocketChild>(aChild);
+  RefPtr<dom::UDPSocketChild> socket_child_ref =
+      already_AddRefed<dom::UDPSocketChild>(aChild);
   if (socket_child_ref) {
     socket_child_ref->Close();
   }
