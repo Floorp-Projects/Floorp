@@ -38,6 +38,7 @@
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/Logging.h"
+#include "mozilla/storage/Variant.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsExceptionHandler.h"
@@ -2344,6 +2345,9 @@ class PrepareDatastoreOp
       public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
   class LoadDataOp;
 
+  class CompressFunction;
+  class CompressibleFunction;
+
   enum class NestedState {
     // The nesting has not yet taken place. Next step is
     // CheckExistingOperations.
@@ -2535,6 +2539,23 @@ class PrepareDatastoreOp::LoadDataOp final
   void OnFailure(nsresult aResultCode) override;
 
   void Cleanup() override;
+};
+
+class PrepareDatastoreOp::CompressFunction final : public mozIStorageFunction {
+ private:
+  ~CompressFunction() = default;
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+};
+
+class PrepareDatastoreOp::CompressibleFunction final
+    : public mozIStorageFunction {
+ private:
+  ~CompressibleFunction() = default;
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
 };
 
 class PrepareObserverOp : public LSRequestBase {
@@ -7034,15 +7055,33 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     mozStorageTransaction transaction(
         connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
+    nsCOMPtr<mozIStorageFunction> function = new CompressFunction();
+
+    rv =
+        connection->CreateFunction(NS_LITERAL_CSTRING("compress"), 1, function);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    function = new CompressibleFunction();
+
+    rv = connection->CreateFunction(NS_LITERAL_CSTRING("compressible"), 1,
+                                    function);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = connection->CreateStatement(
-        NS_LITERAL_CSTRING("INSERT INTO data (key, value, utf16Length) "
-                           "SELECT key, value, utf16Length(value) "
-                           "FROM webappsstore2 "
-                           "WHERE originKey = :originKey "
-                           "AND originAttributes = :originAttributes;"
+        NS_LITERAL_CSTRING(
+            "INSERT INTO data (key, value, utf16Length, compressed) "
+            "SELECT key, compress(value), utf16Length(value), "
+            "compressible(value) "
+            "FROM webappsstore2 "
+            "WHERE originKey = :originKey "
+            "AND originAttributes = :originAttributes;"
 
-                           ),
+            ),
         getter_AddRefs(stmt));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -7054,6 +7093,16 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     }
 
     rv = stmt->Execute();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = connection->RemoveFunction(NS_LITERAL_CSTRING("compress"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = connection->RemoveFunction(NS_LITERAL_CSTRING("compressible"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -7764,6 +7813,80 @@ void PrepareDatastoreOp::LoadDataOp::Cleanup() {
   mPrepareDatastoreOp = nullptr;
 
   ConnectionDatastoreOperationBase::Cleanup();
+}
+
+NS_IMPL_ISUPPORTS(PrepareDatastoreOp::CompressFunction, mozIStorageFunction)
+
+NS_IMETHODIMP
+PrepareDatastoreOp::CompressFunction::OnFunctionCall(
+    mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aFunctionArguments);
+  MOZ_ASSERT(aResult);
+
+#ifdef DEBUG
+  {
+    uint32_t argCount;
+    MOZ_ALWAYS_SUCCEEDS(aFunctionArguments->GetNumEntries(&argCount));
+    MOZ_ASSERT(argCount == 1);
+
+    int32_t type;
+    MOZ_ALWAYS_SUCCEEDS(aFunctionArguments->GetTypeOfIndex(0, &type));
+    MOZ_ASSERT(type == mozIStorageValueArray::VALUE_TYPE_TEXT);
+  }
+#endif
+
+  nsCString value;
+  nsresult rv = aFunctionArguments->GetUTF8String(0, value);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString compressed;
+  if (!SnappyCompress(value, compressed)) {
+    compressed = value;
+  }
+
+  nsCOMPtr<nsIVariant> result = new storage::UTF8TextVariant(compressed);
+
+  result.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(PrepareDatastoreOp::CompressibleFunction, mozIStorageFunction)
+
+NS_IMETHODIMP
+PrepareDatastoreOp::CompressibleFunction::OnFunctionCall(
+    mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aFunctionArguments);
+  MOZ_ASSERT(aResult);
+
+#ifdef DEBUG
+  {
+    uint32_t argCount;
+    MOZ_ALWAYS_SUCCEEDS(aFunctionArguments->GetNumEntries(&argCount));
+    MOZ_ASSERT(argCount == 1);
+
+    int32_t type;
+    MOZ_ALWAYS_SUCCEEDS(aFunctionArguments->GetTypeOfIndex(0, &type));
+    MOZ_ASSERT(type == mozIStorageValueArray::VALUE_TYPE_TEXT);
+  }
+#endif
+
+  nsCString value;
+  nsresult rv = aFunctionArguments->GetUTF8String(0, value);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString compressed;
+  bool compressible = SnappyCompress(value, compressed);
+
+  nsCOMPtr<nsIVariant> result = new storage::IntegerVariant(compressible);
+
+  result.forget(aResult);
+  return NS_OK;
 }
 
 /*******************************************************************************
