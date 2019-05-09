@@ -13,3 +13,4 @@ platform(linux,mac) == mask-perspective.yaml mask-perspective.png
 == fuzzy(1,6) mask-perspective-tiling.yaml mask-perspective.yaml
 platform(linux,mac) == checkerboard.yaml checkerboard.png
 == checkerboard.yaml checkerboard-tiling.yaml
+== missing-mask.yaml missing-mask-ref.yaml
