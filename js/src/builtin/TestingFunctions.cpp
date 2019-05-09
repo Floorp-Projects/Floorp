@@ -1369,7 +1369,7 @@ static bool NondeterministicGetWeakMapKeys(JSContext* cx, unsigned argc,
   return true;
 }
 
-class HasChildTracer : public JS::CallbackTracer {
+class HasChildTracer final : public JS::CallbackTracer {
   RootedValue child_;
   bool found_;
 
