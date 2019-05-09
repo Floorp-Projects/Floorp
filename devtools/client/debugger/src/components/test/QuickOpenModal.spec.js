@@ -6,13 +6,19 @@
 // @flow
 
 import React from "react";
+import lodash from "lodash";
+
 import { shallow, mount } from "enzyme";
 import { QuickOpenModal } from "../QuickOpenModal";
 import { mockcx } from "../../utils/test-mockup";
 
 jest.mock("fuzzaldrin-plus");
+jest.unmock("lodash");
 
 import { filter } from "fuzzaldrin-plus";
+
+// $FlowIgnore
+lodash.throttle = jest.fn(fn => fn);
 
 function generateModal(propOverrides, renderType = "shallow") {
   const props = {
@@ -20,7 +26,7 @@ function generateModal(propOverrides, renderType = "shallow") {
     enabled: false,
     query: "",
     searchType: "sources",
-    sources: [],
+    displayedSources: [],
     tabs: [],
     selectSpecificLocation: jest.fn(),
     setQuickOpenQuery: jest.fn(),
@@ -113,12 +119,24 @@ describe("QuickOpenModal", () => {
       {
         enabled: true,
         query: "",
-        sources: [{ url: "mozilla.com" }],
+        displayedSources: [
+          // $FlowIgnore
+          { url: "mozilla.com", relativeUrl: true }
+        ],
         tabs: [generateTab("mozilla.com")]
       },
       "shallow"
     );
-    expect(wrapper.state("results")).toEqual([{ url: "mozilla.com" }]);
+    expect(wrapper.state("results")).toEqual([
+      {
+        id: undefined,
+        icon: "tab result-item-icon",
+        subtitle: "true",
+        title: "mozilla.com",
+        url: "mozilla.com",
+        value: "true"
+      }
+    ]);
   });
 
   describe("shows loading", () => {

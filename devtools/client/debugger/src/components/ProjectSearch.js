@@ -177,10 +177,7 @@ export class ProjectSearch extends Component<Props, State> {
   };
 
   onEnterPress = () => {
-    if (
-      !this.isProjectSearchEnabled() ||
-      !this.state.focusedItem
-    ) {
+    if (!this.isProjectSearchEnabled() || !this.state.focusedItem) {
       return;
     }
     if (this.state.focusedItem.type === "MATCH") {

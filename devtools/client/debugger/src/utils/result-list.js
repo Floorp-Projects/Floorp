@@ -42,12 +42,18 @@ function chromeScrollList(elem: Element, index: number): void {
     return;
   }
 
-  const resultsHeight: number = resultsEl.clientHeight;
-  const itemHeight: number = resultsEl.children[0].clientHeight;
-  const numVisible: number = resultsHeight / itemHeight;
-  const positionsToScroll: number = index - numVisible + 1;
-  const itemOffset: number = resultsHeight % itemHeight;
-  const scroll: number = positionsToScroll * (itemHeight + 2) + itemOffset;
+  // Avoid expensive DOM computations (reading clientHeight)
+  // https://nolanlawson.com/2018/09/25/accurately-measuring-layout-on-the-web/
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const resultsHeight: number = resultsEl.clientHeight;
+      const itemHeight: number = resultsEl.children[0].clientHeight;
+      const numVisible: number = resultsHeight / itemHeight;
+      const positionsToScroll: number = index - numVisible + 1;
+      const itemOffset: number = resultsHeight % itemHeight;
+      const scroll: number = positionsToScroll * (itemHeight + 2) + itemOffset;
 
-  resultsEl.scrollTop = Math.max(0, scroll);
+      resultsEl.scrollTop = Math.max(0, scroll);
+    });
+  });
 }
