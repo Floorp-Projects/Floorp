@@ -13,7 +13,7 @@ interface nsIEventTarget;
 /*
  * Internal interface for callback from chrome process
  */
-[scriptable, uuid(613dd3ad-598b-4da9-ad63-bbda50c20098)]
+[scriptable, builtinclass, uuid(613dd3ad-598b-4da9-ad63-bbda50c20098)]
 interface nsIUDPSocketInternal : nsISupports
 {
   // callback while socket is opened. localPort and localAddress is ready until this time.
@@ -24,8 +24,7 @@ interface nsIUDPSocketInternal : nsISupports
   void callListenerClosed();
   // callback while incoming packet is received.
   void callListenerReceivedData(in AUTF8String host, in unsigned short port,
-                                [const, array, size_is(dataLength)] in uint8_t data,
-                                in unsigned long dataLength);
+                                in Array<uint8_t> data);
   // callback while any error happened.
   void callListenerError(in AUTF8String message, in AUTF8String filename, in uint32_t lineNumber);
 };
