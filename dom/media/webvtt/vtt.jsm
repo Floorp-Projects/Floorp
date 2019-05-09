@@ -555,6 +555,13 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return { top, left, width, height };
     }
 
+    getFirstLineBoxSize() {
+      // This size would be automatically adjusted by writing direction. When
+      // direction is horizontal, it represents box's height. When direction is
+      // vertical, it represents box's width.
+      return this.div.firstLineBoxBSize;
+    }
+
     /**
      * Following methods are private functions, should not use them outside this
      * class.
@@ -896,7 +903,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       // width or height of the box would be changed when the text is wrapped to
       // different line. Ex. if text is wrapped to two line, the height or width
       // of the box would become 2 times of font size.
-      let step = parseFloat(styleBox.fontSize.replace("px", ""));
+      let step = styleBox.getFirstLineBoxSize();
       if (step == 0) {
         return;
       }
@@ -996,7 +1003,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           outsideAreaPercentage = 1; // Highest possible so the first thing we get is better.
       let hasFoundBestPosition = false;
       const axis = ["-y", "-x", "+x", "+y"];
-      const toMove = parseFloat(styleBox.fontSize.replace("px", ""));
+      const toMove = styleBox.getFirstLineBoxSize();
       for (let i = 0; i < axis.length && !hasFoundBestPosition; i++) {
         while (box.overlapsOppositeAxis(containerBox, axis[i]) ||
                (!box.within(containerBox) || box.overlapsAny(outputBoxes))) {

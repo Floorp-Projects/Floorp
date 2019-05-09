@@ -322,4 +322,9 @@ partial interface Element {
   readonly attribute double clientHeightDouble;
   [ChromeOnly]
   readonly attribute double clientWidthDouble;
+  // This attribute returns the block size of the first line box under the different
+  // writing directions. If the direction is horizontal, it represents box's
+  // height. If the direction is vertical, it represents box's width.
+  [ChromeOnly]
+  readonly attribute double firstLineBoxBSize;
 };
