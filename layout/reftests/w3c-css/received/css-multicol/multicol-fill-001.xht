@@ -1,13 +1,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
-  <title>CSS Multi-column Layout Test: -moz-column-fill: balance with set height (basic)</title>
+  <title>CSS Multi-column Layout Test: column-fill: balance with set height (basic)</title>
   <link rel="author" title="Hakon Wium Lie" href="mailto:howcome@opera.com" />
   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" /> <!-- 2013-08-25 -->
-  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#cf" title="7.1 '-moz-column-fill'" />
+  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#cf" title="7.1 'column-fill'" />
   <link rel="match" href="multicol-fill-001-ref.xht" />
   <meta name="flags" content="ahem" />
-  <meta name="assert" content="This test checks that content is balanced into all -moz-columns of a multi-column element with a set height thanks to '-moz-column-fill: balance'." />
+  <meta name="assert" content="This test checks that content is balanced into all columns of a multi-column element with a set height thanks to 'column-fill: balance'." />
 <style type="text/css"><![CDATA[
 @font-face {
   font-family: Ahem;
@@ -27,9 +27,9 @@
 
   div#test
   {
-  -moz-columns: 2;
-  -moz-column-fill: balance;
-  -moz-column-gap: 0em;
+  columns: 2;
+  column-fill: balance;
+  column-gap: 0em;
 
   /*
 
