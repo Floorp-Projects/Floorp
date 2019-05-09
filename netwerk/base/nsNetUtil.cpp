@@ -95,6 +95,8 @@
 #include "nsJSProtocolHandler.h"
 #include "nsDataHandler.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
+#include "nsStreamUtils.h"
+#include "nsSocketTransportService2.h"
 
 #include <limits>
 
@@ -104,6 +106,8 @@ using mozilla::dom::BlobURLProtocolHandler;
 using mozilla::dom::ClientInfo;
 using mozilla::dom::PerformanceStorage;
 using mozilla::dom::ServiceWorkerDescriptor;
+
+#define MAX_RECURSION_COUNT 50
 
 already_AddRefed<nsIIOService> do_GetIOService(nsresult* error /* = 0 */) {
   nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
