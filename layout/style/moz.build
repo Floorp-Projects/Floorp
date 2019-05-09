@@ -101,6 +101,7 @@ EXPORTS.mozilla += [
     'ServoElementSnapshot.h',
     'ServoElementSnapshotTable.h',
     'ServoStyleConstsForwards.h',
+    'ServoStyleConstsInlines.h',
     'ServoStyleSet.h',
     'ServoStyleSetInlines.h',
     'ServoTraversalStatistics.h',
