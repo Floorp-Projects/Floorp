@@ -42,9 +42,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
 
     ok(chromeBR.height > contentBR.height, "Chrome content height should be bigger than content due to layout");
 
-    ok(!iframeEl.contentDocument.getElementById('svgel').hasExtension("http://www.w3.org/1998/Math/MathML"), 'SVG namespace support is disabled in content iframe');
-    ok(chromeIframeEl.contentDocument.getElementById('svgel').hasExtension("http://www.w3.org/1998/Math/MathML"), 'SVG namespace support is enabled in chrome iframe');
-
     SpecialPowers.setBoolPref("mathml.disabled", initialPrefValue);
   });
 </script>

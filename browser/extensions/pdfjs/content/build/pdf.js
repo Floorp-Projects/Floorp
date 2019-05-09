@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.160';
-var pdfjsBuild = '155304a0';
+var pdfjsVersion = '2.2.167';
+var pdfjsBuild = 'ca2fee3d';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -175,6 +175,7 @@ exports.getFilenameFromUrl = pdfjsDisplayDisplayUtils.getFilenameFromUrl;
 exports.LinkTarget = pdfjsDisplayDisplayUtils.LinkTarget;
 exports.addLinkAttributes = pdfjsDisplayDisplayUtils.addLinkAttributes;
 exports.loadScript = pdfjsDisplayDisplayUtils.loadScript;
+exports.PDFDateString = pdfjsDisplayDisplayUtils.PDFDateString;
 exports.GlobalWorkerOptions = pdfjsDisplayWorkerOptions.GlobalWorkerOptions;
 exports.apiCompatibilityParams = pdfjsDisplayAPICompatibility.apiCompatibilityParams;
 
@@ -1303,7 +1304,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.160',
+    apiVersion: '2.2.167',
     source: {
       data: source.data,
       url: source.url,
@@ -3097,9 +3098,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.160';
+const version = '2.2.167';
 exports.version = version;
-const build = '155304a0';
+const build = 'ca2fee3d';
 exports.build = build;
 
 /***/ }),
@@ -3119,7 +3120,7 @@ exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
 exports.deprecated = deprecated;
 exports.releaseImageResources = releaseImageResources;
-exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
+exports.PDFDateString = exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
@@ -3515,6 +3516,56 @@ function releaseImageResources(img) {
 
   img.removeAttribute('src');
 }
+
+let pdfDateStringRegex;
+
+class PDFDateString {
+  static toDateObject(input) {
+    if (!input || !(0, _util.isString)(input)) {
+      return null;
+    }
+
+    if (!pdfDateStringRegex) {
+      pdfDateStringRegex = new RegExp('^D:' + '(\\d{4})' + '(\\d{2})?' + '(\\d{2})?' + '(\\d{2})?' + '(\\d{2})?' + '(\\d{2})?' + '([Z|+|-])?' + '(\\d{2})?' + '\'?' + '(\\d{2})?' + '\'?');
+    }
+
+    const matches = pdfDateStringRegex.exec(input);
+
+    if (!matches) {
+      return null;
+    }
+
+    const year = parseInt(matches[1], 10);
+    let month = parseInt(matches[2], 10);
+    month = month >= 1 && month <= 12 ? month - 1 : 0;
+    let day = parseInt(matches[3], 10);
+    day = day >= 1 && day <= 31 ? day : 1;
+    let hour = parseInt(matches[4], 10);
+    hour = hour >= 0 && hour <= 23 ? hour : 0;
+    let minute = parseInt(matches[5], 10);
+    minute = minute >= 0 && minute <= 59 ? minute : 0;
+    let second = parseInt(matches[6], 10);
+    second = second >= 0 && second <= 59 ? second : 0;
+    const universalTimeRelation = matches[7] || 'Z';
+    let offsetHour = parseInt(matches[8], 10);
+    offsetHour = offsetHour >= 0 && offsetHour <= 23 ? offsetHour : 0;
+    let offsetMinute = parseInt(matches[9], 10) || 0;
+    offsetMinute = offsetMinute >= 0 && offsetMinute <= 59 ? offsetMinute : 0;
+
+    if (universalTimeRelation === '-') {
+      hour += offsetHour;
+      minute += offsetMinute;
+    } else if (universalTimeRelation === '+') {
+      hour -= offsetHour;
+      minute -= offsetMinute;
+    }
+
+    return new Date(Date.UTC(year, month, day, hour, minute, second));
+  }
+
+}
+
+exports.PDFDateString = PDFDateString;
 
 /***/ }),
 /* 8 */
@@ -8999,6 +9050,7 @@ class AnnotationElement {
       trigger,
       color: data.color,
       title: data.title,
+      modificationDate: data.modificationDate,
       contents: data.contents,
       hideWrapper: true
     });
@@ -9296,6 +9348,7 @@ class PopupAnnotationElement extends AnnotationElement {
       trigger: parentElement,
       color: this.data.color,
       title: this.data.title,
+      modificationDate: this.data.modificationDate,
       contents: this.data.contents
     });
     let parentLeft = parseFloat(parentElement.style.left);
@@ -9314,6 +9367,7 @@ class PopupElement {
     this.trigger = parameters.trigger;
     this.color = parameters.color;
     this.title = parameters.title;
+    this.modificationDate = parameters.modificationDate;
     this.contents = parameters.contents;
     this.hideWrapper = parameters.hideWrapper || false;
     this.pinned = false;
@@ -9336,16 +9390,30 @@ class PopupElement {
       popup.style.backgroundColor = _util.Util.makeCssRgb(r | 0, g | 0, b | 0);
     }
 
-    let contents = this._formatContents(this.contents);
-
     let title = document.createElement('h1');
     title.textContent = this.title;
+    popup.appendChild(title);
+
+    const dateObject = _display_utils.PDFDateString.toDateObject(this.modificationDate);
+
+    if (dateObject) {
+      const modificationDate = document.createElement('span');
+      modificationDate.textContent = '{{date}}, {{time}}';
+      modificationDate.dataset.l10nId = 'annotation_date_string';
+      modificationDate.dataset.l10nArgs = JSON.stringify({
+        date: dateObject.toLocaleDateString(),
+        time: dateObject.toLocaleTimeString()
+      });
+      popup.appendChild(modificationDate);
+    }
+
+    let contents = this._formatContents(this.contents);
+
+    popup.appendChild(contents);
     this.trigger.addEventListener('click', this._toggle.bind(this));
     this.trigger.addEventListener('mouseover', this._show.bind(this, false));
     this.trigger.addEventListener('mouseout', this._hide.bind(this, false));
     popup.addEventListener('click', this._hide.bind(this, true));
-    popup.appendChild(title);
-    popup.appendChild(contents);
     wrapper.appendChild(popup);
     return wrapper;
   }
