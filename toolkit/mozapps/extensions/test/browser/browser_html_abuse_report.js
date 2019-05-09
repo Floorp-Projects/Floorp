@@ -26,7 +26,9 @@ const BASE_TEST_MANIFEST = {
     32: "test-icon.png",
   },
 };
+const THEME_NO_UNINSTALL_ID = "theme-without-perm-can-uninstall@mochi.test";
 
+let gProvider;
 let gHtmlAboutAddonsWindow;
 let gManagerWindow;
 let apiRequestHandler;
@@ -214,6 +216,16 @@ add_task(async function setup() {
       ["extensions.abuseReport.url", "http://test.addons.org/api/report/"],
     ],
   });
+
+  gProvider = new MockProvider();
+  gProvider.createAddons([{
+    id: THEME_NO_UNINSTALL_ID,
+    name: "This theme cannot be uninstalled",
+    version: "1.1",
+    creator: {name: "Theme creator", url: "http://example.com/creator"},
+    type: "theme",
+    permissions: 0,
+  }]);
 });
 
 // This test case verifies that:
@@ -804,6 +816,17 @@ add_task(async function test_abuse_report_message_bars() {
     info("Test message bars on invalid json in the response data");
     setTestRequestHandler(200, "");
     triggerNewAbuseReport(EXT_ID, REPORT_ENTRY_POINT);
+    await promiseAbuseReportRendered();
+    triggerSubmitAbuseReport("fake-reason", "fake-message");
+  });
+
+  // Verify message bar on add-on without perm_can_uninstall.
+  await assertMessageBars([
+    "submitting", "submitted-no-remove-action",
+  ], async () => {
+    info("Test message bars on report submitted on an addon without remove");
+    setTestRequestHandler(200, "{}");
+    triggerNewAbuseReport(THEME_NO_UNINSTALL_ID, "menu");
     await promiseAbuseReportRendered();
     triggerSubmitAbuseReport("fake-reason", "fake-message");
   });
