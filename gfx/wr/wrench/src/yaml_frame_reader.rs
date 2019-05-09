@@ -699,11 +699,17 @@ impl YamlFrameReader {
             return None;
         }
 
-        let file = match item["image"].as_str() {
+        let tiling = item["tile-size"].as_i64();
+
+        let (image_key, image_dims) = match item["image"].as_str() {
             Some(filename) => {
-                let mut file = self.aux_dir.clone();
-                file.push(filename);
-                file
+                if filename == "invalid" {
+                    (ImageKey::DUMMY, LayoutSize::new(100.0, 100.0))
+                } else {
+                    let mut file = self.aux_dir.clone();
+                    file.push(filename);
+                    self.add_or_get_image(&file, tiling, wrench)
+                }
             }
             None => {
                 warn!("No image provided for the image-mask!");
@@ -711,9 +717,6 @@ impl YamlFrameReader {
             }
         };
 
-        let tiling = item["tile-size"].as_i64();
-        let (image_key, image_dims) =
-            self.add_or_get_image(&file, tiling, wrench);
         let image_rect = item["rect"]
             .as_rect()
             .unwrap_or(LayoutRect::new(LayoutPoint::zero(), image_dims));
