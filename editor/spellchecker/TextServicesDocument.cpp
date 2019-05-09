@@ -1089,9 +1089,10 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
 
   // AutoTransactionBatchExternal grabs mTextEditor, so, we don't need to grab
   // the instance with local variable here.
-  AutoTransactionBatchExternal treatAsOneTransaction(*mTextEditor);
+  RefPtr<TextEditor> textEditor = mTextEditor;
+  AutoTransactionBatchExternal treatAsOneTransaction(*textEditor);
 
-  nsresult rv = mTextEditor->InsertTextAsAction(aText);
+  nsresult rv = textEditor->InsertTextAsAction(aText);
   if (NS_FAILED(rv)) {
     return rv;
   }

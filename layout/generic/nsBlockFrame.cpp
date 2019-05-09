@@ -58,6 +58,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Telemetry.h"
+#include "nsFlexContainerFrame.h"
 
 #include "nsBidiPresUtils.h"
 
@@ -1057,6 +1058,139 @@ static LogicalSize CalculateContainingBlockSizeForAbsolutes(
   return cbSize;
 }
 
+/**
+ * Returns aFrame if it is a non-BFC block frame, and null otherwise.
+ *
+ * This is used to determine whether to recurse into aFrame when applying
+ * -webkit-line-clamp.
+ */
+static nsBlockFrame* GetAsLineClampDescendant(nsIFrame* aFrame) {
+  if (nsBlockFrame* block = do_QueryFrame(aFrame)) {
+    if (!block->HasAllStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS)) {
+      return block;
+    }
+  }
+  return nullptr;
+}
+
+/**
+ * Iterator over all descendant inline line boxes, except for those that are
+ * under an independent formatting context.
+ */
+class MOZ_RAII LineClampLineIterator {
+ public:
+  explicit LineClampLineIterator(nsBlockFrame* aFrame)
+      : mCur(aFrame->LinesBegin()),
+        mEnd(aFrame->LinesEnd()),
+        mCurrentFrame(mCur == mEnd ? nullptr : aFrame) {
+    if (mCur != mEnd && !mCur->IsInline()) {
+      Advance();
+    }
+  }
+
+  nsLineBox* GetCurrentLine() { return mCurrentFrame ? mCur.get() : nullptr; }
+  nsBlockFrame* GetCurrentFrame() { return mCurrentFrame; }
+
+  // Advances the iterator to the next line line.
+  //
+  // Next() shouldn't be called once the iterator is at the end, which can be
+  // checked for by GetCurrentLine() or GetCurrentFrame() returning null.
+  void Next() {
+    MOZ_ASSERT(mCur != mEnd && mCurrentFrame,
+               "Don't call Next() when the iterator is at the end");
+    ++mCur;
+    Advance();
+  }
+
+ private:
+  void Advance() {
+    for (;;) {
+      if (mCur == mEnd) {
+        // Reached the end of the current block.  Pop the parent off the
+        // stack; if there isn't one, then we've reached the end.
+        if (mStack.IsEmpty()) {
+          mCurrentFrame = nullptr;
+          break;
+        }
+        auto entry = mStack.PopLastElement();
+        mCurrentFrame = entry.first();
+        mCur = entry.second();
+        mEnd = mCurrentFrame->LinesEnd();
+      } else if (mCur->IsBlock()) {
+        if (nsBlockFrame* child = GetAsLineClampDescendant(mCur->mFirstChild)) {
+          nsBlockFrame::LineIterator next = mCur;
+          ++next;
+          mStack.AppendElement(MakePair(mCurrentFrame, next));
+          mCur = child->LinesBegin();
+          mEnd = child->LinesEnd();
+          mCurrentFrame = child;
+        } else {
+          // Some kind of frame we shouldn't descend into.
+          ++mCur;
+        }
+      } else {
+        MOZ_ASSERT(mCur->IsInline());
+        break;
+      }
+    }
+  }
+
+  // The current line within the current block.
+  //
+  // When this is equal to mEnd, the iterator is at its end, and mCurrentFrame
+  // is set to null.
+  nsBlockFrame::LineIterator mCur;
+
+  // The iterator end for the current block.
+  nsBlockFrame::LineIterator mEnd;
+
+  // The current block.
+  nsBlockFrame* mCurrentFrame;
+
+  // Stack of mCurrentFrame and mEnd values that we push and pop as we enter and
+  // exist blocks.
+  AutoTArray<Pair<nsBlockFrame*, nsBlockFrame::LineIterator>, 8> mStack;
+};
+
+static bool ClearLineClampEllipsis(nsBlockFrame* aFrame) {
+  if (!aFrame->HasAnyStateBits(NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS)) {
+    for (nsIFrame* f : aFrame->PrincipalChildList()) {
+      if (nsBlockFrame* child = GetAsLineClampDescendant(f)) {
+        if (ClearLineClampEllipsis(child)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  aFrame->RemoveStateBits(NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS);
+
+  nsBlockFrame::LineIterator line = aFrame->LinesBegin();
+  nsBlockFrame::LineIterator end = aFrame->LinesEnd();
+  while (line != end) {
+    if (line->HasLineClampEllipsis()) {
+      line->ClearHasLineClampEllipsis();
+      return true;
+    }
+    ++line;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("expected to find a line with HasLineClampEllipsis");
+  return true;
+}
+
+void nsBlockFrame::ClearLineClampEllipsis() {
+  ::ClearLineClampEllipsis(this);
+}
+
+static bool IsLineClampItem(const ReflowInput& aReflowInput) {
+  return aReflowInput.mFlags.mApplyLineClamp ||
+         (aReflowInput.mParentReflowInput &&
+          aReflowInput.mParentReflowInput->mFrame->IsScrollFrame() &&
+          aReflowInput.mParentReflowInput->mFlags.mApplyLineClamp);
+}
+
 void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                           const ReflowInput& aReflowInput,
                           nsReflowStatus& aStatus) {
@@ -1303,6 +1437,11 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     // block-start padding.
   }
 
+  // Clear any existing -webkit-line-clamp ellipsis.
+  if (IsLineClampItem(aReflowInput)) {
+    ClearLineClampEllipsis();
+  }
+
   CheckFloats(state);
 
   // Compute our final size
@@ -1515,6 +1654,109 @@ bool nsBlockFrame::CheckForCollapsedBEndMarginFromClearanceLine() {
   // not reached
 }
 
+static nsLineBox* FindLineClampTarget(nsBlockFrame*& aFrame,
+                                      uint32_t aLineNumber) {
+  MOZ_ASSERT(aLineNumber > 0);
+  MOZ_ASSERT(!aFrame->HasAnyStateBits(NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS),
+             "Should have been removed earlier in nsBlockReflow::Reflow");
+
+  nsLineBox* target = nullptr;
+  nsBlockFrame* targetFrame = nullptr;
+  bool foundFollowingLine = false;
+
+  LineClampLineIterator iter(aFrame);
+
+  while (nsLineBox* line = iter.GetCurrentLine()) {
+    MOZ_ASSERT(!line->HasLineClampEllipsis(),
+               "Should have been removed earlier in nsBlockFrame::Reflow");
+    MOZ_ASSERT(!iter.GetCurrentFrame()->HasAnyStateBits(
+                   NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS),
+               "Should have been removed earlier in nsBlockReflow::Reflow");
+
+    // Don't count a line that only has collapsible white space (as might exist
+    // after calling e.g. getBoxQuads).
+    if (line->IsEmpty()) {
+      continue;
+    }
+
+    if (aLineNumber == 0) {
+      // We already previously found our target line, and now we have
+      // confirmed that there is another line after it.
+      foundFollowingLine = true;
+      break;
+    }
+
+    if (--aLineNumber == 0) {
+      // This is our target line.  Continue looping to confirm that we
+      // have another line after us.
+      target = line;
+      targetFrame = iter.GetCurrentFrame();
+    }
+
+    iter.Next();
+  }
+
+  if (!foundFollowingLine) {
+    aFrame = nullptr;
+    return nullptr;
+  }
+
+  MOZ_ASSERT(target);
+  MOZ_ASSERT(targetFrame);
+
+  aFrame = targetFrame;
+  return target;
+}
+
+static nscoord ApplyLineClamp(const ReflowInput& aReflowInput,
+                              nsBlockFrame* aFrame, nscoord aContentBSize) {
+  // We only do the work of applying the -webkit-line-clamp value during the
+  // measuring bsize reflow.  Boxes affected by -webkit-line-clamp are always
+  // inflexible, so we will never need to select a different line to place the
+  // ellipsis on in the subsequent real reflow.
+  if (!IsLineClampItem(aReflowInput)) {
+    return aContentBSize;
+  }
+
+  auto container =
+      static_cast<nsFlexContainerFrame*>(nsLayoutUtils::GetClosestFrameOfType(
+          aFrame, LayoutFrameType::FlexContainer));
+  MOZ_ASSERT(container,
+             "A flex item affected by -webkit-line-clamp must have an ancestor "
+             "flex container");
+
+  uint32_t lineClamp = container->GetLineClampValue();
+  if (lineClamp == 0) {
+    // -webkit-line-clamp is none or doesn't apply.
+    return aContentBSize;
+  }
+
+  MOZ_ASSERT(container->HasAnyStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX),
+             "Should only have an effective -webkit-line-clamp value if we "
+             "are in a legacy flex container");
+
+  nsBlockFrame* frame = aFrame;
+  nsLineBox* line = FindLineClampTarget(frame, lineClamp);
+  if (!line) {
+    // The number of lines did not exceed the -webkit-line-clamp value.
+    return aContentBSize;
+  }
+
+  // Mark the line as having an ellipsis so that TextOverflow will render it.
+  line->SetHasLineClampEllipsis();
+  frame->AddStateBits(NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS);
+  container->AddStateBits(NS_STATE_FLEX_HAS_LINE_CLAMP_ELLIPSIS);
+
+  // Translate the b-end edge of the line up to aFrame's space.
+  nscoord edge = line->BEnd();
+  for (nsIFrame* f = frame; f != aFrame; f = f->GetParent()) {
+    edge +=
+        f->GetLogicalPosition(f->GetParent()->GetSize()).B(f->GetWritingMode());
+  }
+
+  return edge;
+}
+
 void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
                                     BlockReflowInput& aState,
                                     ReflowOutput& aMetrics,
@@ -1625,10 +1867,12 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     finalSize.BSize(wm) = autoBSize;
   } else if (aState.mReflowStatus.IsComplete()) {
     nscoord contentBSize = blockEndEdgeOfChildren - borderPadding.BStart(wm);
-    nscoord autoBSize = aReflowInput.ApplyMinMaxBSize(contentBSize);
+    nscoord lineClampedContentBSize =
+        ApplyLineClamp(aReflowInput, this, contentBSize);
+    nscoord autoBSize = aReflowInput.ApplyMinMaxBSize(lineClampedContentBSize);
     if (autoBSize != contentBSize) {
-      // Our min- or max-bsize value made our bsize change.  Don't carry out
-      // our kids' block-end margins.
+      // Our min-block-size, max-block-size, or -webkit-line-clamp value made
+      // our bsize change.  Don't carry out our kids' block-end margins.
       aMetrics.mCarriedOutBEndMargin.Zero();
     }
     autoBSize += borderPadding.BStart(wm) + borderPadding.BEnd(wm);
@@ -2808,9 +3052,9 @@ void nsBlockFrame::ReflowLine(BlockReflowInput& aState, LineIterator aLine,
     aLine->SetLineWrapped(false);
     ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
 
-    // Store the line's float edges for text-overflow analysis if needed.
+    // Store the line's float edges for overflow marker analysis if needed.
     aLine->ClearFloatEdges();
-    if (aState.mFlags.mCanHaveTextOverflow) {
+    if (aState.mFlags.mCanHaveOverflowMarkers) {
       WritingMode wm = aLine->mWritingMode;
       nsFlowAreaRect r = aState.GetFloatAvailableSpaceForBSize(
           aLine->BStart(), aLine->BSize(), nullptr);

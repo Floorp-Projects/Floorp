@@ -8,7 +8,7 @@ export class ModalOverlayWrapper extends React.PureComponent {
 
   onKeyDown(event) {
     if (event.key === "Escape") {
-      this.props.onClose();
+      this.props.onClose(event);
     }
   }
 

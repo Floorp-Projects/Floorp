@@ -702,7 +702,9 @@ nsresult EditorBase::DoTransactionInternal(nsITransaction* aTxn) {
     MOZ_ASSERT(mSelState.isNothing());
 
     // We will recurse, but will not hit this case in the nested call
-    DoTransactionInternal(mPlaceholderTransaction);
+    RefPtr<PlaceholderTransaction> placeholderTransaction =
+        mPlaceholderTransaction;
+    DoTransactionInternal(placeholderTransaction);
 
     if (mTransactionManager) {
       nsCOMPtr<nsITransaction> topTransaction =
@@ -3878,8 +3880,8 @@ void EditorBase::EndUpdateViewBatch() {
   // to a document may result in multiple events, some of them quite hard
   // to listen too (in particular when an ancestor of the selection is
   // changed but the selection itself is not changed).
-  DebugOnly<nsresult> rv = htmlEditor->RefereshEditingUI();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RefereshEditingUI() failed");
+  DebugOnly<nsresult> rv = MOZ_KnownLive(htmlEditor)->RefreshEditingUI();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RefreshEditingUI() failed");
 }
 
 TextComposition* EditorBase::GetComposition() const { return mComposition; }

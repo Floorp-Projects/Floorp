@@ -40,7 +40,7 @@ class BlockReflowInput {
           mIsOverflowContainer(false),
           mIsFloatListInBlockPropertyTable(false),
           mFloatFragmentsInsideColumnEnabled(false),
-          mCanHaveTextOverflow(false) {}
+          mCanHaveOverflowMarkers(false) {}
 
     // Set in the BlockReflowInput constructor when the frame being reflowed has
     // been given NS_UNCONSTRAINEDSIZE as its available BSize in the
@@ -104,8 +104,8 @@ class BlockReflowInput {
     // Set when the pref layout.float-fragments-inside-column.enabled is true.
     bool mFloatFragmentsInsideColumnEnabled : 1;
 
-    // Set when we need text-overflow processing.
-    bool mCanHaveTextOverflow : 1;
+    // Set when we need text-overflow or -webkit-line-clamp processing.
+    bool mCanHaveOverflowMarkers : 1;
   };
 
  public:

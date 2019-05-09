@@ -28,7 +28,7 @@ devtools:
     query:
         - "'debugger | 'node-devtools"
         - "'mozlint-eslint"
-        - "'mochitest-devtools | 'mochitest-chrome | 'mac | 'windows10 !asan !shippable !-sw !qr"
+        - "'mochitest-devtools | 'mochitest-chrome 'linux64 | 'mac | 'windows10 !asan !shippable !-sw !qr"
         - "'xpcshell 'linux64/ !asan !shippable"
 
 perf:

@@ -55,6 +55,6 @@ fails == contain-layout-suppress-baseline-002.html contain-layout-suppress-basel
 # column-span enabled. These lines can be removed once the pref becomes
 # default-enabled (Bug 1426010).
 default-preferences pref(layout.css.column-span.enabled,true)
-fails == contain-size-multicol-002.html contain-size-multicol-002-ref.html # Bug 1494100
-fails == contain-size-multicol-003.html contain-size-multicol-003-ref.html # Bug 1494100
+== contain-size-multicol-002.html contain-size-multicol-002-ref.html
+== contain-size-multicol-003.html contain-size-multicol-003-ref.html
 default-preferences

@@ -90,6 +90,10 @@ $excerpt-line-height: 20;
       @include limit-visibile-lines(3, $excerpt-line-height, $excerpt-font-size);
     }
 
+    .source {
+      margin-bottom: 2px;
+    }
+
     .context,
     .source {
       @include dark-theme-only {

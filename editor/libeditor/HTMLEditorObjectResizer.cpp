@@ -147,38 +147,45 @@ nsresult HTMLEditor::SetAllResizersPosition() {
   //      We're may be in hot path if user resizes an element a lot.  So,
   //      we should just add-ref mTopLeftHandle.
   RefPtr<Element> topLeftHandle = mTopLeftHandle.get();
-  SetAnonymousElementPosition(x - rw, y - rh, mTopLeftHandle);
+  SetAnonymousElementPosition(x - rw, y - rh, topLeftHandle);
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
-  SetAnonymousElementPosition(x + w / 2 - rw, y - rh, mTopHandle);
+  RefPtr<Element> topHandle = mTopHandle.get();
+  SetAnonymousElementPosition(x + w / 2 - rw, y - rh, topHandle);
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
-  SetAnonymousElementPosition(x + w - rw - 1, y - rh, mTopRightHandle);
-  if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  SetAnonymousElementPosition(x - rw, y + h / 2 - rh, mLeftHandle);
-  if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
-    return NS_ERROR_FAILURE;
-  }
-  SetAnonymousElementPosition(x + w - rw - 1, y + h / 2 - rh, mRightHandle);
+  RefPtr<Element> topRightHandle = mTopRightHandle.get();
+  SetAnonymousElementPosition(x + w - rw - 1, y - rh, topRightHandle);
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
 
-  SetAnonymousElementPosition(x - rw, y + h - rh - 1, mBottomLeftHandle);
+  RefPtr<Element> leftHandle = mLeftHandle.get();
+  SetAnonymousElementPosition(x - rw, y + h / 2 - rh, leftHandle);
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
-  SetAnonymousElementPosition(x + w / 2 - rw, y + h - rh - 1, mBottomHandle);
+  RefPtr<Element> rightHandle = mRightHandle.get();
+  SetAnonymousElementPosition(x + w - rw - 1, y + h / 2 - rh, rightHandle);
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
+
+  RefPtr<Element> bottomLeftHandle = mBottomLeftHandle.get();
+  SetAnonymousElementPosition(x - rw, y + h - rh - 1, bottomLeftHandle);
+  if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<Element> bottomHandle = mBottomHandle.get();
+  SetAnonymousElementPosition(x + w / 2 - rw, y + h - rh - 1, bottomHandle);
+  if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<Element> bottomRightHandle = mBottomRightHandle.get();
   SetAnonymousElementPosition(x + w - rw - 1, y + h - rh - 1,
-                              mBottomRightHandle);
+                              bottomRightHandle);
   if (NS_WARN_IF(topLeftHandle != mTopLeftHandle)) {
     return NS_ERROR_FAILURE;
   }
@@ -224,7 +231,9 @@ nsresult HTMLEditor::RefreshResizersInternal() {
   MOZ_ASSERT(
       mResizingShadow,
       "SetAllResizersPosition() should return error if resizers are hidden");
-  rv = SetShadowPosition(*mResizingShadow, *mResizedObject, mResizedObjectX,
+  RefPtr<Element> resizingShadow = mResizingShadow.get();
+  RefPtr<Element> resizedObject = mResizedObject;
+  rv = SetShadowPosition(*resizingShadow, *resizedObject, mResizedObjectX,
                          mResizedObjectY);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -379,7 +388,8 @@ nsresult HTMLEditor::ShowResizersInternal(Element& aResizedElement) {
     mResizingShadow = std::move(newShadow);
 
     // and set its position
-    rv = SetShadowPosition(*mResizingShadow, aResizedElement, mResizedObjectX,
+    RefPtr<Element> resizingShadow = mResizingShadow.get();
+    rv = SetShadowPosition(*resizingShadow, aResizedElement, mResizedObjectX,
                            mResizedObjectY);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       if (NS_WARN_IF(mBottomRightHandle.get() != createdBottomRightNalde)) {
@@ -587,9 +597,10 @@ nsresult HTMLEditor::StartResizing(Element* aHandle) {
   mResizingShadow->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_class, true);
 
   // position it
-  mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::width,
+  RefPtr<Element> resizingShadow = mResizingShadow.get();
+  mCSSEditUtils->SetCSSPropertyPixels(*resizingShadow, *nsGkAtoms::width,
                                       mResizedObjectWidth);
-  mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::height,
+  mCSSEditUtils->SetCSSPropertyPixels(*resizingShadow, *nsGkAtoms::height,
                                       mResizedObjectHeight);
 
   // add a mouse move listener to the editor
@@ -725,9 +736,10 @@ nsresult HTMLEditor::SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW,
 
   // Offset info box by 20 so it's not directly under the mouse cursor.
   const int mouseCursorOffset = 20;
-  mCSSEditUtils->SetCSSPropertyPixels(*mResizingInfo, *nsGkAtoms::left,
+  RefPtr<Element> resizingInfo = mResizingInfo.get();
+  mCSSEditUtils->SetCSSPropertyPixels(*resizingInfo, *nsGkAtoms::left,
                                       infoXPosition + mouseCursorOffset);
-  mCSSEditUtils->SetCSSPropertyPixels(*mResizingInfo, *nsGkAtoms::top,
+  mCSSEditUtils->SetCSSPropertyPixels(*resizingInfo, *nsGkAtoms::top,
                                       infoYPosition + mouseCursorOffset);
 
   nsCOMPtr<nsIContent> textInfo = mResizingInfo->GetFirstChild();
@@ -887,13 +899,13 @@ nsresult HTMLEditor::OnMouseMove(MouseEvent* aMouseEvent) {
     int32_t newWidth = GetNewResizingWidth(clientX, clientY);
     int32_t newHeight = GetNewResizingHeight(clientX, clientY);
 
-    mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::left,
+    RefPtr<Element> resizingShadow = mResizingShadow.get();
+    mCSSEditUtils->SetCSSPropertyPixels(*resizingShadow, *nsGkAtoms::left,
                                         newX);
-    mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::top,
-                                        newY);
-    mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::width,
+    mCSSEditUtils->SetCSSPropertyPixels(*resizingShadow, *nsGkAtoms::top, newY);
+    mCSSEditUtils->SetCSSPropertyPixels(*resizingShadow, *nsGkAtoms::width,
                                         newWidth);
-    mCSSEditUtils->SetCSSPropertyPixels(*mResizingShadow, *nsGkAtoms::height,
+    mCSSEditUtils->SetCSSPropertyPixels(*resizingShadow, *nsGkAtoms::height,
                                         newHeight);
 
     return SetResizingInfoPosition(newX, newY, newWidth, newHeight);
@@ -928,9 +940,10 @@ nsresult HTMLEditor::OnMouseMove(MouseEvent* aMouseEvent) {
 
     SnapToGrid(newX, newY);
 
-    mCSSEditUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::left,
+    RefPtr<Element> positioningShadow = mPositioningShadow.get();
+    mCSSEditUtils->SetCSSPropertyPixels(*positioningShadow, *nsGkAtoms::left,
                                         newX);
-    mCSSEditUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::top,
+    mCSSEditUtils->SetCSSPropertyPixels(*positioningShadow, *nsGkAtoms::top,
                                         newY);
   }
   return NS_OK;
@@ -992,11 +1005,11 @@ void HTMLEditor::SetFinalSize(int32_t aX, int32_t aY) {
     }
 
     if (setWidth) {
-      mCSSEditUtils->SetCSSPropertyPixels(*mResizedObject, *nsGkAtoms::width,
+      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::width,
                                           width);
     }
     if (setHeight) {
-      mCSSEditUtils->SetCSSPropertyPixels(*mResizedObject, *nsGkAtoms::height,
+      mCSSEditUtils->SetCSSPropertyPixels(*resizedObject, *nsGkAtoms::height,
                                           height);
     }
   } else {

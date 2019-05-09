@@ -422,13 +422,6 @@ class ContentDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.evaluateJS("$('#pass1').focus()")
-        sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
-            @AssertCalled(count = 1)
-            override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
-            }
-        })
-
         val rootNode = ViewNode.newInstance()
         val rootStructure = ViewNodeBuilder.newInstance(AssistStructure(), rootNode,
                 /* async */ false) as ViewStructure

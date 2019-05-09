@@ -42,6 +42,7 @@ const TRAILHEAD_CONFIG = {
   OVERRIDE_PREF: "trailhead.firstrun.branches",
   DID_SEE_ABOUT_WELCOME_PREF: "trailhead.firstrun.didSeeAboutWelcome",
   INTERRUPTS_EXPERIMENT_PREF: "trailhead.firstrun.interruptsExperiment",
+  TRIPLETS_ENROLLED_PREF: "trailhead.firstrun.tripletsEnrolled",
   BRANCHES: {
     interrupts: [
       ["control"],
@@ -732,6 +733,14 @@ class _ASRouter {
     return {experiment, interrupt, triplet};
   }
 
+  // Dispatch a TRAILHEAD_ENROLL_EVENT action
+  _sendTrailheadEnrollEvent(data) {
+    this.dispatchToAS({
+      type: at.TRAILHEAD_ENROLL_EVENT,
+      data,
+    });
+  }
+
   async setupTrailhead() {
     // Don't initialize
     if (this.state.trailheadInitialized || !Services.prefs.getBoolPref(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF, false)) {
@@ -742,18 +751,28 @@ class _ASRouter {
     await this.setState({trailheadInitialized: true, trailheadInterrupt: interrupt, trailheadTriplet: triplet});
 
     if (experiment) {
+      // In order for ping centre to pick this up, it MUST contain a substring activity-stream
+      const experimentName = `activity-stream-firstrun-trailhead-${experiment}`;
+
       TelemetryEnvironment.setExperimentActive(
-        // In order for ping centre to pick this up, it MUST start with activity-stream
-        `activity-stream-firstrun-trailhead-${experiment}`,
+        experimentName,
         experiment === "interrupts" ? interrupt : triplet,
         {type: "as-firstrun"}
       );
 
       // On the first time setting the interrupts experiment, expose the branch
-      // for normandy to target for survey study.
+      // for normandy to target for survey study, and send out the enrollment ping.
       if (experiment === "interrupts" &&
           !Services.prefs.prefHasUserValue(TRAILHEAD_CONFIG.INTERRUPTS_EXPERIMENT_PREF)) {
         Services.prefs.setStringPref(TRAILHEAD_CONFIG.INTERRUPTS_EXPERIMENT_PREF, interrupt);
+        this._sendTrailheadEnrollEvent({experiment: experimentName, type: "as-firstrun", branch: interrupt});
+      }
+
+      // On the first time setting the triplets experiment, send out the enrollment ping.
+      if (experiment === "triplets" &&
+          !Services.prefs.getBoolPref(TRAILHEAD_CONFIG.TRIPLETS_ENROLLED_PREF, false)) {
+        Services.prefs.setBoolPref(TRAILHEAD_CONFIG.TRIPLETS_ENROLLED_PREF, true);
+        this._sendTrailheadEnrollEvent({experiment: experimentName, type: "as-firstrun", branch: triplet});
       }
     }
   }
