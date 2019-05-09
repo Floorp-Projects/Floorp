@@ -594,8 +594,12 @@ nsresult nsHttpConnectionMgr::UpdateParam(nsParamName name, uint16_t value) {
                    static_cast<int32_t>(param), nullptr);
 }
 
-nsresult nsHttpConnectionMgr::ProcessPendingQ(nsHttpConnectionInfo* ci) {
-  LOG(("nsHttpConnectionMgr::ProcessPendingQ [ci=%s]\n", ci->HashKey().get()));
+nsresult nsHttpConnectionMgr::ProcessPendingQ(nsHttpConnectionInfo* aCI) {
+  LOG(("nsHttpConnectionMgr::ProcessPendingQ [ci=%s]\n", aCI->HashKey().get()));
+  RefPtr<nsHttpConnectionInfo> ci;
+  if (aCI) {
+    ci = aCI->Clone();
+  }
   return PostEvent(&nsHttpConnectionMgr::OnMsgProcessPendingQ, 0, ci);
 }
 
