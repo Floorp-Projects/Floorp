@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1557087541924" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1557222511299" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2892,6 +2892,18 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="413065ac-176f-440d-b4a7-0f928f3e330d" id="jid1-HfFCNbAsKx6Aow@jetpack">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d7ca07b4-9c97-4f49-a304-117c874ff073" id="artur.dubovoy@gmail.com">
+      <prefs/>
+      <versionRange minVersion="16.3.5" maxVersion="16.3.9" severity="3"/>
+    </emItem>
+    <emItem blockID="b62c9ee1-d66f-4964-906e-2a9b07e3fdc1" id="/^((adsmin@vietbacsecurity\.com)|(\{efdefbd4-5c30-42c3-ad2b-4c49082ec4cd\})|(\{63d83b36-a85c-4b51-8f68-8eb6c0ea6922\})|(\{4613a1ed-6cb1-410b-a8b1-3f81f73b6e00\})|(\{90b1aef7-7a52-4649-b5ca-91b5e81b5eab\})|(\{d6e2e76d-edff-416b-8c04-53052ff9fec7\})|(\{43af2e0f-b5ce-409b-9ee6-5360785c9b08\})|(\{e45fa96d-8b74-4666-86de-3bbfb774a74f\})|(\{4f8332b6-6167-4b7f-a1f9-61d8eb89b102\})|(cpcnbnofbhmpimepokdpmoomejafefhb@chrome-store-foxified-14654081)|(developios89@gmail\.com)|(\{d82da356-1fa8-4550-958a-bd2472972314\})|(\{1dfbd1c3-a8ca-4eb3-8747-d30bfd20ecd5\})|(\{6f9fa22a-128f-4d1b-8ef5-d20a44d24245\})|(\{5f6af572-35c1-44d7-9d0f-dffbb62fcafe\})|(developper@avast\.com)|(\{886a6486-37b3-4bcd-891b-fd0e335e7b1a\})|(\{886a6486-37b3-4bcd-891b-fd0e355e7b1a\})|(\{d1cd26ff-fde7-46a4-85cc-48e3bb7e9e8d\})|(\{ae11d5cc-8efb-43a0-89bf-e5a779b4fa40\})|(\{aca140ce-8249-4e6e-8e2c-cd5b1c987441\})|(\{f68b2ca7-0d2c-44cc-afc8-a606a896c467\})|(\{321db3c3-8cfd-49f1-99de-fcdc3485b379\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p332">
@@ -2927,12 +2939,12 @@
     <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
       <match exp="libflashplayer\.so" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.142" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.156" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.142" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.156" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
   </pluginItems>
   <gfxItems>
