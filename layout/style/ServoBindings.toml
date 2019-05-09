@@ -481,6 +481,8 @@ cbindgen-types = [
     { gecko = "StyleArcSlice", servo = "style_traits::arc_slice::ArcSlice" },
     { gecko = "StyleForgottenArcSlicePtr", servo = "style_traits::arc_slice::ForgottenArcSlicePtr" },
     { gecko = "StyleMozContextProperties", servo = "values::specified::svg::MozContextProperties" },
+    { gecko = "StyleQuotes", servo = "values::specified::list::Quotes" },
+    { gecko = "StyleOwnedStr", servo = "style_traits::owned_str::OwnedStr" },
 ]
 
 mapped-generic-types = [

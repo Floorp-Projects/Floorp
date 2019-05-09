@@ -51,7 +51,7 @@ use style::gecko_bindings::bindings::Gecko_NewNoneTransform;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::{Element as RawGeckoElement, nsINode as RawGeckoNode};
 use style::gecko_bindings::structs::{
-    RawServoQuotes, RawServoStyleSet, RawServoAuthorStyles,
+    RawServoStyleSet, RawServoAuthorStyles,
     RawServoCssUrlData, RawServoDeclarationBlock, RawServoMediaList,
     RawServoCounterStyleRule, RawServoAnimationValue, RawServoSupportsRule,
     RawServoKeyframesRule, ServoCssRules, RawServoStyleSheetContents,
@@ -93,7 +93,6 @@ use style::gecko_bindings::structs::ServoTraversalFlags;
 use style::gecko_bindings::structs::SheetLoadData;
 use style::gecko_bindings::structs::SheetLoadDataHolder;
 use style::gecko_bindings::structs::SheetParsingMode;
-use style::gecko_bindings::structs::StyleContentType as ContentType;
 use style::gecko_bindings::structs::StyleRuleInclusion;
 use style::gecko_bindings::structs::StyleSheet as DomStyleSheet;
 use style::gecko_bindings::structs::URLExtraData;
@@ -133,7 +132,7 @@ use style::traversal::DomTraversal;
 use style::traversal_flags::{self, TraversalFlags};
 use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
-use style::values::computed::{self, Context, QuotePair, ToComputedValue};
+use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
 use style::values::specified;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
@@ -6303,52 +6302,8 @@ pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Quotes_GetInitialValue() -> Strong<RawServoQuotes> {
-    computed::Quotes::get_initial_value()
-        .0
-        .clone()
-        .into_strong()
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_Quotes_Equal(a: &RawServoQuotes, b: &RawServoQuotes) -> bool {
-    let a = Box::<[QuotePair]>::as_arc(&a);
-    let b = Box::<[QuotePair]>::as_arc(&b);
-
-    a == b
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_Quotes_GetQuote(
-    quotes: &RawServoQuotes,
-    mut depth: i32,
-    quote_type: ContentType,
-    result: *mut nsAString,
-) {
-    debug_assert!(depth >= -1);
-
-    let quotes = Box::<[QuotePair]>::as_arc(&quotes);
-
-    // Reuse the last pair when the depth is greater than the number of
-    // pairs of quotes.  (Also make 'quotes: none' and close-quote from
-    // a depth of 0 equivalent for the next test.)
-    if depth >= quotes.len() as i32 {
-        depth = quotes.len() as i32 - 1;
-    }
-
-    if depth == -1 {
-        // close-quote from a depth of 0 or 'quotes: none'
-        return;
-    }
-
-    let quote_pair = &quotes[depth as usize];
-    let quote = if quote_type == ContentType::OpenQuote {
-        &quote_pair.opening
-    } else {
-        debug_assert!(quote_type == ContentType::CloseQuote);
-        &quote_pair.closing
-    };
-    (*result).write_str(quote).unwrap();
+pub extern "C" fn Servo_Quotes_GetInitialValue() -> style_traits::arc_slice::ForgottenArcSlicePtr<specified::list::QuotePair> {
+    computed::Quotes::get_initial_value().0.forget()
 }
 
 #[no_mangle]

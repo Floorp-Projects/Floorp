@@ -111,6 +111,12 @@ inline StyleAtom::StyleAtom(const StyleAtom& aOther) : _0(aOther._0) {
   }
 }
 
+inline nsDependentCSubstring StyleOwnedStr::AsString() const {
+  Span<const uint8_t> s = _0.AsSpan();
+  return nsDependentCSubstring(reinterpret_cast<const char*>(s.Elements()),
+                               s.Length());
+}
+
 }  // namespace mozilla
 
 #endif
