@@ -386,12 +386,15 @@ class FxaAccountManagerTest {
         // Make sure 'logoutAsync' clears out state and fires correct observers.
         reset(accountObserver)
         reset(accountStorage)
+        `when`(constellation.destroyCurrentDeviceAsync()).thenReturn(CompletableDeferred(true))
+        verify(constellation, never()).destroyCurrentDeviceAsync()
         manager.logoutAsync().await()
 
         verify(accountObserver, never()).onError(any())
         verify(accountObserver, never()).onAuthenticated(any())
         verify(accountObserver, never()).onProfileUpdated(any())
         verify(accountObserver, times(1)).onLoggedOut()
+        verify(constellation, times(1)).destroyCurrentDeviceAsync()
 
         verify(accountStorage, never()).read()
         verify(accountStorage, never()).write(any())

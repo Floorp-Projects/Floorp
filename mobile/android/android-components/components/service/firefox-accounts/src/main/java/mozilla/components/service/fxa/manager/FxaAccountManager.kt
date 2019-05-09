@@ -319,6 +319,8 @@ open class FxaAccountManager(
             AccountState.NotAuthenticated -> {
                 when (via) {
                     Event.Logout -> {
+                        // Destroy the current device record.
+                        account.deviceConstellation().destroyCurrentDeviceAsync().await()
                         // Clean up resources.
                         profile = null
                         account.close()
