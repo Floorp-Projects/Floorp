@@ -64,6 +64,7 @@ from mozproxy import get_playback
 from power import init_android_power_test, finish_android_power_test
 from results import RaptorResultsHandler
 from utils import view_gecko_profile
+from cpu import generate_android_cpu_profile
 
 
 class SignalHandler:
@@ -85,32 +86,31 @@ class Raptor(object):
 
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None, host=None, power_test=False, memory_test=False,
-                 is_release_build=False, debug_mode=False, post_startup_delay=None,
-                 interrupt_handler=None, **kwargs):
+                 symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None,
+                 interrupt_handler=None, intent=None, **kwargs):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == 'HOST_IP':
             host = os.environ['HOST_IP']
 
-        self.config = {
-            'app': app,
-            'binary': binary,
-            'platform': mozinfo.os,
-            'processor': mozinfo.processor,
-            'run_local': run_local,
-            'obj_path': obj_path,
-            'gecko_profile': gecko_profile,
-            'gecko_profile_interval': gecko_profile_interval,
-            'gecko_profile_entries': gecko_profile_entries,
-            'symbols_path': symbols_path,
-            'host': host,
-            'power_test': power_test,
-            'memory_test': memory_test,
-            'is_release_build': is_release_build,
-            'enable_control_server_wait': memory_test,
-        }
-
+        self.config = {}
+        self.config['app'] = app
+        self.config['binary'] = binary
+        self.config['platform'] = mozinfo.os
+        self.config['processor'] = mozinfo.processor
+        self.config['run_local'] = run_local
+        self.config['obj_path'] = obj_path
+        self.config['gecko_profile'] = gecko_profile
+        self.config['gecko_profile_interval'] = gecko_profile_interval
+        self.config['gecko_profile_entries'] = gecko_profile_entries
+        self.config['symbols_path'] = symbols_path
+        self.config['host'] = host
+        self.config['power_test'] = power_test
+        self.config['cpu_test'] = cpu_test
+        self.config['memory_test'] = memory_test
+        self.config['is_release_build'] = is_release_build
+        self.config['enable_control_server_wait'] = memory_test
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
         self.log = get_default_logger(component='raptor-main')
         self.control_server = None
@@ -342,6 +342,7 @@ class Raptor(object):
             timeout += 5 * 60
 
         elapsed_time = 0
+
         while not self.control_server._finished:
             if self.config['enable_control_server_wait']:
                 response = self.control_server_wait_get()
@@ -588,6 +589,15 @@ class RaptorDesktopFirefox(RaptorDesktop):
 
 
 class RaptorDesktopChrome(RaptorDesktop):
+    def __init__(self, app, binary, run_local=False, obj_path=None,
+                 gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
+                 symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None,
+                 activity=None, intent=None):
+        RaptorDesktop.__init__(self, app, binary, run_local, obj_path, gecko_profile,
+                               gecko_profile_interval, gecko_profile_entries, symbols_path,
+                               host, power_test, cpu_test, memory_test, is_release_build,
+                               debug_mode, post_startup_delay)
 
     def setup_chrome_desktop_for_playback(self):
         # if running a pageload test on google chrome, add the cmd line options
@@ -619,8 +629,15 @@ class RaptorDesktopChrome(RaptorDesktop):
 
 
 class RaptorAndroid(Raptor):
-    def __init__(self, app, binary, activity=None, intent=None, **kwargs):
-        super(RaptorAndroid, self).__init__(app, binary, **kwargs)
+    def __init__(self, app, binary, run_local=False, obj_path=None,
+                 gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
+                 symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None,
+                 intent=None, interrupt_handler=None):
+        Raptor.__init__(self, app, binary, run_local, obj_path, gecko_profile,
+                        gecko_profile_interval, gecko_profile_entries, symbols_path, host,
+                        power_test, cpu_test, memory_test, is_release_build, debug_mode,
+                        post_startup_delay)
 
         # on android, when creating the browser profile, we want to use a 'firefox' type profile
         self.profile_class = "firefox"
@@ -894,6 +911,8 @@ class RaptorAndroid(Raptor):
             self.log.error("Exception: %s %s" % (type(e).__name__, str(e)))
             if self.config['power_test']:
                 finish_android_power_test(self, test_name)
+            if self.config['cpu_test']:
+                generate_android_cpu_profile(self, test_name)
             raise
 
         # give our control server the device and app info
@@ -927,7 +946,8 @@ class RaptorAndroid(Raptor):
         finally:
             if self.config['power_test']:
                 finish_android_power_test(self, test['name'])
-
+            if self.config['cpu_test']:
+                generate_android_cpu_profile(self, test['name'])
             self.run_test_teardown()
 
     def run_test_cold(self, test, timeout=None):
@@ -959,6 +979,9 @@ class RaptorAndroid(Raptor):
 
         if self.config['power_test']:
             init_android_power_test(self)
+
+        if self.config['cpu_test']:
+            generate_android_cpu_profile(self, test['name'])
 
         for test['browser_cycle'] in range(1, test['expected_browser_cycles'] + 1):
 
@@ -1028,6 +1051,9 @@ class RaptorAndroid(Raptor):
                       "page cycles" % test['name'])
         if self.config['power_test']:
             init_android_power_test(self)
+
+        if self.config['cpu_test']:
+            generate_android_cpu_profile(self, test['name'])
 
         self.run_test_setup(test)
         self.create_raptor_sdcard_folder()
@@ -1130,6 +1156,7 @@ def main(args=sys.argv[1:]):
                           symbols_path=args.symbols_path,
                           host=args.host,
                           power_test=args.power_test,
+                          cpu_test=args.cpu_test,
                           memory_test=args.memory_test,
                           is_release_build=args.is_release_build,
                           debug_mode=args.debug_mode,
