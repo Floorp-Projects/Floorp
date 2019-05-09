@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import buildconfig
+import os
 import subprocess
 import sys
 
@@ -30,7 +31,11 @@ def android(verb, *args):
             verb,
         ]
         cmd.extend(args)
-        subprocess.check_call(cmd)
+        env = dict(os.environ)
+        # Confusingly, `MACH` is set only within `mach build`.
+        if env.get('MACH'):
+            env['GRADLE_INVOKED_WITHIN_MACH_BUILD'] = '1'
+        subprocess.check_call(cmd, env=env)
 
         return 0
     finally:
