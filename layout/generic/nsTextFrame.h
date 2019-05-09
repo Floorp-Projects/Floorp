@@ -676,10 +676,10 @@ class nsTextFrame : public nsFrame {
   };
 
   void PaintOneShadow(const PaintShadowParams& aParams,
-                      nsCSSShadowItem* aShadowDetails, gfxRect& aBoundingBox,
-                      uint32_t aBlurFlags);
+                      const mozilla::StyleSimpleShadow& aShadowDetails,
+                      gfxRect& aBoundingBox, uint32_t aBlurFlags);
 
-  void PaintShadows(nsCSSShadowArray* aShadow,
+  void PaintShadows(mozilla::Span<const mozilla::StyleSimpleShadow>,
                     const PaintShadowParams& aParams);
 
   struct LineDecoration {

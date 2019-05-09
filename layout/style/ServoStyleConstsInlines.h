@@ -12,11 +12,39 @@
 #include "mozilla/ServoStyleConsts.h"
 #include "nsGkAtoms.h"
 #include <type_traits>
+#include <new>
 
 // TODO(emilio): there are quite a few other implementations scattered around
 // that should move here.
 
 namespace mozilla {
+
+template <typename T>
+inline StyleOwnedSlice<T>::StyleOwnedSlice(const StyleOwnedSlice& aOther) {
+  len = aOther.len;
+  if (!len) {
+    ptr = (T*)alignof(T);
+  } else {
+    ptr = (T*)malloc(len * sizeof(T));
+    size_t i = 0;
+    for (const T& elem : aOther.AsSpan()) {
+      new (ptr + i++) T(elem);
+    }
+  }
+}
+
+template <typename T>
+inline StyleOwnedSlice<T>::~StyleOwnedSlice() {
+  if (!len) {
+    return;
+  }
+  for (size_t i : IntegerRange(len)) {
+    ptr[i].~T();
+  }
+  free(ptr);
+  ptr = (T*)alignof(T);
+  len = 0;
+}
 
 // This code is basically a C++ port of the Arc::clone() implementation in
 // servo/components/servo_arc/lib.rs.
@@ -59,6 +87,12 @@ template <typename T>
 inline size_t StyleArcSlice<T>::Length() const {
   ASSERT_CANARY
   return _0.ptr->data.header.length;
+}
+
+template <typename T>
+inline bool StyleArcSlice<T>::IsEmpty() const {
+  ASSERT_CANARY
+  return Length() == 0;
 }
 
 template <typename T>
