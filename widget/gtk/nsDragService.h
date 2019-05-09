@@ -58,17 +58,18 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   NS_DECL_NSIOBSERVER
 
   // nsBaseDragService
-  virtual nsresult InvokeDragSessionImpl(
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
       nsIArray* anArrayTransferables,
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType) override;
   // nsIDragService
-  NS_IMETHOD InvokeDragSession(nsINode* aDOMNode, nsIPrincipal* aPrincipal,
-                               nsIArray* anArrayTransferables,
-                               uint32_t aActionType,
-                               nsContentPolicyType aContentPolicyType) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD
+  InvokeDragSession(nsINode* aDOMNode, nsIPrincipal* aPrincipal,
+                    nsIArray* anArrayTransferables, uint32_t aActionType,
+                    nsContentPolicyType aContentPolicyType) override;
   NS_IMETHOD StartDragSession() override;
-  NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag,
+                                               uint32_t aKeyModifiers) override;
 
   // nsIDragSession
   NS_IMETHOD SetCanDrop(bool aCanDrop) override;
@@ -211,10 +212,10 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
                     mozilla::LayoutDeviceIntPoint aWindowPoint, guint aTime);
 
   // Callback for g_idle_add_full() to run mScheduledTask.
-  static gboolean TaskDispatchCallback(gpointer data);
-  gboolean RunScheduledTask();
+  MOZ_CAN_RUN_SCRIPT static gboolean TaskDispatchCallback(gpointer data);
+  MOZ_CAN_RUN_SCRIPT gboolean RunScheduledTask();
   void UpdateDragAction();
-  void DispatchMotionEvents();
+  MOZ_CAN_RUN_SCRIPT void DispatchMotionEvents();
   void ReplyToDragMotion(GdkDragContext* aDragContext);
 #ifdef MOZ_WAYLAND
   void ReplyToDragMotion(nsWaylandDragContext* aDragContext);

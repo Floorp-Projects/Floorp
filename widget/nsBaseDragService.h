@@ -77,7 +77,7 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
    * in this process.  This is expected to ensure that StartDragSession() and
    * EndDragSession() get called if the platform drag is successfully invoked.
    */
-  virtual nsresult InvokeDragSessionImpl(
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
       nsIArray* aTransferableArray,
       const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       uint32_t aActionType) = 0;

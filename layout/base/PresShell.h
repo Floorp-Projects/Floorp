@@ -654,16 +654,16 @@ class PresShell final : public nsStubDocumentObserver,
 
   /**
    * Dispatch event to content only (NOT full processing)
-   * @note The caller must have a strong reference to the PresShell.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                     WidgetEvent* aEvent,
                                     nsEventStatus* aStatus);
 
   /**
    * Dispatch event to content only (NOT full processing)
-   * @note The caller must have a strong reference to the PresShell.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                     dom::Event* aEvent, nsEventStatus* aStatus);
 

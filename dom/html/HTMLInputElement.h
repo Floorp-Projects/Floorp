@@ -1017,7 +1017,7 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
    * MaybeSubmitForm looks for a submit input or a single text control
    * and submits the form if either is present.
    */
-  nsresult MaybeSubmitForm(nsPresContext* aPresContext);
+  MOZ_CAN_RUN_SCRIPT nsresult MaybeSubmitForm(nsPresContext* aPresContext);
 
   /**
    * Update mFileList with the currently selected file.
