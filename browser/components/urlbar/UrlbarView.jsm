@@ -660,7 +660,7 @@ class UrlbarView {
     this._removeStaleRowsTimer = this.window.setTimeout(() => {
       this._removeStaleRowsTimer = null;
       this._removeStaleRows();
-    }, 200);
+    }, 400);
   }
 
   _cancelRemoveStaleRowsTimer() {
