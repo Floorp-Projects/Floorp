@@ -183,7 +183,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 #endif
 
   // Read info from /proc/self/maps. We ignore most of it.
-  pid_t pid = getpid();
+  pid_t pid = profiler_current_process_id();
   char path[PATH_MAX];
   SprintfLiteral(path, "/proc/%d/maps", pid);
   std::ifstream maps(path);

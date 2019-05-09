@@ -38,7 +38,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     ]
     if CONFIG['MOZ_REPLACE_MALLOC'] and CONFIG['MOZ_PROFILER_MEMORY']:
         SOURCES += [
-            'core/memory_hooks.cpp', # conflicts with platform.h class Thread
+            'core/memory_hooks.cpp', # Non-unified because of order of #includes
         ]
 
     XPCOM_MANIFESTS += [

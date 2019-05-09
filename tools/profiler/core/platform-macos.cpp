@@ -22,6 +22,7 @@
 #include <mach/vm_statistics.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <stdarg.h>
@@ -32,8 +33,11 @@
 
 // this port is based off of v8 svn revision 9837
 
-/* static */
-int Thread::GetCurrentId() { return gettid(); }
+int profiler_current_process_id() { return getpid(); }
+
+int profiler_current_thread_id() {
+  return static_cast<int>(static_cast<pid_t>(syscall(SYS_thread_selfid)));
+}
 
 void* GetStackTop(void* aGuess) {
   pthread_t thread = pthread_self();
