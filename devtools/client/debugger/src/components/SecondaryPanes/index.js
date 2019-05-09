@@ -429,21 +429,19 @@ class SecondaryPanes extends Component<Props, State> {
 
   renderVerticalLayout() {
     return (
-      <div>
-        <SplitBox
-          initialSize="300px"
-          minSize={10}
-          maxSize="50%"
-          splitterSize={1}
-          startPanel={
-            <div style={{ width: "inherit" }}>
-              <WhyPaused delay={this.props.renderWhyPauseDelay} />
-              <Accordion items={this.getStartItems()} />
-            </div>
-          }
-          endPanel={<Accordion items={this.getEndItems()} />}
-        />
-      </div>
+      <SplitBox
+        initialSize="300px"
+        minSize={10}
+        maxSize="50%"
+        splitterSize={1}
+        startPanel={
+          <div style={{ width: "inherit" }}>
+            <WhyPaused delay={this.props.renderWhyPauseDelay} />
+            <Accordion items={this.getStartItems()} />
+          </div>
+        }
+        endPanel={<Accordion items={this.getEndItems()} />}
+      />
     );
   }
 
