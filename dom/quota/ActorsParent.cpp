@@ -218,7 +218,7 @@ const char kResourceOriginPrefix[] = "resource://";
 #define LS_ARCHIVE_FILE_NAME "ls-archive.sqlite"
 #define LS_ARCHIVE_TMP_FILE_NAME "ls-archive-tmp.sqlite"
 
-const uint32_t kLocalStorageArchiveVersion = 3;
+const uint32_t kLocalStorageArchiveVersion = 4;
 
 const char kProfileDoChangeTopic[] = "profile-do-change";
 
@@ -446,6 +446,7 @@ nsresult LoadLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
   return NS_OK;
 }
 
+/*
 nsresult SaveLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
                                         uint32_t aVersion) {
   AssertIsOnIOThread();
@@ -471,6 +472,7 @@ nsresult SaveLocalStorageArchiveVersion(mozIStorageConnection* aConnection,
 
   return NS_OK;
 }
+*/
 
 /******************************************************************************
  * Quota manager class declarations
@@ -5331,7 +5333,7 @@ nsresult QuotaManager::DowngradeLocalStorageArchive(
   return NS_OK;
 }
 
-nsresult QuotaManager::UpgradeLocalStorageArchiveFrom0To1(
+nsresult QuotaManager::UpgradeLocalStorageArchiveFromLessThan4To4(
     nsCOMPtr<mozIStorageConnection>& aConnection) {
   AssertIsOnIOThread();
   MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
@@ -5341,7 +5343,7 @@ nsresult QuotaManager::UpgradeLocalStorageArchiveFrom0To1(
     return rv;
   }
 
-  rv = InitializeLocalStorageArchive(aConnection, 1);
+  rv = InitializeLocalStorageArchive(aConnection, 4);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5349,25 +5351,20 @@ nsresult QuotaManager::UpgradeLocalStorageArchiveFrom0To1(
   return NS_OK;
 }
 
-nsresult QuotaManager::UpgradeLocalStorageArchiveFrom1To2(
+/*
+nsresult QuotaManager::UpgradeLocalStorageArchiveFrom4To5(
     nsCOMPtr<mozIStorageConnection>& aConnection) {
-  nsresult rv = SaveLocalStorageArchiveVersion(aConnection, 2);
+  AssertIsOnIOThread();
+  MOZ_ASSERT(CachedNextGenLocalStorageEnabled());
+
+  nsresult rv = SaveLocalStorageArchiveVersion(aConnection, 5);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   return NS_OK;
 }
-
-nsresult QuotaManager::UpgradeLocalStorageArchiveFrom2To3(
-    nsCOMPtr<mozIStorageConnection>& aConnection) {
-  nsresult rv = SaveLocalStorageArchiveVersion(aConnection, 3);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
+*/
 
 #ifdef DEBUG
 
@@ -5591,18 +5588,17 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
           return rv;
         }
       } else {
-        static_assert(kLocalStorageArchiveVersion == 3,
+        static_assert(kLocalStorageArchiveVersion == 4,
                       "Upgrade function needed due to LocalStorage archive "
                       "version increase.");
 
         while (version != kLocalStorageArchiveVersion) {
-          if (version == 0) {
-            rv = UpgradeLocalStorageArchiveFrom0To1(connection);
-          } else if (version == 1) {
-            rv = UpgradeLocalStorageArchiveFrom1To2(connection);
-          } else if (version == 2) {
-            rv = UpgradeLocalStorageArchiveFrom2To3(connection);
-          } else {
+          if (version < 4) {
+            rv = UpgradeLocalStorageArchiveFromLessThan4To4(connection);
+          } /* else if (version == 4) {
+            rv = UpgradeLocalStorageArchiveFrom4To5(connection);
+          } */
+          else {
             QM_WARNING(
                 "Unable to initialize LocalStorage archive, no upgrade path is "
                 "available!");
