@@ -191,7 +191,7 @@ Value Node::exposeToJS() const {
 
 // A JS::CallbackTracer subclass that adds a Edge to a Vector for each
 // edge on which it is invoked.
-class EdgeVectorTracer : public JS::CallbackTracer {
+class EdgeVectorTracer final : public JS::CallbackTracer {
   // The vector to which we add Edges.
   EdgeVector* vec;
 

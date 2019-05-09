@@ -71,7 +71,7 @@ static bool ConstructCCW(JSContext* cx, const JSClass* globalClasp,
   return true;
 }
 
-class CCWTestTracer : public JS::CallbackTracer {
+class CCWTestTracer final : public JS::CallbackTracer {
   void onChild(const JS::GCCellPtr& thing) override {
     numberOfThingsTraced++;
 

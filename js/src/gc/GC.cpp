@@ -4066,7 +4066,7 @@ bool GCRuntime::shouldPreserveJITCode(Realm* realm,
 }
 
 #ifdef DEBUG
-class CompartmentCheckTracer : public JS::CallbackTracer {
+class CompartmentCheckTracer final : public JS::CallbackTracer {
   void onChild(const JS::GCCellPtr& thing) override;
 
  public:
