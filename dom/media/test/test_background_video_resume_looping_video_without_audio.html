@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Resume suspended looping video which doesn't contain audio track</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="manifest.js"></script>
+  <script src="background_video.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+/**
+ * This test is used to ensure that the looping video (without audio track) which
+ * has been suspended can continute to playback correctly after we resume video
+ * decoding.
+ */
+async function startTest() {
+  const video = await createVisibleVideo();
+  await startVideo(video);
+  await suspendVideoDecoding(video);
+  await resumeVideoDecoding(video);
+  await waitUntilVideoLoopAgain(video);
+  endTestAndClearVideo(video);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ 'set': [
+    ["media.test.video-suspend", true],
+    ["media.suspend-bkgnd-video.enabled", true],
+    ["media.suspend-bkgnd-video.delay-ms", 0],
+  ]}, () => {
+  startTest();
+});
+
+/**
+ * The following are test helper functions.
+ */
+async function createVisibleVideo() {
+  let video = document.createElement("video");
+  video.src = "gizmo-noaudio.webm";
+  video.controls = true;
+  video.loop = true;
+  // In order to reduce the test running time, because we don't need to acutally
+  // go through the whole video.
+  video.currentTime = 3;
+  document.body.appendChild(video);
+  info(`ensure video becomes visible`);
+  await waitUntilVisible(video);
+  return video;
+}
+
+async function startVideo(video) {
+  info(`start playing video`);
+  const played = video && await video.play().then(() => true, () => false);
+  ok(played, "video has started playing");
+}
+
+async function suspendVideoDecoding(video) {
+  info(`suspend video decoding`);
+  video.setVisible(false);
+  await nextVideoSuspends(video);
+}
+
+async function resumeVideoDecoding(video) {
+  info(`resume video decoding.`);
+  video.setVisible(true);
+  await nextVideoResumes(video);
+}
+
+async function waitUntilVideoLoopAgain(video) {
+  info(`ensure video is still playing after resuming video decoding.`);
+  await once(video, "seeking");
+  info(`got 'seeking' event.`);
+  await once(video, "seeked");
+  ok(!video.paused, "video is still playing and looping again.")
+}
+
+function endTestAndClearVideo(video) {
+  removeNodeAndSource(video);
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
