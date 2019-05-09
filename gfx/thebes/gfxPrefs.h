@@ -743,7 +743,8 @@ class gfxPrefs final {
   DECL_GFX_PREF(Live, "media.wmf.skip-blacklist", PDMWMFSkipBlacklist, bool, false);
   DECL_GFX_PREF(Live, "media.wmf.deblacklisting-for-telemetry-in-gpu-process", PDMWMFDeblacklistingForTelemetryInGPUProcess, bool, false);
   DECL_GFX_PREF(Live, "media.wmf.amd.highres.enabled", PDMWMFAMDHighResEnabled, bool, true);
-  DECL_GFX_PREF(Live, "media.wmf.allow-unsupported-resolutions",  PDMWMFAllowUnsupportedResolutions, bool, false);
+  DECL_GFX_PREF(Live, "media.wmf.allow-unsupported-resolutions", PDMWMFAllowUnsupportedResolutions, bool, false);
+  DECL_GFX_PREF(Once, "media.wmf.vp9.enabled", MediaWmfVp9Enabled, bool, true);
 #endif
 
   // These affect how line scrolls from wheel events will be accelerated.
