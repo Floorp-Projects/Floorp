@@ -162,6 +162,31 @@ function nl2br(text) {
   return frag;
 }
 
+/**
+ * Adds UTM parameters to a given URL, if it is an AMO URL.
+ *
+ * @param {string} contentAttribute
+ *        Identifies the part of the UI with which the link is associated.
+ * @param {string} url
+ * @returns {string}
+ *          The url with UTM parameters if it is an AMO URL.
+ *          Otherwise the url in unmodified form.
+ */
+function formatAmoUrl(contentAttribute, url) {
+  let parsedUrl = new URL(url);
+  let domain = `.${parsedUrl.hostname}`;
+  if (!domain.endsWith(".addons.mozilla.org") &&
+      // For testing: addons-dev.allizom.org and addons.allizom.org
+      !domain.endsWith(".allizom.org")) {
+    return url;
+  }
+
+  parsedUrl.searchParams.set("utm_source", "firefox-browser");
+  parsedUrl.searchParams.set("utm_medium", "firefox-browser");
+  parsedUrl.searchParams.set("utm_content", contentAttribute);
+  return parsedUrl.href;
+}
+
 // A wrapper around an item from the "results" array from AMO's discovery API.
 // See https://addons-server.readthedocs.io/en/latest/topics/api/discovery.html
 class DiscoAddonWrapper {
@@ -1182,7 +1207,8 @@ class RecommendedAddonCard extends HTMLElement {
       });
       // This is intentionally a link to the add-on listing instead of the
       // author page, because the add-on listing provides more relevant info.
-      authorInfo.querySelector("a").href = addon.amoListingUrl;
+      authorInfo.querySelector("a").href =
+        formatAmoUrl("discopane-entry-link", addon.amoListingUrl);
       authorInfo.hidden = false;
     }
   }
@@ -1698,9 +1724,10 @@ class DiscoveryPane extends HTMLElement {
           "personalized-extension-recommendations", "tab");
         break;
       case "open-amo":
-        windowRoot.ownerGlobal.openTrustedLinkIn(
-          Services.urlFormatter.formatURLPref("extensions.getAddons.link.url"),
-          "tab");
+        let amoUrl =
+          Services.urlFormatter.formatURLPref("extensions.getAddons.link.url");
+        amoUrl = formatAmoUrl("find-more-link-bottom", amoUrl);
+        windowRoot.ownerGlobal.openTrustedLinkIn(amoUrl, "tab");
         break;
     }
   }
