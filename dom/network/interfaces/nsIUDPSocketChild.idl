@@ -20,7 +20,7 @@ union NetAddr;
 native NetAddr(mozilla::net::NetAddr);
 [ptr] native NetAddrPtr(mozilla::net::NetAddr);
 
-[scriptable, uuid(1e6ad73b-6c05-4d78-9a88-2d357b88f58b)]
+[uuid(1e6ad73b-6c05-4d78-9a88-2d357b88f58b)]
 interface nsIUDPSocketChild : nsISupports
 {
   readonly attribute unsigned short localPort;
