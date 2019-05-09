@@ -13,7 +13,7 @@ SOURCES += [
     'chain.c',
     'iccread.c',
     'matrix.c',
-    'transform.c',
+    'transform.cpp',
     'transform_util.c',
 ]
 
@@ -36,16 +36,16 @@ elif CONFIG['HAVE_ALTIVEC']:
     use_altivec = True
 
 if use_sse1:
-    SOURCES += ['transform-sse1.c']
-    SOURCES['transform-sse1.c'].flags += CONFIG['SSE_FLAGS']
+    SOURCES += ['transform-sse1.cpp']
+    SOURCES['transform-sse1.cpp'].flags += CONFIG['SSE_FLAGS']
 
 if use_sse2:
     SOURCES += ['transform-sse2.cpp']
     SOURCES['transform-sse2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 if use_altivec:
-    SOURCES += ['transform-altivec.c']
-    SOURCES['transform-altivec.c'].flags += ['-maltivec']
+    SOURCES += ['transform-altivec.cpp']
+    SOURCES['transform-altivec.cpp'].flags += ['-maltivec']
 
 include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
