@@ -105,8 +105,7 @@ html[dir="rtl"] .editor-mount {
   color: var(--theme-comment);
 }
 
-.debug-expression,
-.debug-expression ~ .CodeMirror-widget {
+.debug-expression {
   background-color: var(--debug-expression-background);
 }
 
