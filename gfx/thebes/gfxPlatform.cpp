@@ -3167,6 +3167,10 @@ class FrameStatsComparator {
 };
 
 void gfxPlatform::NotifyFrameStats(nsTArray<FrameStats>&& aFrameStats) {
+  if (!gfxPrefs::LoggingSlowFramesEnabled()) {
+    return;
+  }
+
   FrameStatsComparator comp;
   for (FrameStats& f : aFrameStats) {
     mFrameStats.InsertElementSorted(f, comp);
