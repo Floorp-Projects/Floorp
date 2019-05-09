@@ -9,7 +9,8 @@ import {
   getDocument,
   hasDocument,
   startOperation,
-  endOperation
+  endOperation,
+  getTokenEnd
 } from "../../utils/editor";
 import { isException } from "../../utils/pause";
 import { getIndentation } from "../../utils/indentation";
@@ -76,9 +77,13 @@ export class DebugLine extends PureComponent<Props> {
     const lineText = doc.getLine(line);
     column = Math.max(column, getIndentation(lineText));
 
+    // If component updates because user clicks on
+    // another source tab, codeMirror will be null.
+    const columnEnd = doc.cm ? getTokenEnd(doc.cm, line, column) : null;
+
     this.debugExpression = doc.markText(
       { ch: column, line },
-      { ch: null, line },
+      { ch: columnEnd, line },
       { className: markTextClass }
     );
   }
