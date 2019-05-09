@@ -121,8 +121,19 @@ class GeckoViewAutoFill {
       return info;
     };
 
+    // Get password field to get better form data via LoginManagerContent.
+    let passwordField;
+    for (const field of aFormLike.elements) {
+      if (ChromeUtils.getClassName(field) === "HTMLInputElement" &&
+          field.type == "password") {
+        passwordField = field;
+        break;
+      }
+    }
+
     const [usernameField] =
-      LoginManagerContent.getUserNameAndPasswordFields(aFormLike.elements[0]);
+      LoginManagerContent.getUserNameAndPasswordFields(
+        passwordField || aFormLike.elements[0]);
 
     const rootInfo = getInfo(aFormLike.rootElement, null, undefined, null);
     rootInfo.root = rootInfo.id;

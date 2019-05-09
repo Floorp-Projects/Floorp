@@ -9594,8 +9594,8 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
   AutoTArray<wr::ComplexClipRegion, 1> clipRegions;
 
   wr::LayoutRect rect;
-  switch (shape.GetShapeType()) {
-    case StyleBasicShapeType::Inset: {
+  switch (shape.tag) {
+    case StyleBasicShape::Tag::Inset: {
       const nsRect insetRect = ShapeUtils::ComputeInsetRect(shape, refBox) +
                                aDisplayItem.ToReferenceFrame();
 
@@ -9610,12 +9610,12 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
           LayoutDeviceRect::FromAppUnits(insetRect, appUnitsPerDevPixel));
       break;
     }
-    case StyleBasicShapeType::Ellipse:
-    case StyleBasicShapeType::Circle: {
+    case StyleBasicShape::Tag::Ellipse:
+    case StyleBasicShape::Tag::Circle: {
       nsPoint center = ShapeUtils::ComputeCircleOrEllipseCenter(shape, refBox);
 
       nsSize radii;
-      if (shape.GetShapeType() == StyleBasicShapeType::Ellipse) {
+      if (shape.IsEllipse()) {
         radii = ShapeUtils::ComputeEllipseRadii(shape, center, refBox);
       } else {
         nscoord radius = ShapeUtils::ComputeCircleRadius(shape, center, refBox);

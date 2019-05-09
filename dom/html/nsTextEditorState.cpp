@@ -1234,11 +1234,11 @@ nsresult nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame) {
   return NS_OK;
 }
 
-struct PreDestroyer {
+struct MOZ_STACK_CLASS PreDestroyer {
   void Init(TextEditor* aTextEditor) { mTextEditor = aTextEditor; }
-  ~PreDestroyer() {
+  MOZ_CAN_RUN_SCRIPT ~PreDestroyer() {
     if (mTextEditor) {
-      mTextEditor->PreDestroy(true);
+      MOZ_KnownLive(mTextEditor)->PreDestroy(true);
     }
   }
   void Swap(RefPtr<TextEditor>& aTextEditor) {
@@ -1917,7 +1917,8 @@ HTMLInputElement* nsTextEditorState::GetParentNumberControl(
 void nsTextEditorState::DestroyEditor() {
   // notify the editor that we are going away
   if (mEditorInitialized) {
-    mTextEditor->PreDestroy(true);
+    RefPtr<TextEditor> textEditor = mTextEditor;
+    textEditor->PreDestroy(true);
     mEditorInitialized = false;
   }
 }

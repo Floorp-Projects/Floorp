@@ -35,6 +35,7 @@ abuse-report-submit-button = Submit
 abuse-report-messagebar-aborted = Report for <span data-l10n-name="addon-name">{ $addon-name }</span> canceled.
 abuse-report-messagebar-submitting = Sending report for <span data-l10n-name="addon-name">{ $addon-name }</span>.
 abuse-report-messagebar-submitted = Thank you for submitting a report. Do you want to remove <span data-l10n-name="addon-name">{ $addon-name }</span>?
+abuse-report-messagebar-submitted-noremove = Thank you for submitting a report.
 abuse-report-messagebar-removed-extension = Thank you for submitting a report. You’ve removed the extension <span data-l10n-name="addon-name">{ $addon-name }</span>.
 abuse-report-messagebar-removed-theme = Thank you for submitting a report. You’ve removed the theme <span data-l10n-name="addon-name">{ $addon-name }</span>.
 abuse-report-messagebar-error = There was an error sending the report for <span data-l10n-name="addon-name">{ $addon-name }</span>.
@@ -42,8 +43,10 @@ abuse-report-messagebar-error-recent-submit = The report for <span data-l10n-nam
 
 ## Message bars actions.
 
-abuse-report-messagebar-action-remove = Yes, Remove It
-abuse-report-messagebar-action-keep = No, I’ll Keep It
+abuse-report-messagebar-action-remove-extension = Yes, Remove It
+abuse-report-messagebar-action-keep-extension = No, I’ll Keep It
+abuse-report-messagebar-action-remove-theme = Yes, Remove It
+abuse-report-messagebar-action-keep-theme = No, I’ll Keep It
 abuse-report-messagebar-action-retry = Retry
 abuse-report-messagebar-action-cancel = Cancel
 
@@ -66,7 +69,7 @@ abuse-report-deceptive-example = Example: Misleading description or imagery
 abuse-report-broken-reason-extension = Doesn’t work, breaks websites, or slows { -brand-product-name } down
 abuse-report-broken-reason-theme = Doesn’t work or breaks browser display
 abuse-report-broken-example =
-  Example: Feature are slow, hard to use, or don’t work; parts of websites won’t load or look unusual
+  Example: Features are slow, hard to use, or don’t work; parts of websites won’t load or look unusual
 abuse-report-broken-suggestions-extension =
   It sounds like you’ve identified a bug. In addition to submitting a report here, the best way
   to get a functionality issue resolved is to contact the extension developer.

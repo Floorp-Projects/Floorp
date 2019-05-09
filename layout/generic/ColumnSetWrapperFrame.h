@@ -54,6 +54,10 @@ class ColumnSetWrapperFrame final : public nsBlockFrame {
 
   void MarkIntrinsicISizesDirty() override;
 
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+
  private:
   explicit ColumnSetWrapperFrame(ComputedStyle* aStyle,
                                  nsPresContext* aPresContext);

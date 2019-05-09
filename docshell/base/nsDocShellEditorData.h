@@ -22,12 +22,13 @@ class nsDocShellEditorData {
   explicit nsDocShellEditorData(nsIDocShell* aOwningDocShell);
   ~nsDocShellEditorData();
 
-  nsresult MakeEditable(bool aWaitForUriLoad);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult MakeEditable(bool aWaitForUriLoad);
   bool GetEditable();
   nsEditingSession* GetEditingSession();
   mozilla::HTMLEditor* GetHTMLEditor() const { return mHTMLEditor; }
-  nsresult SetHTMLEditor(mozilla::HTMLEditor* aHTMLEditor);
-  void TearDownEditor();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  SetHTMLEditor(mozilla::HTMLEditor* aHTMLEditor);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TearDownEditor();
   nsresult DetachFromWindow();
   nsresult ReattachToWindow(nsIDocShell* aDocShell);
   bool WaitingForLoad() const { return mMakeEditable; }

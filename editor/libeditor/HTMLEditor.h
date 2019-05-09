@@ -121,7 +121,7 @@ class HTMLEditor final : public TextEditor,
 
   nsHTMLDocument* GetHTMLDocument() const;
 
-  virtual void PreDestroy(bool aDestroyingFrames) override;
+  MOZ_CAN_RUN_SCRIPT virtual void PreDestroy(bool aDestroyingFrames) override;
 
   bool GetReturnInParagraphCreatesNewParagraph();
 
@@ -218,8 +218,9 @@ class HTMLEditor final : public TextEditor,
    * @param aTarget [IN] the element triggering the event
    * @param aMouseEvent [IN] the event
    */
-  nsresult OnMouseDown(int32_t aX, int32_t aY, Element* aTarget,
-                       dom::Event* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT nsresult OnMouseDown(int32_t aX, int32_t aY,
+                                          Element* aTarget,
+                                          dom::Event* aMouseEvent);
 
   /**
    * event callback when a mouse button is released
@@ -227,8 +228,8 @@ class HTMLEditor final : public TextEditor,
    * @param aY      [IN] vertical position of the pointer
    * @param aTarget [IN] the element triggering the event
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult OnMouseUp(int32_t aX, int32_t aY, Element* aTarget);
+  MOZ_CAN_RUN_SCRIPT nsresult OnMouseUp(int32_t aX, int32_t aY,
+                                        Element* aTarget);
 
   /**
    * event callback when the mouse pointer is moved
@@ -251,7 +252,7 @@ class HTMLEditor final : public TextEditor,
    * Enable/disable object resizers for <img> elements, <table> elements,
    * absolute positioned elements (required absolute position editor enabled).
    */
-  void EnableObjectResizer(bool aEnable) {
+  MOZ_CAN_RUN_SCRIPT void EnableObjectResizer(bool aEnable) {
     if (mIsObjectResizingEnabled == aEnable) {
       return;
     }
@@ -263,7 +264,7 @@ class HTMLEditor final : public TextEditor,
     }
 
     mIsObjectResizingEnabled = aEnable;
-    RefereshEditingUI();
+    RefreshEditingUI();
   }
   bool IsObjectResizerEnabled() const { return mIsObjectResizingEnabled; }
 
@@ -271,7 +272,7 @@ class HTMLEditor final : public TextEditor,
    * Enable/disable inline table editor, e.g., adding new row or column,
    * removing existing row or column.
    */
-  void EnableInlineTableEditor(bool aEnable) {
+  MOZ_CAN_RUN_SCRIPT void EnableInlineTableEditor(bool aEnable) {
     if (mIsInlineTableEditingEnabled == aEnable) {
       return;
     }
@@ -283,7 +284,7 @@ class HTMLEditor final : public TextEditor,
     }
 
     mIsInlineTableEditingEnabled = aEnable;
-    RefereshEditingUI();
+    RefreshEditingUI();
   }
   bool IsInlineTableEditorEnabled() const {
     return mIsInlineTableEditingEnabled;
@@ -294,7 +295,7 @@ class HTMLEditor final : public TextEditor,
    * elements (required object resizers enabled) or positioning them with
    * dragging grabber.
    */
-  void EnableAbsolutePositionEditor(bool aEnable) {
+  MOZ_CAN_RUN_SCRIPT void EnableAbsolutePositionEditor(bool aEnable) {
     if (mIsAbsolutelyPositioningEnabled == aEnable) {
       return;
     }
@@ -306,7 +307,7 @@ class HTMLEditor final : public TextEditor,
     }
 
     mIsAbsolutelyPositioningEnabled = aEnable;
-    RefereshEditingUI();
+    RefreshEditingUI();
   }
   bool IsAbsolutePositionEditorEnabled() const {
     return mIsAbsolutelyPositioningEnabled;
@@ -692,8 +693,9 @@ class HTMLEditor final : public TextEditor,
    *                      the element
    * @param aReturn  [OUT] the new z-index of the element
    */
-  nsresult RelativeChangeElementZIndex(Element& aElement, int32_t aChange,
-                                       int32_t* aReturn);
+  MOZ_CAN_RUN_SCRIPT nsresult RelativeChangeElementZIndex(Element& aElement,
+                                                          int32_t aChange,
+                                                          int32_t* aReturn);
 
   virtual bool IsBlockNode(nsINode* aNode) override;
   using EditorBase::IsBlockNode;
@@ -1545,6 +1547,7 @@ class HTMLEditor final : public TextEditor,
    * This sets background on the appropriate container element (table, cell,)
    * or calls into nsTextEditor to set the page background.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetCSSBackgroundColorWithTransaction(const nsAString& aColor);
   MOZ_CAN_RUN_SCRIPT
   nsresult SetHTMLBackgroundColorWithTransaction(const nsAString& aColor);
@@ -2160,7 +2163,8 @@ class HTMLEditor final : public TextEditor,
    * @param aX       [IN] the x position in pixels.
    * @param aY       [IN] the y position in pixels.
    */
-  void SetTopAndLeft(Element& aElement, int32_t aX, int32_t aY);
+  MOZ_CAN_RUN_SCRIPT void SetTopAndLeft(Element& aElement, int32_t aX,
+                                        int32_t aY);
 
   /**
    * Reset a selected cell or collapsed selection (the caret) after table
@@ -2193,11 +2197,11 @@ class HTMLEditor final : public TextEditor,
   void DeleteRefToAnonymousNode(ManualNACPtr aContent, PresShell* aPresShell);
 
   /**
-   * RefereshEditingUI() may refresh editing UIs for current Selection, focus,
+   * RefreshEditingUI() may refresh editing UIs for current Selection, focus,
    * etc.  If this shows or hides some UIs, it causes reflow.  So, this is
    * not safe method.
    */
-  nsresult RefereshEditingUI();
+  MOZ_CAN_RUN_SCRIPT nsresult RefreshEditingUI();
 
   /**
    * Returns the offset of an element's frame to its absolute containing block.
@@ -2218,13 +2222,13 @@ class HTMLEditor final : public TextEditor,
    * while this is running, this returns error.  So, callers shouldn't
    * keep handling the resizers if this returns error.
    */
-  nsresult SetAllResizersPosition();
+  MOZ_CAN_RUN_SCRIPT nsresult SetAllResizersPosition();
 
   /**
    * Shows active resizers around an element's frame
    * @param aResizedElement [IN] a DOM Element
    */
-  nsresult ShowResizersInternal(Element& aResizedElement);
+  MOZ_CAN_RUN_SCRIPT nsresult ShowResizersInternal(Element& aResizedElement);
 
   /**
    * Hide resizers if they are visible.  If this is called while there is no
@@ -2236,10 +2240,11 @@ class HTMLEditor final : public TextEditor,
    * RefreshResizersInternal() moves resizers to proper position.  This does
    * nothing if there is no resizing target.
    */
-  nsresult RefreshResizersInternal();
+  MOZ_CAN_RUN_SCRIPT nsresult RefreshResizersInternal();
 
   ManualNACPtr CreateResizer(int16_t aLocation, nsIContent& aParentContent);
-  void SetAnonymousElementPosition(int32_t aX, int32_t aY, Element* aResizer);
+  MOZ_CAN_RUN_SCRIPT void SetAnonymousElementPosition(int32_t aX, int32_t aY,
+                                                      Element* aResizer);
 
   ManualNACPtr CreateShadow(nsIContent& aParentContent,
                             Element& aOriginalObject);
@@ -2252,12 +2257,14 @@ class HTMLEditor final : public TextEditor,
    * @param aElementX           Left of aElement.
    * @param aElementY           Top of aElement.
    */
-  nsresult SetShadowPosition(Element& aShadowElement, Element& aElement,
-                             int32_t aElementLeft, int32_t aElementTop);
+  MOZ_CAN_RUN_SCRIPT nsresult SetShadowPosition(Element& aShadowElement,
+                                                Element& aElement,
+                                                int32_t aElementLeft,
+                                                int32_t aElementTop);
 
   ManualNACPtr CreateResizingInfo(nsIContent& aParentContent);
-  nsresult SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW,
-                                   int32_t aH);
+  MOZ_CAN_RUN_SCRIPT nsresult SetResizingInfoPosition(int32_t aX, int32_t aY,
+                                                      int32_t aW, int32_t aH);
 
   enum class ResizeAt {
     eX,
@@ -2267,14 +2274,13 @@ class HTMLEditor final : public TextEditor,
   };
   int32_t GetNewResizingIncrement(int32_t aX, int32_t aY, ResizeAt aResizeAt);
 
-  nsresult StartResizing(Element* aHandle);
+  MOZ_CAN_RUN_SCRIPT nsresult StartResizing(Element* aHandle);
   int32_t GetNewResizingX(int32_t aX, int32_t aY);
   int32_t GetNewResizingY(int32_t aX, int32_t aY);
   int32_t GetNewResizingWidth(int32_t aX, int32_t aY);
   int32_t GetNewResizingHeight(int32_t aX, int32_t aY);
   void HideShadowAndInfo();
-  MOZ_CAN_RUN_SCRIPT
-  void SetFinalSize(int32_t aX, int32_t aY);
+  MOZ_CAN_RUN_SCRIPT void SetFinalSize(int32_t aX, int32_t aY);
   void SetResizeIncrements(int32_t aX, int32_t aY, int32_t aW, int32_t aH,
                            bool aPreserveRatio);
 
@@ -2295,7 +2301,7 @@ class HTMLEditor final : public TextEditor,
    * @param aElement [IN] the element
    * @param aZorder  [IN] the z-index
    */
-  void SetZIndex(Element& aElement, int32_t aZorder);
+  MOZ_CAN_RUN_SCRIPT void SetZIndex(Element& aElement, int32_t aZorder);
 
   /**
    * shows a grabber attached to an arbitrary element. The grabber is an image
@@ -2304,7 +2310,7 @@ class HTMLEditor final : public TextEditor,
    * document. See chrome://editor/content/images/grabber.gif
    * @param aElement [IN] the element
    */
-  nsresult ShowGrabberInternal(Element& aElement);
+  MOZ_CAN_RUN_SCRIPT nsresult ShowGrabberInternal(Element& aElement);
 
   /**
    * Setting grabber to proper position for current mAbsolutelyPositionedObject.
@@ -2312,7 +2318,7 @@ class HTMLEditor final : public TextEditor,
    * or repositioned by script or something.  Then, you need to reset grabber
    * position with this.
    */
-  nsresult RefreshGrabberInternal();
+  MOZ_CAN_RUN_SCRIPT nsresult RefreshGrabberInternal();
 
   /**
    * hide the grabber if it shown.
@@ -2327,12 +2333,12 @@ class HTMLEditor final : public TextEditor,
    */
   bool CreateGrabberInternal(nsIContent& aParentContent);
 
-  nsresult StartMoving();
-  nsresult SetFinalPosition(int32_t aX, int32_t aY);
+  MOZ_CAN_RUN_SCRIPT nsresult StartMoving();
+  MOZ_CAN_RUN_SCRIPT nsresult SetFinalPosition(int32_t aX, int32_t aY);
   void AddPositioningOffset(int32_t& aX, int32_t& aY);
   void SnapToGrid(int32_t& newX, int32_t& newY);
   nsresult GrabberClicked();
-  nsresult EndMoving();
+  MOZ_CAN_RUN_SCRIPT nsresult EndMoving();
   nsresult GetTemporaryStyleForFocusedPositionedElement(Element& aElement,
                                                         nsAString& aReturn);
 
@@ -2344,7 +2350,8 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aCellElement    Must be an <td> or <th> element.
    */
-  nsresult ShowInlineTableEditingUIInternal(Element& aCellElement);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  ShowInlineTableEditingUIInternal(Element& aCellElement);
 
   /**
    * Hide all inline table editing UI.
@@ -2356,7 +2363,7 @@ class HTMLEditor final : public TextEditor,
    * proper position.  This returns error if the UI is hidden or replaced
    * during moving.
    */
-  nsresult RefreshInlineTableEditingUIInternal();
+  MOZ_CAN_RUN_SCRIPT nsresult RefreshInlineTableEditingUIInternal();
 
   /**
    * IsEmptyTextNode() returns true if aNode is a text node and does not have
@@ -2364,12 +2371,13 @@ class HTMLEditor final : public TextEditor,
    */
   bool IsEmptyTextNode(nsINode& aNode);
 
-  bool IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
-                              nsAtom* aAttribute, const nsAString* aValue);
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetInlinePropertyOnNodeImpl(nsIContent& aNode, nsAtom& aProperty,
-                                       nsAtom* aAttribute,
-                                       const nsAString& aValue);
+  MOZ_CAN_RUN_SCRIPT bool IsSimpleModifiableNode(nsIContent* aContent,
+                                                 nsAtom* aProperty,
+                                                 nsAtom* aAttribute,
+                                                 const nsAString* aValue);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  SetInlinePropertyOnNodeImpl(nsIContent& aNode, nsAtom& aProperty,
+                              nsAtom* aAttribute, const nsAString& aValue);
   typedef enum { eInserted, eAppended } InsertedOrAppended;
   void DoContentInserted(nsIContent* aChild, InsertedOrAppended);
 

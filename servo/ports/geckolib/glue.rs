@@ -2875,6 +2875,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_SetDescriptor(
     desc: nsCSSFontDesc,
     value: *const nsACString,
     data: *mut URLExtraData,
+    out_changed: *mut bool,
 ) -> bool {
     let value = value.as_ref().unwrap().as_str_unchecked();
     let mut input = ParserInput::new(&value);
@@ -2900,7 +2901,9 @@ pub unsafe extern "C" fn Servo_FontFaceRule_SetDescriptor(
                     $(
                         nsCSSFontDesc::$v_enum_name => {
                             if let Ok(value) = parser.parse_entirely(|i| Parse::parse(&context, i)) {
-                                rule.$field = Some(value);
+                                let result = Some(value);
+                                *out_changed = result != rule.$field;
+                                rule.$field = result;
                                 true
                             } else {
                                 false
@@ -6398,4 +6401,13 @@ pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Drop(
     builder: *mut RawServoSharedMemoryBuilder
 ) {
     SharedMemoryBuilder::drop_ffi(builder)
+}
+
+/// Returns a unique pointer to a clone of the shape image.
+///
+/// Probably temporary, as we move more stuff to cbindgen.
+#[no_mangle]
+#[must_use]
+pub unsafe extern "C" fn Servo_CloneBasicShape(v: &computed::basic_shape::BasicShape) -> *mut computed::basic_shape::BasicShape {
+    Box::into_raw(Box::new(v.clone()))
 }

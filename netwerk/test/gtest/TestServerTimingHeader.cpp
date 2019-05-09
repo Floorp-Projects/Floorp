@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 
+using namespace mozilla;
+using namespace mozilla::net;
+
 void testServerTimingHeader(
     const char* headerValue,
     std::vector<std::vector<std::string>> expectedResults) {

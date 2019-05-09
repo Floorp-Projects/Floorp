@@ -17,7 +17,12 @@ const ABUSE_REPORT_MESSAGE_BARS = {
   "submitting": {id: "submitting", actions: ["cancel"]},
   // Submitted report message-bar.
   "submitted": {
-    id: "submitted", actions: ["remove", "keep"], dismissable: true,
+    id: "submitted", actionAddonTypeSuffix: true,
+    actions: ["remove", "keep"], dismissable: true,
+  },
+  // Submitted report message-bar (with no remove actions).
+  "submitted-no-remove-action": {
+    id: "submitted-noremove", dismissable: true,
   },
   // Submitted report and remove addon message-bar.
   "submitted-and-removed": {
@@ -68,7 +73,7 @@ function createReportMessageBar(
   if (!barInfo) {
     throw new Error(`message-bar definition not found: ${definitionId}`);
   }
-  const {id, dismissable, actions, type, addonTypeSuffix} = barInfo;
+  const {id, dismissable, actions, type} = barInfo;
   const messageEl = document.createElement("span");
 
   // The message element includes an addon-name span (also filled by
@@ -80,13 +85,17 @@ function createReportMessageBar(
 
   document.l10n.setAttributes(
     messageEl,
-    getMessageL10n(addonTypeSuffix ? `${id}-${addonType}` : id),
+    getMessageL10n(barInfo.addonTypeSuffix ? `${id}-${addonType}` : id),
     {"addon-name": addonName || addonId});
 
   const barActions = actions ? actions.map(action => {
+    // Some of the message bars require a different per addonType
+    // Fluent id for their actions.
+    const actionId = barInfo.actionAddonTypeSuffix ?
+      `${action}-${addonType}` : action;
     const buttonEl = document.createElement("button");
     buttonEl.addEventListener("click", () => onaction && onaction(action));
-    document.l10n.setAttributes(buttonEl, getActionL10n(action));
+    document.l10n.setAttributes(buttonEl, getActionL10n(actionId));
     return buttonEl;
   }) : [];
 
@@ -107,9 +116,10 @@ function createReportMessageBar(
 }
 
 async function submitReport({report, reason, message}) {
-  const addonId = report.addon.id;
-  const addonName = report.addon && report.addon.name;
-  const addonType = report.addon && report.addon.type;
+  const {addon} = report;
+  const addonId = addon.id;
+  const addonName = addon.name;
+  const addonType = addon.type;
 
   // Create a message bar while we are still submitting the report.
   const mbSubmitting = createReportMessageBar(
@@ -126,14 +136,21 @@ async function submitReport({report, reason, message}) {
     await report.submit({reason, message});
     mbSubmitting.remove();
 
-    // Create a submitted message bar is the submission has been
+    // Create a submitted message bar when the submission has been
     // successful.
-    // With reportEntryPoint "uninstall" a specific message bar
-    // is going to be used. All the other reportEntryPoint
-    // values ("menu" and "toolbar_context_menu") uses the same
-    // "submitted" message bar.
-    const barId = report.reportEntryPoint === "uninstall" ?
-      "submitted-and-removed" : "submitted";
+    let barId;
+    if (!(addon.permissions & AddonManager.PERM_CAN_UNINSTALL)) {
+      // Do not offer remove action if the addon can't be uninstalled.
+      barId = "submitted-no-remove-action";
+    } else if (report.reportEntryPoint === "uninstall") {
+      // With reportEntryPoint "uninstall" a specific message bar
+      // is going to be used.
+      barId = "submitted-and-removed";
+    } else {
+      // All the other reportEntryPoint ("menu" and "toolbar_context_menu")
+      // use the same kind of message bar.
+      barId = "submitted";
+    }
 
     const mbInfo = createReportMessageBar(barId, {
       addonId, addonName, addonType,

@@ -18,6 +18,8 @@
 #  include "nsColor.h"
 #  include "nsCoord.h"
 #  include "mozilla/AtomArray.h"
+#  include "mozilla/IntegerRange.h"
+#  include "mozilla/Span.h"
 #  include "Units.h"
 #  include "mozilla/gfx/Types.h"
 #  include "mozilla/MemoryReporting.h"

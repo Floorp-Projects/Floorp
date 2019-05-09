@@ -15,6 +15,9 @@ Login Manager test: multiple login autocomplete
 <script>
 var chromeScript = runChecksAfterCommonInit();
 
+// Temporarily allow use of eval() in this test.
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
+
 var setupScript = runInParent(function setup() {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 

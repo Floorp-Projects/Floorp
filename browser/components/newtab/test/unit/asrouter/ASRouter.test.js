@@ -1601,13 +1601,18 @@ describe("ASRouter", () => {
     describe(".setupTrailhead", () => {
       let getBoolPrefStub;
       let setStringPrefStub;
+      let setBoolPrefStub;
 
       beforeEach(() => {
-        getBoolPrefStub = sandbox.stub(global.Services.prefs, "getBoolPref").withArgs(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF).returns(true);
+        getBoolPrefStub = sandbox.stub(global.Services.prefs, "getBoolPref");
+        getBoolPrefStub.withArgs(TRAILHEAD_CONFIG.DID_SEE_ABOUT_WELCOME_PREF).returns(true);
+        getBoolPrefStub.withArgs(TRAILHEAD_CONFIG.TRIPLETS_ENROLLED_PREF).returns(false);
         setStringPrefStub = sandbox.stub(global.Services.prefs, "setStringPref");
+        setBoolPrefStub = sandbox.stub(global.Services.prefs, "setBoolPref");
       });
 
-      const configWithExperiment = {experiment: "interrupts", interrupt: "join", triplet: "privacy"};
+      const configWithInterruptsExperiment = {experiment: "interrupts", interrupt: "join", triplet: "privacy"};
+      const configWithTripletsExperiment = {experiment: "triplets", interrupt: "join", triplet: "privacy"};
       const configWithoutExperiment = {experiment: "", interrupt: "control", triplet: ""};
 
       it("should generates an experiment/branch configuration and update Router.state", async () => {
@@ -1637,14 +1642,35 @@ describe("ASRouter", () => {
         sandbox.spy(Router, "setState");
         assert.notCalled(Router.setState);
       });
-      it("should set active experiment if one is defined", async () => {
-        sandbox.stub(Router, "_generateTrailheadBranches").resolves(configWithExperiment);
+      it("should set active interrupts experiment if one is defined", async () => {
+        sandbox.stub(Router, "_generateTrailheadBranches").resolves(configWithInterruptsExperiment);
         sandbox.stub(global.TelemetryEnvironment, "setExperimentActive");
+        sandbox.spy(Router, "_sendTrailheadEnrollEvent");
 
         await Router.setupTrailhead();
 
         assert.calledOnce(global.TelemetryEnvironment.setExperimentActive);
         assert.calledWith(setStringPrefStub, TRAILHEAD_CONFIG.INTERRUPTS_EXPERIMENT_PREF, "join");
+        assert.calledWith(Router._sendTrailheadEnrollEvent, {
+          experiment: "activity-stream-firstrun-trailhead-interrupts",
+          type: "as-firstrun",
+          branch: "join",
+        });
+      });
+      it("should set active triplets experiment if one is defined", async () => {
+        sandbox.stub(Router, "_generateTrailheadBranches").resolves(configWithTripletsExperiment);
+        sandbox.stub(global.TelemetryEnvironment, "setExperimentActive");
+        sandbox.spy(Router, "_sendTrailheadEnrollEvent");
+
+        await Router.setupTrailhead();
+
+        assert.calledOnce(global.TelemetryEnvironment.setExperimentActive);
+        assert.calledWith(setBoolPrefStub, TRAILHEAD_CONFIG.TRIPLETS_ENROLLED_PREF, true);
+        assert.calledWith(Router._sendTrailheadEnrollEvent, {
+          experiment: "activity-stream-firstrun-trailhead-triplets",
+          type: "as-firstrun",
+          branch: "privacy",
+        });
       });
       it("should not set an active experiment if no experiment is defined", async () => {
         sandbox.stub(Router, "_generateTrailheadBranches").resolves(configWithoutExperiment);

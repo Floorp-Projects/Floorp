@@ -912,7 +912,8 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
             // in the line layout data structures. See bug 1490281 to fix the
             // underlying issue. When that's fixed this check should be removed.
             !outOfFlowFrame->IsLetterFrame() &&
-            !GetOutermostLineLayout()->mBlockRI->mFlags.mCanHaveTextOverflow) {
+            !GetOutermostLineLayout()
+                 ->mBlockRI->mFlags.mCanHaveOverflowMarkers) {
           // We'll do this at the next break opportunity.
           RecordNoWrapFloat(outOfFlowFrame);
         } else {

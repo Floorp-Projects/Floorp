@@ -1358,6 +1358,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
 struct nsStyleTextOverflowSide {
   nsStyleTextOverflowSide() : mType(NS_STYLE_TEXT_OVERFLOW_CLIP) {}
 
+  static nsStyleTextOverflowSide Ellipsis() {
+    nsStyleTextOverflowSide side;
+    side.mType = NS_STYLE_TEXT_OVERFLOW_ELLIPSIS;
+    return side;
+  }
+
   bool operator==(const nsStyleTextOverflowSide& aOther) const {
     return mType == aOther.mType && (mType != NS_STYLE_TEXT_OVERFLOW_STRING ||
                                      mString == aOther.mString);
@@ -1657,65 +1663,6 @@ struct StyleAnimation {
   float mIterationCount;  // mozilla::PositiveInfinity<float>() means infinite
 };
 
-class StyleBasicShape final {
- public:
-  explicit StyleBasicShape(StyleBasicShapeType);
-
-  StyleBasicShapeType GetShapeType() const { return mType; }
-  nsCSSKeyword GetShapeTypeName() const;
-
-  StyleFillRule GetFillRule() const { return mFillRule; }
-
-  const mozilla::Position& GetPosition() const {
-    MOZ_ASSERT(mType == StyleBasicShapeType::Circle ||
-                   mType == StyleBasicShapeType::Ellipse,
-               "expected circle or ellipse");
-    return mPosition;
-  }
-
-  bool HasRadius() const {
-    MOZ_ASSERT(mType == StyleBasicShapeType::Inset, "expected inset");
-    NS_FOR_CSS_HALF_CORNERS(corner) {
-      auto& radius = mRadius.Get(corner);
-      if (radius.HasPercent() || radius.LengthInCSSPixels() != 0.0f) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  const mozilla::StyleBorderRadius& GetRadius() const {
-    MOZ_ASSERT(mType == StyleBasicShapeType::Inset, "expected inset");
-    return mRadius;
-  }
-
-  // mCoordinates has coordinates for polygon or radii for
-  // ellipse and circle.
-  const nsTArray<nsStyleCoord>& Coordinates() const { return mCoordinates; }
-
-  bool operator==(const StyleBasicShape& aOther) const {
-    return mType == aOther.mType && mFillRule == aOther.mFillRule &&
-           mCoordinates == aOther.mCoordinates &&
-           mPosition == aOther.mPosition && mRadius == aOther.mRadius;
-  }
-  bool operator!=(const StyleBasicShape& aOther) const {
-    return !(*this == aOther);
-  }
-
- private:
-  StyleBasicShapeType mType;
-  StyleFillRule mFillRule;
-
-  // mCoordinates has coordinates for polygon or radii for
-  // ellipse and circle.
-  // (top, right, bottom, left) for inset
-  nsTArray<nsStyleCoord> mCoordinates;
-  // position of center for ellipse or circle
-  mozilla::Position mPosition;
-  // corner radii for inset (0 if not set)
-  mozilla::StyleBorderRadius mRadius;
-};
-
 struct StyleSVGPath final {
   const nsTArray<StylePathCommand>& Path() const { return mPath; }
 
@@ -1773,14 +1720,14 @@ struct StyleShapeSource final {
 
   void SetShapeImage(UniquePtr<nsStyleImage> aShapeImage);
 
-  const StyleBasicShape& BasicShape() const {
+  const mozilla::StyleBasicShape& BasicShape() const {
     MOZ_ASSERT(mType == StyleShapeSourceType::Shape,
                "Wrong shape source type!");
     MOZ_ASSERT(mBasicShape);
     return *mBasicShape;
   }
 
-  void SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
+  void SetBasicShape(UniquePtr<mozilla::StyleBasicShape> aBasicShape,
                      StyleGeometryBox aReferenceBox);
 
   StyleGeometryBox GetReferenceBox() const {
@@ -1809,7 +1756,7 @@ struct StyleShapeSource final {
   void DoDestroy();
 
   union {
-    mozilla::UniquePtr<StyleBasicShape> mBasicShape;
+    mozilla::UniquePtr<mozilla::StyleBasicShape> mBasicShape;
     mozilla::UniquePtr<nsStyleImage> mShapeImage;
     mozilla::UniquePtr<StyleSVGPath> mSVGPath;
     // TODO: Bug 1480665, implement ray() function.
@@ -1901,6 +1848,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   nsStyleCoord mScrollSnapPointsY;
   mozilla::Position mScrollSnapDestination;
   nsTArray<mozilla::Position> mScrollSnapCoordinate;
+  uint32_t mLineClamp;
 
   // mSpecifiedTransform is the list of transform functions as
   // specified, or null to indicate there is no transform.  (inherit or
@@ -2720,6 +2668,7 @@ class nsStyleSVGPaint {
     mozilla::StyleColor mColor;
     mozilla::css::URLValue* mPaintServer;
     explicit ColorOrPaintServer(mozilla::StyleColor c) : mColor(c) {}
+    ~ColorOrPaintServer() {}  // Caller must call Reset().
   };
   ColorOrPaintServer mPaint;
   nsStyleSVGPaintType mType;

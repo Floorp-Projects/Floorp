@@ -418,7 +418,6 @@ shown from Android O while a tab is being queued.-->
     Message of an Android Toast that appears after our app opens "Android System Settings -> Apps -> Default apps"
     and instruct users to tap on the "Browser app" option on that settings screen to choose a default browser app. -->
 <!ENTITY default_browser_system_settings_toast "Tap Browser app &amp; select &brandShortName;">
-<!ENTITY pref_default_browser_mozilla_support_tablet "Visit Mozilla Support">
 <!ENTITY pref_about_firefox "About &brandShortName;">
 <!ENTITY pref_vendor_faqs "FAQs">
 <!ENTITY pref_vendor_feedback "Give feedback">

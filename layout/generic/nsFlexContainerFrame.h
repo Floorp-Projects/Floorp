@@ -151,6 +151,14 @@ class nsFlexContainerFrame final : public nsContainerFrame {
     return true;
   }
 
+  /**
+   * Returns the effective value of -webkit-line-clamp for this flex container.
+   *
+   * This will be 0 if the property is 'none', or if the element is not
+   * display:-webkit-(inline-)box and -webkit-box-orient:vertical.
+   */
+  uint32_t GetLineClampValue() const;
+
   // nsContainerFrame overrides
   uint16_t CSSAlignmentForAbsPosChild(
       const ReflowInput& aChildRI,
@@ -264,7 +272,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                     nscoord aAvailableBSizeForContent,
                     nsTArray<StrutInfo>& aStruts,
                     const FlexboxAxisTracker& aAxisTracker,
-                    nscoord aMainGapSize, nscoord aCrossGapSize);
+                    nscoord aMainGapSize, nscoord aCrossGapSize,
+                    bool aHasLineClampEllipsis);
 
   /**
    * Checks whether our child-frame list "mFrames" is sorted, using the given
@@ -297,7 +306,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   mozilla::UniquePtr<FlexItem> GenerateFlexItemForChild(
       nsPresContext* aPresContext, nsIFrame* aChildFrame,
       const ReflowInput& aParentReflowInput,
-      const FlexboxAxisTracker& aAxisTracker);
+      const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis);
 
   /**
    * This method gets a cached measuring reflow for a flex item, or does it and
@@ -319,6 +328,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   nscoord MeasureFlexItemContentBSize(nsPresContext* aPresContext,
                                       FlexItem& aFlexItem,
                                       bool aForceBResizeForMeasuringReflow,
+                                      bool aHasLineClampEllipsis,
                                       const ReflowInput& aParentReflowInput);
 
   /**
@@ -329,7 +339,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   void ResolveAutoFlexBasisAndMinSize(nsPresContext* aPresContext,
                                       FlexItem& aFlexItem,
                                       const ReflowInput& aItemReflowInput,
-                                      const FlexboxAxisTracker& aAxisTracker);
+                                      const FlexboxAxisTracker& aAxisTracker,
+                                      bool aHasLineClampEllipsis);
 
   /**
    * Returns true if "this" is the nsFlexContainerFrame for a -moz-box or
@@ -358,7 +369,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                          nscoord aAvailableBSizeForContent,
                          const nsTArray<StrutInfo>& aStruts,
                          const FlexboxAxisTracker& aAxisTracker,
-                         nscoord aMainGapSize,
+                         nscoord aMainGapSize, bool aHasLineClampEllipsis,
                          nsTArray<nsIFrame*>& aPlaceholders,
                          mozilla::LinkedList<FlexLine>& aLines);
 
@@ -411,7 +422,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                       const FlexboxAxisTracker& aAxisTracker,
                       const ReflowInput& aReflowInput, const FlexItem& aItem,
                       mozilla::LogicalPoint& aFramePos,
-                      const nsSize& aContainerSize);
+                      const nsSize& aContainerSize, bool aHasLineClampEllipsis);
 
   /**
    * Helper-function to perform a "dummy reflow" on all our nsPlaceholderFrame

@@ -298,6 +298,7 @@ var supported_properties = {
                test_length_clamped, test_percent_clamped ],
     "word-spacing": [ test_length_transition, test_length_unclamped ],
     "z-index": [ test_integer_transition, test_pos_integer_or_auto_transition ],
+    "-webkit-line-clamp": [ test_pos_integer_or_none_transition ],
     "-webkit-text-fill-color": [ test_color_transition,
                                  test_currentcolor_transition ],
     "-webkit-text-stroke-color": [ test_color_transition,
@@ -2254,7 +2255,7 @@ function test_grid_gap(prop) {
   test_percent_clamped(prop);
 }
 
-function test_pos_integer_or_auto_transition(prop) {
+function test_pos_integer_or_keyword_transition(prop, keyword) {
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "4", "");
   is(cs.getPropertyValue(prop), "4",
@@ -2264,9 +2265,9 @@ function test_pos_integer_or_auto_transition(prop) {
   is(cs.getPropertyValue(prop), "6",
      "integer-valued property " + prop + ": interpolation of integers");
   check_distance(prop, "4", "6", "12");
-  div.style.setProperty(prop, "auto", "");
-  is(cs.getPropertyValue(prop), "auto",
-     "integer-valued property " + prop + ": auto not interpolable");
+  div.style.setProperty(prop, keyword, "");
+  is(cs.getPropertyValue(prop), keyword,
+     "integer-valued property " + prop + ": " + keyword + " not interpolable");
   div.style.setProperty(prop, "8", "");
   is(cs.getPropertyValue(prop), "8",
      "integer-valued property " + prop + ": computed value before transition");
@@ -2274,6 +2275,14 @@ function test_pos_integer_or_auto_transition(prop) {
   is(cs.getPropertyValue(prop), "7",
      "integer-valued property " + prop + ": interpolation of integers");
   check_distance(prop, "8", "7", "4");
+}
+
+function test_pos_integer_or_auto_transition(prop) {
+  return test_pos_integer_or_keyword_transition(prop, "auto");
+}
+
+function test_pos_integer_or_none_transition(prop) {
+  return test_pos_integer_or_keyword_transition(prop, "none");
 }
 
 function test_integer_at_least_one_clamping(prop) {

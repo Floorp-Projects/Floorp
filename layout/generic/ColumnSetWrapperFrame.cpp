@@ -6,6 +6,7 @@
 
 #include "ColumnSetWrapperFrame.h"
 
+#include "mozilla/ColumnUtils.h"
 #include "mozilla/PresShell.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
@@ -147,6 +148,74 @@ void ColumnSetWrapperFrame::MarkIntrinsicISizesDirty() {
   for (nsIFrame* f = FirstContinuation(); f; f = f->GetNextContinuation()) {
     f->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
   }
+}
+
+nscoord ColumnSetWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
+  nscoord iSize = 0;
+  DISPLAY_MIN_INLINE_SIZE(this, iSize);
+
+  if (StyleDisplay()->IsContainSize()) {
+    // If we're size-contained, we determine our minimum intrinsic size purely
+    // from our column styling, as if we had no descendants. This should match
+    // what happens in nsColumnSetFrame::GetMinISize in an actual no-descendants
+    // scenario.
+    const nsStyleColumn* colStyle = StyleColumn();
+    if (colStyle->mColumnWidth.IsLength()) {
+      // As available inline size reduces to zero, our number of columns reduces
+      // to one, so no column gaps contribute to our minimum intrinsic size.
+      // Also, column-width doesn't set a lower bound on our minimum intrinsic
+      // size, either. Just use 0 because we're size-contained.
+      iSize = 0;
+    } else {
+      MOZ_ASSERT(colStyle->mColumnCount != nsStyleColumn::kColumnCountAuto,
+                 "column-count and column-width can't both be auto!");
+      // As available inline size reduces to zero, we still have mColumnCount
+      // columns, so compute our minimum intrinsic size based on N zero-width
+      // columns, with specified gap size between them.
+      const nscoord colGap =
+          ColumnUtils::GetColumnGap(this, NS_UNCONSTRAINEDSIZE);
+      iSize = ColumnUtils::IntrinsicISize(colStyle->mColumnCount, colGap, 0);
+    }
+  } else {
+    for (nsIFrame* f : PrincipalChildList()) {
+      iSize = std::max(iSize, f->GetMinISize(aRenderingContext));
+    }
+  }
+
+  return iSize;
+}
+
+nscoord ColumnSetWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
+  nscoord iSize = 0;
+  DISPLAY_PREF_INLINE_SIZE(this, iSize);
+
+  if (StyleDisplay()->IsContainSize()) {
+    const nsStyleColumn* colStyle = StyleColumn();
+    nscoord colISize;
+    if (colStyle->mColumnWidth.IsLength()) {
+      colISize =
+          ColumnUtils::ClampUsedColumnWidth(colStyle->mColumnWidth.AsLength());
+    } else {
+      MOZ_ASSERT(colStyle->mColumnCount != nsStyleColumn::kColumnCountAuto,
+                 "column-count and column-width can't both be auto!");
+      colISize = 0;
+    }
+
+    // If column-count is auto, assume one column.
+    const uint32_t numColumns =
+        colStyle->mColumnCount == nsStyleColumn::kColumnCountAuto
+            ? 1
+            : colStyle->mColumnCount;
+    const nscoord colGap =
+        ColumnUtils::GetColumnGap(this, NS_UNCONSTRAINEDSIZE);
+    iSize = ColumnUtils::IntrinsicISize(numColumns, colGap, colISize);
+  } else {
+    for (nsIFrame* f : PrincipalChildList()) {
+      iSize = std::max(iSize, f->GetPrefISize(aRenderingContext));
+    }
+  }
+
+  return iSize;
 }
 
 #ifdef DEBUG
