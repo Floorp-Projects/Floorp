@@ -73,6 +73,19 @@ const TEST_LOGINS = [
     timePasswordChanged: 1437787539233,
     timesUsed: 1,
   },
+  {
+    id: 6,
+    username: "username",
+    password: "password6",
+    hostname: "https://www.example.com",
+    formSubmitURL: "", // NULL `action_url`
+    httpRealm: null,
+    usernameField: "",
+    passwordField: "pass",
+    timeCreated: 1557291348878,
+    timePasswordChanged: 1557291348878,
+    timesUsed: 1,
+  },
 ];
 
 var crypto = new OSCrypto();
