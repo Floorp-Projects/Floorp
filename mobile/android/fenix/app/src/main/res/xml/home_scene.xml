@@ -12,6 +12,7 @@
         <OnSwipe
             motion:dragDirection="dragUp"
             motion:touchAnchorId="@id/home_component"
+            motion:touchRegionId="@id/home_component"
             motion:touchAnchorSide="top" />
 
         <KeyFrameSet>
@@ -41,6 +42,10 @@
                 motion:framePosition="90"
                 android:alpha="0" />
             <KeyAttribute
+                motion:motionTarget="@id/menuButton"
+                motion:framePosition="90"
+                android:alpha="0" />
+            <KeyAttribute
                 motion:motionTarget="@id/privateBrowsingButton"
                 motion:framePosition="50"
                 android:translationY="0dp"
@@ -51,8 +56,18 @@
                 android:alpha="0" />
 
             <KeyAttribute
+                motion:motionTarget="@id/homeDivider"
+                motion:framePosition="92"
+                android:alpha="1" />
+            <KeyAttribute
+                motion:motionTarget="@id/homeDivider"
+                motion:framePosition="100"
+                android:alpha="0" />
+
+            <KeyAttribute
                 motion:motionTarget="@id/homeDividerShadow"
-                motion:framePosition="90">
+                motion:framePosition="90"
+                android:alpha="0">
                 <CustomAttribute
                     motion:attributeName="layoutMarginStart"
                     motion:customPixelDimension="0dp" />
@@ -60,10 +75,6 @@
                     motion:attributeName="layoutMarginEnd"
                     motion:customPixelDimension="0dp" />
             </KeyAttribute>
-            <KeyAttribute
-                motion:motionTarget="@id/homeDividerShadow"
-                motion:framePosition="90"
-                android:alpha="0" />
 
             <KeyAttribute
                 motion:motionTarget="@id/toolbar_wrapper"
@@ -118,7 +129,7 @@
         <Constraint
             android:id="@+id/menuButton"
             android:alpha="0"
-            android:visibility="gone"
+            android:visibility="invisible"
             android:layout_marginTop="16dp"
             android:translationY="-10dp"
             android:layout_height="@dimen/glyph_button_height"
@@ -129,7 +140,7 @@
         <Constraint
             android:id="@+id/privateBrowsingButton"
             android:alpha="0"
-            android:visibility="gone"
+            android:visibility="invisible"
             android:translationY="-10dp"
             android:layout_height="@dimen/glyph_button_height"
             android:layout_width="@dimen/glyph_button_height"
