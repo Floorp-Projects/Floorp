@@ -350,6 +350,10 @@ FRAME_STATE_BIT(FlexContainer, 22, NS_STATE_FLEX_GENERATE_COMPUTED_VALUES)
 // True if the container has no flex items; may lie if there is a pending reflow
 FRAME_STATE_BIT(FlexContainer, 23, NS_STATE_FLEX_SYNTHESIZE_BASELINE)
 
+// True if any flex item in the container has a line with a
+// -webkit-line-ellipsis marker.
+FRAME_STATE_BIT(FlexContainer, 24, NS_STATE_FLEX_HAS_LINE_CLAMP_ELLIPSIS)
+
 // == Frame state bits that apply to grid container frames ====================
 
 FRAME_STATE_GROUP(GridContainer, nsGridContainerFrame)
@@ -567,6 +571,12 @@ FRAME_STATE_BIT(Block, 29, NS_BLOCK_HAS_FIRST_LETTER_STYLE)
 // exclusive.
 FRAME_STATE_BIT(Block, 30, NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER)
 FRAME_STATE_BIT(Block, 31, NS_BLOCK_FRAME_HAS_INSIDE_MARKER)
+
+// NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS indicates that exactly one line in this
+// block has the LineClampEllipsis flag set, and that such a line must be found
+// and have that flag cleared when reflowing this element's nearest legacy box
+// container.
+FRAME_STATE_BIT(Block, 60, NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS)
 
 // This block has had a child marked dirty, so before we reflow we need
 // to look through the lines to find any such children and mark

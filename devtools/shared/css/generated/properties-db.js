@@ -2317,6 +2317,20 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "-webkit-line-clamp": {
+    "isInherited": false,
+    "subproperties": [
+      "-webkit-line-clamp"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "unset"
+    ]
+  },
   "-webkit-mask": {
     "isInherited": false,
     "subproperties": [
@@ -3104,6 +3118,7 @@ exports.CSS_PROPERTIES = {
       "shape-margin",
       "shape-outside",
       "touch-action",
+      "-webkit-line-clamp",
       "color",
       "column-width",
       "column-count",
@@ -10516,6 +10531,10 @@ exports.PREFERENCES = [
   [
     "transform-box",
     "svg.transform-box.enabled"
+  ],
+  [
+    "-webkit-line-clamp",
+    "layout.css.webkit-line-clamp.enabled"
   ],
   [
     "overflow-clip-box-block",

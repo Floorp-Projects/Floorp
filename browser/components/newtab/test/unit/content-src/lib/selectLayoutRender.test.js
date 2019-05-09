@@ -353,4 +353,23 @@ describe("selectLayoutRender", () => {
 
     assert.deepEqual(layoutRender[0].components[2].data.recommendations[0], {name: "rec", pos: 0});
   });
+  it("should not render a row if no components exist after filter in that row", () => {
+    const fakeLayout = [{
+      width: 3,
+      components: [
+        {type: "TopSites"},
+      ],
+    }, {
+      width: 3,
+      components: [
+        {type: "Message"},
+      ],
+    }];
+    store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: fakeLayout}});
+
+    const {layoutRender} = selectLayoutRender(store.getState().DiscoveryStream, {"feeds.topsites": true}, []);
+
+    assert.equal(layoutRender[0].components[0].type, "TopSites");
+    assert.equal(layoutRender[1], undefined);
+  });
 });

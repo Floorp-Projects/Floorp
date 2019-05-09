@@ -107,11 +107,6 @@ void SMILCSSProperty::ClearAnimValue() {
 // Based on http://www.w3.org/TR/SVG/propidx.html
 // static
 bool SMILCSSProperty::IsPropertyAnimatable(nsCSSPropertyID aPropID) {
-  // Bug 1353918: Drop this check
-  if (!Servo_Property_IsAnimatable(aPropID)) {
-    return false;
-  }
-
   // NOTE: Right now, Gecko doesn't recognize the following properties from
   // the SVG Property Index:
   //   alignment-baseline

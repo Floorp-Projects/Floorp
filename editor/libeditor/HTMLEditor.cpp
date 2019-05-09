@@ -362,7 +362,7 @@ HTMLEditor::NotifySelectionChanged(Document* aDocument, Selection* aSelection,
     typeInState->OnSelectionChange(*aSelection);
 
     // We used a class which derived from nsISelectionListener to call
-    // HTMLEditor::RefereshEditingUI().  The lifetime of the class was
+    // HTMLEditor::RefreshEditingUI().  The lifetime of the class was
     // exactly same as mTypeInState.  So, call it only when mTypeInState
     // is not nullptr.
     if ((aReason & (nsISelectionListener::MOUSEDOWN_REASON |
@@ -374,8 +374,8 @@ HTMLEditor::NotifySelectionChanged(Document* aDocument, Selection* aSelection,
       // FYI: This is an XPCOM method.  So, the caller, Selection, guarantees
       //      the lifetime of this instance.  So, don't need to grab this with
       //      local variable.
-      DebugOnly<nsresult> rv = RefereshEditingUI();
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RefereshEditingUI() failed");
+      DebugOnly<nsresult> rv = RefreshEditingUI();
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RefreshEditingUI() failed");
     }
   }
 
@@ -4380,9 +4380,9 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
       } else if (startNode == endNode &&
                  startNode->IsHTMLElement(nsGkAtoms::body) && isCollapsed) {
         // No block in the document, let's apply the background to the body
-        mCSSEditUtils->SetCSSEquivalentToHTMLStyle(startNode->AsElement(),
-                                                   nullptr, nsGkAtoms::bgcolor,
-                                                   &aColor, false);
+        mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
+            MOZ_KnownLive(startNode->AsElement()), nullptr, nsGkAtoms::bgcolor,
+            &aColor, false);
       } else if (startNode == endNode && (endOffset - startOffset == 1 ||
                                           (!startOffset && !endOffset))) {
         // A unique node is selected, let's also apply the background color to

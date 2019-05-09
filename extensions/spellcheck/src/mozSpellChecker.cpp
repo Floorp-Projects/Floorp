@@ -117,16 +117,7 @@ nsresult mozSpellChecker::NextMisspelledWord(nsAString& aWord,
 RefPtr<CheckWordPromise> mozSpellChecker::CheckWords(
     const nsTArray<nsString>& aWords) {
   if (XRE_IsContentProcess()) {
-    return mEngine->SendCheckAsync(aWords)->Then(
-        GetMainThreadSerialEventTarget(), __func__,
-        [](nsTArray<bool>&& aIsMisspelled) {
-          return CheckWordPromise::CreateAndResolve(std::move(aIsMisspelled),
-                                                    __func__);
-        },
-        [](mozilla::ipc::ResponseRejectReason&& aReason) {
-          return CheckWordPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
-                                                   __func__);
-        });
+    return mEngine->CheckWords(aWords);
   }
 
   nsTArray<bool> misspells;

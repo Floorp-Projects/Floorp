@@ -26,6 +26,7 @@ interface nsIHTMLObjectResizer : nsISupports
   /**
    * a boolean indicating if object resizing is enabled in the editor
    */
+  [can_run_script]  // Setter only.
   attribute boolean objectResizingEnabled;
 
   /**
@@ -39,6 +40,7 @@ interface nsIHTMLObjectResizer : nsISupports
    * you need to refresh position of resizers with calling this.
    * FYI: Current user in script is only BlueGriffon.
    */
+  [can_run_script]
   void refreshResizers();
 };
 

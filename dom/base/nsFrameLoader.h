@@ -244,8 +244,11 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * Called from the layout frame associated with this frame loader;
    * this notifies us to hook up with the widget and view.
    */
-  bool Show(int32_t marginWidth, int32_t marginHeight, int32_t scrollbarPrefX,
-            int32_t scrollbarPrefY, nsSubDocumentFrame* frame);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool Show(int32_t marginWidth,
+                                        int32_t marginHeight,
+                                        int32_t scrollbarPrefX,
+                                        int32_t scrollbarPrefY,
+                                        nsSubDocumentFrame* frame);
 
   void MaybeShowFrame();
 

@@ -1560,11 +1560,6 @@ void Gecko_StyleShapeSource_SetURLValue(StyleShapeSource* aShape,
   aShape->SetURL(*aURL);
 }
 
-void Gecko_NewBasicShape(StyleShapeSource* aShape, StyleBasicShapeType aType) {
-  aShape->SetBasicShape(MakeUnique<StyleBasicShape>(aType),
-                        StyleGeometryBox::NoBox);
-}
-
 void Gecko_NewShapeImage(StyleShapeSource* aShape) {
   aShape->SetShapeImage(MakeUnique<nsStyleImage>());
 }
