@@ -102,7 +102,7 @@ var SiteDataTestUtils = {
         // eslint-disable-next-line no-undef
         let r = await content.navigator.serviceWorker.register(p);
         return new Promise(resolve => {
-          let worker = r.installing || r.waiting || r.active;
+          let worker = r.installing;
           worker.addEventListener("statechange", () => {
             if (worker.state === "installed") {
               resolve();
