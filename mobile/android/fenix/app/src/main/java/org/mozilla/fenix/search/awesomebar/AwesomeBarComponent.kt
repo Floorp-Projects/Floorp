@@ -1,15 +1,23 @@
 package org.mozilla.fenix.search.awesomebar
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import android.util.Log
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
+import io.reactivex.Observable
 import mozilla.components.browser.search.SearchEngine
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
+import org.mozilla.fenix.mvi.UIComponentViewModel
 import org.mozilla.fenix.mvi.ViewState
 
 data class AwesomeBarState(
@@ -32,25 +40,51 @@ sealed class AwesomeBarChange : Change {
 
 class AwesomeBarComponent(
     private val container: ViewGroup,
+    owner: Fragment,
     bus: ActionBusFactory,
     override var initialState: AwesomeBarState = AwesomeBarState("", false)
 ) : UIComponent<AwesomeBarState, AwesomeBarAction, AwesomeBarChange>(
+    owner,
     bus.getManagedEmitter(AwesomeBarAction::class.java),
     bus.getSafeManagedObservable(AwesomeBarChange::class.java)
 ) {
-    override val reducer: Reducer<AwesomeBarState, AwesomeBarChange> = { state, change ->
-        when (change) {
-            is AwesomeBarChange.SearchShortcutEngineSelected ->
-                state.copy(suggestionEngine = change.engine, showShortcutEnginePicker = false)
-            is AwesomeBarChange.SearchShortcutEnginePicker ->
-                state.copy(showShortcutEnginePicker = change.show)
-            is AwesomeBarChange.UpdateQuery -> state.copy(query = change.query)
-        }
-    }
-
     override fun initView() = AwesomeBarUIView(container, actionEmitter, changesObservable)
 
+    override fun render(): Observable<AwesomeBarState> =
+        ViewModelProviders.of(owner, AwesomeBarViewModel.Factory(initialState, changesObservable))
+            .get(AwesomeBarViewModel::class.java).render(uiView)
+
     init {
-        render(reducer)
+        render()
+    }
+}
+
+class AwesomeBarViewModel(initialState: AwesomeBarState, changesObservable: Observable<AwesomeBarChange>) :
+    UIComponentViewModel<AwesomeBarState, AwesomeBarAction, AwesomeBarChange>(
+        initialState,
+        changesObservable,
+        reducer
+    ) {
+
+    class Factory(
+        private val initialState: AwesomeBarState,
+        private val changesObservable: Observable<AwesomeBarChange>
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
+            AwesomeBarViewModel(initialState, changesObservable) as T
+    }
+
+    companion object {
+        val reducer: Reducer<AwesomeBarState, AwesomeBarChange> = { state, change ->
+            Log.d("IN_REDUCER", change.toString())
+            when (change) {
+                is AwesomeBarChange.SearchShortcutEngineSelected ->
+                    state.copy(suggestionEngine = change.engine, showShortcutEnginePicker = false)
+                is AwesomeBarChange.SearchShortcutEnginePicker ->
+                    state.copy(showShortcutEnginePicker = change.show)
+                is AwesomeBarChange.UpdateQuery -> state.copy(query = change.query)
+            }
+        }
     }
 }

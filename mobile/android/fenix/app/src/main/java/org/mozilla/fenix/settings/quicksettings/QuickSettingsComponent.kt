@@ -6,6 +6,10 @@ package org.mozilla.fenix.settings.quicksettings
 
 import android.content.Context
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import io.reactivex.Observable
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.support.ktx.kotlin.toUri
 import org.mozilla.fenix.ext.components
@@ -13,6 +17,7 @@ import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
+import org.mozilla.fenix.mvi.UIComponentViewModel
 import org.mozilla.fenix.mvi.UIView
 import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.settings.PhoneFeature
@@ -22,48 +27,25 @@ import org.mozilla.fenix.utils.Settings
 
 class QuickSettingsComponent(
     private val container: ViewGroup,
+    owner: Fragment,
     bus: ActionBusFactory,
     override var initialState: QuickSettingsState
 ) : UIComponent<QuickSettingsState, QuickSettingsAction, QuickSettingsChange>(
+    owner,
     bus.getManagedEmitter(QuickSettingsAction::class.java),
     bus.getSafeManagedObservable(QuickSettingsChange::class.java)
 ) {
-    override val reducer: (QuickSettingsState, QuickSettingsChange) -> QuickSettingsState = { state, change ->
-        when (change) {
-            is QuickSettingsChange.Change -> {
-                state.copy(
-                    mode = QuickSettingsState.Mode.Normal(
-                        change.url,
-                        change.isSecured,
-                        change.isTrackingProtectionOn,
-                        change.sitePermissions
-                    )
-                )
-            }
-            is QuickSettingsChange.PermissionGranted -> {
-                state.copy(
-                    mode = QuickSettingsState.Mode.ActionLabelUpdated(change.phoneFeature, change.sitePermissions)
-                )
-            }
-            is QuickSettingsChange.PromptRestarted -> {
-                state.copy(
-                    mode = QuickSettingsState.Mode.CheckPendingFeatureBlockedByAndroid(change.sitePermissions)
-                )
-            }
-            is QuickSettingsChange.Stored -> {
-                state.copy(
-                    mode = QuickSettingsState.Mode.ActionLabelUpdated(change.phoneFeature, change.sitePermissions)
-                )
-            }
-        }
-    }
-
     override fun initView(): UIView<QuickSettingsState, QuickSettingsAction, QuickSettingsChange> {
         return QuickSettingsUIView(container, actionEmitter, changesObservable, container)
     }
 
+    override fun render(): Observable<QuickSettingsState> =
+        ViewModelProvider(owner, QuickSettingsViewModel.Factory(initialState, changesObservable)).get(
+            QuickSettingsViewModel::class.java
+        ).render(uiView)
+
     init {
-        render(reducer)
+        render()
     }
 
     fun toggleSitePermission(
@@ -136,4 +118,53 @@ sealed class QuickSettingsChange : Change {
 
     data class PromptRestarted(val sitePermissions: SitePermissions?) : QuickSettingsChange()
     data class Stored(val phoneFeature: PhoneFeature, val sitePermissions: SitePermissions?) : QuickSettingsChange()
+}
+
+class QuickSettingsViewModel(initialState: QuickSettingsState, changesObservable: Observable<QuickSettingsChange>) :
+    UIComponentViewModel<QuickSettingsState, QuickSettingsAction, QuickSettingsChange>(
+        initialState,
+        changesObservable,
+        reducer
+    ) {
+
+    class Factory(
+        private val initialState: QuickSettingsState,
+        private val changesObservable: Observable<QuickSettingsChange>
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
+            QuickSettingsViewModel(initialState, changesObservable) as T
+    }
+
+    companion object {
+        val reducer: (QuickSettingsState, QuickSettingsChange) -> QuickSettingsState = { state, change ->
+            when (change) {
+                is QuickSettingsChange.Change -> {
+                    state.copy(
+                        mode = QuickSettingsState.Mode.Normal(
+                            change.url,
+                            change.isSecured,
+                            change.isTrackingProtectionOn,
+                            change.sitePermissions
+                        )
+                    )
+                }
+                is QuickSettingsChange.PermissionGranted -> {
+                    state.copy(
+                        mode = QuickSettingsState.Mode.ActionLabelUpdated(change.phoneFeature, change.sitePermissions)
+                    )
+                }
+                is QuickSettingsChange.PromptRestarted -> {
+                    state.copy(
+                        mode = QuickSettingsState.Mode.CheckPendingFeatureBlockedByAndroid(change.sitePermissions)
+                    )
+                }
+                is QuickSettingsChange.Stored -> {
+                    state.copy(
+                        mode = QuickSettingsState.Mode.ActionLabelUpdated(change.phoneFeature, change.sitePermissions)
+                    )
+                }
+            }
+        }
+    }
 }

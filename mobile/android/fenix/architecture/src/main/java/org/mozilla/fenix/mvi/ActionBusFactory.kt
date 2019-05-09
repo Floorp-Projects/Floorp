@@ -90,6 +90,7 @@ class ActionBusFactory private constructor(val owner: LifecycleOwner) {
      * @param clazz is the Event Class
      * @param event is the instance of the Event to be sent
      */
+    @Suppress("UNCHECKED_CAST")
     fun <T : Action> emit(clazz: Class<T>, event: T) {
         val subject = if (map[clazz] != null) map[clazz] else create(clazz)
         (subject as Subject<T>).onNext(event)
@@ -102,6 +103,7 @@ class ActionBusFactory private constructor(val owner: LifecycleOwner) {
      *
      *  @param clazz is the class of the event type used by this observable
      */
+    @Suppress("UNCHECKED_CAST")
     fun <T : Action> getSafeManagedObservable(clazz: Class<T>): Observable<T> {
         return if (map[clazz] != null) map[clazz] as Observable<T> else create(clazz)
     }
@@ -111,6 +113,7 @@ class ActionBusFactory private constructor(val owner: LifecycleOwner) {
             .`as`(autoDisposable(AndroidLifecycleScopeProvider.from(owner)))
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <T : Action> getManagedEmitter(clazz: Class<T>): Observer<T> {
         return if (map[clazz] != null) map[clazz] as Observer<T> else create(clazz)
     }
@@ -132,7 +135,7 @@ class ActionBusFactory private constructor(val owner: LifecycleOwner) {
  * Extension on [LifecycleOwner] used to emit an event.
  */
 inline fun <reified T : Action> LifecycleOwner.emit(event: T) =
-    kotlin.with(ActionBusFactory.get(this)) {
+    with(ActionBusFactory.get(this)) {
         getSafeManagedObservable(T::class.java)
         emit(T::class.java, event)
     }
@@ -152,10 +155,10 @@ inline fun <reified T : Action> LifecycleOwner.getManagedEmitter(): Observer<T> 
 /**
  * This method returns a destroy observable that can be passed to [org.mozilla.fenix.mvi.UIView]s as needed.
  */
-inline fun LifecycleOwner?.createDestroyObservable(): Observable<Unit> {
+fun LifecycleOwner?.createDestroyObservable(): Observable<Unit> {
     return Observable.create { emitter ->
         if (this == null || this.lifecycle.currentState == Lifecycle.State.DESTROYED) {
-            emitter.onNext(kotlin.Unit)
+            emitter.onNext(Unit)
             emitter.onComplete()
             return@create
         }
@@ -163,7 +166,7 @@ inline fun LifecycleOwner?.createDestroyObservable(): Observable<Unit> {
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             fun emitDestroy() {
                 if (emitter.isDisposed) {
-                    emitter.onNext(kotlin.Unit)
+                    emitter.onNext(Unit)
                     emitter.onComplete()
                 }
             }

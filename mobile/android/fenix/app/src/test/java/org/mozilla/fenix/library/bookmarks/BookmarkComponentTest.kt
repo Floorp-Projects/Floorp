@@ -35,7 +35,7 @@ class BookmarkComponentTest {
             TestBookmarkComponent(mockk(), TestUtils.bus),
             recordPrivateCalls = true
         )
-        bookmarkObserver = bookmarkComponent.internalRender(bookmarkComponent.reducer).test()
+        bookmarkObserver = bookmarkComponent.render().test()
         emitter = TestUtils.owner.getManagedEmitter()
     }
 
@@ -87,7 +87,7 @@ class BookmarkComponentTest {
 
     @Suppress("MemberVisibilityCanBePrivate")
     class TestBookmarkComponent(container: ViewGroup, bus: ActionBusFactory) :
-        BookmarkComponent(container, bus) {
+        BookmarkComponent(container, mockk(relaxed = true), bus) {
 
         override val uiView: UIView<BookmarkState, BookmarkAction, BookmarkChange>
             get() = mockk(relaxed = true)

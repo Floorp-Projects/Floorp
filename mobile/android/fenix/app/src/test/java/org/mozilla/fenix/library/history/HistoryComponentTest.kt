@@ -34,7 +34,7 @@ class HistoryComponentTest {
             TestHistoryComponent(mockk(), bus),
             recordPrivateCalls = true
         )
-        historyObserver = historyComponent.internalRender(historyComponent.reducer).test()
+        historyObserver = historyComponent.render().test()
         emitter = owner.getManagedEmitter()
     }
 
@@ -82,7 +82,7 @@ class HistoryComponentTest {
 
     @Suppress("MemberVisibilityCanBePrivate")
     class TestHistoryComponent(container: ViewGroup, bus: ActionBusFactory) :
-        HistoryComponent(container, bus) {
+        HistoryComponent(container, mockk(relaxed = true), bus) {
 
         override val uiView: UIView<HistoryState, HistoryAction, HistoryChange>
             get() = mockk(relaxed = true)

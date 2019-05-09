@@ -51,4 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1429 - Updated site permissions ui for MVP
 - #1599 - Fixed a crash creating a bookmark for a custom tab
 - #1414 - Fixed site permissions settings getting reset in Android 6.
+- #1994 - Made app state persist better when rotating the screen
+
 ### Removed

@@ -6,38 +6,42 @@ package org.mozilla.fenix.home.sessioncontrol
 
 import android.graphics.Bitmap
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
+import io.reactivex.Observable
 import io.reactivex.Observer
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
+import org.mozilla.fenix.mvi.UIComponentViewModel
 import org.mozilla.fenix.mvi.ViewState
 
 class SessionControlComponent(
     private val container: ViewGroup,
+    owner: Fragment,
     bus: ActionBusFactory,
     override var initialState: SessionControlState = SessionControlState(emptyList(), emptyList(), Mode.Normal)
 ) :
     UIComponent<SessionControlState, SessionControlAction, SessionControlChange>(
+        owner,
         bus.getManagedEmitter(SessionControlAction::class.java),
         bus.getSafeManagedObservable(SessionControlChange::class.java)
     ) {
-
-    override val reducer: (SessionControlState, SessionControlChange) -> SessionControlState = { state, change ->
-        when (change) {
-            is SessionControlChange.CollectionsChange -> state.copy(collections = change.collections)
-            is SessionControlChange.TabsChange -> state.copy(tabs = change.tabs)
-            is SessionControlChange.ModeChange -> state.copy(mode = change.mode)
-        }
-    }
 
     override fun initView() = SessionControlUIView(container, actionEmitter, changesObservable)
     val view: RecyclerView
         get() = uiView.view as RecyclerView
 
+    override fun render(): Observable<SessionControlState> =
+        ViewModelProviders.of(owner, SessionControlViewModel.Factory(initialState, changesObservable))
+            .get(SessionControlViewModel::class.java).render(uiView)
+
     init {
-        render(reducer)
+        render()
     }
 }
 
@@ -108,4 +112,31 @@ sealed class SessionControlChange : Change {
     data class TabsChange(val tabs: List<Tab>) : SessionControlChange()
     data class ModeChange(val mode: Mode) : SessionControlChange()
     data class CollectionsChange(val collections: List<TabCollection>) : SessionControlChange()
+}
+
+class SessionControlViewModel(initialState: SessionControlState, changesObservable: Observable<SessionControlChange>) :
+    UIComponentViewModel<SessionControlState, SessionControlAction, SessionControlChange>(
+        initialState,
+        changesObservable,
+        reducer
+    ) {
+
+    class Factory(
+        private val initialState: SessionControlState,
+        private val changesObservable: Observable<SessionControlChange>
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
+            SessionControlViewModel(initialState, changesObservable) as T
+    }
+
+    companion object {
+        val reducer: (SessionControlState, SessionControlChange) -> SessionControlState = { state, change ->
+            when (change) {
+                is SessionControlChange.CollectionsChange -> state.copy(collections = change.collections)
+                is SessionControlChange.TabsChange -> state.copy(tabs = change.tabs)
+                is SessionControlChange.ModeChange -> state.copy(mode = change.mode)
+            }
+        }
+    }
 }

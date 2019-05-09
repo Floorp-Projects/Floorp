@@ -74,8 +74,8 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_bookmark, container, false)
-        bookmarkComponent = BookmarkComponent(view.bookmark_layout, ActionBusFactory.get(this))
-        signInComponent = SignInComponent(view.bookmark_layout, ActionBusFactory.get(this))
+        bookmarkComponent = BookmarkComponent(view.bookmark_layout, this, ActionBusFactory.get(this))
+        signInComponent = SignInComponent(view.bookmark_layout, this, ActionBusFactory.get(this))
         return view
     }
 

@@ -48,6 +48,7 @@ class ExceptionsFragment : Fragment(), CoroutineScope {
         val view = inflater.inflate(R.layout.fragment_exceptions, container, false)
         exceptionsComponent = ExceptionsComponent(
             view.exceptions_layout,
+            this,
             ActionBusFactory.get(this),
             ExceptionsState(loadAndMapExceptions())
         )

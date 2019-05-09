@@ -36,12 +36,16 @@ abstract class UIView<S : ViewState, A : Action, C : Change>(
     /**
      * Show the UIView
      */
-    open fun show() { view.visibility = View.VISIBLE }
+    open fun show() {
+        view.visibility = View.VISIBLE
+    }
 
     /**
      * Hide the UIView
      */
-    open fun hide() { view.visibility = View.GONE }
+    open fun hide() {
+        view.visibility = View.GONE
+    }
 
     /**
      * Update the view from the ViewState

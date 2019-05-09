@@ -5,6 +5,10 @@ package org.mozilla.fenix.collections
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import io.reactivex.Observable
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.Action
@@ -12,6 +16,7 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
+import org.mozilla.fenix.mvi.UIComponentViewModel
 import org.mozilla.fenix.mvi.ViewState
 
 sealed class SaveCollectionStep {
@@ -51,34 +56,63 @@ sealed class CollectionCreationAction : Action {
 
 class CollectionCreationComponent(
     private val container: ViewGroup,
+    owner: Fragment,
     bus: ActionBusFactory,
     override var initialState: CollectionCreationState = CollectionCreationState()
 ) : UIComponent<CollectionCreationState, CollectionCreationAction, CollectionCreationChange>(
+    owner,
     bus.getManagedEmitter(CollectionCreationAction::class.java),
     bus.getSafeManagedObservable(CollectionCreationChange::class.java)
 ) {
-    override val reducer: Reducer<CollectionCreationState, CollectionCreationChange> =
-        { state, change ->
-            when (change) {
-                is CollectionCreationChange.AddAllTabs -> state.copy(selectedTabs = state.tabs.toSet())
-                is CollectionCreationChange.TabListChange -> state.copy(tabs = change.tabs)
-                is CollectionCreationChange.TabAdded -> {
-                    val selectedTabs = state.selectedTabs + setOf(change.tab)
-                    state.copy(selectedTabs = selectedTabs)
-                }
-                is CollectionCreationChange.TabRemoved -> {
-                    val selectedTabs = state.selectedTabs - setOf(change.tab)
-                    state.copy(selectedTabs = selectedTabs)
-                }
-                is CollectionCreationChange.StepChanged -> {
-                    state.copy(saveCollectionStep = change.saveCollectionStep)
-                }
-            }
-        }
-
     override fun initView() = CollectionCreationUIView(container, actionEmitter, changesObservable)
 
+    override fun render(): Observable<CollectionCreationState> =
+        ViewModelProvider(owner, CollectionCreationViewModel.Factory(initialState, changesObservable)).get(
+            CollectionCreationViewModel::class.java
+        ).render(uiView)
+
     init {
-        render(reducer)
+        render()
+    }
+}
+
+class CollectionCreationViewModel(
+    initialState: CollectionCreationState,
+    changesObservable: Observable<CollectionCreationChange>
+) :
+    UIComponentViewModel<CollectionCreationState, CollectionCreationAction, CollectionCreationChange>(
+        initialState,
+        changesObservable,
+        reducer
+    ) {
+
+    class Factory(
+        private val initialState: CollectionCreationState,
+        private val changesObservable: Observable<CollectionCreationChange>
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
+            CollectionCreationViewModel(initialState, changesObservable) as T
+    }
+
+    companion object {
+        val reducer: Reducer<CollectionCreationState, CollectionCreationChange> =
+            { state, change ->
+                when (change) {
+                    is CollectionCreationChange.AddAllTabs -> state.copy(selectedTabs = state.tabs.toSet())
+                    is CollectionCreationChange.TabListChange -> state.copy(tabs = change.tabs)
+                    is CollectionCreationChange.TabAdded -> {
+                        val selectedTabs = state.selectedTabs + setOf(change.tab)
+                        state.copy(selectedTabs = selectedTabs)
+                    }
+                    is CollectionCreationChange.TabRemoved -> {
+                        val selectedTabs = state.selectedTabs - setOf(change.tab)
+                        state.copy(selectedTabs = selectedTabs)
+                    }
+                    is CollectionCreationChange.StepChanged -> {
+                        state.copy(saveCollectionStep = change.saveCollectionStep)
+                    }
+                }
+            }
     }
 }

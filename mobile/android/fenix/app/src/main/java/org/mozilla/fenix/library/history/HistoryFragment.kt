@@ -49,7 +49,7 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_history, container, false)
-        historyComponent = HistoryComponent(view.history_layout, ActionBusFactory.get(this))
+        historyComponent = HistoryComponent(view.history_layout, this, ActionBusFactory.get(this))
         return view
     }
 

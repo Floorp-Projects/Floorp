@@ -132,6 +132,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
 
         toolbarComponent = ToolbarComponent(
             view.browserLayout,
+            this,
             ActionBusFactory.get(this), customTabSessionId,
             (activity as HomeActivity).browsingModeManager.isPrivate,
             SearchState("", getSessionById()?.searchTerms ?: "", isEditing = false),
@@ -156,6 +157,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
 
         QuickActionComponent(
             view.nestedScrollQuickAction,
+            this,
             ActionBusFactory.get(this),
             QuickActionState(
                 readable = getSessionById()?.readerable ?: false,

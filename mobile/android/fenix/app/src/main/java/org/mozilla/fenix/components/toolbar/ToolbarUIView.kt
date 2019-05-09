@@ -45,7 +45,7 @@ class ToolbarUIView(
     init {
         val sessionManager = view.context.components.core.sessionManager
         val session = sessionId?.let { sessionManager.findSessionById(it) }
-                ?: sessionManager.selectedSession
+            ?: sessionManager.selectedSession
 
         view.apply {
             elevation = resources.pxToDp(TOOLBAR_ELEVATION).toFloat()

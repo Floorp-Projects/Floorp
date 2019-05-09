@@ -73,7 +73,19 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflateRootView(container)
+        val rootView = inflateRootView(container)
+        quickSettingsComponent = QuickSettingsComponent(
+            rootView as NestedScrollView, this, ActionBusFactory.get(this),
+            QuickSettingsState(
+                QuickSettingsState.Mode.Normal(
+                    url,
+                    isSecured,
+                    isTrackingProtectionOn,
+                    sitePermissions
+                )
+            )
+        )
+        return rootView
     }
 
     private fun inflateRootView(container: ViewGroup? = null): View {
@@ -113,21 +125,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
         return this
-    }
-
-    override fun onViewCreated(rootView: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(rootView, savedInstanceState)
-        quickSettingsComponent = QuickSettingsComponent(
-            rootView as NestedScrollView, ActionBusFactory.get(this),
-            QuickSettingsState(
-                QuickSettingsState.Mode.Normal(
-                    url,
-                    isSecured,
-                    isTrackingProtectionOn,
-                    sitePermissions
-                )
-            )
-        )
     }
 
     companion object {

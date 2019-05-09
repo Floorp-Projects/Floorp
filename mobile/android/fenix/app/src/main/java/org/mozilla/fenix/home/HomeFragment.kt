@@ -89,6 +89,7 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         sessionControlComponent = SessionControlComponent(
             view.homeLayout,
+            this,
             bus,
             SessionControlState(listOf(), listOf(), mode)
         )

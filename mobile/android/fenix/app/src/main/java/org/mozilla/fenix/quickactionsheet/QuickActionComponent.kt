@@ -5,16 +5,22 @@
 package org.mozilla.fenix.quickactionsheet
 
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import io.reactivex.Observable
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
+import org.mozilla.fenix.mvi.UIComponentViewModel
 import org.mozilla.fenix.mvi.UIView
 import org.mozilla.fenix.mvi.ViewState
 
 class QuickActionComponent(
     private val container: ViewGroup,
+    owner: Fragment,
     bus: ActionBusFactory,
     override var initialState: QuickActionState = QuickActionState(
         readable = false,
@@ -22,29 +28,21 @@ class QuickActionComponent(
         readerActive = false
     )
 ) : UIComponent<QuickActionState, QuickActionAction, QuickActionChange>(
+    owner,
     bus.getManagedEmitter(QuickActionAction::class.java),
     bus.getSafeManagedObservable(QuickActionChange::class.java)
 ) {
-
-    override val reducer: Reducer<QuickActionState, QuickActionChange> = { state, change ->
-        when (change) {
-            is QuickActionChange.BookmarkedStateChange -> {
-                state.copy(bookmarked = change.bookmarked)
-            }
-            is QuickActionChange.ReadableStateChange -> {
-                state.copy(readable = change.readable)
-            }
-            is QuickActionChange.ReaderActiveStateChange -> {
-                state.copy(readerActive = change.active)
-            }
-        }
-    }
-
     override fun initView(): UIView<QuickActionState, QuickActionAction, QuickActionChange> =
         QuickActionUIView(container, actionEmitter, changesObservable)
 
+    override fun render(): Observable<QuickActionState> =
+        ViewModelProvider(
+            owner,
+            QuickActionViewModel.Factory(initialState, changesObservable)
+        ).get(QuickActionViewModel::class.java).render(uiView)
+
     init {
-        render(reducer)
+        render()
     }
 }
 
@@ -64,4 +62,37 @@ sealed class QuickActionChange : Change {
     data class BookmarkedStateChange(val bookmarked: Boolean) : QuickActionChange()
     data class ReadableStateChange(val readable: Boolean) : QuickActionChange()
     data class ReaderActiveStateChange(val active: Boolean) : QuickActionChange()
+}
+
+class QuickActionViewModel(initialState: QuickActionState, changesObservable: Observable<QuickActionChange>) :
+    UIComponentViewModel<QuickActionState, QuickActionAction, QuickActionChange>(
+        initialState,
+        changesObservable,
+        reducer
+    ) {
+
+    class Factory(
+        private val initialState: QuickActionState,
+        private val changesObservable: Observable<QuickActionChange>
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
+            QuickActionViewModel(initialState, changesObservable) as T
+    }
+
+    companion object {
+        val reducer: Reducer<QuickActionState, QuickActionChange> = { state, change ->
+            when (change) {
+                is QuickActionChange.BookmarkedStateChange -> {
+                    state.copy(bookmarked = change.bookmarked)
+                }
+                is QuickActionChange.ReadableStateChange -> {
+                    state.copy(readable = change.readable)
+                }
+                is QuickActionChange.ReaderActiveStateChange -> {
+                    state.copy(readerActive = change.active)
+                }
+            }
+        }
+    }
 }
