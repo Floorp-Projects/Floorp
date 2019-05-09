@@ -1705,13 +1705,6 @@ NS_IMPL_THREADSAFE_FFI_REFCOUNTING(URLExtraData, URLExtraData);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
-nsCSSShadowArray* Gecko_NewCSSShadowArray(uint32_t aLen) {
-  RefPtr<nsCSSShadowArray> arr = new (aLen) nsCSSShadowArray(aLen);
-  return arr.forget().take();
-}
-
-NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSShadowArray, CSSShadowArray);
-
 nsCSSValueSharedList* Gecko_NewCSSValueSharedList(uint32_t aLen) {
   RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
   if (aLen == 0) {

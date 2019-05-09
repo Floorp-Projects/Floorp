@@ -222,7 +222,7 @@ void nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // empty, we need to paint the outline
   if (!(GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) &&
       IsVisibleForPainting()) {
-    if (StyleEffects()->mBoxShadow) {
+    if (!StyleEffects()->mBoxShadow.IsEmpty()) {
       aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowOuter>(
           aBuilder, this);
     }

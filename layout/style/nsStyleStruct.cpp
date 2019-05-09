@@ -85,8 +85,6 @@ static bool DefinitelyEqualImages(const nsStyleImageRequest* aRequest1,
   return aRequest1->DefinitelyEquals(*aRequest2);
 }
 
-static bool AreShadowArraysEqual(nsCSSShadowArray* lhs, nsCSSShadowArray* rhs);
-
 // --------------------
 // nsStyleFont
 //
@@ -972,13 +970,12 @@ void StyleShapeSource::DoDestroy() {
 // --------------------
 // nsStyleFilter
 //
-nsStyleFilter::nsStyleFilter()
-    : mType(NS_STYLE_FILTER_NONE), mDropShadow(nullptr) {
+nsStyleFilter::nsStyleFilter() : mType(NS_STYLE_FILTER_NONE), mURL(nullptr) {
   MOZ_COUNT_CTOR(nsStyleFilter);
 }
 
 nsStyleFilter::nsStyleFilter(const nsStyleFilter& aSource)
-    : mType(NS_STYLE_FILTER_NONE), mDropShadow(nullptr) {
+    : mType(NS_STYLE_FILTER_NONE), mURL(nullptr) {
   MOZ_COUNT_CTOR(nsStyleFilter);
   if (aSource.mType == NS_STYLE_FILTER_URL) {
     SetURL(aSource.mURL);
@@ -1021,7 +1018,7 @@ bool nsStyleFilter::operator==(const nsStyleFilter& aOther) const {
   if (mType == NS_STYLE_FILTER_URL) {
     return DefinitelyEqualURIs(mURL, aOther.mURL);
   } else if (mType == NS_STYLE_FILTER_DROP_SHADOW) {
-    return *mDropShadow == *aOther.mDropShadow;
+    return mDropShadow == aOther.mDropShadow;
   } else if (mType != NS_STYLE_FILTER_NONE) {
     return mFilterParameter == aOther.mFilterParameter;
   }
@@ -1031,8 +1028,7 @@ bool nsStyleFilter::operator==(const nsStyleFilter& aOther) const {
 
 void nsStyleFilter::ReleaseRef() {
   if (mType == NS_STYLE_FILTER_DROP_SHADOW) {
-    NS_ASSERTION(mDropShadow, "expected pointer");
-    mDropShadow->Release();
+    mDropShadow.~StyleSimpleShadow();
   } else if (mType == NS_STYLE_FILTER_URL) {
     NS_ASSERTION(mURL, "expected pointer");
     mURL->Release();
@@ -1055,11 +1051,9 @@ bool nsStyleFilter::SetURL(css::URLValue* aURL) {
   return true;
 }
 
-void nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow) {
-  NS_ASSERTION(aDropShadow, "expected pointer");
+void nsStyleFilter::SetDropShadow(const StyleSimpleShadow& aSrc) {
   ReleaseRef();
-  mDropShadow = aDropShadow;
-  mDropShadow->AddRef();
+  new (&mDropShadow) StyleSimpleShadow(aSrc);
   mType = NS_STYLE_FILTER_DROP_SHADOW;
 }
 
@@ -3693,24 +3687,6 @@ nsChangeHint nsStyleTextReset::CalcDifference(
   return nsChangeHint(0);
 }
 
-// Returns true if the given shadow-arrays are equal.
-static bool AreShadowArraysEqual(nsCSSShadowArray* lhs, nsCSSShadowArray* rhs) {
-  if (lhs == rhs) {
-    return true;
-  }
-
-  if (!lhs || !rhs || lhs->Length() != rhs->Length()) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < lhs->Length(); ++i) {
-    if (*lhs->ShadowAt(i) != *rhs->ShadowAt(i)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 // --------------------
 // nsStyleText
 //
@@ -3739,8 +3715,7 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mLetterSpacing({0.}),
       mLineHeight(StyleLineHeight::Normal()),
       mTextIndent(LengthPercentage::Zero()),
-      mWebkitTextStrokeWidth(0),
-      mTextShadow(nullptr) {
+      mWebkitTextStrokeWidth(0) {
   MOZ_COUNT_CTOR(nsStyleText);
   RefPtr<nsAtom> language = aDocument.GetContentLanguageAsAtomForStyle();
   mTextEmphasisPosition =
@@ -3829,7 +3804,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
             nsChangeHint_RepaintFrame;
   }
 
-  if (!AreShadowArraysEqual(mTextShadow, aNewData.mTextShadow) ||
+  if (mTextShadow != aNewData.mTextShadow ||
       mTextEmphasisStyle != aNewData.mTextEmphasisStyle ||
       mTextEmphasisStyleString != aNewData.mTextEmphasisStyleString ||
       mWebkitTextStrokeWidth != aNewData.mWebkitTextStrokeWidth) {
@@ -4085,8 +4060,7 @@ nsChangeHint nsStyleUIReset::CalcDifference(
 //
 
 nsStyleEffects::nsStyleEffects(const Document&)
-    : mBoxShadow(nullptr),
-      mClip(0, 0, 0, 0),
+    : mClip(0, 0, 0, 0),
       mOpacity(1.0f),
       mClipFlags(NS_STYLE_CLIP_AUTO),
       mMixBlendMode(NS_STYLE_BLEND_NORMAL) {
@@ -4109,7 +4083,7 @@ nsChangeHint nsStyleEffects::CalcDifference(
     const nsStyleEffects& aNewData) const {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (!AreShadowArraysEqual(mBoxShadow, aNewData.mBoxShadow)) {
+  if (mBoxShadow != aNewData.mBoxShadow) {
     // Update overflow regions & trigger DLBI to be sure it's noticed.
     // Also request a repaint, since it's possible that only the color
     // of the shadow is changing (and UpdateOverflow/SchedulePaint won't

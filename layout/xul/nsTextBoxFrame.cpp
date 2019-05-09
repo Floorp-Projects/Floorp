@@ -948,7 +948,7 @@ nsTextBoxFrame::DoXULLayout(nsBoxLayoutState& aBoxLayoutState) {
   visualBounds.UnionRect(scrollBounds, textRect);
   nsOverflowAreas overflow(visualBounds, scrollBounds);
 
-  if (textStyle->mTextShadow) {
+  if (textStyle->HasTextShadow()) {
     // text-shadow extends our visual but not scrollable bounds
     nsRect& vis = overflow.VisualOverflow();
     vis.UnionRect(vis,
@@ -960,7 +960,7 @@ nsTextBoxFrame::DoXULLayout(nsBoxLayoutState& aBoxLayoutState) {
 }
 
 nsRect nsTextBoxFrame::GetComponentAlphaBounds() const {
-  if (StyleText()->mTextShadow) {
+  if (StyleText()->HasTextShadow()) {
     return GetVisualOverflowRectRelativeToSelf();
   }
   return mTextDrawRect;
