@@ -51,7 +51,7 @@
 #include <asm/cputable.h>
 #include <link.h>
 
-static inline qcms_bool have_altivec() {
+static inline bool have_altivec() {
 	static int available = -1;
 	int new_avail = 0;
         ElfW(auxv_t) auxv;
@@ -88,7 +88,7 @@ out:
  * rip-off from ffmpeg AltiVec detection code.
  * this code also appears on Apple's AltiVec pages.
  */
-static inline qcms_bool have_altivec() {
+static inline bool have_altivec() {
 	int sels[2] = {CTL_HW, HW_VECTORUNIT};
 	static int available = -1;
 	size_t len = sizeof(available);
@@ -291,7 +291,7 @@ static struct matrix adapt_matrix_to_D50(struct matrix r, qcms_CIE_xyY source_wh
 	return matrix_multiply(Bradford, r);
 }
 
-qcms_bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries)
+bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries)
 {
 	struct matrix colorants;
 	colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
@@ -316,7 +316,7 @@ qcms_bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcm
 	return true;
 }
 
-qcms_bool get_rgb_colorants(struct matrix *colorants, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries)
+bool get_rgb_colorants(struct matrix *colorants, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries)
 {
 	*colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
 	*colorants = adapt_matrix_to_D50(*colorants, white_point);
@@ -920,7 +920,7 @@ static struct precache_output *precache_reference(struct precache_output *p)
 
 static struct precache_output *precache_create()
 {
-	struct precache_output *p = malloc(sizeof(struct precache_output));
+	struct precache_output *p = (struct precache_output*)malloc(sizeof(struct precache_output));
 	if (p)
 		p->ref_count = 1;
 	return p;
@@ -942,7 +942,7 @@ static qcms_transform *transform_alloc(void)
 	if (!posix_memalign(&allocated_memory, 16, sizeof(qcms_transform))) {
 		/* Doing a memset to initialise all bits to 'zero'*/
 		memset(allocated_memory, 0, sizeof(qcms_transform));
-		t = allocated_memory;
+		t = (qcms_transform*)allocated_memory;
 		return t;
 	} else {
 		return NULL;
@@ -1173,8 +1173,8 @@ qcms_transform* qcms_transform_precacheLUT_float(qcms_transform *transform, qcms
 	float* dest = NULL;
 	float* lut = NULL;
 
-	src = malloc(lutSize*sizeof(float));
-	dest = malloc(lutSize*sizeof(float));
+	src = (float*)malloc(lutSize*sizeof(float));
+	dest = (float*)malloc(lutSize*sizeof(float));
 
 	if (src && dest) {
 		/* Prepare a list of points we want to sample */
@@ -1415,10 +1415,10 @@ __attribute__((__force_align_arg_pointer__))
 #endif
 void qcms_transform_data(qcms_transform *transform, void *src, void *dest, size_t length)
 {
-	transform->transform_fn(transform, src, dest, length);
+	transform->transform_fn(transform, (unsigned char*)src, (unsigned char*)dest, length);
 }
 
-qcms_bool qcms_supports_iccv4;
+bool qcms_supports_iccv4;
 void qcms_enable_iccv4()
 {
 	qcms_supports_iccv4 = true;
