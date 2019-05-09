@@ -10,7 +10,7 @@
 this.StoragePrincipalHelper = {
   runTest(name, callback, cleanupFunction, extraPrefs) {
     add_task(async _ => {
-      info("Starting test `" + name + "' with storage principal...");
+      info("Starting test `" + name + "'...");
 
       await SpecialPowers.flushPrefEnv();
       await SpecialPowers.pushPrefEnv({"set": [
@@ -84,7 +84,6 @@ this.StoragePrincipalHelper = {
       info("Cleaning up.");
       if (cleanupFunction) {
         await cleanupFunction();
-        UrlClassifierTestUtils.cleanupTestTrackers();
       }
     });
   },

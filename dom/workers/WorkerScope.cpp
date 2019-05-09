@@ -32,7 +32,6 @@
 #include "mozilla/dom/WorkerNavigator.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/StaticPrefs.h"
-#include "mozilla/StorageAccess.h"
 #include "nsServiceManagerUtils.h"
 
 #include "mozilla/dom/Document.h"
@@ -407,8 +406,8 @@ already_AddRefed<IDBFactory> WorkerGlobalScope::GetIndexedDB(
       return nullptr;
     }
 
-    if (ShouldPartitionStorage(access) &&
-        !StoragePartitioningEnabled(access, mWorkerPrivate->CookieSettings())) {
+    if (access == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+        !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
       NS_WARNING("IndexedDB is not allowed in this worker!");
       aErrorResult = NS_ERROR_DOM_SECURITY_ERR;
       return nullptr;

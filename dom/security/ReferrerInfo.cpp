@@ -18,7 +18,6 @@
 #include "ReferrerInfo.h"
 
 #include "mozilla/AntiTrackingCommon.h"
-#include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/HttpBaseChannel.h"
 
 static mozilla::LazyLogModule gReferrerInfoLog("ReferrerInfo");
@@ -121,18 +120,9 @@ uint32_t ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
                                                 bool privateBrowsing) {
   CachePreferrenceValue();
   bool thirdPartyTrackerIsolated = false;
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  if (aChannel) {
-    loadInfo = aChannel->LoadInfo();
-  }
-  nsCOMPtr<nsICookieSettings> cs;
-  if (loadInfo) {
-    Unused << loadInfo->GetCookieSettings(getter_AddRefs(cs));
-  }
-  if (!cs) {
-    cs = net::CookieSettings::Create();
-  }
-  if (aChannel && aURI && cs->GetRejectThirdPartyTrackers()) {
+  if (StaticPrefs::network_cookie_cookieBehavior() ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+      aChannel && aURI) {
     uint32_t rejectedReason = 0;
     thirdPartyTrackerIsolated =
         !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
