@@ -441,31 +441,27 @@ function getAcceptableMatchSources(context) {
     // Check prefs and restriction tokens.
     switch (source) {
       case UrlbarUtils.RESULT_SOURCE.BOOKMARKS:
-        if (UrlbarPrefs.get("suggest.bookmark") &&
-            (!restrictTokenType ||
-             restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK ||
-             restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_TAG)) {
+        if (restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK ||
+            restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_TAG ||
+            (!restrictTokenType && UrlbarPrefs.get("suggest.bookmark"))) {
           acceptedSources.push(source);
         }
         break;
       case UrlbarUtils.RESULT_SOURCE.HISTORY:
-        if (UrlbarPrefs.get("suggest.history") &&
-            (!restrictTokenType ||
-             restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_HISTORY)) {
+        if (restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_HISTORY ||
+            (!restrictTokenType && UrlbarPrefs.get("suggest.history"))) {
           acceptedSources.push(source);
         }
         break;
       case UrlbarUtils.RESULT_SOURCE.SEARCH:
-        if (UrlbarPrefs.get("suggest.searches") &&
-            (!restrictTokenType ||
-             restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_SEARCH)) {
+        if (restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_SEARCH ||
+            (!restrictTokenType && UrlbarPrefs.get("suggest.searches"))) {
           acceptedSources.push(source);
         }
         break;
       case UrlbarUtils.RESULT_SOURCE.TABS:
-        if (UrlbarPrefs.get("suggest.openpage") &&
-            (!restrictTokenType ||
-             restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE)) {
+        if (restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE ||
+            (!restrictTokenType && UrlbarPrefs.get("suggest.openpage"))) {
           acceptedSources.push(source);
         }
         break;
