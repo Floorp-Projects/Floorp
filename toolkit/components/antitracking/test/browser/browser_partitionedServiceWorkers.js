@@ -1,6 +1,6 @@
-/* import-globals-from partitionedstorage_head.js */
+/* import-globals-from storageprincipal_head.js */
 
-PartitionedStorageHelper.runTest("ServiceWorkers",
+StoragePrincipalHelper.runTest("ServiceWorkers",
   async (win3rdParty, win1stParty, allowed) => {
     // ServiceWorkers are not supported. Always blocked.
     await win3rdParty.navigator.serviceWorker.register("empty.js").then(
@@ -23,7 +23,7 @@ PartitionedStorageHelper.runTest("ServiceWorkers",
    ["dom.serviceWorkers.enabled", true],
    ["dom.serviceWorkers.testing.enabled", true]]);
 
-PartitionedStorageHelper.runTest("ServiceWorkers - MatchAll",
+StoragePrincipalHelper.runTest("ServiceWorkers - MatchAll",
   async (win3rdParty, win1stParty, allowed) => {
     if (!win1stParty.sw) {
       let reg = await win1stParty.navigator.serviceWorker.register("matchAll.js");

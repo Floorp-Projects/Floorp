@@ -1,6 +1,6 @@
-/* import-globals-from partitionedstorage_head.js */
+/* import-globals-from storageprincipal_head.js */
 
-PartitionedStorageHelper.runTest("IndexedDB",
+StoragePrincipalHelper.runTest("IndexedDB",
   async (win3rdParty, win1stParty, allowed) => {
     await new Promise(resolve => {
       let a = win1stParty.indexedDB.open("test", 1);

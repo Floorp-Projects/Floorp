@@ -425,8 +425,6 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
       aRejectedReason ==
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
 
@@ -786,11 +784,12 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     LOG(("Parent window has no doc"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
-  if (!parentDoc->CookieSettings()->GetRejectThirdPartyTrackers()) {
+  auto cookieBehavior = parentDoc->CookieSettings()->GetCookieBehavior();
+  if (cookieBehavior != nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     LOG(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
          "early",
-         parentDoc->CookieSettings()->GetCookieBehavior()));
+         cookieBehavior));
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
@@ -1189,11 +1188,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
 
   // As a performance optimization, we only perform this check for
   // BEHAVIOR_REJECT_FOREIGN and BEHAVIOR_LIMIT_FOREIGN.  For
-  // BEHAVIOR_REJECT_TRACKER and BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
-  // third-partiness is implicily checked later below.
-  if (behavior != nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-      behavior !=
-          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+  // BEHAVIOR_REJECT_TRACKER, third-partiness is implicily checked later below.
+  if (behavior != nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     // Let's check if this is a 3rd party context.
     if (!nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, nullptr, aURI)) {
       LOG(("Our window isn't a third-party window"));
@@ -1212,31 +1208,11 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  MOZ_ASSERT(
-      behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-      behavior ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
+  MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
-  if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    if (!nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow)) {
-      LOG(("Our window isn't a third-party tracking window"));
-      return true;
-    }
-  } else {
-    MOZ_ASSERT(behavior ==
-               nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
-    if (nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow)) {
-      // fall through
-    } else if (nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, nullptr,
-                                                           aURI)) {
-      LOG(("We're in the third-party context, storage should be partitioned"));
-      *aRejectedReason =
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
-      return false;
-    } else {
-      LOG(("Our window isn't a third-party window, storage is allowed"));
-      return true;
-    }
+  if (!nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow)) {
+    LOG(("Our window isn't a third-party tracking window"));
+    return true;
   }
 
 #ifdef DEBUG
@@ -1469,32 +1445,12 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  MOZ_ASSERT(
-      behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-      behavior ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
+  MOZ_ASSERT(behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER);
 
   // Not a tracker.
-  if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    if (!aChannel->IsThirdPartyTrackingResource()) {
-      LOG(("Our channel isn't a third-party tracking channel"));
-      return true;
-    }
-  } else {
-    MOZ_ASSERT(behavior ==
-               nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
-    if (aChannel->IsThirdPartyTrackingResource()) {
-      // fall through
-    } else if (nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel,
-                                                           aURI)) {
-      LOG(("We're in the third-party context, storage should be partitioned"));
-      *aRejectedReason =
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
-      return false;
-    } else {
-      LOG(("Our channel isn't a third-party channel, storage is allowed"));
-      return true;
-    }
+  if (!aChannel->IsThirdPartyTrackingResource()) {
+    LOG(("Our channel isn't a third-party tracking channel"));
+    return true;
   }
 
   nsIPrincipal* parentPrincipal = loadInfo->GetTopLevelStorageAreaPrincipal();
@@ -1616,9 +1572,9 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  if (!parentDocument->CookieSettings()->GetRejectThirdPartyTrackers()) {
-    LOG(("Disabled by the pref (%d), bail out early",
-         parentDocument->CookieSettings()->GetCookieBehavior()));
+  auto cookieBehavior = parentDocument->CookieSettings()->GetCookieBehavior();
+  if (cookieBehavior != nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+    LOG(("Disabled by the pref (%d), bail out early", cookieBehavior));
     return true;
   }
 
@@ -1768,8 +1724,6 @@ void AntiTrackingCommon::NotifyBlockingDecision(nsIChannel* aChannel,
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
       aRejectedReason ==
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
   MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||
@@ -1838,8 +1792,6 @@ void AntiTrackingCommon::NotifyBlockingDecision(nsPIDOMWindowInner* aWindow,
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
       aRejectedReason ==
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
   MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||

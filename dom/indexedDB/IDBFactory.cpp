@@ -21,7 +21,6 @@
 #include "mozilla/ipc/PBackground.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/StaticPrefs.h"
-#include "mozilla/StorageAccess.h"
 #include "mozilla/Telemetry.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsAboutProtocolUtils.h"
@@ -306,9 +305,8 @@ nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  if (ShouldPartitionStorage(access) &&
-      !StoragePartitioningEnabled(access,
-                                  aWindow->GetExtantDoc()->CookieSettings())) {
+  if (access == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 

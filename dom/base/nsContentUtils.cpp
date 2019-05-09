@@ -8470,13 +8470,7 @@ nsContentUtils::StorageAccess nsContentUtils::InternalStorageAllowedCheck(
   // We want to have a partitioned storage only for trackers.
   if (aRejectedReason ==
       nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
-    return StorageAccess::ePartitionTrackersOrDeny;
-  }
-
-  // We want to have a partitioned storage for all third parties.
-  if (aRejectedReason ==
-      nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN) {
-    return StorageAccess::ePartitionForeignOrDeny;
+    return StorageAccess::ePartitionedOrDeny;
   }
 
   return StorageAccess::eDeny;

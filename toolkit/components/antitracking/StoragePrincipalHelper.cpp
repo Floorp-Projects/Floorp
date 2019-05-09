@@ -6,9 +6,7 @@
 
 #include "StoragePrincipalHelper.h"
 
-#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/StorageAccess.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
 #include "nsIHttpChannel.h"
@@ -20,15 +18,15 @@ namespace {
 already_AddRefed<nsIURI> MaybeGetFirstPartyURI(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  nsCOMPtr<nsICookieSettings> cs;
-  if (NS_FAILED(loadInfo->GetCookieSettings(getter_AddRefs(cs)))) {
+  if (!StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) {
+  // Let's use the storage principal only if we need to partition the cookie
+  // jar.
+  nsContentUtils::StorageAccess access =
+      nsContentUtils::StorageAllowedForChannel(aChannel);
+  if (access != nsContentUtils::StorageAccess::ePartitionedOrDeny) {
     return nullptr;
   }
 
@@ -37,27 +35,16 @@ already_AddRefed<nsIURI> MaybeGetFirstPartyURI(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  uint32_t rejectedReason = 0;
-  if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-          httpChannel, uri, &rejectedReason)) {
-    return nullptr;
-  }
+  MOZ_ASSERT(httpChannel->IsThirdPartyTrackingResource());
 
-  // Let's use the storage principal only if we need to partition the cookie
-  // jar.  We use the lower-level AntiTrackingCommon API here to ensure this
-  // check doesn't send notifications.
-  if (!ShouldPartitionStorage(rejectedReason) ||
-      !StoragePartitioningEnabled(rejectedReason, cs)) {
-    return nullptr;
-  }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsIPrincipal> toplevelPrincipal = loadInfo->GetTopLevelPrincipal();
   if (!toplevelPrincipal) {
     return nullptr;
   }
 
   nsCOMPtr<nsIURI> principalURI;
-  rv = toplevelPrincipal->GetURI(getter_AddRefs(principalURI));
+  nsresult rv = toplevelPrincipal->GetURI(getter_AddRefs(principalURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
