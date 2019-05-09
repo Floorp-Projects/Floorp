@@ -548,9 +548,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             this.containerWidth * this._tranferPercentageToFloat(this.div.style.left),
           width = isWritingDirectionHorizontal ?
             this.containerWidth * this._tranferPercentageToFloat(this.div.style.width) :
-            this.div.offsetWidth,
+            this.div.clientWidthDouble,
           height = isWritingDirectionHorizontal ?
-            this.div.offsetHeight :
+            this.div.clientHeightDouble :
             this.containerHeight * this._tranferPercentageToFloat(this.div.style.height);
       return { top, left, width, height };
     }
