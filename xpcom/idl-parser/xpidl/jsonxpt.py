@@ -137,8 +137,7 @@ def mk_method(method, params, getter=0, setter=0, optargc=0, hasretval=0, symbol
         'flags': flags(
             ('getter', getter),
             ('setter', setter),
-            ('notxpcom', method.notxpcom),
-            ('hidden', method.noscript),
+            ('hidden', method.noscript or method.notxpcom),
             ('optargc', optargc),
             ('jscontext', method.implicit_jscontext),
             ('hasretval', hasretval),
