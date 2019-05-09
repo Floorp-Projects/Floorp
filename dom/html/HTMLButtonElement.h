@@ -51,6 +51,7 @@ class HTMLButtonElement final : public nsGenericHTMLFormElementWithState,
 
   // EventTarget
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
   // nsINode

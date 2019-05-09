@@ -50,6 +50,7 @@ interface nsIDragService : nsISupports
     *           passed to the loadInfo when creating a new channel
     *           (defaults to TYPE_OTHER)
     */
+  [can_run_script]
   void invokeDragSession (in Node aDOMNode,
                           in nsIPrincipal aPrincipal,
                           in nsIArray aTransferables,
@@ -83,7 +84,7 @@ interface nsIDragService : nsISupports
    * The aDragEvent must be supplied as the current screen coordinates of the
    * event are needed to calculate the image location.
    */
-  [noscript]
+  [noscript, can_run_script]
   void invokeDragSessionWithImage(in Node aDOMNode,
                                   in nsIPrincipal aPrincipal,
                                   in nsIArray aTransferableArray,
@@ -101,6 +102,7 @@ interface nsIDragService : nsISupports
    *
    * Note: This method is deprecated for non-native code.
    */
+  [can_run_script]
   void invokeDragSessionWithSelection(in Selection aSelection,
                                       in nsIPrincipal aPrincipal,
                                       in nsIArray aTransferableArray,
@@ -126,19 +128,22 @@ interface nsIDragService : nsISupports
     * If aDoneDrag is true, the drag has finished, otherwise the drag has
     * just left the window.
     */
+  [can_run_script]
   void endDragSession(in boolean aDoneDrag,
                       [optional] in unsigned long aKeyModifiers);
 
   /**
    * Fire a drag event at the source of the drag
    */
-  [noscript] void fireDragEventAtSource(in EventMessage aEventMessage,
-                                        in unsigned long aKeyModifiers);
+  [noscript, can_run_script]
+  void fireDragEventAtSource(in EventMessage aEventMessage,
+                             in unsigned long aKeyModifiers);
 
   /**
    * Increase/decrease dragging suppress level by one.
    * If level is greater than one, dragging is disabled.
    */
+  [can_run_script]
   void suppress();
   void unsuppress();
 
