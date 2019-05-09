@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.160';
-const pdfjsBuild = '155304a0';
+const pdfjsVersion = '2.2.167';
+const pdfjsBuild = 'ca2fee3d';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -378,7 +378,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.160';
+    let workerVersion = '2.2.167';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -18318,6 +18318,8 @@ function getTransformMatrix(rect, bbox, matrix) {
 class Annotation {
   constructor(params) {
     let dict = params.dict;
+    this.setCreationDate(dict.get('CreationDate'));
+    this.setModificationDate(dict.get('M'));
     this.setFlags(dict.get('F'));
     this.setRectangle(dict.getArray('Rect'));
     this.setColor(dict.getArray('C'));
@@ -18327,8 +18329,10 @@ class Annotation {
       annotationFlags: this.flags,
       borderStyle: this.borderStyle,
       color: this.color,
+      creationDate: this.creationDate,
       hasAppearance: !!this.appearance,
       id: params.id,
+      modificationDate: this.modificationDate,
       rect: this.rectangle,
       subtype: params.subtype
     };
@@ -18360,6 +18364,14 @@ class Annotation {
     }
 
     return this._isPrintable(this.flags);
+  }
+
+  setCreationDate(creationDate) {
+    this.creationDate = (0, _util.isString)(creationDate) ? creationDate : null;
+  }
+
+  setModificationDate(modificationDate) {
+    this.modificationDate = (0, _util.isString)(modificationDate) ? modificationDate : null;
   }
 
   setFlags(flags) {
@@ -18947,6 +18959,20 @@ class PopupAnnotation extends Annotation {
     this.data.parentId = dict.getRaw('Parent').toString();
     this.data.title = (0, _util.stringToPDFString)(parentItem.get('T') || '');
     this.data.contents = (0, _util.stringToPDFString)(parentItem.get('Contents') || '');
+
+    if (!parentItem.has('CreationDate')) {
+      this.data.creationDate = null;
+    } else {
+      this.setCreationDate(parentItem.get('CreationDate'));
+      this.data.creationDate = this.creationDate;
+    }
+
+    if (!parentItem.has('M')) {
+      this.data.modificationDate = null;
+    } else {
+      this.setModificationDate(parentItem.get('M'));
+      this.data.modificationDate = this.modificationDate;
+    }
 
     if (!parentItem.has('C')) {
       this.data.color = null;
@@ -20582,7 +20608,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       }
     },
 
-    handleColorN: function PartialEvaluator_handleColorN(operatorList, fn, args, cs, patterns, resources, task) {
+    async handleColorN(operatorList, fn, args, cs, patterns, resources, task) {
       var patternName = args[args.length - 1];
       var pattern;
 
@@ -20598,14 +20624,13 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           var matrix = dict.getArray('Matrix');
           pattern = _pattern.Pattern.parseShading(shading, matrix, this.xref, resources, this.handler, this.pdfFunctionFactory);
           operatorList.addOp(fn, pattern.getIR());
-          return Promise.resolve();
+          return undefined;
         }
 
-        return Promise.reject(new Error('Unknown PatternType: ' + typeNum));
+        throw new _util.FormatError(`Unknown PatternType: ${typeNum}`);
       }
 
-      operatorList.addOp(fn, args);
-      return Promise.resolve();
+      throw new _util.FormatError(`Unknown PatternName: ${patternName}`);
     },
 
     getOperatorList({
