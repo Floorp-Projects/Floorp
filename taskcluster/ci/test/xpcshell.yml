@@ -41,16 +41,15 @@ xpcshell:
             default: built-projects
     chunks:
         by-test-platform:
-            linux32/debug: 12
-            linux64/debug: 10
-            android-em-4.3-arm7-api-16/debug: 12
+            android-em-4.3-arm7-api-16/.*: 8
             android-em-7.*: 3
-            macosx.*: 1
-            windows.*: 1
-            windows10-aarch64/opt: 3
-            windows10-64-ccov/debug: 8
             macosx64-ccov/debug: 8
-            default: 8
+            macosx.*/.*: 2
+            linux64(-qr)?/debug: 6
+            (linux.*|windows.*)-ccov/debug: 6
+            windows(7-32|10-64)(-shippable|-devedition|-asan|.*-qr)?/.*: 2
+            windows10-aarch64/opt: 3
+            default: 5
     instance-size:
         by-test-platform:
             android-em.*: xlarge
