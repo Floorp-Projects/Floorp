@@ -10,6 +10,10 @@ const {
 AddonTestUtils.initMochitest(this);
 const server = AddonTestUtils.createHttpServer();
 const serverBaseUrl = `http://localhost:${server.identity.primaryPort}/`;
+server.registerPathHandler("/sumo/personalized-extension-recommendations",
+  (request, response) => {
+    response.write("This is a SUMO page that explains personalized add-ons.");
+  });
 
 // Before a discovery API request is triggered, this method should be called.
 // Resolves with the value of the "telemetry-client-id" query parameter.
@@ -27,6 +31,14 @@ async function promiseOneDiscoveryApiRequest() {
   });
 }
 
+function getNoticeButton(win) {
+  return win.document.querySelector("[action='notice-learn-more']");
+}
+
+function isNoticeVisible(win) {
+  return getNoticeButton(win).closest("message-bar").offsetHeight > 0;
+}
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -34,6 +46,7 @@ add_task(async function setup() {
       ["browser.discovery.enabled", true],
       ["datareporting.healthreport.uploadEnabled", true],
       ["extensions.getAddons.discovery.api_url", `${serverBaseUrl}discoapi`],
+      ["app.support.baseURL", `${serverBaseUrl}sumo/`],
       ["extensions.htmlaboutaddons.enabled", true],
     ],
   });
@@ -46,8 +59,23 @@ add_task(async function clientid_enabled() {
 
   let requestPromise = promiseOneDiscoveryApiRequest();
   let win = await loadInitialView("discover");
+
+  ok(isNoticeVisible(win), "Notice about personalization should be visible");
+
   is(await requestPromise, EXPECTED_CLIENT_ID,
      "Moz-Client-Id should be set when telemetry & discovery are enabled");
+
+  let tabbrowser = win.windowRoot.ownerGlobal.gBrowser;
+  let expectedUrl =
+    `${serverBaseUrl}sumo/personalized-extension-recommendations`;
+  let tabPromise = BrowserTestUtils.waitForNewTab(tabbrowser, expectedUrl);
+
+  getNoticeButton(win).click();
+
+  info(`Waiting for new tab with URL: ${expectedUrl}`);
+  let tab = await tabPromise;
+  BrowserTestUtils.removeTab(tab);
+
   await closeView(win);
 });
 
@@ -59,6 +87,7 @@ add_task(async function clientid_disabled() {
   });
   let requestPromise = promiseOneDiscoveryApiRequest();
   let win = await loadInitialView("discover");
+  ok(!isNoticeVisible(win), "Notice about personalization should be hidden");
   is(await requestPromise, null,
      "Moz-Client-Id should not be sent when discovery is disabled");
   await closeView(win);
