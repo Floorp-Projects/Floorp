@@ -389,7 +389,7 @@ void compute_precache_linear(uint8_t *output)
 	}
 }
 
-qcms_bool compute_precache(struct curveType *trc, uint8_t *output)
+bool compute_precache(struct curveType *trc, uint8_t *output)
 {
         
         if (trc->type == PARAMETRIC_CURVE_TYPE) {
