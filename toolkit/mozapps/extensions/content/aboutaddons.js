@@ -1677,6 +1677,8 @@ class DiscoveryPane extends HTMLElement {
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "recommended-extensions-program";
 
+    this.querySelector(".discopane-notice").hidden =
+      !DiscoveryAPI.clientIdDiscoveryEnabled;
     this.addEventListener("click", this);
 
     // Hide footer until the cards is loaded, to prevent the content from
@@ -1690,6 +1692,11 @@ class DiscoveryPane extends HTMLElement {
   handleEvent(event) {
     let action = event.target.getAttribute("action");
     switch (action) {
+      case "notice-learn-more":
+        windowRoot.ownerGlobal.openTrustedLinkIn(
+          Services.urlFormatter.formatURLPref("app.support.baseURL") +
+          "personalized-extension-recommendations", "tab");
+        break;
       case "open-amo":
         windowRoot.ownerGlobal.openTrustedLinkIn(
           Services.urlFormatter.formatURLPref("extensions.getAddons.link.url"),
