@@ -114,8 +114,6 @@ class DocGroup final {
   nsTArray<Document*> mDocuments;
   RefPtr<mozilla::dom::CustomElementReactionsStack> mReactionsStack;
   nsTArray<RefPtr<HTMLSlotElement>> mSignalSlotList;
-  // This pointer will be null if dom.performance.enable_scheduler_timing is
-  // false (default value)
   RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
 };
 

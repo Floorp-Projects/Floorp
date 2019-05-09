@@ -154,9 +154,6 @@ pref("dom.serviceWorkers.update_delay", 1000);
 // Enable test for 24 hours update, service workers will always treat last update check time is over 24 hours
 pref("dom.serviceWorkers.testUpdateOverOneDay", false);
 
-// Enable collecting of docgroup activity in the scheduler
-pref("dom.performance.enable_scheduler_timing", true);
-
 // Enable Permission API's .revoke() method
 pref("dom.permissions.revoke.enable", false);
 

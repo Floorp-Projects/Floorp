@@ -1430,7 +1430,6 @@ mozilla::ipc::IPCResult ContentChild::GetResultForRenderingInitFailure(
 
 mozilla::ipc::IPCResult ContentChild::RecvRequestPerformanceMetrics(
     const nsID& aID) {
-  MOZ_ASSERT(mozilla::StaticPrefs::dom_performance_enable_scheduler_timing());
   RefPtr<ContentChild> self = this;
   RefPtr<AbstractThread> mainThread =
       SystemGroup::AbstractMainThreadFor(TaskCategory::Performance);
