@@ -1339,7 +1339,6 @@ void DataChannelConnection::HandleOpenRequestMessage(
   RefPtr<DataChannel> channel;
   uint32_t prValue;
   uint16_t prPolicy;
-  uint32_t flags;
 
   mLock.AssertCurrentThreadOwns();
 
@@ -1373,8 +1372,7 @@ void DataChannelConnection::HandleOpenRequestMessage(
       return;
   }
   prValue = ntohl(req->reliability_param);
-  flags =
-      (req->channel_type & 0x80) ? DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED : 0;
+  bool ordered = !(req->channel_type & 0x80);
 
   if ((channel = FindChannelByStream(stream))) {
     if (!(channel->mFlags & DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED)) {
@@ -1387,13 +1385,12 @@ void DataChannelConnection::HandleOpenRequestMessage(
       LOG(("Open for externally negotiated channel %u", stream));
       // XXX should also check protocol, maybe label
       if (prPolicy != channel->mPrPolicy || prValue != channel->mPrValue ||
-          flags !=
-              (channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED)) {
+          ordered != channel->mOrdered) {
         LOG(
             ("WARNING: external negotiation mismatch with OpenRequest:"
-             "channel %u, policy %u/%u, value %u/%u, flags %x/%x",
+             "channel %u, policy %u/%u, value %u/%u, ordered %d/%d",
              stream, prPolicy, channel->mPrPolicy, prValue, channel->mPrValue,
-             flags, channel->mFlags));
+             static_cast<int>(ordered), static_cast<int>(channel->mOrdered)));
       }
     }
     return;
@@ -1411,7 +1408,7 @@ void DataChannelConnection::HandleOpenRequestMessage(
 
   channel =
       new DataChannel(this, stream, DataChannel::CONNECTING, label, protocol,
-                      prPolicy, prValue, flags, nullptr, nullptr);
+                      prPolicy, prValue, ordered, false, nullptr, nullptr);
   mStreams[stream] = channel;
 
   channel->mState = DataChannel::WAITING_TO_OPEN;
@@ -2341,7 +2338,6 @@ already_AddRefed<DataChannel> DataChannelConnection::Open(
     aStream = INVALID_STREAM;
   }
   uint16_t prPolicy = SCTP_PR_SCTP_NONE;
-  uint32_t flags;
 
   LOG(
       ("DC Open: label %s/%s, type %u, inorder %d, prValue %u, listener %p, "
@@ -2377,14 +2373,9 @@ already_AddRefed<DataChannel> DataChannelConnection::Open(
     return nullptr;
   }
 
-  flags = !inOrder ? DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED : 0;
-
-  RefPtr<DataChannel> channel(
-      new DataChannel(this, aStream, DataChannel::CONNECTING, label, protocol,
-                      prPolicy, prValue, flags, aListener, aContext));
-  if (aExternalNegotiated) {
-    channel->mFlags |= DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED;
-  }
+  RefPtr<DataChannel> channel(new DataChannel(
+      this, aStream, DataChannel::CONNECTING, label, protocol, prPolicy,
+      prValue, inOrder, aExternalNegotiated, aListener, aContext));
 
   MutexAutoLock lock(mLock);  // OpenFinish assumes this
   return OpenFinish(channel.forget());

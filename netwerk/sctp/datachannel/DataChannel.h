@@ -372,7 +372,7 @@ class DataChannel {
   DataChannel(DataChannelConnection* connection, uint16_t stream,
               uint16_t state, const nsACString& label,
               const nsACString& protocol, uint16_t policy, uint32_t value,
-              uint32_t flags, DataChannelListener* aListener,
+              bool ordered, bool negotiated, DataChannelListener* aListener,
               nsISupports* aContext)
       : mListenerLock("netwerk::sctp::DataChannel"),
         mListener(aListener),
@@ -384,12 +384,19 @@ class DataChannel {
         mStream(stream),
         mPrPolicy(policy),
         mPrValue(value),
-        mFlags(flags),
+        mOrdered(ordered),
+        mFlags(0),
         mId(0),
         mIsRecvBinary(false),
         mBufferedThreshold(0),  // default from spec
         mBufferedAmount(0),
         mMainThreadEventTarget(connection->GetNeckoTarget()) {
+    if (!ordered) {
+      mFlags |= DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED;
+    }
+    if (negotiated) {
+      mFlags |= DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED;
+    }
     NS_ASSERTION(mConnection, "NULL connection");
   }
 
@@ -432,9 +439,7 @@ class DataChannel {
 
   dom::Nullable<uint16_t> GetMaxRetransmits() const;
 
-  bool GetOrdered() {
-    return !(mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED);
-  }
+  bool GetOrdered() { return mOrdered; }
 
   void IncrementBufferedAmount(uint32_t aSize, ErrorResult& aRv);
   void DecrementBufferedAmount(uint32_t aSize);
@@ -488,6 +493,7 @@ class DataChannel {
   uint16_t mStream;
   uint16_t mPrPolicy;
   uint32_t mPrValue;
+  const bool mOrdered;
   uint32_t mFlags;
   uint32_t mId;
   bool mIsRecvBinary;
