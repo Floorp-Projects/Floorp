@@ -359,6 +359,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 context?.components?.useCases?.sessionUseCases?.reload?.invoke()
             }
         }
+        getSessionById()?.let { (activity as HomeActivity).updateThemeForSession(it) }
         (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
