@@ -139,7 +139,7 @@
       <richlistbox id="categories" flex="1">
         <richlistitem id="category-discover" value="addons://discover/"
                       class="category"
-                      data-l10n-id="extensions-view-discover"
+                      data-l10n-id="extensions-view-discopane"
                       data-l10n-attrs="name"
                       priority="1000"/>
         <richlistitem id="category-legacy" value="addons://legacy/"
