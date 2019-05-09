@@ -733,13 +733,13 @@ var gViewController = {
     this.headeredViewsDeck = document.getElementById("headered-views-content");
     this.backButton = document.getElementById("go-back");
 
-    this.viewObjects.discover = gDiscoverView;
     this.viewObjects.legacy = gLegacyView;
     this.viewObjects.shortcuts = gShortcutsView;
 
     if (useHtmlViews) {
       this.viewObjects.list = htmlView("list");
       this.viewObjects.detail = htmlView("detail");
+      this.viewObjects.discover = htmlView("discover");
       this.viewObjects.updates = htmlView("updates");
       // gUpdatesView still handles when the Available Updates category is
       // shown. Include it in viewObjects so it gets initialized and shutdown.
@@ -747,6 +747,7 @@ var gViewController = {
     } else {
       this.viewObjects.list = gListView;
       this.viewObjects.detail = gDetailView;
+      this.viewObjects.discover = gDiscoverView;
       this.viewObjects.updates = gUpdatesView;
     }
 
@@ -912,11 +913,16 @@ var gViewController = {
 
     let headingName = document.getElementById("heading-name");
     let headingLabel;
-    try {
-      headingLabel = gStrings.ext.GetStringFromName(`listHeading.${view.param}`);
-    } catch (e) {
-      // Some views don't have a label, like the updates view.
-      headingLabel = "";
+    if (view.type == "discover") {
+      headingLabel = gStrings.ext.formatStringFromName(
+        "listHeading.discover", [gStrings.brandShortName], 1);
+    } else {
+      try {
+        headingLabel = gStrings.ext.GetStringFromName(`listHeading.${view.param}`);
+      } catch (e) {
+        // Some views don't have a label, like the updates view.
+        headingLabel = "";
+      }
     }
     headingName.textContent = headingLabel;
     setSearchLabel(view.param);

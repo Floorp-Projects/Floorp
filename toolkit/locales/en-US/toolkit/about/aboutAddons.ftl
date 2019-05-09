@@ -343,6 +343,31 @@ shortcuts-card-collapse-button = Show Less
 go-back-button =
     .tooltiptext = Go back
 
+## Recommended add-ons page
+
+# Explanatory introduction to the list of recommended add-ons. The action word
+# ("recommends") in the final sentence is a link to external documentation.
+discopane-intro =
+    Extensions and themes are like apps for your browser, and they let you
+    protect passwords, download videos, find deals, block annoying ads, change
+    how your browser looks, and much more. These small software programs are
+    often developed by a third party. Here’s a selection { -brand-product-name }
+    <a data-l10n-name="learn-more-trigger">recommends</a> for exceptional
+    security, performance, and functionality.
+
+privacy-policy = Privacy Policy
+
+# Refers to the author of an add-on, shown below the name of the add-on.
+# Variables:
+#   $author (string) - The name of the add-on developer.
+created-by-author = by <a data-l10n-name="author">{ $author }</a>
+install-extension-button = Add to { -brand-product-name }
+install-theme-button = Install Theme
+# The label of the button that appears after installing an add-on. Upon click,
+# the detailed add-on view is opened, from where the add-on can be managed.
+manage-addon-button = Manage
+find-more-addons = Find more add-ons
+
 ## Add-on actions
 report-addon-button = Report
 remove-addon-button = Remove

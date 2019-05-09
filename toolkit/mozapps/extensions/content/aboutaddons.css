@@ -73,6 +73,7 @@ addon-list .addon.card {
 }
 
 .card-contents {
+  word-break: break-word;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -133,6 +134,74 @@ addon-card:not([expanded]) .addon-description {
   /* Add some negative margin to account for the button's padding */
   margin-top: -10px;
   margin-inline-end: -8px;
+}
+
+/* Discopane extensions to the add-on card */
+
+recommended-addon-card .addon-name {
+  display: flex;
+}
+
+recommended-addon-card .addon-description:not(:empty) {
+  margin-top: 0.5em;
+}
+
+.disco-card-head {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.disco-addon-author {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.disco-cta-button {
+  font-size: 14px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  align-self: baseline;
+}
+
+.disco-cta-button[action="install-addon"]::before {
+  content: "+";
+  padding-inline-end: 4px;
+}
+
+.discopane-notice {
+  margin: 0.5em 0;
+}
+
+.discopane-notice-content {
+  align-items: center;
+  display: flex;
+  width: 100%;
+}
+
+.discopane-notice-content > span {
+  flex-grow: 1;
+}
+
+.discopane-notice-content > button {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.discopane-footer {
+  text-align: center;
+}
+
+.discopane-footer > * {
+  margin-top: 30px;
+}
+
+.discopane-privacy-policy-link {
+  font-size: small;
+}
+
+addon-details {
+  color: var(--grey-60);
 }
 
 .addon-detail-description {
