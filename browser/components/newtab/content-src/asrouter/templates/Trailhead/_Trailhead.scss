@@ -1,0 +1,425 @@
+.trailhead {
+  $benefit-icon-size: 62px;
+  $benefit-icon-spacing: $benefit-icon-size + 12px;
+  $benefit-icon-size-small: 40px;
+  $benefit-icon-spacing-small: $benefit-icon-size-small + 12px;
+  $responsive-breakpoint: 850px;
+
+  background: url('#{$image-path}trailhead/accounts-form-bg.jpg') bottom / cover;
+  color: $white;
+  height: auto;
+  top: 100px;
+
+  a {
+    color: $white;
+    text-decoration: underline;
+  }
+
+  input,
+  button {
+    border-radius: 4px;
+    padding: 10px;
+  }
+
+  .trailheadInner {
+    $content-spacing: 40px;
+
+    display: grid;
+    grid-column-gap: $content-spacing;
+    grid-template-columns: 5fr 3fr;
+    padding: $content-spacing 60px;
+  }
+
+  .trailheadContent {
+    h1 {
+      font-size: 36px;
+      font-weight: 200;
+      line-height: 46px;
+      margin: 0;
+    }
+
+    .trailheadLearn {
+      display: block;
+      margin-top: 30px;
+
+      @media (min-width: $responsive-breakpoint) {
+        margin-inline-start: $benefit-icon-spacing;
+      }
+    }
+  }
+
+  &.syncCohort {
+    left: calc(50% - 430px);
+    width: 860px;
+
+    @media (max-width: 860px) {
+      left: 0;
+      width: 100%;
+    }
+
+    .trailheadInner {
+      grid-template-columns: 4fr 3fr;
+    }
+
+    .trailheadContent {
+      .trailheadBenefits {
+        background: url('#{$image-path}sync-devices-trailhead.svg');
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        height: 200px;
+        margin-inline-end: 60px;
+      }
+
+      .trailheadLearn {
+        margin-inline-start: 0;
+      }
+    }
+  }
+
+  .trailheadBenefits {
+    padding: 0;
+
+    li {
+      background-position: left 6px;
+      background-repeat: no-repeat;
+      background-size: $benefit-icon-size-small;
+      -moz-context-properties: fill;
+      fill: $blue-50;
+      list-style: none;
+      padding-top: 8px;
+
+
+      @media (min-width: $responsive-breakpoint) {
+        background-position-y: 4px;
+        background-size: $benefit-icon-size;
+        margin-inline-end: 60px;
+        padding-inline-start: $benefit-icon-spacing;
+      }
+
+      &:dir(rtl) {
+        background-position-x: right;
+      }
+
+      &.knowledge {
+        background-image: url('#{$image-path}trailhead/benefit-knowledge.png');
+      }
+
+      &.privacy {
+        background-image: url('#{$image-path}trailhead/benefit-privacy.png');
+      }
+
+      &.products {
+        background-image: url('#{$image-path}trailhead/benefit-products.png');
+      }
+    }
+
+    h3 {
+      color: $violet-20;
+      font-size: 22px;
+      font-weight: 400;
+      margin: 0 0 4px;
+      padding-inline-start: $benefit-icon-spacing-small;
+
+      @media (min-width: $responsive-breakpoint) {
+        padding-inline-start: 0;
+      }
+    }
+
+    p {
+      color: $white;
+      font-size: 15px;
+      line-height: 22px;
+      margin: 4px 0 15px;
+    }
+  }
+
+  .trailheadForm {
+    $logo-size: 100px;
+
+    background: url('#{$image-path}trailhead/firefox-logo.png') top center / $logo-size no-repeat;
+    min-width: 260px;
+    padding-top: $logo-size;
+    text-align: center;
+
+    h3 {
+      font-size: 36px;
+      font-weight: 200;
+      line-height: 46px;
+      margin: 12px 0 4px;
+    }
+
+    p {
+      color: $white;
+      font-size: 15px;
+      line-height: 22px;
+      margin: 0 0 20px;
+    }
+
+    .trailheadTerms {
+      margin: 4px 30px 20px;
+
+      a,
+      & {
+        color: $white-70;
+        font-size: 12px;
+        line-height: 20px;
+      }
+    }
+
+    form {
+      position: relative;
+
+      .error.active {
+        inset-inline-start: 0;
+        z-index: 0;
+      }
+    }
+
+    button,
+    input {
+      width: 100%;
+    }
+
+    input {
+      background-color: $white;
+      border: 1px solid $grey-50;
+      box-shadow: none;
+      color: $grey-70;
+      font-size: 15px;
+      transition: border-color 150ms, box-shadow 150ms;
+
+      &:hover {
+        border-color: $grey-90;
+      }
+
+      &:focus {
+        border-color: $blue-50;
+        box-shadow: 0 0 0 3px $email-input-focus;
+      }
+
+      &.invalid {
+        border-color: $red-60;
+      }
+
+      &.invalid:focus {
+        box-shadow: 0 0 0 3px $email-input-invalid;
+      }
+    }
+
+    button {
+      background-color: $blue-60;
+      border: 0;
+      cursor: pointer;
+      display: block;
+      font-size: 15px;
+      font-weight: 400;
+      padding: 14px;
+
+      &:hover,
+      &:focus {
+        background-color: $trailhead-blue-60;
+      }
+
+      &:focus {
+        outline: dotted 1px;
+      }
+
+      &:active {
+        background-color: $trailhead-blue-70;
+      }
+    }
+  }
+
+  .trailheadStart {
+    border: 1px solid $white-50;
+    cursor: pointer;
+    display: block;
+    font-size: 15px;
+    font-weight: 400;
+    margin: 0 auto 40px;
+    min-width: 300px;
+    padding: 14px;
+
+    &:hover,
+    &:focus {
+      background-color: $trailhead-blue-60;
+      border-color: transparent;
+    }
+
+    &:focus {
+      outline: dotted 1px;
+    }
+
+    &:active {
+      background-color: $trailhead-blue-70;
+    }
+  }
+
+  .trailheadInner,
+  .trailheadStart {
+    animation: fadeIn 0.4s;
+  }
+}
+
+.trailheadCards {
+  background: var(--trailhead-cards-background-color);
+  max-height: 1000px;
+  overflow: hidden;
+  text-align: center;
+  transition: max-height 0.5s $photon-easing;
+
+
+  &.collapsed {
+    max-height: 0;
+  }
+
+  h1 {
+    font-size: 36px;
+    font-weight: 200;
+    margin: 0 0 40px;
+    color: var(--trailhead-header-text-color);
+  }
+}
+
+.trailheadCardsInner {
+  margin: auto;
+  padding: 40px $section-horizontal-padding;
+
+  @media (min-width: $break-point-medium) {
+    width: $wrapper-max-width-medium;
+  }
+
+  @media (min-width: $break-point-large) {
+    width: $wrapper-max-width-large;
+  }
+
+  @media (min-width: $break-point-widest) {
+    width: $wrapper-max-width-widest;
+  }
+
+  .icon-dismiss {
+    border: 0;
+    cursor: pointer;
+    inset-inline-end: 15px;
+    padding: 15px;
+    opacity: 0.75;
+    position: absolute;
+    top: 15px;
+
+    &:hover,
+    &:focus {
+      background-color: var(--newtab-element-hover-color);
+    }
+  }
+}
+
+.trailheadCardGrid {
+  display: grid;
+  grid-gap: $base-gutter;
+  margin: 0;
+  opacity: 0;
+  transition: opacity 0.4s;
+  transition-delay: 0.1s;
+
+  &.show {
+    opacity: 1;
+  }
+
+  @media (min-width: $break-point-medium) {
+    grid-template-columns: repeat(auto-fit, $card-width);
+  }
+
+  @media (min-width: $break-point-widest) {
+    grid-template-columns: repeat(auto-fit, $card-width-large);
+  }
+}
+
+.trailheadCard {
+  position: relative;
+  background: var(--newtab-card-background-color);
+  border-radius: 4px;
+  box-shadow: var(--newtab-card-shadow);
+
+  font-size: 13px;
+  padding: 20px;
+
+  @media (min-width: $break-point-widest) {
+    font-size: 15px;
+    padding: 40px;
+  }
+
+  .onboardingTitle {
+    font-weight: normal;
+    color: var(--newtab-text-primary-color);
+    margin: 10px 0 4px;
+    font-size: 15px;
+
+    @media (min-width: $break-point-widest) {
+      font-size: 18px;
+    }
+  }
+
+  .onboardingText {
+    margin: 0 0 60px;
+    color: var(--newtab-text-conditional-color);
+    line-height: 1.5;
+    font-weight: 200;
+  }
+
+  .onboardingButton {
+    color: var(--newtab-text-conditional-color);
+    background: var(--trailhead-card-button-background-color);
+    border: 0;
+    height: 30px;
+    min-width: 70%;
+    padding: 0 14px;
+
+    &:focus,
+    &:hover {
+      box-shadow: none;
+      background: var(--trailhead-card-button-background-hover-color);
+    }
+
+    &:focus {
+      outline: dotted 1px;
+    }
+
+    &:active {
+      background: var(--trailhead-card-button-background-active-color);
+    }
+  }
+
+  .onboardingButtonContainer {
+    height: 60px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.inline-onboarding {
+  &.activity-stream.welcome {
+    overflow: scroll;
+  }
+
+  .modalOverlayInner {
+    position: absolute;
+  }
+
+  .outer-wrapper {
+    position: relative;
+
+    .prefs-button {
+      button {
+        position: absolute;
+      }
+    }
+  }
+
+  .asrouter-toggle {
+    position: absolute;
+  }
+}

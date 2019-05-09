@@ -57,7 +57,7 @@ describe("ASRouterAdmin", () => {
   });
   describe("#getSection", () => {
     it("should render a message provider section by default", () => {
-      assert.equal(wrapper.find("h2").at(1).text(), "Messages");
+      assert.equal(wrapper.find("h2").at(2).text(), "Messages");
     });
     it("should render a targeting section for targeting route", () => {
       wrapper = shallow(<ASRouterAdminInner location={{routes: ["targeting"]}} />);

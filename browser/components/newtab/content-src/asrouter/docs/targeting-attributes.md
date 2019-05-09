@@ -28,6 +28,8 @@ Please note that some targeting attributes require stricter controls on the tele
 * [sync](#sync)
 * [topFrecentSites](#topfrecentsites)
 * [totalBookmarksCount](#totalbookmarkscount)
+* [trailheadInterrupt](#trailheadinterrupt)
+* [trailheadTriplet](#trailheadtriplet)
 * [usesFirefoxSync](#usesfirefoxsync)
 * [xpinstallEnabled](#xpinstallEnabled)
 * [hasPinnedTabs](#haspinnedtabs)
@@ -423,6 +425,14 @@ Total number of bookmarks.
 ```ts
 declare const totalBookmarksCount: number;
 ```
+
+### `trailheadInterrupt`
+
+(67.05+ only) Experiment branch for "interrupt" study
+
+### `trailheadTriplet`
+
+(67.05+ only) Experiment branch for "triplet" study
 
 ### `usesFirefoxSync`
 

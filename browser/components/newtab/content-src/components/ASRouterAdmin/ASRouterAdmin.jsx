@@ -562,6 +562,16 @@ export class ASRouterAdminInner extends React.PureComponent {
       </div>);
   }
 
+  renderTrailheadInfo() {
+    const {trailheadInterrupt, trailheadTriplet, trailheadInitialized} = this.state;
+    return trailheadInitialized ? (<table className="minimal-table">
+      <tbody>
+        <tr><td>Interrupt branch</td><td>{trailheadInterrupt}</td></tr>
+        <tr><td>Triplet branch</td><td>{trailheadTriplet}</td></tr>
+      </tbody>
+    </table>) : <p>Trailhead is not initialized. To update these values, load about:welcome.</p>;
+  }
+
   getSection() {
     const [section] = this.props.location.routes;
     switch (section) {
@@ -586,6 +596,8 @@ export class ASRouterAdminInner extends React.PureComponent {
         return (<React.Fragment>
           <h2>Message Providers <button title="Restore all provider settings that ship with Firefox" className="button" onClick={this.resetPref}>Restore default prefs</button></h2>
           {this.state.providers ? this.renderProviders() : null}
+          <h2>Trailhead</h2>
+          {this.renderTrailheadInfo()}
           <h2>Messages</h2>
           {this.renderMessageFilter()}
           {this.renderMessages()}

@@ -5,8 +5,7 @@
 }
 
 .modalOverlayOuter {
-  background: $white;
-  opacity: 0.93;
+  background: var(--newtab-overlay-color);
   height: 100%;
   position: fixed;
   top: 0;

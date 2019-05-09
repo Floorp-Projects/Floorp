@@ -985,3 +985,20 @@ This reports when an error has occurred when parsing/evaluating a JEXL targeting
   "value": ["MALFORMED_EXPRESSION" | "OTHER_ERROR"]
 }
 ```
+
+## Trailhead experiment enrollment ping
+
+This reports an enrollment ping when a user gets enrolled in a Trailhead experiment. Note that this ping is only collected through the Mozilla Events telemetry pipeline.
+
+```js
+{
+  "category": "activity_stream",
+  "method": "enroll",
+  "object": "preference_study"
+  "value": "activity-stream-firstup-trailhead-interrupts",
+  "extra_keys": {
+    "experimentType": "as-firstrun",
+    "branch": ["supercharge" | "join" | "sync" | "privacy" ...]
+  }
+}
+```
