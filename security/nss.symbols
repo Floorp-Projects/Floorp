@@ -664,6 +664,7 @@ SSL_ImplementedCiphers @DATA@
 SSL_ImportFD
 SSL_NamedGroupConfig
 SSL_NumImplementedCiphers @DATA@
+SSL_OptionGet
 SSL_OptionSet
 SSL_OptionSetDefault
 SSL_PeerCertificate

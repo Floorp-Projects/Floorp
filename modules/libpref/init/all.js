@@ -2381,6 +2381,11 @@ pref("network.stricttransportsecurity.preloadlist", true);
 // Use JS mDNS as a fallback
 pref("network.mdns.use_js_fallback", false);
 
+// Cache SSL resumption tokens in necko
+pref("network.ssl_tokens_cache_enabled", false);
+// Capacity of the cache in kilobytes
+pref("network.ssl_tokens_cache_capacity", 2048);
+
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 // Whether we include ruby annotation in the text despite whether it

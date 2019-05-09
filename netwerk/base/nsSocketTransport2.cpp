@@ -38,6 +38,8 @@
 #include "nsICancelable.h"
 #include "TCPFastOpenLayer.h"
 #include <algorithm>
+#include "sslexp.h"
+#include "mozilla/net/SSLTokensCache.h"
 
 #include "nsPrintfCString.h"
 #include "xpcpublic.h"
@@ -734,7 +736,8 @@ nsSocketTransport::nsSocketTransport()
       mFastOpenLayerHasBufferedData(false),
       mFastOpenStatus(TFO_NOT_SET),
       mFirstRetryError(NS_OK),
-      mDoNotRetryToConnect(false) {
+      mDoNotRetryToConnect(false),
+      mSSLCallbackSet(false) {
   this->mNetAddr.raw.family = 0;
   this->mNetAddr.inet = {};
   this->mSelfAddr.raw.family = 0;
@@ -1246,6 +1249,22 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
   return rv;
 }
 
+// static
+SECStatus nsSocketTransport::StoreResumptionToken(
+    PRFileDesc* fd, const PRUint8* resumptionToken, unsigned int len,
+    void* ctx) {
+  PRIntn val;
+  if (SSL_OptionGet(fd, SSL_ENABLE_SESSION_TICKETS, &val) != SECSuccess ||
+      val == 0) {
+    return SECFailure;
+  }
+
+  SSLTokensCache::Put(static_cast<nsSocketTransport*>(ctx)->mHost,
+                      resumptionToken, len);
+
+  return SECSuccess;
+}
+
 nsresult nsSocketTransport::InitiateSocket() {
   SOCKET_LOG(("nsSocketTransport::InitiateSocket [this=%p]\n", this));
 
@@ -1528,6 +1547,23 @@ nsresult nsSocketTransport::InitiateSocket() {
            "started [this=%p]\n",
            this));
     }
+  }
+
+  if (usingSSL && SSLTokensCache::IsEnabled()) {
+    nsTArray<uint8_t> token;
+    nsresult rv2 = SSLTokensCache::Get(mHost, token);
+    if (NS_SUCCEEDED(rv2) && token.Length() != 0) {
+      SECStatus srv =
+          SSL_SetResumptionToken(fd, token.Elements(), token.Length());
+      if (srv == SECFailure) {
+        SOCKET_LOG(("Setting token failed with NSS error %d [host=%s]",
+                    PORT_GetError(), PromiseFlatCString(mHost).get()));
+        SSLTokensCache::Remove(mHost);
+      }
+    }
+
+    SSL_SetResumptionTokenCallback(fd, &StoreResumptionToken, this);
+    mSSLCallbackSet = true;
   }
 
   bool connectCalled = true;  // This is only needed for telemetry.
@@ -2016,6 +2052,11 @@ void nsSocketTransport::ReleaseFD_Locked(PRFileDesc* fd) {
   NS_ASSERTION(mFD == fd, "wrong fd");
 
   if (--mFDref == 0) {
+    if (mSSLCallbackSet) {
+      SSL_SetResumptionTokenCallback(fd, nullptr, nullptr);
+      mSSLCallbackSet = false;
+    }
+
     if (gIOService->IsNetTearingDown() &&
         ((PR_IntervalNow() - gIOService->NetTearingDownStarted()) >
          gSocketTransportService->MaxTimeForPrClosePref())) {
