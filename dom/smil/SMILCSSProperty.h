@@ -53,9 +53,6 @@ class SMILCSSProperty : public SMILAttr {
    * SMIL animation.
    *
    * @param   aProperty  The property to check for animation support.
-   * @param   aBackend   The style backend to check for animation support.
-   *                     This is a temporary measure until the Servo backend
-   *                     supports all animatable properties (bug 1353918).
    * @return  true if the given property is supported for SMIL animation, or
    *          false otherwise
    */
