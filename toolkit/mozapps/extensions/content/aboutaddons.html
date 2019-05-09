@@ -62,6 +62,26 @@
       </div>
     </template>
 
+    <template name="addon-name-container-in-disco-card">
+      <div class="disco-card-head">
+        <span class="disco-addon-name"></span>
+        <span class="disco-addon-author"><a data-l10n-name="author" target="_blank"></a></span>
+      </div>
+      <button class="disco-cta-button primary" action="install-addon"></button>
+      <button class="disco-cta-button" data-l10n-id="manage-addon-button" action="manage-addon"></button>
+    </template>
+
+    <template name="addon-description-in-disco-card">
+      <div>
+        <strong class="disco-description-intro"></strong>
+        <span class="disco-description-main"></span>
+      </div>
+      <div class="disco-description-statistics">
+        <five-star-rating></five-star-rating>
+        <span class="disco-user-count"></span>
+      </div>
+    </template>
+
     <template name="addon-details">
       <div class="addon-detail-description"></div>
       <div class="addon-detail-contribute">
@@ -123,14 +143,19 @@
       <div class="addon-detail-row addon-detail-row-rating">
         <label data-l10n-id="addon-detail-rating-label"></label>
         <div class="addon-detail-rating">
-          <span class="addon-detail-rating-star"></span>
-          <span class="addon-detail-rating-star"></span>
-          <span class="addon-detail-rating-star"></span>
-          <span class="addon-detail-rating-star"></span>
-          <span class="addon-detail-rating-star"></span>
+          <five-star-rating></five-star-rating>
           <a target="_blank"></a>
         </div>
       </div>
+    </template>
+
+    <template name="five-star-rating">
+      <link rel="stylesheet" href="chrome://mozapps/content/extensions/rating-star.css">
+      <span class="rating-star"></span>
+      <span class="rating-star"></span>
+      <span class="rating-star"></span>
+      <span class="rating-star"></span>
+      <span class="rating-star"></span>
     </template>
 
     <template name="panel-list">
@@ -145,6 +170,40 @@
     <template name="panel-item">
       <link rel="stylesheet" href="chrome://mozapps/content/extensions/panel-item.css">
       <button><slot></slot></button>
+    </template>
+
+    <template name="discopane">
+      <header>
+        <p>
+          <span data-l10n-id="discopane-intro">
+            <a
+              class="discopane-intro-learn-more-link"
+              data-l10n-name="learn-more-trigger"
+              target="_blank">
+            </a>
+          </span>
+        </p>
+      </header>
+      <message-bar class="discopane-notice">
+        <div class="discopane-notice-content">
+          <span data-l10n-id="discopane-notice-recommendations"></span>
+          <button data-l10n-id="discopane-notice-learn-more" action="notice-learn-more"></button>
+        </div>
+      </message-bar>
+      <recommended-addon-list></recommended-addon-list>
+      <footer class="discopane-footer">
+        <div>
+          <button class="primary" action="open-amo" data-l10n-id="find-more-addons"></button>
+        </div>
+        <div>
+          <a
+            class="discopane-privacy-policy-link"
+            data-l10n-id="privacy-policy"
+            href="https://www.mozilla.org/privacy/firefox/?utm_source=firefox-browser&amp;utm_medium=firefox-browser&amp;utm_content=privacy-policy-link#addons"
+            target="_blank"
+          ></a>
+        </div>
+      </footer>
     </template>
   </body>
 </html>

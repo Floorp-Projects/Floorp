@@ -12,7 +12,7 @@
 namespace js {
 namespace gc {
 
-struct ClearEdgesTracer : public JS::CallbackTracer {
+struct ClearEdgesTracer final : public JS::CallbackTracer {
   ClearEdgesTracer();
 
 #ifdef DEBUG

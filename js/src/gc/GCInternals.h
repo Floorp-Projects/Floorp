@@ -149,7 +149,7 @@ void CheckHashTablesAfterMovingGC(JSRuntime* rt);
 void CheckHeapAfterGC(JSRuntime* rt);
 #endif
 
-struct MovingTracer : JS::CallbackTracer {
+struct MovingTracer final : public JS::CallbackTracer {
   explicit MovingTracer(JSRuntime* rt)
       : CallbackTracer(rt, TraceWeakMapKeysValues) {}
 
