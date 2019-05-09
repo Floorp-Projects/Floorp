@@ -260,7 +260,9 @@ add_task(async function setup() {
     set: [
       ["extensions.getAddons.discovery.api_url",
        `http://${AMO_TEST_HOST}/discoapi`],
+      // Enable HTML for all because some tests load non-discopane views.
       ["extensions.htmlaboutaddons.enabled", true],
+      ["extensions.htmlaboutaddons.discover.enabled", true],
       // Disable the telemetry client ID (and its associated UI warning).
       // browser_html_discover_view_clientid.js covers this functionality.
       ["browser.discovery.enabled", false],
