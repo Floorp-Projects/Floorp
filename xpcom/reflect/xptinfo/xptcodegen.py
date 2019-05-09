@@ -320,7 +320,7 @@ def link_to_cpp(interfaces, fd):
         ))
 
     def is_method_reflectable(method):
-        if 'notxpcom' in method['flags'] or 'hidden' in method['flags']:
+        if 'hidden' in method['flags']:
             return False
 
         for param in method['params']:
