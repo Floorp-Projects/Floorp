@@ -383,11 +383,6 @@ const KTableEntry nsCSSProps::kTextOverflowKTable[] = {
 
 // keyword tables for SVG properties
 
-const KTableEntry nsCSSProps::kShapeRadiusKTable[] = {
-    {eCSSKeyword_closest_side, StyleShapeRadius::ClosestSide},
-    {eCSSKeyword_farthest_side, StyleShapeRadius::FarthestSide},
-    {eCSSKeyword_UNKNOWN, -1}};
-
 const KTableEntry nsCSSProps::kFilterFunctionKTable[] = {
     {eCSSKeyword_blur, NS_STYLE_FILTER_BLUR},
     {eCSSKeyword_brightness, NS_STYLE_FILTER_BRIGHTNESS},

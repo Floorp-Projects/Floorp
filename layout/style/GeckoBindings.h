@@ -527,9 +527,6 @@ void Gecko_CopyShapeSourceFrom(mozilla::StyleShapeSource* dst,
 
 void Gecko_DestroyShapeSource(mozilla::StyleShapeSource* shape);
 
-void Gecko_NewBasicShape(mozilla::StyleShapeSource* shape,
-                         mozilla::StyleBasicShapeType type);
-
 void Gecko_NewShapeImage(mozilla::StyleShapeSource* shape);
 
 void Gecko_StyleShapeSource_SetURLValue(mozilla::StyleShapeSource* shape,

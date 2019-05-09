@@ -24,7 +24,6 @@ class nsPresContext;
 namespace mozilla {
 struct ReflowInput;
 class PresShell;
-class StyleBasicShape;
 }  // namespace mozilla
 
 enum class nsFlowAreaRectFlags : uint32_t {
