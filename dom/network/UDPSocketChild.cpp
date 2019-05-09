@@ -20,7 +20,7 @@ using mozilla::net::gNeckoChild;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS(UDPSocketChildBase, nsIUDPSocketChild)
+NS_IMPL_ISUPPORTS(UDPSocketChildBase, nsISupports)
 
 UDPSocketChildBase::UDPSocketChildBase() : mIPCOpen(false) {}
 

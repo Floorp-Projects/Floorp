@@ -22,7 +22,7 @@
 namespace mozilla {
 namespace dom {
 
-class UDPSocketChildBase : public nsIUDPSocketChild {
+class UDPSocketChildBase : public nsISupports {
  public:
   NS_DECL_ISUPPORTS
 
@@ -39,7 +39,6 @@ class UDPSocketChildBase : public nsIUDPSocketChild {
 class UDPSocketChild : public mozilla::net::PUDPSocketChild,
                        public UDPSocketChildBase {
  public:
-  NS_DECL_NSIUDPSOCKETCHILD
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
   UDPSocketChild();
