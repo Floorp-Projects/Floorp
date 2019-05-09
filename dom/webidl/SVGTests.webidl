@@ -16,7 +16,5 @@ interface SVGTests {
   readonly attribute SVGStringList requiredFeatures;
   readonly attribute SVGStringList requiredExtensions;
   readonly attribute SVGStringList systemLanguage;
-
-  boolean hasExtension(DOMString extension);
 };
 
