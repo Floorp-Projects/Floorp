@@ -1060,9 +1060,8 @@ NS_IMETHODIMP NrUdpSocketIpcProxy::CallListenerError(const nsACString& message,
 
 // callback while receiving UDP packet
 NS_IMETHODIMP NrUdpSocketIpcProxy::CallListenerReceivedData(
-    const nsACString& host, uint16_t port, const uint8_t* data,
-    uint32_t data_length) {
-  return socket_->CallListenerReceivedData(host, port, data, data_length);
+    const nsACString& host, uint16_t port, const nsTArray<uint8_t>& data) {
+  return socket_->CallListenerReceivedData(host, port, data);
 }
 
 // callback while UDP socket is opened
@@ -1119,10 +1118,8 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerError(const nsACString& message,
 }
 
 // callback while receiving UDP packet
-NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString& host,
-                                                       uint16_t port,
-                                                       const uint8_t* data,
-                                                       uint32_t data_length) {
+NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(
+    const nsACString& host, uint16_t port, const nsTArray<uint8_t>& data) {
   ASSERT_ON_THREAD(io_thread_);
 
   PRNetAddr addr;
@@ -1147,7 +1144,7 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString& host,
   }
 
   nsAutoPtr<MediaPacket> buf(new MediaPacket);
-  buf->Copy(data, data_length);
+  buf->Copy(data.Elements(), data.Length());
   RefPtr<nr_udp_message> msg(new nr_udp_message(addr, buf));
 
   RUN_ON_THREAD(sts_thread_,
