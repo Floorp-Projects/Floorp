@@ -40,10 +40,12 @@ function resultCount(dbg) {
   return findAllElements(dbg, "resultItems").length;
 }
 
-function quickOpen(dbg, query, shortcut = "quickOpen") {
+async function quickOpen(dbg, query, shortcut = "quickOpen") {
   pressKey(dbg, shortcut);
   assertEnabled(dbg);
   query !== "" && type(dbg, query);
+
+  await waitForTime(150);
 }
 
 function findResultEl(dbg, index = 1) {
@@ -63,46 +65,47 @@ add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
 
   info("test opening and closing");
-  quickOpen(dbg, "");
+  await quickOpen(dbg, "");
   pressKey(dbg, "Escape");
   assertDisabled(dbg);
 
   info("Testing the number of results for source search");
-  quickOpen(dbg, "sw");
+  await quickOpen(dbg, "sw");
   is(resultCount(dbg), 2, "two file results");
   pressKey(dbg, "Escape");
 
   info("Testing source search and check to see if source is selected");
   await waitForSource(dbg, "switching-01");
-  quickOpen(dbg, "sw1");
+  await quickOpen(dbg, "sw1");
   is(resultCount(dbg), 1, "one file results");
   pressKey(dbg, "Enter");
   await waitForSelectedSource(dbg, "switching-01");
 
   info("Test that results show tab icons");
-  quickOpen(dbg, "sw1");
+  await quickOpen(dbg, "sw1");
   await assertResultIsTab(dbg, 1);
   pressKey(dbg, "Tab");
 
   info(
     "Testing arrow keys in source search and check to see if source is selected"
   );
-  quickOpen(dbg, "sw2");
+  await quickOpen(dbg, "sw2");
   is(resultCount(dbg), 1, "one file results");
   pressKey(dbg, "Down");
   pressKey(dbg, "Enter");
   await waitForSelectedSource(dbg, "switching-02");
 
   info("Testing tab closes the search");
-  quickOpen(dbg, "sw");
+  await quickOpen(dbg, "sw");
   pressKey(dbg, "Tab");
   assertDisabled(dbg);
 
   info("Testing function search");
-  quickOpen(dbg, "", "quickOpenFunc");
+  await quickOpen(dbg, "", "quickOpenFunc");
   is(resultCount(dbg), 2, "two function results");
 
   type(dbg, "@x");
+  await waitForTime(150);
   is(resultCount(dbg), 0, "no functions with 'x' in name");
 
   pressKey(dbg, "Escape");
@@ -111,13 +114,13 @@ add_task(async function() {
   info("Testing goto line:column");
   assertLine(dbg, 0);
   assertColumn(dbg, null);
-  quickOpen(dbg, ":7:12");
+  await quickOpen(dbg, ":7:12");
   pressKey(dbg, "Enter");
   assertLine(dbg, 7);
   assertColumn(dbg, 12);
 
   info("Testing gotoSource");
-  quickOpen(dbg, "sw1:5");
+  await quickOpen(dbg, "sw1:5");
   pressKey(dbg, "Enter");
   await waitForSelectedSource(dbg, "switching-01");
   assertLine(dbg, 5);
