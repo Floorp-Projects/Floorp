@@ -107,6 +107,7 @@ class GridItem extends PureComponent {
       dom.ul({},
         subgrids.map(g => {
           return createElement(GridItem, {
+            key: g.id,
             getSwatchColorPickerTooltip: this.props.getSwatchColorPickerTooltip,
             grid: g,
             grids,
