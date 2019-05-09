@@ -3041,7 +3041,11 @@ class ADBDevice(ADBCommand):
 
         cmd = self._escape_command_line(acmd)
         self._logger.info('launch_application: %s' % cmd)
-        self.shell_output(cmd, timeout=timeout)
+        cmd_output = self.shell_output(cmd, timeout=timeout)
+        if 'Error:' in cmd_output:
+            for line in cmd_output.split('\n'):
+                self._logger.info(line)
+            raise ADBError('launch_activity %s/%s failed' % (app_name, activity_name))
 
     def launch_fennec(self, app_name, intent="android.intent.action.VIEW",
                       moz_env=None, extra_args=None, url=None, wait=True,
