@@ -1,13 +1,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
-  <title>CSS Multi-column Layout Test: invalid -moz-columns shorthand</title>
+  <title>CSS Multi-column Layout Test: invalid columns shorthand</title>
   <link rel="author" title="Opera Software ASA" href="http://www.opera.com/" />
   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" /> <!-- 2013-07-26 -->
-  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#the-number-and-width-of-columns" title="3. The number and width of -moz-columns" />
+  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#the-number-and-width-of-columns" title="3. The number and width of columns" />
   <link rel="match" href="multicol-columns-invalid-001-ref.xht" />
   <meta name="flags" content="ahem invalid" />
-  <meta name="assert" content="This test checks that '-moz-columns: 8 normal' is invalid (generating a parsing error) and therefore will be ignored." />
+  <meta name="assert" content="This test checks that 'columns: 8 normal' is invalid (generating a parsing error) and therefore will be ignored." />
 <style type="text/css"><![CDATA[
 @font-face {
   font-family: Ahem;
@@ -25,9 +25,9 @@
   widows: 1;
   width: 12em;
 
-  -moz-column-count: 4;
-  -moz-column-gap: 0;
-  -moz-columns: 8 normal;
+  column-count: 4;
+  column-gap: 0;
+  columns: 8 normal;
   }
 
   span {color: blue;}
