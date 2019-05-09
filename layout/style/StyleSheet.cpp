@@ -510,10 +510,7 @@ css::Rule* StyleSheet::GetDOMOwnerRule() const { return mOwnerRule; }
 uint32_t StyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
                                 nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aRv) {
-  if (IsReadOnly()) {
-    return 0;
-  }
-  if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
+  if (IsReadOnly() || !AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return 0;
   }
   return InsertRuleInternal(aRule, aIndex, aRv);
@@ -521,13 +518,34 @@ uint32_t StyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
 
 void StyleSheet::DeleteRule(uint32_t aIndex, nsIPrincipal& aSubjectPrincipal,
                             ErrorResult& aRv) {
-  if (IsReadOnly()) {
-    return;
-  }
-  if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
+  if (IsReadOnly() || !AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return;
   }
   return DeleteRuleInternal(aIndex, aRv);
+}
+
+int32_t StyleSheet::AddRule(const nsAString& aSelector, const nsAString& aBlock,
+                            const Optional<uint32_t>& aIndex,
+                            nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
+  if (IsReadOnly() || !AreRulesAvailable(aSubjectPrincipal, aRv)) {
+    return -1;
+  }
+
+  nsAutoString rule;
+  rule.Append(aSelector);
+  rule.AppendLiteral(" { ");
+  if (!aBlock.IsEmpty()) {
+    rule.Append(aBlock);
+    rule.Append(' ');
+  }
+  rule.Append('}');
+
+  auto index =
+      aIndex.WasPassed() ? aIndex.Value() : GetCssRulesInternal()->Length();
+
+  InsertRuleInternal(rule, index, aRv);
+  // Always return -1.
+  return -1;
 }
 
 nsresult StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup,

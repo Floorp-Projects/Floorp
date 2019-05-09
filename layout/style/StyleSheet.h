@@ -346,6 +346,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
                       nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
   void DeleteRule(uint32_t aIndex, nsIPrincipal& aSubjectPrincipal,
                   ErrorResult& aRv);
+  int32_t AddRule(const nsAString& aSelector, const nsAString& aBlock,
+                  const dom::Optional<uint32_t>& aIndex,
+                  nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
   // WebIDL miscellaneous bits
   inline dom::ParentObject GetParentObject() const;
