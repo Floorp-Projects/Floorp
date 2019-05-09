@@ -125,11 +125,9 @@ def mk_param(type, in_=0, out=0, optional=0):
     }
 
 
-def mk_method(name, params, getter=0, setter=0, notxpcom=0,
-              hidden=0, optargc=0, context=0, hasretval=0,
-              symbol=0):
+def mk_method(method, params, getter=0, setter=0, optargc=0, hasretval=0, symbol=0):
     return {
-        'name': name,
+        'name': method.name,
         # NOTE: We don't include any return value information here, as we'll
         # never call the methods if they're marked notxpcom, and all xpcom
         # methods return the same type (nsresult).
@@ -139,12 +137,12 @@ def mk_method(name, params, getter=0, setter=0, notxpcom=0,
         'flags': flags(
             ('getter', getter),
             ('setter', setter),
-            ('notxpcom', notxpcom),
-            ('hidden', hidden),
+            ('notxpcom', method.notxpcom),
+            ('hidden', method.noscript),
             ('optargc', optargc),
-            ('jscontext', context),
+            ('jscontext', method.implicit_jscontext),
             ('hasretval', hasretval),
-            ('symbol', symbol),
+            ('symbol', method.symbol),
         ),
     }
 
@@ -198,10 +196,8 @@ def build_interface(iface):
             hasretval = True
             params.append(mk_param(get_type(m.realtype, 'out'), out=1))
 
-        methods.append(mk_method(
-            m.name, params, notxpcom=m.notxpcom, hidden=m.noscript,
-            optargc=m.optional_argc, context=m.implicit_jscontext,
-            hasretval=hasretval, symbol=m.symbol))
+        methods.append(mk_method(m, params, optargc=m.optional_argc,
+                                 hasretval=hasretval))
 
     def build_attr(a):
         assert a.realtype.name != 'void'
@@ -209,18 +205,14 @@ def build_interface(iface):
         getter_params = []
         if not a.notxpcom:
             getter_params.append(mk_param(get_type(a.realtype, 'out'), out=1))
-        methods.append(mk_method(a.name, getter_params, getter=1,
-                                 notxpcom=a.notxpcom, hidden=a.noscript,
-                                 context=a.implicit_jscontext, hasretval=1,
-                                 symbol=a.symbol))
+
+        methods.append(mk_method(a, getter_params, getter=1, hasretval=1))
 
         # And maybe the setter
         if not a.readonly:
             param = mk_param(get_type(a.realtype, 'in'), in_=1)
-            methods.append(mk_method(a.name, [param], setter=1,
-                                     notxpcom=a.notxpcom, hidden=a.noscript,
-                                     context=a.implicit_jscontext,
-                                     symbol=a.symbol))
+            methods.append(mk_method(a, [param], setter=1))
+
 
     for member in iface.members:
         if isinstance(member, xpidl.ConstMember):
