@@ -19,6 +19,7 @@
     <string name="no_bookmarks_root">No Bookmarks Root node</string>
     <string name="log_out">FxA Log Out</string>
     <string name="logged_out">Logged out!</string>
+    <string name="need_reauth">Need to re-authenticate</string>
     <string name="sync">Sync</string>
     <string name="refresh_device">Refresh device</string>
     <string name="send_tab">Send tab</string>

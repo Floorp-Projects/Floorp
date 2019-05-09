@@ -113,6 +113,12 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
         override fun onProfileUpdated(profile: Profile) {}
 
+        override fun onAuthenticationProblems() {
+            launch {
+                Toast.makeText(this@MainActivity, "Account auth problem", Toast.LENGTH_LONG).show()
+            }
+        }
+
         override fun onError(error: Exception) {
             launch {
                 Toast.makeText(this@MainActivity, "Account error: $error", Toast.LENGTH_LONG).show()

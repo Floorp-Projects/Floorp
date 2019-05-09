@@ -249,6 +249,15 @@ class MainActivity :
             }
         }
 
+        override fun onAuthenticationProblems() {
+            launch {
+                val txtView: TextView = findViewById(R.id.fxaStatusView)
+                txtView.text = getString(R.string.need_reauth)
+
+                findViewById<View>(R.id.buttonSignIn).visibility = View.VISIBLE
+            }
+        }
+
         override fun onAuthenticated(account: OAuthAccount) {
             launch {
                 val txtView: TextView = findViewById(R.id.fxaStatusView)
