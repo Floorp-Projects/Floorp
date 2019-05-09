@@ -453,7 +453,7 @@ class Zone : public JS::shadow::Zone,
   js::gc::MemoryCounter gcMallocCounter;
 
   // Malloc counter used for allocations where size information is
-  // available. Currently this is used for external allocations only.
+  // available. Used for some internal and all tracked external allocations.
   js::gc::MemoryTracker gcMallocSize;
 
   // Counter of JIT code executable memory for GC scheduling. Also imprecise,
@@ -754,6 +754,37 @@ class ZoneAllocPolicy {
     return !js::oom::ShouldFailWithOOM();
   }
 };
+
+// Convenience functions for memory accounting on the zone.
+
+// Associate malloc memory with a GC thing. This call must be matched by a
+// following call to RemoveCellMemory with the same size and use. The total
+// amount of malloc memory associated with a zone is used to trigger GC.
+inline void AddCellMemory(gc::TenuredCell* cell, size_t nbytes,
+                          MemoryUse use) {
+  if (nbytes) {
+    cell->zone()->addCellMemory(cell, nbytes, use);
+  }
+}
+inline void AddCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
+  if (cell->isTenured()) {
+    AddCellMemory(&cell->asTenured(), nbytes, use);
+  }
+}
+
+// Remove association between malloc memory and a GC thing. This call must
+// follow a call to AddCellMemory with the same size and use.
+inline void RemoveCellMemory(gc::TenuredCell* cell, size_t nbytes,
+                             MemoryUse use) {
+  if (nbytes) {
+    cell->zoneFromAnyThread()->removeCellMemory(cell, nbytes, use);
+  }
+}
+inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
+  if (cell->isTenured()) {
+    RemoveCellMemory(&cell->asTenured(), nbytes, use);
+  }
+}
 
 }  // namespace js
 
