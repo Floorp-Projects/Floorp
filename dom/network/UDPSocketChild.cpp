@@ -127,31 +127,6 @@ UDPSocketChild::Close() {
 }
 
 NS_IMETHODIMP
-UDPSocketChild::Send(const nsACString& aHost, uint16_t aPort,
-                     const uint8_t* aData, uint32_t aByteLength) {
-  NS_ENSURE_ARG(aData);
-
-  UDPSOCKET_LOG(("%s: %s:%u - %u bytes", __FUNCTION__,
-                 PromiseFlatCString(aHost).get(), aPort, aByteLength));
-  return SendDataInternal(
-      UDPSocketAddr(UDPAddressInfo(nsCString(aHost), aPort)), aData,
-      aByteLength);
-}
-
-NS_IMETHODIMP
-UDPSocketChild::SendWithAddr(nsINetAddr* aAddr, const uint8_t* aData,
-                             uint32_t aByteLength) {
-  NS_ENSURE_ARG(aAddr);
-  NS_ENSURE_ARG(aData);
-
-  NetAddr addr;
-  aAddr->GetNetAddr(&addr);
-
-  UDPSOCKET_LOG(("%s: %u bytes", __FUNCTION__, aByteLength));
-  return SendDataInternal(UDPSocketAddr(addr), aData, aByteLength);
-}
-
-NS_IMETHODIMP
 UDPSocketChild::SendWithAddress(const NetAddr* aAddr, const uint8_t* aData,
                                 uint32_t aByteLength) {
   NS_ENSURE_ARG(aAddr);

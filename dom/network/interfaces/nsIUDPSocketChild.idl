@@ -40,14 +40,7 @@ interface nsIUDPSocketChild : nsISupports
   // Tell the chrome process to connect the UDP socket to a given remote host and port
   void connect(in nsIUDPSocketInternal socket, in AUTF8String host, in unsigned short port);
 
-  // Tell the chrome process to perform equivalent operations to all following methods
-  void send(in AUTF8String host, in unsigned short port,
-            [const, array, size_is(byteLength)] in uint8_t bytes,
-            in unsigned long byteLength);
-  // Send without DNS query
-  void sendWithAddr(in nsINetAddr addr,
-                    [const, array, size_is(byteLength)] in uint8_t bytes,
-                    in unsigned long byteLength);
+  // Send the given data to the given address.
   [noscript] void sendWithAddress([const] in NetAddrPtr addr,
                                   [const, array, size_is(byteLength)] in uint8_t bytes,
                                   in unsigned long byteLength);
