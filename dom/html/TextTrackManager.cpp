@@ -631,6 +631,12 @@ void TextTrackManager::TimeMarchesOn() {
   }
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
 
+  if (mMediaElement->ReadyState() == HTMLMediaElement_Binding::HAVE_NOTHING) {
+    WEBVTT_LOG(
+        "TimeMarchesOn return because media doesn't contain any data yet");
+    return;
+  }
+
   if (mMediaElement->Seeking()) {
     WEBVTT_LOG("TimeMarchesOn return during seeking");
     return;
