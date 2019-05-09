@@ -331,10 +331,7 @@ class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
     // Let's be sure that it is created before any
     // content loading.
     aWorkerPrivate->EnsurePerformanceStorage();
-
-    if (mozilla::StaticPrefs::dom_performance_enable_scheduler_timing()) {
-      aWorkerPrivate->EnsurePerformanceCounter();
-    }
+    aWorkerPrivate->EnsurePerformanceCounter();
 
     ErrorResult rv;
     workerinternals::LoadMainScript(aWorkerPrivate, mScriptURL, WorkerScript,
@@ -4731,7 +4728,6 @@ void WorkerPrivate::DumpCrashInformation(nsACString& aString) {
 
 void WorkerPrivate::EnsurePerformanceCounter() {
   AssertIsOnWorkerThread();
-  MOZ_ASSERT(mozilla::StaticPrefs::dom_performance_enable_scheduler_timing());
   if (!mPerformanceCounter) {
     nsPrintfCString workerName("Worker:%s",
                                NS_ConvertUTF16toUTF8(mWorkerName).get());

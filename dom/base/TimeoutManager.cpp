@@ -334,9 +334,6 @@ TimeDuration TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
 }
 
 PerformanceCounter* TimeoutManager::GetPerformanceCounter() {
-  if (!StaticPrefs::dom_performance_enable_scheduler_timing()) {
-    return nullptr;
-  }
   Document* doc = mWindow.GetDocument();
   if (doc) {
     dom::DocGroup* docGroup = doc->GetDocGroup();
@@ -349,11 +346,6 @@ PerformanceCounter* TimeoutManager::GetPerformanceCounter() {
 
 void TimeoutManager::RecordExecution(Timeout* aRunningTimeout,
                                      Timeout* aTimeout) {
-  if (!StaticPrefs::dom_performance_enable_scheduler_timing() &&
-      mWindow.IsChromeWindow()) {
-    return;
-  }
-
   TimeoutBudgetManager& budgetManager = TimeoutBudgetManager::Get();
   TimeStamp now = TimeStamp::Now();
 

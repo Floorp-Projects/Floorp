@@ -95,9 +95,7 @@ class CompileDebuggerScriptRunnable final : public WorkerDebuggerRunnable {
     // Initialize performance state which might be used on the main thread, as
     // in CompileScriptRunnable. This runnable might execute first.
     aWorkerPrivate->EnsurePerformanceStorage();
-    if (mozilla::StaticPrefs::dom_performance_enable_scheduler_timing()) {
-      aWorkerPrivate->EnsurePerformanceCounter();
-    }
+    aWorkerPrivate->EnsurePerformanceCounter();
 
     JS::Rooted<JSObject*> global(aCx, globalScope->GetWrapper());
 
