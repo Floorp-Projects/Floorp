@@ -473,6 +473,7 @@ cbindgen-types = [
     { gecko = "StyleGenericGradientItem", servo = "values::generics::image::GradientItem" },
     { gecko = "StyleGenericVerticalAlign", servo = "values::generics::box_::VerticalAlign" },
     { gecko = "StyleVerticalAlignKeyword", servo = "values::generics::box_::VerticalAlignKeyword" },
+    { gecko = "StyleGenericBasicShape", servo = "values::generics::basic_shape::BasicShape" },
 ]
 
 mapped-generic-types = [

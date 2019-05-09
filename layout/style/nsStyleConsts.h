@@ -168,12 +168,6 @@ enum class StyleScrollbarWidth : uint8_t {
   None,
 };
 
-// <shape-radius> for <basic-shape>
-enum class StyleShapeRadius : uint8_t {
-  ClosestSide,
-  FarthestSide,
-};
-
 // Shape source type
 enum class StyleShapeSourceType : uint8_t {
   None,
