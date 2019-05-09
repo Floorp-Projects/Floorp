@@ -530,7 +530,7 @@ already_AddRefed<Path> SVGPathData::BuildPathForMeasuring() const {
 // used as a reference.
 /* static */
 already_AddRefed<Path> SVGPathData::BuildPath(
-    const nsTArray<StylePathCommand>& aPath, PathBuilder* aBuilder,
+    Span<const StylePathCommand> aPath, PathBuilder* aBuilder,
     uint8_t aStrokeLineCap, Float aStrokeWidth, float aZoomFactor) {
   if (aPath.IsEmpty() || !aPath[0].IsMoveTo()) {
     return nullptr;  // paths without an initial moveto are invalid

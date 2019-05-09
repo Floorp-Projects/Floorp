@@ -1564,9 +1564,11 @@ void Gecko_NewShapeImage(StyleShapeSource* aShape) {
   aShape->SetShapeImage(MakeUnique<nsStyleImage>());
 }
 
-void Gecko_NewStyleSVGPath(StyleShapeSource* aShape) {
+void Gecko_SetToSVGPath(StyleShapeSource* aShape,
+                        StyleForgottenArcSlicePtr<StylePathCommand> aCommands,
+                        StyleFillRule aFill) {
   MOZ_ASSERT(aShape);
-  aShape->SetPath(MakeUnique<StyleSVGPath>());
+  aShape->SetPath(MakeUnique<StyleSVGPath>(aCommands, aFill));
 }
 
 void Gecko_SetStyleMotion(UniquePtr<StyleMotion>* aMotion,
