@@ -78,9 +78,11 @@ function run_test() {
   }
   const configPath = "/v1/";
   const changesPath = "/v1/buckets/monitor/collections/changes/records";
+  const metadataPath = "/v1/buckets/main/collections/password-fields";
   const recordsPath  = "/v1/buckets/main/collections/password-fields/records";
   server.registerPathHandler(configPath, handleResponse);
   server.registerPathHandler(changesPath, handleResponse);
+  server.registerPathHandler(metadataPath, handleResponse);
   server.registerPathHandler(recordsPath, handleResponse);
 
   run_next_test();
@@ -519,6 +521,26 @@ function getSampleResponse(req, port) {
           "last_modified": 1000,
         }],
       },
+    },
+    "GET:/v1/buckets/main/collections/password-fields": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"1234\"",
+      ],
+      "status": { status: 200, statusText: "OK" },
+      "responseBody": JSON.stringify({
+        "data": {
+          "id": "password-fields",
+          "last_modified": 1234,
+          "signature": {
+            "signature": "abcdef",
+            "x5u": "http://localhost/dummy",
+          },
+        },
+      }),
     },
     "GET:/v1/buckets/main/collections/password-fields/records?_expected=2000&_sort=-last_modified": {
       "sampleHeaders": [
