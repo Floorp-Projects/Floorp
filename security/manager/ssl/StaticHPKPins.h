@@ -1153,4 +1153,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1565613080994000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1565872303274000);
