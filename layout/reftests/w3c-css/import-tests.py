@@ -10,7 +10,6 @@ import html5lib
 import fnmatch
 import shutil
 import string
-import sys
 import re
 
 # FIXME:
@@ -172,7 +171,6 @@ def map_file(srcname):
     if srcname in filemap:
         return filemap[srcname]
     destname = to_unix_path_sep(os.path.relpath(srcname, gSrcPath))
-    destdir = os.path.dirname(destname)
     filemap[srcname] = destname
     load_flags_for(srcname, destname)
     copy_file(destname, srcname, destname, False)
@@ -260,7 +258,6 @@ def copy_and_prefix(test, aSourceFileName, aDestFileName, isSupportFile=False):
     global gTestFlags, gPrefixRegexp
     newFile = open(aDestFileName, 'wb')
     unPrefixedFile = open(aSourceFileName, 'rb')
-    testName = aDestFileName[len(gDestPath)+1:]
     ahemFontAdded = False
     for line in unPrefixedFile:
         replacementLine = line
