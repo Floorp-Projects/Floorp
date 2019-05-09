@@ -57,9 +57,10 @@ describe("#CachedTargetingGetter", () => {
     const context = {attributionData: {campaign: "non-fx-button", source: "addons.mozilla.org"}};
     await ASRouterTargeting.findMatchingMessage({messages, trigger: {id: "firstRun"}, context});
 
-    assert.calledTwice(stub);
-    assert.equal(stub.firstCall.args[0].id, "RETURN_TO_AMO_1");
-    assert.equal(stub.secondCall.args[0].id, "FXA_1");
+    assert.equal(stub.callCount, 6);
+    const calls = stub.getCalls().map(call => call.args[0]);
+    const lastCall = calls[calls.length - 1];
+    assert.equal(lastCall.id, "FXA_1");
   });
   it("should return FxA message (is fallback)", async () => {
     const messages = (await OnboardingMessageProvider.getUntranslatedMessages())

@@ -64,6 +64,7 @@ scripts:
 # lint: Run eslint and sass-lint
   lint:
     eslint: esw --ext=.js,.jsm,.json,.jsx .
+    jsx-a11y: esw --config=.eslintrc.jsx-a11y.js --ext=.jsx content-src/asrouter/components/ModalOverlay content-src/asrouter/templates/OnboardingMessage content-src/asrouter/templates/Trailhead
     sasslint: sass-lint -v -q
 
 # strings-import: Replace local strings with those from l10n-central

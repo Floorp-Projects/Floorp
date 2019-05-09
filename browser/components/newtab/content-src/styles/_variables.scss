@@ -19,6 +19,7 @@ $teal-70: #008EA4;
 $teal-80: #005A71;
 $red-60: #D70022;
 $yellow-50: #FFE900;
+$violet-20: #CB9EFF;
 
 // Photon opacity from http://design.firefox.com/photon/visuals/color.html#opacity
 $grey-10-10: rgba($grey-10, 0.1);
@@ -57,6 +58,9 @@ $black-30: rgba($black, 0.3);
 // Other colors
 $white: #FFF;
 $white-10: rgba($white, 0.1);
+$white-50: rgba($white, 0.5);
+$white-60: rgba($white, 0.6);
+$white-70: rgba($white, 0.7);
 $pocket-teal: #50BCB6;
 $pocket-red: #EF4056;
 $shadow-10: rgba(12, 12, 13, 0.1);
@@ -72,6 +76,9 @@ $about-welcome-gradient: linear-gradient(to bottom, $blue-70 40%, $aw-extra-blue
 $about-welcome-extra-links: #676F7E;
 $firefox-wordmark-default-color: #363959;
 $firefox-wordmark-darktheme-color: $white;
+$trailhead-purple: #2B2156;
+$trailhead-blue-60: #0250BB;
+$trailhead-blue-70: #054096;
 
 // Photon transitions from http://design.firefox.com/photon/motion/duration-and-easing.html
 $photon-easing: cubic-bezier(0.07, 0.95, 0, 1);

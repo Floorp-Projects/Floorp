@@ -28,7 +28,12 @@ describe("TelemetryFeed", () => {
   let fakeHomePage;
   let fakeExtensionSettingsStore;
   class PingCentre {sendPing() {} uninit() {} sendStructuredIngestionPing() {}}
-  class UTEventReporting {sendUserEvent() {} sendSessionEndEvent() {} uninit() {}}
+  class UTEventReporting {
+    sendUserEvent() {}
+    sendSessionEndEvent() {}
+    sendTrailheadEnrollEvent() {}
+    uninit() {}
+  }
   class PerfService {
     getMostRecentAbsMarkStartByName() { return 1234; }
     mark() {}
@@ -1089,6 +1094,15 @@ describe("TelemetryFeed", () => {
 
       assert.calledWith(instance.handleDiscoveryStreamImpressionStats, "port123", data);
     });
+    it("should call .handleTrailheadEnrollEvent on a TRAILHEAD_ENROLL_EVENT action", () => {
+      const data = {experiment: "foo", type: "bar", branch: "baz"};
+      const action = {type: at.TRAILHEAD_ENROLL_EVENT, data};
+      sandbox.spy(instance, "handleTrailheadEnrollEvent");
+
+      instance.onAction(action);
+
+      assert.calledWith(instance.handleTrailheadEnrollEvent, action);
+    });
   });
   describe("#handlePagePrerendered", () => {
     it("should not throw if there is no session for the given port ID", () => {
@@ -1254,6 +1268,28 @@ describe("TelemetryFeed", () => {
       const url = feed._generateStructuredIngestionEndpoint("testPingType", "1");
 
       assert.equal(url, `${fakeEndpoint}/testPingType/1/${fakeUUIDWithoutBraces}`);
+    });
+  });
+  describe("#handleTrailheadEnrollEvent", () => {
+    it("should send a TRAILHEAD_ENROLL_EVENT if the telemetry is enabled", () => {
+      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+      const data = {experiment: "foo", type: "bar", branch: "baz"};
+      instance = new TelemetryFeed();
+      sandbox.stub(instance.utEvents, "sendTrailheadEnrollEvent");
+
+      instance.handleTrailheadEnrollEvent({data});
+
+      assert.calledWith(instance.utEvents.sendTrailheadEnrollEvent, data);
+    });
+    it("should not send TRAILHEAD_ENROLL_EVENT if the telemetry is disabled", () => {
+      FakePrefs.prototype.prefs[TELEMETRY_PREF] = false;
+      const data = {experiment: "foo", type: "bar", branch: "baz"};
+      instance = new TelemetryFeed();
+      sandbox.stub(instance.utEvents, "sendTrailheadEnrollEvent");
+
+      instance.handleTrailheadEnrollEvent({data});
+
+      assert.notCalled(instance.utEvents.sendTrailheadEnrollEvent);
     });
   });
 });
