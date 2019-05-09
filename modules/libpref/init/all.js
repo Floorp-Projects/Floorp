@@ -166,9 +166,6 @@ pref("dom.enable_performance_navigation_timing", true);
 // Enable notification of performance timing
 pref("dom.performance.enable_notify_performance_timing", false);
 
-// Enable collecting of docgroup activity in the scheduler
-pref("dom.performance.enable_scheduler_timing", true);
-
 // Enable Permission API's .revoke() method
 pref("dom.permissions.revoke.enable", false);
 
