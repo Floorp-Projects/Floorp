@@ -158,6 +158,8 @@ def build_interface(iface):
     if iface.namemap is None:
         raise Exception("Interface was not resolved.")
 
+    assert iface.attributes.scriptable, "Don't generate XPT info for non-scriptable interfaces"
+
     # State used while building an interface
     consts = []
     methods = []
@@ -234,7 +236,6 @@ def build_interface(iface):
         'consts': consts,
         'parent': iface.base,
         'flags': flags(
-            ('scriptable', iface.attributes.scriptable),
             ('function', iface.attributes.function),
             ('builtinclass', iface.attributes.builtinclass or iface.implicit_builtinclass),
             ('main_process_only', iface.attributes.main_process_scriptable_only),
