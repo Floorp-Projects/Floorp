@@ -540,14 +540,9 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
     mBrowsingContext->SetEmbedderElement(mFrameElement);
   }
 
-  // Ensure all BrowserParent actors within BrowserBridges are also updated.
-  const auto& browserBridges = ManagedPBrowserBridgeParent();
-  for (auto iter = browserBridges.ConstIter(); !iter.Done(); iter.Next()) {
-    BrowserBridgeParent* browserBridge =
-        static_cast<BrowserBridgeParent*>(iter.Get()->GetKey());
-
-    browserBridge->GetBrowserParent()->SetOwnerElement(aElement);
-  }
+  VisitChildren([aElement](BrowserBridgeParent* aBrowser) {
+    aBrowser->GetBrowserParent()->SetOwnerElement(aElement);
+  });
 }
 
 NS_IMETHODIMP BrowserParent::GetOwnerElement(Element** aElement) {
@@ -3252,6 +3247,21 @@ BrowserParent::GetHasPresented(bool* aResult) {
 
 void BrowserParent::NavigateByKey(bool aForward, bool aForDocumentNavigation) {
   Unused << SendNavigateByKey(aForward, aForDocumentNavigation);
+}
+
+NS_IMETHODIMP
+BrowserParent::GetWindowGlobalParents(
+    nsTArray<RefPtr<WindowGlobalParent>>& aWindowGlobalParents) {
+  VisitAll([&aWindowGlobalParents](BrowserParent* aBrowser) {
+    const auto& windowGlobalParents = aBrowser->ManagedPWindowGlobalParent();
+    for (auto iter = windowGlobalParents.ConstIter(); !iter.Done();
+         iter.Next()) {
+      WindowGlobalParent* windowGlobalParent =
+          static_cast<WindowGlobalParent*>(iter.Get()->GetKey());
+      aWindowGlobalParents.AppendElement(windowGlobalParent);
+    }
+  });
+  return NS_OK;
 }
 
 NS_IMETHODIMP
