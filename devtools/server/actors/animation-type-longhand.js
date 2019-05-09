@@ -279,6 +279,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "transform-origin",
     "-moz-window-transform",
     "-moz-window-transform-origin",
+    "-webkit-line-clamp",
   ])],
   ["coord", new Set([
     "border-bottom-left-radius",

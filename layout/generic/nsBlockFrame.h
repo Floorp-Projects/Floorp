@@ -577,6 +577,12 @@ class nsBlockFrame : public nsContainerFrame {
   // @see nsIFrame::AddSizeOfExcludingThisForTree
   void AddSizeOfExcludingThisForTree(nsWindowSizes&) const override;
 
+  /**
+   * Clears any -webkit-line-clamp ellipsis on a line in this block or one
+   * of its descendants.
+   */
+  void ClearLineClampEllipsis();
+
  protected:
   /** @see DoRemoveFrame */
   void DoRemoveFrameInternal(nsIFrame* aDeletedFrame, uint32_t aFlags,
