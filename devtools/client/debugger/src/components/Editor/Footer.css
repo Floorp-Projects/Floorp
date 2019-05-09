@@ -13,6 +13,7 @@
   opacity: 1;
   z-index: 1;
   -moz-user-select: none;
+  width: calc(100% - 1px);
   user-select: none;
   height: var(--editor-footer-height);
   box-sizing: border-box;
