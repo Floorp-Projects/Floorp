@@ -127,6 +127,11 @@ $card-header-in-hero-line-height: 20;
         margin-bottom: 0;
       }
 
+      .context,
+      .source {
+        margin: 0 0 4px;
+      }
+
       .context {
         @include dark-theme-only {
           color: $teal-10;

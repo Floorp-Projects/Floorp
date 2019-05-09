@@ -63,6 +63,11 @@ describe("<Trailhead>", () => {
     assert.calledWith(dispatch, ac.UserEvent({event: at.SKIPPED_SIGNIN, value: {has_flow_params: false}}));
   });
 
+  it("should NOT emit UserEvent SKIPPED_SIGNIN when closeModal is triggered by visibilitychange event", () => {
+    wrapper.instance().closeModal({type: "visibilitychange"});
+    assert.notCalled(dispatch);
+  });
+
   it("should emit UserEvent SUBMIT_EMAIL when you submit the form", () => {
     let form = wrapper.find("form");
     assert.ok(form.exists());
