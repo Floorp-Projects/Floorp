@@ -214,7 +214,6 @@ def build_interface(iface):
             param = mk_param(get_type(a.realtype, 'in'), in_=1)
             methods.append(mk_method(a, [param], setter=1))
 
-
     for member in iface.members:
         if isinstance(member, xpidl.ConstMember):
             build_const(member)
