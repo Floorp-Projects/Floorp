@@ -625,12 +625,6 @@ void TextTrackManager::TimeMarchesOn() {
     return;
   }
 
-  nsISupports* parentObject = mMediaElement->OwnerDoc()->GetParentObject();
-  if (NS_WARN_IF(!parentObject)) {
-    return;
-  }
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
-
   if (mMediaElement->ReadyState() == HTMLMediaElement_Binding::HAVE_NOTHING) {
     WEBVTT_LOG(
         "TimeMarchesOn return because media doesn't contain any data yet");
@@ -642,6 +636,15 @@ void TextTrackManager::TimeMarchesOn() {
     return;
   }
 
+  // Step 1, 2.
+  nsISupports* parentObject = mMediaElement->OwnerDoc()->GetParentObject();
+  if (NS_WARN_IF(!parentObject)) {
+    return;
+  }
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
+  RefPtr<TextTrackCueList> currentCues = new TextTrackCueList(window);
+  RefPtr<TextTrackCueList> otherCues = new TextTrackCueList(window);
+
   // Step 3.
   auto currentPlaybackTime =
       media::TimeUnit::FromSeconds(mMediaElement->CurrentTime());
@@ -652,10 +655,6 @@ void TextTrackManager::TimeMarchesOn() {
       "hasNormalPlayback %d",
       mLastTimeMarchesOnCalled.ToSeconds(), currentPlaybackTime.ToSeconds(),
       hasNormalPlayback);
-
-  // Step 1, 2.
-  RefPtr<TextTrackCueList> currentCues = new TextTrackCueList(window);
-  RefPtr<TextTrackCueList> otherCues = new TextTrackCueList(window);
 
   // The reason we collect other cues is (1) to change active cues to inactive,
   // (2) find missing cues, so we actually no need to process all cues. We just
