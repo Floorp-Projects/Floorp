@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "విహారించడం మొదలుపెట్టండి, మీరు ఈమధ్య చూసిన లేదా ఇష్టపడిన గొప్ప వ్యాసాలను, వీడియోలను, ఇతర పేజీలను ఇక్కడ చూపిస్తాం.",
   "topstories_empty_state": "మీరు పట్టుబడ్డారు. {provider} నుండి మరింత అగ్ర కథనాల కోసం తరువాత తనిఖీ చేయండి. వేచి ఉండలేరా? జాలములోని అంతటి నుండి మరింత గొప్ప కథనాలను కనుగొనడానికి ప్రసిద్ధ అంశం ఎంచుకోండి.",
-  "manual_migration_explanation2": "మరొక విహారిణి లోని ఇష్టాంశాలు, చరిత్ర, సంకేతపదాలతో Firefoxను ప్రయత్నించండి.",
-  "manual_migration_cancel_button": "అడిగినందుకు ధన్యవాదాలు, వద్దు",
-  "manual_migration_import_button": "ఇప్పుడే దిగుమతి చేయండి",
   "error_fallback_default_info": "అయ్యో, ఈ విషయం తేవడంలో ఏదో తప్పు దొర్లింది.",
   "error_fallback_default_refresh_suggestion": "మళ్ళీ ప్రయత్నించడానికి పేజీని రీఫ్రెష్ చెయ్యండి.",
   "section_menu_action_remove_section": "విభాగాన్ని తీసివేయి",
@@ -111,5 +108,8 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "కొనసాగు",
   "firstrun_skip_login": "ఈ అంచెను దాటవేయి",
   "context_menu_title": "మెనూని తెరువు",
-  "pocket_learn_more": "ఇంకా తెలుసుకోండి"
+  "pocket_learn_more": "ఇంకా తెలుసుకోండి",
+  "manual_migration_explanation2": "మరొక విహారిణి లోని ఇష్టాంశాలు, చరిత్ర, సంకేతపదాలతో Firefoxను ప్రయత్నించండి.",
+  "manual_migration_cancel_button": "అడిగినందుకు ధన్యవాదాలు, వద్దు",
+  "manual_migration_import_button": "ఇప్పుడే దిగుమతి చేయండి"
 };

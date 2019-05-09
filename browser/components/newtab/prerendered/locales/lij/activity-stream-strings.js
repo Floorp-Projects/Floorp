@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Sarva e stöie che te piaxan into Pocket, e carega torna a mente con letue che incantan.",
   "highlights_empty_state": "Iniçia a navegâ e, in sta seçion, saian mostræ articoli, video e atre pagine vixitæ de fresco ò azonti a-i segnalibbri.",
   "topstories_empty_state": "No gh'é atro. Contròlla ciù tardi se gh'é atre stöie da {provider}. No t'eu aspetâ? Seleçionn-a 'n argomento tra quelli ciù popolari pe descovrî atre notiçie interesanti da-o Web.",
-  "manual_migration_explanation2": "Preuva Firefox con i segnalibbri, a stöia e-e paròlle segrete de 'n atro navegatô.",
-  "manual_migration_cancel_button": "No graçie",
-  "manual_migration_import_button": "Inpòrta oua",
   "error_fallback_default_info": "Ahime mi, gh'é quarche problema into caregamento de sto contegnuo.",
   "error_fallback_default_refresh_suggestion": "Agiorna pagina pe provâ torna.",
   "section_menu_action_remove_section": "Scancella seçion",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Informativa in sciâ privacy",
   "firstrun_continue_to_login": "Continoa",
   "firstrun_skip_login": "Sata sto passo",
-  "context_menu_title": "Arvi menû"
+  "context_menu_title": "Arvi menû",
+  "manual_migration_explanation2": "Preuva Firefox con i segnalibbri, a stöia e-e paròlle segrete de 'n atro navegatô.",
+  "manual_migration_cancel_button": "No graçie",
+  "manual_migration_import_button": "Inpòrta oua"
 };

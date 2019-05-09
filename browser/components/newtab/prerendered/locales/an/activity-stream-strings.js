@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Empecipia a navegar, y t'iremos amostrando aquí grans articlos, videos y atras pachinas que has vesitau u marcau en zagueras.",
   "topstories_empty_state": "Ya ye tot per agora. Torna mas ta debant pa veyer mas articlos populars de {provider}. No i puetz aguardar? Tría un tema popular pa descubrir los articlos mas interesants de tot lo web.",
-  "manual_migration_explanation2": "Preba lo Firefox con as adrezas d'interés, l'historial y las claus de belatro navegador.",
-  "manual_migration_cancel_button": "No, gracias",
-  "manual_migration_import_button": "Importar-lo agora",
   "error_fallback_default_info": "Oi, ha fallau bella cosa en a carga d'este conteniu.",
   "error_fallback_default_refresh_suggestion": "Refrescar la pachina pa tornar-lo a intentar.",
   "section_menu_action_remove_section": "Borrar la sección",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Nota sobre privacidat",
   "firstrun_continue_to_login": "Continar",
   "firstrun_skip_login": "Blinca-te este paso",
-  "context_menu_title": "Open menu"
+  "context_menu_title": "Open menu",
+  "manual_migration_explanation2": "Preba lo Firefox con as adrezas d'interés, l'historial y las claus de belatro navegador.",
+  "manual_migration_cancel_button": "No, gracias",
+  "manual_migration_import_button": "Importar-lo agora"
 };

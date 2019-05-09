@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",
   "topstories_empty_state": "You’ve caught up. Check back later for more top stories from {provider}. Can’t wait? Select a popular topic to find more great stories from around the web.",
-  "manual_migration_explanation2": "Prueba Firefox colos marcadores, hestorial y contraseñes d'otru restolador.",
-  "manual_migration_cancel_button": "Non, gracies",
-  "manual_migration_import_button": "Importar agora",
   "error_fallback_default_info": "Oops, something went wrong loading this content.",
   "error_fallback_default_refresh_suggestion": "Refresh page to try again.",
   "section_menu_action_remove_section": "Remove Section",
@@ -156,5 +153,8 @@ window.gActivityStreamStrings = {
   "edit_topsites_pin_button": "Fixar esti sitiu",
   "edit_topsites_unpin_button": "Desfixar esti sitiu",
   "edit_topsites_dismiss_button": "Escartar esti sitiu",
-  "edit_topsites_add_button": "Amestar"
+  "edit_topsites_add_button": "Amestar",
+  "manual_migration_explanation2": "Prueba Firefox colos marcadores, hestorial y contraseñes d'otru restolador.",
+  "manual_migration_cancel_button": "Non, gracies",
+  "manual_migration_import_button": "Importar agora"
 };

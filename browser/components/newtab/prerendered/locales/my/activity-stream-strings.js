@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",
   "topstories_empty_state": "You’ve caught up. Check back later for more top stories from {provider}. Can’t wait? Select a popular topic to find more great stories from around the web.",
-  "manual_migration_explanation2": "အခြားဘရောင်ဇာမှ စာမှတ်များ၊ မှတ်တမ်းများ၊ စကားဝှက်များနှင့်အတူ Firefox တွင် စမ်းသုံးကြည့်ပါ။",
-  "manual_migration_cancel_button": "မလိုတော့ပါ၊ ကျေးဇူးတင်ပါသည်။",
-  "manual_migration_import_button": "ထည့်သွင်းရန်",
   "error_fallback_default_info": "Oops, something went wrong loading this content.",
   "error_fallback_default_refresh_suggestion": "ထပ်ကြိုးစားရန် စာမျက်နှာကို ပြန်တင်ပါ",
   "section_menu_action_remove_section": "အပိုင်းကို ပယ်ဖျက်ပါ",
@@ -111,5 +108,8 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "ဆက်၍",
   "firstrun_skip_login": "ဒီအဆင့်ကို ကျော်ပါ",
   "context_menu_title": "မီနူးကို ဖွင့်ပါ",
-  "pocket_learn_more": "ပိုမိုလေ့လာရန်"
+  "pocket_learn_more": "ပိုမိုလေ့လာရန်",
+  "manual_migration_explanation2": "အခြားဘရောင်ဇာမှ စာမှတ်များ၊ မှတ်တမ်းများ၊ စကားဝှက်များနှင့်အတူ Firefox တွင် စမ်းသုံးကြည့်ပါ။",
+  "manual_migration_cancel_button": "မလိုတော့ပါ၊ ကျေးဇူးတင်ပါသည်။",
+  "manual_migration_import_button": "ထည့်သွင်းရန်"
 };

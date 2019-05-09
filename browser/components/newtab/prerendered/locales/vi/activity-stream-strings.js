@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Lưu những câu chuyện bạn yêu thích trong Pocket và vui vẻ khi đọc chúng.",
   "highlights_empty_state": "Bắt đầu duyệt web và chúng tôi sẽ hiển thị một số bài báo, video, và các trang khác mà bạn vừa truy cập hoặc đã đánh dấu tại đây.",
   "topstories_empty_state": "Bạn đã bắt kịp. Kiểm tra lại sau để biết thêm các câu chuyện hàng đầu từ {provider}. Không muốn đợi? Chọn một chủ đề phổ biến để tìm thêm những câu chuyện tuyệt vời từ khắp nơi trên web.",
-  "manual_migration_explanation2": "Thử Firefox với trang đánh dấu, lịch sử và mật khẩu từ trình duyệt khác.",
-  "manual_migration_cancel_button": "Không, cảm ơn",
-  "manual_migration_import_button": "Nhập ngay bây giờ",
   "error_fallback_default_info": "Rất tiếc, đã xảy ra lỗi khi tải nội dung này.",
   "error_fallback_default_refresh_suggestion": "Thử làm mới lại trang.",
   "section_menu_action_remove_section": "Xoá mục",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Thông báo bảo mật",
   "firstrun_continue_to_login": "Tiếp tục",
   "firstrun_skip_login": "Bỏ qua bước này",
-  "context_menu_title": "Mở bảng chọn"
+  "context_menu_title": "Mở bảng chọn",
+  "manual_migration_explanation2": "Thử Firefox với trang đánh dấu, lịch sử và mật khẩu từ trình duyệt khác.",
+  "manual_migration_cancel_button": "Không, cảm ơn",
+  "manual_migration_import_button": "Nhập ngay bây giờ"
 };

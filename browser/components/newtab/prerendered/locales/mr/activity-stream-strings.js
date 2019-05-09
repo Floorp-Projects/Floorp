@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ब्राउझिंग सुरू करा, आणि आम्ही आपल्याला इथे आपण अलीकडील भेट दिलेले किंवा वाचनखूण लावलेले उत्कृष्ठ लेख, व्हिडिओ, आणि इतर पृष्ठांपैकी काही दाखवू.",
   "topstories_empty_state": "तुम्ही सर्व बघितले. {provider} कडून आणखी महत्वाच्या गोष्टी बघण्यासाठी नंतर परत तपासा. प्रतीक्षा करू शकत नाही? वेबवरील छान गोष्टी शोधण्यासाठी लोकप्रिय विषय निवडा.",
-  "manual_migration_explanation2": "दुसऱ्या ब्राऊझरमधील वाचनखूणा, इतिहास आणि पासवर्ड सोबत Firefox ला वापरून पहा.",
-  "manual_migration_cancel_button": "नाही धन्यवाद",
-  "manual_migration_import_button": "आता आयात करा",
   "error_fallback_default_info": "अरेरे, हा मजकूर लोड करताना काहीतरी गोंधळ झाला.",
   "error_fallback_default_refresh_suggestion": "पुन्हा प्रयत्न करण्यासाठी पृष्ठ रिफ्रेश करा.",
   "section_menu_action_remove_section": "विभाग काढा",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "गोपनीयता सूचना",
   "firstrun_continue_to_login": "पुढे चला",
   "firstrun_skip_login": "ही पायरी वगळा",
-  "context_menu_title": "मेनु उघडा"
+  "context_menu_title": "मेनु उघडा",
+  "manual_migration_explanation2": "दुसऱ्या ब्राऊझरमधील वाचनखूणा, इतिहास आणि पासवर्ड सोबत Firefox ला वापरून पहा.",
+  "manual_migration_cancel_button": "नाही धन्यवाद",
+  "manual_migration_import_button": "आता आयात करा"
 };

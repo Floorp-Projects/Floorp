@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Simpan cerita yang anda sukai di Pocket, dan dapatkan bacaan menarik untuk Anda.",
   "highlights_empty_state": "Mulai menjelajah, dan kami akan menampilkan beberapa artikel bagus, video, dan halaman lain yang baru saja Anda kunjungi atau termarkah di sini.",
   "topstories_empty_state": "Maaf Anda tercegat. Periksa lagi nanti untuk lebih banyak cerita terbaik dari {provider}. Tidak mau menunggu? Pilih topik populer untuk menemukan lebih banyak cerita hebat dari seluruh web.",
-  "manual_migration_explanation2": "Coba Firefox dengan markah, riwayat, dan sandi dari peramban lain.",
-  "manual_migration_cancel_button": "Tidak, Terima kasih",
-  "manual_migration_import_button": "Impor Sekarang",
   "error_fallback_default_info": "Ups, ada masalah saat memuat konten ini.",
   "error_fallback_default_refresh_suggestion": "Segarkan laman untuk mencoba lagi.",
   "section_menu_action_remove_section": "Hapus Bagian",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Pernyataan Privasi",
   "firstrun_continue_to_login": "Lanjutkan",
   "firstrun_skip_login": "Lewati langkah ini",
-  "context_menu_title": "Buka menu"
+  "context_menu_title": "Buka menu",
+  "manual_migration_explanation2": "Coba Firefox dengan markah, riwayat, dan sandi dari peramban lain.",
+  "manual_migration_cancel_button": "Tidak, Terima kasih",
+  "manual_migration_import_button": "Impor Sekarang"
 };

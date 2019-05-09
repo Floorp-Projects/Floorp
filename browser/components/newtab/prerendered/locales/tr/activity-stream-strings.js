@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Sevdiğiniz yazıları Pocket’a kaydedin, aklınız okumaya değer şeylerle doldurun.",
   "highlights_empty_state": "Gezinmeye başlayın. Son zamanlarda baktığınız veya yer imlerinize eklediğiniz bazı güzel makaleleri, videoları ve diğer sayfaları burada göstereceğiz.",
   "topstories_empty_state": "Hepsini bitirdiniz. Yeni {provider} haberleri için daha fazla yine gelin. Beklemek istemiyor musunuz? İlginç yazılara ulaşmak için popüler konulardan birini seçebilirsiniz.",
-  "manual_migration_explanation2": "Öteki tarayıcılarınızdaki yer imlerinizi, geçmişinizi ve parolalarınızı Firefox’a aktarabilirsiniz.",
-  "manual_migration_cancel_button": "Gerek yok",
-  "manual_migration_import_button": "Olur, aktaralım",
   "error_fallback_default_info": "Bu içerik yüklenirken bir hata oluştu.",
   "error_fallback_default_refresh_suggestion": "Yeniden denemek için sayfayı tazeleyin.",
   "section_menu_action_remove_section": "Bölümü sil",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Gizlilik Bildirimini",
   "firstrun_continue_to_login": "Devam et",
   "firstrun_skip_login": "Bu adımı atla",
-  "context_menu_title": "Menüyü aç"
+  "context_menu_title": "Menüyü aç",
+  "manual_migration_explanation2": "Öteki tarayıcılarınızdaki yer imlerinizi, geçmişinizi ve parolalarınızı Firefox’a aktarabilirsiniz.",
+  "manual_migration_cancel_button": "Gerek yok",
+  "manual_migration_import_button": "Olur, aktaralım"
 };

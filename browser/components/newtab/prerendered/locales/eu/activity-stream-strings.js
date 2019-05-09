@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Gorde gogoko dituzun istorioak Pocket-en eta piztu zure gogoa irakurgai erakargarriekin.",
   "highlights_empty_state": "Hasi nabigatzen eta azkenaldian bisitatutako edo laster-marka egindako aparteko artikulu, bideo eta orriak erakutsiko ditugu.",
   "topstories_empty_state": "Egunean zaude jada. Etorri berriro geroago {provider} hornitzailearen istorio ezagun gehiagorako. Ezin duzu itxaron? Hautatu gai ezagun bat webeko istorio gehiago aurkitzeko.",
-  "manual_migration_explanation2": "Probatu Firefox beste nabigatzaile batetik ekarritako laster-marka, historia eta pasahitzekin.",
-  "manual_migration_cancel_button": "Ez, eskerrik asko",
-  "manual_migration_import_button": "Inportatu orain",
   "error_fallback_default_info": "Kontxo, zerbait gaizki joan da edukia kargatzerakoan.",
   "error_fallback_default_refresh_suggestion": "Berritu orria berriro saiatzeko.",
   "section_menu_action_remove_section": "Kendu atala",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Pribatutasun-oharra",
   "firstrun_continue_to_login": "Jarraitu",
   "firstrun_skip_login": "Saltatu urrats hau",
-  "context_menu_title": "Ireki menua"
+  "context_menu_title": "Ireki menua",
+  "manual_migration_explanation2": "Probatu Firefox beste nabigatzaile batetik ekarritako laster-marka, historia eta pasahitzekin.",
+  "manual_migration_cancel_button": "Ez, eskerrik asko",
+  "manual_migration_import_button": "Inportatu orain"
 };

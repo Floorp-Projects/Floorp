@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Start browsing, and we’ll show some of the great articles, videos, and other pages you’ve recently visited or bookmarked here.",
   "topstories_empty_state": "You’ve caught up. Check back later for more top stories from {provider}. Can’t wait? Select a popular topic to find more great stories from around the web.",
-  "manual_migration_explanation2": "Try Firefox with the bookmarks, history and passwords from another browser.",
-  "manual_migration_cancel_button": "ਨਹੀਂ, ਧੰਨਵਾਦ",
-  "manual_migration_import_button": "ਹੁਣੇ ਇੰਪੋਰਟ ਕਰੋ",
   "error_fallback_default_info": "ਓਹ ਹੋ, ਇਸ ਸਮੱਗਰੀ ਨੂੰ ਲੋਡ ਕਰਨ ਵਿੱਚ ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ।",
   "error_fallback_default_refresh_suggestion": "ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰਨ ਲਈ ਪੰਨਾ ਤਾਜ਼ਾ ਕਰੋ।",
   "section_menu_action_remove_section": "ਸੈਕਸ਼ਨ ਹਟਾਓ",
@@ -110,5 +107,7 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "ਪਰਦੇਦਾਰੀ ਦਾ ਨੋਟਿਸ",
   "firstrun_continue_to_login": "ਜਾਰੀ ਰੱਖੋ",
   "firstrun_skip_login": "ਇਹ ਪਗ਼ ਛੱਡੋ",
-  "context_menu_title": "ਮੇਨੂ ਖੋਲ੍ਹੋ"
+  "context_menu_title": "ਮੇਨੂ ਖੋਲ੍ਹੋ",
+  "manual_migration_cancel_button": "ਨਹੀਂ, ਧੰਨਵਾਦ",
+  "manual_migration_import_button": "ਹੁਣੇ ਇੰਪੋਰਟ ਕਰੋ"
 };

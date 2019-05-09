@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Salvesta oma lemmiklood Pocketisse.",
   "highlights_empty_state": "Alusta veebilehitsemist ja me näitame siin häid artikleid, videoid ja muid lehti, mida hiljuti külastasid või järjehoidjatesse lisasid.",
   "topstories_empty_state": "Vaata hiljem uuesti, et näha parimaid postitusi teenusepakkujalt {provider}. Ei suuda oodata? Vali populaarne teema, et leida veel suurepärast sisu internetist.",
-  "manual_migration_explanation2": "Proovi Firefoxi teisest brauserist pärinevate järjehoidjate, ajaloo ja paroolidega.",
-  "manual_migration_cancel_button": "Ei soovi",
-  "manual_migration_import_button": "Impordi kohe",
   "error_fallback_default_info": "Ups, selle sisu laadimisel läks midagi viltu.",
   "error_fallback_default_refresh_suggestion": "Uuesti proovimiseks laadi leht uuesti.",
   "section_menu_action_remove_section": "Eemalda osa",
@@ -111,5 +108,8 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "Jätka",
   "firstrun_skip_login": "Jäta see samm vahele",
   "context_menu_title": "Ava menüü",
-  "pocket_learn_more": "Rohkem teavet"
+  "pocket_learn_more": "Rohkem teavet",
+  "manual_migration_explanation2": "Proovi Firefoxi teisest brauserist pärinevate järjehoidjate, ajaloo ja paroolidega.",
+  "manual_migration_cancel_button": "Ei soovi",
+  "manual_migration_import_button": "Impordi kohe"
 };

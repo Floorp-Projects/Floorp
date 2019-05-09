@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Memorisescha ils artitgels che ta plaschan en Pocket e procura per inspiraziun cuntinuanta cun lectura fascinanta.",
   "highlights_empty_state": "Cumenza a navigar e nus ta mussain qua artitgels, videos ed autras paginas che ti has visità dacurt u che ti has agiuntà dacurt sco segnapagina.",
   "topstories_empty_state": "Ussa has ti legì tut las novitads. Turna pli tard per ulteriuras novitads da {provider}. Na pos betg spetgar? Tscherna in tema popular per chattar ulteriuras istorgias ord il web.",
-  "manual_migration_explanation2": "Emprova Firefox cun ils segnapaginas, la cronologia ed ils pleds-clav importads d'in auter navigatur.",
-  "manual_migration_cancel_button": "Na, grazia",
-  "manual_migration_import_button": "Importar ussa",
   "error_fallback_default_info": "Oha, igl è succedì in sbagl cun chargiar il cuntegn.",
   "error_fallback_default_refresh_suggestion": "Rechargia la pagina per reempruvar.",
   "section_menu_action_remove_section": "Allontanar la secziun",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Infurmaziuns davart la protecziun da datas",
   "firstrun_continue_to_login": "Cuntinuar",
   "firstrun_skip_login": "Sursiglir quest pass",
-  "context_menu_title": "Avrir il menu"
+  "context_menu_title": "Avrir il menu",
+  "manual_migration_explanation2": "Emprova Firefox cun ils segnapaginas, la cronologia ed ils pleds-clav importads d'in auter navigatur.",
+  "manual_migration_cancel_button": "Na, grazia",
+  "manual_migration_import_button": "Importar ussa"
 };

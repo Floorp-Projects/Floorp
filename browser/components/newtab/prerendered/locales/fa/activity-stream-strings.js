@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "مطالبی که دوست دارید را در Pocket ذخیره کنید، و به ذهن خود را با مطالب فوق‌العاده انرژی بدهید.",
   "highlights_empty_state": "مرور کردن را شروع کنید و شاهد تعداد زیادی مقاله، فیلم و صفحات خوبی باشید که اخیر مشاهده کرده اید یا نشانگ گذاری کرده اید.",
   "topstories_empty_state": "فعلا تموم شد. بعدا دوباره سر بزن تا مطالب جدید از {provider} ببینی. نمی‌تونی صبر کنی؟ یک موضوع محبوب رو انتخاب کن تا مطالب جالب مرتبط از سراسر دنیا رو پیدا کنی.",
-  "manual_migration_explanation2": "فایرفاکس را با نشانک‌ها،‌ تاریخچه‌ها و کلمات عبور از سایر مرورگر ها تجربه کنید.",
-  "manual_migration_cancel_button": "نه ممنون",
-  "manual_migration_import_button": "هم‌اکنون وارد شوند",
   "error_fallback_default_info": "اوه، هنگام بارگیری این محتوا مشکلی پیش آمد.",
   "error_fallback_default_refresh_suggestion": "برای تلاش مجدد صفحه را بازآوری کنید.",
   "section_menu_action_remove_section": "حذف قسمت",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "نکات حریم‌خصوصی",
   "firstrun_continue_to_login": "ادامه",
   "firstrun_skip_login": "پرش از این مرحله",
-  "context_menu_title": "باز کردن منو"
+  "context_menu_title": "باز کردن منو",
+  "manual_migration_explanation2": "فایرفاکس را با نشانک‌ها،‌ تاریخچه‌ها و کلمات عبور از سایر مرورگر ها تجربه کنید.",
+  "manual_migration_cancel_button": "نه ممنون",
+  "manual_migration_import_button": "هم‌اکنون وارد شوند"
 };

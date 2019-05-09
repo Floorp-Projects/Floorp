@@ -9,6 +9,7 @@ export const FAKE_LOCAL_MESSAGES = [
   {id: "baz", content: {title: "Foo", body: "Foo123"}},
   {id: "newsletter", template: "newsletter_snippet", content: {title: "Foo", body: "Foo123"}},
   {id: "fxa", template: "fxa_signup_snippet", content: {title: "Foo", body: "Foo123"}},
+  {id: "belowsearch", template: "simple_below_search_snippet", content: {text: "Foo"}},
 ];
 export const FAKE_LOCAL_PROVIDER = {id: "onboarding", type: "local", localProvider: "FAKE_LOCAL_PROVIDER", enabled: true, cohort: 0};
 export const FAKE_LOCAL_PROVIDERS = {FAKE_LOCAL_PROVIDER: {getMessages: () => FAKE_LOCAL_MESSAGES}};

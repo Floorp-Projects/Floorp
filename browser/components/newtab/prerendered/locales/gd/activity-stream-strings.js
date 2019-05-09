@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Sàbhail na sgeulachdan as fhearr leat ann am Pocket is faigh toileachas inntinn san leughadh.",
   "highlights_empty_state": "Tòisich air brabhsadh is seallaidh sinn dhut an-seo cuid dhe na h-artaigilean, videothan is duilleagan eile air an do thadhail thu no a chuir thu ris na comharran-lìn o chionn ghoirid.",
   "topstories_empty_state": "Sin na naidheachdan uile o {provider} an-dràsta ach bidh barrachd ann a dh’aithghearr. No thoir sùil air cuspair air a bheil fèill mhòr is leugh na tha a’ dol mun cuairt air an lìon an-dràsta.",
-  "manual_migration_explanation2": "Feuch Firefox leis na comharran-lìn, an eachdraidh ’s na faclan-faire o bhrabhsair eile.",
-  "manual_migration_cancel_button": "Chan eil, tapadh leibh",
-  "manual_migration_import_button": "Ion-phortaich an-dràsta",
   "error_fallback_default_info": "Ìoc, chaidh rudeigin cearr fhad ’s a bha sinn a’ luchdadh na susbaint seo.",
   "error_fallback_default_refresh_suggestion": "Ath-nuadhaich an duilleag airson fheuchainn ris a-rithist.",
   "section_menu_action_remove_section": "Thoir an earrann air falbh",
@@ -111,5 +108,8 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "Lean air adhart",
   "firstrun_skip_login": "Leum seachad air seo",
   "context_menu_title": "Fosgail an clàr-taice",
-  "pocket_learn_more": "Barrachd fiosrachaidh"
+  "pocket_learn_more": "Barrachd fiosrachaidh",
+  "manual_migration_explanation2": "Feuch Firefox leis na comharran-lìn, an eachdraidh ’s na faclan-faire o bhrabhsair eile.",
+  "manual_migration_cancel_button": "Chan eil, tapadh leibh",
+  "manual_migration_import_button": "Ion-phortaich an-dràsta"
 };

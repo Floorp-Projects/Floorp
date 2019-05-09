@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Salvar le chronologias que tu ama in Pocket, e alimenta tu mente con lecturas fascinante.",
   "highlights_empty_state": "Comencia navigar e nos te monstrara alcun del grande articulos, videos e altere paginas que tu ha recentemente visitate o addite marcapaginas hic.",
   "topstories_empty_state": "Tu ja es in die con toto. Reveni plus tarde pro plus historias popular de {provider}. Non vole attender? Selectiona un subjecto popular pro trovar plus altere historias interessante del Web.",
-  "manual_migration_explanation2": "Essaya Firefox con le marcapaginas, le chronologia e le contrasignos de un altere navigator.",
-  "manual_migration_cancel_button": "No, gratias",
-  "manual_migration_import_button": "Importar ora",
   "error_fallback_default_info": "Op, error durante le carga de iste contento.",
   "error_fallback_default_refresh_suggestion": "Refresca le pagina pro retentar.",
   "section_menu_action_remove_section": "Remover le section",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Notification de confidentialitate",
   "firstrun_continue_to_login": "Continuar",
   "firstrun_skip_login": "Saltar iste grado",
-  "context_menu_title": "Aperir le menu"
+  "context_menu_title": "Aperir le menu",
+  "manual_migration_explanation2": "Essaya Firefox con le marcapaginas, le chronologia e le contrasignos de un altere navigator.",
+  "manual_migration_cancel_button": "No, gratias",
+  "manual_migration_import_button": "Importar ora"
 };

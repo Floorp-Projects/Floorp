@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ចាប់ផ្តើមការរុករក ហើយយើងនឹងបង្ហាញអត្ថបទ វីដេអូ និងទំព័រដ៏អស្ចារ្យផ្សេងទៀតដែលអ្នកបានមើល ឬបានចំណាំនៅទីនេះ។",
   "topstories_empty_state": "អ្នកបានអានរឿងទាំងអស់ហើយ។ ពិនិត្យ​រឿង​ដែល​ពេញនិយមបំផុត​ឡើងវិញ​​ពី {provider}។ មិនអាចរង់ចាំ? ជ្រើសរើសប្រធានបទកំពុងពេញនិយម ដើម្បីស្វែងរករឿងដ៏អស្ចារ្យនៅ​លើ​អ៊ីនធឺណិត។",
-  "manual_migration_explanation2": "សាកល្បងប្រើ Firefox ជាមួយចំណាំ ប្រវត្តិ និងពាក្យសម្ងាត់ពីកម្មវិធីរុករកផ្សេងទៀត។",
-  "manual_migration_cancel_button": "ទេ អរគុណ",
-  "manual_migration_import_button": "នាំចូលឥឡូវនេះ",
   "error_fallback_default_info": "អូ មានអ្វីមួយខុសប្រក្រតីក្នុងការផ្ទុក​ខ្លឹមសារ​នេះ។",
   "error_fallback_default_refresh_suggestion": "ផ្ទុកទំព័រឡើងវិញ ដើម្បីព្យាយាមម្ដងទៀត។",
   "section_menu_action_remove_section": "លុប​ផ្នែក​ចេញ",
@@ -111,5 +108,8 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "បន្ត",
   "firstrun_skip_login": "Skip this step",
   "context_menu_title": "បើក​ម៉ឺនុយ",
-  "pocket_learn_more": "ស្វែងយល់​បន្ថែម"
+  "pocket_learn_more": "ស្វែងយល់​បន្ថែម",
+  "manual_migration_explanation2": "សាកល្បងប្រើ Firefox ជាមួយចំណាំ ប្រវត្តិ និងពាក្យសម្ងាត់ពីកម្មវិធីរុករកផ្សេងទៀត។",
+  "manual_migration_cancel_button": "ទេ អរគុណ",
+  "manual_migration_import_button": "នាំចូលឥឡូវនេះ"
 };

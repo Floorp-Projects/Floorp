@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Започнете со прелистување и ние овде ќе ви прикажеме некои од одличните написи, видеа и други страници што неодамна сте ги поселите или обележале.",
   "topstories_empty_state": "Имате видено сѐ! Навратете се подоцна за нови содржини од {provider}. Не можете да чекате? Изберете популарна тема и откријте уште одлични содржини ширум Интернет.",
-  "manual_migration_explanation2": "Пробајте го Firefox со обележувачите, историјата и лозинките на друг прелистувач.",
-  "manual_migration_cancel_button": "Не, благодарам",
-  "manual_migration_import_button": "Увези сега",
   "error_fallback_default_info": "Oops, something went wrong loading this content.",
   "error_fallback_default_refresh_suggestion": "Refresh page to try again.",
   "section_menu_action_remove_section": "Remove Section",
@@ -158,5 +155,8 @@ window.gActivityStreamStrings = {
   "edit_topsites_dismiss_button": "Отфрли го ова место",
   "edit_topsites_add_button": "Додај",
   "pocket_feedback_header": "Најдоброто од Интернет, одбрано од повеќе од 25 милиони луѓе.",
-  "pocket_description": "Откријте високо-квалитетни содржини, коишто инаку би можеле да ги пропуштите, со помош на Pocket, кој сега е дел од Mozilla."
+  "pocket_description": "Откријте високо-квалитетни содржини, коишто инаку би можеле да ги пропуштите, со помош на Pocket, кој сега е дел од Mozilla.",
+  "manual_migration_explanation2": "Пробајте го Firefox со обележувачите, историјата и лозинките на друг прелистувач.",
+  "manual_migration_cancel_button": "Не, благодарам",
+  "manual_migration_import_button": "Увези сега"
 };

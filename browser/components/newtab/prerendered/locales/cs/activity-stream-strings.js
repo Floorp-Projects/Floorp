@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Ukládejte si články do služby Pocket a užívejte si skvělé čtení.",
   "highlights_empty_state": "Začněte prohlížet a my vám zde ukážeme některé skvělé články, videa a další stránky, které jste nedávno viděli nebo uložili do záložek.",
   "topstories_empty_state": "Už jste všechno přečetli. Další články ze služby {provider} tu najdete zase později. Ale pokud se nemůžete dočkat, vyberte své oblíbené téma a podívejte se na další velké články z celého webu.",
-  "manual_migration_explanation2": "Vyzkoušejte Firefox se záložkami, historií a hesly z jiného vašeho prohlížeče.",
-  "manual_migration_cancel_button": "Ne, děkuji",
-  "manual_migration_import_button": "Importovat nyní",
   "error_fallback_default_info": "Jejda, při načítání tohoto obsahu se něco pokazilo.",
   "error_fallback_default_refresh_suggestion": "Obnovte prosím stránku a zkuste to znovu.",
   "section_menu_action_remove_section": "Odebrat sekci",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Zásadami ochrany osobních údajů",
   "firstrun_continue_to_login": "Pokračovat",
   "firstrun_skip_login": "Přeskočit tento krok",
-  "context_menu_title": "Otevře nabídku"
+  "context_menu_title": "Otevře nabídku",
+  "manual_migration_explanation2": "Vyzkoušejte Firefox se záložkami, historií a hesly z jiného vašeho prohlížeče.",
+  "manual_migration_cancel_button": "Ne, děkuji",
+  "manual_migration_import_button": "Importovat nyní"
 };

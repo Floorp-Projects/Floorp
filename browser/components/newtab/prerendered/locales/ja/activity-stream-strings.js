@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "お気に入りに記事を Pocket に保存して、魅力的な読み物を思う存分楽しみましょう。",
   "highlights_empty_state": "ブラウジング中にあなたが最近訪れたりブックマークしたりした、優れた記事、動画、その他ページの一部をここに表示します。",
   "topstories_empty_state": "すべて既読です。また後で戻って {provider} からのおすすめ記事をチェックしてください。もし待ちきれないなら、人気のトピックを選択すれば、他にもウェブ上の優れた記事を見つけられます。",
-  "manual_migration_explanation2": "他のブラウザーからブックマークや履歴、パスワードをインポートして Firefox を使ってみましょう。",
-  "manual_migration_cancel_button": "今はしない",
-  "manual_migration_import_button": "今すぐインポート",
   "error_fallback_default_info": "このコンテンツの読み込み中に何か問題が発生しました。",
   "error_fallback_default_refresh_suggestion": "ページを再読み込みしてもう一度試してください。",
   "section_menu_action_remove_section": "セクションを削除",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "プライバシーに関する通知",
   "firstrun_continue_to_login": "続ける",
   "firstrun_skip_login": "この手順をスキップ",
-  "context_menu_title": "メニューを開きます"
+  "context_menu_title": "メニューを開きます",
+  "manual_migration_explanation2": "他のブラウザーからブックマークや履歴、パスワードをインポートして Firefox を使ってみましょう。",
+  "manual_migration_cancel_button": "今はしない",
+  "manual_migration_import_button": "今すぐインポート"
 };

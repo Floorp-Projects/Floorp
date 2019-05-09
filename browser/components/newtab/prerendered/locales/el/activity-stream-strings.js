@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Αποθηκεύστε τις ιστορίες που αγαπάτε στο Pocket και τροφοδοτήστε το μυαλό σας με εκπληκτικά κείμενα.",
   "highlights_empty_state": "Ξεκινήστε την περιήγηση και θα σάς δείξουμε μερικά υπέροχα άρθρα, βίντεο και άλλες σελίδες που έχετε επισκεφθεί πρόσφατα ή έχετε προσθέσει στους σελιδοδείκτες σας.",
   "topstories_empty_state": "Δεν υπάρχει κάτι νεότερο. Ελέγξτε αργότερα για περισσότερες ιστορίες από τον πάροχο {provider}. Δεν μπορείτε να περιμένετε; Διαλέξτε κάποιο από τα δημοφιλή θέματα και ανακαλύψτε ενδιαφέρουσες ιστορίες από όλο τον Ιστό.",
-  "manual_migration_explanation2": "Δοκιμάστε το Firefox με τους σελιδοδείκτες, το ιστορικό και τους κωδικούς πρόσβασης από ένα άλλο πρόγραμμα περιήγησης.",
-  "manual_migration_cancel_button": "Όχι ευχαριστώ",
-  "manual_migration_import_button": "Εισαγωγή τώρα",
   "error_fallback_default_info": "Ωχ, κάτι πήγε στραβά κατά τη φόρτωση του περιεχομένου.",
   "error_fallback_default_refresh_suggestion": "Ανανεώστε τη σελίδα για να δοκιμάσετε ξανά.",
   "section_menu_action_remove_section": "Αφαίρεση ενότητας",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Σημείωση Απορρήτου",
   "firstrun_continue_to_login": "Συνέχεια",
   "firstrun_skip_login": "Παράλειψη βήματος",
-  "context_menu_title": "Άνοιγμα μενού"
+  "context_menu_title": "Άνοιγμα μενού",
+  "manual_migration_explanation2": "Δοκιμάστε το Firefox με τους σελιδοδείκτες, το ιστορικό και τους κωδικούς πρόσβασης από ένα άλλο πρόγραμμα περιήγησης.",
+  "manual_migration_cancel_button": "Όχι ευχαριστώ",
+  "manual_migration_import_button": "Εισαγωγή τώρα"
 };
