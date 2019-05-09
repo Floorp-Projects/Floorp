@@ -450,6 +450,9 @@ void profiler_get_start_params(
 // whether the profiler is active or inactive.
 double profiler_time();
 
+// Get the current process's ID.
+int profiler_current_process_id();
+
 // Get the current thread's ID.
 int profiler_current_thread_id();
 

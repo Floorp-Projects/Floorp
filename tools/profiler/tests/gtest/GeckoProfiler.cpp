@@ -866,7 +866,7 @@ TEST(GeckoProfiler, SuspendAndSample)
   nsresult rv = NS_NewNamedThread("GeckoProfGTest", getter_AddRefs(thread));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
-  int tid = Thread::GetCurrentId();
+  int tid = profiler_current_thread_id();
 
   ASSERT_TRUE(!profiler_is_active());
 

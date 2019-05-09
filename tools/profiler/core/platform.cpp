@@ -81,12 +81,6 @@
 #include <ostream>
 #include <sstream>
 
-#if defined(XP_WIN)
-#  include <processthreadsapi.h>  // for GetCurrentProcessId()
-#else
-#  include <unistd.h>  // for getpid()
-#endif                 // defined(XP_WIN)
-
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
 #endif
@@ -575,13 +569,7 @@ class ActivePS {
 
       // If the filter starts with pid:, check for a pid match
       if (filter.find("pid:") == 0) {
-        std::string mypid = std::to_string(
-#ifdef XP_WIN
-            GetCurrentProcessId()
-#else
-            getpid()
-#endif
-        );
+        std::string mypid = std::to_string(profiler_current_process_id());
         if (filter.compare(4, std::string::npos, mypid) == 0) {
           return true;
         }
@@ -2679,7 +2667,7 @@ uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
 // Find the RegisteredThread for the current thread. This should only be called
 // in places where TLSRegisteredThread can't be used.
 static RegisteredThread* FindCurrentThreadRegisteredThread(PSLockRef aLock) {
-  int id = Thread::GetCurrentId();
+  int id = profiler_current_thread_id();
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
       CorePS::RegisteredThreads(aLock);
   for (auto& registeredThread : registeredThreads) {
@@ -2705,7 +2693,7 @@ static ProfilingStack* locked_register_thread(PSLockRef aLock,
   }
 
   RefPtr<ThreadInfo> info =
-      new ThreadInfo(aName, Thread::GetCurrentId(), NS_IsMainThread());
+      new ThreadInfo(aName, profiler_current_thread_id(), NS_IsMainThread());
   UniquePtr<RegisteredThread> registeredThread = MakeUnique<RegisteredThread>(
       info, NS_GetCurrentThreadNoCreate(), aStackTop);
 
@@ -3334,7 +3322,7 @@ static void locked_profiler_start(PSLockRef aLock, uint32_t aCapacity,
                    duration);
 
   // Set up profiling for each registered thread, if appropriate.
-  int tid = Thread::GetCurrentId();
+  int tid = profiler_current_thread_id();
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
       CorePS::RegisteredThreads(aLock);
   for (auto& registeredThread : registeredThreads) {
@@ -3518,7 +3506,7 @@ static MOZ_MUST_USE SamplerThread* locked_profiler_stop(PSLockRef aLock) {
 #endif
 
   // Stop sampling live threads.
-  int tid = Thread::GetCurrentId();
+  int tid = profiler_current_thread_id();
   const Vector<LiveProfiledThreadData>& liveProfiledThreads =
       ActivePS::LiveProfiledThreads(aLock);
   for (auto& thread : liveProfiledThreads) {
@@ -3863,7 +3851,7 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
     return nullptr;
   }
 
-  int tid = Thread::GetCurrentId();
+  int tid = profiler_current_thread_id();
 
   TimeStamp now = TimeStamp::Now();
 
@@ -4127,8 +4115,6 @@ void profiler_clear_js_context() {
 
   registeredThread->ClearJSContext();
 }
-
-int profiler_current_thread_id() { return Thread::GetCurrentId(); }
 
 // NOTE: aCollector's methods will be called while the target thread is paused.
 // Doing things in those methods like allocating -- which may try to claim
