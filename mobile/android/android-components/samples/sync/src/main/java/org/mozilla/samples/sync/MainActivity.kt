@@ -5,6 +5,7 @@
 package org.mozilla.samples.sync
 
 import android.os.Bundle
+import android.text.method.ScrollingMovementMethod
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -16,6 +17,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
@@ -313,14 +315,20 @@ class MainActivity :
                 )
 
                 val bookmarksResultTextView: TextView = findViewById(R.id.bookmarksSyncResult)
-                val bookmarksRoot = bookmarksStorage.getTree("root________")
+                val bookmarksRoot = bookmarksStorage.getTree("root________", recursive = true)
                 if (bookmarksRoot == null) {
                     bookmarksResultTextView.text = getString(R.string.no_bookmarks_root)
                 } else {
-                    var bookmarksRootAndChildren = "Bookmarks, root ->"
-                    bookmarksRoot.children!!.forEach {
-                        bookmarksRootAndChildren += "\n-- ${it.title}"
+                    var bookmarksRootAndChildren = "Bookmarks\n"
+                    fun addTreeNode(node: BookmarkNode, depth: Int) {
+                        bookmarksRootAndChildren += " ".repeat(depth * 2) + "${node.title} - ${node.url} (${node.guid})\n";
+                        node.children?.forEach {
+                            addTreeNode(it, depth + 1)
+                        }
                     }
+                    addTreeNode(bookmarksRoot, 0)
+                    bookmarksResultTextView.setHorizontallyScrolling(true)
+                    bookmarksResultTextView.setMovementMethod(ScrollingMovementMethod.getInstance());
                     bookmarksResultTextView.text = bookmarksRootAndChildren
                 }
             }
