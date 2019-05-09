@@ -18,7 +18,7 @@ function todo_is(v1, v2, message) {
 }
 
 function finish() {
-  opener.setTimeout(function() { this.done(); }, 0);
+  opener.setTimeout("done()", 0);
   window.close();
 }
 
