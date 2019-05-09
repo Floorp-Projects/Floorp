@@ -7,7 +7,21 @@
   z-index: 100;
 }
 
-.popover .gap {
+.popover {
+  position: fixed;
+  z-index: 100;
+}
+
+.popover.orientation-right {
+  display: flex;
+  flex-direction: row;
+}
+
+.popover.orientation-right .gap {
+  padding-left: 5px;
+}
+
+.popover:not(.orientation-right) .gap {
   height: 5px;
   padding-top: 5px;
 }
