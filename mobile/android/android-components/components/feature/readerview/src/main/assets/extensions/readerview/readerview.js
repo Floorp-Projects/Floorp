@@ -41,14 +41,8 @@ class ReaderView {
     return node.clientHeight > 0 && node.clientWidth > 0;
   }
 
-  constructor(document) {
-    this.document = document;
-    this.originalBody = document.body.outerHTML;
-  }
-
   show({fontSize = 4, fontType = "sans-serif", colorScheme = "light"} = {}) {
-    var documentClone = document.cloneNode(true);
-    var result = new Readability(documentClone).parse();
+    var result = new Readability(document).parse();
     result.language = document.documentElement.lang;
 
     var article = Object.assign(
@@ -66,7 +60,6 @@ class ReaderView {
   }
 
   hide() {
-    document.body.outerHTML = this.originalBody;
     location.reload(false)
   }
 
@@ -276,7 +269,7 @@ class ReaderView {
    }
 }
 
-let readerView = new ReaderView(document);
+let readerView = new ReaderView();
 
 let port = browser.runtime.connectNative("mozacReaderview");
 port.onMessage.addListener((message) => {
