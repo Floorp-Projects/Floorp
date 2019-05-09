@@ -1,12 +1,12 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {addLocaleData, injectIntl, IntlProvider} from "react-intl";
 import {ASRouterAdmin} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
+import {ASRouterUISurface} from "../../asrouter/asrouter-content";
 import {ConfirmDialog} from "content-src/components/ConfirmDialog/ConfirmDialog";
 import {connect} from "react-redux";
 import {DarkModeMessage} from "content-src/components/DarkModeMessage/DarkModeMessage";
 import {DiscoveryStreamBase} from "content-src/components/DiscoveryStreamBase/DiscoveryStreamBase";
 import {ErrorBoundary} from "content-src/components/ErrorBoundary/ErrorBoundary";
-import {ManualMigration} from "content-src/components/ManualMigration/ManualMigration";
 import {PrerenderData} from "common/PrerenderData.jsm";
 import React from "react";
 import {Search} from "content-src/components/Search/Search";
@@ -88,7 +88,10 @@ export class _Base extends React.PureComponent {
     if (prefs["asrouter.devtoolsEnabled"]) {
       if (window.location.hash.startsWith("#asrouter") ||
           window.location.hash.startsWith("#devtools")) {
-        return (<ASRouterAdmin />);
+        return (<div>
+          <ASRouterAdmin />
+          <ASRouterUISurface dispatch={this.props.dispatch} />
+        </div>);
       } else if (!didLogDevtoolsHelpText) {
         console.log("Activity Stream devtools enabled. To access visit %cabout:newtab#devtools", "font-weight: bold"); // eslint-disable-line no-console
         didLogDevtoolsHelpText = true;
@@ -168,12 +171,8 @@ export class BaseContent extends React.PureComponent {
                 </ErrorBoundary>
               </div>
             }
+            <ASRouterUISurface dispatch={this.props.dispatch} />
             <div className={`body-wrapper${(initialized ? " on" : "")}`}>
-              {!isDiscoveryStream && !prefs.migrationExpired &&
-                <div className="non-collapsible-section">
-                  <ManualMigration />
-                </div>
-                }
               {isDiscoveryStream ? (
                 <ErrorBoundary className="borderless-error">
                   {prefs.darkModeMessage && <DarkModeMessage />}

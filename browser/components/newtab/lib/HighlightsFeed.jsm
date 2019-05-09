@@ -273,7 +273,6 @@ this.HighlightsFeed = class HighlightsFeed {
           this.fetchHighlights({broadcast: true});
         }
         break;
-      case at.MIGRATION_COMPLETED:
       case at.PLACES_HISTORY_CLEARED:
       case at.PLACES_LINK_BLOCKED:
       case at.DOWNLOAD_CHANGED:

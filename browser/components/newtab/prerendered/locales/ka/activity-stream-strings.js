@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "გადაინახეთ სასურველი შიგთავსი Pocket-ში და მიეცით გონებას საკვები, შთამბეჭდავი საკითხავი მასალის სახით.",
   "highlights_empty_state": "დაიწყეთ გვერდების დათვალიერება და აქ გამოჩნდება თქვენთვის სასურველი სტატიები, ვიდეოები და ბოლოს მონახულებული ან ჩანიშნული საიტები.",
   "topstories_empty_state": "უკვე ყველაფერი წაკითხული გაქვთ. {provider}-იდან ახალი რჩეული სტატიების მისაღებად, მოგვიანებით შემოიარეთ. თუ ვერ ითმენთ, აირჩიეთ რომელიმე მოთხოვნადი თემა, ახალი საინტერესო სტატიების მოსაძიებლად.",
-  "manual_migration_explanation2": "გადმოიტანეთ სხვა ბრაუზერებიდან თქვენი სანიშნები, ისტორია და პაროლები Firefox-ში.",
-  "manual_migration_cancel_button": "არა, გმადლობთ",
-  "manual_migration_import_button": "ახლავე გადმოტანა",
   "error_fallback_default_info": "სამწუხაროდ, შიგთავსის ჩატვირთვისას რაღაც ხარვეზი წარმოიქმნა.",
   "error_fallback_default_refresh_suggestion": "განაახლეთ გვერდი და სცადეთ ხელახლა.",
   "section_menu_action_remove_section": "ამ ნაწილის მოცილება",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "პირადი მონაცემების დაცვის განაცხადს",
   "firstrun_continue_to_login": "გაგრძელება",
   "firstrun_skip_login": "გამოტოვება",
-  "context_menu_title": "მენიუს გახსნა"
+  "context_menu_title": "მენიუს გახსნა",
+  "manual_migration_explanation2": "გადმოიტანეთ სხვა ბრაუზერებიდან თქვენი სანიშნები, ისტორია და პაროლები Firefox-ში.",
+  "manual_migration_cancel_button": "არა, გმადლობთ",
+  "manual_migration_import_button": "ახლავე გადმოტანა"
 };

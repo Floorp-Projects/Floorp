@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "ຊ່ວຍບັນທຶກເລື່ອງທີ່ທ່ານຮັກໃນ Pocket, ແລະນ້ໍາໃຈຂອງທ່ານກັບອ່ານທີ່ຫນ້າສົນໃຈ.",
   "highlights_empty_state": "ເລີ່ມການທ່ອງເວັບ ແລະ ພວກເຮົາຈະສະແດງເນື້ອຫາ, ວິດີໂອ ແລະ ຫນ້າອື່ນໆບາງສ່ວນທີ່ທ່ານຫາກໍເຂົ້າໄປເບິງມາ ຫລື ຫາກໍໄດ້ບຸກມາກໄວ້ທີ່ນີ້.",
   "topstories_empty_state": "ທ່ານໄດ້ອ່ານເລື່ອງລາວຄົບທັງຫມົດແລ້ວ. ທ່ານສາມາດກັບມາເບິ່ງເລື່ອງລາວເດັ່ນໄດ້ຈາກ {provider} ໃນພາຍຫລັງ. ອົດໃຈຖ້າບໍ່ໄດ້ແມ່ນບໍ່? ເລືອກຫົວຂໍ້ຍອດນິຍົມເພື່ອຄົ້ນຫາເລື່ອງລາວທີ່ຍອດຢ້ຽມຈາກເວັບຕ່າງໆ.",
-  "manual_migration_explanation2": "ລອງໃຊ້ Firefox ດ້ວຍບຸກມາກ, ປະຫວັດການໃຊ້ງານ ແລະລະຫັດຜ່ານຈາກບຣາວເຊີອື່ນ.",
-  "manual_migration_cancel_button": "ບໍ່, ຂອບໃຈ",
-  "manual_migration_import_button": "ນຳເຂົ້າຕອນນີ້",
   "error_fallback_default_info": "ໂອ້ຍ, ມີບາງສິ່ງບາງຢ່າງຜິດພາດໃນການໂຫລດເນື້ອຫານີ້.",
   "error_fallback_default_refresh_suggestion": "ຟື້ນຟູໜ້າເພື່ອລອງອີກຄັ້ງ.",
   "section_menu_action_remove_section": "ລຶບສ່ວນ",
@@ -111,5 +108,8 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "ສືບຕໍ່",
   "firstrun_skip_login": "ຂ້າມຂັ້ນຕອນນີ້",
   "context_menu_title": "Open menu",
-  "pocket_learn_more": "ຮຽນຮູ້ເພີມຕື່ມ"
+  "pocket_learn_more": "ຮຽນຮູ້ເພີມຕື່ມ",
+  "manual_migration_explanation2": "ລອງໃຊ້ Firefox ດ້ວຍບຸກມາກ, ປະຫວັດການໃຊ້ງານ ແລະລະຫັດຜ່ານຈາກບຣາວເຊີອື່ນ.",
+  "manual_migration_cancel_button": "ບໍ່, ຂອບໃຈ",
+  "manual_migration_import_button": "ນຳເຂົ້າຕອນນີ້"
 };

@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Lagre artiklene du synes er interessante i Pocket, og stimuler dine tanker med fasinerende lesermateriell.",
   "highlights_empty_state": "Begynn å surfe, og vi viser noen av de beste artiklene, videoer og andre sider du nylig har besøkt eller bokmerket her.",
   "topstories_empty_state": "Du har tatt igjen. Kom tilbake senere for flere topphistorier fra {provider}. Kan du ikke vente? Velg et populært emne for å finne flere gode artikler fra hele Internett.",
-  "manual_migration_explanation2": "Prøv Firefox med bokmerkene, historikk og passord fra en annen nettleser.",
-  "manual_migration_cancel_button": "Nei takk",
-  "manual_migration_import_button": "Importer nå",
   "error_fallback_default_info": "Ups, noe gikk galt når innholdet skulle lastes inn.",
   "error_fallback_default_refresh_suggestion": "Oppdater siden for å prøve igjen.",
   "section_menu_action_remove_section": "Fjern seksjon",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Personvernbestemmelser",
   "firstrun_continue_to_login": "Fortsett",
   "firstrun_skip_login": "Hopp over dette trinnet",
-  "context_menu_title": "Åpne meny"
+  "context_menu_title": "Åpne meny",
+  "manual_migration_explanation2": "Prøv Firefox med bokmerkene, historikk og passord fra en annen nettleser.",
+  "manual_migration_cancel_button": "Nei takk",
+  "manual_migration_import_button": "Importer nå"
 };

@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "আপনার পছন্দের গল্পগুলো Pocket এ সংরক্ষণ করুন, এবং আকর্ষণীয় মনে পড়ুন।",
   "highlights_empty_state": "ব্রাউজিং শুরু করুন, এবং আমরা কিছু মহান নিবন্ধ, ভিডিও, এবং আপনার সম্প্রতি প্রদর্শিত পৃষ্ঠা বা বুকমার্ক এখানে প্রদর্শিত হবে।",
   "topstories_empty_state": "আপনি ধরা পড়েছেন। আরো শীর্ষ গল্পের জন্য পরে আবার {provider} এর থেকে চেক করুন। অপেক্ষা করতে পারছেন না? ওয়েব থেকে আরো মহান গল্প খুঁজে পেতে একটি জনপ্রিয় বিষয় নির্বাচন করুন।",
-  "manual_migration_explanation2": "অন্য ব্রাউজার থেকে বুকমার্ক, ইতিহাস এবং পাসওয়ার্ডগুলির সাথে Firefox ব্যবহার করে দেখুন।",
-  "manual_migration_cancel_button": "না, ধন্যবাদ",
-  "manual_migration_import_button": "এখন আমদানি করুন",
   "error_fallback_default_info": "ওহো, বিষয়বস্তুটি লোড করতে কিছু ভুল হয়েছে।",
   "error_fallback_default_refresh_suggestion": "পুনরায় চেস্টা করার জন্য পেজটি রিফ্রেশ করুন।",
   "section_menu_action_remove_section": "বিভাগটিকে সরান",
@@ -111,5 +108,8 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "এগিয়ে চলুন",
   "firstrun_skip_login": "ধাপটি উপেক্ষা করুন",
   "context_menu_title": "মেনু খুলুন",
+  "manual_migration_explanation2": "অন্য ব্রাউজার থেকে বুকমার্ক, ইতিহাস এবং পাসওয়ার্ডগুলির সাথে Firefox ব্যবহার করে দেখুন।",
+  "manual_migration_cancel_button": "না, ধন্যবাদ",
+  "manual_migration_import_button": "এখন আমদানি করুন",
   "pocket_learn_more": "আরো জানুন"
 };

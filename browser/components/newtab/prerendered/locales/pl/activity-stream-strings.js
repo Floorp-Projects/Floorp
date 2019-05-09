@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Zachowuj historie w Pocket, aby wrócić później do ich lektury.",
   "highlights_empty_state": "Zacznij przeglądać Internet, a pojawią się tutaj świetne artykuły, filmy oraz inne ostatnio odwiedzane strony i dodane zakładki.",
   "topstories_empty_state": "To na razie wszystko. {provider} później będzie mieć więcej popularnych artykułów. Nie możesz się doczekać? Wybierz popularny temat, aby znaleźć więcej artykułów z całego Internetu.",
-  "manual_migration_explanation2": "Wypróbuj Firefoksa z zakładkami, historią i hasłami z innej przeglądarki.",
-  "manual_migration_cancel_button": "Anuluj",
-  "manual_migration_import_button": "Importuj",
   "error_fallback_default_info": "Coś się nie powiodło podczas wczytywania tej treści",
   "error_fallback_default_refresh_suggestion": "Odśwież stronę, by spróbować ponownie",
   "section_menu_action_remove_section": "Usuń sekcję",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "zasady ochrony prywatności",
   "firstrun_continue_to_login": "Kontynuuj",
   "firstrun_skip_login": "Pomiń",
-  "context_menu_title": "Otwórz menu"
+  "context_menu_title": "Otwórz menu",
+  "manual_migration_explanation2": "Wypróbuj Firefoksa z zakładkami, historią i hasłami z innej przeglądarki.",
+  "manual_migration_cancel_button": "Anuluj",
+  "manual_migration_import_button": "Importuj"
 };

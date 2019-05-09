@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Enrollit pennadoù a-zoare e Pocket ha magit ho spered gant lennadennoù boemus.",
   "highlights_empty_state": "Krogit da verdeiñ hag e tiskouezimp deoc’h pennadoù, videoioù ha pajennoù all gweladennet pe lakaet er sinedoù nevez ’zo.",
   "topstories_empty_state": "Aet oc'h betek penn. Distroit diwezhatoc'h evit muioc’h a istorioù digant {provider}. N’oc'h ket evit gortoz? Dibabit un danvez brudet evit klask muioc’h a bennadoù dedennus eus pep lec’h er web.",
-  "manual_migration_explanation2": "Amprouit Firefox gant sinedoù, roll istor ha gerioù-tremen ur merdeer all.",
-  "manual_migration_cancel_button": "N'am bo ket",
-  "manual_migration_import_button": "Enporzhiañ bremañ",
   "error_fallback_default_info": "Chaous, un dra bennak a zo a-dreuz en ur gargañ an endalc'had.",
   "error_fallback_default_refresh_suggestion": "Adkargit ar bajenn evit klask en-dro.",
   "section_menu_action_remove_section": "Dilemel ar gevrenn",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "evezhiadennoù a-fet buhez prevez",
   "firstrun_continue_to_login": "Kenderc'hel",
   "firstrun_skip_login": "Tremen ar bazenn-mañ",
-  "context_menu_title": "Digeriñ al lañser"
+  "context_menu_title": "Digeriñ al lañser",
+  "manual_migration_explanation2": "Amprouit Firefox gant sinedoù, roll istor ha gerioù-tremen ur merdeer all.",
+  "manual_migration_cancel_button": "N'am bo ket",
+  "manual_migration_import_button": "Enporzhiañ bremañ"
 };

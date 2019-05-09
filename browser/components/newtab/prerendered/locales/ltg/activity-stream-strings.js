@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "Sōc porlyukōšonu un mes tev parōdēsim dažus breineigus rokstus, video un cytys lopys, kuras tu naseņ esi skatiejs voi davīnōjs grōmotzeimem.",
   "topstories_empty_state": "Esi vysu izlasiejs. Īej vāļōk, kab redzēt vaira ziņu nu {provider}. Nagribi gaidēt? Izavielej popularu tēmu, kab atrostu vaira interesantu rokstu nu vysa interneta.",
-  "manual_migration_explanation2": "Paraugi Firefox ar grōmotzeimem, viesturi un parolem nu cyta porlyuka.",
-  "manual_migration_cancel_button": "Nā, paļdis",
-  "manual_migration_import_button": "Importeit",
   "error_fallback_default_info": "Naz kas aizgōja škārsu, īlōdejut itū saturu.",
   "error_fallback_default_refresh_suggestion": "Porlōdej lopu, kab paraudzēt par jaunu.",
   "section_menu_action_remove_section": "Aizvōkt sadaļu",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privatuma pīzeime",
   "firstrun_continue_to_login": "Turpynōt",
   "firstrun_skip_login": "Izlaist itū sūli",
-  "context_menu_title": "Open menu"
+  "context_menu_title": "Open menu",
+  "manual_migration_explanation2": "Paraugi Firefox ar grōmotzeimem, viesturi un parolem nu cyta porlyuka.",
+  "manual_migration_cancel_button": "Nā, paļdis",
+  "manual_migration_import_button": "Importeit"
 };

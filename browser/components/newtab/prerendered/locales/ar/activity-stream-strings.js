@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "احفظ القصص التي تحبّها في بوكِت، وزوّد عقلك بمقالات رائعة.",
   "highlights_empty_state": "ابدأ التصفح وسنعرض أمامك بعض المقالات والفيديوهات والمواقع الأخرى التي زرتها حديثا أو أضفتها إلى العلامات هنا.",
   "topstories_empty_state": "لا جديد. تحقق لاحقًا للحصول على مزيد من أهم الأخبار من {provider}. لا يمكنك الانتظار؟ اختر موضوعًا شائعًا للعثور على المزيد من القصص الرائعة من جميع أنحاء الوِب.",
-  "manual_migration_explanation2": "جرب فَيَرفُكس مع العلامات، و التأريخ، و كلمات السر من متصفح آخر.",
-  "manual_migration_cancel_button": "لا شكرًا",
-  "manual_migration_import_button": "استورد الآن",
   "error_fallback_default_info": "أخ! حدث خطب ما أثناء تحميل المحتوى.",
   "error_fallback_default_refresh_suggestion": "أنعِش الصفحة لإعادة المحاولة.",
   "section_menu_action_remove_section": "أزِل القسم",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "تنويه الخصوصية",
   "firstrun_continue_to_login": "تابِع",
   "firstrun_skip_login": "تجاوز هذه الخطوة",
-  "context_menu_title": "افتح القائمة"
+  "context_menu_title": "افتح القائمة",
+  "manual_migration_explanation2": "جرب فَيَرفُكس مع العلامات، و التأريخ، و كلمات السر من متصفح آخر.",
+  "manual_migration_cancel_button": "لا شكرًا",
+  "manual_migration_import_button": "استورد الآن"
 };

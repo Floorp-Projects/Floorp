@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Eñongatu umi eipotáva tembiasakue Pocket-pe ha emombarete ne akã ñemoñe’ẽ ha’evévape.",
   "highlights_empty_state": "Eñepyrũ eikundaha ha rohechaukáta ndéve mba'ehai, mba'erecharã oĩva ha ambue ñandutirenda reikeva'ekue ýrõ rembotechaukava'ekue.",
   "topstories_empty_state": "Ko'ág̃a reikuaapáma ipyahúva. Eikejey ag̃ave ápe eikuaávo mombe'upy pyahu {provider} oikuave'ẽva ndéve. Ndaikatuvéima reha'ãrõ? Eiporavo peteĩ ñe'ẽmbyrã ha emoñe'ẽve oĩvéva ñande yvy ape ári.",
-  "manual_migration_explanation2": "Eipuru Firefox reheve techaukaha, tembiasakue ha ñe'ẽñemi ambue kundaharapegua.",
-  "manual_migration_cancel_button": "Ag̃amiénte",
-  "manual_migration_import_button": "Egueroike Ko'ág̃a",
   "error_fallback_default_info": "Ema'ẽ, mba’épa osẽvai henyhẽnguévo ko tetepy.",
   "error_fallback_default_refresh_suggestion": "Kuatiarogue mbopiro’y eñepyrũjey hag̃ua",
   "section_menu_action_remove_section": "Emboguete vore",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Ñemigua purureko",
   "firstrun_continue_to_login": "Eku'ejey",
   "firstrun_skip_login": "Ehejánte kóva",
-  "context_menu_title": "Eike poravorãme"
+  "context_menu_title": "Eike poravorãme",
+  "manual_migration_explanation2": "Eipuru Firefox reheve techaukaha, tembiasakue ha ñe'ẽñemi ambue kundaharapegua.",
+  "manual_migration_cancel_button": "Ag̃amiénte",
+  "manual_migration_import_button": "Egueroike Ko'ág̃a"
 };

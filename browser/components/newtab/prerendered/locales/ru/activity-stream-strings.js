@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Сохраняйте интересные статьи в Pocket и подпитывайте свой ум увлекательным чтением.",
   "highlights_empty_state": "Начните веб-сёрфинг, и мы покажем вам здесь некоторые из интересных статей, видеороликов и других страниц, которые вы недавно посетили или добавили в закладки.",
   "topstories_empty_state": "Вы всё прочитали. Зайдите попозже, чтобы увидеть больше лучших статей от {provider}. Не можете ждать? Выберите популярную тему, чтобы найти больше интересных статей со всего Интернета.",
-  "manual_migration_explanation2": "Попробуйте Firefox с закладками, историей и паролями из другого браузера.",
-  "manual_migration_cancel_button": "Нет, спасибо",
-  "manual_migration_import_button": "Импортировать сейчас",
   "error_fallback_default_info": "К сожалению что-то пошло не так при загрузке этого содержимого.",
   "error_fallback_default_refresh_suggestion": "Обновить страницу, чтобы попробовать ещё раз.",
   "section_menu_action_remove_section": "Удалить раздел",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "политикой приватности",
   "firstrun_continue_to_login": "Продолжить",
   "firstrun_skip_login": "Пропустить этот шаг",
-  "context_menu_title": "Открыть меню"
+  "context_menu_title": "Открыть меню",
+  "manual_migration_explanation2": "Попробуйте Firefox с закладками, историей и паролями из другого браузера.",
+  "manual_migration_cancel_button": "Нет, спасибо",
+  "manual_migration_import_button": "Импортировать сейчас"
 };

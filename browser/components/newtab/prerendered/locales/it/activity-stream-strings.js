@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Salva le storie che ami in Pocket e nutri la tua mente con letture appassionanti.",
   "highlights_empty_state": "Inizia a navigare e, in questa sezione, verranno visualizzati articoli, video e altre pagine visitate di recente o aggiunte ai segnalibri.",
   "topstories_empty_state": "Non c’è altro. Controlla più tardi per altre storie da {provider}. Non vuoi aspettare? Seleziona un argomento tra quelli più popolari per scoprire altre notizie interessanti dal Web.",
-  "manual_migration_explanation2": "Prova Firefox con i segnalibri, la cronologia e le password di un altro browser.",
-  "manual_migration_cancel_button": "No grazie",
-  "manual_migration_import_button": "Importa adesso",
   "error_fallback_default_info": "Oops, qualcosa è andato storto durante il tentativo di caricare questo contenuto.",
   "error_fallback_default_refresh_suggestion": "Aggiornare la pagina per riprovare.",
   "section_menu_action_remove_section": "Rimuovi sezione",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "informativa sulla privacy",
   "firstrun_continue_to_login": "Continua",
   "firstrun_skip_login": "Ignora questo passaggio",
-  "context_menu_title": "Apri menu"
+  "context_menu_title": "Apri menu",
+  "manual_migration_explanation2": "Prova Firefox con i segnalibri, la cronologia e le password di un altro browser.",
+  "manual_migration_cancel_button": "No grazie",
+  "manual_migration_import_button": "Importa adesso"
 };

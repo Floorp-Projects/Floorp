@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ब्राउज गर्न सुरू गर्नुहोस्, र हामी केहि उत्कृष्ट लेखहरू, भिडियोहरू, र अन्य पृष्ठहरू जुन तपाईंले भर्खरै भ्रमण गर्नुभएको वा पुस्तकचिनो राख्नुभएको छ यहाँ देखाउँछौ ।",
   "topstories_empty_state": "अहिले यति नै । {provider} बाट थप शीर्ष कथाहरूको हेर्नका लागि पछि फेरि जाँच गर्नुहोस् । अाफुलाई रोक्न सक्नुहुदैन ? वेबभरिका राम्रा कथाहरु भेटाउन कुनै एउटा लोकप्रिय विषय छान्नुहोस् । ",
-  "manual_migration_explanation2": "अन्य ब्राउजरका पुस्तकचिनोहरु, इतिहास र गोप्यशब्दहरु सहित Firefox प्रयोग गर्नुहोस् ।",
-  "manual_migration_cancel_button": "पर्दैन, धन्यबाद",
-  "manual_migration_import_button": "अहिले आयात गर्नुहोस्",
   "error_fallback_default_info": "उफ्, सामाग्री लोड गर्न खोजदा केहि गलत भयो ।",
   "error_fallback_default_refresh_suggestion": "पुनः प्रयास गर्न पृष्ठ ताजा गर्नुहोस् ।",
   "section_menu_action_remove_section": "खण्ड हटाउनुहोस्",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "Continue",
   "firstrun_skip_login": "Skip this step",
-  "context_menu_title": "Open menu"
+  "context_menu_title": "Open menu",
+  "manual_migration_explanation2": "अन्य ब्राउजरका पुस्तकचिनोहरु, इतिहास र गोप्यशब्दहरु सहित Firefox प्रयोग गर्नुहोस् ।",
+  "manual_migration_cancel_button": "पर्दैन, धन्यबाद",
+  "manual_migration_import_button": "अहिले आयात गर्नुहोस्"
 };

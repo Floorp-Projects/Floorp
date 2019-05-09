@@ -83,9 +83,6 @@ window.gActivityStreamStrings = {
   "pocket_cta_text": "Bewarje de ferhalen dy't jo ynteressant fine yn Pocket, en stimulearje jo tinzen mei boeiende lêsstof.",
   "highlights_empty_state": "Start mei sneupen en wy toane jo guon moaie artikelen, fideo's en oare siden dy't jo resint besocht hawwe of in blêdwizer fan makke hawwe.",
   "topstories_empty_state": "Jo binne by. Kom letter werom foar mear ferhalen fan {provider}. Kin jo net wachtsje? Selektearje in populêr ûnderwerp om mear ferhalen fan it ynternet te finen.",
-  "manual_migration_explanation2": "Probearje Firefox en ymportearje de blêdwizers, skiednis en wachtwurden fan oare browsers.",
-  "manual_migration_cancel_button": "Nee tankewol",
-  "manual_migration_import_button": "No ymportearje",
   "error_fallback_default_info": "Oeps, der is wat misgien by it laden fan dizze ynhâld.",
   "error_fallback_default_refresh_suggestion": "Fernij de side om it opnij te probearjen.",
   "section_menu_action_remove_section": "Seksje fuortsmite",
@@ -110,5 +107,8 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacyferklearring",
   "firstrun_continue_to_login": "Trochgean",
   "firstrun_skip_login": "Dizze stap oerslaan",
-  "context_menu_title": "Menu iepenje"
+  "context_menu_title": "Menu iepenje",
+  "manual_migration_explanation2": "Probearje Firefox en ymportearje de blêdwizers, skiednis en wachtwurden fan oare browsers.",
+  "manual_migration_cancel_button": "Nee tankewol",
+  "manual_migration_import_button": "No ymportearje"
 };

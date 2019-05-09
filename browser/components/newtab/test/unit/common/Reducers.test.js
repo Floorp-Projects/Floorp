@@ -1,5 +1,5 @@
 import {INITIAL_STATE, insertPinned, reducers} from "common/Reducers.jsm";
-const {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket, DiscoveryStream, Search} = reducers;
+const {TopSites, App, Snippets, Prefs, Dialog, Sections, Pocket, DiscoveryStream, Search, ASRouter} = reducers;
 import {actionTypes as at} from "common/Actions.jsm";
 
 describe("Reducers", () => {
@@ -818,5 +818,9 @@ describe("Reducers", () => {
       assert.propertyVal(nextState, "fakeFocus", false);
       assert.propertyVal(nextState, "hide", false);
     });
+  });
+  it("should set initialized to true on AS_ROUTER_INITIALIZED", () => {
+    const nextState = ASRouter(undefined, {type: "AS_ROUTER_INITIALIZED"});
+    assert.propertyVal(nextState, "initialized", true);
   });
 });

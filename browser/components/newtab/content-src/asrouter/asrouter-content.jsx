@@ -13,17 +13,23 @@ import {StartupOverlay} from "./templates/StartupOverlay/StartupOverlay";
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
-const ASR_CONTAINER_ID = "asr-newtab-container";
+const TEMPLATES_BELOW_SEARCH = ["simple_below_search_snippet"];
 
 export const ASRouterUtils = {
   addListener(listener) {
-    global.RPMAddMessageListener(INCOMING_MESSAGE_NAME, listener);
+    if (global.RPMAddMessageListener) {
+      global.RPMAddMessageListener(INCOMING_MESSAGE_NAME, listener);
+    }
   },
   removeListener(listener) {
-    global.RPMRemoveMessageListener(INCOMING_MESSAGE_NAME, listener);
+    if (global.RPMRemoveMessageListener) {
+      global.RPMRemoveMessageListener(INCOMING_MESSAGE_NAME, listener);
+    }
   },
   sendMessage(action) {
-    global.RPMSendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
+    if (global.RPMSendAsyncMessage) {
+      global.RPMSendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
+    }
   },
   blockById(id, options) {
     ASRouterUtils.sendMessage({type: "BLOCK_MESSAGE_BY_ID", data: {id, ...options}});
@@ -50,12 +56,14 @@ export const ASRouterUtils = {
     ASRouterUtils.sendMessage({type: "OVERRIDE_MESSAGE", data: {id}});
   },
   sendTelemetry(ping) {
-    const payload = ac.ASRouterUserEvent(ping);
-    global.RPMSendAsyncMessage(AS_GENERAL_OUTGOING_MESSAGE_NAME, payload);
+    if (global.RPMSendAsyncMessage) {
+      const payload = ac.ASRouterUserEvent(ping);
+      global.RPMSendAsyncMessage(AS_GENERAL_OUTGOING_MESSAGE_NAME, payload);
+    }
   },
   getPreviewEndpoint() {
-    if (window.location.href.includes("endpoint")) {
-      const params = new URLSearchParams(window.location.href.slice(window.location.href.indexOf("endpoint")));
+    if (global.location && global.location.href.includes("endpoint")) {
+      const params = new URLSearchParams(global.location.href.slice(global.location.href.indexOf("endpoint")));
       try {
         const endpoint = new URL(params.get("endpoint"));
         return {
@@ -82,6 +90,9 @@ export class ASRouterUISurface extends React.PureComponent {
     this.sendImpression = this.sendImpression.bind(this);
     this.sendUserActionTelemetry = this.sendUserActionTelemetry.bind(this);
     this.state = {message: {}, bundle: {}};
+    if (props.document) {
+      this.portalContainer = props.document.getElementById("footer-snippets-container");
+    }
   }
 
   sendUserActionTelemetry(extraProps = {}) {
@@ -179,14 +190,16 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   componentWillMount() {
-    // Add locale data for StartupOverlay because it uses react-intl
-    addLocaleData(global.document.documentElement.lang);
+    if (global.document) {
+      // Add locale data for StartupOverlay because it uses react-intl
+      addLocaleData(global.document.documentElement.lang);
+    }
 
     const endpoint = ASRouterUtils.getPreviewEndpoint();
     ASRouterUtils.addListener(this.onMessageFromParent);
 
     // If we are loading about:welcome we want to trigger the onboarding messages
-    if (this.props.document.location.href === "about:welcome") {
+    if (this.props.document && this.props.document.location.href === "about:welcome") {
       ASRouterUtils.sendMessage({type: "TRIGGER", data: {trigger: {id: "firstRun"}}});
     } else {
       ASRouterUtils.sendMessage({type: "SNIPPETS_REQUEST", data: {endpoint}});
@@ -249,8 +262,7 @@ export class ASRouterUISurface extends React.PureComponent {
           <StartupOverlay
             onReady={this.triggerOnboarding}
             onBlock={this.onDismissById(message.id)}
-            dispatch={this.props.activityStreamStore.dispatch}
-            store={this.props.activityStreamStore} />
+            dispatch={this.props.dispatch} />
         </IntlProvider>
       );
     } else if (message.template === "return_to_amo_overlay") {
@@ -284,51 +296,23 @@ export class ASRouterUISurface extends React.PureComponent {
   render() {
     const {message, bundle} = this.state;
     if (!message.id && !bundle.template) { return null; }
-    return (
-      <React.Fragment>
-        {this.renderPreviewBanner()}
-        {this.renderFirstRunOverlay()}
-        {this.renderOnboarding()}
-        {this.renderSnippets()}
-      </React.Fragment>
-    );
+    const shouldRenderBelowSearch = TEMPLATES_BELOW_SEARCH.includes(message.template);
+
+    return shouldRenderBelowSearch ?
+      // Render special below search snippets in place;
+      <div className="below-search-snippet">{this.renderSnippets()}</div> :
+      // For onboarding, regular snippets etc. we should render
+      // everything in our footer container.
+      ReactDOM.createPortal(
+        <React.Fragment>
+          {this.renderPreviewBanner()}
+          {this.renderFirstRunOverlay()}
+          {this.renderOnboarding()}
+          {this.renderSnippets()}
+        </React.Fragment>,
+        this.portalContainer
+      );
   }
 }
 
 ASRouterUISurface.defaultProps = {document: global.document};
-
-export class ASRouterContent {
-  constructor() {
-    this.initialized = false;
-    this.containerElement = null;
-  }
-
-  _mount() {
-    this.containerElement = global.document.getElementById(ASR_CONTAINER_ID);
-    if (!this.containerElement) {
-      this.containerElement = global.document.createElement("div");
-      this.containerElement.id = ASR_CONTAINER_ID;
-      this.containerElement.style.zIndex = 1;
-      global.document.body.appendChild(this.containerElement);
-    }
-
-    ReactDOM.render(<ASRouterUISurface activityStreamStore={this._activityStreamStore} />, this.containerElement);
-  }
-
-  _unmount() {
-    ReactDOM.unmountComponentAtNode(this.containerElement);
-  }
-
-  init(store) {
-    this._activityStreamStore = store;
-    this._mount();
-    this.initialized = true;
-  }
-
-  uninit() {
-    if (this.initialized) {
-      this._unmount();
-      this.initialized = false;
-    }
-  }
-}

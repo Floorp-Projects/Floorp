@@ -8,12 +8,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 .search-wrapper {
   padding: 34px 0 64px;
 
-  @media (max-height: 700px) {
-    & {
-      padding: 0 0 30px;
-    }
-  }
-
   .only-search & {
     padding: 0 0 64px;
   }
@@ -134,6 +128,44 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     &:dir(rtl) {
       transform: scaleX(-1);
     }
+  }
+}
+
+.below-search-snippet {
+  margin: 0 auto 16px;
+  width: $searchbar-width-small;
+
+  @media (min-width: $break-point-medium) {
+    width: $searchbar-width-medium;
+  }
+
+  @media (min-width: $break-point-large) {
+    width: $searchbar-width-large;
+  }
+
+  // Disable breakpoints for now if discovery stream is enabled.
+  .ds-outer-wrapper-breakpoint-override & {
+    width: $searchbar-width-large;
+  }
+}
+
+.non-collapsible-section + .below-search-snippet {
+  // If search is enabled, we need to invade its large bottom padding.
+  margin-top: -48px;
+}
+
+@media (max-height: 700px) {
+  .search-wrapper {
+    padding: 0 0 30px;
+  }
+
+  .non-collapsible-section + .below-search-snippet {
+    // In shorter windows, search doesn't have such a large padding.
+    margin-top: -14px;
+  }
+
+  .below-search-snippet {
+    min-height: 0;
   }
 }
 
