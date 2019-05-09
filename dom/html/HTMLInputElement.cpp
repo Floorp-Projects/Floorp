@@ -3858,7 +3858,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
               case NS_FORM_INPUT_RADIO: {
                 // Checkbox and Radio try to submit on Enter press
                 if (keyEvent->mKeyCode != NS_VK_SPACE) {
-                  MaybeSubmitForm(aVisitor.mPresContext);
+                  MaybeSubmitForm(MOZ_KnownLive(aVisitor.mPresContext));
 
                   break;  // If we are submitting, do not send click event
                 }
@@ -3935,7 +3935,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
                mType == NS_FORM_INPUT_NUMBER ||
                IsExperimentalMobileType(mType) || IsDateTimeInputType(mType))) {
             FireChangeEventIfNeeded();
-            rv = MaybeSubmitForm(aVisitor.mPresContext);
+            rv = MaybeSubmitForm(MOZ_KnownLive(aVisitor.mPresContext));
             NS_ENSURE_SUCCESS(rv, rv);
           }
 
