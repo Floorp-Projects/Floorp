@@ -117,8 +117,7 @@ export class QuickOpenModal extends Component<Props, State> {
     if (this.refs.resultList && this.refs.resultList.refs) {
       scrollList(
         this.refs.resultList.refs,
-        this.state.selectedIndex,
-        nowEnabled || !queryChanged
+        this.state.selectedIndex
       );
     }
 
