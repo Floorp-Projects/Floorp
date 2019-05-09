@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #2308 - Update the deprecated BitmapDrawable constructor
 - #1311 - Enable downloads in custom tabs.
 - #1874 - Added TOP info panel dialog for custom tabs.
+- #1735 - Adds API to see the release channel
 
 ### Changed
 - #1429 - Updated site permissions ui for MVP

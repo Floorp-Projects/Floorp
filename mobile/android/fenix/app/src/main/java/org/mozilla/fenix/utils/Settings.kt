@@ -9,6 +9,7 @@ import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import java.security.InvalidParameterException
@@ -52,7 +53,7 @@ class Settings private constructor(context: Context) {
 
     val isCrashReportingEnabled: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_crash_reporter), true) &&
-                BuildConfig.CRASH_REPORTING && BuildConfig.IS_RELEASED
+                BuildConfig.CRASH_REPORTING && Config.channel.isReleased
 
     val isRemoteDebuggingEnabled: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_remote_debugging), false)

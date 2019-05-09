@@ -32,8 +32,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
         manifestPlaceholders.isRaptorEnabled = "false"
-        buildConfigField "boolean", "IS_RELEASED", "false"
-        resValue "bool", "IS_NOT_RELEASED", "true"
+        resValue "bool", "IS_DEBUG", "true"
     }
 
     def releaseTemplate = {
@@ -55,13 +54,11 @@ android {
             applicationIdSuffix ".raptor"
         }
         nightly releaseTemplate >> {
-            buildConfigField "boolean", "IS_RELEASED", "true"
-            resValue "bool", "IS_NOT_RELEASED", "false"
+            resValue "bool", "IS_DEBUG", "false"
         }
         beta releaseTemplate >> {
             applicationIdSuffix ".beta"
-            buildConfigField "boolean", "IS_RELEASED", "true"
-            resValue "bool", "IS_NOT_RELEASED", "false"
+            resValue "bool", "IS_DEBUG", "false"
         }
     }
 
@@ -133,9 +130,10 @@ android.applicationVariants.all { variant ->
 
     def buildType = variant.buildType.name
     def versionCode = null
-    def isReleased = variant.buildType.buildConfigFields['IS_RELEASED']?.value ?: false
+    def releaseChannels = ["nightly", "beta", "release"]
+    def isReleased = releaseChannels.contains(buildType)
 
-    buildConfigField 'Boolean', 'COLLECTIONS_ENABLED', (buildType != "release").toString()
+    buildConfigField 'Boolean', 'COLLECTIONS_ENABLED', (!isReleased).toString()
 
     if (isReleased) {
         versionCode = generatedVersionCode

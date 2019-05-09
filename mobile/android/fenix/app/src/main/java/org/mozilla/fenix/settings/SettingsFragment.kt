@@ -24,10 +24,10 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import kotlin.coroutines.CoroutineContext
 import mozilla.components.service.fxa.FxaUnauthorizedException
-import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
@@ -206,7 +206,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         preferenceMakeDefaultBrowser?.onPreferenceClickListener =
             getClickListenerForMakeDefaultBrowser()
 
-        if (!BuildConfig.IS_RELEASED) {
+        if (!Config.channel.isReleased) {
             preferenceLeakCanary?.onPreferenceChangeListener =
                 Preference.OnPreferenceChangeListener { _, newValue ->
                     (context?.applicationContext as FenixApplication).toggleLeakCanary(newValue as Boolean)
