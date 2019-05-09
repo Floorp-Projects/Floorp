@@ -1006,7 +1006,7 @@ extern JS_FRIEND_API int JS::IsGCPoisoning() {
 #endif
 }
 
-struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer {
+struct DumpHeapTracer final : public JS::CallbackTracer, public WeakMapTracer {
   const char* prefix;
   FILE* output;
   mozilla::MallocSizeOf mallocSizeOf;

@@ -1664,7 +1664,14 @@ struct StyleAnimation {
 };
 
 struct StyleSVGPath final {
-  const nsTArray<StylePathCommand>& Path() const { return mPath; }
+  StyleSVGPath(StyleForgottenArcSlicePtr<StylePathCommand> aPath,
+               StyleFillRule aFill)
+    : mPath(aPath),
+      mFillRule(aFill) {}
+
+  Span<const StylePathCommand> Path() const {
+    return mPath.AsSpan();
+  }
 
   StyleFillRule FillRule() const { return mFillRule; }
 
@@ -1677,7 +1684,7 @@ struct StyleSVGPath final {
   }
 
  private:
-  nsTArray<StylePathCommand> mPath;
+  StyleArcSlice<StylePathCommand> mPath;
   StyleFillRule mFillRule = StyleFillRule::Nonzero;
 };
 

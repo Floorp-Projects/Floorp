@@ -3371,7 +3371,7 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_INTERNAL_MARKING_FUNCTIONS)
  */
 
 #ifdef DEBUG
-struct AssertNonGrayTracer : public JS::CallbackTracer {
+struct AssertNonGrayTracer final : public JS::CallbackTracer {
   explicit AssertNonGrayTracer(JSRuntime* rt) : JS::CallbackTracer(rt) {}
   void onChild(const JS::GCCellPtr& thing) override {
     MOZ_ASSERT(!thing.asCell()->isMarkedGray());
@@ -3379,7 +3379,7 @@ struct AssertNonGrayTracer : public JS::CallbackTracer {
 };
 #endif
 
-class UnmarkGrayTracer : public JS::CallbackTracer {
+class UnmarkGrayTracer final : public JS::CallbackTracer {
  public:
   // We set weakMapAction to DoNotTraceWeakMaps because the cycle collector
   // will fix up any color mismatches involving weakmaps when it runs.

@@ -415,7 +415,7 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
 }
 
 #ifdef DEBUG
-class AssertNoRootsTracer : public JS::CallbackTracer {
+class AssertNoRootsTracer final : public JS::CallbackTracer {
   void onChild(const JS::GCCellPtr& thing) override {
     MOZ_CRASH("There should not be any roots after finishRoots");
   }

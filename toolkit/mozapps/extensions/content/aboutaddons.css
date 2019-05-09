@@ -57,10 +57,12 @@ addon-list .addon.card {
 
 /* Theme preview image. */
 .card-heading-image {
+  /* If the width, height or aspect ratio changes, don't forget to update the
+   * getScreenshotUrlForAddon function in aboutaddons.js */
   width: var(--section-width);
-  /* This is a magic number for the aspect ratio we get from AMO. */
-  height: 89px;
-  object-fit: cover;
+  /* Adjust height so that the image preserves the aspect ratio from AMO.
+   * For details, see https://bugzilla.mozilla.org/show_bug.cgi?id=1546123 */
+  height: calc(var(--section-width) * 92 / 680);
 }
 
 .card-heading-icon {
@@ -73,6 +75,7 @@ addon-list .addon.card {
 }
 
 .card-contents {
+  word-break: break-word;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -135,6 +138,82 @@ addon-card:not([expanded]) .addon-description {
   margin-inline-end: -8px;
 }
 
+/* Discopane extensions to the add-on card */
+
+recommended-addon-card .addon-name {
+  display: flex;
+}
+
+recommended-addon-card .addon-description:not(:empty) {
+  margin-top: 0.5em;
+}
+
+.disco-card-head {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.disco-addon-author {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.disco-description-statistics {
+  margin-top: 1em;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  grid-column-gap: 2em;
+  align-items: center;
+}
+
+.disco-cta-button {
+  font-size: 14px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  align-self: baseline;
+}
+
+.disco-cta-button[action="install-addon"]::before {
+  content: "+";
+  padding-inline-end: 4px;
+}
+
+.discopane-notice {
+  margin: 0.5em 0;
+}
+
+.discopane-notice-content {
+  align-items: center;
+  display: flex;
+  width: 100%;
+}
+
+.discopane-notice-content > span {
+  flex-grow: 1;
+}
+
+.discopane-notice-content > button {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.discopane-footer {
+  text-align: center;
+}
+
+.discopane-footer > * {
+  margin-top: 30px;
+}
+
+.discopane-privacy-policy-link {
+  font-size: small;
+}
+
+addon-details {
+  color: var(--grey-60);
+}
+
 .addon-detail-description {
   margin: 16px 0;
 }
@@ -190,33 +269,6 @@ addon-card:not([expanded]) .addon-description {
 
 .addon-detail-rating {
   display: flex;
-}
-
-.addon-detail-rating-star {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background: url("chrome://browser/skin/bookmark-hollow.svg");
-}
-
-.addon-detail-rating-star[fill="full"] {
-  background: url("chrome://browser/skin/bookmark.svg");
-}
-
-.addon-detail-rating-star[fill="half"] {
-  background: url("chrome://browser/skin/bookmark.svg");
-  width: 8px;
-  margin-inline-end: 8px;
-}
-
-.addon-detail-rating-star[fill="half"]::after {
-  content: "";
-  display: inline-block;
-  background: url("chrome://browser/skin/bookmark-hollow.svg");
-  background-position: 8px;
-  width: 8px;
-  height: 16px;
-  margin-left: 8px;
 }
 
 .addon-detail-rating > a {
