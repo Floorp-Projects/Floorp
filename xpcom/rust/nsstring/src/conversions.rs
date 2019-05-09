@@ -354,7 +354,7 @@ impl nsACString {
                 times_three(other.len()).ok_or(())?
             };
             let new_len = old_len.checked_add(needed).ok_or(())?;
-            let mut handle = unsafe { self.bulk_write(new_len, old_len, false)? };
+            let handle = unsafe { self.bulk_write(new_len, old_len, false)? };
             (old_len, 0, handle)
         };
         let written =
@@ -626,7 +626,7 @@ impl nsACString {
                     other.len().checked_mul(2).ok_or(())?
                 };
                 let new_len = old_len.checked_add(needed).ok_or(())?;
-                let mut handle = unsafe { self.bulk_write(new_len, old_len, false)? };
+                let handle = unsafe { self.bulk_write(new_len, old_len, false)? };
                 (old_len, 0, handle)
             }
         };
