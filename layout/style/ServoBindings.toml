@@ -330,6 +330,7 @@ whitelist-types = [
     "nsStyleTransformMatrix::MatrixTransformOperator",
 ]
 opaque-types = [
+    "mozilla::StyleThinArc", # https://github.com/rust-lang/rust-bindgen/issues/1557
     "std::pair__PCCP",
     "std::namespace::atomic___base", "std::atomic__My_base",
     "std::atomic",
@@ -474,6 +475,8 @@ cbindgen-types = [
     { gecko = "StyleGenericVerticalAlign", servo = "values::generics::box_::VerticalAlign" },
     { gecko = "StyleVerticalAlignKeyword", servo = "values::generics::box_::VerticalAlignKeyword" },
     { gecko = "StyleGenericBasicShape", servo = "values::generics::basic_shape::BasicShape" },
+    { gecko = "StyleArcSlice", servo = "style_traits::arc_slice::ArcSlice" },
+    { gecko = "StyleForgottenArcSlicePtr", servo = "style_traits::arc_slice::ForgottenArcSlicePtr" },
 ]
 
 mapped-generic-types = [

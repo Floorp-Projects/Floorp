@@ -27,6 +27,7 @@
 #  include "mozilla/ServoBindingTypes.h"
 #  include "nsCSSPropertyID.h"
 #  include "nsCompatibility.h"
+#  include <atomic>
 
 struct RawServoAnimationValueTable;
 struct RawServoAnimationValueMap;
@@ -78,6 +79,9 @@ class StyleSheet;
 class WritingMode;
 class ServoElementSnapshotTable;
 enum class StyleContentType : uint8_t;
+
+template<typename T>
+struct StyleForgottenArcSlicePtr;
 
 struct AnimationPropertySegment;
 struct ComputedTiming;
@@ -134,6 +138,8 @@ using StyleMatrixTransformOperator =
 #  define SERVO_BOXED_TYPE(name_, type_) using Style##type_ = type_;
 #  include "mozilla/ServoBoxedTypeList.h"
 #  undef SERVO_BOXED_TYPE
+
+using StyleAtomicUsize = std::atomic<size_t>;
 
 }  // namespace mozilla
 
