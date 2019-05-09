@@ -45,6 +45,7 @@ child:
   async InitFailed(nsresult reason);
 
   async FlushComplete();
+  async ShutdownComplete();
 
   // Each output includes a SurfaceDescriptorGPUVideo that represents the decoded
   // frame. This SurfaceDescriptor can be used on the Layers IPDL protocol, but

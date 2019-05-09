@@ -7,6 +7,7 @@
 #define include_dom_media_ipc_IRemoteDecoderChild_h
 
 #include "PlatformDecoderModule.h"
+#include "mozilla/TaskQueue.h"
 
 namespace mozilla {
 
@@ -23,7 +24,7 @@ class IRemoteDecoderChild {
       MediaRawData* aSample) = 0;
   virtual RefPtr<MediaDataDecoder::DecodePromise> Drain() = 0;
   virtual RefPtr<MediaDataDecoder::FlushPromise> Flush() = 0;
-  virtual void Shutdown() = 0;
+  virtual RefPtr<ShutdownPromise> Shutdown() = 0;
   virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const {
     return false;
   }
