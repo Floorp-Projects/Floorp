@@ -179,3 +179,11 @@ void qcms_transform_data_rgba_out_lut_altivec(const qcms_transform *transform,
 {
     qcms_transform_data_template_lut_altivec<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX, RGBA_A_INDEX>(transform, src, dest, length);
 }
+
+void qcms_transform_data_bgra_out_lut_altivec(const qcms_transform *transform,
+                                              const unsigned char *src,
+                                              unsigned char *dest,
+                                              size_t length)
+{
+    qcms_transform_data_template_lut_altivec<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
+}
