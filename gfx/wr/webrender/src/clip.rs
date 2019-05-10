@@ -239,11 +239,12 @@ pub struct ClipNodeRange {
     pub count: u32,
 }
 
-// A helper struct for converting between coordinate systems
-// of clip sources and primitives.
+/// A helper struct for converting between coordinate systems
+/// of clip sources and primitives.
 // todo(gw): optimize:
 //  separate arrays for matrices
 //  cache and only build as needed.
+//TODO: merge with `CoordinateSpaceMapping`?
 #[derive(Debug, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 enum ClipSpaceConversion {
@@ -1342,6 +1343,9 @@ fn add_clip_node_to_current_chain(
 
     // Determine the most efficient way to convert between coordinate
     // systems of the primitive and clip node.
+    //Note: this code is different from `get_relative_transform` in a way that we only try
+    // getting the relative transform if it's Local or ScaleOffset,
+    // falling back to the world transform otherwise.
     let conversion = if spatial_node_index == node.spatial_node_index {
         ClipSpaceConversion::Local
     } else if ref_spatial_node.coordinate_system_id == clip_spatial_node.coordinate_system_id {
@@ -1353,7 +1357,7 @@ fn add_clip_node_to_current_chain(
         ClipSpaceConversion::Transform(
             clip_scroll_tree
                 .get_world_transform(node.spatial_node_index)
-                .flattened
+                .into_transform()
         )
     };
 

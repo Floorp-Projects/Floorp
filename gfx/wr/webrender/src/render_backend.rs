@@ -554,7 +554,6 @@ impl Document {
             self.clip_scroll_tree.update_tree(
                 pan,
                 &self.dynamic_properties,
-                None,
             );
 
             self.hit_tester = Some(frame_builder.create_hit_tester(
@@ -1206,7 +1205,7 @@ impl RenderBackend {
 
     fn bookkeep_after_frames(&mut self) {
         self.resource_cache.bookkeep_after_frames();
-        self.gpu_cache.bookkeep_after_frames();   
+        self.gpu_cache.bookkeep_after_frames();
     }
 
     fn requires_frame_build(&mut self) -> bool {

@@ -532,12 +532,11 @@ impl FrameBuilder {
 
         self.globals.update(gpu_cache);
 
-        let mut transform_palette = TransformPalette::new();
         clip_scroll_tree.update_tree(
             pan,
             scene_properties,
-            Some(&mut transform_palette),
         );
+        let mut transform_palette = clip_scroll_tree.build_transform_palette();
         self.clip_store.clear_old_instances();
 
         let mut render_tasks = RenderTaskTree::new(
