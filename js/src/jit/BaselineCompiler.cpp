@@ -6616,6 +6616,24 @@ MethodStatus BaselineCompiler::emitBody() {
   return Method_Compiled;
 }
 
+bool BaselineInterpreterGenerator::emitDebugTrap() {
+  JitRuntime* jrt = cx->runtime()->jitRuntime();
+
+  JitCode* handlerCode =
+      jrt->debugTrapHandler(cx, DebugTrapHandlerKind::Interpreter);
+  if (!handlerCode) {
+    return false;
+  }
+
+  CodeOffset offset = masm.toggledCall(handlerCode, /* enabled = */ false);
+  if (!debugTrapOffsets_.append(offset.offset())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
+}
+
 JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
                                               DebugTrapHandlerKind kind) {
   StackMacroAssembler masm;
