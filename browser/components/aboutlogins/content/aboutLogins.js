@@ -19,6 +19,7 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
     }
     case "LoginAdded": {
       gElements.loginList.loginAdded(event.detail.value);
+      gElements.loginItem.loginAdded(event.detail.value);
       break;
     }
     case "LoginModified": {
