@@ -93,7 +93,8 @@ class nsPrintJob final : public nsIObserver,
    * May be called immediately after initialization, or after one or more
    * PrintPreview calls.
    */
-  nsresult Print(nsIPrintSettings* aPrintSettings,
+  nsresult Print(mozilla::dom::Document* aSourceDoc,
+                 nsIPrintSettings* aPrintSettings,
                  nsIWebProgressListener* aWebProgressListener);
 
   /**
