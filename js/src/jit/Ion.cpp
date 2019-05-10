@@ -164,7 +164,7 @@ JitRuntime::JitRuntime()
       lazyLinkStubOffset_(0),
       interpreterStubOffset_(0),
       doubleToInt32ValueStubOffset_(0),
-      debugTrapHandler_(nullptr),
+      debugTrapHandlers_(),
       baselineDebugModeOSRHandler_(nullptr),
       baselineInterpreter_(),
       trampolineCode_(nullptr),
@@ -330,14 +330,18 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
   return true;
 }
 
-JitCode* JitRuntime::debugTrapHandler(JSContext* cx) {
-  if (!debugTrapHandler_) {
+JitCode* JitRuntime::debugTrapHandler(JSContext* cx,
+                                      DebugTrapHandlerKind kind) {
+  if (!debugTrapHandlers_[kind]) {
     // JitRuntime code stubs are shared across compartments and have to
     // be allocated in the atoms zone.
-    AutoAllocInAtomsZone az(cx);
-    debugTrapHandler_ = generateDebugTrapHandler(cx);
+    mozilla::Maybe<AutoAllocInAtomsZone> az;
+    if (!cx->zone()->isAtomsZone()) {
+      az.emplace(cx);
+    }
+    debugTrapHandlers_[kind] = generateDebugTrapHandler(cx, kind);
   }
-  return debugTrapHandler_;
+  return debugTrapHandlers_[kind];
 }
 
 JitRuntime::IonBuilderList& JitRuntime::ionLazyLinkList(JSRuntime* rt) {

@@ -1400,7 +1400,8 @@ bool BaselineCompiler::emitDebugTrap() {
 #endif
 
   // Emit patchable call to debug trap handler.
-  JitCode* handlerCode = cx->runtime()->jitRuntime()->debugTrapHandler(cx);
+  JitCode* handlerCode = cx->runtime()->jitRuntime()->debugTrapHandler(
+      cx, DebugTrapHandlerKind::Compiler);
   if (!handlerCode) {
     return false;
   }
@@ -6615,15 +6616,33 @@ MethodStatus BaselineCompiler::emitBody() {
   return Method_Compiled;
 }
 
-JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx) {
+JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
+                                              DebugTrapHandlerKind kind) {
   StackMacroAssembler masm;
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
   regs.takeUnchecked(BaselineFrameReg);
   regs.takeUnchecked(ICStubReg);
+  regs.takeUnchecked(PCRegAtStart);
   Register scratch1 = regs.takeAny();
   Register scratch2 = regs.takeAny();
   Register scratch3 = regs.takeAny();
+
+  if (kind == DebugTrapHandlerKind::Interpreter) {
+    // The interpreter calls this for every script when debugging, so check if
+    // the script has any breakpoints or is in step mode before calling into
+    // C++.
+    Label hasDebugScript;
+    Address scriptAddr(BaselineFrameReg,
+                       BaselineFrame::reverseOffsetOfInterpreterScript());
+    masm.loadPtr(scriptAddr, scratch1);
+    masm.branchTest32(Assembler::NonZero,
+                      Address(scratch1, JSScript::offsetOfMutableFlags()),
+                      Imm32(int32_t(JSScript::MutableFlags::HasDebugScript)),
+                      &hasDebugScript);
+    masm.abiret();
+    masm.bind(&hasDebugScript);
+  }
 
   // Load the return address in scratch1.
   masm.loadAbiReturnAddress(scratch1);
@@ -6652,6 +6671,13 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx) {
   // from the trap stub so that execution continues at the current pc.
   Label forcedReturn;
   masm.branchIfTrueBool(ReturnReg, &forcedReturn);
+
+  if (kind == DebugTrapHandlerKind::Interpreter) {
+    // We have to reload the bytecode pc register.
+    Address pcAddr(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfInterpreterPC());
+    masm.loadPtr(pcAddr, PCRegAtStart);
+  }
   masm.abiret();
 
   masm.bind(&forcedReturn);
