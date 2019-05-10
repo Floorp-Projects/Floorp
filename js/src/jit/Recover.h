@@ -608,6 +608,7 @@ class RNewTypedArray final : public RInstruction {
 class RNewArray final : public RInstruction {
  private:
   uint32_t count_;
+  bool convertDoubleElements_;
 
  public:
   RINSTRUCTION_HEADER_NUM_OP_(NewArray, 1)
