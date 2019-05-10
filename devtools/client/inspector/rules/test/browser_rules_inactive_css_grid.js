@@ -47,7 +47,6 @@ const BEFORE = [
     selector: "#self-aligned",
     inactiveDeclarations: [
       {
-        l10n: "rule.inactive.css.not.grid.or.flex.item",
         declaration: {
           "align-self": "stretch",
         },
@@ -70,7 +69,6 @@ const BEFORE = [
     ],
     inactiveDeclarations: [
       {
-        l10n: "rule.inactive.css.not.flex.container",
         declaration: {
           "flex-direction": "row",
         },
@@ -100,14 +98,12 @@ const BEFORE = [
     ],
     inactiveDeclarations: [
       {
-        l10n: "rule.inactive.css.not.grid.or.flex.item",
         declaration: {
           "align-self": "start",
         },
         ruleIndex: 1,
       },
     ],
-    waitFor: "inspector-updated",
   },
 ];
 
@@ -131,21 +127,18 @@ const AFTER = [
     ],
     inactiveDeclarations: [
       {
-        l10n: "rule.inactive.css.not.grid.container",
         declaration: {
           "column-gap": "10px",
         },
         ruleIndex: 1,
       },
       {
-        l10n: "rule.inactive.css.not.grid.container",
         declaration: {
           "row-gap": "10px",
         },
         ruleIndex: 1,
       },
       {
-        l10n: "rule.inactive.css.not.grid.or.flex.item",
         declaration: {
           "align-self": "start",
         },

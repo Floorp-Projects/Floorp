@@ -634,14 +634,13 @@ TextPropertyEditor.prototype = {
       this.element.classList.remove("ruleview-overridden");
     }
 
-    const { used, reasons } = this.prop.isUsed();
+    const { used } = this.prop.isUsed();
 
     if (this.editing || this.prop.overridden || !this.prop.enabled || used) {
       this.element.classList.remove("unused");
       this.unusedState.hidden = true;
     } else {
       this.element.classList.add("unused");
-      this.unusedState.title = reasons.join("\n");
       this.unusedState.hidden = false;
     }
   },

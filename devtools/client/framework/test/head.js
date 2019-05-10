@@ -427,3 +427,19 @@ function setupPreferencesForBrowserToolbox() {
 
   return SpecialPowers.pushPrefEnv(options);
 }
+
+/**
+ * Load FTL.
+ *
+ * @param {Toolbox} toolbox
+ *        Toolbox instance.
+ * @param {String} path
+ *        Path to the FTL file.
+ */
+function loadFTL(toolbox, path) {
+  const win = toolbox.doc.ownerGlobal;
+
+  if (win.MozXULElement) {
+    win.MozXULElement.insertFTLIfNeeded(path);
+  }
+}

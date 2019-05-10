@@ -67,11 +67,33 @@
   --theme-arrowpanel-separator: hsla(210,4%,10%,.14);
 }
 
+strong {
+  font-weight: bold;
+}
+
 /* Tooltip: CSS variables tooltip */
 
 .devtools-tooltip-css-variable {
   color: var(--theme-body-color);
   padding: 2px;
+}
+
+/* Tooltip: Inactive CSS tooltip */
+
+.devtools-tooltip-inactive-css {
+  color: var(--theme-body-color);
+  padding: 7px 10px;
+  margin: 0;
+}
+
+.devtools-tooltip-inactive-css p {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+.devtools-tooltip-inactive-css .link {
+  color: var(--theme-highlight-blue);
+  cursor: pointer;
 }
 
 /* Tooltip: Tiles */

@@ -622,7 +622,7 @@ async function openEyedropper(view, swatch) {
  *                {
  *                  propertyName: "color",
  *                  propertyValue: "red",
- *                  warnings: "This won't work",
+ *                  warning: "This won't work",
  *                  used: true,
  *                }
  *            },
@@ -635,12 +635,15 @@ function getPropertiesForRuleIndex(view, ruleIndex) {
 
   for (const currProp of ruleEditor.rule.textProps) {
     const icon = currProp.editor.unusedState;
+    const unused = currProp.editor.element.classList.contains("unused");
 
     declaration.set(`${currProp.name}:${currProp.value}`, {
       propertyName: currProp.name,
       propertyValue: currProp.value,
-      warnings: icon.title ? icon.title.split("\n") : [],
-      used: !currProp.editor.element.classList.contains("unused"),
+      icon: icon,
+      data: currProp.isUsed(),
+      warning: unused,
+      used: !unused,
     });
   }
 
@@ -679,6 +682,7 @@ async function toggleDeclaration(inspector, view, ruleIndex, declaration) {
   info(`Toggling declaration "${dec}" of rule ${ruleIndex} to ${newStatus}`);
 
   await togglePropStatus(view, textProp);
+  info("Toggled successfully.");
 }
 
 /**
@@ -691,20 +695,17 @@ async function toggleDeclaration(inspector, view, ruleIndex, declaration) {
  *        The index we expect the rule to have in the rule-view.
  * @param {Object} declaration
  *        An object representing the declaration e.g. { color: "red" }.
- * @param {String} warningL10nString
- *        l10n string representing an expected warning.
  */
-function checkDeclarationIsInactive(view, ruleIndex, declaration, warningL10nString) {
+async function checkDeclarationIsInactive(view, ruleIndex, declaration) {
   const declarations = getPropertiesForRuleIndex(view, ruleIndex);
   const [[ name, value ]] = Object.entries(declaration);
   const dec = `${name}:${value}`;
-  const { used, warnings } = declarations.get(dec);
+  const { used, warning } = declarations.get(dec);
 
   ok(!used, `"${dec}" is inactive`);
-  is(warnings.length, 1, `"${dec}" has a warning`);
+  ok(warning, `"${dec}" has a warning`);
 
-  const warning = INSPECTOR_L10N.getFormatStr(warningL10nString, name);
-  is(warnings[0], warning, `The warning on "${dec}" is correct`);
+  await checkInteractiveTooltip(view, ruleIndex, declaration);
 }
 
 /**
@@ -721,10 +722,59 @@ function checkDeclarationIsActive(view, ruleIndex, declaration) {
   const declarations = getPropertiesForRuleIndex(view, ruleIndex);
   const [[ name, value ]] = Object.entries(declaration);
   const dec = `${name}:${value}`;
-  const { used, warnings } = declarations.get(dec);
+  const { used, warning } = declarations.get(dec);
 
   ok(used, `${dec} is active`);
-  is(warnings.length, 0, `${dec} has no warnings`);
+  ok(!warning, `${dec} has no warning`);
+}
+
+/**
+ * Check that a tooltip contains the correct value.
+ *
+ * @param {ruleView} view
+ *        The rule-view instance.
+ * @param {Number} ruleIndex
+ *        The index we expect the rule to have in the rule-view.
+ * @param {Object} declaration
+ *        An object representing the declaration e.g. { color: "red" }.
+ */
+async function checkInteractiveTooltip(view, ruleIndex, declaration) {
+  // Get the declaration
+  const declarations = getPropertiesForRuleIndex(view, ruleIndex);
+  const [[ name, value ]] = Object.entries(declaration);
+  const dec = `${name}:${value}`;
+  const { icon, data } = declarations.get(dec);
+
+  // Get the tooltip.
+  const tooltip = view.tooltips.getTooltip("interactiveTooltip");
+
+  // Get the HTML template.
+  const inactiveCssTooltipHelper = view.tooltips.inactiveCssTooltipHelper;
+  const template = inactiveCssTooltipHelper.getTemplate(data, tooltip);
+
+  // Translate the template using Fluent.
+  const { doc } = tooltip;
+  await doc.l10n.translateFragment(template);
+
+  // Get the expected HTML content of the now translated template.
+  const expected = template.firstElementChild.outerHTML;
+
+  // Show the tooltip for the correct icon.
+  const onTooltipReady = tooltip.once("shown");
+  await view.tooltips.onInteractiveTooltipTargetHover(icon);
+  tooltip.show(icon);
+  await onTooltipReady;
+
+  // Get the tooltip's actual HTML content.
+  const actual = tooltip.panel.firstElementChild.outerHTML;
+
+  // Hide the tooltip.
+  const onTooltipHidden = tooltip.once("hidden");
+  tooltip.hide();
+  await onTooltipHidden;
+
+  // Finally, check the values.
+  is(actual, expected, "Tooltip contains the correct value.");
 }
 
 /**
@@ -757,36 +807,25 @@ function checkDeclarationIsActive(view, ruleIndex, declaration) {
  *              ],
  *              inactiveDeclarations: [
  *                {
- *                  l10n: "rule.inactive.css.not.flex.container",
  *                  declaration: {
  *                    "flex-direction": "row",
  *                  },
  *                  ruleIndex: 1,
  *                },
  *              ],
- *              waitFor: "markupmutation",
  *            },
  *            ...
  *          ]
  */
 async function runInactiveCSSTests(view, inspector, tests) {
   for (const test of tests) {
-    let event = null;
-
-    if (test.waitFor) {
-      event = inspector.once(test.waitFor);
-    }
-
     if (test.selector) {
       await selectNode(test.selector, inspector);
     }
 
-    if (test.waitFor) {
-      await event;
-    }
-
     if (test.activeDeclarations) {
-      // Check whether declarations are marked as used.
+      info("Checking whether declarations are marked as used.");
+
       for (const activeDeclarations of test.activeDeclarations) {
         for (const [name, value] of Object.entries(activeDeclarations.declarations)) {
           checkDeclarationIsActive(view, activeDeclarations.ruleIndex, {
@@ -797,12 +836,12 @@ async function runInactiveCSSTests(view, inspector, tests) {
     }
 
     if (test.inactiveDeclarations) {
+      info("Checking that declarations are unused and have a warning.");
+
       for (const inactiveDeclaration of test.inactiveDeclarations) {
-        // Check that declaration is unused and has a warning.
-        checkDeclarationIsInactive(view,
-                                   inactiveDeclaration.ruleIndex,
-                                   inactiveDeclaration.declaration,
-                                   inactiveDeclaration.l10n);
+        await checkDeclarationIsInactive(view,
+                                         inactiveDeclaration.ruleIndex,
+                                         inactiveDeclaration.declaration);
       }
     }
   }

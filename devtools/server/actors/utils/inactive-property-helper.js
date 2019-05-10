@@ -7,11 +7,8 @@
 "use strict";
 
 const Services = require("Services");
-const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const PREF_UNUSED_CSS_ENABLED = "devtools.inspector.inactive.css.enabled";
-const INSPECTOR_L10N =
-  new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 class InactivePropertyHelper {
   /**
@@ -36,11 +33,14 @@ class InactivePropertyHelper {
    *   when:
    *     The rule itself, a JS function used to identify the conditions
    *     indicating whether a property is valid or not.
-   *
-   *   error:
-   *     A JS function that returns a custom error message explaining why the
-   *     property is inactive in this situation. This function takes a single
-   *     argument: the property name.
+   *   fixId:
+   *     A Fluent id containing a suggested solution to the problem that is
+   *     causing a property to be inactive.
+   *   msgId:
+   *     A Fluent id containing an error message explaining why a property is
+   *     inactive in this situation.
+   *   numFixProps:
+   *     The number of properties we suggest in the fixId string.
    * }
    *
    * NOTE: validProperties and invalidProperties are mutually exclusive.
@@ -58,7 +58,9 @@ class InactivePropertyHelper {
           "flex-wrap",
         ],
         when: () => !this.flexContainer,
-        error: property => msg("rule.inactive.css.not.flex.container", property),
+        fixId: "inactive-css-not-flex-container-fix",
+        msgId: "inactive-css-not-flex-container",
+        numFixProps: 2,
       },
       // Flex item property used on non-flex item.
       {
@@ -70,7 +72,9 @@ class InactivePropertyHelper {
           "order",
         ],
         when: () => !this.flexItem,
-        error: property => msg("rule.inactive.css.not.flex.item", property),
+        fixId: "inactive-css-not-flex-item-fix",
+        msgId: "inactive-css-not-flex-item",
+        numFixProps: 2,
       },
       // Grid container property used on non-grid container.
       {
@@ -85,7 +89,9 @@ class InactivePropertyHelper {
           "justify-items",
         ],
         when: () => !this.gridContainer,
-        error: property => msg("rule.inactive.css.not.grid.container", property),
+        fixId: "inactive-css-not-grid-container-fix",
+        msgId: "inactive-css-not-grid-container",
+        numFixProps: 2,
       },
       // Grid item property used on non-grid item.
       {
@@ -100,7 +106,9 @@ class InactivePropertyHelper {
           "justify-self",
         ],
         when: () => !this.gridItem,
-        error: property => msg("rule.inactive.css.not.grid.item", property),
+        fixId: "inactive-css-not-grid-item-fix",
+        msgId: "inactive-css-not-grid-item",
+        numFixProps: 2,
       },
       // Grid and flex item properties used on non-grid or non-flex item.
       {
@@ -108,7 +116,9 @@ class InactivePropertyHelper {
           "align-self",
         ],
         when: () => !this.gridItem && !this.flexItem,
-        error: property => msg("rule.inactive.css.not.grid.or.flex.item", property),
+        fixId: "inactive-css-not-grid-or-flex-item-fix",
+        msgId: "inactive-css-not-grid-or-flex-item",
+        numFixProps: 4,
       },
       // Grid and flex container properties used on non-grid or non-flex container.
       {
@@ -118,7 +128,9 @@ class InactivePropertyHelper {
           "justify-content",
         ],
         when: () => !this.gridContainer && !this.flexContainer,
-        error: property => msg("rule.inactive.css.not.grid.or.flex.container", property),
+        fixId: "inactive-css-not-grid-or-flex-container-fix",
+        msgId: "inactive-css-not-grid-or-flex-container",
+        numFixProps: 2,
       },
     ];
   }
@@ -143,19 +155,30 @@ class InactivePropertyHelper {
    *        The CSS property name.
    *
    * @return {Object} object
+   * @return {Boolean} object.fixId
+   *         A Fluent id containing a suggested solution to the problem that is
+   *         causing a property to be inactive.
+   * @return {Boolean} object.msgId
+   *         A Fluent id containing an error message explaining why a property
+   *         is inactive in this situation.
+   * @return {Boolean} object.numFixProps
+   *         The number of properties we suggest in the fixId string.
+   * @return {Boolean} object.property
+   *         The inactive property name.
    * @return {Boolean} object.used
    *         true if the property is used.
-   * @return {Array} object.reasons
-   *         A string array listing the reasons a property isn't used.
    */
   isPropertyUsed(el, elStyle, cssRule, property) {
     if (!this.unusedCssEnabled) {
       return {used: true};
     }
 
-    const errors = [];
+    let fixId = "";
+    let msgId = "";
+    let numFixProps = 0;
+    let used = true;
 
-    this.VALIDATORS.forEach(validator => {
+    this.VALIDATORS.some(validator => {
       // First check if this rule cares about this property.
       let isRuleConcerned = false;
 
@@ -167,7 +190,7 @@ class InactivePropertyHelper {
       }
 
       if (!isRuleConcerned) {
-        return;
+        return false;
       }
 
       this.select(el, elStyle, cssRule, property);
@@ -175,17 +198,23 @@ class InactivePropertyHelper {
       // And then run the validator, gathering the error message if the
       // validator passes.
       if (validator.when()) {
-        const error = validator.error(property);
+        fixId = validator.fixId;
+        msgId = validator.msgId;
+        numFixProps = validator.numFixProps;
+        used = false;
 
-        if (typeof error === "string") {
-          errors.push(validator.error(property));
-        }
+        return true;
       }
+
+      return false;
     });
 
     return {
-      used: !errors.length,
-      reasons: errors,
+      fixId,
+      msgId,
+      numFixProps,
+      property,
+      used,
     };
   }
 
@@ -348,19 +377,6 @@ class InactivePropertyHelper {
     }
     return null;
   }
-}
-
-/**
- * Helper function that gets localized strings.
- *
- * @param  {String} propName
- *         The property name to use. This property name must exist in the
- *         `inspector.properties` file).
- * @param  {*} values
- *         Values to be used as replacement strings.
- */
-function msg(...args) {
-  return INSPECTOR_L10N.getFormatStr(...args);
 }
 
 exports.inactivePropertyHelper = new InactivePropertyHelper();
