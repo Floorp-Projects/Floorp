@@ -141,10 +141,10 @@ Object.assign(PushServiceParent.prototype, {
   // nsIPushService methods
 
   subscribe(scope, principal, callback) {
-    this.subscribeWithKey(scope, principal, 0, null, callback);
+    this.subscribeWithKey(scope, principal, [], callback);
   },
 
-  subscribeWithKey(scope, principal, keyLen, key, callback) {
+  subscribeWithKey(scope, principal, key, callback) {
     this._handleRequest("Push:Register", principal, {
       scope,
       appServerKey: key,
@@ -348,10 +348,10 @@ Object.assign(PushServiceContent.prototype, {
   // nsIPushService methods
 
   subscribe(scope, principal, callback) {
-    this.subscribeWithKey(scope, principal, 0, null, callback);
+    this.subscribeWithKey(scope, principal, [], callback);
   },
 
-  subscribeWithKey(scope, principal, keyLen, key, callback) {
+  subscribeWithKey(scope, principal, key, callback) {
     let requestID = this._addRequest(callback);
     this._mm.sendAsyncMessage("Push:Register", {
       scope,
@@ -529,29 +529,25 @@ PushSubscription.prototype = {
    * callers receive the key buffer as a return value, while C++ callers
    * receive the key size and buffer as out parameters.
    */
-  getKey(name, outKeyLen) {
+  getKey(name) {
     switch (name) {
       case "p256dh":
-        return this._getRawKey(this._props.p256dhKey, outKeyLen);
+        return this._getRawKey(this._props.p256dhKey);
 
       case "auth":
-        return this._getRawKey(this._props.authenticationSecret, outKeyLen);
+        return this._getRawKey(this._props.authenticationSecret);
 
       case "appServer":
-        return this._getRawKey(this._props.appServerKey, outKeyLen);
+        return this._getRawKey(this._props.appServerKey);
     }
-    return null;
+    return [];
   },
 
-  _getRawKey(key, outKeyLen) {
+  _getRawKey(key) {
     if (!key) {
-      return null;
+      return [];
     }
-    let rawKey = new Uint8Array(key);
-    if (outKeyLen) {
-      outKeyLen.value = rawKey.length;
-    }
-    return rawKey;
+    return new Uint8Array(key);
   },
 };
 

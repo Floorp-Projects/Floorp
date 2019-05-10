@@ -1021,7 +1021,8 @@ var PushService = {
     console.debug("register()", aPageRecord);
 
     let keyPromise;
-    if (aPageRecord.appServerKey) {
+    if (aPageRecord.appServerKey &&
+        aPageRecord.appServerKey.length != 0) {
       let keyView = new Uint8Array(aPageRecord.appServerKey);
       keyPromise = PushCrypto.validateAppServerKey(keyView)
         .catch(error => {

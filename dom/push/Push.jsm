@@ -96,8 +96,7 @@ Push.prototype = {
           return;
         }
         PushService.subscribeWithKey(this._scope, this._principal,
-                                     keyView.byteLength, keyView,
-                                     callback);
+                                     keyView, callback);
       })
     );
   },
@@ -240,14 +239,13 @@ PushSubscriptionCallback.prototype = {
   },
 
   _getKey(subscription, name) {
-    let outKeyLen = {};
-    let rawKey = Cu.cloneInto(subscription.getKey(name, outKeyLen),
+    let rawKey = Cu.cloneInto(subscription.getKey(name),
                               this.pushManager._window);
-    if (!outKeyLen.value) {
+    if (!rawKey.length) {
       return null;
     }
 
-    let key = new this.pushManager._window.ArrayBuffer(outKeyLen.value);
+    let key = new this.pushManager._window.ArrayBuffer(rawKey.length);
     let keyView = new this.pushManager._window.Uint8Array(key);
     keyView.set(rawKey);
     return key;

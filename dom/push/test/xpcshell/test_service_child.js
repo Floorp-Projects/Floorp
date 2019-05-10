@@ -64,7 +64,6 @@ add_test(function test_subscribeWithKey_error() {
   PushServiceComponent.subscribeWithKey(
     "https://example.com/sub-key/invalid",
     Services.scriptSecurityManager.getSystemPrincipal(),
-    invalidKey.length,
     invalidKey,
     (result, subscription) => {
       ok(!Components.isSuccessCode(result), "Expected error creating subscription with invalid key");
@@ -84,7 +83,6 @@ add_test(function test_subscribeWithKey_success() {
     PushServiceComponent.subscribeWithKey(
       "https://example.com/sub-key/ok",
       Services.scriptSecurityManager.getSystemPrincipal(),
-      key.length,
       key,
       (result, subscription) => {
         ok(Components.isSuccessCode(result), "Error creating subscription with key");
@@ -105,7 +103,6 @@ add_test(function test_subscribeWithKey_conflict() {
     PushServiceComponent.subscribeWithKey(
       "https://example.com/sub-key/ok",
       Services.scriptSecurityManager.getSystemPrincipal(),
-      differentKey.length,
       differentKey,
       (result, subscription) => {
         ok(!Components.isSuccessCode(result), "Expected error creating subscription with conflicting key");

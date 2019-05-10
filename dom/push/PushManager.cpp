@@ -61,38 +61,6 @@ nsresult GetPermissionState(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-// A helper class that frees an `nsIPushSubscription` key buffer when it
-// goes out of scope.
-class MOZ_RAII AutoFreeKeyBuffer final {
-  uint8_t** mKeyBuffer;
-
- public:
-  explicit AutoFreeKeyBuffer(uint8_t** aKeyBuffer) : mKeyBuffer(aKeyBuffer) {
-    MOZ_ASSERT(mKeyBuffer);
-  }
-
-  ~AutoFreeKeyBuffer() { free(*mKeyBuffer); }
-};
-
-// Copies a subscription key buffer into an array.
-nsresult CopySubscriptionKeyToArray(nsIPushSubscription* aSubscription,
-                                    const nsAString& aKeyName,
-                                    nsTArray<uint8_t>& aKey) {
-  uint8_t* keyBuffer = nullptr;
-  AutoFreeKeyBuffer autoFree(&keyBuffer);
-
-  uint32_t keyLen;
-  nsresult rv = aSubscription->GetKey(aKeyName, &keyLen, &keyBuffer);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!aKey.SetCapacity(keyLen, fallible) ||
-      !aKey.InsertElementsAt(0, keyBuffer, keyLen, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
 nsresult GetSubscriptionParams(nsIPushSubscription* aSubscription,
                                nsAString& aEndpoint,
                                nsTArray<uint8_t>& aRawP256dhKey,
@@ -107,18 +75,15 @@ nsresult GetSubscriptionParams(nsIPushSubscription* aSubscription,
     return rv;
   }
 
-  rv = CopySubscriptionKeyToArray(aSubscription, NS_LITERAL_STRING("p256dh"),
-                                  aRawP256dhKey);
+  rv = aSubscription->GetKey(NS_LITERAL_STRING("p256dh"), aRawP256dhKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  rv = CopySubscriptionKeyToArray(aSubscription, NS_LITERAL_STRING("auth"),
-                                  aAuthSecret);
+  rv = aSubscription->GetKey(NS_LITERAL_STRING("auth"), aAuthSecret);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  rv = CopySubscriptionKeyToArray(aSubscription, NS_LITERAL_STRING("appServer"),
-                                  aAppServerKey);
+  rv = aSubscription->GetKey(NS_LITERAL_STRING("appServer"), aAppServerKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -290,9 +255,8 @@ class GetSubscriptionRunnable final : public Runnable {
       if (mAppServerKey.IsEmpty()) {
         rv = service->Subscribe(mScope, principal, callback);
       } else {
-        rv =
-            service->SubscribeWithKey(mScope, principal, mAppServerKey.Length(),
-                                      mAppServerKey.Elements(), callback);
+        rv = service->SubscribeWithKey(mScope, principal, mAppServerKey,
+                                       callback);
       }
     } else {
       MOZ_ASSERT(mAction == PushManager::GetSubscriptionAction);
