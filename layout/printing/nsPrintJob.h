@@ -159,8 +159,14 @@ class nsPrintJob final : public nsIObserver,
    */
   void SuppressPrintPreviewUserEvents();
 
-  // nsIDocumentViewerPrint Printing Methods
-  bool HasPrintCallbackCanvas();
+  // nsIDocumentViewerPrint Printing Methods:
+
+  /**
+   * Checks to see if the document this print engine is associated with has any
+   * canvases that have a mozPrintCallback.
+   * https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement#Properties
+   */
+  bool HasPrintCallbackCanvas() { return mHasMozPrintCallback; }
   bool PrePrintPage();
   bool PrintPage(nsPrintObject* aPOect, bool& aInRange);
   bool DonePrintingPages(nsPrintObject* aPO, nsresult aResult);
@@ -309,6 +315,8 @@ class nsPrintJob final : public nsIObserver,
   bool mDidLoadDataForPrinting = false;
   bool mIsDestroying = false;
   bool mDisallowSelectionPrint = false;
+  bool mIsForModalWindow = false;
+  bool mHasMozPrintCallback = false;
 };
 
 #endif  // nsPrintJob_h
