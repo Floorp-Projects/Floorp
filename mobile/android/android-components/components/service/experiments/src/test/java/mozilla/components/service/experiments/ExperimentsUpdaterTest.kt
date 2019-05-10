@@ -55,7 +55,9 @@ class ExperimentsUpdaterTest {
         // Initialize WorkManager (early) for instrumentation tests.
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
 
-        configuration = Configuration()
+        // Setting the endpoint to a non-existent one to prevent actual experiments from being
+        // downloaded to tests.
+        configuration = Configuration(kintoEndpoint = "https://example.invalid")
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = valuesProvider
 
