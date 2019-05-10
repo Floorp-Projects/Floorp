@@ -108,11 +108,11 @@ function getLongPressResult(browser, midPoint) {
 
   // AccessibleCarets expect longtap between touchstart/end.
   domWinUtils.sendTouchEventToWindow("touchstart", [0], [midPoint.x], [midPoint.y],
-                                     [1], [1], [0], [1], 1, 0);
+                                     [1], [1], [0], [1], 0);
   domWinUtils.sendMouseEventToWindow("mouselongtap", midPoint.x, midPoint.y,
                                      0, 1, 0);
   domWinUtils.sendTouchEventToWindow("touchend", [0], [midPoint.x], [midPoint.y],
-                                     [1], [1], [0], [1], 1, 0);
+                                     [1], [1], [0], [1], 0);
 
   return { focusedElement: gActionBarHandler._targetElement,
            text: gActionBarHandler._getSelectedText(),

@@ -96,17 +96,17 @@ function withoutImplicitlyPointerCaptureForTouch() {
   var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.sendTouchEvent('touchstart', [test1PointerId, test2PointerId],
                        [left1, left2], [top1, top2], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   // Move the touch pointers so that we dispatch all of them to content.
   left1++;
   left2++;
   utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
                        [left1, left2], [top1, top2], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
   utils.sendTouchEvent('touchend', [test1PointerId, test2PointerId],
                        [left1, left2], [top1, top2], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 }
 
 SimpleTest.waitForFocus(() => {

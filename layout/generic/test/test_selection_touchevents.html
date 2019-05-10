@@ -16,7 +16,7 @@ var div1 = document.getElementById("div1");
 
 function sendTouch(aType, aX, aY) {
   var cwu = SpecialPowers.getDOMWindowUtils(window);
-  cwu.sendTouchEvent(aType, [0], [aX], [aY], [1], [1], [0], [1], 1, 0, true);
+  cwu.sendTouchEvent(aType, [0], [aX], [aY], [1], [1], [0], [1], 0, true);
 }
 
 function test()

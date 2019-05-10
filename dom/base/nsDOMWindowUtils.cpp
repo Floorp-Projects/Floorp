@@ -762,35 +762,36 @@ nsDOMWindowUtils::SendWheelEvent(float aX, float aY, double aDeltaX,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SendTouchEvent(const nsAString& aType, uint32_t* aIdentifiers,
-                                 int32_t* aXs, int32_t* aYs, uint32_t* aRxs,
-                                 uint32_t* aRys, float* aRotationAngles,
-                                 float* aForces, uint32_t aCount,
-                                 int32_t aModifiers,
-                                 bool aIgnoreRootScrollFrame,
-                                 bool* aPreventDefault) {
+nsDOMWindowUtils::SendTouchEvent(
+    const nsAString& aType, const nsTArray<uint32_t>& aIdentifiers,
+    const nsTArray<int32_t>& aXs, const nsTArray<int32_t>& aYs,
+    const nsTArray<uint32_t>& aRxs, const nsTArray<uint32_t>& aRys,
+    const nsTArray<float>& aRotationAngles, const nsTArray<float>& aForces,
+    int32_t aModifiers, bool aIgnoreRootScrollFrame, bool* aPreventDefault) {
   return SendTouchEventCommon(aType, aIdentifiers, aXs, aYs, aRxs, aRys,
-                              aRotationAngles, aForces, aCount, aModifiers,
+                              aRotationAngles, aForces, aModifiers,
                               aIgnoreRootScrollFrame, false, aPreventDefault);
 }
 
 NS_IMETHODIMP
 nsDOMWindowUtils::SendTouchEventToWindow(
-    const nsAString& aType, uint32_t* aIdentifiers, int32_t* aXs, int32_t* aYs,
-    uint32_t* aRxs, uint32_t* aRys, float* aRotationAngles, float* aForces,
-    uint32_t aCount, int32_t aModifiers, bool aIgnoreRootScrollFrame,
-    bool* aPreventDefault) {
+    const nsAString& aType, const nsTArray<uint32_t>& aIdentifiers,
+    const nsTArray<int32_t>& aXs, const nsTArray<int32_t>& aYs,
+    const nsTArray<uint32_t>& aRxs, const nsTArray<uint32_t>& aRys,
+    const nsTArray<float>& aRotationAngles, const nsTArray<float>& aForces,
+    int32_t aModifiers, bool aIgnoreRootScrollFrame, bool* aPreventDefault) {
   return SendTouchEventCommon(aType, aIdentifiers, aXs, aYs, aRxs, aRys,
-                              aRotationAngles, aForces, aCount, aModifiers,
+                              aRotationAngles, aForces, aModifiers,
                               aIgnoreRootScrollFrame, true, aPreventDefault);
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::SendTouchEventCommon(
-    const nsAString& aType, uint32_t* aIdentifiers, int32_t* aXs, int32_t* aYs,
-    uint32_t* aRxs, uint32_t* aRys, float* aRotationAngles, float* aForces,
-    uint32_t aCount, int32_t aModifiers, bool aIgnoreRootScrollFrame,
-    bool aToWindow, bool* aPreventDefault) {
+nsresult nsDOMWindowUtils::SendTouchEventCommon(
+    const nsAString& aType, const nsTArray<uint32_t>& aIdentifiers,
+    const nsTArray<int32_t>& aXs, const nsTArray<int32_t>& aYs,
+    const nsTArray<uint32_t>& aRxs, const nsTArray<uint32_t>& aRys,
+    const nsTArray<float>& aRotationAngles, const nsTArray<float>& aForces,
+    int32_t aModifiers, bool aIgnoreRootScrollFrame, bool aToWindow,
+    bool* aPreventDefault) {
   // get the widget to send the event to
   nsPoint offset;
   nsCOMPtr<nsIWidget> widget = GetWidget(&offset);
@@ -817,8 +818,14 @@ nsDOMWindowUtils::SendTouchEventCommon(
   if (!presContext) {
     return NS_ERROR_FAILURE;
   }
-  event.mTouches.SetCapacity(aCount);
-  for (uint32_t i = 0; i < aCount; ++i) {
+  uint32_t count = aIdentifiers.Length();
+  if (aXs.Length() != count || aYs.Length() != count ||
+      aRxs.Length() != count || aRys.Length() != count ||
+      aRotationAngles.Length() != count || aForces.Length() != count) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  event.mTouches.SetCapacity(count);
+  for (uint32_t i = 0; i < count; ++i) {
     LayoutDeviceIntPoint pt = nsContentUtils::ToWidgetPoint(
         CSSPoint(aXs[i], aYs[i]), offset, presContext);
     LayoutDeviceIntPoint radius = LayoutDeviceIntPoint::FromAppUnitsRounded(
