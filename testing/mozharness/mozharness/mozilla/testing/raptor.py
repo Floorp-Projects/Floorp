@@ -398,6 +398,24 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
     # Action methods. {{{1
     # clobber defined in BaseScript
 
+    def clobber(self):
+        # Recreate the upload directory for storing the logcat collected
+        # during apk installation.
+        super(Raptor, self).clobber()
+        upload_dir = self.query_abs_dirs()['abs_blob_upload_dir']
+        if not os.path.isdir(upload_dir):
+            self.mkdir_p(upload_dir)
+
+    def install_apk(self, apk):
+        # Override AnroidMixin's install_apk in order to capture
+        # logcat during the installation. If the installation fails,
+        # the logcat file will be left in the upload directory.
+        self.logcat_start()
+        try:
+            super(Raptor, self).install_apk(apk)
+        finally:
+            self.logcat_stop()
+
     def download_and_extract(self, extract_dirs=None, suite_categories=None):
         if 'MOZ_FETCHES' in os.environ:
             self.fetch_content()
