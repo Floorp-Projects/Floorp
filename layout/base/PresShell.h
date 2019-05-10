@@ -1044,6 +1044,10 @@ class PresShell final : public nsStubDocumentObserver,
   MOZ_CAN_RUN_SCRIPT void DidPaintWindow();
 
   bool IsVisible() const;
+  bool IsUnderHiddenEmbedderElement() const {
+    return mUnderHiddenEmbedderElement;
+  }
+  void SetIsUnderHiddenEmbedderElement(bool aUnderHiddenEmbedderElement);
   MOZ_CAN_RUN_SCRIPT
   void DispatchSynthMouseMove(WidgetGUIEvent* aEvent);
 
@@ -3074,6 +3078,10 @@ class PresShell final : public nsStubDocumentObserver,
 
   // True if the resolution has been ever changed by APZ.
   bool mResolutionUpdatedByApz : 1;
+
+  // Whether this presshell is hidden by 'vibility:hidden' on an ancestor
+  // nsSubDocumentFrame.
+  bool mUnderHiddenEmbedderElement : 1;
 
   bool mDocumentLoading : 1;
   bool mNoDelayedMouseEvents : 1;

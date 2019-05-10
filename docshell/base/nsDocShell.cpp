@@ -7662,7 +7662,8 @@ nsresult nsDocShell::RestoreFromHistory() {
   nsView* rootViewParent = nullptr;
   nsIntRect newBounds(0, 0, 0, 0);
 
-  if (PresShell* oldPresShell = GetPresShell()) {
+  PresShell* oldPresShell = GetPresShell();
+  if (oldPresShell) {
     nsViewManager* vm = oldPresShell->GetViewManager();
     if (vm) {
       nsView* oldRootView = vm->GetRootView();
@@ -8003,6 +8004,15 @@ nsresult nsDocShell::RestoreFromHistory() {
   // have invalid pointer lying around.
   newRootView = rootViewSibling = rootViewParent = nullptr;
   newVM = nullptr;
+
+  // If the IsUnderHiddenEmbedderElement() state has been changed, we need to
+  // update it.
+  if (oldPresShell && presShell &&
+      presShell->IsUnderHiddenEmbedderElement() !=
+          oldPresShell->IsUnderHiddenEmbedderElement()) {
+    presShell->SetIsUnderHiddenEmbedderElement(
+        oldPresShell->IsUnderHiddenEmbedderElement());
+  }
 
   // Simulate the completion of the load.
   nsDocShell::FinishRestore();
