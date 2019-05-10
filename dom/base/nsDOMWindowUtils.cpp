@@ -2789,16 +2789,11 @@ nsDOMWindowUtils::IsPartOfOpaqueLayer(Element* aElement, bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::NumberOfAssignedPaintedLayers(Element** aElements,
-                                                uint32_t aCount,
-                                                uint32_t* aResult) {
-  if (!aElements) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
+nsDOMWindowUtils::NumberOfAssignedPaintedLayers(
+    const nsTArray<RefPtr<Element>>& aElements, uint32_t* aResult) {
   nsTHashtable<nsPtrHashKey<PaintedLayer>> layers;
-  for (uint32_t i = 0; i < aCount; i++) {
-    nsIFrame* frame = aElements[i]->GetPrimaryFrame();
+  for (Element* element : aElements) {
+    nsIFrame* frame = element->GetPrimaryFrame();
     if (!frame) {
       return NS_ERROR_FAILURE;
     }

@@ -1513,8 +1513,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * elements doesn't have a primary frame, or if that frame's display items are
    * assigned to any other layers than just a single PaintedLayer per element.
    */
-  unsigned long numberOfAssignedPaintedLayers([array, size_is(count)] in Element aElements,
-                                              in uint32_t count);
+  unsigned long numberOfAssignedPaintedLayers(in Array<Element> aElements);
 
   /**
    * Get internal id of the stored blob, file or file handle.
