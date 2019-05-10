@@ -9,12 +9,12 @@
 
 #include "vm/JSObject.h"
 
-#include "gc/FreeOp.h"
 #include "vm/ArrayObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSFunction.h"
 #include "vm/Probes.h"
 
+#include "gc/FreeOp-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "vm/ObjectOperations-inl.h"  // js::MaybeHasInterestingSymbolProperty
