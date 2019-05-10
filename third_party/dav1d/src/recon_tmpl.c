@@ -639,7 +639,7 @@ static int obmc(Dav1dTileContext *const t,
             // only odd blocks are considered for overlap handling, hence +1
             const refmvs *const a_r = &r[x - f->b4_stride + 1];
             const uint8_t *const a_b_dim =
-                dav1d_block_dimensions[sbtype_to_bs[a_r->sb_type]];
+                dav1d_block_dimensions[dav1d_sbtype_to_bs[a_r->sb_type]];
 
             if (a_r->ref[0] > 0) {
                 const int ow4 = iclip(a_b_dim[0], 2, b_dim[0]);
@@ -662,7 +662,7 @@ static int obmc(Dav1dTileContext *const t,
             // only odd blocks are considered for overlap handling, hence +1
             const refmvs *const l_r = &r[(y + 1) * f->b4_stride - 1];
             const uint8_t *const l_b_dim =
-                dav1d_block_dimensions[sbtype_to_bs[l_r->sb_type]];
+                dav1d_block_dimensions[dav1d_sbtype_to_bs[l_r->sb_type]];
 
             if (l_r->ref[0] > 0) {
                 const int ow4 = imin(b_dim[0], 16) >> 1;

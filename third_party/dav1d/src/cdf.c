@@ -4181,7 +4181,7 @@ int dav1d_cdf_thread_alloc(CdfThreadContext *const cdf,
 {
     cdf->ref = dav1d_ref_create(sizeof(CdfContext) +
                                 (t != NULL) * sizeof(atomic_uint));
-    if (!cdf->ref) return -ENOMEM;
+    if (!cdf->ref) return DAV1D_ERR(ENOMEM);
     cdf->data.cdf = cdf->ref->data;
     if (t) {
         cdf->progress = (atomic_uint *) &cdf->data.cdf[1];

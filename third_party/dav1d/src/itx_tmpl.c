@@ -50,7 +50,7 @@ inv_txfm_add_c(pixel *dst, const ptrdiff_t stride,
                const int has_dconly HIGHBD_DECL_SUFFIX)
 {
     int i, j;
-    assert((h >= 4 || h <= 64) && (w >= 4 || w <= 64));
+    assert((h >= 4 && h <= 64) && (w >= 4 && w <= 64));
     const int is_rect2 = w * 2 == h || h * 2 == w;
     const int bitdepth = bitdepth_from_max(bitdepth_max);
     const int rnd = (1 << shift) >> 1;
