@@ -33,8 +33,8 @@
   orphans: 1;
   widows: 1;
 
-  -moz-column-count: 3;
-  -moz-column-gap: 1em;
+  column-count: 3;
+  column-gap: 1em;
   }
 
   div div {margin: 0 1em;}
@@ -45,7 +45,7 @@
 
   N == 3;
 
-  W == max(0, (available-width - ((N - 1) * -moz-column-gap)) / N);
+  W == max(0, (available-width - ((N - 1) * column-gap)) / N);
   W == max(0, (41em - ((3 - 1) * 1em)) / 3);
   W == max(0, (41em - (2 * 1em)) / 3);
   W == max(0, (41em - 2em) / 3);
@@ -61,7 +61,7 @@
 
   N == 3;
 
-  W == max(0, (available-width - ((N - 1) * -moz-column-gap)) / N);
+  W == max(0, (available-width - ((N - 1) * column-gap)) / N);
   W == max(0, (11em - ((3 - 1) * 1em)) / 3);
   W == max(0, (11em - (2 * 1em)) / 3);
   W == max(0, (11em - 2em) / 3);

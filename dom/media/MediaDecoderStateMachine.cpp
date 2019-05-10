@@ -2160,7 +2160,7 @@ MediaDecoderStateMachine::StateObject::SetSeekingState(
 }
 
 void MediaDecoderStateMachine::StateObject::SetDecodingState() {
-  if (mMaster->mLooping && mMaster->mSeamlessLoopingAllowed) {
+  if (mMaster->IsInSeamlessLooping()) {
     SetState<LoopingDecodingState>();
     return;
   }
@@ -2276,10 +2276,12 @@ void MediaDecoderStateMachine::DecodingState::Enter() {
     HandleVideoSuspendTimeout();
   }
 
-  // If decoding has ended and we are not in looping, we don't need to decode
-  // anything later.
+  // If we're in the normal decoding mode and the decoding has finished, then we
+  // should go to `completed` state because we don't need to decode anything
+  // later. However, if we're in the saemless decoding mode, we will restart
+  // decoding ASAP so we can still stay in `decoding` state.
   if (!mMaster->IsVideoDecoding() && !mMaster->IsAudioDecoding() &&
-      !mMaster->mLooping) {
+      !mMaster->IsInSeamlessLooping()) {
     SetState<CompletedState>();
     return;
   }
@@ -3935,6 +3937,10 @@ void MediaDecoderStateMachine::AdjustByLooping(media::TimeUnit& aTime) const {
       mAudioDecodedDuration.ref().IsPositive()) {
     aTime = aTime % mAudioDecodedDuration.ref();
   }
+}
+
+bool MediaDecoderStateMachine::IsInSeamlessLooping() const {
+  return mLooping && mSeamlessLoopingAllowed;
 }
 
 }  // namespace mozilla

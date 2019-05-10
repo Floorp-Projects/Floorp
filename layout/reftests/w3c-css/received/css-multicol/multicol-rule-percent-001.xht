@@ -1,13 +1,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
-  <title>CSS Multi-column Layout Test: -moz-column-rule-width and percentage unit (basic)</title>
+  <title>CSS Multi-column Layout Test: column-rule-width and percentage unit (basic)</title>
   <link rel="author" title="Opera Software ASA" href="http://www.opera.com/" />
   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" /> <!-- 2013-08-14 -->
-  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#crw" title="4.4. '-moz-column-rule-width'" />
+  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#crw" title="4.4. 'column-rule-width'" />
   <link rel="match" href="multicol-containing-002-ref.xht" />
   <meta name="flags" content="ahem invalid" />
-  <meta name="assert" content="This test checks that the -moz-column-rule-width property does not accept percentage unit in its values." />
+  <meta name="assert" content="This test checks that the column-rule-width property does not accept percentage unit in its values." />
 <style type="text/css"><![CDATA[
 @font-face {
   font-family: Ahem;
@@ -21,12 +21,12 @@
   font: 1.25em/1 Ahem;
   width: 19em;
 
-  -moz-column-count: 4;
-  -moz-column-gap: 1em;
-  -moz-column-rule-color: red;
-  -moz-column-rule-style: solid;
-  -moz-column-rule-width: 0;
-  -moz-column-rule-width: 200%;
+  column-count: 4;
+  column-gap: 1em;
+  column-rule-color: red;
+  column-rule-style: solid;
+  column-rule-width: 0;
+  column-rule-width: 200%;
   }
   ]]></style>
  </head>
