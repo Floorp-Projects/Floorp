@@ -214,8 +214,8 @@ static nscoord GetBEndMarginClone(nsIFrame* aFrame,
 }
 
 // Compute the amount of available space for reflowing a block frame
-// at the current Y coordinate. This method assumes that
-// GetAvailableSpace has already been called.
+// at the current block-direction coordinate. This method assumes that
+// GetFloatAvailableSpace has already been called.
 void BlockReflowInput::ComputeBlockAvailSpace(
     nsIFrame* aFrame, const nsFlowAreaRect& aFloatAvailableSpace,
     bool aBlockAvoidsFloats, LogicalRect& aResult) {

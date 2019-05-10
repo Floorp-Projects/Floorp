@@ -3511,10 +3511,9 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
         }
       }
 
-      // Temporarily advance the running Y value so that the
-      // GetAvailableSpace method will return the right available
-      // space. This undone as soon as the horizontal margins are
-      // computed.
+      // Temporarily advance the running block-direction value so that the
+      // GetFloatAvailableSpace method will return the right available space.
+      // This undone as soon as the horizontal margins are computed.
       bStartMargin = aState.mPrevBEndMargin.get();
 
       if (treatWithClearance) {
@@ -4265,7 +4264,8 @@ void nsBlockFrame::DoReflowInlineFrames(
                      aFloatAvailableSpace, aAvailableSpaceBSize,
                      aKeepReflowGoing)) {
         lineReflowStatus = LineReflowStatus::RedoMoreFloats;
-        // PlaceLine already called GetAvailableSpaceForBSize for us.
+        // PlaceLine already called GetFloatAvailableSpaceForBSize or its
+        // variant for us.
       }
     }
   }
