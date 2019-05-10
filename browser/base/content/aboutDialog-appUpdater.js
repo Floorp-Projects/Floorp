@@ -50,7 +50,7 @@ function appUpdater(options = {}) {
   // don't have any information to sync between the windows as they both just
   // show the "Restart to continue"-type button.
   if (Services.wm.getMostRecentWindow("Update:Wizard") &&
-      !this.isReadyForRestart) {
+      !this.isApplied) {
     this.updateDeck.hidden = true;
     return;
   }
@@ -69,7 +69,7 @@ function appUpdater(options = {}) {
     return;
   }
 
-  if (this.isReadyForRestart) {
+  if (this.isPending || this.isApplied) {
     this.selectPanel("apply");
     return;
   }
@@ -82,12 +82,6 @@ function appUpdater(options = {}) {
   if (this.isDownloading) {
     this.startDownload();
     // selectPanel("downloading") is called from setupDownloadingUI().
-    return;
-  }
-
-  if (this.isStaging) {
-    this.waitForUpdateToStage();
-    // selectPanel("applying"); is called from waitForUpdateToStage().
     return;
   }
 
@@ -107,7 +101,7 @@ appUpdater.prototype =
   // true when there is an update check in progress.
   isChecking: false,
 
-  // true when there is an update ready to be applied on restart or staged.
+  // true when there is an update already staged / ready to be applied.
   get isPending() {
     if (this.update) {
       return this.update.state == "pending" ||
@@ -120,7 +114,7 @@ appUpdater.prototype =
             this.um.activeUpdate.state == "pending-elevate");
   },
 
-  // true when there is an update already staged.
+  // true when there is an update already installed in the background.
   get isApplied() {
     if (this.update)
       return this.update.state == "applied" ||
@@ -128,38 +122,6 @@ appUpdater.prototype =
     return this.um.activeUpdate &&
            (this.um.activeUpdate.state == "applied" ||
             this.um.activeUpdate.state == "applied-service");
-  },
-
-  get isStaging() {
-    if (!this.updateStagingEnabled) {
-      return false;
-    }
-    let errorCode;
-    if (this.update) {
-      errorCode = this.update.errorCode;
-    } else {
-      errorCode = this.um.activeUpdate.errorCode;
-    }
-    // If the state is pending and the error code is not 0, staging must have
-    // failed.
-    return this.isPending && errorCode == 0;
-  },
-
-  // true when an update ready to restart to finish the update process.
-  get isReadyForRestart() {
-    if (this.updateStagingEnabled) {
-      let errorCode;
-      if (this.update) {
-        errorCode = this.update.errorCode;
-      } else {
-        errorCode = this.um.activeUpdate.errorCode;
-      }
-      // If the state is pending and the error code is not 0, staging must have
-      // failed and Firefox should be restarted to try to apply the update
-      // without staging.
-      return this.isApplied || (this.isPending && errorCode != 0);
-    }
-    return this.isPending;
   },
 
   // true when there is an update download in progress.
@@ -176,9 +138,9 @@ appUpdater.prototype =
   },
 
   // true when updating in background is enabled.
-  get updateStagingEnabled() {
+  get backgroundUpdateEnabled() {
     return !this.updateDisabledByPolicy &&
-           this.aus.canStageUpdates;
+           gAppUpdater.aus.canStageUpdates;
   },
 
   /**
@@ -238,7 +200,7 @@ appUpdater.prototype =
    * which is presented after the download has been downloaded.
    */
   buttonRestartAfterDownload() {
-    if (!this.isReadyForRestart) {
+    if (!this.isPending && !this.isApplied) {
       return;
     }
 
@@ -327,18 +289,6 @@ appUpdater.prototype =
   },
 
   /**
-   * Shows the applying UI until the update has finished staging
-   */
-  waitForUpdateToStage() {
-    if (!this.update)
-      this.update = this.um.activeUpdate;
-    this.update.QueryInterface(Ci.nsIWritablePropertyBag);
-    this.update.setProperty("foregroundDownload", "true");
-    this.selectPanel("applying");
-    this.updateUIWhenStagingComplete();
-  },
-
-  /**
    * Starts the download of an update mar.
    */
   startDownload() {
@@ -401,9 +351,32 @@ appUpdater.prototype =
       break;
     case Cr.NS_OK:
       this.removeDownloadListener();
-      if (this.updateStagingEnabled) {
+      if (this.backgroundUpdateEnabled) {
         this.selectPanel("applying");
-        this.updateUIWhenStagingComplete();
+        let self = this;
+        Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+          // Update the UI when the background updater is finished
+          let status = aData;
+          if (status == "applied" || status == "applied-service" ||
+              status == "pending" || status == "pending-service" ||
+              status == "pending-elevate") {
+            // If the update is successfully applied, or if the updater has
+            // fallen back to non-staged updates, show the "Restart to Update"
+            // button.
+            self.selectPanel("apply");
+          } else if (status == "failed") {
+            // Background update has failed, let's show the UI responsible for
+            // prompting the user to update manually.
+            self.selectPanel("downloadFailed");
+          } else if (status == "downloading") {
+            // We've fallen back to downloading the full update because the
+            // partial update failed to get staged in the background.
+            // Therefore we need to keep our observer.
+            self.setupDownloadingUI();
+            return;
+          }
+          Services.obs.removeObserver(observer, "update-staged");
+        }, "update-staged");
       } else {
         this.selectPanel("apply");
       }
@@ -427,40 +400,6 @@ appUpdater.prototype =
   onProgress(aRequest, aContext, aProgress, aProgressMax) {
     this.downloadStatus.textContent =
       DownloadUtils.getTransferTotal(aProgress, aProgressMax);
-  },
-
-  /**
-   * This function registers an observer that watches for the staging process
-   * to complete. Once it does, it updates the UI to either request that the
-   * user restarts to install the update on success, request that the user
-   * manually download and install the newer version, or automatically download
-   * a complete update if applicable.
-   */
-  updateUIWhenStagingComplete() {
-    let observer = (aSubject, aTopic, aData) => {
-      // Update the UI when the background updater is finished
-      let status = aData;
-      if (status == "applied" || status == "applied-service" ||
-          status == "pending" || status == "pending-service" ||
-          status == "pending-elevate") {
-        // If the update is successfully applied, or if the updater has
-        // fallen back to non-staged updates, show the "Restart to Update"
-        // button.
-        this.selectPanel("apply");
-      } else if (status == "failed") {
-        // Background update has failed, let's show the UI responsible for
-        // prompting the user to update manually.
-        this.selectPanel("downloadFailed");
-      } else if (status == "downloading") {
-        // We've fallen back to downloading the complete update because the
-        // partial update failed to get staged in the background.
-        // Therefore we need to keep our observer.
-        this.setupDownloadingUI();
-        return;
-      }
-      Services.obs.removeObserver(observer, "update-staged");
-    };
-    Services.obs.addObserver(observer, "update-staged");
   },
 
   /**
