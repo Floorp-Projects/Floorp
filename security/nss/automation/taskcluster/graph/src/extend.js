@@ -924,9 +924,13 @@ async function scheduleWindows(name, base, build_script) {
 
 function scheduleTests(task_build, task_cert, test_base) {
   test_base = merge(test_base, {kind: "test"});
-
-  // Schedule tests that do NOT need certificates.
   let no_cert_base = merge(test_base, {parent: task_build});
+  let cert_base = merge(test_base, {parent: task_cert});
+  let cert_base_long = merge(cert_base, {maxRunTime: 7200});
+
+  // Schedule tests that do NOT need certificates. This is defined as
+  // the test itself not needing certs AND not running under the upgradedb
+  // cycle (which itself needs certs). If cycle is not defined, default is all.
   queue.scheduleTask(merge(no_cert_base, {
     name: "Gtests", symbol: "Gtest", tests: "ssl_gtests gtests", cycle: "standard"
   }));
@@ -947,46 +951,45 @@ function scheduleTests(task_build, task_cert, test_base) {
   queue.scheduleTask(merge(no_cert_base, {
     name: "tlsfuzzer tests", symbol: "tlsfuzzer", tests: "tlsfuzzer", cycle: "standard"
   }));
-  queue.scheduleTask(merge(no_cert_base, {
+  queue.scheduleTask(merge(cert_base, {
     name: "Chains tests", symbol: "Chains", tests: "chains"
   }));
-  queue.scheduleTask(merge(no_cert_base, {
+  queue.scheduleTask(merge(cert_base_long, {
     name: "Cipher tests", symbol: "Default", tests: "cipher", group: "Cipher"
   }));
-  queue.scheduleTask(merge(no_cert_base, {
+  queue.scheduleTask(merge(cert_base_long, {
     name: "Cipher tests", symbol: "NoAESNI", tests: "cipher",
     env: {NSS_DISABLE_HW_AES: "1"}, group: "Cipher"
   }));
-  queue.scheduleTask(merge(no_cert_base, {
+  queue.scheduleTask(merge(cert_base_long, {
     name: "Cipher tests", symbol: "NoPCLMUL", tests: "cipher",
     env: {NSS_DISABLE_PCLMUL: "1"}, group: "Cipher"
   }));
-  queue.scheduleTask(merge(no_cert_base, {
+  queue.scheduleTask(merge(cert_base_long, {
     name: "Cipher tests", symbol: "NoAVX", tests: "cipher",
     env: {NSS_DISABLE_AVX: "1"}, group: "Cipher"
   }));
-  queue.scheduleTask(merge(no_cert_base, {
+  queue.scheduleTask(merge(cert_base_long, {
     name: "Cipher tests", symbol: "NoSSSE3|NEON", tests: "cipher",
     env: {
       NSS_DISABLE_ARM_NEON: "1",
       NSS_DISABLE_SSSE3: "1"
     }, group: "Cipher"
   }));
-  queue.scheduleTask(merge(no_cert_base, {
+  queue.scheduleTask(merge(cert_base, {
     name: "EC tests", symbol: "EC", tests: "ec"
   }));
-  queue.scheduleTask(merge(no_cert_base, {
+  queue.scheduleTask(merge(cert_base, {
     name: "Lowhash tests", symbol: "Lowhash", tests: "lowhash"
   }));
-  queue.scheduleTask(merge(no_cert_base, {
+  queue.scheduleTask(merge(cert_base, {
     name: "SDR tests", symbol: "SDR", tests: "sdr"
   }));
-  queue.scheduleTask(merge(no_cert_base, {
+  queue.scheduleTask(merge(cert_base, {
     name: "Policy tests", symbol: "Policy", tests: "policy"
   }));
 
   // Schedule tests that need certificates.
-  let cert_base = merge(test_base, {parent: task_cert});
   queue.scheduleTask(merge(cert_base, {
     name: "CRMF tests", symbol: "CRMF", tests: "crmf"
   }));

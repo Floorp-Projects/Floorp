@@ -107,7 +107,7 @@
           ],
         }],
         # macOS build doesn't use cflags.
-        [ 'OS=="mac"', {
+        [ 'OS=="mac" or OS=="ios"', {
           'xcode_settings': {
             'OTHER_CFLAGS': [
               '-mpclmul', '-maes'
