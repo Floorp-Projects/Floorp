@@ -62,7 +62,7 @@ http://creativecommons.org/licenses/publicdomain/
       let messageId = "message-" + (idCounter++);
       reporters.set(messageId, resolve);
       pushNotifier.notifyPushWithData(registration.scope, principal, messageId,
-                                      data.length, data);
+                                      data);
     });
   }
 

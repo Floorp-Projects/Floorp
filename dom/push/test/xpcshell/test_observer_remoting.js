@@ -77,7 +77,7 @@ var waitForNotifierObservers = async function({ text, principal }, shouldNotify 
   let data = new TextEncoder("utf-8").encode(text);
 
   if (shouldNotify) {
-    pushNotifier.notifyPushWithData(scope, principal, "", data.length, data);
+    pushNotifier.notifyPushWithData(scope, principal, "", data);
     pushNotifier.notifySubscriptionChange(scope, principal);
     pushNotifier.notifySubscriptionModified(scope, principal);
   }
