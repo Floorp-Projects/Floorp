@@ -1943,7 +1943,7 @@ class Element : public FragmentOrElement {
   EventStates mState;
   // Per-node data managed by Servo.
   //
-  // There should not be data on nodes that are in the flattened tree, or
+  // There should not be data on nodes that are not in the flattened tree, or
   // descendants of display: none elements.
   mozilla::RustCell<ServoNodeData*> mServoData;
 
