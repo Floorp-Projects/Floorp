@@ -35,8 +35,15 @@ class WebExtensionController(
      * will happen upon successful installation.
      *
      * @param runtime the [WebExtensionRuntime] the web extension should be installed in.
+     * @param onSuccess (optional) callback invoked if the extension was installed successfully,
+     * providing access to the [WebExtension] object.
+     * @param onError (optional) callback invoked if there was an error installing the extension.
      */
-    fun install(runtime: WebExtensionRuntime) {
+    fun install(
+        runtime: WebExtensionRuntime,
+        onSuccess: ((WebExtension) -> Unit) = { },
+        onError: ((Throwable) -> Unit) = { _ -> }
+    ) {
         if (!installedExtensions.containsKey(extensionId)) {
             runtime.installWebExtension(extensionId, extensionUrl,
                 onSuccess = {
@@ -45,10 +52,12 @@ class WebExtensionController(
                         registerContentMessageHandler(it)
                         registerBackgroundMessageHandler(it)
                         installedExtensions[extensionId] = it
+                        onSuccess(it)
                     }
                 },
                 onError = { ext, throwable ->
                     logger.error("Failed to install extension: $ext", throwable)
+                    onError(throwable)
                 }
             )
         }

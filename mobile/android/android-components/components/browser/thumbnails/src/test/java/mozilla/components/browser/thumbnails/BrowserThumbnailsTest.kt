@@ -63,6 +63,19 @@ class BrowserThumbnailsTest {
     }
 
     @Test
+    fun `feature must capture thumbnail when title changes`() {
+        thumbnails.start()
+
+        val session = getSelectedSession()
+
+        session.notifyObservers {
+            onTitleChanged(session, "test")
+        }
+
+        verify(mockEngineView).captureThumbnail(any())
+    }
+
+    @Test
     fun `when a page is loaded and the os is in low memory condition none thumbnail should be captured`() {
         thumbnails.start()
 

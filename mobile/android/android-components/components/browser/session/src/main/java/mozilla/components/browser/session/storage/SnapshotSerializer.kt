@@ -51,6 +51,9 @@ class SnapshotSerializer(
 
         val sessionJson = serializeSession(item.session)
         sessionJson.put(Keys.SESSION_READER_MODE_KEY, item.readerState?.active ?: false)
+        if (item.readerState?.active == true && item.readerState.activeUrl != null) {
+            sessionJson.put(Keys.SESSION_READER_MODE_ACTIVE_URL_KEY, item.readerState.activeUrl)
+        }
         itemJson.put(Keys.SESSION_KEY, sessionJson)
 
         val engineSessionState = if (item.engineSessionState != null) {
@@ -84,8 +87,10 @@ class SnapshotSerializer(
         val sessionJson = json.getJSONObject(Keys.SESSION_KEY)
         val engineSessionJson = json.getJSONObject(Keys.ENGINE_SESSION_KEY)
         val session = deserializeSession(sessionJson, restoreSessionIds, restoreParentIds)
-        val readerState =
-            ReaderState(active = sessionJson.optBoolean(Keys.SESSION_READER_MODE_KEY, false))
+        val readerState = ReaderState(
+            active = sessionJson.optBoolean(Keys.SESSION_READER_MODE_KEY, false),
+            activeUrl = sessionJson.tryGetString(Keys.SESSION_READER_MODE_ACTIVE_URL_KEY)
+        )
         val engineState = engine.createSessionState(engineSessionJson)
 
         return SessionManager.Snapshot.Item(
@@ -144,6 +149,7 @@ private object Keys {
     const val SESSION_CONTEXT_ID_KEY = "contextId"
     const val SESSION_PARENT_UUID_KEY = "parentUuid"
     const val SESSION_READER_MODE_KEY = "readerMode"
+    const val SESSION_READER_MODE_ACTIVE_URL_KEY = "readerModeArticleUrl"
     const val SESSION_TITLE = "title"
 
     const val SESSION_KEY = "session"

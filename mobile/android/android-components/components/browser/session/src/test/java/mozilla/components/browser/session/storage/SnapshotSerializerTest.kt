@@ -99,13 +99,13 @@ class SnapshotSerializerTest {
         }
 
         val serializer = SnapshotSerializer()
-        val json = serializer.itemToJSON(
+        var json = serializer.itemToJSON(
             Snapshot.Item(
                 originalSession,
                 readerState = ReaderState(active = true)
             )
         )
-        val restoredItem = serializer.itemFromJSON(engine, json)
+        var restoredItem = serializer.itemFromJSON(engine, json)
 
         assertEquals("https://www.mozilla.org", restoredItem.session.url)
         assertEquals(Session.Source.RESTORED, restoredItem.session.source)
@@ -113,6 +113,24 @@ class SnapshotSerializerTest {
         assertEquals("test-context-id", restoredItem.session.contextId)
         assertEquals("Hello World", restoredItem.session.title)
         assertEquals(ReaderState(active = true), restoredItem.readerState)
+
+        json = serializer.itemToJSON(
+            Snapshot.Item(
+                originalSession,
+                readerState = ReaderState(active = true, activeUrl = "https://blog.mozilla.org/123")
+            )
+        )
+        restoredItem = serializer.itemFromJSON(engine, json)
+        assertEquals(ReaderState(active = true, activeUrl = "https://blog.mozilla.org/123"), restoredItem.readerState)
+
+        json = serializer.itemToJSON(
+            Snapshot.Item(
+                originalSession,
+                readerState = ReaderState(active = false, activeUrl = "https://blog.mozilla.org/123")
+            )
+        )
+        restoredItem = serializer.itemFromJSON(engine, json)
+        assertEquals(ReaderState(), restoredItem.readerState)
     }
 
     @Test
