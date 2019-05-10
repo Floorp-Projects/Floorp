@@ -2922,19 +2922,13 @@ JS_PUBLIC_API bool JSPropertySpec::getValue(JSContext* cx,
   return true;
 }
 
-static JS::SymbolCode PropertySpecNameToSymbolCode(const char* name) {
-  MOZ_ASSERT(JS::PropertySpecNameIsSymbol(name));
-  uintptr_t u = reinterpret_cast<uintptr_t>(name);
-  return JS::SymbolCode(u - 1);
-}
-
-bool PropertySpecNameToId(JSContext* cx, const char* name, MutableHandleId id,
+bool PropertySpecNameToId(JSContext* cx, JSPropertySpec::Name name,
+                          MutableHandleId id,
                           js::PinningBehavior pin = js::DoNotPinAtom) {
-  if (JS::PropertySpecNameIsSymbol(name)) {
-    JS::SymbolCode which = PropertySpecNameToSymbolCode(name);
-    id.set(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(which)));
+  if (name.isSymbol()) {
+    id.set(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(name.symbol())));
   } else {
-    JSAtom* atom = Atomize(cx, name, strlen(name), pin);
+    JSAtom* atom = Atomize(cx, name.string(), strlen(name.string()), pin);
     if (!atom) {
       return false;
     }
@@ -2944,7 +2938,7 @@ bool PropertySpecNameToId(JSContext* cx, const char* name, MutableHandleId id,
 }
 
 JS_PUBLIC_API bool JS::PropertySpecNameToPermanentId(JSContext* cx,
-                                                     const char* name,
+                                                     JSPropertySpec::Name name,
                                                      jsid* idp) {
   // We are calling fromMarkedLocation(idp) even though idp points to a
   // location that will never be marked. This is OK because the whole point
@@ -4667,10 +4661,11 @@ JS_PUBLIC_API JS::Symbol* JS::GetWellKnownSymbol(JSContext* cx,
 }
 
 #ifdef DEBUG
-static bool PropertySpecNameIsDigits(const char* s) {
-  if (JS::PropertySpecNameIsSymbol(s)) {
+static bool PropertySpecNameIsDigits(JSPropertySpec::Name name) {
+  if (name.isSymbol()) {
     return false;
   }
+  const char* s = name.string();
   if (!*s) {
     return false;
   }
@@ -4683,18 +4678,19 @@ static bool PropertySpecNameIsDigits(const char* s) {
 }
 #endif  // DEBUG
 
-JS_PUBLIC_API bool JS::PropertySpecNameEqualsId(const char* name, HandleId id) {
-  if (JS::PropertySpecNameIsSymbol(name)) {
+JS_PUBLIC_API bool JS::PropertySpecNameEqualsId(JSPropertySpec::Name name,
+                                                HandleId id) {
+  if (name.isSymbol()) {
     if (!JSID_IS_SYMBOL(id)) {
       return false;
     }
     Symbol* sym = JSID_TO_SYMBOL(id);
-    return sym->isWellKnownSymbol() &&
-           sym->code() == PropertySpecNameToSymbolCode(name);
+    return sym->isWellKnownSymbol() && sym->code() == name.symbol();
   }
 
   MOZ_ASSERT(!PropertySpecNameIsDigits(name));
-  return JSID_IS_ATOM(id) && JS_FlatStringEqualsAscii(JSID_TO_ATOM(id), name);
+  return JSID_IS_ATOM(id) &&
+         JS_FlatStringEqualsAscii(JSID_TO_ATOM(id), name.string());
 }
 
 JS_PUBLIC_API bool JS_Stringify(JSContext* cx, MutableHandleValue vp,
