@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  border-inline-start: 4px solid transparent;
+  border-bottom: 1px solid var(--grey-30);
+  display: block;
+  padding: 10px;
+}
+
+:host(:hover) {
+  background-color: var(--grey-90-a10);
+}
+
+:host(:hover:active) {
+  background-color: var(--grey-90-a20);
+}
+
+:host(.selected) {
+  border-inline-start-color: var(--blue-40);
+  background-color: var(--grey-20);
+}
+
+:host(.selected:hover) {
+}
+
+:host(.selected:hover:active) {
+  background-color: var(--grey-30);
+}
+
+.hostname {
+  font-weight: bold;
+}
+
+.hostname,
+.username {
+  display: block;
+}
