@@ -1699,8 +1699,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   nsChangeHint CalcDifference(const nsStyleDisplay& aNewData) const;
 
-  bool TransformChanged(const nsStyleDisplay& aNewData) const;
-
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   RefPtr<mozilla::css::URLValue> mBinding;
@@ -1752,13 +1750,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   uint8_t mBackfaceVisibility;
   uint8_t mTransformStyle;
   StyleGeometryBox mTransformBox;
-  RefPtr<nsCSSValueSharedList> mSpecifiedTransform;
-  RefPtr<nsCSSValueSharedList> mSpecifiedRotate;
-  RefPtr<nsCSSValueSharedList> mSpecifiedTranslate;
-  RefPtr<nsCSSValueSharedList> mSpecifiedScale;
-  // Used to store the final combination of mSpecifiedRotate,
-  // mSpecifiedTranslate, and mSpecifiedScale.
-  RefPtr<nsCSSValueSharedList> mIndividualTransform;
+
+  mozilla::StyleTransform mTransform;
+  mozilla::StyleRotate mRotate;
+  mozilla::StyleTranslate mTranslate;
+  mozilla::StyleScale mScale;
+
   mozilla::UniquePtr<mozilla::StyleMotion> mMotion;
 
   mozilla::StyleTransformOrigin mTransformOrigin;
@@ -1999,18 +1996,19 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
            (mozilla::StyleDisplay::Table != mDisplay) && !IsInnerTableStyle();
   }
 
-  /* Returns whether the element has the -moz-transform property
-   * or a related property. */
+  /* Returns whether the element has the transform property or a related
+   * property. */
   bool HasTransformStyle() const {
-    return mSpecifiedTransform || mSpecifiedRotate || mSpecifiedTranslate ||
-           mSpecifiedScale ||
+    return HasTransformProperty() || HasIndividualTransform() ||
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
            (mWillChange.bits & mozilla::StyleWillChangeBits_TRANSFORM) ||
            (mMotion && mMotion->HasPath());
   }
 
+  bool HasTransformProperty() const { return !mTransform._0.IsEmpty(); }
+
   bool HasIndividualTransform() const {
-    return mSpecifiedRotate || mSpecifiedTranslate || mSpecifiedScale;
+    return !mRotate.IsNone() || !mTranslate.IsNone() || !mScale.IsNone();
   }
 
   bool HasPerspectiveStyle() const { return !mChildPerspective.IsNone(); }
@@ -2116,23 +2114,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   inline bool
   IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() const;
   inline bool IsFixedPosContainingBlockForTransformSupportingFrames() const;
-
-  /**
-   * Returns the final combined individual transform.
-   **/
-  already_AddRefed<nsCSSValueSharedList> GetCombinedTransform() const {
-    return mIndividualTransform ? do_AddRef(mIndividualTransform) : nullptr;
-  }
-
-  /**
-   * Returns the combined transform list based on translate, rotate, scale
-   * individual transforms. The combination order is defined in
-   * https://drafts.csswg.org/css-transforms-2/#ctm
-   */
-  static already_AddRefed<nsCSSValueSharedList>
-  GenerateCombinedIndividualTransform(nsCSSValueSharedList* aTranslate,
-                                      nsCSSValueSharedList* aRotate,
-                                      nsCSSValueSharedList* aScale);
 
   void GenerateCombinedIndividualTransform();
 };
@@ -2377,7 +2358,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   mozilla::StyleWindowDragging mWindowDragging;
   uint8_t mWindowShadow;
   float mWindowOpacity;
-  RefPtr<nsCSSValueSharedList> mSpecifiedWindowTransform;
+  mozilla::StyleTransform mMozWindowTransform;
   mozilla::StyleTransformOrigin mWindowTransformOrigin;
 };
 

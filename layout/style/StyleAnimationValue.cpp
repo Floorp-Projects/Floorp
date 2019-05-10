@@ -42,196 +42,107 @@ using nsStyleTransformMatrix::Decompose2DMatrix;
 using nsStyleTransformMatrix::Decompose3DMatrix;
 using nsStyleTransformMatrix::ShearType;
 
-static already_AddRefed<nsCSSValue::Array> AppendFunction(
-    nsCSSKeyword aTransformFunction) {
-  uint32_t nargs;
-  switch (aTransformFunction) {
-    case eCSSKeyword_matrix3d:
-      nargs = 16;
-      break;
-    case eCSSKeyword_matrix:
-      nargs = 6;
-      break;
-    case eCSSKeyword_rotate3d:
-      nargs = 4;
-      break;
-    case eCSSKeyword_interpolatematrix:
-    case eCSSKeyword_accumulatematrix:
-    case eCSSKeyword_translate3d:
-    case eCSSKeyword_scale3d:
-      nargs = 3;
-      break;
-    case eCSSKeyword_translate:
-    case eCSSKeyword_skew:
-    case eCSSKeyword_scale:
-      nargs = 2;
-      break;
-    default:
-      NS_ERROR("must be a transform function");
-      MOZ_FALLTHROUGH;
-    case eCSSKeyword_translatex:
-    case eCSSKeyword_translatey:
-    case eCSSKeyword_translatez:
-    case eCSSKeyword_scalex:
-    case eCSSKeyword_scaley:
-    case eCSSKeyword_scalez:
-    case eCSSKeyword_skewx:
-    case eCSSKeyword_skewy:
-    case eCSSKeyword_rotate:
-    case eCSSKeyword_rotatex:
-    case eCSSKeyword_rotatey:
-    case eCSSKeyword_rotatez:
-    case eCSSKeyword_perspective:
-      nargs = 1;
-      break;
-  }
-
-  RefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(nargs + 1);
-  arr->Item(0).SetIntValue(aTransformFunction, eCSSUnit_Enumerated);
-
-  return arr.forget();
-}
-
-static already_AddRefed<nsCSSValue::Array> AppendTransformFunction(
-    nsCSSKeyword aTransformFunction, nsCSSValueList**& aListTail) {
-  RefPtr<nsCSSValue::Array> arr = AppendFunction(aTransformFunction);
-  nsCSSValueList* item = new nsCSSValueList;
-  item->mValue.SetArrayValue(arr, eCSSUnit_Function);
-
-  *aListTail = item;
-  aListTail = &item->mNext;
-
-  return arr.forget();
-}
-
-struct BogusAnimation {};
-
-static inline Result<Ok, BogusAnimation> SetCSSAngle(
-    const layers::CSSAngle& aAngle, nsCSSValue& aValue) {
-  aValue.SetFloatValue(aAngle.value(), nsCSSUnit(aAngle.unit()));
-  if (!aValue.IsAngularUnit()) {
+// TODO(emilio): Remove angle unit in a followup, should always be degrees.
+static inline StyleAngle GetCSSAngle(const layers::CSSAngle& aAngle) {
+  if (aAngle.unit() != eCSSUnit_Degree) {
     NS_ERROR("Bogus animation from IPC");
-    return Err(BogusAnimation{});
+    return StyleAngle{0.0};
   }
-  return Ok();
+  return StyleAngle{aAngle.value()};
 }
 
-static Result<nsCSSValueSharedList*, BogusAnimation> CreateCSSValueList(
-    const InfallibleTArray<layers::TransformFunction>& aFunctions) {
-  nsAutoPtr<nsCSSValueList> result;
-  nsCSSValueList** resultTail = getter_Transfers(result);
-  for (const layers::TransformFunction& function : aFunctions) {
-    RefPtr<nsCSSValue::Array> arr;
-    switch (function.type()) {
-      case layers::TransformFunction::TRotationX: {
-        const layers::CSSAngle& angle = function.get_RotationX().angle();
-        arr = AppendTransformFunction(eCSSKeyword_rotatex, resultTail);
-        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
-        break;
-      }
-      case layers::TransformFunction::TRotationY: {
-        const layers::CSSAngle& angle = function.get_RotationY().angle();
-        arr = AppendTransformFunction(eCSSKeyword_rotatey, resultTail);
-        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
-        break;
-      }
-      case layers::TransformFunction::TRotationZ: {
-        const layers::CSSAngle& angle = function.get_RotationZ().angle();
-        arr = AppendTransformFunction(eCSSKeyword_rotatez, resultTail);
-        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
-        break;
-      }
-      case layers::TransformFunction::TRotation: {
-        const layers::CSSAngle& angle = function.get_Rotation().angle();
-        arr = AppendTransformFunction(eCSSKeyword_rotate, resultTail);
-        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
-        break;
-      }
-      case layers::TransformFunction::TRotation3D: {
-        float x = function.get_Rotation3D().x();
-        float y = function.get_Rotation3D().y();
-        float z = function.get_Rotation3D().z();
-        const layers::CSSAngle& angle = function.get_Rotation3D().angle();
-        arr = AppendTransformFunction(eCSSKeyword_rotate3d, resultTail);
-        arr->Item(1).SetFloatValue(x, eCSSUnit_Number);
-        arr->Item(2).SetFloatValue(y, eCSSUnit_Number);
-        arr->Item(3).SetFloatValue(z, eCSSUnit_Number);
-        MOZ_TRY(SetCSSAngle(angle, arr->Item(4)));
-        break;
-      }
-      case layers::TransformFunction::TScale: {
-        arr = AppendTransformFunction(eCSSKeyword_scale3d, resultTail);
-        arr->Item(1).SetFloatValue(function.get_Scale().x(), eCSSUnit_Number);
-        arr->Item(2).SetFloatValue(function.get_Scale().y(), eCSSUnit_Number);
-        arr->Item(3).SetFloatValue(function.get_Scale().z(), eCSSUnit_Number);
-        break;
-      }
-      case layers::TransformFunction::TTranslation: {
-        arr = AppendTransformFunction(eCSSKeyword_translate3d, resultTail);
-        arr->Item(1).SetFloatValue(function.get_Translation().x(),
-                                   eCSSUnit_Pixel);
-        arr->Item(2).SetFloatValue(function.get_Translation().y(),
-                                   eCSSUnit_Pixel);
-        arr->Item(3).SetFloatValue(function.get_Translation().z(),
-                                   eCSSUnit_Pixel);
-        break;
-      }
-      case layers::TransformFunction::TSkewX: {
-        const layers::CSSAngle& x = function.get_SkewX().x();
-        arr = AppendTransformFunction(eCSSKeyword_skewx, resultTail);
-        MOZ_TRY(SetCSSAngle(x, arr->Item(1)));
-        break;
-      }
-      case layers::TransformFunction::TSkewY: {
-        const layers::CSSAngle& y = function.get_SkewY().y();
-        arr = AppendTransformFunction(eCSSKeyword_skewy, resultTail);
-        MOZ_TRY(SetCSSAngle(y, arr->Item(1)));
-        break;
-      }
-      case layers::TransformFunction::TSkew: {
-        const layers::CSSAngle& x = function.get_Skew().x();
-        const layers::CSSAngle& y = function.get_Skew().y();
-        arr = AppendTransformFunction(eCSSKeyword_skew, resultTail);
-        MOZ_TRY(SetCSSAngle(x, arr->Item(1)));
-        MOZ_TRY(SetCSSAngle(y, arr->Item(2)));
-        break;
-      }
-      case layers::TransformFunction::TTransformMatrix: {
-        arr = AppendTransformFunction(eCSSKeyword_matrix3d, resultTail);
-        const gfx::Matrix4x4& matrix = function.get_TransformMatrix().value();
-        arr->Item(1).SetFloatValue(matrix._11, eCSSUnit_Number);
-        arr->Item(2).SetFloatValue(matrix._12, eCSSUnit_Number);
-        arr->Item(3).SetFloatValue(matrix._13, eCSSUnit_Number);
-        arr->Item(4).SetFloatValue(matrix._14, eCSSUnit_Number);
-        arr->Item(5).SetFloatValue(matrix._21, eCSSUnit_Number);
-        arr->Item(6).SetFloatValue(matrix._22, eCSSUnit_Number);
-        arr->Item(7).SetFloatValue(matrix._23, eCSSUnit_Number);
-        arr->Item(8).SetFloatValue(matrix._24, eCSSUnit_Number);
-        arr->Item(9).SetFloatValue(matrix._31, eCSSUnit_Number);
-        arr->Item(10).SetFloatValue(matrix._32, eCSSUnit_Number);
-        arr->Item(11).SetFloatValue(matrix._33, eCSSUnit_Number);
-        arr->Item(12).SetFloatValue(matrix._34, eCSSUnit_Number);
-        arr->Item(13).SetFloatValue(matrix._41, eCSSUnit_Number);
-        arr->Item(14).SetFloatValue(matrix._42, eCSSUnit_Number);
-        arr->Item(15).SetFloatValue(matrix._43, eCSSUnit_Number);
-        arr->Item(16).SetFloatValue(matrix._44, eCSSUnit_Number);
-        break;
-      }
-      case layers::TransformFunction::TPerspective: {
-        float perspective = function.get_Perspective().value();
-        arr = AppendTransformFunction(eCSSKeyword_perspective, resultTail);
-        arr->Item(1).SetFloatValue(perspective, eCSSUnit_Pixel);
-        break;
-      }
-      default:
-        NS_ASSERTION(false, "All functions should be implemented?");
+static StyleTransformOperation OperationFromLayers(
+    const layers::TransformFunction& aFunction) {
+  switch (aFunction.type()) {
+    case layers::TransformFunction::TRotationX: {
+      const layers::CSSAngle& angle = aFunction.get_RotationX().angle();
+      return StyleTransformOperation::RotateX(GetCSSAngle(angle));
     }
+    case layers::TransformFunction::TRotationY: {
+      const layers::CSSAngle& angle = aFunction.get_RotationY().angle();
+      return StyleTransformOperation::RotateY(GetCSSAngle(angle));
+    }
+    case layers::TransformFunction::TRotationZ: {
+      const layers::CSSAngle& angle = aFunction.get_RotationZ().angle();
+      return StyleTransformOperation::RotateZ(GetCSSAngle(angle));
+    }
+    case layers::TransformFunction::TRotation: {
+      const layers::CSSAngle& angle = aFunction.get_Rotation().angle();
+      return StyleTransformOperation::Rotate(GetCSSAngle(angle));
+    }
+    case layers::TransformFunction::TRotation3D: {
+      float x = aFunction.get_Rotation3D().x();
+      float y = aFunction.get_Rotation3D().y();
+      float z = aFunction.get_Rotation3D().z();
+      const layers::CSSAngle& angle = aFunction.get_Rotation3D().angle();
+      return StyleTransformOperation::Rotate3D(x, y, z, GetCSSAngle(angle));
+    }
+    case layers::TransformFunction::TScale: {
+      float x = aFunction.get_Scale().x();
+      float y = aFunction.get_Scale().y();
+      float z = aFunction.get_Scale().z();
+      return StyleTransformOperation::Scale3D(x, y, z);
+    }
+    case layers::TransformFunction::TTranslation: {
+      float x = aFunction.get_Translation().x();
+      float y = aFunction.get_Translation().y();
+      float z = aFunction.get_Translation().z();
+      return StyleTransformOperation::Translate3D(
+          LengthPercentage::FromPixels(x), LengthPercentage::FromPixels(y),
+          Length{z});
+    }
+    case layers::TransformFunction::TSkewX: {
+      const layers::CSSAngle& x = aFunction.get_SkewX().x();
+      return StyleTransformOperation::SkewX(GetCSSAngle(x));
+    }
+    case layers::TransformFunction::TSkewY: {
+      const layers::CSSAngle& y = aFunction.get_SkewY().y();
+      return StyleTransformOperation::SkewY(GetCSSAngle(y));
+    }
+    case layers::TransformFunction::TSkew: {
+      const layers::CSSAngle& x = aFunction.get_Skew().x();
+      const layers::CSSAngle& y = aFunction.get_Skew().y();
+      return StyleTransformOperation::Skew(GetCSSAngle(x), GetCSSAngle(y));
+    }
+    case layers::TransformFunction::TTransformMatrix: {
+      const gfx::Matrix4x4& matrix = aFunction.get_TransformMatrix().value();
+      return StyleTransformOperation::Matrix3D({
+          matrix._11,
+          matrix._12,
+          matrix._13,
+          matrix._14,
+          matrix._21,
+          matrix._22,
+          matrix._23,
+          matrix._24,
+          matrix._31,
+          matrix._32,
+          matrix._33,
+          matrix._34,
+          matrix._41,
+          matrix._42,
+          matrix._43,
+          matrix._44,
+      });
+    }
+    case layers::TransformFunction::TPerspective: {
+      float perspective = aFunction.get_Perspective().value();
+      return StyleTransformOperation::Perspective(Length{perspective});
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("All functions should be implemented?");
+      return StyleTransformOperation::TranslateX(LengthPercentage::Zero());
   }
-  if (aFunctions.Length() == 0) {
-    result = new nsCSSValueList();
-    result->mValue.SetNoneValue();
+}
+
+static nsTArray<StyleTransformOperation> CreateTransformList(
+    const nsTArray<layers::TransformFunction>& aFunctions) {
+  nsTArray<StyleTransformOperation> result;
+  result.SetCapacity(aFunctions.Length());
+  for (const layers::TransformFunction& function : aFunctions) {
+    result.AppendElement(OperationFromLayers(function));
   }
-  return new nsCSSValueSharedList(result.forget());
+  return result;
 }
 
 // AnimationValue Implementation
@@ -260,17 +171,66 @@ nscolor AnimationValue::GetColor(nscolor aForegroundColor) const {
   return Servo_AnimationValue_GetColor(mServo, aForegroundColor);
 }
 
-already_AddRefed<const nsCSSValueSharedList> AnimationValue::GetTransformList()
-    const {
+const StyleTranslate& AnimationValue::GetTranslateProperty() const {
   MOZ_ASSERT(mServo);
-  RefPtr<nsCSSValueSharedList> transform;
-  Servo_AnimationValue_GetTransform(mServo, &transform);
-  return transform.forget();
+  return *Servo_AnimationValue_GetTranslate(mServo);
+}
+
+const StyleRotate& AnimationValue::GetRotateProperty() const {
+  MOZ_ASSERT(mServo);
+  return *Servo_AnimationValue_GetRotate(mServo);
+}
+
+const StyleScale& AnimationValue::GetScaleProperty() const {
+  MOZ_ASSERT(mServo);
+  return *Servo_AnimationValue_GetScale(mServo);
+}
+
+const StyleTransform& AnimationValue::GetTransformProperty() const {
+  MOZ_ASSERT(mServo);
+  return *Servo_AnimationValue_GetTransform(mServo);
 }
 
 Size AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
-  RefPtr<const nsCSSValueSharedList> list = GetTransformList();
-  return nsStyleTransformMatrix::GetScaleValue(list, aFrame);
+  using namespace nsStyleTransformMatrix;
+
+  const StyleTranslate* translate = nullptr;
+  const StyleRotate* rotate = nullptr;
+  const StyleScale* scale = nullptr;
+  const StyleTransform* transform = nullptr;
+
+  switch (Servo_AnimationValue_GetPropertyId(mServo)) {
+    case eCSSProperty_scale:
+      scale = &GetScaleProperty();
+      break;
+    case eCSSProperty_translate:
+      translate = &GetTranslateProperty();
+      break;
+    case eCSSProperty_rotate:
+      rotate = &GetRotateProperty();
+      break;
+    case eCSSProperty_transform:
+      transform = &GetTransformProperty();
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE(
+          "Should only need to check in transform properties");
+      return Size(1.0, 1.0);
+  }
+
+  TransformReferenceBox refBox(aFrame);
+  Matrix4x4 t =
+      ReadTransforms(translate ? *translate : StyleTranslate::None(),
+                     rotate ? *rotate : StyleRotate::None(),
+                     scale ? *scale : StyleScale::None(), Nothing(),
+                     transform ? *transform : StyleTransform(), refBox,
+                     aFrame->PresContext()->AppUnitsPerDevPixel());
+  Matrix transform2d;
+  bool canDraw2D = t.CanDraw2D(&transform2d);
+  if (!canDraw2D) {
+    return Size();
+  }
+  return transform2d.ScaleFactors(true);
 }
 
 void AnimationValue::SerializeSpecifiedValue(nsCSSPropertyID aProperty,
@@ -341,101 +301,63 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
   return result;
 }
 
+StyleRotate RotateFromLayers(const layers::Rotate& aRotate) {
+  switch (aRotate.type()) {
+    case layers::Rotate::Tnull_t:
+      return StyleRotate::None();
+    case layers::Rotate::TRotation: {
+      const layers::CSSAngle& angle = aRotate.get_Rotation().angle();
+      return StyleRotate::Rotate(GetCSSAngle(angle));
+    }
+    case layers::Rotate::TRotation3D: {
+      float x = aRotate.get_Rotation3D().x();
+      float y = aRotate.get_Rotation3D().y();
+      float z = aRotate.get_Rotation3D().z();
+      const layers::CSSAngle& angle = aRotate.get_Rotation3D().angle();
+      return StyleRotate::Rotate3D(x, y, z, GetCSSAngle(angle));
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown rotate value?");
+      return StyleRotate::None();
+  }
+}
+
 /* static */
 already_AddRefed<RawServoAnimationValue> AnimationValue::FromAnimatable(
     nsCSSPropertyID aProperty, const layers::Animatable& aAnimatable) {
-  RefPtr<RawServoAnimationValue> result;
-
   switch (aAnimatable.type()) {
     case layers::Animatable::Tnull_t:
       break;
     case layers::Animatable::TArrayOfTransformFunction: {
-      const InfallibleTArray<layers::TransformFunction>& transforms =
-          aAnimatable.get_ArrayOfTransformFunction();
-      auto listOrError = CreateCSSValueList(transforms);
-      if (listOrError.isOk()) {
-        RefPtr<nsCSSValueSharedList> list = listOrError.unwrap();
-        MOZ_ASSERT(list, "Transform list should be non null");
-        result = Servo_AnimationValue_Transform(eCSSProperty_transform, list)
-                     .Consume();
-      }
-      break;
+      nsTArray<StyleTransformOperation> ops =
+          CreateTransformList(aAnimatable.get_ArrayOfTransformFunction());
+      ;
+      return Servo_AnimationValue_Transform(ops.Elements(), ops.Length())
+          .Consume();
     }
     case layers::Animatable::Tfloat:
-      result = Servo_AnimationValue_Opacity(aAnimatable.get_float()).Consume();
-      break;
+      return Servo_AnimationValue_Opacity(aAnimatable.get_float()).Consume();
     case layers::Animatable::Tnscolor:
-      result = Servo_AnimationValue_Color(aProperty, aAnimatable.get_nscolor())
-                   .Consume();
-      break;
+      return Servo_AnimationValue_Color(aProperty, aAnimatable.get_nscolor())
+          .Consume();
     case layers::Animatable::TRotate: {
-      RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
-      list->mHead = new nsCSSValueList;
-
-      const layers::Rotate& r = aAnimatable.get_Rotate();
-      if (r.type() == layers::Rotate::Tnull_t) {
-        list->mHead->mValue.SetNoneValue();
-      } else {
-        RefPtr<nsCSSValue::Array> arr;
-        if (r.type() == layers::Rotate::TRotation) {
-          const layers::CSSAngle& angle = r.get_Rotation().angle();
-          arr = AppendFunction(eCSSKeyword_rotate);
-          auto rv = SetCSSAngle(angle, arr->Item(1));
-          if (rv.isErr()) {
-            arr->Item(1).SetFloatValue(0.0, eCSSUnit_Degree);
-          }
-        } else {
-          MOZ_ASSERT(r.type() == layers::Rotate::TRotation3D,
-                     "Should be rotate3D");
-          float x = r.get_Rotation3D().x();
-          float y = r.get_Rotation3D().y();
-          float z = r.get_Rotation3D().z();
-          const layers::CSSAngle& angle = r.get_Rotation3D().angle();
-          arr = AppendFunction(eCSSKeyword_rotate3d);
-          arr->Item(1).SetFloatValue(x, eCSSUnit_Number);
-          arr->Item(2).SetFloatValue(y, eCSSUnit_Number);
-          arr->Item(3).SetFloatValue(z, eCSSUnit_Number);
-          auto rv = SetCSSAngle(angle, arr->Item(4));
-          if (rv.isErr()) {
-            arr->Item(4).SetFloatValue(0.0, eCSSUnit_Degree);
-          }
-        }
-        list->mHead->mValue.SetArrayValue(arr, eCSSUnit_Function);
-      }
-      result =
-          Servo_AnimationValue_Transform(eCSSProperty_rotate, list).Consume();
-      break;
+      auto rotate = RotateFromLayers(aAnimatable.get_Rotate());
+      return Servo_AnimationValue_Rotate(&rotate).Consume();
     }
     case layers::Animatable::TScale: {
-      const layers::Scale& scale = aAnimatable.get_Scale();
-      RefPtr<nsCSSValue::Array> arr = AppendFunction(eCSSKeyword_scale3d);
-      arr->Item(1).SetFloatValue(scale.x(), eCSSUnit_Number);
-      arr->Item(2).SetFloatValue(scale.y(), eCSSUnit_Number);
-      arr->Item(3).SetFloatValue(scale.z(), eCSSUnit_Number);
-
-      RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
-      list->mHead = new nsCSSValueList;
-      list->mHead->mValue.SetArrayValue(arr, eCSSUnit_Function);
-      result =
-          Servo_AnimationValue_Transform(eCSSProperty_scale, list).Consume();
-      break;
+      const layers::Scale& s = aAnimatable.get_Scale();
+      auto scale = StyleScale::Scale3D(s.x(), s.y(), s.z());
+      return Servo_AnimationValue_Scale(&scale).Consume();
     }
     case layers::Animatable::TTranslation: {
-      const layers::Translation& translate = aAnimatable.get_Translation();
-      RefPtr<nsCSSValue::Array> arr = AppendFunction(eCSSKeyword_translate3d);
-      arr->Item(1).SetFloatValue(translate.x(), eCSSUnit_Pixel);
-      arr->Item(2).SetFloatValue(translate.y(), eCSSUnit_Pixel);
-      arr->Item(3).SetFloatValue(translate.z(), eCSSUnit_Pixel);
-
-      RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
-      list->mHead = new nsCSSValueList;
-      list->mHead->mValue.SetArrayValue(arr, eCSSUnit_Function);
-      result = Servo_AnimationValue_Transform(eCSSProperty_translate, list)
-                   .Consume();
-      break;
+      const layers::Translation& t = aAnimatable.get_Translation();
+      auto translate = StyleTranslate::Translate3D(
+          LengthPercentage::FromPixels(t.x()),
+          LengthPercentage::FromPixels(t.y()), Length{t.z()});
+      return Servo_AnimationValue_Translate(&translate).Consume();
     }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported type");
   }
-  return result.forget();
+  return nullptr;
 }

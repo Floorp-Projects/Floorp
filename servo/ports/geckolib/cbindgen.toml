@@ -131,6 +131,10 @@ include = [
   "Quotes",
   "BoxShadow",
   "SimpleShadow",
+  "Transform",
+  "Rotate",
+  "Scale",
+  "Translate",
 ]
 item_types = ["enums", "structs", "typedefs", "functions"]
 renaming_overrides_prefixing = true
@@ -187,6 +191,7 @@ renaming_overrides_prefixing = true
 "CSSPixelLength" = """
   inline nscoord ToAppUnits() const;
   inline bool IsZero() const;
+  float ToCSSPixels() const { return _0; }
 """
 
 "LengthPercentage" = """
@@ -403,4 +408,25 @@ renaming_overrides_prefixing = true
 
 "OwnedStr" = """
   inline nsDependentCSubstring AsString() const;
+"""
+
+"GenericTransform" = """
+  inline Span<const T> Operations() const;
+  inline bool IsNone() const;
+"""
+
+"GenericTransformOperation" = """
+ private:
+  // Private default constructor without initialization so that the helper
+  // constructor functions still work as expected. They take care of
+  // initializing the fields properly.
+  StyleGenericTransformOperation() {}
+ public:
+"""
+
+
+"Angle" = """
+  inline static StyleAngle Zero();
+  inline float ToDegrees() const;
+  inline double ToRadians() const;
 """

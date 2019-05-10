@@ -47,7 +47,6 @@ use style::gecko_bindings::bindings::Gecko_GetOrCreateFinalKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
 use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
-use style::gecko_bindings::bindings::Gecko_NewNoneTransform;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::{Element as RawGeckoElement, nsINode as RawGeckoNode};
 use style::gecko_bindings::structs::{
@@ -65,7 +64,6 @@ use style::gecko_bindings::structs::nsAtom;
 use style::gecko_bindings::structs::nsCSSCounterDesc;
 use style::gecko_bindings::structs::nsCSSFontDesc;
 use style::gecko_bindings::structs::nsCSSPropertyID;
-use style::gecko_bindings::structs::nsCSSValueSharedList;
 use style::gecko_bindings::structs::nsChangeHint;
 use style::gecko_bindings::structs::nsCompatibility;
 use style::gecko_bindings::structs::nsStyleTransformMatrix::MatrixTransformOperator;
@@ -99,7 +97,6 @@ use style::gecko_bindings::structs::URLExtraData;
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, HasFFI};
 use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, HasBoxFFI, Strong, Owned, OwnedOrNull};
 use style::gecko_bindings::sugar::refptr::RefPtr;
-use style::gecko_properties;
 use style::global_style_data::{GlobalStyleData, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL};
 use style::invalidation::element::restyle_hints::RestyleHint;
 use style::media_queries::MediaList;
@@ -791,87 +788,75 @@ pub extern "C" fn Servo_AnimationValue_Color(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
+pub unsafe extern "C" fn Servo_AnimationValue_GetScale(
     value: &RawServoAnimationValue,
-    list: *mut structs::RefPtr<nsCSSValueSharedList>,
-) -> nsCSSPropertyID {
-    let list = &mut *list;
+) -> *const computed::Scale {
     let value = AnimationValue::as_arc(&value);
     match **value {
-        AnimationValue::Transform(ref servo_list) => {
-            if servo_list.0.is_empty() {
-                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
-            } else {
-                gecko_properties::convert_transform(&servo_list.0, list);
-            }
-            nsCSSPropertyID::eCSSProperty_transform
-        },
-        AnimationValue::Translate(ref v) => {
-            if let Some(v) = v.to_transform_operation() {
-                gecko_properties::convert_transform(&[v], list);
-            } else {
-                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
-            }
-            nsCSSPropertyID::eCSSProperty_translate
-        },
-        AnimationValue::Rotate(ref v) => {
-            if let Some(v) = v.to_transform_operation() {
-                gecko_properties::convert_transform(&[v], list);
-            } else {
-                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
-            }
-            nsCSSPropertyID::eCSSProperty_rotate
-        },
-        AnimationValue::Scale(ref v) => {
-            if let Some(v) = v.to_transform_operation() {
-                gecko_properties::convert_transform(&[v], list);
-            } else {
-                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
-            }
-            nsCSSPropertyID::eCSSProperty_scale
-        },
-        _ => unreachable!("Unsupported transform-like animation value"),
+        AnimationValue::Scale(ref value) => value,
+        _ => unreachable!("Expected scale"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_Transform(
-    property: nsCSSPropertyID,
-    list: *const nsCSSValueSharedList,
-) -> Strong<RawServoAnimationValue> {
-    use style::values::computed::transform::{Rotate, Scale, Translate};
-
-    let list = (&*list).mHead.as_ref();
-
-    let property = LonghandId::from_nscsspropertyid(property)
-        .expect("We don't have shorthand property animation value");
-    let transform = gecko_properties::clone_transform_from_list(list);
-    match property {
-        LonghandId::Rotate => {
-            let rotate = if transform.0.is_empty() {
-                style::values::generics::transform::Rotate::None
-            } else {
-                debug_assert_eq!(transform.0.len(), 1);
-                Rotate::from_transform_operation(&(transform.0)[0])
-            };
-            Arc::new(AnimationValue::Rotate(rotate)).into_strong()
-        },
-        LonghandId::Scale => {
-            debug_assert_eq!(transform.0.len(), 1);
-            Arc::new(AnimationValue::Scale(Scale::from_transform_operation(&(transform.0)[0])))
-                .into_strong()
-        },
-        LonghandId::Translate => {
-            debug_assert_eq!(transform.0.len(), 1);
-            Arc::new(AnimationValue::Translate(
-                Translate::from_transform_operation(&(transform.0)[0])
-            )).into_strong()
-        },
-        LonghandId::Transform => {
-            Arc::new(AnimationValue::Transform(transform)).into_strong()
-        },
-        _ => unreachable!("Unsupported transform-like animation value"),
+pub unsafe extern "C" fn Servo_AnimationValue_GetTranslate(
+    value: &RawServoAnimationValue,
+) -> *const computed::Translate {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::Translate(ref value) => value,
+        _ => unreachable!("Expected translate"),
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_GetRotate(
+    value: &RawServoAnimationValue,
+) -> *const computed::Rotate {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::Rotate(ref value) => value,
+        _ => unreachable!("Expected rotate"),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
+    value: &RawServoAnimationValue,
+) -> *const computed::Transform {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::Transform(ref value) => value,
+        _ => unreachable!("Unsupported transform animation value"),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_Rotate(r: &computed::Rotate) -> Strong<RawServoAnimationValue> {
+    Arc::new(AnimationValue::Rotate(r.clone())).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_Translate(t: &computed::Translate) -> Strong<RawServoAnimationValue> {
+    Arc::new(AnimationValue::Translate(t.clone())).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_Scale(s: &computed::Scale) -> Strong<RawServoAnimationValue> {
+    Arc::new(AnimationValue::Scale(s.clone())).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_Transform(
+    list: *const computed::TransformOperation,
+    len: usize,
+) -> Strong<RawServoAnimationValue> {
+    use style::values::generics::transform::Transform;
+
+    let slice = std::slice::from_raw_parts(list, len);
+    Arc::new(AnimationValue::Transform(
+        Transform(slice.iter().cloned().collect())
+    )).into_strong()
 }
 
 #[no_mangle]
@@ -5206,6 +5191,12 @@ pub extern "C" fn Servo_GetAnimationValues(
         unsafe { animation_values.set_len((index + 1) as u32) };
         animation_values[index].set_arc_leaky(Arc::new(anim));
     }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_AnimationValue_GetPropertyId(value: &RawServoAnimationValue) -> nsCSSPropertyID {
+    let value = AnimationValue::as_arc(&value);
+    value.id().to_nscsspropertyid()
 }
 
 #[no_mangle]

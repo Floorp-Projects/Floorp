@@ -1690,33 +1690,6 @@ NS_IMPL_THREADSAFE_FFI_REFCOUNTING(URLExtraData, URLExtraData);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
-nsCSSValueSharedList* Gecko_NewCSSValueSharedList(uint32_t aLen) {
-  RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
-  if (aLen == 0) {
-    return list.forget().take();
-  }
-
-  list->mHead = new nsCSSValueList;
-  nsCSSValueList* cur = list->mHead;
-  for (uint32_t i = 0; i < aLen - 1; i++) {
-    cur->mNext = new nsCSSValueList;
-    cur = cur->mNext;
-  }
-
-  return list.forget().take();
-}
-
-nsCSSValueSharedList* Gecko_NewNoneTransform() {
-  RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
-  list->mHead = new nsCSSValueList;
-  list->mHead->mValue.SetNoneValue();
-  return list.forget().take();
-}
-
-void Gecko_StyleDisplay_GenerateCombinedTransform(nsStyleDisplay* aDisplay) {
-  aDisplay->GenerateCombinedIndividualTransform();
-}
-
 void Gecko_CSSValue_SetNumber(nsCSSValue* aCSSValue, float aNumber) {
   aCSSValue->SetFloatValue(aNumber, eCSSUnit_Number);
 }
@@ -1825,19 +1798,6 @@ void Gecko_CSSValue_SetPairList(nsCSSValue* aCSSValue, uint32_t aLen) {
   for (uint32_t i = 1; i < aLen; ++i) {
     item->mNext = new nsCSSValuePairList;
     item = item->mNext;
-  }
-}
-
-void Gecko_CSSValue_InitSharedList(nsCSSValue* aCSSValue, uint32_t aLen) {
-  MOZ_ASSERT(aLen > 0, "Must create at least one nsCSSValueList (mHead)");
-
-  nsCSSValueSharedList* list = new nsCSSValueSharedList;
-  aCSSValue->SetSharedListValue(list);
-  list->mHead = new nsCSSValueList;
-  nsCSSValueList* cur = list->mHead;
-  for (uint32_t i = 1; i < aLen; ++i) {
-    cur->mNext = new nsCSSValueList;
-    cur = cur->mNext;
   }
 }
 
@@ -2111,8 +2071,6 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSet* aPropertySet,
                             nsCSSPropertyID aProperty) {
   aPropertySet->AddProperty(aProperty);
 }
-
-NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 
 #define STYLE_STRUCT(name)                                             \
                                                                        \

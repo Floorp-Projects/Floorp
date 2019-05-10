@@ -160,6 +160,24 @@ inline nsDependentCSubstring StyleOwnedStr::AsString() const {
                                s.Length());
 }
 
+template <typename T>
+inline Span<const T> StyleGenericTransform<T>::Operations() const {
+  return _0.AsSpan();
+}
+
+template <typename T>
+inline bool StyleGenericTransform<T>::IsNone() const {
+  return Operations().IsEmpty();
+}
+
+inline StyleAngle StyleAngle::Zero() { return {0.0f}; }
+
+inline float StyleAngle::ToDegrees() const { return _0; }
+
+inline double StyleAngle::ToRadians() const {
+  return double(ToDegrees()) * M_PI / 180.0;
+}
+
 }  // namespace mozilla
 
 #endif
