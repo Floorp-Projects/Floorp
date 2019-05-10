@@ -1,55 +1,58 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 s3_bucket_paths:
-  by-platform:
-    fennec-source:
-      - pub/mobile/candidates
-    devedition-source:
-      - pub/devedition/candidates
-    firefox-source:
-      - pub/firefox/candidates
+    by-platform:
+        fennec-source:
+            - pub/mobile/candidates
+        devedition-source:
+            - pub/devedition/candidates
+        firefox-source:
+            - pub/firefox/candidates
 default_locales:  # if given an empty locale, use these locales
-  - en-US
+    - en-US
 tasktype_map:  # Map task reference to task type.
-  release-source-signing: signing
+    release-source-signing: signing
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
 # s3_bucket_paths + destinations + locale_prefix + pretty_name
 default: &default
-  from:
-    - release-source-signing
-  all_locales: false
-  description: "TO_BE_OVERRIDDEN"
-  locale_prefix: ''
-  source_path_modifier: ''
-  destinations:  # locale_prefix is appended
-    - ${version}-candidates/build${build_number}/source
+    from:
+        - release-source-signing
+    all_locales: false
+    description: "TO_BE_OVERRIDDEN"
+    locale_prefix: ''
+    source_path_modifier: ''
+    destinations:  # locale_prefix is appended
+        - ${version}-candidates/build${build_number}/source
 
 # Configuration for individual files. Extends 'default', above.
 mapping:
-  source.tar.xz:
-    <<: *default
-    description: "Source file with the in-tree code archived"
-    pretty_name:
-      by-platform:
-        firefox-source: firefox-${version}.source.tar.xz
-        devedition-source: firefox-${version}.source.tar.xz
-        fennec-source: fennec-${version}.source.tar.xz
-    checksums_path:
-      by-platform:
-        firefox-source: source/firefox-${version}.source.tar.xz
-        devedition-source: source/firefox-${version}.source.tar.xz
-        fennec-source: source/fennec-${version}.source.tar.xz
-  source.tar.xz.asc:
-    <<: *default
-    description: "Detached signature for the source file"
-    pretty_name:
-      by-platform:
-        firefox-source: firefox-${version}.source.tar.xz.asc
-        devedition-source: firefox-${version}.source.tar.xz.asc
-        fennec-source: fennec-${version}.source.tar.xz.asc
-    checksums_path:
-      by-platform:
-        firefox-source: source/firefox-${version}.source.tar.xz.asc
-        devedition-source: source/firefox-${version}.source.tar.xz.asc
-        fennec-source: source/fennec-${version}.source.tar.xz.asc
+    source.tar.xz:
+        <<: *default
+        description: "Source file with the in-tree code archived"
+        pretty_name:
+            by-platform:
+                firefox-source: firefox-${version}.source.tar.xz
+                devedition-source: firefox-${version}.source.tar.xz
+                fennec-source: fennec-${version}.source.tar.xz
+        checksums_path:
+            by-platform:
+                firefox-source: source/firefox-${version}.source.tar.xz
+                devedition-source: source/firefox-${version}.source.tar.xz
+                fennec-source: source/fennec-${version}.source.tar.xz
+    source.tar.xz.asc:
+        <<: *default
+        description: "Detached signature for the source file"
+        pretty_name:
+            by-platform:
+                firefox-source: firefox-${version}.source.tar.xz.asc
+                devedition-source: firefox-${version}.source.tar.xz.asc
+                fennec-source: fennec-${version}.source.tar.xz.asc
+        checksums_path:
+            by-platform:
+                firefox-source: source/firefox-${version}.source.tar.xz.asc
+                devedition-source: source/firefox-${version}.source.tar.xz.asc
+                fennec-source: source/fennec-${version}.source.tar.xz.asc

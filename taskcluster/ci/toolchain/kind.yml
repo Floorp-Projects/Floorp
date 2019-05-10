@@ -1,42 +1,42 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
-   - fetch
+    - fetch
 
 transforms:
-   - taskgraph.transforms.try_job:transforms
-   - taskgraph.transforms.use_toolchains:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.cached_tasks:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.try_job:transforms
+    - taskgraph.transforms.use_toolchains:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.cached_tasks:transforms
+    - taskgraph.transforms.task:transforms
 
 job-defaults:
-   treeherder:
-      kind: build
-      platform: toolchains/opt
-      tier: 1
-   run-on-projects: []
-   run:
-      using: toolchain-script
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        tier: 1
+    run-on-projects: []
+    run:
+        using: toolchain-script
 
 jobs-from:
-   - android.yml
-   - cbindgen.yml
-   - cctools-port.yml
-   - clang-tidy.yml
-   - clang.yml
-   - gcc.yml
-   - gn.yml
-   - grcov.yml
-   - mingw.yml
-   - minidump_stackwalk.yml
-   - misc.yml
-   - nasm.yml
-   - node.yml
-   - rust.yml
-   - rust-size.yml
-   - sccache.yml
+    - android.yml
+    - cbindgen.yml
+    - cctools-port.yml
+    - clang-tidy.yml
+    - clang.yml
+    - gcc.yml
+    - gn.yml
+    - grcov.yml
+    - mingw.yml
+    - minidump_stackwalk.yml
+    - misc.yml
+    - nasm.yml
+    - node.yml
+    - rust.yml
+    - rust-size.yml
+    - sccache.yml

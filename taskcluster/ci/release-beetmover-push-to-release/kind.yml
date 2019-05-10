@@ -1,36 +1,36 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.beetmover_push_to_release:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.beetmover_push_to_release:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-generate-checksums-beetmover
+    - release-generate-checksums-beetmover
 
 job-defaults:
-   run-on-projects: []
-   shipping-phase: push
+    run-on-projects: []
+    shipping-phase: push
 
 jobs:
-   fennec-push-to-release:
-      name: fennec_push_to_release
-      product: fennec
-      shipping-product: fennec
-      treeherder-platform: fennec-release/opt
+    fennec-push-to-release:
+        name: fennec_push_to_release
+        product: fennec
+        shipping-product: fennec
+        treeherder-platform: fennec-release/opt
 
-   devedition-push-to-release:
-      name: devedition_push_to_release
-      product: devedition
-      shipping-product: devedition
-      treeherder-platform: devedition-release/opt
+    devedition-push-to-release:
+        name: devedition_push_to_release
+        product: devedition
+        shipping-product: devedition
+        treeherder-platform: devedition-release/opt
 
-   firefox-push-to-release:
-      name: firefox_push_to_release
-      product: firefox
-      shipping-product: firefox
-      treeherder-platform: firefox-release/opt
+    firefox-push-to-release:
+        name: firefox_push_to_release
+        product: firefox
+        shipping-product: firefox
+        treeherder-platform: firefox-release/opt

@@ -1,45 +1,45 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.scriptworker:add_balrog_scopes
-   - taskgraph.transforms.balrog_toplevel:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.scriptworker:add_balrog_scopes
+    - taskgraph.transforms.balrog_toplevel:transforms
+    - taskgraph.transforms.task:transforms
 
 job-defaults:
-   run-on-projects: []  # to make sure this never runs in CI
-   shipping-phase: promote
-   worker:
-      implementation: balrog
-      balrog-action: submit-toplevel
-      require-mirrors: false
-      platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
-      archive-domain:
-         by-release-level:
-            production: archive.mozilla.org
-            staging: ftp.stage.mozaws.net
-      download-domain:
-         by-release-level:
-            production: download.mozilla.org
-            staging: bouncer-bouncer-releng.stage.mozaws.net
-   whats-new-config: browser/config/whats_new_page.yml
+    run-on-projects: []  # to make sure this never runs in CI
+    shipping-phase: promote
+    worker:
+        implementation: balrog
+        balrog-action: submit-toplevel
+        require-mirrors: false
+        platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
+        archive-domain:
+            by-release-level:
+                production: archive.mozilla.org
+                staging: ftp.stage.mozaws.net
+        download-domain:
+            by-release-level:
+                production: download.mozilla.org
+                staging: bouncer-bouncer-releng.stage.mozaws.net
+    whats-new-config: browser/config/whats_new_page.yml
 
 jobs:
-   firefox:
-      name: submit-toplevel-rc-firefox-release-to-balrog
-      description: submit toplevel RC Firefox release to balrog
-      shipping-product: firefox
-      worker:
-         product: firefox
-         channel-names: ["beta", "beta-localtest", "beta-cdntest"]
-         publish-rules: [32]
-         rules-to-update: ["firefox-beta-cdntest", "firefox-beta-localtest"]
-      treeherder:
-         platform: firefox-release/opt
-         symbol: Rel(BPFxRC)
-         tier: 1
-         kind: build
+    firefox:
+        name: submit-toplevel-rc-firefox-release-to-balrog
+        description: submit toplevel RC Firefox release to balrog
+        shipping-product: firefox
+        worker:
+            product: firefox
+            channel-names: ["beta", "beta-localtest", "beta-cdntest"]
+            publish-rules: [32]
+            rules-to-update: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(BPFxRC)
+            tier: 1
+            kind: build

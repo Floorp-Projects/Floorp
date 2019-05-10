@@ -1,109 +1,109 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.release:run_on_releases
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.scriptworker:add_balrog_scopes
-   - taskgraph.transforms.balrog_toplevel:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release:run_on_releases
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.scriptworker:add_balrog_scopes
+    - taskgraph.transforms.balrog_toplevel:transforms
+    - taskgraph.transforms.task:transforms
 
 job-defaults:
-   run-on-projects: []  # to make sure this never runs in CI
-   shipping-phase: promote
-   worker:
-      implementation: balrog
-      balrog-action: submit-toplevel
-      require-mirrors: true
-      archive-domain:
-         by-release-level:
-            production: archive.mozilla.org
-            staging: ftp.stage.mozaws.net
-      download-domain:
-         by-release-level:
-            production: download.mozilla.org
-            staging: bouncer-bouncer-releng.stage.mozaws.net
-   whats-new-config: browser/config/whats_new_page.yml
+    run-on-projects: []  # to make sure this never runs in CI
+    shipping-phase: promote
+    worker:
+        implementation: balrog
+        balrog-action: submit-toplevel
+        require-mirrors: true
+        archive-domain:
+            by-release-level:
+                production: archive.mozilla.org
+                staging: ftp.stage.mozaws.net
+        download-domain:
+            by-release-level:
+                production: download.mozilla.org
+                staging: bouncer-bouncer-releng.stage.mozaws.net
+    whats-new-config: browser/config/whats_new_page.yml
 
 jobs:
-   firefox:
-      name: submit-toplevel-firefox-release-to-balrog
-      description: Submit toplevel Firefox release to balrog
-      shipping-product: firefox
-      worker:
-         product: firefox
-         channel-names:
-            by-release-type:
-               beta: ["beta", "beta-localtest", "beta-cdntest"]
-               release(-rc)?: ["release", "release-localtest", "release-cdntest"]
-               esr60: ["esr", "esr-localtest", "esr-cdntest"]
-               default: []
-         publish-rules:
-            by-release-level:
-               production:
-                  by-release-type:
-                     beta: [32]
-                     release(-rc)?: [145]
-                     esr60: [806]
-                     default: []
-               staging:
-                  by-release-type:
-                     beta: [32]
-                     release(-rc)?: [145]
-                     esr60: [806]
-                     default: []
-         rules-to-update:
-            by-release-type:
-               beta: ["firefox-beta-cdntest", "firefox-beta-localtest"]
-               release(-rc)?: ["firefox-release-cdntest", "firefox-release-localtest"]
-               esr60: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
-               default: []
-         platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
-      treeherder:
-         platform: firefox-release/opt
-         symbol: Rel(BPFx)
-         tier: 1
-         kind: build
+    firefox:
+        name: submit-toplevel-firefox-release-to-balrog
+        description: Submit toplevel Firefox release to balrog
+        shipping-product: firefox
+        worker:
+            product: firefox
+            channel-names:
+                by-release-type:
+                    beta: ["beta", "beta-localtest", "beta-cdntest"]
+                    release(-rc)?: ["release", "release-localtest", "release-cdntest"]
+                    esr60: ["esr", "esr-localtest", "esr-cdntest"]
+                    default: []
+            publish-rules:
+                by-release-level:
+                    production:
+                        by-release-type:
+                            beta: [32]
+                            release(-rc)?: [145]
+                            esr60: [806]
+                            default: []
+                    staging:
+                        by-release-type:
+                            beta: [32]
+                            release(-rc)?: [145]
+                            esr60: [806]
+                            default: []
+            rules-to-update:
+                by-release-type:
+                    beta: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+                    release(-rc)?: ["firefox-release-cdntest", "firefox-release-localtest"]
+                    esr60: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
+                    default: []
+            platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(BPFx)
+            tier: 1
+            kind: build
 
-   firefox-bz2:
-      name: submit-toplevel-firefox-release-to-balrog-bz2
-      description: Submit toplevel Firefox release to balrog
-      shipping-product: firefox
-      run-on-releases: [esr60]
-      worker:
-         product: firefox
-         channel-names: ["esr", "esr-localtest", "esr-cdntest"]
-         publish-rules:
-            by-release-level:
-               production: [521]
-               staging: [521]
-         rules-to-update: ["esr52-cdntest", "esr52-localtest"]
-         platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
-         blob-suffix: -bz2
-         complete-mar-filename-pattern: '%s-%s.bz2.complete.mar'
-         complete-mar-bouncer-product-pattern: '%s-%s-complete-bz2'
-      treeherder:
-         platform: firefox-release/opt
-         symbol: Rel(BPFx-bz2)
-         tier: 1
-         kind: build
+    firefox-bz2:
+        name: submit-toplevel-firefox-release-to-balrog-bz2
+        description: Submit toplevel Firefox release to balrog
+        shipping-product: firefox
+        run-on-releases: [esr60]
+        worker:
+            product: firefox
+            channel-names: ["esr", "esr-localtest", "esr-cdntest"]
+            publish-rules:
+                by-release-level:
+                    production: [521]
+                    staging: [521]
+            rules-to-update: ["esr52-cdntest", "esr52-localtest"]
+            platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
+            blob-suffix: -bz2
+            complete-mar-filename-pattern: '%s-%s.bz2.complete.mar'
+            complete-mar-bouncer-product-pattern: '%s-%s-complete-bz2'
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(BPFx-bz2)
+            tier: 1
+            kind: build
 
-   devedition:
-      name: submit-toplevel-devedition-release-to-balrog
-      description: submit toplevel Devedition release to balrog
-      shipping-product: devedition
-      run-on-releases: [beta]
-      worker:
-         product: devedition
-         channel-names: ["aurora", "aurora-localtest", "aurora-cdntest"]
-         publish-rules: [10]
-         rules-to-update: ["devedition-cdntest", "devedition-localtest"]
-         platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
-      treeherder:
-         platform: devedition-release/opt
-         symbol: Rel(BPDev)
-         tier: 1
-         kind: build
+    devedition:
+        name: submit-toplevel-devedition-release-to-balrog
+        description: submit toplevel Devedition release to balrog
+        shipping-product: devedition
+        run-on-releases: [beta]
+        worker:
+            product: devedition
+            channel-names: ["aurora", "aurora-localtest", "aurora-cdntest"]
+            publish-rules: [10]
+            rules-to-update: ["devedition-cdntest", "devedition-localtest"]
+            platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
+        treeherder:
+            platform: devedition-release/opt
+            symbol: Rel(BPDev)
+            tier: 1
+            kind: build

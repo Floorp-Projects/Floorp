@@ -1,69 +1,72 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 s3_bucket_paths:
-  by-platform:
-    fennec-release:
-      - pub/mobile/candidates
-    devedition-release:
-      - pub/devedition/candidates
-    firefox-release:
-      - pub/firefox/candidates
+    by-platform:
+        fennec-release:
+            - pub/mobile/candidates
+        devedition-release:
+            - pub/devedition/candidates
+        firefox-release:
+            - pub/firefox/candidates
 default_locales:  # if given an empty locale, use these locales
-  - en-US
+    - en-US
 tasktype_map:  # Map task reference to task type.
-  release-generate-checksums: build
-  release-generate-checksums-signing: signing
+    release-generate-checksums: build
+    release-generate-checksums-signing: signing
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
 # s3_bucket_paths + destinations + locale_prefix + pretty_name
 default: &default
-  from:
-    - release-generate-checksums-signing
-  all_locales: true
-  description: "TO_BE_OVERRIDDEN"
-  locale_prefix: ''
-  source_path_modifier: ''
-  destinations:  # locale_prefix is appended
-    - ${version}-candidates/build${build_number}
+    from:
+        - release-generate-checksums-signing
+    all_locales: true
+    description: "TO_BE_OVERRIDDEN"
+    locale_prefix: ''
+    source_path_modifier: ''
+    destinations:  # locale_prefix is appended
+        - ${version}-candidates/build${build_number}
 
 # Configuration for individual files. Extends 'default', above.
 mapping:
-  SHA256SUMMARY:
-    <<: *default
-    description: "Merkle-tree for the release artifacts with sha 256 hashes"
-    from:
-      - release-generate-checksums
-    pretty_name: SHA256SUMMARY
-    checksums_path: SHA256SUMMARY
-  SHA512SUMMARY:
-    <<: *default
-    description: "Merkle-tree for the release artifacts with sha 512 hashes"
-    from:
-      - release-generate-checksums
-    pretty_name: SHA512SUMMARY
-    checksums_path: SHA512SUMMARY
-  KEY:
-    <<: *default
-    description: "Public side of the key that was used to sign the release artifacts"
-    pretty_name: KEY
-    checksums_path: KEY
-  SHA256SUMS:
-    <<: *default
-    description: "Aggregated checksums with main installers details per platform in sha512 hashes"
-    pretty_name: SHA256SUMS
-    checksums_path: SHA256SUMS
-  SHA256SUMS.asc:
-    <<: *default
-    description: "Detached signature for the checksums file"
-    pretty_name: SHA256SUMS.asc
-    checksums_path: SHA256SUMS.asc
-  SHA512SUMS:
-    <<: *default
-    description: "Aggregated checksums with main installers details per platform in sha256 hashes"
-    pretty_name: SHA512SUMS
-    checksums_path: SHA512SUMS
-  SHA512SUMS.asc:
-    <<: *default
-    description: "Detached signature for the checksums file"
-    pretty_name: SHA512SUMS.asc
-    checksums_path: SHA512SUMS.asc
+    SHA256SUMMARY:
+        <<: *default
+        description: "Merkle-tree for the release artifacts with sha 256 hashes"
+        from:
+            - release-generate-checksums
+        pretty_name: SHA256SUMMARY
+        checksums_path: SHA256SUMMARY
+    SHA512SUMMARY:
+        <<: *default
+        description: "Merkle-tree for the release artifacts with sha 512 hashes"
+        from:
+            - release-generate-checksums
+        pretty_name: SHA512SUMMARY
+        checksums_path: SHA512SUMMARY
+    KEY:
+        <<: *default
+        description: "Public side of the key that was used to sign the release artifacts"
+        pretty_name: KEY
+        checksums_path: KEY
+    SHA256SUMS:
+        <<: *default
+        description: "Aggregated checksums with main installers details per platform in sha512 hashes"
+        pretty_name: SHA256SUMS
+        checksums_path: SHA256SUMS
+    SHA256SUMS.asc:
+        <<: *default
+        description: "Detached signature for the checksums file"
+        pretty_name: SHA256SUMS.asc
+        checksums_path: SHA256SUMS.asc
+    SHA512SUMS:
+        <<: *default
+        description: "Aggregated checksums with main installers details per platform in sha256 hashes"
+        pretty_name: SHA512SUMS
+        checksums_path: SHA512SUMS
+    SHA512SUMS.asc:
+        <<: *default
+        description: "Detached signature for the checksums file"
+        pretty_name: SHA512SUMS.asc
+        checksums_path: SHA512SUMS.asc

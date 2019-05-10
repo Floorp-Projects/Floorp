@@ -1,58 +1,58 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.push_apk:loader
 
 transforms:
-   - taskgraph.transforms.push_apk:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.push_apk:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - build-signing
-   - google-play-strings
-   - push-apk-checks
+    - build-signing
+    - google-play-strings
+    - push-apk-checks
 
 jobs:
-   push-apk/opt:
-      label: 'push-apk/opt'
-      description: Publishes APK onto Google Play Store
-      attributes:
-         build_platform: android-nightly
-         nightly: true
-      shipping-phase: ship
-      shipping-product: fennec
-      worker-type:
-         by-release-level:
-            production: scriptworker-prov-v1/pushapk-v1
-            staging: scriptworker-prov-v1/dep-pushapk
-      worker:
-         upstream-artifacts:  # see transforms
-         google-play-track:
-            # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
-            by-release-type:
-               nightly: 'beta'
-               beta: 'rollout'
-               release(-rc)?: 'rollout'
-               default: 'internal'
-         implementation: push-apk
-         commit:
+    push-apk/opt:
+        label: 'push-apk/opt'
+        description: Publishes APK onto Google Play Store
+        attributes:
+            build_platform: android-nightly
+            nightly: true
+        shipping-phase: ship
+        shipping-product: fennec
+        worker-type:
             by-release-level:
-               production: true
-               staging: false
-         rollout-percentage:
-            by-release-type:
-               # XXX Please make sure to change google-play-track above to
-               # 'rollout' if you add a new supported project
-               release: 10
-               release-rc: 5
-               beta: 10
-               default: null
-      requires: all-resolved
-      scopes:  # see transforms
-      treeherder:
-         symbol: pub(gp)
-         platform: Android/opt
-         tier: 2
-         kind: other
-      run-on-projects: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                production: scriptworker-prov-v1/pushapk-v1
+                staging: scriptworker-prov-v1/dep-pushapk
+        worker:
+            upstream-artifacts:  # see transforms
+            google-play-track:
+                # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
+                by-release-type:
+                    nightly: 'beta'
+                    beta: 'rollout'
+                    release(-rc)?: 'rollout'
+                    default: 'internal'
+            implementation: push-apk
+            commit:
+                by-release-level:
+                    production: true
+                    staging: false
+            rollout-percentage:
+                by-release-type:
+                    # XXX Please make sure to change google-play-track above to
+                    # 'rollout' if you add a new supported project
+                    release: 10
+                    release-rc: 5
+                    beta: 10
+                    default: null
+        requires: all-resolved
+        scopes:  # see transforms
+        treeherder:
+            symbol: pub(gp)
+            platform: Android/opt
+            tier: 2
+            kind: other
+        run-on-projects: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
