@@ -241,7 +241,7 @@
       }
 
       var hidden = !tree.enableColumnDrag;
-      aPopup.querySelectorAll(":not([colindex])").forEach((e) => { e.hidden = hidden; });
+      aPopup.querySelectorAll(":scope > :not([colindex])").forEach((e) => { e.hidden = hidden; });
     }
   }
 
