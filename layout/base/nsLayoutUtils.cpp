@@ -6114,10 +6114,6 @@ void nsLayoutUtils::PaintTextShadow(
     if (auto* textDrawer = aContext->GetTextDrawer()) {
       wr::Shadow wrShadow;
 
-      // Gecko already inflates the bounding rect of text shadows,
-      // so tell WR not to inflate again.
-      wrShadow.should_inflate = false;
-
       wrShadow.offset = {
           presCtx->AppUnitsToFloatDevPixels(shadowDetails->mXOffset),
           presCtx->AppUnitsToFloatDevPixels(shadowDetails->mYOffset)};
@@ -6126,7 +6122,10 @@ void nsLayoutUtils::PaintTextShadow(
           presCtx->AppUnitsToFloatDevPixels(shadowDetails->mRadius);
       wrShadow.color = wr::ToColorF(ToDeviceColor(shadowColor));
 
-      textDrawer->AppendShadow(wrShadow);
+      // Gecko already inflates the bounding rect of text shadows,
+      // so tell WR not to inflate again.
+      bool inflate = false;
+      textDrawer->AppendShadow(wrShadow, inflate);
       continue;
     }
 

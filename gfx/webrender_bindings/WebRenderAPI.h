@@ -528,7 +528,8 @@ class DisplayListBuilder final {
                 const wr::Line& aLine);
 
   void PushShadow(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
-                  bool aIsBackfaceVisible, const wr::Shadow& aShadow);
+                  bool aIsBackfaceVisible, const wr::Shadow& aShadow,
+                  bool aShouldInflate);
 
   void PopAllShadows();
 
