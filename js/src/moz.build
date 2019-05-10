@@ -196,6 +196,10 @@ EXPORTS.js += [
     '../public/Wrapper.h',
 ]
 
+EXPORTS.js.experimental += [
+    '../public/experimental/SourceHook.h',
+]
+
 UNIFIED_SOURCES += [
     'builtin/Array.cpp',
     'builtin/AtomicsObject.cpp',
@@ -318,6 +322,7 @@ UNIFIED_SOURCES += [
     'vm/Shape.cpp',
     'vm/SharedArrayObject.cpp',
     'vm/SharedImmutableStringsCache.cpp',
+    'vm/SourceHook.cpp',
     'vm/Stack.cpp',
     'vm/StringType.cpp',
     'vm/SymbolType.cpp',

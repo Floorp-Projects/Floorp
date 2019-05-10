@@ -44,6 +44,7 @@
 #include "nsCycleCollector.h"
 #include "jsapi.h"
 #include "js/BuildId.h"  // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
+#include "js/experimental/SourceHook.h"  // js::{,Set}SourceHook
 #include "js/MemoryFunctions.h"
 #include "js/MemoryMetrics.h"
 #include "js/UbiNode.h"
