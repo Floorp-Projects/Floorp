@@ -338,12 +338,8 @@ const Class js::ReferenceTypeDescr::class_ = {
 
 const JSFunctionSpec js::ReferenceTypeDescr::typeObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    {JSFunctionSpec::Name("array"), {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
-    {JSFunctionSpec::Name("equivalent"),
-     {nullptr, nullptr},
-     1,
-     0,
-     "TypeDescrEquivalent"},
+    {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
+    {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
     JS_FS_END};
 
 static const uint32_t ReferenceSizes[] = {
@@ -481,13 +477,9 @@ const Class ArrayTypeDescr::class_ = {
 const JSPropertySpec ArrayMetaTypeDescr::typeObjectProperties[] = {JS_PS_END};
 
 const JSFunctionSpec ArrayMetaTypeDescr::typeObjectMethods[] = {
-    {JSFunctionSpec::Name("array"), {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
+    {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    {JSFunctionSpec::Name("equivalent"),
-     {nullptr, nullptr},
-     1,
-     0,
-     "TypeDescrEquivalent"},
+    {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
     JS_SELF_HOSTED_FN("build", "TypedObjectArrayTypeBuild", 3, 0),
     JS_SELF_HOSTED_FN("from", "TypedObjectArrayTypeFrom", 3, 0),
     JS_FS_END};
@@ -495,12 +487,8 @@ const JSFunctionSpec ArrayMetaTypeDescr::typeObjectMethods[] = {
 const JSPropertySpec ArrayMetaTypeDescr::typedObjectProperties[] = {JS_PS_END};
 
 const JSFunctionSpec ArrayMetaTypeDescr::typedObjectMethods[] = {
-    {JSFunctionSpec::Name("forEach"), {nullptr, nullptr}, 1, 0, "ArrayForEach"},
-    {JSFunctionSpec::Name("redimension"),
-     {nullptr, nullptr},
-     1,
-     0,
-     "TypedObjectArrayRedimension"},
+    {"forEach", {nullptr, nullptr}, 1, 0, "ArrayForEach"},
+    {"redimension", {nullptr, nullptr}, 1, 0, "TypedObjectArrayRedimension"},
     JS_SELF_HOSTED_FN("map", "TypedObjectArrayMap", 2, 0),
     JS_SELF_HOSTED_FN("reduce", "TypedObjectArrayReduce", 2, 0),
     JS_SELF_HOSTED_FN("filter", "TypedObjectArrayFilter", 1, 0),
@@ -730,13 +718,9 @@ const Class StructTypeDescr::class_ = {
 const JSPropertySpec StructMetaTypeDescr::typeObjectProperties[] = {JS_PS_END};
 
 const JSFunctionSpec StructMetaTypeDescr::typeObjectMethods[] = {
-    {JSFunctionSpec::Name("array"), {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
+    {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    {JSFunctionSpec::Name("equivalent"),
-     {nullptr, nullptr},
-     1,
-     0,
-     "TypeDescrEquivalent"},
+    {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
     JS_FS_END};
 
 const JSPropertySpec StructMetaTypeDescr::typedObjectProperties[] = {JS_PS_END};
