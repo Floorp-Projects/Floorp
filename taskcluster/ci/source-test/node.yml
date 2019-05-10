@@ -32,7 +32,7 @@ devtools-tests:
     treeherder:
         symbol: node(devtools)
         kind: test
-        tier: 3
+        tier: 1
     worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
@@ -43,18 +43,11 @@ devtools-tests:
         command: >
             cd /builds/worker/checkouts/gecko/ &&
             npm install &&
-            cd /builds/worker/checkouts/gecko/devtools/client/aboutdebugging-new/test/jest &&
-            yarn &&
-            yarn test &&
-            cd /builds/worker/checkouts/gecko/devtools/client/framework/test/jest &&
-            yarn &&
-            yarn test &&
-            cd /builds/worker/checkouts/gecko/devtools/client/webconsole/test &&
-            yarn &&
-            yarn test &&
-            cd /builds/worker/checkouts/gecko/devtools/client/netmonitor/test &&
-            yarn &&
-            yarn test
+            cd /builds/worker/checkouts/gecko/devtools/client/bin/ &&
+            node devtools-node-test-runner.js --suite=aboutdebugging-new &&
+            node devtools-node-test-runner.js --suite=framework &&
+            node devtools-node-test-runner.js --suite=netmonitor &&
+            node devtools-node-test-runner.js --suite=webconsole
     when:
         files-changed:
             - 'devtools/client/aboutdebugging-new/src/components/**'
