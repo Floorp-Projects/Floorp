@@ -183,8 +183,12 @@ already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(DrawTarget* aTarget) {
 
 void gfxFT2Font::FillGlyphDataForChar(FT_Face face, uint32_t ch,
                                       CachedGlyphData* gd) {
-  if (!face->charmap || face->charmap->encoding != FT_ENCODING_UNICODE) {
-    FT_Select_Charmap(face, FT_ENCODING_UNICODE);
+  if (!face->charmap || (face->charmap->encoding != FT_ENCODING_UNICODE &&
+                         face->charmap->encoding != FT_ENCODING_MS_SYMBOL)) {
+    if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE) &&
+        FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_MS_SYMBOL)) {
+      NS_WARNING("failed to select Unicode or symbol charmap!");
+    }
   }
   FT_UInt gid = FT_Get_Char_Index(face, ch);
 
