@@ -33,6 +33,7 @@
 !define DDEApplication        "Firefox"
 !define AppRegName            "Firefox"
 
+!define BrandProductName      "Firefox"
 !ifndef DEV_EDITION
 !define BrandShortName        "@MOZ_APP_DISPLAYNAME@"
 !endif
