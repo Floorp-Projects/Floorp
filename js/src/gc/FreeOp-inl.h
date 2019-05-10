@@ -30,10 +30,12 @@ inline void FreeOp::freeLater(gc::Cell* cell, void* p, size_t nbytes,
 }
 
 inline void FreeOp::freeLater(void* p) {
-  // FreeOps other than the defaultFreeOp() are constructed on the stack,
-  // and won't hold onto the pointers to free indefinitely.
+  // Default FreeOps are not constructed on the stack, and will hold onto the
+  // pointers to free indefinitely.
   MOZ_ASSERT(!isDefaultFreeOp());
 
+  // It's not safe to free this allocation immediately, so we must crash if we
+  // can't append to the list.
   AutoEnterOOMUnsafeRegion oomUnsafe;
   if (!freeLaterList.append(p)) {
     oomUnsafe.crash("FreeOp::freeLater");
