@@ -19,16 +19,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
+  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
-const BROWSER_SEARCH_PREF = "browser.search.";
-
-XPCOMUtils.defineLazyPreferenceGetter(this, "loggingEnabled",
-  BROWSER_SEARCH_PREF + "log", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "gGeoSpecificDefaultsEnabled",
-  BROWSER_SEARCH_PREF + "geoSpecificDefaults", false);
+  SearchUtils.BROWSER_SEARCH_PREF + "geoSpecificDefaults", false);
 
 // Can't use defineLazyPreferenceGetter because we want the value
 // from the default branch
@@ -54,29 +51,11 @@ const APP_SEARCH_PREFIX = "resource://search-plugins/";
 // The address we use to sign the built in search extensions with.
 const EXT_SIGNING_ADDRESS = "search.mozilla.org";
 
-// See documentation in nsISearchService.idl.
-const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
 const TOPIC_LOCALES_CHANGE       = "intl:app-locales-changed";
 const QUIT_APPLICATION_TOPIC     = "quit-application";
 
-const SEARCH_ENGINE_REMOVED      = "engine-removed";
-const SEARCH_ENGINE_ADDED        = "engine-added";
-const SEARCH_ENGINE_CHANGED      = "engine-changed";
-const SEARCH_ENGINE_LOADED       = "engine-loaded";
-const SEARCH_ENGINE_DEFAULT      = "engine-default";
-
 // The following constants are left undocumented in nsISearchService.idl
 // For the moment, they are meant for testing/debugging purposes only.
-
-/**
- * Topic used for events involving the service itself.
- */
-const SEARCH_SERVICE_TOPIC       = "browser-search-service";
-
-/**
- * Sent whenever the cache is fully written to disk.
- */
-const SEARCH_SERVICE_CACHE_WRITTEN  = "write-cache-to-disk-complete";
 
 // Delay for batching invalidation of the JSON cache (ms)
 const CACHE_INVALIDATION_DELAY = 1000;
@@ -86,9 +65,6 @@ const CACHE_INVALIDATION_DELAY = 1000;
 const CACHE_VERSION = 1;
 
 const CACHE_FILENAME = "search.json.mozlz4";
-
-const URLTYPE_SEARCH_HTML  = "text/html";
-const URLTYPE_OPENSEARCH   = "application/opensearchdescription+xml";
 
 // The default engine update interval, in days. This is only used if an engine
 // specifies an updateURL, but not an updateInterval.
@@ -109,105 +85,6 @@ const MULTI_LOCALE_ENGINES = [
 
 // A tag to denote when we are using the "default_locale" of an engine
 const DEFAULT_TAG = "default";
-
-/**
- * This is the Remote Settings key that we use to get the ignore lists for
- * engines.
- */
-const SETTINGS_IGNORELIST_KEY = "hijack-blocklists";
-
-/**
- * Outputs text to the JavaScript console as well as to stdout.
- */
-function LOG(text) {
-  if (loggingEnabled) {
-    dump("*** Search: " + text + "\n");
-    Services.console.logStringMessage(text);
-  }
-}
-
-/**
- * Logs the failure message (if browser.search.log is enabled) and throws.
- * @param  message
- *         A message to display
- * @param  resultCode
- *         The NS_ERROR_* value to throw.
- * @throws resultCode or NS_ERROR_INVALID_ARG if resultCode isn't specified.
- */
-function FAIL(message, resultCode) {
-  LOG(message);
-  throw Components.Exception(message, resultCode || Cr.NS_ERROR_INVALID_ARG);
-}
-
-function loadListener(channel, engine, callback) {
-  this._channel = channel;
-  this._bytes = [];
-  this._engine = engine;
-  this._callback = callback;
-}
-loadListener.prototype = {
-  _callback: null,
-  _channel: null,
-  _countRead: 0,
-  _engine: null,
-  _stream: null,
-
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIRequestObserver,
-    Ci.nsIStreamListener,
-    Ci.nsIChannelEventSink,
-    Ci.nsIInterfaceRequestor,
-    Ci.nsIProgressEventSink,
-  ]),
-
-  // nsIRequestObserver
-  onStartRequest(request) {
-    LOG("loadListener: Starting request: " + request.name);
-    this._stream = Cc["@mozilla.org/binaryinputstream;1"].
-                   createInstance(Ci.nsIBinaryInputStream);
-  },
-
-  onStopRequest(request, statusCode) {
-    LOG("loadListener: Stopping request: " + request.name);
-
-    var requestFailed = !Components.isSuccessCode(statusCode);
-    if (!requestFailed && (request instanceof Ci.nsIHttpChannel))
-      requestFailed = !request.requestSucceeded;
-
-    if (requestFailed || this._countRead == 0) {
-      LOG("loadListener: request failed!");
-      // send null so the callback can deal with the failure
-      this._bytes = null;
-    }
-    this._callback(this._bytes, this._engine);
-    this._channel = null;
-    this._engine = null;
-  },
-
-  // nsIStreamListener
-  onDataAvailable(request, inputStream, offset, count) {
-    this._stream.setInputStream(inputStream);
-
-    // Get a byte array of the data
-    this._bytes = this._bytes.concat(this._stream.readByteArray(count));
-    this._countRead += count;
-  },
-
-  // nsIChannelEventSink
-  asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
-    this._channel = newChannel;
-    callback.onRedirectVerifyCallback(Cr.NS_OK);
-  },
-
-  // nsIInterfaceRequestor
-  getInterface(iid) {
-    return this.QueryInterface(iid);
-  },
-
-  // nsIProgressEventSink
-  onProgress(request, context, progress, progressMax) {},
-  onStatus(request, context, status, statusArg) {},
-};
 
 function isPartnerBuild() {
   // Mozilla-provided builds (i.e. funnelcakes) are not partner builds
@@ -281,7 +158,7 @@ var ensureKnownRegion = async function(ss) {
     // Since bug 1492475, we don't block our init flows on the region fetch as
     // performed here. But we'd still like to unit-test its implementation, thus
     // we fire this observer notification.
-    Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "ensure-known-region-done");
+    Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE, "ensure-known-region-done");
   }
 };
 
@@ -297,11 +174,11 @@ function storeRegion(region) {
 
   // and telemetry...
   if (region == "US" && !isTimezoneUS) {
-    LOG("storeRegion mismatch - US Region, non-US timezone");
+    SearchUtils.log("storeRegion mismatch - US Region, non-US timezone");
     Services.telemetry.getHistogramById("SEARCH_SERVICE_US_COUNTRY_MISMATCHED_TIMEZONE").add(1);
   }
   if (region != "US" && isTimezoneUS) {
-    LOG("storeRegion mismatch - non-US Region, US timezone");
+    SearchUtils.log("storeRegion mismatch - non-US Region, US timezone");
     Services.telemetry.getHistogramById("SEARCH_SERVICE_US_TIMEZONE_MISMATCHED_COUNTRY").add(1);
   }
   // telemetry to compare our geoip response with platform-specific country data.
@@ -348,7 +225,7 @@ function fetchRegion(ss) {
     // generic catch-all that doesn't fit into other categories.
   };
   let endpoint = Services.urlFormatter.formatURLPref("browser.search.geoip.url");
-  LOG("_fetchRegion starting with endpoint " + endpoint);
+  SearchUtils.log("_fetchRegion starting with endpoint " + endpoint);
   // As an escape hatch, no endpoint means no geoip.
   if (!endpoint) {
     return Promise.resolve();
@@ -367,7 +244,7 @@ function fetchRegion(ss) {
     let timeoutMS = Services.prefs.getIntPref("browser.search.geoip.timeout");
     let geoipTimeoutPossible = true;
     let timerId = setTimeout(() => {
-      LOG("_fetchRegion: timeout fetching region information");
+      SearchUtils.log("_fetchRegion: timeout fetching region information");
       if (geoipTimeoutPossible)
         Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT").add(1);
       timerId = null;
@@ -383,7 +260,7 @@ function fetchRegion(ss) {
       Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_RESULT").add(reason);
 
       // This notification is just for tests...
-      Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "geoip-lookup-xhr-complete");
+      Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE, "geoip-lookup-xhr-complete");
 
       if (timerId) {
         Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT").add(0);
@@ -412,22 +289,22 @@ function fetchRegion(ss) {
 
     let request = new XMLHttpRequest();
     // This notification is just for tests...
-    Services.obs.notifyObservers(request, SEARCH_SERVICE_TOPIC, "geoip-lookup-xhr-starting");
+    Services.obs.notifyObservers(request, SearchUtils.TOPIC_SEARCH_SERVICE, "geoip-lookup-xhr-starting");
     request.timeout = 100000; // 100 seconds as the last-chance fallback
     request.onload = function(event) {
       let took = Date.now() - startTime;
       let region = event.target.response && event.target.response.country_code;
-      LOG("_fetchRegion got success response in " + took + "ms: " + region);
+      SearchUtils.log("_fetchRegion got success response in " + took + "ms: " + region);
       Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS").add(took);
       let reason = region ? TELEMETRY_RESULT_ENUM.SUCCESS : TELEMETRY_RESULT_ENUM.SUCCESS_WITHOUT_DATA;
       resolveAndReportSuccess(region, reason);
     };
     request.ontimeout = function(event) {
-      LOG("_fetchRegion: XHR finally timed-out fetching region information");
+      SearchUtils.log("_fetchRegion: XHR finally timed-out fetching region information");
       resolveAndReportSuccess(null, TELEMETRY_RESULT_ENUM.XHRTIMEOUT);
     };
     request.onerror = function(event) {
-      LOG("_fetchRegion: failed to retrieve region information");
+      SearchUtils.log("_fetchRegion: failed to retrieve region information");
       resolveAndReportSuccess(null, TELEMETRY_RESULT_ENUM.ERROR);
     };
     request.open("POST", endpoint, true);
@@ -475,7 +352,7 @@ function convertGoogleEngines(engineNames) {
 // responsibility to ensure with a timer that we are not going to
 // block the async init for too long.
 var fetchRegionDefault = (ss) => new Promise(resolve => {
-  let urlTemplate = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
+  let urlTemplate = Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF)
                             .getCharPref("geoSpecificDefaults.url");
   let endpoint = Services.urlFormatter.formatURL(urlTemplate);
 
@@ -491,7 +368,7 @@ var fetchRegionDefault = (ss) => new Promise(resolve => {
   if (cohort)
     endpoint += "/" + cohort;
 
-  LOG("fetchRegionDefault starting with endpoint " + endpoint);
+  SearchUtils.log("fetchRegionDefault starting with endpoint " + endpoint);
 
   let startTime = Date.now();
   let request = new XMLHttpRequest();
@@ -501,7 +378,7 @@ var fetchRegionDefault = (ss) => new Promise(resolve => {
 
     let status = event.target.status;
     if (status != 200) {
-      LOG("fetchRegionDefault failed with HTTP code " + status);
+      SearchUtils.log("fetchRegionDefault failed with HTTP code " + status);
       let retryAfter = request.getResponseHeader("retry-after");
       if (retryAfter) {
         ss.setGlobalAttr("searchDefaultExpir", Date.now() + retryAfter * 1000);
@@ -511,7 +388,7 @@ var fetchRegionDefault = (ss) => new Promise(resolve => {
     }
 
     let response = event.target.response || {};
-    LOG("received " + response.toSource());
+    SearchUtils.log("received " + response.toSource());
 
     if (response.cohort) {
       Services.prefs.setCharPref(cohortPref, response.cohort);
@@ -522,31 +399,31 @@ var fetchRegionDefault = (ss) => new Promise(resolve => {
     if (response.settings && response.settings.searchDefault) {
       let defaultEngine = response.settings.searchDefault;
       ss.setVerifiedGlobalAttr("searchDefault", defaultEngine);
-      LOG("fetchRegionDefault saved searchDefault: " + defaultEngine);
+      SearchUtils.log("fetchRegionDefault saved searchDefault: " + defaultEngine);
     }
 
     if (response.settings && response.settings.visibleDefaultEngines) {
       let visibleDefaultEngines = response.settings.visibleDefaultEngines;
       let string = visibleDefaultEngines.join(",");
       ss.setVerifiedGlobalAttr("visibleDefaultEngines", string);
-      LOG("fetchRegionDefault saved visibleDefaultEngines: " + string);
+      SearchUtils.log("fetchRegionDefault saved visibleDefaultEngines: " + string);
     }
 
     let interval = response.interval || SEARCH_GEO_DEFAULT_UPDATE_INTERVAL;
     let milliseconds = interval * 1000; // |interval| is in seconds.
     ss.setGlobalAttr("searchDefaultExpir", Date.now() + milliseconds);
 
-    LOG("fetchRegionDefault got success response in " + took + "ms");
+    SearchUtils.log("fetchRegionDefault got success response in " + took + "ms");
     // If we're doing this somewhere during the app's lifetime, reload the list
     // of engines in order to pick up any geo-specific changes.
     ss._maybeReloadEngines().finally(resolve);
   };
   request.ontimeout = function(event) {
-    LOG("fetchRegionDefault: XHR finally timed-out");
+    SearchUtils.log("fetchRegionDefault: XHR finally timed-out");
     resolve();
   };
   request.onerror = function(event) {
-    LOG("fetchRegionDefault: failed to retrieve territory default information");
+    SearchUtils.log("fetchRegionDefault: failed to retrieve territory default information");
     resolve();
   };
   request.open("GET", endpoint, true);
@@ -607,25 +484,8 @@ function getLocalizedPref(prefName, defaultValue) {
   return defaultValue;
 }
 
-/**
- * Notifies watchers of SEARCH_ENGINE_TOPIC about changes to an engine or to
- * the state of the search service.
- *
- * @param {nsISearchEngine} engine
- *   The engine to which the change applies.
- * @param {string} verb
- *   A verb describing the change.
- *
- * @see nsISearchService.idl
- */
 var gInitialized = false;
 var gReinitializing = false;
-function notifyAction(engine, verb) {
-  if (gInitialized) {
-    LOG("NOTIFY: Engine: \"" + engine.name + "\"; Verb: \"" + verb + "\"");
-    Services.obs.notifyObservers(engine, SEARCH_ENGINE_TOPIC, verb);
-  }
-}
 
 // nsISearchParseSubmissionResult
 function ParseSubmissionResult(engine, terms, termsOffset, termsLength) {
@@ -700,7 +560,7 @@ SearchService.prototype = {
   _ensureInitialized() {
     if (gInitialized) {
       if (!Components.isSuccessCode(this._initRV)) {
-        LOG("_ensureInitialized: failure");
+        SearchUtils.log("_ensureInitialized: failure");
         throw this._initRV;
       }
       return;
@@ -725,7 +585,7 @@ SearchService.prototype = {
    * succeeds.
    */
   async _init(skipRegionCheck) {
-    LOG("_init start");
+    SearchUtils.log("_init start");
 
     try {
       // See if we have a cache file so we don't have to parse a bunch of XML.
@@ -735,7 +595,7 @@ SearchService.prototype = {
       // but we're kicking it off as soon as possible to prevent UI flickering as
       // much as possible.
       this._ensureKnownRegionPromise = ensureKnownRegion(this)
-        .catch(ex => LOG("_init: failure determining region: " + ex))
+        .catch(ex => SearchUtils.log("_init: failure determining region: " + ex))
         .finally(() => this._ensureKnownRegionPromise = null);
       if (!skipRegionCheck) {
         await this._ensureKnownRegionPromise;
@@ -746,12 +606,12 @@ SearchService.prototype = {
       await this._loadEngines(cache);
 
       // Make sure the current list of engines is persisted, without the need to wait.
-      LOG("_init: engines loaded, writing cache");
+      SearchUtils.log("_init: engines loaded, writing cache");
       this._buildCache();
       this._addObservers();
     } catch (ex) {
       this._initRV = (ex.result !== undefined ? ex.result : Cr.NS_ERROR_FAILURE);
-      LOG("_init: failure initializng search: " + ex + "\n" + ex.stack);
+      SearchUtils.log("_init: failure initializng search: " + ex + "\n" + ex.stack);
     }
     gInitialized = true;
     if (Components.isSuccessCode(this._initRV)) {
@@ -759,9 +619,9 @@ SearchService.prototype = {
     } else {
       this._initObservers.reject(this._initRV);
     }
-    Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
+    Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE, "init-complete");
 
-    LOG("_init: Completed _init");
+    SearchUtils.log("_init: Completed _init");
     return this._initRV;
   },
 
@@ -775,7 +635,7 @@ SearchService.prototype = {
    * hence the `get` may take a while to return.
    */
   async _setupRemoteSettings() {
-    const ignoreListSettings = RemoteSettings(SETTINGS_IGNORELIST_KEY);
+    const ignoreListSettings = RemoteSettings(SearchUtils.SETTINGS_IGNORELIST_KEY);
     // Trigger a get of the initial value.
     const current = await ignoreListSettings.get();
 
@@ -784,7 +644,7 @@ SearchService.prototype = {
     ignoreListSettings.on("sync", this._ignoreListListener);
 
     await this._handleIgnoreListUpdated({data: {current}});
-    Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "settings-update-complete");
+    Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE, "settings-update-complete");
   },
 
   /**
@@ -795,7 +655,7 @@ SearchService.prototype = {
    *   The event in the format received from RemoteSettings.
    */
   async _handleIgnoreListUpdated(eventData) {
-    LOG("_handleIgnoreListUpdated");
+    SearchUtils.log("_handleIgnoreListUpdated");
     const {data: {current}} = eventData;
 
     for (const entry of current) {
@@ -866,7 +726,7 @@ SearchService.prototype = {
   getVerifiedGlobalAttr(name) {
     let val = this.getGlobalAttr(name);
     if (val && this.getGlobalAttr(name + "Hash") != getVerificationHash(val)) {
-      LOG("getVerifiedGlobalAttr, invalid hash for " + name);
+      SearchUtils.log("getVerifiedGlobalAttr, invalid hash for " + name);
       return "";
     }
     return val;
@@ -898,7 +758,7 @@ SearchService.prototype = {
       // We can't use isPartnerBuild because we need to allow reading
       // of the defaultengine name pref for funnelcakes.
       if (distroID) {
-        let defaultPrefB = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
+        let defaultPrefB = Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF);
         let nsIPLS = Ci.nsIPrefLocalizedString;
 
         try {
@@ -965,15 +825,16 @@ SearchService.prototype = {
       if (!cache.engines.length)
         throw new Error("cannot write without any engine.");
 
-      LOG("_buildCache: Writing to cache file.");
+      SearchUtils.log("_buildCache: Writing to cache file.");
       let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
       let data = gEncoder.encode(JSON.stringify(cache));
       await OS.File.writeAtomic(path, data, {compression: "lz4",
                                              tmpPath: path + ".tmp"});
-      LOG("_buildCache: cache file written to disk.");
-      Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, SEARCH_SERVICE_CACHE_WRITTEN);
+      SearchUtils.log("_buildCache: cache file written to disk.");
+      Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE,
+        "write-cache-to-disk-complete");
     } catch (ex) {
-      LOG("_buildCache: Could not write to cache file: " + ex);
+      SearchUtils.log("_buildCache: Could not write to cache file: " + ex);
     }
   },
 
@@ -984,8 +845,8 @@ SearchService.prototype = {
    * succeeds.
    */
   async _loadEngines(cache, isReload) {
-    LOG("_loadEngines: start");
-    Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "find-jar-engines");
+    SearchUtils.log("_loadEngines: start");
+    Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE, "find-jar-engines");
     let engines = await this._findEngines();
 
     // Get the non-empty distribution directories into distDirs...
@@ -1076,16 +937,16 @@ SearchService.prototype = {
     }
 
     if (!rebuildCache) {
-      LOG("_loadEngines: loading from cache directories");
+      SearchUtils.log("_loadEngines: loading from cache directories");
       this._loadEnginesFromCache(cache);
       if (Object.keys(this._engines).length) {
-        LOG("_loadEngines: done using existing cache");
+        SearchUtils.log("_loadEngines: done using existing cache");
         return;
       }
-      LOG("_loadEngines: No valid engines found in cache. Loading engines from disk.");
+      SearchUtils.log("_loadEngines: No valid engines found in cache. Loading engines from disk.");
     }
 
-    LOG("_loadEngines: Absent or outdated cache. Loading engines from disk.");
+    SearchUtils.log("_loadEngines: Absent or outdated cache. Loading engines from disk.");
     for (let loadDir of distDirs) {
       let enginesFromDir = await this._loadEnginesFromDir(loadDir);
       enginesFromDir.forEach(this._addEngineToStore, this);
@@ -1097,10 +958,10 @@ SearchService.prototype = {
       for (let [id, localeMap] of this._extensions) {
         let policy = WebExtensionPolicy.getByID(id);
         if (policy) {
-          LOG("_loadEngines: Found previously installed extension");
+          SearchUtils.log("_loadEngines: Found previously installed extension");
           await this.addEnginesFromExtension(policy.extension);
         } else {
-          LOG("_loadEngines: Installing " + id);
+          SearchUtils.log("_loadEngines: Installing " + id);
           // We may have marked these as loading from the cache previously
           // but if there wasnt an valid cache, mark as installing.
           for (let [locale, installed] of localeMap) {
@@ -1114,17 +975,17 @@ SearchService.prototype = {
           // The AddonManager will install the engine asynchronously
           // We can manually wait on that happening here.
           await ExtensionParent.apiManager.global.pendingSearchSetupTasks.get(id);
-          LOG("_loadEngines: " + id + " installed");
+          SearchUtils.log("_loadEngines: " + id + " installed");
         }
       }
     }
 
-    LOG("_loadEngines: loading user-installed engines from the obsolete cache");
+    SearchUtils.log("_loadEngines: loading user-installed engines from the obsolete cache");
     this._loadEnginesFromCache(cache, true);
 
     this._loadEnginesMetadataFromCache(cache);
 
-    LOG("_loadEngines: done using rebuilt cache");
+    SearchUtils.log("_loadEngines: done using rebuilt cache");
   },
 
   /**
@@ -1157,16 +1018,17 @@ SearchService.prototype = {
     // If the defaultEngine has changed between the previous load and this one,
     // dispatch the appropriate notifications.
     if (prevCurrentEngine && this.defaultEngine !== prevCurrentEngine) {
-      notifyAction(this._currentEngine, SEARCH_ENGINE_DEFAULT);
+      SearchUtils.notifyAction(this._currentEngine, SearchUtils.MODIFIED_TYPE.DEFAULT);
     }
-    Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "engines-reloaded");
+    Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE,
+      "engines-reloaded");
   },
 
   _reInit(origin, skipRegionCheck = true) {
-    LOG("_reInit");
+    SearchUtils.log("_reInit");
     // Re-entrance guard, because we're using an async lambda below.
     if (gReinitializing) {
-      LOG("_reInit: already re-initializing, bailing out.");
+      SearchUtils.log("_reInit: already re-initializing, bailing out.");
       return;
     }
     gReinitializing = true;
@@ -1178,7 +1040,7 @@ SearchService.prototype = {
       try {
         this._initObservers = PromiseUtils.defer();
         if (this._batchTask) {
-          LOG("finalizing batch task");
+          SearchUtils.log("finalizing batch task");
           let task = this._batchTask;
           this._batchTask = null;
           // Tests manipulate the cache directly, so let's not double-write with
@@ -1201,7 +1063,7 @@ SearchService.prototype = {
 
         // Tests that want to force a synchronous re-initialization need to
         // be notified when we are done uninitializing.
-        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC,
+        Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE,
                                      "uninit-complete");
 
         let cache = await this._readCacheFile();
@@ -1209,7 +1071,7 @@ SearchService.prototype = {
         // but we're kicking it off as soon as possible to prevent UI flickering as
         // much as possible.
         this._ensureKnownRegionPromise = ensureKnownRegion(this)
-          .catch(ex => LOG("_reInit: failure determining region: " + ex))
+          .catch(ex => SearchUtils.log("_reInit: failure determining region: " + ex))
           .finally(() => this._ensureKnownRegionPromise = null);
 
         if (!skipRegionCheck) {
@@ -1224,14 +1086,14 @@ SearchService.prototype = {
         // so signal to 'callers' that we're done.
         gInitialized = true;
         this._initObservers.resolve();
-        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
+        Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE, "init-complete");
       } catch (err) {
-        LOG("Reinit failed: " + err);
-        LOG(err.stack);
-        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-failed");
+        SearchUtils.log("Reinit failed: " + err);
+        SearchUtils.log(err.stack);
+        Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE, "reinit-failed");
       } finally {
         gReinitializing = false;
-        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-complete");
+        Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE, "reinit-complete");
       }
     })();
   },
@@ -1266,7 +1128,7 @@ SearchService.prototype = {
         json.metaData.searchDefaultExpir = 0;
       }
     } catch (ex) {
-      LOG("_readCacheFile: Error reading cache file: " + ex);
+      SearchUtils.log("_readCacheFile: Error reading cache file: " + ex);
       json = {};
     }
     if (!gInitialized && json.metaData)
@@ -1279,7 +1141,7 @@ SearchService.prototype = {
   get batchTask() {
     if (!this._batchTask) {
       let task = async () => {
-        LOG("batchTask: Invalidating engine cache");
+        SearchUtils.log("batchTask: Invalidating engine cache");
         await this._buildCache();
       };
       this._batchTask = new DeferredTask(task, CACHE_INVALIDATION_DELAY);
@@ -1289,18 +1151,18 @@ SearchService.prototype = {
 
   _addEngineToStore(engine) {
     if (this._engineMatchesIgnoreLists(engine)) {
-      LOG("_addEngineToStore: Ignoring engine");
+      SearchUtils.log("_addEngineToStore: Ignoring engine");
       return;
     }
 
-    LOG("_addEngineToStore: Adding engine: \"" + engine.name + "\"");
+    SearchUtils.log("_addEngineToStore: Adding engine: \"" + engine.name + "\"");
 
     // See if there is an existing engine with the same name. However, if this
     // engine is updating another engine, it's allowed to have the same name.
     var hasSameNameAsUpdate = (engine._engineToUpdate &&
                                engine.name == engine._engineToUpdate.name);
     if (engine.name in this._engines && !hasSameNameAsUpdate) {
-      LOG("_addEngineToStore: Duplicate engine found, aborting!");
+      SearchUtils.log("_addEngineToStore: Duplicate engine found, aborting!");
       return;
     }
 
@@ -1325,7 +1187,7 @@ SearchService.prototype = {
 
       // Add the engine back
       this._engines[engine.name] = engine;
-      notifyAction(engine, SEARCH_ENGINE_CHANGED);
+      SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.CHANGED);
     } else {
       // Not an update, just add the new engine.
       this._engines[engine.name] = engine;
@@ -1337,7 +1199,7 @@ SearchService.prototype = {
         this.__sortedEngines.push(engine);
         this._saveSortedEngineList();
       }
-      notifyAction(engine, SEARCH_ENGINE_ADDED);
+      SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.ADDED);
     }
 
     if (engine._hasUpdates) {
@@ -1354,7 +1216,7 @@ SearchService.prototype = {
     for (let engine of cache.engines) {
       let name = engine._name;
       if (name in this._engines) {
-        LOG("_loadEnginesMetadataFromCache, transfering metadata for " + name);
+        SearchUtils.log("_loadEnginesMetadataFromCache, transfering metadata for " + name);
         this._engines[name]._metaData = engine._metaData || {};
       }
     }
@@ -1364,7 +1226,7 @@ SearchService.prototype = {
     if (!cache.engines)
       return;
 
-    LOG("_loadEnginesFromCache: Loading " +
+    SearchUtils.log("_loadEnginesFromCache: Loading " +
         cache.engines.length + " engines from cache");
 
     let skippedEngines = 0;
@@ -1378,7 +1240,7 @@ SearchService.prototype = {
     }
 
     if (skippedEngines) {
-      LOG("_loadEnginesFromCache: skipped " + skippedEngines + " read-only engines.");
+      SearchUtils.log("_loadEnginesFromCache: skipped " + skippedEngines + " read-only engines.");
     }
   },
 
@@ -1391,8 +1253,8 @@ SearchService.prototype = {
       engine._initWithJSON(json);
       this._addEngineToStore(engine);
     } catch (ex) {
-      LOG("Failed to load " + json._name + " from cache: " + ex);
-      LOG("Engine JSON: " + json.toSource());
+      SearchUtils.log("Failed to load " + json._name + " from cache: " + ex);
+      SearchUtils.log("Engine JSON: " + json.toSource());
     }
   },
 
@@ -1405,7 +1267,7 @@ SearchService.prototype = {
    * succeeds.
    */
   async _loadEnginesFromDir(dir) {
-    LOG("_loadEnginesFromDir: Searching in " + dir.path + " for search engines.");
+    SearchUtils.log("_loadEnginesFromDir: Searching in " + dir.path + " for search engines.");
 
     let iterator = new OS.File.DirectoryIterator(dir.path);
 
@@ -1438,7 +1300,7 @@ SearchService.prototype = {
         await addedEngine._initFromFile(file);
         engines.push(addedEngine);
       } catch (ex) {
-        LOG("_loadEnginesFromDir: Failed to load " + osfile.path + "!\n" + ex);
+        SearchUtils.log("_loadEnginesFromDir: Failed to load " + osfile.path + "!\n" + ex);
       }
     }
     return engines;
@@ -1458,7 +1320,7 @@ SearchService.prototype = {
     let engines = [];
     for (let url of urls) {
       try {
-        LOG("_loadFromChromeURLs: loading engine from chrome url: " + url);
+        SearchUtils.log("_loadFromChromeURLs: loading engine from chrome url: " + url);
         let uri = Services.io.newURI(APP_SEARCH_PREFIX + url + ".xml");
         let engine = new SearchEngine({
           uri,
@@ -1473,7 +1335,7 @@ SearchService.prototype = {
         }
         engines.push(engine);
       } catch (ex) {
-        LOG("_loadFromChromeURLs: failed to load engine: " + ex);
+        SearchUtils.log("_loadFromChromeURLs: failed to load engine: " + ex);
       }
     }
     return engines;
@@ -1486,11 +1348,11 @@ SearchService.prototype = {
    * succeeds.
    */
   async _findEngines() {
-    LOG("_findEngines: looking for engines in JARs");
+    SearchUtils.log("_findEngines: looking for engines in JARs");
 
     let chan = makeChannel(this._listJSONURL);
     if (!chan) {
-      LOG("_findEngines: " + this._listJSONURL + " isn't registered");
+      SearchUtils.log("_findEngines: " + this._listJSONURL + " isn't registered");
       return [];
     }
 
@@ -1504,7 +1366,7 @@ SearchService.prototype = {
         resolve(event.target.responseText);
       };
       request.onerror = function(event) {
-        LOG("_findEngines: failed to read " + this._listJSONURL);
+        SearchUtils.log("_findEngines: failed to read " + this._listJSONURL);
         resolve();
       };
       request.open("GET", Services.io.newURI(this._listJSONURL).spec, true);
@@ -1580,7 +1442,7 @@ SearchService.prototype = {
         // from the specific Firefox version we are running, so ignoring the
         // value altogether is safer.
         if (!jarNames.has(engineName)) {
-          LOG("_parseListJSON: ignoring visibleDefaultEngines value because " +
+          SearchUtils.log("_parseListJSON: ignoring visibleDefaultEngines value because " +
               engineName + " is not in the jar engines we have found");
           engineNames = null;
           break;
@@ -1600,7 +1462,7 @@ SearchService.prototype = {
 
     // Remove any engine names that are supposed to be ignored.
     // This pref is only allowed in a partner distribution.
-    let branch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
+    let branch = Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF);
     if (isPartnerBuild() &&
         branch.getPrefType("ignoredJAREngines") == branch.PREF_STRING) {
       let ignoredJAREngines = branch.getCharPref("ignoredJAREngines")
@@ -1668,11 +1530,11 @@ SearchService.prototype = {
   },
 
   _saveSortedEngineList() {
-    LOG("_saveSortedEngineList: starting");
+    SearchUtils.log("_saveSortedEngineList: starting");
 
     // Set the useDB pref to indicate that from now on we should use the order
     // information stored in the database.
-    Services.prefs.setBoolPref(BROWSER_SEARCH_PREF + "useDBForOrder", true);
+    Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder", true);
 
     var engines = this._getSortedEngines(true);
 
@@ -1680,18 +1542,18 @@ SearchService.prototype = {
       engines[i].setAttr("order", i + 1);
     }
 
-    LOG("_saveSortedEngineList: done");
+    SearchUtils.log("_saveSortedEngineList: done");
   },
 
   _buildSortedEngineList() {
-    LOG("_buildSortedEngineList: building list");
+    SearchUtils.log("_buildSortedEngineList: building list");
     var addedEngines = { };
     this.__sortedEngines = [];
 
     // If the user has specified a custom engine order, read the order
     // information from the metadata instead of the default prefs.
-    if (Services.prefs.getBoolPref(BROWSER_SEARCH_PREF + "useDBForOrder", false)) {
-      LOG("_buildSortedEngineList: using db for order");
+    if (Services.prefs.getBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "useDBForOrder", false)) {
+      SearchUtils.log("_buildSortedEngineList: using db for order");
 
       // Flag to keep track of whether or not we need to call _saveSortedEngineList.
       let needToSaveEngineList = false;
@@ -1735,7 +1597,7 @@ SearchService.prototype = {
       if (distroID) {
         try {
           var extras =
-            Services.prefs.getChildList(BROWSER_SEARCH_PREF + "order.extra.");
+            Services.prefs.getChildList(SearchUtils.BROWSER_SEARCH_PREF + "order.extra.");
 
           for (prefName of extras) {
             let engineName = Services.prefs.getCharPref(prefName);
@@ -1750,7 +1612,7 @@ SearchService.prototype = {
         } catch (e) { }
 
         while (true) {
-          prefName = `${BROWSER_SEARCH_PREF}order.${++i}`;
+          prefName = `${SearchUtils.BROWSER_SEARCH_PREF}order.${++i}`;
           let engineName = getLocalizedPref(prefName);
           if (!engineName)
             break;
@@ -1808,7 +1670,7 @@ SearchService.prototype = {
 
   // nsISearchService
   async init(skipRegionCheck = false) {
-    LOG("SearchService.init");
+    SearchUtils.log("SearchService.init");
     if (this._initStarted) {
       if (!skipRegionCheck) {
         await this._ensureKnownRegionPromise;
@@ -1851,14 +1713,14 @@ SearchService.prototype = {
 
   async getEngines() {
     await this.init(true);
-    LOG("getEngines: getting all engines");
+    SearchUtils.log("getEngines: getting all engines");
     var engines = this._getSortedEngines(true);
     return engines;
   },
 
   async getVisibleEngines() {
     await this.init();
-    LOG("getVisibleEngines: getting all visible engines");
+    SearchUtils.log("getVisibleEngines: getting all visible engines");
     var engines = this._getSortedEngines(false);
     return engines;
   },
@@ -1879,7 +1741,7 @@ SearchService.prototype = {
     if (distroID) {
       // First, look at the "browser.search.order.extra" branch.
       try {
-        var extras = Services.prefs.getChildList(BROWSER_SEARCH_PREF + "order.extra.");
+        var extras = Services.prefs.getChildList(SearchUtils.BROWSER_SEARCH_PREF + "order.extra.");
 
         for (let prefName of extras) {
           let engineName = Services.prefs.getCharPref(prefName);
@@ -1888,12 +1750,12 @@ SearchService.prototype = {
             engineOrder[engineName] = i++;
         }
       } catch (e) {
-        LOG("Getting extra order prefs failed: " + e);
+        SearchUtils.log("Getting extra order prefs failed: " + e);
       }
 
       // Now look through the "browser.search.order" branch.
       for (var j = 1; ; j++) {
-        let prefName = `${BROWSER_SEARCH_PREF}order.${j}`;
+        let prefName = `${SearchUtils.BROWSER_SEARCH_PREF}order.${j}`;
         let engineName = getLocalizedPref(prefName);
         if (!engineName)
           break;
@@ -1908,7 +1770,7 @@ SearchService.prototype = {
       engineOrder[engineName] = i++;
     }
 
-    LOG("getDefaultEngines: engineOrder: " + engineOrder.toSource());
+    SearchUtils.log("getDefaultEngines: engineOrder: " + engineOrder.toSource());
 
     function compareEngines(a, b) {
       var aIdx = engineOrder[a.name];
@@ -1929,7 +1791,7 @@ SearchService.prototype = {
 
   async getEnginesByExtensionID(extensionID) {
     await this.init(true);
-    LOG("getEngines: getting all engines for " + extensionID);
+    SearchUtils.log("getEngines: getting all engines for " + extensionID);
     var engines = this._getSortedEngines(true).filter(function(engine) {
       return engine._extensionID == extensionID;
     });
@@ -1974,13 +1836,13 @@ SearchService.prototype = {
     // web extensions freshly installed (via addEnginesFromExtension) or
     // user installed extensions being reenabled calling this directly.
     if (!gInitialized && !this._extensions.has(params.extensionID)) {
-      LOG("addEngineWithDetails: Not expecting " + params.extensionID);
+      SearchUtils.log("addEngineWithDetails: Not expecting " + params.extensionID);
       await this.init(true);
     }
     if (!name)
-      FAIL("Invalid name passed to addEngineWithDetails!");
+      SearchUtils.fail("Invalid name passed to addEngineWithDetails!");
     if (!params.template)
-      FAIL("Invalid template passed to addEngineWithDetails!");
+      SearchUtils.fail("Invalid template passed to addEngineWithDetails!");
     let existingEngine = this._engines[name];
     if (existingEngine) {
       if (params.extensionID &&
@@ -1989,7 +1851,7 @@ SearchService.prototype = {
         isCurrent = this.defaultEngine == existingEngine;
         await this.removeEngine(existingEngine);
       } else {
-        FAIL("An engine with that name already exists!", Cr.NS_ERROR_FILE_ALREADY_EXISTS);
+        SearchUtils.fail("An engine with that name already exists!", Cr.NS_ERROR_FILE_ALREADY_EXISTS);
       }
     }
 
@@ -2012,7 +1874,7 @@ SearchService.prototype = {
   },
 
   async addEnginesFromExtension(extension) {
-    LOG("addEnginesFromExtension: " + extension.id);
+    SearchUtils.log("addEnginesFromExtension: " + extension.id);
     try {
       // When Firefox starts, the AddonManager will report all the currently
       // installed search addons to us, keep the user installed engines
@@ -2023,7 +1885,7 @@ SearchService.prototype = {
       }
 
       if (!this._extensions.has(extension.id)) {
-        LOG("addEnginesFromExtension: User installed extension " + extension.id);
+        SearchUtils.log("addEnginesFromExtension: User installed extension " + extension.id);
         this._extensions.set(extension.id, new Map([[DEFAULT_TAG, null]]));
       }
 
@@ -2038,14 +1900,14 @@ SearchService.prototype = {
         // If we have installed the engine from cache previously then
         // no need to reinstall.
         if (installed !== true) {
-          LOG("addEnginesFromExtension: installing locale: " +
+          SearchUtils.log("addEnginesFromExtension: installing locale: " +
               extension.id + ":" + locale);
           engines.push(await installLocale(locale));
         }
       }
       return engines;
     } catch (err) {
-      LOG("addEnginesFromExtension: Failed to install " + extension.id + ": \"" +
+      SearchUtils.log("addEnginesFromExtension: Failed to install " + extension.id + ": \"" +
           err.message + "\"\n" + err.stack);
       return [];
     }
@@ -2106,7 +1968,7 @@ SearchService.prototype = {
   },
 
   async addEngine(engineURL, iconURL, confirm, extensionID) {
-    LOG("addEngine: Adding \"" + engineURL + "\".");
+    SearchUtils.log("addEngine: Adding \"" + engineURL + "\".");
     await this.init(true);
     let errCode;
     try {
@@ -2134,13 +1996,13 @@ SearchService.prototype = {
       // Drop the reference to the callback, if set
       if (engine)
         engine._installCallback = null;
-      FAIL("addEngine: Error adding engine:\n" + ex, errCode || Cr.NS_ERROR_FAILURE);
+      SearchUtils.fail("addEngine: Error adding engine:\n" + ex, errCode || Cr.NS_ERROR_FAILURE);
     }
     return engine;
   },
 
   async removeWebExtensionEngine(id) {
-    LOG("removeWebExtensionEngine: " + id);
+    SearchUtils.log("removeWebExtensionEngine: " + id);
     let localeMap = this._extensions.get(id);
     if (!localeMap) {
       Cu.reportError("Cannot find extension (" + id + ") to remove");
@@ -2156,7 +2018,7 @@ SearchService.prototype = {
   async removeEngine(engine) {
     await this.init(true);
     if (!engine)
-      FAIL("no engine passed to removeEngine!");
+      SearchUtils.fail("no engine passed to removeEngine!");
 
     var engineToRemove = null;
     for (var e in this._engines) {
@@ -2165,7 +2027,7 @@ SearchService.prototype = {
     }
 
     if (!engineToRemove)
-      FAIL("removeEngine: Can't find engine to remove!", Cr.NS_ERROR_FILE_NOT_FOUND);
+      SearchUtils.fail("removeEngine: Can't find engine to remove!", Cr.NS_ERROR_FILE_NOT_FOUND);
 
     if (engineToRemove == this.defaultEngine) {
       this._currentEngine = null;
@@ -2190,7 +2052,7 @@ SearchService.prototype = {
       // Remove the engine from _sortedEngines
       var index = this._sortedEngines.indexOf(engineToRemove);
       if (index == -1)
-        FAIL("Can't find engine to remove in _sortedEngines!", Cr.NS_ERROR_FAILURE);
+        SearchUtils.fail("Can't find engine to remove in _sortedEngines!", Cr.NS_ERROR_FAILURE);
       this.__sortedEngines.splice(index, 1);
 
       // Remove the engine from the internal store
@@ -2199,23 +2061,23 @@ SearchService.prototype = {
       // Since we removed an engine, we need to update the preferences.
       this._saveSortedEngineList();
     }
-    notifyAction(engineToRemove, SEARCH_ENGINE_REMOVED);
+    SearchUtils.notifyAction(engineToRemove, SearchUtils.MODIFIED_TYPE.REMOVED);
   },
 
   async moveEngine(engine, newIndex) {
     await this.init(true);
     if ((newIndex > this._sortedEngines.length) || (newIndex < 0))
-      FAIL("moveEngine: Index out of bounds!");
+      SearchUtils.fail("moveEngine: Index out of bounds!");
     if (!(engine instanceof Ci.nsISearchEngine) && !(engine instanceof SearchEngine))
-      FAIL("moveEngine: Invalid engine passed to moveEngine!");
+      SearchUtils.fail("moveEngine: Invalid engine passed to moveEngine!");
     if (engine.hidden)
-      FAIL("moveEngine: Can't move a hidden engine!", Cr.NS_ERROR_FAILURE);
+      SearchUtils.fail("moveEngine: Can't move a hidden engine!", Cr.NS_ERROR_FAILURE);
 
     engine = engine.wrappedJSObject;
 
     var currentIndex = this._sortedEngines.indexOf(engine);
     if (currentIndex == -1)
-      FAIL("moveEngine: Can't find engine to move!", Cr.NS_ERROR_UNEXPECTED);
+      SearchUtils.fail("moveEngine: Can't find engine to move!", Cr.NS_ERROR_UNEXPECTED);
 
     // Our callers only take into account non-hidden engines when calculating
     // newIndex, but we need to move it in the array of all engines, so we
@@ -2230,7 +2092,7 @@ SearchService.prototype = {
     // newIndexEngine directly instead of newIndex.
     var newIndexEngine = this._getSortedEngines(false)[newIndex];
     if (!newIndexEngine)
-      FAIL("moveEngine: Can't find engine to replace!", Cr.NS_ERROR_UNEXPECTED);
+      SearchUtils.fail("moveEngine: Can't find engine to replace!", Cr.NS_ERROR_UNEXPECTED);
 
     for (var i = 0; i < this._sortedEngines.length; ++i) {
       if (newIndexEngine == this._sortedEngines[i])
@@ -2246,7 +2108,7 @@ SearchService.prototype = {
     var movedEngine = this.__sortedEngines.splice(currentIndex, 1)[0];
     this.__sortedEngines.splice(newIndex, 0, movedEngine);
 
-    notifyAction(engine, SEARCH_ENGINE_CHANGED);
+    SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.CHANGED);
 
     // Since we moved an engine, we need to update the preferences.
     this._saveSortedEngineList();
@@ -2312,11 +2174,11 @@ SearchService.prototype = {
     // and sometimes we get raw Engine JS objects (callers in this file), so
     // handle both.
     if (!(val instanceof Ci.nsISearchEngine) && !(val instanceof SearchEngine))
-      FAIL("Invalid argument passed to defaultEngine setter");
+      SearchUtils.fail("Invalid argument passed to defaultEngine setter");
 
     var newCurrentEngine = this.getEngineByName(val.name);
     if (!newCurrentEngine)
-      FAIL("Can't find engine in store!", Cr.NS_ERROR_UNEXPECTED);
+      SearchUtils.fail("Can't find engine in store!", Cr.NS_ERROR_UNEXPECTED);
 
     if (!newCurrentEngine._isDefault) {
       // If a non default engine is being set as the current engine, ensure
@@ -2327,7 +2189,7 @@ SearchService.prototype = {
       let currentHash = newCurrentEngine.getAttr("loadPathHash");
       if (!currentHash || currentHash != loadPathHash) {
         newCurrentEngine.setAttr("loadPathHash", loadPathHash);
-        notifyAction(newCurrentEngine, SEARCH_ENGINE_CHANGED);
+        SearchUtils.notifyAction(newCurrentEngine, SearchUtils.MODIFIED_TYPE.CHANGED);
       }
     }
 
@@ -2349,7 +2211,7 @@ SearchService.prototype = {
     this.setGlobalAttr("current", newName);
     this.setGlobalAttr("hash", getVerificationHash(newName));
 
-    notifyAction(this._currentEngine, SEARCH_ENGINE_DEFAULT);
+    SearchUtils.notifyAction(this._currentEngine, SearchUtils.MODIFIED_TYPE.DEFAULT);
   },
 
   async getDefault() {
@@ -2403,7 +2265,7 @@ SearchService.prototype = {
       // ... or engines sorted by default near the top of the list.
       if (!sendSubmissionURL) {
         let extras =
-          Services.prefs.getChildList(BROWSER_SEARCH_PREF + "order.extra.");
+          Services.prefs.getChildList(SearchUtils.BROWSER_SEARCH_PREF + "order.extra.");
 
         for (let prefName of extras) {
           try {
@@ -2416,7 +2278,7 @@ SearchService.prototype = {
 
         let i = 0;
         while (!sendSubmissionURL) {
-          let prefName = `${BROWSER_SEARCH_PREF}order.${++i}`;
+          let prefName = `${SearchUtils.BROWSER_SEARCH_PREF}order.${++i}`;
           let engineName = getLocalizedPref(prefName);
           if (!engineName)
             break;
@@ -2436,14 +2298,14 @@ SearchService.prototype = {
 
       if (!sendSubmissionURL) {
         // ... or engines that are the same domain as a default engine.
-        let engineHost = engine._getURLOfType(URLTYPE_SEARCH_HTML).templateHost;
+        let engineHost = engine._getURLOfType(SearchUtils.URL_TYPE.SEARCH).templateHost;
         for (let name in this._engines) {
           let innerEngine = this._engines[name];
           if (!innerEngine._isDefault) {
             continue;
           }
 
-          let innerEngineURL = innerEngine._getURLOfType(URLTYPE_SEARCH_HTML);
+          let innerEngineURL = innerEngine._getURLOfType(SearchUtils.URL_TYPE.SEARCH);
           if (innerEngineURL.templateHost == engineHost) {
             sendSubmissionURL = true;
             break;
@@ -2542,7 +2404,7 @@ SearchService.prototype = {
   },
 
   /**
-   * Checks to see if any engine has an EngineURL of type URLTYPE_SEARCH_HTML
+   * Checks to see if any engine has an EngineURL of type SearchUtils.URL_TYPE.SEARCH
    * for this request-method, template URL, and query params.
    */
   hasEngineWithURL(method, template, formData) {
@@ -2570,7 +2432,7 @@ SearchService.prototype = {
     return this._getSortedEngines(false).some(engine => {
       return engine._urls.some(url => {
         // Not an engineURL match if type, method, url, #params don't match.
-        if (url.type != URLTYPE_SEARCH_HTML ||
+        if (url.type != SearchUtils.URL_TYPE.SEARCH ||
             url.method != methodUpper ||
             url.template != template ||
             url.params.length != sortedFormLength) {
@@ -2681,23 +2543,23 @@ SearchService.prototype = {
   // nsIObserver
   observe(engine, topic, verb) {
     switch (topic) {
-      case SEARCH_ENGINE_TOPIC:
+      case SearchUtils.TOPIC_ENGINE_MODIFIED:
         switch (verb) {
-          case SEARCH_ENGINE_LOADED:
+          case SearchUtils.MODIFIED_TYPE.LOADED:
             engine = engine.QueryInterface(Ci.nsISearchEngine);
-            LOG("nsSearchService::observe: Done installation of " + engine.name
+            SearchUtils.log("nsSearchService::observe: Done installation of " + engine.name
                 + ".");
             this._addEngineToStore(engine.wrappedJSObject);
             if (engine.wrappedJSObject._useNow) {
-              LOG("nsSearchService::observe: setting current");
+              SearchUtils.log("nsSearchService::observe: setting current");
               this.defaultEngine = engine;
             }
             // The addition of the engine to the store always triggers an ADDED
             // or a CHANGED notification, that will trigger the task below.
             break;
-          case SEARCH_ENGINE_ADDED:
-          case SEARCH_ENGINE_CHANGED:
-          case SEARCH_ENGINE_REMOVED:
+          case SearchUtils.MODIFIED_TYPE.ADDED:
+          case SearchUtils.MODIFIED_TYPE.CHANGED:
+          case SearchUtils.MODIFIED_TYPE.REMOVED:
             this.batchTask.disarm();
             this.batchTask.arm();
             // Invalidate the map used to parse URLs to search engines.
@@ -2724,34 +2586,34 @@ SearchService.prototype = {
 
   // nsITimerCallback
   notify(timer) {
-    LOG("_notify: checking for updates");
+    SearchUtils.log("_notify: checking for updates");
 
-    if (!Services.prefs.getBoolPref(BROWSER_SEARCH_PREF + "update", true))
+    if (!Services.prefs.getBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "update", true))
       return;
 
     // Our timer has expired, but unfortunately, we can't get any data from it.
     // Therefore, we need to walk our engine-list, looking for expired engines
     var currentTime = Date.now();
-    LOG("currentTime: " + currentTime);
+    SearchUtils.log("currentTime: " + currentTime);
     for (let name in this._engines) {
       let engine = this._engines[name].wrappedJSObject;
       if (!engine._hasUpdates)
         continue;
 
-      LOG("checking " + engine.name);
+      SearchUtils.log("checking " + engine.name);
 
       var expirTime = engine.getAttr("updateexpir");
-      LOG("expirTime: " + expirTime + "\nupdateURL: " + engine._updateURL +
+      SearchUtils.log("expirTime: " + expirTime + "\nupdateURL: " + engine._updateURL +
           "\niconUpdateURL: " + engine._iconUpdateURL);
 
       var engineExpired = expirTime <= currentTime;
 
       if (!expirTime || !engineExpired) {
-        LOG("skipping engine");
+        SearchUtils.log("skipping engine");
         continue;
       }
 
-      LOG(engine.name + " has expired");
+      SearchUtils.log(engine.name + " has expired");
 
       engineUpdateService.update(engine);
 
@@ -2768,7 +2630,7 @@ SearchService.prototype = {
     }
     this._observersAdded = true;
 
-    Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC);
+    Services.obs.addObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC);
     Services.obs.addObserver(this, TOPIC_LOCALES_CHANGE);
 
@@ -2811,11 +2673,11 @@ SearchService.prototype = {
 
   _removeObservers() {
     if (this._ignoreListListener) {
-      RemoteSettings(SETTINGS_IGNORELIST_KEY).off("sync", this._ignoreListListener);
+      RemoteSettings(SearchUtils.SETTINGS_IGNORELIST_KEY).off("sync", this._ignoreListListener);
       delete this._ignoreListListener;
     }
 
-    Services.obs.removeObserver(this, SEARCH_ENGINE_TOPIC);
+    Services.obs.removeObserver(this, SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
     Services.obs.removeObserver(this, TOPIC_LOCALES_CHANGE);
   },
@@ -2827,20 +2689,6 @@ SearchService.prototype = {
   ]),
 };
 
-
-const SEARCH_UPDATE_LOG_PREFIX = "*** Search update: ";
-
-/**
- * Outputs text to the JavaScript console as well as to stdout, if the search
- * logging pref (browser.search.update.log) is set to true.
- */
-function ULOG(text) {
-  if (Services.prefs.getBoolPref(BROWSER_SEARCH_PREF + "update.log", false)) {
-    dump(SEARCH_UPDATE_LOG_PREFIX + text + "\n");
-    Services.console.logStringMessage(text);
-  }
-}
-
 var engineUpdateService = {
   scheduleNextUpdate(engine) {
     var interval = engine._updateInterval || SEARCH_DEFAULT_UPDATE_INTERVAL;
@@ -2850,23 +2698,23 @@ var engineUpdateService = {
 
   update(engine) {
     engine = engine.wrappedJSObject;
-    ULOG("update called for " + engine._name);
-    if (!Services.prefs.getBoolPref(BROWSER_SEARCH_PREF + "update", true) ||
+    this._log("update called for " + engine._name);
+    if (!Services.prefs.getBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "update", true) ||
         !engine._hasUpdates)
       return;
 
     let testEngine = null;
-    let updateURL = engine._getURLOfType(URLTYPE_OPENSEARCH);
+    let updateURL = engine._getURLOfType(SearchUtils.URL_TYPE.OPENSEARCH);
     let updateURI = (updateURL && updateURL._hasRelation("self")) ?
                      updateURL.getSubmission("", engine).uri :
                      makeURI(engine._updateURL);
     if (updateURI) {
       if (engine._isDefault && !updateURI.schemeIs("https")) {
-        ULOG("Invalid scheme for default engine update");
+        this._log("Invalid scheme for default engine update");
         return;
       }
 
-      ULOG("updating " + engine.name + " from " + updateURI.spec);
+      this._log("updating " + engine.name + " from " + updateURI.spec);
       testEngine = new SearchEngine({
         uri: updateURI,
         readOnly: false,
@@ -2874,13 +2722,27 @@ var engineUpdateService = {
       testEngine._engineToUpdate = engine;
       testEngine._initFromURIAndLoad(updateURI);
     } else {
-      ULOG("invalid updateURI");
+      this._log("invalid updateURI");
     }
 
     if (engine._iconUpdateURL) {
       // If we're updating the engine too, use the new engine object,
       // otherwise use the existing engine object.
       (testEngine || engine)._setIcon(engine._iconUpdateURL, true);
+    }
+  },
+
+  /**
+   * Outputs text to the JavaScript console as well as to stdout, if the search
+   * logging pref (browser.search.update.log) is set to true.
+   *
+   * @param {string} text
+   *   The message to log.
+   */
+  _log(text) {
+    if (Services.prefs.getBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "update.log", false)) {
+      dump("*** Search update: " + text + "\n");
+      Services.console.logStringMessage(text);
     }
   },
 };
