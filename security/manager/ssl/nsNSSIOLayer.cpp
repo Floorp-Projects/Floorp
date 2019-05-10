@@ -2485,7 +2485,8 @@ static nsresult nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   }
 
   if (flags & nsISocketProvider::NO_PERMANENT_STORAGE) {
-    if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_SESSION_TICKETS, false)) {
+    if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_SESSION_TICKETS, false) ||
+        SECSuccess != SSL_OptionSet(fd, SSL_NO_CACHE, true)) {
       return NS_ERROR_FAILURE;
     }
   }
