@@ -12,7 +12,7 @@ use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::border::BorderSegmentCacheKey;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
 use crate::clip::{ClipStore};
-use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, VisibleFace};
+use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem};
 use crate::debug_colors;
 use crate::debug_render::DebugItem;
@@ -50,9 +50,8 @@ use std::{cmp, fmt, hash, ops, u32, usize, mem};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::storage;
 use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
-use crate::util::{ScaleOffset, MatrixHelpers, MaxRect, Recycler};
-use crate::util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
-use crate::util::{scale_factors, clamp_to_scale_factor};
+use crate::util::{MatrixHelpers, MaxRect, Recycler};
+use crate::util::{clamp_to_scale_factor, pack_as_float, project_rect, raster_rect_to_device_pixels};
 use crate::internal_types::LayoutPrimitiveInfo;
 use smallvec::SmallVec;
 
@@ -132,46 +131,10 @@ impl PrimitiveOpacity {
 
 
 #[derive(Debug, Clone)]
-pub enum CoordinateSpaceMapping<F, T> {
-    Local,
-    ScaleOffset(ScaleOffset),
-    Transform(TypedTransform3D<f32, F, T>),
-}
-
-impl<F, T> CoordinateSpaceMapping<F, T> {
-    pub fn new(
-        ref_spatial_node_index: SpatialNodeIndex,
-        target_node_index: SpatialNodeIndex,
-        clip_scroll_tree: &ClipScrollTree,
-    ) -> (Self, VisibleFace) {
-        let spatial_nodes = &clip_scroll_tree.spatial_nodes;
-        let ref_spatial_node = &spatial_nodes[ref_spatial_node_index.0 as usize];
-        let target_spatial_node = &spatial_nodes[target_node_index.0 as usize];
-
-        if ref_spatial_node_index == target_node_index {
-            (CoordinateSpaceMapping::Local, VisibleFace::Front)
-        } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
-            let scale_offset = ref_spatial_node.coordinate_system_relative_scale_offset
-                .inverse()
-                .accumulate(&target_spatial_node.coordinate_system_relative_scale_offset);
-            (CoordinateSpaceMapping::ScaleOffset(scale_offset), VisibleFace::Front)
-        } else {
-            let relative = clip_scroll_tree
-                .get_relative_transform(target_node_index, ref_spatial_node_index);
-            (
-                CoordinateSpaceMapping::Transform(
-                    relative.flattened.with_source::<F>().with_destination::<T>()
-                ),
-                VisibleFace::from_bool(relative.flattened.is_backface_visible())
-            )
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
 pub struct SpaceMapper<F, T> {
     kind: CoordinateSpaceMapping<F, T>,
     pub ref_spatial_node_index: SpatialNodeIndex,
+    ref_world_inv_transform: CoordinateSpaceMapping<WorldPixel, T>,
     pub current_target_spatial_node_index: SpatialNodeIndex,
     pub bounds: TypedRect<f32, T>,
     visible_face: VisibleFace,
@@ -181,10 +144,16 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
     pub fn new(
         ref_spatial_node_index: SpatialNodeIndex,
         bounds: TypedRect<f32, T>,
+        clip_scroll_tree: &ClipScrollTree,
     ) -> Self {
         SpaceMapper {
             kind: CoordinateSpaceMapping::Local,
             ref_spatial_node_index,
+            ref_world_inv_transform: clip_scroll_tree
+                .get_world_transform(ref_spatial_node_index)
+                .inverse()
+                .unwrap()
+                .with_destination::<T>(),
             current_target_spatial_node_index: ref_spatial_node_index,
             bounds,
             visible_face: VisibleFace::Front,
@@ -197,7 +166,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         bounds: TypedRect<f32, T>,
         clip_scroll_tree: &ClipScrollTree,
     ) -> Self {
-        let mut mapper = SpaceMapper::new(ref_spatial_node_index, bounds);
+        let mut mapper = SpaceMapper::new(ref_spatial_node_index, bounds, clip_scroll_tree);
         mapper.set_target_spatial_node(target_node_index, clip_scroll_tree);
         mapper
     }
@@ -207,18 +176,30 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         target_node_index: SpatialNodeIndex,
         clip_scroll_tree: &ClipScrollTree,
     ) {
-        if target_node_index != self.current_target_spatial_node_index {
-            self.current_target_spatial_node_index = target_node_index;
-
-            let (kind, visible_face) = CoordinateSpaceMapping::new(
-                self.ref_spatial_node_index,
-                target_node_index,
-                clip_scroll_tree,
-            );
-
-            self.kind = kind;
-            self.visible_face = visible_face;
+        if target_node_index == self.current_target_spatial_node_index {
+            return
         }
+
+        let ref_spatial_node = &clip_scroll_tree.spatial_nodes[self.ref_spatial_node_index.0 as usize];
+        let target_spatial_node = &clip_scroll_tree.spatial_nodes[target_node_index.0 as usize];
+
+        self.kind = if self.ref_spatial_node_index == target_node_index {
+            CoordinateSpaceMapping::Local
+        } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
+            let scale_offset = ref_spatial_node.coordinate_system_relative_scale_offset
+                .inverse()
+                .accumulate(&target_spatial_node.coordinate_system_relative_scale_offset);
+            CoordinateSpaceMapping::ScaleOffset(scale_offset)
+        } else {
+            let transform = clip_scroll_tree
+                .get_world_transform(target_node_index)
+                .post_mul_transform(&self.ref_world_inv_transform)
+                .with_source::<F>();
+            CoordinateSpaceMapping::Transform(transform)
+        };
+
+        self.visible_face = self.kind.visible_face();
+        self.current_target_spatial_node_index = target_node_index;
     }
 
     pub fn get_transform(&self) -> TypedTransform3D<f32, F, T> {
@@ -1783,6 +1764,7 @@ impl PrimitiveStore {
         let mut map_local_to_raster = SpaceMapper::new(
             surface.raster_spatial_node_index,
             RasterRect::max_rect(),
+            frame_context.clip_scroll_tree,
         );
 
         let mut surface_rect = PictureRect::zero();
@@ -2197,17 +2179,15 @@ impl PrimitiveStore {
                 // The transform only makes sense for screen space rasterization
                 let relative_transform = frame_context
                     .clip_scroll_tree
-                    .get_relative_transform(
-                        prim_instance.spatial_node_index,
-                        ROOT_SPATIAL_NODE_INDEX,
-                    );
+                    .get_world_transform(prim_instance.spatial_node_index)
+                    .into_transform();
                 let prim_offset = prim_instance.prim_origin.to_vector() - run.reference_frame_relative_offset;
 
                 run.request_resources(
                     prim_offset,
                     &prim_data.font,
                     &prim_data.glyphs,
-                    &relative_transform.flattened.with_destination::<WorldPixel>(),
+                    &relative_transform,
                     surface,
                     raster_space,
                     frame_state.resource_cache,
@@ -2773,16 +2753,13 @@ impl PrimitiveStore {
                 //           based on the true world transform of the primitive. When
                 //           raster roots with local scale are supported in future,
                 //           that will need to be accounted for here.
-                let relative_transform = frame_context
+                let scale = frame_context
                     .clip_scroll_tree
-                    .get_relative_transform(
-                        prim_instance.spatial_node_index,
-                        ROOT_SPATIAL_NODE_INDEX,
-                    );
+                    .get_world_transform(prim_instance.spatial_node_index)
+                    .scale_factors();
 
                 // Scale factors are normalized to a power of 2 to reduce the number of
-                // resolution changes
-                let scale = scale_factors(&relative_transform.flattened);
+                // resolution changes.
                 // For frames with a changing scale transform round scale factors up to
                 // nearest power-of-2 boundary so that we don't keep having to redraw
                 // the content as it scales up and down. Rounding up to nearest
