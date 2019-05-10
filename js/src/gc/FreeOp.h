@@ -54,6 +54,14 @@ class FreeOp : public JSFreeOp {
   // Free memory that was associated with a GC thing using js::AddCellMemory.
   void free_(gc::Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
+  // Queue an allocation to be freed when the FreeOp is destroyed.
+  //
+  // This should not be called on the default FreeOps returned by
+  // JSRuntime/JSContext::defaultFreeOp() since these are not destroyed until
+  // the runtime itself is destroyed.
+  //
+  // This is used to ensure that copy-on-write object elements are not freed
+  // until all objects that refer to them have been finalized.
   void freeLater(void* p);
 
   // Free memory that was associated with a GC thing using js::AddCellMemory.
