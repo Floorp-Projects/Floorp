@@ -67,7 +67,7 @@ sealed class BookmarkAction : Action {
     data class Deselect(val item: BookmarkNode) : BookmarkAction()
     data class Delete(val item: BookmarkNode) : BookmarkAction()
     object BackPressed : BookmarkAction()
-    object ModeChanged : BookmarkAction()
+    object SwitchMode : BookmarkAction()
 }
 
 sealed class BookmarkChange : Change {

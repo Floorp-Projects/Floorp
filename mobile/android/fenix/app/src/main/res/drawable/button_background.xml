@@ -5,5 +5,5 @@
 
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <corners android:radius="4dp"/>
-    <solid android:color="@color/foundation_normal_theme" />
+    <solid android:color="?inset" />
 </shape>

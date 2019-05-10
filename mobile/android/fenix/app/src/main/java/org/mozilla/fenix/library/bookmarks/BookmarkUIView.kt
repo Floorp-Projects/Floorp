@@ -63,7 +63,7 @@ class BookmarkUIView(
         }
         if (it.mode != mode) {
             mode = it.mode
-            actionEmitter.onNext(BookmarkAction.ModeChanged)
+            actionEmitter.onNext(BookmarkAction.SwitchMode)
         }
         bookmarkAdapter.updateData(it.tree, it.mode)
         when (val modeCopy = mode) {
@@ -78,7 +78,7 @@ class BookmarkUIView(
                 mode = BookmarkState.Mode.Normal
                 bookmarkAdapter.updateData(tree, mode)
                 setUIForNormalMode(tree)
-                actionEmitter.onNext(BookmarkAction.ModeChanged)
+                actionEmitter.onNext(BookmarkAction.SwitchMode)
                 true
             }
             canGoBack -> {
@@ -113,7 +113,7 @@ class BookmarkUIView(
             context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
         setToolbarColors(
             R.color.white_color,
-            R.attr.accentBright.getColorIntFromAttr(context!!)
+            R.attr.accentHighContrast.getColorIntFromAttr(context!!)
         )
     }
 

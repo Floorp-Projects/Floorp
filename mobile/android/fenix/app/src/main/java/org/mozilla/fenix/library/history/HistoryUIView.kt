@@ -4,9 +4,15 @@
 
 package org.mozilla.fenix.library.history
 
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.appcompat.widget.Toolbar
+import android.widget.ImageButton
 import android.widget.LinearLayout
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.reactivex.Observable
 import io.reactivex.Observer
@@ -14,6 +20,8 @@ import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.component_history.view.*
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.asActivity
+import org.mozilla.fenix.ext.getColorIntFromAttr
 import org.mozilla.fenix.mvi.UIView
 
 class HistoryUIView(
@@ -27,28 +35,103 @@ class HistoryUIView(
     var mode: HistoryState.Mode = HistoryState.Mode.Normal
         private set
 
+    private val historyAdapter: HistoryAdapter
+    private var items: List<HistoryItem> = listOf()
+    private val context = container.context
+    private val activity = context?.asActivity()
+
+    fun getSelected(): List<HistoryItem> = historyAdapter.selected
+
     override val view: LinearLayout = LayoutInflater.from(container.context)
         .inflate(R.layout.component_history, container, true)
         .findViewById(R.id.history_wrapper)
 
     init {
         view.history_list.apply {
-            adapter = HistoryAdapter(actionEmitter)
+            historyAdapter = HistoryAdapter(actionEmitter)
+            adapter = historyAdapter
             layoutManager = LinearLayoutManager(container.context)
         }
     }
 
     override fun updateView() = Consumer<HistoryState> {
-        mode = it.mode
+        if (it.mode != mode) {
+            mode = it.mode
+            actionEmitter.onNext(HistoryAction.SwitchMode)
+        }
         (view.history_list.adapter as HistoryAdapter).updateData(it.items, it.mode)
+
+        items = it.items
+        when (val modeCopy = mode) {
+            is HistoryState.Mode.Normal -> setUIForNormalMode()
+            is HistoryState.Mode.Editing -> setUIForSelectingMode(modeCopy)
+        }
+    }
+
+    private fun setUIForSelectingMode(
+        mode: HistoryState.Mode.Editing
+    ) {
+        (activity as? AppCompatActivity)?.title =
+                context.getString(R.string.history_multi_select_title, mode.selectedItems.size)
+        setToolbarColors(
+            R.color.white_color,
+            R.attr.accentHighContrast.getColorIntFromAttr(context!!)
+        )
+    }
+
+    private fun setUIForNormalMode() {
+        (activity as? AppCompatActivity)?.title = context.getString(R.string.library_history)
+        setToolbarColors(
+            R.attr.primaryText.getColorIntFromAttr(context!!),
+            R.attr.foundation.getColorIntFromAttr(context)
+        )
+    }
+
+    private fun setToolbarColors(foreground: Int, background: Int) {
+        val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
+        val colorFilter = PorterDuffColorFilter(
+            ContextCompat.getColor(context, foreground), PorterDuff.Mode.SRC_IN
+        )
+        toolbar.setBackgroundColor(ContextCompat.getColor(context, background))
+        toolbar.setTitleTextColor(ContextCompat.getColor(context, foreground))
+
+        themeToolbar(
+            toolbar, foreground,
+            background, colorFilter
+        )
+    }
+
+    private fun themeToolbar(
+        toolbar: androidx.appcompat.widget.Toolbar,
+        textColor: Int,
+        backgroundColor: Int,
+        colorFilter: PorterDuffColorFilter? = null
+    ) {
+        toolbar.setTitleTextColor(ContextCompat.getColor(context!!, textColor))
+        toolbar.setBackgroundColor(ContextCompat.getColor(context, backgroundColor))
+
+        if (colorFilter == null) {
+            return
+        }
+
+        toolbar.overflowIcon?.colorFilter = colorFilter
+        (0 until toolbar.childCount).forEach {
+            when (val item = toolbar.getChildAt(it)) {
+                is ImageButton -> item.drawable.colorFilter = colorFilter
+            }
+        }
     }
 
     override fun onBackPressed(): Boolean {
-        if (mode is HistoryState.Mode.Editing) {
-            actionEmitter.onNext(HistoryAction.BackPressed)
-            return true
+        return when {
+            mode is HistoryState.Mode.Editing -> {
+                mode = HistoryState.Mode.Normal
+                historyAdapter.updateData(items, mode)
+                setUIForNormalMode()
+                actionEmitter.onNext(HistoryAction.SwitchMode)
+                true
+            }
+            else -> false
         }
-
-        return false
     }
 }

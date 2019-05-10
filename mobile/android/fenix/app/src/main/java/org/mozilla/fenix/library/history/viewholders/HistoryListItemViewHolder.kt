@@ -6,6 +6,7 @@ package org.mozilla.fenix.library.history.viewholders
 
 import android.view.View
 import android.widget.CompoundButton
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.history_list_item.view.*
@@ -15,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.menu.BrowserMenu
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.library.history.HistoryAction
@@ -32,7 +34,6 @@ class HistoryListItemViewHolder(
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
 
-    private val checkbox = view.should_remove_checkbox
     private val favicon = view.history_favicon
     private val title = view.history_title
     private val url = view.history_url
@@ -60,17 +61,6 @@ class HistoryListItemViewHolder(
     init {
         setupMenu()
 
-        view.setOnClickListener {
-            if (mode is HistoryState.Mode.Editing) {
-                checkbox.isChecked = !checkbox.isChecked
-                return@setOnClickListener
-            }
-
-            item?.apply {
-                actionEmitter.onNext(HistoryAction.Select(this))
-            }
-        }
-
         view.setOnLongClickListener {
             item?.apply {
                 actionEmitter.onNext(HistoryAction.EnterEditMode(this))
@@ -84,8 +74,6 @@ class HistoryListItemViewHolder(
                 anchor = it,
                 orientation = BrowserMenu.Orientation.DOWN)
         }
-
-        checkbox.setOnCheckedChangeListener(checkListener)
     }
 
     fun bind(item: HistoryItem, mode: HistoryState.Mode) {
@@ -95,23 +83,31 @@ class HistoryListItemViewHolder(
         title.text = item.title
         url.text = item.url
 
-        val isEditing = mode is HistoryState.Mode.Editing
-        checkbox.visibility = if (isEditing) View.VISIBLE else View.GONE
-        favicon.visibility = if (isEditing) View.INVISIBLE else View.VISIBLE
-
-        if (mode is HistoryState.Mode.Editing) {
-            checkbox.setOnCheckedChangeListener(null)
-
-            // Don't set the checkbox if it already contains the right value.
-            // This prevent us from cutting off the animation
-            val shouldCheck = mode.selectedItems.contains(item)
-            if (checkbox.isChecked != shouldCheck) {
-                checkbox.isChecked = shouldCheck
-            }
-            checkbox.setOnCheckedChangeListener(checkListener)
+        val selected = when (mode) {
+            is HistoryState.Mode.Editing -> mode.selectedItems.contains(item)
+            HistoryState.Mode.Normal -> false
         }
 
-        updateFavIcon(item.url)
+        setClickListeners(item, selected)
+
+        if (mode is HistoryState.Mode.Editing) {
+            val backgroundTint =
+                if (selected) {
+                    DefaultThemeManager.resolveAttribute(R.attr.accentHighContrast, itemView.context)
+                } else {
+                    DefaultThemeManager.resolveAttribute(R.attr.neutral, itemView.context)
+                }
+            val backgroundTintList = ContextCompat.getColorStateList(itemView.context, backgroundTint)
+            favicon.backgroundTintList = backgroundTintList
+
+            if (selected) {
+                favicon.setImageResource(R.drawable.mozac_ic_check)
+            } else {
+                favicon.setImageResource(0)
+            }
+        } else {
+            updateFavIcon(item.url)
+        }
     }
 
     private fun setupMenu() {
@@ -130,6 +126,21 @@ class HistoryListItemViewHolder(
                 .loadIcon(IconRequest(url)).await().bitmap
             launch(Dispatchers.Main) {
                 favicon.setImageBitmap(bitmap)
+            }
+        }
+    }
+
+    private fun setClickListeners(
+        item: HistoryItem,
+        selected: Boolean
+    ) {
+        itemView.history_layout.setOnClickListener {
+            if (mode == HistoryState.Mode.Normal) {
+                actionEmitter.onNext(HistoryAction.Open(item))
+            } else {
+                if (selected) actionEmitter.onNext(HistoryAction.RemoveItemForRemoval(item)) else actionEmitter.onNext(
+                    HistoryAction.AddItemForRemoval(item)
+                )
             }
         }
     }

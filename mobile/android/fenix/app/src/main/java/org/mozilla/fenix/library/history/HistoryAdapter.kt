@@ -98,10 +98,13 @@ class HistoryAdapter(
     private var historyList: HistoryList = HistoryList(emptyList())
     private var mode: HistoryState.Mode = HistoryState.Mode.Normal
     private lateinit var job: Job
+    var selected = listOf<HistoryItem>()
 
     fun updateData(items: List<HistoryItem>, mode: HistoryState.Mode) {
         this.historyList = HistoryList(items)
         this.mode = mode
+        this.selected = if (mode is HistoryState.Mode.Editing) mode.selectedItems else listOf()
+
         notifyDataSetChanged()
     }
 

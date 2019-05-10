@@ -231,7 +231,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                             refreshBookmarks(components)
                         }
                     }
-                    is BookmarkAction.ModeChanged -> activity?.invalidateOptionsMenu()
+                    is BookmarkAction.SwitchMode -> activity?.invalidateOptionsMenu()
                 }
             }
 

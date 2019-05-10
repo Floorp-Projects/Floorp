@@ -30,6 +30,7 @@ class HistoryComponent(
         bus.getManagedEmitter(HistoryAction::class.java),
         bus.getSafeManagedObservable(HistoryChange::class.java)
     ) {
+
     override fun initView() = HistoryUIView(container, actionEmitter, changesObservable)
 
     override fun render(): Observable<HistoryState> =
@@ -51,11 +52,12 @@ data class HistoryState(val items: List<HistoryItem>, val mode: Mode) : ViewStat
 }
 
 sealed class HistoryAction : Action {
-    data class Select(val item: HistoryItem) : HistoryAction()
+    data class Open(val item: HistoryItem) : HistoryAction()
     data class EnterEditMode(val item: HistoryItem) : HistoryAction()
     object BackPressed : HistoryAction()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryAction()
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryAction()
+    object SwitchMode : HistoryAction()
 
     sealed class Delete : HistoryAction() {
         object All : Delete()
@@ -99,10 +101,13 @@ class HistoryViewModel(initialState: HistoryState, changesObservable: Observable
                     }
                 }
                 is HistoryChange.RemoveItemForRemoval -> {
-                    val mode = state.mode
+                    var mode = state.mode
+
                     if (mode is HistoryState.Mode.Editing) {
                         val items = mode.selectedItems.filter { it.id != change.item.id }
-                        state.copy(mode = mode.copy(selectedItems = items))
+                        mode = if (items.isEmpty()) HistoryState.Mode.Normal else HistoryState.Mode.Editing(items)
+
+                        state.copy(mode = mode)
                     } else {
                         state
                     }

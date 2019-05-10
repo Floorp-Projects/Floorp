@@ -16,14 +16,18 @@
 
     <TextView
         android:id="@+id/delete_history_button_text"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:text="@string/history_delete_all"
-        android:textColor="?destructive"
-        android:drawablePadding="8dp"
-        android:textSize="16sp"
         android:gravity="center"
+        android:textColor="?primaryText"
+        android:textSize="16sp"
+        android:textStyle="bold"
         android:clickable="false"
         android:focusable="false"
-        android:layout_gravity="center" />
+        android:drawableTint="?primaryText"
+        android:drawableStart="@drawable/ic_delete"
+        android:drawablePadding="12dp"/>
+
 </FrameLayout>

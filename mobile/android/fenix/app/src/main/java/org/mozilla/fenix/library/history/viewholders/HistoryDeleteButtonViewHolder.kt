@@ -35,20 +35,19 @@ class HistoryDeleteButtonViewHolder(
     fun bind(mode: HistoryState.Mode) {
         this.mode = mode
 
-        val text = if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
-            textView.context.resources.getString(
-                R.string.history_delete_some,
-                mode.selectedItems.size
-            )
-        } else {
-            textView.context.resources.getString(R.string.history_delete_all)
+        buttonView.run {
+            if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
+                isEnabled = false
+                alpha = DISABLED_ALPHA
+            } else {
+                isEnabled = true
+                alpha = 1f
+            }
         }
-
-        buttonView.contentDescription = text
-        textView.text = text
     }
 
     companion object {
+        const val DISABLED_ALPHA = 0.4f
         const val LAYOUT_ID = R.layout.delete_history_button
     }
 }

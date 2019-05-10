@@ -39,21 +39,39 @@ class HistoryComponentTest {
     }
 
     @Test
-    fun `add and remove one history item normally`() {
+    fun `select two items for removal, then deselect one, then select it again`() {
+        val historyItem = HistoryItem(1, "Mozilla", "http://mozilla.org", 0)
+        val historyItem2 = HistoryItem(2, "Mozilla", "http://mozilla.org", 0)
+
+        emitter.onNext(HistoryChange.Change(listOf(historyItem, historyItem2)))
+        emitter.onNext(HistoryChange.EnterEditMode(historyItem))
+        emitter.onNext(HistoryChange.AddItemForRemoval(historyItem2))
+        emitter.onNext(HistoryChange.RemoveItemForRemoval(historyItem))
+        emitter.onNext(HistoryChange.AddItemForRemoval(historyItem))
+        emitter.onNext(HistoryChange.ExitEditMode)
+
+        historyObserver.assertSubscribed().awaitCount(7).assertNoErrors()
+            .assertValues(
+                HistoryState(listOf(), HistoryState.Mode.Normal),
+                HistoryState(listOf(historyItem, historyItem2), HistoryState.Mode.Normal),
+                HistoryState(listOf(historyItem, historyItem2), HistoryState.Mode.Editing(listOf(historyItem))),
+                HistoryState(listOf(historyItem, historyItem2), HistoryState.Mode.Editing(listOf(historyItem, historyItem2))),
+                HistoryState(listOf(historyItem, historyItem2), HistoryState.Mode.Editing(listOf(historyItem2))),
+                HistoryState(listOf(historyItem, historyItem2), HistoryState.Mode.Editing(listOf(historyItem2, historyItem))),
+                HistoryState(listOf(historyItem, historyItem2), HistoryState.Mode.Normal)
+            )
+    }
+    @Test
+    fun `deselecting all items triggers normal mode`() {
         val historyItem = HistoryItem(123, "Mozilla", "http://mozilla.org", 0)
 
         emitter.onNext(HistoryChange.Change(listOf(historyItem)))
         emitter.onNext(HistoryChange.EnterEditMode(historyItem))
         emitter.onNext(HistoryChange.RemoveItemForRemoval(historyItem))
-        emitter.onNext(HistoryChange.AddItemForRemoval(historyItem))
-        emitter.onNext(HistoryChange.ExitEditMode)
-
         historyObserver.assertSubscribed().awaitCount(6).assertNoErrors()
             .assertValues(
                 HistoryState(listOf(), HistoryState.Mode.Normal),
                 HistoryState(listOf(historyItem), HistoryState.Mode.Normal),
-                HistoryState(listOf(historyItem), HistoryState.Mode.Editing(listOf(historyItem))),
-                HistoryState(listOf(historyItem), HistoryState.Mode.Editing(listOf())),
                 HistoryState(listOf(historyItem), HistoryState.Mode.Editing(listOf(historyItem))),
                 HistoryState(listOf(historyItem), HistoryState.Mode.Normal)
             )
