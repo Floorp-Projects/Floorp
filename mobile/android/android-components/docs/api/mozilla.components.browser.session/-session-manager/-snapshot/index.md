@@ -2,7 +2,7 @@
 
 # Snapshot
 
-`data class Snapshot` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L147)
+`data class Snapshot` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L155)
 
 ### Types
 
@@ -34,3 +34,4 @@
 | Name | Summary |
 |---|---|
 | [empty](empty.md) | `fun empty(): `[`Snapshot`](./index.md) |
+| [singleItem](single-item.md) | `fun singleItem(item: `[`Item`](-item/index.md)`): `[`Snapshot`](./index.md) |

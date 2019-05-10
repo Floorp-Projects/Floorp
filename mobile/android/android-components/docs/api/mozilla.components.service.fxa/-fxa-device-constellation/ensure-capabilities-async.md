@@ -2,7 +2,7 @@
 
 # ensureCapabilitiesAsync
 
-`fun ensureCapabilitiesAsync(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L62)
+`fun ensureCapabilitiesAsync(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L86)
 
 Overrides [DeviceConstellation.ensureCapabilitiesAsync](../../mozilla.components.concept.sync/-device-constellation/ensure-capabilities-async.md)
 

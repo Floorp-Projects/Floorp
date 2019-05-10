@@ -2,7 +2,7 @@
 
 # refreshDeviceStateAsync
 
-`fun refreshDeviceStateAsync(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L141)
+`fun refreshDeviceStateAsync(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L165)
 
 Overrides [DeviceConstellation.refreshDeviceStateAsync](../../mozilla.components.concept.sync/-device-constellation/refresh-device-state-async.md)
 

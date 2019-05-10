@@ -2,7 +2,7 @@
 
 # setDevicePushSubscriptionAsync
 
-`abstract fun setDevicePushSubscriptionAsync(subscription: `[`DevicePushSubscription`](../-device-push-subscription/index.md)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L66)
+`abstract fun setDevicePushSubscriptionAsync(subscription: `[`DevicePushSubscription`](../-device-push-subscription/index.md)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L75)
 
 Set a [DevicePushSubscription](../-device-push-subscription/index.md) for the current device.
 

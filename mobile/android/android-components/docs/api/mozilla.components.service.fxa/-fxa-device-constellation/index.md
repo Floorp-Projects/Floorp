@@ -2,7 +2,7 @@
 
 # FxaDeviceConstellation
 
-`class FxaDeviceConstellation : `[`DeviceConstellation`](../../mozilla.components.concept.sync/-device-constellation/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`DeviceEventsObserver`](../../mozilla.components.concept.sync/-device-events-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L34)
+`class FxaDeviceConstellation : `[`DeviceConstellation`](../../mozilla.components.concept.sync/-device-constellation/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`DeviceEventsObserver`](../../mozilla.components.concept.sync/-device-events-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaDeviceConstellation.kt#L35)
 
 Provides an implementation of [DeviceConstellation](../../mozilla.components.concept.sync/-device-constellation/index.md) backed by a [FirefoxAccount](#).
 
@@ -16,6 +16,7 @@ Provides an implementation of [DeviceConstellation](../../mozilla.components.con
 
 | Name | Summary |
 |---|---|
+| [destroyCurrentDeviceAsync](destroy-current-device-async.md) | `fun destroyCurrentDeviceAsync(): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>`<br>Destroy current device record. Use this when device record is no longer relevant, e.g. while logging out. On success, other devices will no longer see the current device in their device lists. |
 | [ensureCapabilitiesAsync](ensure-capabilities-async.md) | `fun ensureCapabilitiesAsync(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Ensure that all initialized [DeviceCapability](../../mozilla.components.concept.sync/-device-capability/index.md), such as [DeviceCapability.SEND_TAB](../../mozilla.components.concept.sync/-device-capability/-s-e-n-d_-t-a-b.md), are configured. This may involve backend service registration, or other work involving network/disc access. |
 | [fetchAllDevicesAsync](fetch-all-devices-async.md) | `fun fetchAllDevicesAsync(): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Device`](../../mozilla.components.concept.sync/-device/index.md)`>>`<br>Get all devices in the constellation. |
 | [initDeviceAsync](init-device-async.md) | `fun initDeviceAsync(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, type: `[`DeviceType`](../../mozilla.components.concept.sync/-device-type/index.md)`, capabilities: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`DeviceCapability`](../../mozilla.components.concept.sync/-device-capability/index.md)`>): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Register current device in the associated [DeviceConstellation](../../mozilla.components.concept.sync/-device-constellation/index.md). |

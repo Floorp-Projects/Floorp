@@ -22,7 +22,7 @@ the related [PromptRequest](../../mozilla.components.concept.engine.prompt/-prom
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `PromptFeature(activity: `[`Activity`](https://developer.android.com/reference/android/app/Activity.html)`? = null, fragment: Fragment? = null, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, fragmentManager: FragmentManager, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../-on-need-to-request-permissions.md)`)`<br>Feature for displaying native dialogs for html elements like: input type date, file, time, color, option, menu, authentication, confirmation and alerts. |
+| [&lt;init&gt;](-init-.md) | `PromptFeature(activity: `[`Activity`](https://developer.android.com/reference/android/app/Activity.html)`? = null, fragment: Fragment? = null, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, sessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, fragmentManager: FragmentManager, onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../-on-need-to-request-permissions.md)`)`<br>Feature for displaying native dialogs for html elements like: input type date, file, time, color, option, menu, authentication, confirmation and alerts. |
 
 ### Functions
 
