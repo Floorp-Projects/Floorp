@@ -247,9 +247,8 @@ Tart.prototype = {
         Profiler.mark("End: " + (isReportResult ? name : "[warmup]"), true);
       }
       if (self.USE_RECORDING_API) {
-        var paints = {};
         return window.windowUtils
-                     .stopFrameTimeRecording(recordingHandle, paints);
+                     .stopFrameTimeRecording(recordingHandle);
       }
 
       _abortRecording = true;

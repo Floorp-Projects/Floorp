@@ -2231,28 +2231,14 @@ nsDOMWindowUtils::StartFrameTimeRecording(uint32_t* startIndex) {
 
 NS_IMETHODIMP
 nsDOMWindowUtils::StopFrameTimeRecording(uint32_t startIndex,
-                                         uint32_t* frameCount,
-                                         float** frameIntervals) {
-  NS_ENSURE_ARG_POINTER(frameCount);
-  NS_ENSURE_ARG_POINTER(frameIntervals);
-
+                                         nsTArray<float>& frameIntervals) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) return NS_ERROR_FAILURE;
 
   LayerManager* mgr = widget->GetLayerManager();
   if (!mgr) return NS_ERROR_FAILURE;
 
-  nsTArray<float> tmpFrameIntervals;
-  mgr->StopFrameTimeRecording(startIndex, tmpFrameIntervals);
-  *frameCount = tmpFrameIntervals.Length();
-
-  *frameIntervals = (float*)moz_xmalloc(*frameCount * sizeof(float));
-
-  /* copy over the frame intervals and paint times into the arrays we just
-   * allocated */
-  for (uint32_t i = 0; i < *frameCount; i++) {
-    (*frameIntervals)[i] = tmpFrameIntervals[i];
-  }
+  mgr->StopFrameTimeRecording(startIndex, frameIntervals);
 
   return NS_OK;
 }
