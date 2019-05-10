@@ -555,7 +555,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
       mStream->GraphImpl()->InputDeviceID() != deviceID) {
     // For now, we only allow opening a single audio input device per document,
     // because we can only have one MSG per document.
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;

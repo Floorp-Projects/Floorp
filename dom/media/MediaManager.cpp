@@ -4107,6 +4107,10 @@ SourceListener::InitializeAsync() {
 
                if (audioDevice) {
                  nsresult rv = audioDevice->Start();
+                 if (rv == NS_ERROR_NOT_AVAILABLE) {
+                   PR_Sleep(200);
+                   rv = audioDevice->Start();
+                 }
                  if (NS_FAILED(rv)) {
                    nsString log;
                    if (rv == NS_ERROR_NOT_AVAILABLE) {
