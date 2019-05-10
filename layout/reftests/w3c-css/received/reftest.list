@@ -150,7 +150,7 @@ skip == css-multicol/multicol-rule-shorthand-2.xht css-multicol/multicol-rule-sh
 fuzzy(0-106,0-354) == css-multicol/multicol-rule-solid-000.xht css-multicol/multicol-rule-solid-000-ref.xht
 fails-if(!OSX) random-if(OSX) == css-multicol/multicol-rule-stacking-001.xht css-multicol/multicol-rule-stacking-ref.xht
 fails-if(!OSX||webrender) random-if(OSX) == css-multicol/multicol-shorthand-001.xht css-multicol/multicol-rule-ref.xht
-pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-000.xht css-multicol/multicol-span-000-ref.xht
+pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-000.xht css-multicol/multicol-span-000-ref.xht
 pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-001.xht css-multicol/multicol-span-all-001-ref.xht
 pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-002.xht css-multicol/multicol-span-all-002-ref.xht
 pref(layout.css.column-span.enabled,true) fails-if(!OSX) random-if(OSX) == css-multicol/multicol-span-all-003.xht css-multicol/multicol-count-002-ref.xht

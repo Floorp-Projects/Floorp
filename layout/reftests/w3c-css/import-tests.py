@@ -10,7 +10,6 @@ import html5lib
 import fnmatch
 import shutil
 import string
-import sys
 import re
 
 # FIXME:
@@ -39,21 +38,16 @@ gSubtrees = [
     os.path.join("selectors"),
 ]
 
+# Insert the properties which you want to add "-moz" prefix to
+# gPrefixedProperties.
+#
+# For example, if "columns" is in this list, all the lines in import files
+# containing "columns" are replaced with "-moz-columns."
 gPrefixedProperties = [
-    "column-count",
-    "column-fill",
-    "column-gap",
-    "column-rule",
-    "column-rule-color",
-    "column-rule-style",
-    "column-rule-width",
-    "columns",
-    "column-span",
-    "column-width"
 ]
 
-gPrefixRegexp = re.compile(
-    r"([^-#]|^)(" + r"|".join(gPrefixedProperties) + r")\b")
+gPrefixRegexp = (re.compile(r"([^-#]|^)(" + r"|".join(gPrefixedProperties) + r")\b")
+                 if gPrefixedProperties else None)
 
 # Map of about:config prefs that need toggling, for a given test subdirectory.
 # Entries should look like:
@@ -172,7 +166,6 @@ def map_file(srcname):
     if srcname in filemap:
         return filemap[srcname]
     destname = to_unix_path_sep(os.path.relpath(srcname, gSrcPath))
-    destdir = os.path.dirname(destname)
     filemap[srcname] = destname
     load_flags_for(srcname, destname)
     copy_file(destname, srcname, destname, False)
@@ -260,7 +253,6 @@ def copy_and_prefix(test, aSourceFileName, aDestFileName, isSupportFile=False):
     global gTestFlags, gPrefixRegexp
     newFile = open(aDestFileName, 'wb')
     unPrefixedFile = open(aSourceFileName, 'rb')
-    testName = aDestFileName[len(gDestPath)+1:]
     ahemFontAdded = False
     for line in unPrefixedFile:
         replacementLine = line
@@ -274,7 +266,8 @@ def copy_and_prefix(test, aSourceFileName, aDestFileName, isSupportFile=False):
             newFile.write(template.format(to_unix_path_sep(ahemPath)))
             ahemFontAdded = True
 
-        replacementLine = gPrefixRegexp.sub(r"\1-moz-\2", replacementLine)
+        if gPrefixRegexp:
+            replacementLine = gPrefixRegexp.sub(r"\1-moz-\2", replacementLine)
         newFile.write(replacementLine)
 
     newFile.close()
