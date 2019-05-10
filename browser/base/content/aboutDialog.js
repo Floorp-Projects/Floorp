@@ -61,7 +61,6 @@ async function init(aEvent) {
   document.l10n.setAttributes(versionField, versionId, versionAttributes);
 
   await document.l10n.translateElements([versionField]);
-  window.sizeToContent();
 
   // Show a release notes link if we have a URL.
   let relNotesLink = document.getElementById("releasenotes");
@@ -87,9 +86,10 @@ async function init(aEvent) {
   if (AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")) {
     document.getElementById("release").hidden = false;
   }
+
+  window.sizeToContent();
+
   if (AppConstants.platform == "macosx") {
-    // it may not be sized at this point, and we need its width to calculate its position
-    window.sizeToContent();
     window.moveTo((screen.availWidth / 2) - (window.outerWidth / 2), screen.availHeight / 5);
   }
 }
