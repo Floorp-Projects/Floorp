@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var EXPORTED_SYMBOLS = ["TestChild"];
 
 class TestChild extends JSWindowActorChild {
@@ -42,15 +40,5 @@ class TestChild extends JSWindowActorChild {
 
   show() {
     return "TestChild";
-  }
-
-  willDestroy() {
-    Services.obs.notifyObservers(
-      this, "test-js-window-actor-willdestroy", true);
-  }
-
-  didDestroy() {
-    Services.obs.notifyObservers(
-      this, "test-js-window-actor-diddestroy", true);
   }
 }
