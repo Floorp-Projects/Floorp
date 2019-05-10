@@ -560,9 +560,11 @@ android-hw-aarch64-raptor:
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
+    - raptor-speedometer-geckoview-cpu
 
 android-hw-aarch64-raptor-power:
     - raptor-speedometer-geckoview-power
+    - raptor-speedometer-geckoview-cpu
 
 android-hw-arm7-raptor-nightly:
     - raptor-speedometer-fennec

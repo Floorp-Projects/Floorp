@@ -25,7 +25,7 @@
   transition: opacity 150ms ease-out;
 }
 
-.search-bar-focused::before {
+.search-bar:focus-within::before {
   opacity: 1;
 }
 

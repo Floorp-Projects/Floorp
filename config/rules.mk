@@ -121,7 +121,29 @@ endif # FORCE_SHARED_LIB
 
 ifeq ($(OS_ARCH),WINNT)
 
+#
+# This next line captures both the default (non-MOZ_COPY_PDBS)
+# case as well as the MOZ_COPY_PDBS-for-mingwclang case.
+#
+# For the default case, placing the pdb in the build
+# directory is needed.
+#
+# For the MOZ_COPY_PDBS, non-mingwclang case - we need to
+# build the pdb next to the executable (handled in the if
+# statement immediately below.)
+#
+# For the MOZ_COPY_PDBS, mingwclang case - we also need to
+# build the pdb next to the executable, but this macro doesn't
+# work for jsapi-tests which is a little special, so we specify
+# the output directory below with MOZ_PROGRAM_LDFLAGS.
+#
 LINK_PDBFILE ?= $(basename $(@F)).pdb
+
+ifdef MOZ_COPY_PDBS
+ifneq ($(CC_TYPE),clang)
+LINK_PDBFILE = $(basename $@).pdb
+endif
+endif
 
 ifndef GNU_CC
 
@@ -785,10 +807,18 @@ endif
 endif
 
 ifdef MOZ_COPY_PDBS
-PDB_FILES = $(addsuffix .pdb,$(basename $(DUMP_SYMS_TARGETS)))
-PDB_DEST ?= $(FINAL_TARGET)
-PDB_TARGET = syms
-INSTALL_TARGETS += PDB
+MAIN_PDB_FILES = $(addsuffix .pdb,$(basename $(DUMP_SYMS_TARGETS)))
+MAIN_PDB_DEST ?= $(FINAL_TARGET)
+MAIN_PDB_TARGET = syms
+INSTALL_TARGETS += MAIN_PDB
+
+ifdef CPP_UNIT_TESTS
+CPP_UNIT_TESTS_PDB_FILES = $(addsuffix .pdb,$(basename $(CPP_UNIT_TESTS)))
+CPP_UNIT_TESTS_PDB_DEST = $(DIST)/cppunittests
+CPP_UNIT_TESTS_PDB_TARGET = syms
+INSTALL_TARGETS += CPP_UNIT_TESTS_PDB
+endif
+
 else ifdef MOZ_CRASHREPORTER
 $(foreach file,$(DUMP_SYMS_TARGETS),$(eval $(call syms_template,$(file),$(notdir $(file))_syms.track)))
 endif

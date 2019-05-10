@@ -52,10 +52,8 @@ DocGroup::DocGroup(TabGroup* aTabGroup, const nsACString& aKey)
     : mKey(aKey), mTabGroup(aTabGroup) {
   // This method does not add itself to mTabGroup->mDocGroups as the caller does
   // it for us.
-  if (mozilla::StaticPrefs::dom_performance_enable_scheduler_timing()) {
-    mPerformanceCounter =
-        new mozilla::PerformanceCounter(NS_LITERAL_CSTRING("DocGroup:") + aKey);
-  }
+  mPerformanceCounter =
+      new mozilla::PerformanceCounter(NS_LITERAL_CSTRING("DocGroup:") + aKey);
 }
 
 DocGroup::~DocGroup() {

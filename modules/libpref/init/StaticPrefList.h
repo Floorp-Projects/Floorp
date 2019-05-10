@@ -280,12 +280,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-VARCACHE_PREF(
-  "dom.performance.enable_scheduler_timing",
-  dom_performance_enable_scheduler_timing,
-  RelaxedAtomicBool, true
-)
-
 // Should we defer timeouts and intervals while loading a page.  Released
 // on Idle or when the page is loaded.
 VARCACHE_PREF(
@@ -1796,12 +1790,6 @@ VARCACHE_PREF(
   "media.decoder-doctor.wmf-disabled-is-failure",
    MediaDecoderDoctorWmfDisabledIsFailure,
   bool, false
-)
-
-VARCACHE_PREF(
-  "media.wmf.vp9.enabled",
-   MediaWmfVp9Enabled,
-  RelaxedAtomicBool, true
 )
 
 #endif // MOZ_WMF

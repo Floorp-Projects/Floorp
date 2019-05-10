@@ -90,7 +90,7 @@ export const editLogPointItem = (
 ) => ({
   id: "node-menu-edit-log-point",
   label: L10N.getStr("editor.editLogPoint"),
-  accesskey: L10N.getStr("editor.addLogPoint.accesskey"),
+  accesskey: L10N.getStr("editor.editLogPoint.accesskey"),
   disabled: false,
   click: () => breakpointActions.openConditionalPanel(location, true),
   accelerator: L10N.getStr("toggleCondPanel.logPoint.key")

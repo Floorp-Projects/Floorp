@@ -73,5 +73,6 @@ void logging_sink_for_LUL(const char* str) {
   // MOZ_LOG="prof:5"). This is because LUL's logging is much more verbose than
   // the rest of the profiler's logging, which occurs at the Info (3) and Debug
   // (4) levels.
-  MOZ_LOG(gProfilerLog, mozilla::LogLevel::Verbose, ("[%d] %s", getpid(), str));
+  MOZ_LOG(gProfilerLog, mozilla::LogLevel::Verbose,
+          ("[%d] %s", profiler_current_process_id(), str));
 }

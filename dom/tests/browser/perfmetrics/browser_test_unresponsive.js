@@ -8,7 +8,6 @@ const ROOT_URL = "http://example.com/browser/dom/tests/browser/perfmetrics";
 const PAGE_URL = ROOT_URL + "/unresponsive.html";
 
 add_task(async function test() {
-  // dom.performance.enable_scheduler_timing is set to true in browser.ini
   waitForExplicitFinish();
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL },

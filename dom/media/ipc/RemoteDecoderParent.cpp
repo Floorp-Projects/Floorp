@@ -139,7 +139,15 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvShutdown() {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
   if (mDecoder) {
-    mDecoder->Shutdown();
+    RefPtr<RemoteDecoderParent> self = this;
+    mDecoder->Shutdown()->Then(
+        mManagerTaskQueue, __func__,
+        [self](const ShutdownPromise::ResolveOrRejectValue& aValue) {
+          MOZ_ASSERT(aValue.IsResolve());
+          if (!self->mDestroyed) {
+            Unused << self->SendShutdownComplete();
+          }
+        });
   }
   mDecoder = nullptr;
   return IPC_OK();

@@ -227,8 +227,7 @@ void UDPSocket::JoinMulticastGroup(const nsAString& aMulticastGroupAddress,
 
   MOZ_ASSERT(mSocketChild);
 
-  aRv = mSocketChild->JoinMulticast(address, EmptyCString());
-  NS_WARNING_ASSERTION(!aRv.Failed(), "JoinMulticast failed");
+  mSocketChild->JoinMulticast(address, EmptyCString());
 }
 
 void UDPSocket::LeaveMulticastGroup(const nsAString& aMulticastGroupAddress,
@@ -258,8 +257,7 @@ void UDPSocket::LeaveMulticastGroup(const nsAString& aMulticastGroupAddress,
 
   MOZ_ASSERT(mSocketChild);
 
-  aRv = mSocketChild->LeaveMulticast(address, EmptyCString());
-  NS_WARNING_ASSERTION(!aRv.Failed(), "mSocketChild->LeaveMulticast failed");
+  mSocketChild->LeaveMulticast(address, EmptyCString());
 }
 
 nsresult UDPSocket::DoPendingMcastCommand() {
@@ -467,7 +465,7 @@ nsresult UDPSocket::InitRemote(const nsAString& aLocalAddress,
                                const uint16_t& aLocalPort) {
   nsresult rv;
 
-  nsCOMPtr<nsIUDPSocketChild> sock = new dom::UDPSocketChild();
+  RefPtr<UDPSocketChild> sock = new UDPSocketChild();
 
   mListenerProxy = new ListenerProxy(this);
 
@@ -564,8 +562,7 @@ nsresult UDPSocket::Init(const nsString& aLocalAddress,
 
 void UDPSocket::HandleReceivedData(const nsACString& aRemoteAddress,
                                    const uint16_t& aRemotePort,
-                                   const uint8_t* aData,
-                                   const uint32_t& aDataLength) {
+                                   const nsTArray<uint8_t>& aData) {
   if (mReadyState != SocketReadyState::Open) {
     return;
   }
@@ -574,16 +571,14 @@ void UDPSocket::HandleReceivedData(const nsACString& aRemoteAddress,
     return;
   }
 
-  if (NS_FAILED(DispatchReceivedData(aRemoteAddress, aRemotePort, aData,
-                                     aDataLength))) {
+  if (NS_FAILED(DispatchReceivedData(aRemoteAddress, aRemotePort, aData))) {
     CloseWithReason(NS_ERROR_TYPE_ERR);
   }
 }
 
 nsresult UDPSocket::DispatchReceivedData(const nsACString& aRemoteAddress,
                                          const uint16_t& aRemotePort,
-                                         const uint8_t* aData,
-                                         const uint32_t& aDataLength) {
+                                         const nsTArray<uint8_t>& aData) {
   AutoJSAPI jsapi;
 
   if (NS_WARN_IF(!jsapi.Init(GetOwner()))) {
@@ -593,8 +588,8 @@ nsresult UDPSocket::DispatchReceivedData(const nsACString& aRemoteAddress,
   JSContext* cx = jsapi.cx();
 
   // Copy packet data to ArrayBuffer
-  JS::Rooted<JSObject*> arrayBuf(cx,
-                                 ArrayBuffer::Create(cx, aDataLength, aData));
+  JS::Rooted<JSObject*> arrayBuf(
+      cx, ArrayBuffer::Create(cx, aData.Length(), aData.Elements()));
 
   if (NS_WARN_IF(!arrayBuf)) {
     return NS_ERROR_FAILURE;
@@ -648,8 +643,7 @@ UDPSocket::OnPacketReceived(nsIUDPSocket* aSocket, nsIUDPMessage* aMessage) {
     return NS_OK;
   }
 
-  HandleReceivedData(remoteAddress, remotePort, buffer.Elements(),
-                     buffer.Length());
+  HandleReceivedData(remoteAddress, remotePort, buffer);
   return NS_OK;
 }
 
@@ -676,9 +670,9 @@ UDPSocket::CallListenerError(const nsACString& aMessage,
 
 NS_IMETHODIMP
 UDPSocket::CallListenerReceivedData(const nsACString& aRemoteAddress,
-                                    uint16_t aRemotePort, const uint8_t* aData,
-                                    uint32_t aDataLength) {
-  HandleReceivedData(aRemoteAddress, aRemotePort, aData, aDataLength);
+                                    uint16_t aRemotePort,
+                                    const nsTArray<uint8_t>& aData) {
+  HandleReceivedData(aRemoteAddress, aRemotePort, aData);
 
   return NS_OK;
 }
@@ -692,13 +686,9 @@ UDPSocket::CallListenerOpened() {
   MOZ_ASSERT(mSocketChild);
 
   // Get real local address and local port
-  nsCString localAddress;
-  mSocketChild->GetLocalAddress(localAddress);
-  mLocalAddress = NS_ConvertUTF8toUTF16(localAddress);
+  mLocalAddress = NS_ConvertUTF8toUTF16(mSocketChild->LocalAddress());
 
-  uint16_t localPort;
-  mSocketChild->GetLocalPort(&localPort);
-  mLocalPort.SetValue(localPort);
+  mLocalPort.SetValue(mSocketChild->LocalPort());
 
   mReadyState = SocketReadyState::Open;
   nsresult rv = DoPendingMcastCommand();

@@ -7,6 +7,7 @@ import React, { Component } from "react";
 import { connect } from "../utils/connect";
 import fuzzyAldrin from "fuzzaldrin-plus";
 import { basename } from "../utils/path";
+import { throttle } from "lodash";
 
 import actions from "../actions";
 import {
@@ -46,7 +47,7 @@ import "./QuickOpenModal.css";
 type Props = {
   cx: Context,
   enabled: boolean,
-  sources: Array<Object>,
+  displayedSources: Source[],
   selectedSource?: Source,
   selectedContentLoaded?: boolean,
   query: string,
@@ -73,12 +74,16 @@ type GotoLocationType = {
   column?: number
 };
 
+const updateResultsThrottle = 100;
 const maxResults = 100;
 
 function filter(values, query) {
+  const preparedQuery = fuzzyAldrin.prepareQuery(query);
+
   return fuzzyAldrin.filter(values, query, {
     key: "value",
-    maxResults: maxResults
+    maxResults: maxResults,
+    preparedQuery
   });
 }
 
@@ -131,7 +136,10 @@ export class QuickOpenModal extends Component<Props, State> {
   };
 
   searchSources = (query: string) => {
-    const { sources } = this.props;
+    const { displayedSources, tabs } = this.props;
+    const tabUrls = new Set(tabs.map((tab: Tab) => tab.url));
+    const sources = formatSources(displayedSources, tabUrls);
+
     const results =
       query == "" ? sources : filter(sources, this.dropGoto(query));
     return this.setResults(results);
@@ -162,16 +170,24 @@ export class QuickOpenModal extends Component<Props, State> {
   };
 
   showTopSources = () => {
-    const { tabs, sources } = this.props;
+    const { displayedSources, tabs } = this.props;
+    const tabUrls = new Set(tabs.map((tab: Tab) => tab.url));
+
     if (tabs.length > 0) {
-      const tabUrls = tabs.map((tab: Tab) => tab.url);
-      this.setResults(sources.filter(source => tabUrls.includes(source.url)));
+      this.setResults(
+        formatSources(
+          displayedSources.filter(
+            source => !!source.url && tabUrls.has(source.url)
+          ),
+          tabUrls
+        )
+      );
     } else {
-      this.setResults(sources);
+      this.setResults(formatSources(displayedSources, tabUrls));
     }
   };
 
-  updateResults = (query: string) => {
+  updateResults = throttle((query: string) => {
     if (this.isGotoQuery()) {
       return;
     }
@@ -189,7 +205,7 @@ export class QuickOpenModal extends Component<Props, State> {
     }
 
     return this.searchSources(query);
-  };
+  }, updateResultsThrottle);
 
   setModifier = (item: QuickOpenResult) => {
     if (["@", "#", ":"].includes(item.id)) {
@@ -431,11 +447,12 @@ export class QuickOpenModal extends Component<Props, State> {
 function mapStateToProps(state) {
   const selectedSource = getSelectedSource(state);
   const displayedSources = getDisplayedSourcesList(state);
+  const tabs = getTabs(state);
 
   return {
     cx: getContext(state),
     enabled: getQuickOpenEnabled(state),
-    sources: formatSources(displayedSources, getTabs(state)),
+    displayedSources,
     selectedSource,
     selectedContentLoaded: selectedSource
       ? !!getSourceContent(state, selectedSource.id)
@@ -444,7 +461,7 @@ function mapStateToProps(state) {
     symbolsLoading: isSymbolsLoading(state, selectedSource),
     query: getQuickOpenQuery(state),
     searchType: getQuickOpenType(state),
-    tabs: getTabs(state)
+    tabs
   };
 }
 

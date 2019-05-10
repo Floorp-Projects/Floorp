@@ -21,23 +21,8 @@ RemoteMediaDataDecoder::RemoteMediaDataDecoder(
       mAbstractManagerThread(aAbstractManagerThread) {}
 
 RemoteMediaDataDecoder::~RemoteMediaDataDecoder() {
-  // We're about to be destroyed and drop our ref to
-  // *DecoderChild. Make sure we put a ref into the
-  // task queue for the *DecoderChild thread to keep
-  // it alive until we send the delete message.
-  RefPtr<IRemoteDecoderChild> child = mChild.forget();
-
-  RefPtr<Runnable> task = NS_NewRunnableFunction(
-      "dom::RemoteMediaDataDecoder::~RemoteMediaDataDecoder", [child]() {
-        MOZ_ASSERT(child);
-        child->DestroyIPDL();
-      });
-
-  // Drop our references to the child so that the last ref
-  // always gets released on the manager thread.
-  child = nullptr;
-
-  mManagerThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
+  /* Shutdown method should have been called. */
+  MOZ_ASSERT(!mChild);
 }
 
 RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {
@@ -81,10 +66,15 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteMediaDataDecoder::Drain() {
 
 RefPtr<ShutdownPromise> RemoteMediaDataDecoder::Shutdown() {
   RefPtr<RemoteMediaDataDecoder> self = this;
-  return InvokeAsync(mAbstractManagerThread, __func__, [self]() {
-    self->mChild->Shutdown();
-    return ShutdownPromise::CreateAndResolve(true, __func__);
-  });
+  return InvokeAsync(mAbstractManagerThread, __func__,
+                     [self]() { return self->mChild->Shutdown(); })
+      ->Then(mAbstractManagerThread, __func__,
+             [self](const ShutdownPromise::ResolveOrRejectValue& aValue) {
+               self->mChild->DestroyIPDL();
+               self->mChild = nullptr;
+               return ShutdownPromise::CreateAndResolveOrReject(aValue,
+                                                                __func__);
+             });
 }
 
 bool RemoteMediaDataDecoder::IsHardwareAccelerated(

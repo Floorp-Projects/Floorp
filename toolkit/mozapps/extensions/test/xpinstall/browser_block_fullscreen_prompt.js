@@ -37,15 +37,6 @@ function waitForNextAddonEvent() {
 }
 
 /**
- * Check if an addon installation prompt is visible
- */
-function addonPromptVisible(browser) {
-  if (!PopupNotifications.isPanelOpen) return false;
-  if (ADDON_EVENTS.some(id => PopupNotifications.getNotification(id, browser) != null)) return true;
-  return false;
-}
-
-/**
  * Spawns content task in browser to enter / leave fullscreen
  * @param browser - Browser to use for JS fullscreen requests
  * @param {Boolean} fullscreenState - true to enter fullscreen, false to leave
@@ -75,12 +66,17 @@ add_task(async function testFullscreenBlockAddonInstallPrompt() {
     Assert.equal(eventStr, "addon-install-blocked-silent", "Addon installation was blocked");
 
     // Test if addon installation prompt has been blocked
-    Assert.ok(!addonPromptVisible(), "Addon installation prompt not opened");
+    let panelOpened;
+    try {
+      panelOpened = await TestUtils.waitForCondition(() => PopupNotifications.isPanelOpen, 100, 10);
+    } catch (ex) {
+      panelOpened = false;
+    }
+    is(panelOpened, false, "Addon installation prompt not opened");
 
-    await changeFullscreen(browser, false);
+    window.fullScreen = false;
   });
 });
-
 
 
 // This tests if the addon install prompt is closed when entering fullscreen
@@ -96,14 +92,17 @@ add_task(async function testFullscreenCloseAddonInstallPrompt() {
     Assert.ok(eventStr === "addon-install-started", "Addon installation started");
 
     // Test if addon installation prompt is visible
-    Assert.ok(addonPromptVisible(), "Addon installation prompt opened");
+    await TestUtils.waitForCondition(() => PopupNotifications.isPanelOpen, "Waiting for addon installation prompt to open");
+    Assert.ok(ADDON_EVENTS.some(id => PopupNotifications.getNotification(id, browser) != null), "Opened notification is installation prompt");
+
+    // Test for addon installation prompt close
+    let panelClosePromise = TestUtils.waitForCondition(() => !PopupNotifications.isPanelOpen, "Waiting for addon installation prompt to close");
 
     // Switch to fullscreen
     await changeFullscreen(browser, true);
 
-    // Test if addon installation prompt has been closed
-    Assert.ok(!addonPromptVisible(), "Addon installation prompt closed for fullscreen");
+    await panelClosePromise;
 
-    await changeFullscreen(browser, false);
+    window.fullScreen = false;
   });
 });

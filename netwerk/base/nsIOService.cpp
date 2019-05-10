@@ -55,6 +55,7 @@
 #include "mozilla/net/NetworkConnectivityService.h"
 #include "mozilla/net/SocketProcessHost.h"
 #include "mozilla/net/SocketProcessParent.h"
+#include "mozilla/net/SSLTokensCache.h"
 #include "mozilla/Unused.h"
 #include "ReferrerPolicy.h"
 #include "nsContentSecurityManager.h"
@@ -228,6 +229,8 @@ nsresult nsIOService::Init() {
   MOZ_ALWAYS_TRUE(errorService);
   errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_NETWORK,
                                           NECKO_MSGS_URL);
+
+  SSLTokensCache::Init();
 
   InitializeCaptivePortalService();
 
@@ -1447,6 +1450,8 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
       static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Stop();
       mCaptivePortalService = nullptr;
     }
+
+    SSLTokensCache::Shutdown();
 
     DestroySocketProcess();
   } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {

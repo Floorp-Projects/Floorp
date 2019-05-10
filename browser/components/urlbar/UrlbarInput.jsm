@@ -60,6 +60,7 @@ class UrlbarInput {
       MozXULElement.parseXULToFragment(`
         <panel id="urlbar-results"
                role="group"
+               tooltip="aHTMLTooltip"
                noautofocus="true"
                hidden="true"
                flip="none"
