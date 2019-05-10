@@ -86,7 +86,7 @@
   -moz-box-pack: center;
 }
 
-#titlebar-buttonbox > .titlebar-button {
+.titlebar-button {
   display: none;
 }
 
