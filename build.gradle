@@ -79,6 +79,7 @@ buildscript {
     if (gradle.mozconfig.substs.MOZ_ANDROID_GOOGLE_PLAY_SERVICES) {
         ext.google_play_services_version = '15.0.1'
         ext.google_play_services_cast_version = '16.0.0'
+        ext.google_play_services_fido_version = '17.0.0'
     }
 
     dependencies {

@@ -16,6 +16,10 @@
 #include "mozilla/Unused.h"
 #include "nsTextFormatter.h"
 
+#ifdef ANDROID
+#  include "mozilla/dom/AndroidWebAuthnTokenManager.h"
+#endif
+
 // Not named "security.webauth.u2f_softtoken_counter" because setting that
 // name causes the window.u2f object to disappear until preferences get
 // reloaded, as its pref is a substring!
@@ -26,7 +30,8 @@
   "security.webauth.webauthn_enable_usbtoken"
 #define PREF_WEBAUTHN_ALLOW_DIRECT_ATTESTATION \
   "security.webauth.webauthn_testing_allow_direct_attestation"
-
+#define PREF_WEBAUTHN_ANDROID_FIDO2_ENABLED \
+  "security.webauth.webauthn_enable_android_fido2"
 namespace mozilla {
 namespace dom {
 
@@ -71,6 +76,8 @@ class U2FPrefManager final : public nsIObserver {
       Preferences::AddStrongObserver(gPrefManager,
                                      PREF_WEBAUTHN_USBTOKEN_ENABLED);
       Preferences::AddStrongObserver(gPrefManager,
+                                     PREF_WEBAUTHN_ANDROID_FIDO2_ENABLED);
+      Preferences::AddStrongObserver(gPrefManager,
                                      PREF_WEBAUTHN_ALLOW_DIRECT_ATTESTATION);
       ClearOnShutdown(&gPrefManager, ShutdownPhase::ShutdownThreads);
     }
@@ -94,6 +101,11 @@ class U2FPrefManager final : public nsIObserver {
     return mUsbTokenEnabled;
   }
 
+  bool GetAndroidFido2Enabled() {
+    MutexAutoLock lock(mPrefMutex);
+    return mAndroidFido2Enabled;
+  }
+
   bool GetAllowDirectAttestationForTesting() {
     MutexAutoLock lock(mPrefMutex);
     return mAllowDirectAttestation;
@@ -113,6 +125,8 @@ class U2FPrefManager final : public nsIObserver {
     mSoftTokenEnabled = Preferences::GetBool(PREF_WEBAUTHN_SOFTTOKEN_ENABLED);
     mSoftTokenCounter = Preferences::GetUint(PREF_U2F_NSSTOKEN_COUNTER);
     mUsbTokenEnabled = Preferences::GetBool(PREF_WEBAUTHN_USBTOKEN_ENABLED);
+    mAndroidFido2Enabled =
+        Preferences::GetBool(PREF_WEBAUTHN_ANDROID_FIDO2_ENABLED);
     mAllowDirectAttestation =
         Preferences::GetBool(PREF_WEBAUTHN_ALLOW_DIRECT_ATTESTATION);
   }
@@ -121,6 +135,7 @@ class U2FPrefManager final : public nsIObserver {
   bool mSoftTokenEnabled;
   int mSoftTokenCounter;
   bool mUsbTokenEnabled;
+  bool mAndroidFido2Enabled;
   bool mAllowDirectAttestation;
 };
 
@@ -252,6 +267,13 @@ RefPtr<U2FTokenTransport> U2FTokenManager::GetTokenManagerImpl() {
   }
 
   auto pm = U2FPrefManager::Get();
+
+#ifdef ANDROID
+  // On Android, prefer the platform support if enabled.
+  if (pm->GetAndroidFido2Enabled()) {
+    return AndroidWebAuthnTokenManager::GetInstance();
+  }
+#endif
 
   // Prefer the HW token, even if the softtoken is enabled too.
   // We currently don't support soft and USB tokens enabled at the

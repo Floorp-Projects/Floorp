@@ -63,6 +63,14 @@ LOCAL_INCLUDES += [
     '/security/manager/ssl',
 ]
 
+if CONFIG['OS_TARGET'] == 'Android':
+    EXPORTS.mozilla.dom += [
+        'AndroidWebAuthnTokenManager.h',
+    ]
+    UNIFIED_SOURCES += [
+        'AndroidWebAuthnTokenManager.cpp',
+    ]
+
 if CONFIG['OS_ARCH'] == 'WINNT':
     OS_LIBS += [
         'hid',
