@@ -78,10 +78,15 @@ export class DSImage extends React.PureComponent {
             this.state.containerHeight * 2
           );
 
-          img = (<img onError={this.onOptimizedImageError} src={source} srcSet={`${source2x} 2x`} />);
+          img = (<img crossOrigin="anonymous"
+            onError={this.onOptimizedImageError}
+            src={source}
+            srcSet={`${source2x} 2x`} />);
         }
       } else if (!this.state.nonOptimizedImageFailed) {
-        img = (<img onError={this.onNonOptimizedImageError} src={this.props.source} />);
+        img = (<img crossOrigin="anonymous"
+          onError={this.onNonOptimizedImageError}
+          src={this.props.source} />);
       } else {
         // Remove the img element if both sources fail. Render a placeholder instead.
         img = (<div className="broken-image" />);

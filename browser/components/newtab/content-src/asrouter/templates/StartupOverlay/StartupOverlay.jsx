@@ -18,6 +18,7 @@ export class _StartupOverlay extends React.PureComponent {
     this.state = {
       emailInput: "",
       overlayRemoved: false,
+      deviceId: "",
       flowId: "",
       flowBeginTime: 0,
     };
@@ -31,8 +32,8 @@ export class _StartupOverlay extends React.PureComponent {
         const fxaParams = "entrypoint=activity-stream-firstrun&form_type=email";
         const response = await fetch(`${this.props.fxa_endpoint}/metrics-flow?${fxaParams}&${this.utmParams}`, {credentials: "omit"});
         if (response.status === 200) {
-          const {flowId, flowBeginTime} = await response.json();
-          this.setState({flowId, flowBeginTime});
+          const {deviceId, flowId, flowBeginTime} = await response.json();
+          this.setState({deviceId, flowId, flowBeginTime});
         } else {
           this.props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_FETCH_ERROR", value: response.status}}));
         }
@@ -132,6 +133,7 @@ export class _StartupOverlay extends React.PureComponent {
                 <input name="utm_campaign" type="hidden" value="firstrun" />
                 <input name="utm_medium" type="hidden" value="referral" />
                 <input name="utm_term" type="hidden" value="trailhead-control" />
+                <input name="device_id" type="hidden" value={this.state.deviceId} />
                 <input name="flow_id" type="hidden" value={this.state.flowId} />
                 <input name="flow_begin_time" type="hidden" value={this.state.flowBeginTime} />
                 <span className="error">{this.props.intl.formatMessage({id: "firstrun_invalid_input"})}</span>
