@@ -7,6 +7,8 @@
 var EXPORTED_SYMBOLS = ["AboutLoginsParent"];
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+                               "resource://gre/modules/E10SUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
@@ -37,7 +39,8 @@ var AboutLoginsParent = {
   // Listeners are added in BrowserGlue.jsm
   receiveMessage(message) {
     // Only respond to messages sent from about:logins.
-    if (message.target.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN) {
+    if (message.target.remoteType != E10SUtils.PRIVILEGED_REMOTE_TYPE ||
+        message.target.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN) {
       return;
     }
 
@@ -119,7 +122,8 @@ var AboutLoginsParent = {
   messageSubscribers(name, details) {
     let subscribers = ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers);
     for (let subscriber of subscribers) {
-      if (!subscriber.contentPrincipal ||
+      if (subscriber.remoteType != E10SUtils.PRIVILEGED_REMOTE_TYPE ||
+          !subscriber.contentPrincipal ||
           subscriber.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN) {
         this._subscribers.delete(subscriber);
         continue;
