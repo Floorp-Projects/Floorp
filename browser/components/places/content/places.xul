@@ -333,7 +333,7 @@
 
       <textbox id="searchFilter"
                flex="1"
-               type="search"
+               is="search-textbox"
                aria-controls="placeContent"
                oncommand="PlacesSearchBox.search(this.value);"
                collection="bookmarks">
