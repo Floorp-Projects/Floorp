@@ -36,6 +36,7 @@ let LEGACY_ACTORS = {
       module: "resource:///actors/AboutLoginsChild.jsm",
       events: {
         "AboutLoginsDeleteLogin": {wantUntrusted: true},
+        "AboutLoginsUpdateLogin": {wantUntrusted: true},
         "AboutLoginsInit": {wantUntrusted: true},
       },
       messages: [
@@ -545,6 +546,7 @@ const listeners = {
 
   mm: {
     "AboutLogins:DeleteLogin": ["AboutLoginsParent"],
+    "AboutLogins:UpdateLogin": ["AboutLoginsParent"],
     "AboutLogins:Subscribe": ["AboutLoginsParent"],
     "Content:Click": ["ContentClick"],
     "ContentSearch": ["ContentSearch"],
