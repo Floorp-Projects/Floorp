@@ -1162,7 +1162,7 @@ JS_PUBLIC_API void JS::AddAssociatedMemory(JSObject* obj, size_t nbytes,
 
   Zone* zone = obj->zone();
   zone->updateMallocCounter(nbytes);
-  zone->addCellMemory(obj, nbytes, use);
+  zone->addCellMemory(obj, nbytes, js::MemoryUse(use));
   zone->runtimeFromMainThread()->gc.maybeAllocTriggerZoneGC(zone);
 }
 
@@ -1173,7 +1173,7 @@ JS_PUBLIC_API void JS::RemoveAssociatedMemory(JSObject* obj, size_t nbytes,
     return;
   }
 
-  obj->zoneFromAnyThread()->removeCellMemory(obj, nbytes, use);
+  obj->zoneFromAnyThread()->removeCellMemory(obj, nbytes, js::MemoryUse(use));
 }
 
 #undef JS_AddRoot
