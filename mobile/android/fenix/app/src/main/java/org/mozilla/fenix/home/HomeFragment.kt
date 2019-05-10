@@ -166,6 +166,45 @@ class HomeFragment : Fragment(), CoroutineScope {
         homeDividerShadow.bringToFront()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val state = sessionControlComponent.stateObservable.blockingFirst()
+        outState.putParcelableArrayList(
+            KEY_TABS,
+            ArrayList(state.tabs)
+        )
+        outState.putParcelableArrayList(
+            KEY_COLLECTIONS,
+            ArrayList(state.collections)
+        )
+        val modeInt = if (state.mode is Mode.Private) 0 else 1
+        outState.putInt(KEY_MODE, modeInt)
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        if (savedInstanceState != null) {
+            getManagedEmitter<SessionControlChange>().onNext(
+                SessionControlChange.TabsChange(
+                    (savedInstanceState.getParcelableArrayList<Tab>(
+                        KEY_TABS
+                    ) ?: arrayListOf()).toList()
+                )
+            )
+            getManagedEmitter<SessionControlChange>().onNext(
+                SessionControlChange.CollectionsChange(
+                    (savedInstanceState.getParcelableArrayList<TabCollection>(
+                        KEY_COLLECTIONS
+                    ) ?: arrayListOf()).toList()
+                )
+            )
+            val mode = if (savedInstanceState.getInt(KEY_MODE) == 0) Mode.Private else Mode.Normal
+            getManagedEmitter<SessionControlChange>().onNext(
+                SessionControlChange.ModeChange(mode)
+            )
+        }
+    }
+
     override fun onDestroyView() {
         homeMenu = null
         job.cancel()
@@ -469,6 +508,9 @@ class HomeFragment : Fragment(), CoroutineScope {
     }
 
     companion object {
-        const val toolbarPaddingDp = 12f
+        private const val toolbarPaddingDp = 12f
+        private const val KEY_TABS = "tabs"
+        private const val KEY_COLLECTIONS = "collections"
+        private const val KEY_MODE = "mode"
     }
 }

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol
 
 import android.graphics.Bitmap
+import android.os.Parcelable
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
@@ -13,6 +14,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observable
 import io.reactivex.Observer
+import kotlinx.android.parcel.Parcelize
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -32,19 +34,25 @@ class SessionControlComponent(
         bus.getSafeManagedObservable(SessionControlChange::class.java)
     ) {
 
+    var stateObservable: Observable<SessionControlState>
+    lateinit var viewModel: SessionControlViewModel
+
     override fun initView() = SessionControlUIView(container, actionEmitter, changesObservable)
     val view: RecyclerView
         get() = uiView.view as RecyclerView
 
-    override fun render(): Observable<SessionControlState> =
-        ViewModelProviders.of(owner, SessionControlViewModel.Factory(initialState, changesObservable))
-            .get(SessionControlViewModel::class.java).render(uiView)
+    override fun render(): Observable<SessionControlState> {
+        viewModel = ViewModelProviders.of(owner, SessionControlViewModel.Factory(initialState, changesObservable))
+            .get(SessionControlViewModel::class.java)
+        return viewModel.render(uiView)
+    }
 
     init {
-        render()
+        stateObservable = render()
     }
 }
 
+@Parcelize
 data class Tab(
     val sessionId: String,
     val url: String,
@@ -52,15 +60,16 @@ data class Tab(
     val title: String,
     val selected: Boolean? = null,
     val thumbnail: Bitmap? = null
-)
+) : Parcelable
 
+@Parcelize
 data class TabCollection(
     val id: Int,
     val title: String,
     val tabs: MutableList<Tab>,
     val iconColor: Int = 0,
     var expanded: Boolean = false
-)
+) : Parcelable
 
 sealed class Mode {
     object Normal : Mode()
