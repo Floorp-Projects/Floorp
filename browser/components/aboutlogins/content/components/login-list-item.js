@@ -27,8 +27,8 @@ class LoginListItem extends HTMLElement {
   render() {
     this.classList.toggle("selected", this._selected);
     this.setAttribute("guid", this._login.guid);
-    this.shadowRoot.querySelector(".login-list-item-hostname").textContent = this._login.hostname;
-    this.shadowRoot.querySelector(".login-list-item-username").textContent = this._login.username;
+    this.shadowRoot.querySelector(".hostname").textContent = this._login.hostname;
+    this.shadowRoot.querySelector(".username").textContent = this._login.username;
   }
 
   handleEvent(event) {
