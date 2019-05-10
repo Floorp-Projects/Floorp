@@ -83,6 +83,10 @@
   color: -moz-nativehyperlinktext;
 }
 
+:root[lwt-popup-brighttext] #downloadsSummaryDescription {
+  color: #75baff; /* --blue-30 */
+}
+
 /*** List items and similar elements in the summary ***/
 
 #downloadsSummary,
