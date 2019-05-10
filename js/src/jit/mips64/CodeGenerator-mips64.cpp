@@ -80,7 +80,6 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
         break;
       case MIRType::BigInt:
         masm.unboxBigInt(inputReg, result);
-        break;
       default:
         MOZ_CRASH("Given MIRType cannot be unboxed.");
     }
@@ -106,7 +105,6 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
       break;
     case MIRType::BigInt:
       masm.unboxBigInt(inputAddr, result);
-      break;
     default:
       MOZ_CRASH("Given MIRType cannot be unboxed.");
   }
