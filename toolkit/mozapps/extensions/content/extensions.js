@@ -44,6 +44,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "useHtmlViews",
                                       "extensions.htmlaboutaddons.enabled");
 XPCOMUtils.defineLazyPreferenceGetter(this, "useHtmlDiscover",
                                       "extensions.htmlaboutaddons.discover.enabled");
+XPCOMUtils.defineLazyPreferenceGetter(this, "useNewAboutDebugging",
+                                      "devtools.aboutdebugging.new-enabled");
 
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";
@@ -1390,7 +1392,8 @@ var gViewController = {
         let mainWindow = window.windowRoot.ownerGlobal;
         recordLinkTelemetry("about:debugging");
         if ("switchToTabHavingURI" in mainWindow) {
-          mainWindow.switchToTabHavingURI("about:debugging#addons", true, {
+          let path = useNewAboutDebugging ? "/runtime/this-firefox" : "addons";
+          mainWindow.switchToTabHavingURI(`about:debugging#${path}`, true, {
             triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
           });
         }
