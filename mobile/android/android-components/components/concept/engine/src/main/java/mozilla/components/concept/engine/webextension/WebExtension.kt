@@ -106,9 +106,9 @@ interface MessageHandler {
      * @param source the session this message originated from if from a content
      * script, otherwise null.
      * @return the response to be sent for this message, either a primitive
-     * type or a org.json.JSONObject.
+     * type or a org.json.JSONObject, null if no response should be sent.
      */
-    fun onMessage(message: Any, source: EngineSession?): Any = Unit
+    fun onMessage(message: Any, source: EngineSession?): Any? = Unit
 }
 
 /**

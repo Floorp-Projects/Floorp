@@ -14,10 +14,13 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.json.JSONObject
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.WebExtension
@@ -42,8 +45,13 @@ class GeckoWebExtensionTest {
         // Verify messages are forwarded to message handler
         val message: Any = mock()
         val sender: WebExtension.MessageSender = mock()
-        messageDelegateCaptor.value.onMessage(message, sender)
+        `when`(messageHandler.onMessage(eq(message), eq(null))).thenReturn("result")
+        assertNotNull(messageDelegateCaptor.value.onMessage(message, sender))
         verify(messageHandler).onMessage(eq(message), eq(null))
+
+        `when`(messageHandler.onMessage(eq(message), eq(null))).thenReturn(null)
+        assertNull(messageDelegateCaptor.value.onMessage(message, sender))
+        verify(messageHandler, times(2)).onMessage(eq(message), eq(null))
 
         // Verify connected port is forwarded to message handler
         val port: WebExtension.Port = mock()
@@ -82,11 +90,16 @@ class GeckoWebExtensionTest {
         extension.registerContentMessageHandler(session, "mozacTest", messageHandler)
         verify(geckoSession).setMessageDelegate(messageDelegateCaptor.capture(), eq("mozacTest"))
 
-        // Verify messages are forwarded to message handler
+        // Verify messages are forwarded to message handler and return value passed on
         val message: Any = mock()
         val sender: WebExtension.MessageSender = mock()
-        messageDelegateCaptor.value.onMessage(message, sender)
+        `when`(messageHandler.onMessage(eq(message), eq(session))).thenReturn("result")
+        assertNotNull(messageDelegateCaptor.value.onMessage(message, sender))
         verify(messageHandler).onMessage(eq(message), eq(session))
+
+        `when`(messageHandler.onMessage(eq(message), eq(session))).thenReturn(null)
+        assertNull(messageDelegateCaptor.value.onMessage(message, sender))
+        verify(messageHandler, times(2)).onMessage(eq(message), eq(session))
 
         // Verify connected port is forwarded to message handler
         val port: WebExtension.Port = mock()

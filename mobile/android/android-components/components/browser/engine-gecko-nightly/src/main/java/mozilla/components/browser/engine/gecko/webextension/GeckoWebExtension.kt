@@ -47,7 +47,8 @@ class GeckoWebExtension(
             }
 
             override fun onMessage(message: Any, sender: GeckoNativeWebExtension.MessageSender): GeckoResult<Any>? {
-                return GeckoResult.fromValue(messageHandler.onMessage(message, null))
+                val response = messageHandler.onMessage(message, null)
+                return response?.let { GeckoResult.fromValue(it) }
             }
         }
 
@@ -77,7 +78,8 @@ class GeckoWebExtension(
             }
 
             override fun onMessage(message: Any, sender: GeckoNativeWebExtension.MessageSender): GeckoResult<Any>? {
-                return GeckoResult.fromValue(messageHandler.onMessage(message, session))
+                val response = messageHandler.onMessage(message, session)
+                return response?.let { GeckoResult.fromValue(it) }
             }
         }
 
