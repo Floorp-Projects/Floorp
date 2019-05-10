@@ -71,6 +71,8 @@ class nsMixedContentBlocker : public nsIContentPolicy,
   static void AccumulateMixedContentHSTS(
       nsIURI* aURI, bool aActive, const OriginAttributes& aOriginAttributes);
 
+  static bool URISafeToBeLoadedInSecureContext(nsIURI* aURI);
+
   static bool ShouldUpgradeMixedDisplayContent();
 
   static bool sBlockMixedScript;
