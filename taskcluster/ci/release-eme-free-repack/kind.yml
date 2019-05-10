@@ -1,78 +1,78 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.partner_repack:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.partner_repack:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - build-signing
-   - nightly-l10n-signing
+    - build-signing
+    - nightly-l10n-signing
 
 job-defaults:
-   name: eme-free-repack
-   description: Release Promotion eme-free repacks
-   run-on-projects: []  # to make sure this never runs as part of CI
-   shipping-product: firefox
-   shipping-phase: promote
-   worker-type: b-linux
-   worker:
-      docker-image:
-         in-tree: "partner-repack"
-      chain-of-trust: true
-      max-run-time: 7200
-   run:
-      using: mozharness
-      config:
-         - partner_repacks/release_mozilla-release_desktop.py
-      script: mozharness/scripts/desktop_partner_repacks.py
-      job-script: taskcluster/scripts/builder/repackage.sh
-      need-xvfb: false
-      tooltool-downloads: false
-   extra:
-      limit-locales:
-         by-release-level:
-            staging: true
-            production: false
+    name: eme-free-repack
+    description: Release Promotion eme-free repacks
+    run-on-projects: []  # to make sure this never runs as part of CI
+    shipping-product: firefox
+    shipping-phase: promote
+    worker-type: b-linux
+    worker:
+        docker-image:
+            in-tree: "partner-repack"
+        chain-of-trust: true
+        max-run-time: 7200
+    run:
+        using: mozharness
+        config:
+            - partner_repacks/release_mozilla-release_desktop.py
+        script: mozharness/scripts/desktop_partner_repacks.py
+        job-script: taskcluster/scripts/builder/repackage.sh
+        need-xvfb: false
+        tooltool-downloads: false
+    extra:
+        limit-locales:
+            by-release-level:
+                staging: true
+                production: false
 
 jobs:
-   macosx64-shippable:
-      treeherder:
-         symbol: EME
-         platform: macosx64/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: macosx64-shippable
-         build_type: opt
-         artifact_prefix: releng/partner
-         nightly: true
+    macosx64-shippable:
+        treeherder:
+            symbol: EME
+            platform: macosx64/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: macosx64-shippable
+            build_type: opt
+            artifact_prefix: releng/partner
+            nightly: true
 
-   win32-shippable:
-      treeherder:
-         symbol: EME
-         platform: win32/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win32-shippable
-         build_type: opt
-         artifact_prefix: releng/partner
-         nightly: true
+    win32-shippable:
+        treeherder:
+            symbol: EME
+            platform: win32/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win32-shippable
+            build_type: opt
+            artifact_prefix: releng/partner
+            nightly: true
 
-   win64-shippable:
-      treeherder:
-         symbol: EME
-         platform: win64/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win64-shippable
-         build_type: opt
-         artifact_prefix: releng/partner
-         nightly: true
+    win64-shippable:
+        treeherder:
+            symbol: EME
+            platform: win64/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win64-shippable
+            build_type: opt
+            artifact_prefix: releng/partner
+            nightly: true

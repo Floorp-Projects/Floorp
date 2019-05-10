@@ -1,30 +1,30 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
-   - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.beetmover_repackage_partner:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.beetmover_repackage_partner:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-eme-free-repack-repackage-signing
+    - release-eme-free-repack-repackage-signing
 
 only-for-build-platforms:
-   - macosx64-shippable/opt
-   - win32-shippable/opt
-   - win64-shippable/opt
-   - macosx64-nightly/opt
-   - win32-nightly/opt
-   - win64-nightly/opt
+    - macosx64-shippable/opt
+    - win32-shippable/opt
+    - win64-shippable/opt
+    - macosx64-nightly/opt
+    - win32-nightly/opt
+    - win64-nightly/opt
 
 job-template:
-   shipping-phase: promote
-   partner-bucket-scope:
-      by-release-level:
-         production: beetmover:bucket:partner
-         staging: beetmover:bucket:dep-partner
-   partner-private-path: null
-   partner-public-path: "{platform}-EME-free/{locale}"
+    shipping-phase: promote
+    partner-bucket-scope:
+        by-release-level:
+            production: beetmover:bucket:partner
+            staging: beetmover:bucket:dep-partner
+    partner-private-path: null
+    partner-public-path: "{platform}-EME-free/{locale}"

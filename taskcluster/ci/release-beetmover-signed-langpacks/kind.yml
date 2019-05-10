@@ -1,28 +1,28 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
-   - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.release_beetmover_signed_addons:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.release_beetmover_signed_addons:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-sign-and-push-langpacks
+    - release-sign-and-push-langpacks
 
 only-for-attributes:
-   - nightly
-   - shippable
+    - nightly
+    - shippable
 
 job-template:
-   description: Beetmover submission for platform-independent langpacks {locales} in {platform} directory
-   worker-type:
-      by-release-level:
-         production: scriptworker-prov-v1/beetmoverworker-v1
-         staging: scriptworker-prov-v1/beetmoverworker-dev
-   run-on-projects: []
-   shipping-phase: promote
-   attributes:
-      artifact_map: taskcluster/taskgraph/manifests/firefox_candidates.yml
+    description: Beetmover submission for platform-independent langpacks {locales} in {platform} directory
+    worker-type:
+        by-release-level:
+            production: scriptworker-prov-v1/beetmoverworker-v1
+            staging: scriptworker-prov-v1/beetmoverworker-dev
+    run-on-projects: []
+    shipping-phase: promote
+    attributes:
+        artifact_map: taskcluster/taskgraph/manifests/firefox_candidates.yml

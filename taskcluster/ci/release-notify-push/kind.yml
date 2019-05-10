@@ -1,45 +1,45 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.release_notifications:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.release_notifications:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-beetmover-push-to-release
+    - release-beetmover-push-to-release
 
 job-defaults:
-   name: notify-release-drivers-push
-   description: Sends email to release-drivers telling release was pushed.
-   run-on-projects: []
-   shipping-phase: push
-   worker-type: b-linux
-   worker:
-      implementation: docker-worker
-      os: linux
-      docker-image: "ubuntu:16.10"
-      max-run-time: 600
-      command:
-         - /bin/bash
-         - -c
-         - echo "Dummy task"
-   notifications:
-      subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has been pushed to cdntest"
-      message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has been pushed to cdntest"
-      emails:
-         by-project:
-            mozilla-beta: ["release-signoff@mozilla.org"]
-            mozilla-release: ["release-signoff@mozilla.org"]
-            mozilla-esr60: ["release-signoff@mozilla.org"]
-            try: ["{config[params][owner]}"]
-            default: []
+    name: notify-release-drivers-push
+    description: Sends email to release-drivers telling release was pushed.
+    run-on-projects: []
+    shipping-phase: push
+    worker-type: b-linux
+    worker:
+        implementation: docker-worker
+        os: linux
+        docker-image: "ubuntu:16.10"
+        max-run-time: 600
+        command:
+            - /bin/bash
+            - -c
+            - echo "Dummy task"
+    notifications:
+        subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has been pushed to cdntest"
+        message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has been pushed to cdntest"
+        emails:
+            by-project:
+                mozilla-beta: ["release-signoff@mozilla.org"]
+                mozilla-release: ["release-signoff@mozilla.org"]
+                mozilla-esr60: ["release-signoff@mozilla.org"]
+                try: ["{config[params][owner]}"]
+                default: []
 
 jobs:
-   firefox:
-      shipping-product: firefox
-   devedition:
-      shipping-product: devedition
+    firefox:
+        shipping-product: firefox
+    devedition:
+        shipping-product: devedition

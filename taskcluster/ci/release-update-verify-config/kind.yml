@@ -1,314 +1,314 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.update_verify_config:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.update_verify_config:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
 
 job-defaults:
-   name: update-verify-config
-   run-on-projects: []  # to make sure this never runs as part of CI
-   shipping-phase: promote
-   worker-type: b-linux
-   worker:
-      docker-image:
-         in-tree: "update-verify"
-      max-run-time: 3600
-      artifacts:
-         - name: public/build/update-verify.cfg
-           path: /builds/worker/checkouts/gecko/update-verify.cfg
-           type: file
-   run:
-      sparse-profile: mozharness
-   extra:
-      app-name: browser
-      branch-prefix: mozilla
-      archive-prefix:
-         by-release-level:
-            staging: "http://ftp.stage.mozaws.net/pub"
-            production: "https://archive.mozilla.org/pub"
-      previous-archive-prefix:
-         by-release-level:
-            staging: "https://archive.mozilla.org/pub"
-            production: null
-      aus-server:
-         by-release-level:
-            staging: "https://stage.balrog.nonprod.cloudops.mozgcp.net"
-            production: "https://aus5.mozilla.org"
-      override-certs:
-         by-release-level:
-            staging: dep
-            production: null
-      # This is overridden for devedition to exclude 58.0b1
-      # because of the special case added by
-      # https://bugzilla.mozilla.org/show_bug.cgi?id=1419189
-      # The devedition override can be removed after 58.0b1
-      # is behind a watershed
-      include-version:
-         by-release-type:
-            beta: beta
-            release(-rc)?: nonbeta
-            esr60: esr
-            default: beta
-      last-watershed:
-         by-release-type:
-            beta:
-               by-platform:
-                  win64-aarch64.*: "67.0b2"
-                  default: "56.0b3"
-            release(-rc)?:
-               by-platform:
-                  linux-.*: "57.0"
-                  linux64-.*: "57.0"
-                  macosx64-.*: "57.0"
-                  win32-.*: "56.0"
-                  win64(?!-aarch64)-.*: "56.0"
-                  win64-aarch64.*: "67.0"
-                  default: null
-            esr60: "52.0esr"
-            default: "default"
+    name: update-verify-config
+    run-on-projects: []  # to make sure this never runs as part of CI
+    shipping-phase: promote
+    worker-type: b-linux
+    worker:
+        docker-image:
+            in-tree: "update-verify"
+        max-run-time: 3600
+        artifacts:
+            - name: public/build/update-verify.cfg
+              path: /builds/worker/checkouts/gecko/update-verify.cfg
+              type: file
+    run:
+        sparse-profile: mozharness
+    extra:
+        app-name: browser
+        branch-prefix: mozilla
+        archive-prefix:
+            by-release-level:
+                staging: "http://ftp.stage.mozaws.net/pub"
+                production: "https://archive.mozilla.org/pub"
+        previous-archive-prefix:
+            by-release-level:
+                staging: "https://archive.mozilla.org/pub"
+                production: null
+        aus-server:
+            by-release-level:
+                staging: "https://stage.balrog.nonprod.cloudops.mozgcp.net"
+                production: "https://aus5.mozilla.org"
+        override-certs:
+            by-release-level:
+                staging: dep
+                production: null
+        # This is overridden for devedition to exclude 58.0b1
+        # because of the special case added by
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1419189
+        # The devedition override can be removed after 58.0b1
+        # is behind a watershed
+        include-version:
+            by-release-type:
+                beta: beta
+                release(-rc)?: nonbeta
+                esr60: esr
+                default: beta
+        last-watershed:
+            by-release-type:
+                beta:
+                    by-platform:
+                        win64-aarch64.*: "67.0b2"
+                        default: "56.0b3"
+                release(-rc)?:
+                    by-platform:
+                        linux-.*: "57.0"
+                        linux64-.*: "57.0"
+                        macosx64-.*: "57.0"
+                        win32-.*: "56.0"
+                        win64(?!-aarch64)-.*: "56.0"
+                        win64-aarch64.*: "67.0"
+                        default: null
+                esr60: "52.0esr"
+                default: "default"
 
 jobs:
-   firefox-linux:
-      shipping-product: firefox
-      treeherder:
-         symbol: UVC
-         platform: linux32/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: linux-shippable
-      extra:
-         product: firefox
-         platform: linux-i686
-         updater-platform: linux-x86_64
-         channel:
-            by-release-type:
-               beta: "beta-localtest"
-               release(-rc)?: "release-localtest"
-               esr60: "esr-localtest"
-               default: "default"
-         mar-channel-id-override:
-            by-release-type:
-               beta: beta
-               default: null
+    firefox-linux:
+        shipping-product: firefox
+        treeherder:
+            symbol: UVC
+            platform: linux32/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: linux-shippable
+        extra:
+            product: firefox
+            platform: linux-i686
+            updater-platform: linux-x86_64
+            channel:
+                by-release-type:
+                    beta: "beta-localtest"
+                    release(-rc)?: "release-localtest"
+                    esr60: "esr-localtest"
+                    default: "default"
+            mar-channel-id-override:
+                by-release-type:
+                    beta: beta
+                    default: null
 
-   firefox-linux64:
-      shipping-product: firefox
-      treeherder:
-         symbol: UVC
-         platform: linux64/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: linux64-shippable
-      extra:
-         product: firefox
-         platform: linux-x86_64
-         updater-platform: linux-x86_64
-         channel:
-            by-release-type:
-               beta: "beta-localtest"
-               release(-rc)?: "release-localtest"
-               esr60: "esr-localtest"
-               default: "default"
-         mar-channel-id-override:
-            by-release-type:
-               beta: beta
-               default: null
+    firefox-linux64:
+        shipping-product: firefox
+        treeherder:
+            symbol: UVC
+            platform: linux64/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: linux64-shippable
+        extra:
+            product: firefox
+            platform: linux-x86_64
+            updater-platform: linux-x86_64
+            channel:
+                by-release-type:
+                    beta: "beta-localtest"
+                    release(-rc)?: "release-localtest"
+                    esr60: "esr-localtest"
+                    default: "default"
+            mar-channel-id-override:
+                by-release-type:
+                    beta: beta
+                    default: null
 
-   firefox-macosx64:
-      shipping-product: firefox
-      treeherder:
-         symbol: UVC
-         platform: osx-cross/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: macosx64-shippable
-      extra:
-         product: firefox
-         platform: mac
-         updater-platform: linux-x86_64
-         channel:
-            by-release-type:
-               beta: "beta-localtest"
-               release(-rc)?: "release-localtest"
-               esr60: "esr-localtest"
-               default: "default"
-         mar-channel-id-override:
-            by-release-type:
-               beta: beta
-               default: null
+    firefox-macosx64:
+        shipping-product: firefox
+        treeherder:
+            symbol: UVC
+            platform: osx-cross/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: macosx64-shippable
+        extra:
+            product: firefox
+            platform: mac
+            updater-platform: linux-x86_64
+            channel:
+                by-release-type:
+                    beta: "beta-localtest"
+                    release(-rc)?: "release-localtest"
+                    esr60: "esr-localtest"
+                    default: "default"
+            mar-channel-id-override:
+                by-release-type:
+                    beta: beta
+                    default: null
 
-   firefox-win32:
-      shipping-product: firefox
-      treeherder:
-         symbol: UVC
-         platform: windows2012-32/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win32-shippable
-      extra:
-         product: firefox
-         platform: win32
-         updater-platform: linux-x86_64
-         channel:
-            by-release-type:
-               beta: "beta-localtest"
-               release(-rc)?: "release-localtest"
-               esr60: "esr-localtest"
-               default: "default"
-         mar-channel-id-override:
-            by-release-type:
-               beta: beta
-               default: null
+    firefox-win32:
+        shipping-product: firefox
+        treeherder:
+            symbol: UVC
+            platform: windows2012-32/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win32-shippable
+        extra:
+            product: firefox
+            platform: win32
+            updater-platform: linux-x86_64
+            channel:
+                by-release-type:
+                    beta: "beta-localtest"
+                    release(-rc)?: "release-localtest"
+                    esr60: "esr-localtest"
+                    default: "default"
+            mar-channel-id-override:
+                by-release-type:
+                    beta: beta
+                    default: null
 
-   firefox-win64:
-      shipping-product: firefox
-      treeherder:
-         symbol: UVC
-         platform: windows2012-64/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win64-shippable
-      extra:
-         product: firefox
-         platform: win64
-         updater-platform: linux-x86_64
-         channel:
-            by-release-type:
-               beta: "beta-localtest"
-               release(-rc)?: "release-localtest"
-               esr60: "esr-localtest"
-               default: "default"
-         mar-channel-id-override:
-            by-release-type:
-               beta: beta
-               default: null
+    firefox-win64:
+        shipping-product: firefox
+        treeherder:
+            symbol: UVC
+            platform: windows2012-64/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win64-shippable
+        extra:
+            product: firefox
+            platform: win64
+            updater-platform: linux-x86_64
+            channel:
+                by-release-type:
+                    beta: "beta-localtest"
+                    release(-rc)?: "release-localtest"
+                    esr60: "esr-localtest"
+                    default: "default"
+            mar-channel-id-override:
+                by-release-type:
+                    beta: beta
+                    default: null
 
-   firefox-win64-aarch64:
-      shipping-product: firefox
-      treeherder:
-         symbol: UVC
-         platform: windows2012-aarch64/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win64-aarch64-shippable
-      extra:
-         product: firefox
-         platform: win64-aarch64
-         updater-platform: linux-x86_64
-         channel:
-            by-release-type:
-               beta: "beta-localtest"
-               release(-rc)?: "release-localtest"
-               esr60: "esr-localtest"
-               default: "default"
-         mar-channel-id-override:
-            by-release-type:
-               beta: beta
-               default: null
+    firefox-win64-aarch64:
+        shipping-product: firefox
+        treeherder:
+            symbol: UVC
+            platform: windows2012-aarch64/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win64-aarch64-shippable
+        extra:
+            product: firefox
+            platform: win64-aarch64
+            updater-platform: linux-x86_64
+            channel:
+                by-release-type:
+                    beta: "beta-localtest"
+                    release(-rc)?: "release-localtest"
+                    esr60: "esr-localtest"
+                    default: "default"
+            mar-channel-id-override:
+                by-release-type:
+                    beta: beta
+                    default: null
 
-   devedition-linux:
-      shipping-product: devedition
-      treeherder:
-         symbol: UVC
-         platform: linux32-devedition/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: linux-devedition-nightly
-      extra:
-         product: firefox
-         platform: linux-i686
-         updater-platform: linux-x86_64
-         channel: "aurora-localtest"
-         include-version: devedition_hack
+    devedition-linux:
+        shipping-product: devedition
+        treeherder:
+            symbol: UVC
+            platform: linux32-devedition/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: linux-devedition-nightly
+        extra:
+            product: firefox
+            platform: linux-i686
+            updater-platform: linux-x86_64
+            channel: "aurora-localtest"
+            include-version: devedition_hack
 
-   devedition-linux64:
-      shipping-product: devedition
-      treeherder:
-         symbol: UVC
-         platform: linux64-devedition/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: linux64-devedition-nightly
-      extra:
-         product: firefox
-         platform: linux-x86_64
-         updater-platform: linux-x86_64
-         channel: "aurora-localtest"
-         include-version: devedition_hack
+    devedition-linux64:
+        shipping-product: devedition
+        treeherder:
+            symbol: UVC
+            platform: linux64-devedition/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: linux64-devedition-nightly
+        extra:
+            product: firefox
+            platform: linux-x86_64
+            updater-platform: linux-x86_64
+            channel: "aurora-localtest"
+            include-version: devedition_hack
 
-   devedition-macosx64:
-      shipping-product: devedition
-      treeherder:
-         symbol: UVC
-         platform: osx-cross-devedition/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: macosx64-devedition-nightly
-      extra:
-         product: firefox
-         platform: mac
-         updater-platform: linux-x86_64
-         channel: "aurora-localtest"
-         include-version: devedition_hack
+    devedition-macosx64:
+        shipping-product: devedition
+        treeherder:
+            symbol: UVC
+            platform: osx-cross-devedition/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: macosx64-devedition-nightly
+        extra:
+            product: firefox
+            platform: mac
+            updater-platform: linux-x86_64
+            channel: "aurora-localtest"
+            include-version: devedition_hack
 
-   devedition-win32:
-      shipping-product: devedition
-      treeherder:
-         symbol: UVC
-         platform: windows2012-32-devedition/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win32-devedition-nightly
-      extra:
-         product: firefox
-         platform: win32
-         updater-platform: linux-x86_64
-         channel: "aurora-localtest"
-         include-version: devedition_hack
+    devedition-win32:
+        shipping-product: devedition
+        treeherder:
+            symbol: UVC
+            platform: windows2012-32-devedition/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win32-devedition-nightly
+        extra:
+            product: firefox
+            platform: win32
+            updater-platform: linux-x86_64
+            channel: "aurora-localtest"
+            include-version: devedition_hack
 
-   devedition-win64:
-      shipping-product: devedition
-      treeherder:
-         symbol: UVC
-         platform: windows2012-64-devedition/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win64-devedition-nightly
-      extra:
-         product: firefox
-         platform: win64
-         updater-platform: linux-x86_64
-         channel: "aurora-localtest"
-         include-version: devedition_hack
+    devedition-win64:
+        shipping-product: devedition
+        treeherder:
+            symbol: UVC
+            platform: windows2012-64-devedition/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win64-devedition-nightly
+        extra:
+            product: firefox
+            platform: win64
+            updater-platform: linux-x86_64
+            channel: "aurora-localtest"
+            include-version: devedition_hack
 
-   devedition-win64-aarch64:
-      shipping-product: devedition
-      treeherder:
-         symbol: UVC
-         platform: windows2012-aarch64-devedition/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win64-aarch64-devedition-nightly
-      extra:
-         product: firefox
-         platform: win64-aarch64
-         updater-platform: linux-x86_64
-         channel: "aurora-localtest"
-         include-version: devedition_hack
+    devedition-win64-aarch64:
+        shipping-product: devedition
+        treeherder:
+            symbol: UVC
+            platform: windows2012-aarch64-devedition/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win64-aarch64-devedition-nightly
+        extra:
+            product: firefox
+            platform: win64-aarch64
+            updater-platform: linux-x86_64
+            channel: "aurora-localtest"
+            include-version: devedition_hack

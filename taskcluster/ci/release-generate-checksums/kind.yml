@@ -1,103 +1,103 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
-   - beetmover-source
-   - post-beetmover-checksums-dummy
-   - release-beetmover-signed-langpacks
+    - beetmover-source
+    - post-beetmover-checksums-dummy
+    - release-beetmover-signed-langpacks
 
 transforms:
-   - taskgraph.transforms.build:transforms
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.release_generate_checksums:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.build:transforms
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.release_generate_checksums:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
 
 job-defaults:
-   name: generate-checksums
-   description: generates checksums
-   run-on-projects: []  # to make sure this never runs as part of CI
-   shipping-phase: promote
-   worker-type: b-linux
-   worker:
-      max-run-time: 1200
-      artifacts:
-         - name: public/build/SHA256SUMMARY
-           path: /builds/worker/SHA256SUMMARY
-           type: file
-         - name: public/build/SHA256SUMS
-           path: /builds/worker/SHA256SUMS
-           type: file
-         - name: public/build/SHA512SUMMARY
-           path: /builds/worker/SHA512SUMMARY
-           type: file
-         - name: public/build/SHA512SUMS
-           path: /builds/worker/SHA512SUMS
-           type: file
-   run:
-      using: mozharness
-      config: []  # See extra-config below
-      actions: [create-virtualenv, collect-individual-checksums, create-big-checksums, create-summary]
-      options:
-         - "version={version}"
-         - "build-number={build_number}"
-      script: "mozharness/scripts/release/generate-checksums.py"
-   treeherder:
-      symbol: Rel(GenChcks)
-      kind: test
-      tier: 1
+    name: generate-checksums
+    description: generates checksums
+    run-on-projects: []  # to make sure this never runs as part of CI
+    shipping-phase: promote
+    worker-type: b-linux
+    worker:
+        max-run-time: 1200
+        artifacts:
+            - name: public/build/SHA256SUMMARY
+              path: /builds/worker/SHA256SUMMARY
+              type: file
+            - name: public/build/SHA256SUMS
+              path: /builds/worker/SHA256SUMS
+              type: file
+            - name: public/build/SHA512SUMMARY
+              path: /builds/worker/SHA512SUMMARY
+              type: file
+            - name: public/build/SHA512SUMS
+              path: /builds/worker/SHA512SUMS
+              type: file
+    run:
+        using: mozharness
+        config: []  # See extra-config below
+        actions: [create-virtualenv, collect-individual-checksums, create-big-checksums, create-summary]
+        options:
+            - "version={version}"
+            - "build-number={build_number}"
+        script: "mozharness/scripts/release/generate-checksums.py"
+    treeherder:
+        symbol: Rel(GenChcks)
+        kind: test
+        tier: 1
 
 jobs:
-   firefox:
-      shipping-product: firefox
-      attributes:
-         build_platform: firefox-release
-         build_type: opt
-      run:
-         extra-config:
-            by-release-level:
-               production:
-                  stage_product: "firefox"
-                  bucket_name: "net-mozaws-prod-delivery-firefox"
-               staging:
-                  stage_product: "firefox"
-                  bucket_name: "net-mozaws-stage-delivery-firefox"
-      treeherder:
-         platform: firefox-release/opt
+    firefox:
+        shipping-product: firefox
+        attributes:
+            build_platform: firefox-release
+            build_type: opt
+        run:
+            extra-config:
+                by-release-level:
+                    production:
+                        stage_product: "firefox"
+                        bucket_name: "net-mozaws-prod-delivery-firefox"
+                    staging:
+                        stage_product: "firefox"
+                        bucket_name: "net-mozaws-stage-delivery-firefox"
+        treeherder:
+            platform: firefox-release/opt
 
-   fennec:
-      shipping-product: fennec
-      attributes:
-         build_platform: fennec-release
-         build_type: opt
-      run:
-         extra-config:
-            by-release-level:
-               production:
-                  stage_product: "mobile"
-                  bucket_name: "net-mozaws-prod-delivery-archive"
-               staging:
-                  stage_product: "mobile"
-                  bucket_name: "net-mozaws-stage-delivery-archive"
-      treeherder:
-         platform: fennec-release/opt
+    fennec:
+        shipping-product: fennec
+        attributes:
+            build_platform: fennec-release
+            build_type: opt
+        run:
+            extra-config:
+                by-release-level:
+                    production:
+                        stage_product: "mobile"
+                        bucket_name: "net-mozaws-prod-delivery-archive"
+                    staging:
+                        stage_product: "mobile"
+                        bucket_name: "net-mozaws-stage-delivery-archive"
+        treeherder:
+            platform: fennec-release/opt
 
-   devedition:
-      shipping-product: devedition
-      attributes:
-         build_platform: devedition-release
-         build_type: opt
-      run:
-         extra-config:
-            by-release-level:
-               production:
-                  stage_product: "devedition"
-                  bucket_name: "net-mozaws-prod-delivery-archive"
-               staging:
-                  stage_product: "devedition"
-                  bucket_name: "net-mozaws-stage-delivery-archive"
-      treeherder:
-         platform: devedition-release/opt
+    devedition:
+        shipping-product: devedition
+        attributes:
+            build_platform: devedition-release
+            build_type: opt
+        run:
+            extra-config:
+                by-release-level:
+                    production:
+                        stage_product: "devedition"
+                        bucket_name: "net-mozaws-prod-delivery-archive"
+                    staging:
+                        stage_product: "devedition"
+                        bucket_name: "net-mozaws-stage-delivery-archive"
+        treeherder:
+            platform: devedition-release/opt

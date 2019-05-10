@@ -1,40 +1,44 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
 octane:
-  description: Octane benchmark
-  fetch:
-    type: static-url
-    url: https://github.com/mozilla/perf-automation/releases/download/octane-v1/octane-0f5b8d48d4a9.zip
-    sha256: 38425ee1abfc5feca178b2f60fbd82b5873897c345112a85359be00024402f9f
-    size: 1816138
+    description: Octane benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/octane-v1/octane-0f5b8d48d4a9.zip
+        sha256: 38425ee1abfc5feca178b2f60fbd82b5873897c345112a85359be00024402f9f
+        size: 1816138
 
 unity-webgl:
-  description: unity-webgl benchmark
-  fetch:
-    type: static-url
-    url: https://github.com/mozilla/perf-automation/releases/download/unity-webgl-v3/unity-webgl-2720cdc79082.zip
-    sha256: 2d5a741cb3bfbd191d0aa2b4c4f71d615db84a0760e20c4e4cf701b3682df0d0
-    size: 27062969
+    description: unity-webgl benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/unity-webgl-v3/unity-webgl-2720cdc79082.zip
+        sha256: 2d5a741cb3bfbd191d0aa2b4c4f71d615db84a0760e20c4e4cf701b3682df0d0
+        size: 27062969
 
 assorted-dom:
-  description: assorted-dom benchmark
-  fetch:
-    type: static-url
-    url: https://github.com/mozilla/perf-automation/releases/download/assorted-dom-v1/assorted-dom-4befd28725c6.zip
-    sha256: e4eafe4a8e70c7ae6d42d668d3b1640b9fd9b696c486ff35aab754c368f78c2c
-    size: 402665
+    description: assorted-dom benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/assorted-dom-v1/assorted-dom-4befd28725c6.zip
+        sha256: e4eafe4a8e70c7ae6d42d668d3b1640b9fd9b696c486ff35aab754c368f78c2c
+        size: 402665
 
 wasm-misc:
-  description: wasm-misc benchmark
-  fetch:
-    type: static-url
-    artifact-name: wasm-misc.zip
-    url: https://github.com/mozilla/perf-automation/releases/download/wasm-misc-v1/wasm-misc-c55c3c7690b2.zip
-    sha256: 0ba273b748b872117a4b230c776bbd73550398da164025a735c28a16c0224397
-    size: 4433793
+    description: wasm-misc benchmark
+    fetch:
+        type: static-url
+        artifact-name: wasm-misc.zip
+        url: https://github.com/mozilla/perf-automation/releases/download/wasm-misc-v1/wasm-misc-c55c3c7690b2.zip
+        sha256: 0ba273b748b872117a4b230c776bbd73550398da164025a735c28a16c0224397
+        size: 4433793
 
 web-tooling-benchmark:
-  description: Web Tooling Benchmark
-  fetch:
-    type: static-url
-    url: https://github.com/mozilla/perf-automation/releases/download/V1/web-tooling-benchmark-b2ac25c897c9.zip
-    sha256: 93b0b51df0cec3ca9bfa0bdf81d782306dcf18532e39b3ff3180409125daaff1
-    size: 5444135
+    description: Web Tooling Benchmark
+    fetch:
+        type: static-url
+        url: https://github.com/mozilla/perf-automation/releases/download/V1/web-tooling-benchmark-b2ac25c897c9.zip
+        sha256: 93b0b51df0cec3ca9bfa0bdf81d782306dcf18532e39b3ff3180409125daaff1
+        size: 5444135

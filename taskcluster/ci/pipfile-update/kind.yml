@@ -1,45 +1,45 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.pipfile_update:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.pipfile_update:transforms
+    - taskgraph.transforms.task:transforms
 
 
 job-defaults:
-   name: pipfile_update
-   description: Update Pipfile.lock
-   run-on-projects: []
-   treeherder:
-      kind: build
-      platform: linux64/opt
-      tier: 1
-   worker-type: b-linux
-   worker:
-      implementation: docker-worker
-      os: linux
-      docker-image: {in-tree: pipfile-updates}
-      taskcluster-proxy: true
-      max-run-time: 2400
-      command:
-         - /runme.sh
-      artifacts:
-         - name: 'public/build/Pipfile.lock.diff'
-           path: '/home/worker/artifacts/Pipfile.lock.diff'
-           type: file
-   scopes:
-      - secrets:get:project/releng/gecko/build/level-{level}/arc-phabricator-token
+    name: pipfile_update
+    description: Update Pipfile.lock
+    run-on-projects: []
+    treeherder:
+        kind: build
+        platform: linux64/opt
+        tier: 1
+    worker-type: b-linux
+    worker:
+        implementation: docker-worker
+        os: linux
+        docker-image: {in-tree: pipfile-updates}
+        taskcluster-proxy: true
+        max-run-time: 2400
+        command:
+            - /runme.sh
+        artifacts:
+            - name: 'public/build/Pipfile.lock.diff'
+              path: '/home/worker/artifacts/Pipfile.lock.diff'
+              type: file
+    scopes:
+        - secrets:get:project/releng/gecko/build/level-{level}/arc-phabricator-token
 
 
 jobs:
-   funsize-update-generator:
-      treeherder:
-         symbol: pipfu(fug)
-      worker:
-         env:
-            PIPFILE_DIRECTORY: "taskcluster/docker/funsize-update-generator"
-            PYTHON3: "1"
-            REVIEWERS: "sfraser, bhearsum"
+    funsize-update-generator:
+        treeherder:
+            symbol: pipfu(fug)
+        worker:
+            env:
+                PIPFILE_DIRECTORY: "taskcluster/docker/funsize-update-generator"
+                PYTHON3: "1"
+                REVIEWERS: "sfraser, bhearsum"

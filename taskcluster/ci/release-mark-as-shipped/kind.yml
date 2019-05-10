@@ -1,48 +1,48 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.release_mark_as_shipped:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.release_mark_as_shipped:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - push-apk
-   - release-balrog-scheduling
-   - release-bouncer-aliases
-   - release-version-bump
+    - push-apk
+    - release-balrog-scheduling
+    - release-bouncer-aliases
+    - release-version-bump
 
 job-defaults:
-   description: mark release as shipped in Ship-It
-   worker-type:
-      by-release-level:
-         production: scriptworker-prov-v1/shipit-v1
-         staging: scriptworker-prov-v1/shipit-dev
-   worker:
-      implementation: shipit-shipped
-   scopes:
-      by-release-level:
-         production:
-            - project:releng:ship-it:server:production
-            - project:releng:ship-it:action:mark-as-shipped
-         staging:
-            - project:releng:ship-it:server:staging
-            - project:releng:ship-it:action:mark-as-shipped
-   run-on-projects: []
-   shipping-phase: ship
+    description: mark release as shipped in Ship-It
+    worker-type:
+        by-release-level:
+            production: scriptworker-prov-v1/shipit-v1
+            staging: scriptworker-prov-v1/shipit-dev
+    worker:
+        implementation: shipit-shipped
+    scopes:
+        by-release-level:
+            production:
+                - project:releng:ship-it:server:production
+                - project:releng:ship-it:action:mark-as-shipped
+            staging:
+                - project:releng:ship-it:server:staging
+                - project:releng:ship-it:action:mark-as-shipped
+    run-on-projects: []
+    shipping-phase: ship
 
 jobs:
-   fennec:
-      name: release-fennec_mark_as_shipped
-      shipping-product: fennec
+    fennec:
+        name: release-fennec_mark_as_shipped
+        shipping-product: fennec
 
-   firefox:
-      name: release-firefox_mark_as_shipped
-      shipping-product: firefox
+    firefox:
+        name: release-firefox_mark_as_shipped
+        shipping-product: firefox
 
-   devedition:
-      name: release-devedition_mark_as_shipped
-      shipping-product: devedition
+    devedition:
+        name: release-devedition_mark_as_shipped
+        shipping-product: devedition

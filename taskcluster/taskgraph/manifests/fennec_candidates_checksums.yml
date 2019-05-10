@@ -1,50 +1,53 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 s3_bucket_paths:
-  - pub/mobile/candidates
+    - pub/mobile/candidates
 default_locales:  # if given an empty locale, use these locales
-  - en-US
+    - en-US
 tasktype_map:  # Map task reference to task type.
-  checksums-signing: signing
+    checksums-signing: signing
 platform_names:
-  path_platform:
-    by-platform:
-      android-x86-nightly: 'android-x86'
-      android-x86_64-nightly: 'android-x86_64'
-      android-api-16-nightly: 'android-api-16'
-      android-aarch64-nightly: 'android-aarch64'
-  filename_platform:
-    by-platform:
-      android-x86-nightly: 'android-i386'
-      android-x86_64-nightly: 'android-x86_64'
-      android-api-16-nightly: 'android-arm'
-      android-aarch64-nightly: 'android-aarch64'
+    path_platform:
+        by-platform:
+            android-x86-nightly: 'android-x86'
+            android-x86_64-nightly: 'android-x86_64'
+            android-api-16-nightly: 'android-api-16'
+            android-aarch64-nightly: 'android-aarch64'
+    filename_platform:
+        by-platform:
+            android-x86-nightly: 'android-i386'
+            android-x86_64-nightly: 'android-x86_64'
+            android-api-16-nightly: 'android-arm'
+            android-aarch64-nightly: 'android-aarch64'
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
 # s3_bucket_paths + destinations + locale_prefix + pretty_name
 default: &default
-  from:
-    - checksums-signing
-  all_locales: true
-  description: "TO_BE_OVERRIDDEN"
-  locale_prefix:
-    by-locale:
-      default: ''
-      en-US: '${locale}/'
-  source_path_modifier: ''
-  destinations:
-    - ${version}-candidates/build${build_number}/beetmover-checksums/${path_platform}
-    - ${version}-candidates/build${build_number}/${path_platform}
+    from:
+        - checksums-signing
+    all_locales: true
+    description: "TO_BE_OVERRIDDEN"
+    locale_prefix:
+        by-locale:
+            default: ''
+            en-US: '${locale}/'
+    source_path_modifier: ''
+    destinations:
+        - ${version}-candidates/build${build_number}/beetmover-checksums/${path_platform}
+        - ${version}-candidates/build${build_number}/${path_platform}
 
 # Configuration for individual files. Extends 'default', above.
 mapping:
-  target.checksums:
-    <<: *default
-    description: "Checksums file containing size, hash, sha algorithm and filename"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.checksums.beet
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.checksums
-  target.checksums.asc:
-    <<: *default
-    description: "Detached signature for the checksums file"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.checksums.asc
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.checksums.asc
+    target.checksums:
+        <<: *default
+        description: "Checksums file containing size, hash, sha algorithm and filename"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.checksums.beet
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.checksums
+    target.checksums.asc:
+        <<: *default
+        description: "Detached signature for the checksums file"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.checksums.asc
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.checksums.asc
