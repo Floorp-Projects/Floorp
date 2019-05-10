@@ -25,7 +25,7 @@ var columns_hiertree =
 // expanded. The tree should only display four rows at a time. If editable,
 // the cell at row 1 and column 0 must be editable, and the cell at row 2 and
 // column 1 must not be editable.
-function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
+async function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
   // Stop keystrokes that aren't handled by the tree from leaking out and
   // scrolling the main Mochitests window!
   function preventDefault(event) {
@@ -48,6 +48,7 @@ function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
 
   // note: the functions below should be in this order due to changes made in later tests
 
+  await testtag_tree_treecolpicker(tree, columnInfo, testid);
   testtag_tree_columns(tree, columnInfo, testid);
   testtag_tree_TreeSelection(tree, testid, multiple);
   testtag_tree_TreeSelection_UI(tree, testid, multiple);
@@ -118,6 +119,34 @@ function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
   document.removeEventListener("keypress", preventDefault);
 
   SimpleTest.finish();
+}
+
+async function testtag_tree_treecolpicker(tree, expectedColumns, testid) {
+  testid += " ";
+
+  async function showAndHideTreecolpicker() {
+    let treecolpicker = tree.querySelector("treecolpicker");
+    let treecolpickerMenupopup = treecolpicker.querySelector("menupopup");
+    await new Promise(resolve => {
+      treecolpickerMenupopup.addEventListener("popupshown", resolve, { once: true });
+      treecolpicker.click();
+    });
+    let menuitems = treecolpicker.querySelectorAll("menuitem");
+    // Ignore the last "Restore Column Order" menu in the count:
+    is(menuitems.length - 1, expectedColumns.length, testid + "Same number of columns");
+    for (var c = 0; c < expectedColumns.length; c++) {
+      is(menuitems[c].textContent, expectedColumns[c].label, testid + "treecolpicker menu matches");
+      ok(!menuitems[c].querySelector("label").hidden, testid + "label not hidden");
+    }
+    await new Promise(resolve => {
+      treecolpickerMenupopup.addEventListener("popuphidden", resolve, { once: true });
+      treecolpickerMenupopup.hidePopup();
+    });
+  }
+
+  // Regression test for Bug 1549931 (menuitem content being hidden upon second open)
+  await showAndHideTreecolpicker();
+  await showAndHideTreecolpicker();
 }
 
 function testtag_tree_columns(tree, expectedColumns, testid) {
