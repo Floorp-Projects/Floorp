@@ -498,6 +498,37 @@ static nsresult EnsureSettingsHasPrinterNameSet(
 #endif
 }
 
+static bool DocHasPrintCallbackCanvas(Document* aDoc, void* aData) {
+  if (!aDoc) {
+    return true;
+  }
+  Element* root = aDoc->GetRootElement();
+  if (!root) {
+    return true;
+  }
+  RefPtr<nsContentList> canvases =
+      NS_GetContentList(root, kNameSpaceID_XHTML, NS_LITERAL_STRING("canvas"));
+  uint32_t canvasCount = canvases->Length(true);
+  for (uint32_t i = 0; i < canvasCount; ++i) {
+    HTMLCanvasElement* canvas =
+        HTMLCanvasElement::FromNodeOrNull(canvases->Item(i, false));
+    if (canvas && canvas->GetMozPrintCallback()) {
+      // This subdocument has a print callback. Set result and return false to
+      // stop iteration.
+      *static_cast<bool*>(aData) = true;
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool AnySubdocHasPrintCallbackCanvas(Document* aDoc) {
+  bool result = false;
+  aDoc->EnumerateSubDocuments(&DocHasPrintCallbackCanvas,
+                              static_cast<void*>(&result));
+  return result;
+}
+
 //-------------------------------------------------------
 
 NS_IMPL_ISUPPORTS(nsPrintJob, nsIWebProgressListener, nsISupportsWeakReference,
@@ -549,6 +580,23 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
   // we need to know about the original document should be checked and stored
   // here instead.
   mOriginalDoc = aOriginalDoc;
+
+  // Anything state that we need from aOriginalDoc must be fetched and stored
+  // here, since the document that the user selected to print may mutate
+  // across consecutive PrintPreview() calls.
+
+  nsCOMPtr<nsIDocShellTreeOwner> owner;
+  aDocShell->GetTreeOwner(getter_AddRefs(owner));
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_GetInterface(owner);
+  if (browserChrome) {
+    browserChrome->IsWindowModal(&mIsForModalWindow);
+  }
+
+  bool hasMozPrintCallback = false;
+  DocHasPrintCallbackCanvas(aOriginalDoc,
+                            static_cast<void*>(&hasMozPrintCallback));
+  mHasMozPrintCallback =
+      hasMozPrintCallback || AnySubdocHasPrintCallbackCanvas(aOriginalDoc);
 
   return NS_OK;
 }
@@ -1215,22 +1263,14 @@ void nsPrintJob::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify) {
     nsCOMPtr<nsIPrintingPromptService> printPromptService(
         do_GetService(kPrintingPromptService));
     if (printPromptService) {
-      nsPIDOMWindowOuter* domWin = mOriginalDoc->GetWindow();
-      if (!domWin) return;
-
-      nsCOMPtr<nsIDocShell> docShell = domWin->GetDocShell();
-      if (!docShell) return;
-      nsCOMPtr<nsIDocShellTreeOwner> owner;
-      docShell->GetTreeOwner(getter_AddRefs(owner));
-      nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_GetInterface(owner);
-      if (!browserChrome) return;
-      bool isModal = true;
-      browserChrome->IsWindowModal(&isModal);
-      if (isModal) {
+      if (mIsForModalWindow) {
         // Showing a print progress dialog when printing a modal window
         // isn't supported. See bug 301560.
         return;
       }
+
+      nsPIDOMWindowOuter* domWin = mOriginalDoc->GetWindow();
+      if (!domWin) return;
 
       nsCOMPtr<nsIWebProgressListener> printProgressListener;
 
@@ -2578,53 +2618,6 @@ void nsPrintJob::EllipseLongString(nsAString& aStr, const uint32_t aLen,
       aStr.AppendLiteral("...");
     }
   }
-}
-
-static bool DocHasPrintCallbackCanvas(Document* aDoc, void* aData) {
-  if (!aDoc) {
-    return true;
-  }
-  Element* root = aDoc->GetRootElement();
-  if (!root) {
-    return true;
-  }
-  RefPtr<nsContentList> canvases =
-      NS_GetContentList(root, kNameSpaceID_XHTML, NS_LITERAL_STRING("canvas"));
-  uint32_t canvasCount = canvases->Length(true);
-  for (uint32_t i = 0; i < canvasCount; ++i) {
-    HTMLCanvasElement* canvas =
-        HTMLCanvasElement::FromNodeOrNull(canvases->Item(i, false));
-    if (canvas && canvas->GetMozPrintCallback()) {
-      // This subdocument has a print callback. Set result and return false to
-      // stop iteration.
-      *static_cast<bool*>(aData) = true;
-      return false;
-    }
-  }
-  return true;
-}
-
-static bool DocHasPrintCallbackCanvas(Document* aDoc) {
-  bool result = false;
-  aDoc->EnumerateSubDocuments(&DocHasPrintCallbackCanvas,
-                              static_cast<void*>(&result));
-  return result;
-}
-
-/**
- * Checks to see if the document this print engine is associated with has any
- * canvases that have a mozPrintCallback.
- * https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement#Properties
- */
-bool nsPrintJob::HasPrintCallbackCanvas() {
-  if (!mOriginalDoc) {
-    return false;
-  }
-  // First check this mOriginalDoc.
-  bool result = false;
-  DocHasPrintCallbackCanvas(mOriginalDoc, static_cast<void*>(&result));
-  // Also check the sub documents.
-  return result || DocHasPrintCallbackCanvas(mOriginalDoc);
 }
 
 //-------------------------------------------------------
