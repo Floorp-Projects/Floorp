@@ -32,11 +32,6 @@ const test = new SearchConfigTest({
       },
     }],
   },
-  domains: {
-    "bing.com": {
-      included: [{}],
-    },
-  },
 });
 
 add_task(async function setup() {
