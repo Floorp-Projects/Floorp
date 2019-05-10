@@ -718,6 +718,7 @@ html|input.urlbar-input {
   height: auto;
 }
 
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .ac-site-icon,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-site-icon {
   margin-inline-start: 0;
   display: initial;

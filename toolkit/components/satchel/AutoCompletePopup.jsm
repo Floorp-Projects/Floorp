@@ -36,8 +36,9 @@ var AutoCompleteResultView = {
   },
 
   getLabelAt(index) {
-    // Unused by richlist autocomplete - see getCommentAt.
-    return "";
+    // Backwardly-used by richlist autocomplete - see getCommentAt.
+    // The label is used for secondary information.
+    return this.results[index].comment;
   },
 
   getCommentAt(index) {
