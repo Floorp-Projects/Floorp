@@ -233,10 +233,6 @@ class nsPrintJob final : public nsIObserver,
   bool GetIsPrintPreview() { return mIsDoingPrintPreview; }
   bool GetIsCreatingPrintPreview() { return mIsCreatingPrintPreview; }
 
-  void SetDisallowSelectionPrint(bool aDisallowSelectionPrint) {
-    mDisallowSelectionPrint = aDisallowSelectionPrint;
-  }
-
  private:
   nsPrintJob& operator=(const nsPrintJob& aOther) = delete;
 
