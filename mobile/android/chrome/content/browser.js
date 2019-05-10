@@ -296,6 +296,26 @@ function resolveGeckoURI(aURI) {
   return aURI;
 }
 
+XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
+  Components.Constructor(
+    "@mozilla.org/referrer-info;1",
+    "nsIReferrerInfo",
+    "init"));
+
+function createReferrerInfo(aReferrer) {
+  let referrerUri;
+  try {
+    referrerUri = Services.io.newURI(aReferrer);
+  } catch (ignored) {
+  }
+
+  return new ReferrerInfo(
+    Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    true,
+    referrerUri
+  );
+}
+
 /**
  * Cache of commonly used string bundles.
  */
@@ -1179,7 +1199,7 @@ var BrowserApp = {
 
     let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     let postData = ("postData" in aParams && aParams.postData) ? aParams.postData : null;
-    let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
+    let referrerInfo = "referrerURI" in aParams ? createReferrerInfo(aParams.referrerURI) : null;
     let charset = "charset" in aParams ? aParams.charset : null;
 
     let tab = this.getTabForBrowser(aBrowser);
@@ -1193,7 +1213,7 @@ var BrowserApp = {
     try {
       aBrowser.loadURI(aURI, {
         flags,
-        referrerURI,
+        referrerInfo,
         charset,
         postData,
         triggeringPrincipal,
@@ -3465,7 +3485,7 @@ nsBrowserAccess.prototype = {
     if (aURI && browser) {
       browser.loadURI(aURI.spec, {
         flags: loadflags,
-        referrerURI: referrer,
+        referrerInfo: createReferrerInfo(referrer),
         triggeringPrincipal: aTriggeringPrincipal,
       });
     }
@@ -3759,7 +3779,7 @@ Tab.prototype = {
       }
 
       let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
-      let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
+      let referrerInfo = "referrerURI" in aParams ? createReferrerInfo(aParams.referrerURI) : null;
       let charset = "charset" in aParams ? aParams.charset : null;
 
       // The search term the user entered to load the current URL
@@ -3769,7 +3789,7 @@ Tab.prototype = {
       try {
         this.browser.loadURI(aURL, {
           flags,
-          referrerURI,
+          referrerInfo,
           charset,
           postData,
           triggeringPrincipal: aParams.triggeringPrincipal,
