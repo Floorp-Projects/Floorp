@@ -189,8 +189,11 @@ LightweightThemeConsumer.prototype = {
     this._lastData = themeData;
 
     let theme = themeData.theme;
-    if (Object.keys(themeData.darkTheme).length && this.darkMode) {
+    if (themeData.darkTheme && this.darkMode) {
       theme = themeData.darkTheme;
+    }
+    if (!theme) {
+      theme = { id: DEFAULT_THEME_ID };
     }
 
     let active = this._active = Object.keys(theme).length;
@@ -203,6 +206,8 @@ LightweightThemeConsumer.prototype = {
       root.removeAttribute("lwtheme-image");
     }
 
+    this._setExperiment(active, themeData.experiment, theme.experimental);
+
     if (theme.headerImage) {
       this._doc.mozSetImageElement("lwt-header-image", theme.headerImage);
       root.style.setProperty("--lwt-header-image", "-moz-element(#lwt-header-image)");
@@ -213,15 +218,14 @@ LightweightThemeConsumer.prototype = {
 
     _setImage(root, active, "--lwt-additional-images", theme.additionalBackgrounds);
     _setProperties(root, active, theme);
-    this._setExperiment(active, themeData.experiment, theme.experimental);
 
-    if (active) {
+    if (theme.id != DEFAULT_THEME_ID || this.darkMode) {
       root.setAttribute("lwtheme", "true");
     } else {
       root.removeAttribute("lwtheme");
       root.removeAttribute("lwthemetextcolor");
     }
-    if (themeData.id == DEFAULT_THEME_ID && this.darkMode) {
+    if (theme.id == DEFAULT_THEME_ID && this.darkMode) {
       root.setAttribute("lwt-default-theme-in-dark-mode", "true");
     } else {
       root.removeAttribute("lwt-default-theme-in-dark-mode");
