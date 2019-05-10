@@ -1,5 +1,4 @@
 button {
-  color: inherit;
   background-color: transparent;
   background-image: var(--icon);
   background-position: 16px center;
@@ -36,6 +35,6 @@ button:not([disabled]):hover {
   background-color: var(--in-content-button-background);
 }
 
-button:hover:active {
+button:not([disabled]):hover:active {
   background-color: var(--in-content-button-background-hover);
 }
