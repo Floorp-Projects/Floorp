@@ -264,17 +264,17 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
         return false;
       }
 
-      wr::LayoutVector2D offset = {(float)shadow.mOffset.x,
-                                   (float)shadow.mOffset.y};
-      float radius = stdDev.width;
       Color color = shadow.mColor;
       if (!primNeedsSrgb) {
         color = Color(gsRGBToLinearRGBMap[uint8_t(color.r * 255)],
                       gsRGBToLinearRGBMap[uint8_t(color.g * 255)],
                       gsRGBToLinearRGBMap[uint8_t(color.b * 255)], color.a);
       }
-      wr::FilterOp filterOp = wr::FilterOp::DropShadow(
-          offset, radius, wr::ToColorF(ToDeviceColor(color)));
+      wr::Shadow wrShadow;
+      wrShadow.offset = {(float)shadow.mOffset.x, (float)shadow.mOffset.y};
+      wrShadow.color = wr::ToColorF(ToDeviceColor(color));
+      wrShadow.blur_radius = stdDev.width;
+      wr::FilterOp filterOp = wr::FilterOp::DropShadow(wrShadow);
 
       aWrFilters.filters.AppendElement(filterOp);
     } else if (attr.is<ComponentTransferAttributes>()) {

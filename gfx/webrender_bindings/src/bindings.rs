@@ -2662,12 +2662,14 @@ pub extern "C" fn wr_dp_push_shadow(state: &mut WrState,
                                     _clip: LayoutRect,
                                     _is_backface_visible: bool,
                                     parent: &WrSpaceAndClipChain,
-                                    shadow: Shadow) {
+                                    shadow: Shadow,
+                                    should_inflate: bool) {
     debug_assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder.dl_builder.push_shadow(
         &parent.to_webrender(state.pipeline_id),
         shadow.into(),
+        should_inflate,
     );
 }
 
