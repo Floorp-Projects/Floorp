@@ -14,10 +14,36 @@ const char* FeatureStatusToString(FeatureStatus aStatus) {
       return "unused";
     case FeatureStatus::Unavailable:
       return "unavailable";
+    case FeatureStatus::UnavailableInSafeMode:
+      return "unavailable-in-safe-mode";
+    case FeatureStatus::UnavailableNoGpuProcess:
+      return "unavailable-no-gpu-process";
+    case FeatureStatus::UnavailableNoHwCompositing:
+      return "unavailable-no-hw-compositing";
+    case FeatureStatus::UnavailableNotBuilt:
+      return "unavailable-not-built";
+    case FeatureStatus::UnavailableNoAngle:
+      return "unavailable-no-angle";
     case FeatureStatus::CrashedInHandler:
       return "crashed";
     case FeatureStatus::Blocked:
       return "blocked";
+    case FeatureStatus::BlockedDeviceUnknown:
+      return "blocked-device-unknown";
+    case FeatureStatus::BlockedDeviceTooOld:
+      return "blocked-device-too-old";
+    case FeatureStatus::BlockedVendorUnsupported:
+      return "blocked-vendor-unsupported";
+    case FeatureStatus::BlockedHasBattery:
+      return "blocked-has-battery";
+    case FeatureStatus::BlockedScreenTooLarge:
+      return "blocked-screen-too-large";
+    case FeatureStatus::BlockedScreenUnknown:
+      return "blocked-screen-unknown";
+    case FeatureStatus::BlockedNoGfxInfo:
+      return "blocked-no-gfx-info";
+    case FeatureStatus::BlockedOverride:
+      return "blocked-override";
     case FeatureStatus::Blacklisted:
       return "blacklisted";
     case FeatureStatus::OptIn:

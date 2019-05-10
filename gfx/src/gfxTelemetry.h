@@ -19,6 +19,11 @@ enum class FeatureStatus {
   // This feature is unavailable due to Safe Mode, not being included with
   // the operating system, or a dependent feature being disabled.
   Unavailable,
+  UnavailableInSafeMode,
+  UnavailableNoGpuProcess,
+  UnavailableNoHwCompositing,
+  UnavailableNotBuilt,
+  UnavailableNoAngle,
 
   // This feature crashed immediately when we tried to initialize it, but we
   // were able to recover via SEH (or something similar).
@@ -27,6 +32,14 @@ enum class FeatureStatus {
   // This feature was blocked for reasons outside the blacklist, such as a
   // runtime test failing.
   Blocked,
+  BlockedDeviceUnknown,
+  BlockedDeviceTooOld,
+  BlockedVendorUnsupported,
+  BlockedHasBattery,
+  BlockedScreenTooLarge,
+  BlockedScreenUnknown,
+  BlockedNoGfxInfo,
+  BlockedOverride,
 
   // This feature has been blocked by the graphics blacklist.
   Blacklisted,

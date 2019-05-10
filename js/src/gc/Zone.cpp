@@ -526,6 +526,17 @@ void MemoryTracker::adopt(MemoryTracker& other) {
 
 #ifdef DEBUG
 
+static const char* MemoryUseName(MemoryUse use) {
+  switch (use) {
+#define DEFINE_CASE(Name) \
+    case MemoryUse::Name: return #Name;
+JS_FOR_EACH_MEMORY_USE(DEFINE_CASE)
+#undef DEFINE_CASE
+  }
+
+  MOZ_CRASH("Unknown memory use");
+}
+
 MemoryTracker::MemoryTracker() : mutex(mutexid::MemoryTracker) {}
 
 MemoryTracker::~MemoryTracker() {
@@ -541,8 +552,9 @@ MemoryTracker::~MemoryTracker() {
 
   fprintf(stderr, "Missing calls to JS::RemoveAssociatedMemory:\n");
   for (auto r = map.all(); !r.empty(); r.popFront()) {
-    fprintf(stderr, "  %p 0x%zx %u\n", r.front().key().cell,
-            r.front().value(), unsigned(r.front().key().use));
+    fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell,
+            r.front().value(),
+            MemoryUseName(r.front().key().use));
   }
 
   MOZ_CRASH();
@@ -557,8 +569,8 @@ void MemoryTracker::trackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   AutoEnterOOMUnsafeRegion oomUnsafe;
   auto ptr = map.lookupForAdd(key);
   if (ptr) {
-    MOZ_CRASH_UNSAFE_PRINTF("Association already present: %p 0x%zx %u", cell,
-                            nbytes, unsigned(use));
+    MOZ_CRASH_UNSAFE_PRINTF("Association already present: %p 0x%zx %s", cell,
+                            nbytes, MemoryUseName(use));
   }
 
   if (!map.add(ptr, key, nbytes)) {
@@ -574,14 +586,14 @@ void MemoryTracker::untrackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   Key key{cell, use};
   auto ptr = map.lookup(key);
   if (!ptr) {
-    MOZ_CRASH_UNSAFE_PRINTF("Association not found: %p 0x%x %u", cell,
-                            unsigned(nbytes), unsigned(use));
+    MOZ_CRASH_UNSAFE_PRINTF("Association not found: %p 0x%x %s", cell,
+                            unsigned(nbytes), MemoryUseName(use));
   }
   if (ptr->value() != nbytes) {
     MOZ_CRASH_UNSAFE_PRINTF(
-        "Association for %p %u has different size: "
+        "Association for %p %s has different size: "
         "expected 0x%zx but got 0x%zx",
-        cell, unsigned(use), ptr->value(), nbytes);
+        cell, MemoryUseName(use), ptr->value(), nbytes);
   }
   map.remove(ptr);
 }

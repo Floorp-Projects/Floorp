@@ -573,6 +573,14 @@ JSFlatString* JSRope::flattenInternal(JSContext* maybecx) {
       str->setNonInlineChars(wholeChars);
       uint32_t left_len = left.length();
       pos = wholeChars + left_len;
+
+      // Remove memory association for left node we're about to make into a
+      // dependent string.
+      if (left.isTenured()) {
+        RemoveCellMemory(&left, left.allocSize(),
+                         MemoryUse::StringContents);
+      }
+
       if (IsSame<CharT, char16_t>::value) {
         left.setLengthAndFlags(left_len, DEPENDENT_FLAGS);
       } else {
@@ -655,6 +663,12 @@ finish_node : {
     }
     str->setNonInlineChars(wholeChars);
     str->d.s.u3.capacity = wholeCapacity;
+
+    if (str->isTenured()) {
+      AddCellMemory(str, str->asFlat().allocSize(),
+                    MemoryUse::StringContents);
+    }
+
     return &this->asFlat();
   }
   uintptr_t flattenData;
@@ -871,6 +885,8 @@ JSFlatString* JSDependentString::undependInternal(JSContext* cx) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
+  } else {
+    AddCellMemory(this, (n + 1) * sizeof(CharT), MemoryUse::StringContents);
   }
 
   AutoCheckCannotGC nogc;
@@ -1450,13 +1466,6 @@ JSFlatString* JSExternalString::ensureFlat(JSContext* cx) {
     return nullptr;
   }
 
-  if (!isTenured()) {
-    if (!cx->runtime()->gc.nursery().registerMallocedBuffer(s.get())) {
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-  }
-
   // Copy the chars before finalizing the string.
   {
     AutoCheckCannotGC nogc;
@@ -1465,6 +1474,10 @@ JSFlatString* JSExternalString::ensureFlat(JSContext* cx) {
 
   // Release the external chars.
   finalize(cx->runtime()->defaultFreeOp());
+
+  MOZ_ASSERT(isTenured());
+  AddCellMemory(this, (n + 1) * sizeof(char16_t),
+                MemoryUse::StringContents);
 
   // Transform the string into a non-external, flat string. Note that the
   // resulting string will still be in an AllocKind::EXTERNAL_STRING arena,
@@ -1582,6 +1595,9 @@ static JSFlatString* NewStringDeflated(JSContext* cx, const char16_t* s,
 
   auto news = cx->make_pod_array<Latin1Char>(n + 1, js::StringBufferArena);
   if (!news) {
+    if (!allowGC) {
+      cx->recoverFromOutOfMemory();
+    }
     return nullptr;
   }
 
