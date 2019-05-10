@@ -22,11 +22,6 @@ const test = new SearchConfigTest({
       },
     }],
   },
-  domains: {
-    "baidu.com": {
-      included: [{}],
-    },
-  },
 });
 
 add_task(async function setup() {

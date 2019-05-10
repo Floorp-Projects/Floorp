@@ -24,38 +24,6 @@ const test = new SearchConfigTest({
       },
     }],
   },
-  domains: {
-    "yandex.az": {
-      included: [{
-        locales: { matches: ["az"] },
-      }],
-    },
-    "yandex.com": {
-      included: [{
-        locales: { startsWith: ["en"] },
-      }],
-    },
-    "yandex.ru": {
-      included: [{
-        locales: { matches: ["ru"] },
-      }],
-    },
-    "yandex.by": {
-      included: [{
-        locales: { matches: ["be"] },
-      }],
-    },
-    "yandex.kz": {
-      included: [{
-        locales: { matches: ["kk"] },
-      }],
-    },
-    "yandex.com.tr": {
-      included: [{
-        locales: { matches: ["tr"] },
-      }],
-    },
-  },
 });
 
 add_task(async function setup() {
