@@ -286,7 +286,7 @@ const TEST_GLOBAL = {
   },
   Sampling: {
     ratioSample(seed, ratios) {
-      return 0;
+      return Promise.resolve(0);
     },
   },
 };

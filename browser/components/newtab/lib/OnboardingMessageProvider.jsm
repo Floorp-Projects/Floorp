@@ -485,6 +485,16 @@ const OnboardingMessageProvider = {
         } catch (e) {
           continue;
         }
+
+        // We know we want to show this message, so translate message strings
+        const [primary_button_string, title_string, text_string] = await L10N.formatMessages([
+          {id: msg.content.primary_button.label.string_id},
+          {id: msg.content.title.string_id},
+          {id: msg.content.text.string_id, args: msg.content.text.args},
+        ]);
+        translatedMessage.content.primary_button.label = primary_button_string.value;
+        translatedMessage.content.title = title_string.value;
+        translatedMessage.content.text = text_string.value;
       }
 
       // Translate any secondary buttons separately

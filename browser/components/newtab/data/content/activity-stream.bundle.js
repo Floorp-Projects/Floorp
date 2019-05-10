@@ -2996,6 +2996,7 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
     this.state = {
       emailInput: "",
       overlayRemoved: false,
+      deviceId: "",
       flowId: "",
       flowBeginTime: 0
     };
@@ -3013,10 +3014,12 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
 
         if (response.status === 200) {
           const {
+            deviceId,
             flowId,
             flowBeginTime
           } = await response.json();
           this.setState({
+            deviceId,
             flowId,
             flowBeginTime
           });
@@ -3213,6 +3216,10 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
       type: "hidden",
       value: "trailhead-control"
     }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+      name: "device_id",
+      type: "hidden",
+      value: this.state.deviceId
+    }), react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
       name: "flow_id",
       type: "hidden",
       value: this.state.flowId
@@ -3310,10 +3317,12 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       isModalOpen: true,
       showCardPanel: true,
       showCards: false,
+      // The params below are for FxA metrics
+      deviceId: "",
       flowId: "",
       flowBeginTime: 0
     };
-    this.didFetch = false;
+    this.fxaMetricsInitialized = false;
   }
 
   get dialog() {
@@ -3327,9 +3336,9 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       link.rel = "localization";
     });
 
-    if (this.props.fxaEndpoint && !this.didFetch) {
+    if (this.props.fxaEndpoint && !this.fxaMetricsInitialized) {
       try {
-        this.didFetch = true;
+        this.fxaMetricsInitialized = true;
         const url = new URL(`${this.props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
         this.addUtmParams(url);
         const response = await fetch(url, {
@@ -3338,10 +3347,12 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
 
         if (response.status === 200) {
           const {
+            deviceId,
             flowId,
             flowBeginTime
           } = await response.json();
           this.setState({
+            deviceId,
             flowId,
             flowBeginTime
           });
@@ -3508,6 +3519,7 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       this.addUtmParams(url, true);
 
       if (action.addFlowParams) {
+        url.searchParams.append("device_id", this.state.deviceId);
         url.searchParams.append("flow_id", this.state.flowId);
         url.searchParams.append("flow_begin_time", this.state.flowBeginTime);
       }
@@ -3564,10 +3576,15 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       target: "_blank",
       rel: "noopener noreferrer"
     }, this.getStringValue(content.learn.text))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
+      role: "group",
+      "aria-labelledby": "joinFormHeader",
+      "aria-describedby": "joinFormBody",
       className: "trailheadForm"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", {
+      id: "joinFormHeader",
       "data-l10n-id": content.form.title.string_id
     }, this.getStringValue(content.form.title)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
+      id: "joinFormBody",
       "data-l10n-id": content.form.text.string_id
     }, this.getStringValue(content.form.text)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("form", {
       method: "get",
@@ -3603,6 +3620,10 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       name: "utm_term",
       type: "hidden",
       value: utm_term
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
+      name: "device_id",
+      type: "hidden",
+      value: this.state.deviceId
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", {
       name: "flow_id",
       type: "hidden",
@@ -7645,6 +7666,7 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
           source = this.reformatImageURL(baseSource, this.state.containerWidth, this.state.containerHeight);
           source2x = this.reformatImageURL(baseSource, this.state.containerWidth * 2, this.state.containerHeight * 2);
           img = external_React_default.a.createElement("img", {
+            crossOrigin: "anonymous",
             onError: this.onOptimizedImageError,
             src: source,
             srcSet: `${source2x} 2x`
@@ -7652,6 +7674,7 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
         }
       } else if (!this.state.nonOptimizedImageFailed) {
         img = external_React_default.a.createElement("img", {
+          crossOrigin: "anonymous",
           onError: this.onNonOptimizedImageError,
           src: this.props.source
         });

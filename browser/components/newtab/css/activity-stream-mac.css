@@ -1949,7 +1949,10 @@ main {
     .ds-column-10 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
     .ds-column-11 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
     .ds-column-12 .ds-card-grid.ds-card-grid-divisible-by-4 .title {
+      -webkit-box-orient: vertical;
+      display: -webkit-box;
       font-size: 15px;
+      -webkit-line-clamp: 3;
       line-height: 20px;
       max-height: 4em;
       overflow: hidden; }
@@ -1964,7 +1967,10 @@ main {
     line-height: 1.538;
     margin: 8px 0; }
   .ds-hero .excerpt {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
     font-size: 14px;
+    -webkit-line-clamp: 3;
     line-height: 20px;
     max-height: 4.28571em;
     overflow: hidden;
@@ -2033,7 +2039,10 @@ main {
       flex-direction: column;
       justify-content: space-between; }
       .ds-hero .wrapper .meta header {
+        -webkit-box-orient: vertical;
+        display: -webkit-box;
         font-size: 22px;
+        -webkit-line-clamp: 4;
         line-height: 28px;
         max-height: 5.09091em;
         overflow: hidden;
@@ -2153,7 +2162,10 @@ main {
         .ds-column-10 .ds-hero .wrapper .meta header,
         .ds-column-11 .ds-hero .wrapper .meta header,
         .ds-column-12 .ds-hero .wrapper .meta header {
+          -webkit-box-orient: vertical;
+          display: -webkit-box;
           font-size: 22px;
+          -webkit-line-clamp: 3;
           line-height: 28px;
           max-height: 3.81818em;
           overflow: hidden; }
@@ -2189,7 +2201,10 @@ main {
       .ds-column-10 .ds-hero .cards .ds-card .title,
       .ds-column-11 .ds-hero .cards .ds-card .title,
       .ds-column-12 .ds-hero .cards .ds-card .title {
+        -webkit-box-orient: vertical;
+        display: -webkit-box;
         font-size: 14px;
+        -webkit-line-clamp: 3;
         line-height: 20px;
         max-height: 4.28571em;
         overflow: hidden; }
@@ -2218,7 +2233,10 @@ main {
     line-height: 20px;
     position: relative; }
   .ds-list:not(.ds-list-full-width) .ds-list-item-title {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
     font-size: 14px;
+    -webkit-line-clamp: 3;
     line-height: 20px;
     max-height: 4.28571em;
     overflow: hidden; }
@@ -2332,7 +2350,10 @@ main {
   position: relative; }
 
 .ds-list-full-width .ds-list-item-title {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
   font-size: 17px;
+  -webkit-line-clamp: 3;
   line-height: 24px;
   max-height: 4.23529em;
   overflow: hidden; }
@@ -2359,7 +2380,10 @@ main {
     justify-content: space-between;
     height: 100%; }
   .ds-list-item .ds-list-item-excerpt {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
     font-size: 14px;
+    -webkit-line-clamp: 2;
     line-height: 20px;
     max-height: 2.85714em;
     overflow: hidden;
@@ -2371,7 +2395,10 @@ main {
     margin: 0; }
   .ds-list-item .ds-list-item-info,
   .ds-list-item .ds-list-item-context {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
     font-size: 14px;
+    -webkit-line-clamp: 1;
     line-height: 20px;
     max-height: 1.42857em;
     overflow: hidden;
@@ -2639,13 +2666,19 @@ main {
       flex-grow: 1;
       margin: 0 0 12px; }
     .ds-card .meta .title {
+      -webkit-box-orient: vertical;
+      display: -webkit-box;
       font-size: 17px;
+      -webkit-line-clamp: 3;
       line-height: 24px;
       max-height: 4.23529em;
       overflow: hidden;
       font-weight: 600; }
     .ds-card .meta .excerpt {
+      -webkit-box-orient: vertical;
+      display: -webkit-box;
       font-size: 14px;
+      -webkit-line-clamp: 3;
       line-height: 20px;
       max-height: 4.28571em;
       overflow: hidden; }
@@ -3979,7 +4012,7 @@ a.firstrun-link {
     text-align: center; }
 
 .inline-onboarding.activity-stream.welcome {
-  overflow: scroll; }
+  overflow-y: scroll; }
 
 .inline-onboarding .modalOverlayInner {
   position: absolute; }
