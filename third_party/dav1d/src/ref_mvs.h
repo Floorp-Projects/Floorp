@@ -32,38 +32,35 @@ typedef struct candidate_mv {
 typedef struct AV1_COMMON AV1_COMMON;
 
 // call once per frame thread
-AV1_COMMON *av1_alloc_ref_mv_common(void);
-void av1_free_ref_mv_common(AV1_COMMON *cm);
+AV1_COMMON *dav1d_alloc_ref_mv_common(void);
+void dav1d_free_ref_mv_common(AV1_COMMON *cm);
 
 // call once per frame
-int av1_init_ref_mv_common(AV1_COMMON *cm,
-                           int w8, int h8,
-                           ptrdiff_t stride,
-                           int allow_sb128,
-                           refmvs *cur,
-                           refmvs *ref_mvs[7],
-                           unsigned cur_poc,
-                           const unsigned ref_poc[7],
-                           const unsigned ref_ref_poc[7][7],
-                           const Dav1dWarpedMotionParams gmv[7],
-                           int allow_hp, int force_int_mv,
-                           int allow_ref_frame_mvs, int order_hint);
+int dav1d_init_ref_mv_common(AV1_COMMON *cm, int w8, int h8,
+                             ptrdiff_t stride, int allow_sb128,
+                             refmvs *cur, refmvs *ref_mvs[7],
+                             unsigned cur_poc,
+                             const unsigned ref_poc[7],
+                             const unsigned ref_ref_poc[7][7],
+                             const Dav1dWarpedMotionParams gmv[7],
+                             int allow_hp, int force_int_mv,
+                             int allow_ref_frame_mvs, int order_hint);
 
 // call for start of each sbrow per tile
-void av1_init_ref_mv_tile_row(AV1_COMMON *cm,
-                              int tile_col_start4, int tile_col_end4,
-                              int row_start4, int row_end4);
+void dav1d_init_ref_mv_tile_row(AV1_COMMON *cm,
+                                int tile_col_start4, int tile_col_end4,
+                                int row_start4, int row_end4);
 
 // call for each block
-void av1_find_ref_mvs(candidate_mv *mvstack, int *cnt, mv (*mvlist)[2],
-                      int *ctx, int refidx[2], int w4, int h4,
-                      enum BlockSize bs, enum BlockPartition bp,
-                      int by4, int bx4, int tile_col_start4,
-                      int tile_col_end4, int tile_row_start4,
-                      int tile_row_end4, AV1_COMMON *cm);
+void dav1d_find_ref_mvs(candidate_mv *mvstack, int *cnt, mv (*mvlist)[2],
+                        int *ctx, int refidx[2], int w4, int h4,
+                        enum BlockSize bs, enum BlockPartition bp,
+                        int by4, int bx4, int tile_col_start4,
+                        int tile_col_end4, int tile_row_start4,
+                        int tile_row_end4, AV1_COMMON *cm);
 
-extern const uint8_t bs_to_sbtype[];
-extern const uint8_t sbtype_to_bs[];
+extern const uint8_t dav1d_bs_to_sbtype[];
+extern const uint8_t dav1d_sbtype_to_bs[];
 static inline void splat_oneref_mv(refmvs *r, const ptrdiff_t stride,
                                    const int by4, const int bx4,
                                    const enum BlockSize bs,
@@ -78,7 +75,7 @@ static inline void splat_oneref_mv(refmvs *r, const ptrdiff_t stride,
     const refmvs tmpl = (refmvs) {
         .ref = { ref + 1, is_interintra ? 0 : -1 },
         .mv = { mv },
-        .sb_type = bs_to_sbtype[bs],
+        .sb_type = dav1d_bs_to_sbtype[bs],
         .mode = N_INTRA_PRED_MODES + mode,
     };
     do {
@@ -99,7 +96,7 @@ static inline void splat_intrabc_mv(refmvs *r, const ptrdiff_t stride,
     const refmvs tmpl = (refmvs) {
         .ref = { 0, -1 },
         .mv = { mv },
-        .sb_type = bs_to_sbtype[bs],
+        .sb_type = dav1d_bs_to_sbtype[bs],
         .mode = DC_PRED,
     };
     do {
@@ -123,7 +120,7 @@ static inline void splat_tworef_mv(refmvs *r, const ptrdiff_t stride,
     const refmvs tmpl = (refmvs) {
         .ref = { ref1 + 1, ref2 + 1 },
         .mv = { mv1, mv2 },
-        .sb_type = bs_to_sbtype[bs],
+        .sb_type = dav1d_bs_to_sbtype[bs],
         .mode = N_INTRA_PRED_MODES + N_INTER_PRED_MODES + mode,
     };
     do {
@@ -149,7 +146,7 @@ static inline void splat_intraref(refmvs *r, const ptrdiff_t stride,
             r[x] = (refmvs) {
                 .ref = { 0, -1 },
                 .mv = { [0] = { .y = -0x8000, .x = -0x8000 }, },
-                .sb_type = bs_to_sbtype[bs],
+                .sb_type = dav1d_bs_to_sbtype[bs],
                 .mode = mode,
             };
         r += stride;

@@ -10,9 +10,9 @@ style-check:
         - debian
         - amd64
     script:
-        - git grep -n -P "\t|\r| $" -- . ':(exclude)*/compat/*' && exit 1
-        - git grep -n -i "david" -- . ':(exclude)THANKS.md' ':(exclude).gitlab-ci.yml' && exit 1
-        - for i in $(git ls-files -- . ':(exclude)*/compat/*'); do
+        - git grep -I -n -P "\t|\r| $" -- . ':(exclude)*/compat/*' && exit 1
+        - git grep -I -n -i "david" -- . ':(exclude)THANKS.md' ':(exclude).gitlab-ci.yml' && exit 1
+        - git grep -I -l -z "" -- . ':(exclude)*/compat/*' | while IFS= read -r -d '' i; do
               if [ -n "$(tail -c 1 "$i")" ]; then
                   echo "No newline at end of $i";
                   exit 1;
@@ -55,6 +55,7 @@ build-debian-static:
         - meson build --buildtype release --default-library static --werror
         - ninja -C build
         - cd build && meson test -v
+        - nm -A -g src/libdav1d.a | grep " [ABCDGRST] " | (! grep -v " _*dav1d_")
 
 build-debian32:
     image: registry.videolan.org:5000/dav1d-debian-unstable:20181218135732
@@ -86,6 +87,7 @@ build-win32:
         - ninja -C build
         - ninja -C build install
         - cd build && meson test -v
+        - i686-w64-mingw32-nm -A -g src/libdav1d.a | grep " [ABCDGRST] " | (! grep -E -v " \.| _*dav1d_")
     artifacts:
         name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
         paths:
@@ -124,6 +126,7 @@ build-win64:
         - ninja -C build
         - ninja -C build install
         - cd build && meson test -v
+        - x86_64-w64-mingw32-nm -A -g src/libdav1d.a | grep " [ABCDGRST] " | (! grep -E -v " \.| _*dav1d_")
     artifacts:
         name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
         paths:
@@ -144,6 +147,7 @@ build-win-arm32:
                       --cross-file /opt/crossfiles/armv7-w64-mingw32.meson
                       -Ddefault_library=both
         - ninja -C build
+        - armv7-w64-mingw32-nm -A -g build/src/libdav1d.a | grep " [ABCDGRST] " | (! grep -E -v " \.| _*dav1d_")
 
 build-win-arm64:
     image: registry.videolan.org:5000/vlc-debian-llvm-mingw:20190218133533
@@ -160,6 +164,7 @@ build-win-arm64:
                       -Ddefault_library=both
         - ninja -C build
         - ninja -C build install
+        - aarch64-w64-mingw32-nm -A -g build/src/libdav1d.a | grep " [ABCDGRST] " | (! grep -E -v " \.| _*dav1d_")
     artifacts:
         name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
         paths:
@@ -266,6 +271,26 @@ test-debian:
         - test -d cache/dav1d-test-data.git || git clone --bare https://code.videolan.org/videolan/dav1d-test-data.git cache/dav1d-test-data.git
         - git clone cache/dav1d-test-data.git tests/dav1d-test-data
         - meson build --buildtype release -Dtestdata_tests=true -Dlogging=false
+        - ninja -C build
+        - cd build && time meson test -v
+    dependencies: []
+
+test-debian-unaligned-stack:
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20190215130514
+    stage: test
+    tags:
+        - debian
+        - amd64
+    cache:
+        key: testdata.git-20190215
+        paths:
+            - cache/dav1d-test-data.git/
+    script:
+        - test -d cache || mkdir cache
+        - test -d cache/dav1d-test-data.git && GIT_DIR=cache/dav1d-test-data.git git fetch --refmap=refs/heads/master:refs/heads/master origin master
+        - test -d cache/dav1d-test-data.git || git clone --bare https://code.videolan.org/videolan/dav1d-test-data.git cache/dav1d-test-data.git
+        - git clone cache/dav1d-test-data.git tests/dav1d-test-data
+        - meson build --buildtype release -Dtestdata_tests=true -Dlogging=false -Dstack_alignment=16
         - ninja -C build
         - cd build && time meson test -v
     dependencies: []

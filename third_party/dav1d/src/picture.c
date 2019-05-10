@@ -45,7 +45,7 @@
 #include "src/thread.h"
 #include "src/thread_task.h"
 
-int default_picture_allocator(Dav1dPicture *const p, void *cookie) {
+int dav1d_default_picture_alloc(Dav1dPicture *const p, void *const cookie) {
     assert(cookie == NULL);
     const int hbd = p->p.bpc > 8;
     const int aligned_w = (p->p.w + 127) & ~127;
@@ -62,7 +62,7 @@ int default_picture_allocator(Dav1dPicture *const p, void *cookie) {
     uint8_t *data = dav1d_alloc_aligned(pic_size + DAV1D_PICTURE_ALIGNMENT,
                                         DAV1D_PICTURE_ALIGNMENT);
     if (data == NULL) {
-        return -ENOMEM;
+        return DAV1D_ERR(ENOMEM);
     }
 
     p->data[0] = data;
@@ -76,7 +76,7 @@ int default_picture_allocator(Dav1dPicture *const p, void *cookie) {
     return 0;
 }
 
-void default_picture_release(Dav1dPicture *const p, void *cookie) {
+void dav1d_default_picture_release(Dav1dPicture *const p, void *const cookie) {
     assert(cookie == NULL);
 #ifndef NDEBUG /* safety check */
     assert(p->allocator_data == p->data[0]);
@@ -116,7 +116,7 @@ static int picture_alloc_with_edges(Dav1dContext *const c, Dav1dPicture *const p
 
     struct pic_ctx_context *pic_ctx = malloc(extra + sizeof(struct pic_ctx_context));
     if (pic_ctx == NULL) {
-        return -ENOMEM;
+        return DAV1D_ERR(ENOMEM);
     }
 
     p->p.w = w;
@@ -141,7 +141,7 @@ static int picture_alloc_with_edges(Dav1dContext *const c, Dav1dPicture *const p
         p_allocator->release_picture_callback(p, p_allocator->cookie);
         free(pic_ctx);
         dav1d_log(c, "Failed to wrap picture: %s\n", strerror(errno));
-        return -ENOMEM;
+        return DAV1D_ERR(ENOMEM);
     }
 
     p->seq_hdr_ref = seq_hdr_ref;

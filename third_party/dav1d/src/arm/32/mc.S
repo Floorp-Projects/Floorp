@@ -27,7 +27,7 @@
  */
 
 #include "src/arm/asm.S"
-#include "src/arm/32/util.S"
+#include "util.S"
 
 .macro avg dst0, dst1, t0, t1, t2, t3
         vld1.16         {\t0,\t1},   [r2, :128]!

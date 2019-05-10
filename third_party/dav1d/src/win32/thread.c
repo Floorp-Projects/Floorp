@@ -41,13 +41,15 @@ static unsigned __stdcall thread_entrypoint(void *const data) {
     return 0;
 }
 
-int dav1d_pthread_create(pthread_t *const thread, const void *const attr,
+int dav1d_pthread_create(pthread_t *const thread,
+                         const pthread_attr_t *const attr,
                          void *(*const func)(void*), void *const arg)
 {
+    const unsigned stack_size = attr ? attr->stack_size : 0;
     thread->func = func;
     thread->arg = arg;
-    thread->h = (HANDLE)_beginthreadex(NULL, 0, thread_entrypoint,
-                                       thread, 0, NULL);
+    thread->h = (HANDLE)_beginthreadex(NULL, stack_size, thread_entrypoint, thread,
+                                       STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
     return !thread->h;
 }
 

@@ -103,7 +103,13 @@ void checkasm_check_msac(void) {
     c.symbol_adapt8  = dav1d_msac_decode_symbol_adapt_c;
     c.symbol_adapt16 = dav1d_msac_decode_symbol_adapt_c;
 
-#if ARCH_X86_64 && HAVE_ASM
+#if ARCH_AARCH64 && HAVE_ASM
+    if (dav1d_get_cpu_flags() & DAV1D_ARM_CPU_FLAG_NEON) {
+        c.symbol_adapt4  = dav1d_msac_decode_symbol_adapt4_neon;
+        c.symbol_adapt8  = dav1d_msac_decode_symbol_adapt8_neon;
+        c.symbol_adapt16 = dav1d_msac_decode_symbol_adapt16_neon;
+    }
+#elif ARCH_X86_64 && HAVE_ASM
     if (dav1d_get_cpu_flags() & DAV1D_X86_CPU_FLAG_SSE2) {
         c.symbol_adapt4  = dav1d_msac_decode_symbol_adapt4_sse2;
         c.symbol_adapt8  = dav1d_msac_decode_symbol_adapt8_sse2;

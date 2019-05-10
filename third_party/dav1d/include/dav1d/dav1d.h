@@ -90,7 +90,7 @@ DAV1D_API void dav1d_default_settings(Dav1dSettings *s);
  * @note The context must be freed using dav1d_close() when decoding is
  *       finished.
  *
- * @return 0 on success, or < 0 (a negative errno code) on error.
+ * @return 0 on success, or < 0 (a negative DAV1D_ERR code) on error.
  */
 DAV1D_API int dav1d_open(Dav1dContext **c_out, const Dav1dSettings *s);
 
@@ -101,7 +101,7 @@ DAV1D_API int dav1d_open(Dav1dContext **c_out, const Dav1dSettings *s);
  * @param buf The data to be parser.
  * @param sz  Size of the data.
  *
- * @return 0 on success, or < 0 (a negative errno code) on error.
+ * @return 0 on success, or < 0 (a negative DAV1D_ERR code) on error.
  *
  * @note It is safe to feed this function data containing other OBUs than a
  *       Sequence Header, as they will simply be ignored. If there is more than
@@ -119,11 +119,11 @@ DAV1D_API int dav1d_parse_sequence_header(Dav1dSequenceHeader *out,
  *
  * @return
  *         0: Success, and the data was consumed.
- *   -EAGAIN: The data can't be consumed. dav1d_get_picture() should be called
- *            to get one or more frames before the function can consume new
- *            data.
- *   other negative errno codes: Error during decoding or because of invalid
- *                               passed-in arguments.
+ *  DAV1D_ERR(EAGAIN): The data can't be consumed. dav1d_get_picture() should
+ *                     be called to get one or more frames before the function
+ *                     can consume new data.
+ *  other negative DAV1D_ERR codes: Error during decoding or because of invalid
+ *                                  passed-in arguments.
  */
 DAV1D_API int dav1d_send_data(Dav1dContext *c, Dav1dData *in);
 
@@ -136,10 +136,10 @@ DAV1D_API int dav1d_send_data(Dav1dContext *c, Dav1dData *in);
  *
  * @return
  *         0: Success, and a frame is returned.
- *   -EAGAIN: Not enough data to output a frame. dav1d_send_data() should be
- *            called with new input.
- *   other negative errno codes: Error during decoding or because of invalid
- *                               passed-in arguments.
+ *  DAV1D_ERR(EAGAIN): Not enough data to output a frame. dav1d_send_data()
+ *                     should be called with new input.
+ *  other negative DAV1D_ERR codes: Error during decoding or because of invalid
+ *                                  passed-in arguments.
  *
  * @note To drain buffered frames from the decoder (i.e. on end of stream),
  *       call this function until it returns -EAGAIN.
