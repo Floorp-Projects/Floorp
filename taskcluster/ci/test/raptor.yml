@@ -1026,26 +1026,6 @@ raptor-speedometer-geckoview-power:
             - --host HOST_IP
             - --activity=GeckoViewActivity
 
-raptor-speedometer-geckoview-cpu:
-    description: "Raptor Speedometer CPU on Geckoview"
-    try-name: raptor-speedometer-geckoview-cpu
-    treeherder-symbol: Rap-Cpu(sp)
-    target: geckoview_example.apk
-    run-on-projects:
-        by-test-platform:
-            android-hw.*/pgo: ['try', 'mozilla-central']
-            android-hw-.*-aarch64/opt: ['try', 'mozilla-central']
-            android-hw-.*-api-16/opt: ['try']
-    tier: 2
-    max-run-time: 1800
-    mozharness:
-        extra-options:
-            - --test=raptor-speedometer
-            - --app=geckoview
-            - --binary=org.mozilla.geckoview_example
-            - --cpu-test
-            - --activity=GeckoViewActivity
-
 raptor-speedometer-fennec:
     description: "Raptor Speedometer on Fennec"
     try-name: raptor-speedometer-fennec
