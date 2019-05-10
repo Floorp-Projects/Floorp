@@ -170,6 +170,16 @@ IPCResult WindowGlobalParent::RecvDestroy() {
   if (!mIPCClosed) {
     RefPtr<BrowserParent> browserParent = GetRemoteTab();
     if (!browserParent || !browserParent->IsDestroyed()) {
+      // Make a copy so that we can avoid potential iterator invalidation when
+      // calling the user-provided Destroy() methods.
+      nsTArray<RefPtr<JSWindowActorParent>> windowActors(mWindowActors.Count());
+      for (auto iter = mWindowActors.Iter(); !iter.Done(); iter.Next()) {
+        windowActors.AppendElement(iter.UserData());
+      }
+
+      for (auto& windowActor : windowActors) {
+        windowActor->StartDestroy();
+      }
       Unused << Send__delete__(this);
     }
   }
@@ -299,7 +309,9 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   mWindowActors.SwapElements(windowActors);
   for (auto iter = windowActors.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->RejectPendingQueries();
+    iter.Data()->AfterDestroy();
   }
+  windowActors.Clear();
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
@@ -310,6 +322,7 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
 WindowGlobalParent::~WindowGlobalParent() {
   MOZ_ASSERT(!gWindowGlobalParentsById ||
              !gWindowGlobalParentsById->Contains(mInnerWindowId));
+  MOZ_ASSERT(!mWindowActors.Count());
 }
 
 JSObject* WindowGlobalParent::WrapObject(JSContext* aCx,
