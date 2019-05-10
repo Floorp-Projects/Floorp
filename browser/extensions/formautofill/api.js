@@ -130,8 +130,8 @@ this.formautofill = class extends ExtensionAPI {
     Services.mm.loadFrameScript("chrome://formautofill/content/FormAutofillFrameScript.js", true, true);
   }
 
-  onShutdown(reason) {
-    if (reason == "APP_SHUTDOWN") {
+  onShutdown(isAppShutdown) {
+    if (isAppShutdown) {
       return;
     }
 

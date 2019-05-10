@@ -88,14 +88,14 @@ this.sidebarAction = class extends ExtensionAPI {
     this.build();
   }
 
-  onShutdown(reason) {
+  onShutdown(isAppShutdown) {
     sidebarActionMap.delete(this.this);
 
     this.tabContext.shutdown();
 
     // Don't remove everything on app shutdown so session restore can handle
     // restoring open sidebars.
-    if (reason === "APP_SHUTDOWN") {
+    if (isAppShutdown) {
       return;
     }
 
