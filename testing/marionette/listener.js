@@ -707,7 +707,6 @@ function emitTouchEvent(type, touch) {
       [touch.radiusY],
       [touch.rotationAngle],
       [touch.force],
-      1,
       0);
 }
 

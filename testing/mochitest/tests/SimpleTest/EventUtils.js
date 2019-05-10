@@ -492,11 +492,11 @@ function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window)
     var modifiers = _parseModifiers(aEvent, aWindow);
 
     if (("type" in aEvent) && aEvent.type) {
-      defaultPrevented = utils.sendTouchEvent(aEvent.type, [id], [left], [top], [rx], [ry], [angle], [force], 1, modifiers);
+      defaultPrevented = utils.sendTouchEvent(aEvent.type, [id], [left], [top], [rx], [ry], [angle], [force], modifiers);
     }
     else {
-      utils.sendTouchEvent("touchstart", [id], [left], [top], [rx], [ry], [angle], [force], 1, modifiers);
-      utils.sendTouchEvent("touchend", [id], [left], [top], [rx], [ry], [angle], [force], 1, modifiers);
+      utils.sendTouchEvent("touchstart", [id], [left], [top], [rx], [ry], [angle], [force], modifiers);
+      utils.sendTouchEvent("touchend", [id], [left], [top], [rx], [ry], [angle], [force], modifiers);
     }
   }
   return defaultPrevented;
