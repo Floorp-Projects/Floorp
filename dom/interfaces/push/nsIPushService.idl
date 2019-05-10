@@ -24,9 +24,7 @@ interface nsIPushSubscription : nsISupports
   bool quotaApplies();
   bool isExpired();
 
-  void getKey(in AString name,
-              [optional] out uint32_t keyLen,
-              [array, size_is(keyLen), retval] out uint8_t key);
+  Array<uint8_t> getKey(in AString name);
 };
 
 /**
@@ -105,8 +103,7 @@ interface nsIPushService : nsISupports
    * message delivery requests, as described in draft-thomson-webpush-vapid.
    */
   void subscribeWithKey(in AString scope, in nsIPrincipal principal,
-                        in uint32_t keyLength,
-                        [const, array, size_is(keyLength)] in uint8_t key,
+                        in Array<uint8_t> key,
                         in nsIPushSubscriptionCallback callback);
 
   /**
