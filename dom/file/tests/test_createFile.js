@@ -1,4 +1,4 @@
-async function run_test() {
+add_task(async function() {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   do_get_profile();
@@ -28,4 +28,13 @@ async function run_test() {
 
   let b = await File.createFromNsIFile(unknownFile, { existenceCheck: false });
   ok(b.size == 0, "The size is 0 for unknown file");
-}
+
+  let c = await File.createFromNsIFile(existingFile, { existenceCheck: true });
+  ok(c.size != 0, "The size is correctly set");
+
+  let d = await File.createFromNsIFile(unknownFile, { existenceCheck: true }).then(_ => true, _ => false);
+  ok(d === false, "Exception thrown");
+
+  existingFile.remove(true);
+  ok(!existingFile.exists(), "exists.js doesn't exist anymore");
+});
