@@ -119,6 +119,8 @@ class BaselineICFallbackCode {
   }
 };
 
+enum class DebugTrapHandlerKind { Interpreter, Compiler, Count };
+
 typedef void (*EnterJitCode)(void* code, unsigned argc, Value* argv,
                              InterpreterFrame* fp, CalleeToken calleeToken,
                              JSObject* envChain, size_t numStackValues,
@@ -190,7 +192,9 @@ class JitRuntime {
   WriteOnceData<uint32_t> doubleToInt32ValueStubOffset_;
 
   // Thunk used by the debugger for breakpoint and step mode.
-  WriteOnceData<JitCode*> debugTrapHandler_;
+  mozilla::EnumeratedArray<DebugTrapHandlerKind, DebugTrapHandlerKind::Count,
+                           WriteOnceData<JitCode*>>
+      debugTrapHandlers_;
 
   // Thunk used to fix up on-stack recompile of baseline scripts.
   WriteOnceData<JitCode*> baselineDebugModeOSRHandler_;
@@ -264,7 +268,7 @@ class JitRuntime {
                               MIRType type);
   void generateMallocStub(MacroAssembler& masm);
   void generateFreeStub(MacroAssembler& masm);
-  JitCode* generateDebugTrapHandler(JSContext* cx);
+  JitCode* generateDebugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
   JitCode* generateBaselineDebugModeOSRHandler(
       JSContext* cx, uint32_t* noFrameRegPopOffsetOut);
 
@@ -326,7 +330,7 @@ class JitRuntime {
     return trampolineCode(tailCallFunctionWrapperOffsets_[size_t(funId)]);
   }
 
-  JitCode* debugTrapHandler(JSContext* cx);
+  JitCode* debugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
   JitCode* getBaselineDebugModeOSRHandler(JSContext* cx);
   void* getBaselineDebugModeOSRHandlerAddress(JSContext* cx, bool popFrameReg);
 

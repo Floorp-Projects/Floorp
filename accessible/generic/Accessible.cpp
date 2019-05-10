@@ -315,13 +315,19 @@ uint64_t Accessible::VisibilityState() const {
     return states::INVISIBLE;
   }
 
-  // Walk the parent frame chain to see if there's invisible parent or the frame
-  // is in background tab.
   if (!frame->StyleVisibility()->IsVisible()) return states::INVISIBLE;
+
+  // It's invisible if the presshell is hidden by a visibility:hidden element in
+  // an ancestor document.
+  if (frame->PresShell()->IsUnderHiddenEmbedderElement()) {
+    return states::INVISIBLE;
+  }
 
   // Offscreen state if the document's visibility state is not visible.
   if (Document()->IsHidden()) return states::OFFSCREEN;
 
+  // Walk the parent frame chain to see if the frame is in background tab or
+  // scrolled out.
   nsIFrame* curFrame = frame;
   do {
     nsView* view = curFrame->GetView();
@@ -366,8 +372,6 @@ uint64_t Accessible::VisibilityState() const {
 
     if (!parentFrame) {
       parentFrame = nsLayoutUtils::GetCrossDocParentFrame(curFrame);
-      if (parentFrame && !parentFrame->StyleVisibility()->IsVisible())
-        return states::INVISIBLE;
     }
 
     curFrame = parentFrame;

@@ -80,13 +80,13 @@ nsresult FileCreatorParent::CreateBlobImpl(
     return rv;
   }
 
-  if (aExistenceCheck) {
-    bool exists;
-    nsresult rv = file->Exists(&exists);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  bool exists;
+  rv = file->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
+  if (aExistenceCheck) {
     if (!exists) {
       return NS_ERROR_FILE_NOT_FOUND;
     }
@@ -106,7 +106,9 @@ nsresult FileCreatorParent::CreateBlobImpl(
 
   // If the file doesn't exist, we cannot have its path, its size and so on.
   // Let's set them now.
-  if (!aExistenceCheck) {
+  if (!exists) {
+    MOZ_ASSERT(!aExistenceCheck);
+
     impl->SetMozFullPath(aPath);
     impl->SetLastModified(0);
     impl->SetEmptySize();

@@ -79,6 +79,8 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                             int32_t aModType) override;
 
+  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+
   // if the content is "visibility:hidden", then just hide the view
   // and all our contents. We don't extend "visibility:hidden" to
   // the child content ourselves, since it belongs to a different
@@ -116,6 +118,9 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
 
   nsFrameLoader* FrameLoader() const;
   void ResetFrameLoader();
+
+  void PropagateIsUnderHiddenEmbedderElementToSubView(
+      bool aIsUnderHiddenEmbedderElement);
 
  protected:
   friend class AsyncFrameInit;

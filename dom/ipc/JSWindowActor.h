@@ -39,6 +39,7 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
   JSWindowActor();
 
   enum class Type { Parent, Child };
+  enum class DestroyCallbackFunction { WillDestroy, DidDestroy };
 
   const nsString& Name() const { return mName; }
 
@@ -70,6 +71,12 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
   virtual ~JSWindowActor() = default;
 
   void SetName(const nsAString& aName);
+
+  void StartDestroy();
+
+  void AfterDestroy();
+
+  void DestroyCallback(DestroyCallbackFunction willDestroy);
 
  private:
   void ReceiveMessageOrQuery(JSContext* aCx,

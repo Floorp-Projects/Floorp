@@ -889,6 +889,11 @@ class RaptorAndroid(Raptor):
                                             url='about:blank',
                                             e10s=True,
                                             fail_if_running=False)
+
+            # Check if app has started and it's running
+            if not self.device.process_exist(self.config['binary']):
+                raise Exception("Error launching %s. App did not start properly!" %
+                                self.config['binary'])
         except Exception as e:
             self.log.error("Exception launching %s" % self.config['binary'])
             self.log.error("Exception: %s %s" % (type(e).__name__, str(e)))

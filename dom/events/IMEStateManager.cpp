@@ -464,7 +464,9 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
       aPresContext ? aPresContext->GetRootWidget() : nullptr;
   bool focusActuallyChanging =
       (sContent != aContent || sPresContext != aPresContext ||
-       oldWidget != newWidget || remoteHasFocus);
+       oldWidget != newWidget ||
+       (remoteHasFocus &&
+        (aAction.mFocusChange != InputContextAction::MENU_GOT_PSEUDO_FOCUS)));
 
   // If old widget has composition, we may need to commit composition since
   // a native IME context is shared on all editors on some widgets or all
@@ -674,14 +676,6 @@ void IMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling) {
                             aInstalling
                                 ? InputContextAction::MENU_GOT_PSEUDO_FOCUS
                                 : InputContextAction::MENU_LOST_PSEUDO_FOCUS);
-  BrowserParent* focused = BrowserParent::GetFocused();
-  if (focused) {
-    if (aInstalling) {
-      OnFocusMovedBetweenBrowsers(focused, nullptr);
-    } else {
-      OnFocusMovedBetweenBrowsers(nullptr, focused);
-    }
-  }
   OnChangeFocusInternal(sPresContext, sContent, action);
 }
 

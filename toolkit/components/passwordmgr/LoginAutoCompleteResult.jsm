@@ -30,6 +30,8 @@ ChromeUtils.defineModuleGetter(this, "LoginManagerContent",
 XPCOMUtils.defineLazyServiceGetter(this, "formFillController",
                                    "@mozilla.org/satchel/form-fill-controller;1",
                                    Ci.nsIFormFillController);
+XPCOMUtils.defineLazyPreferenceGetter(this, "SHOULD_SHOW_ORIGIN",
+                                      "signon.showAutoCompleteOrigins");
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("LoginAutoCompleteResult");
@@ -91,6 +93,7 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messa
 
   this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
   this._showAutoCompleteFooter = isFooterEnabled() ? 1 : 0;
+  this._showOrigin = SHOULD_SHOW_ORIGIN ? 1 : 0;
   this.searchString = aSearchString;
   this.logins = matchingLogins.sort(loginSort);
   this.matchCount = matchingLogins.length + this._showInsecureFieldWarning + this._showAutoCompleteFooter;
@@ -190,7 +193,18 @@ LoginAutoCompleteResult.prototype = {
   },
 
   getCommentAt(index) {
-    return "";
+    if (this._showInsecureFieldWarning && index === 0) {
+      return "";
+    }
+
+    if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
+      return "";
+    }
+
+    let login = this.logins[index - this._showInsecureFieldWarning];
+    return JSON.stringify({
+      loginOrigin: login.hostname,
+    });
   },
 
   getStyleAt(index) {
@@ -198,6 +212,8 @@ LoginAutoCompleteResult.prototype = {
       return "insecureWarning";
     } else if (this._showAutoCompleteFooter && index == this.matchCount - 1) {
       return "loginsFooter";
+    } else if (this._showOrigin) {
+      return "loginWithOrigin";
     }
 
     return "login";

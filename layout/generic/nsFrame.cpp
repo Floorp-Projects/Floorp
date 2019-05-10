@@ -393,6 +393,10 @@ bool nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const {
     return false;
   }
 
+  if (PresShell()->IsUnderHiddenEmbedderElement()) {
+    return false;
+  }
+
   const nsIFrame* frame = this;
   while (frame) {
     nsView* view = frame->GetView();
@@ -415,8 +419,6 @@ bool nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const {
           !frame->PresContext()->IsChrome()) {
         break;
       }
-
-      if (!parent->StyleVisibility()->IsVisible()) return false;
 
       frame = parent;
     }

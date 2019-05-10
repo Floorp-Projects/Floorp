@@ -58,12 +58,12 @@ int dav1d_data_wrap_internal(Dav1dData *const buf, const uint8_t *const ptr,
                                                          void *cookie),
                              void *const cookie)
 {
-    validate_input_or_ret(buf != NULL, -EINVAL);
-    validate_input_or_ret(ptr != NULL, -EINVAL);
-    validate_input_or_ret(free_callback != NULL, -EINVAL);
+    validate_input_or_ret(buf != NULL, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(ptr != NULL, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(free_callback != NULL, DAV1D_ERR(EINVAL));
 
     buf->ref = dav1d_ref_wrap(ptr, free_callback, cookie);
-    if (!buf->ref) return -ENOMEM;
+    if (!buf->ref) return DAV1D_ERR(ENOMEM);
     buf->data = ptr;
     buf->sz = buf->m.size = sz;
     dav1d_data_props_set_defaults(&buf->m);
@@ -77,11 +77,11 @@ int dav1d_data_wrap_user_data_internal(Dav1dData *const buf,
                                                                    void *cookie),
                                        void *const cookie)
 {
-    validate_input_or_ret(buf != NULL, -EINVAL);
-    validate_input_or_ret(free_callback != NULL, -EINVAL);
+    validate_input_or_ret(buf != NULL, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(free_callback != NULL, DAV1D_ERR(EINVAL));
 
     buf->m.user_data.ref = dav1d_ref_wrap(user_data, free_callback, cookie);
-    if (!buf->m.user_data.ref) return -ENOMEM;
+    if (!buf->m.user_data.ref) return DAV1D_ERR(ENOMEM);
     buf->m.user_data.data = user_data;
 
     return 0;

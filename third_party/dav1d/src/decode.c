@@ -231,7 +231,7 @@ static void find_matching_ref(const Dav1dTileContext *const t,
                         have_top && t->bx + bw4 < t->ts->tiling.col_end &&
                         (intra_edge_flags & EDGE_I444_TOP_HAS_RIGHT);
 
-#define bs(rp) dav1d_block_dimensions[sbtype_to_bs[(rp)->sb_type]]
+#define bs(rp) dav1d_block_dimensions[dav1d_sbtype_to_bs[(rp)->sb_type]]
 #define matches(rp) ((rp)->ref[0] == ref + 1 && (rp)->ref[1] == -1)
 
     if (have_top) {
@@ -1243,11 +1243,11 @@ static int decode_b(Dav1dTileContext *const t,
         candidate_mv mvstack[8];
         int n_mvs;
         mv mvlist[2][2];
-        av1_find_ref_mvs(mvstack, &n_mvs, mvlist, NULL,
-                         (int[2]) { -1, -1 }, f->bw, f->bh,
-                         bs, bp, t->by, t->bx, ts->tiling.col_start,
-                         ts->tiling.col_end, ts->tiling.row_start,
-                         ts->tiling.row_end, f->libaom_cm);
+        dav1d_find_ref_mvs(mvstack, &n_mvs, mvlist, NULL,
+                           (int[2]) { -1, -1 }, f->bw, f->bh,
+                           bs, bp, t->by, t->bx, ts->tiling.col_start,
+                           ts->tiling.col_end, ts->tiling.row_start,
+                           ts->tiling.row_end, f->libaom_cm);
 
         if (mvlist[0][0].y | mvlist[0][0].x)
             b->mv[0] = mvlist[0][0];
@@ -1388,11 +1388,11 @@ static int decode_b(Dav1dTileContext *const t,
             candidate_mv mvstack[8];
             int n_mvs, ctx;
             mv mvlist[2][2];
-            av1_find_ref_mvs(mvstack, &n_mvs, mvlist, &ctx,
-                             (int[2]) { b->ref[0], b->ref[1] }, f->bw, f->bh,
-                             bs, bp, t->by, t->bx, ts->tiling.col_start,
-                             ts->tiling.col_end, ts->tiling.row_start,
-                             ts->tiling.row_end, f->libaom_cm);
+            dav1d_find_ref_mvs(mvstack, &n_mvs, mvlist, &ctx,
+                               (int[2]) { b->ref[0], b->ref[1] }, f->bw, f->bh,
+                               bs, bp, t->by, t->bx, ts->tiling.col_start,
+                               ts->tiling.col_end, ts->tiling.row_start,
+                               ts->tiling.row_end, f->libaom_cm);
 
             b->mv[0] = mvstack[0].this_mv;
             b->mv[1] = mvstack[0].comp_mv;
@@ -1468,11 +1468,11 @@ static int decode_b(Dav1dTileContext *const t,
             candidate_mv mvstack[8];
             int n_mvs, ctx;
             mv mvlist[2][2];
-            av1_find_ref_mvs(mvstack, &n_mvs, mvlist, &ctx,
-                             (int[2]) { b->ref[0], b->ref[1] }, f->bw, f->bh,
-                             bs, bp, t->by, t->bx, ts->tiling.col_start,
-                             ts->tiling.col_end, ts->tiling.row_start,
-                             ts->tiling.row_end, f->libaom_cm);
+            dav1d_find_ref_mvs(mvstack, &n_mvs, mvlist, &ctx,
+                               (int[2]) { b->ref[0], b->ref[1] }, f->bw, f->bh,
+                               bs, bp, t->by, t->bx, ts->tiling.col_start,
+                               ts->tiling.col_end, ts->tiling.row_start,
+                               ts->tiling.row_end, f->libaom_cm);
 
             b->inter_mode = dav1d_msac_decode_symbol_adapt8(&ts->msac,
                                 ts->cdf.m.comp_inter_mode[ctx],
@@ -1645,11 +1645,11 @@ static int decode_b(Dav1dTileContext *const t,
             candidate_mv mvstack[8];
             int n_mvs, ctx;
             mv mvlist[2][2];
-            av1_find_ref_mvs(mvstack, &n_mvs, mvlist, &ctx,
-                             (int[2]) { b->ref[0], -1 }, f->bw, f->bh, bs, bp,
-                             t->by, t->bx, ts->tiling.col_start,
-                             ts->tiling.col_end, ts->tiling.row_start,
-                             ts->tiling.row_end, f->libaom_cm);
+            dav1d_find_ref_mvs(mvstack, &n_mvs, mvlist, &ctx,
+                               (int[2]) { b->ref[0], -1 }, f->bw, f->bh, bs, bp,
+                               t->by, t->bx, ts->tiling.col_start,
+                               ts->tiling.col_end, ts->tiling.row_start,
+                               ts->tiling.row_end, f->libaom_cm);
 
             // mode parsing and mv derivation from ref_mvs
             if ((seg && (seg->skip || seg->globalmv)) ||
@@ -2463,9 +2463,9 @@ int dav1d_decode_tile_sbrow(Dav1dTileContext *const t) {
             {
                 return 1;
             }
-        av1_init_ref_mv_tile_row(f->libaom_cm,
-                                 ts->tiling.col_start, ts->tiling.col_end,
-                                 t->by, imin(t->by + sb_step, f->bh));
+        dav1d_init_ref_mv_tile_row(f->libaom_cm,
+                                   ts->tiling.col_start, ts->tiling.col_end,
+                                   t->by, imin(t->by + sb_step, f->bh));
     }
     memset(t->pal_sz_uv[1], 0, sizeof(*t->pal_sz_uv));
     const int sb128y = t->by >> 5;
@@ -2566,7 +2566,7 @@ int dav1d_decode_tile_sbrow(Dav1dTileContext *const t) {
 
 int dav1d_decode_frame(Dav1dFrameContext *const f) {
     const Dav1dContext *const c = f->c;
-    int retval = -ENOMEM;
+    int retval = DAV1D_ERR(ENOMEM);
 
     if (f->n_tc > 1) {
         if (f->frame_hdr->tiling.cols * f->sbh > f->tile_thread.titsati_sz) {
@@ -2765,20 +2765,20 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
     if ((f->frame_hdr->frame_type & 1) || f->frame_hdr->allow_intrabc) {
         f->mvs = f->mvs_ref->data;
         const int order_hint_n_bits = f->seq_hdr->order_hint * f->seq_hdr->order_hint_n_bits;
-        const int ret = av1_init_ref_mv_common(f->libaom_cm, f->bw >> 1, f->bh >> 1,
-                                               f->b4_stride, f->seq_hdr->sb128,
-                                               f->mvs, f->ref_mvs,
-                                               f->cur.frame_hdr->frame_offset,
-                                               f->refpoc,
-                                               f->refrefpoc, f->frame_hdr->gmv,
-                                               f->frame_hdr->hp, f->frame_hdr->force_integer_mv,
-                                               f->frame_hdr->use_ref_frame_mvs,
-                                               order_hint_n_bits);
+        const int ret = dav1d_init_ref_mv_common(f->libaom_cm, f->bw >> 1, f->bh >> 1,
+                                                 f->b4_stride, f->seq_hdr->sb128,
+                                                 f->mvs, f->ref_mvs,
+                                                 f->cur.frame_hdr->frame_offset,
+                                                 f->refpoc,
+                                                 f->refrefpoc, f->frame_hdr->gmv,
+                                                 f->frame_hdr->hp, f->frame_hdr->force_integer_mv,
+                                                 f->frame_hdr->use_ref_frame_mvs,
+                                                 order_hint_n_bits);
         if (ret < 0) goto error;
         if (c->n_fc == 1 && f->frame_hdr->use_ref_frame_mvs)
-            av1_init_ref_mv_tile_row(f->libaom_cm, 0, f->bw, 0, f->bh);
+            dav1d_init_ref_mv_tile_row(f->libaom_cm, 0, f->bw, 0, f->bh);
     }
-    retval = -EINVAL;
+    retval = DAV1D_ERR(EINVAL);
 
     // setup dequant tables
     init_quant_tables(f->seq_hdr, f->frame_hdr, f->frame_hdr->quant.yac, f->dq);
@@ -3115,7 +3115,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
         default:
             dav1d_log(c, "Compiled without support for %d-bit decoding\n",
                     8 + 2 * f->seq_hdr->hbd);
-            res = -ENOPROTOOPT;
+            res = DAV1D_ERR(ENOPROTOOPT);
             goto error;
         }
     }
@@ -3142,7 +3142,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
         if (f->frame_hdr->primary_ref_frame != DAV1D_PRIMARY_REF_NONE) {
             const int pri_ref = f->frame_hdr->refidx[f->frame_hdr->primary_ref_frame];
             if (!c->refs[pri_ref].p.p.data[0]) {
-                res = -EINVAL;
+                res = DAV1D_ERR(EINVAL);
                 goto error;
             }
         }
@@ -3158,7 +3158,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
             {
                 for (int j = 0; j < i; j++)
                     dav1d_thread_picture_unref(&f->refp[j]);
-                res = -EINVAL;
+                res = DAV1D_ERR(EINVAL);
                 goto error;
             }
             dav1d_thread_picture_ref(&f->refp[i], &c->refs[refidx].p);
@@ -3255,7 +3255,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
         f->mvs_ref = dav1d_ref_create(f->sb128h * 32 * f->b4_stride *
                                       sizeof(*f->mvs));
         if (!f->mvs_ref) {
-            res = -ENOMEM;
+            res = DAV1D_ERR(ENOMEM);
             goto error;
         }
         f->mvs = f->mvs_ref->data;
@@ -3318,7 +3318,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
             // actually gets set elsewhere)
             f->cur_segmap_ref = dav1d_ref_create(f->b4_stride * 32 * f->sb128h);
             if (!f->cur_segmap_ref) {
-                res = -ENOMEM;
+                res = DAV1D_ERR(ENOMEM);
                 goto error;
             }
             f->cur_segmap = f->cur_segmap_ref->data;
@@ -3332,7 +3332,7 @@ int dav1d_submit_frame(Dav1dContext *const c) {
             // We need to make a new map. Allocate one here and zero it out.
             f->cur_segmap_ref = dav1d_ref_create(f->b4_stride * 32 * f->sb128h);
             if (!f->cur_segmap_ref) {
-                res = -ENOMEM;
+                res = DAV1D_ERR(ENOMEM);
                 goto error;
             }
             f->cur_segmap = f->cur_segmap_ref->data;

@@ -623,6 +623,16 @@ function check_schemeIsNull()
   Assert.ok(!uri.schemeIs(null));
 }
 
+// Check that characters in the query of moz-extension aren't improperly unescaped (Bug 1547882)
+function check_mozextension_query() {
+  let uri = gIoService.newURI("moz-extension://a7d1572e-3beb-4d93-a920-c408fa09e8ea/_source/holding.html");
+  uri = uri.mutate().setQuery("u=https%3A%2F%2Fnews.ycombinator.com%2F").finalize();
+  Assert.equal(uri.query, "u=https%3A%2F%2Fnews.ycombinator.com%2F");
+  uri = gIoService.newURI("moz-extension://a7d1572e-3beb-4d93-a920-c408fa09e8ea/_source/holding.html?u=https%3A%2F%2Fnews.ycombinator.com%2F");
+  Assert.equal(uri.spec, "moz-extension://a7d1572e-3beb-4d93-a920-c408fa09e8ea/_source/holding.html?u=https%3A%2F%2Fnews.ycombinator.com%2F");
+  Assert.equal(uri.query, "u=https%3A%2F%2Fnews.ycombinator.com%2F");
+}
+
 // TEST MAIN FUNCTION
 // ------------------
 function run_test()
@@ -630,6 +640,7 @@ function run_test()
   check_nested_mutations();
   check_space_escaping();
   check_schemeIsNull();
+  check_mozextension_query();
 
   // UTF-8 check - From bug 622981
   // ASCII

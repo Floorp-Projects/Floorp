@@ -8,6 +8,7 @@ DevToolsModules(
     'EventTooltipHelper.js',
     'HTMLTooltip.js',
     'ImageTooltipHelper.js',
+    'inactive-css-tooltip-helper.js',
     'InlineTooltip.js',
     'RulePreviewTooltip.js',
     'SwatchBasedEditorTooltip.js',

@@ -40,11 +40,15 @@ typedef struct {
     void *arg;
 } pthread_t;
 
+typedef struct {
+    unsigned stack_size;
+} pthread_attr_t;
+
 typedef SRWLOCK pthread_mutex_t;
 typedef CONDITION_VARIABLE pthread_cond_t;
 typedef INIT_ONCE pthread_once_t;
 
-int dav1d_pthread_create(pthread_t *thread, const void *attr,
+int dav1d_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                          void *(*func)(void*), void *arg);
 int dav1d_pthread_join(pthread_t *thread, void **res);
 int dav1d_pthread_once(pthread_once_t *once_control,
@@ -53,6 +57,22 @@ int dav1d_pthread_once(pthread_once_t *once_control,
 #define pthread_create dav1d_pthread_create
 #define pthread_join(thread, res) dav1d_pthread_join(&(thread), res)
 #define pthread_once   dav1d_pthread_once
+
+static inline int pthread_attr_init(pthread_attr_t *const attr) {
+    attr->stack_size = 0;
+    return 0;
+}
+
+static inline int pthread_attr_destroy(pthread_attr_t *const attr) {
+    return 0;
+}
+
+static inline int pthread_attr_setstacksize(pthread_attr_t *const attr,
+                                            const unsigned stack_size)
+{
+    attr->stack_size = stack_size;
+    return 0;
+}
 
 static inline int pthread_mutex_init(pthread_mutex_t *const mutex,
                                      const void *const attr)
