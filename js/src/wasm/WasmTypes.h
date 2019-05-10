@@ -1980,6 +1980,18 @@ struct Limits {
 
 enum class TableKind { AnyRef, FuncRef, AsmJS };
 
+static inline ValType ToElemValType(TableKind tk) {
+  switch (tk) {
+    case TableKind::AnyRef:
+      return ValType::AnyRef;
+    case TableKind::FuncRef:
+      return ValType::FuncRef;
+    case TableKind::AsmJS:
+      break;
+  }
+  MOZ_CRASH("not used for asm.js");
+}
+
 struct TableDesc {
   TableKind kind;
   bool importedOrExported;

@@ -886,8 +886,8 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                          uint32_t tableIndex) {
   MOZ_ASSERT(SASigTableFill.failureMode == FailureMode::FailOnNegI32);
 
+  JSContext* cx = TlsContext.get();
   Table& table = *instance->tables()[tableIndex];
-  MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
 
   if (len == 0) {
     // Even though the length is zero, we must check for a valid offset.  But
@@ -912,10 +912,17 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       mustTrap = true;
     }
 
-    for (uint32_t i = 0; i < len; i++) {
-      uint32_t index = start + i;
-      MOZ_ASSERT(index < table.length());
-      table.setAnyRef(index, AnyRef::fromCompiledCode(value));
+    AnyRef ref = AnyRef::fromCompiledCode(value);
+
+    switch (table.kind()) {
+      case TableKind::AnyRef:
+        table.fillAnyRef(start, len, ref);
+        break;
+      case TableKind::FuncRef:
+        table.fillFuncRef(start, len, ref, cx);
+        break;
+      case TableKind::AsmJS:
+        MOZ_CRASH("not asm.js");
     }
 
     if (!mustTrap) {
@@ -923,7 +930,6 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     }
   }
 
-  JSContext* cx = TlsContext.get();
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
   return -1;
@@ -932,30 +938,52 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 /* static */ void* Instance::tableGet(Instance* instance, uint32_t index,
                                       uint32_t tableIndex) {
   MOZ_ASSERT(SASigTableGet.failureMode == FailureMode::FailOnInvalidRef);
+
   const Table& table = *instance->tables()[tableIndex];
-  MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
   if (index >= table.length()) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
                               JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
     return AnyRef::invalid().forCompiledCode();
   }
-  return table.getAnyRef(index).forCompiledCode();
+
+  if (table.kind() == TableKind::AnyRef) {
+    return table.getAnyRef(index).forCompiledCode();
+  }
+
+  MOZ_RELEASE_ASSERT(table.kind() == TableKind::FuncRef);
+
+  JSContext* cx = TlsContext.get();
+  RootedFunction fun(cx);
+  if (!table.getFuncRef(cx, index, &fun)) {
+    return AnyRef::invalid().forCompiledCode();
+  }
+
+  return AnyRef::fromJSObject(fun).forCompiledCode();
 }
 
 /* static */ uint32_t Instance::tableGrow(Instance* instance, void* initValue,
                                           uint32_t delta, uint32_t tableIndex) {
   MOZ_ASSERT(SASigTableGrow.failureMode == FailureMode::Infallible);
 
-  RootedAnyRef obj(TlsContext.get(), AnyRef::fromCompiledCode(initValue));
+  RootedAnyRef ref(TlsContext.get(), AnyRef::fromCompiledCode(initValue));
   Table& table = *instance->tables()[tableIndex];
-  MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
 
-  uint32_t oldSize = table.grow(delta, TlsContext.get());
+  JSContext* cx = TlsContext.get();
+  uint32_t oldSize = table.grow(delta, cx);
+
   if (oldSize != uint32_t(-1) && initValue != nullptr) {
-    for (uint32_t i = 0; i < delta; i++) {
-      table.setAnyRef(oldSize + i, obj.get());
+    switch (table.kind()) {
+      case TableKind::AnyRef:
+        table.fillAnyRef(oldSize, delta, ref);
+        break;
+      case TableKind::FuncRef:
+        table.fillFuncRef(oldSize, delta, ref, cx);
+        break;
+      case TableKind::AsmJS:
+        MOZ_CRASH("not asm.js");
     }
   }
+
   return oldSize;
 }
 
@@ -964,13 +992,25 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   MOZ_ASSERT(SASigTableSet.failureMode == FailureMode::FailOnNegI32);
 
   Table& table = *instance->tables()[tableIndex];
-  MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
   if (index >= table.length()) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
                               JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
     return -1;
   }
-  table.setAnyRef(index, AnyRef::fromCompiledCode(value));
+
+  AnyRef ref = AnyRef::fromCompiledCode(value);
+
+  switch (table.kind()) {
+    case TableKind::AnyRef:
+      table.fillAnyRef(index, 1, ref);
+      break;
+    case TableKind::FuncRef:
+      table.fillFuncRef(index, 1, ref, TlsContext.get());
+      break;
+    case TableKind::AsmJS:
+      MOZ_CRASH("not asm.js");
+  }
+
   return 0;
 }
 

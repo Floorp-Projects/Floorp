@@ -139,12 +139,22 @@ const FunctionTableElem& Table::getFuncRef(uint32_t index) const {
   return functions_[index];
 }
 
-AnyRef Table::getAnyRef(uint32_t index) const {
-  MOZ_ASSERT(!isFunction());
-  // TODO/AnyRef-boxing: With boxed immediates and strings, the write barrier
-  // is going to have to be more complicated.
-  ASSERT_ANYREF_IS_JSOBJECT;
-  return AnyRef::fromJSObject(objects_[index]);
+bool Table::getFuncRef(JSContext* cx, uint32_t index,
+                       MutableHandleFunction fun) const {
+  MOZ_ASSERT(isFunction());
+
+  const FunctionTableElem& elem = getFuncRef(index);
+  if (!elem.code) {
+    fun.set(nullptr);
+    return true;
+  }
+
+  Instance& instance = *elem.tls->instance;
+  const CodeRange& codeRange = *instance.code().lookupFuncRange(elem.code);
+
+  RootedWasmInstanceObject instanceObj(cx, instance.object());
+  return instanceObj->getExportedFunction(cx, instanceObj,
+                                          codeRange.funcIndex(), fun);
 }
 
 void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
@@ -171,12 +181,57 @@ void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
   }
 }
 
-void Table::setAnyRef(uint32_t index, AnyRef new_obj) {
+void Table::fillFuncRef(uint32_t index, uint32_t fillCount, AnyRef ref,
+                        JSContext* cx) {
+  MOZ_ASSERT(isFunction());
+
+  if (ref.isNull()) {
+    for (uint32_t i = index, end = index + fillCount; i != end; i++) {
+      setNull(i);
+    }
+    return;
+  }
+
+  RootedFunction fun(cx, &ref.asJSObject()->as<JSFunction>());
+  MOZ_RELEASE_ASSERT(IsWasmExportedFunction(fun));
+
+  RootedWasmInstanceObject instanceObj(cx,
+                                       ExportedFunctionToInstanceObject(fun));
+  uint32_t funcIndex = ExportedFunctionToFuncIndex(fun);
+
+#ifdef DEBUG
+  RootedFunction f(cx);
+  MOZ_ASSERT(instanceObj->getExportedFunction(cx, instanceObj, funcIndex, &f));
+  MOZ_ASSERT(fun == f);
+#endif
+
+  Instance& instance = instanceObj->instance();
+  Tier tier = instance.code().bestTier();
+  const MetadataTier& metadata = instance.metadata(tier);
+  const CodeRange& codeRange =
+      metadata.codeRange(metadata.lookupFuncExport(funcIndex));
+  void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
+  for (uint32_t i = index, end = index + fillCount; i != end; i++) {
+    setFuncRef(i, code, &instance);
+  }
+}
+
+AnyRef Table::getAnyRef(uint32_t index) const {
   MOZ_ASSERT(!isFunction());
   // TODO/AnyRef-boxing: With boxed immediates and strings, the write barrier
   // is going to have to be more complicated.
   ASSERT_ANYREF_IS_JSOBJECT;
-  objects_[index] = new_obj.asJSObject();
+  return AnyRef::fromJSObject(objects_[index]);
+}
+
+void Table::fillAnyRef(uint32_t index, uint32_t fillCount, AnyRef ref) {
+  MOZ_ASSERT(!isFunction());
+  // TODO/AnyRef-boxing: With boxed immediates and strings, the write barrier
+  // is going to have to be more complicated.
+  ASSERT_ANYREF_IS_JSOBJECT;
+  for (uint32_t i = index, end = index + fillCount; i != end; i++) {
+    objects_[i] = ref.asJSObject();
+  }
 }
 
 void Table::setNull(uint32_t index) {
@@ -192,7 +247,7 @@ void Table::setNull(uint32_t index) {
       break;
     }
     case TableKind::AnyRef: {
-      setAnyRef(index, AnyRef::null());
+      fillAnyRef(index, 1, AnyRef::null());
       break;
     }
     case TableKind::AsmJS: {
@@ -223,7 +278,7 @@ void Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
       break;
     }
     case TableKind::AnyRef: {
-      setAnyRef(dstIndex, srcTable.getAnyRef(srcIndex));
+      fillAnyRef(dstIndex, 1, srcTable.getAnyRef(srcIndex));
       break;
     }
     case TableKind::AsmJS: {
