@@ -585,6 +585,11 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
   // here, since the document that the user selected to print may mutate
   // across consecutive PrintPreview() calls.
 
+  Element* root = aOriginalDoc->GetRootElement();
+  mDisallowSelectionPrint =
+      root &&
+      root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint);
+
   nsCOMPtr<nsIDocShellTreeOwner> owner;
   aDocShell->GetTreeOwner(getter_AddRefs(owner));
   nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_GetInterface(owner);
