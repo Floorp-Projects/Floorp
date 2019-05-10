@@ -770,7 +770,16 @@ class RaptorAndroid(Raptor):
                 '/sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq': '2457600',
             })
         elif device_name == 'Moto G (5)':
-            pass
+            # MSM8937(8x 1.4GHz)
+            # values obtained from:
+            #   /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies
+            for x in xrange(0, 8):
+                commands.update({
+                    '/sys/devices/system/cpu/cpu{}/'
+                    'cpufreq/scaling_governor'.format(x): 'performance',
+                    '/sys/devices/system/cpu/cpu{}/'
+                    'cpufreq/scaling_min_freq'.format(x): '1401000'
+                })
         else:
             pass
 
@@ -800,7 +809,14 @@ class RaptorAndroid(Raptor):
                 '/sys/devices/soc/5000000.qcom,kgsl-3d0/kgsl/kgsl-3d0/min_clock_mhz': '710',
             })
         elif device_name == 'Moto G (5)':
-            pass
+            # Adreno 505 (450MHz)
+            # values obtained from:
+            #   /sys/devices/soc/1c00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/max_clock_mhz
+            commands.update({
+                '/sys/devices/soc/1c00000.qcom,kgsl-3d0/devfreq/'
+                '1c00000.qcom,kgsl-3d0/governor': 'performance',
+                '/sys/devices/soc/1c00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/min_clock_mhz': '450',
+            })
         else:
             pass
         for key, value in commands.items():
