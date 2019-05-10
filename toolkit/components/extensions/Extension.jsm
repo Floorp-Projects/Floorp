@@ -2089,7 +2089,7 @@ class Extension extends ExtensionData {
       obj.close();
     }
 
-    ParentAPIManager.shutdownExtension(this.id);
+    ParentAPIManager.shutdownExtension(this.id, reason);
 
     Management.emit("shutdown", this);
     this.emit("shutdown");
