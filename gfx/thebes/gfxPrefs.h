@@ -507,6 +507,7 @@ class gfxPrefs final {
   // The maximums here are quite conservative, we can tighten them if problems show up.
   DECL_GFX_PREF(Once, "gfx.logging.texture-usage.enabled",     GfxLoggingTextureUsageEnabled, bool, false);
   DECL_GFX_PREF(Once, "gfx.logging.peak-texture-usage.enabled",GfxLoggingPeakTextureUsageEnabled, bool, false);
+  DECL_GFX_PREF(Once, "gfx.logging.slow-frames.enabled",       LoggingSlowFramesEnabled, bool, false);
   // Use gfxPlatform::MaxAllocSize instead of the pref directly
   DECL_GFX_PREF(Once, "gfx.max-alloc-size",                    MaxAllocSizeDoNotUseDirectly, int32_t, (int32_t)500000000);
   // Use gfxPlatform::MaxTextureSize instead of the pref directly

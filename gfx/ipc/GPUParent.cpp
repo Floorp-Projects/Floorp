@@ -52,6 +52,8 @@
 #include "skia/include/core/SkGraphics.h"
 #if defined(XP_WIN)
 #  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/widget/WinCompositorWindowThread.h"
+#  include "mozilla/WindowsVersion.h"
 #  include <process.h>
 #  include <dwrite.h>
 #endif
@@ -252,6 +254,15 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
     wr::RenderThread::Start();
     image::ImageMemoryReporter::InitForWebRender();
   }
+#ifdef XP_WIN
+  else {
+    if (gfxPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
+      // This is needed to avoid freezing the window on a device crash on double
+      // buffering, see bug 1549674.
+      widget::WinCompositorWindowThread::Start();
+    }
+  }
+#endif
 
   VRManager::ManagerInit();
   // Send a message to the UI process that we're done.
@@ -501,6 +512,11 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (wr::RenderThread::Get()) {
     wr::RenderThread::ShutDown();
   }
+#ifdef XP_WIN
+  else if (gfxPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
+    widget::WinCompositorWindowThread::ShutDown();
+  }
+#endif
 
   image::ImageMemoryReporter::ShutdownForWebRender();
 
