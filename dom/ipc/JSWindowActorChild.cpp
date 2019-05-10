@@ -115,10 +115,12 @@ Nullable<WindowProxyHolder> JSWindowActorChild::GetContentWindow(
 }
 
 void JSWindowActorChild::StartDestroy() {
+  JSWindowActor::StartDestroy();
   mCanSend = false;
 }
 
 void JSWindowActorChild::AfterDestroy() {
+  JSWindowActor::AfterDestroy();
   mManager = nullptr;
 }
 

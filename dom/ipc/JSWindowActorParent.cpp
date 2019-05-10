@@ -86,10 +86,12 @@ void JSWindowActorParent::SendRawMessage(const JSWindowActorMessageMeta& aMeta,
 }
 
 void JSWindowActorParent::StartDestroy() {
+  JSWindowActor::StartDestroy();
   mCanSend = false;
 }
 
 void JSWindowActorParent::AfterDestroy() {
+  JSWindowActor::AfterDestroy();
   mManager = nullptr;
 }
 

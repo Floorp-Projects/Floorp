@@ -39,6 +39,37 @@ nsIGlobalObject* JSWindowActor::GetParentObject() const {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
+void JSWindowActor::StartDestroy() {
+  DestroyCallback(DestroyCallbackFunction::WillDestroy);
+}
+
+void JSWindowActor::AfterDestroy() {
+  DestroyCallback(DestroyCallbackFunction::DidDestroy);
+}
+
+void JSWindowActor::DestroyCallback(DestroyCallbackFunction callback) {
+  AutoEntryScript aes(xpc::PrivilegedJunkScope(),
+                      "JSWindowActor destroy callback");
+  JSContext* cx = aes.cx();
+  MozActorDestroyCallbacks callbacksHolder;
+  NS_ENSURE_TRUE_VOID(GetWrapper());
+  JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*GetWrapper()));
+  if (NS_WARN_IF(!callbacksHolder.Init(cx, val))) {
+    return;
+  }
+
+  // Destroy callback is optional.
+  if (callback == DestroyCallbackFunction::WillDestroy) {
+    if (callbacksHolder.mWillDestroy.WasPassed()) {
+      callbacksHolder.mWillDestroy.Value()->Call();
+    }
+  } else {
+    if (callbacksHolder.mDidDestroy.WasPassed()) {
+      callbacksHolder.mDidDestroy.Value()->Call();
+    }
+  }
+}
+
 void JSWindowActor::RejectPendingQueries() {
   // Take our queries out, in case somehow rejecting promises can trigger
   // additions or removals.
