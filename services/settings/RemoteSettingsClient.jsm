@@ -23,6 +23,8 @@ ChromeUtils.defineModuleGetter(this, "RemoteSettingsWorker",
                                "resource://services-settings/RemoteSettingsWorker.jsm");
 ChromeUtils.defineModuleGetter(this, "Utils",
                                "resource://services-settings/Utils.jsm");
+ChromeUtils.defineModuleGetter(this, "Downloader",
+                               "resource://services-settings/Attachments.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -201,6 +203,8 @@ class RemoteSettingsClient extends EventEmitter {
       adapter: Kinto.adapters.IDB,
       adapterOptions: { dbName: DB_NAME, migrateOldData: false },
     }));
+
+    XPCOMUtils.defineLazyGetter(this, "attachments", () => new Downloader(this.bucketName, collectionName));
   }
 
   get identifier() {

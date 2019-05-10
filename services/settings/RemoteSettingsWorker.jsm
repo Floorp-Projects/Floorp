@@ -47,6 +47,10 @@ class Worker {
   async importJSONDump(bucket, collection) {
     return this._execute("importJSONDump", [bucket, collection]);
   }
+
+  async checkFileHash(filepath, size, hash) {
+    return this._execute("checkFileHash", [filepath, size, hash]);
+  }
 }
 
 var RemoteSettingsWorker = new Worker("resource://services-settings/RemoteSettingsWorker.js");
