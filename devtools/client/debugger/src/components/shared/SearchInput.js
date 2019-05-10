@@ -35,16 +35,13 @@ type Props = {
   handleNext?: (e: SyntheticMouseEvent<HTMLButtonElement>) => void,
   handlePrev?: (e: SyntheticMouseEvent<HTMLButtonElement>) => void,
   hasPrefix?: boolean,
-  onBlur?: (e: SyntheticFocusEvent<HTMLInputElement>) => void,
   onChange: (e: SyntheticInputEvent<HTMLInputElement>) => void,
-  onFocus?: (e: SyntheticFocusEvent<HTMLInputElement>) => void,
   onKeyDown: (e: SyntheticKeyboardEvent<HTMLInputElement>) => void,
   onKeyUp?: (e: SyntheticKeyboardEvent<HTMLInputElement>) => void,
   onHistoryScroll?: (historyValue: string) => void,
   placeholder: string,
   query: string,
   selectedItemId?: string,
-  shouldFocus?: boolean,
   showErrorEmoji: boolean,
   size: string,
   summaryMsg: string,
@@ -53,7 +50,6 @@ type Props = {
 };
 
 type State = {
-  inputFocused: boolean,
   history: Array<string>
 };
 
@@ -73,19 +69,12 @@ class SearchInput extends Component<Props, State> {
     super(props);
 
     this.state = {
-      inputFocused: false,
       history: []
     };
   }
 
   componentDidMount() {
     this.setFocus();
-  }
-
-  componentDidUpdate(prevProps: Props) {
-    if (this.props.shouldFocus && !prevProps.shouldFocus) {
-      this.setFocus();
-    }
   }
 
   setFocus() {
@@ -125,24 +114,6 @@ class SearchInput extends Component<Props, State> {
       )
     ];
   }
-
-  onFocus = (e: SyntheticFocusEvent<HTMLInputElement>) => {
-    const { onFocus } = this.props;
-
-    this.setState({ inputFocused: true });
-    if (onFocus) {
-      onFocus(e);
-    }
-  };
-
-  onBlur = (e: SyntheticFocusEvent<HTMLInputElement>) => {
-    const { onBlur } = this.props;
-
-    this.setState({ inputFocused: false });
-    if (onBlur) {
-      onBlur(e);
-    }
-  };
 
   onKeyDown = (e: any) => {
     const { onHistoryScroll, onKeyDown } = this.props;
@@ -238,8 +209,6 @@ class SearchInput extends Component<Props, State> {
       onChange,
       onKeyDown: e => this.onKeyDown(e),
       onKeyUp,
-      onFocus: e => this.onFocus(e),
-      onBlur: e => this.onBlur(e),
       "aria-autocomplete": "list",
       "aria-controls": "result-list",
       "aria-activedescendant":
@@ -251,11 +220,7 @@ class SearchInput extends Component<Props, State> {
     };
 
     return (
-      <div
-        className={classnames("search-outline", {
-          focused: this.state.inputFocused
-        })}
-      >
+      <div className="search-outline">
         <div
           className={classnames("search-field", size)}
           role="combobox"

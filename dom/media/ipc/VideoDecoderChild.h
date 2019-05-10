@@ -36,6 +36,7 @@ class VideoDecoderChild final : public PVideoDecoderChild,
                              const uint32_t& aConversion);
   IPCResult RecvInitFailed(const nsresult& aReason);
   IPCResult RecvFlushComplete();
+  IPCResult RecvShutdownComplete();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -44,7 +45,7 @@ class VideoDecoderChild final : public PVideoDecoderChild,
       MediaRawData* aSample) override;
   RefPtr<MediaDataDecoder::DecodePromise> Drain() override;
   RefPtr<MediaDataDecoder::FlushPromise> Flush() override;
-  void Shutdown() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   nsCString GetDescriptionName() const override;
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
@@ -73,6 +74,7 @@ class VideoDecoderChild final : public PVideoDecoderChild,
   MozPromiseHolder<MediaDataDecoder::DecodePromise> mDecodePromise;
   MozPromiseHolder<MediaDataDecoder::DecodePromise> mDrainPromise;
   MozPromiseHolder<MediaDataDecoder::FlushPromise> mFlushPromise;
+  MozPromiseHolder<ShutdownPromise> mShutdownPromise;
 
   nsCString mHardwareAcceleratedReason;
   nsCString mDescription;
@@ -89,6 +91,9 @@ class VideoDecoderChild final : public PVideoDecoderChild,
   nsCString mBlacklistedD3D11Driver;
   nsCString mBlacklistedD3D9Driver;
   TimeStamp mGPUCrashTime;
+  // Keep this instance alive during SendShutdown RecvShutdownComplete
+  // handshake.
+  RefPtr<VideoDecoderChild> mShutdownSelfRef;
 };
 
 }  // namespace mozilla

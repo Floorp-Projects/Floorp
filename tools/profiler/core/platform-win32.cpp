@@ -36,8 +36,9 @@
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/WindowsVersion.h"
 
-/* static */
-int Thread::GetCurrentId() {
+int profiler_current_process_id() { return _getpid(); }
+
+int profiler_current_thread_id() {
   DWORD threadId = GetCurrentThreadId();
   MOZ_ASSERT(threadId <= INT32_MAX, "native thread ID is > INT32_MAX");
   return int(threadId);

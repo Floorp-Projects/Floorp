@@ -222,11 +222,11 @@ mochitest-devtools-chrome:
             default: 5400
     chunks:
         by-test-platform:
-            linux64/debug: 16
-            linux64-ccov/debug: 16
-            windows10-64-ccov/debug: 10
-            macosx64-ccov/debug: 15
-            default: 8
+            .*-ccov/debug: 16
+            linux64/debug: 12
+            macosx64/debug: 8
+            .*-asan/opt: 8
+            default: 5
     mozharness:
         mochitest-flavor: chrome
         chunked: true
@@ -312,8 +312,12 @@ mochitest-media:
     chunks:
         by-test-platform:
             android-em-7.*: 1
-            macosx64.*: 1
             windows10-64.*: 1
+            macosx64.*/opt: 2
+            macosx64.*/debug: 4
+            windows10-aarch64/.*: 2
+            windows7-32-shippable/.*: 2
+            linux64(-shippable|-devedition|-.*qr)/opt: 2
             default: 3
     mozharness:
         mochitest-flavor: plain

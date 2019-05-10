@@ -5535,7 +5535,7 @@
   },
   "UPDATE_CHECK_NO_UPDATE_EXTERNAL" : {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5544,7 +5544,7 @@
   },
   "UPDATE_CHECK_NO_UPDATE_NOTIFY" : {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5553,7 +5553,7 @@
   },
   "UPDATE_CHECK_CODE_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
@@ -5563,7 +5563,7 @@
   },
   "UPDATE_CHECK_CODE_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
@@ -5573,7 +5573,7 @@
   },
   "UPDATE_CHECK_EXTENDED_ERROR_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -5583,7 +5583,7 @@
   },
   "UPDATE_CHECK_EXTENDED_ERROR_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -5593,7 +5593,7 @@
   },
   "UPDATE_INVALID_LASTUPDATETIME_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5602,7 +5602,7 @@
   },
   "UPDATE_INVALID_LASTUPDATETIME_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5611,7 +5611,7 @@
   },
   "UPDATE_LAST_NOTIFY_INTERVAL_DAYS_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "n_buckets": 60,
@@ -5622,7 +5622,7 @@
   },
   "UPDATE_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "n_buckets": 30,
@@ -5633,7 +5633,7 @@
   },
   "UPDATE_PING_COUNT_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5642,7 +5642,7 @@
   },
   "UPDATE_PING_COUNT_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5651,7 +5651,7 @@
   },
   "UPDATE_SERVICE_INSTALLED_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
@@ -5660,7 +5660,7 @@
   },
   "UPDATE_SERVICE_INSTALLED_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
@@ -5669,7 +5669,7 @@
   },
   "UPDATE_SERVICE_MANUALLY_UNINSTALLED_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5678,7 +5678,7 @@
   },
   "UPDATE_SERVICE_MANUALLY_UNINSTALLED_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5687,7 +5687,7 @@
   },
   "UPDATE_UNABLE_TO_APPLY_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5696,7 +5696,7 @@
   },
   "UPDATE_UNABLE_TO_APPLY_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5705,7 +5705,7 @@
   },
   "UPDATE_CANNOT_STAGE_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5714,7 +5714,7 @@
   },
   "UPDATE_CANNOT_STAGE_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5723,7 +5723,7 @@
   },
   "UPDATE_PREF_UPDATE_CANCELATIONS_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -5733,7 +5733,7 @@
   },
   "UPDATE_PREF_UPDATE_CANCELATIONS_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -5743,7 +5743,7 @@
   },
   "UPDATE_PREF_SERVICE_ERRORS_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
@@ -5753,7 +5753,7 @@
   },
   "UPDATE_PREF_SERVICE_ERRORS_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
@@ -5763,7 +5763,7 @@
   },
   "UPDATE_NOT_PREF_UPDATE_AUTO_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5772,7 +5772,7 @@
   },
   "UPDATE_NOT_PREF_UPDATE_AUTO_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5781,7 +5781,7 @@
   },
   "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5790,7 +5790,7 @@
   },
   "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5799,7 +5799,7 @@
   },
   "UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_EXTERNAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5808,7 +5808,7 @@
   },
   "UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_NOTIFY": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
@@ -5817,7 +5817,7 @@
   },
   "UPDATE_DOWNLOAD_CODE_COMPLETE": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
@@ -5827,7 +5827,7 @@
   },
   "UPDATE_DOWNLOAD_CODE_PARTIAL": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
@@ -5837,7 +5837,7 @@
   },
   "UPDATE_DOWNLOAD_CODE_UNKNOWN": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
@@ -5847,7 +5847,7 @@
   },
   "UPDATE_STATE_CODE_COMPLETE_STARTUP": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -5857,7 +5857,7 @@
   },
   "UPDATE_STATE_CODE_PARTIAL_STARTUP": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -5867,7 +5867,7 @@
   },
   "UPDATE_STATE_CODE_UNKNOWN_STARTUP": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -5877,7 +5877,7 @@
   },
   "UPDATE_STATE_CODE_COMPLETE_STAGE": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -5887,7 +5887,7 @@
   },
   "UPDATE_STATE_CODE_PARTIAL_STAGE": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -5897,7 +5897,7 @@
   },
   "UPDATE_STATE_CODE_UNKNOWN_STAGE": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -5907,7 +5907,7 @@
   },
   "UPDATE_STATUS_ERROR_CODE_COMPLETE_STARTUP": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -5917,7 +5917,7 @@
   },
   "UPDATE_STATUS_ERROR_CODE_PARTIAL_STARTUP": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -5927,7 +5927,7 @@
   },
   "UPDATE_STATUS_ERROR_CODE_UNKNOWN_STARTUP": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -5937,7 +5937,7 @@
   },
   "UPDATE_STATUS_ERROR_CODE_COMPLETE_STAGE": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -5947,7 +5947,7 @@
   },
   "UPDATE_STATUS_ERROR_CODE_PARTIAL_STAGE": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -5957,7 +5957,7 @@
   },
   "UPDATE_STATUS_ERROR_CODE_UNKNOWN_STAGE": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
@@ -5967,7 +5967,7 @@
   },
   "UPDATE_WIZ_LAST_PAGE_CODE": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
@@ -5975,63 +5975,52 @@
     "bug_numbers": [1137447],
     "description": "Update: the update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/UpdateTelemetry.jsm)"
   },
-  "UPTAKE_REMOTE_CONTENT_RESULT_1": {
-    "record_in_processes": ["all"],
-    "expires_in_version": "never",
-    "kind": "categorical",
-    "keyed": true,
-    "labels": ["up_to_date", "success", "backoff", "pref_disabled", "parse_error", "content_error", "sign_error", "sign_retry_error", "conflict_error", "sync_error", "apply_error", "server_error", "certificate_error", "download_error", "timeout_error", "network_error", "offline_error", "cleanup_error", "unknown_error", "custom_1_error", "custom_2_error", "custom_3_error", "custom_4_error", "custom_5_error"],
-    "releaseChannelCollection": "opt-out",
-    "alert_emails": ["storage-team@mozilla.com"],
-    "bug_numbers": [1254099],
-    "description": "Generic histogram to track uptake of remote content like blocklists, settings or updates."
-  },
   "UPDATE_NOTIFICATION_SHOWN": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "bug_numbers": [893505],
+    "bug_numbers": [893505, 1521427],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the application update doorhanger type that was displayed.",
     "labels": ["restart", "available", "manual", "unsupported"]
   },
   "UPDATE_NOTIFICATION_BADGE_SHOWN": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "bug_numbers": [893505, 1365204],
+    "bug_numbers": [893505, 1365204, 1521427],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the application update badge type that was displayed.",
     "labels": ["restart", "available", "manual", "unsupported"]
   },
   "UPDATE_NOTIFICATION_DISMISSED": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "bug_numbers": [893505],
+    "bug_numbers": [893505, 1521427],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the dismiss action was executed for this application update doorhanger type.",
     "labels": ["restart", "available", "manual", "unsupported"]
   },
   "UPDATE_NOTIFICATION_MAIN_ACTION_DOORHANGER": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "bug_numbers": [893505],
+    "bug_numbers": [893505, 1521427],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the main update action was initiated for this application update doorhanger type.",
     "labels": ["restart", "available", "manual", "unsupported"]
   },
   "UPDATE_NOTIFICATION_MAIN_ACTION_MENU": {
     "record_in_processes": ["main"],
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "bug_numbers": [893505],
+    "bug_numbers": [893505, 1521427],
     "releaseChannelCollection": "opt-out",
     "description": "Update: the update action was initiated from the PanelUI application update menu item.",
     "labels": ["restart", "available", "manual", "unsupported"]
@@ -6091,6 +6080,17 @@
     "bug_numbers": [1343669, 1540193, 1520321],
     "description": "Update: Result code from downloading a partial update via BITS",
     "operating_systems": ["windows"]
+  },
+  "UPTAKE_REMOTE_CONTENT_RESULT_1": {
+    "record_in_processes": ["all"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "keyed": true,
+    "labels": ["up_to_date", "success", "backoff", "pref_disabled", "parse_error", "content_error", "sign_error", "sign_retry_error", "conflict_error", "sync_error", "apply_error", "server_error", "certificate_error", "download_error", "timeout_error", "network_error", "offline_error", "cleanup_error", "unknown_error", "custom_1_error", "custom_2_error", "custom_3_error", "custom_4_error", "custom_5_error"],
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["storage-team@mozilla.com"],
+    "bug_numbers": [1254099],
+    "description": "Generic histogram to track uptake of remote content like blocklists, settings or updates."
   },
   "THUNDERBIRD_GLODA_SIZE_MB": {
     "record_in_processes": ["main", "content"],
@@ -10914,6 +10914,74 @@
     ],
     "n_buckets": 100,
     "description": "Number of unique sites accessing the cache entry keyed by content type."
+  },
+  "NETWORK_CACHE_SIZE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1548472],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 4000,
+    "n_buckets": 100,
+    "keyed": true,
+    "keys": [
+      "SMARTSIZE",
+      "USERDEFINEDSIZE"
+    ],
+    "description": "Cache size in megabytes keyed by cache capacity calculation type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
+  },
+  "NETWORK_CACHE_ENTRY_COUNT" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1548472],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "keyed": true,
+    "keys": [
+      "SMARTSIZE",
+      "USERDEFINEDSIZE"
+    ],
+    "description": "Number of entries in the cache keyed by cache capacity calculation type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
+  },
+  "NETWORK_CACHE_SIZE_SHARE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1548472],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 99,
+    "keyed": true,
+    "keys": [
+      "UNKNOWN",
+      "OTHER",
+      "JAVASCRIPT",
+      "IMAGE",
+      "MEDIA",
+      "STYLESHEET",
+      "WASM"
+    ],
+    "description": "Percentage of the cache size occupied by given content type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
+  },
+  "NETWORK_CACHE_ENTRY_COUNT_SHARE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1548472],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 99,
+    "keyed": true,
+    "keys": [
+      "UNKNOWN",
+      "OTHER",
+      "JAVASCRIPT",
+      "IMAGE",
+      "MEDIA",
+      "STYLESHEET",
+      "WASM"
+    ],
+    "description": "Percentage of the entries with the given content type. Numbers are sampled periodically, every time 2GB of data is written to the cache."
   },
   "DATABASE_LOCKED_EXCEPTION": {
     "record_in_processes": ["main", "content"],

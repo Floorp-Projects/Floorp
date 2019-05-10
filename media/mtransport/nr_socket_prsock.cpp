@@ -1060,9 +1060,8 @@ NS_IMETHODIMP NrUdpSocketIpcProxy::CallListenerError(const nsACString& message,
 
 // callback while receiving UDP packet
 NS_IMETHODIMP NrUdpSocketIpcProxy::CallListenerReceivedData(
-    const nsACString& host, uint16_t port, const uint8_t* data,
-    uint32_t data_length) {
-  return socket_->CallListenerReceivedData(host, port, data, data_length);
+    const nsACString& host, uint16_t port, const nsTArray<uint8_t>& data) {
+  return socket_->CallListenerReceivedData(host, port, data);
 }
 
 // callback while UDP socket is opened
@@ -1119,10 +1118,8 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerError(const nsACString& message,
 }
 
 // callback while receiving UDP packet
-NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString& host,
-                                                       uint16_t port,
-                                                       const uint8_t* data,
-                                                       uint32_t data_length) {
+NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(
+    const nsACString& host, uint16_t port, const nsTArray<uint8_t>& data) {
   ASSERT_ON_THREAD(io_thread_);
 
   PRNetAddr addr;
@@ -1147,7 +1144,7 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString& host,
   }
 
   nsAutoPtr<MediaPacket> buf(new MediaPacket);
-  buf->Copy(data, data_length);
+  buf->Copy(data.Elements(), data.Length());
   RefPtr<nr_udp_message> msg(new nr_udp_message(addr, buf));
 
   RUN_ON_THREAD(sts_thread_,
@@ -1158,19 +1155,9 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString& host,
 }
 
 nsresult NrUdpSocketIpc::SetAddress() {
-  uint16_t port;
-  if (NS_FAILED(socket_child_->GetLocalPort(&port))) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to get local port");
-    return NS_OK;
-  }
+  uint16_t port = socket_child_->LocalPort();
 
-  nsAutoCString address;
-  if (NS_FAILED(socket_child_->GetLocalAddress(address))) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to get local address");
-    return NS_OK;
-  }
+  nsAutoCString address(socket_child_->LocalAddress());
 
   PRNetAddr praddr;
   if (PR_SUCCESS != PR_InitializeNetAddr(PR_IpAddrAny, port, &praddr)) {
@@ -1482,7 +1469,7 @@ void NrUdpSocketIpc::create_i(const nsACString& host, const uint16_t port) {
   ASSERT_ON_THREAD(io_thread_);
 
   uint32_t minBuffSize = 0;
-  nsCOMPtr<nsIUDPSocketChild> socketChild = new dom::UDPSocketChild();
+  RefPtr<dom::UDPSocketChild> socketChild = new dom::UDPSocketChild();
 
   // This can spin the event loop; don't do that with the monitor held
   socketChild->SetBackgroundSpinsEvents();
@@ -1542,12 +1529,7 @@ void NrUdpSocketIpc::connect_i(const nsACString& host, const uint16_t port) {
     return;
   }
 
-  if (NS_FAILED(socket_child_->Connect(proxy, host, port))) {
-    err_ = true;
-    MOZ_ASSERT(false, "Failed to connect UDP socket");
-    mon.NotifyAll();
-    return;
-  }
+  socket_child_->Connect(proxy, host, port);
 }
 
 void NrUdpSocketIpc::sendto_i(const net::NetAddr& addr,
@@ -1582,10 +1564,10 @@ static void ReleaseIOThread_s() { sThread->ReleaseUse(); }
 
 // close(), but transfer the socket_child_ reference to die as well
 // static
-void NrUdpSocketIpc::destroy_i(nsIUDPSocketChild* aChild,
+void NrUdpSocketIpc::destroy_i(dom::UDPSocketChild* aChild,
                                nsCOMPtr<nsIEventTarget>& aStsThread) {
-  RefPtr<nsIUDPSocketChild> socket_child_ref =
-      already_AddRefed<nsIUDPSocketChild>(aChild);
+  RefPtr<dom::UDPSocketChild> socket_child_ref =
+      already_AddRefed<dom::UDPSocketChild>(aChild);
   if (socket_child_ref) {
     socket_child_ref->Close();
   }

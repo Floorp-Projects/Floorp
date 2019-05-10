@@ -141,14 +141,17 @@ Structure:
           profile: { // hdd where the profile folder is located
               model: <string>, // windows only or null on failure
               revision: <string>, // windows only or null on failure
+              type: <string>, // "SSD" or "HDD" windows only or null on failure
           },
           binary:  { // hdd where the application binary is located
               model: <string>, // windows only or null on failure
               revision: <string>, // windows only or null on failure
+              type: <string>, // "SSD" or "HDD" windows only or null on failure
           },
           system:  { // hdd where the system files are located
               model: <string>, // windows only or null on failure
               revision: <string>, // windows only or null on failure
+              type: <string>, // "SSD" or "HDD" windows only or null on failure
           },
         },
         gfx: {

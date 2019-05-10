@@ -51,10 +51,6 @@ already_AddRefed<MediaDataDecoder> GpuDecoderModule::CreateVideoDecoder(
   }
 
   RefPtr<VideoDecoderChild> child = new VideoDecoderChild();
-  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
-      child, VideoDecoderManagerChild::GetManagerThread(),
-      VideoDecoderManagerChild::GetManagerAbstractThread());
-
   SynchronousTask task("InitIPDL");
   MediaResult result(NS_OK);
   VideoDecoderManagerChild::GetManagerThread()->Dispatch(
@@ -75,6 +71,10 @@ already_AddRefed<MediaDataDecoder> GpuDecoderModule::CreateVideoDecoder(
     }
     return nullptr;
   }
+
+  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
+      child, VideoDecoderManagerChild::GetManagerThread(),
+      VideoDecoderManagerChild::GetManagerAbstractThread());
 
   return object.forget();
 }
