@@ -42,8 +42,6 @@ class JSWindowActorParent final : public JSWindowActor {
 
   WindowGlobalParent* Manager() const;
   void Init(const nsAString& aName, WindowGlobalParent* aManager);
-  void StartDestroy();
-  void AfterDestroy();
 
  protected:
   void SendRawMessage(const JSWindowActorMessageMeta& aMeta,
@@ -51,9 +49,8 @@ class JSWindowActorParent final : public JSWindowActor {
                       ErrorResult& aRv) override;
 
  private:
-  ~JSWindowActorParent();
+  ~JSWindowActorParent() = default;
 
-  bool mCanSend = true;
   RefPtr<WindowGlobalParent> mManager;
 };
 
