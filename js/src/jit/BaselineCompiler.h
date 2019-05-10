@@ -697,8 +697,14 @@ class BaselineInterpreterHandler {
 using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;
 
 class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
+  // Offsets of patchable call instructions for debugger breakpoints/stepping.
+  js::Vector<uint32_t, 0, SystemAllocPolicy> debugTrapOffsets_;
+
  public:
   explicit BaselineInterpreterGenerator(JSContext* cx);
+
+ private:
+  MOZ_MUST_USE bool emitDebugTrap();
 };
 
 }  // namespace jit
