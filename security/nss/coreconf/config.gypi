@@ -19,6 +19,8 @@
       'conditions': [
         ['OS=="android"', {
           'target_arch%': 'arm',
+        }, 'OS=="ios"', {
+          'target_arch%': 'arm64',
         }, {
           # Default architecture we're building for is the architecture we're
           # building on.
@@ -35,7 +37,7 @@
         },{
           'use_system_sqlite%': 0,
         }],
-        ['OS=="mac" or OS=="win"', {
+        ['OS=="mac" or OS=="ios" or OS=="win"', {
           'cc_use_gnu_ld%': 0,
         }, {
           'cc_use_gnu_ld%': 1,
@@ -54,7 +56,7 @@
           'zlib_libs%': ['-lz'],
           'dll_prefix': 'lib',
           'conditions': [
-            ['OS=="mac"', {
+            ['OS=="mac" or OS=="ios"', {
               'moz_debug_flags%': '-gdwarf-2 -gfull',
               'dll_suffix': 'dylib',
             }, {
@@ -155,7 +157,7 @@
           'standalone_static_library': '1',
         },
       }],
-      [ 'OS!="android" and OS!="mac" and OS!="win"', {
+      [ 'OS!="android" and OS!="mac" and OS!="ios" and OS!="win"', {
         'libraries': [
           '-lpthread',
         ],
@@ -373,7 +375,7 @@
               'OPENBSD',
             ],
           }],
-          ['OS=="mac" or OS=="dragonfly" or OS=="freebsd" or OS=="netbsd" or OS=="openbsd"', {
+          ['OS=="mac" or OS=="ios" or OS=="dragonfly" or OS=="freebsd" or OS=="netbsd" or OS=="openbsd"', {
             'defines': [
               'HAVE_BSD_FLOCK',
             ],
@@ -385,7 +387,7 @@
               '_REENTRANT',
             ],
           }],
-          [ 'OS!="mac" and OS!="win"', {
+          [ 'OS!="mac" and OS!="ios" and OS!="win"', {
             'cflags': [
               '-fPIC',
               '-pipe',
@@ -411,7 +413,7 @@
           }],
           [ 'use_pprof==1 and OS!="android" and OS!="win"', {
             'conditions': [
-              [ 'OS=="mac"', {
+              [ 'OS=="mac" or OS=="ios"', {
                 'xcode_settings': {
                   'OTHER_LDFLAGS': [ '-lprofiler' ],
                 },
@@ -471,7 +473,7 @@
               'ANDROID',
             ],
           }],
-          [ 'OS=="mac"', {
+          [ 'OS=="mac" or OS=="ios"', {
             'defines': [
               'DARWIN',
             ],
@@ -486,7 +488,17 @@
                   'ARCHS': ['x86_64'],
                 },
               }],
+              [ 'target_arch=="arm64"', {
+                'xcode_settings': {
+                  'ARCHS': ['arm64'],
+                },
+              }],
             ],
+          }],
+          [ 'OS=="ios"', {
+            'xcode_settings': {
+              'IPHONEOS_DEPLOYMENT_TARGET': '<(iphone_deployment_target)',
+            },
           }],
           [ 'OS=="win"', {
             'defines': [
@@ -555,7 +567,7 @@
       'Debug': {
         'inherit_from': ['Common'],
         'conditions': [
-          [ 'OS!="mac" and OS!="win"', {
+          [ 'OS!="mac" and OS!="ios" and OS!="win"', {
             'cflags': [
               '-g',
               '<(moz_debug_flags)',
@@ -625,7 +637,7 @@
         'process_map_file': ['/bin/sh', '-c', '/usr/bin/env grep -v ";-" >(mapfile) | sed -e "s,;+,," -e "s; DATA ;;" -e "s,;;,," -e "s,;.*,;," > >@(_outputs)'],
       },
     }],
-    [ 'OS=="mac"', {
+    [ 'OS=="mac" or OS=="ios"', {
       'variables': {
         'process_map_file': ['/bin/sh', '-c', '/usr/bin/grep -v ";+" >(mapfile) | grep -v ";-" | sed -e "s; DATA ;;" -e "s,;;,," -e "s,;.*,," -e "s,^,_," > >@(_outputs)'],
       },
