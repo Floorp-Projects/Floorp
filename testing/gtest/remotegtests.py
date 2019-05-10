@@ -30,6 +30,8 @@ class RemoteGTests(object):
     """
        A test harness to run gtest on Android.
     """
+    def __init__(self):
+        self.device = None
 
     def build_environment(self, shuffle, test_filter):
         """
@@ -190,10 +192,11 @@ class RemoteGTests(object):
         return crashed
 
     def cleanup(self):
-        self.device.stop_application(self.package)
-        self.device.rm(self.remote_log, force=True, root=True)
-        self.device.rm(self.remote_profile, recursive=True, force=True, root=True)
-        self.device.rm(self.remote_minidumps, recursive=True, force=True, root=True)
+        if self.device:
+            self.device.stop_application(self.package)
+            self.device.rm(self.remote_log, force=True, root=True)
+            self.device.rm(self.remote_profile, recursive=True, force=True, root=True)
+            self.device.rm(self.remote_minidumps, recursive=True, force=True, root=True)
 
 
 class AppWaiter(object):
