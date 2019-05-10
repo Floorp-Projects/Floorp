@@ -913,7 +913,7 @@ var PushService = {
     if (payload) {
       gPushNotifier.notifyPushWithData(aPushRecord.scope,
                                        aPushRecord.principal,
-                                       messageID, payload.length, payload);
+                                       messageID, payload);
     } else {
       gPushNotifier.notifyPush(aPushRecord.scope, aPushRecord.principal,
                                messageID);

@@ -41,17 +41,18 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PushNotifier)
 NS_IMETHODIMP
 PushNotifier::NotifyPushWithData(const nsACString& aScope,
                                  nsIPrincipal* aPrincipal,
-                                 const nsAString& aMessageId, uint32_t aDataLen,
-                                 uint8_t* aData) {
+                                 const nsAString& aMessageId,
+                                 const nsTArray<uint8_t>& aData) {
   NS_ENSURE_ARG(aPrincipal);
+  // We still need to do this copying business, if we want the copy to be
+  // fallible.  Just passing Some(aData) would do an infallible copy at the
+  // point where the Some() call happens.
   nsTArray<uint8_t> data;
-  if (!data.SetCapacity(aDataLen, fallible)) {
+  if (!data.AppendElements(aData, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  if (!data.InsertElementsAt(0, aData, aDataLen, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Some(data));
+  PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId,
+                                   Some(std::move(data)));
   return Dispatch(dispatcher);
 }
 
@@ -194,20 +195,8 @@ PushData::Json(JSContext* aCx, JS::MutableHandle<JS::Value> aResult) {
 }
 
 NS_IMETHODIMP
-PushData::Binary(uint32_t* aDataLen, uint8_t** aData) {
-  NS_ENSURE_ARG_POINTER(aDataLen);
-  NS_ENSURE_ARG_POINTER(aData);
-
-  *aData = nullptr;
-  if (mData.IsEmpty()) {
-    *aDataLen = 0;
-    return NS_OK;
-  }
-  uint32_t length = mData.Length();
-  uint8_t* data = static_cast<uint8_t*>(moz_xmalloc(length * sizeof(uint8_t)));
-  memcpy(data, mData.Elements(), length * sizeof(uint8_t));
-  *aDataLen = length;
-  *aData = data;
+PushData::Binary(nsTArray<uint8_t>& aData) {
+  aData = mData;
   return NS_OK;
 }
 

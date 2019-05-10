@@ -39,8 +39,7 @@ interface nsIPushNotifier : nsISupports
    */
   void notifyPushWithData(in ACString scope, in nsIPrincipal principal,
                           in AString messageId,
-                          [optional] in uint32_t dataLen,
-                          [array, size_is(dataLen)] in uint8_t data);
+                          in Array<uint8_t> data);
 
   /**
    * Fires a `push-subscription-change` observer notification, and sends a
@@ -78,8 +77,7 @@ interface nsIPushData : nsISupports
   [implicit_jscontext] jsval json();
 
   /** Extracts the raw binary data. */
-  void binary([optional] out uint32_t dataLen,
-              [array, retval, size_is(dataLen)] out uint8_t data);
+  Array<uint8_t> binary();
 };
 
 /**
