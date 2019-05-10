@@ -3533,11 +3533,6 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
     // callbacks have been called:
     mAutoBeforeAndAfterPrint = std::move(autoBeforeAndAfterPrint);
   }
-  dom::Element* root = mDocument->GetRootElement();
-  if (root &&
-      root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint)) {
-    printJob->SetDisallowSelectionPrint(true);
-  }
   rv = printJob->Print(mDocument, aPrintSettings, aWebProgressListener);
   if (NS_FAILED(rv)) {
     OnDonePrinting();
@@ -3617,12 +3612,6 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
     // Postpone the 'afterprint' event until after the mozPrintCallback
     // callbacks have been called:
     mAutoBeforeAndAfterPrint = std::move(autoBeforeAndAfterPrint);
-  }
-  dom::Element* root = doc->GetRootElement();
-  if (root &&
-      root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint)) {
-    PR_PL(("PrintPreview: found mozdisallowselectionprint"));
-    printJob->SetDisallowSelectionPrint(true);
   }
   rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener);
   mPrintPreviewZoomed = false;
