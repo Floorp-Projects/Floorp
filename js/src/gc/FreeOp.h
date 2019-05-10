@@ -19,6 +19,8 @@ struct JSRuntime;
 
 namespace js {
 
+enum class MemoryUse : uint8_t;
+
 /*
  * A FreeOp can do one thing: free memory. For convenience, it has delete_
  * convenience methods that also call destructors.
@@ -49,16 +51,21 @@ class FreeOp : public JSFreeOp {
 
   void free_(void* p) { js_free(p); }
 
-  void freeLater(void* p) {
-    // FreeOps other than the defaultFreeOp() are constructed on the stack,
-    // and won't hold onto the pointers to free indefinitely.
-    MOZ_ASSERT(!isDefaultFreeOp());
+  // Free memory that was associated with a GC thing using js::AddCellMemory.
+  void free_(gc::Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!freeLaterList.append(p)) {
-      oomUnsafe.crash("FreeOp::freeLater");
-    }
-  }
+  // Queue an allocation to be freed when the FreeOp is destroyed.
+  //
+  // This should not be called on the default FreeOps returned by
+  // JSRuntime/JSContext::defaultFreeOp() since these are not destroyed until
+  // the runtime itself is destroyed.
+  //
+  // This is used to ensure that copy-on-write object elements are not freed
+  // until all objects that refer to them have been finalized.
+  void freeLater(void* p);
+
+  // Free memory that was associated with a GC thing using js::AddCellMemory.
+  void freeLater(gc::Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
   bool appendJitPoisonRange(const jit::JitPoisonRange& range) {
     // FreeOps other than the defaultFreeOp() are constructed on the stack,
@@ -73,6 +80,24 @@ class FreeOp : public JSFreeOp {
     if (p) {
       p->~T();
       free_(p);
+    }
+  }
+
+  // Delete a C++ object that was associated with a GC thing using
+  // js::AddCellMemory. The size is determined by the type T.
+  template <class T>
+  void delete_(gc::Cell* cell, T* p, MemoryUse use) {
+    delete_(cell, p, sizeof(T), use);
+  }
+
+  // Delete a C++ object that was associated with a GC thing using
+  // js::AddCellMemory. The size of the allocation is passed in to allow for
+  // allocations with trailing data after the object.
+  template <class T>
+  void delete_(gc::Cell* cell, T* p, size_t nbytes, MemoryUse use) {
+    if (p) {
+      p->~T();
+      free_(cell, p, nbytes, use);
     }
   }
 };
