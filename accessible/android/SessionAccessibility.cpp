@@ -19,6 +19,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
+#include "mozilla/jni/GeckoBundleUtils.h"
 
 #ifdef DEBUG
 #  include <android/log.h>

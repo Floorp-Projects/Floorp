@@ -19,6 +19,7 @@
 #include "nsTextEquivUtils.h"
 
 #include "mozilla/a11y/PDocAccessibleChild.h"
+#include "mozilla/jni/GeckoBundleUtils.h"
 
 #define ROLE_STRINGS_URL "chrome://global/locale/AccessFu.properties"
 
