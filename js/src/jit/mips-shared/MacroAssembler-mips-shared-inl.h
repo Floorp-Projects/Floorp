@@ -787,18 +787,27 @@ void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {
 
 void MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs,
                                  Register src, Register dest) {
-  MOZ_CRASH();
+  Register scratch = ScratchRegister;
+  MOZ_ASSERT(src != scratch && dest != scratch);
+  cmp32Set(cond, lhs, rhs, scratch);
+  as_movn(dest, src, scratch);
 }
 
 void MacroAssembler::cmp32MovePtr(Condition cond, Register lhs, Imm32 rhs,
                                   Register src, Register dest) {
-  MOZ_CRASH();
+  Register scratch = ScratchRegister;
+  MOZ_ASSERT(src != scratch && dest != scratch);
+  cmp32Set(cond, lhs, rhs, scratch);
+  as_movn(dest, src, scratch);
 }
 
 void MacroAssembler::cmp32Move32(Condition cond, Register lhs,
                                  const Address& rhs, Register src,
                                  Register dest) {
-  MOZ_CRASH();
+  SecondScratchRegisterScope scratch2(*this);
+  MOZ_ASSERT(lhs != scratch2 && src != scratch2 && dest != scratch2);
+  load32(rhs, scratch2);
+  cmp32Move32(cond, lhs, scratch2, src, dest);
 }
 
 void MacroAssembler::cmp32Load32(Condition cond, Register lhs,

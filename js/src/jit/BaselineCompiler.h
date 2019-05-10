@@ -327,7 +327,6 @@ class BaselineCodeGen {
   void pushUint8BytecodeOperandArg(Register scratch);
   void pushUint16BytecodeOperandArg(Register scratch);
 
-  void loadResumeIndexBytecodeOperand(Register dest);
   void loadInt32LengthBytecodeOperand(Register dest);
   void loadInt32IndexBytecodeOperand(ValueOperand dest);
   void loadNumFormalArguments(Register dest);
@@ -697,8 +696,20 @@ class BaselineInterpreterHandler {
 using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;
 
 class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
+  // Offsets of patchable call instructions for debugger breakpoints/stepping.
+  js::Vector<uint32_t, 0, SystemAllocPolicy> debugTrapOffsets_;
+
+  // Offset of the code to start interpreting a bytecode op.
+  uint32_t interpretOpOffset_ = 0;
+
  public:
   explicit BaselineInterpreterGenerator(JSContext* cx);
+
+  MOZ_MUST_USE bool generate(BaselineInterpreter& interpreter);
+
+ private:
+  MOZ_MUST_USE bool emitInterpreterLoop();
+  MOZ_MUST_USE bool emitDebugTrap();
 };
 
 }  // namespace jit

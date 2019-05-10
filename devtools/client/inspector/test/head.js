@@ -775,20 +775,20 @@ async function assertTooltipShownOnHover(tooltip, target) {
  * @return a promise that resolves with the tooltip object
  */
 async function assertShowPreviewTooltip(view, target) {
+  const name = "previewTooltip";
+
+  // Get the tooltip. If it does not exist one will be created.
+  const tooltip = view.tooltips.getTooltip(name);
+  ok(tooltip, `Tooltip '${name}' has been instantiated`);
+
+  const shown = tooltip.once("shown");
   const mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mousemove", {
     bubbles: true,
   });
   target.dispatchEvent(mouseEvent);
 
-  const name = "previewTooltip";
-  ok(view.tooltips._instances.has(name),
-    `Tooltip '${name}' has been instantiated`);
-  const tooltip = view.tooltips.getTooltip(name);
-
-  if (!tooltip.isVisible()) {
-    info("Waiting for tooltip to be shown");
-    await tooltip.once("shown");
-  }
+  info("Waiting for tooltip to be shown");
+  await shown;
 
   ok(tooltip.isVisible(), `The tooltip '${name}' is visible`);
 

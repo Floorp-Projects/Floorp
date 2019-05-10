@@ -97,12 +97,13 @@ add_task(async function do_test() {
                pm.testPermissionFromPrincipal(principal3, TEST_PERMISSION));
   Assert.equal(Ci.nsIPermissionManager.ALLOW_ACTION,
                pm.testPermissionFromPrincipal(principal4, TEST_PERMISSION));
-  // make sure principals with userContextId or firstPartyDomain use the same permissions
+  // make sure principals with userContextId use the same permissions
   Assert.equal(Ci.nsIPermissionManager.ALLOW_ACTION,
                pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION));
-  Assert.equal(Ci.nsIPermissionManager.ALLOW_ACTION,
+  // make sure principals with a firstPartyDomain use different permissions
+  Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
                pm.testPermissionFromPrincipal(principal7, TEST_PERMISSION));
-  Assert.equal(Ci.nsIPermissionManager.ALLOW_ACTION,
+  Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
                pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
 
   // Asking for this permission to be removed should result in that permission
@@ -113,10 +114,6 @@ add_task(async function do_test() {
   // make sure principals with userContextId or firstPartyDomain use the same permissions
   Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
                pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION));
-  Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
-               pm.testPermissionFromPrincipal(principal7, TEST_PERMISSION));
-  Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
-               pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   // and we should have this UNKNOWN_ACTION reflected in the DB
   await checkCapabilityViaDB(Ci.nsIPermissionManager.UNKNOWN_ACTION);
   // but the permission should *not* appear in the enumerator.
@@ -127,12 +124,13 @@ add_task(async function do_test() {
 
   Assert.equal(Ci.nsIPermissionManager.ALLOW_ACTION,
                pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
-  // make sure principals with userContextId or firstPartyDomain use the same permissions
+  // make sure principals with userContextId use the same permissions
   Assert.equal(Ci.nsIPermissionManager.ALLOW_ACTION,
                pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION));
-  Assert.equal(Ci.nsIPermissionManager.ALLOW_ACTION,
+  // make sure principals with firstPartyDomain use different permissions
+  Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
                pm.testPermissionFromPrincipal(principal7, TEST_PERMISSION));
-  Assert.equal(Ci.nsIPermissionManager.ALLOW_ACTION,
+  Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
                pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   // and allow it to again be seen in the enumerator.
   Assert.equal(Ci.nsIPermissionManager.ALLOW_ACTION, findCapabilityViaEnum());
@@ -143,12 +141,13 @@ add_task(async function do_test() {
   // it should be reflected in a permission check, in the enumerator and the DB
   Assert.equal(Ci.nsIPermissionManager.DENY_ACTION,
                pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
-  // make sure principals with userContextId or firstPartyDomain use the same permissions
+  // make sure principals with userContextId use the same permissions
   Assert.equal(Ci.nsIPermissionManager.DENY_ACTION,
                pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION));
-  Assert.equal(Ci.nsIPermissionManager.DENY_ACTION,
+  // make sure principals with firstPartyDomain use different permissions
+  Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
                pm.testPermissionFromPrincipal(principal7, TEST_PERMISSION));
-  Assert.equal(Ci.nsIPermissionManager.DENY_ACTION,
+  Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
                pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   Assert.equal(Ci.nsIPermissionManager.DENY_ACTION, findCapabilityViaEnum());
   await checkCapabilityViaDB(Ci.nsIPermissionManager.DENY_ACTION);
@@ -160,12 +159,13 @@ add_task(async function do_test() {
   // it should be reflected in a permission check, in the enumerator and the DB
   Assert.equal(Ci.nsIPermissionManager.PROMPT_ACTION,
                pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
-  // make sure principals with userContextId or firstPartyDomain use the same permissions
+  // make sure principals with userContextId use the same permissions
   Assert.equal(Ci.nsIPermissionManager.PROMPT_ACTION,
                pm.testPermissionFromPrincipal(principal6, TEST_PERMISSION));
-  Assert.equal(Ci.nsIPermissionManager.PROMPT_ACTION,
+  // make sure principals with firstPartyDomain use different permissions
+  Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
                pm.testPermissionFromPrincipal(principal7, TEST_PERMISSION));
-  Assert.equal(Ci.nsIPermissionManager.PROMPT_ACTION,
+  Assert.equal(Ci.nsIPermissionManager.UNKNOWN_ACTION,
                pm.testPermissionFromPrincipal(principal8, TEST_PERMISSION));
   Assert.equal(Ci.nsIPermissionManager.PROMPT_ACTION, findCapabilityViaEnum());
   await checkCapabilityViaDB(Ci.nsIPermissionManager.PROMPT_ACTION);

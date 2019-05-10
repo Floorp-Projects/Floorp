@@ -12,6 +12,8 @@
 namespace mozilla {
 namespace dom {
 
+JSWindowActorParent::~JSWindowActorParent() { MOZ_ASSERT(!mManager); }
+
 JSObject* JSWindowActorParent::WrapObject(JSContext* aCx,
                                           JS::Handle<JSObject*> aGivenProto) {
   return JSWindowActorParent_Binding::Wrap(aCx, this, aGivenProto);
@@ -55,7 +57,7 @@ class AsyncMessageToChild : public Runnable {
 void JSWindowActorParent::SendRawMessage(const JSWindowActorMessageMeta& aMeta,
                                          ipc::StructuredCloneData&& aData,
                                          ErrorResult& aRv) {
-  if (NS_WARN_IF(!mManager || mManager->IsClosed())) {
+  if (NS_WARN_IF(!mCanSend || !mManager || mManager->IsClosed())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -81,6 +83,16 @@ void JSWindowActorParent::SendRawMessage(const JSWindowActorMessageMeta& aMeta,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
+}
+
+void JSWindowActorParent::StartDestroy() {
+  JSWindowActor::StartDestroy();
+  mCanSend = false;
+}
+
+void JSWindowActorParent::AfterDestroy() {
+  JSWindowActor::AfterDestroy();
+  mManager = nullptr;
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(JSWindowActorParent, JSWindowActor, mManager)

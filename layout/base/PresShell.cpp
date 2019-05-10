@@ -45,6 +45,7 @@
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/PopupBlocker.h"
@@ -821,6 +822,7 @@ PresShell::PresShell()
       mIsNeverPainting(false),
       mResolutionUpdated(false),
       mResolutionUpdatedByApz(false),
+      mUnderHiddenEmbedderElement(false),
       mDocumentLoading(false),
       mNoDelayedMouseEvents(false),
       mNoDelayedKeyEvents(false),
@@ -1054,6 +1056,26 @@ void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
 
     // We call this to create mMobileViewportManager, if it is needed.
     UpdateViewportOverridden(false);
+  }
+
+  if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
+    BrowsingContext* bc = nsDocShell::Cast(docShell)->GetBrowsingContext();
+    bool embedderFrameIsHidden = true;
+    if (Element* embedderElement = bc->GetEmbedderElement()) {
+      if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
+        embedderFrameIsHidden = !embedderFrame->StyleVisibility()->IsVisible();
+      }
+    }
+
+    if (BrowsingContext* parent = bc->GetParent()) {
+      if (nsCOMPtr<nsIDocShell> parentDocShell = parent->GetDocShell()) {
+        if (PresShell* parentPresShell = parentDocShell->GetPresShell()) {
+          mUnderHiddenEmbedderElement =
+              parentPresShell->IsUnderHiddenEmbedderElement() ||
+              embedderFrameIsHidden;
+        }
+      }
+    }
   }
 }
 
@@ -8811,7 +8833,7 @@ void PresShell::DidPaintWindow() {
   }
 }
 
-bool PresShell::IsVisible() {
+bool PresShell::IsVisible() const {
   if (!mIsActive || !mViewManager) return false;
 
   nsView* view = mViewManager->GetRootView();
@@ -10882,6 +10904,43 @@ void PresShell::NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
 void PresShell::NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
                                                     uint32_t aSheetType) {
   RemoveSheet(ToOrigin(aSheetType), aSheet);
+}
+
+void PresShell::SetIsUnderHiddenEmbedderElement(
+    bool aUnderHiddenEmbedderElement) {
+  if (mUnderHiddenEmbedderElement == aUnderHiddenEmbedderElement) {
+    return;
+  }
+
+  mUnderHiddenEmbedderElement = aUnderHiddenEmbedderElement;
+
+  if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
+    BrowsingContext* bc = nsDocShell::Cast(docShell)->GetBrowsingContext();
+
+    // Propagate to children.
+    for (BrowsingContext* child : bc->GetChildren()) {
+      bool embedderFrameIsHidden = true;
+      if (Element* embedderElement = bc->GetEmbedderElement()) {
+        if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
+          embedderFrameIsHidden =
+              !embedderFrame->StyleVisibility()->IsVisible();
+        }
+      }
+
+      if (nsIDocShell* childDocShell = child->GetDocShell()) {
+        PresShell* presShell = childDocShell->GetPresShell();
+        if (!presShell) {
+          continue;
+        }
+
+        presShell->SetIsUnderHiddenEmbedderElement(
+            aUnderHiddenEmbedderElement || embedderFrameIsHidden);
+      }
+      // FIXME: Bug 1518919 - In the case where the BrowsingContext has no
+      // docshell which means it's out-of-process iframe, we need to propagate
+      // the info via an IPC call.
+    }
+  }
 }
 
 nsIContent* PresShell::EventHandler::GetOverrideClickTarget(

@@ -61,7 +61,7 @@ static int (*default_picture_allocator)(Dav1dPicture *, void *);
 
 static int fuzz_picture_allocator(Dav1dPicture *pic, void *cookie) {
     if (pic->p.w > DAV1D_FUZZ_MAX_SIZE || pic->p.h > DAV1D_FUZZ_MAX_SIZE)
-        return -EINVAL;
+        return DAV1D_ERR(EINVAL);
 
     return default_picture_allocator(pic, cookie);
 }
@@ -149,14 +149,14 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
         do {
             if ((err = dav1d_send_data(ctx, &buf)) < 0) {
-                if (err != -EAGAIN)
+                if (err != DAV1D_ERR(EAGAIN))
                     break;
             }
             memset(&pic, 0, sizeof(pic));
             err = dav1d_get_picture(ctx, &pic);
             if (err == 0) {
                 dav1d_picture_unref(&pic);
-            } else if (err != -EAGAIN) {
+            } else if (err != DAV1D_ERR(EAGAIN)) {
                 break;
             }
         } while (buf.sz > 0);
@@ -170,7 +170,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         err = dav1d_get_picture(ctx, &pic);
         if (err == 0)
             dav1d_picture_unref(&pic);
-    } while (err != -EAGAIN);
+    } while (err != DAV1D_ERR(EAGAIN));
 
 cleanup:
     dav1d_flush(ctx);

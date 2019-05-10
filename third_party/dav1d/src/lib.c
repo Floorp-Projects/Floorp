@@ -61,8 +61,8 @@ void dav1d_default_settings(Dav1dSettings *const s) {
     s->n_tile_threads = 1;
     s->apply_grain = 1;
     s->allocator.cookie = NULL;
-    s->allocator.alloc_picture_callback = default_picture_allocator;
-    s->allocator.release_picture_callback = default_picture_release;
+    s->allocator.alloc_picture_callback = dav1d_default_picture_alloc;
+    s->allocator.release_picture_callback = dav1d_default_picture_release;
     s->logger.cookie = NULL;
     s->logger.callback = dav1d_log_default_callback;
     s->operating_point = 0;
@@ -77,18 +77,22 @@ int dav1d_open(Dav1dContext **const c_out,
     static pthread_once_t initted = PTHREAD_ONCE_INIT;
     pthread_once(&initted, init_internal);
 
-    validate_input_or_ret(c_out != NULL, -EINVAL);
-    validate_input_or_ret(s != NULL, -EINVAL);
+    validate_input_or_ret(c_out != NULL, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(s != NULL, DAV1D_ERR(EINVAL));
     validate_input_or_ret(s->n_tile_threads >= 1 &&
-                          s->n_tile_threads <= DAV1D_MAX_TILE_THREADS, -EINVAL);
+                          s->n_tile_threads <= DAV1D_MAX_TILE_THREADS, DAV1D_ERR(EINVAL));
     validate_input_or_ret(s->n_frame_threads >= 1 &&
-                          s->n_frame_threads <= DAV1D_MAX_FRAME_THREADS, -EINVAL);
+                          s->n_frame_threads <= DAV1D_MAX_FRAME_THREADS, DAV1D_ERR(EINVAL));
     validate_input_or_ret(s->allocator.alloc_picture_callback != NULL,
-                          -EINVAL);
+                          DAV1D_ERR(EINVAL));
     validate_input_or_ret(s->allocator.release_picture_callback != NULL,
-                          -EINVAL);
+                          DAV1D_ERR(EINVAL));
     validate_input_or_ret(s->operating_point >= 0 &&
-                          s->operating_point <= 31, -EINVAL);
+                          s->operating_point <= 31, DAV1D_ERR(EINVAL));
+
+    pthread_attr_t thread_attr;
+    if (pthread_attr_init(&thread_attr)) return DAV1D_ERR(ENOMEM);
+    pthread_attr_setstacksize(&thread_attr, 512 * 1024);
 
     Dav1dContext *const c = *c_out = dav1d_alloc_aligned(sizeof(*c), 32);
     if (!c) goto error;
@@ -151,7 +155,7 @@ int dav1d_open(Dav1dContext **const c_out,
                     goto error;
                 }
                 t->tile_thread.fttd = &f->tile_thread;
-                if (pthread_create(&t->tile_thread.td.thread, NULL, dav1d_tile_task, t)) {
+                if (pthread_create(&t->tile_thread.td.thread, &thread_attr, dav1d_tile_task, t)) {
                     pthread_cond_destroy(&t->tile_thread.td.cond);
                     pthread_mutex_destroy(&t->tile_thread.td.lock);
                     goto error;
@@ -159,7 +163,7 @@ int dav1d_open(Dav1dContext **const c_out,
                 t->tile_thread.td.inited = 1;
             }
         }
-        f->libaom_cm = av1_alloc_ref_mv_common();
+        f->libaom_cm = dav1d_alloc_ref_mv_common();
         if (!f->libaom_cm) goto error;
         if (c->n_fc > 1) {
             if (pthread_mutex_init(&f->frame_thread.td.lock, NULL)) goto error;
@@ -167,7 +171,7 @@ int dav1d_open(Dav1dContext **const c_out,
                 pthread_mutex_destroy(&f->frame_thread.td.lock);
                 goto error;
             }
-            if (pthread_create(&f->frame_thread.td.thread, NULL, dav1d_frame_task, f)) {
+            if (pthread_create(&f->frame_thread.td.thread, &thread_attr, dav1d_frame_task, f)) {
                 pthread_cond_destroy(&f->frame_thread.td.cond);
                 pthread_mutex_destroy(&f->frame_thread.td.lock);
                 goto error;
@@ -182,11 +186,14 @@ int dav1d_open(Dav1dContext **const c_out,
     c->intra_edge.root[BL_64X64] = &c->intra_edge.branch_sb64[0].node;
     dav1d_init_mode_tree(c->intra_edge.root[BL_64X64], c->intra_edge.tip_sb64, 0);
 
+    pthread_attr_destroy(&thread_attr);
+
     return 0;
 
 error:
     if (c) close_internal(c_out, 0);
-    return -ENOMEM;
+    pthread_attr_destroy(&thread_attr);
+    return DAV1D_ERR(ENOMEM);
 }
 
 static void dummy_free(const uint8_t *const data, void *const user_data) {
@@ -199,7 +206,7 @@ int dav1d_parse_sequence_header(Dav1dSequenceHeader *const out,
     Dav1dData buf = { 0 };
     int res;
 
-    validate_input_or_ret(out != NULL, -EINVAL);
+    validate_input_or_ret(out != NULL, DAV1D_ERR(EINVAL));
 
     Dav1dSettings s;
     dav1d_default_settings(&s);
@@ -224,7 +231,7 @@ int dav1d_parse_sequence_header(Dav1dSequenceHeader *const out,
     }
 
     if (!c->seq_hdr) {
-        res = -EINVAL;
+        res = DAV1D_ERR(EINVAL);
         goto error;
     }
 
@@ -240,14 +247,14 @@ error:
 
 int dav1d_send_data(Dav1dContext *const c, Dav1dData *const in)
 {
-    validate_input_or_ret(c != NULL, -EINVAL);
-    validate_input_or_ret(in != NULL, -EINVAL);
-    validate_input_or_ret(in->data == NULL || in->sz, -EINVAL);
+    validate_input_or_ret(c != NULL, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(in != NULL, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(in->data == NULL || in->sz, DAV1D_ERR(EINVAL));
 
     c->drain = 0;
 
     if (c->in.data)
-        return -EAGAIN;
+        return DAV1D_ERR(EAGAIN);
     dav1d_data_move_ref(&c->in, in);
 
     return 0;
@@ -336,22 +343,22 @@ static int drain_picture(Dav1dContext *const c, Dav1dPicture *const out) {
         }
     } while (++drain_count < c->n_fc);
 
-    return -EAGAIN;
+    return DAV1D_ERR(EAGAIN);
 }
 
 int dav1d_get_picture(Dav1dContext *const c, Dav1dPicture *const out)
 {
     int res;
 
-    validate_input_or_ret(c != NULL, -EINVAL);
-    validate_input_or_ret(out != NULL, -EINVAL);
+    validate_input_or_ret(c != NULL, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(out != NULL, DAV1D_ERR(EINVAL));
 
     const int drain = c->drain;
     c->drain = 1;
 
     Dav1dData *const in = &c->in;
     if (!in->data) {
-        if (c->n_fc == 1) return -EAGAIN;
+        if (c->n_fc == 1) return DAV1D_ERR(EAGAIN);
         return drain_picture(c, out);
     }
 
@@ -377,7 +384,7 @@ int dav1d_get_picture(Dav1dContext *const c, Dav1dPicture *const out)
     if (c->n_fc > 1 && drain)
         return drain_picture(c, out);
 
-    return -EAGAIN;
+    return DAV1D_ERR(EAGAIN);
 }
 
 void dav1d_flush(Dav1dContext *const c) {
@@ -502,7 +509,7 @@ static void close_internal(Dav1dContext **const c_out, int flush) {
         free(f->lf.lr_mask);
         free(f->lf.level);
         free(f->lf.tx_lpf_right_edge[0]);
-        if (f->libaom_cm) av1_free_ref_mv_common(f->libaom_cm);
+        if (f->libaom_cm) dav1d_free_ref_mv_common(f->libaom_cm);
         dav1d_free_aligned(f->lf.cdef_line);
         dav1d_free_aligned(f->lf.lr_lpf_line);
     }

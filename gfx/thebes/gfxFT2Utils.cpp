@@ -24,11 +24,16 @@ uint32_t gfxFT2LockedFace::GetGlyph(uint32_t aCharCode) {
   // selected charmap.  This can cause non-determistic behavior when more
   // than one charmap supports a character but with different glyphs, as
   // with older versions of MS Gothic, for example.  Always prefer a Unicode
-  // charmap, if there is one.  (FcFreeTypeCharIndex usually does the
-  // appropriate Unicode conversion, but some fonts have non-Roman glyphs
-  // for FT_ENCODING_APPLE_ROMAN characters.)
-  if (!mFace->charmap || mFace->charmap->encoding != FT_ENCODING_UNICODE) {
-    FT_Select_Charmap(mFace, FT_ENCODING_UNICODE);
+  // charmap, if there is one; failing that, try MS_SYMBOL.
+  // (FcFreeTypeCharIndex usually does the appropriate Unicode conversion,
+  // but some fonts have non-Roman glyphs for FT_ENCODING_APPLE_ROMAN
+  // characters.)
+  if (!mFace->charmap || (mFace->charmap->encoding != FT_ENCODING_UNICODE &&
+                          mFace->charmap->encoding != FT_ENCODING_MS_SYMBOL)) {
+    if (FT_Err_Ok != FT_Select_Charmap(mFace, FT_ENCODING_UNICODE) &&
+        FT_Err_Ok != FT_Select_Charmap(mFace, FT_ENCODING_MS_SYMBOL)) {
+      NS_WARNING("failed to select Unicode or symbol charmap");
+    }
   }
 
   return FcFreeTypeCharIndex(mFace, aCharCode);

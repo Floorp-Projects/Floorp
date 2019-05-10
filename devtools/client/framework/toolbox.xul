@@ -16,6 +16,9 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
+  <linkset>
+    <html:link rel="localization" href="devtools/tooltips.ftl"/>
+  </linkset>
 
   <html:link href="chrome://browser/skin/window.svg" rel="shortcut icon"/>
   <script src="chrome://devtools/content/shared/theme-switching.js"/>

@@ -2101,6 +2101,12 @@ class JSScript : public js::gc::TenuredCell {
     return scriptData_->code();
   }
 
+  bool hasForceInterpreterOp() const {
+    // JSOP_FORCEINTERPRETER, if present, must be the first op.
+    MOZ_ASSERT(length() >= 1);
+    return JSOp(*code()) == JSOP_FORCEINTERPRETER;
+  }
+
   js::AllBytecodesIterable allLocations() {
     return js::AllBytecodesIterable(this);
   }
