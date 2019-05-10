@@ -129,8 +129,4 @@ class CreateCollectionFragment : DialogFragment() {
             }
         }
     }
-
-    companion object {
-        const val createCollectionTag = "createCollection"
-    }
 }

@@ -38,28 +38,21 @@ import java.net.MalformedURLException
 import java.net.URL
 import kotlin.coroutines.CoroutineContext
 
-private const val KEY_URL = "KEY_URL"
-private const val KEY_IS_SECURED = "KEY_IS_SECURED"
-private const val KEY_SITE_PERMISSIONS = "KEY_SITE_PERMISSIONS"
-private const val KEY_IS_TP_ON = "KEY_IS_TP_ON"
-private const val KEY_DIALOG_GRAVITY = "KEY_DIALOG_GRAVITY"
 private const val REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS = 4
 
 @SuppressWarnings("TooManyFunctions")
 class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineScope {
     private val safeArguments get() = requireNotNull(arguments)
-    private val url: String by lazy { safeArguments.getString(KEY_URL) }
-    private val isSecured: Boolean by lazy { safeArguments.getBoolean(KEY_IS_SECURED) }
-    private val isTrackingProtectionOn: Boolean by lazy { safeArguments.getBoolean(KEY_IS_TP_ON) }
-    private val promptGravity: Int by lazy { safeArguments.getInt(KEY_DIALOG_GRAVITY) }
+    private val url: String by lazy { QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).url }
+    private val isSecured: Boolean by lazy { QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).isSecured }
+    private val isTrackingProtectionOn: Boolean by lazy {
+        QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).isTrackingProtectionOn
+    }
+    private val promptGravity: Int by lazy { QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).gravity }
     private lateinit var quickSettingsComponent: QuickSettingsComponent
     private lateinit var job: Job
 
-    var sitePermissions: SitePermissions?
-        get() = safeArguments.getParcelable(KEY_SITE_PERMISSIONS)
-        set(value) {
-            safeArguments.putParcelable(KEY_SITE_PERMISSIONS, value)
-        }
+    private var sitePermissions: SitePermissions? = null
 
     override val coroutineContext: CoroutineContext get() = Dispatchers.IO + job
 
@@ -73,6 +66,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        sitePermissions = QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).sitePermissions
         val rootView = inflateRootView(container)
         quickSettingsComponent = QuickSettingsComponent(
             rootView as NestedScrollView, this, ActionBusFactory.get(this),
@@ -125,32 +119,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
         return this
-    }
-
-    companion object {
-        const val FRAGMENT_TAG = "QUICK_SETTINGS_FRAGMENT_TAG"
-
-        fun newInstance(
-            url: String,
-            isSecured: Boolean,
-            isTrackingProtectionOn: Boolean,
-            sitePermissions: SitePermissions?,
-            gravity: Int = BOTTOM
-        ): QuickSettingsSheetDialogFragment {
-
-            val fragment = QuickSettingsSheetDialogFragment()
-            val arguments = fragment.arguments ?: Bundle()
-
-            with(arguments) {
-                putString(KEY_URL, url)
-                putBoolean(KEY_IS_SECURED, isSecured)
-                putBoolean(KEY_IS_TP_ON, isTrackingProtectionOn)
-                putParcelable(KEY_SITE_PERMISSIONS, sitePermissions)
-                putInt(KEY_DIALOG_GRAVITY, gravity)
-            }
-            fragment.arguments = arguments
-            return fragment
-        }
     }
 
     override fun onRequestPermissionsResult(

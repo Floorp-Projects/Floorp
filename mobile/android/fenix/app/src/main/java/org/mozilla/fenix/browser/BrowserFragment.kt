@@ -58,7 +58,6 @@ import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.collections.CreateCollectionFragment
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
@@ -85,7 +84,6 @@ import org.mozilla.fenix.quickactionsheet.QuickActionAction
 import org.mozilla.fenix.quickactionsheet.QuickActionChange
 import org.mozilla.fenix.quickactionsheet.QuickActionComponent
 import org.mozilla.fenix.quickactionsheet.QuickActionState
-import org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
@@ -641,11 +639,10 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             val selectedSet = setOf(tabs)
             viewModel?.selectedTabs = selectedSet
             viewModel?.saveCollectionStep = SaveCollectionStep.SelectCollection
-            CreateCollectionFragment()
-                .show(
-                    requireActivity().supportFragmentManager,
-                    CreateCollectionFragment.createCollectionTag
-                )
+            view?.let {
+                val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
+                Navigation.findNavController(it).navigate(directions)
+            }
         }
     }
 
@@ -668,18 +665,16 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             val sitePermissions: SitePermissions? = storage.findSitePermissionsBy(host)
 
             launch(Main) {
-                val quickSettingsSheet = QuickSettingsSheetDialogFragment.newInstance(
-                    url = session.url,
-                    isSecured = session.securityInfo.secure,
-                    isTrackingProtectionOn = session.trackerBlockingEnabled,
-                    sitePermissions = sitePermissions,
-                    gravity = getAppropriateLayoutGravity()
-                )
-                quickSettingsSheet.sitePermissions = sitePermissions
-                quickSettingsSheet.show(
-                    requireFragmentManager(),
-                    QuickSettingsSheetDialogFragment.FRAGMENT_TAG
-                )
+                view?.let {
+                    val directions = BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
+                        url = session.url,
+                        isSecured = session.securityInfo.secure,
+                        isTrackingProtectionOn = session.trackerBlockingEnabled,
+                        sitePermissions = sitePermissions,
+                        gravity = getAppropriateLayoutGravity()
+                    )
+                    Navigation.findNavController(it).navigate(directions)
+                }
             }
         }
     }

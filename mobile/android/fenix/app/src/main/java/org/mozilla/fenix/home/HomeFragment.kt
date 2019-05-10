@@ -35,7 +35,6 @@ import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.collections.CreateCollectionFragment
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.metrics.Event
@@ -494,16 +493,9 @@ class HomeFragment : Fragment(), CoroutineScope {
         viewModel?.selectedTabs = selectedSet
         viewModel?.saveCollectionStep = SaveCollectionStep.SelectTabs
 
-        CreateCollectionFragment().also {
-            it.onCollectionSaved = {
-                storedCollections.add(it)
-                emitCollectionChange()
-            }
-
-            it.show(
-                requireActivity().supportFragmentManager,
-                CreateCollectionFragment.createCollectionTag
-            )
+        view?.let {
+            val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
+            Navigation.findNavController(it).navigate(directions)
         }
     }
 

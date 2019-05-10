@@ -32,6 +32,9 @@
         <action
             android:id="@+id/action_homeFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_createCollectionFragment"
+            app:destination="@id/createCollectionFragment" />
     </fragment>
 
     <fragment
@@ -116,6 +119,12 @@
         <action
             android:id="@+id/action_browserFragment_to_bookmarkEditFragment"
             app:destination="@id/bookmarkEditFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_createCollectionFragment"
+            app:destination="@id/createCollectionFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_quickSettingsSheetDialogFragment"
+            app:destination="@id/quickSettingsSheetDialogFragment" />
     </fragment>
 
     <fragment
@@ -300,4 +309,31 @@
         android:id="@+id/exceptionsFragment"
         android:name="org.mozilla.fenix.exceptions.ExceptionsFragment"
         android:label="ExceptionsFragment" />
+    <dialog
+        android:id="@+id/createCollectionFragment"
+        android:name="org.mozilla.fenix.collections.CreateCollectionFragment"
+        android:label="fragment_create_collection"
+        tools:layout="@layout/fragment_create_collection" />
+    <dialog
+        android:id="@+id/quickSettingsSheetDialogFragment"
+        android:name="org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment"
+        android:label="QuickSettingsSheetDialogFragment" >
+        <argument
+            android:name="url"
+            app:argType="string" />
+        <argument
+            android:name="isSecured"
+            app:argType="boolean" />
+        <argument
+            android:name="isTrackingProtectionOn"
+            app:argType="boolean" />
+        <argument
+            android:name="sitePermissions"
+            app:argType="mozilla.components.feature.sitepermissions.SitePermissions"
+            app:nullable="true" />
+        <argument
+            android:name="gravity"
+            app:argType="integer"
+            android:defaultValue="80" />
+    </dialog>
 </navigation>
