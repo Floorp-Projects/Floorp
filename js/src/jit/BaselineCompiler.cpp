@@ -1545,6 +1545,16 @@ bool BaselineCodeGen<Handler>::emit_JSOP_NOP() {
   return true;
 }
 
+template <>
+bool BaselineCompilerCodeGen::emit_JSOP_FORCEINTERPRETER() {
+  MOZ_CRASH("Unexpected JSOP_FORCEINTERPRETER in compiler");
+}
+
+template <>
+bool BaselineInterpreterCodeGen::emit_JSOP_FORCEINTERPRETER() {
+  return true;
+}
+
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_ITERNEXT() {
   return true;
@@ -6634,6 +6644,56 @@ bool BaselineInterpreterGenerator::emitDebugTrap() {
   return true;
 }
 
+bool BaselineInterpreterGenerator::emitInterpreterLoop() {
+  MOZ_CRASH("NYI: interpreter emitInterpreterLoop");
+
+  return true;
+}
+
+bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
+  if (!emitPrologue()) {
+    return false;
+  }
+
+  if (!emitInterpreterLoop()) {
+    return false;
+  }
+
+  if (!emitEpilogue()) {
+    return false;
+  }
+
+  if (!emitOutOfLinePostBarrierSlot()) {
+    return false;
+  }
+
+  Linker linker(masm, "BaselineInterpreter");
+  if (masm.oom()) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  JitCode* code = linker.newCode(cx, CodeKind::Other);
+  if (!code) {
+    return false;
+  }
+
+#ifdef JS_ION_PERF
+  writePerfSpewerJitCodeProfile(code, "BaselineInterpreter");
+#endif
+
+#ifdef MOZ_VTUNE
+  vtune::MarkStub(code, "BaselineInterpreter");
+#endif
+
+  interpreter.init(
+      code, interpretOpOffset_, profilerEnterFrameToggleOffset_.offset(),
+      profilerExitFrameToggleOffset_.offset(),
+      handler.debuggeeCheckOffset().offset(), std::move(debugTrapOffsets_));
+
+  return true;
+}
+
 JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
                                               DebugTrapHandlerKind kind) {
   StackMacroAssembler masm;
@@ -6734,9 +6794,6 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
 
   return handlerCode;
 }
-
-// Instantiate explicitly for now to make sure it compiles.
-template class jit::BaselineCodeGen<BaselineInterpreterHandler>;
 
 }  // namespace jit
 }  // namespace js
