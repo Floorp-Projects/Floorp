@@ -55,6 +55,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "dav1d/common.h"
+
 #include "common/intops.h"
 
 #define av1_zero(a) memset(a, 0, sizeof(a))
@@ -765,25 +767,6 @@ static INLINE int16_t av1_mode_context_analyzer(
       newmv_ctx, COMP_NEWMV_CTXS - 1)];
   return comp_ctx;
 }
-
-static void av1_setup_frame_buf_refs(AV1_COMMON *cm);
-void av1_setup_frame_sign_bias(AV1_COMMON *cm);
-void av1_setup_skip_mode_allowed(AV1_COMMON *cm);
-
-void av1_copy_frame_mvs(const AV1_COMMON *const cm, MB_MODE_INFO *mi,
-                        int mi_row, int mi_col, int x_mis, int y_mis);
-
-static void av1_find_mv_refs(const AV1_COMMON *cm, const MACROBLOCKD *xd,
-                      MB_MODE_INFO *mi, MV_REFERENCE_FRAME ref_frame,
-                      uint8_t ref_mv_count[MODE_CTX_REF_FRAMES],
-                      CANDIDATE_MV ref_mv_stack[][MAX_REF_MV_STACK_SIZE],
-                      int_mv mv_ref_list[][MAX_MV_REF_CANDIDATES],
-                      int_mv *global_mvs, int mi_row, int mi_col,
-                      int16_t *mode_context);
-
-int selectSamples(MV *mv, int *pts, int *pts_inref, int len, BLOCK_SIZE bsize);
-int findSamples(const AV1_COMMON *cm, MACROBLOCKD *xd, int mi_row, int mi_col,
-                int *pts, int *pts_inref);
 
 #define INTRABC_DELAY_PIXELS 256  //  Delay of 256 pixels
 #define INTRABC_DELAY_SB64 (INTRABC_DELAY_PIXELS / 64)
@@ -1850,7 +1833,7 @@ enum BlockSize {
     N_BS_SIZES,
 };
 extern const uint8_t dav1d_block_dimensions[N_BS_SIZES][4];
-const uint8_t bs_to_sbtype[N_BS_SIZES] = {
+const uint8_t dav1d_bs_to_sbtype[N_BS_SIZES] = {
     [BS_128x128] = BLOCK_128X128,
     [BS_128x64] = BLOCK_128X64,
     [BS_64x128] = BLOCK_64X128,
@@ -1874,7 +1857,7 @@ const uint8_t bs_to_sbtype[N_BS_SIZES] = {
     [BS_4x8] = BLOCK_4X8,
     [BS_4x4] = BLOCK_4X4,
 };
-const uint8_t sbtype_to_bs[BLOCK_SIZES_ALL] = {
+const uint8_t dav1d_sbtype_to_bs[BLOCK_SIZES_ALL] = {
     [BLOCK_128X128] = BS_128x128,
     [BLOCK_128X64] = BS_128x64,
     [BLOCK_64X128] = BS_64x128,
@@ -1901,18 +1884,18 @@ const uint8_t sbtype_to_bs[BLOCK_SIZES_ALL] = {
 
 #include <stdio.h>
 
-void av1_find_ref_mvs(CANDIDATE_MV *mvstack, int *cnt, int_mv (*mvlist)[2],
-                      int *ctx, int refidx_dav1d[2],
-                      int w4, int h4, int bs, int bp, int by4, int bx4,
-                      int tile_col_start4, int tile_col_end4,
-                      int tile_row_start4, int tile_row_end4,
-                      AV1_COMMON *cm);
-void av1_find_ref_mvs(CANDIDATE_MV *mvstack, int *cnt, int_mv (*mvlist)[2],
-                      int *ctx, int refidx_dav1d[2],
-                      int w4, int h4, int bs, int bp, int by4, int bx4,
-                      int tile_col_start4, int tile_col_end4,
-                      int tile_row_start4, int tile_row_end4,
-                      AV1_COMMON *cm)
+void dav1d_find_ref_mvs(CANDIDATE_MV *mvstack, int *cnt, int_mv (*mvlist)[2],
+                        int *ctx, int refidx_dav1d[2],
+                        int w4, int h4, int bs, int bp, int by4, int bx4,
+                        int tile_col_start4, int tile_col_end4,
+                        int tile_row_start4, int tile_row_end4,
+                        AV1_COMMON *cm);
+void dav1d_find_ref_mvs(CANDIDATE_MV *mvstack, int *cnt, int_mv (*mvlist)[2],
+                        int *ctx, int refidx_dav1d[2],
+                        int w4, int h4, int bs, int bp, int by4, int bx4,
+                        int tile_col_start4, int tile_col_end4,
+                        int tile_row_start4, int tile_row_end4,
+                        AV1_COMMON *cm)
 {
     const int bw4 = dav1d_block_dimensions[bs][0];
     const int bh4 = dav1d_block_dimensions[bs][1];
@@ -1940,7 +1923,7 @@ void av1_find_ref_mvs(CANDIDATE_MV *mvstack, int *cnt, int_mv (*mvlist)[2],
             .partition = bp,
         },
     };
-    xd.mi->sb_type = bs_to_sbtype[bs];
+    xd.mi->sb_type = dav1d_bs_to_sbtype[bs];
     if (xd.n8_w < xd.n8_h) {
         // Only mark is_sec_rect as 1 for the last block.
         // For PARTITION_VERT_4, it would be (0, 0, 0, 1);
@@ -1980,40 +1963,32 @@ void av1_find_ref_mvs(CANDIDATE_MV *mvstack, int *cnt, int_mv (*mvlist)[2],
     }
 }
 
-int av1_init_ref_mv_common(AV1_COMMON *cm,
-                           const int w8, const int h8,
-                           const ptrdiff_t stride,
-                           const int allow_sb128,
-                           MV_REF *cur,
-                           MV_REF *ref_mvs[7],
-                           const unsigned cur_poc,
-                           const unsigned ref_poc[7],
-                           const unsigned ref_ref_poc[7][7],
-                           const Dav1dWarpedMotionParams gmv[7],
-                           const int allow_hp,
-                           const int force_int_mv,
-                           const int allow_ref_frame_mvs,
-                           const int order_hint);
-int av1_init_ref_mv_common(AV1_COMMON *cm,
-                           const int w8, const int h8,
-                           const ptrdiff_t stride,
-                           const int allow_sb128,
-                           MV_REF *cur,
-                           MV_REF *ref_mvs[7],
-                           const unsigned cur_poc,
-                           const unsigned ref_poc[7],
-                           const unsigned ref_ref_poc[7][7],
-                           const Dav1dWarpedMotionParams gmv[7],
-                           const int allow_hp,
-                           const int force_int_mv,
-                           const int allow_ref_frame_mvs,
-                           const int order_hint)
+int dav1d_init_ref_mv_common(AV1_COMMON *cm, const int w8, const int h8,
+                             const ptrdiff_t stride, const int allow_sb128,
+                             MV_REF *cur, MV_REF *ref_mvs[7],
+                             const unsigned cur_poc,
+                             const unsigned ref_poc[7],
+                             const unsigned ref_ref_poc[7][7],
+                             const Dav1dWarpedMotionParams gmv[7],
+                             const int allow_hp, const int force_int_mv,
+                             const int allow_ref_frame_mvs,
+                             const int order_hint);
+int dav1d_init_ref_mv_common(AV1_COMMON *cm, const int w8, const int h8,
+                             const ptrdiff_t stride, const int allow_sb128,
+                             MV_REF *cur, MV_REF *ref_mvs[7],
+                             const unsigned cur_poc,
+                             const unsigned ref_poc[7],
+                             const unsigned ref_ref_poc[7][7],
+                             const Dav1dWarpedMotionParams gmv[7],
+                             const int allow_hp, const int force_int_mv,
+                             const int allow_ref_frame_mvs,
+                             const int order_hint)
 {
     if (cm->mi_cols != (w8 << 1) || cm->mi_rows != (h8 << 1)) {
         const int align_h = (h8 + 15) & ~15;
         if (cm->tpl_mvs) free(cm->tpl_mvs);
         cm->tpl_mvs = malloc(sizeof(*cm->tpl_mvs) * (stride >> 1) * align_h);
-        if (!cm->tpl_mvs) return -ENOMEM;
+        if (!cm->tpl_mvs) return DAV1D_ERR(ENOMEM);
         for (int i = 0; i < 7; i++)
             cm->frame_refs[i].idx = i;
         cm->mi_cols = w8 << 1;
@@ -2061,12 +2036,12 @@ int av1_init_ref_mv_common(AV1_COMMON *cm,
     return 0;
 }
 
-void av1_init_ref_mv_tile_row(AV1_COMMON *cm,
-                              int tile_col_start4, int tile_col_end4,
-                              int row_start4, int row_end4);
-void av1_init_ref_mv_tile_row(AV1_COMMON *cm,
-                              int tile_col_start4, int tile_col_end4,
-                              int row_start4, int row_end4)
+void dav1d_init_ref_mv_tile_row(AV1_COMMON *cm,
+                                int tile_col_start4, int tile_col_end4,
+                                int row_start4, int row_end4);
+void dav1d_init_ref_mv_tile_row(AV1_COMMON *cm,
+                                int tile_col_start4, int tile_col_end4,
+                                int row_start4, int row_end4)
 {
   RefCntBuffer *const frame_bufs = cm->buffer_pool.frame_bufs;
   const int cur_order_hint = cm->cur_frame.cur_frame_offset;
@@ -2115,16 +2090,16 @@ void av1_init_ref_mv_tile_row(AV1_COMMON *cm,
                                   row_start4, row_end4)) --ref_stamp;
 }
 
-AV1_COMMON *av1_alloc_ref_mv_common(void);
-AV1_COMMON *av1_alloc_ref_mv_common(void) {
+AV1_COMMON *dav1d_alloc_ref_mv_common(void);
+AV1_COMMON *dav1d_alloc_ref_mv_common(void) {
     AV1_COMMON *cm = malloc(sizeof(*cm));
     if (!cm) return NULL;
     memset(cm, 0, sizeof(*cm));
     return cm;
 }
 
-void av1_free_ref_mv_common(AV1_COMMON *cm);
-void av1_free_ref_mv_common(AV1_COMMON *cm) {
+void dav1d_free_ref_mv_common(AV1_COMMON *cm);
+void dav1d_free_ref_mv_common(AV1_COMMON *cm) {
     if (cm->tpl_mvs) free(cm->tpl_mvs);
     free(cm);
 }

@@ -284,7 +284,7 @@ static int parse_seq_hdr(Dav1dContext *const c, GetBits *const gb,
 
 error:
     dav1d_log(c, "Error parsing sequence header\n");
-    return -EINVAL;
+    return DAV1D_ERR(EINVAL);
 }
 
 static int read_frame_size(Dav1dContext *const c, GetBits *const gb,
@@ -756,7 +756,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
             // segmentation data from the reference frame.
             assert(hdr->primary_ref_frame != DAV1D_PRIMARY_REF_NONE);
             const int pri_ref = hdr->refidx[hdr->primary_ref_frame];
-            if (!c->refs[pri_ref].p.p.frame_hdr) return -EINVAL;
+            if (!c->refs[pri_ref].p.p.frame_hdr) return DAV1D_ERR(EINVAL);
             hdr->segmentation.seg_data =
                 c->refs[pri_ref].p.p.frame_hdr->segmentation.seg_data;
         }
@@ -818,7 +818,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
             hdr->loopfilter.mode_ref_deltas = default_mode_ref_deltas;
         } else {
             const int ref = hdr->refidx[hdr->primary_ref_frame];
-            if (!c->refs[ref].p.p.frame_hdr) return -EINVAL;
+            if (!c->refs[ref].p.p.frame_hdr) return DAV1D_ERR(EINVAL);
             hdr->loopfilter.mode_ref_deltas =
                 c->refs[ref].p.p.frame_hdr->loopfilter.mode_ref_deltas;
         }
@@ -922,7 +922,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
         int off_before_idx[2], off_after_idx;
         off_before_idx[0] = 0;
         for (int i = 0; i < 7; i++) {
-            if (!c->refs[hdr->refidx[i]].p.p.data[0]) return -EINVAL;
+            if (!c->refs[hdr->refidx[i]].p.p.data[0]) return DAV1D_ERR(EINVAL);
             const unsigned refpoc = c->refs[hdr->refidx[i]].p.p.frame_hdr->frame_offset;
 
             const int diff = get_poc_diff(seqhdr->order_hint_n_bits, refpoc, poc);
@@ -999,7 +999,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
                 ref_gmv = &dav1d_default_wm_params;
             } else {
                 const int pri_ref = hdr->refidx[hdr->primary_ref_frame];
-                if (!c->refs[pri_ref].p.p.frame_hdr) return -EINVAL;
+                if (!c->refs[pri_ref].p.p.frame_hdr) return DAV1D_ERR(EINVAL);
                 ref_gmv = &c->refs[pri_ref].p.p.frame_hdr->gmv[i];
             }
             int32_t *const mat = hdr->gmv[i].matrix;
@@ -1122,7 +1122,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
 
 error:
     dav1d_log(c, "Error parsing frame header\n");
-    return -EINVAL;
+    return DAV1D_ERR(EINVAL);
 }
 
 static void parse_tile_hdr(Dav1dContext *const c, GetBits *const gb) {
@@ -1227,7 +1227,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
     switch (type) {
     case OBU_SEQ_HDR: {
         Dav1dRef *ref = dav1d_ref_create(sizeof(Dav1dSequenceHeader));
-        if (!ref) return -ENOMEM;
+        if (!ref) return DAV1D_ERR(ENOMEM);
         Dav1dSequenceHeader *seq_hdr = ref->data;
         memset(seq_hdr, 0, sizeof(*seq_hdr));
         if ((res = parse_seq_hdr(c, &gb, seq_hdr)) < 0) {
@@ -1236,7 +1236,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         }
         if (check_for_overrun(c, &gb, init_bit_pos, len)) {
             dav1d_ref_dec(&ref);
-            return -EINVAL;
+            return DAV1D_ERR(EINVAL);
         }
         // If we have read a sequence header which is different from
         // the old one, this is a new video sequence and can't use any
@@ -1273,7 +1273,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         if (!c->seq_hdr) goto error;
         if (!c->frame_hdr_ref) {
             c->frame_hdr_ref = dav1d_ref_create(sizeof(Dav1dFrameHeader));
-            if (!c->frame_hdr_ref) return -ENOMEM;
+            if (!c->frame_hdr_ref) return DAV1D_ERR(ENOMEM);
         }
         // ensure that the reference is writable
         assert(dav1d_ref_is_writable(c->frame_hdr_ref));
@@ -1295,7 +1295,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
             dav1d_get_bits(&gb, 1);
             if (check_for_overrun(c, &gb, init_bit_pos, len)) {
                 c->frame_hdr = NULL;
-                return -EINVAL;
+                return DAV1D_ERR(EINVAL);
             }
 
             break;
@@ -1326,7 +1326,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         // Align to the next byte boundary and check for overrun.
         dav1d_bytealign_get_bits(&gb);
         if (check_for_overrun(c, &gb, init_bit_pos, len))
-            return -EINVAL;
+            return DAV1D_ERR(EINVAL);
         // The current bit position is a multiple of 8 (because we
         // just aligned it) and less than 8*pkt_bytelen because
         // otherwise the overrun check would have fired.
@@ -1362,7 +1362,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         switch (meta_type) {
         case OBU_META_HDR_CLL:
             ref = dav1d_ref_create(sizeof(Dav1dContentLightLevel));
-            if (!ref) return -ENOMEM;
+            if (!ref) return DAV1D_ERR(ENOMEM);
             content_light = ref->data;
             memset(content_light, 0, sizeof(*content_light));
 
@@ -1383,7 +1383,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
             break;
         case OBU_META_HDR_MDCV: {
             ref = dav1d_ref_create(sizeof(Dav1dMasteringDisplay));
-            if (!ref) return -ENOMEM;
+            if (!ref) return DAV1D_ERR(ENOMEM);
             mastering_display = ref->data;
             memset(mastering_display, 0, sizeof(*mastering_display));
 
@@ -1428,12 +1428,12 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
         break;
     default:
         dav1d_log(c, "Unknown OBU type %d of size %u\n", type, len);
-        return -EINVAL;
+        return DAV1D_ERR(EINVAL);
     }
 
     if (c->seq_hdr && c->frame_hdr) {
         if (c->frame_hdr->show_existing_frame) {
-            if (!c->refs[c->frame_hdr->existing_frame_idx].p.p.data[0]) return -EINVAL;
+            if (!c->refs[c->frame_hdr->existing_frame_idx].p.p.data[0]) return DAV1D_ERR(EINVAL);
             if (c->n_fc == 1) {
                 dav1d_picture_ref(&c->out,
                                   &c->refs[c->frame_hdr->existing_frame_idx].p.p);
@@ -1486,7 +1486,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
             c->frame_hdr = NULL;
         } else if (c->n_tiles == c->frame_hdr->tiling.cols * c->frame_hdr->tiling.rows) {
             if (!c->n_tile_data)
-                return -EINVAL;
+                return DAV1D_ERR(EINVAL);
             if ((res = dav1d_submit_frame(c)) < 0)
                 return res;
             assert(!c->n_tile_data);
@@ -1499,5 +1499,5 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
 
 error:
     dav1d_log(c, "Error parsing OBU data\n");
-    return -EINVAL;
+    return DAV1D_ERR(EINVAL);
 }

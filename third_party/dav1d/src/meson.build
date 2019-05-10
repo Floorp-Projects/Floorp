@@ -96,6 +96,7 @@ if is_asm_enabled
                 'arm/64/loopfilter.S',
                 'arm/64/looprestoration.S',
                 'arm/64/mc.S',
+                'arm/64/msac.S',
             )
         elif host_machine.cpu_family().startswith('arm')
             libdav1d_sources += files(

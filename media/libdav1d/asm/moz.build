@@ -188,6 +188,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/64/loopfilter.S',
             '../../../third_party/dav1d/src/arm/64/looprestoration.S',
             '../../../third_party/dav1d/src/arm/64/mc.S',
+            '../../../third_party/dav1d/src/arm/64/msac.S',
         ]
     elif CONFIG['CPU_ARCH'] == 'arm':
         SOURCES += [

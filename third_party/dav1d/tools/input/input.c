@@ -90,7 +90,7 @@ int input_open(DemuxerContext **const c_out,
         }
         if (i == num_demuxers) {
             fprintf(stderr, "Failed to find demuxer named \"%s\"\n", name);
-            return -ENOPROTOOPT;
+            return DAV1D_ERR(ENOPROTOOPT);
         }
     } else {
         const char *const ext = find_extension(filename);
@@ -109,13 +109,13 @@ int input_open(DemuxerContext **const c_out,
             fprintf(stderr,
                     "Failed to find demuxer for file %s (\"%s\")\n",
                     filename, ext);
-            return -ENOPROTOOPT;
+            return DAV1D_ERR(ENOPROTOOPT);
         }
     }
 
     if (!(c = malloc(sizeof(DemuxerContext) + impl->priv_data_size))) {
         fprintf(stderr, "Failed to allocate memory\n");
-        return -ENOMEM;
+        return DAV1D_ERR(ENOMEM);
     }
     memset(c, 0, sizeof(DemuxerContext) + impl->priv_data_size);
     c->impl = impl;

@@ -6097,7 +6097,7 @@ ALIGN function_align
 
 
 
-cglobal inv_txfm_add_dct_dct_64x16, 4, 6, 8, 16*68, dst, stride, coeff, eob, tx2
+cglobal inv_txfm_add_dct_dct_64x16, 4, 6, 8, 16*132, dst, stride, coeff, eob, tx2
 %if ARCH_X86_32
     LEA                     r5, $$
 %endif
@@ -6186,7 +6186,9 @@ cglobal inv_txfm_add_dct_dct_64x16, 4, 6, 8, 16*68, dst, stride, coeff, eob, tx2
 %endmacro
 
 cglobal idct_64x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
-    mov                     r3, 2
+    mov                    r3d, 2
+    mov  [rsp+gprsize*2+16*67], dstq
+    lea                   dstq, [rsp+gprsize+16*68]
 
 .pass1_loop:
     LOAD_4ROWS     coeffq+32*0, 32*8
@@ -6277,7 +6279,7 @@ cglobal idct_64x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     jmp   m(idct_8x8_internal).pass1_end1
 
 .pass1_end4:
-    SAVE_8ROWS    coeffq+32*32, 32
+    SAVE_8ROWS       dstq+32*0, 32
     LOAD_8ROWS   rsp+gprsize+16*43, 16
     mova    [rsp+gprsize+16*0], m7
     mova                    m7, [o(pw_8192)]
@@ -6285,7 +6287,7 @@ cglobal idct_64x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     jmp   m(idct_8x8_internal).pass1_end1
 
 .pass1_end5:
-    SAVE_8ROWS    coeffq+32*40, 32
+    SAVE_8ROWS       dstq+32*8, 32
     LOAD_8ROWS   rsp+gprsize+16*51, 16
     mova    [rsp+gprsize+16*0], m7
     mova                    m7, [o(pw_8192)]
@@ -6293,7 +6295,7 @@ cglobal idct_64x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     jmp   m(idct_8x8_internal).pass1_end1
 
 .pass1_end6:
-    SAVE_8ROWS    coeffq+32*48, 32
+    SAVE_8ROWS      dstq+32*16, 32
     LOAD_8ROWS   rsp+gprsize+16*59, 16
     mova    [rsp+gprsize+16*0], m7
     mova                    m7, [o(pw_8192)]
@@ -6301,20 +6303,20 @@ cglobal idct_64x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     jmp   m(idct_8x8_internal).pass1_end1
 
 .pass1_end7:
-    SAVE_8ROWS    coeffq+32*56, 32
+    SAVE_8ROWS      dstq+32*24, 32
 
     add                 coeffq, 16
-    dec                     r3
+    add                   dstq, 16
+    dec                    r3d
     jg .pass1_loop
 
 .pass2:
+    mov                   dstq, [rsp+gprsize*2+16*67]
     sub                 coeffq, 32
-    mov                     r3, 8
-    lea                     r4, [dstq+8]
-    mov  [rsp+gprsize*2+16*67], r4
+    mov                    r3d, 4
 
 .pass2_loop:
-    mov  [rsp+gprsize*1+16*67], r3
+    mov  [rsp+gprsize*1+16*67], r3d
 
     LOAD_4ROWS     coeffq+16*0, 32*2
     LOAD_4ROWS_H   coeffq+16*1, 32*2
@@ -6341,13 +6343,47 @@ cglobal idct_64x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     REPX  {mova [coeffq+16*x], m7}, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15
 
     add                 coeffq, 16*16
-    mov                     r3, [rsp+gprsize*1+16*67]
+    mov                    r3d, [rsp+gprsize*1+16*67]
     mov                   dstq, [rsp+gprsize*2+16*67]
-    lea                     r4, [dstq+8]
-    mov  [rsp+gprsize*2+16*67], r4
-
-    dec                     r3
+    add                   dstq, 8
+    mov  [rsp+gprsize*2+16*67], dstq
+    dec                    r3d
     jg .pass2_loop
+
+    mov                    r3d, 4
+    lea                 coeffq, [rsp+gprsize+16*68]
+.pass2_loop2:
+    mov  [rsp+gprsize*1+16*67], r3d
+
+    LOAD_4ROWS     coeffq+16*0, 32*2
+    LOAD_4ROWS_H   coeffq+16*1, 32*2
+    call  m(idct_8x8_internal).main
+    SAVE_7ROWS    rsp+gprsize+16*3, 16
+    LOAD_4ROWS     coeffq+16*2, 32*2
+    LOAD_4ROWS_H   coeffq+16*3, 32*2
+    call m(idct_16x8_internal).main
+
+    mov                    r3, dstq
+    lea                  tx2q, [o(m(idct_64x16_internal).end2)]
+    lea                  dstq, [dstq+strideq*8]
+    jmp  m(idct_8x8_internal).end
+
+.end2:
+    LOAD_8ROWS   rsp+gprsize+16*3, 16
+    mova   [rsp+gprsize+16*0], m7
+    lea                  tx2q, [o(m(idct_64x16_internal).end3)]
+    mov                  dstq, r3
+    jmp  m(idct_8x8_internal).end
+
+.end3:
+
+    add                 coeffq, 16*16
+    mov                    r3d, [rsp+gprsize*1+16*67]
+    mov                   dstq, [rsp+gprsize*2+16*67]
+    add                   dstq, 8
+    mov  [rsp+gprsize*2+16*67], dstq
+    dec                    r3d
+    jg .pass2_loop2
     ret
 
 
