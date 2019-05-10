@@ -721,6 +721,11 @@ HTMLTooltip.prototype = {
    * is hidden.
    */
   async hide({ fromMouseup = false } = {}) {
+    // Exit if the disable autohide setting is in effect.
+    if (Services.prefs.getBoolPref("ui.popup.disable_autohide", false)) {
+      return;
+    }
+
     this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     if (!this.isVisible()) {
       this.emit("hidden");
@@ -823,11 +828,6 @@ HTMLTooltip.prototype = {
    */
   _onMouseup: function(e) {
     if (this._isInTooltipContainer(e.target)) {
-      return;
-    }
-
-    // If the disable autohide setting is in effect, ignore.
-    if (Services.prefs.getBoolPref("ui.popup.disable_autohide", false)) {
       return;
     }
 
