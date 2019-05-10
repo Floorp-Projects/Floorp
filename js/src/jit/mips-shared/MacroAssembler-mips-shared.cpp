@@ -496,7 +496,7 @@ void MacroAssemblerMIPSShared::ma_load_unaligned(
   BufferOffset load;
   switch (size) {
     case SizeHalfWord:
-      if (extension != ZeroExtend) {
+      if (extension == ZeroExtend) {
         load = as_lbu(temp, base, hiOffset);
       } else {
         load = as_lb(temp, base, hiOffset);
@@ -508,7 +508,7 @@ void MacroAssemblerMIPSShared::ma_load_unaligned(
       load = as_lwl(dest, base, hiOffset);
       as_lwr(dest, base, lowOffset);
 #ifdef JS_CODEGEN_MIPS64
-      if (extension != ZeroExtend) {
+      if (extension == ZeroExtend) {
         as_dext(dest, dest, 0, 32);
       }
 #endif
