@@ -17,7 +17,13 @@ public class ActivityHandlerHelper {
     private static final String LOGTAG = "GeckoActivityHandlerHelper";
     private static final ActivityResultHandlerMap mActivityResultHandlerMap = new ActivityResultHandlerMap();
 
-    private static int makeRequestCode(ActivityResultHandler aHandler) {
+    /**
+     * If you need to launch a PendingIntent from a Gecko activity but still collect
+     * the result, then you can use registerActivityHandler() to observe the
+     * result when it comes, as long as the Gecko activity is calling
+     * handleActivityResult(), which they do.
+     */
+    public static int registerActivityHandler(ActivityResultHandler aHandler) {
         return mActivityResultHandlerMap.put(aHandler);
     }
 
@@ -44,7 +50,6 @@ public class ActivityHandlerHelper {
     public static void startIntentForActivity(Activity activity, Intent intent, ActivityResultHandler activityResultHandler) {
         activity.startActivityForResult(intent, mActivityResultHandlerMap.put(activityResultHandler));
     }
-
 
     public static boolean handleActivityResult(int requestCode, int resultCode, Intent data) {
         ActivityResultHandler handler = mActivityResultHandlerMap.getAndRemove(requestCode);

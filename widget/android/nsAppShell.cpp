@@ -412,6 +412,7 @@ nsAppShell::nsAppShell()
     mozilla::widget::WebExecutorSupport::Init();
     nsWindow::InitNatives();
     mozilla::gl::AndroidSurfaceTexture::Init();
+    mozilla::WebAuthnTokenManager::Init();
 
     if (jni::IsFennec()) {
       BrowserLocaleManagerSupport::Init();
