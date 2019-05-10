@@ -174,7 +174,7 @@ class DrawTargetCairo final : public DrawTarget {
   static cairo_surface_t* GetDummySurface();
 
   // Cairo hardcodes this as its maximum surface size.
-  static size_t GetMaxSurfaceSize() { return 32767; }
+  static size_t GetMaxSurfaceSize() { return 32766; }
 
  private:  // methods
   // Init cairo surface without doing a cairo_surface_reference() call.

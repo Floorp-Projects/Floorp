@@ -1,13 +1,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
-  <title>CSS Multi-column Layout Test: -moz-columns shorthand (basic)</title>
+  <title>CSS Multi-column Layout Test: columns shorthand (basic)</title>
   <link rel="author" title="Opera Software ASA" href="http://www.opera.com/" />
   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" /> <!-- 2013-07-25 -->
-  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#the-number-and-width-of-columns" title="3. The number and width of -moz-columns" />
+  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#the-number-and-width-of-columns" title="3. The number and width of columns" />
   <link rel="match" href="multicol-columns-001-ref.xht" />
   <meta name="flags" content="ahem" />
-  <meta name="assert" content="This test checks that '-moz-columns: 6' shorthand correctly set '-moz-column-width' and '-moz-column-count' properties. '-moz-columns: 6' is equivalent to '-moz-column-width: auto' and '-moz-column-count: 6'." />
+  <meta name="assert" content="This test checks that 'columns: 6' shorthand correctly set 'column-width' and 'column-count' properties. 'columns: 6' is equivalent to 'column-width: auto' and 'column-count: 6'." />
 <style type="text/css"><![CDATA[
 @font-face {
   font-family: Ahem;
@@ -25,8 +25,8 @@
   orphans: 1;
   widows: 1;
 
-  -moz-columns: 6;
-  -moz-column-gap: 0;
+  columns: 6;
+  column-gap: 0;
   }
   ]]></style>
  </head>

@@ -7433,7 +7433,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   }
 
   ListNodeType statementList = handler_.newStatementList(wholeInitializerPos);
-  if (!argsbody) {
+  if (!statementList) {
     return null();
   }
   handler_.addStatementToList(statementList, exprStatement);

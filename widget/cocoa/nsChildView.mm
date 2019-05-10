@@ -5250,8 +5250,9 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     if (aMessage == eDragOver) {
       // fire the drag event at the source. Just ignore whether it was
       // cancelled or not as there isn't actually a means to stop the drag
-      mDragService->FireDragEventAtSource(eDrag,
-                                          nsCocoaUtils::ModifiersForEvent([NSApp currentEvent]));
+      nsCOMPtr<nsIDragService> dragService = mDragService;
+      dragService->FireDragEventAtSource(eDrag,
+                                         nsCocoaUtils::ModifiersForEvent([NSApp currentEvent]));
       dragSession->SetCanDrop(false);
     } else if (aMessage == eDrop) {
       // We make the assumption that the dragOver handlers have correctly set
@@ -5263,8 +5264,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
         nsCOMPtr<nsINode> sourceNode;
         dragSession->GetSourceNode(getter_AddRefs(sourceNode));
         if (!sourceNode) {
-          mDragService->EndDragSession(false,
-                                       nsCocoaUtils::ModifiersForEvent([NSApp currentEvent]));
+          nsCOMPtr<nsIDragService> dragService = mDragService;
+          dragService->EndDragSession(false, nsCocoaUtils::ModifiersForEvent([NSApp currentEvent]));
         }
         return NSDragOperationNone;
       }
@@ -5324,8 +5325,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
           // initiated in a different app. End the drag session,
           // since we're done with it for now (until the user
           // drags back into mozilla).
-          mDragService->EndDragSession(false,
-                                       nsCocoaUtils::ModifiersForEvent([NSApp currentEvent]));
+          nsCOMPtr<nsIDragService> dragService = mDragService;
+          dragService->EndDragSession(false, nsCocoaUtils::ModifiersForEvent([NSApp currentEvent]));
         }
       }
       default:
@@ -5411,7 +5412,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   if (mDragService) {
     // set the dragend point from the current mouse location
-    nsDragService* dragService = static_cast<nsDragService*>(mDragService);
+    RefPtr<nsDragService> dragService = static_cast<nsDragService*>(mDragService);
     FlipCocoaScreenCoordinate(aPoint);
     dragService->SetDragEndPoint(gfx::IntPoint::Round(aPoint.x, aPoint.y));
 
@@ -5434,7 +5435,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
       }
     }
 
-    mDragService->EndDragSession(true, nsCocoaUtils::ModifiersForEvent(currentEvent));
+    dragService->EndDragSession(true, nsCocoaUtils::ModifiersForEvent(currentEvent));
     NS_RELEASE(mDragService);
   }
 

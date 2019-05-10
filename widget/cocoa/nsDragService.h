@@ -23,11 +23,11 @@ class nsDragService : public nsBaseDragService {
   nsDragService();
 
   // nsBaseDragService
-  virtual nsresult InvokeDragSessionImpl(nsIArray* anArrayTransferables,
-                                         const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
-                                         uint32_t aActionType) override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult InvokeDragSessionImpl(
+      nsIArray* anArrayTransferables, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
+      uint32_t aActionType) override;
   // nsIDragService
-  NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) override;
   NS_IMETHOD UpdateDragImage(nsINode* aImage, int32_t aImageX, int32_t aImageY) override;
 
   // nsIDragSession

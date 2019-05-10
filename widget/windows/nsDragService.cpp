@@ -251,9 +251,8 @@ static bool LayoutDevicePointToCSSPoint(const LayoutDevicePoint& aDevPos,
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP
-nsDragService::StartInvokingDragSession(IDataObject* aDataObj,
-                                        uint32_t aActionType) {
+nsresult nsDragService::StartInvokingDragSession(IDataObject* aDataObj,
+                                                 uint32_t aActionType) {
   // To do the drag we need to create an object that
   // implements the IDataObject interface (for OLE)
   RefPtr<nsNativeDragSource> nativeDragSrc =
