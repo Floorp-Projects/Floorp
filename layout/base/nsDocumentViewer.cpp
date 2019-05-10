@@ -3538,7 +3538,7 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
       root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint)) {
     printJob->SetDisallowSelectionPrint(true);
   }
-  rv = printJob->Print(aPrintSettings, aWebProgressListener);
+  rv = printJob->Print(mDocument, aPrintSettings, aWebProgressListener);
   if (NS_FAILED(rv)) {
     OnDonePrinting();
   }
