@@ -386,51 +386,6 @@ extern JS_FRIEND_API bool JS_DefineFunctionsWithHelp(
 namespace js {
 
 /**
- * A class of objects that return source code on demand.
- *
- * When code is compiled with setSourceIsLazy(true), SpiderMonkey doesn't
- * retain the source code (and doesn't do lazy bytecode generation). If we ever
- * need the source code, say, in response to a call to Function.prototype.
- * toSource or Debugger.Source.prototype.text, then we call the 'load' member
- * function of the instance of this class that has hopefully been registered
- * with the runtime, passing the code's URL, and hope that it will be able to
- * find the source.
- */
-class SourceHook {
- public:
-  virtual ~SourceHook() {}
-
-  /**
-   * Attempt to load the source for |filename|.
-   *
-   * On success, return true and store an owning pointer to the UTF-8 or UTF-16
-   * contents of the file in whichever of |twoByteSource| or |utf8Source| is
-   * non-null.  (Exactly one of these will be non-null.)  This pointer must be
-   * |js_free|'d when it is no longer needed.
-   *
-   * On failure, return false.  The contents of whichever of |twoByteSource| or
-   * |utf8Source| was initially non-null are unspecified and must not be
-   * |js_free|'d.
-   */
-  virtual bool load(JSContext* cx, const char* filename,
-                    char16_t** twoByteSource, char** utf8Source,
-                    size_t* length) = 0;
-};
-
-/**
- * Have |cx| use |hook| to retrieve lazily-retrieved source code. See the
- * comments for SourceHook. The context takes ownership of the hook, and
- * will delete it when the context itself is deleted, or when a new hook is
- * set.
- */
-extern JS_FRIEND_API void SetSourceHook(JSContext* cx,
-                                        mozilla::UniquePtr<SourceHook> hook);
-
-/** Remove |cx|'s source hook, and return it. The caller now owns the hook. */
-extern JS_FRIEND_API mozilla::UniquePtr<SourceHook> ForgetSourceHook(
-    JSContext* cx);
-
-/**
  * Use the runtime's internal handling of job queues for Promise jobs.
  *
  * Most embeddings, notably web browsers, will have their own task scheduling
