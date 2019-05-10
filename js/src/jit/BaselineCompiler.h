@@ -419,6 +419,7 @@ class BaselineCodeGen {
 
 #define EMIT_OP(op) bool emit_##op();
   OPCODE_LIST(EMIT_OP)
+  EMIT_OP(JSOP_FORCEINTERPRETER)
 #undef EMIT_OP
 
   // JSOP_NEG, JSOP_BITNOT, JSOP_INC, JSOP_DEC
@@ -700,10 +701,16 @@ class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
   // Offsets of patchable call instructions for debugger breakpoints/stepping.
   js::Vector<uint32_t, 0, SystemAllocPolicy> debugTrapOffsets_;
 
+  // Offset of the code to start interpreting a bytecode op.
+  uint32_t interpretOpOffset_ = 0;
+
  public:
   explicit BaselineInterpreterGenerator(JSContext* cx);
 
+  MOZ_MUST_USE bool generate(BaselineInterpreter& interpreter);
+
  private:
+  MOZ_MUST_USE bool emitInterpreterLoop();
   MOZ_MUST_USE bool emitDebugTrap();
 };
 
