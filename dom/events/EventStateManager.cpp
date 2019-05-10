@@ -1996,7 +1996,7 @@ bool EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
 
   // get any custom drag image that was set
   int32_t imageX, imageY;
-  Element* dragImage = aDataTransfer->GetDragImage(&imageX, &imageY);
+  RefPtr<Element> dragImage = aDataTransfer->GetDragImage(&imageX, &imageY);
 
   nsCOMPtr<nsIArray> transArray = aDataTransfer->GetTransferables(dragTarget);
   if (!transArray) return false;

@@ -102,7 +102,8 @@ class SVGSVGElement final : public SVGSVGElementBase {
    *
    * XXX SVGZoomEvent is no more, is this needed?
    */
-  void SetCurrentScaleTranslate(float s, float x, float y);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetCurrentScaleTranslate(float s, float x,
+                                                            float y);
 
   // nsIContent interface
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;

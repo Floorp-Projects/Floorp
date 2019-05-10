@@ -218,7 +218,14 @@ BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent,
       mFullWindowRenderTarget(nullptr) {
   MOZ_COUNT_CTOR(BasicCompositor);
 
-  mMaxTextureSize = Factory::GetMaxSurfaceSize(gfxVars::ContentBackend());
+  // The widget backends may create intermediate Cairo surfaces to deal with
+  // various window buffers, regardless of actual content backend type, when
+  // using the basic compositor. Ensure that the buffers will be able to fit
+  // in or blit with a Cairo surface.
+  mMaxTextureSize =
+      std::min(Factory::GetMaxSurfaceSize(gfxVars::ContentBackend()),
+               Factory::GetMaxSurfaceSize(BackendType::CAIRO));
+
 }
 
 BasicCompositor::~BasicCompositor() { MOZ_COUNT_DTOR(BasicCompositor); }

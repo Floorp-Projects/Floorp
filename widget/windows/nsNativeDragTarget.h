@@ -48,24 +48,27 @@ class nsNativeDragTarget final : public IDropTarget {
 
   // Similar to DragEnter except it is called frequently while the drag
   // is over this object's window.
-  STDMETHODIMP DragOver(DWORD grfKeyState, POINTL point, DWORD* pEffect);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY STDMETHODIMP DragOver(DWORD grfKeyState,
+                                                    POINTL point,
+                                                    DWORD* pEffect);
 
   // Release the drag-drop source and put internal state back to the point
   // before the call to DragEnter. This is called when the drag leaves
   // without a drop occurring.
-  STDMETHODIMP DragLeave();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY STDMETHODIMP DragLeave();
 
   // If point is within our region of interest and pSource's data supports
   // one of our formats, get the data and set pEffect according to
   // grfKeyState (DROPEFFECT_MOVE if the control key was not pressed,
   // DROPEFFECT_COPY if the control key was pressed). Otherwise return
   // E_FAIL.
-  STDMETHODIMP Drop(LPDATAOBJECT pSource, DWORD grfKeyState, POINTL point,
-                    DWORD* pEffect);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY STDMETHODIMP Drop(LPDATAOBJECT pSource,
+                                                DWORD grfKeyState, POINTL point,
+                                                DWORD* pEffect);
   /**
    * Cancel the current drag session, if any.
    */
-  void DragCancel();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DragCancel();
 
   static void DragImageChanged() { gDragImageChanged = true; }
 

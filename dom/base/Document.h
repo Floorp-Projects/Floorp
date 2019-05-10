@@ -1940,8 +1940,9 @@ class Document : public nsINode,
   static bool HandlePendingFullscreenRequests(Document* aDocument);
 
   void RequestPointerLock(Element* aElement, CallerType);
-  bool SetPointerLock(Element* aElement, StyleCursorKind);
+  MOZ_CAN_RUN_SCRIPT bool SetPointerLock(Element* aElement, StyleCursorKind);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static void UnlockPointer(Document* aDoc = nullptr);
 
   // ScreenOrientation related APIs
