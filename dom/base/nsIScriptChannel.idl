@@ -15,13 +15,13 @@
  * - If the channel does not have an owner principal, the program will not be
  *   executed at all, no matter what.  This is necessary because in this
  *   circumstance we have no way to tell whether script execution is allowed at
- *   all for the originating security context of this channel. 
+ *   all for the originating security context of this channel.
  * - If the channel has an owner principal, how it is executed is controlled by
  *   this interface.  However if the owner principal does not subsume the
  *   principal of the environment in which the program is to be executed the
  *   execution will be forced to happen in a sandbox.
  */
-[scriptable, uuid(33234b99-9588-4c7d-9da6-86b8b7cba565)]
+[uuid(33234b99-9588-4c7d-9da6-86b8b7cba565)]
 interface nsIScriptChannel : nsISupports
 {
   /**
