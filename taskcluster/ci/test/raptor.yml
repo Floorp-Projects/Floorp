@@ -92,8 +92,13 @@ raptor-tp6-3-firefox:
     treeherder-symbol: Rap(tp6-3)
     run-on-projects:
         by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: built-projects
+            windows10-64-ux/opt: ['try', 'mozilla-central']
+            windows10-aarch64/opt: ['try', 'mozilla-central']
+            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            android-hw-.*-api-16/opt: ['try']
+            android-hw-.*-aarch64/opt: ['try']
+            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            default: ['try', 'trunk', 'mozilla-beta']
     mozharness:
         extra-options:
             - --test=raptor-tp6-3
