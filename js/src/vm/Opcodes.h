@@ -2237,7 +2237,8 @@
     MACRO(JSOP_ENVCALLEE, 206, "envcallee", NULL, 2, 0, 1, JOF_UINT8) \
     /*
      * No-op bytecode only emitted in some self-hosted functions. Not handled
-     * by the JITs so the script always runs in the interpreter.
+     * by the JITs or Baseline Interpreter so the script always runs in the C++
+     * interpreter.
      *
      *   Category: Other
      *   Operands:

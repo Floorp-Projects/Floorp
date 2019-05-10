@@ -104,7 +104,7 @@ elif fuzzing_engine == 'libfuzzer'
     fuzzer_ldflags += ['-fsanitize=fuzzer']
 elif fuzzing_engine == 'oss-fuzz'
     # libFuzzingEngine needs libc++
-    fuzzer_ldflags += ['-lFuzzingEngine', '-lc++']
+    fuzzer_ldflags += ['-fsanitize=fuzzer', '-lFuzzingEngine', '-lc++']
 endif
 
 dav1d_fuzzer = executable('dav1d_fuzzer',

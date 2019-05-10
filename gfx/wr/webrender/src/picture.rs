@@ -9,10 +9,10 @@ use api::units::*;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
 use crate::clip::{ClipChainId, ClipChainNode, ClipItem, ClipStore, ClipDataStore, ClipChainStack};
 use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
-    ClipScrollTree, CoordinateSystemId, SpatialNodeIndex, VisibleFace
+    ClipScrollTree, CoordinateSystemId, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace
 };
 use crate::debug_colors;
-use euclid::{size2, vec3, TypedPoint2D, TypedScale, TypedSize2D};
+use euclid::{size2, vec3, TypedPoint2D, TypedScale, TypedSize2D, Vector2D};
 use euclid::approxeq::ApproxEq;
 use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
 use crate::intern::ItemUid;
@@ -21,7 +21,7 @@ use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureStat
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
 use plane_split::{Clipper, Polygon, Splitter};
-use crate::prim_store::{CoordinateSpaceMapping, SpaceMapper};
+use crate::prim_store::SpaceMapper;
 use crate::prim_store::{PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
 use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer, VectorKey, PointKey};
 use crate::prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex, RectangleKey};
@@ -703,6 +703,7 @@ impl TileCache {
         prim_instances: &[PrimitiveInstance],
         root_clip_chain_id: ClipChainId,
         pictures: &[PicturePrimitive],
+        clip_scroll_tree: &ClipScrollTree,
     ) -> Self {
         // Build the list of reference primitives
         // for this picture cache.
@@ -717,6 +718,7 @@ impl TileCache {
             map_local_to_world: SpaceMapper::new(
                 ROOT_SPATIAL_NODE_INDEX,
                 WorldRect::zero(),
+                clip_scroll_tree,
             ),
             tiles_to_draw: Vec::new(),
             opacity_bindings: FastHashMap::default(),
@@ -793,7 +795,6 @@ impl TileCache {
         // Work out the scroll offset to apply to the world reference point.
         let scroll_offset_point = frame_context.clip_scroll_tree
             .get_world_transform(self.spatial_node_index)
-            .flattened
             .inverse_project_2d_origin()
             .unwrap_or_else(LayoutPoint::zero);
 
@@ -833,6 +834,7 @@ impl TileCache {
         self.map_local_to_world = SpaceMapper::new(
             ROOT_SPATIAL_NODE_INDEX,
             frame_context.screen_world_rect,
+            frame_context.clip_scroll_tree,
         );
 
         let world_mapper = SpaceMapper::new_with_target(
@@ -1439,15 +1441,13 @@ impl TileCache {
                             self.spatial_node_index,
                             spatial_node_index,
                         )
-                        .flattened
-                        .transform_point2d(&LayoutPoint::zero())
+                        .project_2d_origin()
                 } else {
                     frame_context.clip_scroll_tree
                         .get_relative_transform(
                             spatial_node_index,
                             self.spatial_node_index,
                         )
-                        .flattened
                         .inverse_project_2d_origin()
                 };
                 // Store the result of transforming a fixed point by this
@@ -1843,6 +1843,7 @@ impl SurfaceInfo {
         let map_local_to_surface = SpaceMapper::new(
             surface_spatial_node_index,
             pic_bounds,
+            clip_scroll_tree,
         );
 
         SurfaceInfo {
@@ -2400,6 +2401,7 @@ impl PicturePrimitive {
         let map_local_to_pic = SpaceMapper::new(
             surface_spatial_node_index,
             pic_bounds,
+            frame_context.clip_scroll_tree,
         );
 
         let (map_raster_to_world, map_pic_to_raster) = create_raster_mappers(
@@ -2797,9 +2799,8 @@ impl PicturePrimitive {
         plane_split_anchor: usize,
     ) -> bool {
         let transform = clip_scroll_tree
-            .get_world_transform(prim_spatial_node_index)
-            .flattened;
-        let matrix = transform.cast();
+            .get_world_transform(prim_spatial_node_index);
+        let matrix = transform.clone().into_transform().cast();
 
         // Apply the local clip rect here, before splitting. This is
         // because the local clip rect can't be applied in the vertex
@@ -2815,32 +2816,39 @@ impl PicturePrimitive {
         };
         let world_rect = world_rect.cast();
 
-        if transform.is_simple_translation() {
-            let inv_transform = clip_scroll_tree
-                .get_world_transform(prim_spatial_node_index)
-                .flattened
-                .inverse()
-                .expect("Simple translation, really?");
-            let polygon = Polygon::from_transformed_rect_with_inverse(
-                local_rect,
-                &matrix,
-                &inv_transform.cast(),
-                plane_split_anchor,
-            ).unwrap();
-            splitter.add(polygon);
-        } else {
-            let mut clipper = Clipper::new();
-            let results = clipper.clip_transformed(
-                Polygon::from_rect(
-                    local_rect,
+        match transform {
+            CoordinateSpaceMapping::Local => {
+                let polygon = Polygon::from_rect(
+                    local_rect * TypedScale::new(1.0),
                     plane_split_anchor,
-                ),
-                &matrix,
-                Some(world_rect),
-            );
-            if let Ok(results) = results {
-                for poly in results {
-                    splitter.add(poly);
+                );
+                splitter.add(polygon);
+            }
+            CoordinateSpaceMapping::ScaleOffset(scale_offset) if scale_offset.scale == Vector2D::new(1.0, 1.0) => {
+                let inv_matrix = scale_offset.inverse().to_transform().cast();
+                let polygon = Polygon::from_transformed_rect_with_inverse(
+                    local_rect,
+                    &matrix,
+                    &inv_matrix,
+                    plane_split_anchor,
+                ).unwrap();
+                splitter.add(polygon);
+            }
+            CoordinateSpaceMapping::ScaleOffset(_) |
+            CoordinateSpaceMapping::Transform(_) => {
+                let mut clipper = Clipper::new();
+                let results = clipper.clip_transformed(
+                    Polygon::from_rect(
+                        local_rect,
+                        plane_split_anchor,
+                    ),
+                    &matrix,
+                    Some(world_rect),
+                );
+                if let Ok(results) = results {
+                    for poly in results {
+                        splitter.add(poly);
+                    }
                 }
             }
         }
@@ -2866,10 +2874,9 @@ impl PicturePrimitive {
             let spatial_node_index = self.prim_list.prim_instances[poly.anchor].spatial_node_index;
             let transform = match clip_scroll_tree
                 .get_world_transform(spatial_node_index)
-                .flattened
                 .inverse()
             {
-                Some(transform) => transform,
+                Some(transform) => transform.into_transform(),
                 // logging this would be a bit too verbose
                 None => continue,
             };
@@ -3015,7 +3022,7 @@ impl PicturePrimitive {
             // rasterization root should be established.
             let establishes_raster_root = frame_context.clip_scroll_tree
                 .get_relative_transform(surface_spatial_node_index, parent_raster_node_index)
-                .has_perspective;
+                .is_perspective();
 
             // Disallow subpixel AA if an intermediate surface is needed.
             // TODO(lsalzman): allow overriding parent if intermediate surface is opaque
@@ -3079,13 +3086,12 @@ impl PicturePrimitive {
                 // For in-preserve-3d primitives and pictures, the backface visibility is
                 // evaluated relative to the containing block.
                 if let Picture3DContext::In { ancestor_index, .. } = self.context_3d {
-                    match CoordinateSpaceMapping::<LayoutPoint, LayoutPoint>::new(
-                        ancestor_index,
-                        cluster.spatial_node_index,
-                        &frame_context.clip_scroll_tree,
-                    ) {
-                        (_, VisibleFace::Back) => continue,
-                        (_, VisibleFace::Front) => (),
+                    match frame_context.clip_scroll_tree
+                        .get_relative_transform(cluster.spatial_node_index, ancestor_index)
+                        .visible_face()
+                    {
+                        VisibleFace::Back => continue,
+                        VisibleFace::Front => (),
                     }
                 }
             }
@@ -3383,6 +3389,7 @@ fn build_ref_prims(
     let mut map_local_to_world = SpaceMapper::new(
         ROOT_SPATIAL_NODE_INDEX,
         WorldRect::zero(),
+        clip_scroll_tree,
     );
 
     for ref_prim in ref_prims {

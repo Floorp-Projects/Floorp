@@ -1,6 +1,7 @@
 /* verify that certain invalid URIs are not parsed by the resource
    protocol handler */
 
+"use strict";
 
 const specs = [
   "resource://res-test//",
@@ -39,25 +40,8 @@ function get_channel(spec)
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
   });
 
-  try {
-    channel.asyncOpen(null);
-    ok(false, "asyncOpen() of URI: " + spec + "should throw");
-  }
-  catch (e) {
-    // make sure we get the right error code in the exception
-    // ERROR code for NS_ERROR_DOM_BAD_URI is 1012
-    equal(e.code, 1012);
-  }
-
-  try {
-    channel.open();
-    ok(false, "Open() of uri: " + spec + "should throw");
-  }
-  catch (e) {
-    // make sure we get the right error code in the exception
-    // ERROR code for NS_ERROR_DOM_BAD_URI is 1012
-    equal(e.code, 1012);
-  }
+  Assert.throws(() => { channel.asyncOpen(null); }, /NS_ERROR_DOM_BAD_URI/, `asyncOpen() of uri: ${spec} should throw`);
+  Assert.throws(() => { channel.open(); }, /NS_ERROR_DOM_BAD_URI/, `Open() of uri: ${spec} should throw`);
 
   return channel;
 }
@@ -69,18 +53,18 @@ function check_safe_resolution(spec, rootURI)
   let channel = get_channel(spec);
 
   ok(channel.name.startsWith(rootURI), `URL resolved safely to ${channel.name}`);
-  ok(!/%2f/i.test(channel.name), `URL contains no escaped / characters`);
+  let startOfQuery = channel.name.indexOf("?");
+  if (startOfQuery == -1) {
+    ok(!/%2f/i.test(channel.name), `URL contains no escaped / characters`);
+  } else {
+    // Escaped slashes are allowed in the query or hash part of the URL
+    ok(!channel.name.replace(/\?.*/, "").includes("%2f"), `URL contains no escaped slashes before the query ${channel.name}`);
+  }
 }
 
 function check_resolution_error(spec)
 {
-  try {
-    get_channel(spec);
-    ok(false, "Expected an error");
-  } catch (e) {
-    equal(e.result, Cr.NS_ERROR_MALFORMED_URI,
-          "Expected a malformed URI error");
-  }
+  Assert.throws(() => { get_channel(spec); }, /NS_ERROR_MALFORMED_URI/, "Expected a malformed URI error");
 }
 
 function run_test() {

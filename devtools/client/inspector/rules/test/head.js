@@ -568,7 +568,7 @@ async function toggleClassPanelCheckBox(view, name) {
 
 /**
  * Verify the content of the class-panel.
- * @param {CssRuleView} view The rule-view isntance
+ * @param {CssRuleView} view The rule-view instance
  * @param {Array} classes The list of expected classes. Each item in this array is an
  * object with the following properties: {name: {String}, state: {Boolean}}
  */
@@ -605,4 +605,244 @@ async function openEyedropper(view, swatch) {
   const onOpened = tooltip.once("eyedropper-opened");
   dropperButton.click();
   await onOpened;
+}
+
+/**
+ * Gets a set of declarations for a rule index.
+ *
+ * @param {ruleView} view
+ *        The rule-view instance.
+ * @param {Number} ruleIndex
+ *        The index we expect the rule to have in the rule-view.
+ *
+ * @returns A map containing stringified property declarations e.g.
+ *          [
+ *            {
+ *              "color:red":
+ *                {
+ *                  propertyName: "color",
+ *                  propertyValue: "red",
+ *                  warning: "This won't work",
+ *                  used: true,
+ *                }
+ *            },
+ *            ...
+ *          ]
+ */
+function getPropertiesForRuleIndex(view, ruleIndex) {
+  const declaration = new Map();
+  const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
+
+  for (const currProp of ruleEditor.rule.textProps) {
+    const icon = currProp.editor.unusedState;
+    const unused = currProp.editor.element.classList.contains("unused");
+
+    declaration.set(`${currProp.name}:${currProp.value}`, {
+      propertyName: currProp.name,
+      propertyValue: currProp.value,
+      icon: icon,
+      data: currProp.isUsed(),
+      warning: unused,
+      used: !unused,
+    });
+  }
+
+  return declaration;
+}
+
+/**
+ * Toggle a declaration disabled or enabled.
+ *
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox.
+ * @param {ruleView} view
+ *        The rule-view instance
+ * @param {Number} ruleIndex
+ *        The index of the CSS rule where we can find the declaration to be
+ *        toggled.
+ * @param {Object} declaration
+ *        An object representing the declaration e.g. { color: "red" }.
+ */
+async function toggleDeclaration(inspector, view, ruleIndex, declaration) {
+  const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
+  const [[ name, value ]] = Object.entries(declaration);
+
+  let textProp = null;
+  for (const currProp of ruleEditor.rule.textProps) {
+    if (currProp.name === name && currProp.value === value) {
+      textProp = currProp;
+      break;
+    }
+  }
+
+  const dec = `${name}:${value}`;
+  ok(textProp, `Declaration "${dec}" found`);
+
+  const newStatus = textProp.enabled ? "disabled" : "enabled";
+  info(`Toggling declaration "${dec}" of rule ${ruleIndex} to ${newStatus}`);
+
+  await togglePropStatus(view, textProp);
+  info("Toggled successfully.");
+}
+
+/**
+ * Check that a declaration is marked inactive and that it has the expected
+ * warning.
+ *
+ * @param {ruleView} view
+ *        The rule-view instance.
+ * @param {Number} ruleIndex
+ *        The index we expect the rule to have in the rule-view.
+ * @param {Object} declaration
+ *        An object representing the declaration e.g. { color: "red" }.
+ */
+async function checkDeclarationIsInactive(view, ruleIndex, declaration) {
+  const declarations = getPropertiesForRuleIndex(view, ruleIndex);
+  const [[ name, value ]] = Object.entries(declaration);
+  const dec = `${name}:${value}`;
+  const { used, warning } = declarations.get(dec);
+
+  ok(!used, `"${dec}" is inactive`);
+  ok(warning, `"${dec}" has a warning`);
+
+  await checkInteractiveTooltip(view, ruleIndex, declaration);
+}
+
+/**
+ * Check that a declaration is marked active.
+ *
+ * @param {ruleView} view
+ *        The rule-view instance.
+ * @param {Number} ruleIndex
+ *        The index we expect the rule to have in the rule-view.
+ * @param {Object} declaration
+ *        An object representing the declaration e.g. { color: "red" }.
+ */
+function checkDeclarationIsActive(view, ruleIndex, declaration) {
+  const declarations = getPropertiesForRuleIndex(view, ruleIndex);
+  const [[ name, value ]] = Object.entries(declaration);
+  const dec = `${name}:${value}`;
+  const { used, warning } = declarations.get(dec);
+
+  ok(used, `${dec} is active`);
+  ok(!warning, `${dec} has no warning`);
+}
+
+/**
+ * Check that a tooltip contains the correct value.
+ *
+ * @param {ruleView} view
+ *        The rule-view instance.
+ * @param {Number} ruleIndex
+ *        The index we expect the rule to have in the rule-view.
+ * @param {Object} declaration
+ *        An object representing the declaration e.g. { color: "red" }.
+ */
+async function checkInteractiveTooltip(view, ruleIndex, declaration) {
+  // Get the declaration
+  const declarations = getPropertiesForRuleIndex(view, ruleIndex);
+  const [[ name, value ]] = Object.entries(declaration);
+  const dec = `${name}:${value}`;
+  const { icon, data } = declarations.get(dec);
+
+  // Get the tooltip.
+  const tooltip = view.tooltips.getTooltip("interactiveTooltip");
+
+  // Get the HTML template.
+  const inactiveCssTooltipHelper = view.tooltips.inactiveCssTooltipHelper;
+  const template = inactiveCssTooltipHelper.getTemplate(data, tooltip);
+
+  // Translate the template using Fluent.
+  const { doc } = tooltip;
+  await doc.l10n.translateFragment(template);
+
+  // Get the expected HTML content of the now translated template.
+  const expected = template.firstElementChild.outerHTML;
+
+  // Show the tooltip for the correct icon.
+  const onTooltipReady = tooltip.once("shown");
+  await view.tooltips.onInteractiveTooltipTargetHover(icon);
+  tooltip.show(icon);
+  await onTooltipReady;
+
+  // Get the tooltip's actual HTML content.
+  const actual = tooltip.panel.firstElementChild.outerHTML;
+
+  // Hide the tooltip.
+  const onTooltipHidden = tooltip.once("hidden");
+  tooltip.hide();
+  await onTooltipHidden;
+
+  // Finally, check the values.
+  is(actual, expected, "Tooltip contains the correct value.");
+}
+
+/**
+ * Inactive CSS test runner.
+ *
+ * @param {ruleView} view
+ *        The rule-view instance.
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox.
+ * @param {Array} tests
+ *        An array of test object for this method to consume e.g.
+ *          [
+ *            {
+ *              selector: "#flex-item",
+ *              activeDeclarations: [
+ *                {
+ *                  declarations: {
+ *                    "order": "2",
+ *                  },
+ *                  ruleIndex: 0,
+ *                },
+ *                {
+ *                  declarations: {
+ *                    "flex-basis": "auto",
+ *                    "flex-grow": "1",
+ *                    "flex-shrink": "1",
+ *                  },
+ *                  ruleIndex: 1,
+ *                },
+ *              ],
+ *              inactiveDeclarations: [
+ *                {
+ *                  declaration: {
+ *                    "flex-direction": "row",
+ *                  },
+ *                  ruleIndex: 1,
+ *                },
+ *              ],
+ *            },
+ *            ...
+ *          ]
+ */
+async function runInactiveCSSTests(view, inspector, tests) {
+  for (const test of tests) {
+    if (test.selector) {
+      await selectNode(test.selector, inspector);
+    }
+
+    if (test.activeDeclarations) {
+      info("Checking whether declarations are marked as used.");
+
+      for (const activeDeclarations of test.activeDeclarations) {
+        for (const [name, value] of Object.entries(activeDeclarations.declarations)) {
+          checkDeclarationIsActive(view, activeDeclarations.ruleIndex, {
+            [name]: value,
+          });
+        }
+      }
+    }
+
+    if (test.inactiveDeclarations) {
+      info("Checking that declarations are unused and have a warning.");
+
+      for (const inactiveDeclaration of test.inactiveDeclarations) {
+        await checkDeclarationIsInactive(view,
+                                         inactiveDeclaration.ruleIndex,
+                                         inactiveDeclaration.declaration);
+      }
+    }
+  }
 }

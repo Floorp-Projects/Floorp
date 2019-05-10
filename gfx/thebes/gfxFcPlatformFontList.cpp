@@ -1988,7 +1988,8 @@ gfxFontEntry* gfxFcPlatformFontList::MakePlatformFont(
     free((void*)aFontData);
     return nullptr;
   }
-  if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE)) {
+  if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE) &&
+      FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_MS_SYMBOL)) {
     Factory::ReleaseFTFace(face);
     free((void*)aFontData);
     return nullptr;

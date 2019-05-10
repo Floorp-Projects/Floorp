@@ -1,0 +1,171 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"/>
+<body xmlns="http://www.w3.org/1999/xhtml"></body>
+<script>
+<![CDATA[
+const baseURL = "chrome://mochitests/content/chrome/layout/base/tests/chrome/";
+
+// Tests that iframe visibility is updated when it's swapped.
+add_task(async () => {
+  // Open two new windows to swap iframes.
+  const window1 =
+      window.open(baseURL + "window_css_visibility_propagation-1.html",
+                  "_blank", "chrome");
+  const window2 =
+      window.open(baseURL + "window_css_visibility_propagation-2.html",
+                  "_blank", "chrome");
+
+  const loadWindow1 =
+      new Promise(resolve => window1.addEventListener("load", resolve));
+  const loadWindow2 =
+      new Promise(resolve => window2.addEventListener("load", resolve));
+
+  await Promise.all([ loadWindow1, loadWindow2 ]);
+
+  // Hide the parent of iframe2.
+  let parent = window2.document.getElementById("parent");
+  parent.style.visibility = "hidden";
+  parent.getBoundingClientRect();
+
+  const iframe2 = window2.document.querySelector("iframe");
+  let target = iframe2.contentDocument.getElementById("button");
+  target.focus();
+
+  // iframe2 is now in a visibility:hidden element in window2,
+  // so that Element.focus() shouldn't work.
+  isnot(iframe2.contentDocument.activeElement, target,
+        "Element.focus() shouldn't work in invisible iframe");
+
+  // Make the parent visible.
+  parent.style.visibility = "";
+  parent.getBoundingClientRect();
+
+  target.focus();
+
+  // iframe2 is visible now, so focus() should work.
+  is(iframe2.contentDocument.activeElement, target,
+     "Element.focus() should work in visible iframe");
+
+  target.blur();
+  isnot(iframe2.contentDocument.activeElement, target,
+        "The target element shouldn't be activeElement");
+
+  // Swap the content in iframe1 for the content in iframe2.
+  const iframe1 = window1.document.querySelector("iframe");
+  iframe1.swapFrameLoaders(iframe2);
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  target = iframe1.contentDocument.getElementById("button");
+  target.focus();
+
+  // iframe1 is in a visibility:hidden element in window1,
+  // so that Element.focus() shouldn't work.
+  isnot(iframe1.contentDocument.activeElement, target,
+        "Element.focus() shouldn't work in invisible iframe");
+
+  parent = window1.document.getElementById("parent");
+  parent.style.visibility = "visible";
+  parent.getBoundingClientRect();
+
+  target.focus();
+
+  // Now iframe1 is in a visibility:visible element, so that
+  // Element.focus() should just work.
+  is(iframe1.contentDocument.activeElement, target,
+     "Element.focus() should work in visible iframe");
+
+  window1.close();
+  window2.close();
+});
+
+// Tests that ancestor's visibility change doesn't clobber child
+// iframe's visibility if the child iframe is hidden by an
+// element in the ancestor document.
+add_task(async () => {
+  const tabReady = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      if (event.data == "ready") {
+        resolve();
+      }
+    }, { once: true });
+  });
+  const tabWindow =
+      window.open(baseURL + "window_css_visibility_propagation-3.html");
+  await tabReady;
+
+  const childIFrame = tabWindow.document.querySelector("iframe");
+
+  const grandChildIFrame =
+      childIFrame.contentDocument.querySelector("iframe");
+  let target = grandChildIFrame.contentDocument.getElementById("button");
+  target.focus();
+
+  is(grandChildIFrame.contentDocument.activeElement, target,
+     "Element.focus() should work in visible iframe");
+  target.blur();
+
+  // Hide the parent element of the grand child iframe.
+  let parent = childIFrame.contentDocument.getElementById("parent");
+  parent.style.visibility = "hidden";
+  parent.getBoundingClientRect();
+
+  target.focus();
+
+  isnot(grandChildIFrame.contentDocument.activeElement, target,
+        "Element.focus() shouldn't work in invisible iframe");
+
+  // Hide the parent element of the child iframe.
+  parent = tabWindow.document.getElementById("parent");
+  parent.style.visibility = "hidden";
+  parent.getBoundingClientRect();
+
+  target.focus();
+
+  isnot(grandChildIFrame.contentDocument.activeElement, target,
+        "Element.focus() shouldn't work in invisible iframe");
+
+  // Make the parent element of the child iframe visible.
+  parent.style.visibility = "visible";
+  parent.getBoundingClientRect();
+
+  target.focus();
+
+  // Even if the child iframe is visible, but still the grand child is
+  // hidden by the parent element of the grand child iframe so that
+  // we can't focus to the element in the grand child iframe.
+  isnot(grandChildIFrame.contentDocument.activeElement, target,
+        "Element.focus() shouldn't work in invisible iframe");
+
+  tabWindow.close();
+});
+
+// Tests that an iframe is initially hidden by a visibility:hidden element in
+// the parent document.
+add_task(async () => {
+  const tabReady = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      if (event.data == "ready") {
+        resolve();
+      }
+    }, { once: true });
+  });
+  const tabWindow =
+      window.open(baseURL + "window_css_visibility_propagation-4.html");
+  await tabReady;
+
+  const iframe = tabWindow.document.querySelector("iframe");
+  let target = iframe.contentDocument.getElementById("button");
+  target.focus();
+
+  isnot(iframe.contentDocument.activeElement, target,
+        "Element.focus() shouldn't work in invisible iframe");
+
+  tabWindow.close();
+});
+]]>
+</script>
+</window>

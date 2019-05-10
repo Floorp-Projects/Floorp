@@ -59,7 +59,10 @@ smooth_weights: SMOOTH_WEIGHT_TABLE         \
 ipred_v_shuf      : db  0,  1,  0,  1,  2,  3,  2,  3,  4,  5,  4,  5,  6,  7,  6,  7
 ipred_h_shuf      : db  3,  3,  3,  3,  2,  2,  2,  2,  1,  1,  1,  1,  0,  0,  0,  0
 ipred_paeth_shuf  : db  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0
+filter_shuf1      : db  3,  4,  3,  4,  5,  6,  5,  6,  7,  2,  7,  2,  1, -1,  1, -1
+filter_shuf2      : db  3,  4,  3,  4,  5,  6,  5,  6,  7, 11,  7, 11, 15, -1, 15, -1
 
+pw_8        : times 8  dw 8
 pb_3        : times 16 db 3
 pb_128      : times 8  db 128
 pw_128      : times 4  dw 128
@@ -95,6 +98,9 @@ JMP_TABLE pal_pred,         ssse3, w4, w8, w16, w32, w64
 JMP_TABLE ipred_cfl,        ssse3, h4, h8, h16, h32, w4, w8, w16, w32, \
                                 s4-8*4, s8-8*4, s16-8*4, s32-8*4
 JMP_TABLE ipred_cfl_left,   ssse3, h4, h8, h16, h32
+JMP_TABLE ipred_filter,     ssse3, w4, w8, w16, w32
+
+cextern filter_intra_taps
 
 
 SECTION .text
@@ -2909,3 +2915,196 @@ ALIGN function_align
     jg .w64_loop
     RET
 
+
+%macro FILTER 4  ;dst, src, tmp, shuf
+%ifnum %4
+    pshufb               m%2, m%4
+%else
+    pshufb               m%2, %4
+%endif
+    pshufd               m%1, m%2, q0000           ;p0 p1
+    pmaddubsw            m%1, m2
+    pshufd               m%3, m%2, q1111           ;p2 p3
+    pmaddubsw            m%3, m3
+    paddw                m%1, [base+pw_8]
+    paddw                m%1, m%3
+    pshufd               m%3, m%2, q2222           ;p4 p5
+    pmaddubsw            m%3, m4
+    paddw                m%1, m%3
+    pshufd               m%3, m%2, q3333           ;p6 __
+    pmaddubsw            m%3, m5
+    paddw                m%1, m%3
+    psraw                m%1, 4
+    packuswb             m%1, m%1
+%endmacro
+
+cglobal ipred_filter, 3, 7, 8, dst, stride, tl, w, h, filter
+%define base r6-$$
+    LEA                   r6, $$
+    tzcnt                 wd, wm
+%ifidn filterd, filterm
+    movzx            filterd, filterb
+%else
+    movzx            filterd, byte filterm
+%endif
+    shl              filterd, 6
+    lea              filterq, [base+filter_intra_taps+filterq]
+    movq                  m0, [tlq-3]                     ;_ 6 5 0 1 2 3 4
+    movsxd                wq, [base+ipred_filter_ssse3_table+wq*4]
+    mova                  m2, [filterq+16*0]
+    mova                  m3, [filterq+16*1]
+    mova                  m4, [filterq+16*2]
+    mova                  m5, [filterq+16*3]
+    lea                   wq, [base+ipred_filter_ssse3_table+wq]
+    mov                   hd, hm
+    jmp                   wq
+.w4:
+    mova                  m1, [base+filter_shuf1]
+    sub                  tlq, 3
+    sub                  tlq, hq
+    jmp .w4_loop_start
+.w4_loop:
+    movd                  m0, [tlq+hq]
+    punpckldq             m0, m6
+    lea                 dstq, [dstq+strideq*2]
+.w4_loop_start:
+    FILTER                 6, 0, 7, 1
+    movd    [dstq+strideq*0], m6
+    pshuflw               m6, m6, q1032
+    movd    [dstq+strideq*1], m6
+    sub                   hd, 2
+    jg .w4_loop
+    RET
+
+ALIGN function_align
+.w8:
+    movq                  m6, [tlq+1]                   ;_ _ _ 0 1 2 3 4
+    sub                  tlq, 5
+    sub                  tlq, hq
+
+.w8_loop:
+    FILTER                 7, 0, 1, [base+filter_shuf1]
+    punpcklqdq            m6, m7                        ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    FILTER                 0, 6, 1, [base+filter_shuf2]
+
+    punpckldq             m6, m7, m0
+    movq    [dstq+strideq*0], m6
+    punpckhqdq            m6, m6
+    movq    [dstq+strideq*1], m6
+
+    movd                  m0, [tlq+hq]                  ;_ 6 5 0
+    punpckldq             m0, m6                        ;_ 6 5 0 1 2 3 4
+
+    lea                 dstq, [dstq+strideq*2]
+    sub                   hd, 2
+    jg .w8_loop
+    RET
+
+ALIGN function_align
+.w16:
+    movu                  m6, [tlq+1]                   ;top row
+    sub                  tlq, 5
+    sub                  tlq, hq
+
+.w16_loop:
+    FILTER                 7, 0, 1, [base+filter_shuf1]
+    punpcklqdq            m0, m6, m7                    ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movd    [dstq+strideq*0], m7
+    psrlq                 m7, 32
+    palignr               m7, m6, 4
+
+    FILTER                 6, 0, 1, [base+filter_shuf2]
+    punpcklqdq            m0, m7, m6                    ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movd  [dstq+4+strideq*0], m6
+    psrlq                 m6, 32
+    palignr               m6, m7, 4
+
+    FILTER                 7, 0, 1, [base+filter_shuf2]
+    punpcklqdq            m0, m6, m7                    ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movd  [dstq+8+strideq*0], m7
+    psrlq                 m7, 32
+    palignr               m7, m6, 4
+
+    FILTER                 6, 0, 1, [base+filter_shuf2]
+    movd [dstq+12+strideq*0], m6
+    psrlq                 m6, 32
+    palignr               m6, m7, 4
+    mova    [dstq+strideq*1], m6
+
+    movd                  m0, [tlq+hq]                  ;_ 6 5 0
+    punpckldq             m0, m6                        ;_ 6 5 0 1 2 3 4
+
+    lea                 dstq, [dstq+strideq*2]
+    sub                   hd, 2
+    jg .w16_loop
+    RET
+
+ALIGN function_align
+.w32:
+    movu                  m6, [tlq+1]                   ;top row
+    lea              filterq, [tlq+17]
+    sub                  tlq, 5
+    sub                  tlq, hq
+
+.w32_loop:
+    FILTER                 7, 0, 1, [base+filter_shuf1]
+    punpcklqdq            m0, m6, m7                    ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movd    [dstq+strideq*0], m7
+    psrlq                 m7, 32
+    palignr               m7, m6, 4
+
+    FILTER                 6, 0, 1, [base+filter_shuf2]
+    punpcklqdq            m0, m7, m6                    ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movd  [dstq+4+strideq*0], m6
+    psrlq                 m6, 32
+    palignr               m6, m7, 4
+
+    FILTER                 7, 0, 1, [base+filter_shuf2]
+    punpcklqdq            m0, m6, m7                    ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movd  [dstq+8+strideq*0], m7
+    psrlq                 m7, 32
+    palignr               m7, m6, 4
+
+    FILTER                 6, 0, 1, [base+filter_shuf2]
+    movu                  m1, [filterq]
+    punpckldq             m0, m7, m1                    ;_ _ _ 0 1 2 3 4 _ _ _ _ _ _ _ _
+    punpcklqdq            m0, m6                        ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movd [dstq+12+strideq*0], m6
+    psrlq                 m6, 32
+    palignr               m6, m7, 4
+    mova    [dstq+strideq*1], m6
+
+    mova                  m6, m1
+
+    FILTER                 7, 0, 6, [base+filter_shuf2]
+    punpcklqdq            m0, m1, m7                    ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movd [dstq+16+strideq*0], m7
+    psrlq                 m7, 32
+    palignr               m7, m1, 4
+
+    FILTER                 6, 0, 1, [base+filter_shuf2]
+    punpcklqdq            m0, m7, m6                    ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movd [dstq+20+strideq*0], m6
+    psrlq                 m6, 32
+    palignr               m6, m7, 4
+
+    FILTER                 7, 0, 1, [base+filter_shuf2]
+    punpcklqdq            m0, m6, m7                    ;_ _ _ 0 1 2 3 4 _ _ _ 5 _ _ _ 6
+    movd [dstq+24+strideq*0], m7
+    psrlq                 m7, 32
+    palignr               m7, m6, 4
+
+    FILTER                 6, 0, 1, [base+filter_shuf2]
+    movd [dstq+28+strideq*0], m6
+    psrlq                 m6, 32
+    palignr               m6, m7, 4
+    mova [dstq+16+strideq*1], m6
+
+    mova                  m6, [dstq+strideq*1]
+    movd                  m0, [tlq+hq]                  ;_ 6 5 0
+    punpckldq             m0, m6                        ;_ 6 5 0 1 2 3 4
+    lea              filterq, [dstq+16+strideq*1]
+    lea                 dstq, [dstq+strideq*2]
+    sub                   hd, 2
+    jg .w32_loop
+    RET

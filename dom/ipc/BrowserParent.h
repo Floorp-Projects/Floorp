@@ -708,7 +708,7 @@ class BrowserParent final : public PBrowserParent,
                                             const int32_t& aCy);
 
   mozilla::ipc::IPCResult RecvShowCanvasPermissionPrompt(
-      const nsCString& aFirstPartyURI, const bool& aHideDoorHanger);
+      const nsCString& aOrigin, const bool& aHideDoorHanger);
 
   mozilla::ipc::IPCResult RecvSetSystemFont(const nsCString& aFontName);
   mozilla::ipc::IPCResult RecvGetSystemFont(nsCString* aFontName);

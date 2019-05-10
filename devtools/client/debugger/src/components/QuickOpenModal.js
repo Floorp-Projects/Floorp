@@ -115,11 +115,7 @@ export class QuickOpenModal extends Component<Props, State> {
     const queryChanged = prevProps.query !== this.props.query;
 
     if (this.refs.resultList && this.refs.resultList.refs) {
-      scrollList(
-        this.refs.resultList.refs,
-        this.state.selectedIndex,
-        nowEnabled || !queryChanged
-      );
+      scrollList(this.refs.resultList.refs, this.state.selectedIndex);
     }
 
     if (nowEnabled || queryChanged) {

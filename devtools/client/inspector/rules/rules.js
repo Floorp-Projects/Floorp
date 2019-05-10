@@ -16,15 +16,16 @@ const {PrefObserver} = require("devtools/client/shared/prefs");
 const ElementStyle = require("devtools/client/inspector/rules/models/element-style");
 const RuleEditor = require("devtools/client/inspector/rules/views/rule-editor");
 const {
-  VIEW_NODE_SELECTOR_TYPE,
-  VIEW_NODE_PROPERTY_TYPE,
-  VIEW_NODE_VALUE_TYPE,
+  VIEW_NODE_FONT_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
+  VIEW_NODE_INACTIVE_CSS,
   VIEW_NODE_LOCATION_TYPE,
+  VIEW_NODE_PROPERTY_TYPE,
+  VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_SHAPE_POINT_TYPE,
   VIEW_NODE_SHAPE_SWATCH,
+  VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_VARIABLE_TYPE,
-  VIEW_NODE_FONT_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
 const {createChild, promiseWarn} = require("devtools/client/inspector/shared/utils");
@@ -425,6 +426,9 @@ CssRuleView.prototype = {
         toggleActive: getShapeToggleActive(node),
         point: getShapePoint(node),
       };
+    } else if (classes.contains("ruleview-unused-warning") && prop) {
+      type = VIEW_NODE_INACTIVE_CSS;
+      value = prop.isUsed();
     } else if (classes.contains("ruleview-shapeswatch") && prop) {
       type = VIEW_NODE_SHAPE_SWATCH;
       value = {

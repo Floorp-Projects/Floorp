@@ -158,6 +158,8 @@ static int copy_subcoefs(coef *coeff,
         eob += rnd() % (n - eob - 1);
     for (n = eob + 1; n < sw * sh; n++)
         coeff[scan[n]] = 0;
+    for (; n < 32 * 32; n++)
+        coeff[n] = rnd();
     return eob;
 }
 
@@ -224,7 +226,7 @@ void bitfn(checkasm_check_itx)(void) {
     Dav1dInvTxfmDSPContext c;
     bitfn(dav1d_itx_dsp_init)(&c);
 
-    ALIGN_STK_32(coef, coeff, 3, [32 * 32]);
+    ALIGN_STK_32(coef, coeff, 2, [32 * 32]);
     ALIGN_STK_32(pixel, c_dst, 64 * 64,);
     ALIGN_STK_32(pixel, a_dst, 64 * 64,);
 
@@ -245,7 +247,6 @@ void bitfn(checkasm_check_itx)(void) {
         const enum RectTxfmSize tx = txfm_size_order[i];
         const int w = dav1d_txfm_dimensions[tx].w * 4;
         const int h = dav1d_txfm_dimensions[tx].h * 4;
-        const int sw = imin(w, 32), sh = imin(h, 32);
         const int subsh_max = subsh_iters[imax(dav1d_txfm_dimensions[tx].lw,
                                                dav1d_txfm_dimensions[tx].lh)];
 
@@ -263,24 +264,22 @@ void bitfn(checkasm_check_itx)(void) {
                     const int bitdepth_max = 0xff;
 #endif
                     const int eob = ftx(coeff[0], tx, txtp, w, h, subsh, bitdepth_max);
+                    memcpy(coeff[1], coeff[0], sizeof(*coeff));
 
                     for (int j = 0; j < w * h; j++)
                         c_dst[j] = a_dst[j] = rnd() & bitdepth_max;
-
-                    memcpy(coeff[1], coeff[0], sw * sh * sizeof(**coeff));
-                    memcpy(coeff[2], coeff[0], sw * sh * sizeof(**coeff));
 
                     call_ref(c_dst, w * sizeof(*c_dst), coeff[0], eob
                              HIGHBD_TAIL_SUFFIX);
                     call_new(a_dst, w * sizeof(*c_dst), coeff[1], eob
                              HIGHBD_TAIL_SUFFIX);
                     if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)) ||
-                        memcmp(coeff[0], coeff[1], sw * sh * sizeof(**coeff)))
+                        memcmp(coeff[0], coeff[1], sizeof(*coeff)))
                     {
                         fail();
                     }
 
-                    bench_new(a_dst, w * sizeof(*c_dst), coeff[2], eob
+                    bench_new(a_dst, w * sizeof(*c_dst), coeff[0], eob
                               HIGHBD_TAIL_SUFFIX);
                 }
         report("add_%dx%d", w, h);

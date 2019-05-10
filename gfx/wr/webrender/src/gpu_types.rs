@@ -476,22 +476,17 @@ pub struct TransformPalette {
 }
 
 impl TransformPalette {
-    pub fn new() -> Self {
+    pub fn new(count: usize) -> Self {
         let _ = VECS_PER_TRANSFORM;
         TransformPalette {
-            transforms: Vec::new(),
-            metadata: Vec::new(),
+            transforms: vec![TransformData::invalid(); count],
+            metadata: vec![TransformMetadata::invalid(); count],
             map: FastHashMap::default(),
         }
     }
 
     pub fn finish(self) -> Vec<TransformData> {
         self.transforms
-    }
-
-    pub fn allocate(&mut self, count: usize) {
-        self.transforms = vec![TransformData::invalid(); count];
-        self.metadata = vec![TransformMetadata::invalid(); count];
     }
 
     pub fn set_world_transform(
@@ -535,7 +530,7 @@ impl TransformPalette {
                         child_index,
                         parent_index,
                     )
-                    .flattened
+                    .into_transform()
                     .with_destination::<PicturePixel>();
 
                     register_transform(

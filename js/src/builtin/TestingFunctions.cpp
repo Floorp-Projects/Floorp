@@ -255,6 +255,24 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef JS_CODEGEN_MIPS32
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "mips32", value)) {
+    return false;
+  }
+
+#ifdef JS_CODEGEN_MIPS64
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "mips64", value)) {
+    return false;
+  }
+
 #ifdef JS_SIMULATOR_MIPS32
   value = BooleanValue(true);
 #else

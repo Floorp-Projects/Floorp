@@ -62,6 +62,7 @@ decl_angular_ipred_fn(dav1d_ipred_paeth_ssse3);
 decl_angular_ipred_fn(dav1d_ipred_smooth_ssse3);
 decl_angular_ipred_fn(dav1d_ipred_smooth_v_ssse3);
 decl_angular_ipred_fn(dav1d_ipred_smooth_h_ssse3);
+decl_angular_ipred_fn(dav1d_ipred_filter_ssse3);
 
 decl_cfl_pred_fn(dav1d_ipred_cfl_ssse3);
 decl_cfl_pred_fn(dav1d_ipred_cfl_128_ssse3);
@@ -90,6 +91,7 @@ void bitfn(dav1d_intra_pred_dsp_init_x86)(Dav1dIntraPredDSPContext *const c) {
     c->intra_pred[SMOOTH_PRED]   = dav1d_ipred_smooth_ssse3;
     c->intra_pred[SMOOTH_V_PRED] = dav1d_ipred_smooth_v_ssse3;
     c->intra_pred[SMOOTH_H_PRED] = dav1d_ipred_smooth_h_ssse3;
+    c->intra_pred[FILTER_PRED]   = dav1d_ipred_filter_ssse3;
 
     c->cfl_pred[DC_PRED]         = dav1d_ipred_cfl_ssse3;
     c->cfl_pred[DC_128_PRED]     = dav1d_ipred_cfl_128_ssse3;

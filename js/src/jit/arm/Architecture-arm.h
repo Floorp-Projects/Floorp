@@ -164,7 +164,6 @@ class Registers {
 
 // Smallest integer type that can hold a register bitmask.
 typedef uint16_t PackedRegisterMask;
-typedef uint16_t PackedRegisterMask;
 
 class FloatRegisters {
  public:

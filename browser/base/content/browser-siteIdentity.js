@@ -1109,9 +1109,9 @@ var gIdentityHandler = {
 
       // Avoiding listening to the "select" event on purpose. See Bug 1404262.
       menulist.addEventListener("command", () => {
-        SitePermissions.set(gBrowser.currentURI,
-                            aPermission.id,
-                            menulist.selectedItem.value);
+        SitePermissions.setForPrincipal(gBrowser.contentPrincipal,
+                                        aPermission.id,
+                                        menulist.selectedItem.value);
       });
 
       container.appendChild(img);
@@ -1165,16 +1165,16 @@ var gIdentityHandler = {
           // If we set persistent permissions or the sharing has
           // started due to existing persistent permissions, we need
           // to handle removing these even for frames with different hostnames.
-          let uris = browser._devicePermissionURIs || [];
-          for (let uri of uris) {
+          let principals = browser._devicePermissionPrincipals || [];
+          for (let principal of principals) {
             // It's not possible to stop sharing one of camera/microphone
             // without the other.
             for (let id of ["camera", "microphone"]) {
               if (this._sharingState[id]) {
-                let perm = SitePermissions.get(uri, id);
+                let perm = SitePermissions.getForPrincipal(principal, id);
                 if (perm.state == SitePermissions.ALLOW &&
                     perm.scope == SitePermissions.SCOPE_PERSISTENT) {
-                  SitePermissions.remove(uri, id);
+                  SitePermissions.removeFromPrincipal(principal, id);
                 }
               }
             }
@@ -1183,7 +1183,7 @@ var gIdentityHandler = {
         browser.messageManager.sendAsyncMessage("webrtc:StopSharing", windowId);
         webrtcUI.forgetActivePermissionsFromBrowser(gBrowser.selectedBrowser);
       }
-      SitePermissions.remove(gBrowser.currentURI, aPermission.id, browser);
+      SitePermissions.removeFromPrincipal(gBrowser.contentPrincipal, aPermission.id, browser);
 
       this._permissionReloadHint.removeAttribute("hidden");
       PanelView.forNode(this._identityPopupMainView)
