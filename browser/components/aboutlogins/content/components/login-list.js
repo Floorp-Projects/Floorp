@@ -21,9 +21,9 @@ class LoginList extends HTMLElement {
   }
 
   render() {
-    let pre = this.shadowRoot.querySelector("pre");
+    let list = this.shadowRoot.querySelector("ol");
     for (let login of this._logins) {
-      pre.append(new LoginListItem(login));
+      list.append(new LoginListItem(login));
     }
   }
 
@@ -46,16 +46,16 @@ class LoginList extends HTMLElement {
   }
 
   setLogins(logins) {
-    let pre = this.shadowRoot.querySelector("pre");
-    pre.textContent = "";
+    let list = this.shadowRoot.querySelector("ol");
+    list.textContent = "";
     this._logins = logins;
     this.render();
   }
 
   loginAdded(login) {
     this._logins.push(login);
-    let pre = this.shadowRoot.querySelector("pre");
-    pre.append(new LoginListItem(login));
+    let list = this.shadowRoot.querySelector("ol");
+    list.append(new LoginListItem(login));
   }
 
   loginModified(login) {
@@ -65,8 +65,8 @@ class LoginList extends HTMLElement {
         break;
       }
     }
-    let pre = this.shadowRoot.querySelector("pre");
-    for (let loginListItem of pre.children) {
+    let list = this.shadowRoot.querySelector("ol");
+    for (let loginListItem of list.children) {
       if (loginListItem.getAttribute("guid") == login.guid) {
         loginListItem.update(login);
         break;
@@ -76,8 +76,8 @@ class LoginList extends HTMLElement {
 
   loginRemoved(login) {
     this._logins = this._logins.filter(l => l.guid != login.guid);
-    let pre = this.shadowRoot.querySelector("pre");
-    for (let loginListItem of pre.children) {
+    let list = this.shadowRoot.querySelector("ol");
+    for (let loginListItem of list.children) {
       if (loginListItem.getAttribute("guid") == login.guid) {
         loginListItem.remove();
         break;
