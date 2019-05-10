@@ -491,7 +491,7 @@ class TaskBuilder(object):
             _DEFAULT_TASK_URL, signing_task_id, DEFAULT_APK_ARTIFACT_LOCATION
         )
         architecture, _ = get_architecture_and_build_type_from_variant(variant)
-        worker_type = 'gecko-t-ap-perf-p2' if force_run_on_64_bit_device or architecture == 'aarch64' else 'gecko-t-ap-perf-g5'
+        worker_type = 'gecko-t-bitbar-gw-perf-p2' if force_run_on_64_bit_device or architecture == 'aarch64' else 'gecko-t-bitbar-gw-perf-g5'
 
         if force_run_on_64_bit_device:
             treeherder_platform = 'android-hw-p2-8-0-arm7-api-16'
