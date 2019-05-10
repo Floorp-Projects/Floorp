@@ -1349,13 +1349,10 @@ interface nsIDOMWindowUtils : nsISupports {
   void startFrameTimeRecording([retval] out unsigned long startIndex);
 
   /**
-   * Returns number of recorded frames since startIndex was issued,
-   *   and allocates+populates 2 arraye with the recorded data.
-   * - Allocation is infallible. Should be released even if size is 0.
+   * Returns array of frame intervals since the time when the given startIndex
+   * was handed out from startFrameTimeRecording.
    */
-  void stopFrameTimeRecording(in unsigned long startIndex,
-                             [optional] out unsigned long frameCount,
-                             [retval, array, size_is(frameCount)] out float frameIntervals);
+  Array<float> stopFrameTimeRecording(in unsigned long startIndex);
 
   /**
    * The DPI of the display
