@@ -756,7 +756,7 @@ impl JSJitSetterCallArgs {
 // Wrappers around things in jsglue.cpp
 
 pub struct RootedObjectVectorWrapper {
-    pub ptr: *mut JS::RootedObjectVector
+    pub ptr: *mut JS::PersistentRootedObjectVector
 }
 
 impl RootedObjectVectorWrapper {
@@ -935,7 +935,7 @@ impl JSNativeWrapper {
 }
 
 pub struct RootedIdVectorWrapper {
-    pub ptr: *mut JS::RootedIdVector
+    pub ptr: *mut JS::PersistentRootedIdVector
 }
 
 impl RootedIdVectorWrapper {
