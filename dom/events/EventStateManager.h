@@ -1088,6 +1088,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * aPrincipal - the triggering principal of the drag, or null if it's from
    *              browser chrome or OS
    */
+  MOZ_CAN_RUN_SCRIPT
   bool DoDefaultDragStart(nsPresContext* aPresContext,
                           WidgetDragEvent* aDragEvent,
                           dom::DataTransfer* aDataTransfer,
@@ -1273,7 +1274,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   void KillClickHoldTimer();
   void FireContextClick();
 
-  static void SetPointerLock(nsIWidget* aWidget, nsIContent* aElement);
+  MOZ_CAN_RUN_SCRIPT static void SetPointerLock(nsIWidget* aWidget,
+                                                nsIContent* aElement);
   static void sClickHoldCallback(nsITimer* aTimer, void* aESM);
 };
 

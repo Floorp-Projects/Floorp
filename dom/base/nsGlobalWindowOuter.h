@@ -325,7 +325,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // Outer windows only.
   virtual void EnsureSizeAndPositionUpToDate() override;
 
-  virtual void EnterModalState() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void EnterModalState() override;
   virtual void LeaveModalState() override;
 
   // Outer windows only.
@@ -863,6 +863,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                                     nsIPrincipal* aSubjectPrincipal);
 
   // Outer windows only.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   bool CanMoveResizeWindows(mozilla::dom::CallerType aCallerType);
 
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to

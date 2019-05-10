@@ -1,14 +1,14 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
-  <title>CSS Multi-column Layout Test: -moz-column-rule-color: inherit</title>
+  <title>CSS Multi-column Layout Test: column-rule-color: inherit</title>
   <link rel="author" title="Opera Software ASA" href="http://www.opera.com/" />
   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" /> <!-- 2013-09-02 -->
-  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#crc" title="4.2. '-moz-column-rule-color'" />
+  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#crc" title="4.2. 'column-rule-color'" />
   <link rel="help" href="http://www.w3.org/TR/css3-values/#common-keywords" title="3.1.1. CSS-wide keywords: 'initial' and 'inherit'" />
   <link rel="match" href="multicol-rule-color-inherit-001-ref.xht" />
   <meta name="flags" content="ahem" />
-  <meta name="assert" content="This test checks that, by default, -moz-column-rule-color is the current color applying to the element unless reserved keyword 'inherit' is used in which case -moz-column-rule-color will be inherited from the parent's -moz-column-rule-color value." />
+  <meta name="assert" content="This test checks that, by default, column-rule-color is the current color applying to the element unless reserved keyword 'inherit' is used in which case column-rule-color will be inherited from the parent's column-rule-color value." />
 <style type="text/css"><![CDATA[
 @font-face {
   font-family: Ahem;
@@ -18,8 +18,8 @@
   <style type="text/css"><![CDATA[
   div#parent
   {
-  -moz-column-rule-color: green;
-  -moz-column-rule-style: none;
+  column-rule-color: green;
+  column-rule-style: none;
   font: 1.25em/1 Ahem;
   width: 17em;
   }
@@ -28,7 +28,7 @@
 
   N == 3;
 
-  W == max(0, (available-width - ((N - 1) * -moz-column-gap)) / N);
+  W == max(0, (available-width - ((N - 1) * column-gap)) / N);
   W == max(0, (17em - ((3 - 1) * 1em)) / 3);
   W == max(0, (17em - (2 * 1em)) / 3);
   W == max(0, (17em - 2em) / 3);
@@ -42,7 +42,7 @@
 
   N == 3;
 
-  W == max(0, (available-width - ((N - 1) * -moz-column-gap)) / N);
+  W == max(0, (available-width - ((N - 1) * column-gap)) / N);
   W == max(0, (5em - ((3 - 1) * 1em)) / 3);
   W == max(0, (5em - (2 * 1em)) / 3);
   W == max(0, (5em - 2em) / 3);
@@ -58,15 +58,15 @@
   orphans: 1;
   widows: 1;
 
-  -moz-column-count: 3;
-  -moz-column-gap: 1em;
-  -moz-column-rule-width: 1em;
+  column-count: 3;
+  column-gap: 1em;
+  column-rule-width: 1em;
   }
 
   div.child
   {
-  -moz-column-rule-color: inherit;
-  -moz-column-rule-style: solid;
+  column-rule-color: inherit;
+  column-rule-style: solid;
   font-size: 1em;
   }
   ]]></style>

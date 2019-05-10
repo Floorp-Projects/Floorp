@@ -454,6 +454,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvInvokeDragSession(
       nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvEndDragSession(
       const bool& aDoneDrag, const bool& aUserCancelled,
       const mozilla::LayoutDeviceIntPoint& aEndDragPoint,

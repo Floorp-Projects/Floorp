@@ -2,8 +2,8 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>multicolumn | -moz-column-fill-auto</title>
-<meta name="assert" content="This test checks that -moz-columns are not balanced when '-moz-column-fill: auto' is set"/>
+<title>multicolumn | column-fill-auto</title>
+<meta name="assert" content="This test checks that columns are not balanced when 'column-fill: auto' is set"/>
 <link rel="author" title="howcome@opera.com" href="http://www.opera.com/"/>
 <link rel="help" href="http://www.w3.org/TR/css3-multicol/#filling-columns"/>
 <link rel="match" href="multicol-fill-auto-002-ref.xht"/>
@@ -28,9 +28,9 @@ body>div {
 	margin: 1em;
 }
 div.col {
-	-moz-column-count: 2;
-	-moz-column-fill: auto;
-	-moz-column-gap: 0;
+	column-count: 2;
+	column-fill: auto;
+	column-gap: 0;
 }
 div.red {
 	background: red; position: absolute; z-index: -1;

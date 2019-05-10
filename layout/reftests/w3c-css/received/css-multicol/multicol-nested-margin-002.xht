@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
-  <title>CSS Multi-column Layout Test: nested multi-moz-columns and vertical margin (complex)</title>
+  <title>CSS Multi-column Layout Test: nested multicolumns and vertical margin (complex)</title>
   <link rel="author" title="Opera Software ASA" href="http://www.opera.com/" />
   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" />  <!-- 2013-08-14 -->
   <link rel="help" href="http://www.w3.org/TR/css3-multicol/#the-multi-column-model" title="2. The multi-column model" />
@@ -41,8 +41,8 @@
   orphans: 1;
   widows: 1;
 
-  -moz-column-count: 3;
-  -moz-column-gap: 1em;
+  column-count: 3;
+  column-gap: 1em;
   }
 
   div div {margin: 0em 1em;}
@@ -57,7 +57,7 @@
 
   N == 3;
 
-  W == max(0, (available-width - ((N - 1) * -moz-column-gap)) / N);
+  W == max(0, (available-width - ((N - 1) * column-gap)) / N);
   W == max(0, (41em - ((3 - 1) * 1em)) / 3);
   W == max(0, (41em - (2 * 1em)) / 3);
   W == max(0, (41em - 2em) / 3);
@@ -77,7 +77,7 @@
 
   N == 3;
 
-  W == max(0, (available-width - ((N - 1) * -moz-column-gap)) / N);
+  W == max(0, (available-width - ((N - 1) * column-gap)) / N);
   W == max(0, (11em - ((3 - 1) * 1em)) / 3);
   W == max(0, (11em - (2 * 1em)) / 3);
   W == max(0, (11em - 2em) / 3);

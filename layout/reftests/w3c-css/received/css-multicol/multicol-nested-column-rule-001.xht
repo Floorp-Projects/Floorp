@@ -6,7 +6,7 @@
   and it has been modified and is now
   multicol-nested-column-rule-001.xht
   -->
-  <title>CSS Multi-column Layout Test: nested multi-columns and -moz-column-rule position</title>
+  <title>CSS Multi-column Layout Test: nested multi-columns and column-rule position</title>
   <link rel="author" title="Opera Software ASA" href="http://www.opera.com/" />
   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" /> <!-- 2013-08-09 -->
   <link rel="help" href="http://www.w3.org/TR/css3-multicol/#pseudo-algorithm" title="3.4 Pseudo-algorithm" />
@@ -22,7 +22,7 @@
   <style type="text/css"><![CDATA[
   body > div
   {
-  -moz-column-rule: blue solid 1em;
+  column-rule: blue solid 1em;
   font: 1.25em/1 Ahem;
   width: 26em;
   }
@@ -31,7 +31,7 @@
 
   N == 3;
 
-  W == max(0, (available-width - ((N - 1) * -moz-column-gap)) / N);
+  W == max(0, (available-width - ((N - 1) * column-gap)) / N);
   W == max(0, (26em - ((3 - 1) * 1em)) / 3);
   W == max(0, (26em - (2 * 1em)) / 3);
   W == max(0, (26em - 2em) / 3);
@@ -39,21 +39,21 @@
   W == max(0, 8em);
   W == 8em;
 
-  So, the first -moz-column-rule should be at:
+  So, the first column-rule should be at:
 
     1.0em : margin-left of outer div
     8.0em : width of 1st column box
-    0.0em : (1.0em / 2) - (1.0em / 2) : left edge of 1st -moz-column-rule
+    0.0em : (1.0em / 2) - (1.0em / 2) : left edge of 1st column-rule
   =========
     9.0em
 
-  The 2nd -moz-column-rule should be at:
+  The 2nd column-rule should be at:
 
     1.0em : margin-left of outer div
     8.0em : width of 1st column box
     1.0em : first -moz-column-gap
     8.0em : width of 2nd column box
-    0.0em : (1.0em / 2) - (1.0em / 2) : left edge of 2nd -moz-column-rule
+    0.0em : (1.0em / 2) - (1.0em / 2) : left edge of 2nd column-rule
   =========
    18.0em
 
@@ -95,8 +95,8 @@
   orphans: 1;
   widows: 1;
 
-  -moz-column-count: 3;
-  -moz-column-gap: 1em;
+  column-count: 3;
+  column-gap: 1em;
   }
   ]]></style>
  </head>

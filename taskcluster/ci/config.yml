@@ -35,8 +35,6 @@ treeherder:
         'Rap-Prof-1proc': 'Raptor performance tests on Firefox with Gecko Profiling and without e10s'
         'Rap-ChC': 'Raptor performance tests on Google Chrome Canary'
         'Rap-ChD': 'Raptor performance tests on Google Chrome Dev'
-        'Rap-Cpu': 'Raptor CPU tests on Android'
-        'Rap-CPU-1proc': 'Reaptor CPU tests on Android without e10s'
         'Rap-Cr': 'Raptor performance tests on Google Chromium'
         'Rap-P': 'Raptor power tests on Firefox'
         'Rap-P-1proc': 'Raptor power tests on Firefox without e10s'

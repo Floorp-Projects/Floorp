@@ -1,13 +1,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
-  <title>CSS Multi-column Layout Test: -moz-column-count and height of table-cell (basic)</title>
+  <title>CSS Multi-column Layout Test: column-count and height of table-cell (basic)</title>
   <link rel="author" title="Opera Software ASA" href="http://www.opera.com/" />
   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" /> <!-- 2013-08-23 -->
-  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#the-number-and-width-of-columns" title="3. The number and width of -moz-columns" />
+  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#the-number-and-width-of-columns" title="3. The number and width of columns" />
   <link rel="match" href="multicol-table-cell-height-001-ref.xht" />
   <meta name="flags" content="ahem" />
-  <meta name="assert" content="This test checks that '-moz-column-count' applies to elements with 'display' set to 'table-cell' which can be constrained with a set height." />
+  <meta name="assert" content="This test checks that 'column-count' applies to elements with 'display' set to 'table-cell' which can be constrained with a set height." />
 <style type="text/css"><![CDATA[
 @font-face {
   font-family: Ahem;
@@ -26,8 +26,8 @@
   widows: 1;
   width: 15em;
 
-  -moz-column-count: 2;
-  -moz-column-gap: 2em;
+  column-count: 2;
+  column-gap: 2em;
 
   /*
 

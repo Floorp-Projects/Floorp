@@ -278,7 +278,7 @@ fails-if(!OSX) random-if(OSX) css-multicol/multicol-rule-stacking-001.xht
 fails-if(!OSX||webrender) random-if(OSX) css-multicol/multicol-shorthand-001.xht
 
 # Bug 1547160: Fix existing reftests failure related to column-span
-pref(layout.css.column-span.enabled,true) fails css-multicol/multicol-span-000.xht
+pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-000.xht
 pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-001.xht
 pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-002.xht
 pref(layout.css.column-span.enabled,true) fails-if(!OSX) random-if(OSX) css-multicol/multicol-span-all-003.xht

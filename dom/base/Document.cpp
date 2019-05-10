@@ -11051,7 +11051,7 @@ class PointerLockRequest final : public Runnable {
         mDocument(do_GetWeakReference(aElement->OwnerDoc())),
         mUserInputOrChromeCaller(aUserInputOrChromeCaller) {}
 
-  NS_IMETHOD Run() final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() final;
 
  private:
   nsWeakPtr mElement;
