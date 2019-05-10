@@ -57,16 +57,6 @@ JS::RootingContext::RootingContext()
 #endif
 }
 
-JS_FRIEND_API void js::SetSourceHook(JSContext* cx,
-                                     mozilla::UniquePtr<SourceHook> hook) {
-  cx->runtime()->sourceHook.ref() = std::move(hook);
-}
-
-JS_FRIEND_API mozilla::UniquePtr<SourceHook> js::ForgetSourceHook(
-    JSContext* cx) {
-  return std::move(cx->runtime()->sourceHook.ref());
-}
-
 JS_FRIEND_API void JS_SetGrayGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp,
                                            void* data) {
   cx->runtime()->gc.setGrayRootsTracer(traceOp, data);
