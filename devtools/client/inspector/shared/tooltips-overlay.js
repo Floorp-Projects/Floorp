@@ -17,6 +17,7 @@ const {
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_FONT_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
+  VIEW_NODE_INACTIVE_CSS,
   VIEW_NODE_VARIABLE_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 
@@ -32,12 +33,15 @@ loader.lazyRequireGetter(this, "setBrokenImageTooltip",
   "devtools/client/shared/widgets/tooltip/ImageTooltipHelper", true);
 loader.lazyRequireGetter(this, "setVariableTooltip",
   "devtools/client/shared/widgets/tooltip/VariableTooltipHelper", true);
+loader.lazyRequireGetter(this, "InactiveCssTooltipHelper",
+  "devtools/client/shared/widgets/tooltip/inactive-css-tooltip-helper", false);
 
 const PREF_IMAGE_TOOLTIP_SIZE = "devtools.inspector.imagePreviewTooltipSize";
 
 // Types of existing tooltips
 const TOOLTIP_IMAGE_TYPE = "image";
 const TOOLTIP_FONTFAMILY_TYPE = "font-family";
+const TOOLTIP_INACTIVE_CSS = "inactive-css";
 const TOOLTIP_VARIABLE_TYPE = "variable";
 
 /**
@@ -81,16 +85,21 @@ TooltipsOverlay.prototype = {
 
     this._isStarted = true;
 
-    // Instantiate the preview tooltip when the rule/computed view is hovered over in
-    // order to call tooltip.starTogglingOnHover. This will allow the preview tooltip
-    // to be shown when an appropriate element is hovered over.
-    if (flags.testing) {
-      this.getTooltip("previewTooltip");
-    } else {
-      // Lazily get the preview tooltip to avoid loading HTMLTooltip.
-      this.view.element.addEventListener("mousemove", () => {
-        this.getTooltip("previewTooltip");
-      }, { once: true });
+    this.inactiveCssTooltipHelper = new InactiveCssTooltipHelper();
+
+    // Instantiate the interactiveTooltip and preview tooltip when the
+    // rule/computed view is hovered over in order to call
+    // `tooltip.startTogglingOnHover`. This will allow the tooltip to be shown
+    // when an appropriate element is hovered over.
+    for (const type of ["interactiveTooltip", "previewTooltip"]) {
+      if (flags.testing) {
+        this.getTooltip(type);
+      } else {
+        // Lazily get the preview tooltip to avoid loading HTMLTooltip.
+        this.view.element.addEventListener("mousemove", () => {
+          this.getTooltip(type);
+        }, { once: true });
+      }
     }
   },
 
@@ -126,6 +135,16 @@ TooltipsOverlay.prototype = {
         tooltip = new SwatchFilterTooltip(doc,
           this._cssProperties.getValidityChecker(this.view.inspector.panelDoc));
         break;
+      case "interactiveTooltip":
+        tooltip = new HTMLTooltip(doc, {
+          type: "doorhanger",
+          useXulWrapper: true,
+        });
+        tooltip.startTogglingOnHover(this.view.element,
+          this.onInteractiveTooltipTargetHover.bind(this), {
+            interactive: true,
+          });
+        break;
       case "previewTooltip":
         tooltip = new HTMLTooltip(doc, {
           type: "arrow",
@@ -154,6 +173,8 @@ TooltipsOverlay.prototype = {
       tooltip.destroy();
     }
 
+    this.inactiveCssTooltipHelper.destroy();
+
     this._isStarted = false;
   },
 
@@ -179,6 +200,11 @@ TooltipsOverlay.prototype = {
       if (value !== "inherit" && value !== "unset" && value !== "initial") {
         tooltipType = TOOLTIP_FONTFAMILY_TYPE;
       }
+    }
+
+    // Inactive CSS tooltip
+    if (type === VIEW_NODE_INACTIVE_CSS) {
+      tooltipType = TOOLTIP_INACTIVE_CSS;
     }
 
     // Variable preview tooltip
@@ -246,6 +272,54 @@ TooltipsOverlay.prototype = {
     if (type === TOOLTIP_VARIABLE_TYPE && nodeInfo.value.value.startsWith("--")) {
       const variable = nodeInfo.value.variable;
       await this._setVariablePreviewTooltip(variable);
+      return true;
+    }
+
+    return false;
+  },
+
+  /**
+   * Executed by the tooltip when the pointer hovers over an element of the
+   * view. Used to decide whether the tooltip should be shown or not and to
+   * actually put content in it.
+   * Checks if the hovered target is a css value we support tooltips for.
+   *
+   * @param  {DOMNode} target
+   *         The currently hovered node
+   * @return {Boolean}
+   *         true if shown, false otherwise.
+   */
+  async onInteractiveTooltipTargetHover(target) {
+    const nodeInfo = this.view.getNodeInfo(target);
+    if (!nodeInfo) {
+      // The hovered node isn't something we care about.
+      return false;
+    }
+
+    const type = this._getTooltipType(nodeInfo);
+    if (!type) {
+      // There is no tooltip type defined for the hovered node.
+      return false;
+    }
+
+    // Remove previous tooltip instances.
+    for (const [, tooltip] of this._instances) {
+      if (tooltip.isVisible()) {
+        if (tooltip.revert) {
+          tooltip.revert();
+        }
+        tooltip.hide();
+      }
+    }
+
+    if (type === TOOLTIP_INACTIVE_CSS) {
+    // Ensure this is the correct node and not a parent.
+      if (!target.classList.contains("ruleview-unused-warning")) {
+        return false;
+      }
+
+      await this.inactiveCssTooltipHelper.setContent(
+        nodeInfo.value, this.getTooltip("interactiveTooltip"));
       return true;
     }
 

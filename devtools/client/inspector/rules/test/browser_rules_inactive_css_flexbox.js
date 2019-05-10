@@ -44,7 +44,6 @@ const BEFORE = [
     selector: "#self-aligned",
     inactiveDeclarations: [
       {
-        l10n: "rule.inactive.css.not.grid.or.flex.item",
         declaration: {
           "align-self": "stretch",
         },
@@ -72,7 +71,6 @@ const BEFORE = [
     ],
     inactiveDeclarations: [
       {
-        l10n: "rule.inactive.css.not.flex.container",
         declaration: {
           "flex-direction": "row",
         },
@@ -101,14 +99,12 @@ const BEFORE = [
     ],
     inactiveDeclarations: [
       {
-        l10n: "rule.inactive.css.not.flex.item",
         declaration: {
           "order": "1",
         },
         ruleIndex: 1,
       },
     ],
-    waitFor: "inspector-updated",
   },
 ];
 
@@ -117,35 +113,30 @@ const AFTER = [
     selector: ".item-2",
     inactiveDeclarations: [
       {
-        l10n: "rule.inactive.css.not.flex.item",
         declaration: {
           "order": "2",
         },
         ruleIndex: 0,
       },
       {
-        l10n: "rule.inactive.css.not.flex.item",
         declaration: {
           "flex-basis": "auto",
         },
         ruleIndex: 1,
       },
       {
-        l10n: "rule.inactive.css.not.flex.item",
         declaration: {
           "flex-grow": "1",
         },
         ruleIndex: 1,
       },
       {
-        l10n: "rule.inactive.css.not.flex.item",
         declaration: {
           "flex-shrink": "1",
         },
         ruleIndex: 1,
       },
       {
-        l10n: "rule.inactive.css.not.flex.container",
         declaration: {
           "flex-direction": "row",
         },
@@ -165,6 +156,5 @@ add_task(async function() {
   await toggleDeclaration(inspector, view, 0, {
     display: "flex",
   });
-  await view.once("ruleview-refreshed");
   await runInactiveCSSTests(view, inspector, AFTER);
 });
