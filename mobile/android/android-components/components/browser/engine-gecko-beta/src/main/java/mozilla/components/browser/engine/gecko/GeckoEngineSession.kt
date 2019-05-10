@@ -42,7 +42,7 @@ import java.lang.IllegalStateException
 /**
  * Gecko-based EngineSession implementation.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class GeckoEngineSession(
     private val runtime: GeckoRuntime,
     private val privateMode: Boolean = false,
@@ -192,14 +192,23 @@ class GeckoEngineSession(
      */
     override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
         val currentMode = geckoSession.settings.userAgentMode
+        val currentViewPortMode = geckoSession.settings.viewportMode
+
         val newMode = if (enable) {
             GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
         } else {
             GeckoSessionSettings.USER_AGENT_MODE_MOBILE
         }
 
-        if (newMode != currentMode) {
+        val newViewportMode = if (enable) {
+            GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
+        } else {
+            GeckoSessionSettings.VIEWPORT_MODE_MOBILE
+        }
+
+        if (newMode != currentMode || newViewportMode != currentViewPortMode) {
             geckoSession.settings.userAgentMode = newMode
+            geckoSession.settings.viewportMode = newViewportMode
             notifyObservers { onDesktopModeChange(enable) }
         }
 

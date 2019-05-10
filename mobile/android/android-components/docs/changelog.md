@@ -178,6 +178,7 @@ permalink: /changelog/
 
 * **browser-session**, **browser-engine-gecko-nightly**, **browser-engine-system**
   * Fixed an issue causing `Session.searchTerms` getting cleared to early. Now the search terms will stay assigned to the `Session` until a new request, triggered by a user interaction like clicking a link, started loading (ignoring redirects).
+  * Added setting of desktop view port when requesting desktop site
 
 * **feature-customtabs**
   * Added fact emitting.
