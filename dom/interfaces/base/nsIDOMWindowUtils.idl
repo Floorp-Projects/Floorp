@@ -357,14 +357,13 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   [can_run_script]
   boolean sendTouchEvent(in AString aType,
-                         [array, size_is(count)] in uint32_t aIdentifiers,
-                         [array, size_is(count)] in int32_t aXs,
-                         [array, size_is(count)] in int32_t aYs,
-                         [array, size_is(count)] in uint32_t aRxs,
-                         [array, size_is(count)] in uint32_t aRys,
-                         [array, size_is(count)] in float aRotationAngles,
-                         [array, size_is(count)] in float aForces,
-                         in uint32_t count,
+                         in Array<uint32_t> aIdentifiers,
+                         in Array<int32_t> aXs,
+                         in Array<int32_t> aYs,
+                         in Array<uint32_t> aRxs,
+                         in Array<uint32_t> aRys,
+                         in Array<float> aRotationAngles,
+                         in Array<float> aForces,
                          in long aModifiers,
                          [optional] in boolean aIgnoreRootScrollFrame);
 
@@ -391,14 +390,13 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   [can_run_script]
   boolean sendTouchEventToWindow(in AString aType,
-                                 [array, size_is(count)] in uint32_t aIdentifiers,
-                                 [array, size_is(count)] in int32_t aXs,
-                                 [array, size_is(count)] in int32_t aYs,
-                                 [array, size_is(count)] in uint32_t aRxs,
-                                 [array, size_is(count)] in uint32_t aRys,
-                                 [array, size_is(count)] in float aRotationAngles,
-                                 [array, size_is(count)] in float aForces,
-                                 in uint32_t count,
+                                 in Array<uint32_t> aIdentifiers,
+                                 in Array<int32_t> aXs,
+                                 in Array<int32_t> aYs,
+                                 in Array<uint32_t> aRxs,
+                                 in Array<uint32_t> aRys,
+                                 in Array<float> aRotationAngles,
+                                 in Array<float> aForces,
                                  in long aModifiers,
                                  [optional] in boolean aIgnoreRootScrollFrame);
 

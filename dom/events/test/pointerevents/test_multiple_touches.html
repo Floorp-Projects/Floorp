@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <meta charset="utf-8">
@@ -34,7 +34,7 @@ function synthesizeTouchEvent(aType, aIds, aLefts, aTops, aRxs, aRys, aAngles, a
   }
 
   utils.sendTouchEvent(aType, aIds, aLefts, aTops, aRxs, aRys,
-                       aAngles, aForces, aIds.length, 0 /* modifiers */);
+                       aAngles, aForces, 0 /* modifiers */);
 }
 
 function synthesizeTouchStart(aTarget, aId, aOffsetX, aOffsetY) {

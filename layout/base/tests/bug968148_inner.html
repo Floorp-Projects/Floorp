@@ -194,15 +194,15 @@ function runTests() {
   // event listener.
   utils.sendTouchEvent('touchstart', [test1PointerId, test2PointerId],
                        [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
                        [left1d2, left2d2], [top1d2, top2d2], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   utils.sendTouchEvent('touchend', [test1PointerId, test2PointerId],
                        [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   // No implicitly / explicitly pointer capture. pointermove should be
   // dispatched to 1d2, 2d2
@@ -217,11 +217,11 @@ function runTests() {
 
   utils.sendTouchEvent('touchstart', [test1PointerId, test2PointerId],
                        [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
                        [left1d2, left2d2], [top1d2, top2d2], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   // Explicitly capture pointer to 1d1, 2d1. pointermove, gotpointercapture
   // should be dispatched to 1d1, 2d1
@@ -237,7 +237,7 @@ function runTests() {
 
   utils.sendTouchEvent('touchend', [test1PointerId, test2PointerId],
                        [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   // Explicitly capture pointer to 1d1, 2d1 when pointerdown
   test1d1.addEventListener("pointerdown", test1d1CapturePointer, {capture: true, once: true});
@@ -249,17 +249,17 @@ function runTests() {
 
   utils.sendTouchEvent('touchstart', [test1PointerId, test2PointerId],
                        [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   // This should send pointer event to test1d1, test2d1.
   utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
                        [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   // This should send pointer event to test1d2, test2d2.
   utils.sendTouchEvent('touchmove', [test1PointerId, test2PointerId],
                        [left1d1 + 1, left2d1 + 1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   is(test1d1pointermovecount, 2, "1d1 should have got pointermove");
   is(test1d1pointergotcapture, 2, "1d1 should have got pointergotcapture");
@@ -273,7 +273,7 @@ function runTests() {
 
   utils.sendTouchEvent('touchend', [test1PointerId, test2PointerId],
                        [left1d1, left2d1], [top1d1, top2d1], [rx, rx], [ry, ry],
-                       [angle, angle], [force, force], 2, modifiers);
+                       [angle, angle], [force, force], modifiers);
 
   finishTest();
 }

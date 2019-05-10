@@ -94,13 +94,13 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
       bool aIsWidgetEventSynthesized, int32_t aButtons);
 
   MOZ_CAN_RUN_SCRIPT
-  NS_IMETHOD SendTouchEventCommon(const nsAString& aType,
-                                  uint32_t* aIdentifiers, int32_t* aXs,
-                                  int32_t* aYs, uint32_t* aRxs, uint32_t* aRys,
-                                  float* aRotationAngles, float* aForces,
-                                  uint32_t aCount, int32_t aModifiers,
-                                  bool aIgnoreRootScrollFrame, bool aToWindow,
-                                  bool* aPreventDefault);
+  nsresult SendTouchEventCommon(
+      const nsAString& aType, const nsTArray<uint32_t>& aIdentifiers,
+      const nsTArray<int32_t>& aXs, const nsTArray<int32_t>& aYs,
+      const nsTArray<uint32_t>& aRxs, const nsTArray<uint32_t>& aRys,
+      const nsTArray<float>& aRotationAngles, const nsTArray<float>& aForces,
+      int32_t aModifiers, bool aIgnoreRootScrollFrame, bool aToWindow,
+      bool* aPreventDefault);
 };
 
 #endif
