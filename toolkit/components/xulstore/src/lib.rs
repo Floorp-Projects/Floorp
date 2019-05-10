@@ -192,7 +192,7 @@ pub(crate) fn get_ids(doc: &nsAString) -> XULStoreResult<XULStoreIterator> {
 
     match data.get(&doc.to_string()) {
         Some(ids) => {
-            let mut ids: Vec<String> = ids.keys().cloned().collect();
+            let ids: Vec<String> = ids.keys().cloned().collect();
             Ok(XULStoreIterator::new(ids.into_iter()))
         }
         None => Ok(XULStoreIterator::new(vec![].into_iter())),
@@ -211,7 +211,7 @@ pub(crate) fn get_attrs(doc: &nsAString, id: &nsAString) -> XULStoreResult<XULSt
     match data.get(&doc.to_string()) {
         Some(ids) => match ids.get(&id.to_string()) {
             Some(attrs) => {
-                let mut attrs: Vec<String> = attrs.keys().cloned().collect();
+                let attrs: Vec<String> = attrs.keys().cloned().collect();
                 Ok(XULStoreIterator::new(attrs.into_iter()))
             }
             None => Ok(XULStoreIterator::new(vec![].into_iter())),

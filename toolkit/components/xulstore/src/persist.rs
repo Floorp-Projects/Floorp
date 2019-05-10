@@ -2,6 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+//! The XULStore API is synchronous for both C++ and JS consumers and accessed
+//! on the main thread, so we persist its data to disk on a background thread
+//! to avoid janking the UI.
+//!
+//! We also re-open the database each time we write to it in order to conserve
+//! heap memory, since holding a database connection open would consume at least
+//! 3MB of heap memory in perpetuity.
+//!
+//! Since re-opening the database repeatedly to write individual changes can be
+//! expensive when there are many of them in quick succession, we batch changes
+//! and write them in batches.
+
 use crate::{
     error::{XULStoreError, XULStoreResult},
     ffi::XpcomShutdownObserver,
@@ -14,18 +26,6 @@ use nserror::nsresult;
 use rkv::{StoreError as RkvStoreError, Value};
 use std::{collections::HashMap, sync::Mutex, thread::sleep, time::Duration};
 use xpcom::{interfaces::nsIThread, RefPtr, ThreadBoundRefPtr};
-
-/// The XULStore API is synchronous for both C++ and JS consumers and accessed
-/// on the main thread, so we persist its data to disk on a background thread
-/// to avoid janking the UI.
-///
-/// We also re-open the database each time we write to it in order to conserve
-/// heap memory, since holding a database connection open would consume at least
-/// 3MB of heap memory in perpetuity.
-///
-/// Since re-opening the database repeatedly to write individual changes can be
-/// expensive when there are many of them in quick succession, we batch changes
-/// and write them in batches.
 
 lazy_static! {
     /// A map of key/value pairs to persist.  Values are Options so we can
