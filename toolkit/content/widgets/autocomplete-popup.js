@@ -379,6 +379,7 @@ MozElements.MozAutocompleteRichlistboxPopup = class MozAutocompleteRichlistboxPo
           "autofill-insecureWarning",
           "insecureWarning",
           "loginsFooter",
+          "loginWithOrigin",
         ];
         // Reuse the item when its style is exactly equal to the previous style or
         // neither of their style are in the UNREUSEABLE_STYLES.
@@ -407,6 +408,9 @@ MozElements.MozAutocompleteRichlistboxPopup = class MozAutocompleteRichlistboxPo
             break;
           case "loginsFooter":
             options = { is: "autocomplete-richlistitem-logins-footer" };
+            break;
+          case "loginWithOrigin":
+            options = { is: "autocomplete-richlistitem-login-with-origin" };
             break;
           default:
             options = { is: "autocomplete-richlistitem" };

@@ -1003,6 +1003,64 @@ class MozAutocompleteRichlistitemLoginsFooter extends MozElements.MozAutocomplet
   }
 }
 
+class MozAutocompleteRichlistitemLoginWithOrigin extends MozElements.MozRichlistitem {
+  connectedCallback() {
+    if (this.delayConnectedCallback()) {
+      return;
+    }
+
+    this.textContent = "";
+    this.appendChild(MozXULElement.parseXULToFragment(this._markup));
+    this.initializeAttributeInheritance();
+    this._adjustAcItem();
+  }
+
+
+  static get inheritedAttributes() {
+    return {
+      ".login-username": "text=ac-value",
+    };
+  }
+
+  get _markup() {
+    return `
+      <div xmlns="http://www.w3.org/1999/xhtml"
+           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+           class="login-wrapper">
+        <xul:image class="ac-site-icon"></xul:image>
+        <div class="login-text">
+          <div class="login-row login-username"></div>
+          <div class="login-row login-origin"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  _adjustAcItem() {
+    let outerBoxRect = this.parentNode.getBoundingClientRect();
+
+    // Make item fit in popup as XUL box could not constrain
+    // item's width
+    this.firstElementChild.style.width = outerBoxRect.width + "px";
+
+    let data = JSON.parse(this.getAttribute("ac-label"));
+    let originElement = this.querySelector(".login-origin");
+    try {
+      let uri = Services.io.newURI(data.loginOrigin);
+      // Fallback to handle file: URIs
+      originElement.textContent = uri.displayHostPort || data.loginOrigin;
+    } catch (ex) {
+      originElement.textContent = data.loginOrigin;
+    }
+  }
+
+  _onOverflow() {}
+
+  _onUnderflow() {}
+
+  handleOverUnderflow() {}
+}
+
 customElements.define("autocomplete-richlistitem", MozElements.MozAutocompleteRichlistitem, {
   extends: "richlistitem",
 });
@@ -1012,6 +1070,10 @@ customElements.define("autocomplete-richlistitem-insecure-warning", MozAutocompl
 });
 
 customElements.define("autocomplete-richlistitem-logins-footer", MozAutocompleteRichlistitemLoginsFooter, {
+  extends: "richlistitem",
+});
+
+customElements.define("autocomplete-richlistitem-login-with-origin", MozAutocompleteRichlistitemLoginWithOrigin, {
   extends: "richlistitem",
 });
 }
