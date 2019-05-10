@@ -1,76 +1,79 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 s3_bucket_paths:
-  - maven2
+    - maven2
 default_locales:  # Ignored for geckoview
-  - en-US
+    - en-US
 tasktype_map:  # Map task reference to task type.
-  build: build
+    build: build
 base_artifact_prefix: ''
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
 # s3_bucket_paths + destinations + locale_prefix + pretty_name
 default: &default
-  from:
-    - build
-  locale_prefix: ''
-  source_path_modifier: org/mozilla/geckoview/${artifact_id}/${major_version}.${minor_version}.${build_date}
-  description: "TO_BE_OVERRIDDEN"
-  destinations:  # locale_prefix is appended
-    - org/mozilla/geckoview/${artifact_id}/${major_version}.${minor_version}.${build_date}
+    from:
+        - build
+    locale_prefix: ''
+    source_path_modifier: org/mozilla/geckoview/${artifact_id}/${major_version}.${minor_version}.${build_date}
+    description: "TO_BE_OVERRIDDEN"
+    destinations:  # locale_prefix is appended
+        - org/mozilla/geckoview/${artifact_id}/${major_version}.${minor_version}.${build_date}
 
 # Configuration for individual files. Extends 'default', above.
 upstream_mapping:
-  target.maven.zip:
-    from:
-      - build
+    target.maven.zip:
+        from:
+            - build
 
 mapping:
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.md5:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.md5
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.md5
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha1:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha1
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha1
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.md5:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.md5
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.md5
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.sha1:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.sha1
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.sha1
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.md5:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.md5
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.md5
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.md5:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.md5
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.md5
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha1:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha1
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha1
-  ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar:
-    <<: *default
-    pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar
-    checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.sha1
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.md5:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.md5
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.md5
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha1:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha1
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.sha1
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.md5:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.md5
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar.md5
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.sha1:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.sha1
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.sha1
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.md5:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.md5
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom.md5
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.pom
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}.aar
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.md5:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.md5
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar.md5
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha1:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha1
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-javadoc.jar.sha1
+    ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar:
+        <<: *default
+        pretty_name: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar
+        checksums_path: ${artifact_id}-${major_version}.${minor_version}.${build_date}-sources.jar

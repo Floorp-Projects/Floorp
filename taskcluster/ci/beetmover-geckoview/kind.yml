@@ -1,64 +1,64 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
-   - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.beetmover_geckoview:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.beetmover_geckoview:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - build  # geckoview builds aren't signed
+    - build  # geckoview builds aren't signed
 
 only-for-attributes:
-   - nightly
+    - nightly
 
 not-for-build-platforms:
-   - linux-nightly/opt
-   - linux-shippable/opt
-   - linux64-nightly/opt
-   - linux64-shippable/opt
-   - macosx64-nightly/opt
-   - macosx64-shippable/opt
-   - win32-nightly/opt
-   - win32-shippable/opt
-   - win64-nightly/opt
-   - win64-shippable/opt
-   - win64-aarch64-nightly/opt
-   - win64-aarch64-shippable/opt
-   - linux-devedition-nightly/opt
-   - linux64-devedition-nightly/opt
-   - macosx64-devedition-nightly/opt
-   - win32-devedition-nightly/opt
-   - win64-devedition-nightly/opt
-   - win64-aarch64-devedition-nightly/opt
-   - linux64-asan-reporter-nightly/opt
-   - win64-asan-reporter-nightly/opt
+    - linux-nightly/opt
+    - linux-shippable/opt
+    - linux64-nightly/opt
+    - linux64-shippable/opt
+    - macosx64-nightly/opt
+    - macosx64-shippable/opt
+    - win32-nightly/opt
+    - win32-shippable/opt
+    - win64-nightly/opt
+    - win64-shippable/opt
+    - win64-aarch64-nightly/opt
+    - win64-aarch64-shippable/opt
+    - linux-devedition-nightly/opt
+    - linux64-devedition-nightly/opt
+    - macosx64-devedition-nightly/opt
+    - win32-devedition-nightly/opt
+    - win64-devedition-nightly/opt
+    - win64-aarch64-devedition-nightly/opt
+    - linux64-asan-reporter-nightly/opt
+    - win64-asan-reporter-nightly/opt
 
 job-template:
-   attributes:
-      artifact_map: taskcluster/taskgraph/manifests/fennec_geckoview.yml
-   run-on-projects: ['mozilla-central', 'mozilla-release']
-   run-on-hg-branches:
-      by-project:
-         mozilla-release:
-            - '^GECKOVIEW_\d+_RELBRANCH$'
-         default:
-            - '.*'
-   shipping-phase:
-      by-project:
-         # Beetmoving geckoview makes it available to the official maven repo.
-         # So we want beetmover to act only when the release is greenlit. That
-         # is to say:
-         # - right after nightly builds on mozilla-central
-         # - when Fennec beta was greenlit by QA on mozilla-beta (hence the ship phase)
-         # - at every patch uplifted on the GECKOVIEW_XX_RELBRANC on mozilla-release
-         # Reminder: There is no Android/geckoview build on ESR.
-         mozilla-release: build
-         default: ship
-   bucket-scope:
-      by-release-level:
-         production: 'project:releng:beetmover:bucket:maven-production'
-         staging: 'project:releng:beetmover:bucket:maven-staging'
+    attributes:
+        artifact_map: taskcluster/taskgraph/manifests/fennec_geckoview.yml
+    run-on-projects: ['mozilla-central', 'mozilla-release']
+    run-on-hg-branches:
+        by-project:
+            mozilla-release:
+                - '^GECKOVIEW_\d+_RELBRANCH$'
+            default:
+                - '.*'
+    shipping-phase:
+        by-project:
+            # Beetmoving geckoview makes it available to the official maven repo.
+            # So we want beetmover to act only when the release is greenlit. That
+            # is to say:
+            # - right after nightly builds on mozilla-central
+            # - when Fennec beta was greenlit by QA on mozilla-beta (hence the ship phase)
+            # - at every patch uplifted on the GECKOVIEW_XX_RELBRANC on mozilla-release
+            # Reminder: There is no Android/geckoview build on ESR.
+            mozilla-release: build
+            default: ship
+    bucket-scope:
+        by-release-level:
+            production: 'project:releng:beetmover:bucket:maven-production'
+            staging: 'project:releng:beetmover:bucket:maven-staging'

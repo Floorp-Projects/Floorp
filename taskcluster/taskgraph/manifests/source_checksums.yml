@@ -1,55 +1,58 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 s3_bucket_paths:
-  by-platform:
-    fennec-source:
-      - pub/mobile/candidates
-    devedition-source:
-      - pub/devedition/candidates
-    firefox-source:
-      - pub/firefox/candidates
+    by-platform:
+        fennec-source:
+            - pub/mobile/candidates
+        devedition-source:
+            - pub/devedition/candidates
+        firefox-source:
+            - pub/firefox/candidates
 default_locales:  # if given an empty locale, use these locales
-  - en-US
+    - en-US
 tasktype_map:  # Map task reference to task type.
-  release-source-checksums-signing: signing
+    release-source-checksums-signing: signing
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
 # s3_bucket_paths + destinations + locale_prefix + pretty_name
 default: &default
-  from:
-    - release-source-checksums-signing
-  all_locales: false
-  description: "TO_BE_OVERRIDDEN"
-  locale_prefix: ''
-  source_path_modifier: ''
-  destinations:  # locale_prefix is appended
-    - ${version}-candidates/build${build_number}/beetmover-checksums/source
+    from:
+        - release-source-checksums-signing
+    all_locales: false
+    description: "TO_BE_OVERRIDDEN"
+    locale_prefix: ''
+    source_path_modifier: ''
+    destinations:  # locale_prefix is appended
+        - ${version}-candidates/build${build_number}/beetmover-checksums/source
 
 # Configuration for individual files. Extends 'default', above.
 mapping:
-  target-source.checksums:
-    <<: *default
-    description: "Checksums file for the source zip files"
-    pretty_name:
-      by-platform:
-        firefox-source: firefox-${version}.checksums.beet
-        devedition-source: firefox-${version}.checksums.beet
-        fennec-source: fennec-${version}.checksums.beet
-    checksums_path:
-      by-platform:
-        firefox-source: firefox-${version}.checksums.beet
-        devedition-source: firefox-${version}.checksums.beet
-        fennec-source: fennec-${version}.checksums.beet
-  target-source.checksums.asc:
-    <<: *default
-    description: "Detached signature for the checksums file"
-    pretty_name:
-      by-platform:
-        firefox-source: firefox-${version}.checksums.asc
-        devedition-source: firefox-${version}.checksums.asc
-        fennec-source: fennec-${version}.checksums.asc
-    checksums_path:
-      by-platform:
-        firefox-source: firefox-${version}.checksums.asc
-        devedition-source: firefox-${version}.checksums.asc
-        fennec-source: fennec-${version}.checksums.asc
+    target-source.checksums:
+        <<: *default
+        description: "Checksums file for the source zip files"
+        pretty_name:
+            by-platform:
+                firefox-source: firefox-${version}.checksums.beet
+                devedition-source: firefox-${version}.checksums.beet
+                fennec-source: fennec-${version}.checksums.beet
+        checksums_path:
+            by-platform:
+                firefox-source: firefox-${version}.checksums.beet
+                devedition-source: firefox-${version}.checksums.beet
+                fennec-source: fennec-${version}.checksums.beet
+    target-source.checksums.asc:
+        <<: *default
+        description: "Detached signature for the checksums file"
+        pretty_name:
+            by-platform:
+                firefox-source: firefox-${version}.checksums.asc
+                devedition-source: firefox-${version}.checksums.asc
+                fennec-source: fennec-${version}.checksums.asc
+        checksums_path:
+            by-platform:
+                firefox-source: firefox-${version}.checksums.asc
+                devedition-source: firefox-${version}.checksums.asc
+                fennec-source: fennec-${version}.checksums.asc

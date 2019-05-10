@@ -1,532 +1,532 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-  - taskgraph.transforms.try_job:transforms
-  - taskgraph.transforms.job:transforms
-  - taskgraph.transforms.cached_tasks:transforms
-  - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.try_job:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.cached_tasks:transforms
+    - taskgraph.transforms.task:transforms
 
 job-defaults:
-  treeherder:
-    kind: build
-    platform: packages/opt
-    tier: 1
-  worker-type: b-linux
-  worker:
-    max-run-time: 1800
-  run-on-projects: []
-  run:
-    dist: wheezy
-    snapshot: 20171210T214726Z
+    treeherder:
+        kind: build
+        platform: packages/opt
+        tier: 1
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+    run-on-projects: []
+    run:
+        dist: wheezy
+        snapshot: 20171210T214726Z
 
 jobs:
-  deb7-apt:
-    description: "Updated APT for Debian wheezy"
-    treeherder:
-      symbol: Deb7(apt)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20141023T170002Z/pool/main/a/apt/apt_0.9.7.9%2Bdeb7u7.dsc
-        sha256: 7835d9f97acf8adcad7eee0eca2990eaef72ffe21272302d3c36d8053d6baf82
-      patch: apt-wheezy.diff
+    deb7-apt:
+        description: "Updated APT for Debian wheezy"
+        treeherder:
+            symbol: Deb7(apt)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20141023T170002Z/pool/main/a/apt/apt_0.9.7.9%2Bdeb7u7.dsc
+                sha256: 7835d9f97acf8adcad7eee0eca2990eaef72ffe21272302d3c36d8053d6baf82
+            patch: apt-wheezy.diff
 
-  deb7-sqlite3:
-    description: "SQLite backport for Debian wheezy"
-    treeherder:
-      symbol: Deb7(sqlite3)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20171003T220520Z/pool/main/s/sqlite3/sqlite3_3.16.2-5.dsc
-        sha256: 21a2d432ace9ecf50ca5d64580af78d4414a0cfcc8b8a4f15222e11cf105da09
-      patch: sqlite3-wheezy.diff
+    deb7-sqlite3:
+        description: "SQLite backport for Debian wheezy"
+        treeherder:
+            symbol: Deb7(sqlite3)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20171003T220520Z/pool/main/s/sqlite3/sqlite3_3.16.2-5.dsc
+                sha256: 21a2d432ace9ecf50ca5d64580af78d4414a0cfcc8b8a4f15222e11cf105da09
+            patch: sqlite3-wheezy.diff
 
-  deb7-python:
-    description: "Python backport for Debian wheezy"
-    treeherder:
-      symbol: Deb7(python)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20160813T164221Z/pool/main/p/python2.7/python2.7_2.7.9-2+deb8u1.dsc
-        sha256: 274c293e7156edf59cb9f0a9d8cedcd94fa801df35adf39b8a9f3d776a250ead
-      patch: python-wheezy.diff
-      pre-build-command: debian/rules control-file
+    deb7-python:
+        description: "Python backport for Debian wheezy"
+        treeherder:
+            symbol: Deb7(python)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20160813T164221Z/pool/main/p/python2.7/python2.7_2.7.9-2+deb8u1.dsc
+                sha256: 274c293e7156edf59cb9f0a9d8cedcd94fa801df35adf39b8a9f3d776a250ead
+            patch: python-wheezy.diff
+            pre-build-command: debian/rules control-file
 
-  deb7-python3.5:
-    description: "Python 3.5 backport for Debian wheezy"
-    treeherder:
-      symbol: Deb7(python3.5)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20170119T211826Z/pool/main/p/python3.5/python3.5_3.5.3-1.dsc
-        sha256: 5259cbb15bb93f7bdfbe9ce03a972ea47f81c86057d5939ef9ce578414b2f1de
-      patch: python3.5-wheezy.diff
-      pre-build-command: debian/rules control-file
+    deb7-python3.5:
+        description: "Python 3.5 backport for Debian wheezy"
+        treeherder:
+            symbol: Deb7(python3.5)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20170119T211826Z/pool/main/p/python3.5/python3.5_3.5.3-1.dsc
+                sha256: 5259cbb15bb93f7bdfbe9ce03a972ea47f81c86057d5939ef9ce578414b2f1de
+            patch: python3.5-wheezy.diff
+            pre-build-command: debian/rules control-file
 
-  deb7-python3-defaults:
-    description: "python3-defaults backport for Debian wheezy"
-    treeherder:
-      symbol: Deb7(python3-defaults)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20170120T212942Z/pool/main/p/python3-defaults/python3-defaults_3.5.3-1.dsc
-        sha256: 2bec1dd8a5836d5a19fbbd48d7c49aec40642669036297a34bbfd8b0b2d61439
-      packages:
-        - deb7-python3.5
-      patch: python3-defaults-wheezy.diff
-      pre-build-command: debian/rules control-file
+    deb7-python3-defaults:
+        description: "python3-defaults backport for Debian wheezy"
+        treeherder:
+            symbol: Deb7(python3-defaults)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20170120T212942Z/pool/main/p/python3-defaults/python3-defaults_3.5.3-1.dsc
+                sha256: 2bec1dd8a5836d5a19fbbd48d7c49aec40642669036297a34bbfd8b0b2d61439
+            packages:
+                - deb7-python3.5
+            patch: python3-defaults-wheezy.diff
+            pre-build-command: debian/rules control-file
 
-  deb7-python-defaults:
-    description: "multiarch python-defaults for Debian wheezy"
-    treeherder:
-      symbol: Deb7(python-defaults)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20130930T035642Z/pool/main/p/python-defaults/python-defaults_2.7.3-4+deb7u1.dsc
-        sha256: e12fa64899a025b7ac3bdccd5611ae6f3d23327b695b2938473b1cf68ecc9ae5
-      patch: python-defaults-wheezy.diff
-      pre-build-command: debian/rules control-file
+    deb7-python-defaults:
+        description: "multiarch python-defaults for Debian wheezy"
+        treeherder:
+            symbol: Deb7(python-defaults)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20130930T035642Z/pool/main/p/python-defaults/python-defaults_2.7.3-4+deb7u1.dsc
+                sha256: e12fa64899a025b7ac3bdccd5611ae6f3d23327b695b2938473b1cf68ecc9ae5
+            patch: python-defaults-wheezy.diff
+            pre-build-command: debian/rules control-file
 
-  deb7-cmake:
-    description: "Cmake backport for Debian wheezy"
-    treeherder:
-      symbol: Deb7(cmake)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20161204T034107Z/pool/main/c/cmake/cmake_3.7.1-1.dsc
-        sha256: 406a12c0d0a2e92d44a8d444fd1b32bcc29a8810e9631427161a7cb411f60172
-      patch: cmake-wheezy.diff
+    deb7-cmake:
+        description: "Cmake backport for Debian wheezy"
+        treeherder:
+            symbol: Deb7(cmake)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20161204T034107Z/pool/main/c/cmake/cmake_3.7.1-1.dsc
+                sha256: 406a12c0d0a2e92d44a8d444fd1b32bcc29a8810e9631427161a7cb411f60172
+            patch: cmake-wheezy.diff
 
-  deb7-make:
-    description: "Make backport for Debian wheezy"
-    treeherder:
-      symbol: Deb7(make)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20150121T220334Z/pool/main/m/make-dfsg/make-dfsg_4.0-8.1.dsc
-        sha256: ae258d9abb68e756d1ff5195dc3060748b3d4b019ccce19a249d4de23039a0ce
-      patch: make-wheezy.diff
+    deb7-make:
+        description: "Make backport for Debian wheezy"
+        treeherder:
+            symbol: Deb7(make)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20150121T220334Z/pool/main/m/make-dfsg/make-dfsg_4.0-8.1.dsc
+                sha256: ae258d9abb68e756d1ff5195dc3060748b3d4b019ccce19a249d4de23039a0ce
+            patch: make-wheezy.diff
 
-  deb7-ninja:
-    description: "Ninja backport for Debian wheezy"
-    treeherder:
-      symbol: Deb7(ninja)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20160209T042121Z/pool/main/n/ninja-build/ninja-build_1.6.0-1.dsc
-        sha256: 25cd62b011d669c31bcd51d36d454dd826bc50af6a3af8d87bcab8948ec21626
+    deb7-ninja:
+        description: "Ninja backport for Debian wheezy"
+        treeherder:
+            symbol: Deb7(ninja)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20160209T042121Z/pool/main/n/ninja-build/ninja-build_1.6.0-1.dsc
+                sha256: 25cd62b011d669c31bcd51d36d454dd826bc50af6a3af8d87bcab8948ec21626
 
-  deb7-mercurial:
-    description: "Modern Mercurial for Debian wheezy"
-    treeherder:
-      symbol: Deb7(hg)
-    run:
-      using: debian-package
-      tarball:
-        url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
-        sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
-      pre-build-command: >-
-        cp -r contrib/packaging/debian debian &&
-        sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb7moz1/" \
-               -e "s/__DATE__/$(date --rfc-2822)/" \
-               -e "s/__CODENAME__/wheezy/" debian/changelog
+    deb7-mercurial:
+        description: "Modern Mercurial for Debian wheezy"
+        treeherder:
+            symbol: Deb7(hg)
+        run:
+            using: debian-package
+            tarball:
+                url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
+                sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
+            pre-build-command: >-
+                cp -r contrib/packaging/debian debian &&
+                sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb7moz1/" \
+                             -e "s/__DATE__/$(date --rfc-2822)/" \
+                             -e "s/__CODENAME__/wheezy/" debian/changelog
 
-  deb9-mercurial:
-    description: "Modern Mercurial for Debian stretch"
-    treeherder:
-      symbol: Deb9(hg)
-    run:
-      using: debian-package
-      dist: stretch
-      tarball:
-        url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
-        sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
-      pre-build-command: >-
-        cp -r contrib/packaging/debian debian &&
-        sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb9moz1/" \
-               -e "s/__DATE__/$(date --rfc-2822)/" \
-               -e "s/__CODENAME__/stretch/" debian/changelog
+    deb9-mercurial:
+        description: "Modern Mercurial for Debian stretch"
+        treeherder:
+            symbol: Deb9(hg)
+        run:
+            using: debian-package
+            dist: stretch
+            tarball:
+                url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
+                sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
+            pre-build-command: >-
+                cp -r contrib/packaging/debian debian &&
+                sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb9moz1/" \
+                             -e "s/__DATE__/$(date --rfc-2822)/" \
+                             -e "s/__CODENAME__/stretch/" debian/changelog
 
-  deb7-git:
-    description: "Modern git for Debian wheezy"
-    treeherder:
-      symbol: Deb7(git)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20160317T100542Z/pool/main/g/git/git_2.8.0%7Erc3-1.dsc
-        sha256: 6e81a318fb4eb5cca0333b7b6ff0c70dd0097e9fe711b159d5eac4b9f47c6c27
+    deb7-git:
+        description: "Modern git for Debian wheezy"
+        treeherder:
+            symbol: Deb7(git)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20160317T100542Z/pool/main/g/git/git_2.8.0%7Erc3-1.dsc
+                sha256: 6e81a318fb4eb5cca0333b7b6ff0c70dd0097e9fe711b159d5eac4b9f47c6c27
 
-  deb7-valgrind:
-    description: "Valgrind for Debian Wheezy"
-    treeherder:
-      symbol: Deb7(valgrind)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20181115T045552Z/pool/main/v/valgrind/valgrind_3.14.0-1.dsc
-        sha256: 6709e2fe4e8251ee32f3cfbf2c6ee106a5cfa3e8dc672cf1dd5f2b26e72b64ee
-      patch: valgrind-wheezy.diff
+    deb7-valgrind:
+        description: "Valgrind for Debian Wheezy"
+        treeherder:
+            symbol: Deb7(valgrind)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20181115T045552Z/pool/main/v/valgrind/valgrind_3.14.0-1.dsc
+                sha256: 6709e2fe4e8251ee32f3cfbf2c6ee106a5cfa3e8dc672cf1dd5f2b26e72b64ee
+            patch: valgrind-wheezy.diff
 
-  deb7-dh-python:
-    description: "dh-python for Debian wheezy"
-    treeherder:
-      symbol: Deb7(dh-python)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20170125T211752Z/pool/main/d/dh-python/dh-python_2.20170125.dsc
-        sha256: ef4f2951cea36ae4aac29126a1017505f98b595432fb5bdac0f21b4b4d72c1b4
-      packages:
-        - deb7-python3.5
-        - deb7-python3-defaults
+    deb7-dh-python:
+        description: "dh-python for Debian wheezy"
+        treeherder:
+            symbol: Deb7(dh-python)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20170125T211752Z/pool/main/d/dh-python/dh-python_2.20170125.dsc
+                sha256: ef4f2951cea36ae4aac29126a1017505f98b595432fb5bdac0f21b4b4d72c1b4
+            packages:
+                - deb7-python3.5
+                - deb7-python3-defaults
 
-  deb7-dpkg-1.17:
-    description: "dpkg 1.17 for Debian wheezy"
-    treeherder:
-      symbol: Deb7(dpkg)
-    worker:
-      env:
-        # The compiler in wheezy doesn't support the stackprotector flags.
-        DEB_BUILD_MAINT_OPTIONS: hardening=-stackprotector
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20141023T043132Z/pool/main/d/dpkg/dpkg_1.17.20.dsc
-        sha256: c706ad3f5db11968086ab2e0767f87d6e3522b13ebf136ae46f7722a82f645f6
-      patch: dpkg-wheezy.diff
+    deb7-dpkg-1.17:
+        description: "dpkg 1.17 for Debian wheezy"
+        treeherder:
+            symbol: Deb7(dpkg)
+        worker:
+            env:
+                # The compiler in wheezy doesn't support the stackprotector flags.
+                DEB_BUILD_MAINT_OPTIONS: hardening=-stackprotector
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20141023T043132Z/pool/main/d/dpkg/dpkg_1.17.20.dsc
+                sha256: c706ad3f5db11968086ab2e0767f87d6e3522b13ebf136ae46f7722a82f645f6
+            patch: dpkg-wheezy.diff
 
-  deb7-devscripts-2.14:
-    description: "devscripts 2.14 for Debian wheezy"
-    treeherder:
-      symbol: Deb7(devscripts)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20141204T100716Z/pool/main/d/devscripts/devscripts_2.14.11.dsc
-        sha256: 47009dd76b2e8ce0f64b9f0d1caa4f648e0815ae5f79624bb96e3d06de1cb0d6
-      resolver: aptitude
+    deb7-devscripts-2.14:
+        description: "devscripts 2.14 for Debian wheezy"
+        treeherder:
+            symbol: Deb7(devscripts)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20141204T100716Z/pool/main/d/devscripts/devscripts_2.14.11.dsc
+                sha256: 47009dd76b2e8ce0f64b9f0d1caa4f648e0815ae5f79624bb96e3d06de1cb0d6
+            resolver: aptitude
 
-  deb7-automake-1.14:
-    description: "automake 1.14 for Debian wheezy"
-    treeherder:
-      symbol: Deb7(am)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20141027T102134Z/pool/main/a/automake-1.14/automake-1.14_1.14.1-4.dsc
-        sha256: d798619c504a686a5ebe46d106fd992971e805916032607e473541182da12167
+    deb7-automake-1.14:
+        description: "automake 1.14 for Debian wheezy"
+        treeherder:
+            symbol: Deb7(am)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20141027T102134Z/pool/main/a/automake-1.14/automake-1.14_1.14.1-4.dsc
+                sha256: d798619c504a686a5ebe46d106fd992971e805916032607e473541182da12167
 
-  deb7-xz-utils:
-    description: "xz-utils for Debian wheezy"
-    treeherder:
-      symbol: Deb7(xz)
-    worker:
-      env:
-        # The compiler in wheezy doesn't support the stackprotector flags.
-        DEB_BUILD_MAINT_OPTIONS: hardening=-stackprotector
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20161010T223637Z/pool/main/x/xz-utils/xz-utils_5.2.2-1.2.dsc
-        sha256: 13c8d8d0c243af78dc89b6e2cd670c8d8a2522379e1fcd196957c95d988d5961
-      packages:
-        - deb7-automake-1.14
-        # The xz debian source is in a format not supported by dpkg in wheezy,
-        # so we need a newer version of dpkg, which also needs a newer version
-        # of devscripts.
-        - deb7-devscripts-2.14
-        - deb7-dpkg-1.17
+    deb7-xz-utils:
+        description: "xz-utils for Debian wheezy"
+        treeherder:
+            symbol: Deb7(xz)
+        worker:
+            env:
+                # The compiler in wheezy doesn't support the stackprotector flags.
+                DEB_BUILD_MAINT_OPTIONS: hardening=-stackprotector
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20161010T223637Z/pool/main/x/xz-utils/xz-utils_5.2.2-1.2.dsc
+                sha256: 13c8d8d0c243af78dc89b6e2cd670c8d8a2522379e1fcd196957c95d988d5961
+            packages:
+                - deb7-automake-1.14
+                # The xz debian source is in a format not supported by dpkg in wheezy,
+                # so we need a newer version of dpkg, which also needs a newer version
+                # of devscripts.
+                - deb7-devscripts-2.14
+                - deb7-dpkg-1.17
 
-  deb7-gdb:
-    description: "gdb for Debian wheezy"
-    treeherder:
-      symbol: Deb7(gdb)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20170119T152956Z/pool/main/g/gdb/gdb_7.12-6.dsc
-        sha256: 9727dcb3d6b655e4f2a92110f5db076a490aa50b739804be239905ecff3aacc8
-      patch: gdb-wheezy.diff
+    deb7-gdb:
+        description: "gdb for Debian wheezy"
+        treeherder:
+            symbol: Deb7(gdb)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20170119T152956Z/pool/main/g/gdb/gdb_7.12-6.dsc
+                sha256: 9727dcb3d6b655e4f2a92110f5db076a490aa50b739804be239905ecff3aacc8
+            patch: gdb-wheezy.diff
 
-  deb7-python-zstandard:
-    description: "python-zstandard for Debian wheezy"
-    treeherder:
-      symbol: Deb7(python-zstandard)
-    run:
-      using: debian-package
-      tarball:
-        url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
-        sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
-      patch: python-zstandard-wheezy.diff
-      packages:
-        - deb7-dh-python
-        - deb7-python
-        - deb7-python3.5
-        - deb7-python3-defaults
+    deb7-python-zstandard:
+        description: "python-zstandard for Debian wheezy"
+        treeherder:
+            symbol: Deb7(python-zstandard)
+        run:
+            using: debian-package
+            tarball:
+                url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
+                sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
+            patch: python-zstandard-wheezy.diff
+            packages:
+                - deb7-dh-python
+                - deb7-python
+                - deb7-python3.5
+                - deb7-python3-defaults
 
-  deb9-python-zstandard:
-    description: "python-zstandard for Debian stretch"
-    treeherder:
-      symbol: Deb9(python-zstandard)
-    run:
-      using: debian-package
-      dist: stretch
-      tarball:
-        url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
-        sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
+    deb9-python-zstandard:
+        description: "python-zstandard for Debian stretch"
+        treeherder:
+            symbol: Deb9(python-zstandard)
+        run:
+            using: debian-package
+            dist: stretch
+            tarball:
+                url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
+                sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
 
-  deb7-pcre3:
-    description: "pcre3 8.31 for Debian Wheezy"
-    treeherder:
-      symbol: Deb7(pcre3)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20140424T055217Z/pool/main/p/pcre3/pcre3_8.31-5.dsc
-        sha256: e6e92af1e9f4b1d286ce9e7fdb6cb2f0972a341a94f5631e0b8c31b9f79633a4
+    deb7-pcre3:
+        description: "pcre3 8.31 for Debian Wheezy"
+        treeherder:
+            symbol: Deb7(pcre3)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20140424T055217Z/pool/main/p/pcre3/pcre3_8.31-5.dsc
+                sha256: e6e92af1e9f4b1d286ce9e7fdb6cb2f0972a341a94f5631e0b8c31b9f79633a4
 
-  deb7-atk:
-    description: "atk 2.8 for Debian Wheezy"
-    treeherder:
-      symbol: Deb7(atk)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20130510T040301Z/pool/main/a/atk1.0/atk1.0_2.8.0-2.dsc
-        sha256: cae824b2a5ef47704fb820c04b5b7ee234329d9ddda1086bf487e12d58b9f70c
+    deb7-atk:
+        description: "atk 2.8 for Debian Wheezy"
+        treeherder:
+            symbol: Deb7(atk)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20130510T040301Z/pool/main/a/atk1.0/atk1.0_2.8.0-2.dsc
+                sha256: cae824b2a5ef47704fb820c04b5b7ee234329d9ddda1086bf487e12d58b9f70c
 
-  deb7-glib:
-    description: "glib 2.38 for Debian Wheezy"
-    treeherder:
-      symbol: Deb7(glib)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20140215T160944Z/pool/main/g/glib2.0/glib2.0_2.38.2-5.dsc
-        sha256: 1d81952a9a46a935d35d723f7528bf8d5264ef8a59491bad335d134dbeaa2404
-      patch: glib-wheezy.diff
-      packages:
-        - deb7-pcre3
+    deb7-glib:
+        description: "glib 2.38 for Debian Wheezy"
+        treeherder:
+            symbol: Deb7(glib)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20140215T160944Z/pool/main/g/glib2.0/glib2.0_2.38.2-5.dsc
+                sha256: 1d81952a9a46a935d35d723f7528bf8d5264ef8a59491bad335d134dbeaa2404
+            patch: glib-wheezy.diff
+            packages:
+                - deb7-pcre3
 
-  deb7-harfbuzz:
-    description: "harfbuzz for Debian Wheezy"
-    treeherder:
-      symbol: Deb7(harfbuzz)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20121211T033951Z/pool/main/h/harfbuzz/harfbuzz_0.9.9-1.dsc
-        sha256: 622677a2757a739fb59c8bcd8cde9c1722fac82808248e19ce1cae46620d92bd
+    deb7-harfbuzz:
+        description: "harfbuzz for Debian Wheezy"
+        treeherder:
+            symbol: Deb7(harfbuzz)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20121211T033951Z/pool/main/h/harfbuzz/harfbuzz_0.9.9-1.dsc
+                sha256: 622677a2757a739fb59c8bcd8cde9c1722fac82808248e19ce1cae46620d92bd
 
-  deb7-gdk-pixbuf:
-    description: "gdk-pixbuf 2.28 for Debian Wheezy"
-    treeherder:
-      symbol: Deb7(gdkpixbuf)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20130608T215552Z/pool/main/g/gdk-pixbuf/gdk-pixbuf_2.28.2-1.dsc
-        sha256: f5057beb54c37293de352c6f253cedd8b144d25289f1fdf1a958f17b51565bcb
-      packages:
-        - deb7-glib
-        - deb7-pcre3
+    deb7-gdk-pixbuf:
+        description: "gdk-pixbuf 2.28 for Debian Wheezy"
+        treeherder:
+            symbol: Deb7(gdkpixbuf)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20130608T215552Z/pool/main/g/gdk-pixbuf/gdk-pixbuf_2.28.2-1.dsc
+                sha256: f5057beb54c37293de352c6f253cedd8b144d25289f1fdf1a958f17b51565bcb
+            packages:
+                - deb7-glib
+                - deb7-pcre3
 
-  deb7-pango:
-    description: "pango 1.32 for Debian Wheezy"
-    treeherder:
-      symbol: Deb7(pango)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20130224T223605Z/pool/main/p/pango1.0/pango1.0_1.32.5-1.dsc
-        sha256: d9d9b1f797c5dbe70bfe9c7931d63b28437476aa1a737c424c7f072ca6e22914
-      packages:
-        - deb7-glib
-        - deb7-harfbuzz
-        - deb7-pcre3
+    deb7-pango:
+        description: "pango 1.32 for Debian Wheezy"
+        treeherder:
+            symbol: Deb7(pango)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20130224T223605Z/pool/main/p/pango1.0/pango1.0_1.32.5-1.dsc
+                sha256: d9d9b1f797c5dbe70bfe9c7931d63b28437476aa1a737c424c7f072ca6e22914
+            packages:
+                - deb7-glib
+                - deb7-harfbuzz
+                - deb7-pcre3
 
-  deb7-libxkbcommon:
-    description: "libxkbcommon for Debian Wheezy"
-    treeherder:
-      symbol: Deb7(xkbc)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20140723T102555Z/pool/main/libx/libxkbcommon/libxkbcommon_0.4.1-2.dsc
-        sha256: 9046dbceda207ed7163b7c12c98399e6d119491a480dc908ae451d7fff0fb77c
+    deb7-libxkbcommon:
+        description: "libxkbcommon for Debian Wheezy"
+        treeherder:
+            symbol: Deb7(xkbc)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20140723T102555Z/pool/main/libx/libxkbcommon/libxkbcommon_0.4.1-2.dsc
+                sha256: 9046dbceda207ed7163b7c12c98399e6d119491a480dc908ae451d7fff0fb77c
 
-  deb7-wayland:
-    description: "wayland 1.2 for Debian wheezy"
-    treeherder:
-      symbol: Deb7(wayland)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20130908T214400Z/pool/main/w/wayland/wayland_1.2.1-1.dsc
-        sha256: 964619747c00c697c95f2739c7980a0a360d79d03eaa3d9a342fed81d86e9466
+    deb7-wayland:
+        description: "wayland 1.2 for Debian wheezy"
+        treeherder:
+            symbol: Deb7(wayland)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20130908T214400Z/pool/main/w/wayland/wayland_1.2.1-1.dsc
+                sha256: 964619747c00c697c95f2739c7980a0a360d79d03eaa3d9a342fed81d86e9466
 
-  deb7-gtk3:
-    description: "gtk+ 3.10 for Debian wheezy"
-    treeherder:
-      symbol: Deb7(gtk3)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20140215T220417Z/pool/main/g/gtk+3.0/gtk+3.0_3.10.7-1.dsc
-        sha256: 2a6810d44517806940063bb488e49e7177732d8059c798cf0ef94103fefaf0b3
-      patch: gtk-wheezy.diff
-      packages:
-        - deb7-atk
-        - deb7-glib
-        - deb7-gdk-pixbuf
-        - deb7-harfbuzz
-        - deb7-libxkbcommon
-        - deb7-make
-        - deb7-pango
-        - deb7-pcre3
-        - deb7-wayland
+    deb7-gtk3:
+        description: "gtk+ 3.10 for Debian wheezy"
+        treeherder:
+            symbol: Deb7(gtk3)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20140215T220417Z/pool/main/g/gtk+3.0/gtk+3.0_3.10.7-1.dsc
+                sha256: 2a6810d44517806940063bb488e49e7177732d8059c798cf0ef94103fefaf0b3
+            patch: gtk-wheezy.diff
+            packages:
+                - deb7-atk
+                - deb7-glib
+                - deb7-gdk-pixbuf
+                - deb7-harfbuzz
+                - deb7-libxkbcommon
+                - deb7-make
+                - deb7-pango
+                - deb7-pcre3
+                - deb7-wayland
 
-  deb7-32-pcre3:
-    description: "pcre3 8.31 for Debian Wheezy"
-    treeherder:
-      symbol: Deb7-32(pcre3)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20140424T055217Z/pool/main/p/pcre3/pcre3_8.31-5.dsc
-        sha256: e6e92af1e9f4b1d286ce9e7fdb6cb2f0972a341a94f5631e0b8c31b9f79633a4
-      arch: i386
+    deb7-32-pcre3:
+        description: "pcre3 8.31 for Debian Wheezy"
+        treeherder:
+            symbol: Deb7-32(pcre3)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20140424T055217Z/pool/main/p/pcre3/pcre3_8.31-5.dsc
+                sha256: e6e92af1e9f4b1d286ce9e7fdb6cb2f0972a341a94f5631e0b8c31b9f79633a4
+            arch: i386
 
-  deb7-32-atk:
-    description: "atk 2.8 for Debian Wheezy"
-    treeherder:
-      symbol: Deb7-32(atk)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20130510T040301Z/pool/main/a/atk1.0/atk1.0_2.8.0-2.dsc
-        sha256: cae824b2a5ef47704fb820c04b5b7ee234329d9ddda1086bf487e12d58b9f70c
-      arch: i386
+    deb7-32-atk:
+        description: "atk 2.8 for Debian Wheezy"
+        treeherder:
+            symbol: Deb7-32(atk)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20130510T040301Z/pool/main/a/atk1.0/atk1.0_2.8.0-2.dsc
+                sha256: cae824b2a5ef47704fb820c04b5b7ee234329d9ddda1086bf487e12d58b9f70c
+            arch: i386
 
-  deb7-32-glib:
-    description: "glib 2.38 for Debian Wheezy"
-    treeherder:
-      symbol: Deb7-32(glib)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20140215T160944Z/pool/main/g/glib2.0/glib2.0_2.38.2-5.dsc
-        sha256: 1d81952a9a46a935d35d723f7528bf8d5264ef8a59491bad335d134dbeaa2404
-      arch: i386
-      patch: glib-wheezy.diff
-      packages:
-        - deb7-32-pcre3
+    deb7-32-glib:
+        description: "glib 2.38 for Debian Wheezy"
+        treeherder:
+            symbol: Deb7-32(glib)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20140215T160944Z/pool/main/g/glib2.0/glib2.0_2.38.2-5.dsc
+                sha256: 1d81952a9a46a935d35d723f7528bf8d5264ef8a59491bad335d134dbeaa2404
+            arch: i386
+            patch: glib-wheezy.diff
+            packages:
+                - deb7-32-pcre3
 
-  deb7-32-harfbuzz:
-    description: "harfbuzz for Debian Wheezy"
-    treeherder:
-      symbol: Deb7-32(harfbuzz)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20121211T033951Z/pool/main/h/harfbuzz/harfbuzz_0.9.9-1.dsc
-        sha256: 622677a2757a739fb59c8bcd8cde9c1722fac82808248e19ce1cae46620d92bd
-      arch: i386
+    deb7-32-harfbuzz:
+        description: "harfbuzz for Debian Wheezy"
+        treeherder:
+            symbol: Deb7-32(harfbuzz)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20121211T033951Z/pool/main/h/harfbuzz/harfbuzz_0.9.9-1.dsc
+                sha256: 622677a2757a739fb59c8bcd8cde9c1722fac82808248e19ce1cae46620d92bd
+            arch: i386
 
-  deb7-32-gdk-pixbuf:
-    description: "gdk-pixbuf 2.28 for Debian Wheezy"
-    treeherder:
-      symbol: Deb7-32(gdkpixbuf)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20130608T215552Z/pool/main/g/gdk-pixbuf/gdk-pixbuf_2.28.2-1.dsc
-        sha256: f5057beb54c37293de352c6f253cedd8b144d25289f1fdf1a958f17b51565bcb
-      arch: i386
-      packages:
-        - deb7-32-glib
-        - deb7-32-pcre3
+    deb7-32-gdk-pixbuf:
+        description: "gdk-pixbuf 2.28 for Debian Wheezy"
+        treeherder:
+            symbol: Deb7-32(gdkpixbuf)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20130608T215552Z/pool/main/g/gdk-pixbuf/gdk-pixbuf_2.28.2-1.dsc
+                sha256: f5057beb54c37293de352c6f253cedd8b144d25289f1fdf1a958f17b51565bcb
+            arch: i386
+            packages:
+                - deb7-32-glib
+                - deb7-32-pcre3
 
-  deb7-32-pango:
-    description: "pango 1.32 for Debian Wheezy"
-    treeherder:
-      symbol: Deb7-32(pango)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20130224T223605Z/pool/main/p/pango1.0/pango1.0_1.32.5-1.dsc
-        sha256: d9d9b1f797c5dbe70bfe9c7931d63b28437476aa1a737c424c7f072ca6e22914
-      arch: i386
-      packages:
-        - deb7-32-glib
-        - deb7-32-harfbuzz
-        - deb7-32-pcre3
+    deb7-32-pango:
+        description: "pango 1.32 for Debian Wheezy"
+        treeherder:
+            symbol: Deb7-32(pango)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20130224T223605Z/pool/main/p/pango1.0/pango1.0_1.32.5-1.dsc
+                sha256: d9d9b1f797c5dbe70bfe9c7931d63b28437476aa1a737c424c7f072ca6e22914
+            arch: i386
+            packages:
+                - deb7-32-glib
+                - deb7-32-harfbuzz
+                - deb7-32-pcre3
 
-  deb7-32-xkeyboard-config:
-    description: "xkeyboard-config for Debian Wheezy"
-    treeherder:
-      symbol: Deb7-32(xkbdconfig)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20121225T153644Z/pool/main/x/xkeyboard-config/xkeyboard-config_2.5.1-3.dsc
-        sha256: 327d53dfca4288c7f75471bb01e6d1f161811706b1d8daa01bf9abc269016dc1
-      arch: i386
-      patch: xkeyboard-config-wheezy.diff
+    deb7-32-xkeyboard-config:
+        description: "xkeyboard-config for Debian Wheezy"
+        treeherder:
+            symbol: Deb7-32(xkbdconfig)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20121225T153644Z/pool/main/x/xkeyboard-config/xkeyboard-config_2.5.1-3.dsc
+                sha256: 327d53dfca4288c7f75471bb01e6d1f161811706b1d8daa01bf9abc269016dc1
+            arch: i386
+            patch: xkeyboard-config-wheezy.diff
 
-  deb7-32-libxkbcommon:
-    description: "libxkbcommon for Debian Wheezy"
-    treeherder:
-      symbol: Deb7-32(xkbc)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20140723T102555Z/pool/main/libx/libxkbcommon/libxkbcommon_0.4.1-2.dsc
-        sha256: 9046dbceda207ed7163b7c12c98399e6d119491a480dc908ae451d7fff0fb77c
-      arch: i386
+    deb7-32-libxkbcommon:
+        description: "libxkbcommon for Debian Wheezy"
+        treeherder:
+            symbol: Deb7-32(xkbc)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20140723T102555Z/pool/main/libx/libxkbcommon/libxkbcommon_0.4.1-2.dsc
+                sha256: 9046dbceda207ed7163b7c12c98399e6d119491a480dc908ae451d7fff0fb77c
+            arch: i386
 
-  deb7-32-wayland:
-    description: "wayland 1.2 for Debian wheezy"
-    treeherder:
-      symbol: Deb7-32(wayland)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20130908T214400Z/pool/main/w/wayland/wayland_1.2.1-1.dsc
-        sha256: 964619747c00c697c95f2739c7980a0a360d79d03eaa3d9a342fed81d86e9466
-      arch: i386
+    deb7-32-wayland:
+        description: "wayland 1.2 for Debian wheezy"
+        treeherder:
+            symbol: Deb7-32(wayland)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20130908T214400Z/pool/main/w/wayland/wayland_1.2.1-1.dsc
+                sha256: 964619747c00c697c95f2739c7980a0a360d79d03eaa3d9a342fed81d86e9466
+            arch: i386
 
-  deb7-32-gtk3:
-    description: "gtk+ 3.10 for Debian wheezy"
-    treeherder:
-      symbol: Deb7-32(gtk3)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20140215T220417Z/pool/main/g/gtk+3.0/gtk+3.0_3.10.7-1.dsc
-        sha256: 2a6810d44517806940063bb488e49e7177732d8059c798cf0ef94103fefaf0b3
-      arch: i386
-      patch: gtk-wheezy.diff
-      packages:
-        - deb7-32-atk
-        - deb7-32-glib
-        - deb7-32-gdk-pixbuf
-        - deb7-32-harfbuzz
-        - deb7-32-libxkbcommon
-        - deb7-make
-        - deb7-32-pango
-        - deb7-32-pcre3
-        - deb7-32-wayland
+    deb7-32-gtk3:
+        description: "gtk+ 3.10 for Debian wheezy"
+        treeherder:
+            symbol: Deb7-32(gtk3)
+        run:
+            using: debian-package
+            dsc:
+                url: http://snapshot.debian.org/archive/debian/20140215T220417Z/pool/main/g/gtk+3.0/gtk+3.0_3.10.7-1.dsc
+                sha256: 2a6810d44517806940063bb488e49e7177732d8059c798cf0ef94103fefaf0b3
+            arch: i386
+            patch: gtk-wheezy.diff
+            packages:
+                - deb7-32-atk
+                - deb7-32-glib
+                - deb7-32-gdk-pixbuf
+                - deb7-32-harfbuzz
+                - deb7-32-libxkbcommon
+                - deb7-make
+                - deb7-32-pango
+                - deb7-32-pcre3
+                - deb7-32-wayland

@@ -1,15 +1,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.single_dep:loader
 
 kind-dependencies:
-   - release-generate-checksums
+    - release-generate-checksums
 
 transforms:
-   - taskgraph.transforms.release_generate_checksums_signing:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release_generate_checksums_signing:transforms
+    - taskgraph.transforms.task:transforms
 
 job-template:
-   shipping-phase: promote
+    shipping-phase: promote

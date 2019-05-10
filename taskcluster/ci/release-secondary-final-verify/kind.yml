@@ -1,38 +1,38 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
-   - post-balrog-dummy
-   - post-beetmover-dummy
-   - release-secondary-balrog-submit-toplevel
-   - release-secondary-update-verify-config
+    - post-balrog-dummy
+    - post-beetmover-dummy
+    - release-secondary-balrog-submit-toplevel
+    - release-secondary-update-verify-config
 
 transforms:
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.final_verify:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.final_verify:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
 
 job-defaults:
-   name: secondary-final-verify
-   run-on-projects: []  # to make sure this never runs as part of CI
-   worker-type: b-linux
-   worker:
-      docker-image:
-         in-tree: "update-verify"
-      max-run-time: 7200
-      retry-exit-status: [1]
+    name: secondary-final-verify
+    run-on-projects: []  # to make sure this never runs as part of CI
+    worker-type: b-linux
+    worker:
+        docker-image:
+            in-tree: "update-verify"
+        max-run-time: 7200
+        retry-exit-status: [1]
 
 jobs:
-   firefox:
-      description: secondary final verify
-      shipping-phase: promote
-      shipping-product: firefox
-      treeherder:
-         platform: firefox-release/opt
-         kind: test
-         symbol: Rel(FVS)
-         tier: 1
+    firefox:
+        description: secondary final verify
+        shipping-phase: promote
+        shipping-product: firefox
+        treeherder:
+            platform: firefox-release/opt
+            kind: test
+            symbol: Rel(FVS)
+            tier: 1

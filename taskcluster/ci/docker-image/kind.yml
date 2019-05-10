@@ -1,16 +1,16 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
-  - packages
+    - packages
 
 transforms:
-  - taskgraph.transforms.docker_image:transforms
-  - taskgraph.transforms.cached_tasks:transforms
-  - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.docker_image:transforms
+    - taskgraph.transforms.cached_tasks:transforms
+    - taskgraph.transforms.task:transforms
 
 # make a task for each docker-image we might want.  For the moment, since we
 # write artifacts for each, these are whitelisted, but ideally that will change
@@ -18,187 +18,187 @@ transforms:
 # generate tasks for every docker image in the directory, secure in the
 # knowledge that unnecessary images will be omitted from the target task graph
 jobs:
-  image_builder:
-    symbol: I(ib)
-  desktop1604-test:
-    symbol: I(dt16t)
-  # Neither the debian7-*raw nor the debian7-*packages images can have
-  # packages dependencies.
-  debian7-raw:
-    symbol: I(deb7-raw)
-    definition: debian-raw
-    args:
-      BASE_IMAGE: debian:wheezy-20171210
-      DIST: wheezy
-      SNAPSHOT: '20171210T214726Z'
-  debian7-packages:
-    symbol: I(deb7-pkg)
-    definition: debian-packages
-    parent: debian7-raw
-  debian7-i386-raw:
-    symbol: I(deb7-32-raw)
-    definition: debian-raw
-    args:
-      BASE_IMAGE: i386/debian:wheezy-20171210
-      DIST: wheezy
-      SNAPSHOT: '20171210T214726Z'
-  debian7-i386-packages:
-    symbol: I(deb7-32-pkg)
-    definition: debian-packages
-    parent: debian7-i386-raw
-  debian7-base:
-    symbol: I(deb7-base)
-    definition: debian-base
-    parent: debian7-raw
-    packages:
-      - deb7-apt
-      - deb7-gdb
-      - deb7-git
-      - deb7-make
-      - deb7-mercurial
-      - deb7-python
-      - deb7-python3.5
-      - deb7-python3-defaults
-      - deb7-python-zstandard
-      - deb7-sqlite3
-      - deb7-xz-utils
-  toolchain-build:
-    symbol: I(toolchain)
-    parent: debian7-base
-    packages:
-      - deb7-cmake
-      - deb7-ninja
-  custom-v8:
-    symbol: I(custom-v8)
-    parent: debian9-base
-  debian7-amd64-build-base:
-    symbol: I(deb7-bb)
-    parent: debian7-base
-    definition: debian-build
-    packages:
-      - deb7-valgrind
-    args:
-      ARCH: amd64
-  debian7-amd64-build:
-    symbol: I(deb7)
-    parent: debian7-base
-    definition: debian-build
-    packages:
-      - deb7-atk
-      - deb7-glib
-      - deb7-gdk-pixbuf
-      - deb7-gtk3
-      - deb7-harfbuzz
-      - deb7-libxkbcommon
-      - deb7-pango
-      - deb7-pcre3
-      - deb7-valgrind
-      - deb7-wayland
-    args:
-      ARCH: amd64
-  debian7-i386-build:
-    symbol: I(deb7-32)
-    parent: debian7-base
-    definition: debian-build
-    packages:
-      - deb7-32-atk
-      - deb7-32-glib
-      - deb7-32-gdk-pixbuf
-      - deb7-32-gtk3
-      - deb7-32-harfbuzz
-      - deb7-32-libxkbcommon
-      - deb7-32-pango
-      - deb7-32-pcre3
-      - deb7-32-xkeyboard-config
-      - deb7-32-wayland
-      - deb7-atk
-      - deb7-glib
-      - deb7-gtk3
-      - deb7-harfbuzz
-      - deb7-python-defaults
-      - deb7-pcre3
-      - deb7-valgrind
-    args:
-      ARCH: i386
-  debian7-mozjs-rust-build:
-    symbol: I(deb7jsrs)
-    parent: debian7-amd64-build
-    packages:
-      - deb7-cmake
-  valgrind-build:
-    symbol: I(vb)
-    parent: debian7-amd64-build
-  lint:
-    symbol: I(lnt)
-  # Neither the debian9-raw nor the debian9-packages images can have
-  # packages dependencies.
-  debian9-raw:
-    symbol: I(deb9-raw)
-    definition: debian-raw
-    args:
-      BASE_IMAGE: debian:stretch-20190228
-      DIST: stretch
-      SNAPSHOT: '20190306T040711Z'
-  debian9-packages:
-    symbol: I(deb9-pkg)
-    definition: debian-packages
-    parent: debian9-raw
-  debian9-base:
-    symbol: I(deb9-base)
-    definition: debian-base
-    parent: debian9-raw
-    packages:
-      - deb9-mercurial
-      - deb9-python-zstandard
-  debian9-amd64-build:
-    symbol: I(deb9)
-    parent: debian9-base
-    definition: debian-build
-    args:
-      ARCH: amd64
-  debian9-arm64-build:
-    symbol: I(deb9-arm64)
-    parent: debian9-base
-    definition: debian-build
-    args:
-      ARCH: arm64
-  toolchain-arm64-build:
-    symbol: I(toolchain-arm64)
-    parent: debian9-arm64-build
-    definition: toolchain-build
-  android-build:
-    symbol: I(agb)
-    parent: debian9-base
-  fetch:
-    symbol: I(fetch)
-    parent: debian9-raw
-  static-analysis-build:
-    symbol: I(static-analysis-build)
-    parent: android-build
-  mingw32-build:
-    symbol: I(mingw)
-    parent: debian9-base
-  index-task:
-    symbol: I(idx)
-  funsize-update-generator:
-    symbol: I(pg)
-  mozapkpublisher:
-    symbol: I(apk)
-  update-verify:
-    symbol: I(uv)
-  diffoscope:
-    symbol: I(diff)
-    parent: debian9-base
-  partner-repack:
-    symbol: I(PR)
-    parent: debian9-base
-    definition: partner-repack
-  periodic-updates:
-    symbol: I(file)
-  pipfile-updates:
-    symbol: I(pip)
-  firefox-snap:
-    symbol: I(snap)
-  webrender:
-    symbol: I(webrender)
-    parent: debian9-base
+    image_builder:
+        symbol: I(ib)
+    desktop1604-test:
+        symbol: I(dt16t)
+    # Neither the debian7-*raw nor the debian7-*packages images can have
+    # packages dependencies.
+    debian7-raw:
+        symbol: I(deb7-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: debian:wheezy-20171210
+            DIST: wheezy
+            SNAPSHOT: '20171210T214726Z'
+    debian7-packages:
+        symbol: I(deb7-pkg)
+        definition: debian-packages
+        parent: debian7-raw
+    debian7-i386-raw:
+        symbol: I(deb7-32-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: i386/debian:wheezy-20171210
+            DIST: wheezy
+            SNAPSHOT: '20171210T214726Z'
+    debian7-i386-packages:
+        symbol: I(deb7-32-pkg)
+        definition: debian-packages
+        parent: debian7-i386-raw
+    debian7-base:
+        symbol: I(deb7-base)
+        definition: debian-base
+        parent: debian7-raw
+        packages:
+            - deb7-apt
+            - deb7-gdb
+            - deb7-git
+            - deb7-make
+            - deb7-mercurial
+            - deb7-python
+            - deb7-python3.5
+            - deb7-python3-defaults
+            - deb7-python-zstandard
+            - deb7-sqlite3
+            - deb7-xz-utils
+    toolchain-build:
+        symbol: I(toolchain)
+        parent: debian7-base
+        packages:
+            - deb7-cmake
+            - deb7-ninja
+    custom-v8:
+        symbol: I(custom-v8)
+        parent: debian9-base
+    debian7-amd64-build-base:
+        symbol: I(deb7-bb)
+        parent: debian7-base
+        definition: debian-build
+        packages:
+            - deb7-valgrind
+        args:
+            ARCH: amd64
+    debian7-amd64-build:
+        symbol: I(deb7)
+        parent: debian7-base
+        definition: debian-build
+        packages:
+            - deb7-atk
+            - deb7-glib
+            - deb7-gdk-pixbuf
+            - deb7-gtk3
+            - deb7-harfbuzz
+            - deb7-libxkbcommon
+            - deb7-pango
+            - deb7-pcre3
+            - deb7-valgrind
+            - deb7-wayland
+        args:
+            ARCH: amd64
+    debian7-i386-build:
+        symbol: I(deb7-32)
+        parent: debian7-base
+        definition: debian-build
+        packages:
+            - deb7-32-atk
+            - deb7-32-glib
+            - deb7-32-gdk-pixbuf
+            - deb7-32-gtk3
+            - deb7-32-harfbuzz
+            - deb7-32-libxkbcommon
+            - deb7-32-pango
+            - deb7-32-pcre3
+            - deb7-32-xkeyboard-config
+            - deb7-32-wayland
+            - deb7-atk
+            - deb7-glib
+            - deb7-gtk3
+            - deb7-harfbuzz
+            - deb7-python-defaults
+            - deb7-pcre3
+            - deb7-valgrind
+        args:
+            ARCH: i386
+    debian7-mozjs-rust-build:
+        symbol: I(deb7jsrs)
+        parent: debian7-amd64-build
+        packages:
+            - deb7-cmake
+    valgrind-build:
+        symbol: I(vb)
+        parent: debian7-amd64-build
+    lint:
+        symbol: I(lnt)
+    # Neither the debian9-raw nor the debian9-packages images can have
+    # packages dependencies.
+    debian9-raw:
+        symbol: I(deb9-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: debian:stretch-20190228
+            DIST: stretch
+            SNAPSHOT: '20190306T040711Z'
+    debian9-packages:
+        symbol: I(deb9-pkg)
+        definition: debian-packages
+        parent: debian9-raw
+    debian9-base:
+        symbol: I(deb9-base)
+        definition: debian-base
+        parent: debian9-raw
+        packages:
+            - deb9-mercurial
+            - deb9-python-zstandard
+    debian9-amd64-build:
+        symbol: I(deb9)
+        parent: debian9-base
+        definition: debian-build
+        args:
+            ARCH: amd64
+    debian9-arm64-build:
+        symbol: I(deb9-arm64)
+        parent: debian9-base
+        definition: debian-build
+        args:
+            ARCH: arm64
+    toolchain-arm64-build:
+        symbol: I(toolchain-arm64)
+        parent: debian9-arm64-build
+        definition: toolchain-build
+    android-build:
+        symbol: I(agb)
+        parent: debian9-base
+    fetch:
+        symbol: I(fetch)
+        parent: debian9-raw
+    static-analysis-build:
+        symbol: I(static-analysis-build)
+        parent: android-build
+    mingw32-build:
+        symbol: I(mingw)
+        parent: debian9-base
+    index-task:
+        symbol: I(idx)
+    funsize-update-generator:
+        symbol: I(pg)
+    mozapkpublisher:
+        symbol: I(apk)
+    update-verify:
+        symbol: I(uv)
+    diffoscope:
+        symbol: I(diff)
+        parent: debian9-base
+    partner-repack:
+        symbol: I(PR)
+        parent: debian9-base
+        definition: partner-repack
+    periodic-updates:
+        symbol: I(file)
+    pipfile-updates:
+        symbol: I(pip)
+    firefox-snap:
+        symbol: I(snap)
+    webrender:
+        symbol: I(webrender)
+        parent: debian9-base

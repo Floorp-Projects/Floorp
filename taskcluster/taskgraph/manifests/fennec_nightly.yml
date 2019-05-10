@@ -1,165 +1,168 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 s3_bucket_paths:
-  - pub/mobile/nightly
+    - pub/mobile/nightly
 default_locales:  # if given an empty locale, use these locales
-  - en-US
-  - multi
+    - en-US
+    - multi
 tasktype_map:  # Map task reference to task type.
-  build: build
-  build-signing: signing
-  nightly-l10n-signing: signing
+    build: build
+    build-signing: signing
+    nightly-l10n-signing: signing
 platform_names:
-  path_platform:
-    by-platform:
-      android-x86-nightly: 'android-x86'
-      android-x86_64-nightly: 'android-x86_64'
-      android-api-16-nightly: 'android-api-16'
-      android-aarch64-nightly: 'android-aarch64'
-  filename_platform:
-    by-platform:
-      android-x86-nightly: 'android-i386'
-      android-x86_64-nightly: 'android-x86_64'
-      android-api-16-nightly: 'android-arm'
-      android-aarch64-nightly: 'android-aarch64'
+    path_platform:
+        by-platform:
+            android-x86-nightly: 'android-x86'
+            android-x86_64-nightly: 'android-x86_64'
+            android-api-16-nightly: 'android-api-16'
+            android-aarch64-nightly: 'android-aarch64'
+    filename_platform:
+        by-platform:
+            android-x86-nightly: 'android-i386'
+            android-x86_64-nightly: 'android-x86_64'
+            android-api-16-nightly: 'android-arm'
+            android-aarch64-nightly: 'android-aarch64'
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
 # s3_bucket_paths + destinations + locale_prefix + pretty_name
 default: &default
-  from:
-    - build
-  all_locales: false
-  description: "TO_BE_OVERRIDDEN"
-  locale_prefix:
-    by-locale:
-      default: ''
-      en-US: '${locale}/'
-  source_path_modifier:  # Anything between artifact prefix and filename
-    by-locale:
-      default: '${locale}'
-      multi: ''
-  destinations:  # locale_prefix is appended
-    by-locale:
-      multi:
-        - ${year}/${month}/${upload_date}-${branch}-${path_platform}
-        - latest-${branch}-${path_platform}
-      en-US:
-        - ${year}/${month}/${upload_date}-${branch}-${path_platform}
-        - latest-${branch}-${path_platform}
-      default:
-        - ${year}/${month}/${upload_date}-${branch}-${path_platform}-l10n
-        - latest-${branch}-${path_platform}-l10n
+    from:
+        - build
+    all_locales: false
+    description: "TO_BE_OVERRIDDEN"
+    locale_prefix:
+        by-locale:
+            default: ''
+            en-US: '${locale}/'
+    source_path_modifier:  # Anything between artifact prefix and filename
+        by-locale:
+            default: '${locale}'
+            multi: ''
+    destinations:  # locale_prefix is appended
+        by-locale:
+            multi:
+                - ${year}/${month}/${upload_date}-${branch}-${path_platform}
+                - latest-${branch}-${path_platform}
+            en-US:
+                - ${year}/${month}/${upload_date}-${branch}-${path_platform}
+                - latest-${branch}-${path_platform}
+            default:
+                - ${year}/${month}/${upload_date}-${branch}-${path_platform}-l10n
+                - latest-${branch}-${path_platform}-l10n
 
 # Configuration for individual files. Extends 'default', above.
 mapping:
-  buildhub.json:
-    <<: *default
-    all_locales: true
-    description: "Build related information to be consumed by Buildhub service"
-    locale_prefix: ''
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.buildhub.json
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.buildhub.json
-  target.common.tests.tar.gz:
-    <<: *default
-    description: "Mixture of reftests, mochitests, UI and others, commonly bundled together in a test suite"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.common.tests.tar.gz
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.common.tests.tar.gz
-  target.cppunittest.tests.tar.gz:
-    <<: *default
-    description: "C++ unittests related in-tree test infrastructure"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.cppunittest.tests.tar.gz
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.cppunittest.tests.tar.gz
-  target.crashreporter-symbols.zip:
-    <<: *default
-    description: "Crashreporter symbols to be consumed by Socorro"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.crashreporter-symbols.zip
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.crashreporter-symbols.zip
-  target.json:
-    <<: *default
-    all_locales: true
-    description: "Various compile and moz_app flags baked together in a json file"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.json
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.json
-  target.mochitest.tests.tar.gz:
-    <<: *default
-    description: "Results for running the mochitest testing framework via Javascript function calls"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.mochitest.tests.tar.gz
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.mochitest.tests.tar.gz
-  target.mozinfo.json:
-    <<: *default
-    all_locales: true
-    description: "Various compile and moz_app flags baked together in a json file"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.mozinfo.json
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.mozinfo.json
-  target.reftest.tests.tar.gz:
-    <<: *default
-    description: "Results for running the reftest testing framework via display of two Web pages comparison"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.reftest.tests.tar.gz
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.reftest.tests.tar.gz
-  target.talos.tests.tar.gz:
-    <<: *default
-    description: "Results for running the talos testing framework to measure performance"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.talos.tests.tar.gz
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.talos.tests.tar.gz
-  target.awsy.tests.tar.gz:
-    <<: *default
-    description: "Results for running the awsy testing framework to track memory usage"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.awsy.tests.tar.gz
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.awsy.tests.tar.gz
-  target.test_packages.json:
-    <<: *default
-    description: "File containing metadata about all other files and testing harnesses specifics"
-    all_locales: true
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.test_packages.json
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.test_packages.json
-  target.txt:
-    <<: *default
-    description: "File containing buildid and revision"
-    all_locales: true
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.txt
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.txt
-  target.web-platform.tests.tar.gz:
-    <<: *default
-    description: "Results for running the webplatform testing framework to cover standard Web platform features"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.web-platform.tests.tar.gz
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.web-platform.tests.tar.gz
-  target.xpcshell.tests.tar.gz:
-    <<: *default
-    description: "Results for running the xpcshell testing framework to enable XPConnect console application"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.xpcshell.tests.tar.gz
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.xpcshell.tests.tar.gz
-  target_info.txt:
-    <<: *default
-    all_locales: true
-    description: "File containing the buildID"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}_info.txt
-    checksums_path: fennec-${version}.${locale}.${filename_platform}_info.txt
-  mozharness.zip:
-    <<: *default
-    description: "File containing the mozharness set of scripts and configuration used by various automation tools"
-    pretty_name: mozharness.zip
-    checksums_path: mozharness.zip
-  robocop.apk:
-    <<: *default
-    description: "APK to enable the Robocop testing framework "
-    all_locales: true
-    pretty_name: robocop.apk
-    checksums_path: robocop.apk
-  target.jsshell.zip:
-    <<: *default
-    description: "Set of shells to allow test snippets of Javascript code without needing to reload the page"
-    pretty_name: jsshell-${filename_platform}.zip
-    checksums_path: jsshell-${filename_platform}.zip
-  target.apk:
-    <<: *default
-    description: "The main installer we ship our mobile products baked within"
-    all_locales: true
-    from:
-      - build-signing
-      - nightly-l10n-signing
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.apk
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.apk
-    update_balrog_manifest:
-      by-locale:
-        multi: true
-        default: false
+    buildhub.json:
+        <<: *default
+        all_locales: true
+        description: "Build related information to be consumed by Buildhub service"
+        locale_prefix: ''
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.buildhub.json
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.buildhub.json
+    target.common.tests.tar.gz:
+        <<: *default
+        description: "Mixture of reftests, mochitests, UI and others, commonly bundled together in a test suite"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.common.tests.tar.gz
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.common.tests.tar.gz
+    target.cppunittest.tests.tar.gz:
+        <<: *default
+        description: "C++ unittests related in-tree test infrastructure"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.cppunittest.tests.tar.gz
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.cppunittest.tests.tar.gz
+    target.crashreporter-symbols.zip:
+        <<: *default
+        description: "Crashreporter symbols to be consumed by Socorro"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.crashreporter-symbols.zip
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.crashreporter-symbols.zip
+    target.json:
+        <<: *default
+        all_locales: true
+        description: "Various compile and moz_app flags baked together in a json file"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.json
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.json
+    target.mochitest.tests.tar.gz:
+        <<: *default
+        description: "Results for running the mochitest testing framework via Javascript function calls"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.mochitest.tests.tar.gz
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.mochitest.tests.tar.gz
+    target.mozinfo.json:
+        <<: *default
+        all_locales: true
+        description: "Various compile and moz_app flags baked together in a json file"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.mozinfo.json
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.mozinfo.json
+    target.reftest.tests.tar.gz:
+        <<: *default
+        description: "Results for running the reftest testing framework via display of two Web pages comparison"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.reftest.tests.tar.gz
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.reftest.tests.tar.gz
+    target.talos.tests.tar.gz:
+        <<: *default
+        description: "Results for running the talos testing framework to measure performance"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.talos.tests.tar.gz
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.talos.tests.tar.gz
+    target.awsy.tests.tar.gz:
+        <<: *default
+        description: "Results for running the awsy testing framework to track memory usage"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.awsy.tests.tar.gz
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.awsy.tests.tar.gz
+    target.test_packages.json:
+        <<: *default
+        description: "File containing metadata about all other files and testing harnesses specifics"
+        all_locales: true
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.test_packages.json
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.test_packages.json
+    target.txt:
+        <<: *default
+        description: "File containing buildid and revision"
+        all_locales: true
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.txt
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.txt
+    target.web-platform.tests.tar.gz:
+        <<: *default
+        description: "Results for running the webplatform testing framework to cover standard Web platform features"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.web-platform.tests.tar.gz
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.web-platform.tests.tar.gz
+    target.xpcshell.tests.tar.gz:
+        <<: *default
+        description: "Results for running the xpcshell testing framework to enable XPConnect console application"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.xpcshell.tests.tar.gz
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.xpcshell.tests.tar.gz
+    target_info.txt:
+        <<: *default
+        all_locales: true
+        description: "File containing the buildID"
+        pretty_name: fennec-${version}.${locale}.${filename_platform}_info.txt
+        checksums_path: fennec-${version}.${locale}.${filename_platform}_info.txt
+    mozharness.zip:
+        <<: *default
+        description: "File containing the mozharness set of scripts and configuration used by various automation tools"
+        pretty_name: mozharness.zip
+        checksums_path: mozharness.zip
+    robocop.apk:
+        <<: *default
+        description: "APK to enable the Robocop testing framework "
+        all_locales: true
+        pretty_name: robocop.apk
+        checksums_path: robocop.apk
+    target.jsshell.zip:
+        <<: *default
+        description: "Set of shells to allow test snippets of Javascript code without needing to reload the page"
+        pretty_name: jsshell-${filename_platform}.zip
+        checksums_path: jsshell-${filename_platform}.zip
+    target.apk:
+        <<: *default
+        description: "The main installer we ship our mobile products baked within"
+        all_locales: true
+        from:
+            - build-signing
+            - nightly-l10n-signing
+        pretty_name: fennec-${version}.${locale}.${filename_platform}.apk
+        checksums_path: fennec-${version}.${locale}.${filename_platform}.apk
+        update_balrog_manifest:
+            by-locale:
+                multi: true
+                default: false

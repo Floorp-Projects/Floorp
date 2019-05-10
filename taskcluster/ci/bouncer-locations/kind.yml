@@ -1,53 +1,53 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
-   - post-beetmover-dummy
+    - post-beetmover-dummy
 
 transforms:
-   - taskgraph.transforms.bouncer_locations:transforms
-   - taskgraph.transforms.release:run_on_releases
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.bouncer_locations:transforms
+    - taskgraph.transforms.release:run_on_releases
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.task:transforms
 
 job-defaults:
-   description: nightly bouncer locations job
-   attributes:
-      nightly: true
-   worker-type:
-      by-project:
-         mozilla-central: scriptworker-prov-v1/bouncer-v1
-         default: scriptworker-prov-v1/bouncer-dev
-   worker:
-      implementation: bouncer-locations
-   scopes:
-      by-project:
-         mozilla-central:
-            - project:releng:bouncer:action:locations
-            - project:releng:bouncer:server:production
-         default:
-            - project:releng:bouncer:action:locations
-            - project:releng:bouncer:server:staging
-   run-on-projects: ['maple', 'mozilla-central']
-   run-on-releases: ['nightly']
-   shipping-phase: ship
-   treeherder:
-      symbol: BncLoc
-      kind: other
-      tier: 2
+    description: nightly bouncer locations job
+    attributes:
+        nightly: true
+    worker-type:
+        by-project:
+            mozilla-central: scriptworker-prov-v1/bouncer-v1
+            default: scriptworker-prov-v1/bouncer-dev
+    worker:
+        implementation: bouncer-locations
+    scopes:
+        by-project:
+            mozilla-central:
+                - project:releng:bouncer:action:locations
+                - project:releng:bouncer:server:production
+            default:
+                - project:releng:bouncer:action:locations
+                - project:releng:bouncer:server:staging
+    run-on-projects: ['maple', 'mozilla-central']
+    run-on-releases: ['nightly']
+    shipping-phase: ship
+    treeherder:
+        symbol: BncLoc
+        kind: other
+        tier: 2
 
 jobs:
-   firefox:
-      shipping-product: firefox
-      bouncer-products:
-         - firefox-nightly-latest
-         - firefox-nightly-latest-ssl
-         - firefox-nightly-latest-l10n
-         - firefox-nightly-latest-l10n-ssl
-         - firefox-nightly-msi-latest-ssl
-         - firefox-nightly-msi-latest-l10n-ssl
-      treeherder:
-         platform: firefox-release/opt
+    firefox:
+        shipping-product: firefox
+        bouncer-products:
+            - firefox-nightly-latest
+            - firefox-nightly-latest-ssl
+            - firefox-nightly-latest-l10n
+            - firefox-nightly-latest-l10n-ssl
+            - firefox-nightly-msi-latest-ssl
+            - firefox-nightly-msi-latest-l10n-ssl
+        treeherder:
+            platform: firefox-release/opt

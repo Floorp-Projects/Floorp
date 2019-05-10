@@ -1,19 +1,19 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
-   - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.beetmover:transforms
-   - taskgraph.transforms.beetmover_snap:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.beetmover:transforms
+    - taskgraph.transforms.beetmover_snap:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-snap-repackage  # snap builds builds aren't signed
+    - release-snap-repackage  # snap builds builds aren't signed
 
 job-template:
-   attributes:
-      artifact_map: taskcluster/taskgraph/manifests/firefox_snap.yml
-   shipping-phase: promote
+    attributes:
+        artifact_map: taskcluster/taskgraph/manifests/firefox_snap.yml
+    shipping-phase: promote

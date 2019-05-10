@@ -1,19 +1,19 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
-   - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.beetmover_langpack_checksums:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.beetmover_langpack_checksums:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-beetmover-signed-langpacks
+    - release-beetmover-signed-langpacks
 
 job-template:
-   shipping-phase: promote
-   attributes:
-      artifact_prefix: public
-      artifact_map: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml
+    shipping-phase: promote
+    attributes:
+        artifact_prefix: public
+        artifact_map: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml

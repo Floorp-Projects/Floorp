@@ -1,127 +1,127 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.update_verify_config:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.update_verify_config:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
 
 job-defaults:
-   name: secondary-update-verify-config
-   run-on-projects: []  # to make sure this never runs as part of CI
-   shipping-product: firefox
-   shipping-phase: promote
-   worker-type: b-linux
-   worker:
-      docker-image:
-         in-tree: "update-verify"
-      max-run-time: 3600
-      artifacts:
-         - name: public/build/update-verify.cfg
-           path: /builds/worker/checkouts/gecko/update-verify.cfg
-           type: file
-   run:
-      sparse-profile: mozharness
-   extra:
-      app-name: browser
-      branch-prefix: mozilla
-      product: firefox
-      archive-prefix:
-         by-release-level:
-            staging: "http://ftp.stage.mozaws.net/pub"
-            production: "https://archive.mozilla.org/pub"
-      previous-archive-prefix:
-         by-release-level:
-            staging: "https://archive.mozilla.org/pub"
-            production: null
-      aus-server:
-         by-release-level:
-            staging: "https://stage.balrog.nonprod.cloudops.mozgcp.net"
-            production: "https://aus5.mozilla.org"
-      override-certs:
-         by-release-level:
-            staging: dep
-            production: null
-      include-version: beta
-      last-watershed:
-         by-platform:
-            win64-aarch64.*: "67.0b2"
-            default: "56.0b3"
-      mar-channel-id-override: beta
-      channel: "beta-localtest"
+    name: secondary-update-verify-config
+    run-on-projects: []  # to make sure this never runs as part of CI
+    shipping-product: firefox
+    shipping-phase: promote
+    worker-type: b-linux
+    worker:
+        docker-image:
+            in-tree: "update-verify"
+        max-run-time: 3600
+        artifacts:
+            - name: public/build/update-verify.cfg
+              path: /builds/worker/checkouts/gecko/update-verify.cfg
+              type: file
+    run:
+        sparse-profile: mozharness
+    extra:
+        app-name: browser
+        branch-prefix: mozilla
+        product: firefox
+        archive-prefix:
+            by-release-level:
+                staging: "http://ftp.stage.mozaws.net/pub"
+                production: "https://archive.mozilla.org/pub"
+        previous-archive-prefix:
+            by-release-level:
+                staging: "https://archive.mozilla.org/pub"
+                production: null
+        aus-server:
+            by-release-level:
+                staging: "https://stage.balrog.nonprod.cloudops.mozgcp.net"
+                production: "https://aus5.mozilla.org"
+        override-certs:
+            by-release-level:
+                staging: dep
+                production: null
+        include-version: beta
+        last-watershed:
+            by-platform:
+                win64-aarch64.*: "67.0b2"
+                default: "56.0b3"
+        mar-channel-id-override: beta
+        channel: "beta-localtest"
 
 jobs:
-   firefox-secondary-linux:
-      treeherder:
-         symbol: UVCS
-         platform: linux/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: linux-shippable
-      extra:
-         platform: linux-i686
-         updater-platform: linux-x86_64
+    firefox-secondary-linux:
+        treeherder:
+            symbol: UVCS
+            platform: linux/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: linux-shippable
+        extra:
+            platform: linux-i686
+            updater-platform: linux-x86_64
 
-   firefox-secondary-linux64:
-      treeherder:
-         symbol: UVCS
-         platform: linux64/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: linux64-shippable
-      extra:
-         platform: linux-x86_64
-         updater-platform: linux-x86_64
+    firefox-secondary-linux64:
+        treeherder:
+            symbol: UVCS
+            platform: linux64/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: linux64-shippable
+        extra:
+            platform: linux-x86_64
+            updater-platform: linux-x86_64
 
-   firefox-secondary-macosx64:
-      treeherder:
-         symbol: UVCS
-         platform: macosx64/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: macosx64-shippable
-      extra:
-         platform: mac
-         updater-platform: linux-x86_64
+    firefox-secondary-macosx64:
+        treeherder:
+            symbol: UVCS
+            platform: macosx64/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: macosx64-shippable
+        extra:
+            platform: mac
+            updater-platform: linux-x86_64
 
-   firefox-secondary-win32:
-      treeherder:
-         symbol: UVCS
-         platform: win32/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win32-shippable
-      extra:
-         platform: win32
-         updater-platform: linux-x86_64
+    firefox-secondary-win32:
+        treeherder:
+            symbol: UVCS
+            platform: win32/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win32-shippable
+        extra:
+            platform: win32
+            updater-platform: linux-x86_64
 
-   firefox-secondary-win64:
-      treeherder:
-         symbol: UVCS
-         platform: win64/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win64-shippable
-      extra:
-         platform: win64
-         updater-platform: linux-x86_64
+    firefox-secondary-win64:
+        treeherder:
+            symbol: UVCS
+            platform: win64/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win64-shippable
+        extra:
+            platform: win64
+            updater-platform: linux-x86_64
 
-   firefox-secondary-win64-aarch64:
-      treeherder:
-         symbol: UVCS
-         platform: win64-aarch64/opt
-         kind: test
-         tier: 1
-      attributes:
-         build_platform: win64-aarch64-shippable
-      extra:
-         platform: win64-aarch64
-         updater-platform: linux-x86_64
+    firefox-secondary-win64-aarch64:
+        treeherder:
+            symbol: UVCS
+            platform: win64-aarch64/opt
+            kind: test
+            tier: 1
+        attributes:
+            build_platform: win64-aarch64-shippable
+        extra:
+            platform: win64-aarch64
+            updater-platform: linux-x86_64

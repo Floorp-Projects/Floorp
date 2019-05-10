@@ -1,74 +1,74 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.release:run_on_releases
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.scriptworker:add_balrog_scopes
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release:run_on_releases
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.scriptworker:add_balrog_scopes
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-bouncer-check
+    - release-bouncer-check
 
 job-defaults:
-   run-on-projects: []
-   shipping-phase: ship
-   worker:
-      implementation: balrog
-      balrog-action: schedule
+    run-on-projects: []
+    shipping-phase: ship
+    worker:
+        implementation: balrog
+        balrog-action: schedule
 
 jobs:
-   firefox:
-      description: Schedule Firefox publishing in balrog
-      name: release-firefox_schedule_publishing_in_balrog
-      shipping-product: firefox
-      worker:
-         product: firefox
-         publish-rules:
-            by-release-level:
-               production:
-                  by-release-type:
-                     beta: [32]
-                     release: [145]
-                     esr60: [806]
-                     default: []
-               staging:
-                  by-release-type:
-                     beta: [32]
-                     release: [145]
-                     esr60: [806]
-                     default: []
-      treeherder:
-         platform: firefox-release/opt
-         symbol: Rel(BSFx)
-         tier: 1
-         kind: build
-   firefox-bz2:
-      description: Schedule Firefox publishing in balrog (bz2)
-      name: release-firefox_schedule_publishing_in_balrog-bz2
-      shipping-product: firefox
-      run-on-releases: [esr60]
-      worker:
-         product: firefox
-         publish-rules: [521]
-         blob-suffix: -bz2
-      treeherder:
-         platform: firefox-release/opt
-         symbol: Rel(BSFx-bz2)
-         tier: 1
-         kind: build
-   devedition:
-      description: Schedule Devedition publishing in balrog
-      name: release-devedition_schedule_publishing_in_balrog
-      shipping-product: devedition
-      worker:
-         product: devedition
-         publish-rules: [10]
-      treeherder:
-         platform: devedition-release/opt
-         symbol: Rel(BSDev)
-         tier: 1
-         kind: build
+    firefox:
+        description: Schedule Firefox publishing in balrog
+        name: release-firefox_schedule_publishing_in_balrog
+        shipping-product: firefox
+        worker:
+            product: firefox
+            publish-rules:
+                by-release-level:
+                    production:
+                        by-release-type:
+                            beta: [32]
+                            release: [145]
+                            esr60: [806]
+                            default: []
+                    staging:
+                        by-release-type:
+                            beta: [32]
+                            release: [145]
+                            esr60: [806]
+                            default: []
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(BSFx)
+            tier: 1
+            kind: build
+    firefox-bz2:
+        description: Schedule Firefox publishing in balrog (bz2)
+        name: release-firefox_schedule_publishing_in_balrog-bz2
+        shipping-product: firefox
+        run-on-releases: [esr60]
+        worker:
+            product: firefox
+            publish-rules: [521]
+            blob-suffix: -bz2
+        treeherder:
+            platform: firefox-release/opt
+            symbol: Rel(BSFx-bz2)
+            tier: 1
+            kind: build
+    devedition:
+        description: Schedule Devedition publishing in balrog
+        name: release-devedition_schedule_publishing_in_balrog
+        shipping-product: devedition
+        worker:
+            product: devedition
+            publish-rules: [10]
+        treeherder:
+            platform: devedition-release/opt
+            symbol: Rel(BSDev)
+            tier: 1
+            kind: build

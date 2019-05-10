@@ -1,55 +1,58 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 s3_bucket_paths:
-  by-platform:
-    .*devedition.*:
-      - pub/devedition/nightly
-    default:
-      - pub/firefox/nightly
-default_locales:  # if given an empty locale, use these locales
-  - en-US
-tasktype_map:  # Map task reference to task type.
-  checksums-signing: signing
-platform_names:
-  filename_platform:
     by-platform:
-      linux-shippable: 'linux-i686'
-      linux64-shippable: 'linux-x86_64'
-      linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
-      macosx64-shippable: 'mac'
-      win32-shippable: 'win32'
-      win64-shippable: 'win64'
-      win64-aarch64-shippable: 'win64-aarch64'
-      win64-asan-reporter-nightly: 'win64-asan-reporter'
+        .*devedition.*:
+            - pub/devedition/nightly
+        default:
+            - pub/firefox/nightly
+default_locales:  # if given an empty locale, use these locales
+    - en-US
+tasktype_map:  # Map task reference to task type.
+    checksums-signing: signing
+platform_names:
+    filename_platform:
+        by-platform:
+            linux-shippable: 'linux-i686'
+            linux64-shippable: 'linux-x86_64'
+            linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+            macosx64-shippable: 'mac'
+            win32-shippable: 'win32'
+            win64-shippable: 'win64'
+            win64-aarch64-shippable: 'win64-aarch64'
+            win64-asan-reporter-nightly: 'win64-asan-reporter'
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
 # s3_bucket_paths + destinations + locale_prefix + pretty_name
 default: &default
-  from:
-    - checksums-signing
-  all_locales: true
-  description: "TO_BE_OVERRIDDEN"
-  locale_prefix: ''
-  source_path_modifier: ''
-  destinations:  # locale_prefix is appended
-    by-locale:
-      en-US:
-        - ${year}/${month}/${upload_date}-${branch}
-        - latest-${branch}
-        - latest-${branch}-l10n
-      default:
-        - ${year}/${month}/${upload_date}-${branch}-l10n
-        - latest-${branch}-l10n
+    from:
+        - checksums-signing
+    all_locales: true
+    description: "TO_BE_OVERRIDDEN"
+    locale_prefix: ''
+    source_path_modifier: ''
+    destinations:  # locale_prefix is appended
+        by-locale:
+            en-US:
+                - ${year}/${month}/${upload_date}-${branch}
+                - latest-${branch}
+                - latest-${branch}-l10n
+            default:
+                - ${year}/${month}/${upload_date}-${branch}-l10n
+                - latest-${branch}-l10n
 
 # Configuration for individual files. Extends 'default', above.
 mapping:
-  target.checksums:
-    <<: *default
-    description: "Checksums file containing size, hash, sha algorithm and filename"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.checksums
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.checksums
-  target.checksums.asc:
-    <<: *default
-    description: "Detached signature for the checksums file"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.checksums.asc
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.checksums.asc
+    target.checksums:
+        <<: *default
+        description: "Checksums file containing size, hash, sha algorithm and filename"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.checksums
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.checksums
+    target.checksums.asc:
+        <<: *default
+        description: "Detached signature for the checksums file"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.checksums.asc
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.checksums.asc

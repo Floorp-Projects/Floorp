@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
 # This file contains exhaustive information about all the release artifacs that
 # are needed within a type of release.
 #
@@ -28,410 +32,409 @@
 # `update_balrog_manifest`-- flag needed downstream in beetmover jobs to reckon the balrog manifest
 # `from_buildid`          -- flag needed downstream in beetmover jobs to reckon the balrog manifest
 
----
 s3_bucket_paths:
-  - pub/firefox/nightly
+    - pub/firefox/nightly
 default_locales:
-  - en-US
+    - en-US
 tasktype_map:
-  build: build
-  signing: signing
-  mar-signing: signing
-  partials-signing: signing
-  repackage: repackage
-  repackage-signing: repackage
-  repackage-signing-msi: repackage
+    build: build
+    signing: signing
+    mar-signing: signing
+    partials-signing: signing
+    repackage: repackage
+    repackage-signing: repackage
+    repackage-signing-msi: repackage
 platform_names:
-  filename_platform:
-    by-platform:
-      linux-shippable: 'linux-i686'
-      linux64-shippable: 'linux-x86_64'
-      linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
-      macosx64-shippable: 'mac'
-      win32-shippable: 'win32'
-      win64-shippable: 'win64'
-      win64-aarch64-shippable: 'win64-aarch64'
-      win64-asan-reporter-nightly: 'win64-asan-reporter'
-  stage_platform:
-    by-platform:
-      linux-shippable: 'linux'
-      linux64-asan-reporter-nightly: 'linux64-asan-reporter'
-      linux64-shippable: 'linux64'
-      macosx64-shippable: 'macosx64'
-      win32-shippable: 'win32'
-      win64-shippable: 'win64'
-      win64-aarch64-shippable: 'win64-aarch64'
-      win64-asan-reporter-nightly: 'win64-asan-reporter'
+    filename_platform:
+        by-platform:
+            linux-shippable: 'linux-i686'
+            linux64-shippable: 'linux-x86_64'
+            linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+            macosx64-shippable: 'mac'
+            win32-shippable: 'win32'
+            win64-shippable: 'win64'
+            win64-aarch64-shippable: 'win64-aarch64'
+            win64-asan-reporter-nightly: 'win64-asan-reporter'
+    stage_platform:
+        by-platform:
+            linux-shippable: 'linux'
+            linux64-asan-reporter-nightly: 'linux64-asan-reporter'
+            linux64-shippable: 'linux64'
+            macosx64-shippable: 'macosx64'
+            win32-shippable: 'win32'
+            win64-shippable: 'win64'
+            win64-aarch64-shippable: 'win64-aarch64'
+            win64-asan-reporter-nightly: 'win64-asan-reporter'
 
 default: &default
-  from:
-    - build
-  all_locales: false
-  description: "TO_BE_OVERRIDDEN"
-  locale_prefix: ''
-  source_path_modifier:
-    by-locale:
-      default: '${locale}'
-      en-US: ''
-  destinations:
-    by-locale:
-      en-US:
-        - ${year}/${month}/${upload_date}-${branch}
-        - latest-${branch}
-      default:
-        - ${year}/${month}/${upload_date}-${branch}-l10n
-        - latest-${branch}-l10n
+    from:
+        - build
+    all_locales: false
+    description: "TO_BE_OVERRIDDEN"
+    locale_prefix: ''
+    source_path_modifier:
+        by-locale:
+            default: '${locale}'
+            en-US: ''
+    destinations:
+        by-locale:
+            en-US:
+                - ${year}/${month}/${upload_date}-${branch}
+                - latest-${branch}
+            default:
+                - ${year}/${month}/${upload_date}-${branch}-l10n
+                - latest-${branch}-l10n
 
 mapping:
-  buildhub.json:
-    <<: *default
-    description: "Build related information to be consumed by Buildhub service"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.buildhub.json
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.buildhub.json
-    destinations:
-      by-locale:
-        en-US:
-          - ${year}/${month}/${upload_date}-${branch}
-          - latest-${branch}
-          - latest-${branch}-l10n
-        default:
-          - ${year}/${month}/${upload_date}-${branch}-l10n
-          - latest-${branch}-l10n
-  target.common.tests.tar.gz:
-    <<: *default
-    description: "Mixture of reftests, mochitests, UI and others, commonly bundled together in a test suite"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.common.tests.tar.gz
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.common.tests.tar.gz
-  target.cppunittest.tests.tar.gz:
-    <<: *default
-    description: "C++ unittests related in-tree test infrastructure"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.cppunittest.tests.tar.gz
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.cppunittest.tests.tar.gz
-  target.crashreporter-symbols.zip:
-    <<: *default
-    description: "Crashreporter symbols to be consumed by Socorro"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.crashreporter-symbols.zip
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.crashreporter-symbols.zip
-    not_for_platforms:
-      - linux64-asan-reporter-nightly
-      - win64-asan-reporter-nightly
-  target.json:
-    <<: *default
-    description: "Various compile and moz_app flags baked together in a json file"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.json
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.json
-  target.mochitest.tests.tar.gz:
-    <<: *default
-    description: "Results for running the mochitest testing framework via Javascript function calls"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.mochitest.tests.tar.gz
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.mochitest.tests.tar.gz
-  target.mozinfo.json:
-    <<: *default
-    description: "Various compile and moz_app flags baked together in a json file"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.mozinfo.json
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.mozinfo.json
-  target.reftest.tests.tar.gz:
-    <<: *default
-    description: "Results for running the reftest testing framework via display of two Web pages comparison"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.reftest.tests.tar.gz
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.reftest.tests.tar.gz
-  target.talos.tests.tar.gz:
-    <<: *default
-    description: "Results for running the talos testing framework to measure performance"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.talos.tests.tar.gz
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.talos.tests.tar.gz
-  target.awsy.tests.tar.gz:
-    <<: *default
-    description: "Results for running the awsy testing framework to track memory usage"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.awsy.tests.tar.gz
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.awsy.tests.tar.gz
-  target.test_packages.json:
-    <<: *default
-    description: "File containing metadata about all other files and testing harnesses specifics"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.test_packages.json
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.test_packages.json
-  target.txt:
-    <<: *default
-    description: "File containing buildid and revision"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.txt
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.txt
-  target.web-platform.tests.tar.gz:
-    <<: *default
-    description: "Results for running the webplatform testing framework to cover standard Web platform features"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.web-platform.tests.tar.gz
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.web-platform.tests.tar.gz
-  target.xpcshell.tests.tar.gz:
-    <<: *default
-    description: "Results for running the xpcshell testing framework to enable XPConnect console application"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.xpcshell.tests.tar.gz
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.xpcshell.tests.tar.gz
-  target_info.txt:
-    <<: *default
-    description: "File containing the buildID"
-    pretty_name: firefox-${version}.${locale}.${filename_platform}_info.txt
-    checksums_path: firefox-${version}.${locale}.${filename_platform}_info.txt
-  mozharness.zip:
-    <<: *default
-    description: "File containing the mozharness set of scripts and configuration used by various automation tools"
-    pretty_name: mozharness.zip
-    checksums_path: mozharness.zip
-  target.jsshell.zip:
-    <<: *default
-    description: "Set of shells to allow test snippets of Javascript code without needing to reload the page"
-    pretty_name: jsshell-${filename_platform}.zip
-    checksums_path: jsshell-${filename_platform}.zip
-    not_for_platforms:
-      - linux64-asan-reporter-nightly
-      - win64-asan-reporter-nightly
-  target.langpack.xpi:
-    <<: *default
-    all_locales: true
-    description: "Localized repack that grabs a packaged en-US Firefox and repackages it as locale-specific Firefox"
-    from:
-      - build
-    only_for_platforms:
-      - linux-shippable
-      - linux64-shippable
-      - macosx64-shippable
-      - win64-shippable
-      - win32-shippable
-      - win64-shippable
-      - win64-aarch64-shippable
-      - win64-asan-reporter-nightly
-      - linux64-asan-reporter-nightly
-    pretty_name: firefox-${version}.${locale}.langpack.xpi
-    checksums_path: firefox-${version}.${locale}.langpack.xpi
-    destinations:
-      by-locale:
-        en-US:
-          - ${year}/${month}/${upload_date}-${branch}
-          - latest-${branch}
-        default:
-          - ${year}/${month}/${upload_date}-${branch}-l10n/${filename_platform}/xpi
-          - latest-${branch}-l10n/${filename_platform}/xpi
-  mar:
-    <<: *default
-    description: "Alongside `mbsdiff`, a tool used to generate partials"
-    source_path_modifier: 'host/bin'
-    pretty_name: mar
-    checksums_path: mar
-    not_for_platforms:
-      - win32-shippable
-      - win64-shippable
-      - win64-aarch64-shippable
-      - win64-asan-reporter-nightly
-    destinations:
-      - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
-      - latest-${branch}/mar-tools/${stage_platform}
-  mbsdiff:
-    <<: *default
-    description: "Alongside `mar`, a tool used to generate partials"
-    source_path_modifier: 'host/bin'
-    pretty_name: mbsdiff
-    checksums_path: mbsdiff
-    not_for_platforms:
-      - win32-shippable
-      - win64-shippable
-      - win64-aarch64-shippable
-      - win64-asan-reporter-nightly
-    destinations:
-      - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
-      - latest-${branch}/mar-tools/${stage_platform}
-  mar.exe:
-    <<: *default
-    description: "Alongside `mbsdiff.exe`, a tool used to generate partials for Windows platforms"
-    source_path_modifier: 'host/bin'
-    pretty_name: mar.exe
-    checksums_path: mar.exe
-    only_for_platforms:
-      - win32-shippable
-      - win64-shippable
-      - win64-aarch64-shippable
-      - win64-asan-reporter-nightly
-    destinations:
-      - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
-      - latest-${branch}/mar-tools/${stage_platform}
-  mbsdiff.exe:
-    <<: *default
-    description: "Alongside `mar.exe`, a tool used to generate partials for Windows platforms"
-    source_path_modifier: 'host/bin'
-    pretty_name: mbsdiff.exe
-    checksums_path: mbsdiff.exe
-    only_for_platforms:
-      - win32-shippable
-      - win64-shippable
-      - win64-aarch64-shippable
-      - win64-asan-reporter-nightly
-    destinations:
-      - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
-      - latest-${branch}/mar-tools/${stage_platform}
-  target.tar.bz2:
-    <<: *default
-    description: "Main installer for Linux platforms"
-    all_locales: true
-    from:
-      - signing
-    only_for_platforms:
-      - linux-shippable
-      - linux64-shippable
-      - linux64-asan-reporter-nightly
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.tar.bz2
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.tar.bz2
-    destinations:
-      by-locale:
-        en-US:
-          - ${year}/${month}/${upload_date}-${branch}
-          - latest-${branch}
-          - latest-${branch}-l10n
-        default:
-          - ${year}/${month}/${upload_date}-${branch}-l10n
-          - latest-${branch}-l10n
-  target.tar.bz2.asc:
-    <<: *default
-    description: "Detached signature for the checksums file"
-    all_locales: true
-    from:
-      - signing
-    only_for_platforms:
-      - linux-shippable
-      - linux64-shippable
-      - linux64-asan-reporter-nightly
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.tar.bz2.asc
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.tar.bz2.asc
-    destinations:
-      by-locale:
-        en-US:
-          - ${year}/${month}/${upload_date}-${branch}
-          - latest-${branch}
-          - latest-${branch}-l10n
-        default:
-          - ${year}/${month}/${upload_date}-${branch}-l10n
-          - latest-${branch}-l10n
-  target.dmg:
-    <<: *default
-    description: "Main package installer for Mac OS X platforms"
-    all_locales: true
-    from:
-      - repackage
-    only_for_platforms:
-      - macosx64-shippable
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.dmg
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.dmg
-    destinations:
-      by-locale:
-        en-US:
-          - ${year}/${month}/${upload_date}-${branch}
-          - latest-${branch}
-          - latest-${branch}-l10n
-        default:
-          - ${year}/${month}/${upload_date}-${branch}-l10n
-          - latest-${branch}-l10n
-  target.zip:
-    <<: *default
-    description: "Main package installer for Windows platforms"
-    all_locales: true
-    from:
-      - signing
-    only_for_platforms:
-      - win64-shippable
-      - win32-shippable
-      - win64-aarch64-shippable
-      - win64-asan-reporter-nightly
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.zip
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.zip
-  target.installer.exe:
-    <<: *default
-    description: "Main installer for Windows platforms"
-    all_locales: true
-    from:
-      - repackage-signing
-    only_for_platforms:
-      - win64-shippable
-      - win32-shippable
-      - win64-aarch64-shippable
-      - win64-asan-reporter-nightly
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.installer.exe
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.installer.exe
-    destinations:
-      by-locale:
-        en-US:
-          - ${year}/${month}/${upload_date}-${branch}
-          - latest-${branch}
-          - latest-${branch}-l10n
-        default:
-          - ${year}/${month}/${upload_date}-${branch}-l10n
-          - latest-${branch}-l10n
-  target.stub-installer.exe:
-    <<: *default
-    description: "Stub installer for Win32 platforms"
-    all_locales: true
-    from:
-      - repackage-signing
-    only_for_platforms:
-      - win32-shippable
-    pretty_name: Firefox Installer.${locale}.exe
-    checksums_path: Firefox Installer.${locale}.exe
-    destinations:
-      by-locale:
-        en-US:
-          - ${year}/${month}/${upload_date}-${branch}
-          - latest-${branch}
-          - latest-${branch}-l10n
-        default:
-          - ${year}/${month}/${upload_date}-${branch}-l10n
-          - latest-${branch}-l10n
-  target.installer.msi:
-    <<: *default
-    description: "Windows installer for MSI platform"
-    all_locales: true
-    from:
-      - repackage-signing-msi
-    only_for_platforms:
-      - win64-shippable
-      - win32-shippable
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.installer.msi
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.installer.msi
-    destinations:
-      by-locale:
-        en-US:
-          - ${year}/${month}/${upload_date}-${branch}
-          - latest-${branch}
-          - latest-${branch}-l10n
-        default:
-          - ${year}/${month}/${upload_date}-${branch}-l10n
-          - latest-${branch}-l10n
-  target.complete.mar:
-    <<: *default
-    description: "The main installer we ship our mobile products baked within"
-    all_locales: true
-    from:
-      - mar-signing
-    pretty_name: firefox-${version}.${locale}.${filename_platform}.complete.mar
-    checksums_path: firefox-${version}.${locale}.${filename_platform}.complete.mar
-    update_balrog_manifest: true
-    destinations:
-      by-locale:
-        en-US:
-          - ${year}/${month}/${upload_date}-${branch}
-          - latest-${branch}
-          - latest-${branch}-l10n
-        default:
-          - ${year}/${month}/${upload_date}-${branch}-l10n
-          - latest-${branch}-l10n
-  ${partial}:
-    <<: *default
-    description: "Partials MAR files to serve as updates"
-    all_locales: true
-    from:
-      - partials-signing
-    partials_only: true
-    pretty_name: firefox-${branch}-${version}-${filename_platform}-${locale}-${from_buildid}-${buildid}.partial.mar
-    checksums_path: firefox-${branch}-${version}-${filename_platform}-${locale}-${from_buildid}-${buildid}.partial.mar
-    update_balrog_manifest: true
-    from_buildid: ${from_buildid}
-    destinations:
-      by-locale:
-        en-US:
-          - partials/${year}/${month}/${upload_date}-${branch}
-        default:
-          - partials/${year}/${month}/${upload_date}-${branch}-l10n
+    buildhub.json:
+        <<: *default
+        description: "Build related information to be consumed by Buildhub service"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.buildhub.json
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.buildhub.json
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                    - latest-${branch}-l10n
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n
+                    - latest-${branch}-l10n
+    target.common.tests.tar.gz:
+        <<: *default
+        description: "Mixture of reftests, mochitests, UI and others, commonly bundled together in a test suite"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.common.tests.tar.gz
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.common.tests.tar.gz
+    target.cppunittest.tests.tar.gz:
+        <<: *default
+        description: "C++ unittests related in-tree test infrastructure"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.cppunittest.tests.tar.gz
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.cppunittest.tests.tar.gz
+    target.crashreporter-symbols.zip:
+        <<: *default
+        description: "Crashreporter symbols to be consumed by Socorro"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.crashreporter-symbols.zip
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.crashreporter-symbols.zip
+        not_for_platforms:
+            - linux64-asan-reporter-nightly
+            - win64-asan-reporter-nightly
+    target.json:
+        <<: *default
+        description: "Various compile and moz_app flags baked together in a json file"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.json
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.json
+    target.mochitest.tests.tar.gz:
+        <<: *default
+        description: "Results for running the mochitest testing framework via Javascript function calls"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.mochitest.tests.tar.gz
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.mochitest.tests.tar.gz
+    target.mozinfo.json:
+        <<: *default
+        description: "Various compile and moz_app flags baked together in a json file"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.mozinfo.json
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.mozinfo.json
+    target.reftest.tests.tar.gz:
+        <<: *default
+        description: "Results for running the reftest testing framework via display of two Web pages comparison"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.reftest.tests.tar.gz
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.reftest.tests.tar.gz
+    target.talos.tests.tar.gz:
+        <<: *default
+        description: "Results for running the talos testing framework to measure performance"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.talos.tests.tar.gz
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.talos.tests.tar.gz
+    target.awsy.tests.tar.gz:
+        <<: *default
+        description: "Results for running the awsy testing framework to track memory usage"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.awsy.tests.tar.gz
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.awsy.tests.tar.gz
+    target.test_packages.json:
+        <<: *default
+        description: "File containing metadata about all other files and testing harnesses specifics"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.test_packages.json
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.test_packages.json
+    target.txt:
+        <<: *default
+        description: "File containing buildid and revision"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.txt
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.txt
+    target.web-platform.tests.tar.gz:
+        <<: *default
+        description: "Results for running the webplatform testing framework to cover standard Web platform features"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.web-platform.tests.tar.gz
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.web-platform.tests.tar.gz
+    target.xpcshell.tests.tar.gz:
+        <<: *default
+        description: "Results for running the xpcshell testing framework to enable XPConnect console application"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.xpcshell.tests.tar.gz
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.xpcshell.tests.tar.gz
+    target_info.txt:
+        <<: *default
+        description: "File containing the buildID"
+        pretty_name: firefox-${version}.${locale}.${filename_platform}_info.txt
+        checksums_path: firefox-${version}.${locale}.${filename_platform}_info.txt
+    mozharness.zip:
+        <<: *default
+        description: "File containing the mozharness set of scripts and configuration used by various automation tools"
+        pretty_name: mozharness.zip
+        checksums_path: mozharness.zip
+    target.jsshell.zip:
+        <<: *default
+        description: "Set of shells to allow test snippets of Javascript code without needing to reload the page"
+        pretty_name: jsshell-${filename_platform}.zip
+        checksums_path: jsshell-${filename_platform}.zip
+        not_for_platforms:
+            - linux64-asan-reporter-nightly
+            - win64-asan-reporter-nightly
+    target.langpack.xpi:
+        <<: *default
+        all_locales: true
+        description: "Localized repack that grabs a packaged en-US Firefox and repackages it as locale-specific Firefox"
+        from:
+            - build
+        only_for_platforms:
+            - linux-shippable
+            - linux64-shippable
+            - macosx64-shippable
+            - win64-shippable
+            - win32-shippable
+            - win64-shippable
+            - win64-aarch64-shippable
+            - win64-asan-reporter-nightly
+            - linux64-asan-reporter-nightly
+        pretty_name: firefox-${version}.${locale}.langpack.xpi
+        checksums_path: firefox-${version}.${locale}.langpack.xpi
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n/${filename_platform}/xpi
+                    - latest-${branch}-l10n/${filename_platform}/xpi
+    mar:
+        <<: *default
+        description: "Alongside `mbsdiff`, a tool used to generate partials"
+        source_path_modifier: 'host/bin'
+        pretty_name: mar
+        checksums_path: mar
+        not_for_platforms:
+            - win32-shippable
+            - win64-shippable
+            - win64-aarch64-shippable
+            - win64-asan-reporter-nightly
+        destinations:
+            - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
+            - latest-${branch}/mar-tools/${stage_platform}
+    mbsdiff:
+        <<: *default
+        description: "Alongside `mar`, a tool used to generate partials"
+        source_path_modifier: 'host/bin'
+        pretty_name: mbsdiff
+        checksums_path: mbsdiff
+        not_for_platforms:
+            - win32-shippable
+            - win64-shippable
+            - win64-aarch64-shippable
+            - win64-asan-reporter-nightly
+        destinations:
+            - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
+            - latest-${branch}/mar-tools/${stage_platform}
+    mar.exe:
+        <<: *default
+        description: "Alongside `mbsdiff.exe`, a tool used to generate partials for Windows platforms"
+        source_path_modifier: 'host/bin'
+        pretty_name: mar.exe
+        checksums_path: mar.exe
+        only_for_platforms:
+            - win32-shippable
+            - win64-shippable
+            - win64-aarch64-shippable
+            - win64-asan-reporter-nightly
+        destinations:
+            - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
+            - latest-${branch}/mar-tools/${stage_platform}
+    mbsdiff.exe:
+        <<: *default
+        description: "Alongside `mar.exe`, a tool used to generate partials for Windows platforms"
+        source_path_modifier: 'host/bin'
+        pretty_name: mbsdiff.exe
+        checksums_path: mbsdiff.exe
+        only_for_platforms:
+            - win32-shippable
+            - win64-shippable
+            - win64-aarch64-shippable
+            - win64-asan-reporter-nightly
+        destinations:
+            - ${year}/${month}/${upload_date}-${branch}/mar-tools/${stage_platform}
+            - latest-${branch}/mar-tools/${stage_platform}
+    target.tar.bz2:
+        <<: *default
+        description: "Main installer for Linux platforms"
+        all_locales: true
+        from:
+            - signing
+        only_for_platforms:
+            - linux-shippable
+            - linux64-shippable
+            - linux64-asan-reporter-nightly
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.tar.bz2
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.tar.bz2
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                    - latest-${branch}-l10n
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n
+                    - latest-${branch}-l10n
+    target.tar.bz2.asc:
+        <<: *default
+        description: "Detached signature for the checksums file"
+        all_locales: true
+        from:
+            - signing
+        only_for_platforms:
+            - linux-shippable
+            - linux64-shippable
+            - linux64-asan-reporter-nightly
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.tar.bz2.asc
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.tar.bz2.asc
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                    - latest-${branch}-l10n
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n
+                    - latest-${branch}-l10n
+    target.dmg:
+        <<: *default
+        description: "Main package installer for Mac OS X platforms"
+        all_locales: true
+        from:
+            - repackage
+        only_for_platforms:
+            - macosx64-shippable
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.dmg
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.dmg
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                    - latest-${branch}-l10n
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n
+                    - latest-${branch}-l10n
+    target.zip:
+        <<: *default
+        description: "Main package installer for Windows platforms"
+        all_locales: true
+        from:
+            - signing
+        only_for_platforms:
+            - win64-shippable
+            - win32-shippable
+            - win64-aarch64-shippable
+            - win64-asan-reporter-nightly
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.zip
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.zip
+    target.installer.exe:
+        <<: *default
+        description: "Main installer for Windows platforms"
+        all_locales: true
+        from:
+            - repackage-signing
+        only_for_platforms:
+            - win64-shippable
+            - win32-shippable
+            - win64-aarch64-shippable
+            - win64-asan-reporter-nightly
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.installer.exe
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.installer.exe
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                    - latest-${branch}-l10n
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n
+                    - latest-${branch}-l10n
+    target.stub-installer.exe:
+        <<: *default
+        description: "Stub installer for Win32 platforms"
+        all_locales: true
+        from:
+            - repackage-signing
+        only_for_platforms:
+            - win32-shippable
+        pretty_name: Firefox Installer.${locale}.exe
+        checksums_path: Firefox Installer.${locale}.exe
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                    - latest-${branch}-l10n
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n
+                    - latest-${branch}-l10n
+    target.installer.msi:
+        <<: *default
+        description: "Windows installer for MSI platform"
+        all_locales: true
+        from:
+            - repackage-signing-msi
+        only_for_platforms:
+            - win64-shippable
+            - win32-shippable
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.installer.msi
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.installer.msi
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                    - latest-${branch}-l10n
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n
+                    - latest-${branch}-l10n
+    target.complete.mar:
+        <<: *default
+        description: "The main installer we ship our mobile products baked within"
+        all_locales: true
+        from:
+            - mar-signing
+        pretty_name: firefox-${version}.${locale}.${filename_platform}.complete.mar
+        checksums_path: firefox-${version}.${locale}.${filename_platform}.complete.mar
+        update_balrog_manifest: true
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                    - latest-${branch}-l10n
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n
+                    - latest-${branch}-l10n
+    ${partial}:
+        <<: *default
+        description: "Partials MAR files to serve as updates"
+        all_locales: true
+        from:
+            - partials-signing
+        partials_only: true
+        pretty_name: firefox-${branch}-${version}-${filename_platform}-${locale}-${from_buildid}-${buildid}.partial.mar
+        checksums_path: firefox-${branch}-${version}-${filename_platform}-${locale}-${from_buildid}-${buildid}.partial.mar
+        update_balrog_manifest: true
+        from_buildid: ${from_buildid}
+        destinations:
+            by-locale:
+                en-US:
+                    - partials/${year}/${month}/${upload_date}-${branch}
+                default:
+                    - partials/${year}/${month}/${upload_date}-${branch}-l10n

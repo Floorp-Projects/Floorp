@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
 # This file contains exhaustive information about all the release artifacs that
 # are needed within a type of release.
 #
@@ -27,63 +31,63 @@
 # `partials_only`         -- filtering option to avoid associating an artifact unless this flag is present
 # `update_balrog_manifest`-- flag needed downstream in beetmover jobs to reckon the balrog manifest
 # `from_buildid`          -- flag needed downstream in beetmover jobs to reckon the balrog manifest
----
+
 s3_bucket_paths:
-  by-platform:
-    .*devedition.*:
-      - pub/devedition/candidates
-    default:
-      - pub/firefox/candidates
-default_locales:
-  - en-US
-tasktype_map:
-  checksums-signing: signing
-  release-beetmover-signed-langpacks: signing
-platform_names:
-  path_platform:
     by-platform:
-      linux-shippable: 'linux-i686'
-      linux64-shippable: 'linux-x86_64'
-      linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
-      macosx64-shippable: 'mac'
-      win32-shippable: 'win32'
-      win64-shippable: 'win64'
-      win64-aarch64-shippable: 'win64-aarch64'
-      win64-asan-reporter-nightly: 'win64-asan-reporter'
-      linux: 'linux-i686'
-      linux64: 'linux-x86_64'
-      macosx64: 'mac'
-      win32: 'win32'
-      win64: 'win64'
+        .*devedition.*:
+            - pub/devedition/candidates
+        default:
+            - pub/firefox/candidates
+default_locales:
+    - en-US
+tasktype_map:
+    checksums-signing: signing
+    release-beetmover-signed-langpacks: signing
+platform_names:
+    path_platform:
+        by-platform:
+            linux-shippable: 'linux-i686'
+            linux64-shippable: 'linux-x86_64'
+            linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+            macosx64-shippable: 'mac'
+            win32-shippable: 'win32'
+            win64-shippable: 'win64'
+            win64-aarch64-shippable: 'win64-aarch64'
+            win64-asan-reporter-nightly: 'win64-asan-reporter'
+            linux: 'linux-i686'
+            linux64: 'linux-x86_64'
+            macosx64: 'mac'
+            win32: 'win32'
+            win64: 'win64'
 
 default: &default
-  from:
-    - checksums-signing
-  all_locales: true
-  description: "TO_BE_OVERRIDDEN"
-  locale_prefix: '${locale}/'
-  source_path_modifier: ''
-  destinations:
-    - ${version}-candidates/build${build_number}/beetmover-checksums/${path_platform}
+    from:
+        - checksums-signing
+    all_locales: true
+    description: "TO_BE_OVERRIDDEN"
+    locale_prefix: '${locale}/'
+    source_path_modifier: ''
+    destinations:
+        - ${version}-candidates/build${build_number}/beetmover-checksums/${path_platform}
 
 mapping:
-  target.checksums:
-    <<: *default
-    description: "Checksums file containing size, hash, sha algorithm and filename"
-    pretty_name: firefox-${version}.checksums.beet
-    checksums_path: beetmover-checksums/${path_platform}/${locale}/firefox-${version}.checksums.beet
-  target.checksums.asc:
-    <<: *default
-    description: "Detached signature for the checksums file"
-    pretty_name: firefox-${version}.checksums.asc
-    checksums_path: beetmover-checksums/${path_platform}/${locale}/firefox-${version}.checksums.asc
-  target-langpack.checksums:
-    <<: *default
-    description: "Checksums file containing size, hash, sha algorithm and filename for the langpack"
-    locale_prefix: ''
-    from:
-      - release-beetmover-signed-langpacks
-    pretty_name: ${locale}.checksums.beet
-    checksums_path: beetmover-checksums/${path_platform}/xpi/${locale}.checksums.beet
-    destinations:
-      - ${version}-candidates/build${build_number}/beetmover-checksums/${path_platform}/xpi
+    target.checksums:
+        <<: *default
+        description: "Checksums file containing size, hash, sha algorithm and filename"
+        pretty_name: firefox-${version}.checksums.beet
+        checksums_path: beetmover-checksums/${path_platform}/${locale}/firefox-${version}.checksums.beet
+    target.checksums.asc:
+        <<: *default
+        description: "Detached signature for the checksums file"
+        pretty_name: firefox-${version}.checksums.asc
+        checksums_path: beetmover-checksums/${path_platform}/${locale}/firefox-${version}.checksums.asc
+    target-langpack.checksums:
+        <<: *default
+        description: "Checksums file containing size, hash, sha algorithm and filename for the langpack"
+        locale_prefix: ''
+        from:
+            - release-beetmover-signed-langpacks
+        pretty_name: ${locale}.checksums.beet
+        checksums_path: beetmover-checksums/${path_platform}/xpi/${locale}.checksums.beet
+        destinations:
+            - ${version}-candidates/build${build_number}/beetmover-checksums/${path_platform}/xpi

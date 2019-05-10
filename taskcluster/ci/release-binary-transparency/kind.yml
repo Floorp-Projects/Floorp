@@ -1,29 +1,29 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - post-beetmover-checksums-dummy
+    - post-beetmover-checksums-dummy
 
 job-defaults:
-   name: release-binary-transparency
-   description: Binary transparency to issue a certificate
-   run-on-projects: []
-   shipping-phase: promote
-   routes:
-      - index.releases.v1.{branch}.latest.{product}.latest.binary_transparency
-      - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.binary_transparency
-   worker-type: scriptworker-prov-v1/dummy-worker-transpar
-   worker:
-      implementation: binary-transparency
+    name: release-binary-transparency
+    description: Binary transparency to issue a certificate
+    run-on-projects: []
+    shipping-phase: promote
+    routes:
+        - index.releases.v1.{branch}.latest.{product}.latest.binary_transparency
+        - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.binary_transparency
+    worker-type: scriptworker-prov-v1/dummy-worker-transpar
+    worker:
+        implementation: binary-transparency
 
 # Bug 1433467 - binary transparency disabled for now
 # jobs:
-#    firefox:
-#       shipping-product: firefox
+#     firefox:
+#         shipping-product: firefox

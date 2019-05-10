@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
 # This file maps build platforms to test platforms.  In some cases, a
 # single build may be tested on multiple test platforms, but a single test
 # platform can only link to one build platform.  Both build and test platforms

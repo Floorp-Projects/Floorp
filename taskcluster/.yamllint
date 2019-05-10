@@ -7,6 +7,9 @@ extends: default
 rules:
   document-end:
      present: false
+  document-start:
+     present: true
+  indentation:
+     spaces: 4
   # Checks currently failing
-  document-start: disable
   line-length: disable

@@ -5,37 +5,37 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-   - taskgraph.transforms.code_review:transforms
-   - taskgraph.transforms.job:transforms
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.code_review:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - source-test
+    - source-test
 
 jobs:
-   issues:
-      label: code-review-issues
-      description: List all issues found in static analysis and linting tasks
-      worker-type: b-linux
+    issues:
+        label: code-review-issues
+        description: List all issues found in static analysis and linting tasks
+        worker-type: b-linux
 
-      # Only run by using the code-review target_tasks_method
-      run-on-projects: []
+        # Only run by using the code-review target_tasks_method
+        run-on-projects: []
 
-      # This option permits to run the task
-      # regardless of the soft-dependencies tasks exit status
-      # as we are interested in the task failures
-      requires: all-resolved
+        # This option permits to run the task
+        # regardless of the soft-dependencies tasks exit status
+        # as we are interested in the task failures
+        requires: all-resolved
 
-      # Publish on pulse
-      routes:
-         - project.relman.codereview.v1.try_ending
+        # Publish on pulse
+        routes:
+            - project.relman.codereview.v1.try_ending
 
-      # Dummy execution for now, we only need the pulse message
-      worker:
-         docker-image:
-            in-tree: debian9-amd64-build
-         max-run-time: 600
-      run:
-         using: run-task
-         checkout: false
-         command: /bin/true
+        # Dummy execution for now, we only need the pulse message
+        worker:
+            docker-image:
+                in-tree: debian9-amd64-build
+            max-run-time: 600
+        run:
+            using: run-task
+            checkout: false
+            command: /bin/true
