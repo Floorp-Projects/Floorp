@@ -64,6 +64,7 @@ from mozproxy import get_playback
 from power import init_android_power_test, finish_android_power_test
 from results import RaptorResultsHandler
 from utils import view_gecko_profile
+from cpu import generate_android_cpu_profile
 
 
 class SignalHandler:
@@ -85,32 +86,31 @@ class Raptor(object):
 
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None, host=None, power_test=False, memory_test=False,
-                 is_release_build=False, debug_mode=False, post_startup_delay=None,
-                 interrupt_handler=None, **kwargs):
+                 symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None,
+                 interrupt_handler=None, intent=None, **kwargs):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == 'HOST_IP':
             host = os.environ['HOST_IP']
 
-        self.config = {
-            'app': app,
-            'binary': binary,
-            'platform': mozinfo.os,
-            'processor': mozinfo.processor,
-            'run_local': run_local,
-            'obj_path': obj_path,
-            'gecko_profile': gecko_profile,
-            'gecko_profile_interval': gecko_profile_interval,
-            'gecko_profile_entries': gecko_profile_entries,
-            'symbols_path': symbols_path,
-            'host': host,
-            'power_test': power_test,
-            'memory_test': memory_test,
-            'is_release_build': is_release_build,
-            'enable_control_server_wait': memory_test,
-        }
-
+        self.config = {}
+        self.config['app'] = app
+        self.config['binary'] = binary
+        self.config['platform'] = mozinfo.os
+        self.config['processor'] = mozinfo.processor
+        self.config['run_local'] = run_local
+        self.config['obj_path'] = obj_path
+        self.config['gecko_profile'] = gecko_profile
+        self.config['gecko_profile_interval'] = gecko_profile_interval
+        self.config['gecko_profile_entries'] = gecko_profile_entries
+        self.config['symbols_path'] = symbols_path
+        self.config['host'] = host
+        self.config['power_test'] = power_test
+        self.config['cpu_test'] = cpu_test
+        self.config['memory_test'] = memory_test
+        self.config['is_release_build'] = is_release_build
+        self.config['enable_control_server_wait'] = memory_test
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
         self.log = get_default_logger(component='raptor-main')
         self.control_server = None
@@ -342,6 +342,7 @@ class Raptor(object):
             timeout += 5 * 60
 
         elapsed_time = 0
+
         while not self.control_server._finished:
             if self.config['enable_control_server_wait']:
                 response = self.control_server_wait_get()
@@ -588,6 +589,15 @@ class RaptorDesktopFirefox(RaptorDesktop):
 
 
 class RaptorDesktopChrome(RaptorDesktop):
+    def __init__(self, app, binary, run_local=False, obj_path=None,
+                 gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
+                 symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None,
+                 activity=None, intent=None):
+        RaptorDesktop.__init__(self, app, binary, run_local, obj_path, gecko_profile,
+                               gecko_profile_interval, gecko_profile_entries, symbols_path,
+                               host, power_test, cpu_test, memory_test, is_release_build,
+                               debug_mode, post_startup_delay)
 
     def setup_chrome_desktop_for_playback(self):
         # if running a pageload test on google chrome, add the cmd line options
@@ -619,8 +629,15 @@ class RaptorDesktopChrome(RaptorDesktop):
 
 
 class RaptorAndroid(Raptor):
-    def __init__(self, app, binary, activity=None, intent=None, **kwargs):
-        super(RaptorAndroid, self).__init__(app, binary, **kwargs)
+    def __init__(self, app, binary, run_local=False, obj_path=None,
+                 gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
+                 symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None,
+                 intent=None, interrupt_handler=None):
+        Raptor.__init__(self, app, binary, run_local, obj_path, gecko_profile,
+                        gecko_profile_interval, gecko_profile_entries, symbols_path, host,
+                        power_test, cpu_test, memory_test, is_release_build, debug_mode,
+                        post_startup_delay)
 
         # on android, when creating the browser profile, we want to use a 'firefox' type profile
         self.profile_class = "firefox"
@@ -663,6 +680,159 @@ class RaptorAndroid(Raptor):
         self.device = ADBDevice(verbose=True)
         self.device.clear_logcat()
         self.clear_app_data()
+
+    def tune_performance(self):
+        """Sets various performance-oriented parameters, to reduce jitter.
+
+        For more information, see https://bugzilla.mozilla.org/show_bug.cgi?id=1547135.
+        """
+        self.log.info("tuning android device performance")
+        self.set_scheduler()
+        self.set_svc_power_stayon()
+        device_name = self.device.shell_output('getprop ro.product.model')
+        if (self.device._have_su or self.device._have_android_su):
+            # all commands require root shell from here on
+            self.set_virtual_memory_parameters()
+            self.turn_off_services()
+            self.set_cpu_performance_parameters(device_name)
+            self.set_gpu_performance_parameters(device_name)
+            self.set_kernel_performance_parameters()
+        self.device.clear_logcat()
+
+    def _set_value_and_check_exitcode(self, file_name, value):
+        self.log.info('setting {} to {}'.format(file_name, value))
+        process = self.device.shell(' '.join(['echo', str(value), '>', str(file_name)]), root=True)
+        if process.exitcode == 0:
+            self.log.info('successfully set {} to {}'.format(file_name, value))
+        else:
+            self.log.warning('command failed with exitcode {}'.format(str(process.exitcode)))
+
+    def set_svc_power_stayon(self):
+        self.log.info('set device to stay awake on usb')
+        self.device.shell('svc power stayon usb')
+
+    def set_scheduler(self):
+        self.log.info('setting scheduler to noop')
+        scheduler_location = '/sys/block/sda/queue/scheduler'
+
+        self._set_value_and_check_exitcode(scheduler_location, 'noop')
+
+    def turn_off_services(self):
+        services = [
+            'mpdecision',
+            'thermal-engine',
+            'thermald',
+        ]
+        for service in services:
+            self.log.info(' '.join(['turning off service:', service]))
+            self.device.shell(' '.join(['stop', service]), root=True)
+
+        services_list_output = self.device.shell_output('service list')
+        for service in services:
+            if service not in services_list_output:
+                self.log.info(' '.join(['successfully terminated:', service]))
+            else:
+                self.log.warning(' '.join(['failed to terminate:', service]))
+
+    def disable_animations(self):
+        self.log.info('disabling animations')
+        commands = {
+            'animator_duration_scale': 0.0,
+            'transition_animation_scale': 0.0,
+            'window_animation_scale': 0.0
+        }
+
+        for key, value in commands.items():
+            command = ' '.join(['settings', 'put', 'global', key, str(value)])
+            self.log.info('setting {} to {}'.format(key, value))
+            self.device.shell(command)
+
+    def restore_animations(self):
+        # animation settings are not restored to default by reboot
+        self.log.info('restoring animations')
+        commands = {
+            'animator_duration_scale': 1.0,
+            'transition_animation_scale': 1.0,
+            'window_animation_scale': 1.0
+        }
+
+        for key, value in commands.items():
+            command = ' '.join(['settings', 'put', 'global', key, str(value)])
+            self.device.shell(command)
+
+    def set_virtual_memory_parameters(self):
+        self.log.info('setting virtual memory parameters')
+        commands = {
+            '/proc/sys/vm/swappiness': 0,
+            '/proc/sys/vm/dirty_ratio': 85,
+            '/proc/sys/vm/dirty_background_ratio': 70
+        }
+
+        for key, value in commands.items():
+            self._set_value_and_check_exitcode(key, value)
+
+    def set_cpu_performance_parameters(self, device_name):
+        self.log.info('setting cpu performance parameters')
+        commands = {}
+
+        if device_name == 'Pixel 2':
+            # MSM8998 (4x 2.35GHz, 4x 1.9GHz)
+            # values obtained from:
+            #   /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies
+            #   /sys/devices/system/cpu/cpufreq/policy4/scaling_available_frequencies
+            commands.update({
+                '/sys/devices/system/cpu/cpufreq/policy0/scaling_governor': 'performance',
+                '/sys/devices/system/cpu/cpufreq/policy4/scaling_governor': 'performance',
+                '/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq': '1900800',
+                '/sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq': '2457600',
+            })
+        elif device_name == 'Moto G (5)':
+            pass
+        else:
+            pass
+
+        for key, value in commands.items():
+            self._set_value_and_check_exitcode(key, value)
+
+    def set_gpu_performance_parameters(self, device_name):
+        self.log.info('setting gpu performance parameters')
+        commands = {
+            '/sys/class/kgsl/kgsl-3d0/bus_split': '0',
+            '/sys/class/kgsl/kgsl-3d0/force_bus_on': '1',
+            '/sys/class/kgsl/kgsl-3d0/force_rail_on': '1',
+            '/sys/class/kgsl/kgsl-3d0/force_clk_on': '1',
+            '/sys/class/kgsl/kgsl-3d0/force_no_nap': '1',
+            '/sys/class/kgsl/kgsl-3d0/idle_timer': '1000000',
+        }
+
+        if device_name == 'Pixel 2':
+            # Adreno 540 (710MHz)
+            # values obtained from:
+            #   /sys/devices/soc/5000000.qcom,kgsl-3d0/kgsl/kgsl-3d0/max_clk_mhz
+            commands.update({
+                '/sys/devices/soc/5000000.qcom,kgsl-3d0/devfreq/'
+                '5000000.qcom,kgsl-3d0/governor': 'performance',
+                '/sys/devices/soc/soc:qcom,kgsl-busmon/devfreq/'
+                'soc:qcom,kgsl-busmon/governor': 'performance',
+                '/sys/devices/soc/5000000.qcom,kgsl-3d0/kgsl/kgsl-3d0/min_clock_mhz': '710',
+            })
+        elif device_name == 'Moto G (5)':
+            pass
+        else:
+            pass
+        for key, value in commands.items():
+            self._set_value_and_check_exitcode(key, value)
+
+    def set_kernel_performance_parameters(self):
+        self.log.info('setting kernel performance parameters')
+        commands = {
+            '/sys/kernel/debug/msm-bus-dbg/shell-client/update_request': '1',
+            '/sys/kernel/debug/msm-bus-dbg/shell-client/mas': '1',
+            '/sys/kernel/debug/msm-bus-dbg/shell-client/ab': '0',
+            '/sys/kernel/debug/msm-bus-dbg/shell-client/slv': '512',
+        }
+        for key, value in commands.items():
+            self._set_value_and_check_exitcode(key, value)
 
     def clear_app_data(self):
         self.log.info("clearing %s app data" % self.config['binary'])
@@ -741,6 +911,8 @@ class RaptorAndroid(Raptor):
             self.log.error("Exception: %s %s" % (type(e).__name__, str(e)))
             if self.config['power_test']:
                 finish_android_power_test(self, test_name)
+            if self.config['cpu_test']:
+                generate_android_cpu_profile(self, test_name)
             raise
 
         # give our control server the device and app info
@@ -774,7 +946,8 @@ class RaptorAndroid(Raptor):
         finally:
             if self.config['power_test']:
                 finish_android_power_test(self, test['name'])
-
+            if self.config['cpu_test']:
+                generate_android_cpu_profile(self, test['name'])
             self.run_test_teardown()
 
     def run_test_cold(self, test, timeout=None):
@@ -806,6 +979,9 @@ class RaptorAndroid(Raptor):
 
         if self.config['power_test']:
             init_android_power_test(self)
+
+        if self.config['cpu_test']:
+            generate_android_cpu_profile(self, test['name'])
 
         for test['browser_cycle'] in range(1, test['expected_browser_cycles'] + 1):
 
@@ -875,6 +1051,9 @@ class RaptorAndroid(Raptor):
                       "page cycles" % test['name'])
         if self.config['power_test']:
             init_android_power_test(self)
+
+        if self.config['cpu_test']:
+            generate_android_cpu_profile(self, test['name'])
 
         self.run_test_setup(test)
         self.create_raptor_sdcard_folder()
@@ -977,6 +1156,7 @@ def main(args=sys.argv[1:]):
                           symbols_path=args.symbols_path,
                           host=args.host,
                           power_test=args.power_test,
+                          cpu_test=args.cpu_test,
                           memory_test=args.memory_test,
                           is_release_build=args.is_release_build,
                           debug_mode=args.debug_mode,
@@ -988,6 +1168,9 @@ def main(args=sys.argv[1:]):
 
     raptor.create_browser_profile()
     raptor.create_browser_handler()
+    if type(raptor) == RaptorAndroid:
+        # only Raptor Android supports device performance tuning
+        raptor.tune_performance()
     raptor.start_control_server()
 
     try:

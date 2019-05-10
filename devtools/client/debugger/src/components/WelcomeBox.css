@@ -11,6 +11,7 @@
   padding: 50px 0 0 0;
   text-align: center;
   background-color: var(--theme-toolbar-background);
+  overflow: hidden;
   font-weight: lighter;
   z-index: 10;
   user-select: none;

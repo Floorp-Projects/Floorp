@@ -31,6 +31,8 @@
 
 #include "PlatformMacros.h"
 
+#include "GeckoProfiler.h"
+
 #include "mozilla/Logging.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
@@ -39,26 +41,6 @@
 #include <functional>
 #include <stdint.h>
 
-// We need a definition of gettid(), but old glibc versions don't provide a
-// wrapper for it.
-#if defined(__GLIBC__)
-#  include <unistd.h>
-#  include <sys/syscall.h>
-#  define gettid() static_cast<pid_t>(syscall(SYS_gettid))
-#elif defined(GP_OS_darwin)
-#  include <unistd.h>
-#  include <sys/syscall.h>
-#  define gettid() static_cast<pid_t>(syscall(SYS_thread_selfid))
-#elif defined(GP_OS_android)
-#  include <unistd.h>
-#elif defined(GP_OS_windows)
-#  include <windows.h>
-#  include <process.h>
-#  ifndef getpid
-#    define getpid _getpid
-#  endif
-#endif
-
 extern mozilla::LazyLogModule gProfilerLog;
 
 // These are for MOZ_LOG="prof:3" or higher. It's the default logging level for
@@ -66,28 +48,16 @@ extern mozilla::LazyLogModule gProfilerLog;
 #define LOG_TEST MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Info)
 #define LOG(arg, ...)                            \
   MOZ_LOG(gProfilerLog, mozilla::LogLevel::Info, \
-          ("[%d] " arg, getpid(), ##__VA_ARGS__))
+          ("[%d] " arg, profiler_current_process_id(), ##__VA_ARGS__))
 
 // These are for MOZ_LOG="prof:4" or higher. It should be used for logging that
 // is somewhat more verbose than LOG.
 #define DEBUG_LOG_TEST MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Debug)
 #define DEBUG_LOG(arg, ...)                       \
   MOZ_LOG(gProfilerLog, mozilla::LogLevel::Debug, \
-          ("[%d] " arg, getpid(), ##__VA_ARGS__))
+          ("[%d] " arg, profiler_current_process_id(), ##__VA_ARGS__))
 
 typedef uint8_t* Address;
-
-// ----------------------------------------------------------------------------
-// Thread
-//
-// This class has static methods for the different platform specific
-// functions. Add methods here to cope with differences between the
-// supported platforms.
-
-class Thread {
- public:
-  static int GetCurrentId();
-};
 
 // ----------------------------------------------------------------------------
 // Miscellaneous

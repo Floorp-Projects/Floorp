@@ -105,7 +105,15 @@ web-platform-tests-reftests:
         name: web-platform-tests-reftests
     schedules-component: web-platform-tests-reftests
     treeherder-symbol: W(Wr)
-    chunks: 6
+    chunks:
+        by-test-platform:
+            .*-ccov/debug: 8
+            linux64(-qr|-asan)/.*: 6
+            linux64(-shippable|-devedition)?/opt: 3
+            macosx64/debug: 6
+            windows.*-(32|64)(-qr)?/debug: 5
+            android.*: 6
+            default: 4
     e10s:
         by-test-platform:
             linux32/debug: both

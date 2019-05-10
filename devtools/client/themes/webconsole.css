@@ -233,6 +233,11 @@ a {
   transform: rotate(180deg);
 }
 
+.message > .icon.logpoint {
+  background-image: url(resource://devtools/client/debugger/images/webconsole-logpoint.svg);
+  color: var(--theme-graphs-purple);
+}
+
 /*
  * we flip the next.svg icon by default because when we're
  * not paused, we would jump back. We remove the transform here

@@ -29,7 +29,7 @@
 
 #include "LulMainInt.h"
 
-#include "platform-linux-lul.h"  // for gettid()
+#include "GeckoProfiler.h"  // for profiler_current_thread_id()
 
 // Set this to 1 for verbose logging
 #define DEBUG_MAIN 0
@@ -684,19 +684,20 @@ class PriMap {
 // LUL                                                        //
 ////////////////////////////////////////////////////////////////
 
-#define LUL_LOG(_str)                                                  \
-  do {                                                                 \
-    char buf[200];                                                     \
-    SprintfLiteral(buf, "LUL: pid %d tid %d lul-obj %p: %s", getpid(), \
-                   gettid(), this, (_str));                            \
-    buf[sizeof(buf) - 1] = 0;                                          \
-    mLog(buf);                                                         \
+#define LUL_LOG(_str)                                           \
+  do {                                                          \
+    char buf[200];                                              \
+    SprintfLiteral(buf, "LUL: pid %d tid %d lul-obj %p: %s",    \
+                   profiler_current_process_id(),               \
+                   profiler_current_thread_id(), this, (_str)); \
+    buf[sizeof(buf) - 1] = 0;                                   \
+    mLog(buf);                                                  \
   } while (0)
 
 LUL::LUL(void (*aLog)(const char*))
     : mLog(aLog),
       mAdminMode(true),
-      mAdminThreadId(gettid()),
+      mAdminThreadId(profiler_current_thread_id()),
       mPriMap(new PriMap(aLog)),
       mSegArray(new SegArray()),
       mUSU(new UniqueStringUniverse()) {
@@ -749,7 +750,7 @@ void LUL::EnableUnwinding() {
   LUL_LOG("LUL::EnableUnwinding");
   // Don't assert for Admin mode here.  That is, tolerate a call here
   // if we are already in Unwinding mode.
-  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(profiler_current_thread_id() == mAdminThreadId);
 
   mAdminMode = false;
 }
@@ -757,7 +758,7 @@ void LUL::EnableUnwinding() {
 void LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize, const char* aFileName,
                          const void* aMappedImage) {
   MOZ_RELEASE_ASSERT(mAdminMode);
-  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(profiler_current_thread_id() == mAdminThreadId);
 
   mLog(":\n");
   char buf[200];
@@ -802,7 +803,7 @@ void LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize, const char* aFileName,
 
 void LUL::NotifyExecutableArea(uintptr_t aRXavma, size_t aSize) {
   MOZ_RELEASE_ASSERT(mAdminMode);
-  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(profiler_current_thread_id() == mAdminThreadId);
 
   mLog(":\n");
   char buf[200];
@@ -822,7 +823,7 @@ void LUL::NotifyExecutableArea(uintptr_t aRXavma, size_t aSize) {
 
 void LUL::NotifyBeforeUnmap(uintptr_t aRXavmaMin, uintptr_t aRXavmaMax) {
   MOZ_RELEASE_ASSERT(mAdminMode);
-  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(profiler_current_thread_id() == mAdminThreadId);
 
   mLog(":\n");
   char buf[100];
@@ -850,7 +851,7 @@ void LUL::NotifyBeforeUnmap(uintptr_t aRXavmaMin, uintptr_t aRXavmaMax) {
 
 size_t LUL::CountMappings() {
   MOZ_RELEASE_ASSERT(mAdminMode);
-  MOZ_RELEASE_ASSERT(gettid() == mAdminThreadId);
+  MOZ_RELEASE_ASSERT(profiler_current_thread_id() == mAdminThreadId);
 
   return mPriMap->CountSecMaps();
 }

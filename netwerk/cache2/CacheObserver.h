@@ -106,7 +106,7 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static Atomic<uint32_t, Relaxed> sDiskCacheCapacity;
   static uint32_t sDiskFreeSpaceSoftLimit;
   static uint32_t sDiskFreeSpaceHardLimit;
-  static bool sSmartCacheSizeEnabled;
+  static Atomic<bool, Relaxed> sSmartCacheSizeEnabled;
   static uint32_t sPreloadChunkCount;
   static int32_t sMaxMemoryEntrySize;
   static int32_t sMaxDiskEntrySize;

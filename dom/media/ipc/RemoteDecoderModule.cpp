@@ -93,10 +93,6 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
   }
 
   RefPtr<RemoteAudioDecoderChild> child = new RemoteAudioDecoderChild();
-  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
-      child, mManagerThread,
-      RemoteDecoderManagerChild::GetManagerAbstractThread());
-
   MediaResult result(NS_OK);
   RefPtr<Runnable> task = NS_NewRunnableFunction(
       "RemoteDecoderModule::CreateAudioDecoder", [&, child]() {
@@ -111,6 +107,10 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateAudioDecoder(
     return nullptr;
   }
 
+  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
+      child, mManagerThread,
+      RemoteDecoderManagerChild::GetManagerAbstractThread());
+
   return object.forget();
 }
 
@@ -123,10 +123,6 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
   }
 
   RefPtr<RemoteVideoDecoderChild> child = new RemoteVideoDecoderChild();
-  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
-      child, mManagerThread,
-      RemoteDecoderManagerChild::GetManagerAbstractThread());
-
   MediaResult result(NS_OK);
   RefPtr<Runnable> task = NS_NewRunnableFunction(
       "RemoteDecoderModule::CreateVideoDecoder", [&, child]() {
@@ -141,6 +137,10 @@ already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
     }
     return nullptr;
   }
+
+  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
+      child, mManagerThread,
+      RemoteDecoderManagerChild::GetManagerAbstractThread());
 
   return object.forget();
 }

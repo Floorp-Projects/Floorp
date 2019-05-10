@@ -1274,8 +1274,8 @@ bool Debugger::wrapEnvironment(JSContext* cx, Handle<Env*> env,
       return false;
     }
 
-    CrossCompartmentKey key(object, env,
-                            CrossCompartmentKey::DebuggerEnvironment);
+    CrossCompartmentKey key(
+        CrossCompartmentKey::DebuggeeEnvironment(object, env));
     if (!object->compartment()->putWrapper(cx, key, ObjectValue(*envobj))) {
       NukeDebuggerWrapper(envobj);
       environments.remove(env);
@@ -1372,7 +1372,7 @@ bool Debugger::wrapDebuggeeObject(JSContext* cx, HandleObject obj,
     }
 
     if (obj->compartment() != object->compartment()) {
-      CrossCompartmentKey key(object, obj, CrossCompartmentKey::DebuggerObject);
+      CrossCompartmentKey key(CrossCompartmentKey::DebuggeeObject(object, obj));
       if (!object->compartment()->putWrapper(cx, key, ObjectValue(*dobj))) {
         NukeDebuggerWrapper(dobj);
         objects.remove(obj);
@@ -6082,9 +6082,7 @@ JSObject* Debugger::wrapVariantReferent(
     Handle<WasmInstanceObject*> untaggedReferent =
         referent.template as<WasmInstanceObject*>();
     Rooted<CrossCompartmentKey> key(
-        cx, CrossCompartmentKey(
-                object, untaggedReferent,
-                CrossCompartmentKey::DebuggerObjectKind::DebuggerWasmScript));
+        cx, CrossCompartmentKey::DebuggeeWasmScript(object, untaggedReferent));
     obj = wrapVariantReferent<DebuggerScriptReferent, WasmInstanceObject*,
                               WasmInstanceWeakMap>(cx, wasmInstanceScripts, key,
                                                    referent);
@@ -8368,18 +8366,14 @@ JSObject* Debugger::wrapVariantReferent(
     Handle<ScriptSourceObject*> untaggedReferent =
         referent.template as<ScriptSourceObject*>();
     Rooted<CrossCompartmentKey> key(
-        cx, CrossCompartmentKey(
-                object, untaggedReferent,
-                CrossCompartmentKey::DebuggerObjectKind::DebuggerSource));
+        cx, CrossCompartmentKey::DebuggeeSource(object, untaggedReferent));
     obj = wrapVariantReferent<DebuggerSourceReferent, ScriptSourceObject*,
                               SourceWeakMap>(cx, sources, key, referent);
   } else {
     Handle<WasmInstanceObject*> untaggedReferent =
         referent.template as<WasmInstanceObject*>();
     Rooted<CrossCompartmentKey> key(
-        cx, CrossCompartmentKey(
-                object, untaggedReferent,
-                CrossCompartmentKey::DebuggerObjectKind::DebuggerWasmSource));
+        cx, CrossCompartmentKey::DebuggeeSource(object, untaggedReferent));
     obj = wrapVariantReferent<DebuggerSourceReferent, WasmInstanceObject*,
                               WasmInstanceWeakMap>(cx, wasmInstanceSources, key,
                                                    referent);

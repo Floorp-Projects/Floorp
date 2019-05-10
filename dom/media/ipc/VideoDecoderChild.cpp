@@ -86,6 +86,8 @@ mozilla::ipc::IPCResult VideoDecoderChild::RecvError(const nsresult& aError) {
   mDecodePromise.RejectIfExists(aError, __func__);
   mDrainPromise.RejectIfExists(aError, __func__);
   mFlushPromise.RejectIfExists(aError, __func__);
+  mShutdownSelfRef = nullptr;
+  mShutdownPromise.ResolveIfExists(true, __func__);
   return IPC_OK();
 }
 
@@ -115,6 +117,14 @@ mozilla::ipc::IPCResult VideoDecoderChild::RecvFlushComplete() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult VideoDecoderChild::RecvShutdownComplete() {
+  AssertOnManagerThread();
+  MOZ_ASSERT(mShutdownSelfRef);
+  mShutdownSelfRef = nullptr;
+  mShutdownPromise.ResolveIfExists(true, __func__);
+  return IPC_OK();
+}
+
 void VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (aWhy == AbnormalShutdown) {
     // GPU process crashed, record the time and send back to MFR for telemetry.
@@ -132,6 +142,8 @@ void VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
             mDecodePromise.RejectIfExists(error, __func__);
             mDrainPromise.RejectIfExists(error, __func__);
             mFlushPromise.RejectIfExists(error, __func__);
+            mShutdownSelfRef = nullptr;
+            mShutdownPromise.ResolveIfExists(true, __func__);
             // Make sure the next request will be rejected accordingly if ever
             // called.
             mNeedNewDecoder = true;
@@ -189,6 +201,7 @@ MediaResult VideoDecoderChild::InitIPDL(
 }
 
 void VideoDecoderChild::DestroyIPDL() {
+  AssertOnManagerThread();
   if (mCanSend) {
     PVideoDecoderChild::Send__delete__(this);
   }
@@ -277,13 +290,22 @@ RefPtr<MediaDataDecoder::DecodePromise> VideoDecoderChild::Drain() {
   return mDrainPromise.Ensure(__func__);
 }
 
-void VideoDecoderChild::Shutdown() {
+RefPtr<ShutdownPromise> VideoDecoderChild::Shutdown() {
   AssertOnManagerThread();
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  if (mCanSend) {
-    SendShutdown();
-  }
   mInitialized = false;
+  if (mNeedNewDecoder) {
+    MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
+    error.SetGPUCrashTimeStamp(mGPUCrashTime);
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  }
+  if (!mCanSend) {
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  }
+  SendShutdown();
+  MOZ_ASSERT(!mShutdownSelfRef);
+  mShutdownSelfRef = this;
+  return mShutdownPromise.Ensure(__func__);
 }
 
 bool VideoDecoderChild::IsHardwareAccelerated(

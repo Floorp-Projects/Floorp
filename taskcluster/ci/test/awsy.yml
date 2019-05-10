@@ -44,6 +44,7 @@ awsy-tp6:
     mozharness:
         extra-options:
             - --tp6
+    tier: 3
 
 awsy-dmd:
     description: "Are we slim yet - dmd enabled"

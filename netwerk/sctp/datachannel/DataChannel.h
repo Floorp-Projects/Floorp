@@ -11,7 +11,9 @@
 #  define SCTP_DTLS_SUPPORTED 1
 #endif
 
+#include <memory>
 #include <string>
+#include <vector>
 #include <errno.h>
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
@@ -20,7 +22,7 @@
 #include "nsThreadUtils.h"
 #include "nsTArray.h"
 #include "nsDeque.h"
-#include "nsIInputStream.h"
+#include "mozilla/dom/Blob.h"
 #include "mozilla/Mutex.h"
 #include "DataChannelProtocol.h"
 #include "DataChannelListener.h"
@@ -229,7 +231,7 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
 #ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void* data);
-  void SendPacket(nsAutoPtr<MediaPacket> packet);
+  void SendPacket(std::unique_ptr<MediaPacket>&& packet);
   void SctpDtlsInput(const std::string& aTransportId, MediaPacket& packet);
   static int SctpDtlsOutput(void* addr, void* buffer, size_t length,
                             uint8_t tos, uint8_t set_df);
@@ -245,10 +247,12 @@ class DataChannelConnection final : public net::NeckoTargetHolder
                              const nsACString& protocol, uint16_t stream,
                              bool unordered, uint16_t prPolicy,
                              uint32_t prValue);
-  bool SendBufferedMessages(nsTArray<nsAutoPtr<BufferedOutgoingMsg>>& buffer);
-  int SendMsgInternal(OutgoingMsg& msg);
+  bool SendBufferedMessages(nsTArray<nsAutoPtr<BufferedOutgoingMsg>>& buffer,
+                            size_t* aWritten);
+  int SendMsgInternal(OutgoingMsg& msg, size_t* aWritten);
   int SendMsgInternalOrBuffer(nsTArray<nsAutoPtr<BufferedOutgoingMsg>>& buffer,
-                              OutgoingMsg& msg, bool& buffered);
+                              OutgoingMsg& msg, bool& buffered,
+                              size_t* aWritten);
   int SendDataMsgInternalOrBuffer(DataChannel& channel, const uint8_t* data,
                                   size_t len, uint32_t ppid);
   int SendDataMsg(DataChannel& channel, const uint8_t* data, size_t len,
@@ -337,6 +341,11 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   uint8_t mPendingType;
   nsCString mRecvBuffer;
 
+  // Workaround to prevent a message from being received on main before the
+  // sender sees the decrease in bufferedAmount.
+  bool mDeferSend;
+  std::vector<std::unique_ptr<MediaPacket>> mDeferredSend;
+
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool mShutdown;
 #endif
@@ -363,7 +372,7 @@ class DataChannel {
   DataChannel(DataChannelConnection* connection, uint16_t stream,
               uint16_t state, const nsACString& label,
               const nsACString& protocol, uint16_t policy, uint32_t value,
-              uint32_t flags, DataChannelListener* aListener,
+              bool ordered, bool negotiated, DataChannelListener* aListener,
               nsISupports* aContext)
       : mListenerLock("netwerk::sctp::DataChannel"),
         mListener(aListener),
@@ -375,12 +384,19 @@ class DataChannel {
         mStream(stream),
         mPrPolicy(policy),
         mPrValue(value),
-        mFlags(flags),
+        mOrdered(ordered),
+        mFlags(0),
         mId(0),
         mIsRecvBinary(false),
-        mBufferedThreshold(0)  // default from spec
-        ,
+        mBufferedThreshold(0),  // default from spec
+        mBufferedAmount(0),
         mMainThreadEventTarget(connection->GetNeckoTarget()) {
+    if (!ordered) {
+      mFlags |= DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED;
+    }
+    if (negotiated) {
+      mFlags |= DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED;
+    }
     NS_ASSERTION(mConnection, "NULL connection");
   }
 
@@ -415,7 +431,7 @@ class DataChannel {
   void SendBinaryMsg(const nsACString& aMsg, ErrorResult& aRv);
 
   // Send a binary blob
-  void SendBinaryStream(nsIInputStream* aBlob, ErrorResult& aRv);
+  void SendBinaryBlob(dom::Blob& aBlob, ErrorResult& aRv);
 
   uint16_t GetType() { return mPrPolicy; }
 
@@ -423,27 +439,15 @@ class DataChannel {
 
   dom::Nullable<uint16_t> GetMaxRetransmits() const;
 
-  bool GetOrdered() {
-    return !(mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED);
-  }
+  bool GetOrdered() { return mOrdered; }
+
+  void IncrementBufferedAmount(uint32_t aSize, ErrorResult& aRv);
+  void DecrementBufferedAmount(uint32_t aSize);
 
   // Amount of data buffered to send
   uint32_t GetBufferedAmount() {
-    if (!mConnection) {
-      return 0;
-    }
-
-    MutexAutoLock lock(mConnection->mLock);
-    size_t buffered = GetBufferedAmountLocked();
-
-#if (SIZE_MAX > UINT32_MAX)
-    if (buffered >
-        UINT32_MAX) {  // paranoia - >4GB buffered is very very unlikely
-      buffered = UINT32_MAX;
-    }
-#endif
-
-    return buffered;
+    MOZ_ASSERT(NS_IsMainThread());
+    return mBufferedAmount;
   }
 
   // Trigger amount for generating BufferedAmountLow events
@@ -480,7 +484,6 @@ class DataChannel {
   friend class DataChannelConnection;
 
   nsresult AddDataToBinaryMsg(const char* data, uint32_t size);
-  size_t GetBufferedAmountLocked() const;
   bool EnsureValidStream(ErrorResult& aRv);
 
   RefPtr<DataChannelConnection> mConnection;
@@ -490,10 +493,14 @@ class DataChannel {
   uint16_t mStream;
   uint16_t mPrPolicy;
   uint32_t mPrValue;
+  const bool mOrdered;
   uint32_t mFlags;
   uint32_t mId;
   bool mIsRecvBinary;
   size_t mBufferedThreshold;
+  // Read/written on main only. Decremented via message-passing, because the
+  // spec requires us to queue a task for this.
+  size_t mBufferedAmount;
   nsCString mRecvBuffer;
   nsTArray<nsAutoPtr<BufferedOutgoingMsg>>
       mBufferedData;  // GUARDED_BY(mConnection->mLock)
@@ -514,8 +521,6 @@ class DataChannelOnMessageAvailable : public Runnable {
     ON_CHANNEL_CLOSED,
     ON_DATA_STRING,
     ON_DATA_BINARY,
-    BUFFER_LOW_THRESHOLD,
-    NO_LONGER_BUFFERED,
   }; /* types */
 
   DataChannelOnMessageAvailable(
@@ -561,9 +566,7 @@ class DataChannelOnMessageAvailable : public Runnable {
       case ON_DATA_STRING:
       case ON_DATA_BINARY:
       case ON_CHANNEL_OPEN:
-      case ON_CHANNEL_CLOSED:
-      case BUFFER_LOW_THRESHOLD:
-      case NO_LONGER_BUFFERED: {
+      case ON_CHANNEL_CLOSED: {
         MutexAutoLock lock(mChannel->mListenerLock);
         if (!mChannel->mListener) {
           DATACHANNEL_LOG((
@@ -584,12 +587,6 @@ class DataChannelOnMessageAvailable : public Runnable {
             break;
           case ON_CHANNEL_CLOSED:
             mChannel->mListener->OnChannelClosed(mChannel->mContext);
-            break;
-          case BUFFER_LOW_THRESHOLD:
-            mChannel->mListener->OnBufferLow(mChannel->mContext);
-            break;
-          case NO_LONGER_BUFFERED:
-            mChannel->mListener->NotBuffered(mChannel->mContext);
             break;
         }
         break;

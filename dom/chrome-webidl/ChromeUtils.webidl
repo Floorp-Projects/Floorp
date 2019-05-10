@@ -359,7 +359,7 @@ partial namespace ChromeUtils {
   /**
    * Request performance metrics to the current process & all content processes.
    */
-  [Throws, Func="DOMPrefs::dom_performance_enable_scheduler_timing"]
+  [Throws]
   Promise<sequence<PerformanceInfoDictionary>> requestPerformanceMetrics();
 
   /**

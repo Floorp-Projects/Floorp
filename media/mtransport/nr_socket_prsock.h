@@ -94,6 +94,10 @@ namespace net {
 union NetAddr;
 }
 
+namespace dom {
+class UDPSocketChild;
+}  // namespace dom
+
 class NrSocketBase {
  public:
   NrSocketBase() : connect_invoked_(false), poll_flags_(0) {
@@ -242,8 +246,7 @@ class NrUdpSocketIpc : public NrSocketIpc {
                                   const nsACString& filename,
                                   uint32_t line_number);
   NS_IMETHODIMP CallListenerReceivedData(const nsACString& host, uint16_t port,
-                                         const uint8_t* data,
-                                         uint32_t data_length);
+                                         const nsTArray<uint8_t>& data);
   NS_IMETHODIMP CallListenerOpened();
   NS_IMETHODIMP CallListenerConnected();
   NS_IMETHODIMP CallListenerClosed();
@@ -277,7 +280,7 @@ class NrUdpSocketIpc : public NrSocketIpc {
   void sendto_i(const net::NetAddr& addr, nsAutoPtr<MediaPacket> buf);
   void close_i();
 #if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
-  static void destroy_i(nsIUDPSocketChild* aChild,
+  static void destroy_i(dom::UDPSocketChild* aChild,
                         nsCOMPtr<nsIEventTarget>& aStsThread);
 #endif
   // STS thread executor
@@ -289,7 +292,8 @@ class NrUdpSocketIpc : public NrSocketIpc {
 
   std::queue<RefPtr<nr_udp_message>> received_msgs_;
 
-  RefPtr<nsIUDPSocketChild> socket_child_;  // only accessed from the io_thread
+  // only accessed from the io_thread
+  RefPtr<dom::UDPSocketChild> socket_child_;
 };
 
 // The socket child holds onto one of these, which just passes callbacks

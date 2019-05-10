@@ -548,11 +548,18 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             this.containerWidth * this._tranferPercentageToFloat(this.div.style.left),
           width = isWritingDirectionHorizontal ?
             this.containerWidth * this._tranferPercentageToFloat(this.div.style.width) :
-            this.div.offsetWidth,
+            this.div.clientWidthDouble,
           height = isWritingDirectionHorizontal ?
-            this.div.offsetHeight :
+            this.div.clientHeightDouble :
             this.containerHeight * this._tranferPercentageToFloat(this.div.style.height);
       return { top, left, width, height };
+    }
+
+    getFirstLineBoxSize() {
+      // This size would be automatically adjusted by writing direction. When
+      // direction is horizontal, it represents box's height. When direction is
+      // vertical, it represents box's width.
+      return this.div.firstLineBoxBSize;
     }
 
     /**
@@ -848,20 +855,19 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
              this.right <= container.right;
     }
 
-    // Check if this box is entirely within the container or it is overlapping
-    // on the edge opposite of the axis direction passed. For example, if "+x" is
-    // passed and the box is overlapping on the left edge of the container, then
-    // return true.
-    overlapsOppositeAxis(container, axis) {
+    // Check whether this box is passed over the specfic axis boundary. The axis
+    // is based on the canvas coordinates, the `+x` is rightward and `+y` is
+    // downward.
+    isOutsideTheAxisBoundary(container, axis) {
       switch (axis) {
       case "+x":
-        return this.left < container.left;
-      case "-x":
         return this.right > container.right;
+      case "-x":
+        return this.left < container.left;
       case "+y":
-        return this.top < container.top;
-      case "-y":
         return this.bottom > container.bottom;
+      case "-y":
+        return this.top < container.top;
       }
     }
 
@@ -896,7 +902,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       // width or height of the box would be changed when the text is wrapped to
       // different line. Ex. if text is wrapped to two line, the height or width
       // of the box would become 2 times of font size.
-      let step = parseFloat(styleBox.fontSize.replace("px", ""));
+      let step = styleBox.getFirstLineBoxSize();
       if (step == 0) {
         return;
       }
@@ -996,9 +1002,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           outsideAreaPercentage = 1; // Highest possible so the first thing we get is better.
       let hasFoundBestPosition = false;
       const axis = ["-y", "-x", "+x", "+y"];
-      const toMove = parseFloat(styleBox.fontSize.replace("px", ""));
+      const toMove = styleBox.getFirstLineBoxSize();
       for (let i = 0; i < axis.length && !hasFoundBestPosition; i++) {
-        while (box.overlapsOppositeAxis(containerBox, axis[i]) ||
+        while (!box.isOutsideTheAxisBoundary(containerBox, axis[i]) &&
                (!box.within(containerBox) || box.overlapsAny(outputBoxes))) {
           box.move(axis[i], toMove);
         }

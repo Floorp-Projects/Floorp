@@ -237,31 +237,43 @@ PeerConnectionTest.prototype.closeDataChannels = function(index) {
  * @param {DataChannelWrapper} [options.targetChannel=pcRemote.dataChannels[length - 1]]
  *        Data channel to use for receiving the message
  */
-PeerConnectionTest.prototype.send = function(data, options) {
+PeerConnectionTest.prototype.send = async function(data, options) {
   options = options || { };
-  var source = options.sourceChannel ||
+  const source = options.sourceChannel ||
            this.pcLocal.dataChannels[this.pcLocal.dataChannels.length - 1];
-  var target = options.targetChannel ||
+  const target = options.targetChannel ||
            this.pcRemote.dataChannels[this.pcRemote.dataChannels.length - 1];
-  var bufferedamount = options.bufferedAmountLowThreshold || 0;
-  var bufferlow_fired = true; // to make testing later easier
-  if (bufferedamount != 0) {
-    source.bufferedAmountLowThreshold = bufferedamount;
-    bufferlow_fired = false;
-    source.onbufferedamountlow = function() {
-      bufferlow_fired = true;
-    };
-  }
+  source.bufferedAmountLowThreshold = options.bufferedAmountLowThreshold || 0;
+
+  const getSizeInBytes = d => {
+    if (d instanceof Blob) {
+      return d.size;
+    } else if (d instanceof ArrayBuffer) {
+      return d.byteLength;
+    } else if (d instanceof String || typeof d === "string") {
+      return (new TextEncoder('utf-8')).encode(d).length;
+    } else {
+      ok(false);
+    }
+  };
+
+  const expectedSizeInBytes = getSizeInBytes(data);
+  const bufferedAmount = source.bufferedAmount;
+
+  source.send(data);
+  is(source.bufferedAmount, expectedSizeInBytes + bufferedAmount,
+    `Buffered amount should be ${expectedSizeInBytes}`);
+
+  await new Promise(resolve => source.onbufferedamountlow = resolve);
 
   return new Promise(resolve => {
     // Register event handler for the target channel
       target.onmessage = e => {
-        ok(bufferlow_fired, "bufferedamountlow event fired");
+        is(getSizeInBytes(e.data), expectedSizeInBytes,
+          `Expected to receive the same number of bytes as we sent (${expectedSizeInBytes})`);
 	resolve({ channel: target, data: e.data });
     };
-
-    source.send(data);
-  });
+  });;
 };
 
 /**
@@ -715,6 +727,10 @@ DataChannelWrapper.prototype = {
    */
   get readyState() {
     return this._channel.readyState;
+  },
+
+  get bufferedAmount() {
+    return this._channel.bufferedAmount;
   },
 
   /**

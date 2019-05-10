@@ -173,6 +173,7 @@ EXPORTS.mozilla.net += [
     'ReferrerPolicy.h',
     'RequestContextService.h',
     'SimpleChannelParent.h',
+    'SSLTokensCache.h',
     'TCPFastOpen.h',
 ]
 
@@ -241,6 +242,7 @@ UNIFIED_SOURCES += [
     'SimpleBuffer.cpp',
     'SimpleChannel.cpp',
     'SimpleChannelParent.cpp',
+    'SSLTokensCache.cpp',
     'TCPFastOpenLayer.cpp',
     'ThrottleQueue.cpp',
     'Tickler.cpp',

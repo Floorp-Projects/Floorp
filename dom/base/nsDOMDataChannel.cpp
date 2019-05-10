@@ -16,6 +16,7 @@
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/Blob.h"
 
 #include "nsError.h"
 #include "nsContentUtils.h"
@@ -170,7 +171,7 @@ void nsDOMDataChannel::Close() {
 // All of the following is copy/pasted from WebSocket.cpp.
 void nsDOMDataChannel::Send(const nsAString& aData, ErrorResult& aRv) {
   NS_ConvertUTF16toUTF8 msgString(aData);
-  Send(nullptr, msgString, false, aRv);
+  Send(nullptr, &msgString, false, aRv);
 }
 
 void nsDOMDataChannel::Send(Blob& aData, ErrorResult& aRv) {
@@ -192,7 +193,7 @@ void nsDOMDataChannel::Send(Blob& aData, ErrorResult& aRv) {
     return;
   }
 
-  Send(msgStream, EmptyCString(), true, aRv);
+  Send(&aData, nullptr, true, aRv);
 }
 
 void nsDOMDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
@@ -206,7 +207,7 @@ void nsDOMDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
   char* data = reinterpret_cast<char*>(aData.Data());
 
   nsDependentCSubstring msgString(data, len);
-  Send(nullptr, msgString, true, aRv);
+  Send(nullptr, &msgString, true, aRv);
 }
 
 void nsDOMDataChannel::Send(const ArrayBufferView& aData, ErrorResult& aRv) {
@@ -220,12 +221,12 @@ void nsDOMDataChannel::Send(const ArrayBufferView& aData, ErrorResult& aRv) {
   char* data = reinterpret_cast<char*>(aData.Data());
 
   nsDependentCSubstring msgString(data, len);
-  Send(nullptr, msgString, true, aRv);
+  Send(nullptr, &msgString, true, aRv);
 }
 
-void nsDOMDataChannel::Send(nsIInputStream* aMsgStream,
-                            const nsACString& aMsgString, bool aIsBinary,
-                            ErrorResult& aRv) {
+void nsDOMDataChannel::Send(mozilla::dom::Blob* aMsgBlob,
+                            const nsACString* aMsgString, bool aIsBinary,
+                            mozilla::ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   uint16_t state = mozilla::DataChannel::CLOSED;
   if (!mSentClose) {
@@ -247,13 +248,13 @@ void nsDOMDataChannel::Send(nsIInputStream* aMsgStream,
   MOZ_ASSERT(state == mozilla::DataChannel::OPEN,
              "Unknown state in nsDOMDataChannel::Send");
 
-  if (aMsgStream) {
-    mDataChannel->SendBinaryStream(aMsgStream, aRv);
+  if (aMsgBlob) {
+    mDataChannel->SendBinaryBlob(*aMsgBlob, aRv);
   } else {
     if (aIsBinary) {
-      mDataChannel->SendBinaryMsg(aMsgString, aRv);
+      mDataChannel->SendBinaryMsg(*aMsgString, aRv);
     } else {
-      mDataChannel->SendMsg(aMsgString, aRv);
+      mDataChannel->SendMsg(*aMsgString, aRv);
     }
   }
 }

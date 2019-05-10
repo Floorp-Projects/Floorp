@@ -571,6 +571,10 @@ class UrlbarView {
     let title = item._elements.get("title");
     this._addTextContentWithHighlights(
       title, result.title, result.titleHighlights);
+    title._tooltip = result.title;
+    if (title.hasAttribute("overflow")) {
+      title.setAttribute("title", title._tooltip);
+    }
 
     let tagsContainer = item._elements.get("tagsContainer");
     tagsContainer.textContent = "";
@@ -619,8 +623,13 @@ class UrlbarView {
     if (setURL) {
       this._addTextContentWithHighlights(url, result.payload.displayUrl,
                                          result.payloadHighlights.displayUrl || []);
+      url._tooltip = result.payload.displayUrl;
     } else {
       url.textContent = "";
+      url._tooltip = "";
+    }
+    if (url.hasAttribute("overflow")) {
+      url.setAttribute("title", url._tooltip);
     }
 
     if (isVisitAction) {
@@ -651,7 +660,7 @@ class UrlbarView {
     this._removeStaleRowsTimer = this.window.setTimeout(() => {
       this._removeStaleRowsTimer = null;
       this._removeStaleRows();
-    }, 200);
+    }, 400);
   }
 
   _cancelRemoveStaleRowsTimer() {
@@ -820,6 +829,7 @@ class UrlbarView {
         (event.target.classList.contains("urlbarView-url") ||
          event.target.classList.contains("urlbarView-title"))) {
       event.target.toggleAttribute("overflow", true);
+      event.target.setAttribute("title", event.target._tooltip);
     }
   }
 
@@ -828,6 +838,7 @@ class UrlbarView {
         (event.target.classList.contains("urlbarView-url") ||
          event.target.classList.contains("urlbarView-title"))) {
       event.target.toggleAttribute("overflow", false);
+      event.target.removeAttribute("title");
     }
   }
 

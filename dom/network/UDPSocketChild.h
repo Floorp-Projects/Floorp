@@ -22,7 +22,7 @@
 namespace mozilla {
 namespace dom {
 
-class UDPSocketChildBase : public nsIUDPSocketChild {
+class UDPSocketChildBase : public nsISupports {
  public:
   NS_DECL_ISUPPORTS
 
@@ -39,11 +39,48 @@ class UDPSocketChildBase : public nsIUDPSocketChild {
 class UDPSocketChild : public mozilla::net::PUDPSocketChild,
                        public UDPSocketChildBase {
  public:
-  NS_DECL_NSIUDPSOCKETCHILD
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
   UDPSocketChild();
   virtual ~UDPSocketChild();
+
+  uint16_t LocalPort() const { return mLocalPort; }
+  // Local address as UTF-8.
+  const nsACString& LocalAddress() const { return mLocalAddress; }
+
+  nsresult SetFilterName(const nsACString& aFilterName);
+
+  // Allow hosting this over PBackground instead of PNecko
+  nsresult SetBackgroundSpinsEvents();
+
+  // Tell the chrome process to bind the UDP socket to a given local host and
+  // port
+  nsresult Bind(nsIUDPSocketInternal* aSocket, nsIPrincipal* aPrincipal,
+                const nsACString& aHost, uint16_t aPort, bool aAddressReuse,
+                bool aLoopback, uint32_t recvBufferSize,
+                uint32_t sendBufferSize,
+                nsIEventTarget* aMainThreadEventTarget);
+
+  // Tell the chrome process to connect the UDP socket to a given remote host
+  // and port
+  void Connect(nsIUDPSocketInternal* aSocket, const nsACString& aHost,
+               uint16_t aPort);
+
+  // Send the given data to the given address.
+  nsresult SendWithAddress(const NetAddr* aAddr, const uint8_t* aData,
+                           uint32_t aByteLength);
+
+  // Send input stream. This must be a buffered stream implementation.
+  nsresult SendBinaryStream(const nsACString& aHost, uint16_t aPort,
+                            nsIInputStream* aStream);
+
+  void Close();
+
+  // Address and interface are both UTF-8.
+  void JoinMulticast(const nsACString& aMulticastAddress,
+                     const nsACString& aInterface);
+  void LeaveMulticast(const nsACString& aMulticastAddress,
+                      const nsACString& aInterface);
 
   mozilla::ipc::IPCResult RecvCallbackOpened(
       const UDPAddressInfo& aAddressInfo);

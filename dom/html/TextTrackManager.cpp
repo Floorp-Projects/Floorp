@@ -620,21 +620,30 @@ void TextTrackManager::TimeMarchesOn() {
   WEBVTT_LOG("TimeMarchesOn");
 
   // Early return if we don't have any TextTracks or shutting down.
-  if (!mTextTracks || mTextTracks->Length() == 0 || IsShutdown()) {
+  if (!mTextTracks || mTextTracks->Length() == 0 || IsShutdown() ||
+      !mMediaElement) {
     return;
   }
 
+  if (mMediaElement->ReadyState() == HTMLMediaElement_Binding::HAVE_NOTHING) {
+    WEBVTT_LOG(
+        "TimeMarchesOn return because media doesn't contain any data yet");
+    return;
+  }
+
+  if (mMediaElement->Seeking()) {
+    WEBVTT_LOG("TimeMarchesOn return during seeking");
+    return;
+  }
+
+  // Step 1, 2.
   nsISupports* parentObject = mMediaElement->OwnerDoc()->GetParentObject();
   if (NS_WARN_IF(!parentObject)) {
     return;
   }
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
-
-  if (mMediaElement &&
-      (!(mMediaElement->GetPlayedOrSeeked()) || mMediaElement->Seeking())) {
-    WEBVTT_LOG("TimeMarchesOn seeking or post return");
-    return;
-  }
+  RefPtr<TextTrackCueList> currentCues = new TextTrackCueList(window);
+  RefPtr<TextTrackCueList> otherCues = new TextTrackCueList(window);
 
   // Step 3.
   auto currentPlaybackTime =
@@ -646,10 +655,6 @@ void TextTrackManager::TimeMarchesOn() {
       "hasNormalPlayback %d",
       mLastTimeMarchesOnCalled.ToSeconds(), currentPlaybackTime.ToSeconds(),
       hasNormalPlayback);
-
-  // Step 1, 2.
-  RefPtr<TextTrackCueList> currentCues = new TextTrackCueList(window);
-  RefPtr<TextTrackCueList> otherCues = new TextTrackCueList(window);
 
   // The reason we collect other cues is (1) to change active cues to inactive,
   // (2) find missing cues, so we actually no need to process all cues. We just
@@ -824,8 +829,14 @@ void TextTrackManager::NotifyCueUpdated(TextTrackCue* aCue) {
 }
 
 void TextTrackManager::NotifyReset() {
+  // https://html.spec.whatwg.org/multipage/media.html#text-track-cue-active-flag
+  // This will unset all cues' active flag and update the cue display.
   WEBVTT_LOG("NotifyReset");
   mLastTimeMarchesOnCalled = media::TimeUnit::Zero();
+  for (uint32_t idx = 0; idx < mTextTracks->Length(); ++idx) {
+    (*mTextTracks)[idx]->SetCuesInactive();
+  }
+  UpdateCueDisplay();
 }
 
 void TextTrackManager::ReportTelemetryForTrack(TextTrack* aTextTrack) const {
