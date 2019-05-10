@@ -1043,7 +1043,7 @@ class PresShell final : public nsStubDocumentObserver,
    */
   MOZ_CAN_RUN_SCRIPT void DidPaintWindow();
 
-  bool IsVisible();
+  bool IsVisible() const;
   MOZ_CAN_RUN_SCRIPT
   void DispatchSynthMouseMove(WidgetGUIEvent* aEvent);
 
