@@ -51,3 +51,12 @@ JSWindowActorChild implements JSWindowActor;
 callback interface MozObserverCallback {
   void observe(nsISupports subject, ByteString topic, DOMString? data);
 };
+
+// WebIDL callback interface calling the `willDestroy` and `didDestroy`
+// method on JSWindowActors.
+callback MozActorDestroyCallback = void();
+
+dictionary MozActorDestroyCallbacks {
+  [ChromeOnly] MozActorDestroyCallback willDestroy;
+  [ChromeOnly] MozActorDestroyCallback didDestroy;
+};
