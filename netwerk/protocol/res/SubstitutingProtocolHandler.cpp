@@ -326,8 +326,14 @@ nsresult SubstitutingProtocolHandler::NewURI(const nsACString& aSpec,
         last = src + 1;  // src will be incremented by the loop
       }
     }
+    if (*src == '?' || *src == '#') {
+      break;  // Don't escape %2f and %2e in the query or ref parts of the URI
+    }
   }
-  if (last < src) spec.Append(last, src - last);
+
+  if (last < end) {
+    spec.Append(last, end - last);
+  }
 
   nsCOMPtr<nsIURI> base(aBaseURI);
   nsCOMPtr<nsIURL> uri;
