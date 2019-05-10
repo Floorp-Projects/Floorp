@@ -39,7 +39,7 @@ internal class PingMaker(
      * @param pingName The name of the ping
      * @return sequence number
      */
-    private fun getPingSeq(pingName: String): Int {
+    internal fun getPingSeq(pingName: String): Int {
         sharedPreferences?.let {
             val key = "${pingName}_seq"
             val currentValue = it.getInt(key, 0)
@@ -53,6 +53,15 @@ internal class PingMaker(
         // isn't guaranteed to exist if using a mocked ApplicationContext
         logger.error("Couldn't get SharedPreferences object for ping sequence number")
         return 0
+    }
+
+    /**
+     * Reset all ping sequence numbers.
+     */
+    internal fun resetPingSequenceNumbers() {
+        sharedPreferences?.let {
+            it.edit().clear().apply()
+        }
     }
 
     /**

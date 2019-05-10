@@ -37,6 +37,10 @@ permalink: /changelog/
   engine.clearData(BrowsingData.select(BrowsingData.COOKIES), host = "mozilla.org")
   ```
 
+* **service-glean**
+   * Disabling telemetry through `setUploadEnabled` now clears all metrics
+     (except first_run_date) immediately.
+
 # 0.54.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.53.0...v0.54.0)
@@ -181,8 +185,6 @@ permalink: /changelog/
    * ⚠️ **This is a breaking API change**: Custom pings must be explicitly
      registered with Glean at startup time. See
      `components/service/glean/docs/pings/custom.md` for more information.
-   * Disabling telemetry through `setUploadEnabled` now clears all metrics
-     immediately.
 
 * **ui-autocomplete**
   * Added an optional `shouldAutoComplete` boolean to `setText` which is currently used by `updateUrl` in `EditToolbar`.

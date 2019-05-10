@@ -530,8 +530,11 @@ class GleanTest {
     fun `Core metrics should be cleared and restored when disabling and enabling uploading`() {
         assertTrue(GleanInternalMetrics.os.testHasValue())
 
+        Glean.pingMaker.getPingSeq("custom")
+
         Glean.setUploadEnabled(false)
         assertFalse(GleanInternalMetrics.os.testHasValue())
+        assertEquals(0, Glean.pingMaker.getPingSeq("custom"))
 
         Glean.setUploadEnabled(true)
         assertTrue(GleanInternalMetrics.os.testHasValue())

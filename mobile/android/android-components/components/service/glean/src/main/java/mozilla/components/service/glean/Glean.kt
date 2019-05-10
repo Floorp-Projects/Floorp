@@ -45,7 +45,7 @@ open class GleanInternalAPI internal constructor () {
 
     // Include our singletons of StorageEngineManager and PingMaker
     private lateinit var storageEngineManager: StorageEngineManager
-    private lateinit var pingMaker: PingMaker
+    internal lateinit var pingMaker: PingMaker
     internal lateinit var configuration: Configuration
 
     private val gleanLifecycleObserver by lazy { GleanLifecycleObserver() }
@@ -205,6 +205,7 @@ open class GleanInternalAPI internal constructor () {
 
         pingStorageEngine.clearPendingPings()
         storageEngineManager.clearAllStores()
+        pingMaker.resetPingSequenceNumbers()
 
         // This does not clear the experiments store (which isn't managed by the
         // StorageEngineManager), since doing so would mean we would have to have the
