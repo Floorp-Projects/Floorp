@@ -327,7 +327,6 @@ class BaselineCodeGen {
   void pushUint8BytecodeOperandArg(Register scratch);
   void pushUint16BytecodeOperandArg(Register scratch);
 
-  void loadResumeIndexBytecodeOperand(Register dest);
   void loadInt32LengthBytecodeOperand(Register dest);
   void loadInt32IndexBytecodeOperand(ValueOperand dest);
   void loadNumFormalArguments(Register dest);

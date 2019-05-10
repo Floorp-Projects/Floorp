@@ -952,16 +952,6 @@ void BaselineInterpreterCodeGen::pushUint16BytecodeOperandArg(
 }
 
 template <>
-void BaselineCompilerCodeGen::loadResumeIndexBytecodeOperand(Register dest) {
-  masm.move32(Imm32(GET_RESUMEINDEX(handler.pc())), dest);
-}
-
-template <>
-void BaselineInterpreterCodeGen::loadResumeIndexBytecodeOperand(Register dest) {
-  MOZ_CRASH("NYI: interpreter loadResumeIndexBytecodeOperand");
-}
-
-template <>
 void BaselineCompilerCodeGen::loadInt32LengthBytecodeOperand(Register dest) {
   uint32_t length = GET_UINT32(handler.pc());
   MOZ_ASSERT(length <= INT32_MAX,
@@ -5624,12 +5614,16 @@ bool BaselineCodeGen<Handler>::emit_JSOP_YIELD() {
   masm.unboxObject(R0, genObj);
 
   if (frame.hasKnownStackDepth(1)) {
-    // If the expression stack is empty, we can inline the YIELD.
+    // If the expression stack is empty, we can inline the YIELD. Note that this
+    // branch is never taken for the interpreter because it doesn't know static
+    // stack depths.
 
     Register temp = R1.scratchReg();
     Address resumeIndexSlot(genObj,
                             AbstractGeneratorObject::offsetOfResumeIndexSlot());
-    loadResumeIndexBytecodeOperand(temp);
+    jsbytecode* pc = handler.maybePC();
+    MOZ_ASSERT(pc, "compiler-only code never has a null pc");
+    masm.move32(Imm32(GET_RESUMEINDEX(pc)), temp);
     masm.storeValue(JSVAL_TYPE_INT32, temp, resumeIndexSlot);
 
     Register envObj = R0.scratchReg();

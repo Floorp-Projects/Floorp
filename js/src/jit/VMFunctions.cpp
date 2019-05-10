@@ -27,6 +27,7 @@
 #include "jit/VMFunctionList-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/TypeInference-inl.h"
@@ -1052,6 +1053,14 @@ bool InitFunctionEnvironmentObjects(JSContext* cx, BaselineFrame* frame) {
 
 bool NewArgumentsObject(JSContext* cx, BaselineFrame* frame,
                         MutableHandleValue res) {
+  // BaselineCompiler calls ensureHasAnalyzedArgsUsage at compile time. The
+  // interpreters have to do this as part of JSOP_ARGUMENTS.
+  if (frame->runningInInterpreter()) {
+    if (!frame->script()->ensureHasAnalyzedArgsUsage(cx)) {
+      return false;
+    }
+  }
+
   ArgumentsObject* obj = ArgumentsObject::createExpected(cx, frame);
   if (!obj) {
     return false;
@@ -1242,7 +1251,8 @@ bool DebugLeaveThenRecreateLexicalEnv(JSContext* cx, BaselineFrame* frame,
 }
 
 bool DebugLeaveLexicalEnv(JSContext* cx, BaselineFrame* frame, jsbytecode* pc) {
-  MOZ_ASSERT(frame->script()->baselineScript()->hasDebugInstrumentation());
+  MOZ_ASSERT_IF(!frame->runningInInterpreter(),
+                frame->script()->baselineScript()->hasDebugInstrumentation());
   if (cx->realm()->isDebuggee()) {
     DebugEnvironments::onPopLexical(cx, frame, pc);
   }
