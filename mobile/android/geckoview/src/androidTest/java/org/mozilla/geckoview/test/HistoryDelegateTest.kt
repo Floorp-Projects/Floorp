@@ -17,6 +17,7 @@ import org.hamcrest.Matchers.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.util.Callbacks
+import org.junit.Ignore
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -134,6 +135,7 @@ class HistoryDelegateTest : BaseSessionTest() {
     }
 
     @ReuseSession(false)
+    @Ignore //disable test on debug for frequent failures Bug 1544169
     @Test fun onHistoryStateChange() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
 
