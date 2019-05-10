@@ -418,7 +418,6 @@ class BaselineCodeGen {
 
 #define EMIT_OP(op) bool emit_##op();
   OPCODE_LIST(EMIT_OP)
-  EMIT_OP(JSOP_FORCEINTERPRETER)
 #undef EMIT_OP
 
   // JSOP_NEG, JSOP_BITNOT, JSOP_INC, JSOP_DEC
