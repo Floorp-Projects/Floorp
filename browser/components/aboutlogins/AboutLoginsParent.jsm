@@ -6,17 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["AboutLoginsParent"];
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "E10SUtils",
-                               "resource://gre/modules/E10SUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "log", () => {
-  return LoginHelper.createLogger("AboutLoginsParent");
-});
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
 
@@ -39,8 +32,7 @@ var AboutLoginsParent = {
   // Listeners are added in BrowserGlue.jsm
   receiveMessage(message) {
     // Only respond to messages sent from about:logins.
-    if (message.target.remoteType != E10SUtils.PRIVILEGED_REMOTE_TYPE ||
-        message.target.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN) {
+    if (message.target.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN) {
       return;
     }
 
@@ -58,25 +50,6 @@ var AboutLoginsParent = {
 
         let messageManager = message.target.messageManager;
         messageManager.sendAsyncMessage("AboutLogins:AllLogins", this.getAllLogins());
-        break;
-      }
-      case "AboutLogins:UpdateLogin": {
-        let loginUpdates = message.data.login;
-        let logins = LoginHelper.searchLoginsWithObject({guid: loginUpdates.guid});
-        if (!logins || logins.length != 1) {
-          log.warn(`AboutLogins:UpdateLogin: expected to find a login for guid: ${loginUpdates.guid} but found ${(logins || []).length}`);
-          return;
-        }
-
-        let modifiedLogin = logins[0].clone();
-        if (loginUpdates.hasOwnProperty("username")) {
-          modifiedLogin.username = loginUpdates.username;
-        }
-        if (loginUpdates.hasOwnProperty("password")) {
-          modifiedLogin.password = loginUpdates.password;
-        }
-
-        Services.logins.modifyLogin(logins[0], modifiedLogin);
         break;
       }
     }
@@ -122,9 +95,7 @@ var AboutLoginsParent = {
   messageSubscribers(name, details) {
     let subscribers = ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers);
     for (let subscriber of subscribers) {
-      if (subscriber.remoteType != E10SUtils.PRIVILEGED_REMOTE_TYPE ||
-          !subscriber.contentPrincipal ||
-          subscriber.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN) {
+      if (subscriber.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN) {
         this._subscribers.delete(subscriber);
         continue;
       }
