@@ -13,56 +13,48 @@
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
-    <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
   </head>
   <body>
     <login-list data-l10n-id="login-list"
                 data-l10n-attrs="login-list-header"></login-list>
     <login-item data-l10n-id="login-item"
-                data-l10n-attrs="cancel-button,
-                                 delete-button,
-                                 hostname-label,
-                                 password-label,
-                                 save-changes-button,
-                                 time-created,
-                                 time-changed,
-                                 time-used,
-                                 username-label"></login-item>
+                data-l10n-attrs="login-item-hostname, login-item-password, login-item-username, login-item-time-created, login-item-delete"></login-item>
 
     <template id="login-list-template">
-      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list.css">
       <h2></h2>
-      <ol>
-      </ol>
+      <pre>
+      </pre>
     </template>
 
     <template id="login-list-item-template">
-      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list-item.css">
-      <span class="hostname"></span>
-      <span class="username"></span>
+      <style>
+        :host(.selected) {
+          font-weight: bold;
+        }
+      </style>
+      <span class="login-list-item-hostname"></span>
+      <span class="login-list-item-username"></span>
     </template>
 
     <template id="login-item-template">
-      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-item.css">
-      <h2 class="header"></h2>
-      <button class="delete-button"></button>
+      <h2 data-l10n-id="login-item-header"></h2>
       <label>
-        <span class="hostname-label field-label"></span>
-        <span class="hostname"/>
+        <span class="hostname-label"></span>
+        <input name="hostname"/>
       </label>
       <label>
-        <span class="username-label field-label"></span>
+        <span class="username-label"></span>
         <input name="username"/>
       </label>
       <label>
-        <span class="password-label field-label"></span>
+        <span class="password-label"></span>
         <input type="password" name="password"/>
       </label>
-      <p class="time-created meta-info"></p>
-      <p class="time-changed meta-info"></p>
-      <p class="time-used meta-info"></p>
-      <button class="save-changes-button"></button>
-      <button class="cancel-button"></button>
+      <p>
+        <span class="time-created-label"></span>
+        <span class="time-created"></span>
+      </p>
+      <button class="delete-button"></button>
     </template>
   </body>
 </html>
