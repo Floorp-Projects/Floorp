@@ -274,8 +274,9 @@ set_config('MOZ_CLANG_PATH', bindgen_config_paths.clang_path)
 
 
 @depends(target, target_is_unix, cxx_compiler, bindgen_cflags_android,
-         bindgen_config_paths.clang_path)
-def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags, clang_path):
+         bindgen_config_paths.clang_path, macos_sdk)
+def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags,
+                         clang_path, macos_sdk):
     args = [
         '-x', 'c++', '-fno-sized-deallocation',
         '-DTRACING=1', '-DIMPL_LIBXUL', '-DMOZILLA_INTERNAL_API',
@@ -322,6 +323,11 @@ def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags, clang_p
     info = check_compiler([clang_path], 'C++', target)
 
     args += info.flags
+
+    # XXX We wouldn't have to do this if we were using the compiler from
+    # toolchain.configure, rather than just `check_compiler`.
+    if macos_sdk and target.os == 'OSX':
+        args += ['-isysroot', macos_sdk]
 
     return args
 
