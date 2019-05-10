@@ -148,6 +148,10 @@ android {
                     exclude 'org/mozilla/gecko/gcm/**/*.java'
                     exclude 'org/mozilla/gecko/push/**/*.java'
                 }
+
+                if (!mozconfig.substs.MOZ_ANDROID_GOOGLE_PLAY_SERVICES) {
+                    exclude 'org/mozilla/gecko/util/WebAuthnUtils.java'
+                }
             }
 
             res {
@@ -240,6 +244,10 @@ dependencies {
         implementation "com.google.android.gms:play-services-basement:$google_play_services_version"
         implementation "com.google.android.gms:play-services-base:$google_play_services_version"
         implementation "com.google.android.gms:play-services-gcm:$google_play_services_version"
+    }
+
+    if (mozconfig.substs.MOZ_ANDROID_GOOGLE_PLAY_SERVICES) {
+        implementation "com.google.android.gms:play-services-fido:$google_play_services_fido_version"
     }
 
     // Include LeakCanary in local builds, but not in official builds.
@@ -471,7 +479,8 @@ configurations.all {
     resolutionStrategy {
         eachDependency { DependencyResolveDetails details ->
             if (details.requested.group == 'com.google.android.gms'
-                    && details.requested.name != 'play-services-cast') {
+                    && details.requested.name != 'play-services-cast'
+                    && details.requested.name != 'play-services-fido') {
                 details.useVersion "$google_play_services_version"
             }
         }

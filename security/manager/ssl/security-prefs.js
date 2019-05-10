@@ -121,6 +121,7 @@ pref("security.pki.certificate_transparency.mode", 0);
 // Hardware Origin-bound Second Factor Support
 pref("security.webauth.u2f", true);
 pref("security.webauth.webauthn", true);
+pref("security.webauth.webauthn_enable_android_fido2", false);
 // Only one of "enable_softtoken" and "enable_usbtoken" can be true
 // at a time.
 pref("security.webauth.webauthn_enable_softtoken", false);
