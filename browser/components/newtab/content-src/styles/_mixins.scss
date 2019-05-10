@@ -10,7 +10,10 @@
 
 // Note: lineHeight and fontSize should be unitless but can be derived from pixel values
 @mixin limit-visibile-lines($line-count, $line-height, $font-size) {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
   font-size: $font-size * 1px;
+  -webkit-line-clamp: $line-count;
   line-height: $line-height * 1px;
   max-height: 1em * $line-count * $line-height / $font-size;
   overflow: hidden;

@@ -38,10 +38,12 @@ export class _Trailhead extends React.PureComponent {
       isModalOpen: true,
       showCardPanel: true,
       showCards: false,
+      // The params below are for FxA metrics
+      deviceId: "",
       flowId: "",
       flowBeginTime: 0,
     };
-    this.didFetch = false;
+    this.fxaMetricsInitialized = false;
   }
 
   get dialog() {
@@ -55,15 +57,15 @@ export class _Trailhead extends React.PureComponent {
       link.rel = "localization";
     });
 
-    if (this.props.fxaEndpoint && !this.didFetch) {
+    if (this.props.fxaEndpoint && !this.fxaMetricsInitialized) {
       try {
-        this.didFetch = true;
+        this.fxaMetricsInitialized = true;
         const url = new URL(`${this.props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
         this.addUtmParams(url);
         const response = await fetch(url, {credentials: "omit"});
         if (response.status === 200) {
-          const {flowId, flowBeginTime} = await response.json();
-          this.setState({flowId, flowBeginTime});
+          const {deviceId, flowId, flowBeginTime} = await response.json();
+          this.setState({deviceId, flowId, flowBeginTime});
         } else {
           this.props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_FETCH_ERROR", value: response.status}}));
         }
@@ -194,6 +196,7 @@ export class _Trailhead extends React.PureComponent {
       this.addUtmParams(url, true);
 
       if (action.addFlowParams) {
+        url.searchParams.append("device_id", this.state.deviceId);
         url.searchParams.append("flow_id", this.state.flowId);
         url.searchParams.append("flow_begin_time", this.state.flowBeginTime);
       }
@@ -232,9 +235,9 @@ export class _Trailhead extends React.PureComponent {
             {this.getStringValue(content.learn.text)}
           </a>
         </div>
-        <div className="trailheadForm">
-          <h3 data-l10n-id={content.form.title.string_id}>{this.getStringValue(content.form.title)}</h3>
-          <p data-l10n-id={content.form.text.string_id}>{this.getStringValue(content.form.text)}</p>
+        <div role="group" aria-labelledby="joinFormHeader" aria-describedby="joinFormBody" className="trailheadForm">
+          <h3 id="joinFormHeader" data-l10n-id={content.form.title.string_id}>{this.getStringValue(content.form.title)}</h3>
+          <p id="joinFormBody" data-l10n-id={content.form.text.string_id}>{this.getStringValue(content.form.text)}</p>
           <form method="get" action={this.props.fxaEndpoint} target="_blank" rel="noopener noreferrer" onSubmit={this.onSubmit}>
             <input name="service" type="hidden" value="sync" />
             <input name="action" type="hidden" value="email" />
@@ -243,6 +246,7 @@ export class _Trailhead extends React.PureComponent {
             <input name="utm_source" type="hidden" value="activity-stream" />
             <input name="utm_campaign" type="hidden" value="firstrun" />
             <input name="utm_term" type="hidden" value={utm_term} />
+            <input name="device_id" type="hidden" value={this.state.deviceId} />
             <input name="flow_id" type="hidden" value={this.state.flowId} />
             <input name="flow_begin_time" type="hidden" value={this.state.flowBeginTime} />
             <input name="style" type="hidden" value="trailhead" />

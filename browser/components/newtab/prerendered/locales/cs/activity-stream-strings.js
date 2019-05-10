@@ -95,7 +95,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_privacy_notice": "Zásady ochrany osobních údajů",
   "firstrun_title": "Vezměte si Firefox s sebou",
   "firstrun_content": "Mějte své záložky, historii i uložená hesla s sebou na všech svých zařízeních.",
-  "firstrun_learn_more_link": "Zjistěte více o účtech Firefoxu",
+  "firstrun_learn_more_link": "Zjistit více o účtech Firefoxu",
   "firstrun_form_header": "Zadejte svoji e-mailovou adresu",
   "firstrun_form_sub_header": "a používejte službu Firefox Sync.",
   "firstrun_email_input_placeholder": "E-mail",
