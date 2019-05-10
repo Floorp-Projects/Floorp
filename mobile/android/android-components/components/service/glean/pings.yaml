@@ -16,6 +16,12 @@ baseline:
     The `baseline` ping is automatically sent when the application is moved to
     the background.
   include_client_id: true
+  bugs:
+    - 1512938
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
+  notification_emails:
+    - telemetry-client-dev@mozilla.com
 
 metrics:
   description: >
@@ -28,10 +34,21 @@ metrics:
     at 4AM. Data in the `ping_info` section of the ping can be used to infer the
     length of this window.
   include_client_id: true
-
+  bugs:
+    - 1512938
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
+  notification_emails:
+    - telemetry-client-dev@mozilla.com
 events:
   description: >
     The events ping's purpose is to transport all of the event metric information.
     The `events` ping is automatically sent when the application is moved to
     the background.
   include_client_id: true
+  bugs:
+    - 1512938
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
+  notification_emails:
+    - telemetry-client-dev@mozilla.com

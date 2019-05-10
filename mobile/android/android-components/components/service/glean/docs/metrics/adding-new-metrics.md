@@ -31,11 +31,11 @@ toolbar:
     description: |
       Event to record toolbar clicks.
     notification_emails:
-      - CHANGE-ME@test-only.com
+      - CHANGE-ME@example.com
     bugs:
       - 123456789
     data_reviews:
-      - http://test-only.com/path/to/data-review
+      - http://example.com/path/to/data-review
     expires:
       - 2019-06-01  # <-- Update to a date in the future
     

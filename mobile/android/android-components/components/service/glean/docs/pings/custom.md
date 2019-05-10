@@ -10,9 +10,13 @@ directory alongside your app's `metrics.yaml` file.
 
 Each ping has the following parameters:
 
-- `description` (required): A human-readable description of the ping.
 - `include_client_id` (required): A boolean indicating whether to include the
   `client_id` in the [`client_info` section](pings.md#The-client_info-section)).
+
+In addition to these parameters, pings also support the parameters related to
+data review and expiration defined in [common metric
+parameters](../metrics/adding-new-metrics.md#common-metric-parameters):
+`description`, `notification_emails`, `bugs`, and `data_reviews`.
 
 For example, to define a custom ping called `search` specifically for search
 information:
@@ -25,6 +29,12 @@ search:
   description: >
     A ping to record search data.
   include_client_id: false
+  notification_emails:
+    - CHANGE-ME@example.com
+  bugs:
+    - 123456789
+  data_reviews:
+    - http://example.com/path/to/data-review
 ```
 
 ## Loading custom ping metadata into your application or library

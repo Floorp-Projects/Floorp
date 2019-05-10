@@ -12,3 +12,9 @@ sample:
   description: |
     A sample custom ping.
   include_client_id: true
+  bugs:
+    - 123456789
+  data_reviews:
+    - N/A
+  notification_emails:
+    - CHANGE-ME@example.com

@@ -18,7 +18,7 @@ browser.engagement:
     data_reviews:
       - N/A 
     notification_emails:
-      - CHANGE-ME@test-only.com
+      - CHANGE-ME@example.com
     extra_keys:
       key1:
         description: "This is key one"
@@ -35,7 +35,7 @@ browser.engagement:
     data_reviews:
       - N/A 
     notification_emails:
-      - CHANGE-ME@test-only.com
+      - CHANGE-ME@example.com
     expires: 2100-01-01
 
 basic:
@@ -48,7 +48,7 @@ basic:
     data_reviews:
       - N/A 
     notification_emails:
-      - CHANGE-ME@test-only.com
+      - CHANGE-ME@example.com
     expires: 2100-01-01
 
 test:
@@ -64,7 +64,7 @@ test:
     data_reviews:
       - N/A 
     notification_emails:
-      - CHANGE-ME@test-only.com
+      - CHANGE-ME@example.com
     expires: 2100-01-01
 
   test_counter:
@@ -79,7 +79,7 @@ test:
     data_reviews:
       - N/A 
     notification_emails:
-      - CHANGE-ME@test-only.com
+      - CHANGE-ME@example.com
     expires: 2100-01-01
 
   test_timespan:
@@ -93,7 +93,7 @@ test:
     data_reviews:
       - N/A 
     notification_emails:
-      - CHANGE-ME@test-only.com
+      - CHANGE-ME@example.com
     expires: 2100-01-01
 
 custom:
