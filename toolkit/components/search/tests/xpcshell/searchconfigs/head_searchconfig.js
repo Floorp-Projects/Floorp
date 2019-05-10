@@ -13,9 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const GLOBAL_SCOPE = this;
 
-const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
-const URLTYPE_SEARCH_HTML  = "text/html";
-
 /**
  * This class implements the test harness for search configuration tests.
  * These tests are designed to ensure that the correct search engines are
@@ -104,11 +101,7 @@ class SearchConfigTest {
         await this._reinit(region, locale);
 
         this._assertDefaultEngines(region, locale);
-        const engines = await Services.search.getVisibleEngines();
-        const isPresent = this._assertAvailableEngines(region, locale, engines);
-        if (isPresent) {
-          this._assertCorrectDomains(region, locale, engines);
-        }
+        await this._assertAvailableEngines(region, locale);
       }
     }
 
@@ -208,7 +201,7 @@ class SearchConfigTest {
   }
 
   /**
-   * Helper function to find an engine from within a list.
+   * Helper function to determine if an engine matches within a list.
    * Due to Amazon's current complex setup with three different identifiers,
    * if the identifier is 'amazon', then we do a startsWith match. Otherwise
    * we expect the names to equal.
@@ -217,14 +210,14 @@ class SearchConfigTest {
    *   The list of engines to check.
    * @param {string} identifier
    *   The identifier to look for in the list.
-   * @returns {Engine}
-   *   Returns the engine if found, null otherwise.
+   * @returns {boolean}
+   *   Returns true if the engine is found within the list.
    */
-  _findEngine(engines, identifier) {
+  _enginesMatch(engines, identifier) {
     if (identifier == "amazon") {
-      return engines.find(engine => engine.identifier.startsWith(identifier));
+      return !!engines.find(engine => engine.startsWith(identifier));
     }
-    return engines.find(engine => engine.identifier == identifier);
+    return engines.includes(identifier);
   }
 
   /**
@@ -238,22 +231,20 @@ class SearchConfigTest {
    *   The two-letter locale code.
    * @param {string} section
    *   The section of the configuration to check.
-   * @returns {boolean}
-   *   Returns true if the engine is expected to be present, false otherwise.
    */
   _assertEngineRules(engines, region, locale, section) {
     const infoString = `region: "${region}" locale: "${locale}"`;
     const config = this._config[section];
     const hasIncluded = "included" in config;
     const hasExcluded = "excluded" in config;
-    const identifierIncluded = !!this._findEngine(engines, this._config.identifier);
+    const identifierIncluded = this._enginesMatch(engines, this._config.identifier);
 
     // If there's not included/excluded, then this shouldn't be the default anywhere.
     if (section == "default" && !hasIncluded && !hasExcluded) {
       Assert.ok(!identifierIncluded,
         `Should not be ${section} for any locale/region,
          currently set for ${infoString}`);
-      return false;
+      return;
     }
 
     // If there's no included section, we assume the engine is default everywhere
@@ -266,10 +257,9 @@ class SearchConfigTest {
 
     if (included || notExcluded) {
       Assert.ok(identifierIncluded, `Should be ${section} for ${infoString}`);
-      return true;
+      return;
     }
     Assert.ok(!identifierIncluded, `Should not be ${section} for ${infoString}`);
-    return false;
   }
 
   /**
@@ -281,8 +271,8 @@ class SearchConfigTest {
    *   The two-letter locale code.
    */
   _assertDefaultEngines(region, locale) {
-    this._assertEngineRules([Services.search.originalDefaultEngine], region,
-                            locale, "default");
+    const identifier = Services.search.originalDefaultEngine.identifier;
+    this._assertEngineRules([identifier], region, locale, "default");
   }
 
   /**
@@ -292,57 +282,10 @@ class SearchConfigTest {
    *   The two-letter region code.
    * @param {string} locale
    *   The two-letter locale code.
-   * @param {array} engines
-   *   The current visible engines.
-   * @returns {boolean}
-   *   Returns true if the engine is expected to be present, false otherwise.
    */
-  _assertAvailableEngines(region, locale, engines) {
-    return this._assertEngineRules(engines, region, locale, "available");
-  }
-
-  /**
-   * Asserts whether the engine is using the correct domains or not.
-   *
-   * @param {string} region
-   *   The two-letter region code.
-   * @param {string} locale
-   *   The two-letter locale code.
-   * @param {array} engines
-   *   The current visible engines.
-   */
-  _assertCorrectDomains(region, locale, engines) {
-    const [expectedDomain, domainConfig] =
-      Object.entries(this._config.domains).find(([key, value]) =>
-        this._localeRegionInSection(value.included, region, locale));
-
-    Assert.ok(expectedDomain,
-      `Should have an expectedDomain for the engine in region: "${region}" locale: "${locale}"`);
-
-    const engine = this._findEngine(engines, this._config.identifier);
-    Assert.ok(engine, "Should have an engine present");
-
-    const searchForm = new URL(engine.searchForm);
-    Assert.ok(searchForm.host.endsWith(expectedDomain),
-      `Should have the correct search form domain for region: "${region}" locale: "${locale}".
-       Got "${searchForm.host}", expected to end with "${expectedDomain}".`);
-
-    for (const urlType of [URLTYPE_SUGGEST_JSON, URLTYPE_SEARCH_HTML]) {
-      info(`Checking urlType ${urlType}`);
-
-      const submission = engine.getSubmission("test", urlType);
-      if (urlType == URLTYPE_SUGGEST_JSON &&
-          (this._config.noSuggestionsURL || domainConfig.noSuggestionsURL)) {
-        Assert.ok(!submission, "Should not have a submission url");
-      } else if (this._config.searchUrlBase) {
-          Assert.equal(submission.uri.prePath + submission.uri.filePath,
-            this._config.searchUrlBase + domainConfig.searchUrlEnd,
-            `Should have the correct domain for region: "${region}" locale: "${locale}".`);
-      } else {
-        Assert.ok(submission.uri.host.endsWith(expectedDomain),
-          `Should have the correct domain for region: "${region}" locale: "${locale}".
-           Got "${submission.uri.host}", expected to end with "${expectedDomain}".`);
-      }
-    }
+  async _assertAvailableEngines(region, locale) {
+    const engines = await Services.search.getVisibleEngines();
+    const engineNames = engines.map(engine => engine._shortName);
+    this._assertEngineRules(engineNames, region, locale, "available");
   }
 }
