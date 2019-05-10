@@ -94,7 +94,7 @@ class nsComboButtonListener final : public nsIDOMEventListener {
  public:
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD HandleEvent(dom::Event*) override {
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD HandleEvent(dom::Event*) override {
     mComboBox->ShowDropDown(!mComboBox->IsDroppedDown());
     return NS_OK;
   }
@@ -315,7 +315,8 @@ void nsComboboxControlFrame::ShowPopup(bool aShowPopup) {
                            aShowPopup ? eXULPopupShowing : eXULPopupHiding,
                            nullptr, WidgetMouseEvent::eReal);
 
-    presShell->HandleDOMEventWithTarget(mContent, &event, &status);
+    nsCOMPtr<nsIContent> content = mContent;
+    presShell->HandleDOMEventWithTarget(content, &event, &status);
   }
 }
 
@@ -495,7 +496,7 @@ class nsAsyncRollup : public Runnable {
  public:
   explicit nsAsyncRollup(nsComboboxControlFrame* aFrame)
       : mozilla::Runnable("nsAsyncRollup"), mFrame(aFrame) {}
-  NS_IMETHOD Run() override {
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     if (mFrame.IsAlive()) {
       static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())->RollupFromList();
     }

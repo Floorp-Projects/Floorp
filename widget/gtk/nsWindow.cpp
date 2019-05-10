@@ -117,6 +117,7 @@ using namespace mozilla::widget;
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/KnowsCompositor.h"
 
 #ifdef MOZ_X11
 #  include "GLContextGLX.h"  // for GLContextGLX::FindVisual()
@@ -4236,13 +4237,18 @@ LayoutDeviceIntSize nsWindow::GetSafeWindowSize(LayoutDeviceIntSize aSize) {
   // reads it as CARD16.  Sizes of pixmaps, used for drawing, are (unsigned)
   // CARD16 in the protocol, but the server's ProcCreatePixmap returns
   // BadAlloc if dimensions cannot be represented by signed shorts.
+  // Because we are creating Cairo surfaces to represent window buffers,
+  // we also must ensure that the window can fit in a Cairo surface.
   LayoutDeviceIntSize result = aSize;
-  const int32_t kInt16Max = 32767;
-  if (result.width > kInt16Max) {
-    result.width = kInt16Max;
+  int32_t maxSize = 32767;
+  if (mLayerManager && mLayerManager->AsKnowsCompositor()) {
+    maxSize = std::min(maxSize, mLayerManager->AsKnowsCompositor()->GetMaxTextureSize());
   }
-  if (result.height > kInt16Max) {
-    result.height = kInt16Max;
+  if (result.width > maxSize) {
+    result.width = maxSize;
+  }
+  if (result.height > maxSize) {
+    result.height = maxSize;
   }
   return result;
 }
