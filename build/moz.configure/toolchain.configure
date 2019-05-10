@@ -126,7 +126,7 @@ with only_when(target_is_osx):
     # MacOS SDK
     # =========
 
-    option('--with-macos-sdk', env='MACOS_SDK_DIR', nargs=1,
+    js_option('--with-macos-sdk', env='MACOS_SDK_DIR', nargs=1,
            help='Location of platform SDK to use')
 
     @depends_if('--with-macos-sdk')
