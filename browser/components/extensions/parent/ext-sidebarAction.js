@@ -104,10 +104,6 @@ this.sidebarAction = class extends ExtensionAPI {
       if (SidebarUI.currentID === this.id) {
         SidebarUI.hide();
       }
-      if (SidebarUI.lastOpenedId === this.id &&
-          reason === "ADDON_UNINSTALL") {
-        SidebarUI.lastOpenedId = null;
-      }
       let menu = document.getElementById(this.menuId);
       if (menu) {
         menu.remove();
@@ -122,6 +118,16 @@ this.sidebarAction = class extends ExtensionAPI {
     }
     windowTracker.removeOpenListener(this.windowOpenListener);
     windowTracker.removeCloseListener(this.windowCloseListener);
+  }
+
+  static onUninstall(id) {
+    const sidebarId = `${makeWidgetId(id)}-sidebar-action`;
+    for (let window of windowTracker.browserWindows()) {
+      let {SidebarUI} = window;
+      if (SidebarUI.lastOpenedId === sidebarId) {
+        SidebarUI.lastOpenedId = null;
+      }
+    }
   }
 
   build() {
