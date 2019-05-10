@@ -39,7 +39,8 @@
   color: HighlightText;
 }
 
-/* Login form autocompletion */
+/* Login form autocompletion with and without origin showing */
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper > .ac-site-icon,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon {
   display: initial;
   list-style-image: url(chrome://browser/skin/login.svg);
@@ -47,10 +48,47 @@
   fill: GrayText;
 }
 
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"][selected] > .login-wrapper > .ac-site-icon,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon[selected] {
   fill: HighlightText;
 }
 
+/* Login form autocompletion with origin showing */
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] {
+  height: auto;
+  padding: 4px;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  margin: 0;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper > .ac-site-icon {
+  margin-inline-start: auto;
+  margin-inline-end: 4px;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper > .login-text {
+  /* The text should flex while the icon should not */
+  flex: 1;
+  /* width/min-width are needed to get the text-overflow: ellipsis to work for the children */
+  min-width: 0;
+  width: 0;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper > .login-text > .login-row {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper > .login-text > .login-origin {
+  padding-top: 2px !important;
+  opacity: .6;
+}
 
 /* Insecure field warning */
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
