@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons.preparer
 
+import android.content.Context
 import mozilla.components.browser.icons.IconRequest
 
 /**
@@ -11,5 +12,5 @@ import mozilla.components.browser.icons.IconRequest
  * to rewrite the [IconRequest] and return a new instance.
  */
 interface IconPreprarer {
-    fun prepare(request: IconRequest): IconRequest
+    fun prepare(context: Context, request: IconRequest): IconRequest
 }

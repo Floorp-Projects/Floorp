@@ -118,4 +118,13 @@ class StringTest {
         assertEquals(calendar.time, "2019-11-28".toDate("yyyy-MM-dd"))
         assertNotNull("".toDate("yyyy-MM-dd"))
     }
+
+    @Test
+    fun sha1() {
+        assertEquals("da39a3ee5e6b4b0d3255bfef95601890afd80709", "".sha1())
+
+        assertEquals("0a4d55a8d778e5022fab701977c5d840bbc486d0", "Hello World".sha1())
+
+        assertEquals("8de545c123907e9f886ba2313560a0abef530594", "ßüöä@!§\$".sha1())
+    }
 }

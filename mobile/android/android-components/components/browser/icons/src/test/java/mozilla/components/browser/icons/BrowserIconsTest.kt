@@ -33,6 +33,7 @@ class BrowserIconsTest {
     @Before
     @After
     fun cleanUp() {
+        sharedDiskCache.clear(context)
         sharedMemoryCache.clear()
     }
 
@@ -139,6 +140,47 @@ class BrowserIconsTest {
             assertNotNull(secondIcon.bitmap)
 
             assertSame(icon.bitmap, secondIcon.bitmap)
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    @Test
+    fun `WHEN icon is loaded again and not in memory cache THEN second load is delivered from disk cache`() = runBlocking {
+        val server = MockWebServer()
+
+        server.enqueue(MockResponse().setBody(
+            Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
+        ))
+
+        server.start()
+
+        try {
+            val icons = BrowserIcons(context, httpClient = HttpURLConnectionClient())
+
+            val request = IconRequest(
+                url = "https://www.mozilla.org",
+                resources = listOf(
+                    IconRequest.Resource(
+                        url = server.url("icon64.png").toString(),
+                        type = IconRequest.Resource.Type.FAVICON
+                    )
+                )
+            )
+
+            val icon = icons.loadIcon(request).await()
+
+            assertEquals(Icon.Source.DOWNLOAD, icon.source)
+            assertNotNull(icon.bitmap)
+
+            sharedMemoryCache.clear()
+
+            val secondIcon = icons.loadIcon(
+                IconRequest("https://www.mozilla.org") // Without resources!
+            ).await()
+
+            assertEquals(Icon.Source.DISK, secondIcon.source)
+            assertNotNull(secondIcon.bitmap)
         } finally {
             server.shutdown()
         }

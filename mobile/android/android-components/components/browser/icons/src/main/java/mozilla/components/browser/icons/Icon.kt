@@ -40,6 +40,11 @@ data class Icon(
         /**
          * This icon was loaded from an in-memory cache.
          */
-        MEMORY
+        MEMORY,
+
+        /**
+         * This icon was loaded from a disk cache.
+         */
+        DISK
     }
 }

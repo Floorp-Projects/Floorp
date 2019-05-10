@@ -4,25 +4,23 @@
 
 package mozilla.components.browser.icons.loader
 
-import android.graphics.Bitmap
+import android.content.Context
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class MemoryIconLoaderTest {
+class DiskIconLoaderTest {
     @Test
-    fun `MemoryIconLoader returns bitmap from cache`() {
-        val bitmap: Bitmap = mock()
-
-        val cache = object : MemoryIconLoader.LoaderMemoryCache {
-            override fun getBitmap(request: IconRequest, resource: IconRequest.Resource): Bitmap? {
-                return bitmap
+    fun `DiskIconLoader returns bitmap from cache`() {
+        val cache = object : DiskIconLoader.LoaderDiskCache {
+            override fun getIconData(context: Context, resource: IconRequest.Resource): ByteArray? {
+                return "Hello World".toByteArray()
             }
         }
 
-        val loader = MemoryIconLoader(cache)
+        val loader = DiskIconLoader(cache)
 
         val request = IconRequest("https://www.mozilla.org")
         val resource = IconRequest.Resource(
@@ -31,22 +29,22 @@ class MemoryIconLoaderTest {
 
         val result = loader.load(mock(), request, resource)
 
-        assertTrue(result is IconLoader.Result.BitmapResult)
+        assertTrue(result is IconLoader.Result.BytesResult)
 
-        val bitmapResult = result as IconLoader.Result.BitmapResult
+        val bytesResult = result as IconLoader.Result.BytesResult
 
-        assertEquals(bitmap, bitmapResult.bitmap)
+        assertEquals("Hello World", String(bytesResult.bytes))
     }
 
     @Test
-    fun `MemoryIconLoader returns NoResult if cache does not contain entry`() {
-        val cache = object : MemoryIconLoader.LoaderMemoryCache {
-            override fun getBitmap(request: IconRequest, resource: IconRequest.Resource): Bitmap? {
+    fun `DiskIconLoader returns NoResult if cache does not contain entry`() {
+        val cache = object : DiskIconLoader.LoaderDiskCache {
+            override fun getIconData(context: Context, resource: IconRequest.Resource): ByteArray? {
                 return null
             }
         }
 
-        val loader = MemoryIconLoader(cache)
+        val loader = DiskIconLoader(cache)
 
         val request = IconRequest("https://www.mozilla.org")
         val resource = IconRequest.Resource(

@@ -43,7 +43,7 @@ class HttpIconLoaderTest {
             try {
                 val loader = HttpIconLoader(client)
                 val result = loader.load(
-                    mock(), IconRequest.Resource(
+                    mock(), mock(), IconRequest.Resource(
                         url = server.url("/some/path").toString(),
                         type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
                     )
@@ -77,7 +77,7 @@ class HttpIconLoaderTest {
     fun `Loader will not perform any requests for data uris`() {
         val client: Client = mock()
 
-        val result = HttpIconLoader(client).load(mock(), IconRequest.Resource(
+        val result = HttpIconLoader(client).load(mock(), mock(), IconRequest.Resource(
             url = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAA" +
                 "AAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
             type = IconRequest.Resource.Type.FAVICON

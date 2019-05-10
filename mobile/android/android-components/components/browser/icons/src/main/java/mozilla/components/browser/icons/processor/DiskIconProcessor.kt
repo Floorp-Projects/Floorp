@@ -9,29 +9,29 @@ import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 
 /**
- * An [IconProcessor] implementation that saves icons in the in-memory cache.
+ * [IconProcessor] implementation that saves icons in the disk cache.
  */
-class MemoryIconProcessor(
-    private val cache: ProcessorMemoryCache
+class DiskIconProcessor(
+    private val cache: ProcessorDiskCache
 ) : IconProcessor {
-    interface ProcessorMemoryCache {
-        fun put(request: IconRequest, resource: IconRequest.Resource, icon: Icon)
+    interface ProcessorDiskCache {
+        fun put(context: Context, request: IconRequest, resource: IconRequest.Resource, icon: Icon)
     }
 
     override fun process(context: Context, request: IconRequest, resource: IconRequest.Resource?, icon: Icon): Icon {
-        if (resource != null && icon.shouldCacheInMemory) {
-            cache.put(request, resource, icon)
+        if (resource != null && icon.shouldCacheOnDisk) {
+            cache.put(context, request, resource, icon)
         }
 
         return icon
     }
 }
 
-private val Icon.shouldCacheInMemory: Boolean
+private val Icon.shouldCacheOnDisk: Boolean
     get() = when (source) {
         Icon.Source.GENERATOR -> false
         Icon.Source.DOWNLOAD -> true
         Icon.Source.INLINE -> true
         Icon.Source.MEMORY -> false
-        Icon.Source.DISK -> true
+        Icon.Source.DISK -> false
     }

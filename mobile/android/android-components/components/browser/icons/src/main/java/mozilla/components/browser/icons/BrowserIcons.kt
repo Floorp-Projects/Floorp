@@ -19,14 +19,18 @@ import mozilla.components.browser.icons.extension.IconSessionObserver
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.generator.IconGenerator
 import mozilla.components.browser.icons.loader.DataUriIconLoader
+import mozilla.components.browser.icons.loader.DiskIconLoader
 import mozilla.components.browser.icons.loader.HttpIconLoader
 import mozilla.components.browser.icons.loader.IconLoader
 import mozilla.components.browser.icons.loader.MemoryIconLoader
 import mozilla.components.browser.icons.pipeline.IconResourceComparator
+import mozilla.components.browser.icons.preparer.DiskIconPreparer
 import mozilla.components.browser.icons.preparer.IconPreprarer
 import mozilla.components.browser.icons.preparer.MemoryIconPreparer
+import mozilla.components.browser.icons.processor.DiskIconProcessor
 import mozilla.components.browser.icons.processor.IconProcessor
 import mozilla.components.browser.icons.processor.MemoryIconProcessor
+import mozilla.components.browser.icons.utils.DiskCache
 import mozilla.components.browser.icons.utils.MemoryCache
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
@@ -42,6 +46,7 @@ private const val MAXIMUM_SCALE_FACTOR = 2.0f
 private const val THREADS = 3
 
 internal val sharedMemoryCache = MemoryCache()
+internal val sharedDiskCache = DiskCache()
 
 /**
  * Entry point for loading icons for websites.
@@ -54,10 +59,12 @@ class BrowserIcons(
     private val httpClient: Client,
     private val generator: IconGenerator = DefaultIconGenerator(context),
     private val preparers: List<IconPreprarer> = listOf(
-        MemoryIconPreparer(sharedMemoryCache)
+        MemoryIconPreparer(sharedMemoryCache),
+        DiskIconPreparer(sharedDiskCache)
     ),
     private val loaders: List<IconLoader> = listOf(
         MemoryIconLoader(sharedMemoryCache),
+        DiskIconLoader(sharedDiskCache),
         HttpIconLoader(httpClient),
         DataUriIconLoader()
     ),
@@ -66,38 +73,46 @@ class BrowserIcons(
         ICOIconDecoder()
     ),
     private val processors: List<IconProcessor> = listOf(
-        MemoryIconProcessor(sharedMemoryCache)
+        MemoryIconProcessor(sharedMemoryCache),
+        DiskIconProcessor(sharedDiskCache)
     ),
     jobDispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(THREADS).asCoroutineDispatcher()
 ) {
+    private val logger = Logger("BrowserIcons")
     private val maximumSize = context.resources.pxToDp(MAXIMUM_SIZE_DP)
     private val scope = CoroutineScope(jobDispatcher)
 
     /**
      * Asynchronously loads an [Icon] for the given [IconRequest].
      */
-    fun loadIcon(initialRequest: IconRequest): Deferred<Icon> = scope.async {
+    fun loadIcon(request: IconRequest): Deferred<Icon> = scope.async {
+        loadIconInternal(request).also { loadedIcon ->
+            logger.debug("Loaded icon (source = ${loadedIcon.source}): ${request.url}")
+        }
+    }
+
+    private fun loadIconInternal(initialRequest: IconRequest): Icon {
         val targetSize = context.resources.pxToDp(initialRequest.size.value)
 
         // (1) First prepare the request.
-        val request = prepare(preparers, initialRequest)
+        val request = prepare(context, preparers, initialRequest)
 
         // (2) Then try to load an icon.
-        val (result, resource) = load(request, loaders)
+        val (result, resource) = load(context, request, loaders)
 
         val icon = when (result) {
-            IconLoader.Result.NoResult -> return@async generator.generate(context, request)
+            IconLoader.Result.NoResult -> return generator.generate(context, request)
 
             is IconLoader.Result.BitmapResult -> Icon(result.bitmap, source = result.source)
 
             is IconLoader.Result.BytesResult ->
                 decode(result.bytes, decoders, targetSize, maximumSize)?.let { bitmap ->
                     Icon(bitmap, source = result.source)
-                } ?: return@async generator.generate(context, request)
+                } ?: return generator.generate(context, request)
         }
 
         // (3) Finally process the icon.
-        process(processors, request, resource, icon)
+        return process(context, processors, request, resource, icon)
     }
 
     /**
@@ -120,22 +135,26 @@ class BrowserIcons(
     }
 }
 
-private fun prepare(preparers: List<IconPreprarer>, request: IconRequest): IconRequest {
+private fun prepare(context: Context, preparers: List<IconPreprarer>, request: IconRequest): IconRequest {
     var preparedRequest: IconRequest = request
 
     preparers.forEach { preparer ->
-        preparedRequest = preparer.prepare(preparedRequest)
+        preparedRequest = preparer.prepare(context, preparedRequest)
     }
 
     return preparedRequest
 }
 
-private fun load(request: IconRequest, loaders: List<IconLoader>): Pair<IconLoader.Result, IconRequest.Resource?> {
+private fun load(
+    context: Context,
+    request: IconRequest,
+    loaders: List<IconLoader>
+): Pair<IconLoader.Result, IconRequest.Resource?> {
     // We are just looping over the resources here. We need to rank them first to try the best icon first.
     // https://github.com/mozilla-mobile/android-components/issues/2048
     request.resources.toSortedSet(IconResourceComparator).forEach { resource ->
         loaders.forEach { loader ->
-            val result = loader.load(request, resource)
+            val result = loader.load(context, request, resource)
 
             if (result != IconLoader.Result.NoResult) {
                 return Pair(result, resource)
@@ -168,6 +187,7 @@ private fun decode(
 }
 
 private fun process(
+    context: Context,
     processors: List<IconProcessor>,
     request: IconRequest,
     resource: IconRequest.Resource?,
@@ -176,7 +196,7 @@ private fun process(
     var processedIcon = icon
 
     processors.forEach { processor ->
-        processedIcon = processor.process(request, resource, processedIcon)
+        processedIcon = processor.process(context, request, resource, processedIcon)
     }
 
     return processedIcon

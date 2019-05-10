@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons.loader
 
+import android.content.Context
 import android.util.Base64
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
@@ -12,7 +13,7 @@ import mozilla.components.browser.icons.IconRequest
  * An [IconLoader] implementation that will base64 decode the image bytes from a data:image uri.
  */
 class DataUriIconLoader : IconLoader {
-    override fun load(request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
+    override fun load(context: Context, request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
         if (!resource.url.startsWith("data:image/")) {
             return IconLoader.Result.NoResult
         }

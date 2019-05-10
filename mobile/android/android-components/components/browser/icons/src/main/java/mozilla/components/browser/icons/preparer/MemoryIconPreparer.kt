@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons.preparer
 
+import android.content.Context
 import mozilla.components.browser.icons.IconRequest
 
 /**
@@ -17,7 +18,7 @@ class MemoryIconPreparer(
         fun getResources(request: IconRequest): List<IconRequest.Resource>
     }
 
-    override fun prepare(request: IconRequest): IconRequest {
+    override fun prepare(context: Context, request: IconRequest): IconRequest {
         return if (request.resources.isNotEmpty()) {
             request
         } else {

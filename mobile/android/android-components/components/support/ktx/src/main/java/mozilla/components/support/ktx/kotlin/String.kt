@@ -6,6 +6,7 @@ package mozilla.components.support.ktx.kotlin
 
 import android.net.Uri
 import mozilla.components.support.utils.URLStringUtils
+import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -52,3 +53,15 @@ fun String.toDate(format: String, locale: Locale = Locale.ROOT): Date {
  * Converts a [String] to a [Uri] object.
  */
 fun String.toUri() = Uri.parse(this)
+
+/**
+ * Calculates a SHA1 hash for this string.
+ */
+@Suppress("MagicNumber")
+fun String.sha1(): String {
+    val characters = "0123456789abcdef"
+    val digest = MessageDigest.getInstance("SHA-1").digest(toByteArray())
+    return digest.joinToString(separator = "", transform = { byte ->
+        String(charArrayOf(characters[byte.toInt() shr 4 and 0x0f], characters[byte.toInt() and 0x0f]))
+    })
+}

@@ -7,80 +7,80 @@ package mozilla.components.browser.icons.processor
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
-class MemoryIconProcessorTest {
+class DiskIconProcessorTest {
     @Test
     fun `Generated icons are not saved in cache`() {
         val icon = Icon(mock(), source = Icon.Source.GENERATOR)
-        val cache: MemoryIconProcessor.ProcessorMemoryCache = mock()
+        val cache: DiskIconProcessor.ProcessorDiskCache = mock()
 
-        val processor = MemoryIconProcessor(cache)
+        val processor = DiskIconProcessor(cache)
         processor.process(context = mock(), request = mock(), resource = mock(), icon = icon)
 
-        verify(cache, never()).put(any(), any(), any())
+        verify(cache, never()).put(any(), any(), any(), eq(icon))
     }
 
     @Test
     fun `Icon loaded from memory cache are not saved in cache`() {
         val icon = Icon(mock(), source = Icon.Source.MEMORY)
-        val cache: MemoryIconProcessor.ProcessorMemoryCache = mock()
+        val cache: DiskIconProcessor.ProcessorDiskCache = mock()
 
-        val processor = MemoryIconProcessor(cache)
+        val processor = DiskIconProcessor(cache)
         processor.process(context = mock(), request = mock(), resource = mock(), icon = icon)
 
-        verify(cache, never()).put(any(), any(), any())
+        verify(cache, never()).put(any(), any(), any(), eq(icon))
     }
 
     @Test
-    fun `Icon loaded from disk cache are saved in cache`() {
+    fun `Icon loaded from disk cache are not saved in cache`() {
         val icon = Icon(mock(), source = Icon.Source.DISK)
-        val cache: MemoryIconProcessor.ProcessorMemoryCache = mock()
+        val cache: DiskIconProcessor.ProcessorDiskCache = mock()
 
-        val processor = MemoryIconProcessor(cache)
+        val processor = DiskIconProcessor(cache)
         processor.process(context = mock(), request = mock(), resource = mock(), icon = icon)
 
-        verify(cache).put(any(), any(), any())
+        verify(cache, never()).put(any(), any(), any(), eq(icon))
     }
 
     @Test
     fun `Downloaded icon is saved in cache`() {
         val icon = Icon(mock(), source = Icon.Source.DOWNLOAD)
-        val cache: MemoryIconProcessor.ProcessorMemoryCache = mock()
+        val cache: DiskIconProcessor.ProcessorDiskCache = mock()
 
-        val processor = MemoryIconProcessor(cache)
+        val processor = DiskIconProcessor(cache)
         val request: IconRequest = mock()
         val resource: IconRequest.Resource = mock()
         processor.process(mock(), request, resource, icon)
 
-        verify(cache).put(request, resource, icon)
+        verify(cache).put(any(), eq(request), eq(resource), eq(icon))
     }
 
     @Test
-
     fun `Inlined icon is saved in cache`() {
         val icon = Icon(mock(), source = Icon.Source.INLINE)
-        val cache: MemoryIconProcessor.ProcessorMemoryCache = mock()
+        val cache: DiskIconProcessor.ProcessorDiskCache = mock()
 
-        val processor = MemoryIconProcessor(cache)
+        val processor = DiskIconProcessor(cache)
         val request: IconRequest = mock()
         val resource: IconRequest.Resource = mock()
         processor.process(mock(), request, resource, icon)
 
-        verify(cache).put(request, resource, icon)
+        verify(cache).put(any(), eq(request), eq(resource), eq(icon))
     }
 
     @Test
     fun `Icon without resource is not saved in cache`() {
         val icon = Icon(mock(), source = Icon.Source.MEMORY)
-        val cache: MemoryIconProcessor.ProcessorMemoryCache = mock()
+        val cache: DiskIconProcessor.ProcessorDiskCache = mock()
 
-        val processor = MemoryIconProcessor(cache)
+        val processor = DiskIconProcessor(cache)
         processor.process(context = mock(), request = mock(), resource = null, icon = icon)
 
-        verify(cache, never()).put(any(), any(), any())
+        verify(cache, never()).put(any(), any(), any(), eq(icon))
     }
 }

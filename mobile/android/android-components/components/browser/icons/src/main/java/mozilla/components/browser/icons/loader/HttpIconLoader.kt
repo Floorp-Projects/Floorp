@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons.loader
 
+import android.content.Context
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.fetch.Client
@@ -17,7 +18,7 @@ import mozilla.components.support.ktx.kotlin.toUri
 class HttpIconLoader(
     private val httpClient: Client
 ) : IconLoader {
-    override fun load(request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
+    override fun load(context: Context, request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
         if (!resource.url.toUri().isHttpOrHttps) {
             return IconLoader.Result.NoResult
         }

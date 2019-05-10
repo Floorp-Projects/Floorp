@@ -33,13 +33,13 @@ class MemoryCacheTest {
             url = "https://www.mozilla.org/favicon64.ico", type = IconRequest.Resource.Type.FAVICON)
         val request = IconRequest("https://www.mozilla.org", resources = listOf(resource))
 
-        assertEquals(IconLoader.Result.NoResult, loader.load(request, resource))
+        assertEquals(IconLoader.Result.NoResult, loader.load(mock(), request, resource))
 
         // First, save something in the memory cache using the processor
-        processor.process(request, resource, icon)
+        processor.process(mock(), request, resource, icon)
 
         // Then load the same icon from the loader
-        val result = loader.load(request, resource)
+        val result = loader.load(mock(), request, resource)
         assertTrue(result is IconLoader.Result.BitmapResult)
         assertSame(icon.bitmap, (result as IconLoader.Result.BitmapResult).bitmap)
         assertEquals(Icon.Source.MEMORY, result.source)
@@ -47,11 +47,11 @@ class MemoryCacheTest {
         // Prepare a new request with the same URL
         val newRequest = IconRequest("https://www.mozilla.org")
         assertTrue(newRequest.resources.isEmpty())
-        val preparedRequest = preparer.prepare(newRequest)
+        val preparedRequest = preparer.prepare(mock(), newRequest)
         assertEquals(1, preparedRequest.resources.size)
 
         // Load prepared request
-        val preparedResult = loader.load(preparedRequest, preparedRequest.resources[0])
+        val preparedResult = loader.load(mock(), preparedRequest, preparedRequest.resources[0])
         assertTrue(preparedResult is IconLoader.Result.BitmapResult)
         assertSame(icon.bitmap, (preparedResult as IconLoader.Result.BitmapResult).bitmap)
         assertEquals(Icon.Source.MEMORY, preparedResult.source)

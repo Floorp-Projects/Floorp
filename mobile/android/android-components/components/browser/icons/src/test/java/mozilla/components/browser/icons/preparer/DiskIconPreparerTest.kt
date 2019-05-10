@@ -9,9 +9,9 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.mockito.Mockito.doReturn
+import org.mockito.Mockito
 
-class MemoryIconPreparerTest {
+class DiskIconPreparerTest {
     @Test
     fun `Preparer will add resources from cache`() {
         val resources = listOf(
@@ -19,10 +19,10 @@ class MemoryIconPreparerTest {
             IconRequest.Resource("https://www.firefox.com", type = IconRequest.Resource.Type.APPLE_TOUCH_ICON)
         )
 
-        val cache: MemoryIconPreparer.PreparerMemoryCache = mock()
-        doReturn(resources).`when`(cache).getResources(any())
+        val cache: DiskIconPreparer.PreparerDiskCache = mock()
+        Mockito.doReturn(resources).`when`(cache).getResources(any(), any())
 
-        val preparer = MemoryIconPreparer(cache)
+        val preparer = DiskIconPreparer(cache)
 
         val initialRequest = IconRequest(url = "example.org")
 
@@ -45,10 +45,10 @@ class MemoryIconPreparerTest {
             IconRequest.Resource("https://www.firefox.com", type = IconRequest.Resource.Type.APPLE_TOUCH_ICON)
         )
 
-        val cache: MemoryIconPreparer.PreparerMemoryCache = mock()
-        doReturn(resources).`when`(cache).getResources(any())
+        val cache: DiskIconPreparer.PreparerDiskCache = mock()
+        Mockito.doReturn(resources).`when`(cache).getResources(any(), any())
 
-        val preparer = MemoryIconPreparer(cache)
+        val preparer = DiskIconPreparer(cache)
 
         val initialRequest = IconRequest(url = "https://www.example.org", resources = listOf(
             IconRequest.Resource("https://getpocket.com", type = IconRequest.Resource.Type.FAVICON)

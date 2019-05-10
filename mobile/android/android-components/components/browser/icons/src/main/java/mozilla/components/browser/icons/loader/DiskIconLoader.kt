@@ -5,23 +5,22 @@
 package mozilla.components.browser.icons.loader
 
 import android.content.Context
-import android.graphics.Bitmap
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 
 /**
- * An [IconLoader] implementation that loads icons from an in-memory cache.
+ * [IconLoader] implementation that loads icons from a disk cache.
  */
-class MemoryIconLoader(
-    private val cache: LoaderMemoryCache
+class DiskIconLoader(
+    private val cache: LoaderDiskCache
 ) : IconLoader {
-    interface LoaderMemoryCache {
-        fun getBitmap(request: IconRequest, resource: IconRequest.Resource): Bitmap?
+    interface LoaderDiskCache {
+        fun getIconData(context: Context, resource: IconRequest.Resource): ByteArray?
     }
 
     override fun load(context: Context, request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
-        return cache.getBitmap(request, resource)?.let { bitmap ->
-            IconLoader.Result.BitmapResult(bitmap, Icon.Source.MEMORY)
+        return cache.getIconData(context, resource)?.let { data ->
+            IconLoader.Result.BytesResult(data, Icon.Source.DISK)
         } ?: IconLoader.Result.NoResult
     }
 }

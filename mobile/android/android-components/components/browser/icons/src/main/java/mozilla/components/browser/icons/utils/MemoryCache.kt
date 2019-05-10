@@ -32,18 +32,15 @@ internal class MemoryCache : ProcessorMemoryCache, LoaderMemoryCache, MemoryIcon
     }
 
     override fun getBitmap(request: IconRequest, resource: IconRequest.Resource): Bitmap? {
-        println("Cache(${hashCode()}: GET(${resource.url}")
         return iconBitmapCache[resource.url]
     }
 
     override fun put(request: IconRequest, resource: IconRequest.Resource, icon: Icon) {
         if (icon.source.shouldCacheInMemory) {
-            println("Cache(${hashCode()}: PUT:BITMAP:(${resource.url}")
             iconBitmapCache.put(resource.url, icon.bitmap)
         }
 
         if (request.resources.isNotEmpty()) {
-            println("Cache(${hashCode()}: PUT:RESOURCE:${request.url} => (${resource.url}")
             iconResourcesCache.put(request.url, request.resources)
         }
     }
@@ -60,8 +57,8 @@ private val Icon.Source.shouldCacheInMemory: Boolean
         return when (this) {
             Icon.Source.DOWNLOAD -> true
             Icon.Source.INLINE -> true
-
             Icon.Source.GENERATOR -> false
             Icon.Source.MEMORY -> false
+            Icon.Source.DISK -> true
         }
     }
