@@ -321,14 +321,15 @@ class MainActivity :
                 } else {
                     var bookmarksRootAndChildren = "Bookmarks\n"
                     fun addTreeNode(node: BookmarkNode, depth: Int) {
-                        bookmarksRootAndChildren += " ".repeat(depth * 2) + "${node.title} - ${node.url} (${node.guid})\n";
+                        val desc = " ".repeat(depth * 2) + "${node.title} - ${node.url} (${node.guid})\n";
+                        bookmarksRootAndChildren += desc;
                         node.children?.forEach {
                             addTreeNode(it, depth + 1)
                         }
                     }
                     addTreeNode(bookmarksRoot, 0)
                     bookmarksResultTextView.setHorizontallyScrolling(true)
-                    bookmarksResultTextView.setMovementMethod(ScrollingMovementMethod.getInstance());
+                    bookmarksResultTextView.setMovementMethod(ScrollingMovementMethod.getInstance())
                     bookmarksResultTextView.text = bookmarksRootAndChildren
                 }
             }
