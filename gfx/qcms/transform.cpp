@@ -360,16 +360,17 @@ static void qcms_transform_data_rgb_out_pow(const qcms_transform *transform, con
 	See: ftp://ftp.alvyray.com/Acrobat/17_Nonln.pdf
 */
 
-template <size_t kRIndex, size_t kGIndex, size_t kBIndex, size_t kAIndex = NO_A_INDEX>
+template <size_t kRIndex, size_t kGIndex, size_t kBIndex,
+          size_t kInAIndex = NO_A_INDEX, size_t kOutAIndex = kInAIndex>
 static void qcms_transform_data_gray_template_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
-	const unsigned int components = A_INDEX_COMPONENTS(kAIndex);
+	const unsigned int components = A_INDEX_COMPONENTS(kOutAIndex);
 	unsigned int i;
 	for (i = 0; i < length; i++) {
 		float out_device_r, out_device_g, out_device_b;
 		unsigned char device = *src++;
-		unsigned char alpha;
-		if (kAIndex != NO_A_INDEX) {
+		unsigned char alpha = 0xFF;
+		if (kInAIndex != NO_A_INDEX) {
 			alpha = *src++;
 		}
 
@@ -382,8 +383,8 @@ static void qcms_transform_data_gray_template_lut(const qcms_transform *transfor
 		dest[kRIndex] = clamp_u8(out_device_r*255);
 		dest[kGIndex] = clamp_u8(out_device_g*255);
 		dest[kBIndex] = clamp_u8(out_device_b*255);
-		if (kAIndex != NO_A_INDEX) {
-			dest[kAIndex] = alpha;
+		if (kOutAIndex != NO_A_INDEX) {
+			dest[kOutAIndex] = alpha;
 		}
 		dest += components;
 	}
@@ -392,6 +393,16 @@ static void qcms_transform_data_gray_template_lut(const qcms_transform *transfor
 static void qcms_transform_data_gray_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_gray_template_lut<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX>(transform, src, dest, length);
+}
+
+static void qcms_transform_data_gray_rgba_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+{
+	qcms_transform_data_gray_template_lut<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX, NO_A_INDEX, RGBA_A_INDEX>(transform, src, dest, length);
+}
+
+static void qcms_transform_data_gray_bgra_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+{
+	qcms_transform_data_gray_template_lut<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, NO_A_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
 }
 
 static void qcms_transform_data_graya_rgba_out_lut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
@@ -404,15 +415,16 @@ static void qcms_transform_data_graya_bgra_out_lut(const qcms_transform *transfo
 	qcms_transform_data_gray_template_lut<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
 }
 
-template <size_t kRIndex, size_t kGIndex, size_t kBIndex, size_t kAIndex = NO_A_INDEX>
+template <size_t kRIndex, size_t kGIndex, size_t kBIndex,
+          size_t kInAIndex = NO_A_INDEX, size_t kOutAIndex = kInAIndex>
 static void qcms_transform_data_gray_template_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
-	const unsigned int components = A_INDEX_COMPONENTS(kAIndex);
+	const unsigned int components = A_INDEX_COMPONENTS(kOutAIndex);
 	unsigned int i;
 	for (i = 0; i < length; i++) {
 		unsigned char device = *src++;
-		unsigned char alpha;
-		if (kAIndex != NO_A_INDEX) {
+		unsigned char alpha = 0xFF;
+		if (kInAIndex != NO_A_INDEX) {
 		       alpha = *src++;
 		}
 		uint16_t gray;
@@ -425,8 +437,8 @@ static void qcms_transform_data_gray_template_precache(const qcms_transform *tra
 		dest[kRIndex] = transform->output_table_r->data[gray];
 		dest[kGIndex] = transform->output_table_g->data[gray];
 		dest[kBIndex] = transform->output_table_b->data[gray];
-		if (kAIndex != NO_A_INDEX) {
-			dest[kAIndex] = alpha;
+		if (kOutAIndex != NO_A_INDEX) {
+			dest[kOutAIndex] = alpha;
 		}
 		dest += components;
 	}
@@ -435,6 +447,16 @@ static void qcms_transform_data_gray_template_precache(const qcms_transform *tra
 static void qcms_transform_data_gray_out_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
 {
 	qcms_transform_data_gray_template_precache<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX>(transform, src, dest, length);
+}
+
+static void qcms_transform_data_gray_rgba_out_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+{
+	qcms_transform_data_gray_template_precache<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX, NO_A_INDEX, RGBA_A_INDEX>(transform, src, dest, length);
+}
+
+static void qcms_transform_data_gray_bgra_out_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
+{
+	qcms_transform_data_gray_template_precache<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, NO_A_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
 }
 
 static void qcms_transform_data_graya_rgba_out_precache(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length)
@@ -1117,7 +1139,7 @@ qcms_transform* qcms_transform_create(
 	} else if (in_type == QCMS_DATA_BGRA_8) {
 		match = out_type == QCMS_DATA_BGRA_8;
 	} else if (in_type == QCMS_DATA_GRAY_8) {
-		match = out_type == QCMS_DATA_RGB_8;
+		match = out_type == QCMS_DATA_RGB_8 || out_type == QCMS_DATA_RGBA_8 || out_type == QCMS_DATA_BGRA_8;
 	} else if (in_type == QCMS_DATA_GRAYA_8) {
 		match = out_type == QCMS_DATA_RGBA_8 || out_type == QCMS_DATA_BGRA_8;
 	}
@@ -1283,20 +1305,36 @@ qcms_transform* qcms_transform_create(
 		}
 
 		if (precache) {
-			if (in_type == QCMS_DATA_GRAY_8) {
+			if (out_type == QCMS_DATA_RGB_8) {
 				transform->transform_fn = qcms_transform_data_gray_out_precache;
 			} else if (out_type == QCMS_DATA_RGBA_8) {
-				transform->transform_fn = qcms_transform_data_graya_rgba_out_precache;
+				if (in_type == QCMS_DATA_GRAY_8) {
+					transform->transform_fn = qcms_transform_data_gray_rgba_out_precache;
+				} else {
+					transform->transform_fn = qcms_transform_data_graya_rgba_out_precache;
+				}
 			} else if (out_type == QCMS_DATA_BGRA_8) {
-				transform->transform_fn = qcms_transform_data_graya_bgra_out_precache;
+				if (in_type == QCMS_DATA_GRAY_8) {
+					transform->transform_fn = qcms_transform_data_gray_bgra_out_precache;
+				} else {
+					transform->transform_fn = qcms_transform_data_graya_bgra_out_precache;
+				}
 			}
 		} else {
-			if (in_type == QCMS_DATA_GRAY_8) {
+			if (out_type == QCMS_DATA_RGB_8) {
 				transform->transform_fn = qcms_transform_data_gray_out_lut;
 			} else if (out_type == QCMS_DATA_RGBA_8) {
-				transform->transform_fn = qcms_transform_data_graya_rgba_out_lut;
+				if (in_type == QCMS_DATA_GRAY_8) {
+					transform->transform_fn = qcms_transform_data_gray_rgba_out_lut;
+				} else {
+					transform->transform_fn = qcms_transform_data_graya_rgba_out_lut;
+				}
 			} else if (out_type == QCMS_DATA_BGRA_8) {
-				transform->transform_fn = qcms_transform_data_graya_bgra_out_lut;
+				if (in_type == QCMS_DATA_GRAY_8) {
+					transform->transform_fn = qcms_transform_data_gray_bgra_out_lut;
+				} else {
+					transform->transform_fn = qcms_transform_data_graya_bgra_out_lut;
+				}
 			}
 		}
 	} else {
