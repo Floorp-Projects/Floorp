@@ -32,6 +32,9 @@ pref("dom.push.enabled", false);
 // enable external storage API
 pref("dom.storageManager.enabled", true);
 
+// enable Visual Viewport API
+pref("dom.visualviewport.enabled", true);
+
 // Use containerless scrolling.
 pref("layout.scroll.root-frame-containers", 0);
 
