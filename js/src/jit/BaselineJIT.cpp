@@ -299,6 +299,10 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
     return Method_Error;
   }
 
+  if (script->hasForceInterpreterOp()) {
+    return Method_CantCompile;
+  }
+
   // Frames can be marked as debuggee frames independently of its underlying
   // script being a debuggee script, e.g., when performing
   // Debugger.Frame.prototype.eval.
@@ -314,6 +318,10 @@ static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
 
   if (script->types()) {
     return Method_Compiled;
+  }
+
+  if (script->hasForceInterpreterOp()) {
+    return Method_CantCompile;
   }
 
   // Check script warm-up counter.
