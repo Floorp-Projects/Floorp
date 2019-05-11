@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.library
 
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -78,7 +80,13 @@ class LibraryFragment : Fragment() {
 
     private fun setToolbarColor() {
         val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
-        toolbar.setBackgroundColor(R.attr.foundation.getColorFromAttr(context!!))
-        toolbar.setTitleTextColor(R.attr.primaryText.getColorFromAttr(context!!))
+
+        val backgroundColor = R.attr.foundation.getColorFromAttr(context!!)
+        val foregroundColor = R.attr.primaryText.getColorFromAttr(context!!)
+
+        toolbar.setBackgroundColor(backgroundColor)
+        toolbar.setTitleTextColor(foregroundColor)
+        toolbar.navigationIcon?.colorFilter =
+                PorterDuffColorFilter(foregroundColor, PorterDuff.Mode.SRC_IN)
     }
 }
