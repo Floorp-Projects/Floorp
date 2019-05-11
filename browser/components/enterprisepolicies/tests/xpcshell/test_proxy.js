@@ -12,13 +12,13 @@ add_task(async function test_proxy_modes_and_autoconfig() {
 
   for (let [mode, expectedValue] of PROXY_TYPES_MAP) {
     ProxyPolicies.configureProxySettings({Mode: mode}, (_, value) => {
-      is(value, expectedValue, "Correct proxy mode");
+      equal(value, expectedValue, "Correct proxy mode");
     });
   }
 
   let autoconfigURL = new URL("data:text/plain,test");
   ProxyPolicies.configureProxySettings({AutoConfigURL: autoconfigURL}, (_, value) => {
-    is(value, autoconfigURL.href, "AutoconfigURL correctly set");
+    equal(value, autoconfigURL.href, "AutoconfigURL correctly set");
   });
 });
 

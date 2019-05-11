@@ -10,7 +10,7 @@ add_task(async function test_default_browser_check() {
   // testing profile. Let's start with true for a sanity check.
 
   ShellService.shouldCheckDefaultBrowser = true;
-  is(ShellService.shouldCheckDefaultBrowser, true, "Sanity check");
+  equal(ShellService.shouldCheckDefaultBrowser, true, "Sanity check");
 
   await setupPolicyEngineWithJson({
     "policies": {
@@ -18,12 +18,12 @@ add_task(async function test_default_browser_check() {
     },
   });
 
-  is(ShellService.shouldCheckDefaultBrowser, false, "Policy changed it to not check");
+  equal(ShellService.shouldCheckDefaultBrowser, false, "Policy changed it to not check");
 
   // Try to change it to true and check that it doesn't take effect
   ShellService.shouldCheckDefaultBrowser = true;
 
-  is(ShellService.shouldCheckDefaultBrowser, false, "Policy is enforced");
+  equal(ShellService.shouldCheckDefaultBrowser, false, "Policy is enforced");
 });
 
 add_task(async function test_default_browser_check() {
@@ -33,10 +33,10 @@ add_task(async function test_default_browser_check() {
     },
   });
 
-  is(ShellService.shouldCheckDefaultBrowser, true, "Policy changed it to check");
+  equal(ShellService.shouldCheckDefaultBrowser, true, "Policy changed it to check");
 
   // Try to change it to false and check that it doesn't take effect
   ShellService.shouldCheckDefaultBrowser = false;
 
-  is(ShellService.shouldCheckDefaultBrowser, true, "Policy is enforced");
+  equal(ShellService.shouldCheckDefaultBrowser, true, "Policy is enforced");
 });

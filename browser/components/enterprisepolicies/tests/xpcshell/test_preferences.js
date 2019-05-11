@@ -18,5 +18,5 @@ add_task(async function test_policy_preferences() {
   });
 
   checkLockedPref("network.IDN_show_punycode", true);
-  is(Services.prefs.getBoolPref("app.update.log"), false, "Disallowed pref was not been changed");
+  equal(Services.prefs.getBoolPref("app.update.log"), false, "Disallowed pref was not been changed");
  });
