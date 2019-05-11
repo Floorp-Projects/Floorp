@@ -207,7 +207,7 @@
     </style>
 
     <style name="QuickSettingsText">
-        <item name="android:textColor">?primaryText</item>
+        <item name="android:textColor">@color/state_list_text_color</item>
         <item name="android:textSize">14sp</item>
         <item name="android:paddingStart">16dp</item>
         <item name="android:gravity">center_vertical</item>
@@ -223,6 +223,6 @@
         <item name="android:paddingEnd">24dp</item>
         <item name="android:gravity">end|center_vertical</item>
         <item name="android:background">?android:attr/selectableItemBackground</item>
-        <item name="android:textColor">@color/photonBlue50</item>
+        <item name="android:textColor">?accentBright</item>
     </style>
 </resources>
