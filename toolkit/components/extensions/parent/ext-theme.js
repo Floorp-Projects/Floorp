@@ -45,20 +45,11 @@ class Theme {
     if (startupData && startupData.lwtData) {
       Object.assign(this, startupData);
     } else {
-      // TODO(ntim): clean this in bug 1550090
       this.lwtStyles = {};
-      this.lwtDarkStyles = null;
-      if (darkDetails) {
-        this.lwtDarkStyles = {};
-      }
+      this.lwtDarkStyles = {};
 
       if (experiment) {
         if (extension.experimentsAllowed) {
-          this.lwtStyles.experimental = {
-            colors: {},
-            images: {},
-            properties: {},
-          };
           const {baseURI} = this.extension;
           if (experiment.stylesheet) {
             experiment.stylesheet = baseURI.resolve(experiment.stylesheet);
@@ -91,6 +82,8 @@ class Theme {
       this.lwtData = {
         theme: this.lwtStyles,
         darkTheme: this.lwtDarkStyles,
+        id: this.extension.id,
+        version: this.extension.version,
       };
 
       if (this.experiment) {
@@ -126,6 +119,14 @@ class Theme {
    * @param {Object} styles Styles object in which to store the colors.
    */
   loadDetails(details, styles) {
+    if (this.experiment) {
+      styles.experimental = {
+        colors: {},
+        images: {},
+        properties: {},
+      };
+    }
+
     if (details.colors) {
       this.loadColors(details.colors, styles);
     }
@@ -137,8 +138,6 @@ class Theme {
     if (details.properties) {
       this.loadProperties(details.properties, styles);
     }
-
-    this.loadMetadata(this.extension, styles);
   }
 
   /**
@@ -337,21 +336,10 @@ class Theme {
     }
   }
 
-  /**
-   * Helper method for loading extension metadata required by downstream
-   * consumers.
-   *
-   * @param {Object} extension Extension object.
-   * @param {Object} styles Styles object in which to store the colors.
-   */
-  loadMetadata(extension, styles) {
-    styles.id = extension.id;
-    styles.version = extension.version;
-  }
-
   static unload(windowId) {
     let lwtData = {
-      theme: null,
+      theme: {},
+      darkTheme: {},
     };
 
     if (windowId) {
