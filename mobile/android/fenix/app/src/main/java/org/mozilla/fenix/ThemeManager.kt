@@ -105,17 +105,13 @@ class DefaultThemeManager : ThemeManager {
             window: Window,
             context: Context
         ) {
-            if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.O) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 // API level can display handle light navigation bar color
                 window.decorView.systemUiVisibility =
                     window.decorView.systemUiVisibility or
                             View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
                             View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
                 updateNavigationBar(window, context)
-            } else {
-                window.decorView.systemUiVisibility =
-                    window.decorView.systemUiVisibility or
-                            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             }
         }
 
