@@ -49,14 +49,14 @@ add_task(async function test_setup_preexisting_permissions() {
 
 add_task(async function test_setup_activate_policies() {
   await setupPolicyEngineWithJson("config_popups_cookies_addons_flash.json");
-  is(Services.policies.status, Ci.nsIEnterprisePolicies.ACTIVE, "Engine is active");
+  equal(Services.policies.status, Ci.nsIEnterprisePolicies.ACTIVE, "Engine is active");
 });
 
 function checkPermission(url, expected, permissionName) {
   let expectedValue = Ci.nsIPermissionManager[`${expected}_ACTION`];
   let uri = Services.io.newURI(`https://www.${url}`);
 
-  is(Services.perms.testPermission(uri, permissionName),
+  equal(Services.perms.testPermission(uri, permissionName),
     expectedValue,
     `Correct (${permissionName}=${expected}) for URL ${url}`);
 
@@ -64,7 +64,7 @@ function checkPermission(url, expected, permissionName) {
     let permission = Services.perms.getPermissionObjectForURI(
       uri, permissionName, true);
     ok(permission, "Permission object exists");
-    is(permission.expireType, Ci.nsIPermissionManager.EXPIRE_POLICY,
+    equal(permission.expireType, Ci.nsIPermissionManager.EXPIRE_POLICY,
        "Permission expireType is correct");
   }
 }

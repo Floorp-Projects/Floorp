@@ -16,5 +16,5 @@ add_task(async function setup() {
                                   });
 
   let extensionPolicy = Services.policies.getExtensionPolicy("3rdparty-policy@mozilla.com");
-  Assert.deepEqual(extensionPolicy, {"string": "value"});
+  deepEqual(extensionPolicy, {"string": "value"});
 });

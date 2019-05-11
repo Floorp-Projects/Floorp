@@ -12,8 +12,8 @@ function callback() {
 
 add_task(async function test_runonce_helper() {
   runOnce("test_action", callback);
-  is(runCount, 1, "Callback ran for the first time.");
+  equal(runCount, 1, "Callback ran for the first time.");
 
   runOnce("test_action", callback);
-  is(runCount, 1, "Callback didn't run again.");
+  equal(runCount, 1, "Callback didn't run again.");
 });

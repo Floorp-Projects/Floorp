@@ -95,7 +95,7 @@ add_task(async function test_object_unflatten() {
 
   let unflattened = macOSPoliciesParser.unflatten(input);
 
-  Assert.deepEqual(unflattened, expected, "Input was unflattened correctly.");
+  deepEqual(unflattened, expected, "Input was unflattened correctly.");
 });
 
 add_task(async function test_array_unflatten() {
@@ -108,7 +108,7 @@ add_task(async function test_array_unflatten() {
   };
 
   let unflattened = macOSPoliciesParser.unflatten(input);
-  is(unflattened.Foo.length, 31, "Array size is correct");
+  equal(unflattened.Foo.length, 31, "Array size is correct");
 
   let expected = {
     Foo: [, 1, , , , 5], // eslint-disable-line no-sparse-arrays
@@ -116,5 +116,5 @@ add_task(async function test_array_unflatten() {
   expected.Foo[10] = 10;
   expected.Foo[30] = 30;
 
-  Assert.deepEqual(unflattened, expected, "Array was unflattened correctly.");
+  deepEqual(unflattened, expected, "Array was unflattened correctly.");
 });

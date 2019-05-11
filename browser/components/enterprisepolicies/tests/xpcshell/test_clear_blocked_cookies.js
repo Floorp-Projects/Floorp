@@ -51,7 +51,7 @@ add_task(async function test_cookies_for_blocked_sites_cleared() {
        path: "/"},
     ],
   };
-  is(JSON.stringify(cookies), JSON.stringify(expected),
+  equal(JSON.stringify(cookies), JSON.stringify(expected),
      "All stored cookies for blocked origins should be cleared");
 });
 

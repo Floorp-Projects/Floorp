@@ -174,10 +174,6 @@ EnterprisePoliciesManager.prototype = {
   },
 
   async _restart() {
-    if (!Cu.isInAutomation) {
-      return;
-    }
-
     DisallowedFeatures = {};
 
     Services.ppmm.sharedData.delete("EnterprisePolicies:Status");
@@ -415,8 +411,13 @@ class JSONPoliciesProvider {
   }
 
   _readData() {
+    let configFile = this._getConfigurationFile();
+    if (!configFile) {
+      // Do nothing, _policies will remain null
+      return;
+    }
     try {
-      let data = Cu.readUTF8File(this._getConfigurationFile());
+      let data = Cu.readUTF8File(configFile);
       if (data) {
         this._policies = JSON.parse(data).policies;
 
