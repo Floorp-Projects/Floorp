@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.system
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
@@ -64,6 +65,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
@@ -1393,23 +1395,24 @@ class SystemEngineViewTest {
     }
 
     @Test
-    @Suppress("Deprecation")
-    // TODO remove suppression when fixed: https://github.com/mozilla-mobile/android-components/issues/888
     fun captureThumbnail() {
-        val engineView = SystemEngineView(getApplicationContext())
+        val activity = Robolectric.setupActivity(Activity::class.java)
+        val engineView = SystemEngineView(activity)
+        val webView = mock<WebView>()
+
+        `when`(webView.width).thenReturn(100)
+        `when`(webView.height).thenReturn(200)
 
         engineView.session = mock()
 
-        `when`(engineView.session!!.webView).thenReturn(mock())
-
-        `when`(engineView.session!!.webView.drawingCache)
-            .thenReturn(Bitmap.createBitmap(10, 10, Bitmap.Config.RGB_565))
+        `when`(engineView.session!!.webView).thenReturn(webView)
 
         var thumbnail: Bitmap? = null
 
         engineView.captureThumbnail {
             thumbnail = it
         }
+        verify(webView).draw(any())
         assertNotNull(thumbnail)
 
         engineView.session = null

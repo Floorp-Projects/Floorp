@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.system
 import android.annotation.TargetApi
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.net.http.SslError
 import android.os.Build
@@ -644,17 +645,15 @@ class SystemEngineView @JvmOverloads constructor(
 
     override fun canScrollVerticallyDown() = session?.webView?.canScrollVertically(1) ?: false
 
-    @Suppress("Deprecation")
-    // TODO remove suppression when fixed: https://github.com/mozilla-mobile/android-components/issues/888
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
         val webView = session?.webView
 
         val thumbnail = if (webView == null) {
             null
         } else {
-            webView.buildDrawingCache()
-            val outBitmap = webView.drawingCache?.let { cache -> Bitmap.createBitmap(cache) }
-            webView.destroyDrawingCache()
+            val outBitmap = Bitmap.createBitmap(webView.width, webView.height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(outBitmap)
+            webView.draw(canvas)
             outBitmap
         }
         onFinish(thumbnail)
