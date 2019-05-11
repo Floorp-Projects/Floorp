@@ -32,6 +32,7 @@ class SearchBox extends PureComponent {
       onFocus: PropTypes.func,
       onKeyDown: PropTypes.func,
       placeholder: PropTypes.string.isRequired,
+      plainStyle: PropTypes.bool,
       type: PropTypes.string.isRequired,
     };
   }
@@ -168,21 +169,28 @@ class SearchBox extends PureComponent {
   }
 
   render() {
-    const {
+    let {
       autocompleteProvider,
       learnMoreTitle,
       learnMoreUrl,
       placeholder,
+      plainStyle,
       type = "search",
     } = this.props;
     const { value } = this.state;
     const showAutocomplete = autocompleteProvider && this.state.focused && value !== "";
-    const showLearnMoreLink = learnMoreUrl && value === "";
 
     const inputClassList = [`devtools-${type}input`];
+    if (plainStyle) {
+      inputClassList.push("devtools-plaininput");
+    }
+    if (value !== "") {
+      inputClassList.push("filled");
+      learnMoreUrl = false;
+    }
 
     return dom.div(
-      { className: "devtools-searchbox" },
+      { className: "devtools-searchbox has-clear-btn" },
       dom.input({
         className: inputClassList.join(" "),
         onBlur: this.onBlur,
@@ -193,14 +201,14 @@ class SearchBox extends PureComponent {
         ref: this.inputRef,
         value,
       }),
-      showLearnMoreLink && MDNLink({
-        title: learnMoreTitle,
-        url: learnMoreUrl,
-      }),
       dom.button({
         className: "devtools-searchinput-clear",
         hidden: value === "",
         onClick: this.onClearButtonClick,
+      }),
+      learnMoreUrl && MDNLink({
+        title: learnMoreTitle,
+        url: learnMoreUrl,
       }),
       showAutocomplete && AutocompletePopup({
         autocompleteProvider,

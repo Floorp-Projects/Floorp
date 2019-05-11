@@ -11,7 +11,6 @@ define(function(require, exports, module) {
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
   const { createFactories } = require("devtools/client/shared/react-utils");
-  const { div } = require("devtools/client/shared/vendor/react-dom-factories");
 
   const { SearchBox } = createFactories(require("./SearchBox"));
   const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
@@ -72,7 +71,6 @@ define(function(require, exports, module) {
           ToolbarButton({className: "btn expand", onClick: this.onExpand},
             JSONView.Locale.$STR("jsonViewer.ExpandAll")
           ),
-          div({className: "devtools-separator"}),
           SearchBox({
             actions: this.props.actions,
           })
