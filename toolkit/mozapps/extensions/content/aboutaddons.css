@@ -47,6 +47,11 @@ addon-list message-bar-stack.pending-uninstall {
   box-shadow: var(--card-shadow);
 }
 
+addon-card:not([expanded]) > .addon.card:hover {
+  box-shadow: var(--card-shadow-hover);
+  cursor: pointer;
+}
+
 .addon-card-collapsed {
   display: flex;
 }
