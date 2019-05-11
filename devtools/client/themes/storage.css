@@ -70,6 +70,16 @@
   min-width: 250px;
 }
 
+/* Toolbar */
+
+/*
+  .devtools-input-toolbar forces display: flex; which does not work
+  properly with XUL. Force XUL flexbox instead.
+*/
+#storage-toolbar {
+  display: -moz-box;
+}
+
 #storage-toolbar .add-button::before {
   background-image: url("chrome://devtools/skin/images/add.svg");
   -moz-user-focus: normal;

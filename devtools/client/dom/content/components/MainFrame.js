@@ -48,7 +48,7 @@ class MainFrame extends Component {
           dispatch: this.props.dispatch,
           object: this.props.object,
         }),
-        div({className: "treeTableBox"},
+        div({className: "treeTableBox devtools-monospace"},
           DomTree({
             filter,
             object,
