@@ -8,6 +8,7 @@ class LoginList extends HTMLElement {
   constructor() {
     super();
     this._logins = [];
+    this._selectedItem = null;
   }
 
   connectedCallback() {
@@ -18,12 +19,30 @@ class LoginList extends HTMLElement {
     this.attachShadow({mode: "open"})
         .appendChild(loginListTemplate.content.cloneNode(true));
     this.render();
+
+    window.addEventListener("AboutLoginsLoginSelected", this);
   }
 
   render() {
     let list = this.shadowRoot.querySelector("ol");
     for (let login of this._logins) {
       list.append(new LoginListItem(login));
+    }
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "AboutLoginsLoginSelected": {
+        if (this._selectedItem) {
+          if (this._selectedItem.getAttribute("guid") == event.detail.guid) {
+            return;
+          }
+          this._selectedItem.classList.toggle("selected", false);
+        }
+        this._selectedItem = this.shadowRoot.querySelector(`login-list-item[guid="${event.detail.guid}"]`);
+        this._selectedItem.classList.toggle("selected", true);
+        break;
+      }
     }
   }
 
