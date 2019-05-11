@@ -16,12 +16,8 @@ login-list =
   .login-list-header = Logins
 
 login-item =
-  .cancel-button = Cancel
-  .delete-button = Delete
-  .hostname-label = Website Address
-  .password-label = Password
-  .save-changes-button = Save Changes
-  .time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }
-  .time-changed = Last changed: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
-  .time-used = Last used: { DATETIME($timeUsed, day: "numeric", month: "long", year: "numeric") }
-  .username-label = Username
+  .login-item-hostname = Hostname
+  .login-item-password = Password
+  .login-item-username = Username
+  .login-item-time-created = Time Created
+  .login-item-delete = Delete
