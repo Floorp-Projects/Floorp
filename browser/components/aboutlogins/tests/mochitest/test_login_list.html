@@ -63,6 +63,12 @@ add_task(async function test_populated_list() {
      "login-list-item hostname should match");
   is(loginListItems[0].shadowRoot.querySelector(".username").textContent, TEST_LOGIN_1.username,
      "login-list-item username should match");
+
+  ok(!loginListItems[0].classList.contains("selected"), "The first item should not be selected by default");
+  ok(!loginListItems[1].classList.contains("selected"), "The second item should not be selected by default");
+  loginListItems[0].click();
+  ok(loginListItems[0].classList.contains("selected"), "The first item should be selected");
+  ok(!loginListItems[1].classList.contains("selected"), "The second item should still not be selected");
 });
 
 add_task(async function test_login_modified() {
