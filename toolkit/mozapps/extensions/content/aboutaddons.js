@@ -963,6 +963,13 @@ class AddonCard extends HTMLElement {
           this.panel.hide();
           openAbuseReport({addonId: addon.id, reportEntryPoint: "menu"});
           break;
+        default:
+          // Handle a click on the card itself.
+          // Don't expand if expanded or a button was clicked.
+          if (!this.expanded && e.target.localName != "button") {
+            loadViewFn("detail", this.addon.id);
+          }
+          break;
       }
     } else if (e.type == "change") {
       let {name} = e.target;
@@ -995,11 +1002,6 @@ class AddonCard extends HTMLElement {
       if (action == "more-options") {
         this.panel.toggle(e);
       }
-    } else if (e.type == "dblclick") {
-      // Don't expand if expanded or a button is double clicked.
-      if (!this.expanded && e.target.tagName != "BUTTON") {
-        loadViewFn("detail", this.addon.id);
-      }
     }
   }
 
@@ -1010,14 +1012,12 @@ class AddonCard extends HTMLElement {
   registerListeners() {
     this.addEventListener("change", this);
     this.addEventListener("click", this);
-    this.addEventListener("dblclick", this);
     this.addEventListener("mousedown", this);
   }
 
   removeListeners() {
     this.removeEventListener("change", this);
     this.removeEventListener("click", this);
-    this.removeEventListener("dblclick", this);
     this.removeEventListener("mousedown", this);
   }
 
