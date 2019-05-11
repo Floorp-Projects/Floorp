@@ -645,12 +645,6 @@ CssRuleView.prototype = {
     this.searchClearButton.hidden = this.searchValue.length === 0;
 
     this._filterChangedTimeout = setTimeout(() => {
-      if (this.searchField.value.length > 0) {
-        this.searchField.setAttribute("filled", true);
-      } else {
-        this.searchField.removeAttribute("filled");
-      }
-
       this.searchData = {
         searchPropertyMatch: FILTER_PROP_RE.exec(this.searchValue),
         searchPropertyName: this.searchValue,
@@ -1220,11 +1214,11 @@ CssRuleView.prototype = {
       }
     }
 
-    if (this.searchValue && !seenSearchTerm) {
-      this.searchField.classList.add("devtools-style-searchbox-no-match");
-    } else {
-      this.searchField.classList.remove("devtools-style-searchbox-no-match");
-    }
+    const searchBox = this.searchField.parentNode;
+    searchBox.classList.toggle(
+      "devtools-searchbox-no-match",
+      this.searchValue && !seenSearchTerm,
+    );
 
     return promise.all(editorReadyPromises);
   },

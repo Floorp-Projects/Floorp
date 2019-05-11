@@ -6,44 +6,17 @@
 
 .devtools-toolbar {
   display: flex;
-  line-height: 23px;
-}
-
-.devtools-toolbar-container {
-  height: auto;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  border: none;
-  padding: 0;
-}
-
-.devtools-toolbar-group {
-  display: flex;
-  flex: 0 0 auto;
-  flex-wrap: nowrap;
   align-items: center;
 }
 
-.devtools-toolbar-two-rows-1,
-.devtools-toolbar-two-rows-2,
-.devtools-toolbar-single-row {
-  flex-grow: 1;
+#netmonitor-main-toolbar,
+#netmonitor-toolbar-container > .devtools-toolbar {
+  /* @TODO: Remove this in bug 1535956 */
   min-height: var(--primary-toolbar-height);
-  background-color: var(--theme-body-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
-}
-
-.devtools-toolbar-two-rows-1 {
-  width: -moz-available;
-}
-
-.devtools-toolbar-two-rows-2 {
-  justify-content: space-between;
 }
 
 .requests-list-filter-buttons {
-  display: flex;
-  flex-wrap: wrap;
+  white-space: nowrap;
   margin: 0 7px;
 }
 
@@ -95,34 +68,10 @@
   margin-inline-end: 7px;
 }
 
-/* Filter input within the Toolbar */
-
-.devtools-toolbar-group .devtools-filterinput {
-  border: none;
-  box-shadow: none;
-  background-color: var(--theme-body-background);
-}
-
-.devtools-toolbar-group .devtools-searchbox {
-  height: 28px;
-  border: 1px solid transparent;
-}
-
-.devtools-toolbar-group .devtools-searchbox:focus-within {
-  border: 1px solid var(--blue-50);
-  margin-bottom: 0;
-  margin-top: 0;
-  box-shadow: none;
-}
-
-.network-monitor .devtools-toolbar-group .learn-more-link::before {
-  opacity: 0.6;
-}
-
 /* Hide filter input learn more link if there is not enough
    horizontal space. */
 @media (max-width: 590px) {
-  .network-monitor .devtools-searchbox:hover .learn-more-link {
+  .network-monitor .devtools-searchbox .learn-more-link {
     display: none;
   }
 }

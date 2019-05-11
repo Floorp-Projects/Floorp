@@ -424,7 +424,7 @@ VariablesView.prototype = {
     const ownerNode = this._parent.parentNode;
 
     const container = this._searchboxContainer = document.createXULElement("hbox");
-    container.className = "devtools-toolbar";
+    container.className = "devtools-toolbar devtools-input-toolbar";
 
     // Hide the variables searchbox container if there are no variables or
     // properties to display.

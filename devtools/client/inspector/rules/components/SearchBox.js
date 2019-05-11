@@ -16,10 +16,10 @@ class SearchBox extends PureComponent {
 
   render() {
     return (
-      dom.div({ className: "devtools-searchbox has-clear-btn" },
+      dom.div({ className: "devtools-searchbox" },
         dom.input({
           id: "ruleview-searchbox",
-          className: "devtools-filterinput devtools-rule-searchbox",
+          className: "devtools-filterinput",
           placeholder: getStr("rule.filterStyles.placeholder"),
           type: "search",
         }),
