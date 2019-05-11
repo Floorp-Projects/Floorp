@@ -16,8 +16,8 @@ login-list =
   .login-list-header = Logins
 
 login-item =
-  .login-item-hostname = Hostname
-  .login-item-password = Password
-  .login-item-username = Username
-  .login-item-time-created = Time Created
-  .login-item-delete = Delete
+  .delete-button = Delete
+  .hostname-label = Hostname
+  .password-label = Password
+  .time-created-label = Time Created
+  .username-label = Username
