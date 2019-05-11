@@ -17,8 +17,8 @@
     <color name="neutral_faded_light_theme">@color/photonGrey20</color>
     <color name="shadow_light_theme">#1F000000</color>
     <color name="destructive_light_theme">#C50042</color>
-    <color name="scrimStart_light_theme">#F5393473</color>
-    <color name="scrimEnd_light_theme">#F520123A</color>
+    <color name="scrimStart_light_theme">#F515141A</color>
+    <color name="scrimEnd_light_theme">#F542414D</color>
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">#FBFBFE</color>

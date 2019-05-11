@@ -36,7 +36,7 @@
         <item name="shadow">@color/shadow_normal_theme</item>
         <item name="destructive">@color/destructive_normal_theme</item>
         <item name="scrimStart">@color/scrimStart_normal_theme</item>
-        <item name="scrimEnd">@color/scrimStart_normal_theme</item>
+        <item name="scrimEnd">@color/scrimEnd_normal_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_normal</item>
@@ -78,7 +78,7 @@
         <item name="shadow">@color/shadow_private_theme</item>
         <item name="destructive">@color/destructive_private_theme</item>
         <item name="scrimStart">@color/scrimStart_private_theme</item>
-        <item name="scrimEnd">@color/scrimStart_private_theme</item>
+        <item name="scrimEnd">@color/scrimEnd_private_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_private</item>
