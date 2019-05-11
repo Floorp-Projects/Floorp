@@ -13,6 +13,7 @@ import android.net.http.SslError
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
+import android.view.PixelCopy
 import android.view.View
 import android.webkit.HttpAuthHandler
 import android.webkit.JsPromptResult
@@ -47,6 +48,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.shadow.PixelCopyShadow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -1395,7 +1397,8 @@ class SystemEngineViewTest {
     }
 
     @Test
-    fun captureThumbnail() {
+    @Config(sdk = [Build.VERSION_CODES.N])
+    fun captureThumbnailOnPreO() {
         val activity = Robolectric.setupActivity(Activity::class.java)
         val engineView = SystemEngineView(activity)
         val webView = mock<WebView>()
@@ -1421,6 +1424,39 @@ class SystemEngineViewTest {
         }
 
         assertNull(thumbnail)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O], shadows = [PixelCopyShadow::class])
+    fun captureThumbnailOnPostO() {
+        val activity = Robolectric.setupActivity(Activity::class.java)
+        val engineView = SystemEngineView(activity)
+        val webView = mock<WebView>()
+        `when`(webView.width).thenReturn(100)
+        `when`(webView.height).thenReturn(200)
+
+        var thumbnail: Bitmap? = null
+
+        engineView.session = null
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+        assertNull(thumbnail)
+
+        engineView.session = mock()
+        `when`(engineView.session!!.webView).thenReturn(webView)
+
+        PixelCopyShadow.copyResult = PixelCopy.ERROR_UNKNOWN
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+        assertNull(thumbnail)
+
+        PixelCopyShadow.copyResult = PixelCopy.SUCCESS
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+        assertNotNull(thumbnail)
     }
 
     @Test

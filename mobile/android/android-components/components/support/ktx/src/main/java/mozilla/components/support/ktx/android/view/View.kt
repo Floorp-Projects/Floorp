@@ -5,6 +5,7 @@
 package mozilla.components.support.ktx.android.view
 
 import android.content.Context
+import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import androidx.core.view.ViewCompat
@@ -66,6 +67,19 @@ fun View.hideKeyboard() {
         as InputMethodManager
 
     imm.hideSoftInputFromWindow(windowToken, 0)
+}
+
+/**
+ * Fills the given [Rect] with data about location view in the window.
+ *
+ * @see View.getLocationInWindow
+ */
+fun View.getRectWithViewLocation(): Rect {
+    val locationInWindow = IntArray(2).apply { getLocationInWindow(this) }
+    return Rect(locationInWindow[0],
+            locationInWindow[1],
+            locationInWindow[0] + width,
+            locationInWindow[1] + height)
 }
 
 /**

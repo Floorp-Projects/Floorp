@@ -10,11 +10,15 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.support.base.android.Padding
+import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowLooper
 
@@ -72,5 +76,26 @@ class ViewTest {
         assertEquals(view.paddingTop, 20)
         assertEquals(view.paddingRight, 24)
         assertEquals(view.paddingBottom, 28)
+    }
+
+    @Test
+    fun `getRectWithViewLocation should transform getLocationInWindow method values`() {
+        val view = spy(View(context))
+        doAnswer { invocation ->
+            val locationInWindow = (invocation.getArgument(0) as IntArray)
+            locationInWindow[0] = 100
+            locationInWindow[1] = 200
+            locationInWindow
+        }.`when`(view).getLocationInWindow(any())
+
+        `when`(view.width).thenReturn(150)
+        `when`(view.height).thenReturn(250)
+
+        val outRect = view.getRectWithViewLocation()
+
+        assertEquals(100, outRect.left)
+        assertEquals(200, outRect.top)
+        assertEquals(250, outRect.right)
+        assertEquals(450, outRect.bottom)
     }
 }

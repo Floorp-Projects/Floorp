@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.system
 
 import android.annotation.TargetApi
+import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -14,6 +15,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Message
 import android.util.AttributeSet
+import android.view.PixelCopy
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
@@ -51,6 +53,7 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.support.ktx.android.view.getRectWithViewLocation
 import mozilla.components.support.ktx.kotlin.toUri
 import mozilla.components.support.utils.DownloadUtils
 import java.util.Date
@@ -647,16 +650,35 @@ class SystemEngineView @JvmOverloads constructor(
 
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
         val webView = session?.webView
-
-        val thumbnail = if (webView == null) {
-            null
-        } else {
-            val outBitmap = Bitmap.createBitmap(webView.width, webView.height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(outBitmap)
-            webView.draw(canvas)
-            outBitmap
+        if (webView == null) {
+            onFinish(null)
+            return
         }
-        onFinish(thumbnail)
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            createThumbnailUsingDrawingView(webView, onFinish)
+        } else {
+            createThumbnailUsingPixelCopy(webView, onFinish)
+        }
+    }
+
+    private fun createThumbnailUsingDrawingView(view: View, onFinish: (Bitmap?) -> Unit) {
+        val outBitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(outBitmap)
+        view.draw(canvas)
+        onFinish(outBitmap)
+    }
+
+    @TargetApi(Build.VERSION_CODES.O)
+    private fun createThumbnailUsingPixelCopy(view: View, onFinish: (Bitmap?) -> Unit) {
+        val out = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val viewRect = view.getRectWithViewLocation()
+        val window = (context as Activity).window
+
+        PixelCopy.request(window, viewRect, out, { copyResult ->
+            val result = if (copyResult == PixelCopy.SUCCESS) out else null
+            onFinish(result)
+        }, handler)
     }
 
     private fun resetJSAlertAbuseState() {
