@@ -66,10 +66,7 @@ interface nsIEventListenerService : nsISupports
    * Returns an array of nsIEventListenerInfo objects.
    * If aEventTarget doesn't have any listeners, this returns null.
    */
-  void getListenerInfoFor(in EventTarget aEventTarget,
-                          [optional] out unsigned long aCount,
-                          [retval, array, size_is(aCount)] out
-                            nsIEventListenerInfo aOutArray);
+  Array<nsIEventListenerInfo> getListenerInfoFor(in EventTarget aEventTarget);
 
   /**
    * Returns an array of event targets.
@@ -79,11 +76,8 @@ interface nsIEventListenerService : nsISupports
    * @note Some events, especially 'load', may actually have a shorter
    *       event target chain than what this methods returns.
    */
-  void getEventTargetChainFor(in EventTarget aEventTarget,
-                              in boolean composed,
-                              [optional] out unsigned long aCount,
-                              [retval, array, size_is(aCount)] out
-                                EventTarget aOutArray);
+  Array<EventTarget> getEventTargetChainFor(in EventTarget aEventTarget,
+                                            in boolean composed);
 
   /**
    * Returns true if a event target has any listener for the given type.

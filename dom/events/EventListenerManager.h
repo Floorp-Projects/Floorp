@@ -16,6 +16,7 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMEventListener.h"
 #include "nsTObserverArray.h"
+#include "nsTArray.h"
 
 class nsIDocShell;
 class nsIEventListenerInfo;
@@ -23,9 +24,6 @@ class nsPIDOMWindowInner;
 class JSTracer;
 
 struct EventTypeData;
-
-template <class T>
-class nsCOMArray;
 
 namespace mozilla {
 
@@ -402,7 +400,7 @@ class EventListenerManager final : public EventListenerManagerBase {
    * Sets aList to the list of nsIEventListenerInfo objects representing the
    * listeners managed by this listener manager.
    */
-  nsresult GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList);
+  nsresult GetListenerInfo(nsTArray<RefPtr<nsIEventListenerInfo>>& aList);
 
   uint32_t GetIdentifierForEvent(nsAtom* aEvent);
 
