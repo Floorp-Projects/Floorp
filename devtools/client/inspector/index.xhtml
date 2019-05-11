@@ -46,8 +46,8 @@
     <!-- Main Panel Content -->
     <div id="inspector-main-content" class="devtools-main-content" style="visibility: hidden;">
       <!-- Toolbar -->
-      <div id="inspector-toolbar" class="devtools-toolbar" nowindowdrag="true">
-        <div id="inspector-search" class="devtools-searchbox has-clear-btn">
+      <div id="inspector-toolbar" class="devtools-toolbar devtools-input-toolbar" nowindowdrag="true">
+        <div id="inspector-search" class="devtools-searchbox">
           <input id="inspector-searchbox" class="devtools-searchinput"
                  type="search"
                  data-localization="placeholder=inspectorSearchHTML.label3"/>
@@ -87,11 +87,11 @@
     <!-- Sidebar Panel Definitions -->
     <div id="tabpanels" style="visibility: collapse">
       <div id="sidebar-panel-ruleview" class="theme-sidebar inspector-tabpanel">
-        <div id="ruleview-toolbar-container" class="devtools-toolbar">
-          <div id="ruleview-toolbar">
-            <div class="devtools-searchbox has-clear-btn">
+        <div id="ruleview-toolbar-container">
+          <div id="ruleview-toolbar" class="devtools-toolbar devtools-input-toolbar">
+            <div class="devtools-searchbox">
               <input id="ruleview-searchbox"
-                     class="devtools-filterinput devtools-rule-searchbox"
+                     class="devtools-filterinput"
                      type="search"
                      data-localization="placeholder=inspector.filterStyles.placeholder"/>
               <button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></button>
@@ -104,13 +104,13 @@
               <button id="print-simulation-toggle" data-localization="title=inspector.printSimulation.tooltip" class="devtools-button" hidden="true"></button>
             </div>
           </div>
-          <div id="pseudo-class-panel" class="ruleview-reveal-panel" hidden="true">
+          <div id="pseudo-class-panel" class="theme-toolbar ruleview-reveal-panel" hidden="true">
             <label><input id="pseudo-hover-toggle" type="checkbox" value=":hover" tabindex="-1" />:hover</label>
             <label><input id="pseudo-active-toggle" type="checkbox" value=":active" tabindex="-1" />:active</label>
             <label><input id="pseudo-focus-toggle" type="checkbox" value=":focus" tabindex="-1" />:focus</label>
             <label><input id="pseudo-focus-within-toggle" type="checkbox" value=":focus-within" tabindex="-1" />:focus-within</label>
           </div>
-          <div id="ruleview-class-panel" class="ruleview-reveal-panel" hidden="true"></div>
+          <div id="ruleview-class-panel" class="theme-toolbar ruleview-reveal-panel" hidden="true"></div>
         </div>
 
         <div id="ruleview-container" class="ruleview">
@@ -120,10 +120,10 @@
       </div>
 
       <div id="sidebar-panel-computedview" class="theme-sidebar inspector-tabpanel">
-        <div id="computed-toolbar" class="devtools-toolbar">
-          <div class="devtools-searchbox has-clear-btn">
+        <div id="computed-toolbar" class="devtools-toolbar devtools-input-toolbar">
+          <div class="devtools-searchbox">
             <input id="computed-searchbox"
-                   class="devtools-filterinput devtools-rule-searchbox"
+                   class="devtools-filterinput"
                    type="search"
                    data-localization="placeholder=inspector.filterStyles.placeholder"/>
             <button id="computed-searchinput-clear" class="devtools-searchinput-clear"></button>

@@ -54,11 +54,11 @@ describe("FilterBar component:", () => {
 
     // Text filter
     const textInput = toolbar.children().eq(2);
-    expect(textInput.attr("class")).toBe("devtools-searchbox has-clear-btn");
+    expect(textInput.attr("class")).toBe("devtools-searchbox");
 
     // Text filter input
     const textFilter = textInput.children().eq(0);
-    expect(textFilter.attr("class")).toBe("devtools-plaininput text-filter");
+    expect(textFilter.attr("class")).toBe("devtools-filterinput text-filter");
     expect(textFilter.attr("placeholder")).toBe("Filter output");
     expect(textFilter.attr("type")).toBe("search");
     expect(textFilter.attr("value")).toBe("");
@@ -257,7 +257,7 @@ describe("FilterBar component:", () => {
     const store = setupStore();
 
     const wrapper = mount(Provider({store}, getFilterBar()));
-    wrapper.find(".devtools-plaininput").simulate("input", { target: { value: "a" } });
+    wrapper.find(".devtools-filterinput").simulate("input", { target: { value: "a" } });
     expect(store.getState().filters.text).toBe("a");
   });
 

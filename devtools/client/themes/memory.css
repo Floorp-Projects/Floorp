@@ -54,7 +54,8 @@ html, body, #app, #memory-tool {
    * and aligned vertically in the middle of the container.
    */
   display: flex;
-  align-items: center;
+  line-height: initial;
+  align-items: stretch;
 }
 
 .devtools-toolbar > .toolbar-group:nth-of-type(1) {
@@ -136,8 +137,8 @@ html, body, #app, #memory-tool {
 }
 
 #filter {
-  align-self: stretch;
-  margin: 2px;
+  box-sizing: border-box;
+  height: 100%;
 }
 
 /**

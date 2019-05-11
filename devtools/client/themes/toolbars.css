@@ -44,6 +44,19 @@
   border-bottom: none;
 }
 
+/* Input toolbars (toolbars that have a full height text input) */
+
+.devtools-input-toolbar {
+  display: flex;
+  /* @TODO: Remove the !important in bug 1535956 */
+  background-color: var(--theme-body-background) !important;
+  color: inherit;
+}
+
+.devtools-input-toolbar > .devtools-searchbox:first-child {
+  margin-inline-start: -3px; /* This needs to match .devtools-toolbar's padding */
+}
+
 /* Expected space around a separator:
  * -----------------------
  *            4

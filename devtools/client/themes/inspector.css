@@ -74,30 +74,6 @@ window {
   transform: scaleX(-1);
 }
 
-.devtools-toolbar {
-  background-color: var(--theme-body-background);
-  display: flex;
-}
-
-.devtools-toolbar .devtools-searchbox {
-  border: 1px solid transparent;
-}
-
-.devtools-toolbar .devtools-searchbox:focus-within {
-  border: 1px solid var(--blue-50);
-  margin-bottom: 0;
-  margin-top: 0;
-  box-shadow: none;
-}
-
-.devtools-toolbar .devtools-filterinput,
-.devtools-toolbar .devtools-searchinput {
-  border: none;
-  border-radius: 0 !important;
-  box-shadow: none;
-  background-color: var(--theme-body-background);
-}
-
 #inspector-searchlabel-container {
   display: flex;
 }
