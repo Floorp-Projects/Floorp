@@ -284,6 +284,10 @@ projects:
     path: components/lib/publicsuffixlist
     description: 'A library for reading and using the public suffix list.'
     publish: true
+  lib-push-firebase:
+    path: components/lib/push-firebase
+    description: 'An implementation of concept-push for the Firebase Message Service.'
+    publish: true
   tooling-lint:
     path: components/tooling/lint
     description: 'Custom Lint checks for using and writing components.'
