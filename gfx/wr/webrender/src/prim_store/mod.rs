@@ -2010,6 +2010,16 @@ impl PrimitiveStore {
                     prim_instance.local_clip_rect
                 };
 
+                if combined_local_clip_rect.size.is_empty_or_negative() {
+                    debug_assert!(combined_local_clip_rect.size.width >= 0.0 &&
+                                  combined_local_clip_rect.size.height >= 0.0);
+                    if prim_instance.is_chased() {
+                        println!("\tculled for zero local clip rectangle");
+                    }
+                    prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                    continue;
+                }
+
                 // All pictures must snap to their primitive rect instead of the
                 // visible rect like most primitives. This is because the picture's
                 // visible rect includes the effect of the picture's clip rect,
@@ -2018,9 +2028,16 @@ impl PrimitiveStore {
                 // children, which they snapped to, which is precisely what we also
                 // need to snap to in order to be consistent.
                 let visible_rect = if snap_to_visible {
-                    combined_local_clip_rect
-                        .intersection(&prim_local_rect)
-                        .unwrap_or(LayoutRect::zero())
+                    match combined_local_clip_rect.intersection(&prim_local_rect) {
+                        Some(r) => r,
+                        None => {
+                            if prim_instance.is_chased() {
+                                println!("\tculled for zero visible rectangle");
+                            }
+                            prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
+                            continue;
+                        }
+                    }
                 } else {
                     prim_local_rect
                 };
