@@ -253,7 +253,7 @@ class FilterBar extends Component {
 
     const children = [
       dom.div({
-        className: "devtools-toolbar webconsole-filterbar-primary",
+        className: "devtools-toolbar devtools-input-toolbar webconsole-filterbar-primary",
         key: "primary-bar",
       },
         dom.button({
@@ -265,9 +265,9 @@ class FilterBar extends Component {
           className: "devtools-separator",
         }),
         dom.div(
-          { className: "devtools-searchbox has-clear-btn" },
+          { className: "devtools-searchbox" },
           dom.input({
-            className: "devtools-plaininput text-filter",
+            className: "devtools-filterinput text-filter",
             type: "search",
             value: filter.text,
             placeholder: l10n.getStr("webconsole.filterInput.placeholder"),

@@ -361,7 +361,6 @@ class Toolbar extends Component {
         delay: FILTER_SEARCH_DELAY,
         keyShortcut: SEARCH_KEY_SHORTCUT,
         placeholder: SEARCH_PLACE_HOLDER,
-        plainStyle: true,
         type: "filter",
         ref: "searchbox",
         onChange: setRequestFilterText,
@@ -390,26 +389,27 @@ class Toolbar extends Component {
     // Render the entire toolbar.
     // dock at bottom or dock at side has different layout
     return singleRow ? (
-      span({ className: "devtools-toolbar devtools-toolbar-container" },
-        span({ className: "devtools-toolbar-group devtools-toolbar-single-row" },
-          this.renderClearButton(clearRequests),
-          this.renderSeparator(),
-          this.renderFilterBox(setRequestFilterText),
-          this.renderSeparator(),
-          this.renderToggleRecordingButton(recording, toggleRecording),
-          this.renderSeparator(),
-          this.renderFilterButtons(requestFilterTypes),
-          this.renderSeparator(),
-          this.renderPersistlogCheckbox(persistentLogsEnabled, togglePersistentLogs),
-          this.renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache),
-          this.renderSeparator(),
-          this.renderThrottlingMenu(),
-          this.renderHarButton(),
-        )
+      span({
+        id: "netmonitor-main-toolbar",
+        className: "devtools-toolbar devtools-input-toolbar",
+      },
+        this.renderClearButton(clearRequests),
+        this.renderSeparator(),
+        this.renderFilterBox(setRequestFilterText),
+        this.renderSeparator(),
+        this.renderToggleRecordingButton(recording, toggleRecording),
+        this.renderSeparator(),
+        this.renderFilterButtons(requestFilterTypes),
+        this.renderSeparator(),
+        this.renderPersistlogCheckbox(persistentLogsEnabled, togglePersistentLogs),
+        this.renderCacheCheckbox(browserCacheDisabled, toggleBrowserCache),
+        this.renderSeparator(),
+        this.renderThrottlingMenu(),
+        this.renderHarButton(),
       )
     ) : (
-      span({ className: "devtools-toolbar devtools-toolbar-container" },
-        span({ className: "devtools-toolbar-group devtools-toolbar-two-rows-1" },
+      span({ id: "netmonitor-toolbar-container" },
+        span({ className: "devtools-toolbar devtools-input-toolbar" },
           this.renderClearButton(clearRequests),
           this.renderSeparator(),
           this.renderFilterBox(setRequestFilterText),
@@ -422,7 +422,7 @@ class Toolbar extends Component {
           this.renderThrottlingMenu(),
           this.renderHarButton(),
         ),
-        span({ className: "devtools-toolbar-group devtools-toolbar-two-rows-2" },
+        span({ className: "devtools-toolbar" },
           this.renderFilterButtons(requestFilterTypes)
         )
       )

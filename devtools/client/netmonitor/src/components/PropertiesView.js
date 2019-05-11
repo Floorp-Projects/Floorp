@@ -228,7 +228,7 @@ class PropertiesView extends Component {
     return (
       div({ className: "properties-view" },
         this.shouldRenderSearchBox(object) &&
-          div({ className: "searchbox-section" },
+          div({ className: "devtools-toolbar devtools-input-toolbar" },
             SearchBox({
               delay: FILTER_SEARCH_DELAY,
               type: "filter",

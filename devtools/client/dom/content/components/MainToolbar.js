@@ -7,19 +7,14 @@
 
 // React
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
 
 const { l10n } = require("../utils");
-// Reps
-const { createFactories } = require("devtools/client/shared/react-utils");
 
-const { Toolbar, ToolbarButton } = createFactories(require("devtools/client/jsonview/components/reps/Toolbar"));
-
-// DOM Panel
-const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
 // Actions
 const { fetchProperties } = require("../actions/grips");
-
 const { setVisibilityFilter } = require("../actions/filter");
 
 /**
@@ -50,21 +45,22 @@ class MainToolbar extends Component {
 
   render() {
     return (
-      Toolbar({},
-        ToolbarButton({
-          key: "refresh",
-          className: "refresh devtools-button",
-          id: "dom-refresh-button",
-          title: l10n.getStr("dom.refresh"),
-          onClick: this.onRefresh,
-        }),
+      dom.div({ className: "devtools-toolbar devtools-input-toolbar" },
         SearchBox({
           key: "filter",
           delay: 250,
           onChange: this.onSearch,
           placeholder: l10n.getStr("dom.filterDOMPanel"),
           type: "filter",
-        })
+        }),
+        dom.span({ className: "devtools-separator" }),
+        dom.button({
+          key: "refresh",
+          className: "refresh devtools-button",
+          id: "dom-refresh-button",
+          title: l10n.getStr("dom.refresh"),
+          onClick: this.onRefresh,
+        }),
       )
     );
   }

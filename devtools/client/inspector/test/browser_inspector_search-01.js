@@ -87,7 +87,7 @@ add_task(async function() {
     is(inspector.selection.nodeFront, nodeFront,
        "Correct node is selected for state " + index);
 
-    is(!searchBox.classList.contains("devtools-style-searchbox-no-match"), isValid,
+    is(!searchBox.classList.contains("devtools-searchbox-no-match"), isValid,
        "Correct searchbox result state for state " + index);
 
     index++;

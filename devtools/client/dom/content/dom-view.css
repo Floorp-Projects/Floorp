@@ -103,13 +103,6 @@ body {
 }
 
 /******************************************************************************/
-/* Search box */
-.devtools-searchbox {
-  margin-inline-start: auto; /* Align to the right */
-  flex: none; /* Don't flex */
-}
-
-/******************************************************************************/
 /* Theme Dark */
 
 .theme-dark .treeTable > tbody > tr > td {

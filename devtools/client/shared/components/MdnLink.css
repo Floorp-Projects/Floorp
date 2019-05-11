@@ -6,24 +6,21 @@
 
 .network-monitor .learn-more-link {
   display: inline-block;
-  vertical-align: middle;
+  line-height: 16px;
 }
 
 .network-monitor .learn-more-link::before {
-  display: block;
-  margin: 0;
   background-image: url(chrome://devtools/skin/images/help.svg);
-  background-position: center;
   background-size: contain;
 }
 
 .network-monitor .tree-container .learn-more-link {
   position: absolute;
   top: 0;
-  inset-inline-start: 6px;
+  inset-inline-start: 2px;
   /* Override devtools-button styles to make this button 20x20,
    * so that the icon is vertically centered in the table row */
-  padding: 2px;
+  padding: 1px 0;
 }
 
 .network-monitor .tree-container tr:not(:hover) .learn-more-link {
