@@ -75,7 +75,7 @@ async function synthesizeKeys(keys, inspector) {
 }
 
 function assertHasResult(inspector, expectResult) {
-  is(inspector.searchBox.classList.contains("devtools-style-searchbox-no-match"),
+  is(inspector.searchBox.parentNode.classList.contains("devtools-searchbox-no-match"),
      !expectResult,
      "There are" + (expectResult ? "" : " no") + " search results");
 }
