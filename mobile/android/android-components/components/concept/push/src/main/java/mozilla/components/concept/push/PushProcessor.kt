@@ -6,53 +6,58 @@
 
 package mozilla.components.concept.push
 
-import androidx.annotation.CallSuper
+import androidx.annotation.VisibleForTesting
 
 /**
  * A push notification processor that handles registration and new messages from the [PushService] provided.
  * Starting Push in the Application's onCreate is recommended.
  */
-abstract class PushProcessor {
+interface PushProcessor {
 
     /**
-     * Initialize the PushProcessor before it
+     * Start the push processor and any service associated.
      */
-    @CallSuper
-    open fun initialize() {
-        instance = this
-    }
+    fun initialize()
 
     /**
-     * Start the push processor and starts any service associated.
+     * Removes all push subscriptions from the device.
      */
-    abstract fun start()
-
-    /**
-     * Stop the push service and stops any service associated.
-     */
-    abstract fun stop()
+    fun shutdown()
 
     /**
      * A new registration token has been received.
      */
-    abstract fun onNewToken(newToken: String)
+    fun onNewToken(newToken: String)
 
     /**
      * A new push message has been received.
      */
-    abstract fun onMessageReceived(message: PushMessage)
+    fun onMessageReceived(message: EncryptedPushMessage)
 
     /**
      * An error has occurred.
      */
-    abstract fun onError(error: Error)
+    fun onError(error: PushError)
 
     companion object {
+        /**
+         * Initialize and installs the PushProcessor into the application.
+         * This needs to be called in the application's onCreate before a push service has started.
+         */
+        fun install(processor: PushProcessor) {
+            instance = processor
+        }
+
         @Volatile
-        var instance: PushProcessor? = null
+        private var instance: PushProcessor? = null
+
+        @VisibleForTesting
+        internal fun reset() {
+            instance = null
+        }
         val requireInstance: PushProcessor
             get() = instance ?: throw IllegalStateException(
-                "You need to call start() on your Push instance from Application.onCreate()."
+                "You need to call initialize() on your Push instance from Application.onCreate()."
             )
     }
 }
@@ -60,20 +65,37 @@ abstract class PushProcessor {
 /**
  * A push message holds the information needed to pass the message on to the appropriate receiver.
  */
-data class PushMessage(val data: String)
-
-/**
- * The different kinds of push messages.
- */
-enum class PushType {
-    Services,
-    ThirdParty
+data class EncryptedPushMessage(
+    val channelId: String,
+    val body: String,
+    val encoding: String,
+    val salt: String = "",
+    val cryptoKey: String = "" // diffie–hellman key
+) {
+    companion object {
+        /**
+         * The [salt] and [cryptoKey] are optional as part of the standard for WebPush, so we should default
+         * to empty strings.
+         *
+         * Note: We have use the invoke operator since secondary constructors don't work with nullable primitive types.
+         */
+        operator fun invoke(
+            channelId: String,
+            body: String,
+            encoding: String,
+            salt: String? = null,
+            cryptoKey: String? = null
+        ) = EncryptedPushMessage(channelId, body, encoding, salt ?: "", cryptoKey ?: "")
+    }
 }
 
 /**
  *  Various error types.
  */
-sealed class Error {
-    data class RegistrationError(val desc: String) : Error()
-    data class NetworkError(val desc: String) : Error()
+sealed class PushError(open val desc: String) {
+    data class Registration(override val desc: String) : PushError(desc)
+    data class Network(override val desc: String) : PushError(desc)
+    data class Rust(override val desc: String) : PushError(desc)
+    data class MalformedMessage(override val desc: String) : PushError(desc)
+    data class ServiceUnavailable(override val desc: String) : PushError(desc)
 }

@@ -6,6 +6,8 @@
 
 package mozilla.components.concept.push
 
+import androidx.lifecycle.LifecycleOwner
+
 /**
  * Interface for a basic bus that is implemented by MessageBus so that classes can observe particular event types.
  *
@@ -36,6 +38,16 @@ interface Bus<T, M> {
      * @param observer The observer to be notified for the type.
      */
     fun register(type: T, observer: Bus.Observer<T, M>)
+
+    /**
+     * Registers an observer to get notified about events.
+     *
+     * @param observer The observer to be notified for the type.
+     * @param owner the lifecycle owner the provided observer is bound to.
+     * @param autoPause whether or not the observer should automatically be
+     * paused/resumed with the bound lifecycle.
+     */
+    fun register(type: T, observer: Bus.Observer<T, M>, owner: LifecycleOwner, autoPause: Boolean)
 
     /**
      * Unregisters an observer to stop getting notified about events.

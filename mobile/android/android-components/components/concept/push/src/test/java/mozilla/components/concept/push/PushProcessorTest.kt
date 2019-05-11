@@ -6,34 +6,50 @@
 
 package mozilla.components.concept.push
 
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertNotNull
+import org.junit.Before
 import org.junit.Test
 
 class PushProcessorTest {
 
-    @Test
-    fun init() {
-        val push = TestPushProcessor()
+    @Before
+    fun setup() {
+        PushProcessor.reset()
+    }
 
-        push.initialize()
+    @Test
+    fun install() {
+        val processor: PushProcessor = mock()
+
+        PushProcessor.install(processor)
 
         assertNotNull(PushProcessor.requireInstance)
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `requireInstance throws exception if not initialized`() {
+    fun `requireInstance throws if install not called first`() {
         PushProcessor.requireInstance
     }
 
-    class TestPushProcessor : PushProcessor() {
-        override fun start() {}
+    @Test
+    fun init() {
+        val push = TestPushProcessor()
 
-        override fun stop() {}
+        PushProcessor.install(push)
+
+        assertNotNull(PushProcessor.requireInstance)
+    }
+
+    class TestPushProcessor : PushProcessor {
+        override fun initialize() {}
+
+        override fun shutdown() {}
 
         override fun onNewToken(newToken: String) {}
 
-        override fun onMessageReceived(message: PushMessage) {}
+        override fun onMessageReceived(message: EncryptedPushMessage) {}
 
-        override fun onError(error: Error) {}
+        override fun onError(error: PushError) {}
     }
 }
