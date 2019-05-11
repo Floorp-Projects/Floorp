@@ -27,12 +27,12 @@ function runTests() {
 
   // Event listener info tests
   root = document.getElementById("testroot");
-  var infos = els.getListenerInfoFor(root, {});
+  var infos = els.getListenerInfoFor(root);
   is(infos.length, 0, "Element shouldn't have listeners (1)");
 
   var listenerSource = 'alert(event);';
   root.setAttribute("onclick", listenerSource);
-  infos = els.getListenerInfoFor(root, {});
+  infos = els.getListenerInfoFor(root);
   is(infos.length, 1, "Element should have listeners (1)");
   is(infos[0].toSource(), 'function onclick(event) {\n' + listenerSource + '\n}',
      "Unexpected serialization (1)");
@@ -45,19 +45,19 @@ function runTests() {
   root.removeAttribute("onclick");
   root.setAttribute("onclick", "...invalid script...");
   SimpleTest.expectUncaughtException(true);
-  infos = els.getListenerInfoFor(root, {});
+  infos = els.getListenerInfoFor(root);
   SimpleTest.expectUncaughtException(false);
   is(infos.length, 1);
   is(infos[0].listenerObject, null);
 
   root.removeAttribute("onclick");
-  infos = els.getListenerInfoFor(root, {});
+  infos = els.getListenerInfoFor(root);
   is(infos.length, 0, "Element shouldn't have listeners (2)");
 
   var l = function (e) { alert(e); };
   root.addEventListener("foo", l, true, true);
   root.addEventListener("foo", l, false, false);
-  infos = els.getListenerInfoFor(root, {});
+  infos = els.getListenerInfoFor(root);
   is(infos.length, 2, "Element should have listeners (2)");
   is(infos[0].toSource(), "(function (e) { alert(e); })",
      "Unexpected serialization (2)");
@@ -76,11 +76,11 @@ function runTests() {
 
   root.removeEventListener("foo", l, true);
   root.removeEventListener("foo", l);
-  infos = els.getListenerInfoFor(root, {});
+  infos = els.getListenerInfoFor(root);
   is(infos.length, 0, "Element shouldn't have listeners (3)");
 
   root.onclick = l;
-  infos = els.getListenerInfoFor(root, {});
+  infos = els.getListenerInfoFor(root);
   is(infos.length, 1, "Element should have listeners (3)");
   is(infos[0].toSource(), '(function (e) { alert(e); })',
      "Unexpected serialization (4)");
@@ -94,7 +94,7 @@ function runTests() {
   l2 = document.getElementById("testlevel2");
   l3 = document.getElementById("testlevel3");
   var textnode = l3.firstChild;
-  var chain = els.getEventTargetChainFor(textnode, true, {});
+  var chain = els.getEventTargetChainFor(textnode, true);
   ok(chain.length > 3, "Too short event target chain.");
   ok(SpecialPowers.compare(chain[0], textnode), "Wrong chain item (1)");
   ok(SpecialPowers.compare(chain[1], l3), "Wrong chain item (2)");
@@ -115,7 +115,7 @@ function runTests() {
   ok(hasWindowInChain, "Should have window in event target chain!");
 
   try {
-    els.getListenerInfoFor(null, {});
+    els.getListenerInfoFor(null);
     ok(false, "Should have thrown an exception.");
   } catch (ex) {
     ok(true, "We should be still running.");

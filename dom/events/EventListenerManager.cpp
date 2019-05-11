@@ -33,7 +33,6 @@
 #include "mozilla/TimeStamp.h"
 
 #include "EventListenerService.h"
-#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsDOMCID.h"
@@ -1460,10 +1459,10 @@ bool EventListenerManager::HasListeners() const {
 }
 
 nsresult EventListenerManager::GetListenerInfo(
-    nsCOMArray<nsIEventListenerInfo>* aList) {
+    nsTArray<RefPtr<nsIEventListenerInfo>>& aList) {
   nsCOMPtr<EventTarget> target = mTarget;
   NS_ENSURE_STATE(target);
-  aList->Clear();
+  aList.Clear();
   nsAutoTObserverArray<Listener, 2>::ForwardIterator iter(mListeners);
   while (iter.HasMore()) {
     const Listener& listener = iter.GetNext();
@@ -1510,7 +1509,7 @@ nsresult EventListenerManager::GetListenerInfo(
     RefPtr<EventListenerInfo> info = new EventListenerInfo(
         eventType, callback, callbackGlobal, listener.mFlags.mCapture,
         listener.mFlags.mAllowUntrustedEvents, listener.mFlags.mInSystemGroup);
-    aList->AppendElement(info.forget());
+    aList.AppendElement(info.forget());
   }
   return NS_OK;
 }
