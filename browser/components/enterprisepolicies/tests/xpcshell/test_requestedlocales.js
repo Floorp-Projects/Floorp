@@ -12,7 +12,7 @@ function promiseLocaleChanged(requestedLocale) {
         switch (aTopic) {
           case REQ_LOC_CHANGE_EVENT:
             let reqLocs = Services.locale.requestedLocales;
-            is(reqLocs[0], requestedLocale);
+            equal(reqLocs[0], requestedLocale);
             Services.obs.removeObserver(localeObserver, REQ_LOC_CHANGE_EVENT);
             resolve();
         }

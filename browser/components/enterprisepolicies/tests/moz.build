@@ -13,3 +13,5 @@ BROWSER_CHROME_MANIFESTS += [
     'browser/disable_fxscreenshots/browser.ini',
     'browser/hardware_acceleration/browser.ini',
 ]
+
+XPCSHELL_TESTS_MANIFESTS += ['xpcshell/xpcshell.ini']
