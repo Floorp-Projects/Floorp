@@ -21,7 +21,6 @@ import android.widget.Button
 import android.widget.LinearLayout.LayoutParams
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.content.ContextCompat
-import kotlin.properties.Delegates
 
 internal const val KEY_SESSION_ID = "KEY_SESSION_ID"
 internal const val KEY_TITLE = "KEY_TITLE"
@@ -69,7 +68,7 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
     // State
 
     internal var feature: SitePermissionsFeature? = null
-    internal var userSelectionCheckBox: Boolean by Delegates.notNull()
+    internal var userSelectionCheckBox: Boolean = false
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         userSelectionCheckBox = shouldPreselectDoNotAskAgainCheckBox
