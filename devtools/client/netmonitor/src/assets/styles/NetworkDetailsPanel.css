@@ -102,6 +102,7 @@
   width: 100%;
 }
 
+.network-monitor .properties-view .devtools-searchbox,
 .network-monitor .tree-container .treeTable .tree-section,
 .network-monitor .properties-view .raw-headers-container  {
   width: 100%;
@@ -112,6 +113,7 @@
   border-top: 1px solid var(--theme-splitter-color);
 }
 
+.network-monitor .properties-view .devtools-searchbox,
 .network-monitor .tree-container .treeTable tr.tree-section:not(:last-child) td:not([class=""]) {
   border-bottom: 1px solid var(--theme-splitter-color);
 }
@@ -237,7 +239,6 @@
 
 .network-monitor .headers-overview {
   background: var(--theme-toolbar-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .network-monitor .headers-summary,

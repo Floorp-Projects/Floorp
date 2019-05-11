@@ -53,12 +53,8 @@ input {
   direction: ltr;
 }
 
-input:not(:focus) {
-  border-color: rgba(255,255,255,0.2);
-}
-
 input:invalid {
-  border-color: #F06;
+  box-shadow: 0 0 2px 2px #F06;
 }
 
 section {
