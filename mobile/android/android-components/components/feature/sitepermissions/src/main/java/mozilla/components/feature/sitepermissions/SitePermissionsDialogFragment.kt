@@ -21,54 +21,59 @@ import android.widget.Button
 import android.widget.LinearLayout.LayoutParams
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.content.ContextCompat
+import kotlin.properties.Delegates
 
 internal const val KEY_SESSION_ID = "KEY_SESSION_ID"
 internal const val KEY_TITLE = "KEY_TITLE"
-private const val KEY_USER_CHECK_BOX = "KEY_USER_CHECK_BOX"
 private const val KEY_DIALOG_GRAVITY = "KEY_DIALOG_GRAVITY"
 private const val KEY_DIALOG_WIDTH_MATCH_PARENT = "KEY_DIALOG_WIDTH_MATCH_PARENT"
 private const val KEY_TITLE_ICON = "KEY_TITLE_ICON"
 private const val KEY_POSITIVE_BUTTON_BACKGROUND_COLOR = "KEY_POSITIVE_BUTTON_BACKGROUND_COLOR"
 private const val KEY_POSITIVE_BUTTON_TEXT_COLOR = "KEY_POSITIVE_BUTTON_TEXT_COLOR"
-private const val KEY_SHOULD_INCLUDE_CHECKBOX = "KEY_SHOULD_INCLUDE_CHECKBOX"
+private const val KEY_SHOULD_SHOW_DO_NOT_ASK_AGAIN_CHECKBOX = "KEY_SHOULD_SHOW_DO_NOT_ASK_AGAIN_CHECKBOX"
+private const val KEY_SHOULD_PRESELECT_DO_NOT_ASK_AGAIN_CHECKBOX = "KEY_SHOULD_PRESELECT_DO_NOT_ASK_AGAIN_CHECKBOX"
 private const val KEY_IS_NOTIFICATION_REQUEST = "KEY_IS_NOTIFICATION_REQUEST"
 private const val DEFAULT_VALUE = Int.MAX_VALUE
 
 internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
 
-    internal var feature: SitePermissionsFeature? = null
-
-    internal val sessionId: String get() = safeArguments.getString(KEY_SESSION_ID, "")
-
-    internal val title: String get() = safeArguments.getString(KEY_TITLE, "")
-
-    internal val dialogGravity: Int get() = safeArguments.getInt(KEY_DIALOG_GRAVITY, DEFAULT_VALUE)
-
-    internal val dialogShouldWidthMatchParent: Boolean get() = safeArguments.getBoolean(KEY_DIALOG_WIDTH_MATCH_PARENT)
-
-    internal val showDoNotAskAgainCheckBox: Boolean get() = safeArguments.getBoolean(KEY_SHOULD_INCLUDE_CHECKBOX)
+    // Safe Arguments
 
     private val safeArguments get() = requireNotNull(arguments)
 
-    internal val icon get() = safeArguments.getInt(KEY_TITLE_ICON, DEFAULT_VALUE)
+    internal val sessionId: String get() =
+        safeArguments.getString(KEY_SESSION_ID, "")
+    internal val title: String get() =
+        safeArguments.getString(KEY_TITLE, "")
+    internal val icon get() =
+        safeArguments.getInt(KEY_TITLE_ICON, DEFAULT_VALUE)
 
-    internal val isNotificationRequest get() = safeArguments.getBoolean(KEY_IS_NOTIFICATION_REQUEST, false)
+    internal val dialogGravity: Int get() =
+        safeArguments.getInt(KEY_DIALOG_GRAVITY, DEFAULT_VALUE)
+    internal val dialogShouldWidthMatchParent: Boolean get() =
+        safeArguments.getBoolean(KEY_DIALOG_WIDTH_MATCH_PARENT)
 
-    internal val positiveButtonBackgroundColor
-        get() =
-            safeArguments.getInt(KEY_POSITIVE_BUTTON_BACKGROUND_COLOR, DEFAULT_VALUE)
+    internal val positiveButtonBackgroundColor get() =
+        safeArguments.getInt(KEY_POSITIVE_BUTTON_BACKGROUND_COLOR, DEFAULT_VALUE)
+    internal val positiveButtonTextColor get() =
+        safeArguments.getInt(KEY_POSITIVE_BUTTON_TEXT_COLOR, DEFAULT_VALUE)
 
-    internal val positiveButtonTextColor
-        get() =
-            safeArguments.getInt(KEY_POSITIVE_BUTTON_TEXT_COLOR, DEFAULT_VALUE)
+    internal val isNotificationRequest get() =
+        safeArguments.getBoolean(KEY_IS_NOTIFICATION_REQUEST, false)
 
-    internal var userSelectionCheckBox: Boolean
-        get() = safeArguments.getBoolean(KEY_USER_CHECK_BOX)
-        set(value) {
-            safeArguments.putBoolean(KEY_USER_CHECK_BOX, value)
-        }
+    internal val shouldShowDoNotAskAgainCheckBox: Boolean get() =
+        safeArguments.getBoolean(KEY_SHOULD_SHOW_DO_NOT_ASK_AGAIN_CHECKBOX, true)
+    internal val shouldPreselectDoNotAskAgainCheckBox: Boolean get() =
+        safeArguments.getBoolean(KEY_SHOULD_PRESELECT_DO_NOT_ASK_AGAIN_CHECKBOX, false)
+
+    // State
+
+    internal var feature: SitePermissionsFeature? = null
+    internal var userSelectionCheckBox: Boolean by Delegates.notNull()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        userSelectionCheckBox = shouldPreselectDoNotAskAgainCheckBox
+
         val sheetDialog = Dialog(requireContext())
         sheetDialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         sheetDialog.setCanceledOnTouchOutside(true)
@@ -144,18 +149,20 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
             negativeButton.setText(R.string.mozac_feature_sitepermissions_never_allow)
         }
 
-        if (showDoNotAskAgainCheckBox) {
-            addCheckbox(rootView)
+        if (shouldShowDoNotAskAgainCheckBox) {
+            showDoNotAskAgainCheckbox(rootView, checked = shouldPreselectDoNotAskAgainCheckBox)
         }
 
         return rootView
     }
 
-    private fun addCheckbox(containerView: View) {
-        val checkBox = containerView.findViewById<CheckBox>(R.id.do_not_ask_again)
-        checkBox.visibility = VISIBLE
-        checkBox.setOnCheckedChangeListener { _, isChecked ->
-            userSelectionCheckBox = isChecked
+    private fun showDoNotAskAgainCheckbox(containerView: View, checked: Boolean) {
+        containerView.findViewById<CheckBox>(R.id.do_not_ask_again).apply {
+            visibility = VISIBLE
+            isChecked = checked
+            setOnCheckedChangeListener { _, isChecked ->
+                userSelectionCheckBox = isChecked
+            }
         }
     }
 
@@ -166,23 +173,26 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
             title: String,
             titleIcon: Int,
             feature: SitePermissionsFeature,
-            shouldIncludeCheckBox: Boolean,
+            shouldShowDoNotAskAgainCheckBox: Boolean,
+            shouldSelectDoNotAskAgainCheckBox: Boolean = false,
             isNotificationRequest: Boolean = false
         ): SitePermissionsDialogFragment {
 
             val fragment = SitePermissionsDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 
-            with(arguments) {
+            arguments.apply {
                 putString(KEY_SESSION_ID, sessionId)
                 putString(KEY_TITLE, title)
                 putInt(KEY_TITLE_ICON, titleIcon)
-                putBoolean(KEY_SHOULD_INCLUDE_CHECKBOX, shouldIncludeCheckBox)
-                putBoolean(KEY_USER_CHECK_BOX, shouldIncludeCheckBox)
+
                 putBoolean(KEY_IS_NOTIFICATION_REQUEST, isNotificationRequest)
                 if (isNotificationRequest) {
-                    putBoolean(KEY_USER_CHECK_BOX, true)
-                    putBoolean(KEY_SHOULD_INCLUDE_CHECKBOX, false)
+                    putBoolean(KEY_SHOULD_SHOW_DO_NOT_ASK_AGAIN_CHECKBOX, false)
+                    putBoolean(KEY_SHOULD_PRESELECT_DO_NOT_ASK_AGAIN_CHECKBOX, true)
+                } else {
+                    putBoolean(KEY_SHOULD_SHOW_DO_NOT_ASK_AGAIN_CHECKBOX, shouldShowDoNotAskAgainCheckBox)
+                    putBoolean(KEY_SHOULD_PRESELECT_DO_NOT_ASK_AGAIN_CHECKBOX, shouldSelectDoNotAskAgainCheckBox)
                 }
 
                 feature.promptsStyling?.apply {

@@ -42,7 +42,7 @@ class SitePermissionsDialogFragmentTest {
                 "title",
                 R.drawable.notification_icon_background,
                 mock(),
-                true
+                shouldShowDoNotAskAgainCheckBox = true
             )
         )
 
@@ -52,18 +52,68 @@ class SitePermissionsDialogFragmentTest {
 
         val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
 
-        assertTrue(checkBox.isVisible())
+        assertTrue("Checkbox should be displayed", checkBox.isVisible())
+        assertFalse("Checkbox shouldn't be checked", checkBox.isChecked)
+        assertFalse("User selection property should be false", fragment.userSelectionCheckBox)
     }
 
     @Test
-    fun `dialog with shouldIncludeCheckBox equals false should not have a checkbox`() {
+    fun `display dialog with unselected "don't ask again"`() {
         val fragment = spy(
             SitePermissionsDialogFragment.newInstance(
                 "sessionId",
                 "title",
                 R.drawable.notification_icon_background,
                 mock(),
-                false
+                true,
+                shouldSelectDoNotAskAgainCheckBox = false
+            )
+        )
+
+        doReturn(context).`when`(fragment).requireContext()
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
+
+        assertTrue("Checkbox should be displayed", checkBox.isVisible())
+        assertFalse("Checkbox shouldn't be checked", checkBox.isChecked)
+        assertFalse("User selection property should be false", fragment.userSelectionCheckBox)
+    }
+
+    @Test
+    fun `display dialog with preselected "don't ask again"`() {
+        val fragment = spy(
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                mock(),
+                shouldShowDoNotAskAgainCheckBox = true,
+                shouldSelectDoNotAskAgainCheckBox = true
+            )
+        )
+
+        doReturn(context).`when`(fragment).requireContext()
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
+
+        assertTrue("Checkbox should be displayed", checkBox.isVisible())
+        assertTrue("Checkbox should be checked", checkBox.isChecked)
+        assertTrue("User selection property should be true", fragment.userSelectionCheckBox)
+    }
+
+    @Test
+    fun `dialog with shouldShowDoNotAskAgainCheckBox equals false should not have a checkbox`() {
+        val fragment = spy(
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                mock(),
+                shouldShowDoNotAskAgainCheckBox = false
             )
         )
 
@@ -74,11 +124,12 @@ class SitePermissionsDialogFragmentTest {
 
         val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
 
-        assertFalse(checkBox.isVisible())
+        assertFalse("Checkbox shouldn't be displayed", checkBox.isVisible())
+        assertFalse("User selection property should be false", fragment.userSelectionCheckBox)
     }
 
     @Test
-    fun `clicking on positive button notifies the feature`() {
+    fun `clicking on positive button notifies the feature (temporary)`() {
         val mockFeature: SitePermissionsFeature = mock()
 
         val fragment = spy(
@@ -87,7 +138,8 @@ class SitePermissionsDialogFragmentTest {
                 "title",
                 R.drawable.notification_icon_background,
                 mockFeature,
-                false
+                shouldShowDoNotAskAgainCheckBox = false,
+                shouldSelectDoNotAskAgainCheckBox = false
             )
         )
 
@@ -105,7 +157,7 @@ class SitePermissionsDialogFragmentTest {
     }
 
     @Test
-    fun `clicking on negative button notifies the feature`() {
+    fun `clicking on negative button notifies the feature (temporary)`() {
         val mockFeature: SitePermissionsFeature = mock()
 
         val fragment = spy(
@@ -114,7 +166,8 @@ class SitePermissionsDialogFragmentTest {
                 "title",
                 R.drawable.notification_icon_background,
                 mockFeature,
-                false
+                shouldShowDoNotAskAgainCheckBox = false,
+                shouldSelectDoNotAskAgainCheckBox = false
             )
         )
 
@@ -132,6 +185,62 @@ class SitePermissionsDialogFragmentTest {
     }
 
     @Test
+    fun `clicking on positive button notifies the feature (permanent)`() {
+        val mockFeature: SitePermissionsFeature = mock()
+
+        val fragment = spy(
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                mockFeature,
+                shouldShowDoNotAskAgainCheckBox = false,
+                shouldSelectDoNotAskAgainCheckBox = true
+            )
+        )
+
+        fragment.feature = mockFeature
+
+        doReturn(context).`when`(fragment).requireContext()
+        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val positiveButton = dialog.findViewById<Button>(R.id.allow_button)
+        positiveButton.performClick()
+        verify(mockFeature).onPositiveButtonPress("sessionId", true)
+    }
+
+    @Test
+    fun `clicking on negative button notifies the feature (permanent)`() {
+        val mockFeature: SitePermissionsFeature = mock()
+
+        val fragment = spy(
+            SitePermissionsDialogFragment.newInstance(
+                "sessionId",
+                "title",
+                R.drawable.notification_icon_background,
+                mockFeature,
+                shouldShowDoNotAskAgainCheckBox = false,
+                shouldSelectDoNotAskAgainCheckBox = true
+            )
+        )
+
+        fragment.feature = mockFeature
+
+        doReturn(context).`when`(fragment).requireContext()
+        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val positiveButton = dialog.findViewById<Button>(R.id.deny_button)
+        positiveButton.performClick()
+        verify(mockFeature).onNegativeButtonPress("sessionId", true)
+    }
+
+    @Test
     fun `dialog must have all the styles of the feature promptsStyling object`() {
         val mockFeature: SitePermissionsFeature = mock()
 
@@ -143,7 +252,7 @@ class SitePermissionsDialogFragmentTest {
                 "title",
                 R.drawable.notification_icon_background,
                 mockFeature,
-                false
+                shouldShowDoNotAskAgainCheckBox = false
             )
         )
 
@@ -167,7 +276,8 @@ class SitePermissionsDialogFragmentTest {
                 "title",
                 R.drawable.notification_icon_background,
                 mock(),
-                shouldIncludeCheckBox = true,
+                shouldShowDoNotAskAgainCheckBox = true,
+                shouldSelectDoNotAskAgainCheckBox = false,
                 isNotificationRequest = true
             )
         )
@@ -179,8 +289,8 @@ class SitePermissionsDialogFragmentTest {
 
         val checkBox = dialog.findViewById<CheckBox>(R.id.do_not_ask_again)
 
-        assertTrue(fragment.userSelectionCheckBox)
-        assertFalse(checkBox.isVisible())
+        assertFalse("Checkbox shouldn't be displayed", checkBox.isVisible())
+        assertTrue("User selection property should be true", fragment.userSelectionCheckBox)
     }
 
     private fun mockFragmentManager(): FragmentManager {
