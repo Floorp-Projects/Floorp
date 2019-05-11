@@ -751,7 +751,7 @@ var gViewController = {
       this.viewObjects.updates = gUpdatesView;
     }
 
-    if (useHtmlDiscover) {
+    if (useHtmlDiscover && isDiscoverEnabled()) {
       this.viewObjects.discover = htmlView("discover");
     } else {
       this.viewObjects.discover = gDiscoverView;
