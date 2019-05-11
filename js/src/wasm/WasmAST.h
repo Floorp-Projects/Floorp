@@ -127,9 +127,11 @@ class AstValType {
     }
   }
 
-  bool isRefType() const {
+#ifdef ENABLE_WASM_GC
+  bool isNarrowType() const {
     return code() == ValType::AnyRef || code() == ValType::Ref;
   }
+#endif
 
   bool isValid() const { return !(which_ == IsValType && !type_.isValid()); }
 

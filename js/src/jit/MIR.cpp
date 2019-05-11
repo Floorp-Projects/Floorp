@@ -5451,8 +5451,9 @@ MWasmCall* MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
 
 MWasmCall* MWasmCall::NewBuiltinInstanceMethodCall(
     TempAllocator& alloc, const wasm::CallSiteDesc& desc,
-    const wasm::SymbolicAddress builtin, const ABIArg& instanceArg,
-    const Args& args, MIRType resultType, uint32_t stackArgAreaSizeUnaligned) {
+    const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
+    const ABIArg& instanceArg, const Args& args, MIRType resultType,
+    uint32_t stackArgAreaSizeUnaligned) {
   auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
   MWasmCall* call = MWasmCall::New(alloc, desc, callee, args, resultType,
                                    stackArgAreaSizeUnaligned, nullptr);
@@ -5462,6 +5463,7 @@ MWasmCall* MWasmCall::NewBuiltinInstanceMethodCall(
 
   MOZ_ASSERT(instanceArg != ABIArg());
   call->instanceArg_ = instanceArg;
+  call->builtinMethodFailureMode_ = failureMode;
   return call;
 }
 
