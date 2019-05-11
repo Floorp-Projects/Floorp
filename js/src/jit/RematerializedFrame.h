@@ -19,10 +19,19 @@
 namespace js {
 namespace jit {
 
+// RematerializedFrame: An optimized frame that has been rematerialized with
+// values read out of Snapshots.
 //
-// An optimized frame that has been rematerialized with values read out of
-// Snapshots.
-//
+// If the Debugger API tries to inspect or modify an IonMonkey frame, much of
+// the information it expects to find in a frame is missing: function calls may
+// have been inlined, variables may have been optimized out, and so on. So when
+// this happens, SpiderMonkey builds one or more Rematerialized frames from the
+// IonMonkey frame, using the snapshot metadata built by Ion to reconstruct the
+// missing parts. The Rematerialized frames are now the authority on the state
+// of those frames, and the Ion frame is ignored: stack iterators ignore the Ion
+// frame, producing the Rematerialized frames in their stead; and when control
+// returns to the Ion frame, we pop it, rebuild Baseline frames from the
+// Rematerialized frames, and resume execution in Baseline.
 class RematerializedFrame {
   // See DebugScopes::updateLiveScopes.
   bool prevUpToDate_;
