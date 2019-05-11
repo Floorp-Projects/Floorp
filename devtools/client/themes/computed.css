@@ -48,6 +48,7 @@
 }
 
 #browser-style-checkbox-label {
+  white-space: nowrap;
   padding-inline-start: 5px;
   margin-inline-end: 5px;
 }
