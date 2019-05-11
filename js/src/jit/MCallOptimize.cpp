@@ -4272,6 +4272,7 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
         break;
       case wasm::ValType::I64:
       case wasm::ValType::AnyRef:
+      case wasm::ValType::FuncRef:
       case wasm::ValType::Ref:
         MOZ_CRASH("impossible per above check");
       case wasm::ValType::NullRef:
