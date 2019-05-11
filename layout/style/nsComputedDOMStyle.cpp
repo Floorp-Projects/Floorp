@@ -1842,17 +1842,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
     val->SetAppUnits(mInnerFrame->GetContentRect().height +
                      adjustedValues.TopBottom());
   } else {
-    const nsStylePosition* positionData = StylePosition();
-
-    nscoord minHeight =
-        StyleCoordToNSCoord(positionData->mMinHeight,
-                            &nsComputedDOMStyle::GetCBContentHeight, 0, true);
-
-    nscoord maxHeight = StyleCoordToNSCoord(
-        positionData->mMaxHeight, &nsComputedDOMStyle::GetCBContentHeight,
-        nscoord_MAX, true);
-
-    SetValueToSize(val, positionData->mHeight, minHeight, maxHeight);
+    SetValueToSize(val, StylePosition()->mHeight);
   }
 
   return val.forget();
@@ -1879,17 +1869,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWidth() {
     val->SetAppUnits(mInnerFrame->GetContentRect().width +
                      adjustedValues.LeftRight());
   } else {
-    const nsStylePosition* positionData = StylePosition();
-
-    nscoord minWidth =
-        StyleCoordToNSCoord(positionData->mMinWidth,
-                            &nsComputedDOMStyle::GetCBContentWidth, 0, true);
-
-    nscoord maxWidth = StyleCoordToNSCoord(
-        positionData->mMaxWidth, &nsComputedDOMStyle::GetCBContentWidth,
-        nscoord_MAX, true);
-
-    SetValueToSize(val, positionData->mWidth, minWidth, maxWidth);
+    SetValueToSize(val, StylePosition()->mWidth);
   }
 
   return val.forget();
@@ -2219,8 +2199,7 @@ void nsComputedDOMStyle::SetValueToExtremumLength(nsROCSSPrimitiveValue* aValue,
 }
 
 void nsComputedDOMStyle::SetValueToSize(nsROCSSPrimitiveValue* aValue,
-                                        const StyleSize& aSize, nscoord aMin,
-                                        nscoord aMax) {
+                                        const StyleSize& aSize) {
   if (aSize.IsAuto()) {
     return aValue->SetIdent(eCSSKeyword_auto);
   }
@@ -2228,8 +2207,7 @@ void nsComputedDOMStyle::SetValueToSize(nsROCSSPrimitiveValue* aValue,
     return SetValueToExtremumLength(aValue, aSize.AsExtremumLength());
   }
   MOZ_ASSERT(aSize.IsLengthPercentage());
-  SetValueToLengthPercentage(aValue, aSize.AsLengthPercentage(), true, aMin,
-                             aMax);
+  SetValueToLengthPercentage(aValue, aSize.AsLengthPercentage(), true);
 }
 
 void nsComputedDOMStyle::SetValueToMaxSize(nsROCSSPrimitiveValue* aValue,
@@ -2256,14 +2234,13 @@ void nsComputedDOMStyle::SetValueToLengthPercentageOrAuto(
 
 void nsComputedDOMStyle::SetValueToLengthPercentage(
     nsROCSSPrimitiveValue* aValue, const mozilla::LengthPercentage& aLength,
-    bool aClampNegativeCalc, nscoord aMin, nscoord aMax) {
+    bool aClampNegativeCalc) {
   if (aLength.ConvertsToLength()) {
     nscoord result = aLength.ToLength();
     if (aClampNegativeCalc) {
       result = std::max(result, 0);
     }
-    // TODO(emilio, bug 1527392): It's wrong to clamp here.
-    return aValue->SetAppUnits(std::max(aMin, std::min(result, aMax)));
+    return aValue->SetAppUnits(result);
   }
   if (aLength.ConvertsToPercentage()) {
     float result = aLength.ToPercentage();
@@ -2294,7 +2271,7 @@ void nsComputedDOMStyle::SetValueToLengthPercentage(
 void nsComputedDOMStyle::SetValueToCoord(
     nsROCSSPrimitiveValue* aValue, const nsStyleCoord& aCoord,
     bool aClampNegativeCalc, PercentageBaseGetter aPercentageBaseGetter,
-    const KTableEntry aTable[], nscoord aMinAppUnits, nscoord aMaxAppUnits) {
+    const KTableEntry aTable[]) {
   MOZ_ASSERT(aValue, "Must have a value to work with");
 
   switch (aCoord.GetUnit()) {
@@ -2312,8 +2289,7 @@ void nsComputedDOMStyle::SetValueToCoord(
           (this->*aPercentageBaseGetter)(percentageBase)) {
         nscoord val =
             NSCoordSaturatingMultiply(percentageBase, aCoord.GetPercentValue());
-        aValue->SetAppUnits(
-            std::max(aMinAppUnits, std::min(val, aMaxAppUnits)));
+        aValue->SetAppUnits(val);
       } else {
         aValue->SetPercent(aCoord.GetPercentValue());
       }
@@ -2325,7 +2301,7 @@ void nsComputedDOMStyle::SetValueToCoord(
 
     case eStyleUnit_Coord: {
       nscoord val = aCoord.GetCoordValue();
-      aValue->SetAppUnits(std::max(aMinAppUnits, std::min(val, aMaxAppUnits)));
+      aValue->SetAppUnits(val);
     } break;
 
     case eStyleUnit_Integer:
@@ -2350,8 +2326,7 @@ void nsComputedDOMStyle::SetValueToCoord(
           MOZ_ASSERT(aCoord.IsCalcUnit(), "parser should have rejected value");
           val = 0;
         }
-        aValue->SetAppUnits(
-            std::max(aMinAppUnits, std::min(val, aMaxAppUnits)));
+        aValue->SetAppUnits(val);
       } else if (aPercentageBaseGetter &&
                  (this->*aPercentageBaseGetter)(percentageBase)) {
         nscoord val = aCoord.ComputeCoordPercentCalc(percentageBase);
@@ -2359,8 +2334,7 @@ void nsComputedDOMStyle::SetValueToCoord(
           MOZ_ASSERT(aCoord.IsCalcUnit(), "parser should have rejected value");
           val = 0;
         }
-        aValue->SetAppUnits(
-            std::max(aMinAppUnits, std::min(val, aMaxAppUnits)));
+        aValue->SetAppUnits(val);
       } else {
         nsStyleCoord::Calc* calc = aCoord.GetCalcValue();
         SetValueToCalc(calc, aValue);

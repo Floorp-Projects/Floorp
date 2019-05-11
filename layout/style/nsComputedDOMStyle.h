@@ -295,9 +295,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   void SetValueToURLValue(const mozilla::css::URLValue* aURL,
                           nsROCSSPrimitiveValue* aValue);
 
-  void SetValueToSize(nsROCSSPrimitiveValue* aValue, const mozilla::StyleSize&,
-                      nscoord aMinAppUnits = nscoord_MIN,
-                      nscoord aMaxAppUnits = nscoord_MAX);
+  void SetValueToSize(nsROCSSPrimitiveValue* aValue, const mozilla::StyleSize&);
 
   void SetValueToLengthPercentageOrAuto(nsROCSSPrimitiveValue* aValue,
                                         const LengthPercentageOrAuto&,
@@ -305,9 +303,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   void SetValueToLengthPercentage(nsROCSSPrimitiveValue* aValue,
                                   const LengthPercentage&,
-                                  bool aClampNegativeCalc,
-                                  nscoord aMinAppUnits = nscoord_MIN,
-                                  nscoord aMaxAppUnits = nscoord_MAX);
+                                  bool aClampNegativeCalc);
 
   void SetValueToMaxSize(nsROCSSPrimitiveValue* aValue, const StyleMaxSize&);
 
@@ -331,9 +327,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   void SetValueToCoord(nsROCSSPrimitiveValue* aValue,
                        const nsStyleCoord& aCoord, bool aClampNegativeCalc,
                        PercentageBaseGetter aPercentageBaseGetter = nullptr,
-                       const KTableEntry aTable[] = nullptr,
-                       nscoord aMinAppUnits = nscoord_MIN,
-                       nscoord aMaxAppUnits = nscoord_MAX);
+                       const KTableEntry aTable[] = nullptr);
 
   /**
    * If aCoord is a eStyleUnit_Coord returns the nscoord.  If it's
