@@ -527,11 +527,14 @@ CssComputedView.prototype = {
               this._refreshProcess = null;
               this.noResults.hidden = this.numVisibleProperties > 0;
 
-              const searchBox = this.searchField.parentNode;
-              searchBox.classList.toggle(
-                "devtools-searchbox-no-match",
-                this.searchField.value.length > 0 && !this.numVisibleProperties,
-              );
+              if (this.searchField.value.length > 0 &&
+                  !this.numVisibleProperties) {
+                this.searchField.classList
+                                .add("devtools-style-searchbox-no-match");
+              } else {
+                this.searchField.classList
+                                .remove("devtools-style-searchbox-no-match");
+              }
 
               this.inspector.emit("computed-view-refreshed");
               resolve(undefined);
@@ -586,6 +589,12 @@ CssComputedView.prototype = {
     this.searchClearButton.hidden = this.searchField.value.length === 0;
 
     this._filterChangedTimeout = setTimeout(() => {
+      if (this.searchField.value.length > 0) {
+        this.searchField.setAttribute("filled", true);
+      } else {
+        this.searchField.removeAttribute("filled");
+      }
+
       this.refreshPanel();
       this._filterChangeTimeout = null;
     }, filterTimeout);

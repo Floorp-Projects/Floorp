@@ -35,7 +35,7 @@ class PseudoClassPanel extends PureComponent {
       dom.div(
         {
           id: "pseudo-class-panel",
-          className: "theme-toolbar ruleview-reveal-panel",
+          className: "ruleview-reveal-panel",
         },
         Object.entries(pseudoClasses).map(([value, { isChecked, isDisabled }]) => {
           return (

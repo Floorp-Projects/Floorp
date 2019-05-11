@@ -96,7 +96,7 @@ class Toolbar extends Component {
           )
         ),
 
-        dom.span({ className: "devtools-separator" }),
+        dom.div({ id: "toolbar-spacer", className: "spacer" }),
 
         dom.input({
           id: "filter",

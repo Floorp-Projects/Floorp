@@ -328,7 +328,6 @@ checkbox:-moz-focusring {
 .devtools-button:empty::before {
   content: "";
   display: inline-block;
-  background-position: center;
   background-repeat: no-repeat;
   vertical-align: middle;
 }
@@ -453,23 +452,51 @@ checkbox:-moz-focusring {
 .devtools-searchinput,
 .devtools-filterinput {
   -moz-appearance: none;
-  margin: 0;
-  padding: 0 4px;
-  font: inherit;
-  border: 1px solid transparent;
-  background-color: var(--theme-body-background);
-  color: var(--theme-body-color);
-  flex-grow: 1;
+  margin: 1px 3px;
+  border: 1px solid;
+  border-radius: 2px;
+  padding: 4px 6px;
+  border-color: var(--theme-splitter-color);
+  font: message-box;
+  font-size: var(--theme-body-font-size);
+  background-color: white;
+  color: var(--grey-90);
+}
+
+.theme-dark .devtools-textinput,
+.theme-dark .devtools-searchinput,
+.theme-dark .devtools-filterinput {
+  /* in between grey-85 and grey-90 */
+  background-color: #141416;
+  color: var(--grey-20);
+}
+
+:root[platform="mac"] .devtools-textinput,
+:root[platform="mac"] .devtools-searchinput,
+:root[platform="mac"] .devtools-filterinput {
+  border-radius: 20px;
 }
 
 .devtools-searchinput,
 .devtools-filterinput {
+  padding: 0;
   padding-inline-start: 22px;
+  padding-inline-end: 4px;
   background-position: 7px center;
   background-size: 12px;
   background-repeat: no-repeat;
+  font-size: inherit;
   -moz-context-properties: fill;
   fill: var(--theme-icon-dimmed-color);
+}
+
+/*
+ * @TODO : has-clear-btn class was added for bug 1296187 and we should remove it
+ *  once we have a standardized search and filter input across the toolboxes.
+ */
+.has-clear-btn > .devtools-searchinput,
+.has-clear-btn > .devtools-filterinput {
+  padding-inline-end: 23px;
 }
 
 .devtools-searchinput {
@@ -492,41 +519,107 @@ checkbox:-moz-focusring {
   font-style: normal;
 }
 
-/* Searchbox with extra button(s) (MDN help or clear button) */
+.devtools-plaininput {
+  color: var(--grey-90);
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.theme-dark .devtools-plaininput {
+  color: var(--grey-20);
+}
+
+/* Searchbox is a div container element for a search input element */
 .devtools-searchbox {
   display: inline-flex;
-  flex-grow: 1;
+  flex: 1;
+  height: 23px;
   position: relative;
-  border: 1px solid transparent;
-  height: 100%;
-  box-sizing: border-box;
+  padding: 0 3px;
 }
 
+/* The spacing is accomplished with a padding on the searchbox */
+.devtools-searchbox > .devtools-textinput,
 .devtools-searchbox > .devtools-searchinput,
 .devtools-searchbox > .devtools-filterinput {
-  /* Let .devtools-searchbox handle the background and border */
-  background-color: transparent;
-  border: none;
-  flex-grow: 1;
+  margin-left: 0;
+  margin-right: 0;
+  width: 100%;
 }
 
-.devtools-searchbox:focus-within,
 .devtools-textinput:focus,
 .devtools-searchinput:focus,
 .devtools-filterinput:focus {
-  border-color: var(--blue-50);
+  border-color: var(--theme-focus-border-color-textbox);
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+  transition: all 0.2s ease-in-out;
   outline: none;
 }
 
-.devtools-searchbox-no-match {
-  background-color: var(--searchbox-no-match-background-color);
-  border-color: var(--searchbox-no-match-stroke-color);
+.devtools-searchbox .devtools-autocomplete-popup {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  line-height: initial !important;
+  /* See bug - 1414609. z-index is greater than 1000 so that searchbox's z-index
+  is more than z-index of requests-list-headers-wrapper in netmonitor */
+  z-index: 1001;
 }
 
-/* Clear icon within the searchbox */
+/* MDN link within the Searchbox */
+.devtools-searchbox .learn-more-link:before {
+  height: 20px;
+}
+
+.devtools-searchbox .learn-more-link {
+  background: transparent !important;
+  cursor: pointer;
+  display: none;
+}
+
+.devtools-searchbox:hover .learn-more-link {
+  display: block;
+}
+
+/* Don't add 'double spacing' for inputs that are at beginning / end
+   of a toolbar (since the toolbar has it's own spacing). */
+.devtools-toolbar > .devtools-textinput:first-child,
+.devtools-toolbar > .devtools-searchinput:first-child,
+.devtools-toolbar > .devtools-filterinput:first-child {
+  margin-inline-start: 0;
+}
+.devtools-toolbar > .devtools-textinput:last-child,
+.devtools-toolbar > .devtools-searchinput:last-child,
+.devtools-toolbar > .devtools-filterinput:last-child {
+  margin-inline-end: 0;
+}
+.devtools-toolbar > .devtools-searchbox:first-child {
+  padding-inline-start: 0;
+}
+.devtools-toolbar > .devtools-searchbox:last-child {
+  padding-inline-end: 0;
+}
+
+.devtools-rule-searchbox {
+  -moz-box-flex: 1;
+  width: 100%;
+}
+
+.devtools-filterinput:-moz-any([filled],.filled) {
+  background-color: var(--searchbox-background-color);
+  border-color: var(--searchbox-border-color);
+}
+
+.devtools-style-searchbox-no-match {
+  background-color: var(--searchbox-no-match-background-color) !important;
+  border-color: var(--searchbox-no-match-stroke-color) !important;
+}
+
 .devtools-searchinput-clear {
-  align-self: center;
-  margin: 0 4px;
+  position: absolute;
+  top: calc(50% - 8px);
+  inset-inline-end: 7px;
   padding: 0;
   border: 0;
   width: 16px;
@@ -538,33 +631,12 @@ checkbox:-moz-focusring {
   fill-opacity: 0.8;
 }
 
-.devtools-searchbox-no-match > .devtools-searchinput-clear {
+.devtools-style-searchbox-no-match + .devtools-searchinput-clear {
   fill: var(--searchbox-no-match-stroke-color);
 }
 
 .devtools-searchinput-clear:hover {
   fill-opacity: 1;
-}
-
-/* MDN link within the searchbox */
-.devtools-searchbox .learn-more-link::before {
-  opacity: 0.6;
-}
-
-.devtools-searchbox:not(:hover) .learn-more-link {
-  visibility: hidden;
-}
-
-/* Autocomplete popup within the searchbox */
-.devtools-searchbox .devtools-autocomplete-popup {
-  position: absolute;
-  left: 0;
-  top: 100%;
-  width: 100%;
-  line-height: initial !important;
-  /* See bug - 1414609. z-index is greater than 1000 so that searchbox's z-index
-  is more than z-index of requests-list-headers-wrapper in netmonitor */
-  z-index: 1001;
 }
 
 /* Twisty and checkbox controls */

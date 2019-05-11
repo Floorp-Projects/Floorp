@@ -77,10 +77,8 @@ InspectorSearch.prototype = {
     const lastSearched = this._lastSearched;
     this._lastSearched = query;
 
-    const searchContainer = this.searchBox.parentNode;
-
     if (query.length === 0) {
-      searchContainer.classList.remove("devtools-searchbox-no-match");
+      this.searchBox.classList.remove("devtools-style-searchbox-no-match");
       if (!lastSearched || lastSearched.length > 0) {
         this.emit("search-cleared");
       }
@@ -96,12 +94,12 @@ InspectorSearch.prototype = {
 
     if (res) {
       this.inspector.selection.setNodeFront(res.node, { reason: "inspectorsearch" });
-      searchContainer.classList.remove("devtools-searchbox-no-match");
+      this.searchBox.classList.remove("devtools-style-searchbox-no-match");
 
       res.query = query;
       this.emit("search-result", res);
     } else {
-      searchContainer.classList.add("devtools-searchbox-no-match");
+      this.searchBox.classList.add("devtools-style-searchbox-no-match");
       this.emit("search-result");
     }
   },
@@ -129,7 +127,7 @@ InspectorSearch.prototype = {
   },
 
   _onClearSearch: function() {
-    this.searchBox.parentNode.classList.remove("devtools-searchbox-no-match");
+    this.searchBox.classList.remove("devtools-style-searchbox-no-match");
     this.searchBox.value = "";
     this.searchClearButton.hidden = true;
     this.emit("search-cleared");

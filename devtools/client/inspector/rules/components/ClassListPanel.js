@@ -62,7 +62,7 @@ class ClassListPanel extends PureComponent {
       dom.div(
         {
           id: "ruleview-class-panel",
-          className: "theme-toolbar ruleview-reveal-panel",
+          className: "ruleview-reveal-panel",
         },
         dom.input({
           className: "devtools-textinput add-class",

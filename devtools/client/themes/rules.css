@@ -40,8 +40,17 @@
 /* Rule View Toolbar */
 
 #ruleview-toolbar-container {
-  /* @TODO: Bug 1535956 - Use the right CSS variable for this */
-  line-height: calc(24px - 2px);
+  flex-direction: column;
+  height: auto;
+  padding: 0;
+}
+
+#ruleview-toolbar {
+  display: flex;
+}
+
+#ruleview-toolbar > .devtools-searchbox:first-child {
+  padding-inline-start: 0;
 }
 
 #ruleview-command-toolbar {
@@ -49,7 +58,8 @@
 }
 
 .ruleview-reveal-panel {
-  border-bottom: 1px solid var(--theme-splitter-color);
+  background: var(--rule-header-background-color);
+  border-top: 1px solid var(--theme-splitter-color);
   display: flex;
   overflow: hidden;
   flex-wrap: wrap;
@@ -66,6 +76,7 @@
   align-items: center;
 }
 
+#ruleview-toolbar,
 #pseudo-class-panel,
 #ruleview-class-panel .classes {
   padding: 0 3px;
@@ -75,6 +86,16 @@
 
 #ruleview-class-panel {
   flex-direction: column;
+}
+
+#ruleview-class-panel .add-class {
+  border: 1px solid transparent;
+  border-radius: 0;
+  margin: 0;
+}
+
+#ruleview-class-panel .add-class:focus {
+  border: 1px solid var(--blue-50);
 }
 
 #ruleview-class-panel .classes {
@@ -651,6 +672,7 @@
 
 #ruleview-add-rule-button::before {
   background-image: url("chrome://devtools/skin/images/add.svg");
+  background-position: center;
   background-size: 14px;
 }
 
@@ -672,6 +694,7 @@
 
 #print-simulation-toggle::before {
   background-image: url("chrome://devtools/skin/images/rules-view-print-simulation.svg");
+  background-position: center;
   background-size: 14px;
 }
 
