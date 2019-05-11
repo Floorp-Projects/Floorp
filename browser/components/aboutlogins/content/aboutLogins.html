@@ -38,13 +38,9 @@
     </template>
 
     <template id="login-list-item-template">
-      <style>
-        :host(.selected) {
-          font-weight: bold;
-        }
-      </style>
-      <span class="login-list-item-hostname"></span>
-      <span class="login-list-item-username"></span>
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list-item.css">
+      <span class="hostname"></span>
+      <span class="username"></span>
     </template>
 
     <template id="login-item-template">
