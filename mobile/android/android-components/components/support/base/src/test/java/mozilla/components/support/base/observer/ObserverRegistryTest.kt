@@ -430,6 +430,22 @@ class ObserverRegistryTest {
         assertEquals(0, observer.notified.size)
     }
 
+    @Test
+    fun `isObserved is true if observers is empty`() {
+        val registry = spy(ObserverRegistry<TestIntObserver>())
+        val observer = TestIntObserver()
+
+        assertFalse(registry.isObserved())
+
+        registry.register(observer)
+
+        assertTrue(registry.isObserved())
+
+        registry.unregister(observer)
+
+        assertFalse(registry.isObserved())
+    }
+
     private class TestObserver {
         var notified: Boolean = false
 

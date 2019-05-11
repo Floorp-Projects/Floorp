@@ -107,6 +107,7 @@ object Dependencies {
     const val mozilla_sync_logins = "org.mozilla.appservices:logins:${Versions.mozilla_appservices}"
     const val mozilla_places = "org.mozilla.appservices:places:${Versions.mozilla_appservices}"
     const val mozilla_places_forUnitTests = "org.mozilla.appservices:places-forUnitTests:${Versions.mozilla_appservices}"
+    const val mozilla_push = "org.mozilla.appservices:push:${Versions.mozilla_appservices}"
     const val mozilla_rustlog = "org.mozilla.appservices:rustlog:${Versions.mozilla_appservices}"
     const val mozilla_servo_arm = "org.mozilla.servoview:servoview-armv7:${Versions.servo}"
     const val mozilla_servo_x86 = "org.mozilla.servoview:servoview-x86:${Versions.servo}"

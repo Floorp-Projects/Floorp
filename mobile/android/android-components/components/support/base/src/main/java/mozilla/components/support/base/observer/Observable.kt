@@ -87,4 +87,9 @@ interface Observable<T> {
      * Returns a list of lambdas wrapping a consuming method of an observer.
      */
     fun <R> wrapConsumers(block: T.(R) -> Boolean): List<(R) -> Boolean>
+
+    /**
+     * If the observable has registered observers.
+     */
+    fun isObserved(): Boolean
 }

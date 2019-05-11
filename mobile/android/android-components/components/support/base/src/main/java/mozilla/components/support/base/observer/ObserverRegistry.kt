@@ -132,6 +132,12 @@ class ObserverRegistry<T> : Observable<T> {
         return consumers
     }
 
+    override fun isObserved(): Boolean {
+        synchronized(observers) {
+            return !observers.isEmpty()
+        }
+    }
+
     /**
      * LifecycleObserver implementation to bind an observer to a Lifecycle.
      */

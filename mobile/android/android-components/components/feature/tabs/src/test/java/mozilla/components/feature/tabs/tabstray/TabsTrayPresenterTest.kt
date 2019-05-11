@@ -293,6 +293,8 @@ private class MockedTabsTray : TabsTray {
 
     override fun <R> wrapConsumers(block: TabsTray.Observer.(R) -> Boolean): List<(R) -> Boolean> = emptyList()
 
+    override fun isObserved(): Boolean = false
+
     override fun pauseObserver(observer: TabsTray.Observer) {}
 
     override fun resumeObserver(observer: TabsTray.Observer) {}
