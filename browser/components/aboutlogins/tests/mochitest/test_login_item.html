@@ -31,9 +31,17 @@ const TEST_LOGIN_1 = {
   username: "user1",
   password: "pass1",
   timeCreated: "1000",
+  timePasswordChanged: "2000",
+  timeLastUsed: "4000",
 };
 
 add_task(async function setup() {
+  stubFluentL10n({
+    "time-created": "timeCreated",
+    "time-changed": "timeChanged",
+    "time-used": "timeUsed",
+  });
+
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   importDependencies(templateFrame, displayEl);
@@ -44,20 +52,24 @@ add_task(async function setup() {
 
 add_task(async function test_empty_item() {
   ok(gLoginItem, "loginItem exists");
-  is(gLoginItem.shadowRoot.querySelector("input[name='hostname']").value, "", "hostname should be blank");
+  is(gLoginItem.shadowRoot.querySelector(".hostname").textContent, "", "hostname should be blank");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, "", "username should be blank");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, "", "password should be blank");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, "", "time-created should be blank");
+  is(gLoginItem.shadowRoot.querySelector(".time-changed").textContent, "", "time-changed should be blank");
+  is(gLoginItem.shadowRoot.querySelector(".time-used").textContent, "", "time-used should be blank");
 });
 
 add_task(async function test_set_login() {
   gLoginItem.setLogin(TEST_LOGIN_1);
   await asyncElementRendered();
 
-  is(gLoginItem.shadowRoot.querySelector("input[name='hostname']").value, TEST_LOGIN_1.hostname, "hostname should be populated");
+  is(gLoginItem.shadowRoot.querySelector(".hostname").textContent, TEST_LOGIN_1.hostname, "hostname should be populated");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be populated");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be populated");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, TEST_LOGIN_1.timeCreated, "time-created should be populated");
+  is(gLoginItem.shadowRoot.querySelector(".time-changed").textContent, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
+  is(gLoginItem.shadowRoot.querySelector(".time-used").textContent, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
 });
 
 add_task(async function test_different_login_modified() {
@@ -65,10 +77,12 @@ add_task(async function test_different_login_modified() {
   gLoginItem.loginModified(otherLogin);
   await asyncElementRendered();
 
-  is(gLoginItem.shadowRoot.querySelector("input[name='hostname']").value, TEST_LOGIN_1.hostname, "hostname should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector(".hostname").textContent, TEST_LOGIN_1.hostname, "hostname should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be unchanged");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector(".time-changed").textContent, TEST_LOGIN_1.timePasswordChanged, "time-changed should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector(".time-used").textContent, TEST_LOGIN_1.timeLastUsed, "time-used should be unchanged");
 });
 
 add_task(async function test_different_login_removed() {
@@ -76,10 +90,12 @@ add_task(async function test_different_login_removed() {
   gLoginItem.loginRemoved(otherLogin);
   await asyncElementRendered();
 
-  is(gLoginItem.shadowRoot.querySelector("input[name='hostname']").value, TEST_LOGIN_1.hostname, "hostname should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector(".hostname").textContent, TEST_LOGIN_1.hostname, "hostname should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be unchanged");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, TEST_LOGIN_1.password, "password should be unchanged");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector(".time-changed").textContent, TEST_LOGIN_1.timePasswordChanged, "time-changed should be unchanged");
+  is(gLoginItem.shadowRoot.querySelector(".time-used").textContent, TEST_LOGIN_1.timeLastUsed, "time-used should be unchanged");
 });
 
 add_task(async function test_login_modified() {
@@ -87,20 +103,24 @@ add_task(async function test_login_modified() {
   gLoginItem.loginModified(modifiedLogin);
   await asyncElementRendered();
 
-  is(gLoginItem.shadowRoot.querySelector("input[name='hostname']").value, modifiedLogin.hostname, "hostname should be updated");
+  is(gLoginItem.shadowRoot.querySelector(".hostname").textContent, modifiedLogin.hostname, "hostname should be updated");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, modifiedLogin.username, "username should be updated");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, modifiedLogin.password, "password should be updated");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, modifiedLogin.timeCreated, "time-created should be updated");
+  is(gLoginItem.shadowRoot.querySelector(".time-changed").textContent, modifiedLogin.timePasswordChanged, "time-changed should be updated");
+  is(gLoginItem.shadowRoot.querySelector(".time-used").textContent, modifiedLogin.timeLastUsed, "time-used should be updated");
 });
 
 add_task(async function test_login_removed() {
   gLoginItem.loginRemoved(TEST_LOGIN_1);
   await asyncElementRendered();
 
-  is(gLoginItem.shadowRoot.querySelector("input[name='hostname']").value, "", "hostname should be cleared");
+  is(gLoginItem.shadowRoot.querySelector(".hostname").textContent, "", "hostname should be cleared");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, "", "username should be cleared");
   is(gLoginItem.shadowRoot.querySelector("input[name='password']").value, "", "password should be cleared");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, "", "time-created should be cleared");
+  is(gLoginItem.shadowRoot.querySelector(".time-changed").textContent, "", "time-changed should be cleared");
+  is(gLoginItem.shadowRoot.querySelector(".time-used").textContent, "", "time-used should be cleared");
 });
 
 </script>
