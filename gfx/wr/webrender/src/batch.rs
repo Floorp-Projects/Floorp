@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, ExternalImageType, FilterOp, ImageRendering};
+use api::{AlphaType, ClipMode, ExternalImageType, ImageRendering};
 use api::{YuvColorSpace, YuvFormat, ColorDepth, PremultipliedColorF, RasterSpace};
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore, ClipNodeInstance};
@@ -13,7 +13,7 @@ use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, Z
 use crate::gpu_types::{ClipMaskInstance, SplitCompositeInstance, SnapOffsets};
 use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
-use crate::internal_types::{FastHashMap, SavedTargetIndex, TextureSource};
+use crate::internal_types::{FastHashMap, SavedTargetIndex, TextureSource, Filter};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use crate::prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, PrimitiveVisibilityIndex};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
@@ -25,7 +25,6 @@ use crate::render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree, TileBl
 use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache, ImageProperties};
-use crate::scene::FilterOpHelpers;
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use crate::tiling::{RenderTargetContext};
@@ -636,6 +635,7 @@ impl BatchBuilder {
         let transform_kind = transform_id.transform_kind();
         let prim_info = &ctx.scratch.prim_info[prim_instance.visibility_info.0 as usize];
         let bounding_rect = &prim_info.clip_chain.pic_clip_rect;
+
         let z_id = z_generator.next();
 
         let prim_common_data = &ctx.data_stores.as_common_data(&prim_instance);
@@ -1287,7 +1287,7 @@ impl BatchBuilder {
                             PictureCompositeMode::Filter(ref filter) => {
                                 assert!(filter.is_visible());
                                 match filter {
-                                    FilterOp::Blur(..) => {
+                                    Filter::Blur(..) => {
                                         let kind = BatchKind::Brush(
                                             BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
                                         );
@@ -1323,7 +1323,105 @@ impl BatchBuilder {
                                             PrimitiveInstanceData::from(instance),
                                         );
                                     }
-                                    FilterOp::DropShadow(offset, ..) => {
+                                    Filter::DropShadowStack(shadows) => {
+                                        // Draw an instance per shadow first, following by the content.
+
+                                        // The shadows and the content get drawn as a brush image.
+                                        let kind = BatchKind::Brush(
+                                            BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
+                                        );
+
+                                        // Gets the saved render task ID of the content, which is
+                                        // deeper in the render task tree than the direct child.
+                                        let secondary_id = picture.secondary_render_task_id.expect("no secondary!?");
+                                        let saved_index = render_tasks[secondary_id].saved_index.expect("no saved index!?");
+                                        debug_assert_ne!(saved_index, SavedTargetIndex::PENDING);
+
+                                        // Build BatchTextures for shadow/content
+                                        let shadow_textures = BatchTextures::render_target_cache();
+                                        let content_textures = BatchTextures {
+                                            colors: [
+                                                TextureSource::RenderTaskCache(saved_index),
+                                                TextureSource::Invalid,
+                                                TextureSource::Invalid,
+                                            ],
+                                        };
+
+                                        // Build batch keys for shadow/content
+                                        let shadow_key = BatchKey::new(kind, non_segmented_blend_mode, shadow_textures);
+                                        let content_key = BatchKey::new(kind, non_segmented_blend_mode, content_textures);
+
+                                        // Retrieve the UV rect addresses for shadow/content.
+                                        let cache_task_id = surface
+                                            .expect("bug: surface must be allocated by now");
+                                        let shadow_uv_rect_address = render_tasks[cache_task_id]
+                                            .get_texture_address(gpu_cache)
+                                            .as_int();
+                                        let content_uv_rect_address = render_tasks[secondary_id]
+                                            .get_texture_address(gpu_cache)
+                                            .as_int();
+
+                                        for (shadow, shadow_gpu_data) in shadows.iter().zip(picture.extra_gpu_data_handles.iter()) {
+                                            // Get the GPU cache address of the extra data handle.
+                                            let shadow_prim_address = gpu_cache.get_address(shadow_gpu_data);
+
+                                            let shadow_rect = prim_header.local_rect.translate(&shadow.offset);
+
+                                            let shadow_prim_header = PrimitiveHeader {
+                                                local_rect: shadow_rect,
+                                                specific_prim_address: shadow_prim_address,
+                                                ..prim_header
+                                            };
+
+                                            let shadow_prim_header_index = prim_headers.push(&shadow_prim_header, z_id, [
+                                                ShaderColorMode::Alpha as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
+                                                RasterizationSpace::Screen as i32,
+                                                get_shader_opacity(1.0),
+                                                0,
+                                            ]);
+
+                                            let shadow_instance = BrushInstance {
+                                                prim_header_index: shadow_prim_header_index,
+                                                clip_task_address,
+                                                segment_index: INVALID_SEGMENT_INDEX,
+                                                edge_flags: EdgeAaSegmentMask::empty(),
+                                                brush_flags,
+                                                user_data: shadow_uv_rect_address,
+                                            };
+
+                                            batcher.current_batch_list().push_single_instance(
+                                                shadow_key,
+                                                bounding_rect,
+                                                z_id,
+                                                PrimitiveInstanceData::from(shadow_instance),
+                                            );
+                                        }
+                                        let z_id_content = z_generator.next();
+
+                                        let content_prim_header_index = prim_headers.push(&prim_header, z_id_content, [
+                                            ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
+                                            RasterizationSpace::Screen as i32,
+                                            get_shader_opacity(1.0),
+                                            0,
+                                        ]);
+
+                                        let content_instance = BrushInstance {
+                                            prim_header_index: content_prim_header_index,
+                                            clip_task_address,
+                                            segment_index: INVALID_SEGMENT_INDEX,
+                                            edge_flags: EdgeAaSegmentMask::empty(),
+                                            brush_flags,
+                                            user_data: content_uv_rect_address,
+                                        };
+
+                                        batcher.current_batch_list().push_single_instance(
+                                            content_key,
+                                            bounding_rect,
+                                            z_id_content,
+                                            PrimitiveInstanceData::from(content_instance),
+                                        );
+                                    }
+                                    Filter::DropShadow(shadow) => {
                                         // Draw an instance of the shadow first, following by the content.
 
                                         // Both the shadow and the content get drawn as a brush image.
@@ -1361,7 +1459,7 @@ impl BatchBuilder {
                                             .as_int();
 
                                         // Get the GPU cache address of the extra data handle.
-                                        let shadow_prim_address = gpu_cache.get_address(&picture.extra_gpu_data_handle);
+                                        let shadow_prim_address = gpu_cache.get_address(&picture.extra_gpu_data_handles[0]);
 
                                         let z_id_shadow = z_id;
                                         let z_id_content = z_generator.next();
@@ -1373,7 +1471,7 @@ impl BatchBuilder {
                                             0,
                                         ]);
 
-                                        let shadow_rect = prim_header.local_rect.translate(&offset);
+                                        let shadow_rect = prim_header.local_rect.translate(&shadow.offset);
 
                                         let shadow_prim_header = PrimitiveHeader {
                                             local_rect: shadow_rect,
@@ -1423,47 +1521,49 @@ impl BatchBuilder {
                                     }
                                     _ => {
                                         let filter_mode = match filter {
-                                            FilterOp::Identity => 1, // matches `Contrast(1)`
-                                            FilterOp::Blur(..) => 0,
-                                            FilterOp::Contrast(..) => 1,
-                                            FilterOp::Grayscale(..) => 2,
-                                            FilterOp::HueRotate(..) => 3,
-                                            FilterOp::Invert(..) => 4,
-                                            FilterOp::Saturate(..) => 5,
-                                            FilterOp::Sepia(..) => 6,
-                                            FilterOp::Brightness(..) => 7,
-                                            FilterOp::Opacity(..) => 8,
-                                            FilterOp::DropShadow(..) => 9,
-                                            FilterOp::ColorMatrix(..) => 10,
-                                            FilterOp::SrgbToLinear => 11,
-                                            FilterOp::LinearToSrgb => 12,
-                                            FilterOp::ComponentTransfer => unreachable!(),
+                                            Filter::Identity => 1, // matches `Contrast(1)`
+                                            Filter::Blur(..) => 0,
+                                            Filter::Contrast(..) => 1,
+                                            Filter::Grayscale(..) => 2,
+                                            Filter::HueRotate(..) => 3,
+                                            Filter::Invert(..) => 4,
+                                            Filter::Saturate(..) => 5,
+                                            Filter::Sepia(..) => 6,
+                                            Filter::Brightness(..) => 7,
+                                            Filter::Opacity(..) => 8,
+                                            Filter::DropShadow(..) |
+                                            Filter::DropShadowStack(..) => 9,
+                                            Filter::ColorMatrix(..) => 10,
+                                            Filter::SrgbToLinear => 11,
+                                            Filter::LinearToSrgb => 12,
+                                            Filter::ComponentTransfer => unreachable!(),
                                         };
 
                                         let user_data = match filter {
-                                            FilterOp::Identity => 0x10000i32, // matches `Contrast(1)`
-                                            FilterOp::Contrast(amount) |
-                                            FilterOp::Grayscale(amount) |
-                                            FilterOp::Invert(amount) |
-                                            FilterOp::Saturate(amount) |
-                                            FilterOp::Sepia(amount) |
-                                            FilterOp::Brightness(amount) |
-                                            FilterOp::Opacity(_, amount) => {
+                                            Filter::Identity => 0x10000i32, // matches `Contrast(1)`
+                                            Filter::Contrast(amount) |
+                                            Filter::Grayscale(amount) |
+                                            Filter::Invert(amount) |
+                                            Filter::Saturate(amount) |
+                                            Filter::Sepia(amount) |
+                                            Filter::Brightness(amount) |
+                                            Filter::Opacity(_, amount) => {
                                                 (amount * 65536.0) as i32
                                             }
-                                            FilterOp::SrgbToLinear | FilterOp::LinearToSrgb => 0,
-                                            FilterOp::HueRotate(angle) => {
+                                            Filter::SrgbToLinear | Filter::LinearToSrgb => 0,
+                                            Filter::HueRotate(angle) => {
                                                 (0.01745329251 * angle * 65536.0) as i32
                                             }
                                             // Go through different paths
-                                            FilterOp::Blur(..) |
-                                            FilterOp::DropShadow(..) => {
+                                            Filter::Blur(..) |
+                                            Filter::DropShadowStack(..) |
+                                            Filter::DropShadow(..) => {
                                                 unreachable!();
                                             }
-                                            FilterOp::ColorMatrix(_) => {
-                                                picture.extra_gpu_data_handle.as_int(gpu_cache)
+                                            Filter::ColorMatrix(_) => {
+                                                picture.extra_gpu_data_handles[0].as_int(gpu_cache)
                                             }
-                                            FilterOp::ComponentTransfer => unreachable!(),
+                                            Filter::ComponentTransfer => unreachable!(),
                                         };
 
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
