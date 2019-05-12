@@ -78,11 +78,9 @@ function run_test() {
   }
   const configPath = "/v1/";
   const changesPath = "/v1/buckets/monitor/collections/changes/records";
-  const metadataPath = "/v1/buckets/main/collections/password-fields";
   const recordsPath  = "/v1/buckets/main/collections/password-fields/records";
   server.registerPathHandler(configPath, handleResponse);
   server.registerPathHandler(changesPath, handleResponse);
-  server.registerPathHandler(metadataPath, handleResponse);
   server.registerPathHandler(recordsPath, handleResponse);
 
   run_next_test();
@@ -182,42 +180,6 @@ add_task(async function test_get_ignores_synchronization_errors() {
   // The sync endpoints are not mocked, this fails internally.
   data = await RemoteSettings("no-mocked-responses").get();
   equal(data.length, 0);
-});
-add_task(clear_state);
-
-add_task(async function test_get_can_verify_signature() {
-  // No signature in metadata.
-  let error;
-  try {
-    await client.get({ verifySignature: true, syncIfEmpty: false });
-  } catch (e) {
-    error = e;
-  }
-  equal(error.message, "Missing signature (main/password-fields)");
-
-  // Populate the local DB (record and metadata)
-  await client.maybeSync(2000);
-
-  // It validates signature that was stored in local DB.
-  let calledSignature;
-  client._verifier = {
-    async asyncVerifyContentSignature(serialized, signature) {
-      calledSignature = signature;
-      return JSON.parse(serialized).data.length == 1;
-    },
-  };
-  await client.get({ verifySignature: true });
-  ok(calledSignature.endsWith("abcdef"));
-
-  // It throws when signature does not verify.
-  const col = await client.openCollection();
-  await col.delete("9d500963-d80e-3a91-6e74-66f3811b99cc");
-  try {
-    await client.get({ verifySignature: true });
-  } catch (e) {
-    error = e;
-  }
-  equal(error.message, "Invalid content signature (main/password-fields)");
 });
 add_task(clear_state);
 
@@ -557,26 +519,6 @@ function getSampleResponse(req, port) {
           "last_modified": 1000,
         }],
       },
-    },
-    "GET:/v1/buckets/main/collections/password-fields": {
-      "sampleHeaders": [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        "Etag: \"1234\"",
-      ],
-      "status": { status: 200, statusText: "OK" },
-      "responseBody": JSON.stringify({
-        "data": {
-          "id": "password-fields",
-          "last_modified": 1234,
-          "signature": {
-            "signature": "abcdef",
-            "x5u": "http://localhost/dummy",
-          },
-        },
-      }),
     },
     "GET:/v1/buckets/main/collections/password-fields/records?_expected=2000&_sort=-last_modified": {
       "sampleHeaders": [

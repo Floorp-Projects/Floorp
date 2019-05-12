@@ -92,7 +92,6 @@ function setupKintoPreloadServer(certGenerator, options = {
   Services.prefs.setCharPref("services.settings.server", dummyServerURL);
 
   const configPath = "/v1/";
-  const metadataPath = "/v1/buckets/security-state/collections/intermediates";
   const recordsPath = "/v1/buckets/security-state/collections/intermediates/records";
   const attachmentsPath = "/attachments/";
 
@@ -112,7 +111,7 @@ function setupKintoPreloadServer(certGenerator, options = {
   }
 
   // Basic server information, all static
-  const handler = (request, response) => {
+  server.registerPathHandler(configPath, (request, response) => {
     try {
       const respData = getResponseData(request, server.identity.primaryPort);
       if (!respData) {
@@ -127,9 +126,7 @@ function setupKintoPreloadServer(certGenerator, options = {
     } catch (e) {
       info(e);
     }
-  };
-  server.registerPathHandler(configPath, handler);
-  server.registerPathHandler(metadataPath, handler);
+  });
 
   // Lists of certs
   server.registerPathHandler(recordsPath, (request, response) => {
@@ -505,22 +502,6 @@ function getResponseData(req, port) {
           "attachments": {
             "base_url": `http://localhost:${port}/attachments/`,
           },
-        },
-      }),
-    },
-    "GET:/v1/buckets/security-state/collections/intermediates?": {
-      "responseHeaders": [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        "Etag: \"1234\"",
-      ],
-      "status": { status: 200, statusText: "OK" },
-      "responseBody": JSON.stringify({
-        "data": {
-          "id": "intermediates",
-          "last_modified": 1234,
         },
       }),
     },
