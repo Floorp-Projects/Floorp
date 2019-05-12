@@ -28,11 +28,11 @@ class LoginItem extends HTMLElement {
 
   static get observedAttributes() {
     return [
-      "login-item-delete",
-      "login-item-hostname",
-      "login-item-password",
-      "login-item-time-created",
-      "login-item-username",
+      "delete-button",
+      "hostname-label",
+      "password-label",
+      "time-created-label",
+      "username-label",
     ];
   }
 
@@ -43,23 +43,10 @@ class LoginItem extends HTMLElement {
       return;
     }
 
-    switch (attr) {
-      case "login-item-delete":
-        this.shadowRoot.querySelector(".delete-button").textContent = newValue;
-        break;
-      case "login-item-hostname":
-        this.shadowRoot.querySelector(".hostname-label").textContent = newValue;
-        break;
-      case "login-item-password":
-        this.shadowRoot.querySelector(".password-label").textContent = newValue;
-        break;
-      case "login-item-time-created":
-        this.shadowRoot.querySelector(".time-created-label").textContent = newValue;
-        break;
-      case "login-item-username":
-        this.shadowRoot.querySelector(".username-label").textContent = newValue;
-        break;
-    }
+    // Strings that are reflected to their shadowed element are assigned
+    // to an attribute name that matches a className on the element.
+    let shadowedElement = this.shadowRoot.querySelector("." + attr);
+    shadowedElement.textContent = newValue;
   }
 
   render() {

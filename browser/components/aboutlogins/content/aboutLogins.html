@@ -18,7 +18,11 @@
     <login-list data-l10n-id="login-list"
                 data-l10n-attrs="login-list-header"></login-list>
     <login-item data-l10n-id="login-item"
-                data-l10n-attrs="login-item-hostname, login-item-password, login-item-username, login-item-time-created, login-item-delete"></login-item>
+                data-l10n-attrs="delete-button,
+                                 hostname-label,
+                                 password-label,
+                                 time-created-label,
+                                 username-label"></login-item>
 
     <template id="login-list-template">
       <h2></h2>
@@ -37,7 +41,7 @@
     </template>
 
     <template id="login-item-template">
-      <h2 data-l10n-id="login-item-header"></h2>
+      <h2 class="header"></h2>
       <label>
         <span class="hostname-label"></span>
         <input name="hostname"/>
