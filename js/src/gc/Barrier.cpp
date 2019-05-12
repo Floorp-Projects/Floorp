@@ -11,7 +11,6 @@
 #include "gc/Zone.h"
 #include "js/HashTable.h"
 #include "js/Value.h"
-#include "vm/BigIntType.h"  // JS::BigInt
 #include "vm/EnvironmentObject.h"
 #include "vm/JSObject.h"
 #include "vm/Realm.h"

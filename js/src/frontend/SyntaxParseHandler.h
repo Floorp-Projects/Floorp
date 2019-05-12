@@ -13,7 +13,6 @@
 #include <string.h>
 
 #include "frontend/ParseNode.h"
-#include "frontend/TokenStream.h"
 #include "js/GCAnnotations.h"
 #include "vm/JSContext.h"
 

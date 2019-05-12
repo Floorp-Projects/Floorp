@@ -48,7 +48,6 @@
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
-#include "vm/ModuleBuilder.h"  // js::ModuleBuilder
 #include "vm/RegExpObject.h"
 #include "vm/StringType.h"
 #include "wasm/AsmJS.h"
@@ -2108,17 +2107,6 @@ JSAtom* ParserBase::prefixAccessorName(PropertyType propType,
 }
 
 template <class ParseHandler, typename Unit>
-void GeneralParser<ParseHandler, Unit>::setFunctionStartAtCurrentToken(
-    FunctionBox* funbox) const {
-  uint32_t bufStart = anyChars.currentToken().pos.begin;
-
-  uint32_t startLine, startColumn;
-  tokenStream.computeLineAndColumn(bufStart, &startLine, &startColumn);
-
-  funbox->setStart(bufStart, startLine, startColumn);
-}
-
-template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::functionArguments(
     YieldHandling yieldHandling, FunctionSyntaxKind kind,
     FunctionNodeType funNode) {
@@ -2182,7 +2170,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
 
     // Record the start of function source (for FunctionToString). If we
     // are parenFreeArrow, we will set this below, after consuming the NAME.
-    setFunctionStartAtCurrentToken(funbox);
+    tokenStream.setFunctionStart(funbox);
   } else {
     // When delazifying, we may not have a current token and pos() is
     // garbage. In that case, substitute the first token's position.
@@ -2297,7 +2285,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
           }
 
           if (parenFreeArrow) {
-            setFunctionStartAtCurrentToken(funbox);
+            tokenStream.setFunctionStart(funbox);
           }
 
           RootedPropertyName name(cx_, bindingIdentifier(yieldHandling));
@@ -2913,10 +2901,6 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   return funNode;
 }
 
-void ParserBase::setFunctionEndFromCurrentToken(FunctionBox* funbox) const {
-  funbox->setEnd(anyChars.currentToken().pos.end);
-}
-
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
     InHandling inHandling, YieldHandling yieldHandling,
@@ -3057,7 +3041,7 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
       return false;
     }
 
-    setFunctionEndFromCurrentToken(funbox);
+    funbox->setEnd(anyChars);
   } else {
     MOZ_ASSERT(kind == FunctionSyntaxKind::Arrow);
 
@@ -3065,7 +3049,7 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
       return false;
     }
 
-    setFunctionEndFromCurrentToken(funbox);
+    funbox->setEnd(anyChars);
 
     if (kind == FunctionSyntaxKind::Statement) {
       if (!matchOrInsertSemicolon()) {
@@ -7166,7 +7150,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   }
   funbox->initWithEnclosingParseContext(pc_, functionSyntaxKind);
   handler_.setFunctionBox(funNode, funbox);
-  setFunctionEndFromCurrentToken(funbox);
+  funbox->setEnd(anyChars);
 
   // Push a SourceParseContext on to the stack.
   SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
@@ -7183,7 +7167,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   }
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
   funbox->function()->setArgCount(0);
-  setFunctionStartAtCurrentToken(funbox);
+  tokenStream.setFunctionStart(funbox);
 
   pc_->functionScope().useAsVarScope(pc_);
 
@@ -7320,7 +7304,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   funbox->initFieldInitializer(pc_, hasHeritage);
   handler_.setFunctionBox(funNode, funbox);
 
-  // We can't use setFunctionStartAtCurrentToken because that uses pos().begin,
+  // We can't use tokenStream.setFunctionStart, because that uses pos().begin,
   // which is incorrect for fields without initializers (pos() points to the
   // field identifier)
   uint32_t firstTokenLine, firstTokenColumn;
@@ -7357,7 +7341,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
 
   // Update the end position of the parse node.
   handler_.setEndPosition(funNode, wholeInitializerPos.end);
-  setFunctionEndFromCurrentToken(funbox);
+  funbox->setEnd(anyChars);
 
   // Create a ListNode for the parameters + body (there are no parameters).
   ListNodeType argsbody =
