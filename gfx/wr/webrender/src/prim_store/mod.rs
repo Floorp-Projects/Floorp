@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, ColorF};
-use api::{FilterOp, ImageRendering, RepeatMode};
+use api::{ImageRendering, RepeatMode};
 use api::{PremultipliedColorF, PropertyBinding, Shadow, GradientStop};
 use api::{BoxShadowClipMode, LineStyle, LineOrientation};
 use api::{PrimitiveKeyKind, RasterSpace};
@@ -52,7 +52,7 @@ use crate::storage;
 use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
 use crate::util::{MatrixHelpers, MaxRect, Recycler};
 use crate::util::{clamp_to_scale_factor, pack_as_float, project_rect, raster_rect_to_device_pixels};
-use crate::internal_types::LayoutPrimitiveInfo;
+use crate::internal_types::{LayoutPrimitiveInfo, Filter};
 use smallvec::SmallVec;
 
 pub mod borders;
@@ -1852,7 +1852,15 @@ impl PrimitiveStore {
                         Some(ref rc) => match rc.composite_mode {
                             // If we have a drop shadow filter, we also need to include the shadow in
                             // our local rect for the purpose of calculating the size of the picture.
-                            PictureCompositeMode::Filter(FilterOp::DropShadow(offset, ..)) => pic.snapped_local_rect.translate(&offset),
+                            PictureCompositeMode::Filter(Filter::DropShadow(shadow)) => pic.snapped_local_rect.translate(&shadow.offset),
+                            PictureCompositeMode::Filter(Filter::DropShadowStack(ref shadows)) => {
+                                let mut rect = LayoutRect::zero();
+                                for shadow in shadows {
+                                    rect = rect.union(&pic.snapped_local_rect.translate(&shadow.offset));
+                                }
+
+                                rect
+                            }
                             _ => LayoutRect::zero(),
                         }
                         None => {
@@ -2132,9 +2140,17 @@ impl PrimitiveStore {
             // Inflate the local bounding rect if required by the filter effect.
             // This inflaction factor is to be applied to the surface itself.
             let inflation_size = match raster_config.composite_mode {
-                PictureCompositeMode::Filter(FilterOp::Blur(_)) => surface.inflation_factor,
-                PictureCompositeMode::Filter(FilterOp::DropShadow(_, blur_radius, _)) =>
-                    (blur_radius * BLUR_SAMPLE_SCALE).ceil(),
+                PictureCompositeMode::Filter(Filter::Blur(_)) => surface.inflation_factor,
+                PictureCompositeMode::Filter(Filter::DropShadow(shadow)) => {
+                    (shadow.blur_radius * BLUR_SAMPLE_SCALE).ceil()
+                }
+                PictureCompositeMode::Filter(Filter::DropShadowStack(ref shadows)) => {
+                    let mut max = 0.0;
+                    for shadow in shadows {
+                        max = f32::max(max, shadow.blur_radius * BLUR_SAMPLE_SCALE);
+                    }
+                    max.ceil()
+                }
                 _ => 0.0,
             };
             surface_rect = surface_rect.inflate(inflation_size, inflation_size);
@@ -2143,8 +2159,15 @@ impl PrimitiveStore {
             // perspective of its child primitives.
             let pic_local_rect = surface_rect * TypedScale::new(1.0);
             if pic.snapped_local_rect != pic_local_rect {
-                if let PictureCompositeMode::Filter(FilterOp::DropShadow(..)) = raster_config.composite_mode {
-                    frame_state.gpu_cache.invalidate(&pic.extra_gpu_data_handle);
+                match raster_config.composite_mode {
+                    PictureCompositeMode::Filter(Filter::DropShadow(..)) 
+                    | PictureCompositeMode::Filter(Filter::DropShadowStack(..))
+                    => {
+                        for handle in &pic.extra_gpu_data_handles {
+                            frame_state.gpu_cache.invalidate(handle);
+                        }
+                    }
+                    _ => {}
                 }
                 // Invalidate any segments built for this picture, since the local
                 // rect has changed.
@@ -2397,7 +2420,7 @@ impl PrimitiveStore {
     ) {
         // Only handle opacity filters for now.
         let binding = match self.pictures[pic_index.0].requested_composite_mode {
-            Some(PictureCompositeMode::Filter(FilterOp::Opacity(binding, _))) => {
+            Some(PictureCompositeMode::Filter(Filter::Opacity(binding, _))) => {
                 binding
             }
             _ => {

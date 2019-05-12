@@ -521,6 +521,7 @@ pub struct BoxShadowDisplayItem {
 pub struct PushShadowDisplayItem {
     pub space_and_clip: SpaceAndClipInfo,
     pub shadow: Shadow,
+    pub should_inflate: bool,
 }
 
 #[repr(C)]
@@ -529,7 +530,6 @@ pub struct Shadow {
     pub offset: LayoutVector2D,
     pub color: ColorF,
     pub blur_radius: f32,
-    pub should_inflate: bool,
 }
 
 #[repr(u8)]
@@ -712,29 +712,11 @@ pub enum FilterOp {
     Opacity(PropertyBinding<f32>, f32),
     Saturate(f32),
     Sepia(f32),
-    DropShadow(LayoutVector2D, f32, ColorF),
+    DropShadow(Shadow),
     ColorMatrix([f32; 20]),
     SrgbToLinear,
     LinearToSrgb,
     ComponentTransfer,
-}
-
-impl FilterOp {
-    /// Ensure that the parameters for a filter operation
-    /// are sensible.
-    pub fn sanitize(&self) -> FilterOp {
-        match self {
-            FilterOp::Blur(radius) => {
-                let radius = radius.min(MAX_BLUR_RADIUS);
-                FilterOp::Blur(radius)
-            }
-            FilterOp::DropShadow(offset, radius, color) => {
-                let radius = radius.min(MAX_BLUR_RADIUS);
-                FilterOp::DropShadow(*offset, radius, *color)
-            }
-            filter => filter.clone(),
-        }
-    }
 }
 
 #[repr(u8)]
