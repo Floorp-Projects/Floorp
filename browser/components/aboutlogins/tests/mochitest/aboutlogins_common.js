@@ -1,6 +1,6 @@
 "use strict";
 
-/* exported asyncElementRendered, importDependencies */
+/* exported asyncElementRendered, importDependencies, stubFluentL10n */
 
 /**
  * A helper to await on while waiting for an asynchronous rendering of a Custom
@@ -23,4 +23,16 @@ function importDependencies(templateFrame, destinationEl) {
     let imported = document.importNode(template, true);
     destinationEl.appendChild(imported);
   }
+}
+
+function stubFluentL10n(argsMap) {
+  document.l10n = {
+    setAttributes(element, id, args) {
+      element.setAttribute("data-l10n-id", id);
+      for (let attrName of Object.keys(argsMap)) {
+        let varName = argsMap[attrName];
+        element.setAttribute(attrName, args[varName]);
+      }
+    },
+  };
 }

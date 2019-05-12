@@ -18,10 +18,15 @@
     <login-list data-l10n-id="login-list"
                 data-l10n-attrs="login-list-header"></login-list>
     <login-item data-l10n-id="login-item"
-                data-l10n-attrs="delete-button,
+                data-l10n-args='{"timeCreated": 0, "timeChanged": 0, "timeUsed": 0}'
+                data-l10n-attrs="cancel-button,
+                                 delete-button,
                                  hostname-label,
                                  password-label,
-                                 time-created-label,
+                                 save-changes-button,
+                                 time-created,
+                                 time-changed,
+                                 time-used,
                                  username-label"></login-item>
 
     <template id="login-list-template">
@@ -43,23 +48,24 @@
     <template id="login-item-template">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-item.css">
       <h2 class="header"></h2>
+      <button class="delete-button"></button>
       <label>
-        <span class="hostname-label"></span>
-        <input name="hostname"/>
+        <span class="hostname-label field-label"></span>
+        <span class="hostname"/>
       </label>
       <label>
-        <span class="username-label"></span>
+        <span class="username-label field-label"></span>
         <input name="username"/>
       </label>
       <label>
-        <span class="password-label"></span>
+        <span class="password-label field-label"></span>
         <input type="password" name="password"/>
       </label>
-      <p>
-        <span class="time-created-label"></span>
-        <span class="time-created"></span>
-      </p>
-      <button class="delete-button"></button>
+      <p class="time-created meta-info"></p>
+      <p class="time-changed meta-info"></p>
+      <p class="time-used meta-info"></p>
+      <button class="save-changes-button"></button>
+      <button class="cancel-button"></button>
     </template>
   </body>
 </html>
