@@ -48,6 +48,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
+#include "vm/ModuleBuilder.h"  // js::ModuleBuilder
 #include "vm/RegExpObject.h"
 #include "vm/StringType.h"
 #include "wasm/AsmJS.h"
