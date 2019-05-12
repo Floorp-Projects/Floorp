@@ -11,6 +11,7 @@
 #include "jit/MoveResolver.h"
 #include "jit/x86-shared/MacroAssembler-x86-shared.h"
 #include "js/HeapAPI.h"
+#include "vm/BigIntType.h"  // JS::BigInt
 #include "vm/Realm.h"
 
 namespace js {
