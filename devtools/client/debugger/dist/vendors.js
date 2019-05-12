@@ -2825,7 +2825,11 @@ Menu.prototype.popup = function (screenX, screenY, doc) {
 };
 
 Menu.prototype.createPopup = function (doc) {
-  return doc.createElement("menupopup");
+  const popup = doc.createXULElement("menupopup");
+  popup.setAttribute("menu-api", "true");
+  popup.setAttribute("consumeoutsideclicks", "false");
+  popup.setAttribute("incontentshell", "false");
+  return popup;
 };
 
 Menu.prototype._createMenuItems = function (parent) {
@@ -2836,16 +2840,16 @@ Menu.prototype._createMenuItems = function (parent) {
     }
 
     if (item.submenu) {
-      let menupopup = doc.createElement("menupopup");
+      let menupopup = doc.createXULElement("menupopup");
       item.submenu._createMenuItems(menupopup);
 
-      let menuitem = doc.createElement("menuitem");
+      let menuitem = doc.createXULElement("menuitem");
       menuitem.setAttribute("label", item.label);
       if (!inToolbox()) {
         menuitem.textContent = item.label;
       }
 
-      let menu = doc.createElement("menu");
+      let menu = doc.createXULElement("menu");
       menu.appendChild(menuitem);
       menu.appendChild(menupopup);
       if (item.disabled) {
@@ -2862,10 +2866,10 @@ Menu.prototype._createMenuItems = function (parent) {
       }
       parent.appendChild(menu);
     } else if (item.type === "separator") {
-      let menusep = doc.createElement("menuseparator");
+      let menusep = doc.createXULElement("menuseparator");
       parent.appendChild(menusep);
     } else {
-      let menuitem = doc.createElement("menuitem");
+      let menuitem = doc.createXULElement("menuitem");
       menuitem.setAttribute("label", item.label);
 
       if (!inToolbox()) {
