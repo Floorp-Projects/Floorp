@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 
-#include "frontend/TokenStream.h"
+#include "frontend/Token.h"
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Printer.h"
