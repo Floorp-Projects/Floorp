@@ -2420,7 +2420,7 @@ class StaticAnalysis(MachCommandBase):
             common_args += ['-config=%s' % yaml.dump(cfg)]
 
         if fix:
-            common_args += '-fix'
+            common_args += ['-fix']
 
         return [
             self.virtualenv_manager.python_path, self._run_clang_tidy_path, '-j',
