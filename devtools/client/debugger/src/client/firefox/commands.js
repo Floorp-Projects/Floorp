@@ -147,16 +147,8 @@ function rewind(thread: string): Promise<*> {
   return lookupThreadClient(thread).rewind();
 }
 
-function reverseStepIn(thread: string): Promise<*> {
-  return lookupThreadClient(thread).reverseStepIn();
-}
-
 function reverseStepOver(thread: string): Promise<*> {
   return lookupThreadClient(thread).reverseStepOver();
-}
-
-function reverseStepOut(thread: string): Promise<*> {
-  return lookupThreadClient(thread).reverseStepOut();
 }
 
 function breakOnNext(thread: string): Promise<*> {
@@ -507,8 +499,6 @@ const clientCommands = {
   stepOut,
   stepOver,
   rewind,
-  reverseStepIn,
-  reverseStepOut,
   reverseStepOver,
   breakOnNext,
   sourceContents,
