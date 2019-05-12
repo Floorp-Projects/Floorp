@@ -23,6 +23,8 @@ class RegExpObject;
 
 namespace frontend {
 
+class TokenStreamAnyChars;
+
 enum class SourceKind {
   // We are parsing from a text source (Parser.h)
   Text,
