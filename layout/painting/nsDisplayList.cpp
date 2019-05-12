@@ -9951,18 +9951,15 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(WrFiltersHolder& wrFilters) {
         nsCSSShadowItem* shadow = shadows->ShadowAt(0);
         nscolor color = shadow->mColor.CalcColor(mFrame);
 
-        auto filterOp = wr::FilterOp::DropShadow(
-            {
-                NSAppUnitsToFloatPixels(shadow->mXOffset, appUnitsPerDevPixel),
-                NSAppUnitsToFloatPixels(shadow->mYOffset, appUnitsPerDevPixel),
-            },
-            NSAppUnitsToFloatPixels(shadow->mRadius, appUnitsPerDevPixel),
-            {
-                NS_GET_R(color) / 255.0f,
-                NS_GET_G(color) / 255.0f,
-                NS_GET_B(color) / 255.0f,
-                NS_GET_A(color) / 255.0f,
-            });
+        wr::Shadow wrShadow;
+        wrShadow.offset = {
+          NSAppUnitsToFloatPixels(shadow->mXOffset, appUnitsPerDevPixel),
+          NSAppUnitsToFloatPixels(shadow->mYOffset, appUnitsPerDevPixel)};
+        wrShadow.blur_radius =
+          NSAppUnitsToFloatPixels(shadow->mRadius, appUnitsPerDevPixel);
+        wrShadow.color = {NS_GET_R(color) / 255.0f, NS_GET_G(color) / 255.0f,
+                          NS_GET_B(color) / 255.0f, NS_GET_A(color) / 255.0f};
+        auto filterOp = wr::FilterOp::DropShadow(wrShadow);
 
         wrFilters.filters.AppendElement(filterOp);
         break;

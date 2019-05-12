@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    ColorU, FilterOp, MixBlendMode,
+    ColorU, MixBlendMode,
     PropertyBinding, PropertyBindingId,
 };
 use api::units::{Au, LayoutSize, LayoutVector2D};
 use crate::intern::ItemUid;
 use crate::display_list_flattener::IsVisible;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
-use crate::internal_types::LayoutPrimitiveInfo;
+use crate::internal_types::{LayoutPrimitiveInfo, Filter};
 use crate::picture::PictureCompositeMode;
 use crate::prim_store::{
     PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
@@ -39,6 +39,7 @@ pub enum PictureCompositeKey {
     Saturate(Au),
     Sepia(Au),
     DropShadow(VectorKey, Au, ColorU),
+    DropShadowStack(Vec<(VectorKey, Au, ColorU)>),
     ColorMatrix([Au; 20]),
     SrgbToLinear,
     LinearToSrgb,
@@ -87,21 +88,28 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
             }
             Some(PictureCompositeMode::Filter(op)) => {
                 match op {
-                    FilterOp::Blur(value) => PictureCompositeKey::Blur(Au::from_f32_px(value)),
-                    FilterOp::Brightness(value) => PictureCompositeKey::Brightness(Au::from_f32_px(value)),
-                    FilterOp::Contrast(value) => PictureCompositeKey::Contrast(Au::from_f32_px(value)),
-                    FilterOp::Grayscale(value) => PictureCompositeKey::Grayscale(Au::from_f32_px(value)),
-                    FilterOp::HueRotate(value) => PictureCompositeKey::HueRotate(Au::from_f32_px(value)),
-                    FilterOp::Invert(value) => PictureCompositeKey::Invert(Au::from_f32_px(value)),
-                    FilterOp::Saturate(value) => PictureCompositeKey::Saturate(Au::from_f32_px(value)),
-                    FilterOp::Sepia(value) => PictureCompositeKey::Sepia(Au::from_f32_px(value)),
-                    FilterOp::SrgbToLinear => PictureCompositeKey::SrgbToLinear,
-                    FilterOp::LinearToSrgb => PictureCompositeKey::LinearToSrgb,
-                    FilterOp::Identity => PictureCompositeKey::Identity,
-                    FilterOp::DropShadow(offset, radius, color) => {
-                        PictureCompositeKey::DropShadow(offset.into(), Au::from_f32_px(radius), color.into())
+                    Filter::Blur(value) => PictureCompositeKey::Blur(Au::from_f32_px(value)),
+                    Filter::Brightness(value) => PictureCompositeKey::Brightness(Au::from_f32_px(value)),
+                    Filter::Contrast(value) => PictureCompositeKey::Contrast(Au::from_f32_px(value)),
+                    Filter::Grayscale(value) => PictureCompositeKey::Grayscale(Au::from_f32_px(value)),
+                    Filter::HueRotate(value) => PictureCompositeKey::HueRotate(Au::from_f32_px(value)),
+                    Filter::Invert(value) => PictureCompositeKey::Invert(Au::from_f32_px(value)),
+                    Filter::Saturate(value) => PictureCompositeKey::Saturate(Au::from_f32_px(value)),
+                    Filter::Sepia(value) => PictureCompositeKey::Sepia(Au::from_f32_px(value)),
+                    Filter::SrgbToLinear => PictureCompositeKey::SrgbToLinear,
+                    Filter::LinearToSrgb => PictureCompositeKey::LinearToSrgb,
+                    Filter::Identity => PictureCompositeKey::Identity,
+                    Filter::DropShadowStack(ref shadows) => {
+                        PictureCompositeKey::DropShadowStack(
+                            shadows.iter().map(|shadow| {
+                                (shadow.offset.into(), Au::from_f32_px(shadow.blur_radius), shadow.color.into())
+                            }).collect()
+                        )
                     }
-                    FilterOp::Opacity(binding, _) => {
+                    Filter::DropShadow(shadow) => {
+                        PictureCompositeKey::DropShadow(shadow.offset.into(), Au::from_f32_px(shadow.blur_radius), shadow.color.into())
+                    }
+                    Filter::Opacity(binding, _) => {
                         match binding {
                             PropertyBinding::Value(value) => {
                                 PictureCompositeKey::Opacity(Au::from_f32_px(value))
@@ -111,14 +119,14 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
                             }
                         }
                     }
-                    FilterOp::ColorMatrix(values) => {
+                    Filter::ColorMatrix(values) => {
                         let mut quantized_values: [Au; 20] = [Au(0); 20];
                         for (value, result) in values.iter().zip(quantized_values.iter_mut()) {
                             *result = Au::from_f32_px(*value);
                         }
                         PictureCompositeKey::ColorMatrix(quantized_values)
                     }
-                    FilterOp::ComponentTransfer => unreachable!(),
+                    Filter::ComponentTransfer => unreachable!(),
                 }
             }
             Some(PictureCompositeMode::ComponentTransferFilter(handle)) => {

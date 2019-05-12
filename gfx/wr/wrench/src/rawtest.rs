@@ -952,8 +952,8 @@ impl<'a> RawtestHarness<'a> {
                         offset: LayoutVector2D::new(1.0, 1.0),
                         blur_radius: 1.0,
                         color: ColorF::new(0.0, 0.0, 0.0, 1.0),
-                        should_inflate: true,
                     },
+                    true,
                 );
                 let info = CommonItemProperties {
                     clip_rect: rect(110., 110., 50., 2.),
@@ -1030,8 +1030,8 @@ impl<'a> RawtestHarness<'a> {
                     offset: LayoutVector2D::new(1.0, 1.0),
                     blur_radius: 1.0,
                     color: shadow_color,
-                    should_inflate: true,
                 },
+                true,
             );
             let info = self.make_common_properties(rect(110., 110., 50., 2.));
             builder.push_line(
