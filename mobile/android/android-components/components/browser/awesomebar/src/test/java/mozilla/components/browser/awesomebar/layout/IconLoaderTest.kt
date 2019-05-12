@@ -6,15 +6,14 @@ package mozilla.components.browser.awesomebar.layout
 
 import android.graphics.Bitmap
 import android.widget.ImageView
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.test.mock
+import mozilla.utils.setupTestCoroutinesDispatcher
+import mozilla.utils.unsetTestCoroutinesDispatcher
 import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -23,18 +22,19 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.Executors
 
+@ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 class IconLoaderTest {
+
     @Before
     fun setUp() {
-        Dispatchers.setMain(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
+        setupTestCoroutinesDispatcher()
     }
 
     @After
     fun tearDown() {
-        Dispatchers.resetMain()
+        unsetTestCoroutinesDispatcher()
     }
 
     @Test
@@ -60,6 +60,7 @@ class IconLoaderTest {
     @Test
     fun `Load task is cancelled`() {
         runBlocking {
+            @Suppress("UNREACHABLE_CODE")
             val suggestion = AwesomeBar.Suggestion(
                 provider = mock(),
                 icon = { _, _ ->

@@ -6,43 +6,54 @@ package mozilla.components.browser.awesomebar
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.awesomebar.transform.SuggestionTransformer
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.test.mock
+import mozilla.utils.setupTestCoroutinesDispatcher
+import mozilla.utils.unsetTestCoroutinesDispatcher
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.never
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
-import java.lang.IllegalStateException
 import java.util.UUID
 
+@ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 class BrowserAwesomeBarTest {
-    private val testMainScope = CoroutineScope(newSingleThreadContext("Test"))
 
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
+    @Before
+    fun setUp() {
+        setupTestCoroutinesDispatcher()
+    }
+
+    @After
+    fun tearDown() {
+        unsetTestCoroutinesDispatcher()
+    }
+
     @Test
     fun `BrowserAwesomeBar forwards input to providers`() {
-        runBlocking(testMainScope.coroutineContext) {
+        runBlocking {
             val provider1 = mockProvider()
             val provider2 = mockProvider()
             val provider3 = mockProvider()
 
             val awesomeBar = BrowserAwesomeBar(context)
-            awesomeBar.scope = testMainScope
             awesomeBar.addProviders(provider1, provider2)
             awesomeBar.addProviders(provider3)
 
@@ -96,7 +107,7 @@ class BrowserAwesomeBarTest {
 
     @Test
     fun `onInputCancelled stops jobs`() {
-        runBlocking(testMainScope.coroutineContext) {
+        runBlocking {
             var providerTriggered = false
             var providerCancelled = false
 
@@ -118,7 +129,6 @@ class BrowserAwesomeBarTest {
             }
 
             val awesomeBar = BrowserAwesomeBar(context)
-            awesomeBar.scope = testMainScope
             awesomeBar.addProviders(blockingProvider)
 
             awesomeBar.onInputChanged("Hello!")
@@ -138,7 +148,7 @@ class BrowserAwesomeBarTest {
 
     @Test
     fun `removeProvider removes the provider`() {
-        runBlocking(testMainScope.coroutineContext) {
+        runBlocking {
             val provider1 = mockProvider()
             val provider2 = mockProvider()
             val provider3 = mockProvider()
@@ -170,7 +180,7 @@ class BrowserAwesomeBarTest {
 
     @Test
     fun `removeAllProviders removes all providers`() {
-        runBlocking(testMainScope.coroutineContext) {
+        runBlocking {
             val provider1 = mockProvider()
             val provider2 = mockProvider()
 
@@ -193,7 +203,7 @@ class BrowserAwesomeBarTest {
 
     @Test
     fun `BrowserAwesomeBar stops jobs when getting detached`() {
-        runBlocking(testMainScope.coroutineContext) {
+        runBlocking {
             var providerTriggered = false
             var providerCancelled = false
 
@@ -215,7 +225,6 @@ class BrowserAwesomeBarTest {
             }
 
             val awesomeBar = BrowserAwesomeBar(context)
-            awesomeBar.scope = testMainScope
             awesomeBar.addProviders(blockingProvider)
 
             awesomeBar.onInputChanged("Hello!")
@@ -235,7 +244,7 @@ class BrowserAwesomeBarTest {
 
     @Test
     fun `BrowserAwesomeBar cancels previous jobs if onInputStarted gets called again`() {
-        runBlocking(testMainScope.coroutineContext) {
+        runBlocking {
             var firstProviderCallCancelled = false
             var timesProviderCalled = 0
 
@@ -270,7 +279,6 @@ class BrowserAwesomeBarTest {
             }
 
             val awesomeBar = BrowserAwesomeBar(context)
-            awesomeBar.scope = testMainScope
             awesomeBar.addProviders(provider)
 
             awesomeBar.onInputChanged("Hello!")
@@ -289,9 +297,8 @@ class BrowserAwesomeBarTest {
 
     @Test
     fun `BrowserAwesomeBar will use optional transformer before passing suggestions to adapter`() {
-        runBlocking(testMainScope.coroutineContext) {
+        runBlocking {
             val awesomeBar = BrowserAwesomeBar(context)
-            awesomeBar.scope = testMainScope
 
             val inputSuggestions = listOf(AwesomeBar.Suggestion(mock(), title = "Tetst"))
             val provider = object : AwesomeBar.SuggestionProvider {
