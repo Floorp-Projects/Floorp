@@ -10,9 +10,8 @@
 // methods.
 [scriptable, uuid(8b86b71f-8471-472e-9997-c5f21f9d0598)]
 interface rrIReplay : nsISupports {
-  jsval ProcessRequest(in jsval request);
-  void EnsurePositionHandler(in jsval position);
-  void ClearPositionHandlers();
-  void ClearPausedState();
-  jsval GetEntryPosition(in jsval position);
+  void ManifestStart(in jsval manifest);
+  void BeforeCheckpoint();
+  void AfterCheckpoint(in long checkpoint, in bool restoredCheckpoint);
+  long NewTimeWarpTarget();
 };
