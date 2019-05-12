@@ -10,12 +10,15 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 
-#include "builtin/ModuleObject.h"    // js::Module{Builder,Object}
+#include "builtin/ModuleObject.h"    // js::ModuleObject
 #include "frontend/SharedContext.h"  // js::frontend::SharedContext
 #include "js/RootingAPI.h"           // JS::Handle, JS::Rooted
 #include "vm/Scope.h"                // js::{Module,}Scope
 
 namespace js {
+
+class ModuleBuilder;
+
 namespace frontend {
 
 class MOZ_STACK_CLASS ModuleSharedContext : public SharedContext {
