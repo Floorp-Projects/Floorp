@@ -491,11 +491,8 @@ pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 #endif
 
-// HTTP process selection which uses an advanced channel process switch
-// mechanism is disabled on release due to bug 1535699.  It can be re-enabled
-// again once the bug is fixed.  When disabled, a lesser form of process
-// switching is used.
-pref("browser.tabs.remote.useHTTPResponseProcessSelection", false);
+// Turn on HTTP response process selection.
+pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
 
 // Unload tabs when available memory is running low
 pref("browser.tabs.unloadOnLowMemory", true);
