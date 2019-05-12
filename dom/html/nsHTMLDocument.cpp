@@ -1020,20 +1020,9 @@ Document* nsHTMLDocument::Open(const Optional<nsAString>& /* unused */,
   // Step 5 -- if we have an active parser with a nonzero script nesting level,
   // just no-op.
   //
-  // If we have a parser that has a zero script nesting level, we need to
-  // properly terminate it before setting up a new parser.  See the similar code
-  // in WriteCommon that handles the !IsInsertionPointDefined() case and should
-  // stay in sync with this code.
-  if (mParser && !mParser->HasNonzeroScriptNestingLevel()) {
-    // Make sure we don't re-enter.
-    IgnoreOpensDuringUnload ignoreOpenGuard(this);
-    mParser->Terminate();
-    MOZ_RELEASE_ASSERT(!mParser, "mParser should have been null'd out");
-  }
-
   // The mParserAborted check here is probably wrong.  Removing it is
   // tracked in https://bugzilla.mozilla.org/show_bug.cgi?id=1475000
-  if (mParser || mParserAborted) {
+  if ((mParser && mParser->HasNonzeroScriptNestingLevel()) || mParserAborted) {
     return this;
   }
 
@@ -1095,6 +1084,22 @@ Document* nsHTMLDocument::Open(const Optional<nsAString>& /* unused */,
         elm->RemoveAllListeners();
       }
     }
+  }
+
+  // If we have a parser that has a zero script nesting level, we need to
+  // properly terminate it.  We do that after we've removed all the event
+  // listeners (so termination won't trigger event listeners if it does
+  // something to the DOM), but before we remove all elements from the document
+  // (so if termination does modify the DOM in some way we will just blow it
+  // away immediately.  See the similar code in WriteCommon that handles the
+  // !IsInsertionPointDefined() case and should stay in sync with this code.
+  if (mParser) {
+    MOZ_ASSERT(!mParser->HasNonzeroScriptNestingLevel(),
+               "Why didn't we take the early return?");
+    // Make sure we don't re-enter.
+    IgnoreOpensDuringUnload ignoreOpenGuard(this);
+    mParser->Terminate();
+    MOZ_RELEASE_ASSERT(!mParser, "mParser should have been null'd out");
   }
 
   // Step 10 -- remove all our DOM kids without firing any mutation events.
