@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{DebugCommand, DocumentId, ExternalImageData, ExternalImageId};
-use api::{ImageFormat, ItemTag, NotificationRequest};
+use api::{ImageFormat, ItemTag, NotificationRequest, Shadow, FilterOp, MAX_BLUR_RADIUS};
 use api::units::*;
+use api;
 use crate::device::TextureFilter;
 use crate::renderer::PipelineInfo;
 use crate::gpu_cache::GpuCacheUpdateList;
@@ -29,6 +30,136 @@ pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
 
 /// A concrete plane splitter type used in WebRender.
 pub type PlaneSplitter = BspSplitter<f64, WorldPixel>;
+
+/// An arbitrary number which we assume opacity is invisible below.
+const OPACITY_EPSILON: f32 = 0.001;
+
+/// Equivalent to api::FilterOp with added internal information
+#[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum Filter {
+    Identity,
+    Blur(f32),
+    Brightness(f32),
+    Contrast(f32),
+    Grayscale(f32),
+    HueRotate(f32),
+    Invert(f32),
+    Opacity(api::PropertyBinding<f32>, f32),
+    Saturate(f32),
+    Sepia(f32),
+    DropShadow(Shadow),
+    #[allow(dead_code)]
+    DropShadowStack(Vec<Shadow>),
+    ColorMatrix([f32; 20]),
+    SrgbToLinear,
+    LinearToSrgb,
+    ComponentTransfer,
+}
+
+impl Filter {
+    /// Ensure that the parameters for a filter operation
+    /// are sensible.
+    pub fn sanitize(&mut self) {
+        match self {
+            Filter::Blur(ref mut radius) => {
+                *radius = radius.min(MAX_BLUR_RADIUS);
+            }
+            Filter::DropShadow(ref mut shadow) => {
+                shadow.blur_radius = shadow.blur_radius.min(MAX_BLUR_RADIUS);
+            }
+            Filter::DropShadowStack(ref mut stack) => {
+                for shadow in stack {
+                    shadow.blur_radius = shadow.blur_radius.min(MAX_BLUR_RADIUS);
+                }
+            }
+            _ => {},
+        }
+    }
+
+    pub fn is_visible(&self) -> bool {
+        match *self {
+            Filter::Identity |
+            Filter::Blur(..) |
+            Filter::Brightness(..) |
+            Filter::Contrast(..) |
+            Filter::Grayscale(..) |
+            Filter::HueRotate(..) |
+            Filter::Invert(..) |
+            Filter::Saturate(..) |
+            Filter::Sepia(..) |
+            Filter::DropShadow(..) |
+            Filter::DropShadowStack(..) |
+            Filter::ColorMatrix(..) |
+            Filter::SrgbToLinear |
+            Filter::LinearToSrgb |
+            Filter::ComponentTransfer  => true,
+            Filter::Opacity(_, amount) => {
+                amount > OPACITY_EPSILON
+            }
+        }
+    }
+
+    pub fn is_noop(&self) -> bool {
+        match *self {
+            Filter::Identity => false, // this is intentional
+            Filter::Blur(length) => length == 0.0,
+            Filter::Brightness(amount) => amount == 1.0,
+            Filter::Contrast(amount) => amount == 1.0,
+            Filter::Grayscale(amount) => amount == 0.0,
+            Filter::HueRotate(amount) => amount == 0.0,
+            Filter::Invert(amount) => amount == 0.0,
+            Filter::Opacity(_, amount) => amount >= 1.0,
+            Filter::Saturate(amount) => amount == 1.0,
+            Filter::Sepia(amount) => amount == 0.0,
+            Filter::DropShadowStack(ref shadows) => {
+                for shadow in shadows {
+                    if shadow.offset.x != 0.0 || shadow.offset.y != 0.0 || shadow.blur_radius != 0.0 {
+                        return false;
+                    }
+                }
+
+                true
+            }
+            Filter::DropShadow(shadow) => {
+                shadow.offset.x == 0.0 && shadow.offset.y == 0.0 && shadow.blur_radius == 0.0
+            },
+            Filter::ColorMatrix(matrix) => {
+                matrix == [1.0, 0.0, 0.0, 0.0,
+                           0.0, 1.0, 0.0, 0.0,
+                           0.0, 0.0, 1.0, 0.0,
+                           0.0, 0.0, 0.0, 1.0,
+                           0.0, 0.0, 0.0, 0.0]
+            }
+            Filter::SrgbToLinear |
+            Filter::LinearToSrgb |
+            Filter::ComponentTransfer => false,
+        }
+    }
+}
+
+impl From<FilterOp> for Filter {
+    fn from(op: FilterOp) -> Self {
+        match op {
+            FilterOp::Identity => Filter::Identity,
+            FilterOp::Blur(r) => Filter::Blur(r),
+            FilterOp::Brightness(b) => Filter::Brightness(b),
+            FilterOp::Contrast(c) => Filter::Contrast(c),
+            FilterOp::Grayscale(g) => Filter::Grayscale(g),
+            FilterOp::HueRotate(h) => Filter::HueRotate(h),
+            FilterOp::Invert(i) => Filter::Invert(i),
+            FilterOp::Opacity(binding, opacity) => Filter::Opacity(binding, opacity),
+            FilterOp::Saturate(s) => Filter::Saturate(s),
+            FilterOp::Sepia(s) => Filter::Sepia(s),
+            FilterOp::DropShadow(shadow) => Filter::DropShadow(shadow),
+            FilterOp::ColorMatrix(mat) => Filter::ColorMatrix(mat),
+            FilterOp::SrgbToLinear => Filter::SrgbToLinear,
+            FilterOp::LinearToSrgb => Filter::LinearToSrgb,
+            FilterOp::ComponentTransfer => Filter::ComponentTransfer,
+        }
+    }
+}
 
 /// An ID for a texture that is owned by the `texture_cache` module.
 ///

@@ -1146,7 +1146,8 @@ void DisplayListBuilder::PushLine(const wr::LayoutRect& aClip,
 void DisplayListBuilder::PushShadow(const wr::LayoutRect& aRect,
                                     const wr::LayoutRect& aClip,
                                     bool aIsBackfaceVisible,
-                                    const wr::Shadow& aShadow) {
+                                    const wr::Shadow& aShadow,
+                                    bool aShouldInflate) {
   // Local clip_rects are translated inside of shadows, as they are assumed to
   // be part of the element drawing itself, and not a parent frame clipping it.
   // As such, it is not sound to apply the MergeClipLeaf optimization inside of
@@ -1155,7 +1156,8 @@ void DisplayListBuilder::PushShadow(const wr::LayoutRect& aRect,
   // being re-enabled mid-shadow. The optimization is restored in PopAllShadows.
   SuspendClipLeafMerging();
   wr_dp_push_shadow(mWrState, aRect, aClip, aIsBackfaceVisible,
-                    &mCurrentSpaceAndClipChain, aShadow);
+                    &mCurrentSpaceAndClipChain, aShadow,
+                    aShouldInflate);
 }
 
 void DisplayListBuilder::PopAllShadows() {

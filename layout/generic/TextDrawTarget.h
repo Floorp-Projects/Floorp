@@ -228,8 +228,9 @@ class TextDrawTarget : public DrawTarget {
 
   IntSize GetSize() const override { return mSize; }
 
-  void AppendShadow(const wr::Shadow& aShadow) {
-    mBuilder.PushShadow(mBoundsRect, ClipRect(), mBackfaceVisible, aShadow);
+  void AppendShadow(const wr::Shadow& aShadow, bool aInflate) {
+    mBuilder.PushShadow(mBoundsRect, ClipRect(), mBackfaceVisible, aShadow,
+                        aInflate);
     mHasShadows = true;
   }
 
