@@ -2107,6 +2107,17 @@ JSAtom* ParserBase::prefixAccessorName(PropertyType propType,
 }
 
 template <class ParseHandler, typename Unit>
+void GeneralParser<ParseHandler, Unit>::setFunctionStartAtCurrentToken(
+    FunctionBox* funbox) const {
+  uint32_t bufStart = anyChars.currentToken().pos.begin;
+
+  uint32_t startLine, startColumn;
+  tokenStream.computeLineAndColumn(bufStart, &startLine, &startColumn);
+
+  funbox->setStart(bufStart, startLine, startColumn);
+}
+
+template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::functionArguments(
     YieldHandling yieldHandling, FunctionSyntaxKind kind,
     FunctionNodeType funNode) {
@@ -2170,7 +2181,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
 
     // Record the start of function source (for FunctionToString). If we
     // are parenFreeArrow, we will set this below, after consuming the NAME.
-    tokenStream.setFunctionStart(funbox);
+    setFunctionStartAtCurrentToken(funbox);
   } else {
     // When delazifying, we may not have a current token and pos() is
     // garbage. In that case, substitute the first token's position.
@@ -2285,7 +2296,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
           }
 
           if (parenFreeArrow) {
-            tokenStream.setFunctionStart(funbox);
+            setFunctionStartAtCurrentToken(funbox);
           }
 
           RootedPropertyName name(cx_, bindingIdentifier(yieldHandling));
@@ -7167,7 +7178,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   }
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
   funbox->function()->setArgCount(0);
-  tokenStream.setFunctionStart(funbox);
+  setFunctionStartAtCurrentToken(funbox);
 
   pc_->functionScope().useAsVarScope(pc_);
 
@@ -7304,7 +7315,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   funbox->initFieldInitializer(pc_, hasHeritage);
   handler_.setFunctionBox(funNode, funbox);
 
-  // We can't use tokenStream.setFunctionStart, because that uses pos().begin,
+  // We can't use setFunctionStartAtCurrentToken because that uses pos().begin,
   // which is incorrect for fields without initializers (pos() points to the
   // field identifier)
   uint32_t firstTokenLine, firstTokenColumn;

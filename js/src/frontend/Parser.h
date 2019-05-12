@@ -1055,6 +1055,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                     uint32_t toStringStart,
                                     FunctionSyntaxKind kind, bool tryAnnexB);
 
+  void setFunctionStartAtCurrentToken(FunctionBox* funbox) const;
+
  public:
   /* Public entry points for parsing. */
   Node statementListItem(YieldHandling yieldHandling,

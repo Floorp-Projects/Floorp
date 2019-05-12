@@ -2094,8 +2094,6 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
 
     return drainCharBufferIntoAtom(anyChars.cx);
   }
-
-  inline void setFunctionStart(FunctionBox* funbox) const;
 };
 
 template <typename Unit, class AnyCharsAccess>
