@@ -13,6 +13,9 @@ let server;
 // are more tests for core Kinto.js (and its storage adapter) in the
 // xpcshell tests under /services/common
 add_task(async function test_something() {
+  const configPath = "/v1/";
+  const recordsPath = "/v1/buckets/security-state/collections/onecrl/records";
+
   const dummyServerURL = `http://localhost:${server.identity.primaryPort}/v1`;
   Services.prefs.setCharPref("services.settings.server", dummyServerURL);
 
@@ -40,9 +43,8 @@ add_task(async function test_something() {
       info(e);
     }
   }
-  server.registerPathHandler("/v1/", handleResponse);
-  server.registerPathHandler("/v1/buckets/security-state/collections/onecrl", handleResponse);
-  server.registerPathHandler("/v1/buckets/security-state/collections/onecrl/records", handleResponse);
+  server.registerPathHandler(configPath, handleResponse);
+  server.registerPathHandler(recordsPath, handleResponse);
 
   // Test an empty db populates from JSON dump.
   await OneCRLBlocklistClient.maybeSync(42);
@@ -146,22 +148,6 @@ function getSampleResponse(req, port) {
         "hello": "kinto",
       }),
     },
-    "GET:/v1/buckets/security-state/collections/onecrl": {
-      "sampleHeaders": [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        "Etag: \"1234\"",
-      ],
-      "status": { status: 200, statusText: "OK" },
-      "responseBody": JSON.stringify({
-        "data": {
-          "id": "onecrl",
-          "last_modified": 1234,
-        },
-      }),
-    },
     "GET:/v1/buckets/security-state/collections/onecrl/records?_expected=2000&_sort=-last_modified&_since=1000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
@@ -227,6 +213,5 @@ function getSampleResponse(req, port) {
     },
   };
   return responses[`${req.method}:${req.path}?${req.queryString}`] ||
-         responses[`${req.method}:${req.path}`] ||
          responses[req.method];
 }
