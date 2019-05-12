@@ -12,7 +12,6 @@
 
 #include "ds/InlineTable.h"
 #include "frontend/ParseNode.h"
-#include "frontend/TokenStream.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
