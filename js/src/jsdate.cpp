@@ -905,6 +905,7 @@ template <typename CharT>
 static bool ParseISOStyleDate(const CharT* s, size_t length,
                               ClippedTime* result) {
   size_t i = 0;
+  size_t pre = 0;
   int tzMul = 1;
   int dateMul = 1;
   size_t year = 1970;
@@ -917,6 +918,7 @@ static bool ParseISOStyleDate(const CharT* s, size_t length,
   bool isLocalTime = false;
   size_t tzHour = 0;
   size_t tzMin = 0;
+  bool isPermissive = false;
 
 #define PEEK(ch) (i < length && s[i] == ch)
 
@@ -947,8 +949,12 @@ static bool ParseISOStyleDate(const CharT* s, size_t length,
   }
 
 #define NEED_NDIGITS_OR_LESS(n, field)                 \
+  pre = i;                                             \
   if (!ParseDigitsNOrLess(n, &field, s, &i, length)) { \
     return false;                                      \
+  }                                                    \
+  if (i < pre + (n)) {                                 \
+    isPermissive = true;                               \
   }
 
   if (PEEK('+') || PEEK('-')) {
@@ -966,7 +972,14 @@ static bool ParseISOStyleDate(const CharT* s, size_t length,
   NEED_NDIGITS_OR_LESS(2, day);
 
 done_date:
-  if (PEEK('T') || PEEK(' ')) {
+  if (PEEK('T')) {
+    if (isPermissive) {
+      // Require standard format "[+00]1970-01-01" if a time part marker "T"
+      // exists
+      return false;
+    }
+    i++;
+  } else if (PEEK(' ')) {
     i++;
   } else {
     goto done;
