@@ -1640,10 +1640,12 @@ impl DisplayListBuilder {
         &mut self,
         space_and_clip: &di::SpaceAndClipInfo,
         shadow: di::Shadow,
+        should_inflate: bool,
     ) {
         let item = di::DisplayItem::PushShadow(di::PushShadowDisplayItem {
             space_and_clip: *space_and_clip,
             shadow,
+            should_inflate,
         });
         self.push_item(&item);
     }

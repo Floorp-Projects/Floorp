@@ -676,6 +676,32 @@ pub enum ClearMode {
     Transparent,
 }
 
+/// In order to avoid duplicating the down-scaling and blur passes when a picture has several blurs,
+/// we use a local (primitive-level) cache of the render tasks generated for a single shadowed primitive
+/// in a single frame.
+pub type BlurTaskCache = FastHashMap<BlurTaskKey, RenderTaskId>;
+
+/// Since we only use it within a single primitive, the key only needs to contain the down-scaling level
+/// and the blur std deviation.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub enum BlurTaskKey {
+    DownScale(u32),
+    Blur { downscale_level: u32, stddev_x: u32, stddev_y: u32 },
+}
+
+impl BlurTaskKey {
+    fn downscale_and_blur(downscale_level: u32, blur_stddev: DeviceSize) -> Self {
+        // Quantise the std deviations and store it as integers to work around
+        // Eq and Hash's f32 allergy.
+        // The blur radius is rounded before RenderTask::new_blur so we don't need
+        // a lot of precision.
+        const QUANTIZATION_FACTOR: f32 = 1024.0;
+        let stddev_x = (blur_stddev.width * QUANTIZATION_FACTOR) as u32;
+        let stddev_y = (blur_stddev.height * QUANTIZATION_FACTOR) as u32;
+        BlurTaskKey::Blur { downscale_level, stddev_x, stddev_y }
+    }
+}
+
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -905,15 +931,14 @@ impl RenderTask {
                             let mask_task_id = render_tasks.add(mask_task);
 
                             // Blur it
-                            let blur_render_task = RenderTask::new_blur(
+                            RenderTask::new_blur(
                                 DeviceSize::new(blur_radius_dp, blur_radius_dp),
                                 mask_task_id,
                                 render_tasks,
                                 RenderTargetKind::Alpha,
                                 ClearMode::Zero,
-                            );
-
-                            render_tasks.add(blur_render_task)
+                                None,
+                            )
                         }
                     ));
                 }
@@ -1023,7 +1048,8 @@ impl RenderTask {
         render_tasks: &mut RenderTaskTree,
         target_kind: RenderTargetKind,
         clear_mode: ClearMode,
-    ) -> Self {
+        mut blur_cache: Option<&mut BlurTaskCache>,
+    ) -> RenderTaskId {
         // Adjust large std deviation value.
         let mut adjusted_blur_std_deviation = blur_std_deviation;
         let (blur_target_size, uv_rect_kind) = {
@@ -1033,6 +1059,7 @@ impl RenderTask {
         let mut adjusted_blur_target_size = blur_target_size;
         let mut downscaling_src_task_id = src_task_id;
         let mut scale_factor = 1.0;
+        let mut n_downscales = 1;
         while adjusted_blur_std_deviation.width > MAX_BLUR_STD_DEVIATION &&
               adjusted_blur_std_deviation.height > MAX_BLUR_STD_DEVIATION {
             if adjusted_blur_target_size.width < MIN_DOWNSCALING_RT_SIZE ||
@@ -1042,40 +1069,72 @@ impl RenderTask {
             adjusted_blur_std_deviation = adjusted_blur_std_deviation * 0.5;
             scale_factor *= 2.0;
             adjusted_blur_target_size = (blur_target_size.to_f32() / scale_factor).to_i32();
-            let downscaling_task = RenderTask::new_scaling(
-                downscaling_src_task_id,
-                render_tasks,
-                target_kind,
-                adjusted_blur_target_size,
-            );
-            downscaling_src_task_id = render_tasks.add(downscaling_task);
+
+            let cached_task = match blur_cache {
+                Some(ref mut cache) => cache.get(&BlurTaskKey::DownScale(n_downscales)).cloned(),
+                None => None,
+            };
+
+            downscaling_src_task_id = cached_task.unwrap_or_else(|| {
+                let downscaling_task = RenderTask::new_scaling(
+                    downscaling_src_task_id,
+                    render_tasks,
+                    target_kind,
+                    adjusted_blur_target_size,
+                );
+                render_tasks.add(downscaling_task)
+            });
+
+            if let Some(ref mut cache) = blur_cache {
+                cache.insert(BlurTaskKey::DownScale(n_downscales), downscaling_src_task_id);
+            }
+
+            n_downscales += 1;
         }
 
-        let blur_task_v = RenderTask::with_dynamic_location(
-            adjusted_blur_target_size,
-            vec![downscaling_src_task_id],
-            RenderTaskKind::VerticalBlur(BlurTask {
-                blur_std_deviation: adjusted_blur_std_deviation.height,
-                target_kind,
-                uv_rect_handle: GpuCacheHandle::new(),
-                uv_rect_kind,
-            }),
-            clear_mode,
-        );
 
-        let blur_task_v_id = render_tasks.add(blur_task_v);
+        let blur_key = BlurTaskKey::downscale_and_blur(n_downscales, adjusted_blur_std_deviation);
 
-        RenderTask::with_dynamic_location(
-            adjusted_blur_target_size,
-            vec![blur_task_v_id],
-            RenderTaskKind::HorizontalBlur(BlurTask {
-                blur_std_deviation: adjusted_blur_std_deviation.width,
-                target_kind,
-                uv_rect_handle: GpuCacheHandle::new(),
-                uv_rect_kind,
-            }),
-            clear_mode,
-        )
+        let cached_task = match blur_cache {
+            Some(ref mut cache) => cache.get(&blur_key).cloned(),
+            None => None,
+        };
+
+        let blur_task_id = cached_task.unwrap_or_else(|| {
+            let blur_task_v = RenderTask::with_dynamic_location(
+                adjusted_blur_target_size,
+                vec![downscaling_src_task_id],
+                RenderTaskKind::VerticalBlur(BlurTask {
+                    blur_std_deviation: adjusted_blur_std_deviation.height,
+                    target_kind,
+                    uv_rect_handle: GpuCacheHandle::new(),
+                    uv_rect_kind,
+                }),
+                clear_mode,
+            );
+
+            let blur_task_v_id = render_tasks.add(blur_task_v);
+
+            let blur_task_h = RenderTask::with_dynamic_location(
+                adjusted_blur_target_size,
+                vec![blur_task_v_id],
+                RenderTaskKind::HorizontalBlur(BlurTask {
+                    blur_std_deviation: adjusted_blur_std_deviation.width,
+                    target_kind,
+                    uv_rect_handle: GpuCacheHandle::new(),
+                    uv_rect_kind,
+                }),
+                clear_mode,
+            );
+
+            render_tasks.add(blur_task_h)
+        });
+
+        if let Some(ref mut cache) = blur_cache {
+            cache.insert(blur_key, blur_task_id);
+        }
+
+        blur_task_id
     }
 
     pub fn new_border_segment(
@@ -1393,7 +1452,6 @@ impl RenderTask {
         if let Some(mut request) = gpu_cache.request(cache_handle) {
             let p0 = target_rect.origin.to_f32();
             let p1 = target_rect.bottom_right().to_f32();
-
             let image_source = ImageSource {
                 p0,
                 p1,

@@ -601,9 +601,11 @@ impl YamlHelper for Yaml {
                     let str = format!("---\noffset: {}\nblur-radius: {}\ncolor: {}\n", args[0], args[1], args[2]);
                     let mut yaml_doc = YamlLoader::load_from_str(&str).expect("Failed to parse drop-shadow");
                     let yaml = yaml_doc.pop().unwrap();
-                    Some(FilterOp::DropShadow(yaml["offset"].as_vector().unwrap(),
-                                              yaml["blur-radius"].as_f32().unwrap(),
-                                              yaml["color"].as_colorf().unwrap()))
+                    Some(FilterOp::DropShadow(Shadow {
+                        offset: yaml["offset"].as_vector().unwrap(),
+                        blur_radius: yaml["blur-radius"].as_f32().unwrap(),
+                        color: yaml["color"].as_colorf().unwrap()
+                    }))
                 }
                 ("color-matrix", ref args, _) if args.len() == 20 => {
                     let m: Vec<f32> = args.iter().map(|f| f.parse().unwrap()).collect();
