@@ -73,10 +73,10 @@ struct SavedThreadStack {
 };
 
 struct SavedCheckpoint {
-  CheckpointId mCheckpoint;
+  size_t mCheckpoint;
   SavedThreadStack mStacks[MaxRecordedThreadId];
 
-  explicit SavedCheckpoint(CheckpointId aCheckpoint)
+  explicit SavedCheckpoint(size_t aCheckpoint)
       : mCheckpoint(aCheckpoint) {}
 
   void ReleaseContents() {

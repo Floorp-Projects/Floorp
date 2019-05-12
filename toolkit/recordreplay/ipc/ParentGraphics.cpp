@@ -104,14 +104,6 @@ static size_t gLastPaintWidth, gLastPaintHeight;
 // its graphics, we wait until both the Paint and the checkpoint itself have
 // been hit, with no intervening repaint.
 
-// The last explicit paint message received from the child, if there has not
-// been an intervening repaint.
-static UniquePtr<PaintMessage> gLastExplicitPaint;
-
-// The last checkpoint the child reached, if there has not been an intervening
-// repaint.
-static size_t gLastCheckpoint;
-
 void UpdateGraphicsInUIProcess(const PaintMessage* aMsg) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -125,10 +117,6 @@ void UpdateGraphicsInUIProcess(const PaintMessage* aMsg) {
   }
 
   bool hadFailure = !aMsg;
-
-  // Clear out the last explicit paint information. This may delete aMsg.
-  gLastExplicitPaint = nullptr;
-  gLastCheckpoint = CheckpointId::Invalid;
 
   // Make sure there is a sandbox which is running the graphics JS module.
   if (!gGraphics) {
@@ -185,23 +173,6 @@ void UpdateGraphicsInUIProcess(const PaintMessage* aMsg) {
   // JS::NewArrayBufferWithUserOwnedContents API mandates.  (The API also
   // guarantees that this call always succeeds.)
   MOZ_ALWAYS_TRUE(JS::DetachArrayBuffer(cx, bufferObject));
-}
-
-static void MaybeTriggerExplicitPaint() {
-  if (gLastExplicitPaint &&
-      gLastExplicitPaint->mCheckpointId == gLastCheckpoint) {
-    UpdateGraphicsInUIProcess(gLastExplicitPaint.get());
-  }
-}
-
-void MaybeUpdateGraphicsAtPaint(const PaintMessage& aMsg) {
-  gLastExplicitPaint.reset(new PaintMessage(aMsg));
-  MaybeTriggerExplicitPaint();
-}
-
-void MaybeUpdateGraphicsAtCheckpoint(size_t aCheckpointId) {
-  gLastCheckpoint = aCheckpointId;
-  MaybeTriggerExplicitPaint();
 }
 
 bool InRepaintStressMode() {
