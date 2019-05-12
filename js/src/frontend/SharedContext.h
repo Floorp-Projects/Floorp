@@ -12,6 +12,7 @@
 
 #include "ds/InlineTable.h"
 #include "frontend/ParseNode.h"
+#include "frontend/TokenStream.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
@@ -554,15 +555,30 @@ class FunctionBox : public ObjectBox, public SharedContext {
     startColumn = column;
   }
 
-  void setEnd(uint32_t end) {
+  void setEnd(const TokenStreamAnyChars& anyChars) {
     // For all functions except class constructors, the buffer and
     // toString ending positions are the same. Class constructors override
     // the toString ending position with the end of the class definition.
-    bufEnd = toStringEnd = end;
+    uint32_t offset = anyChars.currentToken().pos.end;
+    bufEnd = offset;
+    toStringEnd = offset;
   }
 
   void trace(JSTracer* trc) override;
 };
+
+template <typename Unit, class AnyCharsAccess>
+inline void GeneralTokenStreamChars<Unit, AnyCharsAccess>::setFunctionStart(
+    FunctionBox* funbox) const {
+  const TokenStreamAnyChars& anyChars = anyCharsAccess();
+
+  uint32_t bufStart = anyChars.currentToken().pos.begin;
+
+  uint32_t startLine, startColumn;
+  computeLineAndColumn(bufStart, &startLine, &startColumn);
+
+  funbox->setStart(bufStart, startLine, startColumn);
+}
 
 inline FunctionBox* SharedContext::asFunctionBox() {
   MOZ_ASSERT(isFunctionBox());
