@@ -4,7 +4,6 @@ package org.mozilla.fenix.search.awesomebar
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import android.util.Log
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
@@ -12,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import io.reactivex.Observable
 import mozilla.components.browser.search.SearchEngine
+import org.mozilla.fenix.ext.logDebug
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -77,7 +77,7 @@ class AwesomeBarViewModel(initialState: AwesomeBarState, changesObservable: Obse
 
     companion object {
         val reducer: Reducer<AwesomeBarState, AwesomeBarChange> = { state, change ->
-            Log.d("IN_REDUCER", change.toString())
+            logDebug("IN_REDUCER", change.toString())
             when (change) {
                 is AwesomeBarChange.SearchShortcutEngineSelected ->
                     state.copy(suggestionEngine = change.engine, showShortcutEnginePicker = false)
