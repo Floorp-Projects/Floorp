@@ -322,8 +322,9 @@ var gPlayTests = [
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN },
 ];
 
-if (!(manifestNavigator().userAgent.includes("Windows") &&
-      !manifestNavigator().userAgent.includes("x64"))) {
+const win32 = SpecialPowers.Services.appinfo.OS == "WINNT" &&
+              !SpecialPowers.Services.appinfo.is64Bit;
+if (!win32) {
   gPlayTests.push({ name: "av1.mp4", type:"video/mp4", duration:1.00 });
 }
 
