@@ -859,7 +859,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
               olderFrame = olderFrame.older;
             }
             if (olderFrame) {
-              olderFrame.setReplayingOnStep(onStep, [olderFrame.offset]);
+              // Set an onStep handler in the older frame to stop at the call site.
+              // Make sure the offsets we use are valid breakpoint locations, as we
+              // cannot stop at other offsets when replaying.
+              const offsets = this._findReplayingStepOffsets({}, olderFrame, true);
+              olderFrame.setReplayingOnStep(onStep, offsets);
             }
           } else {
             stepFrame.onPop = onPop;
