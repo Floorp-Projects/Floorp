@@ -12,7 +12,6 @@
 #include "jsapi.h"
 
 #include "builtin/SelfHostingDefines.h"
-#include "frontend/EitherParser.h"
 #include "gc/Zone.h"
 #include "js/GCVector.h"
 #include "js/Id.h"
@@ -25,12 +24,6 @@ namespace js {
 
 class ModuleEnvironmentObject;
 class ModuleObject;
-
-namespace frontend {
-class BinaryNode;
-class ListNode;
-class ParseNode;
-} /* namespace frontend */
 
 typedef Rooted<ModuleObject*> RootedModuleObject;
 typedef Handle<ModuleObject*> HandleModuleObject;
@@ -329,76 +322,6 @@ class ModuleObject : public NativeObject {
 
   bool hasImportBindings() const;
   FunctionDeclarationVector* functionDeclarations();
-};
-
-// Process a module's parse tree to collate the import and export data used when
-// creating a ModuleObject.
-class MOZ_STACK_CLASS ModuleBuilder {
-  explicit ModuleBuilder(JSContext* cx, HandleModuleObject module,
-                         const frontend::EitherParser& eitherParser);
-
- public:
-  template <class Parser>
-  explicit ModuleBuilder(JSContext* cx, HandleModuleObject module,
-                         Parser* parser)
-      : ModuleBuilder(cx, module, frontend::EitherParser(parser)) {}
-
-  bool processImport(frontend::BinaryNode* importNode);
-  bool processExport(frontend::ParseNode* exportNode);
-  bool processExportFrom(frontend::BinaryNode* exportNode);
-
-  bool hasExportedName(JSAtom* name) const;
-
-  using ExportEntryVector = GCVector<ExportEntryObject*>;
-  const ExportEntryVector& localExportEntries() const {
-    return localExportEntries_;
-  }
-
-  bool buildTables();
-  bool initModule();
-
- private:
-  using RequestedModuleVector = GCVector<RequestedModuleObject*>;
-  using AtomSet = JS::GCHashSet<JSAtom*>;
-  using ImportEntryMap = GCHashMap<JSAtom*, ImportEntryObject*>;
-  using RootedExportEntryVector = JS::Rooted<ExportEntryVector>;
-  using RootedRequestedModuleVector = JS::Rooted<RequestedModuleVector>;
-  using RootedAtomSet = JS::Rooted<AtomSet>;
-  using RootedImportEntryMap = JS::Rooted<ImportEntryMap>;
-
-  JSContext* cx_;
-  RootedModuleObject module_;
-  frontend::EitherParser eitherParser_;
-  RootedAtomSet requestedModuleSpecifiers_;
-  RootedRequestedModuleVector requestedModules_;
-  RootedImportEntryMap importEntries_;
-  RootedExportEntryVector exportEntries_;
-  RootedAtomSet exportNames_;
-  RootedExportEntryVector localExportEntries_;
-  RootedExportEntryVector indirectExportEntries_;
-  RootedExportEntryVector starExportEntries_;
-
-  ImportEntryObject* importEntryFor(JSAtom* localName) const;
-
-  bool processExportBinding(frontend::ParseNode* pn);
-  bool processExportArrayBinding(frontend::ListNode* array);
-  bool processExportObjectBinding(frontend::ListNode* obj);
-
-  bool appendImportEntryObject(HandleImportEntryObject importEntry);
-
-  bool appendExportEntry(HandleAtom exportName, HandleAtom localName,
-                         frontend::ParseNode* node = nullptr);
-  bool appendExportFromEntry(HandleAtom exportName, HandleAtom moduleRequest,
-                             HandleAtom importName, frontend::ParseNode* node);
-  bool appendExportEntryObject(HandleExportEntryObject exportEntry);
-
-  bool maybeAppendRequestedModule(HandleAtom specifier,
-                                  frontend::ParseNode* node);
-
-  template <typename T>
-  ArrayObject* createArray(const JS::Rooted<GCVector<T>>& vector);
-  template <typename K, typename V>
-  ArrayObject* createArray(const JS::Rooted<GCHashMap<K, V>>& map);
 };
 
 JSObject* GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);
