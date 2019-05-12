@@ -567,19 +567,6 @@ class FunctionBox : public ObjectBox, public SharedContext {
   void trace(JSTracer* trc) override;
 };
 
-template <typename Unit, class AnyCharsAccess>
-inline void GeneralTokenStreamChars<Unit, AnyCharsAccess>::setFunctionStart(
-    FunctionBox* funbox) const {
-  const TokenStreamAnyChars& anyChars = anyCharsAccess();
-
-  uint32_t bufStart = anyChars.currentToken().pos.begin;
-
-  uint32_t startLine, startColumn;
-  computeLineAndColumn(bufStart, &startLine, &startColumn);
-
-  funbox->setStart(bufStart, startLine, startColumn);
-}
-
 inline FunctionBox* SharedContext::asFunctionBox() {
   MOZ_ASSERT(isFunctionBox());
   return static_cast<FunctionBox*>(this);
