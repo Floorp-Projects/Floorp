@@ -15,7 +15,6 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
 
-#include "frontend/EitherParser.h"  // js::frontend::EitherParser
 #include "frontend/ParseContext.h"  // js::frontend::UsedNameTracker
 #include "frontend/SharedContext.h"  // js::frontend::Directives, js::frontend::{,Eval,Global}SharedContext
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
@@ -31,6 +30,8 @@ class JSObject;
 namespace js {
 
 namespace frontend {
+
+class EitherParser;
 
 template <typename Unit>
 class SourceAwareCompiler;
