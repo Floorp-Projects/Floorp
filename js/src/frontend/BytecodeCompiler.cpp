@@ -26,7 +26,6 @@
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
-#include "vm/ModuleBuilder.h"  // js::ModuleBuilder
 #include "vm/TraceLogging.h"
 #include "wasm/AsmJS.h"
 
