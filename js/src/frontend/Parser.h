@@ -457,6 +457,8 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   JSAtom* prefixAccessorName(PropertyType propType, HandleAtom propAtom);
 
   MOZ_MUST_USE bool setSourceMapInfo();
+
+  void setFunctionEndFromCurrentToken(FunctionBox* funbox) const;
 };
 
 enum FunctionCallBehavior {
@@ -824,6 +826,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::prefixAccessorName;
   using Base::processExport;
   using Base::processExportFrom;
+  using Base::setFunctionEndFromCurrentToken;
 
  private:
   inline FinalParser* asFinalParser();
