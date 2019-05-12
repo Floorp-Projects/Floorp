@@ -9,6 +9,8 @@
 
 #include "jit/mips32/MacroAssembler-mips32.h"
 
+#include "vm/BigIntType.h"  // JS::BigInt
+
 #include "jit/mips-shared/MacroAssembler-mips-shared-inl.h"
 
 namespace js {
