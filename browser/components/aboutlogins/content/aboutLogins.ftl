@@ -16,8 +16,12 @@ login-list =
   .login-list-header = Logins
 
 login-item =
+  .cancel-button = Cancel
   .delete-button = Delete
-  .hostname-label = Hostname
+  .hostname-label = Website Address
   .password-label = Password
-  .time-created-label = Time Created
+  .save-changes-button = Save Changes
+  .time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }
+  .time-changed = Last changed: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
+  .time-used = Last used: { DATETIME($timeUsed, day: "numeric", month: "long", year: "numeric") }
   .username-label = Username

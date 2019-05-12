@@ -9,3 +9,23 @@
 h2 {
   border-bottom: 1px solid var(--grey-30);
 }
+
+.field-label {
+  display: block;
+}
+
+.meta-info {
+  font-size: smaller;
+}
+
+.meta-info:not(:first-of-type) {
+  margin-top: 0;
+}
+
+.meta-info:not(:last-of-type) {
+  margin-bottom: 0;
+}
+
+.meta-info:first-of-type {
+  border-top: 1px solid var(--grey-30);
+}
