@@ -247,7 +247,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-// Whether the disabled attribute in HTMLLinkElement disables the sheet loading
 // altogether, or forwards to the inner stylesheet method without attribute
 // reflection.
 //
