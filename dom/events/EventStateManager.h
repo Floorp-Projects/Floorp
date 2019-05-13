@@ -1283,7 +1283,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
  * This class is used while processing real user input. During this time, popups
  * are allowed. For mousedown events, mouse capturing is also permitted.
  */
-class AutoHandlingUserInputStatePusher {
+class MOZ_RAII AutoHandlingUserInputStatePusher final {
  public:
   AutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
                                    WidgetEvent* aEvent,
@@ -1298,11 +1298,6 @@ class AutoHandlingUserInputStatePusher {
   bool NeedsToResetFocusManagerMouseButtonHandlingState() const {
     return mMessage == eMouseDown || mMessage == eMouseUp;
   }
-
- private:
-  // Hide so that this class can only be stack-allocated
-  static void* operator new(size_t /*size*/) CPP_THROW_NEW { return nullptr; }
-  static void operator delete(void* /*memory*/) {}
 };
 
 }  // namespace mozilla
