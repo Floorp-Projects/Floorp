@@ -8,7 +8,6 @@ import android.content.DialogInterface
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -23,11 +22,12 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_history.view.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.BrowserDirection
@@ -37,6 +37,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getHostFromUrl
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -45,16 +46,13 @@ import org.mozilla.fenix.share.ShareTab
 import java.net.MalformedURLException
 import java.net.URL
 import kotlin.coroutines.CoroutineContext
+import java.util.concurrent.TimeUnit
 
 @SuppressWarnings("TooManyFunctions")
-class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
+class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
 
-    private lateinit var job: Job
     private lateinit var historyComponent: HistoryComponent
     private val navigation by lazy { Navigation.findNavController(requireView()) }
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -76,7 +74,6 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        job = Job()
 
         setHasOptionsMenu(true)
     }
@@ -95,8 +92,8 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     }
 
     override fun onDestroy() {
+        coroutineContext.cancel()
         super.onDestroy()
-        job.cancel()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -117,9 +114,8 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        launch(Dispatchers.IO) {
-            reloadData()
-        }
+
+        launch { reloadData() }
     }
 
     // This method triggers the complexity warning. However it's actually not that hard to understand.
@@ -139,10 +135,10 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                     is HistoryAction.BackPressed -> getManagedEmitter<HistoryChange>()
                         .onNext(HistoryChange.ExitEditMode)
                     is HistoryAction.Delete.All -> {
-                        activity?.let {
+                        activity?.let { activity ->
                             AlertDialog.Builder(
                                 ContextThemeWrapper(
-                                    it,
+                                    activity,
                                     R.style.DeleteDialogStyle
                                 )
                             ).apply {
@@ -151,7 +147,7 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                                     dialog.cancel()
                                 }
                                 setPositiveButton(R.string.history_clear_dialog) { dialog: DialogInterface, _ ->
-                                    launch(Dispatchers.IO) {
+                                    launch {
                                         requireComponents.core.historyStorage.deleteEverything()
                                         reloadData()
                                     }
@@ -161,13 +157,14 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                             }.show()
                         }
                     }
-                    is HistoryAction.Delete.One -> launch(Dispatchers.IO) {
+                    is HistoryAction.Delete.One -> launch {
                         requireComponents.core.historyStorage.deleteVisit(it.item.url, it.item.visitedAt)
                         reloadData()
                     }
-                    is HistoryAction.Delete.Some -> launch(Dispatchers.IO) {
-                        it.items.forEach { item ->
-                            requireComponents.core.historyStorage.deleteVisit(item.url, item.visitedAt)
+                    is HistoryAction.Delete.Some -> launch {
+                        val storage = requireComponents.core.historyStorage
+                        for (item in it.items) {
+                            storage.deleteVisit(item.url, item.visitedAt)
                         }
                         reloadData()
                     }
@@ -199,7 +196,7 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                 val components = context?.applicationContext?.components!!
                 val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
 
-                CoroutineScope(Main).launch {
+                GlobalScope.launch(Main) {
                     deleteSelectedHistory(selectedHistory, components)
                     reloadData()
                 }
@@ -243,33 +240,29 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
             VisitType.FRAMED_LINK,
             VisitType.REDIRECT_PERMANENT
         )
+
         // Until we have proper pagination, only display a limited set of history to avoid blowing up the UI.
         // See https://github.com/mozilla-mobile/fenix/issues/1393
-        @SuppressWarnings("MagicNumber")
-        val historyCutoffMs = 1000L * 60 * 60 * 24 * 3 // past few days
-        val items = requireComponents.core.historyStorage.getDetailedVisits(
-            System.currentTimeMillis() - historyCutoffMs, excludeTypes = excludeTypes
-        )
+        val sinceTimeMs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(HISTORY_TIME_DAYS)
+        val items = requireComponents.core.historyStorage
+            .getDetailedVisits(sinceTimeMs, excludeTypes = excludeTypes)
             // We potentially have a large amount of visits, and multiple processing steps.
             // Wrapping iterator in a sequence should make this a little more efficient.
             .asSequence()
             .sortedByDescending { it.visitTime }
-
             .mapIndexed { id, item ->
-                HistoryItem(
-                    id, if (TextUtils.isEmpty(item.title!!)) try {
-                        URL(item.url).host
-                    } catch (e: MalformedURLException) {
-                        item.url
-                    } else item.title!!, item.url, item.visitTime
-                )
+                val title = item.title
+                    ?.takeIf(String::isNotEmpty)
+                    ?: item.url.getHostFromUrl()
+                    ?: item.url
+
+                HistoryItem(id, title, item.url, item.visitTime)
             }
             .toList()
 
-        coroutineScope {
-            launch(Dispatchers.Main) {
-                getManagedEmitter<HistoryChange>().onNext(HistoryChange.Change(items))
-            }
+        withContext(Main) {
+            getManagedEmitter<HistoryChange>()
+                .onNext(HistoryChange.Change(items))
         }
     }
 
@@ -288,3 +281,5 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
         Navigation.findNavController(view!!).navigate(directions)
     }
 }
+
+private const val HISTORY_TIME_DAYS = 3L

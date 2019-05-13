@@ -18,13 +18,14 @@ fun String.replace(pairs: Map<String, String>): String {
     return result
 }
 
-fun String?.urlToHost(): String {
-    return try {
-        val url = URL(this)
-        url.host
-    } catch (e: MalformedURLException) {
-        ""
-    }
+/**
+ * Try to parse and get host part if this [String] is valid URL.
+ * Returns **null** otherwise.
+ */
+fun String?.getHostFromUrl(): String? = try {
+    URL(this).host
+} catch (e: MalformedURLException) {
+    null
 }
 
 fun String?.urlToTrimmedHost(): String {
@@ -40,8 +41,8 @@ fun String?.urlToTrimmedHost(): String {
             else -> url.host
         }
     } catch (e: MalformedURLException) {
-        this.urlToHost()
+        this.getHostFromUrl() ?: ""
     } catch (e: StringIndexOutOfBoundsException) {
-        this.urlToHost()
+        this.getHostFromUrl() ?: ""
     }
 }
