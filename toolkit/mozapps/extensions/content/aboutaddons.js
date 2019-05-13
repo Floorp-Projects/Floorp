@@ -12,6 +12,7 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -1305,12 +1306,43 @@ class RecommendedAddonCard extends HTMLElement {
     let action = event.target.getAttribute("action");
     switch (action) {
       case "install-addon":
+        AMTelemetry.recordActionEvent({
+          object: "aboutAddons",
+          view: this.getTelemetryViewName(),
+          action: "installFromRecommendation",
+          addon: this.discoAddon,
+        });
         this.installDiscoAddon();
         break;
       case "manage-addon":
+        AMTelemetry.recordActionEvent({
+          object: "aboutAddons",
+          view: this.getTelemetryViewName(),
+          action: "manage",
+          addon: this.discoAddon,
+        });
         loadViewFn("detail", this.addonId);
         break;
+      default:
+        if (event.target.matches(".disco-addon-author a[href]")) {
+          AMTelemetry.recordLinkEvent({
+            object: "aboutAddons",
+            // Note: This is not "author" nor "homepage", because the link text
+            // is the author name, but the link URL the add-on's listing URL.
+            value: "discohome",
+            extra: {
+              view: this.getTelemetryViewName(),
+            },
+          });
+        }
     }
+  }
+
+  /**
+   * The name of the view for use in addonsManager telemetry events.
+   */
+  getTelemetryViewName() {
+    return "discover";
   }
 
   async installDiscoAddon() {
@@ -1783,11 +1815,27 @@ class DiscoveryPane extends HTMLElement {
     let action = event.target.getAttribute("action");
     switch (action) {
       case "notice-learn-more":
+        // The element is a button but opens a URL, so record as link.
+        AMTelemetry.recordLinkEvent({
+          object: "aboutAddons",
+          value: "disconotice",
+          extra: {
+            view: "discover",
+          },
+        });
         windowRoot.ownerGlobal.openTrustedLinkIn(
           Services.urlFormatter.formatURLPref("app.support.baseURL") +
           "personalized-extension-recommendations", "tab");
         break;
       case "open-amo":
+        // The element is a button but opens a URL, so record as link.
+        AMTelemetry.recordLinkEvent({
+          object: "aboutAddons",
+          value: "discomore",
+          extra: {
+            view: "discover",
+          },
+        });
         let amoUrl =
           Services.urlFormatter.formatURLPref("extensions.getAddons.link.url");
         amoUrl = formatAmoUrl("find-more-link-bottom", amoUrl);
