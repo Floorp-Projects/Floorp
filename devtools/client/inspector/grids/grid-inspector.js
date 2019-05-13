@@ -318,8 +318,8 @@ class GridInspector {
       const disabled = !highlighted &&
                        this.maxHighlighters > 1 &&
                        this.highlighters.gridHighlighters.size === this.maxHighlighters;
-      const isSubgrid = grid.isSubgrid;
-      const gridData = {
+
+      grids.push({
         id: i,
         actorID: grid.actorID,
         color,
@@ -327,32 +327,14 @@ class GridInspector {
         direction: grid.direction,
         gridFragments: grid.gridFragments,
         highlighted,
-        isSubgrid,
         nodeFront,
-        parentNodeActorID: null,
-        subgrids: [],
         writingMode: grid.writingMode,
-      };
-
-      if (isSubgrid) {
-        const parentGridNodeFront = await grid.getParentGridNode(this.walker);
-        if (!parentGridNodeFront) {
-          return;
-        }
-
-        const parentIndex = grids.findIndex(g =>
-          g.nodeFront.actorID === parentGridNodeFront.actorID);
-        gridData.parentNodeActorID = parentGridNodeFront.actorID;
-        grids[parentIndex].subgrids.push(gridData.id);
-      }
-
-      grids.push(gridData);
+      });
     }
 
     this.store.dispatch(updateGrids(grids));
     this.inspector.emit("grid-panel-updated");
   }
-
   /**
    * Handler for "grid-highlighter-shown" events emitted from the
    * HighlightersOverlay. Passes nodefront and event name to handleHighlighterChange.
