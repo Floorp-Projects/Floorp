@@ -88,6 +88,7 @@
 | [mozilla.components.feature.session.bundling](mozilla.components.feature.session.bundling/index.md) |  |
 | [mozilla.components.feature.sitepermissions](mozilla.components.feature.sitepermissions/index.md) |  |
 | [mozilla.components.feature.sync](mozilla.components.feature.sync/index.md) |  |
+| [mozilla.components.feature.tab.collections](mozilla.components.feature.tab.collections/index.md) |  |
 | [mozilla.components.feature.tabs](mozilla.components.feature.tabs/index.md) |  |
 | [mozilla.components.feature.tabs.tabstray](mozilla.components.feature.tabs.tabstray/index.md) |  |
 | [mozilla.components.feature.tabs.toolbar](mozilla.components.feature.tabs.toolbar/index.md) |  |

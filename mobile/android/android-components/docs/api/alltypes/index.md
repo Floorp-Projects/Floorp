@@ -459,6 +459,9 @@
 | [mozilla.components.browser.engine.system.SystemEngineView](../mozilla.components.browser.engine.system/-system-engine-view/index.md) | WebView-based implementation of EngineView. |
 | [mozilla.components.browser.engine.system.permission.SystemPermissionRequest](../mozilla.components.browser.engine.system.permission/-system-permission-request/index.md) | WebView-based implementation of [PermissionRequest](../mozilla.components.concept.engine.permission/-permission-request/index.md). |
 | [mozilla.components.browser.engine.system.window.SystemWindowRequest](../mozilla.components.browser.engine.system.window/-system-window-request/index.md) | WebView-based implementation of [WindowRequest](../mozilla.components.concept.engine.window/-window-request/index.md). |
+| [mozilla.components.feature.tab.collections.Tab](../mozilla.components.feature.tab.collections/-tab/index.md) | A tab of a [TabCollection](../mozilla.components.feature.tab.collections/-tab-collection/index.md). |
+| [mozilla.components.feature.tab.collections.TabCollection](../mozilla.components.feature.tab.collections/-tab-collection/index.md) | A collection of tabs. |
+| [mozilla.components.feature.tab.collections.TabCollectionStorage](../mozilla.components.feature.tab.collections/-tab-collection-storage/index.md) | A storage implementation that saves snapshots of tabs / sessions in named collections. |
 | [mozilla.components.ui.tabcounter.TabCounter](../mozilla.components.ui.tabcounter/-tab-counter/index.md) |  |
 | [mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton](../mozilla.components.feature.tabs.toolbar/-tab-counter-toolbar-button/index.md) | A [Toolbar.Action](../mozilla.components.concept.toolbar/-toolbar/-action/index.md) implementation that shows a [TabCounter](../mozilla.components.ui.tabcounter/-tab-counter/index.md). |
 | [mozilla.components.concept.sync.TabData](../mozilla.components.concept.sync/-tab-data/index.md) |  |

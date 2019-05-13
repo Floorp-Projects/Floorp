@@ -168,6 +168,7 @@ mozilla.components.feature.session
 mozilla.components.feature.session.bundling
 mozilla.components.feature.sitepermissions
 mozilla.components.feature.sync
+mozilla.components.feature.tab.collections
 mozilla.components.feature.tabs
 mozilla.components.feature.tabs.tabstray
 mozilla.components.feature.tabs.toolbar
