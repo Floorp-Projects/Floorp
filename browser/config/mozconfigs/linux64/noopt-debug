@@ -1,5 +1,3 @@
-MOZ_AUTOMATION_BUILD_SYMBOLS=0
-
 # Developers often build with these options for a better debugging experience.
 . "$topsrcdir/browser/config/mozconfigs/linux64/debug"
 
