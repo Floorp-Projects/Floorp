@@ -566,7 +566,10 @@ class nsCompleteUpgradeData : public ARefBase {
   bool mJsWrapped;
 
  private:
-  virtual ~nsCompleteUpgradeData() = default;
+  virtual ~nsCompleteUpgradeData() {
+    NS_ReleaseOnMainThreadSystemGroup("nsCompleteUpgradeData.mUpgradeListener",
+                                      mUpgradeListener.forget());
+  }
 };
 
 nsresult nsHttpConnectionMgr::CompleteUpgrade(
