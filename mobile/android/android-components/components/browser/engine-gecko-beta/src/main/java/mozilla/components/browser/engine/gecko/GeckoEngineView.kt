@@ -21,7 +21,6 @@ class GeckoEngineView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView {
-
     internal var currentGeckoView = object : NestedGeckoView(context) {
         override fun onDetachedFromWindow() {
             // We are releasing the session before GeckoView gets detached from the window. Otherwise
@@ -71,5 +70,9 @@ class GeckoEngineView @JvmOverloads constructor(
             onFinish(null)
             GeckoResult<Void>()
         })
+    }
+
+    override fun setVerticalClipping(clippingHeight: Int) {
+        // no-op: requires GeckoView 68.0
     }
 }

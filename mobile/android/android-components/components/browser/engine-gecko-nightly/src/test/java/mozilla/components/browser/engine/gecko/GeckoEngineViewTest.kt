@@ -72,4 +72,14 @@ class GeckoEngineViewTest {
         geckoResult.completeExceptionally(mock())
         assertNull(thumbnail)
     }
+
+    @Test
+    fun `setVerticalClipping is forwarded to GeckoView instance`() {
+        val engineView = GeckoEngineView(context)
+        engineView.currentGeckoView = mock()
+
+        engineView.setVerticalClipping(42)
+
+        verify(engineView.currentGeckoView).setVerticalClipping(42)
+    }
 }

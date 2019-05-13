@@ -20,7 +20,6 @@ class GeckoEngineView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView {
-
     internal var currentGeckoView = object : NestedGeckoView(context) {
         override fun onDetachedFromWindow() {
             // We are releasing the session before GeckoView gets detached from the window. Otherwise
@@ -62,4 +61,8 @@ class GeckoEngineView @JvmOverloads constructor(
     override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
 
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
+
+    override fun setVerticalClipping(clippingHeight: Int) {
+        // no-op: requires GeckoView 68.0
+    }
 }

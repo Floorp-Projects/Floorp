@@ -63,12 +63,14 @@ class EngineViewTest {
     private fun createDummyEngineView(context: Context): EngineView = DummyEngineView(context)
 
     open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {
+        override fun setVerticalClipping(clippingHeight: Int) {}
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun render(session: EngineSession) {}
     }
 
     // Class it not actually a View!
     open class BrokenEngineView : EngineView {
+        override fun setVerticalClipping(clippingHeight: Int) {}
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun render(session: EngineSession) {}
     }

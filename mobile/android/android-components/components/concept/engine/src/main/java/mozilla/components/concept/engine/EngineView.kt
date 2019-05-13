@@ -12,6 +12,7 @@ import androidx.lifecycle.OnLifecycleEvent
 /**
  * View component that renders web content.
  */
+@Suppress("TooManyFunctions")
 interface EngineView {
 
     /**
@@ -71,6 +72,14 @@ interface EngineView {
      * @param onFinish A callback to inform that process of capturing a thumbnail has finished.
      */
     fun captureThumbnail(onFinish: (Bitmap?) -> Unit)
+
+    /**
+     * Updates the amount of vertical space that is clipped or visibly obscured in the bottom portion of the view.
+     * Tells the [EngineView] where to put bottom fixed elements so they are fully visible.
+     *
+     * @param clippingHeight The height of the bottom clipped space in screen pixels.
+     */
+    fun setVerticalClipping(clippingHeight: Int)
 }
 
 /**

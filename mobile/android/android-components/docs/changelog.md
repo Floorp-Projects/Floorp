@@ -15,6 +15,9 @@ permalink: /changelog/
 * **browser-icons**
   * Added disk cache for icons.
 
+* **feature-session**:
+  * Added `EngineViewBottomBehavior`: A `CoordinatorLayout.Behavior` implementation to be used with [EngineView] when placing a toolbar at the bottom of the screen. This implementation will update the vertical clipping of the `EngineView` so that bottom-aligned web content will be drawn above the browser toolbar.
+
 # 0.52.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.51.0...v0.52.0)

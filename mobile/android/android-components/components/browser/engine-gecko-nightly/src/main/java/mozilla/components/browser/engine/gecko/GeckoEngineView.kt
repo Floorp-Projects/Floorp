@@ -93,6 +93,10 @@ class GeckoEngineView @JvmOverloads constructor(
 
     override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
 
+    override fun setVerticalClipping(clippingHeight: Int) {
+        currentGeckoView.setVerticalClipping(clippingHeight)
+    }
+
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
         val geckoResult = currentGeckoView.capturePixels()
         geckoResult.then({ bitmap ->

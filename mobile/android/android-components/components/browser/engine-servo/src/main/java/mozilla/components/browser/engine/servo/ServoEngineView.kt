@@ -46,4 +46,8 @@ class ServoEngineView @JvmOverloads constructor(
     }
 
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
+
+    override fun setVerticalClipping(clippingHeight: Int) {
+        // no-op
+    }
 }

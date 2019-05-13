@@ -12,6 +12,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
@@ -71,5 +72,14 @@ class GeckoEngineViewTest {
 
         geckoResult.completeExceptionally(mock())
         assertNull(thumbnail)
+    }
+
+    @Test
+    fun `setVerticalClipping is a no-op`() {
+        val engineView = GeckoEngineView(context)
+        engineView.currentGeckoView = mock()
+
+        engineView.setVerticalClipping(42)
+        Mockito.verifyNoMoreInteractions(engineView.currentGeckoView)
     }
 }

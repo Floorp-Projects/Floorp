@@ -63,7 +63,6 @@ class SystemEngineView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), EngineView, View.OnLongClickListener {
-
     @VisibleForTesting(otherwise = PRIVATE)
     internal var session: SystemEngineSession? = null
     internal var jsAlertCount = 0
@@ -635,6 +634,10 @@ class SystemEngineView @JvmOverloads constructor(
 
             session?.internalNotifyObservers { onLongPress(HitResult.IMAGE_SRC(src, url)) }
         }
+    }
+
+    override fun setVerticalClipping(clippingHeight: Int) {
+        // no-op
     }
 
     override fun canScrollVerticallyDown() = session?.webView?.canScrollVertically(1) ?: false
