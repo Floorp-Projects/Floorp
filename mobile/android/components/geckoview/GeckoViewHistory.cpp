@@ -311,17 +311,10 @@ class OnVisitedCallback final : public nsIAndroidEventCallback {
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD
-  OnSuccess(JS::HandleValue aData) override {
+  OnSuccess(JS::HandleValue aData, JSContext* aCx) override {
     bool shouldNotify = false;
-    {
-      // Scope `jsapi`.
-      dom::AutoJSAPI jsapi;
-      if (NS_WARN_IF(!jsapi.Init(mGlobalObject))) {
-        return NS_ERROR_FAILURE;
-      }
-      shouldNotify = ShouldNotifyVisited(jsapi.cx(), aData);
-      JS_ClearPendingException(jsapi.cx());
-    }
+    shouldNotify = ShouldNotifyVisited(aCx, aData);
+    JS_ClearPendingException(aCx);
     if (shouldNotify) {
       AutoTArray<VisitedURI, 1> visitedURIs;
       visitedURIs.AppendElement(VisitedURI{mURI, true});
@@ -331,7 +324,7 @@ class OnVisitedCallback final : public nsIAndroidEventCallback {
   }
 
   NS_IMETHOD
-  OnError(JS::HandleValue aData) override { return NS_OK; }
+  OnError(JS::HandleValue aData, JSContext* aCx) override { return NS_OK; }
 
  private:
   virtual ~OnVisitedCallback() {}
@@ -504,25 +497,18 @@ class GetVisitedCallback final : public nsIAndroidEventCallback {
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD
-  OnSuccess(JS::HandleValue aData) override {
+  OnSuccess(JS::HandleValue aData, JSContext* aCx) override {
     nsTArray<VisitedURI> visitedURIs;
-    {
-      // Scope `jsapi`.
-      dom::AutoJSAPI jsapi;
-      if (NS_WARN_IF(!jsapi.Init(mGlobalObject))) {
-        return NS_ERROR_FAILURE;
-      }
-      if (!ExtractVisitedURIs(jsapi.cx(), aData, visitedURIs)) {
-        JS_ClearPendingException(jsapi.cx());
-        return NS_ERROR_FAILURE;
-      }
+    if (!ExtractVisitedURIs(aCx, aData, visitedURIs)) {
+      JS_ClearPendingException(aCx);
+      return NS_ERROR_FAILURE;
     }
     mHistory->HandleVisitedState(visitedURIs);
     return NS_OK;
   }
 
   NS_IMETHOD
-  OnError(JS::HandleValue aData) override { return NS_OK; }
+  OnError(JS::HandleValue aData, JSContext* aCx) override { return NS_OK; }
 
  private:
   virtual ~GetVisitedCallback() {}
