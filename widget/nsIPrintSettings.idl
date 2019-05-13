@@ -70,7 +70,6 @@ interface nsIPrintSettings : nsISupports
   const long kRangeAllPages           = 0;
   const long kRangeSpecifiedPageRange = 1;
   const long kRangeSelection          = 2;
-  const long kRangeFocusFrame         = 3;
 
   /* Justification Enums */
   const long kJustLeft   = 0;
