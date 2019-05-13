@@ -67,20 +67,6 @@ function startTest(test, token) {
   v.addEventListener("ended", checkEnded);
 
   document.body.appendChild(v);
-
-  // Debug timeouts on slow platforms.
-  if (isSlowPlatform()) {
-    var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
-                  "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
-                  "waiting", "pause"];
-    function logEvent(e) {
-      var v = e.target;
-      Log(e.target.token, "got " + e.type);
-    }
-    events.forEach(function(e) {
-      v.addEventListener(e, logEvent);
-    });
-  }
 }
 
 manager.runTests(gSmallTests, startTest);
