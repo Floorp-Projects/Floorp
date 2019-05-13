@@ -8,6 +8,7 @@ package org.mozilla.gecko.toolbar;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.CustomEditText;
 import org.mozilla.gecko.InputMethods;
+import org.mozilla.gecko.toolbar.BrowserToolbar.CommitEventSource;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnCommitListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
@@ -605,7 +606,7 @@ public class ToolbarEditText extends CustomEditText
                 final Editable content = getText();
                 if (!hasCompositionString(content)) {
                     if (mCommitListener != null) {
-                        mCommitListener.onCommitByKey();
+                        mCommitListener.onCommit(CommitEventSource.PRE_IME_KEY_EVENT);
                     }
 
                     return true;
@@ -631,7 +632,7 @@ public class ToolbarEditText extends CustomEditText
                 }
 
                 if (mCommitListener != null) {
-                    mCommitListener.onCommitByKey();
+                    mCommitListener.onCommit(CommitEventSource.KEY_EVENT);
                 }
 
                 return true;
