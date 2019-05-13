@@ -3258,7 +3258,7 @@ impl PicturePrimitive {
             }
             PictureCompositeMode::MixBlend(..) if !frame_context.fb_config.gpu_supports_advanced_blend => {}
             PictureCompositeMode::Filter(ref filter) => {
-                if let Filter::ColorMatrix(m) = *filter {
+                if let Filter::ColorMatrix(ref m) = *filter {
                     if self.extra_gpu_data_handles.is_empty() {
                         self.extra_gpu_data_handles.push(GpuCacheHandle::new());
                     }
