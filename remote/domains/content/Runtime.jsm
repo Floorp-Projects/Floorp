@@ -77,6 +77,20 @@ class Runtime extends ContentProcessDomain {
     return context.evaluate(request.expression);
   }
 
+  callFunctionOn(request) {
+    const context = this.contexts.get(request.executionContextId);
+    if (!context) {
+      throw new Error(`Unable to find execution context with id: ${request.executionContextId}`);
+    }
+    if (typeof(request.functionDeclaration) != "string") {
+      throw new Error("Expect 'functionDeclaration' attribute to be passed and be a string");
+    }
+    if (request.arguments && !Array.isArray(request.arguments)) {
+      throw new Error("Expect 'arguments' to be an array");
+    }
+    return context.callFunctionOn(request.functionDeclaration, request.arguments);
+  }
+
   get _debugger() {
     if (this.__debugger) {
       return this.__debugger;
