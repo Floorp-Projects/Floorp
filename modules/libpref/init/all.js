@@ -2497,6 +2497,11 @@ pref("intl.hyphenation-alias.no-*", "nb");
 pref("intl.hyphenation-alias.nb-*", "nb");
 pref("intl.hyphenation-alias.nn-*", "nn");
 
+// In German, we allow hyphenation of capitalized words; otherwise not.
+pref("intl.hyphenate-capitalized.de-1996", true);
+pref("intl.hyphenate-capitalized.de-1901", true);
+pref("intl.hyphenate-capitalized.de-CH", true);
+
 // All prefs of default font should be "auto".
 pref("font.name.serif.ar", "");
 pref("font.name.sans-serif.ar", "");
