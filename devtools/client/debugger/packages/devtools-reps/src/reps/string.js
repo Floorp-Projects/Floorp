@@ -29,6 +29,7 @@ StringRep.propTypes = {
   escapeWhitespace: PropTypes.bool,
   style: PropTypes.object,
   cropLimit: PropTypes.number.isRequired,
+  urlCropLimit: PropTypes.number,
   member: PropTypes.object,
   object: PropTypes.object.isRequired,
   openLink: PropTypes.func,
@@ -42,6 +43,7 @@ function StringRep(props) {
     className,
     style,
     cropLimit,
+    urlCropLimit,
     object,
     useQuotes = true,
     escapeWhitespace = true,
@@ -91,12 +93,13 @@ function StringRep(props) {
     if (containsURL(text)) {
       return span(
         config,
-        ...getLinkifiedElements(
+        getLinkifiedElements({
           text,
-          shouldCrop && cropLimit,
+          cropLimit: shouldCrop ? cropLimit : null,
+          urlCropLimit,
           openLink,
           isInContentPage
-        )
+        })
       );
     }
 
@@ -172,14 +175,24 @@ function maybeCropString(opts, text) {
  * Get an array of the elements representing the string, cropped if needed,
  * with actual links.
  *
- * @param {String} text: The actual string to linkify.
- * @param {Integer | null} cropLimit
- * @param {Function} openLink: Function handling the link opening.
- * @param {Boolean} isInContentPage: pass true if the reps is rendered in
- *                                   the content page (e.g. in JSONViewer).
+ * @param {Object} An options object of the following shape:
+ *                 - text {String}: The actual string to linkify.
+ *                 - cropLimit {Integer}: The limit to apply on the whole text.
+ *                 - urlCropLimit {Integer}: The limit to apply on each URL.
+ *                 - openLink {Function} openLink: Function handling the link
+ *                                                 opening.
+ *                 - isInContentPage {Boolean}: pass true if the reps is
+ *                                              rendered in the content page
+ *                                              (e.g. in JSONViewer).
  * @returns {Array<String|ReactElement>}
  */
-function getLinkifiedElements(text, cropLimit, openLink, isInContentPage) {
+function getLinkifiedElements({
+  text,
+  cropLimit,
+  urlCropLimit,
+  openLink,
+  isInContentPage
+}) {
   const halfLimit = Math.ceil((cropLimit - ELLIPSIS.length) / 2);
   const startCropIndex = cropLimit ? halfLimit : null;
   const endCropIndex = cropLimit ? text.length - halfLimit : null;
@@ -211,7 +224,7 @@ function getLinkifiedElements(text, cropLimit, openLink, isInContentPage) {
     }
 
     currentIndex = currentIndex + contentStart;
-    const linkText = getCroppedString(
+    let linkText = getCroppedString(
       useUrl,
       currentIndex,
       startCropIndex,
@@ -219,9 +232,20 @@ function getLinkifiedElements(text, cropLimit, openLink, isInContentPage) {
     );
 
     if (linkText) {
+      if (urlCropLimit && useUrl.length > urlCropLimit) {
+        const urlCropHalf = Math.ceil((urlCropLimit - ELLIPSIS.length) / 2);
+        linkText = getCroppedString(
+          useUrl,
+          0,
+          urlCropHalf,
+          useUrl.length - urlCropHalf
+        );
+      }
+
       items.push(
         a(
           {
+            key: `${useUrl}-${currentIndex}`,
             className: "url",
             title: useUrl,
             draggable: false,
