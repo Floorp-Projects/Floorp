@@ -6604,15 +6604,16 @@ nsresult PrepareDatastoreOp::Open() {
     return NS_ERROR_FAILURE;
   }
 
-  const PrincipalInfo& principalInfo = mParams.principalInfo();
+  const PrincipalInfo& storagePrincipalInfo = mParams.storagePrincipalInfo();
 
-  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+  if (storagePrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     QuotaManager::GetInfoForChrome(&mSuffix, &mGroup, &mOrigin);
   } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+    MOZ_ASSERT(storagePrincipalInfo.type() ==
+               PrincipalInfo::TContentPrincipalInfo);
 
     QuotaManager::GetInfoFromValidatedPrincipalInfo(
-        principalInfo, &mSuffix, &mGroup, &mMainThreadOrigin);
+        storagePrincipalInfo, &mSuffix, &mGroup, &mMainThreadOrigin);
   }
 
   mState = State::Nesting;
@@ -6634,17 +6635,19 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
     return NS_ERROR_FAILURE;
   }
 
-  const PrincipalInfo& principalInfo = mParams.principalInfo();
+  const PrincipalInfo& storagePrincipalInfo = mParams.storagePrincipalInfo();
 
   nsCString originAttrSuffix;
   uint32_t privateBrowsingId;
 
-  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+  if (storagePrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     privateBrowsingId = 0;
   } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+    MOZ_ASSERT(storagePrincipalInfo.type() ==
+               PrincipalInfo::TContentPrincipalInfo);
 
-    const ContentPrincipalInfo& info = principalInfo.get_ContentPrincipalInfo();
+    const ContentPrincipalInfo& info =
+        storagePrincipalInfo.get_ContentPrincipalInfo();
     const OriginAttributes& attrs = info.attrs();
     attrs.CreateSuffix(originAttrSuffix);
 
@@ -7910,15 +7913,16 @@ nsresult PrepareObserverOp::Open() {
     return NS_ERROR_FAILURE;
   }
 
-  const PrincipalInfo& principalInfo = mParams.principalInfo();
+  const PrincipalInfo& storagePrincipalInfo = mParams.storagePrincipalInfo();
 
-  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+  if (storagePrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     QuotaManager::GetInfoForChrome(nullptr, nullptr, &mOrigin);
   } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+    MOZ_ASSERT(storagePrincipalInfo.type() ==
+               PrincipalInfo::TContentPrincipalInfo);
 
-    QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo, nullptr,
-                                                    nullptr, &mOrigin);
+    QuotaManager::GetInfoFromValidatedPrincipalInfo(storagePrincipalInfo,
+                                                    nullptr, nullptr, &mOrigin);
   }
 
   mState = State::SendingReadyMessage;
@@ -8051,15 +8055,16 @@ nsresult PreloadedOp::Open() {
     return NS_ERROR_FAILURE;
   }
 
-  const PrincipalInfo& principalInfo = mParams.principalInfo();
+  const PrincipalInfo& storagePrincipalInfo = mParams.storagePrincipalInfo();
 
-  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+  if (storagePrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     QuotaManager::GetInfoForChrome(nullptr, nullptr, &mOrigin);
   } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+    MOZ_ASSERT(storagePrincipalInfo.type() ==
+               PrincipalInfo::TContentPrincipalInfo);
 
-    QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo, nullptr,
-                                                    nullptr, &mOrigin);
+    QuotaManager::GetInfoFromValidatedPrincipalInfo(storagePrincipalInfo,
+                                                    nullptr, nullptr, &mOrigin);
   }
 
   mState = State::SendingResults;
@@ -8970,11 +8975,11 @@ nsresult QuotaClient::CreateArchivedOriginScope(
     contentPrincipalInfo.attrs() = attrs;
     contentPrincipalInfo.spec() = spec;
 
-    PrincipalInfo principalInfo(contentPrincipalInfo);
+    PrincipalInfo storagePrincipalInfo(contentPrincipalInfo);
 
     nsCString originAttrSuffix;
     nsCString originKey;
-    rv = GenerateOriginKey2(principalInfo, originAttrSuffix, originKey);
+    rv = GenerateOriginKey2(storagePrincipalInfo, originAttrSuffix, originKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8993,11 +8998,11 @@ nsresult QuotaClient::CreateArchivedOriginScope(
     contentPrincipalInfo.attrs() = attrs;
     contentPrincipalInfo.spec() = spec;
 
-    PrincipalInfo principalInfo(contentPrincipalInfo);
+    PrincipalInfo storagePrincipalInfo(contentPrincipalInfo);
 
     nsCString originAttrSuffix;
     nsCString originKey;
-    rv = GenerateOriginKey2(principalInfo, originAttrSuffix, originKey);
+    rv = GenerateOriginKey2(storagePrincipalInfo, originAttrSuffix, originKey);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
