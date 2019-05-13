@@ -23,16 +23,16 @@ async function startTest() {
   const cues = createCues(video);
   await startVideo(video);
 
-  seekVideo(video, cues[0].startTime);
+  await seekVideo(video, cues[0].startTime);
   await waitUntilCueIsShowing(cues[0]);
   checkActiveCueAndInactiveCue(cues[0], cues[1]);
 
-  seekVideo(video, cues[1].startTime);
+  await seekVideo(video, cues[1].startTime);
   await waitUntilCueIsShowing(cues[1]);
   checkActiveCueAndInactiveCue(cues[1], cues[0]);
 
   // seek forward again
-  seekVideo(video, cues[0].startTime);
+  await seekVideo(video, cues[0].startTime);
   await waitUntilCueIsShowing(cues[0]);
   checkActiveCueAndInactiveCue(cues[0], cues[1]);
 
