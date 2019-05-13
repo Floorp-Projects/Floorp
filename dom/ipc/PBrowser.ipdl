@@ -661,6 +661,8 @@ child:
 
     async ChildToParentMatrix(Matrix4x4 aMatrix);
 
+    async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
+
     async ParentActivated(bool aActivated);
 
     async SetKeyboardIndicators(UIStateChangeType showAccelerators,

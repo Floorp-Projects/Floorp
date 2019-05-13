@@ -47,6 +47,8 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   void Deactivate();
 
+  void SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
+
   static BrowserBridgeChild* GetFrom(nsFrameLoader* aFrameLoader);
 
   static BrowserBridgeChild* GetFrom(nsIContent* aContent);

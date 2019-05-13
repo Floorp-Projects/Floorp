@@ -415,6 +415,9 @@ class BrowserChild final : public BrowserChildBase,
   mozilla::ipc::IPCResult RecvNormalPrioritySelectionEvent(
       const mozilla::WidgetSelectionEvent& aEvent);
 
+  mozilla::ipc::IPCResult RecvSetIsUnderHiddenEmbedderElement(
+      const bool& aIsUnderHiddenEmbedderElement);
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvPasteTransferable(
       const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
