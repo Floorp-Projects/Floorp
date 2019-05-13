@@ -579,16 +579,15 @@ class JavaCallbackDelegate final : public nsIAndroidEventCallback {
 
   virtual ~JavaCallbackDelegate() {}
 
-  NS_IMETHOD Call(JS::HandleValue aData,
+  NS_IMETHOD Call(JSContext* aCx, JS::HandleValue aData,
                   void (java::EventCallback::*aCall)(jni::Object::Param)
                       const) {
     MOZ_ASSERT(NS_IsMainThread());
-    AutoJSContext cx;
 
     jni::Object::LocalRef data(jni::GetGeckoThreadEnv());
-    nsresult rv = BoxData(NS_LITERAL_STRING("callback"), cx, aData, data,
+    nsresult rv = BoxData(NS_LITERAL_STRING("callback"), aCx, aData, data,
                           /* ObjectOnly */ false);
-    NS_ENSURE_SUCCESS(rv, JS_IsExceptionPending(cx) ? NS_OK : rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     dom::AutoNoJSAPI nojsapi;
 
@@ -602,12 +601,12 @@ class JavaCallbackDelegate final : public nsIAndroidEventCallback {
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD OnSuccess(JS::HandleValue aData) override {
-    return Call(aData, &java::EventCallback::SendSuccess);
+  NS_IMETHOD OnSuccess(JS::HandleValue aData, JSContext* aCx) override {
+    return Call(aCx, aData, &java::EventCallback::SendSuccess);
   }
 
-  NS_IMETHOD OnError(JS::HandleValue aData) override {
-    return Call(aData, &java::EventCallback::SendError);
+  NS_IMETHOD OnError(JS::HandleValue aData, JSContext* aCx) override {
+    return Call(aCx, aData, &java::EventCallback::SendError);
   }
 };
 
@@ -624,7 +623,8 @@ class NativeCallbackDelegateSupport final
   const nsCOMPtr<nsIGlobalObject> mGlobalObject;
 
   void Call(jni::Object::Param aData,
-            nsresult (nsIAndroidEventCallback::*aCall)(JS::HandleValue)) {
+            nsresult (nsIAndroidEventCallback::*aCall)(JS::HandleValue,
+                                                       JSContext*)) {
     MOZ_ASSERT(NS_IsMainThread());
 
     // Use either the attached window's realm or a default realm.
@@ -637,8 +637,7 @@ class NativeCallbackDelegateSupport final
                             &data, /* BundleOnly */ false);
     NS_ENSURE_SUCCESS_VOID(rv);
 
-    dom::AutoNoJSAPI nojsapi;
-    rv = (mCallback->*aCall)(data);
+    rv = (mCallback->*aCall)(data, jsapi.cx());
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 
@@ -813,6 +812,10 @@ EventDispatcher::Dispatch(JS::HandleValue aEvent, JS::HandleValue aData,
 
   jni::Object::LocalRef data(jni::GetGeckoThreadEnv());
   nsresult rv = BoxData(event, aCx, aData, data, /* ObjectOnly */ true);
+  // Keep XPConnect from overriding the JSContext exception with one
+  // based on the nsresult.
+  //
+  // XXXbz Does xpconnect still do that?  Needs to be checked/tested.
   NS_ENSURE_SUCCESS(rv, JS_IsExceptionPending(aCx) ? NS_OK : rv);
 
   dom::AutoNoJSAPI nojsapi;

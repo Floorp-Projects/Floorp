@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "Завантажити"
   },
+  "downloadScreenshotTitle": {
+    "message": "Завантажити знімки екрану"
+  },
   "downloadOnlyNotice": {
     "message": "Ви зараз в режимі лише завантаження."
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Копіювати"
+  },
+  "copyScreenshotTitle": {
+    "message": "Копіювати знімки в буфер обміну"
   },
   "notificationImageCopiedTitle": {
     "message": "Знімок скопійовано"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Ми не впевнені, в чому проблема. Спробувати ще раз, або ж зробити знімок іншої сторінки?"
   },
-  "tourBodyIntro": {
-    "message": "Робіть знімки екрану, зберігайте та діліться ними прямо в Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Створюйте, копіюйте і завантажуйте знімки екрану, не покидаючи Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Новий спосіб збереження"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "За допомогою кнопок у верхній правій частині обирайте захоплення видимої області вікна, або сторінки повністю."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Як вам подобається"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Зберігайте свої знімки в Інтернеті, щоб легко ними ділитися, або завантажуйте їх на свій комп'ютер. Ви також можете переглянути всі збережені знімки, натиснувши на кнопку Мої знімки."
-  },
-  "tourHeaderAccounts": {
-    "message": "Знімки екрану на ходу"
-  },
-  "tourBodyAccounts": {
-    "message": "Увійдіть в обліковий запис Firefox, щоб отримати доступ до своїх знімків на всіх пристроях і зберігати обрані знімки без обмежень."
   },
   "tourSkip": {
     "message": "Пропустити"

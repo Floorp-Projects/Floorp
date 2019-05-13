@@ -704,6 +704,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "chrome-devtools-frontend.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chrome.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chrome.google.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "chromereporting-pa.googleapis.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chromiumbugs.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chromiumcodereview.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "cl.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
@@ -1149,8 +1150,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "zh.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
 };
 
-// Pinning Preload List Length = 486;
+// Pinning Preload List Length = 487;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1565872296829000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1566217826661000);

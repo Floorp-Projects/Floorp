@@ -564,49 +564,12 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     return NS_OK;
   }
 
-  /* Get the scheme of the sub-document resource to be requested. If it is
-   * a safe to load in an https context then mixed content doesn't apply.
-   *
-   * Check Protocol Flags to determine if scheme is safe to load:
-   * URI_DOES_NOT_RETURN_DATA - e.g.
-   *   "mailto"
-   * URI_IS_LOCAL_RESOURCE - e.g.
-   *   "data",
-   *   "resource",
-   *   "moz-icon"
-   * URI_INHERITS_SECURITY_CONTEXT - e.g.
-   *   "javascript"
-   * URI_IS_POTENTIALLY_TRUSTWORTHY - e.g.
-   *   "https",
-   *   "moz-safe-about"
-   *
-   */
-  bool schemeLocal = false;
-  bool schemeNoReturnData = false;
-  bool schemeInherits = false;
-  bool schemeSecure = false;
-  if (NS_FAILED(NS_URIChainHasFlags(innerContentLocation,
-                                    nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
-                                    &schemeLocal)) ||
-      NS_FAILED(NS_URIChainHasFlags(
-          innerContentLocation, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
-          &schemeNoReturnData)) ||
-      NS_FAILED(
-          NS_URIChainHasFlags(innerContentLocation,
-                              nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
-                              &schemeInherits)) ||
-      NS_FAILED(NS_URIChainHasFlags(
-          innerContentLocation,
-          nsIProtocolHandler::URI_IS_POTENTIALLY_TRUSTWORTHY, &schemeSecure))) {
-    *aDecision = REJECT_REQUEST;
-    return NS_ERROR_FAILURE;
-  }
   // TYPE_IMAGE redirects are cached based on the original URI, not the final
   // destination and hence cache hits for images may not have the correct
   // innerContentLocation.  Check if the cached hit went through an http
   // redirect, and if it did, we can't treat this as a secure subresource.
   if (!aHadInsecureImageRedirect &&
-      (schemeLocal || schemeNoReturnData || schemeInherits || schemeSecure)) {
+      URISafeToBeLoadedInSecureContext(innerContentLocation)) {
     *aDecision = ACCEPT;
     return NS_OK;
   }
@@ -1080,6 +1043,43 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     *aDecision = ACCEPT;
     return NS_OK;
   }
+}
+
+bool nsMixedContentBlocker::URISafeToBeLoadedInSecureContext(nsIURI* aURI) {
+  /* Returns a bool if the URI can be loaded as a sub resource safely.
+   *
+   * Check Protocol Flags to determine if scheme is safe to load:
+   * URI_DOES_NOT_RETURN_DATA - e.g.
+   *   "mailto"
+   * URI_IS_LOCAL_RESOURCE - e.g.
+   *   "data",
+   *   "resource",
+   *   "moz-icon"
+   * URI_INHERITS_SECURITY_CONTEXT - e.g.
+   *   "javascript"
+   * URI_IS_POTENTIALLY_TRUSTWORTHY - e.g.
+   *   "https",
+   *   "moz-safe-about"
+   *
+   */
+  bool schemeLocal = false;
+  bool schemeNoReturnData = false;
+  bool schemeInherits = false;
+  bool schemeSecure = false;
+  if (NS_FAILED(NS_URIChainHasFlags(
+          aURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE, &schemeLocal)) ||
+      NS_FAILED(NS_URIChainHasFlags(
+          aURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+          &schemeNoReturnData)) ||
+      NS_FAILED(NS_URIChainHasFlags(
+          aURI, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+          &schemeInherits)) ||
+      NS_FAILED(NS_URIChainHasFlags(
+          aURI, nsIProtocolHandler::URI_IS_POTENTIALLY_TRUSTWORTHY,
+          &schemeSecure))) {
+    return false;
+  }
+  return (schemeLocal || schemeNoReturnData || schemeInherits || schemeSecure);
 }
 
 NS_IMETHODIMP

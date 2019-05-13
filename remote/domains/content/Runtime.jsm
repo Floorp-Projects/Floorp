@@ -77,6 +77,41 @@ class Runtime extends ContentProcessDomain {
     return context.evaluate(request.expression);
   }
 
+  callFunctionOn(request) {
+    let context = null;
+    // When an `objectId` is passed, we want to execute the function of a given object
+    // So we first have to find its ExecutionContext
+    if (request.objectId) {
+      for (const ctx of this.contexts.values()) {
+        if (ctx.hasRemoteObject(request.objectId)) {
+          context = ctx;
+          break;
+        }
+      }
+      if (!context) {
+        throw new Error(`Unable to get the context for object with id: ${request.objectId}`);
+      }
+    } else {
+      context = this.contexts.get(request.executionContextId);
+      if (!context) {
+        throw new Error(`Unable to find execution context with id: ${request.executionContextId}`);
+      }
+    }
+    if (typeof(request.functionDeclaration) != "string") {
+      throw new Error("Expect 'functionDeclaration' attribute to be passed and be a string");
+    }
+    if (request.arguments && !Array.isArray(request.arguments)) {
+      throw new Error("Expect 'arguments' to be an array");
+    }
+    if (request.returnByValue && typeof(request.returnByValue) != "boolean") {
+      throw new Error("Expect 'returnByValue' to be a boolean");
+    }
+    if (request.awaitPromise && typeof(request.awaitPromise) != "boolean") {
+      throw new Error("Expect 'awaitPromise' to be a boolean");
+    }
+    return context.callFunctionOn(request.functionDeclaration, request.arguments, request.returnByValue, request.awaitPromise, request.objectId);
+  }
+
   get _debugger() {
     if (this.__debugger) {
       return this.__debugger;

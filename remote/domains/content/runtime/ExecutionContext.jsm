@@ -38,6 +38,10 @@ class ExecutionContext {
     this._debugger.removeDebuggee(this._debuggee);
   }
 
+  hasRemoteObject(id) {
+    return this._remoteObjects.has(id);
+  }
+
   /**
    * Evaluate a Javascript expression.
    *
@@ -59,21 +63,98 @@ class ExecutionContext {
       };
     }
     if (rv.throw) {
-      if (this._debuggee.executeInGlobalWithBindings("e instanceof Error", {e: rv.throw}).return) {
-        return {
-          exceptionDetails: {
-            text: this._debuggee.executeInGlobalWithBindings("e.message", {e: rv.throw}).return,
-          },
-        };
-      }
+      return this._returnError(rv.throw);
+    }
+    return {
+      result: this._toRemoteObject(rv.return),
+    };
+  }
+
+  /**
+   * Given a Debugger.Object reference for an Exception, return a JSON object
+   * describing the exception by following CDP ExceptionDetails specification.
+   */
+  _returnError(exception) {
+    if (this._debuggee.executeInGlobalWithBindings("exception instanceof Error",
+      {exception}).return) {
+      const text = this._debuggee.executeInGlobalWithBindings("exception.message",
+        {exception}).return;
       return {
         exceptionDetails: {
-          exception: this._createRemoteObject(rv.throw),
+          text,
         },
       };
     }
+
+    // If that isn't an Error, consider the exception as a JS value
     return {
-      result: this._createRemoteObject(rv.return),
+      exceptionDetails: {
+        exception: this._toRemoteObject(exception),
+      },
+    };
+  }
+
+  async callFunctionOn(functionDeclaration, callArguments = [], returnByValue = false, awaitPromise = false, objectId = null) {
+    // Map the given objectId to a JS reference.
+    let thisArg = null;
+    if (objectId) {
+      thisArg = this._remoteObjects.get(objectId);
+      if (!thisArg) {
+        throw new Error(`Unable to get target object with id: ${objectId}`);
+      }
+    }
+
+    // First evaluate the function
+    const fun = this._debuggee.executeInGlobal("(" + functionDeclaration + ")");
+    if (!fun) {
+      return {
+        exceptionDetails: {
+          text: "Evaluation terminated!",
+        },
+      };
+    }
+    if (fun.throw) {
+      return this._returnError(fun.throw);
+    }
+
+    // Then map all input arguments, which are matching CDP's CallArguments type,
+    // into JS values
+    const args = callArguments.map(arg => this._fromCallArgument(arg));
+
+    // Finally, call the function with these arguments
+    const rv = fun.return.apply(thisArg, args);
+    if (rv.throw) {
+      return this._returnError(rv.throw);
+    }
+
+    let result = rv.return;
+
+    if (result && result.isPromise && awaitPromise) {
+      if (result.promiseState === "fulfilled") {
+        result = result.promiseValue;
+      } else if (result.promiseState === "rejected") {
+        return this._returnError(result.promiseReason);
+      } else {
+        try {
+          const promiseResult = await result.unsafeDereference();
+          result = this._debuggee.makeDebuggeeValue(promiseResult);
+        } catch (e) {
+          // The promise has been rejected
+          return this._returnError(e);
+        }
+      }
+    }
+
+    if (returnByValue) {
+      return {
+        result: {
+          value: this._serialize(result),
+        },
+      };
+    }
+
+    return {
+      result: this._toRemoteObject(result),
     };
   }
 
@@ -86,11 +167,51 @@ class ExecutionContext {
    *  The JSON string
    */
   _serialize(obj) {
+    if (typeof(obj) == "undefined") {
+      return undefined;
+    }
     const result = this._debuggee.executeInGlobalWithBindings("JSON.stringify(e)", {e: obj});
     if (result.throw) {
       throw new Error("Object is not serializable");
     }
     return JSON.parse(result.return);
+  }
+
+  /**
+   * Given a CDP `CallArgument`, return a JS value that represent this argument.
+   * Note that `CallArgument` is actually very similar to `RemoteObject`
+   */
+  _fromCallArgument(arg) {
+    if (arg.objectId) {
+      if (!this._remoteObjects.has(arg.objectId)) {
+        throw new Error(`Cannot find object with ID: ${arg.objectId}`);
+      }
+      return this._remoteObjects.get(arg.objectId);
+    }
+    if (arg.unserializableValue) {
+      switch (arg.unserializableValue) {
+        case "Infinity": return Infinity;
+        case "-Infinity": return -Infinity;
+        case "-0": return -0;
+        case "NaN": return NaN;
+      }
+    }
+    return this._deserialize(arg.value);
+  }
+
+  /**
+   * Given a JS value, create a copy of it within the debugee compartment.
+   */
+  _deserialize(obj) {
+    if (typeof obj !== "object") {
+      return obj;
+    }
+    const result = this._debuggee.executeInGlobalWithBindings("JSON.parse(obj)",
+      {obj: JSON.stringify(obj)});
+    if (result.throw) {
+      throw new Error("Unable to deserialize object");
+    }
+    return result.return;
   }
 
   /**
@@ -102,7 +223,7 @@ class ExecutionContext {
    * @return {RemoteObject}
    *  The serialized description of the given object
    */
-  _createRemoteObject(debuggerObj) {
+  _toRemoteObject(debuggerObj) {
     // First handle all non-primitive values which are going to be wrapped by the
     // Debugger API into Debugger.Object instances
     if (debuggerObj instanceof Debugger.Object) {

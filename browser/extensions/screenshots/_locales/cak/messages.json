@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "Tiyak"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "Tijotob'äx"
+  },
   "saveScreenshotVisibleArea": {
     "message": "Tiyak wachel"
   },
@@ -122,9 +125,6 @@
   "genericErrorDetails": {
     "message": "Man öj jikïl chi rij ri xk'ulwachitäj. ¿La nawajo' natojtob'ej chik o nachäp ruwachib'al jun chik ruxaq?"
   },
-  "tourBodyIntro": {
-    "message": "Ke'achapa', ke'ayaka', chuqa' ke'akomonij chapoj taq wachib'äl rik'in man yatel ta el pa Firefox."
-  },
   "tourHeaderPageAction": {
     "message": "Jun k'ak'a' rub'anikil richin niyak"
   },
@@ -142,12 +142,6 @@
   },
   "tourBodyFullPage": {
     "message": "Ke'acha' ri ikim ajkiq'a' taq pitz'b'äl richin nachäp ri tz'etel ruk'ojlem tzuwäch o richin nachäp jun tz'aqät ruxaq."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Achi'el Niqa Chawäch"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Ke'ayaka' ri qupin taq awachib'al pa ajk'amaya'l richin man k'ayew ta ye'akomonij o ye'aqasaj pan akematz'ib'. Chuqa' yatikïr napïtz ri Taq Nuwachib'al richin ye'awïl konojel ri taq wachib'al e'elesan."
   },
   "tourSkip": {
     "message": "SKIP"

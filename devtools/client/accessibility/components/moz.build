@@ -10,6 +10,7 @@ DevToolsModules(
     'Accessible.js',
     'AuditController.js',
     'AuditFilter.js',
+    'AuditProgressOverlay.js',
     'Badge.js',
     'Badges.js',
     'Button.js',

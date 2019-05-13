@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "Изтегляне"
   },
+  "downloadScreenshotTitle": {
+    "message": "Изтегляне на екранна снимка"
+  },
   "downloadOnlyNotice": {
     "message": "В момента сте в режим на изтегляне."
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Копиране"
+  },
+  "copyScreenshotTitle": {
+    "message": "Копиране в системния буфер"
   },
   "notificationImageCopiedTitle": {
     "message": "Снимката е копирана"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Не сме сигурни какво точно се случи. Може да опитате отново, както и да снимате друга страница."
   },
-  "tourBodyIntro": {
-    "message": "Създавайте, запазвайте и споделяйте снимки на екрана без да напускате Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Създавайте, копирайте и изтегляйте снимки на екрана без да напускате Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Нов начин за запазване"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Използвайте бутоните в горния десен ъгъл, за да уловите само видимата част или цялата страница."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Както ви харесва"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Запазвайте снимките на страници от Мрежата, за да ги споделяте по-лесно или ги изтегляйте на компютъра си. А бутонът „Моите снимки“ ще ви покаже всички направени от вас снимки."
-  },
-  "tourHeaderAccounts": {
-    "message": "Снимки на екрана за из път"
-  },
-  "tourBodyAccounts": {
-    "message": "Впишете се в Снимки на екрана с вашия Firefox Account, за да получите достъп до вашите снимки на всички ваши устройства и за да запазите вашите любими снимки завинаги."
   },
   "tourSkip": {
     "message": "Пропускане"

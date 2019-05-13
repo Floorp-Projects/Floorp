@@ -130,17 +130,67 @@ function isStale(accessible) {
  *        AccessibileActor to be used as the root for the audit.
  * @param {Map} report
  *        An accumulator map to be used to store audit information.
+ * @param {Object} progress
+ *        An audit project object that is used to track the progress of the
+ *        audit and send progress "audit-event" events to the client.
  */
-function getAudit(acc, report) {
+function getAudit(acc, report, progress) {
   if (acc.isDefunct) {
     return;
   }
 
   // Audit returns a promise, save the actual value in the report.
-  report.set(acc, acc.audit().then(result => report.set(acc, result)));
+  report.set(acc, acc.audit().then(result => {
+    report.set(acc, result);
+    progress.increment();
+  }));
 
   for (const child of acc.children()) {
-    getAudit(child, report);
+    getAudit(child, report, progress);
+  }
+}
+
+/**
+ * A helper class that is used to track audit progress and send progress events
+ * to the client.
+ */
+class AuditProgress {
+  constructor(walker) {
+    this.completed = 0;
+    this.percentage = 0;
+    this.walker = walker;
+  }
+
+  setTotal(size) {
+    this.size = size;
+  }
+
+  notify() {
+    this.walker.emit("audit-event", {
+      type: "progress",
+      progress: {
+        total: this.size,
+        percentage: this.percentage,
+      },
+    });
+  }
+
+  increment() {
+    this.completed++;
+    const { completed, size } = this;
+    if (!size) {
+      return;
+    }
+
+    const percentage = Math.round(completed / size * 100);
+    if (percentage > this.percentage) {
+      this.percentage = percentage;
+      this.notify();
+    }
+  }
+
+  destroy() {
+    this.walker = null;
   }
 }
 
@@ -401,7 +451,9 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   async audit() {
     const doc = await this.getDocument();
     const report = new Map();
-    getAudit(doc, report);
+    this._auditProgress = new AuditProgress(this);
+    getAudit(doc, report, this._auditProgress);
+    this._auditProgress.setTotal(report.size);
     await Promise.all(report.values());
 
     const ancestries = [];
@@ -431,10 +483,15 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     this._auditing = this.audit()
       // We do not want to block on audit request, instead fire "audit-event"
       // event when internal audit is finished or failed.
-      .then(ancestries => this.emit("audit-event", { ancestries }))
-      .catch(() => this.emit("audit-event", { error: true }))
+      .then(ancestries => this.emit("audit-event", {
+        type: "completed",
+        ancestries,
+      }))
+      .catch(() => this.emit("audit-event", { type: "error" }))
       .finally(() => {
         this._auditing = null;
+        this._auditProgress.destroy();
+        this._auditProgress = null;
       });
   },
 

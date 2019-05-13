@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Arg, RetVal, generateActorSpec, types} = require("devtools/shared/protocol");
+const {Arg, Option, RetVal, generateActorSpec, types} = require("devtools/shared/protocol");
 
 types.addDictType("available-breakpoint-group", {
   name: "string",
@@ -17,7 +17,73 @@ types.addDictType("available-breakpoint-event", {
 const threadSpec = generateActorSpec({
   typeName: "context",
 
+  events: {
+    newSource: {
+      source: Option(0, "source"),
+    },
+    progress: {
+      recording: Option(0, "json"),
+      executionPoint: Option(0, "json"),
+    },
+  },
+
   methods: {
+    attach: {
+      request: {
+        options: Arg(0, "json"),
+      },
+      response: RetVal("nullable:json"),
+    },
+    detach: {
+      response: {},
+    },
+    reconfigure: {
+      request: {
+        options: Arg(0, "json"),
+      },
+      response: {},
+    },
+    resume: {
+      request: {
+        resumeLimit: Arg(0, "nullable:json"),
+        rewind: Arg(1, "boolean"),
+      },
+      response: RetVal("nullable:json"),
+    },
+    frames: {
+      request: {
+        start: Arg(0, "number"),
+        count: Arg(1, "number"),
+      },
+      response: RetVal("json"),
+    },
+    interrupt: {
+      request: {
+        when: Arg(0, "json"),
+      },
+      response: RetVal("array:json"),
+    },
+    sources: {
+      response: RetVal("array:json"),
+    },
+    skipBreakpoints: {
+      request: {
+        skip: Arg(0, "json"),
+      },
+      response: {
+        skip: Arg(0, "json"),
+      },
+    },
+    threadGrips: {
+      request: {
+        actors: Arg(0, "array:string"),
+      },
+      response: RetVal("json"),
+    },
+    dumpThread: {
+      request: {},
+      response: RetVal("json"),
+    },
     setBreakpoint: {
       request: {
         location: Arg(0, "json"),
