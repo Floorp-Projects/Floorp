@@ -7,6 +7,10 @@
 <?xml-stylesheet href="chrome://mozapps/content/extensions/extensions.css"?>
 <?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
 
+<!-- Used for the modals related to the inline options_page XUL browser -->
+<?xml-stylesheet href="chrome://global/content/tabprompts.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/tabprompts.css" type="text/css"?>
+
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
