@@ -25,8 +25,16 @@ impl<'a> Bytes<'a> {
     }
 
     #[inline]
-    pub fn bump(&mut self) {
+    pub unsafe fn bump(&mut self) {
+        debug_assert!(self.pos + 1 <= self.slice.len(), "overflow");
         self.pos += 1;
+    }
+
+    #[allow(unused)]
+    #[inline]
+    pub unsafe fn advance(&mut self, n: usize) {
+        debug_assert!(self.pos + n <= self.slice.len(), "overflow");
+        self.pos += n;
     }
 
     #[inline]
@@ -36,21 +44,22 @@ impl<'a> Bytes<'a> {
 
     #[inline]
     pub fn slice(&mut self) -> &'a [u8] {
-        self.slice_skip(0)
+        // not moving position at all, so it's safe
+        unsafe {
+            self.slice_skip(0)
+        }
     }
 
     #[inline]
-    pub fn slice_skip(&mut self, skip: usize) -> &'a [u8] {
+    pub unsafe fn slice_skip(&mut self, skip: usize) -> &'a [u8] {
         debug_assert!(self.pos >= skip);
         let head_pos = self.pos - skip;
-        unsafe {
-            let ptr = self.slice.as_ptr();
-            let head = slice::from_raw_parts(ptr, head_pos);
-            let tail = slice::from_raw_parts(ptr.offset(self.pos as isize), self.slice.len() - self.pos);
-            self.pos = 0;
-            self.slice = tail;
-            head
-        }
+        let ptr = self.slice.as_ptr();
+        let head = slice::from_raw_parts(ptr, head_pos);
+        let tail = slice::from_raw_parts(ptr.offset(self.pos as isize), self.slice.len() - self.pos);
+        self.pos = 0;
+        self.slice = tail;
+        head
     }
 
     #[inline]
@@ -60,6 +69,13 @@ impl<'a> Bytes<'a> {
         } else {
             None
         }
+    }
+}
+
+impl<'a> AsRef<[u8]> for Bytes<'a> {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        &self.slice[self.pos..]
     }
 }
 
