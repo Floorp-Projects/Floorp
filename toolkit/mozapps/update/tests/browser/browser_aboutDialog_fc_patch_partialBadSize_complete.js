@@ -21,8 +21,8 @@ add_task(async function aboutDialog_foregroundCheck_partialBadSize_complete() {
                        internalResult: "0"};
   }
 
-  let updateParams = "&invalidPartialSize=1";
-  await runAboutDialogUpdateTest(updateParams, false, [
+  let params = {queryString: "&invalidPartialSize=1"};
+  await runAboutDialogUpdateTest(params, [
     {
       panelId: "checkingForUpdates",
       checkActiveUpdate: null,
