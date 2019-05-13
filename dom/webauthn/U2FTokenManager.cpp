@@ -16,7 +16,7 @@
 #include "mozilla/Unused.h"
 #include "nsTextFormatter.h"
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/dom/AndroidWebAuthnTokenManager.h"
 #endif
 
@@ -268,7 +268,7 @@ RefPtr<U2FTokenTransport> U2FTokenManager::GetTokenManagerImpl() {
 
   auto pm = U2FPrefManager::Get();
 
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   // On Android, prefer the platform support if enabled.
   if (pm->GetAndroidFido2Enabled()) {
     return AndroidWebAuthnTokenManager::GetInstance();
