@@ -5,7 +5,6 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const Services = require("Services");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const {
   flexboxSpec,
@@ -22,9 +21,6 @@ loader.lazyRequireGetter(this, "getCSSStyleRules", "devtools/shared/inspector/cs
 loader.lazyRequireGetter(this, "isCssPropertyKnown", "devtools/server/actors/css-properties", true);
 loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing-utils", true);
 loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
-
-const SUBGRID_ENABLED =
-  Services.prefs.getBoolPref("layout.css.grid-template-subgrid-value.enabled");
 
 /**
  * Set of actors the expose the CSS layout information to the devtools protocol clients.
@@ -262,28 +258,13 @@ const GridActor = ActorClassWithSpec(gridSpec, {
 
     this.containerEl = containerEl;
     this.walker = layoutActor.walker;
-    this.computedStyle = CssLogic.getComputedStyle(this.containerEl);
-
-    if (SUBGRID_ENABLED) {
-      const { gridTemplateColumns, gridTemplateRows } = this.computedStyle;
-      this.isSubgrid = gridTemplateRows === "subgrid" ||
-                       gridTemplateColumns === "subgrid";
-
-      if (this.isSubgrid) {
-        // The parent grid container for the subgrid.
-        this.parentEl = findGridParentContainerForNode(this.containerEl, this.walker);
-      }
-    }
   },
 
   destroy() {
     Actor.prototype.destroy.call(this);
 
-    this.computedStyle = null;
     this.containerEl = null;
     this.gridFragments = null;
-    this.isSubgrid = null;
-    this.parentEl = null;
     this.walker = null;
   },
 
@@ -294,7 +275,7 @@ const GridActor = ActorClassWithSpec(gridSpec, {
     this.gridFragments = getStringifiableFragments(gridFragments);
 
     // Record writing mode and text direction for use by the grid outline.
-    const { direction, writingMode } = this.computedStyle;
+    const { direction, writingMode } = CssLogic.getComputedStyle(this.containerEl);
 
     const form = {
       actor: this.actorID,
@@ -302,17 +283,6 @@ const GridActor = ActorClassWithSpec(gridSpec, {
       gridFragments: this.gridFragments,
       writingMode,
     };
-
-    if (SUBGRID_ENABLED && this.isSubgrid) {
-      form.isSubgrid = this.isSubgrid;
-
-      // If the WalkerActor already knows the parent grid element, then also return its
-      // ActorID so we avoid the client from doing another round trip to get it in many
-      // cases.
-      if (this.walker.hasNode(this.parentEl)) {
-        form.parentGridNodeActorID = this.walker.getNode(this.parentEl).actorID;
-      }
-    }
 
     // If the WalkerActor already knows the container element, then also return its
     // ActorID so we avoid the client from doing another round trip to get it in many

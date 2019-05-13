@@ -113,13 +113,6 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
   }
 
   /**
-   * Get whether or not the grid is a subgrid.
-   */
-  get isSubgrid() {
-    return !!this._form.isSubgrid;
-  }
-
-  /**
    * Get the writing mode of the grid container.
    * Added in Firefox 60.
    */
@@ -129,30 +122,6 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
     }
 
     return this._form.writingMode;
-  }
-
-  /**
-   * For a subgrid, returns the NodeFront of the parent grid container.
-   *
-   * @param  {WalkerFront} walker
-   *         Client side of the DOM walker.
-   * @return {NodeFront} of the parent grid container.
-   */
-  async getParentGridNode(walker) {
-    if (this._form.parentGridNodeActorID) {
-      return this.conn.getActor(this._form.parentGridNodeActorID);
-    }
-
-    // If the parentGridNodeActorID wasn't set, that means the nodeFront for this
-    // subgrid's parent grid container hasn't been seen by the walker yet.
-    // So, get the nodeFront from the server.
-    try {
-      return await walker.getNodeFromActor(this.actorID, ["parentEl"]);
-    } catch (e) {
-      // This call might fail if called asynchrously after the toolbox is finished
-      // closing.
-      return null;
-    }
   }
 }
 
