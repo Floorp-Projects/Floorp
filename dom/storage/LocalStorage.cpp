@@ -54,9 +54,8 @@ LocalStorage::LocalStorage(nsPIDOMWindowInner* aWindow,
                            LocalStorageManager* aManager,
                            LocalStorageCache* aCache,
                            const nsAString& aDocumentURI,
-                           nsIPrincipal* aPrincipal,
-                           nsIPrincipal* aStoragePrincipal, bool aIsPrivate)
-    : Storage(aWindow, aPrincipal, aStoragePrincipal),
+                           nsIPrincipal* aPrincipal, bool aIsPrivate)
+    : Storage(aWindow, aPrincipal),
       mManager(aManager),
       mCache(aCache),
       mDocumentURI(aDocumentURI),
@@ -164,9 +163,9 @@ void LocalStorage::Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
 
 void LocalStorage::OnChange(const nsAString& aKey, const nsAString& aOldValue,
                             const nsAString& aNewValue) {
-  NotifyChange(/* aStorage */ this, StoragePrincipal(), aKey, aOldValue,
-               aNewValue, /* aStorageType */ u"localStorage", mDocumentURI,
-               mIsPrivate, /* aImmediateDispatch */ false);
+  NotifyChange(/* aStorage */ this, Principal(), aKey, aOldValue, aNewValue,
+               /* aStorageType */ u"localStorage", mDocumentURI, mIsPrivate,
+               /* aImmediateDispatch */ false);
 }
 
 void LocalStorage::ApplyEvent(StorageEvent* aStorageEvent) {

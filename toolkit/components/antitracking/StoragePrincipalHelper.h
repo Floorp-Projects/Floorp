@@ -121,10 +121,6 @@ class nsIPrincipal;
 
 namespace mozilla {
 
-namespace ipc {
-class PrincipalInfo;
-}
-
 class OriginAttributes;
 
 class StoragePrincipalHelper final {
@@ -134,10 +130,6 @@ class StoragePrincipalHelper final {
 
   static nsresult PrepareOriginAttributes(nsIChannel* aChannel,
                                           OriginAttributes& aOriginAttributes);
-
-  static bool VerifyValidStoragePrincipalInfoForPrincipalInfo(
-      const mozilla::ipc::PrincipalInfo& aStoragePrincipalInfo,
-      const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 };
 
 }  // namespace mozilla

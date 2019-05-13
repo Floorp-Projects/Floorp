@@ -35,7 +35,7 @@ SessionStorage::SessionStorage(nsPIDOMWindowInner* aWindow,
                                SessionStorageCache* aCache,
                                SessionStorageManager* aManager,
                                const nsAString& aDocumentURI, bool aIsPrivate)
-    : Storage(aWindow, aPrincipal, aPrincipal),
+    : Storage(aWindow, aPrincipal),
       mCache(aCache),
       mManager(aManager),
       mDocumentURI(aDocumentURI),
@@ -46,7 +46,6 @@ SessionStorage::SessionStorage(nsPIDOMWindowInner* aWindow,
 SessionStorage::~SessionStorage() {}
 
 already_AddRefed<SessionStorage> SessionStorage::Clone() const {
-  MOZ_ASSERT(Principal() == StoragePrincipal());
   RefPtr<SessionStorage> storage =
       new SessionStorage(GetParentObject(), Principal(), mCache, mManager,
                          mDocumentURI, mIsPrivate);

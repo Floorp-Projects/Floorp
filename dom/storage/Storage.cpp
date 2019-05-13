@@ -16,8 +16,7 @@ namespace dom {
 
 static const char kStorageEnabled[] = "dom.storage.enabled";
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Storage, mWindow, mPrincipal,
-                                      mStoragePrincipal)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Storage, mWindow, mPrincipal)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Storage)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(Storage, LastRelease())
@@ -27,12 +26,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Storage)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
-                 nsIPrincipal* aStoragePrincipal)
-    : mWindow(aWindow),
-      mPrincipal(aPrincipal),
-      mStoragePrincipal(aStoragePrincipal),
-      mIsSessionOnly(false) {
+Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
+    : mWindow(aWindow), mPrincipal(aPrincipal), mIsSessionOnly(false) {
   MOZ_ASSERT(aPrincipal);
 
   if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
@@ -50,7 +45,7 @@ Storage::Storage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
   }
 }
 
-Storage::~Storage() = default;
+Storage::~Storage() {}
 
 /* static */
 bool Storage::StoragePrefIsEnabled() {

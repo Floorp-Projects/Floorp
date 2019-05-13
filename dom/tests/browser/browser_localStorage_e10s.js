@@ -107,7 +107,7 @@ async function verifyTabPreload(knownTab, expectStorageExists) {
       if (Services.lsm.nextGenLocalStorageEnabled) {
         return Services.lsm.isPreloaded(principal);
       }
-      return !!Services.domStorageManager.getStorage(null, principal, principal);
+      return !!Services.domStorageManager.getStorage(null, principal);
     });
   is(storageExists, expectStorageExists, "Storage existence === preload");
 }

@@ -32,8 +32,7 @@ class LocalStorage final : public Storage, public nsSupportsWeakReference {
 
   LocalStorage(nsPIDOMWindowInner* aWindow, LocalStorageManager* aManager,
                LocalStorageCache* aCache, const nsAString& aDocumentURI,
-               nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
-               bool aIsPrivate);
+               nsIPrincipal* aPrincipal, bool aIsPrivate);
 
   bool IsForkOf(const Storage* aOther) const override;
 

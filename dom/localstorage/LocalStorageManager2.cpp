@@ -191,19 +191,16 @@ LocalStorageManager2::PrecacheStorage(nsIPrincipal* aPrincipal,
 NS_IMETHODIMP
 LocalStorageManager2::CreateStorage(mozIDOMWindow* aWindow,
                                     nsIPrincipal* aPrincipal,
-                                    nsIPrincipal* aStoragePrincipal,
                                     const nsAString& aDocumentURI,
                                     bool aPrivate, Storage** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aStoragePrincipal);
   MOZ_ASSERT(_retval);
 
   nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
   RefPtr<LSObject> object;
-  nsresult rv = LSObject::CreateForPrincipal(inner, aPrincipal,
-                                             aStoragePrincipal, aDocumentURI,
+  nsresult rv = LSObject::CreateForPrincipal(inner, aPrincipal, aDocumentURI,
                                              aPrivate, getter_AddRefs(object));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -215,12 +212,10 @@ LocalStorageManager2::CreateStorage(mozIDOMWindow* aWindow,
 
 NS_IMETHODIMP
 LocalStorageManager2::GetStorage(mozIDOMWindow* aWindow,
-                                 nsIPrincipal* aPrincipal,
-                                 nsIPrincipal* aStoragePrincipal, bool aPrivate,
+                                 nsIPrincipal* aPrincipal, bool aPrivate,
                                  Storage** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aStoragePrincipal);
   MOZ_ASSERT(_retval);
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -288,7 +283,6 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
 
   LSRequestCommonParams commonParams;
   commonParams.principalInfo() = *principalInfo;
-  commonParams.storagePrincipalInfo() = *principalInfo;
   commonParams.originKey() = originKey;
 
   LSRequestPreloadDatastoreParams params(commonParams);
