@@ -77,7 +77,7 @@ nsresult SVGMPathElement::BindToTree(Document* aDocument, nsIContent* aParent,
       SVGMPathElementBase::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDocument) {
+  if (IsInComposedDoc()) {
     const nsAttrValue* hrefAttrValue =
         HasAttr(kNameSpaceID_None, nsGkAtoms::href)
             ? mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_None)
@@ -103,7 +103,7 @@ bool SVGMPathElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       aNamespaceID, aAttribute, aValue, aMaybeScriptedPrincipal, aResult);
   if ((aNamespaceID == kNameSpaceID_XLink ||
        aNamespaceID == kNameSpaceID_None) &&
-      aAttribute == nsGkAtoms::href && IsInUncomposedDoc()) {
+      aAttribute == nsGkAtoms::href && IsInComposedDoc()) {
     // Note: If we fail the IsInDoc call, it's ok -- we'll update the target
     // on next BindToTree call.
 
