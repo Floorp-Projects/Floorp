@@ -1921,7 +1921,7 @@ static bool InitTypeConstructor(
     const JSFunctionSpec* instanceFns, const JSPropertySpec* instanceProps,
     MutableHandleObject typeProto, MutableHandleObject dataProto) {
   JSFunction* fun = js::DefineFunctionWithReserved(
-      cx, parent, spec.name, spec.call.op, spec.nargs, spec.flags);
+      cx, parent, spec.name.string(), spec.call.op, spec.nargs, spec.flags);
   if (!fun) {
     return false;
   }
