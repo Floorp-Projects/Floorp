@@ -153,9 +153,8 @@ static const char* gPrintFrameTypeStr[] = {"kNoFrames", "kFramesAsIs",
                                            "kSelectedFrame", "kEachFrameSep"};
 static const char* gFrameHowToEnableStr[] = {
     "kFrameEnableNone", "kFrameEnableAll", "kFrameEnableAsIsAndEach"};
-static const char* gPrintRangeStr[] = {"kRangeAllPages",
-                                       "kRangeSpecifiedPageRange",
-                                       "kRangeSelection", "kRangeFocusFrame"};
+static const char* gPrintRangeStr[] = {
+    "kRangeAllPages", "kRangeSpecifiedPageRange", "kRangeSelection"};
 
 // This processes the selection on aOrigDoc and creates an inverted selection on
 // aDoc, which it then deletes. If the start or end of the inverted selection
