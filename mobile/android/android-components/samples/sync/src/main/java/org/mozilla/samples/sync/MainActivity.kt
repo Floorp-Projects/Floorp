@@ -321,8 +321,8 @@ class MainActivity :
                 } else {
                     var bookmarksRootAndChildren = "Bookmarks\n"
                     fun addTreeNode(node: BookmarkNode, depth: Int) {
-                        val desc = " ".repeat(depth * 2) + "${node.title} - ${node.url} (${node.guid})\n";
-                        bookmarksRootAndChildren += desc;
+                        val desc = " ".repeat(depth * 2) + "${node.title} - ${node.url} (${node.guid})\n"
+                        bookmarksRootAndChildren += desc
                         node.children?.forEach {
                             addTreeNode(it, depth + 1)
                         }
