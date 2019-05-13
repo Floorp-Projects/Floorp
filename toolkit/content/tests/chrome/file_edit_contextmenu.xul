@@ -25,4 +25,6 @@
 
 <html:textarea />
 
+<textbox is="search-textbox"/>
+
 </window>
