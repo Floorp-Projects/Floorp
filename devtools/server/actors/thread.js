@@ -13,7 +13,7 @@ const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, dumpn } = DevToolsUtils;
-const { threadSpec } = require("devtools/shared/specs/script");
+const { threadSpec } = require("devtools/shared/specs/thread");
 const {
   getAvailableEventBreakpoints,
 } = require("devtools/server/actors/utils/event-breakpoints");
