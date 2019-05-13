@@ -26,12 +26,12 @@ add_task(async function() {
 
   info("clicking on pocket library button");
   let pocketPagePromise = BrowserTestUtils.waitForNewTab(gBrowser,
-    "https://example.com/browser/browser/components/pocket/test/pocket_actions_test.html/?src=ff_ext");
+    "https://example.com/browser/browser/components/pocket/test/pocket_actions_test.html/firefox_learnmore?src=ff_library");
   pocketLibraryButton.click();
   await pocketPagePromise;
 
   is(gBrowser.currentURI.spec,
-    "https://example.com/browser/browser/components/pocket/test/pocket_actions_test.html/?src=ff_ext",
+    "https://example.com/browser/browser/components/pocket/test/pocket_actions_test.html/firefox_learnmore?src=ff_library",
     "pocket button in library menu button opens correct page");
 
   BrowserTestUtils.removeTab(tab);
