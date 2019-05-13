@@ -75,7 +75,7 @@ body:not(.neterror) #netErrorButtonContainer {
   display: none;
 }
 
-#errorTryAgain {
+#netErrorButtonContainer > .try-again {
   margin-top: 1.2em;
 }
 
@@ -91,11 +91,8 @@ body:not(.captiveportal) #openPortalLoginPageButton {
   display: none;
 }
 
-body:not(.clockSkewError) #errorTryAgain {
-  display: none;
-}
-
-body:not(.clockSkewError) #advancedPanelErrorTryAgain {
+body:not(.clockSkewError) #certErrorAndCaptivePortalButtonContainer > .try-again,
+body:not(.clockSkewError) #advancedPanelContainer .try-again {
   display: none;
 }
 
@@ -233,8 +230,7 @@ body:not(.neterror) #advancedButton {
   display: none;
 }
 
-.clockSkewError #advancedPanelErrorTryAgain,
-.clockSkewError #errorTryAgain {
+.clockSkewError .try-again {
   display: block;
   margin-top: 0.3em;
 }
@@ -247,7 +243,7 @@ body:not(.neterror) #advancedButton {
   display: none;
 }
 
-.malformedURI #errorTryAgain {
+.malformedURI .try-again {
   display: none;
 }
 
