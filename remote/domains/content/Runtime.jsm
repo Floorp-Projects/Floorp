@@ -78,9 +78,24 @@ class Runtime extends ContentProcessDomain {
   }
 
   callFunctionOn(request) {
-    const context = this.contexts.get(request.executionContextId);
-    if (!context) {
-      throw new Error(`Unable to find execution context with id: ${request.executionContextId}`);
+    let context = null;
+    // When an `objectId` is passed, we want to execute the function of a given object
+    // So we first have to find its ExecutionContext
+    if (request.objectId) {
+      for (const ctx of this.contexts.values()) {
+        if (ctx.hasRemoteObject(request.objectId)) {
+          context = ctx;
+          break;
+        }
+      }
+      if (!context) {
+        throw new Error(`Unable to get the context for object with id: ${request.objectId}`);
+      }
+    } else {
+      context = this.contexts.get(request.executionContextId);
+      if (!context) {
+        throw new Error(`Unable to find execution context with id: ${request.executionContextId}`);
+      }
     }
     if (typeof(request.functionDeclaration) != "string") {
       throw new Error("Expect 'functionDeclaration' attribute to be passed and be a string");
