@@ -2462,6 +2462,13 @@ MOZ_XML_GetMismatchedTag(XML_Parser parser)
 }
 /* END MOZILLA CHANGE */
 
+/* BEGIN MOZILLA CHANGE (Report whether the parser is currently expanding an entity) */
+XML_Bool XMLCALL
+MOZ_XML_ProcessingEntityValue(XML_Parser parser) {
+  return openInternalEntities != NULL;
+}
+/* END MOZILLA CHANGE */
+
 /* Initially tag->rawName always points into the parse buffer;
    for those TAG instances opened while the current parse buffer was
    processed, and not yet closed, we need to store tag->rawName in a more
