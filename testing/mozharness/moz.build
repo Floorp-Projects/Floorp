@@ -5,4 +5,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Release Engineering", "Mozharness")
+    BUG_COMPONENT = ("Release Engineering", "Applications: MozharnessCore")
