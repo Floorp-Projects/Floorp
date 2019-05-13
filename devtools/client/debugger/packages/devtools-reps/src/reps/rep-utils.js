@@ -12,7 +12,7 @@ const validProtocols = /(http|https|ftp|data|resource|chrome):/i;
 //                       character so we can include it as part of the text
 //                       preceding the match. We lack look-behind matching.
 //  ^|                   The URL can start at the beginning of the string.
-//  [\s(,;'"`]           Or whitespace or some punctuation that does not imply
+//  [\s(,;'"`“]          Or whitespace or some punctuation that does not imply
 //                       a context which would preclude a URL.
 // )
 //
@@ -53,7 +53,7 @@ const validProtocols = /(http|https|ftp|data|resource|chrome):/i;
 //                       (so also '%')
 // )
 // eslint-disable-next-line max-len
-const urlRegex = /(^|[\s(,;'"`])((?:https?:\/\/|www\d{0,3}[.][a-z0-9.\-]{2,249}|[a-z0-9.\-]{2,250}[.][a-z]{2,4}\/)[-\w.!~*'();,/?:@&=+$#%]*)/im;
+const urlRegex = /(^|[\s(,;'"`“])((?:https?:\/\/|www\d{0,3}[.][a-z0-9.\-]{2,249}|[a-z0-9.\-]{2,250}[.][a-z]{2,4}\/)[-\w.!~*'();,/?:@&=+$#%]*)/im;
 
 // Set of terminators that are likely to have been part of the context rather
 // than part of the URL and so should be uneaten. This is '(', ',', ';', plus

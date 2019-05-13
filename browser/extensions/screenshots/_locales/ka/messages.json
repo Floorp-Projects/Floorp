@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "ჩამოტვირთვა"
   },
+  "downloadScreenshotTitle": {
+    "message": "ეკრანის სურათის ჩამოტვირთვა"
+  },
   "downloadOnlyNotice": {
     "message": "თქვენ ახლა იმყოფებით „მხოლოდ ჩამოტვირთვის“ რეჟიმში."
   },
@@ -45,7 +48,7 @@
     "message": "მესამე მხარის ფუნთუშების შენახვა, შეზღუდულია."
   },
   "downloadOnlyDetailsNeverRemember": {
-    "message": "მითითებულია, რომ “არასოდეს დაიმახსოვრებს ისტორიას” ბრაუზერი."
+    "message": "მითითებულია, რომ ბრაუზერი „არასოდეს დაიმახსოვრებს ისტორიას“."
   },
   "downloadOnlyDetailsESR": {
     "message": "თქვენ იყენებთ Firefox ESR-ს."
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "ასლი"
+  },
+  "copyScreenshotTitle": {
+    "message": "სურათის ასლის აღება"
   },
   "notificationImageCopiedTitle": {
     "message": "სურათის ასლი მზადაა"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "გაუგებარია რა მოხდა. ისევ ცდით ხელახლა, თუ სხვა ვებგვერდს გადაუღებთ სურათს?"
   },
-  "tourBodyIntro": {
-    "message": "გადაიღეთ, შეინახეთ და გააზიარეთ ეკრანის სურათები Firefox-იდან გაუსვლელად."
+  "tourBodyIntroServerless": {
+    "message": "გადაიღეთ, გააკეთეთ ასლი და ჩამოტვირთეთ ეკრანის სურათები Firefox-იდან გაუსვლელად."
   },
   "tourHeaderPageAction": {
     "message": "შენახვის ახალი ხერხი"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "მარჯვენა ზედა კუთხეში არსებული ღილაკების საშუალებით, შეგიძლიათ გადაუღოთ სურათი ხილულ ნაწილს ან მთლიან გვერდს."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "როგორც გენებოთ"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "ამოჭრილი სურათები შეგიძლიათ განათავსოთ ინტერნეტში, მარტივად გასაზიარებლად, ან ჩამოტვირთოთ კომპიუტერში. ასევე, „ჩემი გადაღებულების“ ღილაკზე დაწკაპებით, იხილავთ თქვენ მიერ გადაღებულ ყველა სურათს."
-  },
-  "tourHeaderAccounts": {
-    "message": "თან წაიყოლეთ Screenshots"
-  },
-  "tourBodyAccounts": {
-    "message": "შედით Firefox-ანგარიშზე თქვენს გადაღებულ სურათებთან წვდომის მისაღებად ყველა თქვენი მოწყობილობიდან და სასურველი სურათების სამუდამოდ შესანახად."
   },
   "tourSkip": {
     "message": "გამოტოვება"

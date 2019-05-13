@@ -86,8 +86,11 @@ function onMultiE10sUpdated() {
 }
 
 function connectRuntime(id) {
+  // Create a random connection id to track the connection attempt in telemetry.
+  const connectionId = (Math.random() * 100000) | 0;
+
   return async (dispatch, getState) => {
-    dispatch({ type: CONNECT_RUNTIME_START, id });
+    dispatch({ type: CONNECT_RUNTIME_START, connectionId, id });
 
     // The preferences test-connection-timing-out-delay and test-connection-cancel-delay
     // don't have a default value but will be overridden during our tests.
@@ -101,7 +104,7 @@ function connectRuntime(id) {
       // If connecting to the runtime takes time over CONNECTION_TIMING_OUT_DELAY,
       // we assume the connection prompt is showing on the runtime, show a dialog
       // to let user know that.
-      dispatch({ type: CONNECT_RUNTIME_NOT_RESPONDING, id });
+      dispatch({ type: CONNECT_RUNTIME_NOT_RESPONDING, connectionId, id });
     }, connectionTimingOutDelay);
     const connectionCancelTimer = setTimeout(() => {
       // Connect button of the runtime will be disabled during connection, but the status
@@ -109,7 +112,7 @@ function connectRuntime(id) {
       // possibility that the disabling continues unless page reloading, user will not be
       // able to click again. To avoid this, revert the connect button status after
       // CONNECTION_CANCEL_DELAY ms.
-      dispatch({ type: CONNECT_RUNTIME_CANCEL, id });
+      dispatch({ type: CONNECT_RUNTIME_CANCEL, connectionId, id });
     }, connectionCancelDelay);
 
     try {
@@ -183,6 +186,7 @@ function connectRuntime(id) {
 
       dispatch({
         type: CONNECT_RUNTIME_SUCCESS,
+        connectionId,
         runtime: {
           id,
           runtimeDetails,
@@ -190,7 +194,7 @@ function connectRuntime(id) {
         },
       });
     } catch (e) {
-      dispatch({ type: CONNECT_RUNTIME_FAILURE, id, error: e });
+      dispatch({ type: CONNECT_RUNTIME_FAILURE, connectionId, id, error: e });
     } finally {
       clearTimeout(connectionNotRespondingTimer);
       clearTimeout(connectionCancelTimer);

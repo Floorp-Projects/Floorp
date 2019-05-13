@@ -167,6 +167,11 @@ already_AddRefed<Response> Response::Constructor(
     const ResponseInit& aInit, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   if (aInit.mStatus < 200 || aInit.mStatus > 599) {
     aRv.ThrowRangeError<MSG_INVALID_RESPONSE_STATUSCODE_ERROR>();
     return nullptr;
@@ -209,10 +214,22 @@ already_AddRefed<Response> Response::Constructor(
         aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
         return nullptr;
       }
-    } else {
+
+      internalResponse->InitChannelInfo(info);
+    } else if (nsContentUtils::IsSystemPrincipal(global->PrincipalOrNull())) {
       info.InitFromChromeGlobal(global);
+
+      internalResponse->InitChannelInfo(info);
     }
-    internalResponse->InitChannelInfo(info);
+
+    /**
+     * The channel info is left uninitialized if neither the above `if` nor
+     * `else if` statements are executed; this could be because we're in a
+     * WebExtensions content script, where the global (i.e. `global`) is a
+     * wrapper, and the principal is an expanded principal. In this case,
+     * as far as I can tell, there's no way to get the security info, but we'd
+     * like the `Response` to be successfully constructed.
+     */
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);

@@ -756,7 +756,7 @@ impl JSJitSetterCallArgs {
 // Wrappers around things in jsglue.cpp
 
 pub struct RootedObjectVectorWrapper {
-    pub ptr: *mut JS::RootedObjectVector
+    pub ptr: *mut JS::PersistentRootedObjectVector
 }
 
 impl RootedObjectVectorWrapper {
@@ -935,7 +935,7 @@ impl JSNativeWrapper {
 }
 
 pub struct RootedIdVectorWrapper {
-    pub ptr: *mut JS::RootedIdVector
+    pub ptr: *mut JS::PersistentRootedIdVector
 }
 
 impl RootedIdVectorWrapper {
@@ -994,7 +994,7 @@ pub unsafe fn define_methods(cx: *mut JSContext, obj: JS::HandleObject,
                              -> Result<(), ()> {
     assert!({
         match methods.last() {
-            Some(&JSFunctionSpec { name, call, nargs, flags, selfHostedName }) => {
+            Some(&JSFunctionSpec { name: JSFunctionSpec_Name { string_: name, }, call, nargs, flags, selfHostedName }) => {
                 name.is_null() && call.is_zeroed() && nargs == 0 && flags == 0 &&
                 selfHostedName.is_null()
             },
@@ -1142,7 +1142,9 @@ impl JSFunctionSpec {
                  nargs: u16,
                  flags: u16) -> JSFunctionSpec {
         JSFunctionSpec {
-            name: name,
+            name: JSFunctionSpec_Name {
+                string_: name,
+            },
             call: JSNativeWrapper {
                 op: func,
                 info: ptr::null(),
@@ -1158,7 +1160,9 @@ impl JSFunctionSpec {
                  nargs: u16,
                  flags: u16) -> JSFunctionSpec {
         JSFunctionSpec {
-            name: name,
+            name: JSFunctionSpec_Name {
+                string_: name,
+            },
             call: JSNativeWrapper {
                 op: func,
                 info: ptr::null(),
@@ -1170,7 +1174,9 @@ impl JSFunctionSpec {
     }
 
     pub const NULL: JSFunctionSpec = JSFunctionSpec {
-        name: 0 as *const _,
+        name: JSFunctionSpec_Name {
+            string_: 0 as *const _,
+        },
         call: JSNativeWrapper {
             op: None,
             info: 0 as *const _,
@@ -1187,7 +1193,9 @@ impl JSPropertySpec {
                         -> JSPropertySpec {
         debug_assert_eq!(flags & !(JSPROP_ENUMERATE | JSPROP_PERMANENT), 0);
         JSPropertySpec {
-            name: name,
+            name: JSPropertySpec_Name {
+                string_: name,
+            },
             flags: flags,
             u: JSPropertySpec_AccessorsOrValue {
                 accessors: JSPropertySpec_AccessorsOrValue_Accessors {
@@ -1215,7 +1223,9 @@ impl JSPropertySpec {
                          -> JSPropertySpec {
         debug_assert_eq!(flags & !(JSPROP_ENUMERATE | JSPROP_PERMANENT), 0);
         JSPropertySpec {
-            name: name,
+            name: JSPropertySpec_Name {
+                string_: name,
+            },
             flags: flags,
             u: JSPropertySpec_AccessorsOrValue {
                 accessors: JSPropertySpec_AccessorsOrValue_Accessors {
@@ -1237,7 +1247,9 @@ impl JSPropertySpec {
     }
 
     pub const NULL: JSPropertySpec = JSPropertySpec {
-        name: 0 as *const _,
+        name: JSPropertySpec_Name {
+            string_: 0 as *const _,
+        },
         flags: 0,
         u: JSPropertySpec_AccessorsOrValue{
             accessors: JSPropertySpec_AccessorsOrValue_Accessors {
