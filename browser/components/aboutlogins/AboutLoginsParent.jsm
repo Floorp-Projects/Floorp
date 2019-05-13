@@ -20,6 +20,17 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
 
+const PRIVILEGED_PROCESS_PREF =
+  "browser.tabs.remote.separatePrivilegedContentProcess";
+const PRIVILEGED_PROCESS_ENABLED =
+  Services.prefs.getBoolPref(PRIVILEGED_PROCESS_PREF, false);
+
+// When the privileged content process is enabled, we expect about:logins
+// to load in it. Otherwise, it's in a normal web content process.
+const EXPECTED_ABOUTLOGINS_REMOTE_TYPE =
+  PRIVILEGED_PROCESS_ENABLED ? E10SUtils.PRIVILEGED_REMOTE_TYPE
+                             : E10SUtils.DEFAULT_REMOTE_TYPE;
+
 const isValidLogin = login => {
   return !(login.hostname || "").startsWith("chrome://");
 };
@@ -39,7 +50,7 @@ var AboutLoginsParent = {
   // Listeners are added in BrowserGlue.jsm
   receiveMessage(message) {
     // Only respond to messages sent from about:logins.
-    if (message.target.remoteType != E10SUtils.PRIVILEGED_REMOTE_TYPE ||
+    if (message.target.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE ||
         message.target.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN) {
       return;
     }
@@ -122,7 +133,7 @@ var AboutLoginsParent = {
   messageSubscribers(name, details) {
     let subscribers = ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers);
     for (let subscriber of subscribers) {
-      if (subscriber.remoteType != E10SUtils.PRIVILEGED_REMOTE_TYPE ||
+      if (subscriber.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE ||
           !subscriber.contentPrincipal ||
           subscriber.contentPrincipal.originNoSuffix != ABOUT_LOGINS_ORIGIN) {
         this._subscribers.delete(subscriber);
