@@ -21,7 +21,6 @@ import six
 import stat
 import sys
 import time
-import types
 
 from collections import (
     Iterable,
@@ -385,7 +384,7 @@ class ListMixin(object):
     def __add__(self, other):
         # Allow None and EmptyValue is a special case because it makes undefined
         # variable references in moz.build behave better.
-        other = [] if isinstance(other, (types.NoneType, EmptyValue)) else other
+        other = [] if isinstance(other, (type(None), EmptyValue)) else other
         if not isinstance(other, list):
             raise ValueError('Only lists can be appended to lists.')
 
@@ -394,7 +393,7 @@ class ListMixin(object):
         return new_list
 
     def __iadd__(self, other):
-        other = [] if isinstance(other, (types.NoneType, EmptyValue)) else other
+        other = [] if isinstance(other, (type(None), EmptyValue)) else other
         if not isinstance(other, list):
             raise ValueError('Only lists can be appended to lists.')
 
