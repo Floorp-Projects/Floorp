@@ -62,7 +62,7 @@ class ExecutionContext {
       return this._returnError(rv.throw);
     }
     return {
-      result: this._createRemoteObject(rv.return),
+      result: this._toRemoteObject(rv.return),
     };
   }
 
@@ -90,6 +90,34 @@ class ExecutionContext {
     };
   }
 
+  async callFunctionOn(functionDeclaration, callArguments = []) {
+    // First evaluate the function
+    const fun = this._debuggee.executeInGlobal("(" + functionDeclaration + ")");
+    if (!fun) {
+      return {
+        exceptionDetails: {
+          text: "Evaluation terminated!",
+        },
+      };
+    }
+    if (fun.throw) {
+      return this._returnError(fun.throw);
+    }
+
+    // Then map all input arguments, which are matching CDP's CallArguments type,
+    // into JS values
+    const args = callArguments.map(arg => this._fromCallArgument(arg));
+
+    // Finally, call the function with these arguments
+    const rv = fun.return.apply(null, args);
+    if (rv.throw) {
+      return this._returnError(rv.throw);
+    }
+    return {
+      result: this._toRemoteObject(rv.return),
+    };
+  }
+
   /**
    * Convert a given `Debugger.Object` to a JSON string.
    *
@@ -107,6 +135,43 @@ class ExecutionContext {
   }
 
   /**
+   * Given a CDP `CallArgument`, return a JS value that represent this argument.
+   * Note that `CallArgument` is actually very similar to `RemoteObject`
+   */
+  _fromCallArgument(arg) {
+    if (arg.objectId) {
+      if (!this._remoteObjects.has(arg.objectId)) {
+        throw new Error(`Cannot find object with ID: ${arg.objectId}`);
+      }
+      return this._remoteObjects.get(arg.objectId);
+    }
+    if (arg.unserializableValue) {
+      switch (arg.unserializableValue) {
+        case "Infinity": return Infinity;
+        case "-Infinity": return -Infinity;
+        case "-0": return -0;
+        case "NaN": return NaN;
+      }
+    }
+    return this._deserialize(arg.value);
+  }
+
+  /**
+   * Given a JS value, create a copy of it within the debugee compartment.
+   */
+  _deserialize(obj) {
+    if (typeof obj !== "object") {
+      return obj;
+    }
+    const result = this._debuggee.executeInGlobalWithBindings("JSON.parse(obj)",
+      {obj: JSON.stringify(obj)});
+    if (result.throw) {
+      throw new Error("Unable to deserialize object");
+    }
+    return result.return;
+  }
+
+  /**
    * Given a `Debugger.Object` object, return a JSON-serializable description of it
    * matching `RemoteObject` CDP type.
    *
@@ -115,7 +180,7 @@ class ExecutionContext {
    * @return {RemoteObject}
    *  The serialized description of the given object
    */
-  _createRemoteObject(debuggerObj) {
+  _toRemoteObject(debuggerObj) {
     // First handle all non-primitive values which are going to be wrapped by the
     // Debugger API into Debugger.Object instances
     if (debuggerObj instanceof Debugger.Object) {
