@@ -52,6 +52,13 @@ async function runTest() {
     ],
   });
 
+  const httpSwapEnabled =
+    SpecialPowers.getBoolPref(
+      "browser.tabs.remote.useHTTPResponseProcessSelection", true);
+  const parentIntercept =
+    SpecialPowers.getBoolPref(
+      "dom.serviceWorkers.parent_intercept", false);
+
   info(`Loading tab with page ${SW_REGISTER_PAGE_URL}`);
   const tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
@@ -103,8 +110,16 @@ async function runTest() {
   info('Waiting for the browser to stop')
   await BrowserTestUtils.browserStopped(tab.linkedBrowser);
 
-  Assert.equal(tab.linkedBrowser.remoteType, E10SUtils.WEB_REMOTE_TYPE,
-               `${CROSS_ORIGIN_URL} should load in a web-content process`);
+  if (httpSwapEnabled || parentIntercept) {
+    Assert.equal(tab.linkedBrowser.remoteType, E10SUtils.WEB_REMOTE_TYPE,
+                 `${CROSS_ORIGIN_URL} should load in a web-content process`);
+  } else {
+    // Because of child intercept the load will be served out of the file
+    // process if the channel itself doesn't trigger a process switch during
+    // redirect.
+    Assert.equal(tab.linkedBrowser.remoteType, E10SUtils.FILE_REMOTE_TYPE,
+                 `${CROSS_ORIGIN_URL} regrettably stays in the file process`);
+  }
 
   // Step 3: cleanup.
   info('Loading initial page to unregister all Service Workers');
