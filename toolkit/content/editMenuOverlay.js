@@ -64,7 +64,7 @@ window.addEventListener("contextmenu", (e) => {
   // Note that there's not a risk of e.target being XBL anonymous content for <textbox> (which manages
   // its own context menu), because e.target will be the XBL binding parent in that case.
   let needsContextMenu = e.target.ownerDocument == document && !e.defaultPrevented && (
-    (e.target.localName == "textarea" && e.target.namespaceURI == HTML_NS)
+    (["textarea", "input"].includes(e.target.localName) && e.target.namespaceURI == HTML_NS)
     || e.target.closest("textbox[is='search-textbox']")
   );
 
