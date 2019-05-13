@@ -3,15 +3,9 @@
 
 "use strict";
 
-// Test for About Dialog foreground check for updates
-// with an automatic download and update staging.
-add_task(async function aboutDialog_foregroundCheck_downloadAuto_staging() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_APP_UPDATE_STAGING_ENABLED, true],
-    ],
-  });
-
+// Test for about:preferences background check for updates
+// with about:preferences opened during downloading.
+add_task(async function aboutPrefs_backgroundCheck_downloading() {
   let downloadInfo = [];
   if (Services.prefs.getBoolPref(PREF_APP_UPDATE_BITS_ENABLED)) {
     downloadInfo[0] = {patchType: "partial",
@@ -23,13 +17,10 @@ add_task(async function aboutDialog_foregroundCheck_downloadAuto_staging() {
 
   // Since the partial should be successful specify an invalid size for the
   // complete update.
-  let params = {queryString: "&invalidCompleteSize=1"};
-  await runAboutDialogUpdateTest(params, [
-    {
-      panelId: "checkingForUpdates",
-      checkActiveUpdate: null,
-      continueFile: CONTINUE_CHECK,
-    },
+  let params = {queryString: "&useSlowDownloadMar=1&invalidCompleteSize=1",
+                backgroundUpdate: true,
+                waitForUpdateState: STATE_DOWNLOADING};
+  await runAboutPrefsUpdateTest(params, [
     {
       panelId: "downloading",
       checkActiveUpdate: {state: STATE_DOWNLOADING},
@@ -37,13 +28,8 @@ add_task(async function aboutDialog_foregroundCheck_downloadAuto_staging() {
       downloadInfo,
     },
     {
-      panelId: "applying",
-      checkActiveUpdate: {state: STATE_PENDING},
-      continueFile: CONTINUE_STAGING,
-    },
-    {
       panelId: "apply",
-      checkActiveUpdate: {state: STATE_APPLIED},
+      checkActiveUpdate: {state: STATE_PENDING},
       continueFile: null,
     },
   ]);
