@@ -73,7 +73,7 @@ function showPrefChangeContainer() {
     const event = new CustomEvent("AboutNetErrorResetPreferences", {bubbles: true});
     document.dispatchEvent(event);
   });
-  addAutofocus("prefResetButton", "beforeend");
+  addAutofocus("#prefResetButton", "beforeend");
 }
 
 function setupAdvancedButton() {
@@ -207,7 +207,7 @@ function initPage() {
     updateContainerPosition();
     return;
   }
-  addAutofocus("errorTryAgain");
+  addAutofocus("#netErrorButtonContainer > .try-again");
 
   document.body.classList.add("neterror");
 
@@ -283,7 +283,7 @@ function initPage() {
     // Remove the "Try again" button from pages that don't need it.
     // For HTTP/2 inadequate security or pages blocked by policy, trying
     // again won't help.
-    document.getElementById("errorTryAgain").style.display = "none";
+    document.getElementById("netErrorButtonContainer").style.display = "none";
 
     var container = document.getElementById("errorLongDesc");
     for (var span of container.querySelectorAll("span.hostname")) {
@@ -318,7 +318,7 @@ function initPageCaptivePortal() {
     RPMSendAsyncMessage("Browser:OpenCaptivePortalPage");
   });
 
-  addAutofocus("openPortalLoginPageButton");
+  addAutofocus("#openPortalLoginPageButton");
   setupAdvancedButton();
 
   // When the portal is freed, an event is sent by the parent process
@@ -334,7 +334,7 @@ function initPageCertError() {
     host.textContent = document.location.hostname;
   }
 
-  addAutofocus("returnButton");
+  addAutofocus("#returnButton");
   setupAdvancedButton();
 
   document.getElementById("learnMoreContainer").style.display = "block";
@@ -371,9 +371,9 @@ function initPageCertError() {
    can remove the button, add @autofocus, and reinsert the
    button.
 */
-function addAutofocus(buttonId, position = "afterbegin") {
+function addAutofocus(selector, position = "afterbegin") {
   if (window.top == window) {
-      var button = document.getElementById(buttonId);
+      var button = document.querySelector(selector);
       var parent = button.parentNode;
       button.remove();
       button.setAttribute("autofocus", "true");
@@ -381,15 +381,11 @@ function addAutofocus(buttonId, position = "afterbegin") {
   }
 }
 
-let errorTryAgain = document.getElementById("errorTryAgain");
-errorTryAgain.addEventListener("click", function() {
-  retryThis(this);
-});
-
-let advancedPanelErrorTryAgain = document.getElementById("advancedPanelErrorTryAgain");
-advancedPanelErrorTryAgain.addEventListener("click", function() {
-  retryThis(this);
-});
+for (let button of document.querySelectorAll(".try-again")) {
+  button.addEventListener("click", function() {
+    retryThis(this);
+  });
+}
 
 // Note: It is important to run the script this way, instead of using
 // an onload handler. This is because error pages are loaded as
