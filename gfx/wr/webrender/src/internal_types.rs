@@ -51,7 +51,7 @@ pub enum Filter {
     Saturate(f32),
     Sepia(f32),
     DropShadowStack(SmallVec<[Shadow; 1]>),
-    ColorMatrix([f32; 20]),
+    ColorMatrix(Box<[f32; 20]>),
     SrgbToLinear,
     LinearToSrgb,
     ComponentTransfer,
@@ -117,12 +117,14 @@ impl Filter {
 
                 true
             }
-            Filter::ColorMatrix(matrix) => {
-                matrix == [1.0, 0.0, 0.0, 0.0,
-                           0.0, 1.0, 0.0, 0.0,
-                           0.0, 0.0, 1.0, 0.0,
-                           0.0, 0.0, 0.0, 1.0,
-                           0.0, 0.0, 0.0, 0.0]
+            Filter::ColorMatrix(ref matrix) => {
+                **matrix == [
+                    1.0, 0.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0,
+                    0.0, 0.0, 0.0, 0.0
+                ]
             }
             Filter::SrgbToLinear |
             Filter::LinearToSrgb |
@@ -144,7 +146,7 @@ impl From<FilterOp> for Filter {
             FilterOp::Opacity(binding, opacity) => Filter::Opacity(binding, opacity),
             FilterOp::Saturate(s) => Filter::Saturate(s),
             FilterOp::Sepia(s) => Filter::Sepia(s),
-            FilterOp::ColorMatrix(mat) => Filter::ColorMatrix(mat),
+            FilterOp::ColorMatrix(mat) => Filter::ColorMatrix(Box::new(mat)),
             FilterOp::SrgbToLinear => Filter::SrgbToLinear,
             FilterOp::LinearToSrgb => Filter::LinearToSrgb,
             FilterOp::ComponentTransfer => Filter::ComponentTransfer,
