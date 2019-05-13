@@ -117,6 +117,11 @@ void BrowserBridgeChild::Activate() { Unused << SendActivate(); }
 
 void BrowserBridgeChild::Deactivate() { Unused << SendDeactivate(); }
 
+void BrowserBridgeChild::SetIsUnderHiddenEmbedderElement(
+    bool aIsUnderHiddenEmbedderElement) {
+  Unused << SendSetIsUnderHiddenEmbedderElement(aIsUnderHiddenEmbedderElement);
+}
+
 /*static*/
 BrowserBridgeChild* BrowserBridgeChild::GetFrom(nsFrameLoader* aFrameLoader) {
   if (!aFrameLoader) {

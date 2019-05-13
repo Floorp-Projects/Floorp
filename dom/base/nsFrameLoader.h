@@ -128,6 +128,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   }
   nsresult CreateStaticClone(nsFrameLoader* aDest);
   nsresult UpdatePositionAndSize(nsSubDocumentFrame* aIFrame);
+  void SendIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
   // WebIDL methods
 

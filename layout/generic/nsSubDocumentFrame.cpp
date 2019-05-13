@@ -160,9 +160,11 @@ void nsSubDocumentFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 void nsSubDocumentFrame::PropagateIsUnderHiddenEmbedderElementToSubView(
     bool aIsUnderHiddenEmbedderElement) {
-  // FIXME: Bug 1518919 - In the case where we have mFrameLoader and its
-  // IsRemoteFrame() is true, the iframe is out-of-process iframe, so we need
-  // to notify the change via nsFrameLoader.
+  if (mFrameLoader && mFrameLoader->IsRemoteFrame()) {
+    mFrameLoader->SendIsUnderHiddenEmbedderElement(
+        aIsUnderHiddenEmbedderElement);
+    return;
+  }
 
   if (!mInnerView) {
     return;
