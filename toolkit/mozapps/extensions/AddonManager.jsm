@@ -3857,9 +3857,13 @@ AMTelemetry = {
    *        addonsManager.action object of the Events.yaml file.
    * @param {string} opts.action The identifier for the action.
    * @param {string} opts.value An optional value for the action.
-   * @param {AddonWrapper} opts.addon
-   *        An optional add-on object related to the event. Passing this will
-   *        set extra.addonId and extra.type based on the add-on.
+   * @param {object} opts.addon
+   *        An optional object with the "id" and "type" properties, for example
+   *        an AddonWrapper object. Passing this will set some extra properties.
+   * @param {string} opts.addon.id
+   *        The add-on ID to assign to extra.addonId.
+   * @param {string} opts.addon.type
+   *        The add-on type to assign to extra.type.
    * @param {string} opts.view The current view, when object is aboutAddons.
    * @param {object} opts.extra
    *        The extra data to be sent, all keys must be registered in the
