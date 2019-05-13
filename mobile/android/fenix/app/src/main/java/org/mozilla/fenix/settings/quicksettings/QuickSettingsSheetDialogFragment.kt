@@ -36,6 +36,7 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import java.net.MalformedURLException
 import java.net.URL
 import kotlin.coroutines.CoroutineContext
@@ -167,6 +168,12 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
                 when (it) {
                     is QuickSettingsAction.SelectBlockedByAndroid -> {
                         requestPermissions(it.permissions, REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS)
+                    }
+                    is QuickSettingsAction.SelectTrackingProtectionSettings -> {
+                        context?.let {
+                            ItsNotBrokenSnack(it).showSnackbar("2422")
+                        }
+                        dismiss()
                     }
                     is QuickSettingsAction.SelectReportProblem -> {
                         launch(Dispatchers.Main) {

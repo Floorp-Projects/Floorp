@@ -43,7 +43,7 @@ class QuickSettingsUIView(
     private val securityInfoLabel: TextView
     private val urlLabel: TextView
     private val trackingProtectionSwitch: Switch
-    private val reportProblemAction: TextView
+    private val trackingProtectionAction: TextView
     private val cameraActionLabel: TextView
     private val cameraLabel: TextView
     private val microphoneActionLabel: TextView
@@ -60,7 +60,7 @@ class QuickSettingsUIView(
         urlLabel = view.findViewById<AppCompatTextView>(R.id.url)
         securityInfoLabel = view.findViewById<AppCompatTextView>(R.id.security_info)
         trackingProtectionSwitch = view.findViewById(R.id.tracking_protection)
-        reportProblemAction = view.findViewById(R.id.report_problem)
+        trackingProtectionAction = view.findViewById(R.id.tracking_protection_action)
         cameraActionLabel = view.findViewById<AppCompatTextView>(R.id.camera_action_label)
         cameraLabel = view.findViewById<AppCompatTextView>(R.id.camera_icon)
         microphoneActionLabel = view.findViewById<AppCompatTextView>(R.id.microphone_action_label)
@@ -76,7 +76,7 @@ class QuickSettingsUIView(
             is QuickSettingsState.Mode.Normal -> {
                 bindUrl(state.mode.url)
                 bindSecurityInfo(state.mode.isSecured)
-                bindReportProblemAction(state.mode.url)
+                bindTrackingProtectionAction(state.mode.url)
                 bindTrackingProtectionInfo(state.mode.isTrackingProtectionOn)
                 bindPhoneFeatureItem(CAMERA, state.mode.sitePermissions)
                 bindPhoneFeatureItem(MICROPHONE, state.mode.sitePermissions)
@@ -97,12 +97,14 @@ class QuickSettingsUIView(
     }
 
     private fun bindTrackingProtectionInfo(isTrackingProtectionOn: Boolean) {
+        val globalTPSetting = Settings.getInstance(context).shouldUseTrackingProtection
         val drawableId =
             if (isTrackingProtectionOn) R.drawable.ic_tracking_protection else
                 R.drawable.ic_tracking_protection_disabled
         val icon = AppCompatResources.getDrawable(context, drawableId)
         trackingProtectionSwitch.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
         trackingProtectionSwitch.isChecked = isTrackingProtectionOn
+        trackingProtectionSwitch.isEnabled = globalTPSetting
 
         trackingProtectionSwitch.setOnCheckedChangeListener { _, isChecked ->
             actionEmitter.onNext(
@@ -113,11 +115,22 @@ class QuickSettingsUIView(
         }
     }
 
-    private fun bindReportProblemAction(url: String) {
-        reportProblemAction.setOnClickListener {
-            actionEmitter.onNext(
-                QuickSettingsAction.SelectReportProblem(url)
-            )
+    private fun bindTrackingProtectionAction(url: String) {
+        val globalTPSetting = Settings.getInstance(context).shouldUseTrackingProtection
+        trackingProtectionAction.text =
+            if (globalTPSetting)
+                context.getString(R.string.browser_menu_report_issue) else
+                context.getString(R.string.preferences_tracking_protection_turned_off_globally)
+        trackingProtectionAction.setOnClickListener {
+            if (globalTPSetting) {
+                actionEmitter.onNext(
+                    QuickSettingsAction.SelectReportProblem(url)
+                )
+            } else {
+                actionEmitter.onNext(
+                    QuickSettingsAction.SelectTrackingProtectionSettings
+                )
+            }
         }
     }
 

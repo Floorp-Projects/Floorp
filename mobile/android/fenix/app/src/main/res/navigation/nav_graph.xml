@@ -338,5 +338,8 @@
             android:name="gravity"
             app:argType="integer"
             android:defaultValue="80" />
+        <action
+            android:id="@+id/action_quickSettingsSheetDialogFragment_to_trackingProtectionFragment"
+            app:destination="@id/trackingProtectionFragment" />
     </dialog>
 </navigation>

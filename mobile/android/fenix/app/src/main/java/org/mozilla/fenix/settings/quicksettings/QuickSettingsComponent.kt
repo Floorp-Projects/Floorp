@@ -100,6 +100,7 @@ data class QuickSettingsState(val mode: Mode) : ViewState {
 
 sealed class QuickSettingsAction : Action {
     data class SelectReportProblem(val url: String) : QuickSettingsAction()
+    object SelectTrackingProtectionSettings : QuickSettingsAction()
     data class ToggleTrackingProtection(val trackingProtection: Boolean) : QuickSettingsAction()
     data class SelectBlockedByAndroid(val permissions: Array<String>) : QuickSettingsAction()
     data class TogglePermission(val featurePhone: PhoneFeature) : QuickSettingsAction()
