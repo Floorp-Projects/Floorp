@@ -157,7 +157,7 @@ function initialize(event) {
 
   document.getElementById("preferencesButton")
     .addEventListener("click", () => {
-      let mainWindow = getMainWindow();
+      let mainWindow = window.windowRoot.ownerGlobal;
       recordLinkTelemetry("about:preferences");
       if ("switchToTabHavingURI" in mainWindow) {
         mainWindow.switchToTabHavingURI("about:preferences", true, {
@@ -382,13 +382,6 @@ function setSearchLabel(type) {
     searchLabel.textContent = "";
     searchLabel.hidden = true;
   }
-}
-
-/**
- * Obtain the main DOMWindow for the current context.
- */
-function getMainWindow() {
-  return window.docShell.rootTreeItem.domWindow;
 }
 
 /**
@@ -1397,7 +1390,7 @@ var gViewController = {
         return true;
       },
       doCommand() {
-        let mainWindow = getMainWindow();
+        let mainWindow = window.windowRoot.ownerGlobal;
         recordLinkTelemetry("about:debugging");
         if ("switchToTabHavingURI" in mainWindow) {
           mainWindow.switchToTabHavingURI("about:debugging#addons", true, {
@@ -1562,18 +1555,6 @@ async function isAddonAllowedInCurrentWindow(aAddon) {
 function hasInlineOptions(aAddon) {
   return aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE_BROWSER ||
          aAddon.type == "plugin";
-}
-
-function openOptionsInTab(optionsURL) {
-  let mainWindow = getMainWindow();
-  if ("switchToTabHavingURI" in mainWindow) {
-    mainWindow.switchToTabHavingURI(optionsURL, true, {
-      relatedToCurrent: true,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
-    return true;
-  }
-  return false;
 }
 
 function formatDate(aDate) {
