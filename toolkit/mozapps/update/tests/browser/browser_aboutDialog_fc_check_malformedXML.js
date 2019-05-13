@@ -6,8 +6,8 @@
 // Test for About Dialog foreground check for updates
 // with a malformed update XML file.
 add_task(async function aboutDialog_foregroundCheck_malformedXML() {
-  let updateParams = "&xmlMalformed=1";
-  await runAboutDialogUpdateTest(updateParams, false, [
+  let params = {queryString: "&xmlMalformed=1"};
+  await runAboutDialogUpdateTest(params, [
     {
       panelId: "checkingForUpdates",
       checkActiveUpdate: null,

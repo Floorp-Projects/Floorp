@@ -3,9 +3,9 @@
 
 "use strict";
 
-// Test for About Dialog foreground check for updates
-// with an automatic download and update staging.
-add_task(async function aboutDialog_foregroundCheck_downloadAuto_staging() {
+// Test for About Dialog background check for updates
+// with the About Dialog opened during downloading and stages the update.
+add_task(async function aboutDialog_backgroundCheck_downloading_staging() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_APP_UPDATE_STAGING_ENABLED, true],
@@ -23,13 +23,10 @@ add_task(async function aboutDialog_foregroundCheck_downloadAuto_staging() {
 
   // Since the partial should be successful specify an invalid size for the
   // complete update.
-  let params = {queryString: "&invalidCompleteSize=1"};
+  let params = {queryString: "&useSlowDownloadMar=1&invalidCompleteSize=1",
+                backgroundUpdate: true,
+                waitForUpdateState: STATE_DOWNLOADING};
   await runAboutDialogUpdateTest(params, [
-    {
-      panelId: "checkingForUpdates",
-      checkActiveUpdate: null,
-      continueFile: CONTINUE_CHECK,
-    },
     {
       panelId: "downloading",
       checkActiveUpdate: {state: STATE_DOWNLOADING},
