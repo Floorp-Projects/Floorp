@@ -33,14 +33,8 @@ class nsExpatDriver : public nsIDTD, public nsITokenizer {
   int HandleExternalEntityRef(const char16_t* aOpenEntityNames,
                               const char16_t* aBase, const char16_t* aSystemId,
                               const char16_t* aPublicId);
-  static void HandleStartElement(void* aUserData, const char16_t* aName,
-                                 const char16_t** aAtts);
-  static void HandleStartElementForSystemPrincipal(void* aUserData,
-                                                   const char16_t* aName,
-                                                   const char16_t** aAtts);
-  static void HandleEndElement(void* aUserData, const char16_t* aName);
-  static void HandleEndElementForSystemPrincipal(void* aUserData,
-                                                 const char16_t* aName);
+  nsresult HandleStartElement(const char16_t* aName, const char16_t** aAtts);
+  nsresult HandleEndElement(const char16_t* aName);
   nsresult HandleCharacterData(const char16_t* aCData, const uint32_t aLength);
   nsresult HandleComment(const char16_t* aName);
   nsresult HandleProcessingInstruction(const char16_t* aTarget,
