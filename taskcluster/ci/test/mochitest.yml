@@ -51,7 +51,7 @@ mochitest:
     loopback-video: true
     tier:
         by-test-platform:
-            android-em-7.*/opt: 2
+            android-em-7.*: 2
             windows10-aarch64.*: 2
             default: default
     instance-size:
