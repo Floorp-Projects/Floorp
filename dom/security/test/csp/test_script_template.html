@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1548385 - CSP: Test script template</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/**
+ * Description of the test:
+ * We load a document using a CSP of "default-src 'unsafe-inline'"
+ * and make sure that an external script within a template gets
+ * blocked correctly.
+ */
+
+const CSP_BLOCKED_SUBJECT = "csp-on-violate-policy";
+const CSP_ALLOWED_SUBJECT = "specialpowers-http-notify-request";
+
+SimpleTest.waitForExplicitFinish();
+
+function examiner() {
+  SpecialPowers.addObserver(this, CSP_BLOCKED_SUBJECT);
+  SpecialPowers.addObserver(this, CSP_ALLOWED_SUBJECT);
+}
+
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    if (topic == CSP_BLOCKED_SUBJECT) {
+      let jsFileName = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+      if (jsFileName.endsWith("file_script_template.js")) {
+        ok(true, "js file blocked by CSP");
+        this.removeAndFinish();
+      }
+    }
+
+    if (topic == CSP_ALLOWED_SUBJECT) {
+      if (data.endsWith("file_script_template.js")) {
+        ok(false, "js file allowed by CSP");
+        this.removeAndFinish();
+      }
+    }
+  },
+
+  removeAndFinish: function() {
+    SpecialPowers.removeObserver(this, CSP_BLOCKED_SUBJECT);
+    SpecialPowers.removeObserver(this, CSP_ALLOWED_SUBJECT);
+    SimpleTest.finish();
+  }
+}
+
+window.examiner = new examiner();
+document.getElementById("testframe").src = "file_script_template.html";
+
+</script>
+</body>
+</html>
