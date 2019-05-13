@@ -19,7 +19,7 @@ interface nsIEventTarget;
  * nsIProtocolProxyService provides methods to access information about
  * various network proxies.
  */
-[scriptable, uuid(ef57c8b6-e09d-4cd4-9222-2a5d2402e15d)]
+[scriptable, builtinclass, uuid(ef57c8b6-e09d-4cd4-9222-2a5d2402e15d)]
 interface nsIProtocolProxyService : nsISupports
 {
     /** Flag 1 << 0 is unused **/

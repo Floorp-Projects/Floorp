@@ -61,7 +61,7 @@ struct nsIDataType
  * JS type anyway.
  */
 
-[scriptable, uuid(81e4c2de-acac-4ad6-901a-b5fb1b851a0d)]
+[scriptable, builtinclass, uuid(81e4c2de-acac-4ad6-901a-b5fb1b851a0d)]
 interface nsIVariant : nsISupports
 {
     [notxpcom,nostdcall] readonly attribute uint16_t     dataType;
@@ -88,30 +88,30 @@ interface nsIVariant : nsISupports
     [noscript] nsISupports  getAsISupports();
     [noscript] jsval        getAsJSVal();
 
-    [noscript] void getAsInterface(out nsIIDPtr iid, 
+    [noscript] void getAsInterface(out nsIIDPtr iid,
                                    [iid_is(iid), retval] out nsQIResult iface);
 
     [notxpcom] nsresult getAsArray(out uint16_t type, out nsIID iid,
                                    out uint32_t count, out voidPtr ptr);
 
-    [noscript] void getAsStringWithSize(out uint32_t size, 
+    [noscript] void getAsStringWithSize(out uint32_t size,
                                         [size_is(size), retval] out string str);
-    
-    [noscript] void getAsWStringWithSize(out uint32_t size, 
+
+    [noscript] void getAsWStringWithSize(out uint32_t size,
                                          [size_is(size), retval] out wstring str);
 };
 
 /**
  * An object that implements nsIVariant may or may NOT also implement this
  * nsIWritableVariant.
- * 
+ *
  * If the 'writable' attribute is false then attempts to call any of the 'set'
  * methods can be expected to fail. Setting the 'writable' attribute may or
  * may not succeed.
  *
  */
 
-[scriptable, uuid(5586a590-8c82-11d5-90f3-0010a4e73d9a)]
+[scriptable, builtinclass, uuid(5586a590-8c82-11d5-90f3-0010a4e73d9a)]
 interface nsIWritableVariant : nsIVariant
 {
     attribute boolean writable;
@@ -137,16 +137,16 @@ interface nsIWritableVariant : nsIVariant
     void setAsWString(in wstring aValue);
     void setAsISupports(in nsISupports aValue);
 
-    void setAsInterface(in nsIIDRef iid, 
+    void setAsInterface(in nsIIDRef iid,
                         [iid_is(iid)] in nsQIResult iface);
 
     [noscript] void setAsArray(in uint16_t type, in nsIIDPtr iid,
                                in uint32_t count, in voidPtr ptr);
 
-    void setAsStringWithSize(in uint32_t size, 
+    void setAsStringWithSize(in uint32_t size,
                              [size_is(size)] in string str);
-    
-    void setAsWStringWithSize(in uint32_t size, 
+
+    void setAsWStringWithSize(in uint32_t size,
                               [size_is(size)] in wstring str);
 
     void setAsVoid();
