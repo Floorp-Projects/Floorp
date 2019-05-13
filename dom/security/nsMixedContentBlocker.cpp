@@ -378,7 +378,9 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL) {
   // We could also allow 'localhost' (if we can guarantee that it resolves
   // to a loopback address), but Chrome doesn't support it as of writing. For
   // web compat, lets only allow what Chrome allows.
-  return host.EqualsLiteral("127.0.0.1") || host.EqualsLiteral("::1");
+  // see also https://bugzilla.mozilla.org/show_bug.cgi?id=1220810
+  return host.EqualsLiteral("127.0.0.1") || host.EqualsLiteral("::1") ||
+         host.EqualsLiteral("localhost");
 }
 
 /* Maybe we have a .onion URL. Treat it as whitelisted as well if
@@ -400,6 +402,78 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(nsIURI* aURL) {
   nsresult rv = aURL->GetHost(host);
   NS_ENSURE_SUCCESS(rv, false);
   return StringEndsWith(host, NS_LITERAL_CSTRING(".onion"));
+}
+
+bool nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(nsIURI* aURI) {
+  // The following implements:
+  // https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
+
+  nsAutoCString scheme;
+  nsresult rv = aURI->GetScheme(scheme);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  // Blobs are expected to inherit their principal so we don't expect to have
+  // a codebase principal with scheme 'blob' here.  We can't assert that though
+  // since someone could mess with a non-blob URI to give it that scheme.
+  NS_WARNING_ASSERTION(!scheme.EqualsLiteral("blob"),
+                       "IsOriginPotentiallyTrustworthy ignoring blob scheme");
+
+  // According to the specification, the user agent may choose to extend the
+  // trust to other, vendor-specific URL schemes. We use this for "resource:",
+  // which is technically a substituting protocol handler that is not limited to
+  // local resource mapping, but in practice is never mapped remotely as this
+  // would violate assumptions a lot of code makes.
+  // We use nsIProtocolHandler flags to determine which protocols we consider a
+  // priori authenticated.
+  bool aPrioriAuthenticated = false;
+  if (NS_FAILED(NS_URIChainHasFlags(
+          aURI, nsIProtocolHandler::URI_IS_POTENTIALLY_TRUSTWORTHY,
+          &aPrioriAuthenticated))) {
+    return false;
+  }
+
+  if (aPrioriAuthenticated) {
+    return true;
+  }
+
+  nsAutoCString host;
+  rv = aURI->GetHost(host);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  if (IsPotentiallyTrustworthyLoopbackURL(aURI)) {
+    return true;
+  }
+
+  // If a host is not considered secure according to the default algorithm, then
+  // check to see if it has been whitelisted by the user.  We only apply this
+  // whitelist for network resources, i.e., those with scheme "http" or "ws".
+  // The pref should contain a comma-separated list of hostnames.
+
+  if (!scheme.EqualsLiteral("http") && !scheme.EqualsLiteral("ws")) {
+    return false;
+  }
+
+  nsAutoCString whitelist;
+  rv = Preferences::GetCString("dom.securecontext.whitelist", whitelist);
+  if (NS_SUCCEEDED(rv)) {
+    nsCCharSeparatedTokenizer tokenizer(whitelist, ',');
+    while (tokenizer.hasMoreTokens()) {
+      const nsACString& allowedHost = tokenizer.nextToken();
+      if (host.Equals(allowedHost)) {
+        return true;
+      }
+    }
+  }
+  // Maybe we have a .onion URL. Treat it as whitelisted as well if
+  // `dom.securecontext.whitelist_onions` is `true`.
+  if (nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(aURI)) {
+    return true;
+  }
+  return false;
 }
 
 /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
@@ -701,17 +775,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   rv = innerContentLocation->SchemeIs("http", &isHttpScheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Loopback origins are not considered mixed content even over HTTP. See:
-  // https://w3c.github.io/webappsec-mixed-content/#should-block-fetch
-  if (isHttpScheme &&
-      IsPotentiallyTrustworthyLoopbackURL(innerContentLocation)) {
-    *aDecision = ACCEPT;
-    return NS_OK;
-  }
-
-  // .onion URLs are encrypted and authenticated. Don't treat them as mixed
-  // content if potentially trustworthy (i.e. whitelisted).
-  if (isHttpScheme && IsPotentiallyTrustworthyOnion(innerContentLocation)) {
+  if (isHttpScheme && IsPotentiallyTrustworthyOrigin(innerContentLocation)) {
     *aDecision = ACCEPT;
     return NS_OK;
   }
