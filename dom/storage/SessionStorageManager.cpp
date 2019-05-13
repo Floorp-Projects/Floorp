@@ -71,7 +71,6 @@ SessionStorageManager::PrecacheStorage(nsIPrincipal* aPrincipal,
 NS_IMETHODIMP
 SessionStorageManager::CreateStorage(mozIDOMWindow* aWindow,
                                      nsIPrincipal* aPrincipal,
-                                     nsIPrincipal* aStoragePrincipal,
                                      const nsAString& aDocumentURI,
                                      bool aPrivate, Storage** aRetval) {
   nsAutoCString originKey;
@@ -95,7 +94,6 @@ SessionStorageManager::CreateStorage(mozIDOMWindow* aWindow,
 
   nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
-  // No StoragePrincipal for sessionStorage.
   RefPtr<SessionStorage> storage = new SessionStorage(
       inner, aPrincipal, cache, this, aDocumentURI, aPrivate);
 
@@ -105,9 +103,8 @@ SessionStorageManager::CreateStorage(mozIDOMWindow* aWindow,
 
 NS_IMETHODIMP
 SessionStorageManager::GetStorage(mozIDOMWindow* aWindow,
-                                  nsIPrincipal* aPrincipal,
-                                  nsIPrincipal* aStoragePrincipal,
-                                  bool aPrivate, Storage** aRetval) {
+                                  nsIPrincipal* aPrincipal, bool aPrivate,
+                                  Storage** aRetval) {
   *aRetval = nullptr;
 
   nsAutoCString originKey;

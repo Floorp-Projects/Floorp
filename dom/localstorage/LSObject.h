@@ -61,7 +61,6 @@ class LSObject final : public Storage {
   friend nsGlobalWindowInner;
 
   nsAutoPtr<PrincipalInfo> mPrincipalInfo;
-  nsAutoPtr<PrincipalInfo> mStoragePrincipalInfo;
 
   RefPtr<LSDatabase> mDatabase;
   RefPtr<LSObserver> mObserver;
@@ -93,7 +92,6 @@ class LSObject final : public Storage {
    */
   static nsresult CreateForPrincipal(nsPIDOMWindowInner* aWindow,
                                      nsIPrincipal* aPrincipal,
-                                     nsIPrincipal* aStoragePrincipal,
                                      const nsAString& aDocumentURI,
                                      bool aPrivate, LSObject** aObject);
 
@@ -179,8 +177,7 @@ class LSObject final : public Storage {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(LSObject, Storage)
 
  private:
-  LSObject(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
-           nsIPrincipal* aStoragePrincipal);
+  LSObject(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal);
 
   ~LSObject();
 
