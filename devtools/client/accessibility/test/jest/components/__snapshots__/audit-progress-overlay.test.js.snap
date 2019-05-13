@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AuditProgressOverlay component: render auditing finishing up 1`] = `"<span id=\\"audit-progress-container\\" role=\\"progressbar\\" aria-valuetext=\\"accessibility.progress.finishing\\">accessibility.progress.finishing</span>"`;
+
+exports[`AuditProgressOverlay component: render auditing initializing 1`] = `"<span id=\\"audit-progress-container\\" role=\\"progressbar\\" aria-valuetext=\\"accessibility.progress.initializing\\">accessibility.progress.initializing</span>"`;
+
+exports[`AuditProgressOverlay component: render auditing progress 1`] = `"<span id=\\"audit-progress-container\\">accessibility.progress.progressbar<progress max=\\"100\\" value=\\"0\\" class=\\"audit-progress-progressbar\\" aria-labelledby=\\"audit-progress-container\\"></progress></span>"`;
+
+exports[`AuditProgressOverlay component: render auditing progress 2`] = `"<span id=\\"audit-progress-container\\">accessibility.progress.progressbar<progress max=\\"100\\" value=\\"50\\" class=\\"audit-progress-progressbar\\" aria-labelledby=\\"audit-progress-container\\"></progress></span>"`;
+
+exports[`AuditProgressOverlay component: render auditing progress 3`] = `"<span id=\\"audit-progress-container\\">accessibility.progress.progressbar<progress max=\\"100\\" value=\\"75\\" class=\\"audit-progress-progressbar\\" aria-labelledby=\\"audit-progress-container\\"></progress></span>"`;
+
+exports[`AuditProgressOverlay component: render not auditing 1`] = `null`;

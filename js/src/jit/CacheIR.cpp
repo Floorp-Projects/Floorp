@@ -5128,6 +5128,8 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
 
 bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
                                                  MutableHandleObject res) {
+  AutoRealm ar(cx_, calleeFunc);
+
   // Saving the template object is unsound for super(), as a single
   // callsite can have multiple possible prototype objects created
   // (via different newTargets)

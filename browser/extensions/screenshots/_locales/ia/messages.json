@@ -42,7 +42,7 @@
     "message": "Firefox Screenshots automaticamente se converte al modo de solo discargamento in le situationes sequente:"
   },
   "downloadOnlyDetailsPrivate": {
-    "message": "In un fenestra de Navigation Private."
+    "message": "In un Fenestra de navigation private."
   },
   "downloadOnlyDetailsThirdParty": {
     "message": "Cookies de tertie parte disactivate."
@@ -120,10 +120,10 @@
     "message": "Tu selection es troppo micre"
   },
   "privateWindowErrorTitle": {
-    "message": "Le instantaneos es disactivate durante le navigation private"
+    "message": "Le instantaneos es disactivate durante le Navigation private"
   },
   "privateWindowErrorDetails": {
-    "message": "Pardono pro le incommoditate. Nos labora sur iste functionalitate pro futur publicationes."
+    "message": "Pardono pro le incommoditate. Nos labora sur iste functionalitate pro futur editiones."
   },
   "genericErrorTitle": {
     "message": "Problemas de Firefox Screenshots!"

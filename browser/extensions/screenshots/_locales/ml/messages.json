@@ -17,6 +17,9 @@
   "saveScreenshotSelectedArea": {
     "message": "സംരക്ഷിക്കുക"
   },
+  "uploadScreenshotSelectedArea": {
+    "message": "അപ്‌ലോഡ്"
+  },
   "saveScreenshotVisibleArea": {
     "message": "കാണുന്നതു സംരക്ഷിക്കുക"
   },
@@ -29,8 +32,29 @@
   "downloadScreenshot": {
     "message": "ഡൗണ്‍ലോഡ് ചെയ്യുക"
   },
+  "downloadScreenshotTitle": {
+    "message": "സ്ക്രീൻഷോട്ട് ഡൗൺലോഡ് ചെയ്യുക"
+  },
+  "downloadOnlyNotice": {
+    "message": "നിങ്ങൾ ഇപ്പോൾ ഡൗൺലോഡ് മാത്രം ഉള്ള മോഡിൽ ആണ്."
+  },
+  "downloadOnlyDetails": {
+    "message": "ഫയർഫോക്സ് സ്ക്രീൻഷോട്ടുകൾ ഈ സാഹചര്യങ്ങളിൽ ഡൗൺലോഡ്-മാത്രം മോഡിലേക് സ്വയം മാറുന്നു:"
+  },
   "downloadOnlyDetailsPrivate": {
     "message": "സ്വകാര്യ ബ്രൌസിങ്ങ് ജാലകത്തില്‍."
+  },
+  "downloadOnlyDetailsThirdParty": {
+    "message": "മൂന്നാം കക്ഷി കുക്കികൾ അപ്രാപ്തമാക്കി."
+  },
+  "downloadOnlyDetailsNeverRemember": {
+    "message": "“ചരിത്രം ഒരിക്കലും ഓർക്കേണ്ട” എന്ന സജ്ജീകരണം പ്രാപ്തമാക്കിയിരിക്കുന്നു."
+  },
+  "downloadOnlyDetailsESR": {
+    "message": "നിങ്ങൾ ഫയർഫോക്സ് ESR ഉപയോഗിക്കുന്നു."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "അപ്ലോഡുകൾ അപ്രാപ്തമാക്കി."
   },
   "notificationLinkCopiedTitle": {
     "message": "ലിങ്ക് പകര്‍ത്തി"
@@ -46,8 +70,27 @@
   "copyScreenshot": {
     "message": "പകര്‍ത്തുക"
   },
+  "copyScreenshotTitle": {
+    "message": "ക്ലിപ്പ്ബോർഡിലേക്ക് സ്ക്രീൻഷോട്ട് പകർത്തുക"
+  },
   "notificationImageCopiedTitle": {
     "message": "ഷോട്ട് പകര്‍ത്തി"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "നിങ്ങളുടെ ഷോട്ടിലേക്കുള്ള ലിങ്ക് ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി. ഒട്ടിക്കാൻ $META_KEY$-V അമർത്തുക.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "സംരക്ഷിത ചിത്രം $PIXELS$px ഉയരത്തിലേക്ക് മാറ്റപ്പെടും.",
+    "placeholders": {
+      "pixels": {
+        "content": "$1"
+      }
+    }
   },
   "requestErrorTitle": {
     "message": "പണി പാളി."
@@ -76,6 +119,9 @@
   "emptySelectionErrorTitle": {
     "message": "നിങ്ങളുടെ തെരഞ്ഞെടുപ്പ് തീരെ ചെറുതാണ്"
   },
+  "privateWindowErrorTitle": {
+    "message": "സ്വകാര്യ ബ്രൗസിംഗ് മോഡിൽ സ്ക്രീൻഷോട്ട്സ് പ്രവർത്തനരഹിതമാക്കിയിരിക്കുന്നു"
+  },
   "privateWindowErrorDetails": {
     "message": "അസൗകര്യം നേരിടേണ്ടി വന്നതിൽ ഖേദിക്കുന്നു. ഈ സവിശേഷതയുള്ള ഭാവിയിലെ റിലീസുകൾക്കായി ഞങ്ങൾ പ്രവർത്തിക്കുന്നു."
   },
@@ -85,11 +131,26 @@
   "genericErrorDetails": {
     "message": "എന്താ സംഭവിച്ചതെന്ന് വല്യ പിടി ഇല്ല. ഒന്നുകൂടി നോക്കുകയോ അല്ലെങ്കില്‍ വേറെ താളിന്റെ സ്ക്രീൻഷോട്ട് എടുക്കുകയോ ചെയ്യുന്നോ?"
   },
+  "tourBodyIntroServerless": {
+    "message": "ഫയര്‍ഫോക്സ് വിട്ടുപോകാതെ തന്നെ സ്ക്രീൻഷോട്ടുകൾ എടുക്കുക, പകര്‍ത്തുക, ഡൌണ്‍ലോഡു് ചെയ്യുക."
+  },
   "tourHeaderPageAction": {
     "message": "സൂക്ഷിക്കാന്‍ പുതിയൊരു മാർഗ്ഗം"
   },
-  "tourHeaderDownloadUpload": {
-    "message": "നിങ്ങളുടെ ഇഷ്ടാനുസൃതം"
+  "tourBodyPageAction": {
+    "message": "നിങ്ങൾ സ്ക്രീൻഷോട്ട് എടുക്കാൻ ആഗ്രഹിക്കുമ്പോള്‍ വിലാസ ബാറിലെ പേജ് പ്രവർത്തനങ്ങളുടെ മെനു വിപുലീകരിക്കുക."
+  },
+  "tourHeaderClickAndDrag": {
+    "message": "നിങ്ങൾക്ക് വേണ്ടതു് പിടിച്ചെടുക്കുക"
+  },
+  "tourBodyClickAndDrag": {
+    "message": "ഒരു പേജിന്റെ ഒരു ഭാഗം പകർത്താൻ ക്ലിക്കുചെയ്ത് ഇഴയ്ക്കുക. നിങ്ങളുടെ തിരഞ്ഞെടുക്കൽ ഹൈലൈറ്റുചെയ്ത് നിങ്ങൾക്ക് ഹോവർ ചെയ്യാനാകും."
+  },
+  "tourHeaderFullPage": {
+    "message": "പണിയിടം അല്ലെങ്കിൽ പേജു് മുഴുവൻ ക്യാപ്ചർ ചെയ്യുക"
+  },
+  "tourBodyFullPage": {
+    "message": "പണിയിടത്തില്‍ ദൃശ്യമായ പ്രദേശം പിടിച്ചെടുക്കാനോ അല്ലെങ്കിൽ ഒരു മുഴുവൻ പേജ് എടുക്കാനോ മുകളിലോ വലതുഭാഗത്തുള്ള ബട്ടണുകൾ തിരഞ്ഞെടുക്കുക."
   },
   "tourSkip": {
     "message": "ഒഴിവാക്കുക"
@@ -102,6 +163,17 @@
   },
   "tourDone": {
     "message": "തീര്‍ന്നു"
+  },
+  "termsAndPrivacyNotice2": {
+    "message": "ഫയർഫോക്സ് സ്ക്രീൻഷോട്ട്സ് ഉപയോഗിക്കുമ്പോൾ, നിങ്ങൾ ഞങ്ങളുടെ $TERMSANDPRIVACYNOTICETERMSLINK$, $TERMSANDPRIVACYNOTICEPRIVACYLINK$ എന്നിവ അംഗീകരിക്കുന്നു.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
   },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "നിബന്ധനകൾ"

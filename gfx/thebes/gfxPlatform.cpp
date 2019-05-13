@@ -2663,6 +2663,26 @@ static FeatureState& WebRenderHardwareQualificationStatus(
               0x3ea8,
               0x3ea5,
 
+              // broadwell gt2+
+              0x1612,
+              0x1616,
+              0x161a,
+              0x161b,
+              0x161d,
+              0x161e,
+              0x1622,
+              0x1626,
+              0x162a,
+              0x162b,
+              0x162d,
+              0x162e,
+              0x1632,
+              0x1636,
+              0x163a,
+              0x163b,
+              0x163d,
+              0x163e,
+
               // HD Graphics 4600
               0x0412,
               0x0416,
@@ -2679,6 +2699,7 @@ static FeatureState& WebRenderHardwareQualificationStatus(
           for (uint16_t id : supportedDevices) {
             if (deviceID == id) {
               supported = true;
+              break;
             }
           }
           if (!supported) {

@@ -304,6 +304,17 @@ class RootedVector : public Rooted<StackGCVector<T>> {
   explicit RootedVector(JSContext* cx) : Base(cx, Vec(cx)) {}
 };
 
+// For use in rust code, an analog to RootedVector that doesn't require
+// instances to be destroyed in LIFO order.
+template <typename T>
+class PersistentRootedVector : public PersistentRooted<StackGCVector<T>> {
+  using Vec = StackGCVector<T>;
+  using Base = PersistentRooted<Vec>;
+
+ public:
+  explicit PersistentRootedVector(JSContext* cx) : Base(cx, Vec(cx)) {}
+};
+
 }  // namespace JS
 
 #endif  // js_GCVector_h

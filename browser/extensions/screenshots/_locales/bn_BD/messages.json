@@ -9,10 +9,10 @@
     "message": "একটি স্ক্রিনশট নিন"
   },
   "myShotsLink": {
-    "message": "আমার সটসমূহ"
+    "message": "আমার সট"
   },
   "screenshotInstructions": {
-    "message": "ড্রাগ করে অথবা পেজে ক্লিক করে একটি অংশ নির্বাচন করুন। বাতিল করতে ESC টিপুন।"
+    "message": "ড্রাগ করে অথবা পাতায় ক্লিক করে একটি অংশ নির্বাচন করুন। বাতিল করতে ESC চাপুন।"
   },
   "saveScreenshotSelectedArea": {
     "message": "সংরক্ষণ"
@@ -24,7 +24,7 @@
     "message": "যতটুকু দেখা যাচ্ছে সংরক্ষণ করুন"
   },
   "saveScreenshotFullPage": {
-    "message": "সম্পূর্ণ পেজ সংরক্ষণ করুন"
+    "message": "সম্পূর্ণ পাতা সংরক্ষণ করুন"
   },
   "cancelScreenshot": {
     "message": "বাতিল"
@@ -51,13 +51,13 @@
     "message": "“ইতিহাস কখনো মনে রাখবেন না” সক্রিয় হয়েছে।"
   },
   "downloadOnlyDetailsESR": {
-    "message": "অাপনি Firefox ESR ব্যবহার করছেন।"
+    "message": "আপনি Firefox ESR ব্যবহার করছেন।"
   },
   "downloadOnlyDetailsNoUploadPref": {
     "message": "আপলোড নিষ্ক্রিয় করা হয়েছে।"
   },
   "notificationLinkCopiedTitle": {
-    "message": "লিঙ্ক কপি করা হয়েছে"
+    "message": "লিঙ্ক অনুলিপি করা হয়েছে"
   },
   "notificationLinkCopiedDetails": {
     "message": "আপার সট এর লিংক ক্লিপবোর্ডে কপি করা হয়েছে। পেস্ট করতে $META_KEY$-V চাপুন।",
@@ -85,7 +85,7 @@
     }
   },
   "imageCropPopupWarning": {
-    "message": "সংরক্ষিত ইমেজ $PIXELS$পিক্সেল উচ্চতায় ক্রপ করা হবে।",
+    "message": "সংরক্ষিত চিত্র $PIXELS$পিক্সেল উচ্চতায় কাটা হবে।",
     "placeholders": {
       "pixels": {
         "content": "$1"
@@ -108,13 +108,13 @@
     "message": "আমরা আপনার শট সংরক্ষণ করতে পারিনি কারণ সেখানে Firefox স্ক্রিণশট সেবার সমস্যা আছে। অনুগ্রহ করে আবার চেস্টা করুন।"
   },
   "unshootablePageErrorTitle": {
-    "message": "আমার এই পেজের স্ক্রিনশট নিতে পারব না।"
+    "message": "আমরা এই পাতার স্ক্রিনশট নিতে পারব না।"
   },
   "unshootablePageErrorDetails": {
-    "message": "এটা কোন প্রমিত ওয়েব পেজ না, তাই আপনি এটার স্ক্রিনশট তুলতে পারবেন না।"
+    "message": "এটা কোন আদর্শ ওয়েব পাতা না, তাই আপনি এটার স্ক্রিনশট নিতে পারবেন না।"
   },
   "selfScreenshotErrorTitle": {
-    "message": "আপনি Firefox স্ক্রিনশটের পেজের শট নিতে পারেন না!"
+    "message": "আপনি Firefox Screenshots পাতার শট নিতে পারবেন না!"
   },
   "emptySelectionErrorTitle": {
     "message": "আপনি অল্প স্থান নির্বাচন করেছেন"
@@ -150,7 +150,7 @@
     "message": "উইন্ডো অথবা সম্পূর্ণ পাতা ক্যাপচার করুন"
   },
   "tourBodyFullPage": {
-    "message": "ইউন্ডোতে দৃশ্যমান অংশ অথবা সম্পূর্ণ পাতা ক্যাপচার করতে উপরে ডানদিকের বাটনগুলো থেকে নির্বাচন করুন।"
+    "message": "উইন্ডোতে দৃশ্যমান অংশ অথবা সম্পূর্ণ পাতা ক্যাপচার করতে উপরে ডানদিকের বোতাম থেকে নির্বাচন করুন।"
   },
   "tourSkip": {
     "message": "এড়িয়ে যান"

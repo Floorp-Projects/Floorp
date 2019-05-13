@@ -29,9 +29,9 @@ BENCHMARK_REVISION = '2720cdc790828952964524bb44ce8b4c14670e90'
 class RaptorRunner(MozbuildObject):
     def run_test(self, raptor_args, kwargs):
         """
-        We want to do couple of things before running raptor
+        We want to do a few things before running Raptor:
         1. Clone mozharness
-        2. Make config for raptor mozharness
+        2. Make the config for Raptor mozharness
         3. Run mozharness
         """
 
@@ -204,7 +204,7 @@ class MachRaptor(MachCommandBase):
                 adbhost = ADBHost(verbose=True)
                 device_serial = "%s:5555" % device.get_ip_address()
                 device.command_output(["tcpip", "5555"])
-                raw_input("Please disconnect your device from USB then press ENTER...")
+                raw_input("Please disconnect your device from USB then press Enter/return...")
                 adbhost.command_output(["connect", device_serial])
                 while len(adbhost.devices()) > 1:
                     raw_input("You must disconnect your device from USB before continuing.")
@@ -218,7 +218,7 @@ class MachRaptor(MachCommandBase):
         finally:
             try:
                 if kwargs['app'] in firefox_android_browsers and kwargs['power_test']:
-                    raw_input("Connect device via usb and press ENTER...")
+                    raw_input("Connect device via USB and press Enter/return...")
                     device = ADBAndroid(device=device_serial, verbose=True)
                     device.command_output(["usb"])
                     adbhost.command_output(["disconnect", device_serial])

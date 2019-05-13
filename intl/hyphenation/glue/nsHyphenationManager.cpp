@@ -80,6 +80,9 @@ already_AddRefed<nsHyphenator> nsHyphenationManager::GetHyphenator(
   if (hyph) {
     return hyph.forget();
   }
+  nsAutoCString hyphCapPref("intl.hyphenate-capitalized.");
+  hyphCapPref.Append(nsAtomCString(aLocale));
+  bool hyphenateCapitalized = Preferences::GetBool(hyphCapPref.get());
   nsCOMPtr<nsIURI> uri = mPatternFiles.Get(aLocale);
   if (!uri) {
     RefPtr<nsAtom> alias = mHyphAliases.Get(aLocale);
@@ -111,7 +114,7 @@ already_AddRefed<nsHyphenator> nsHyphenationManager::GetHyphenator(
       }
     }
   }
-  hyph = new nsHyphenator(uri);
+  hyph = new nsHyphenator(uri, hyphenateCapitalized);
   if (hyph->IsValid()) {
     mHyphenators.Put(aLocale, hyph);
     return hyph.forget();

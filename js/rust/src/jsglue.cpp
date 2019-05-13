@@ -538,35 +538,41 @@ JSObject* UncheckedUnwrapObject(JSObject* obj, bool stopAtOuter) {
   return js::UncheckedUnwrap(obj, stopAtOuter);
 }
 
-JS::RootedIdVector* CreateRootedIdVector(JSContext* cx) {
-  return new JS::RootedIdVector(cx);
+JS::PersistentRootedIdVector* CreateRootedIdVector(JSContext* cx) {
+  return new JS::PersistentRootedIdVector(cx);
 }
 
-bool AppendToRootedIdVector(JS::RootedIdVector* v, jsid id) {
+bool AppendToRootedIdVector(JS::PersistentRootedIdVector* v, jsid id) {
   return v->append(id);
 }
 
-const jsid* SliceRootedIdVector(const JS::RootedIdVector* v, size_t* length) {
+const jsid* SliceRootedIdVector(const JS::PersistentRootedIdVector* v,
+                                size_t* length) {
   *length = v->length();
   return v->begin();
 }
 
-void DestroyRootedIdVector(JS::RootedIdVector* v) { delete v; }
+void DestroyRootedIdVector(JS::PersistentRootedIdVector* v) { delete v; }
 
-JS::MutableHandleIdVector GetMutableHandleIdVector(JS::RootedIdVector* v) {
+JS::MutableHandleIdVector GetMutableHandleIdVector(JS::PersistentRootedIdVector* v) {
   return JS::MutableHandleIdVector(v);
 }
 
-JS::RootedObjectVector* CreateRootedObjectVector(JSContext* aCx) {
-  JS::RootedObjectVector* vec = new JS::RootedObjectVector(aCx);
+JS::PersistentRootedObjectVector* CreateRootedObjectVector(
+    JSContext* aCx) {
+  JS::PersistentRootedObjectVector* vec =
+      new JS::PersistentRootedObjectVector(aCx);
   return vec;
 }
 
-bool AppendToRootedObjectVector(JS::RootedObjectVector* v, JSObject* obj) {
+bool AppendToRootedObjectVector(JS::PersistentRootedObjectVector* v,
+                                          JSObject* obj) {
   return v->append(obj);
 }
 
-void DeleteRootedObjectVector(JS::RootedObjectVector* v) { delete v; }
+void DeleteRootedObjectVector(JS::PersistentRootedObjectVector* v) {
+  delete v;
+}
 
 #if defined(__linux__)
 #  include <malloc.h>
