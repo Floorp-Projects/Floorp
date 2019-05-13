@@ -33,6 +33,7 @@ add_task(async function() {
   await testExceptions(client, contextId);
   await testReturnByValue(client, contextId);
   await testAwaitPromise(client, contextId);
+  await testObjectId(client, contextId);
 
   await client.close();
   ok(true, "The client is closed");
@@ -206,4 +207,22 @@ async function testAwaitPromise({ Runtime }, executionContextId) {
   is(result.subtype, "promise", "The subtype is promise");
   ok(!!result.objectId, "We got the object id for the promise");
   ok(!result.exceptionDetails, "We do not receive any exception");
+}
+
+async function testObjectId({ Runtime }, contextId) {
+  // First create an object via Runtime.evaluate
+  const { result } = await Runtime.evaluate({ contextId, expression: "({ foo: 42 })" });
+  is(result.type, "object", "The type is correct");
+  is(result.subtype, null, "The subtype is null for objects");
+  ok(!!result.objectId, "Got an object id");
+
+  // Then apply a method on this object
+  const { result: result2 } = await Runtime.callFunctionOn({
+    executionContextId: contextId,
+    functionDeclaration: "function () { return this.foo; }",
+    objectId: result.objectId,
+  });
+  is(result2.type, "number", "The type is correct");
+  is(result2.subtype, null, "The subtype is null for numbers");
+  is(result2.value, 42, "We have a good proof that the function was ran against the target object");
 }
