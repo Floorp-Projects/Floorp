@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gc/Verifier.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
@@ -447,23 +449,6 @@ void js::gc::GCRuntime::finishVerifier() {
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
 
-// Like gc::MarkColor but allows the possibility of the cell being
-// unmarked. Order is important here, with white being 'least marked'
-// and black being 'most marked'.
-enum class CellColor : uint8_t { White = 0, Gray = 1, Black = 2 };
-
-static CellColor GetCellColor(Cell* cell) {
-  if (cell->isMarkedBlack()) {
-    return CellColor::Black;
-  }
-
-  if (cell->isMarkedGray()) {
-    return CellColor::Gray;
-  }
-
-  return CellColor::White;
-}
-
 static const char* CellColorName(CellColor color) {
   switch (color) {
     case CellColor::White:
@@ -798,7 +783,7 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
     valueColor = GetCellColor(value);
   }
 
-  if (valueColor < Min(mapColor, keyColor)) {
+  if (valueColor < ExpectedWeakMapValueColor(mapColor, keyColor)) {
     fprintf(stderr, "WeakMap value is less marked than map and key\n");
     fprintf(stderr, "(map %p is %s, key %p is %s, value %p is %s)\n", map,
             CellColorName(mapColor), key, CellColorName(keyColor), value,
@@ -827,7 +812,7 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
     delegateColor = CellColor::Black;
   }
 
-  if (keyColor < Min(mapColor, delegateColor)) {
+  if (keyColor < ExpectedWeakMapKeyColor(mapColor, delegateColor)) {
     fprintf(stderr, "WeakMap key is less marked than map and delegate\n");
     fprintf(stderr, "(map %p is %s, delegate %p is %s, key %p is %s)\n", map,
             CellColorName(mapColor), delegate, CellColorName(delegateColor),
