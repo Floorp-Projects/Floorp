@@ -820,7 +820,8 @@ class NetErrorChild extends ActorChild {
       this.mm.sendAsyncMessage("Browser:SSLErrorGoBack", {});
       return;
     }
-    if (elmId != "errorTryAgain" || !/e=netOffline/.test(documentURI)) {
+
+    if (!event.originalTarget.classList.contains("try-again") || !/e=netOffline/.test(documentURI)) {
       return;
     }
     // browser front end will handle clearing offline mode and refreshing
