@@ -88,6 +88,7 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        themeManager.onThemeChange = null
         sessionObserver?.let { components.core.sessionManager.unregister(it) }
         super.onDestroy()
     }
