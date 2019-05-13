@@ -44,7 +44,6 @@ struct PrintData {
 
   short  howToEnableFrameUI;
   bool isCancelled;
-  short printFrameTypeUsage;
   short  printFrameType;
   bool printSilent;
   bool shrinkToFit;
