@@ -91,7 +91,10 @@ class Runtime extends ContentProcessDomain {
     if (request.returnByValue && typeof(request.returnByValue) != "boolean") {
       throw new Error("Expect 'returnByValue' to be a boolean");
     }
-    return context.callFunctionOn(request.functionDeclaration, request.arguments, request.returnByValue);
+    if (request.awaitPromise && typeof(request.awaitPromise) != "boolean") {
+      throw new Error("Expect 'awaitPromise' to be a boolean");
+    }
+    return context.callFunctionOn(request.functionDeclaration, request.arguments, request.returnByValue, request.awaitPromise, request.objectId);
   }
 
   get _debugger() {

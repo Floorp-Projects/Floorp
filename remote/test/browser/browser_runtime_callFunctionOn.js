@@ -32,6 +32,7 @@ add_task(async function() {
   await testObjectReferences(client, contextId);
   await testExceptions(client, contextId);
   await testReturnByValue(client, contextId);
+  await testAwaitPromise(client, contextId);
 
   await client.close();
   ok(true, "The client is closed");
@@ -145,4 +146,64 @@ async function testReturnByValue({ Runtime }, executionContextId) {
     returnByValue: true,
   });
   is(result.value, undefined, "The returned value is undefined");
+}
+
+async function testAwaitPromise({ Runtime }, executionContextId) {
+  // First assert promise resolution with awaitPromise
+  let { result } = await Runtime.callFunctionOn({
+    executionContextId,
+    functionDeclaration: "() => Promise.resolve(42)",
+    awaitPromise: true,
+  });
+  is(result.type, "number", "The type is correct");
+  is(result.subtype, null, "The subtype is null for numbers");
+  is(result.value, 42, "The result is the promise's resolution");
+
+  // Also test promise rejection with awaitPromise
+  let { exceptionDetails } = await Runtime.callFunctionOn({
+    executionContextId,
+    functionDeclaration: "() => Promise.reject(42)",
+    awaitPromise: true,
+  });
+  is(exceptionDetails.exception.value, 42, "The result is the promise's rejection");
+
+  // Then check delayed promise resolution
+  ({ result } = await Runtime.callFunctionOn({
+    executionContextId,
+    functionDeclaration: "() => new Promise(r => setTimeout(() => r(42), 0))",
+    awaitPromise: true,
+  }));
+  is(result.type, "number", "The type is correct");
+  is(result.subtype, null, "The subtype is null for numbers");
+  is(result.value, 42, "The result is the promise's resolution");
+
+  // And delayed promise rejection
+  ({ exceptionDetails } = await Runtime.callFunctionOn({
+    executionContextId,
+    functionDeclaration: "() => new Promise((_,r) => setTimeout(() => r(42), 0))",
+    awaitPromise: true,
+  }));
+  is(exceptionDetails.exception.value, 42, "The result is the promise's rejection");
+
+  // Finally assert promise resolution without awaitPromise
+  ({ result } = await Runtime.callFunctionOn({
+    executionContextId,
+    functionDeclaration: "() => Promise.resolve(42)",
+    awaitPromise: false,
+  }));
+  is(result.type, "object", "The type is correct");
+  is(result.subtype, "promise", "The subtype is promise");
+  ok(!!result.objectId, "We got the object id for the promise");
+  ok(!result.value, "We do not receive any value");
+
+  // As well as promise rejection without awaitPromise
+  ({ result } = await Runtime.callFunctionOn({
+    executionContextId,
+    functionDeclaration: "() => Promise.reject(42)",
+    awaitPromise: false,
+  }));
+  is(result.type, "object", "The type is correct");
+  is(result.subtype, "promise", "The subtype is promise");
+  ok(!!result.objectId, "We got the object id for the promise");
+  ok(!result.exceptionDetails, "We do not receive any exception");
 }

@@ -90,7 +90,7 @@ class ExecutionContext {
     };
   }
 
-  async callFunctionOn(functionDeclaration, callArguments = [], returnByValue = false) {
+  async callFunctionOn(functionDeclaration, callArguments = [], returnByValue = false, awaitPromise = false) {
     // First evaluate the function
     const fun = this._debuggee.executeInGlobal("(" + functionDeclaration + ")");
     if (!fun) {
@@ -113,16 +113,35 @@ class ExecutionContext {
     if (rv.throw) {
       return this._returnError(rv.throw);
     }
+
+    let result = rv.return;
+
+    if (result && result.isPromise && awaitPromise) {
+      if (result.promiseState === "fulfilled") {
+        result = result.promiseValue;
+      } else if (result.promiseState === "rejected") {
+        return this._returnError(result.promiseReason);
+      } else {
+        try {
+          const promiseResult = await result.unsafeDereference();
+          result = this._debuggee.makeDebuggeeValue(promiseResult);
+        } catch (e) {
+          // The promise has been rejected
+          return this._returnError(e);
+        }
+      }
+    }
+
     if (returnByValue) {
       return {
         result: {
-          value: this._serialize(rv.return),
+          value: this._serialize(result),
         },
       };
     }
 
     return {
-      result: this._toRemoteObject(rv.return),
+      result: this._toRemoteObject(result),
     };
   }
 
