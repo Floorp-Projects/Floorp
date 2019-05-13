@@ -436,13 +436,11 @@ function populateChildren(menulist, options, uniqueOptionStyles, selectedIndex,
   if (Services.prefs.getBoolPref("dom.forms.selectSearch") && addSearch
       && element.childElementCount > SEARCH_MINIMUM_ELEMENTS) {
     // Add a search text field as the first element of the dropdown
-    let searchbox = element.ownerDocument.createXULElement("textbox", {
-      is: "search-textbox",
-    });
-    searchbox.className = "contentSelectDropdown-searchbox";
+    let searchbox = element.ownerDocument.createXULElement("textbox");
+    searchbox.setAttribute("type", "search");
     searchbox.addEventListener("input", onSearchInput);
-    searchbox.inputField.addEventListener("focus", onSearchFocus);
-    searchbox.inputField.addEventListener("blur", onSearchBlur);
+    searchbox.addEventListener("focus", onSearchFocus);
+    searchbox.addEventListener("blur", onSearchBlur);
     searchbox.addEventListener("command", onSearchInput);
 
     // Handle special keys for exiting search
@@ -544,7 +542,7 @@ function onSearchInput() {
 
 function onSearchFocus() {
   let searchObj = this;
-  let menupopup = searchObj.closest("menupopup");
+  let menupopup = searchObj.parentElement;
   menupopup.parentElement.activeChild = null;
   menupopup.setAttribute("ignorekeys", "true");
   currentBrowser.messageManager.sendAsyncMessage("Forms:SearchFocused", {});
@@ -552,6 +550,6 @@ function onSearchFocus() {
 
 function onSearchBlur() {
   let searchObj = this;
-  let menupopup = searchObj.closest("menupopup");
+  let menupopup = searchObj.parentElement;
   menupopup.setAttribute("ignorekeys", "false");
 }
