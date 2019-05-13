@@ -102,14 +102,13 @@ MOZ_MUST_USE bool DeserializeModule(JSContext* cx, const Bytes& serialized,
 // functions for extracting the instance and func-index of a wasm function
 // can be used for both wasm and asm.js, however.
 
-bool IsWasmExportedFunction(JSFunction* fun);
-bool CheckFuncRefValue(JSContext* cx, HandleValue v, MutableHandleFunction fun);
+extern bool IsWasmExportedFunction(JSFunction* fun);
 
-Instance& ExportedFunctionToInstance(JSFunction* fun);
-WasmInstanceObject* ExportedFunctionToInstanceObject(JSFunction* fun);
-uint32_t ExportedFunctionToFuncIndex(JSFunction* fun);
+extern Instance& ExportedFunctionToInstance(JSFunction* fun);
+extern WasmInstanceObject* ExportedFunctionToInstanceObject(JSFunction* fun);
+extern uint32_t ExportedFunctionToFuncIndex(JSFunction* fun);
 
-bool IsSharedWasmMemoryObject(JSObject* obj);
+extern bool IsSharedWasmMemoryObject(JSObject* obj);
 
 }  // namespace wasm
 
@@ -177,7 +176,8 @@ class WasmGlobalObject : public NativeObject {
     int64_t i64;
     float f32;
     double f64;
-    wasm::AnyRef ref;
+    JSObject* ref;  // Note, this breaks an abstraction boundary
+    wasm::AnyRef anyref;
     Cell() : i64(0) {}
     ~Cell() {}
   };
