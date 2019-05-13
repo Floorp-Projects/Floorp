@@ -615,56 +615,6 @@ static void CollectFromSelectElement(JSContext* aCx, Document& aDocument,
   }
 }
 
-/*
-  @param aDocument: DOMDocument instance to obtain form data for.
-  @return aRetVal: Form data encoded in an object.
- */
-static void CollectFromXULTextbox(Document& aDocument,
-                                  Nullable<CollectedData>& aRetVal) {
-  nsAutoCString url;
-  Unused << aDocument.GetDocumentURI()->GetSpecIgnoringRef(url);
-  if (!url.EqualsLiteral("about:config")) {
-    return;
-  }
-  RefPtr<nsContentList> aboutConfigElements = NS_GetContentList(
-      &aDocument, kNameSpaceID_XUL, NS_LITERAL_STRING("window"));
-  uint32_t length = aboutConfigElements->Length(true);
-  for (uint32_t i = 0; i < length; ++i) {
-    MOZ_ASSERT(aboutConfigElements->Item(i), "null item in node list!");
-    nsAutoString id, value;
-    aboutConfigElements->Item(i)->AsElement()->GetId(id);
-    if (!id.EqualsLiteral("config")) {
-      continue;
-    }
-    RefPtr<nsContentList> textboxs =
-        NS_GetContentList(aboutConfigElements->Item(i)->AsElement(),
-                          kNameSpaceID_XUL, NS_LITERAL_STRING("textbox"));
-    uint32_t boxsLength = textboxs->Length(true);
-    for (uint32_t idx = 0; idx < boxsLength; idx++) {
-      textboxs->Item(idx)->AsElement()->GetId(id);
-      if (!id.EqualsLiteral("textbox")) {
-        continue;
-      }
-      RefPtr<HTMLInputElement> input = HTMLInputElement::FromNode(
-          nsFocusManager::GetRedirectedFocus(textboxs->Item(idx)));
-      if (!input) {
-        continue;
-      }
-      input->GetValue(value, CallerType::System);
-      if (value.IsEmpty() ||
-          input->AttrValueIs(kNameSpaceID_None, nsGkAtoms::value, value,
-                             eCaseMatters)) {
-        continue;
-      }
-      uint16_t generatedCount = 0;
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
-          AppendEntryToCollectedData(input, id, generatedCount, aRetVal);
-      entry->mValue.SetAsString() = value;
-      return;
-    }
-  }
-}
-
 static void CollectCurrentFormData(JSContext* aCx, Document& aDocument,
                                    Nullable<CollectedData>& aRetVal) {
   uint16_t generatedCount = 0;
@@ -674,8 +624,6 @@ static void CollectCurrentFormData(JSContext* aCx, Document& aDocument,
   CollectFromInputElement(aCx, aDocument, generatedCount, aRetVal);
   /* select element */
   CollectFromSelectElement(aCx, aDocument, generatedCount, aRetVal);
-  /* special case for about:config's search field */
-  CollectFromXULTextbox(aDocument, aRetVal);
 
   Element* bodyElement = aDocument.GetBody();
   if (aDocument.HasFlag(NODE_IS_EDITABLE) && bodyElement) {
