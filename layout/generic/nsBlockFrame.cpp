@@ -1676,6 +1676,7 @@ static nsLineBox* FindLineClampTarget(nsBlockFrame*& aFrame,
     // Don't count a line that only has collapsible white space (as might exist
     // after calling e.g. getBoxQuads).
     if (line->IsEmpty()) {
+      iter.Next();
       continue;
     }
 
