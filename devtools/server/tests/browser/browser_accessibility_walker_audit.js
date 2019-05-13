@@ -59,6 +59,14 @@ add_task(async function() {
       },
     },
   }];
+  const total = accessibles.length;
+  const expectedProgress = [
+    { total, percentage: 20 },
+    { total, percentage: 40 },
+    { total, percentage: 60 },
+    { total, percentage: 80 },
+    { total, percentage: 100},
+  ];
 
   function findAccessible(name, role) {
     return accessibles.find(accessible =>
@@ -70,9 +78,30 @@ add_task(async function() {
   await accessibility.enable();
 
   info("Checking AccessibleWalker audit functionality");
-  const auditEvent = a11yWalker.once("audit-event");
-  a11yWalker.startAudit();
-  const { ancestries } = await auditEvent;
+  const ancestries = await new Promise((resolve, reject) => {
+    const auditEventHandler = ({ type, ancestries: response, progress }) => {
+      switch (type) {
+        case "error":
+          a11yWalker.off("audit-event", auditEventHandler);
+          reject();
+          break;
+        case "completed":
+          a11yWalker.off("audit-event", auditEventHandler);
+          resolve(response);
+          is(expectedProgress.length, 0, "All progress events fired");
+          break;
+        case "progress":
+          SimpleTest.isDeeply(progress, expectedProgress.shift(),
+                              "Progress data is correct");
+          break;
+        default:
+          break;
+      }
+    };
+
+    a11yWalker.on("audit-event", auditEventHandler);
+    a11yWalker.startAudit();
+  });
 
   is(ancestries.length, 2, "The size of ancestries is correct");
   for (const ancestry of ancestries) {
