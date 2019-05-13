@@ -898,13 +898,22 @@ class RaptorAndroid(Raptor):
                                           url='about:blank',
                                           fail_if_running=False)
             else:
-                self.device.launch_activity(self.config['binary'],
-                                            self.config['activity'],
-                                            self.config['intent'],
-                                            extra_args=extra_args,
-                                            url='about:blank',
-                                            e10s=True,
-                                            fail_if_running=False)
+
+                # Additional command line arguments that the app will read and use (e.g.
+                # with a custom profile)
+                extras = {}
+                if extra_args:
+                    extras['args'] = " ".join(extra_args)
+
+                # add e10s=True
+                extras['use_multiprocess'] = True
+
+                self.device.launch_application(self.config['binary'],
+                                               self.config['activity'],
+                                               self.config['intent'],
+                                               extras=extras,
+                                               url='about:blank',
+                                               fail_if_running=False)
 
             # Check if app has started and it's running
             if not self.device.process_exist(self.config['binary']):
