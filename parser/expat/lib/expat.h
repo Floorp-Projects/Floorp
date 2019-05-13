@@ -1056,6 +1056,11 @@ XMLPARSEAPI(const XML_Char*)
 MOZ_XML_GetMismatchedTag(XML_Parser parser);
 /* END MOZILLA CHANGE */
 
+/* BEGIN MOZILLA CHANGE (Report whether the parser is currently expanding an entity) */
+XMLPARSEAPI(XML_Bool)
+MOZ_XML_ProcessingEntityValue(XML_Parser parser);
+/* END MOZILLA CHANGE */
+
 #ifdef __cplusplus
 }
 #endif
