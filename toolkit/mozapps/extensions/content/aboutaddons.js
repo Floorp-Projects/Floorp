@@ -124,6 +124,21 @@ function isPending(addon, action) {
   return !!(addon.pendingOperations & amAction);
 }
 
+// Don't change how we handle this while the page is open.
+const INLINE_OPTIONS_ENABLED = Services.prefs.getBoolPref(
+  "extensions.htmlaboutaddons.inline-options.enabled");
+const OPTIONS_TYPE_MAP = {
+  [AddonManager.OPTIONS_TYPE_TAB]: "tab",
+  [AddonManager.OPTIONS_TYPE_INLINE_BROWSER]:
+    INLINE_OPTIONS_ENABLED ? "inline" : "tab",
+};
+
+// Check if an add-on has the provided options type, accounting for the pref
+// to disable inline options.
+function getOptionsType(addon, type) {
+  return OPTIONS_TYPE_MAP[addon.optionsType];
+}
+
 /**
  * This function is set in initialize() by the parent about:addons window. It
  * is a helper for gViewController.loadView().
@@ -566,6 +581,10 @@ class AddonOptions extends HTMLElement {
     // Hide the expand button if we're expanded.
     this.querySelector('[action="expand"]').hidden = card.expanded;
 
+    // Show the preferences option if needed.
+    this.querySelector('[action="preferences"]').hidden =
+      getOptionsType(addon) != "tab";
+
     // Update the separators visibility based on the updated visibility
     // of the actions in the panel-list.
     this.updateSeparatorsVisibility();
@@ -931,6 +950,11 @@ class AddonCard extends HTMLElement {
             triggeringPrincipal:
               Services.scriptSecurityManager.createNullPrincipal({}),
           });
+          break;
+        case "preferences":
+          if (getOptionsType(addon) == "tab") {
+            openOptionsInTab(addon.optionsURL);
+          }
           break;
         case "remove":
           {
