@@ -2068,6 +2068,7 @@ DisplayItemData* FrameLayerBuilder::GetDisplayItemData(nsIFrame* aFrame,
     DisplayItemData* item =
         DisplayItemData::AssertDisplayItemData(array.ElementAt(i));
     if (item->mDisplayItemKey == aKey &&
+        item->FirstFrame() == aFrame &&
         item->mLayer->Manager() == mRetainingManager) {
       return item;
     }
