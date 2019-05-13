@@ -4,18 +4,28 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.52.0-SNAPSHOT  (In Development)
+# 0.53.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.51.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/55?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.52.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/56?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 0.52.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.51.0...v0.52.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/55?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.52.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.52.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.52.0/buildSrc/src/main/java/Config.kt)
 
 * ℹ️ **Migrated all components to [AndroidX](https://developer.android.com/jetpack/androidx).**
 
 * ℹ️ **Upgraded Gradle to 5.3.1**
   * ⚠️ This requires using the 1.3.30 Kotlin gradle plugin or higher.
+  
+* **feature-tab-collections**: 🆕 New component: Feature implementation for saving, restoring and organizing collections of tabs.
 
 * **feature-readerview**
   * 🆕 New component/feature that provides reader mode functionality. To see a complete and working example of how to integrate this new component, check out the `ReaderViewIntegration` class in our [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
