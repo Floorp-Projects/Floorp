@@ -591,6 +591,20 @@ devtools.main:
     extra_keys:
       width: Toolbox width rounded up to the nearest 50px.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  connection_attempt:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1549970]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User is trying to connect to a remote runtime.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      connection_id: Randomly generated id to keep to group various events related to the same connection attempt.
+      connection_type: Connection type
+      runtime_id: Random id generated to track events related to a single runtime
+      status: One of (cancelled, failed, not responding, start, success).
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   continue:
     objects: ["debugger"]
     bug_numbers: [1463122]
@@ -826,7 +840,7 @@ devtools.main:
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.   
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   pretty_print:
     objects: ["debugger"]
     bug_numbers: [1463125]
