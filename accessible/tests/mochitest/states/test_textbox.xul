@@ -112,9 +112,9 @@
     <textbox id="readonly_textbox" readonly="true"/>
     <textbox id="disabled_textbox" disabled="true"/>
 
-    <textbox id="searchbox" flex="1" type="search" results="historyTree"/>
+    <textbox id="searchbox" flex="1" is="search-textbox" results="historyTree"/>
     <textbox id="searchfield" placeholder="Search all add-ons"
-             type="search" searchbutton="true"/>
+             is="search-textbox" searchbutton="true"/>
   </vbox>
   </hbox>
 </window>
