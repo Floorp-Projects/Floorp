@@ -90,7 +90,7 @@ class ExecutionContext {
     };
   }
 
-  async callFunctionOn(functionDeclaration, callArguments = []) {
+  async callFunctionOn(functionDeclaration, callArguments = [], returnByValue = false) {
     // First evaluate the function
     const fun = this._debuggee.executeInGlobal("(" + functionDeclaration + ")");
     if (!fun) {
@@ -113,6 +113,14 @@ class ExecutionContext {
     if (rv.throw) {
       return this._returnError(rv.throw);
     }
+    if (returnByValue) {
+      return {
+        result: {
+          value: this._serialize(rv.return),
+        },
+      };
+    }
+
     return {
       result: this._toRemoteObject(rv.return),
     };
@@ -127,6 +135,9 @@ class ExecutionContext {
    *  The JSON string
    */
   _serialize(obj) {
+    if (typeof(obj) == "undefined") {
+      return undefined;
+    }
     const result = this._debuggee.executeInGlobalWithBindings("JSON.stringify(e)", {e: obj});
     if (result.throw) {
       throw new Error("Object is not serializable");

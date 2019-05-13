@@ -88,7 +88,10 @@ class Runtime extends ContentProcessDomain {
     if (request.arguments && !Array.isArray(request.arguments)) {
       throw new Error("Expect 'arguments' to be an array");
     }
-    return context.callFunctionOn(request.functionDeclaration, request.arguments);
+    if (request.returnByValue && typeof(request.returnByValue) != "boolean") {
+      throw new Error("Expect 'returnByValue' to be a boolean");
+    }
+    return context.callFunctionOn(request.functionDeclaration, request.arguments, request.returnByValue);
   }
 
   get _debugger() {

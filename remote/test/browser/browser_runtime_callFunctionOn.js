@@ -31,6 +31,7 @@ add_task(async function() {
   const contextId = firstContext.id;
   await testObjectReferences(client, contextId);
   await testExceptions(client, contextId);
+  await testReturnByValue(client, contextId);
 
   await client.close();
   ok(true, "The client is closed");
@@ -113,4 +114,35 @@ async function testExceptions({ Runtime }, executionContextId) {
     functionDeclaration: "() => doesNotExists()",
   }));
   is(exceptionDetails.text, "doesNotExists is not defined", "Exception message is passed to the client");
+}
+
+async function testReturnByValue({ Runtime }, executionContextId) {
+  const values = [
+    42,
+    "42",
+    42.00,
+    true,
+    false,
+    null,
+    { foo: true },
+    { foo: { bar: 42, str: "str", array: [1, 2, 3] } },
+    [ 42, "42", true ],
+    [ { foo: true } ],
+  ];
+  for (const value of values) {
+    const { result } = await Runtime.callFunctionOn({
+      executionContextId,
+      functionDeclaration: "() => (" + JSON.stringify(value) + ")",
+      returnByValue: true,
+    });
+    Assert.deepEqual(result.value, value, "The returned value is the same than the input value");
+  }
+
+  // Test undefined individually as JSON.stringify doesn't return a string
+  const { result } = await Runtime.callFunctionOn({
+    executionContextId,
+    functionDeclaration: "() => {}",
+    returnByValue: true,
+  });
+  is(result.value, undefined, "The returned value is undefined");
 }
