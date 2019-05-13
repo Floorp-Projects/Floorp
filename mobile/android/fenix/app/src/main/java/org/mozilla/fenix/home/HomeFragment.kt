@@ -167,17 +167,20 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        val state = sessionControlComponent.stateObservable.blockingFirst()
-        outState.putParcelableArrayList(
-            KEY_TABS,
-            ArrayList(state.tabs)
-        )
-        outState.putParcelableArrayList(
-            KEY_COLLECTIONS,
-            ArrayList(state.collections)
-        )
-        val modeInt = if (state.mode is Mode.Private) 0 else 1
-        outState.putInt(KEY_MODE, modeInt)
+        // This can get called before onCreateView, before the component is defined
+        view?.let {
+            val state = sessionControlComponent.stateObservable.blockingFirst()
+            outState.putParcelableArrayList(
+                KEY_TABS,
+                ArrayList(state.tabs)
+            )
+            outState.putParcelableArrayList(
+                KEY_COLLECTIONS,
+                ArrayList(state.collections)
+            )
+            val modeInt = if (state.mode is Mode.Private) 0 else 1
+            outState.putInt(KEY_MODE, modeInt)
+        }
     }
 
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
