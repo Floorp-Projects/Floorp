@@ -383,7 +383,7 @@
   <label><html:h2 data-l10n-id="applications-header"/></label>
   <description data-l10n-id="applications-description"/>
   <textbox id="filter" flex="1"
-           is="search-textbox"
+           type="search"
            data-l10n-id="applications-filter"
            aria-controls="handlersView"/>
 

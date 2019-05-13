@@ -68,13 +68,13 @@ xul|radio[focused="true"] > .radio-check {
   -moz-outline-radius: 100%;
 }
 
-textbox[is="search-textbox"] {
+textbox[type="search"] {
   -moz-appearance: none;
   padding-inline-start: 8px;
   padding-inline-end: 8px;
 }
 
-xul|textbox[is="search-textbox"] > .textbox-search-sign {
+xul|textbox[type="search"] > moz-input-box > .textbox-search-sign {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.8;

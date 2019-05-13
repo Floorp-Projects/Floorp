@@ -11,7 +11,7 @@
 
   <hbox>
     <textbox id="searchbox"
-             is="search-textbox"
+             type="search"
              oncommand="doSearch(this.value);"
              placeholder="random placeholder"
              timeout="1"/>
@@ -30,9 +30,9 @@ var gLastTest;
 
 function doTests() {
   var textbox = $("searchbox");
-  var icons = textbox.querySelector(".textbox-search-icons");
-  var searchIcon = icons.querySelector(".textbox-search-icon");
-  var clearIcon = icons.querySelector(".textbox-search-clear");
+  var icons = document.getAnonymousElementByAttribute(textbox, "anonid", "search-icons");
+  var searchIcon = document.getAnonymousElementByAttribute(textbox, "class", "textbox-search-icon");
+  var clearIcon = document.getAnonymousElementByAttribute(textbox, "class", "textbox-search-clear");
 
   ok(icons, "icon deck found");
   ok(searchIcon, "search icon found");

@@ -668,7 +668,6 @@ if (!isDummyDocument) {
   for (let [tag, script] of [
     ["findbar", "chrome://global/content/elements/findbar.js"],
     ["menulist", "chrome://global/content/elements/menulist.js"],
-    ["search-textbox", "chrome://global/content/elements/search-textbox.js"],
     ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
     ["printpreview-toolbar", "chrome://global/content/printPreviewToolbar.js"],
     ["editor", "chrome://global/content/elements/editor.js"],

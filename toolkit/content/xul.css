@@ -458,8 +458,8 @@ textbox {
   text-shadow: none;
 }
 
-textbox[is="search-textbox"] {
-  -moz-binding: none;
+textbox[type="search"] {
+  -moz-binding: url("chrome://global/content/bindings/textbox.xml#search-textbox");
 }
 
 /* Prefix with (xul|*):root to workaround HTML tests loading xul.css */
