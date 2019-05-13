@@ -23,7 +23,7 @@ interface nsIInputStreamReceiver : nsISupports
   void onInputStreamReady(in nsIInputStream aStream);
 };
 
-[scriptable, uuid(72c34415-c6eb-48af-851f-772fa9ee5972)]
+[scriptable, builtinclass, uuid(72c34415-c6eb-48af-851f-772fa9ee5972)]
 interface nsICacheInfoChannel : nsISupports
 {
   /**
