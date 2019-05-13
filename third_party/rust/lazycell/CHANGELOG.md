@@ -1,3 +1,49 @@
+<a name="v1.2.1"></a>
+## v1.2.1 (2018-12-03)
+
+
+#### Features
+
+*   Implement Clone for LazyCell and AtomicLazyCell ([30fe4a8f](https://github.com/indiv0/lazycell/commit/30fe4a8f568059b3c78ed149a810962a676cb2b2))
+
+
+
+<a name="v1.2.0"></a>
+## v1.2.0 (2018-09-19)
+
+
+#### Features
+
+*   add `LazyCell::replace` for infallible access ([a63ffb90](https://github.com/indiv0/lazycell/commit/a63ffb9040a5e0683a9bbf9d3d5ef589f2ca8b7c))
+
+
+
+<a name="v1.1.0"></a>
+## v1.1.0 (2018-09-10)
+
+
+#### Documentation
+
+*   add note regarding LazyCell::borrow_mut ([9d634d1f](https://github.com/indiv0/lazycell/commit/9d634d1fd9a21b7aa075d407bedf9fe77ba8b79f))
+*   describe mutability more consistently ([b8078029](https://github.com/indiv0/lazycell/commit/b80780294611e92efddcdd33a701b3049ab5c5eb), closes [#78](https://github.com/indiv0/lazycell/issues/78))
+
+#### Improvements
+
+*   add NONE constant for an empty AtomicLazyCell ([31aff0da](https://github.com/indiv0/lazycell/commit/31aff0dacf824841c5f38ef4acf0aa71ec4c36eb), closes [#87](https://github.com/indiv0/lazycell/issues/87))
+*   add `LazyCell::borrow_mut_with` and `LazyCell::try_borrow_mut_with` ([fdc6d268](https://github.com/indiv0/lazycell/commit/fdc6d268f0e9a6668768302f45fe2bb4aa9a7c34), closes [#79](https://github.com/indiv0/lazycell/issues/79), [#80](https://github.com/indiv0/lazycell/issues/80))
+
+
+
+<a name="v1.0.0"></a>
+## v1.0.0 (2018-06-06)
+
+
+#### Features
+
+*   Add #![no_std] ([e59f6b55](https://github.com/indiv0/lazycell/commit/e59f6b5531e310d3df26b0eb40b1431937f38096))
+
+
+
 <a name="0.6.0"></a>
 ## 0.6.0 (2017-11-25)
 

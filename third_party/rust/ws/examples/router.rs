@@ -1,7 +1,7 @@
+extern crate env_logger;
 /// WebSocket server using trait objects to route
 /// to an infinitely extensible number of handlers
 extern crate ws;
-extern crate env_logger;
 
 // A WebSocket handler that routes connections to different boxed handlers by resource
 struct Router {
@@ -11,30 +11,35 @@ struct Router {
 
 impl ws::Handler for Router {
     fn on_request(&mut self, req: &ws::Request) -> ws::Result<(ws::Response)> {
-
         // Clone the sender so that we can move it into the child handler
         let out = self.sender.clone();
 
         match req.resource() {
-            "/echo" => self.inner = Box::new(Echo { ws: out } ),
+            "/echo" => self.inner = Box::new(Echo { ws: out }),
 
             // Route to a data handler
-            "/data/one" => self.inner = Box::new(Data {
-                ws: out,
-                data: vec!["one", "two", "three", "four", "five"]
-            }),
+            "/data/one" => {
+                self.inner = Box::new(Data {
+                    ws: out,
+                    data: vec!["one", "two", "three", "four", "five"],
+                })
+            }
 
             // Route to another data handler
-            "/data/two" => self.inner = Box::new(Data {
-                ws: out,
-                data: vec!["いち", "二", "さん", "四", "ご"]
-            }),
+            "/data/two" => {
+                self.inner = Box::new(Data {
+                    ws: out,
+                    data: vec!["いち", "二", "さん", "四", "ご"],
+                })
+            }
 
             // Use a closure as the child handler
-            "/closure" => self.inner = Box::new(move |msg: ws::Message| {
-                println!("Got a message on a closure handler: {}", msg);
-                out.close_with_reason(ws::CloseCode::Error, "Not Implemented.")
-            }),
+            "/closure" => {
+                self.inner = Box::new(move |msg: ws::Message| {
+                    println!("Got a message on a closure handler: {}", msg);
+                    out.close_with_reason(ws::CloseCode::Error, "Not Implemented.")
+                })
+            }
 
             // Use the default child handler, NotFound
             _ => (),
@@ -74,17 +79,14 @@ impl ws::Handler for Router {
 struct NotFound;
 
 impl ws::Handler for NotFound {
-
     fn on_request(&mut self, req: &ws::Request) -> ws::Result<(ws::Response)> {
         // This handler responds to all requests with a 404
-        let mut res = try!(ws::Response::from_request(req));
+        let mut res = ws::Response::from_request(req)?;
         res.set_status(404);
         res.set_reason("Not Found");
         Ok(res)
     }
-
 }
-
 
 // This handler simply echoes all messages back to the client
 struct Echo {
@@ -92,12 +94,10 @@ struct Echo {
 }
 
 impl ws::Handler for Echo {
-
     fn on_message(&mut self, msg: ws::Message) -> ws::Result<()> {
         println!("Echo handler received a message: {}", msg);
         self.ws.send(msg)
     }
-
 }
 
 // This handler sends some data to the client and then terminates the connection on the first
@@ -109,8 +109,8 @@ struct Data {
 
 impl ws::Handler for Data {
     fn on_open(&mut self, _: ws::Handshake) -> ws::Result<()> {
-        for msg in self.data.iter() {
-            try!(self.ws.send(*msg))
+        for msg in &self.data {
+            self.ws.send(*msg)?
         }
         Ok(())
     }
@@ -122,14 +122,11 @@ impl ws::Handler for Data {
     }
 }
 
-
-fn main () {
-
-    env_logger::init().unwrap();
+fn main() {
+    env_logger::init();
 
     // Listen on an address and call the closure for each connection
     if let Err(error) = ws::listen("127.0.0.1:3012", |out| {
-
         // Use our router as the handler to route the new connection
         Router {
             sender: out,
@@ -137,7 +134,6 @@ fn main () {
             // You could default to any handler here.
             inner: Box::new(NotFound),
         }
-
     }) {
         // Inform the user of failure
         println!("Failed to create WebSocket due to {:?}", error);
