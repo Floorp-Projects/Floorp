@@ -8,16 +8,21 @@ package org.mozilla.geckoview;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
+import java.util.Locale;
 
 import android.app.Service;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.LocaleList;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -651,12 +656,64 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     private void commitLocales() {
-        if (mRequestedLocales == null) {
-            return;
-        }
         final GeckoBundle data = new GeckoBundle(1);
         data.putStringArray("requestedLocales", mRequestedLocales);
+        data.putString("acceptLanguages", computeAcceptLanguages());
         EventDispatcher.getInstance().dispatch("GeckoView:SetLocale", data);
+    }
+
+    private String computeAcceptLanguages() {
+        ArrayList<String> locales = new ArrayList<String>();
+
+        // Explicitly-set app prefs come first:
+        if (mRequestedLocales != null) {
+            for (String locale : mRequestedLocales) {
+                locales.add(locale.toLowerCase());
+            }
+        }
+        // OS prefs come second:
+        for (String locale : getDefaultLocales()) {
+            locale = locale.toLowerCase();
+            if (!locales.contains(locale)) {
+                locales.add(locale);
+            }
+        }
+
+        return TextUtils.join(",", locales);
+    }
+
+    private static String[] getDefaultLocales() {
+        if (Build.VERSION.SDK_INT >= 24) {
+            final LocaleList localeList = LocaleList.getDefault();
+            String[] locales = new String[localeList.size()];
+            for (int i = 0; i < localeList.size(); i++) {
+                locales[i] = localeList.get(i).toLanguageTag();
+            }
+            return locales;
+        }
+        String[] locales = new String[1];
+        final Locale locale = Locale.getDefault();
+        if (Build.VERSION.SDK_INT >= 21) {
+            locales[0] = locale.toLanguageTag();
+            return locales;
+        }
+
+        locales[0] = getLanguageTag(locale);
+        return locales;
+    }
+
+    private static String getLanguageTag(final Locale locale) {
+        final StringBuilder out = new StringBuilder(locale.getLanguage());
+        final String country = locale.getCountry();
+        final String variant = locale.getVariant();
+        if (!TextUtils.isEmpty(country)) {
+            out.append('-').append(country);
+        }
+        if (!TextUtils.isEmpty(variant)) {
+            out.append('-').append(variant);
+        }
+        // e.g. "en", "en-US", or "en-US-POSIX".
+        return out.toString();
     }
 
     /**
