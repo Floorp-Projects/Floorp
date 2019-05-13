@@ -73,6 +73,7 @@ parent:
 
   async Deactivate();
 
+  async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 };
 
 }  // namespace dom

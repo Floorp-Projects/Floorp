@@ -192,6 +192,13 @@ IPCResult BrowserBridgeParent::RecvDeactivate() {
   return IPC_OK();
 }
 
+IPCResult BrowserBridgeParent::RecvSetIsUnderHiddenEmbedderElement(
+    const bool& aIsUnderHiddenEmbedderElement) {
+  Unused << mBrowserParent->SendSetIsUnderHiddenEmbedderElement(
+      aIsUnderHiddenEmbedderElement);
+  return IPC_OK();
+}
+
 void BrowserBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
   Destroy();

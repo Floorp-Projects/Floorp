@@ -63,6 +63,9 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
 
   mozilla::ipc::IPCResult RecvDeactivate();
 
+  mozilla::ipc::IPCResult RecvSetIsUnderHiddenEmbedderElement(
+      const bool& aIsUnderHiddenEmbedderElement);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

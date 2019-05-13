@@ -2518,6 +2518,16 @@ nsresult nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame* aIFrame) {
   return NS_OK;
 }
 
+void nsFrameLoader::SendIsUnderHiddenEmbedderElement(
+    bool aIsUnderHiddenEmbedderElement) {
+  MOZ_ASSERT(IsRemoteFrame());
+
+  if (mBrowserBridgeChild) {
+    mBrowserBridgeChild->SetIsUnderHiddenEmbedderElement(
+        aIsUnderHiddenEmbedderElement);
+  }
+}
+
 void nsFrameLoader::UpdateBaseWindowPositionAndSize(
     nsSubDocumentFrame* aIFrame) {
   nsCOMPtr<nsIBaseWindow> baseWindow = GetDocShell(IgnoreErrors());

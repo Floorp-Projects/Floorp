@@ -10919,12 +10919,13 @@ void PresShell::SetIsUnderHiddenEmbedderElement(
 
     // Propagate to children.
     for (BrowsingContext* child : bc->GetChildren()) {
+      Element* embedderElement = child->GetEmbedderElement();
+      MOZ_ASSERT(embedderElement);
+
       bool embedderFrameIsHidden = true;
-      if (Element* embedderElement = bc->GetEmbedderElement()) {
-        if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
-          embedderFrameIsHidden =
-              !embedderFrame->StyleVisibility()->IsVisible();
-        }
+      if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
+        embedderFrameIsHidden =
+            !embedderFrame->StyleVisibility()->IsVisible();
       }
 
       if (nsIDocShell* childDocShell = child->GetDocShell()) {
@@ -10932,13 +10933,14 @@ void PresShell::SetIsUnderHiddenEmbedderElement(
         if (!presShell) {
           continue;
         }
-
         presShell->SetIsUnderHiddenEmbedderElement(
             aUnderHiddenEmbedderElement || embedderFrameIsHidden);
+      } else {
+        BrowserBridgeChild* bridgeChild =
+            BrowserBridgeChild::GetFrom(embedderElement);
+        bridgeChild->SetIsUnderHiddenEmbedderElement(
+            aUnderHiddenEmbedderElement || embedderFrameIsHidden);
       }
-      // FIXME: Bug 1518919 - In the case where the BrowsingContext has no
-      // docshell which means it's out-of-process iframe, we need to propagate
-      // the info via an IPC call.
     }
   }
 }
