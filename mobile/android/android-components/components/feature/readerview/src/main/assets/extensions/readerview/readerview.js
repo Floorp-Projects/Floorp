@@ -9,7 +9,31 @@ const supportedProtocols = ["http:", "https:"];
 
 // Prevent false positives for these sites. This list is taken from Fennec:
 // https://dxr.mozilla.org/mozilla-central/rev/7d47e7fa2489550ffa83aae67715c5497048923f/toolkit/components/reader/Readerable.js#45
-const blockedHosts = ["amazon.com", "github.com", "mail.google.com", "pinterest.com", "reddit.com", "twitter.com", "youtube.com"];
+const blockedHosts = [
+  "amazon.com",
+  "github.com",
+  "mail.google.com",
+  "pinterest.com",
+  "reddit.com",
+  "twitter.com",
+  "youtube.com"
+];
+
+// Class names to preserve in the readerized output. We preserve these class
+// names so that rules in readerview.css can match them. This list is taken from Fennec:
+// https://dxr.mozilla.org/mozilla-central/rev/7d47e7fa2489550ffa83aae67715c5497048923f/toolkit/components/reader/ReaderMode.jsm#21
+const preservedClasses = [
+  "caption",
+  "emoji",
+  "hidden",
+  "invisble",
+  "sr-only",
+  "visually-hidden",
+  "visuallyhidden",
+  "wp-caption",
+  "wp-caption-text",
+  "wp-smiley"
+];
 
 class ReaderView {
 
@@ -42,7 +66,7 @@ class ReaderView {
   }
 
   show({fontSize = 4, fontType = "sans-serif", colorScheme = "light"} = {}) {
-    let result = new Readability(document).parse();
+    let result = new Readability(document, {classesToPreserve: preservedClasses}).parse();
     result.language = document.documentElement.lang;
 
     let article = Object.assign(
