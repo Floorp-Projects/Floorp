@@ -27,4 +27,8 @@
     <string name="mozac_feature_sitepermissions_not_allow">Ne pas autoriser</string>
     <!-- Text for a checkbox in a permission request dialog, this will allow to not show again the prompt-->
     <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site2">Se souvenir de ce choix pour ce site</string>
+    <!-- Text for a positive button in a permission request dialog. This will always allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
+    <string name="mozac_feature_sitepermissions_always_allow">Toujours</string>
+    <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
+    <string name="mozac_feature_sitepermissions_never_allow">Jamais</string>
 </resources>
