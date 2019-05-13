@@ -98,7 +98,6 @@ toolkit.jar:
    content/global/elements/marquee.js          (widgets/marquee.js)
    content/global/elements/menulist.js         (widgets/menulist.js)
    content/global/elements/popupnotification.js  (widgets/popupnotification.js)
-   content/global/elements/search-textbox.js     (widgets/search-textbox.js)
    content/global/elements/stringbundle.js     (widgets/stringbundle.js)
    content/global/elements/tabbox.js           (widgets/tabbox.js)
    content/global/elements/text.js             (widgets/text.js)

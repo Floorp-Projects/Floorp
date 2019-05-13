@@ -28,9 +28,9 @@ add_task(async function test_focus_on_search_shouldnt_close_popup() {
   await BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
   await popupShownPromise;
 
-  let searchInput = selectPopup.querySelector(".contentSelectDropdown-searchbox");
+  let searchInput = selectPopup.querySelector("textbox[type='search']");
   searchInput.scrollIntoView();
-  let searchFocused = BrowserTestUtils.waitForEvent(searchInput, "focus", true);
+  let searchFocused = BrowserTestUtils.waitForEvent(searchInput, "focus");
   await EventUtils.synthesizeMouseAtCenter(searchInput, {}, window);
   await searchFocused;
 
@@ -39,3 +39,4 @@ add_task(async function test_focus_on_search_shouldnt_close_popup() {
   await hideSelectPopup(selectPopup, "escape");
   BrowserTestUtils.removeTab(tab);
 });
+
