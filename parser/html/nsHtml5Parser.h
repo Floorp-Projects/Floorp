@@ -254,6 +254,13 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    */
   nsresult ParseUntilBlocked();
 
+  /**
+   * Start our executor.  This is meant to be used from document.open() _only_
+   * and does some work similar to what nsHtml5StreamParser::OnStartRequest does
+   * for normal parses.
+   */
+  nsresult StartExecutor();
+
  private:
   virtual ~nsHtml5Parser();
 
