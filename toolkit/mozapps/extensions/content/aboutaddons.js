@@ -749,6 +749,9 @@ class AddonDetails extends HTMLElement {
         .querySelector('a[data-l10n-name="learn-more"]');
       learnMore.href = SUPPORT_URL + "extensions-pb";
     } else {
+      // Remove the help row, which is right after the settings.
+      pbRow.nextElementSibling.remove();
+      // Then remove the actual settings.
       pbRow.remove();
     }
 
