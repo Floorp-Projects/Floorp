@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class LoginFilter extends HTMLElement {
+/* globals ReflectedFluentElement */
+
+class LoginFilter extends ReflectedFluentElement {
   connectedCallback() {
     if (this.children.length) {
       return;
@@ -11,6 +13,8 @@ class LoginFilter extends HTMLElement {
     let loginFilterTemplate = document.querySelector("#login-filter-template");
     this.attachShadow({mode: "open"})
         .appendChild(loginFilterTemplate.content.cloneNode(true));
+
+    this.reflectFluentStrings();
 
     this.addEventListener("input", this);
   }
@@ -28,22 +32,21 @@ class LoginFilter extends HTMLElement {
     }
   }
 
-  static get observedAttributes() {
+  static get reflectedFluentIDs() {
     return ["placeholder"];
   }
 
-  /* Fluent doesn't handle localizing into Shadow DOM yet so strings
-     need to get reflected in to their targeted element. */
-  attributeChangedCallback(attr, oldValue, newValue) {
-    if (!this.shadowRoot) {
-      return;
+  static get observedAttributes() {
+    return this.reflectedFluentIDs;
+  }
+
+  handleSpecialCaseFluentString(attrName) {
+    if (attrName != "placeholder") {
+      return false;
     }
 
-    switch (attr) {
-      case "placeholder":
-        this.shadowRoot.querySelector("input").placeholder = newValue;
-        break;
-    }
+    this.shadowRoot.querySelector("input").placeholder = this.getAttribute(attrName);
+    return true;
   }
 }
 customElements.define("login-filter", LoginFilter);
