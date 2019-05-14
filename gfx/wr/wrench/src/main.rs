@@ -658,6 +658,11 @@ fn render<'a>(
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
                             do_render = true;
                         }
+                        VirtualKeyCode::D => {
+                            debug_flags.toggle(DebugFlags::PICTURE_CACHING_DBG);
+                            wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
+                            do_render = true;
+                        }
                         VirtualKeyCode::Q => {
                             debug_flags.toggle(DebugFlags::GPU_TIME_QUERIES | DebugFlags::GPU_SAMPLE_QUERIES);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
