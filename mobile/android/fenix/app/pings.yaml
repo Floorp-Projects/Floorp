@@ -11,3 +11,10 @@ activation:
     include the client_id, since it might be reporting an hashed version of the
     Google Advertising ID.
   include_client_id: false
+  bugs:
+    - 1538011
+    - 1501822
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
+  notification_emails:
+    - fenix-core@mozilla.com
