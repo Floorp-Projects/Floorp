@@ -413,7 +413,7 @@ LoginManagerStorage_mozStorage.prototype = {
    *
    * @return {nsILoginInfo[]} which are decrypted.
    */
-  searchLogins(count, matchData) {
+  searchLogins(matchData) {
     let realMatchData = {};
     let options = {};
     // Convert nsIPropertyBag to normal JS object
@@ -436,7 +436,6 @@ LoginManagerStorage_mozStorage.prototype = {
     // Decrypt entries found for the caller.
     logins = this._decryptLogins(logins);
 
-    count.value = logins.length; // needed for XPCOM
     return logins;
   },
 

@@ -122,23 +122,17 @@ interface nsILoginManagerStorage : nsISupports {
    * Search for logins in the login manager. An array is always returned;
    * if there are no logins the array is empty.
    *
-   * @param count
-   *        The number of elements in the array. JS callers can simply use
-   *        the array's .length property, and supply an dummy object for
-   *        this out param. For example: |searchLogins({}, matchData)|
    * @param matchData
    *        The data used to search. This does not follow the same
    *        requirements as findLogins for those fields. Wildcard matches are
    *        simply not specified.
-   * @param logins
-   *        An array of nsILoginInfo objects.
+   * @return An array of nsILoginInfo objects.
    *
    * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.searchLogins({}, matchData);
+   *       var logins = pwmgr.searchLogins(matchData);
    *       (|logins| is an array).
    */
-  void searchLogins(out unsigned long count, in nsIPropertyBag matchData,
-                    [retval, array, size_is(count)] out nsILoginInfo logins);
+  Array<nsILoginInfo> searchLogins(in nsIPropertyBag matchData);
 
 
   /**
