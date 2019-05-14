@@ -20,7 +20,7 @@ interface imgIContainer;
  * An application may have as many tab previews per window as memory allows.
  *
  */
-[scriptable, uuid(11E4C8BD-5C2D-4E1A-A9A1-79DD5B0FE544)]
+[scriptable, builtinclass, uuid(11E4C8BD-5C2D-4E1A-A9A1-79DD5B0FE544)]
 interface nsITaskbarTabPreview : nsITaskbarPreview
 {
   /**
