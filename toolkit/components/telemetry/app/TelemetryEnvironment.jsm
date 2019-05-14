@@ -848,7 +848,7 @@ EnvironmentAddonBuilder.prototype = {
           blocklisted: tag.blocklisted,
           disabled: tag.disabled,
           clicktoplay: tag.clicktoplay,
-          mimeTypes: tag.getMimeTypes({}),
+          mimeTypes: tag.getMimeTypes(),
           updateDay: Utils.millisecondsToDays(updateDate.getTime()),
         });
       } catch (ex) {
