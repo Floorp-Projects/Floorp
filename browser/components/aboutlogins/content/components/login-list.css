@@ -3,14 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  border-inline-end: 1px solid var(--grey-30);
+  border-inline-end: 1px solid var(--in-content-box-border-color);
+  background-color: var(--in-content-box-background);
 }
 
 .meta {
   display: flex;
   padding: 10px;
-  border-bottom: 1px solid var(--grey-30);
-  background-color: var(--grey-20);
+  border-bottom: 1px solid var(--in-content-box-border-color);
+  background-color: var(--in-content-box-info-background);
 }
 
 .count {

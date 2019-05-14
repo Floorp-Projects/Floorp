@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 h2 {
-  border-bottom: 1px solid var(--grey-30);
+  border-bottom: 1px solid var(--in-content-box-border-color);
 }
 
 .field-label {
@@ -23,5 +23,5 @@ h2 {
 }
 
 .meta-info:first-of-type {
-  border-top: 1px solid var(--grey-30);
+  border-top: 1px solid var(--in-content-box-border-color);
 }
