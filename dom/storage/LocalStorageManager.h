@@ -101,6 +101,7 @@ class LocalStorageManager final : public nsIDOMStorageManager,
   // Helper for creation of DOM storage objects
   nsresult GetStorageInternal(CreateMode aCreate, mozIDOMWindow* aWindow,
                               nsIPrincipal* aPrincipal,
+                              nsIPrincipal* aStoragePrincipal,
                               const nsAString& aDocumentURI, bool aPrivate,
                               Storage** aRetval);
 

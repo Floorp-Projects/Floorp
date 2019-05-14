@@ -20,9 +20,11 @@ NS_INTERFACE_MAP_END_INHERITING(Storage)
 NS_IMPL_ADDREF_INHERITED(PartitionedLocalStorage, Storage)
 NS_IMPL_RELEASE_INHERITED(PartitionedLocalStorage, Storage)
 
-PartitionedLocalStorage::PartitionedLocalStorage(nsPIDOMWindowInner* aWindow,
-                                                 nsIPrincipal* aPrincipal)
-    : Storage(aWindow, aPrincipal), mCache(new SessionStorageCache()) {}
+PartitionedLocalStorage::PartitionedLocalStorage(
+    nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
+    nsIPrincipal* aStoragePrincipal)
+    : Storage(aWindow, aPrincipal, aStoragePrincipal),
+      mCache(new SessionStorageCache()) {}
 
 PartitionedLocalStorage::~PartitionedLocalStorage() {}
 
