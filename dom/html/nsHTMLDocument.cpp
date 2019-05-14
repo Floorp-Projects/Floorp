@@ -1193,6 +1193,11 @@ Document* nsHTMLDocument::Open(const Optional<nsAString>& /* unused */,
           static_cast<ReferrerPolicy>(mReferrerPolicy));
     }
   }
+  nsresult rv = parser->StartExecutor();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aError.Throw(rv);
+    return nullptr;
+  }
 
   // Some internal non-spec bookkeeping.
   mContentTypeForWriteCalls.AssignLiteral("text/html");
