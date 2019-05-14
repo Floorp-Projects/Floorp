@@ -253,3 +253,4 @@ TEST(CubebDeviceEnumerator, DeviceInfoFromName)
   // Shutdown for `supports` to take effect
   CubebDeviceEnumerator::Shutdown();
 }
+#undef ENABLE_SET_CUBEB_BACKEND
