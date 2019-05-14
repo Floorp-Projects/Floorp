@@ -409,8 +409,17 @@ const QuotaCleaner = {
 
               let promises = [];
               for (let item of aRequest.result) {
-                let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
-                if (Services.eTLD.hasRootDomain(principal.URI.host, aHost)) {
+                let principal = Services.scriptSecurityManager
+                                        .createCodebasePrincipalFromOrigin(item.origin);
+                let host;
+                try {
+                  host = principal.URI.host;
+                } catch (e) {
+                  // There is no host for the given principal.
+                  continue;
+                }
+
+                if (Services.eTLD.hasRootDomain(host, aHost)) {
                   promises.push(new Promise((aResolve, aReject) => {
                     let clearRequest = Services.qms.clearStoragesForPrincipal(principal, null, "ls");
                     clearRequest.callback = () => {
