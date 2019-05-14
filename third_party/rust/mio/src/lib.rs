@@ -1,7 +1,3 @@
-#![doc(html_root_url = "https://docs.rs/mio/0.6.16")]
-#![deny(missing_docs, missing_debug_implementations)]
-#![cfg_attr(test, deny(warnings))]
-
 //! A fast, low-level IO library for Rust focusing on non-blocking APIs, event
 //! notification, and other useful utilities for building high performance IO
 //! apps.
@@ -93,6 +89,11 @@
 //! }
 //!
 //! ```
+
+#![doc(html_root_url = "https://docs.rs/mio/0.6.15")]
+#![crate_name = "mio"]
+
+#![deny(warnings, missing_docs, missing_debug_implementations)]
 
 extern crate lazycell;
 extern crate net2;
