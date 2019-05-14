@@ -6,6 +6,7 @@ package org.mozilla.fenix.customtabs
 
 import android.app.Activity
 import android.content.Context
+import com.google.android.material.appbar.AppBarLayout
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
@@ -21,6 +22,10 @@ class CustomTabsIntegration(
     activity: Activity?,
     onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : LifecycleAwareFeature, BackHandler {
+
+    init {
+        enableToolbarCollapse()
+    }
 
     private val customTabToolbarMenu by lazy {
         CustomTabToolbarMenu(
@@ -51,7 +56,16 @@ class CustomTabsIntegration(
         return feature.onBackPressed()
     }
 
+    private fun enableToolbarCollapse() {
+        val params = toolbar.layoutParams as AppBarLayout.LayoutParams
+        params.scrollFlags = DEFAULT_SCROLL_FLAGS
+    }
+
     companion object {
+        const val DEFAULT_SCROLL_FLAGS = AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
+                AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS or
+                AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or
+                AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED
         const val START_OF_MENU_ITEMS_INDEX = 2
     }
 }
