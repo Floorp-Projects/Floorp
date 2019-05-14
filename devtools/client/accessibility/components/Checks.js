@@ -21,7 +21,7 @@ function EmptyChecks() {
     div({
       className: "checks-empty",
       role: "presentation",
-    }, L10N.getStr("accessibility.checks.empty"))
+    }, L10N.getStr("accessibility.checks.empty2"))
   );
 }
 
