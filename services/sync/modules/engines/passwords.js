@@ -213,7 +213,7 @@ PasswordStore.prototype = {
 
   async getAllIDs() {
     let items = {};
-    let logins = Services.logins.getAllLogins({});
+    let logins = Services.logins.getAllLogins();
 
     for (let i = 0; i < logins.length; i++) {
       // Skip over Weave password/passphrase entries.
@@ -402,7 +402,7 @@ class PasswordValidator extends CollectionValidator {
   }
 
   getClientItems() {
-    let logins = Services.logins.getAllLogins({});
+    let logins = Services.logins.getAllLogins();
     let syncHosts = Utils.getSyncCredentialsHosts();
     let result = logins.map(l => l.QueryInterface(Ci.nsILoginMetaInfo))
                        .filter(l => !syncHosts.has(l.hostname));

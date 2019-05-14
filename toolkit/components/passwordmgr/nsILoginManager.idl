@@ -97,18 +97,13 @@ interface nsILoginManager : nsISupports {
    * Fetch all logins in the login manager. An array is always returned;
    * if there are no logins the array is empty.
    *
-   * @param count
-   *        The number of elements in the array. JS callers can simply use
-   *        the array's .length property and omit this param.
-   * @param logins
-   *        An array of nsILoginInfo objects.
+   * @return An array of nsILoginInfo objects.
    *
    * NOTE: This can be called from JS as:
    *       var logins = pwmgr.getAllLogins();
    *       (|logins| is an array).
    */
-  void getAllLogins([optional] out unsigned long count,
-                    [retval, array, size_is(count)] out nsILoginInfo logins);
+  Array<nsILoginInfo> getAllLogins();
 
 
   /**

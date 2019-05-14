@@ -168,7 +168,7 @@ LoginManager.prototype = {
       return;
     }
 
-    let logins = this.getAllLogins({});
+    let logins = this.getAllLogins();
 
     let usernamePresentHistogram = clearAndGetHistogram("PWMGR_USERNAME_PRESENT");
     let loginLastUsedDaysHistogram = clearAndGetHistogram("PWMGR_LOGIN_LAST_USED_DAYS");
@@ -323,12 +323,11 @@ LoginManager.prototype = {
   /**
    * Get a dump of all stored logins. Used by the login manager UI.
    *
-   * @param count - only needed for XPCOM.
    * @return {nsILoginInfo[]} - If there are no logins, the array is empty.
    */
-  getAllLogins(count) {
+  getAllLogins() {
     log.debug("Getting a list of all logins");
-    return this._storage.getAllLogins(count);
+    return this._storage.getAllLogins();
   },
 
 
