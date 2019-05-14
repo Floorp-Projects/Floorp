@@ -28,7 +28,8 @@
         android:id="@+id/history_favicon"
         android:layout_width="@dimen/history_favicon_width_height"
         android:layout_height="@dimen/history_favicon_width_height"
-        android:background="@drawable/history_favicon_background"
+        android:background="@drawable/favicon_background"
+        android:padding="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

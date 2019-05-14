@@ -106,6 +106,9 @@ class HistoryListItemViewHolder(
                 favicon.setImageResource(0)
             }
         } else {
+            val backgroundTint = DefaultThemeManager.resolveAttribute(R.attr.neutral, itemView.context)
+            val backgroundTintList = ContextCompat.getColorStateList(itemView.context, backgroundTint)
+            favicon.backgroundTintList = backgroundTintList
             updateFavIcon(item.url)
         }
     }
