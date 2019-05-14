@@ -399,14 +399,14 @@ nsresult nsHttpChannelAuthProvider::GenCredsAndSetEntry(
 #endif
 
   return UpdateCache(auth, scheme, host, port, directory, realm, challenge,
-                     ident, *result, generateFlags, sessionState);
+                     ident, *result, generateFlags, sessionState, proxyAuth);
 }
 
 nsresult nsHttpChannelAuthProvider::UpdateCache(
     nsIHttpAuthenticator* auth, const char* scheme, const char* host,
     int32_t port, const char* directory, const char* realm,
     const char* challenge, const nsHttpAuthIdentity& ident, const char* creds,
-    uint32_t generateFlags, nsISupports* sessionState) {
+    uint32_t generateFlags, nsISupports* sessionState, bool aProxyAuth) {
   nsresult rv;
 
   uint32_t authFlags;
@@ -426,9 +426,13 @@ nsresult nsHttpChannelAuthProvider::UpdateCache(
   // this getter never fails
   nsHttpAuthCache* authCache = gHttpHandler->AuthCache(mIsPrivate);
 
-  nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
   nsAutoCString suffix;
-  GetOriginAttributesSuffix(chan, suffix);
+  if (!aProxyAuth) {
+    // We don't isolate proxy credentials cache entries with the origin suffix
+    // as it would only annoy users with authentication dialogs popping up.
+    nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
+    GetOriginAttributesSuffix(chan, suffix);
+  }
 
   // create a cache entry.  we do this even though we don't yet know that
   // these credentials are valid b/c we need to avoid prompting the user
@@ -1393,7 +1397,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnCredsGenerated(
 
   rv = UpdateCache(auth, scheme.get(), host, port, directory.get(), realm.get(),
                    mCurrentChallenge.get(), *ident, aGeneratedCreds, aFlags,
-                   aSessionState);
+                   aSessionState, mProxyAuth);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   mCurrentChallenge.Truncate();
 
