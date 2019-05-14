@@ -25,6 +25,7 @@ login-list =
 login-item =
   .cancel-button = Cancel
   .delete-button = Delete
+  .edit-button = Edit
   .hostname-label = Website Address
   .password-label = Password
   .save-changes-button = Save Changes
