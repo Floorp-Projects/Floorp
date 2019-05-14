@@ -394,8 +394,7 @@ var LoginManagerParent = {
         // but since we don't have the username, we don't know if the user is
         // changing a second account to the new password so we ask anyways.
 
-        prompter.promptToChangePasswordWithUsernames(
-          logins, logins.length, formLogin);
+        prompter.promptToChangePasswordWithUsernames(logins, formLogin);
       }
 
       return;
