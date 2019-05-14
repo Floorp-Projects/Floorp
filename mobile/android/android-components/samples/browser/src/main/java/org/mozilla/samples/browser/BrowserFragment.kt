@@ -232,6 +232,6 @@ class BrowserFragment : Fragment(), BackHandler {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        promptFeature.withFeature { onActivityResult(requestCode, resultCode, data) }
+        promptFeature.withFeature { it.onActivityResult(requestCode, resultCode, data) }
     }
 }

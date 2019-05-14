@@ -198,7 +198,7 @@ class PromptFeature(
     ) {
         intent.apply {
 
-            if (request.isMultipleFilesSelection) {
+            if (intent.clipData != null && request.isMultipleFilesSelection) {
                 handleMultipleFileSelections(request, this)
             } else {
                 handleSingleFileSelection(request, this)
@@ -221,7 +221,7 @@ class PromptFeature(
         request: File,
         intent: Intent
     ) {
-        intent.clipData?.apply {
+        intent.clipData?.run {
             val uris = Array<Uri>(itemCount) { index -> getItemAt(index).uri }
             request.onMultipleFilesSelected(context, uris)
         }

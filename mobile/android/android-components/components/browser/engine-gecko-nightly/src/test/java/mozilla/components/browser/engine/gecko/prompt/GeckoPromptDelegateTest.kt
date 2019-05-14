@@ -48,6 +48,8 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_MONTH
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_TIME
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_WEEK
+import org.robolectric.Shadows.shadowOf
+import java.io.FileInputStream
 import java.security.InvalidParameterException
 import java.util.Date
 import java.util.Calendar
@@ -630,6 +632,11 @@ class GeckoPromptDelegateTest {
         var onSingleFileSelectedWasCalled = false
         var onMultipleFilesSelectedWasCalled = false
         var onDismissWasCalled = false
+        val mockUri: Uri = mock()
+        val mockFileInput: FileInputStream = mock()
+        val shadowContentResolver = shadowOf(context.contentResolver)
+
+        shadowContentResolver.registerInputStream(mockUri, mockFileInput)
 
         val callback = object : GeckoSession.PromptDelegate.FileCallback {
             override fun dismiss() {
@@ -662,10 +669,10 @@ class GeckoPromptDelegateTest {
 
         val filePickerRequest = request as PromptRequest.File
 
-        filePickerRequest.onSingleFileSelected(context, mock())
+        filePickerRequest.onSingleFileSelected(context, mockUri)
         assertTrue(onSingleFileSelectedWasCalled)
 
-        filePickerRequest.onMultipleFilesSelected(context, emptyArray())
+        filePickerRequest.onMultipleFilesSelected(context, arrayOf(mockUri))
         assertTrue(onMultipleFilesSelectedWasCalled)
 
         filePickerRequest.onDismiss()
