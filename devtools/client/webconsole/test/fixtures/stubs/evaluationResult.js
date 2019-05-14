@@ -106,51 +106,8 @@ stubPreparedMessages.set(`1 + @`, new ConsoleMessage({
       "type": "undefined"
     }
   ],
-  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":[{\"filename\":\"resource://devtools/server/actors/webconsole/eval-with-debugger.js\",\"sourceId\":null,\"lineNumber\":134,\"columnNumber\":28,\"functionName\":\"getEvalResult\"},{\"filename\":\"resource://devtools/server/actors/webconsole/eval-with-debugger.js\",\"sourceId\":null,\"lineNumber\":105,\"columnNumber\":18,\"functionName\":\"exports.evalWithDebugger\"},{\"filename\":\"resource://devtools/server/actors/webconsole.js\",\"sourceId\":null,\"lineNumber\":1005,\"columnNumber\":22,\"functionName\":\"evaluateJS\"},{\"filename\":\"self-hosted\",\"sourceId\":null,\"lineNumber\":1005,\"columnNumber\":17,\"functionName\":\"evaluateJS\"},{\"filename\":\"resource://devtools/server/main.js\",\"sourceId\":null,\"lineNumber\":1291,\"columnNumber\":58,\"functionName\":\"onPacket\"},{\"filename\":\"resource://devtools/shared/transport/child-transport.js\",\"sourceId\":null,\"lineNumber\":66,\"columnNumber\":16,\"functionName\":\"receiveMessage\"}]}",
-  "stacktrace": [
-    {
-      "filename": "resource://devtools/server/actors/webconsole/eval-with-debugger.js",
-      "sourceId": null,
-      "lineNumber": 134,
-      "columnNumber": 28,
-      "functionName": "getEvalResult"
-    },
-    {
-      "filename": "resource://devtools/server/actors/webconsole/eval-with-debugger.js",
-      "sourceId": null,
-      "lineNumber": 105,
-      "columnNumber": 18,
-      "functionName": "exports.evalWithDebugger"
-    },
-    {
-      "filename": "resource://devtools/server/actors/webconsole.js",
-      "sourceId": null,
-      "lineNumber": 1005,
-      "columnNumber": 22,
-      "functionName": "evaluateJS"
-    },
-    {
-      "filename": "self-hosted",
-      "sourceId": null,
-      "lineNumber": 1005,
-      "columnNumber": 17,
-      "functionName": "evaluateJS"
-    },
-    {
-      "filename": "resource://devtools/server/main.js",
-      "sourceId": null,
-      "lineNumber": 1291,
-      "columnNumber": 58,
-      "functionName": "onPacket"
-    },
-    {
-      "filename": "resource://devtools/shared/transport/child-transport.js",
-      "sourceId": null,
-      "lineNumber": 66,
-      "columnNumber": 16,
-      "functionName": "receiveMessage"
-    }
-  ],
+  "repeatId": "{\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":[{\"type\":\"undefined\"}],\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null,\"stacktrace\":null}",
+  "stacktrace": null,
   "frame": {
     "source": "debugger eval code",
     "line": 1,
@@ -490,50 +447,7 @@ stubPackets.set(`1 + @`, {
   },
   "exceptionMessage": "SyntaxError: illegal character",
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-  "exceptionStack": [
-    {
-      "filename": "resource://devtools/server/actors/webconsole/eval-with-debugger.js",
-      "sourceId": null,
-      "lineNumber": 134,
-      "columnNumber": 28,
-      "functionName": "getEvalResult"
-    },
-    {
-      "filename": "resource://devtools/server/actors/webconsole/eval-with-debugger.js",
-      "sourceId": null,
-      "lineNumber": 105,
-      "columnNumber": 18,
-      "functionName": "exports.evalWithDebugger"
-    },
-    {
-      "filename": "resource://devtools/server/actors/webconsole.js",
-      "sourceId": null,
-      "lineNumber": 1005,
-      "columnNumber": 22,
-      "functionName": "evaluateJS"
-    },
-    {
-      "filename": "self-hosted",
-      "sourceId": null,
-      "lineNumber": 1005,
-      "columnNumber": 17,
-      "functionName": "evaluateJS"
-    },
-    {
-      "filename": "resource://devtools/server/main.js",
-      "sourceId": null,
-      "lineNumber": 1291,
-      "columnNumber": 58,
-      "functionName": "onPacket"
-    },
-    {
-      "filename": "resource://devtools/shared/transport/child-transport.js",
-      "sourceId": null,
-      "lineNumber": 66,
-      "columnNumber": 16,
-      "functionName": "receiveMessage"
-    }
-  ],
+  "exceptionStack": null,
   "errorMessageName": "JSMSG_ILLEGAL_CHARACTER",
   "frame": {
     "source": "debugger eval code",

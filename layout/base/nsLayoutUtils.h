@@ -3023,7 +3023,7 @@ class nsLayoutUtils {
 
   /**
    * Returns true if there are any preferences or overrides that indicate a
-   * need to create a MobileViewportManager.
+   * need to handle <meta name="viewport"> tags.
    */
   static bool ShouldHandleMetaViewport(const mozilla::dom::Document*);
 

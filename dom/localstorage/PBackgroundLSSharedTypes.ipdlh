@@ -16,6 +16,7 @@ namespace dom {
 struct LSRequestCommonParams
 {
   PrincipalInfo principalInfo;
+  PrincipalInfo storagePrincipalInfo;
   nsCString originKey;
 };
 
@@ -33,6 +34,7 @@ struct LSRequestPrepareDatastoreParams
 struct LSRequestPrepareObserverParams
 {
   PrincipalInfo principalInfo;
+  PrincipalInfo storagePrincipalInfo;
   nsID? clientId;
 };
 
@@ -46,6 +48,7 @@ union LSRequestParams
 struct LSSimpleRequestPreloadedParams
 {
   PrincipalInfo principalInfo;
+  PrincipalInfo storagePrincipalInfo;
 };
 
 union LSSimpleRequestParams
