@@ -1877,14 +1877,14 @@ class BreakpointSite {
 
  protected:
   virtual void recompile(FreeOp* fop) = 0;
-  inline bool isEnabled() const { return enabledCount > 0; }
+  bool isEnabled() const { return enabledCount > 0; }
 
  public:
   BreakpointSite(Type type);
   Breakpoint* firstBreakpoint() const;
   virtual ~BreakpointSite() {}
   bool hasBreakpoint(Breakpoint* bp);
-  inline Type type() const { return type_; }
+  Type type() const { return type_; }
 
   void inc(FreeOp* fop);
   void dec(FreeOp* fop);
