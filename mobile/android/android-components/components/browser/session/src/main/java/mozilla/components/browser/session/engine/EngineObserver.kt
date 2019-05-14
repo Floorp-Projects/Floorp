@@ -26,9 +26,12 @@ internal class EngineObserver(
 ) : EngineSession.Observer {
 
     override fun onLocationChange(url: String) {
+        if (session.url != url) {
+            session.title = ""
+            session.icon = null
+        }
+
         session.url = url
-        session.title = ""
-        session.icon = null
 
         session.contentPermissionRequest.consume {
             it.reject()
