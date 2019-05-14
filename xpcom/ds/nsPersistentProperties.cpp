@@ -543,7 +543,7 @@ nsPersistentProperties::Has(const char* aProp, bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsPersistentProperties::GetKeys(uint32_t* aCount, char*** aKeys) {
+nsPersistentProperties::GetKeys(nsTArray<nsCString>& aKeys) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
