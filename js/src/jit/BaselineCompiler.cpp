@@ -163,7 +163,8 @@ MethodStatus BaselineCompiler::compile() {
   AutoTraceLog logCompile(logger, TraceLogger_BaselineCompilation);
 
   AutoKeepTypeScripts keepTypes(cx);
-  if (!script->ensureHasTypes(cx, keepTypes)) {
+  if (!script->ensureHasTypes(cx, keepTypes) ||
+      !script->ensureHasAnalyzedArgsUsage(cx)) {
     return Method_Error;
   }
 
@@ -415,7 +416,7 @@ static void LoadInlineValueOperand(MacroAssembler& masm, Register pc,
   // Note: the Value might be unaligned but as above we rely on all our
   // platforms having appropriate support for unaligned accesses (except for
   // floating point instructions on ARM).
-  masm.loadUnalignedValue(Address(pc, sizeof(jsbytecode)), dest);
+  masm.loadValue(Address(pc, sizeof(jsbytecode)), dest);
 }
 
 template <>
@@ -6686,10 +6687,6 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
   regs.takeUnchecked(BaselineFrameReg);
   regs.takeUnchecked(ICStubReg);
   regs.takeUnchecked(PCRegAtStart);
-#ifdef JS_CODEGEN_ARM
-  regs.takeUnchecked(BaselineSecondScratchReg);
-  masm.setSecondScratchReg(BaselineSecondScratchReg);
-#endif
   Register scratch1 = regs.takeAny();
   Register scratch2 = regs.takeAny();
   Register scratch3 = regs.takeAny();
