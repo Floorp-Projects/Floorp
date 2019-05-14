@@ -16,7 +16,11 @@ login-filter =
   .placeholder = Search Logins
 
 login-list =
-  .login-list-header = Logins
+  .count =
+    { $count ->
+        [one] { $count } entry
+       *[other] { $count } entries
+    }
 
 login-item =
   .cancel-button = Cancel
