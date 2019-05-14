@@ -798,7 +798,7 @@ class UrlInputFragment :
         }
 
         view?.let {
-            var result : DomainAutocompleteResult? = null
+            var result: DomainAutocompleteResult? = null
             if (useCustom) {
                 result = customDomainsProvider.getAutocompleteSuggestion(searchText)
             }
