@@ -35,8 +35,6 @@ const TELEMETRY_COMPONENT = "remotesettings";
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "gServerURL",
                                       "services.settings.server");
-XPCOMUtils.defineLazyPreferenceGetter(this, "gChangesPath",
-                                      "services.settings.changes.path");
 
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
@@ -255,7 +253,7 @@ class RemoteSettingsClient extends EventEmitter {
   async sync(options) {
     // We want to know which timestamp we are expected to obtain in order to leverage
     // cache busting. We don't provide ETag because we don't want a 304.
-    const { changes } = await Utils.fetchLatestChanges(gServerURL + gChangesPath, {
+    const { changes } = await Utils.fetchLatestChanges(gServerURL, {
       filters: {
         collection: this.collectionName,
         bucket: this.bucketName,
