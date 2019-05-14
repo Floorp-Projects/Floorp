@@ -60,19 +60,10 @@ void nsHtml5Module::ReleaseStatics() {
 }
 
 // static
-already_AddRefed<nsIParser> nsHtml5Module::NewHtml5Parser() {
+already_AddRefed<nsHtml5Parser> nsHtml5Module::NewHtml5Parser() {
   MOZ_ASSERT(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
-  nsCOMPtr<nsIParser> rv = new nsHtml5Parser();
+  RefPtr<nsHtml5Parser> rv = new nsHtml5Parser();
   return rv.forget();
-}
-
-// static
-nsresult nsHtml5Module::Initialize(nsIParser* aParser, dom::Document* aDoc,
-                                   nsIURI* aURI, nsISupports* aContainer,
-                                   nsIChannel* aChannel) {
-  MOZ_ASSERT(sNsHtml5ModuleInitialized, "nsHtml5Module not initialized.");
-  nsHtml5Parser* parser = static_cast<nsHtml5Parser*>(aParser);
-  return parser->Initialize(aDoc, aURI, aContainer, aChannel);
 }
 
 class nsHtml5ParserThreadTerminator final : public nsIObserver {
