@@ -122,7 +122,7 @@ typedef FetchThreatListUpdatesRequest_ListUpdateRequest ListUpdateRequest;
 typedef FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints Constraints;
 
 static void InitListUpdateRequest(ThreatType aThreatType,
-                                  const char* aStateBase64,
+                                  const nsCString& aStateBase64,
                                   ListUpdateRequest* aListUpdateRequest) {
   aListUpdateRequest->set_threat_type(aThreatType);
   PlatformType platform = GetPlatformType();
@@ -141,9 +141,9 @@ static void InitListUpdateRequest(ThreatType aThreatType,
   aListUpdateRequest->set_allocated_constraints(contraints);
 
   // Only set non-empty state.
-  if (aStateBase64[0] != '\0') {
+  if (!aStateBase64.IsEmpty()) {
     nsCString stateBinary;
-    nsresult rv = Base64Decode(nsDependentCString(aStateBase64), stateBinary);
+    nsresult rv = Base64Decode(aStateBase64, stateBinary);
     if (NS_SUCCEEDED(rv)) {
       aListUpdateRequest->set_state(stateBinary.get(), stateBinary.Length());
     }
@@ -392,19 +392,21 @@ nsUrlClassifierUtils::GetProtocolVersion(const nsACString& aProvider,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
-                                          const char** aStatesBase64,
-                                          uint32_t aCount,
-                                          nsACString& aRequest) {
+nsUrlClassifierUtils::MakeUpdateRequestV4(
+    const nsTArray<nsCString>& aListNames,
+    const nsTArray<nsCString>& aStatesBase64, nsACString& aRequest) {
   using namespace mozilla::safebrowsing;
+
+  if (aListNames.Length() != aStatesBase64.Length()) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   FetchThreatListUpdatesRequest r;
   r.set_allocated_client(CreateClientInfo());
 
-  for (uint32_t i = 0; i < aCount; i++) {
-    nsCString listName(aListNames[i]);
+  for (uint32_t i = 0; i < aListNames.Length(); i++) {
     uint32_t threatType;
-    nsresult rv = ConvertListNameToThreatType(listName, &threatType);
+    nsresult rv = ConvertListNameToThreatType(aListNames[i], &threatType);
     if (NS_FAILED(rv)) {
       continue;  // Unknown list name.
     }
@@ -412,7 +414,7 @@ nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
       NS_WARNING(
           nsPrintfCString(
               "Threat type %d (%s) is unsupported on current platform: %d",
-              threatType, aListNames[i], GetPlatformType())
+              threatType, aListNames[i].get(), GetPlatformType())
               .get());
       continue;  // Some threat types are not available on some platforms.
     }
