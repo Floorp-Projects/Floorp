@@ -2,6 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:host {
+  border-inline-end: 1px solid var(--grey-30);
+}
+
+.meta {
+  display: flex;
+  padding: 10px;
+  border-bottom: 1px solid var(--grey-30);
+  background-color: var(--grey-20);
+}
+
+.count {
+  flex: auto;
+  text-align: end;
+  font-size: smaller;
+}
+
 ol {
+  margin-top: 0;
+  margin-bottom: 0;
   padding-inline-start: 0;
 }

@@ -23,7 +23,8 @@
                     data-l10n-attrs="placeholder"></login-filter>
     </header>
     <login-list data-l10n-id="login-list"
-                data-l10n-attrs="login-list-header"></login-list>
+                data-l10n-attrs="count"
+                data-l10n-args='{"count": 0}'></login-list>
     <login-item data-l10n-id="login-item"
                 data-l10n-args='{"timeCreated": 0, "timeChanged": 0, "timeUsed": 0}'
                 data-l10n-attrs="cancel-button,
@@ -39,7 +40,9 @@
     <template id="login-list-template">
       <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list.css">
-      <h2></h2>
+      <div class="meta">
+        <span class="count"></span>
+      </div>
       <ol>
       </ol>
     </template>
