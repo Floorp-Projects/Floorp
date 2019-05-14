@@ -218,6 +218,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   void loadValue(const BaseIndex& src, ValueOperand val) {
     loadValue(Operand(src), val);
   }
+  void loadUnalignedValue(const Address& src, ValueOperand dest) {
+    loadValue(src, dest);
+  }
   void tagValue(JSValueType type, Register payload, ValueOperand dest) {
     MOZ_ASSERT(dest.typeReg() != dest.payloadReg());
     if (payload != dest.payloadReg()) {
