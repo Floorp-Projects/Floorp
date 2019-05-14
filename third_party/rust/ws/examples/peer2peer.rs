@@ -1,6 +1,3 @@
-extern crate clap;
-extern crate env_logger;
-extern crate url;
 /// An example of a client-server-agnostic WebSocket that takes input from stdin and sends that
 /// input to all other peers.
 ///
@@ -26,9 +23,12 @@ extern crate url;
 /// Stdin on 3013 will be sent to 3012 and 3015
 /// Stdin on 3014 will be sent to 3012 only
 /// Stdin on 3015 will be sent to 3012 and 2013
+
 extern crate ws;
-#[macro_use]
-extern crate log;
+extern crate url;
+extern crate clap;
+extern crate env_logger;
+#[macro_use] extern crate log;
 
 use std::io;
 use std::io::prelude::*;
@@ -38,25 +38,21 @@ use clap::{App, Arg};
 
 fn main() {
     // Setup logging
-    env_logger::init();
+    env_logger::init().unwrap();
 
     // Parse command line arguments
     let matches = App::new("Simple Peer 2 Peer")
         .version("1.0")
         .author("Jason Housley <housleyjk@gmail.com>")
         .about("Connect to other peers and listen for incoming connections.")
-        .arg(
-            Arg::with_name("server")
-                .short("s")
-                .long("server")
-                .value_name("SERVER")
-                .help("Set the address to listen for new connections."),
-        )
-        .arg(
-            Arg::with_name("PEER")
-                .help("A WebSocket URL to attempt to connect to at start.")
-                .multiple(true),
-        )
+        .arg(Arg::with_name("server")
+             .short("s")
+             .long("server")
+             .value_name("SERVER")
+             .help("Set the address to listen for new connections."))
+        .arg(Arg::with_name("PEER")
+             .help("A WebSocket URL to attempt to connect to at start.")
+             .multiple(true))
         .get_matches();
 
     // Get address of this peer
@@ -65,8 +61,7 @@ fn main() {
     // Create simple websocket that just prints out messages
     let mut me = ws::WebSocket::new(|_| {
         move |msg| {
-            info!("Peer {} got message: {}", my_addr, msg);
-            Ok(())
+            Ok(info!("Peer {} got message: {}", my_addr, msg))
         }
     }).unwrap();
 
@@ -93,4 +88,5 @@ fn main() {
     // Run the websocket
     me.listen(my_addr).unwrap();
     input.join().unwrap();
+
 }
