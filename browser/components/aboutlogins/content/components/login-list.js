@@ -29,6 +29,7 @@ class LoginList extends HTMLElement {
     for (let login of this._logins) {
       list.append(new LoginListItem(login));
     }
+    document.l10n.setAttributes(this, "login-list", {count: this._logins.length});
   }
 
   handleEvent(event) {
@@ -53,6 +54,7 @@ class LoginList extends HTMLElement {
             listItem.hidden = true;
           }
         }
+        document.l10n.setAttributes(this, "login-list", {count: matchingLoginGuids.length});
         break;
       }
       case "AboutLoginsLoginSelected": {
@@ -70,7 +72,7 @@ class LoginList extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["login-list-header"];
+    return ["count"];
   }
 
   /* Fluent doesn't handle localizing into Shadow DOM yet so strings
@@ -81,8 +83,8 @@ class LoginList extends HTMLElement {
     }
 
     switch (attr) {
-      case "login-list-header":
-        this.shadowRoot.querySelector("h2").textContent = newValue;
+      case "count":
+        this.shadowRoot.querySelector(".count").textContent = newValue;
         break;
     }
   }
