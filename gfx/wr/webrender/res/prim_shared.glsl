@@ -56,7 +56,6 @@ struct PrimitiveHeader {
     vec4 snap_offsets;
     float z;
     int specific_prim_address;
-    int render_task_index;
     int transform_id;
     ivec4 user_data;
 };
@@ -75,9 +74,8 @@ PrimitiveHeader fetch_prim_header(int index) {
     ivec4 data0 = TEXEL_FETCH(sPrimitiveHeadersI, uv_i, 0, ivec2(0, 0));
     ivec4 data1 = TEXEL_FETCH(sPrimitiveHeadersI, uv_i, 0, ivec2(1, 0));
     ph.z = float(data0.x);
-    ph.render_task_index = data0.y;
-    ph.specific_prim_address = data0.z;
-    ph.transform_id = data0.w;
+    ph.specific_prim_address = data0.y;
+    ph.transform_id = data0.z;
     ph.user_data = data1;
 
     return ph;
