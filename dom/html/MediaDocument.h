@@ -53,7 +53,7 @@ class MediaDocument : public nsHTMLDocument {
   virtual nsresult CreateSyntheticDocument();
 
   friend class MediaDocumentStreamListener;
-  nsresult StartLayout();
+  virtual nsresult StartLayout();
 
   void GetFileName(nsAString& aResult, nsIChannel* aChannel);
 
