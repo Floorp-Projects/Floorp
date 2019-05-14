@@ -145,10 +145,6 @@ interface nsILoginManagerStorage : nsISupports {
    * Search for logins matching the specified criteria. Called when looking
    * for logins that might be applicable to a form or authentication request.
    *
-   * @param count
-   *        The number of elements in the array. JS callers can simply use
-   *        the array's .length property, and supply an dummy object for
-   *        this out param. For example: |findLogins({}, hostname, ...)|
    * @param aHostname
    *        The hostname to restrict searches to, in URL format. For
    *        example: "http://www.site.com".
@@ -160,16 +156,14 @@ interface nsILoginManagerStorage : nsISupports {
    *        for which the login applies. This is obtained from the
    *        WWW-Authenticate header. See RFC2617. For form logins,
    *        specify null.
-   * @param logins
-   *        An array of nsILoginInfo objects.
+   * @return An array of nsILoginInfo objects.
    *
    * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.findLogins({}, hostname, ...);
+   *       var logins = pwmgr.findLogins(hostname, ...);
    *
    */
-  void findLogins(out unsigned long count, in AString aHostname,
-                  in AString aActionURL,   in AString aHttpRealm,
-                  [retval, array, size_is(count)] out nsILoginInfo logins);
+  Array<nsILoginInfo> findLogins(in AString aHostname, in AString aActionURL,
+				 in AString aHttpRealm);
 
 
   /**

@@ -74,10 +74,7 @@ function checkAllSearches(aQuery, aExpectedCount) {
   let httpRealm = ("httpRealm" in aQuery) ? aQuery.httpRealm : "";
 
   // Test findLogins.
-  let outCount = {};
-  let logins = Services.logins.findLogins(outCount, hostname, formSubmitURL,
-                                          httpRealm);
-  Assert.equal(outCount.value, expectedLogins.length);
+  let logins = Services.logins.findLogins(hostname, formSubmitURL, httpRealm);
   LoginTestUtils.assertLoginListsEqual(logins, expectedLogins);
 
   // Test countLogins.

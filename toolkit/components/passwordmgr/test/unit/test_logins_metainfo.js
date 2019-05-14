@@ -24,7 +24,7 @@ var gLooksLikeUUIDRegex = /^\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$/;
  * hostname, the test fails.
  */
 function retrieveLoginMatching(aLoginInfo) {
-  let logins = Services.logins.findLogins({}, aLoginInfo.hostname, "", "");
+  let logins = Services.logins.findLogins(aLoginInfo.hostname, "", "");
   Assert.equal(logins.length, 1);
   return logins[0].QueryInterface(Ci.nsILoginMetaInfo);
 }

@@ -258,7 +258,7 @@ LoginManager.prototype = {
     this._checkLogin(login);
 
     // Look for an existing entry.
-    var logins = this.findLogins({}, login.hostname, login.formSubmitURL,
+    var logins = this.findLogins(login.hostname, login.formSubmitURL,
                                  login.httpRealm);
 
     if (logins.some(l => login.matches(l, true))) {
@@ -365,12 +365,11 @@ LoginManager.prototype = {
   /**
    * Search for the known logins for entries matching the specified criteria.
    */
-  findLogins(count, origin, formActionOrigin, httpRealm) {
+  findLogins(origin, formActionOrigin, httpRealm) {
     log.debug("Searching for logins matching origin:", origin,
               "formActionOrigin:", formActionOrigin, "httpRealm:", httpRealm);
 
-    return this._storage.findLogins(count, origin, formActionOrigin,
-                                    httpRealm);
+    return this._storage.findLogins(origin, formActionOrigin, httpRealm);
   },
 
 

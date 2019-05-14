@@ -379,8 +379,7 @@ LoginManagerPrompter.prototype = {
       }
 
       // Look for existing logins.
-      var foundLogins = Services.logins.findLogins({}, hostname, null,
-                                                   realm);
+      var foundLogins = Services.logins.findLogins(hostname, null, realm);
 
       // XXX Like the original code, we can't deal with multiple
       // account selection. (bug 227632)
@@ -483,8 +482,7 @@ LoginManagerPrompter.prototype = {
 
       if (!aPassword.value) {
         // Look for existing logins.
-        var foundLogins = Services.logins.findLogins({}, hostname, null,
-                                                     realm);
+        var foundLogins = Services.logins.findLogins(hostname, null, realm);
 
         // XXX Like the original code, we can't deal with multiple
         // account selection (bug 227632). We can deal with finding the

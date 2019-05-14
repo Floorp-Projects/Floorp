@@ -105,9 +105,8 @@ function add_login(aHost) {
  *        True if the login should exist, false otherwise.
  */
 function check_login_exists(aHost, aExists) {
-  let count = { value: 0 };
-  Services.logins.findLogins(count, aHost, "", null);
-  Assert.equal(count.value, aExists ? 1 : 0);
+  let logins = Services.logins.findLogins(aHost, "", null);
+  Assert.equal(logins.length, aExists ? 1 : 0);
 }
 
 /**

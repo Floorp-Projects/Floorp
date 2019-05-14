@@ -330,7 +330,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
     // Look for an existing entry in case key properties changed.
     if (!newLogin.matches(oldLogin, true)) {
-      let logins = this.findLogins({}, newLogin.hostname,
+      let logins = this.findLogins(newLogin.hostname,
                                    newLogin.formSubmitURL,
                                    newLogin.httpRealm);
 
@@ -606,7 +606,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  findLogins(count, hostname, formSubmitURL, httpRealm) {
+  findLogins(hostname, formSubmitURL, httpRealm) {
     let loginData = {
       hostname,
       formSubmitURL,
@@ -624,7 +624,6 @@ LoginManagerStorage_mozStorage.prototype = {
     logins = this._decryptLogins(logins);
 
     this.log("_findLogins: returning " + logins.length + " logins");
-    count.value = logins.length; // needed for XPCOM
     return logins;
   },
 

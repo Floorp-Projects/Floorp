@@ -38,7 +38,7 @@ add_task(function test_logins_decrypt_failure() {
 
   // These functions don't see the non-decryptable entries anymore.
   Assert.equal(Services.logins.getAllLogins().length, 0);
-  Assert.equal(Services.logins.findLogins({}, "", "", "").length, 0);
+  Assert.equal(Services.logins.findLogins("", "", "").length, 0);
   Assert.equal(Services.logins.searchLogins({}, newPropertyBag()).length, 0);
   Assert.throws(() => Services.logins.modifyLogin(logins[0], newPropertyBag()),
                 /No matching logins/);
@@ -56,7 +56,7 @@ add_task(function test_logins_decrypt_failure() {
   Assert.equal(Services.logins.countLogins("", "", ""), logins.length * 2);
 
   // Finding logins doesn't return the non-decryptable duplicates.
-  Assert.equal(Services.logins.findLogins({}, "http://www.example.com",
+  Assert.equal(Services.logins.findLogins("http://www.example.com",
                                           "", "").length, 1);
   let matchData = newPropertyBag({ hostname: "http://www.example.com" });
   Assert.equal(Services.logins.searchLogins({}, matchData).length, 1);

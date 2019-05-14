@@ -210,7 +210,7 @@ this.LoginManagerStorage_json.prototype = {
 
     // Look for an existing entry in case key properties changed.
     if (!newLogin.matches(oldLogin, true)) {
-      let logins = this.findLogins({}, newLogin.hostname,
+      let logins = this.findLogins(newLogin.hostname,
                                    newLogin.formSubmitURL,
                                    newLogin.httpRealm);
 
@@ -395,7 +395,7 @@ this.LoginManagerStorage_json.prototype = {
     LoginHelper.notifyStorageChanged("removeAllLogins", null);
   },
 
-  findLogins(count, hostname, formSubmitURL, httpRealm) {
+  findLogins(hostname, formSubmitURL, httpRealm) {
     let loginData = {
       hostname,
       formSubmitURL,
@@ -413,7 +413,6 @@ this.LoginManagerStorage_json.prototype = {
     logins = this._decryptLogins(logins);
 
     this.log("_findLogins: returning", logins.length, "logins");
-    count.value = logins.length; // needed for XPCOM
     return logins;
   },
 
