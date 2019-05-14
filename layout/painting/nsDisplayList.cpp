@@ -6599,9 +6599,7 @@ nsDisplayRenderRoot::nsDisplayRenderRoot(
       mBuiltWRCommands(false) {
   MOZ_ASSERT(aRenderRoot != wr::RenderRoot::Default);
   MOZ_ASSERT(gfxPrefs::WebRenderSplitRenderRoots());
-  mozilla::LayoutDeviceRect rect = mozilla::LayoutDeviceRect::FromAppUnits(
-      mFrame->GetRect(), mFrame->PresContext()->AppUnitsPerDevPixel());
-  aBuilder->ExpandRenderRootRect(rect, mRenderRoot);
+  ExpandDisplayListBuilderRenderRootRect(aBuilder);
   MOZ_COUNT_CTOR(nsDisplayRenderRoot);
 }
 
@@ -6613,9 +6611,7 @@ void nsDisplayRenderRoot::Destroy(nsDisplayListBuilder* aBuilder) {
 }
 
 void nsDisplayRenderRoot::NotifyUsed(nsDisplayListBuilder* aBuilder) {
-  mozilla::LayoutDeviceRect rect = mozilla::LayoutDeviceRect::FromAppUnits(
-      mFrame->GetRect(), mFrame->PresContext()->AppUnitsPerDevPixel());
-  aBuilder->ExpandRenderRootRect(rect, mRenderRoot);
+  ExpandDisplayListBuilderRenderRootRect(aBuilder);
   nsDisplayWrapList::SetReused(aBuilder);
 }
 
@@ -6694,6 +6690,14 @@ bool nsDisplayRenderRoot::CreateWebRenderCommands(
     mBuiltWRCommands = true;
   }
   return true;
+}
+
+void nsDisplayRenderRoot::ExpandDisplayListBuilderRenderRootRect(
+    nsDisplayListBuilder* aBuilder) {
+  mozilla::LayoutDeviceRect rect = mozilla::LayoutDeviceRect::FromAppUnits(
+      mFrame->GetRectRelativeToSelf() + ToReferenceFrame(),
+      mFrame->PresContext()->AppUnitsPerDevPixel());
+  aBuilder->ExpandRenderRootRect(rect, mRenderRoot);
 }
 
 nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,
