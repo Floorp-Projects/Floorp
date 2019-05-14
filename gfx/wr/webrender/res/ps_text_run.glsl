@@ -162,15 +162,16 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
 void main(void) {
     int prim_header_address = aData.x;
     int glyph_index = aData.y & 0xffff;
-    int raster_space = aData.y >> 16;
+    int render_task_index = aData.y >> 16;
     int resource_address = aData.z;
-    int subpx_dir = aData.w >> 16;
-    int color_mode = aData.w & 0xffff;
+    int raster_space = aData.w >> 16;
+    int subpx_dir = (aData.w >> 8) & 0xff;
+    int color_mode = aData.w & 0xff;
 
     PrimitiveHeader ph = fetch_prim_header(prim_header_address);
     Transform transform = fetch_transform(ph.transform_id);
     ClipArea clip_area = fetch_clip_area(ph.user_data.w);
-    PictureTask task = fetch_picture_task(ph.render_task_index);
+    PictureTask task = fetch_picture_task(render_task_index);
 
     TextRun text = fetch_text_run(ph.specific_prim_address);
     vec2 text_offset = vec2(ph.user_data.xy) / 256.0;
