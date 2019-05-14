@@ -232,7 +232,7 @@ function getLocalStorage(principal) {
     principal = getCurrentPrincipal();
   }
 
-  return Services.domStorageManager.createStorage(null, principal, "");
+  return Services.domStorageManager.createStorage(null, principal, principal, "");
 }
 
 function requestFinished(request) {

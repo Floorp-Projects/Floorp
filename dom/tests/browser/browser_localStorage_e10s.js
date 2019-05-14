@@ -88,7 +88,7 @@ function clearOriginStorageEnsuringNoPreload() {
   // We want to use createStorage to force the cache to be created so we can
   // issue the clear.  It's possible for getStorage to return false but for the
   // origin preload hash to still have our origin in it.
-  let storage = Services.domStorageManager.createStorage(null, principal, "");
+  let storage = Services.domStorageManager.createStorage(null, principal, principal, "");
   storage.clear();
 
   // We also need to trigger a flush os that mOriginsHavingData gets updated.
@@ -107,7 +107,7 @@ async function verifyTabPreload(knownTab, expectStorageExists) {
       if (Services.lsm.nextGenLocalStorageEnabled) {
         return Services.lsm.isPreloaded(principal);
       }
-      return !!Services.domStorageManager.getStorage(null, principal);
+      return !!Services.domStorageManager.getStorage(null, principal, principal);
     });
   is(storageExists, expectStorageExists, "Storage existence === preload");
 }
