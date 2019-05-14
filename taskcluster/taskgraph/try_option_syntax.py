@@ -602,6 +602,8 @@ class TryOptionSyntax(object):
                 return False
             tier = task.task['extra']['treeherder']['tier']
             if 'platforms' in test:
+                if 'all' in test['platforms']:
+                    return True
                 platform = attr('test_platform', '').split('/')[0]
                 # Platforms can be forced by syntax like "-u xpcshell[Windows 8]"
                 return platform in test['platforms']
