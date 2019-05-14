@@ -77,7 +77,6 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet,
   // prefix from mIndexPrefix. Then every "delta" corresponds
   // to a prefix in the PrefixSet.
   nsTArray<nsTArray<uint16_t> > mIndexDeltas;
-  uint32_t mIndexDeltasChecksum;
 
   // how many prefixes we have.
   uint32_t mTotalPrefixes;
