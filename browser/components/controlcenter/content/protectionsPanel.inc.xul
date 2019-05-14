@@ -1,0 +1,25 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<panel id="protections-popup"
+       type="arrow"
+       hidden="true"
+       photon="true"
+       role="alertdialog"
+       orient="vertical">
+
+  <panelmultiview id="protections-popup-multiView"
+                  mainViewId="protections-popup-mainView">
+    <panelview id="protections-popup-mainView"
+               descriptionheightworkaround="true">
+      <vbox id="protections-popup-mainView-panel-header">
+        <label>
+          <html:span id="protections-popup-mainView-panel-header-span">
+            <html:h1>Watch this space! :)</html:h1>
+          </html:span>
+        </label>
+      </vbox>
+    </panelview>
+  </panelmultiview>
+</panel>
