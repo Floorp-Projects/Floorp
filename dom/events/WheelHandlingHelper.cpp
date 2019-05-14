@@ -387,7 +387,7 @@ double WheelTransaction::ComputeAcceleratedWheelDelta(double aDelta,
 DeltaValues WheelTransaction::OverrideSystemScrollSpeed(
     WidgetWheelEvent* aEvent) {
   MOZ_ASSERT(sTargetFrame, "We don't have mouse scrolling transaction");
-  MOZ_ASSERT(aEvent->mDeltaMode == WheelEvent_Binding::DOM_DELTA_LINE);
+  MOZ_ASSERT(aEvent->mDeltaMode == dom::WheelEvent_Binding::DOM_DELTA_LINE);
 
   // If the event doesn't scroll to both X and Y, we don't need to do anything
   // here.
@@ -677,7 +677,7 @@ ESMAutoDirWheelDeltaAdjuster::ESMAutoDirWheelDeltaAdjuster(
     // If we are going to honour root, first try to get the frame for <body> as
     // the honoured root, because <body> is in preference to <html> if the
     // current document is an HTML document.
-    Document* document = aScrollFrame.PresShell()->GetDocument();
+    dom::Document* document = aScrollFrame.PresShell()->GetDocument();
     if (document) {
       Element* bodyElement = document->GetBodyElement();
       if (bodyElement) {

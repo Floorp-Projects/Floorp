@@ -16,6 +16,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/RemoteDragStartData.h"
 #include "nsTArray.h"
 #include "nsRegion.h"
 #include "Units.h"
@@ -178,6 +179,9 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
 
   // set if a selection is being dragged
   RefPtr<mozilla::dom::Selection> mSelection;
+
+  // remote drag data
+  RefPtr<mozilla::dom::RemoteDragStartData> mDragStartData;
 
   // set if the image in mImage is a popup. If this case, the popup will be
   // opened and moved instead of using a drag image.
