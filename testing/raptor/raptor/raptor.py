@@ -620,15 +620,19 @@ class RaptorDesktopChrome(RaptorDesktop):
 
 
 class RaptorAndroid(Raptor):
+
     def __init__(self, app, binary, activity=None, intent=None, **kwargs):
         super(RaptorAndroid, self).__init__(app, binary, **kwargs)
 
-        # on android, when creating the browser profile, we want to use a 'firefox' type profile
-        self.profile_class = "firefox"
         self.config.update({
             'activity': activity,
             'intent': intent,
         })
+
+        self.profile_class = "firefox"
+
+        self.remote_test_root = os.path.abspath(os.path.join(os.sep, 'sdcard', 'raptor'))
+        self.remote_profile = os.path.join(self.remote_test_root, "profile")
 
     def set_reverse_port(self, port):
         tcp_port = "tcp:{}".format(port)
@@ -663,7 +667,9 @@ class RaptorAndroid(Raptor):
         self.log.info("creating android device handler using mozdevice")
         self.device = ADBDevice(verbose=True)
         self.device.clear_logcat()
+
         self.clear_app_data()
+        self.create_raptor_sdcard_folder()
 
     def tune_performance(self):
         """Sets various performance-oriented parameters, to reduce jitter.
@@ -838,35 +844,27 @@ class RaptorAndroid(Raptor):
         self.log.info("clearing %s app data" % self.config['binary'])
         self.device.shell("pm clear %s" % self.config['binary'])
 
-    def create_raptor_sdcard_folder(self):
-        # for android/geckoview, create a top-level raptor folder on the device
-        # sdcard; if it already exists remove it so we start fresh each time
-        self.device_raptor_dir = "/sdcard/raptor"
-        self.config['device_raptor_dir'] = self.device_raptor_dir
-        if self.device.is_dir(self.device_raptor_dir):
-            self.log.info("deleting existing device raptor dir: %s" % self.device_raptor_dir)
-            self.device.rm(self.device_raptor_dir, recursive=True)
-        self.log.info("creating raptor folder on sdcard: %s" % self.device_raptor_dir)
-        self.device.mkdir(self.device_raptor_dir)
-        self.device.chmod(self.device_raptor_dir, recursive=True)
-
-    def copy_profile_onto_device(self):
-        # for geckoview/fennec we must copy the profile onto the device and set perms
+    def copy_profile_to_device(self):
+        """Copy the profile to the device, and update permissions of all files."""
         if not self.device.is_app_installed(self.config['binary']):
             raise Exception('%s is not installed' % self.config['binary'])
-        self.device_profile = os.path.join(self.device_raptor_dir, "profile")
 
-        if self.device.is_dir(self.device_profile):
-            self.log.info("deleting existing device profile folder: %s" % self.device_profile)
-            self.device.rm(self.device_profile, recursive=True)
-        self.log.info("creating profile folder on device: %s" % self.device_profile)
-        self.device.mkdir(self.device_profile)
+        try:
+            self.log.info("copying profile to device: %s" % self.remote_profile)
+            self.device.rm(self.remote_profile, force=True, recursive=True)
+            # self.device.mkdir(self.remote_profile)
+            self.device.push(self.profile.profile, self.remote_profile)
+            self.device.chmod(self.remote_profile, recursive=True, root=True)
 
-        self.log.info("copying firefox profile onto the device")
-        self.log.info("note: the profile folder being copied is: %s" % self.profile.profile)
-        self.log.info('the adb push cmd copies that profile dir to a new temp dir before copy')
-        self.device.push(self.profile.profile, self.device_profile)
-        self.device.chmod(self.device_profile, recursive=True)
+        except Exception:
+            self.log.error("Unable to copy profile to device.")
+            raise
+
+    def create_raptor_sdcard_folder(self):
+        self.log.info("creating test folder for raptor: %s" % self.remote_test_root)
+        self.device.rm(self.remote_test_root, force=True, recursive=True)
+        self.device.mkdir(self.remote_test_root)
+        self.device.chmod(self.remote_test_root, recursive=True, root=True)
 
     def turn_on_android_app_proxy(self):
         # for geckoview/android pageload playback we can't use a policy to turn on the
@@ -885,7 +883,7 @@ class RaptorAndroid(Raptor):
     def launch_firefox_android_app(self, test_name):
         self.log.info("starting %s" % self.config['app'])
 
-        extra_args = ["-profile", self.device_profile,
+        extra_args = ["-profile", self.remote_profile,
                       "--es", "env0", "LOG_VERBOSE=1",
                       "--es", "env1", "R_LOG_LEVEL=6"]
 
@@ -999,8 +997,6 @@ class RaptorAndroid(Raptor):
             self.run_test_setup(test)
 
             if test['browser_cycle'] == 1:
-                self.create_raptor_sdcard_folder()
-
                 if test.get('playback') is not None:
                     self.start_playback(test)
 
@@ -1035,7 +1031,7 @@ class RaptorAndroid(Raptor):
             if test.get('playback') is not None:
                 self.turn_on_android_app_proxy()
 
-            self.copy_profile_onto_device()
+            self.copy_profile_to_device()
 
             # now start the browser/app under test
             self.launch_firefox_android_app(test['name'])
@@ -1061,7 +1057,6 @@ class RaptorAndroid(Raptor):
             init_android_power_test(self)
 
         self.run_test_setup(test)
-        self.create_raptor_sdcard_folder()
 
         if test.get('playback') is not None:
             self.start_playback(test)
@@ -1073,7 +1068,7 @@ class RaptorAndroid(Raptor):
             self.turn_on_android_app_proxy()
 
         self.clear_app_data()
-        self.copy_profile_onto_device()
+        self.copy_profile_to_device()
 
         # now start the browser/app under test
         self.launch_firefox_android_app(test['name'])
@@ -1099,7 +1094,7 @@ class RaptorAndroid(Raptor):
                 return
         try:
             dump_dir = tempfile.mkdtemp()
-            remote_dir = posixpath.join(self.device_profile, 'minidumps')
+            remote_dir = posixpath.join(self.remote_profile, 'minidumps')
             if not self.device.is_dir(remote_dir):
                 self.log.error("No crash directory (%s) found on remote device" % remote_dir)
                 return
