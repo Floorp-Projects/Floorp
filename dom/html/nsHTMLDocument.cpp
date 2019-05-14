@@ -542,18 +542,20 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
 
   bool loadWithPrototype = false;
+  RefPtr<nsHtml5Parser> html5Parser;
   if (loadAsHtml5) {
-    mParser = nsHtml5Module::NewHtml5Parser();
+    html5Parser = nsHtml5Module::NewHtml5Parser();
+    mParser = html5Parser;
     if (mIsPlainText) {
       if (viewSource) {
-        mParser->MarkAsNotScriptCreated("view-source-plain");
+        html5Parser->MarkAsNotScriptCreated("view-source-plain");
       } else {
-        mParser->MarkAsNotScriptCreated("plain-text");
+        html5Parser->MarkAsNotScriptCreated("plain-text");
       }
     } else if (viewSource && !html) {
-      mParser->MarkAsNotScriptCreated("view-source-xml");
+      html5Parser->MarkAsNotScriptCreated("view-source-xml");
     } else {
-      mParser->MarkAsNotScriptCreated(aCommand);
+      html5Parser->MarkAsNotScriptCreated(aCommand);
     }
   } else if (xhtml && ShouldUsePrototypeDocument(aChannel, this)) {
     loadWithPrototype = true;
@@ -691,7 +693,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   } else {
     if (loadAsHtml5) {
-      nsHtml5Module::Initialize(mParser, this, uri, docShell, aChannel);
+      html5Parser->Initialize(this, uri, docShell, aChannel);
     } else {
       // about:blank *only*
       nsCOMPtr<nsIHTMLContentSink> htmlsink;
@@ -1178,8 +1180,9 @@ Document* nsHTMLDocument::Open(const Optional<nsAString>& /* unused */,
   // Step 14 -- create a new parser associated with document.  This also does
   // step 16 implicitly.
   mParserAborted = false;
-  mParser = nsHtml5Module::NewHtml5Parser();
-  nsHtml5Module::Initialize(mParser, this, GetDocumentURI(), shell, nullptr);
+  RefPtr<nsHtml5Parser> parser = nsHtml5Module::NewHtml5Parser();
+  mParser = parser;
+  parser->Initialize(this, GetDocumentURI(), shell, nullptr);
   if (mReferrerPolicySet) {
     // CSP may have set the referrer policy, so a speculative parser should
     // start with the new referrer policy.
