@@ -72,7 +72,7 @@ def make_repackage_signing_description(config, jobs):
         signing_cert_scope = get_signing_cert_scope_per_platform(
             build_platform, is_nightly, config
         )
-        scopes = [signing_cert_scope]
+        scopes = [signing_cert_scope, add_scope_prefix(config, 'signing:format:gpg')]
 
         if 'win' in build_platform:
             upstream_artifacts = [{
@@ -81,7 +81,7 @@ def make_repackage_signing_description(config, jobs):
                 "paths": [
                     get_artifact_path(dep_job, "{}/target.installer.exe".format(repack_id)),
                 ],
-                "formats": ["sha2signcode", "autograph_gpg"]
+                "formats": ["sha2signcode", "gpg"]
             }]
             scopes.append(add_scope_prefix(config, "signing:format:sha2signcode"))
         elif 'mac' in build_platform:
@@ -91,7 +91,7 @@ def make_repackage_signing_description(config, jobs):
                 "paths": [
                     get_artifact_path(dep_job, "{}/target.dmg".format(repack_id)),
                 ],
-                "formats": ["autograph_gpg"]
+                "formats": ["gpg"]
             }]
         elif 'linux' in build_platform:
             upstream_artifacts = [{
@@ -100,7 +100,7 @@ def make_repackage_signing_description(config, jobs):
                 "paths": [
                     get_artifact_path(dep_job, "{}/target.tar.bz2".format(repack_id)),
                 ],
-                "formats": ["autograph_gpg"]
+                "formats": ["gpg"]
             }]
 
         task = {
