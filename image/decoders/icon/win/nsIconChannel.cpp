@@ -530,8 +530,7 @@ nsresult nsIconChannel::GetHIconFromFile(nsIFile* aLocalFile,
   return NS_OK;
 }
 
-nsresult nsIconChannel::GetStockHIcon(nsIMozIconURI* aIconURI,
-                                      bool aNonBlocking, HICON* hIcon) {
+nsresult nsIconChannel::GetStockHIcon(nsIMozIconURI* aIconURI, HICON* hIcon) {
   nsresult rv = NS_OK;
 
   uint32_t desiredImageSize;
@@ -550,14 +549,6 @@ nsresult nsIconChannel::GetStockHIcon(nsIMozIconURI* aIconURI,
   SHSTOCKICONINFO sii = {0};
   sii.cbSize = sizeof(sii);
   HRESULT hr = SHGetStockIconInfo(stockIconID, infoFlags, &sii);
-
-  if (aNonBlocking) {
-    nsCOMPtr<nsIRunnable> task = NewRunnableMethod<HICON, nsresult>(
-        "nsIconChannel::FinishAsyncOpen", this, &nsIconChannel::FinishAsyncOpen,
-        sii.hIcon, rv);
-    mListenerTarget->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
-    return NS_OK;
-  }
 
   if (SUCCEEDED(hr)) {
     *hIcon = sii.hIcon;
@@ -651,7 +642,7 @@ nsresult nsIconChannel::GetHIcon(bool aNonBlocking, HICON* aIcon) {
   nsAutoCString stockIcon;
   iconURI->GetStockIcon(stockIcon);
   if (!stockIcon.IsEmpty()) {
-    return GetStockHIcon(iconURI, aNonBlocking, aIcon);
+    return GetStockHIcon(iconURI, aIcon);
   }
 
   return GetHIconFromFile(aNonBlocking, aIcon);
