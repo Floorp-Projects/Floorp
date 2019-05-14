@@ -1030,6 +1030,12 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                     'Only GCC 6.1 or newer is supported (found version %s).'
                     % info.version)
 
+        if info.type == 'clang-cl':
+            if info.version < '8.0.0':
+                raise FatalCheckError(
+                    'Only clang-cl 8.0 or newer is supported (found version %s)'
+                    % info.version)
+
         # If you want to bump the version check here search for
         # builtin_bitreverse8 above, and see the associated comment.
         if info.type == 'clang' and not info.version:
