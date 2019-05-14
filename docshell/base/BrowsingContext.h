@@ -347,7 +347,16 @@ class BrowsingContext : public nsWrapperCache,
   };
 
   // Create an IPCInitializer object for this BrowsingContext.
-  IPCInitializer GetIPCInitializer();
+  IPCInitializer GetIPCInitializer() {
+    IPCInitializer init;
+    init.mId = Id();
+    init.mParentId = mParent ? mParent->Id() : 0;
+    init.mCached = IsCached();
+
+#define MOZ_BC_FIELD(name, type) init.m##name = m##name;
+#include "mozilla/dom/BrowsingContextFieldList.h"
+    return init;
+  }
 
   // Create a BrowsingContext object from over IPC.
   static already_AddRefed<BrowsingContext> CreateFromIPC(

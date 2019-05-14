@@ -2296,7 +2296,7 @@ var SessionStoreInternal = {
     }
   },
 
-  async _doTabProcessSwitch(aBrowser, aRemoteType, aChannel, aSwitchId, aReplaceBrowsingContext) {
+  async _doTabProcessSwitch(aBrowser, aRemoteType, aChannel, aSwitchId) {
     debug(`[process-switch]: performing switch from ${aBrowser.remoteType} to ${aRemoteType}`);
 
     // Don't try to switch tabs before delayed startup is completed.
@@ -2310,10 +2310,6 @@ var SessionStoreInternal = {
 
       // Information about which channel should be performing the load.
       redirectLoadSwitchId: aSwitchId,
-
-      // True if this is a process switch due to a policy mismatch, means we
-      // shouldn't preserve our browsing context.
-      replaceBrowsingContext: aReplaceBrowsingContext,
     };
 
     await SessionStore.navigateAndRestore(tab, loadArguments, -1);
@@ -2336,7 +2332,7 @@ var SessionStoreInternal = {
    * This method is asynchronous, as it requires multiple calls into content
    * processes.
    */
-  async _doProcessSwitch(aBrowsingContext, aRemoteType, aChannel, aSwitchId, aReplaceBrowsingContext) {
+  async _doProcessSwitch(aBrowsingContext, aRemoteType, aChannel, aSwitchId) {
     // There are two relevant cases when performing a process switch for a
     // browsing context: in-process and out-of-process embedders.
 
@@ -2345,7 +2341,7 @@ var SessionStoreInternal = {
     // traditional mechanism.
     if (aBrowsingContext.embedderElement) {
       return this._doTabProcessSwitch(aBrowsingContext.embedderElement,
-                                      aRemoteType, aChannel, aSwitchId, aReplaceBrowsingContext);
+                                      aRemoteType, aChannel, aSwitchId);
     }
 
     let wg = aBrowsingContext.embedderWindowGlobal;
@@ -2447,17 +2443,13 @@ var SessionStoreInternal = {
       return;
     }
 
-    const isCOOPSwitch = E10SUtils.useCrossOriginOpenerPolicy() &&
-          aChannel.hasCrossOriginOpenerPolicyMismatch();
-
     // ------------------------------------------------------------------------
     // DANGER ZONE: Perform a process switch into the new process. This is
     // destructive.
     // ------------------------------------------------------------------------
     let identifier = ++this._switchIdMonotonic;
     let tabPromise = this._doProcessSwitch(browsingContext, remoteType,
-                                           aChannel, identifier,
-                                           isCOOPSwitch);
+                                           aChannel, identifier);
     aChannel.switchProcessTo(tabPromise, identifier);
   },
 
@@ -3304,7 +3296,6 @@ var SessionStoreInternal = {
       // the loadArguments.
       newFrameloader: loadArguments.newFrameloader,
       remoteType: loadArguments.remoteType,
-      replaceBrowsingContext: loadArguments.replaceBrowsingContext,
       // Make sure that SessionStore knows that this restoration is due
       // to a navigation, as opposed to us restoring a closed window or tab.
       restoreContentReason: RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE,
@@ -4267,21 +4258,18 @@ var SessionStoreInternal = {
     this.markTabAsRestoring(aTab);
 
     let newFrameloader = aOptions.newFrameloader;
-    let replaceBrowsingContext = aOptions.replaceBrowsingContext;
+
     let isRemotenessUpdate;
     if (aOptions.remoteType !== undefined) {
       // We already have a selected remote type so we update to that.
       isRemotenessUpdate =
         tabbrowser.updateBrowserRemoteness(browser,
                                            { remoteType: aOptions.remoteType,
-                                             newFrameloader,
-                                             replaceBrowsingContext,
-                                           });
+                                             newFrameloader });
     } else {
       isRemotenessUpdate =
         tabbrowser.updateBrowserRemotenessByURL(browser, uri, {
           newFrameloader,
-          replaceBrowsingContext,
         });
     }
 

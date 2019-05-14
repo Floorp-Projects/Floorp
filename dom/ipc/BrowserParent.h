@@ -678,8 +678,6 @@ class BrowserParent final : public PBrowserParent,
 
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
-  void SkipBrowsingContextDetach();
-
  protected:
   bool ReceiveMessage(
       const nsString& aMessage, bool aSync, ipc::StructuredCloneData* aData,
