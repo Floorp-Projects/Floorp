@@ -308,6 +308,13 @@ add_task(async function testFullDetails() {
   row = rows.shift();
   checkLabel(row, "private-browsing");
 
+  // Private browsing help text.
+  row = rows.shift();
+  ok(row.classList.contains("addon-detail-help-row"), "There's a help row");
+  ok(!row.hidden, "The help row is shown");
+  is(doc.l10n.getAttributes(row).id, "addon-detail-private-browsing-help",
+     "The help row is for private browsing");
+
   // Author.
   row = rows.shift();
   checkLabel(row, "author");
@@ -401,8 +408,16 @@ add_task(async function testMinimalExtension() {
   let row = rows.shift();
   checkLabel(row, "updates");
 
+  // Private browsing settings.
   row = rows.shift();
   checkLabel(row, "private-browsing");
+
+  // Private browsing help text.
+  row = rows.shift();
+  ok(row.classList.contains("addon-detail-help-row"), "There's a help row");
+  ok(!row.hidden, "The help row is shown");
+  is(doc.l10n.getAttributes(row).id, "addon-detail-private-browsing-help",
+     "The help row is for private browsing");
 
   // Author.
   row = rows.shift();
