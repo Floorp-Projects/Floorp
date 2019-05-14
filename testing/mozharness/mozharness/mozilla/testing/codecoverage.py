@@ -182,21 +182,21 @@ class CodeCoverageMixin(SingleTestMixin):
         baseline_tests_by_ext = {
             '.html': {
                 'test': 'testing/mochitest/baselinecoverage/plain/test_baselinecoverage.html',
-                'suite': 'plain'
+                'suite': 'mochitest-plain'
             },
             '.js': {
                 'test': 'testing/mochitest/baselinecoverage/browser_chrome/browser_baselinecoverage.js',  # NOQA: E501
-                'suite': 'browser-chrome'
+                'suite': 'mochitest-browser-chrome'
             },
             '.xul': {
                 'test': 'testing/mochitest/baselinecoverage/chrome/test_baselinecoverage.xul',
-                'suite': 'chrome'
+                'suite': 'mochitest-chrome'
             }
         }
 
         baseline_tests_by_suite = {
-            'browser-chrome': 'testing/mochitest/baselinecoverage/browser_chrome/'
-                              'browser_baselinecoverage_browser-chrome.js'
+            'mochitest-browser-chrome': 'testing/mochitest/baselinecoverage/browser_chrome/'
+                                        'browser_baselinecoverage_browser-chrome.js'
         }
 
         wpt_baseline_test = 'tests/web-platform/mozilla/tests/baselinecoverage/wpt_baselinecoverage.html'  # NOQA: E501
