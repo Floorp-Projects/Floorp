@@ -74,8 +74,7 @@ class nsIconChannel final : public nsIChannel, public nsIStreamListener {
 
   // Functions specific to Vista and above
  protected:
-  nsresult GetStockHIcon(nsIMozIconURI* aIconURI, bool aNonBlocking,
-                         HICON* hIcon);
+  nsresult GetStockHIcon(nsIMozIconURI* aIconURI, HICON* hIcon);
 };
 
 #endif  // mozilla_image_encoders_icon_win_nsIconChannel_h
