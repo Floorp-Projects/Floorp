@@ -886,9 +886,12 @@ class RaptorAndroid(Raptor):
     def launch_firefox_android_app(self, test_name):
         self.log.info("starting %s" % self.config['app'])
 
-        extra_args = ["-profile", self.remote_profile,
-                      "--es", "env0", "LOG_VERBOSE=1",
-                      "--es", "env1", "R_LOG_LEVEL=6"]
+        extra_args = ["-profile", self.remote_profile]
+
+        env = {
+            'LOG_VERBOSE': '1',
+            'R_LOG_LEVEL': '6',
+        }
 
         try:
             # make sure the android app is not already running
@@ -897,6 +900,7 @@ class RaptorAndroid(Raptor):
             if self.config['app'] == "fennec":
                 self.device.launch_fennec(self.config['binary'],
                                           extra_args=extra_args,
+                                          moz_env=env,
                                           url='about:blank',
                                           fail_if_running=False)
             else:
@@ -914,6 +918,7 @@ class RaptorAndroid(Raptor):
                                                self.config['activity'],
                                                self.config['intent'],
                                                extras=extras,
+                                               moz_env=env,
                                                url='about:blank',
                                                fail_if_running=False)
 
