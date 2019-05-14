@@ -12,7 +12,16 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS(BrowserHost, nsIRemoteTab)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserHost)
+  NS_INTERFACE_MAP_ENTRY(nsIRemoteTab)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, RemoteBrowser)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION(BrowserHost, mRoot)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(BrowserHost)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowserHost)
 
 BrowserHost::BrowserHost(BrowserParent* aParent) : mRoot(aParent) {
   mRoot->SetBrowserHost(this);
