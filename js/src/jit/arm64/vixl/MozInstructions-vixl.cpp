@@ -121,13 +121,13 @@ bool Instruction::IsTargetReachable(const Instruction* target) const {
     int offset = (target - this) >> kInstructionSizeLog2;
     switch (BranchType()) {
       case CondBranchType:
-        return IsInt19(offset);
+        return is_int19(offset);
       case UncondBranchType:
-        return IsInt26(offset);
+        return is_int26(offset);
       case CompareBranchType:
-        return IsInt19(offset);
+        return is_int19(offset);
       case TestBranchType:
-        return IsInt14(offset);
+        return is_int14(offset);
       default:
         VIXL_UNREACHABLE();
     }
