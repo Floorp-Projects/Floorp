@@ -138,7 +138,6 @@ import org.mozilla.gecko.tabs.TabsPanel;
 import org.mozilla.gecko.telemetry.TelemetryCorePingDelegate;
 import org.mozilla.gecko.telemetry.TelemetryUploadService;
 import org.mozilla.gecko.telemetry.measurements.SearchCountMeasurements;
-import org.mozilla.gecko.telemetry.TelemetryActivationPingDelegate;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.CommitEventSource;
@@ -318,7 +317,6 @@ public class BrowserApp extends GeckoApp
     private final DynamicToolbar mDynamicToolbar = new DynamicToolbar();
 
     private final TelemetryCorePingDelegate mTelemetryCorePingDelegate = new TelemetryCorePingDelegate();
-    private final TelemetryActivationPingDelegate mTelemetryActivationPingDelegate = new TelemetryActivationPingDelegate();
 
     private final List<BrowserAppDelegate> delegates = Collections.unmodifiableList(Arrays.asList(
             new ScreenshotDelegate(),
@@ -326,7 +324,6 @@ public class BrowserApp extends GeckoApp
             new ReaderViewBookmarkPromotion(),
             new PostUpdateHandler(),
             mTelemetryCorePingDelegate,
-            mTelemetryActivationPingDelegate,
             new OfflineTabStatusDelegate(),
             new AdjustBrowserAppDelegate(mTelemetryCorePingDelegate)
     ));
