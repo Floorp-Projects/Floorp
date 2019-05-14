@@ -43,6 +43,7 @@ treeherder:
         'Rap-P': 'Raptor power tests on Firefox'
         'Rap-P-1proc': 'Raptor power tests on Firefox without e10s'
         'Rap-fenix': 'Raptor performance tests on Fenix'
+        'Rap-fennec': 'Raptor performance tests on Fennec'
         'Rap-refbrow': 'Raptor performance tests on the reference browser'
         'T': 'Talos performance tests'
         'T-1proc': 'Talos performance tests without e10s'

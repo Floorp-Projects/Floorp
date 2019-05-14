@@ -7,6 +7,10 @@ const {
   AddonTestUtils,
 } = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
+const {
+  TelemetryTestUtils,
+} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
+
 AddonTestUtils.initMochitest(this);
 const server = AddonTestUtils.createHttpServer();
 const serverBaseUrl = `http://localhost:${server.identity.primaryPort}/`;
@@ -76,6 +80,8 @@ add_task(async function clientid_enabled() {
   ok(await requestPromise,
      "Moz-Client-Id should be set when telemetry & discovery are enabled");
 
+  Services.telemetry.clearEvents();
+
   let tabbrowser = win.windowRoot.ownerGlobal.gBrowser;
   let expectedUrl =
     `${serverBaseUrl}sumo/personalized-extension-recommendations`;
@@ -88,6 +94,18 @@ add_task(async function clientid_enabled() {
   BrowserTestUtils.removeTab(tab);
 
   await closeView(win);
+
+  TelemetryTestUtils.assertEvents([{
+    method: "link",
+    value: "disconotice",
+    extra: {
+      view: "discover",
+    },
+  }], {
+    category: "addonsManager",
+    method: "link",
+    object: "aboutAddons",
+  });
 });
 
 // Test that the clientid is not sent when disabled via prefs.

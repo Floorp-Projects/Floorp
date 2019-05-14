@@ -21,8 +21,8 @@
  *       |            |             |        |      FilePath Query Ref
  *       |            |             |       Port       \            /
  *       |            |            Host      /          ------------
- *       |         UserPass                 /	              |
- *     Scheme                              /	             Path
+ *       |         UserPass                 /                |
+ *     Scheme                              /                Path
  *       \                                /
  *        --------------------------------
  *                       |
@@ -63,7 +63,7 @@ interface nsIURIMutator;
  * interface.
  *
  * AUTF8String attributes may also contain escaped characters.
- * 
+ *
  * Unescaping URI segments is unadvised unless there is intimate
  * knowledge of the underlying charset or there is no plan to display (or
  * otherwise enforce a charset on) the resulting URI substring.

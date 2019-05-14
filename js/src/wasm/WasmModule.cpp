@@ -1228,6 +1228,7 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
       t = GlobalObject::getOrCreateReferenceTypeDescr(
           cx, cx->global(), ReferenceType::TYPE_OBJECT);
       break;
+    case ValType::FuncRef:
     case ValType::AnyRef:
       t = GlobalObject::getOrCreateReferenceTypeDescr(
           cx, cx->global(), ReferenceType::TYPE_WASM_ANYREF);

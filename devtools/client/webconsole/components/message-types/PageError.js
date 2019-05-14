@@ -10,6 +10,7 @@
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Message = createFactory(require("devtools/client/webconsole/components/Message"));
+const { MODE, REPS } = require("devtools/client/shared/components/reps/reps");
 
 PageError.displayName = "PageError";
 
@@ -52,12 +53,14 @@ function PageError(props) {
     notes,
   } = message;
 
-  let messageBody;
-  if (typeof messageText === "string") {
-    messageBody = messageText;
-  } else if (typeof messageText === "object" && messageText.type === "longString") {
-    messageBody = `${message.messageText.initial}…`;
-  }
+  const messageBody = REPS.StringRep.rep({
+    object: messageText,
+    mode: MODE.LONG,
+    useQuotes: false,
+    escapeWhitespace: false,
+    urlCropLimit: 120,
+    openLink: serviceContainer.openLink,
+  });
 
   return Message({
     dispatch,

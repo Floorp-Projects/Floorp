@@ -3238,10 +3238,8 @@ var BrowserOnClick = {
         let errorInfo = getDetailedCertErrorInfo(location,
                                                  securityInfo);
         let validityInfo = {
-          notAfter: securityInfo.serverCert.validity.notAfter,
-          notBefore: securityInfo.serverCert.validity.notBefore,
-          notAfterLocalTime: securityInfo.serverCert.validity.notAfterLocalTime,
-          notBeforeLocalTime: securityInfo.serverCert.validity.notBeforeLocalTime,
+          notAfter: securityInfo.serverCert.validity.notAfter / 1000,
+          notBefore: securityInfo.serverCert.validity.notBefore / 1000,
         };
         browser.messageManager.sendAsyncMessage("CertErrorDetails", {
             code: securityInfo.errorCode,

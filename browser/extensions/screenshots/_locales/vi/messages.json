@@ -45,7 +45,7 @@
     "message": "Trong một cửa sổ duyệt web riêng tư."
   },
   "downloadOnlyDetailsThirdParty": {
-    "message": "Cookies của bên thứ ba đã bị vô hiệu hóa."
+    "message": "Cookie của bên thứ ba đã bị vô hiệu hóa."
   },
   "downloadOnlyDetailsNeverRemember": {
     "message": "“Không bao giờ ghi nhớ lược sử” đã được kích hoạt."
@@ -147,13 +147,13 @@
     "message": "Nhấp và kéo để chụp một phần của một trang. Bạn cũng có thể di chuột để làm nổi bật lựa chọn của bạn."
   },
   "tourHeaderFullPage": {
-    "message": "Chụp Windows hoặc Toàn bộ trang"
+    "message": "Chụp cửa sổ hoặc toàn bộ trang"
   },
   "tourBodyFullPage": {
     "message": "Chọn các nút ở phía trên bên phải để chụp khu vực nhìn thấy được trong cửa sổ hoặc để chụp toàn bộ trang."
   },
   "tourSkip": {
-    "message": "SKIP"
+    "message": "BỎ QUA"
   },
   "tourNext": {
     "message": "Slide tiếp theo"

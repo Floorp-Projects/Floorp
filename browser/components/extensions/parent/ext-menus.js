@@ -1100,7 +1100,7 @@ this.menusInternal = class extends ExtensionAPI {
     gMenuMap.set(extension, new Map());
   }
 
-  onShutdown(reason) {
+  onShutdown() {
     let {extension} = this;
 
     if (gMenuMap.has(extension)) {

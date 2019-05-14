@@ -60,7 +60,7 @@ textbox.plain html|*.textbox-input {
 
 /* ::::: search box ::::: */
 
-textbox[type="search"] {
+textbox[is="search-textbox"] {
   -moz-appearance: searchfield;
   padding: 1px;
   font-size: 12px;

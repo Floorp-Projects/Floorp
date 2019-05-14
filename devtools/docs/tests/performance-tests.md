@@ -17,11 +17,11 @@ This command will run all tests which contains "console" in their name.
 ## How to run it on try?
 
 ```bash
-./mach try -b o -p linux64 -u none -t damp-e10s --rebuild-talos 6
+./mach try -b o -p linux64 -u none -t damp --rebuild-talos 6
 ```
 * Linux appears to build and run quickly, and offers quite stable results over the other OSes.
 The vast majority of performance issues for DevTools are OS agnostic, so it doesn't really matter which one you run them on.
-* "damp-e10s" is the talos bucket in which we run DAMP.
+* "damp" is the talos bucket in which we run DAMP.
 * And 6 is the number of times we run DAMP tests. That's to do averages between all the 6 runs and helps filtering out the noise.
 
 ## What does it do?

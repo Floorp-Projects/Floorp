@@ -2319,6 +2319,9 @@ var XPIProvider = {
             if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
                             .includes(addon.id))
               reason = BOOTSTRAP_REASONS.ADDON_INSTALL;
+            else if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_ENABLED)
+                                 .includes(addon.id))
+              reason = BOOTSTRAP_REASONS.ADDON_ENABLE;
             BootstrapScope.get(addon).startup(reason);
           } catch (e) {
             logger.error("Failed to load bootstrap addon " + addon.id + " from " +

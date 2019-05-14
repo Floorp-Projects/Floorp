@@ -77,6 +77,8 @@ add_task(async function testUsbRuntimeUpdates() {
 
   checkTelemetryEvents([
     { method: "runtime_connected", extras: runtime1ConnectedExtras },
+    { method: "connection_attempt", extras: { status: "start" } },
+    { method: "connection_attempt", extras: { status: "success" } },
   ], sessionId);
 
   info("Add a second runtime");

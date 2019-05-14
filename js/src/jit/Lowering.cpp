@@ -4350,11 +4350,6 @@ void LIRGenerator::visitWasmDerivedPointer(MWasmDerivedPointer* ins) {
   define(new (alloc()) LWasmDerivedPointer(base), ins);
 }
 
-void LIRGenerator::visitWasmLoadRef(MWasmLoadRef* ins) {
-  define(new (alloc()) LWasmLoadRef(useRegisterAtStart(ins->getOperand(0))),
-         ins);
-}
-
 void LIRGenerator::visitWasmStoreRef(MWasmStoreRef* ins) {
   LAllocation tls = useRegister(ins->tls());
   LAllocation valueAddr = useFixed(ins->valueAddr(), PreBarrierReg);
@@ -4720,11 +4715,6 @@ void LIRGenerator::visitConstant(MConstant* ins) {
 
 void LIRGenerator::visitWasmNullConstant(MWasmNullConstant* ins) {
   define(new (alloc()) LWasmNullConstant(), ins);
-}
-
-void LIRGenerator::visitIsNullPointer(MIsNullPointer* ins) {
-  define(new (alloc()) LIsNullPointer(useRegisterAtStart(ins->getOperand(0))),
-         ins);
 }
 
 void LIRGenerator::visitWasmFloatConstant(MWasmFloatConstant* ins) {

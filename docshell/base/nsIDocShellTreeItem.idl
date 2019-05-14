@@ -18,7 +18,7 @@ webidl Document;
  * node or a leaf. 
  */
 
-[scriptable, uuid(9b7c586f-9214-480c-a2c4-49b526fff1a6)]
+[scriptable, builtinclass, uuid(9b7c586f-9214-480c-a2c4-49b526fff1a6)]
 interface nsIDocShellTreeItem : nsISupports
 {
 	/*

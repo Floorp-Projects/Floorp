@@ -113,18 +113,24 @@ class ThrottledEventQueue::Inner final : public nsISupports {
   // Used from any thread; protected by mMutex.
   nsCOMPtr<nsIRunnable> mExecutor;
 
+  const char* mName;
+
   const uint32_t mPriority;
 
   // True if this queue is currently paused.
   // Used from any thread; protected by mMutex.
   bool mIsPaused;
 
-  explicit Inner(nsISerialEventTarget* aBaseTarget, uint32_t aPriority)
+  explicit Inner(nsISerialEventTarget* aBaseTarget, const char* aName,
+                 uint32_t aPriority)
       : mMutex("ThrottledEventQueue"),
         mIdleCondVar(mMutex, "ThrottledEventQueue:Idle"),
         mBaseTarget(aBaseTarget),
+        mName(aName),
         mPriority(aPriority),
-        mIsPaused(false) {}
+        mIsPaused(false) {
+          MOZ_ASSERT(mName, "Must pass a valid name!");
+        }
 
   ~Inner() {
 #ifdef DEBUG
@@ -185,7 +191,7 @@ class ThrottledEventQueue::Inner final : public nsISupports {
       return rv;
     }
 
-    aName.AssignLiteral("non-nsINamed ThrottledEventQueue runnable");
+    aName.AssignASCII(mName);
     return NS_OK;
   }
 
@@ -245,12 +251,13 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
  public:
   static already_AddRefed<Inner> Create(nsISerialEventTarget* aBaseTarget,
+                                        const char* aName,
                                         uint32_t aPriority) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(ClearOnShutdown_Internal::sCurrentShutdownPhase ==
                ShutdownPhase::NotInShutdown);
 
-    RefPtr<Inner> ref = new Inner(aBaseTarget, aPriority);
+    RefPtr<Inner> ref = new Inner(aBaseTarget, aName, aPriority);
     return ref.forget();
   }
 
@@ -358,11 +365,11 @@ ThrottledEventQueue::ThrottledEventQueue(already_AddRefed<Inner> aInner)
 }
 
 already_AddRefed<ThrottledEventQueue> ThrottledEventQueue::Create(
-    nsISerialEventTarget* aBaseTarget, uint32_t aPriority) {
+    nsISerialEventTarget* aBaseTarget, const char* aName, uint32_t aPriority) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBaseTarget);
 
-  RefPtr<Inner> inner = Inner::Create(aBaseTarget, aPriority);
+  RefPtr<Inner> inner = Inner::Create(aBaseTarget, aName, aPriority);
 
   RefPtr<ThrottledEventQueue> ref = new ThrottledEventQueue(inner.forget());
   return ref.forget();

@@ -699,6 +699,11 @@ static bool FindNotableScriptSources(JS::RuntimeSizes& runtime) {
 static bool CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats,
                                       ObjectPrivateVisitor* opv, bool anonymize,
                                       IterateCellCallback statsCellCallback) {
+  // Finish any ongoing incremental GC that may change the data we're gathering
+  // and ensure that we don't do anything that could start another one.
+  gc::FinishGC(cx);
+  JS::AutoAssertNoGC nogc(cx);
+
   JSRuntime* rt = cx->runtime();
   if (!rtStats->realmStatsVector.reserve(rt->numRealms)) {
     return false;

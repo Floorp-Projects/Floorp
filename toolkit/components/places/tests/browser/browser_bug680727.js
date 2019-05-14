@@ -67,9 +67,9 @@ function errorAsyncListener(aURI, aIsVisited) {
                   .then(reloadListener);
 
   ContentTask.spawn(ourTab.linkedBrowser, null, function() {
-    Assert.ok(content.document.getElementById("errorTryAgain"),
-      "The error page has got a #errorTryAgain element");
-    content.document.getElementById("errorTryAgain").click();
+    Assert.ok(content.document.querySelector("#netErrorButtonContainer > .try-again"),
+      "The error page has got a .try-again element");
+    content.document.querySelector("#netErrorButtonContainer > .try-again").click();
   });
 }
 

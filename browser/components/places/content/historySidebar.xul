@@ -45,7 +45,7 @@
 #include bookmarksHistoryTooltip.inc.xul
 
   <hbox id="sidebar-search-container">
-    <textbox id="search-box" flex="1" type="search"
+    <textbox id="search-box" flex="1" is="search-textbox"
              placeholder="&historySearch.placeholder;"
              aria-controls="historyTree"
              oncommand="searchHistory(this.value);"/>

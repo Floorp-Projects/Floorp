@@ -8,8 +8,8 @@
 add_task(async function aboutPrefs_foregroundCheck_cantApply() {
   lockWriteTestFile();
 
-  let updateParams = "";
-  await runAboutPrefsUpdateTest(updateParams, false, [
+  let params = {};
+  await runAboutPrefsUpdateTest(params, [
     {
       panelId: "checkingForUpdates",
       checkActiveUpdate: null,

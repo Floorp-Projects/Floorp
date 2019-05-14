@@ -176,6 +176,25 @@ body {
   margin-inline-end: 5px;
 }
 
+#audit-progress-container {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  background: rgba(255,255,255,0.9);
+  padding-block-start: 30vh;
+  font: message-box;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.audit-progress-progressbar {
+  width: 30vw;
+}
+
 /* Description */
 .description {
   color: var(--theme-toolbar-color);

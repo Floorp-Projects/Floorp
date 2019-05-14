@@ -7,7 +7,7 @@
 #include "nsISupports.idl"
 
 /* NOTE: this interface is completely undesigned, not stable and likely to change */
-[scriptable, uuid(1accd618-4c80-4703-9d29-ecf257d397c8)]
+[scriptable, builtinclass, uuid(1accd618-4c80-4703-9d29-ecf257d397c8)]
 interface nsIGfxInfo : nsISupports
 {
   /*

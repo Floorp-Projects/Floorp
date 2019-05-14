@@ -1927,7 +1927,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // (TLS & pinned regs are non-volatile registers in the system ABI).
   CodeOffset wasmCallBuiltinInstanceMethod(const wasm::CallSiteDesc& desc,
                                            const ABIArg& instanceArg,
-                                           wasm::SymbolicAddress builtin);
+                                           wasm::SymbolicAddress builtin,
+                                           wasm::FailureMode failureMode);
 
   // As enterFakeExitFrame(), but using register conventions appropriate for
   // wasm stubs.

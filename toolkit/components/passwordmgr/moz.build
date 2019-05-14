@@ -52,6 +52,7 @@ else:
     EXTRA_JS_MODULES += [
         'LoginImport.jsm',
         'LoginStore.jsm',
+        'PasswordGenerator.jsm',
         'storage-json.js',
     ]
 

@@ -131,6 +131,9 @@
   "genericErrorDetails": {
     "message": "Emme oikein tiedä, mitä tapahtui. Haluatko yrittää uudestaan tai ottaa kuvan eri sivusta?"
   },
+  "tourBodyIntroServerless": {
+    "message": "Ota, kopioi ja lataa kuvakaappauksia poistumatta Firefoxista."
+  },
   "tourHeaderPageAction": {
     "message": "Uusi tapa tallentaa"
   },

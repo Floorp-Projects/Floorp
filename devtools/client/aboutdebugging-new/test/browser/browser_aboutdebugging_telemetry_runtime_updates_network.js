@@ -50,6 +50,8 @@ add_task(async function testNetworkRuntimeUpdates() {
   await connectToRuntime(NETWORK_RUNTIME.host, document);
   checkTelemetryEvents([
     { method: "runtime_connected", extras: connectedNetworkRuntimeExtras },
+    { method: "connection_attempt", extras: { status: "start" } },
+    { method: "connection_attempt", extras: { status: "success" } },
   ], sessionId);
 
   info("Remove network runtime");

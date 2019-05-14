@@ -14,7 +14,7 @@
  * the current architecture (e.g., sizeof(double) for RISCy CPUs).  malloc(3)
  * satisfies this requirement.
  */
-[scriptable, uuid(ac923b72-ac87-4892-ac7a-ca385d429435)]
+[scriptable, builtinclass, uuid(ac923b72-ac87-4892-ac7a-ca385d429435)]
 interface nsIStreamBufferAccess : nsISupports
 {
     /**

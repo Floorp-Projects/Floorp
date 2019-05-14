@@ -216,4 +216,16 @@ function test_component(contractid) {
   doIsTest("testInterfaceIsSequence", [makeA(), makeA(), makeA(), makeA(), makeA()], Ci['nsIXPCTestInterfaceA'],
                                       [makeB(), makeB(), makeB()], Ci['nsIXPCTestInterfaceB'],
                                       arrayComparator(interfaceComparator), dotEqualsComparator);
+
+  var ret = o.testOptionalSequence();
+  Assert.ok(Array.isArray(ret));
+  Assert.equal(ret.length, 0);
+
+  ret = o.testOptionalSequence([]);
+  Assert.ok(Array.isArray(ret));
+  Assert.equal(ret.length, 0);
+
+  ret = o.testOptionalSequence([1, 2, 3]);
+  Assert.ok(Array.isArray(ret));
+  Assert.equal(ret.length, 3);
 }

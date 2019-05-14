@@ -70,6 +70,9 @@
   "copyScreenshot": {
     "message": "Copiar"
   },
+  "copyScreenshotTitle": {
+    "message": "Copiar captura de pantalla al portapapeles"
+  },
   "notificationImageCopiedTitle": {
     "message": "Captura copiada"
   },
@@ -127,6 +130,9 @@
   },
   "genericErrorDetails": {
     "message": "No estamos seguros de lo que sucedió. ¿Te importaría volver a intentarlo o tomar una captura de una página diferente?"
+  },
+  "tourBodyIntroServerless": {
+    "message": "Toma, copia y descarga capturas de pantalla sin salir de Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Una nueva forma de guardar"

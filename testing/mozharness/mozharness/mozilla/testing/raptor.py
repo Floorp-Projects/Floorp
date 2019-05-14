@@ -62,7 +62,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
           }],
         [["--activity"],
          {"dest": "activity",
-          "help": "name of the android activity used to launch the android app"
+          "help": "the android activity used to launch the android app. "
+                  "ex: org.mozilla.fenix.browser.BrowserPerformanceTestActivity"
           }],
         [["--intent"],
          {"dest": "intent",

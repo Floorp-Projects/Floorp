@@ -74,11 +74,11 @@
         },
         "awscli": {
             "hashes": [
-                "sha256:9af619482982c75dc6139784dcc25cf485b5e3cea39d950bd0895794536acf15",
-                "sha256:d15aa3a86e9254312a59f1862207cd174826bb07eca3d2a0d1d8f426cfeb7ff2"
+                "sha256:b7a6e758a7d2e7230e4e21acab9f80db2fd31248333ca8575b4538a5c43ebd2c",
+                "sha256:fae8839c4ddf6e7fb49543beec8d9659afd60e2fa23481ee723390f0a3a7d0f7"
             ],
             "index": "pypi",
-            "version": "==1.16.152"
+            "version": "==1.16.156"
         },
         "backports.lzma": {
             "hashes": [
@@ -88,10 +88,10 @@
         },
         "botocore": {
             "hashes": [
-                "sha256:60c40f8c51d308046c737c3f74c4dcf1681e884e6dc87fa2727db2d44f8b70f7",
-                "sha256:78b9413286c8fbcf094911584f63a81356b4539befec7be76887c6dcd66ace83"
+                "sha256:1517c52eaa3056d0e81f9a81b580d7f28440e7e1523d10a8acc8160c56be7113",
+                "sha256:19d9d56fcf4f16ffea8a929bbf3c72db3458b6c1f306c04031f3166759cd62ac"
             ],
-            "version": "==1.12.142"
+            "version": "==1.12.146"
         },
         "certifi": {
             "hashes": [
@@ -332,9 +332,9 @@
         },
         "pyrsistent": {
             "hashes": [
-                "sha256:5403d37f4d55ff4572b5b5676890589f367a9569529c6f728c11046c4ea4272b"
+                "sha256:16692ee739d42cf5e39cef8d27649a8c1fdb7aa99887098f1460057c5eb75c3a"
             ],
-            "version": "==0.15.1"
+            "version": "==0.15.2"
         },
         "python-dateutil": {
             "hashes": [
@@ -392,10 +392,11 @@
         },
         "scriptworker": {
             "hashes": [
-                "sha256:643ace350b233bbb77637763e770cac2f13f2a7fe871042390042bd9e5b10338"
+                "sha256:44b19ef0ddfe14309ddb035e4f6e82da8d9eb3d7c3de8ed82ee74a75beefb767",
+                "sha256:4b7bd567c8b511f1a87c68ac541c94b730d6f307ad86bb0af279ac30ef5867e9"
             ],
             "index": "pypi",
-            "version": "==23.0.3"
+            "version": "==23.0.4"
         },
         "sh": {
             "hashes": [

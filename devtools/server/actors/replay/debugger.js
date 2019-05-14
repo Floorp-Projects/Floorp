@@ -194,6 +194,7 @@ ReplayDebugger.prototype = {
       if (this._paused) {
         // If we resume and immediately pause, we are at an endpoint of the
         // recording. Force the thread to pause.
+        this._capturePauseData();
         this.replayingOnForcedPause(this.getNewestFrame());
       }
     });
@@ -209,6 +210,7 @@ ReplayDebugger.prototype = {
       // timeWarp() doesn't return until the child has reached the target of
       // the warp, after which we force the thread to pause.
       assert(this._paused);
+      this._capturePauseData();
       this.replayingOnForcedPause(this.getNewestFrame());
     });
   },
@@ -350,6 +352,48 @@ ReplayDebugger.prototype = {
 
     this._objects.forEach(obj => obj._invalidate());
     this._objects.length = 0;
+  },
+
+  // Fill in the debugger with (hopefully) all data the client/server need to
+  // pause at the current location.
+  _capturePauseData() {
+    if (this._frames.length) {
+      return;
+    }
+
+    const pauseData = this._sendRequestAllowDiverge({ type: "pauseData" });
+    if (!pauseData.frames) {
+      return;
+    }
+
+    for (const data of Object.values(pauseData.scripts)) {
+      this._addScript(data);
+    }
+
+    for (const { scriptId, offset, metadata} of pauseData.offsetMetadata) {
+      if (this._scripts[scriptId]) {
+        const script = this._getScript(scriptId);
+        script._addOffsetMetadata(offset, metadata);
+      }
+    }
+
+    for (const { data, preview } of Object.values(pauseData.objects)) {
+      if (!this._objects[data.id]) {
+        this._addObject(data);
+      }
+      this._getObject(data.id)._preview = preview;
+    }
+
+    for (const { data, names } of Object.values(pauseData.environments)) {
+      if (!this._objects[data.id]) {
+        this._addObject(data);
+      }
+      this._getObject(data.id)._names = names;
+    }
+
+    for (const frame of pauseData.frames) {
+      this._frames[frame.index] = new ReplayDebuggerFrame(this, frame);
+    }
   },
 
   /////////////////////////////////////////////////////////
@@ -556,18 +600,22 @@ ReplayDebugger.prototype = {
   _getObject(id) {
     if (id && !this._objects[id]) {
       const data = this._sendRequest({ type: "getObject", id });
-      switch (data.kind) {
-      case "Object":
-        this._objects[id] = new ReplayDebuggerObject(this, data);
-        break;
-      case "Environment":
-        this._objects[id] = new ReplayDebuggerEnvironment(this, data);
-        break;
-      default:
-        ThrowError("Unknown object kind");
-      }
+      this._addObject(data);
     }
     return this._objects[id];
+  },
+
+  _addObject(data) {
+    switch (data.kind) {
+    case "Object":
+      this._objects[data.id] = new ReplayDebuggerObject(this, data);
+      break;
+    case "Environment":
+      this._objects[data.id] = new ReplayDebuggerEnvironment(this, data);
+      break;
+    default:
+      ThrowError("Unknown object kind");
+    }
   },
 
   // Convert a value we received from the child.
@@ -694,8 +742,10 @@ ReplayDebugger.prototype = {
 
   set replayingOnPopFrame(handler) {
     if (handler) {
-      this._setBreakpoint(() => { handler.call(this, this.getNewestFrame()); },
-                          { kind: "OnPop" }, handler);
+      this._setBreakpoint(() => {
+        this._capturePauseData();
+        handler.call(this, this.getNewestFrame());
+      }, { kind: "OnPop" }, handler);
     } else {
       this._clearMatchingBreakpoints(({position}) => {
         return position.kind == "OnPop" && !position.script;
@@ -727,6 +777,7 @@ ReplayDebugger.prototype = {
 function ReplayDebuggerScript(dbg, data) {
   this._dbg = dbg;
   this._data = data;
+  this._offsetMetadata = [];
 }
 
 ReplayDebuggerScript.prototype = {
@@ -749,7 +800,6 @@ ReplayDebuggerScript.prototype = {
   getSuccessorOffsets(pc) { return this._forward("getSuccessorOffsets", pc); },
   getPredecessorOffsets(pc) { return this._forward("getPredecessorOffsets", pc); },
   getAllColumnOffsets() { return this._forward("getAllColumnOffsets"); },
-  getOffsetMetadata(pc) { return this._forward("getOffsetMetadata", pc); },
   getPossibleBreakpoints(query) {
     return this._forward("getPossibleBreakpoints", query);
   },
@@ -757,10 +807,22 @@ ReplayDebuggerScript.prototype = {
     return this._forward("getPossibleBreakpointOffsets", query);
   },
 
+  getOffsetMetadata(pc) {
+    if (!this._offsetMetadata[pc]) {
+      this._addOffsetMetadata(pc, this._forward("getOffsetMetadata", pc));
+    }
+    return this._offsetMetadata[pc];
+  },
+
+  _addOffsetMetadata(pc, metadata) {
+    this._offsetMetadata[pc] = metadata;
+  },
+
   setBreakpoint(offset, handler) {
-    this._dbg._setBreakpoint(() => { handler.hit(this._dbg.getNewestFrame()); },
-                             { kind: "Break", script: this._data.id, offset },
-                             handler);
+    this._dbg._setBreakpoint(() => {
+      this._dbg._capturePauseData();
+      handler.hit(this._dbg.getNewestFrame());
+    }, { kind: "Break", script: this._data.id, offset }, handler);
   },
 
   clearBreakpoint(handler) {
@@ -867,13 +929,15 @@ ReplayDebuggerFrame.prototype = {
 
   setReplayingOnStep(handler, offsets) {
     offsets.forEach(offset => {
-      this._dbg._setBreakpoint(
-        () => { handler.call(this._dbg.getNewestFrame()); },
-        { kind: "OnStep",
-          script: this._data.script,
-          offset,
-          frameIndex: this._data.index },
-        handler);
+      this._dbg._setBreakpoint(() => {
+        this._dbg._capturePauseData();
+        handler.call(this._dbg.getNewestFrame());
+      }, {
+        kind: "OnStep",
+        script: this._data.script,
+        offset,
+        frameIndex: this._data.index,
+      }, handler);
     });
   },
 
@@ -886,6 +950,7 @@ ReplayDebuggerFrame.prototype = {
   set onPop(handler) {
     if (handler) {
       this._dbg._setBreakpoint(() => {
+          this._dbg._capturePauseData();
           const result = this._dbg._sendRequest({ type: "popFrameResult" });
           handler.call(this._dbg.getNewestFrame(),
                        this._dbg._convertCompletionValue(result));
@@ -917,15 +982,15 @@ ReplayDebuggerFrame.prototype = {
 function ReplayDebuggerObject(dbg, data) {
   this._dbg = dbg;
   this._data = data;
+  this._preview = null;
   this._properties = null;
-  this._proxyData = null;
 }
 
 ReplayDebuggerObject.prototype = {
   _invalidate() {
     this._data = null;
+    this._preview = null;
     this._properties = null;
-    this._proxyData = null;
   },
 
   get callable() { return this._data.callable; },
@@ -956,28 +1021,56 @@ ReplayDebuggerObject.prototype = {
     return Object.keys(this._properties);
   },
 
+  getEnumerableOwnPropertyNamesForPreview() {
+    if (this._preview) {
+      return Object.keys(this._preview.enumerableOwnProperties);
+    }
+    return this.getOwnPropertyNames();
+  },
+
+  getOwnPropertyNamesCount() {
+    if (this._preview) {
+      return this._preview.ownPropertyNamesCount;
+    }
+    return this.getOwnPropertyNames().length;
+  },
+
   getOwnPropertySymbols() {
     // Symbol properties are not handled yet.
     return [];
   },
 
   getOwnPropertyDescriptor(name) {
+    if (this._preview) {
+      if (this._preview.enumerableOwnProperties) {
+        const desc = this._preview.enumerableOwnProperties[name];
+        if (desc) {
+          return this._convertPropertyDescriptor(desc);
+        }
+      }
+      if (name == "length") {
+        return this._convertPropertyDescriptor(this._preview.lengthProperty);
+      }
+      if (name == "displayName") {
+        return this._convertPropertyDescriptor(this._preview.displayNameProperty);
+      }
+    }
     this._ensureProperties();
-    const desc = this._properties[name];
-    return desc ? this._convertPropertyDescriptor(desc) : undefined;
+    return this._convertPropertyDescriptor(this._properties[name]);
   },
 
   _ensureProperties() {
     if (!this._properties) {
       const id = this._data.id;
-      const properties =
+      this._properties =
         this._dbg._sendRequestAllowDiverge({ type: "getObjectProperties", id });
-      this._properties = Object.create(null);
-      properties.forEach(({name, desc}) => { this._properties[name] = desc; });
     }
   },
 
   _convertPropertyDescriptor(desc) {
+    if (!desc) {
+      return undefined;
+    }
     const rv = Object.assign({}, desc);
     if ("value" in desc) {
       rv.value = this._dbg._convertValue(desc.value);
@@ -991,35 +1084,19 @@ ReplayDebuggerObject.prototype = {
     return rv;
   },
 
-  _ensureProxyData() {
-    if (!this._proxyData) {
-      const data = this._dbg._sendRequestAllowDiverge({
-        type: "objectProxyData",
-        id: this._data.id,
-      });
-      if (data.exception) {
-        throw new Error(data.exception);
-      }
-      this._proxyData = data;
-    }
-  },
-
   unwrap() {
     if (!this.isProxy) {
       return this;
     }
-    this._ensureProxyData();
-    return this._dbg._convertValue(this._proxyData.unwrapped);
+    return this._dbg._convertValue(this._data.proxyUnwrapped);
   },
 
   get proxyTarget() {
-    this._ensureProxyData();
-    return this._dbg._convertValue(this._proxyData.target);
+    return this._dbg._convertValue(this._data.proxyTarget);
   },
 
   get proxyHandler() {
-    this._ensureProxyData();
-    return this._dbg._convertValue(this._proxyData.handler);
+    return this._dbg._convertValue(this._data.proxyHandler);
   },
 
   get boundTargetFunction() {

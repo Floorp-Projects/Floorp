@@ -37,6 +37,7 @@
 #include "js/OffThreadScriptCompilation.h"
 #include "js/Principals.h"
 #include "js/PropertyDescriptor.h"
+#include "js/PropertySpec.h"
 #include "js/Realm.h"
 #include "js/RealmOptions.h"
 #include "js/RefCounted.h"
@@ -2547,7 +2548,8 @@ MOZ_MUST_USE JS_PUBLIC_API bool JS_EncodeStringToBuffer(JSContext* cx,
 
 namespace JS {
 
-JS_PUBLIC_API bool PropertySpecNameEqualsId(const char* name, HandleId id);
+JS_PUBLIC_API bool PropertySpecNameEqualsId(JSPropertySpec::Name name,
+                                            HandleId id);
 
 /**
  * Create a jsid that does not need to be marked for GC.
@@ -2558,7 +2560,8 @@ JS_PUBLIC_API bool PropertySpecNameEqualsId(const char* name, HandleId id);
  * during GC marking.
  */
 JS_PUBLIC_API bool PropertySpecNameToPermanentId(JSContext* cx,
-                                                 const char* name, jsid* idp);
+                                                 JSPropertySpec::Name name,
+                                                 jsid* idp);
 
 } /* namespace JS */
 

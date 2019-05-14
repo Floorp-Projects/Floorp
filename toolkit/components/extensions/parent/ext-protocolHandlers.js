@@ -50,11 +50,11 @@ this.protocolHandlers = class extends ExtensionAPI {
     }
   }
 
-  onShutdown(shutdownReason) {
+  onShutdown(isAppShutdown) {
     let {extension} = this;
     let {manifest} = extension;
 
-    if (shutdownReason === "APP_SHUTDOWN") {
+    if (isAppShutdown) {
       return;
     }
 

@@ -1079,12 +1079,7 @@ nsContentSecurityManager::IsOriginPotentiallyTrustworthy(
     *aIsTrustWorthy = true;
     return NS_OK;
   }
-
-  // The following implements:
-  // https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
-
   *aIsTrustWorthy = false;
-
   if (aPrincipal->GetIsNullPrincipal()) {
     return NS_OK;
   }
@@ -1094,78 +1089,8 @@ nsContentSecurityManager::IsOriginPotentiallyTrustworthy(
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) {
-    return NS_OK;
-  }
-
-  nsAutoCString scheme;
-  rv = uri->GetScheme(scheme);
-  if (NS_FAILED(rv)) {
-    return NS_OK;
-  }
-
-  // Blobs are expected to inherit their principal so we don't expect to have
-  // a codebase principal with scheme 'blob' here.  We can't assert that though
-  // since someone could mess with a non-blob URI to give it that scheme.
-  NS_WARNING_ASSERTION(!scheme.EqualsLiteral("blob"),
-                       "IsOriginPotentiallyTrustworthy ignoring blob scheme");
-
-  // According to the specification, the user agent may choose to extend the
-  // trust to other, vendor-specific URL schemes. We use this for "resource:",
-  // which is technically a substituting protocol handler that is not limited to
-  // local resource mapping, but in practice is never mapped remotely as this
-  // would violate assumptions a lot of code makes.
-  // We use nsIProtocolHandler flags to determine which protocols we consider a
-  // priori authenticated.
-  bool aPrioriAuthenticated = false;
-  if (NS_FAILED(NS_URIChainHasFlags(
-          uri, nsIProtocolHandler::URI_IS_POTENTIALLY_TRUSTWORTHY,
-          &aPrioriAuthenticated))) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (aPrioriAuthenticated) {
-    *aIsTrustWorthy = true;
-    return NS_OK;
-  }
-
-  nsAutoCString host;
-  rv = uri->GetHost(host);
-  if (NS_FAILED(rv)) {
-    return NS_OK;
-  }
-
-  if (host.EqualsLiteral("127.0.0.1") || host.EqualsLiteral("localhost") ||
-      host.EqualsLiteral("::1")) {
-    *aIsTrustWorthy = true;
-    return NS_OK;
-  }
-
-  // If a host is not considered secure according to the default algorithm, then
-  // check to see if it has been whitelisted by the user.  We only apply this
-  // whitelist for network resources, i.e., those with scheme "http" or "ws".
-  // The pref should contain a comma-separated list of hostnames.
-  if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("ws")) {
-    nsAutoCString whitelist;
-    nsresult rv =
-        Preferences::GetCString("dom.securecontext.whitelist", whitelist);
-    if (NS_SUCCEEDED(rv)) {
-      nsCCharSeparatedTokenizer tokenizer(whitelist, ',');
-      while (tokenizer.hasMoreTokens()) {
-        const nsACString& allowedHost = tokenizer.nextToken();
-        if (host.Equals(allowedHost)) {
-          *aIsTrustWorthy = true;
-          return NS_OK;
-        }
-      }
-    }
-    // Maybe we have a .onion URL. Treat it as whitelisted as well if
-    // `dom.securecontext.whitelist_onions` is `true`.
-    if (nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(uri)) {
-      *aIsTrustWorthy = true;
-      return NS_OK;
-    }
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  *aIsTrustWorthy = nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(uri);
 
   return NS_OK;
 }

@@ -10,7 +10,9 @@ var focusCount = 0;
 async function test() {
   waitForExplicitFinish();
 
-  let aWindow = await open_manager(null);
+  // The discovery pane does not display the about:addons searchbox,
+  // open the extensions pane instead.
+  let aWindow = await open_manager("addons://list/extension");
   gManagerWindow = aWindow;
 
   var searchBox = gManagerWindow.document.getElementById("header-search");
@@ -18,10 +20,10 @@ async function test() {
     searchBox.blur();
     focusCount++;
   }
-  searchBox.addEventListener("focus", focusHandler);
+  searchBox.inputField.addEventListener("focus", focusHandler);
   f_key_test();
   slash_key_test();
-  searchBox.removeEventListener("focus", focusHandler);
+  searchBox.inputField.removeEventListener("focus", focusHandler);
   end_test();
 }
 

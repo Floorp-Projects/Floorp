@@ -29,7 +29,7 @@ namespace wasm {
 // stateful objects exposed to WebAssembly. asm.js also uses Tables to represent
 // its homogeneous function-pointer tables.
 //
-// A table of AnyFunction holds FunctionTableElems, which are (instance*,index)
+// A table of FuncRef holds FunctionTableElems, which are (instance*,index)
 // pairs, where the instance must be traced.
 //
 // A table of AnyRef holds JSObject pointers, which must be traced.
@@ -44,11 +44,11 @@ class Table : public ShareableBase<Table> {
   using InstanceSet = JS::WeakCache<GCHashSet<
       WeakHeapPtrWasmInstanceObject,
       MovableCellHasher<WeakHeapPtrWasmInstanceObject>, SystemAllocPolicy>>;
-  using UniqueAnyFuncArray = UniquePtr<FunctionTableElem[], JS::FreePolicy>;
+  using UniqueFuncRefArray = UniquePtr<FunctionTableElem[], JS::FreePolicy>;
 
   WeakHeapPtrWasmTableObject maybeObject_;
   InstanceSet observers_;
-  UniqueAnyFuncArray functions_;  // either functions_ has data
+  UniqueFuncRefArray functions_;  // either functions_ has data
   TableAnyRefVector objects_;     //   or objects_, but not both
   const TableKind kind_;
   uint32_t length_;
@@ -57,7 +57,7 @@ class Table : public ShareableBase<Table> {
   template <class>
   friend struct js::MallocProvider;
   Table(JSContext* cx, const TableDesc& td, HandleWasmTableObject maybeObject,
-        UniqueAnyFuncArray functions);
+        UniqueFuncRefArray functions);
   Table(JSContext* cx, const TableDesc& td, HandleWasmTableObject maybeObject,
         TableAnyRefVector&& objects);
 
@@ -70,9 +70,8 @@ class Table : public ShareableBase<Table> {
   void trace(JSTracer* trc);
 
   TableKind kind() const { return kind_; }
-  bool isTypedFunction() const { return kind_ == TableKind::TypedFunction; }
   bool isFunction() const {
-    return kind_ == TableKind::AnyFunction || kind_ == TableKind::TypedFunction;
+    return kind_ == TableKind::FuncRef || kind_ == TableKind::AsmJS;
   }
   uint32_t length() const { return length_; }
   Maybe<uint32_t> maximum() const { return maximum_; }
@@ -80,14 +79,13 @@ class Table : public ShareableBase<Table> {
   // Only for function values.  Raw pointer to the table.
   uint8_t* functionBase() const;
 
-  // get/setAnyFunc is allowed only on table-of-funcref.
+  // get/setFuncRef is allowed only on table-of-funcref.
   // get/setAnyRef is allowed only on table-of-anyref.
   // setNull is allowed on either.
-  const FunctionTableElem& getAnyFunc(uint32_t index) const;
-  void setAnyFunc(uint32_t index, void* code, const Instance* instance);
+  const FunctionTableElem& getFuncRef(uint32_t index) const;
+  void setFuncRef(uint32_t index, void* code, const Instance* instance);
 
   AnyRef getAnyRef(uint32_t index) const;
-  const void* getShortlivedAnyRefLocForCompiledCode(uint32_t index) const;
   void setAnyRef(uint32_t index, AnyRef);
 
   void setNull(uint32_t index);

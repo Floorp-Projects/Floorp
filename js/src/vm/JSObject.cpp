@@ -38,7 +38,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
 #include "js/PropertyDescriptor.h"  // JS::FromPropertyDescriptor
-#include "js/PropertySpec.h"
+#include "js/PropertySpec.h"        // JSPropertySpec
 #include "js/Proxy.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
@@ -3014,7 +3014,7 @@ bool js::GetPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
 
 /* * */
 
-extern bool PropertySpecNameToId(JSContext* cx, const char* name,
+extern bool PropertySpecNameToId(JSContext* cx, JSPropertySpec::Name name,
                                  MutableHandleId id,
                                  js::PinningBehavior pin = js::DoNotPinAtom);
 

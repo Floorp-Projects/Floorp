@@ -14,7 +14,7 @@ class nsIURI;
 
 class nsHyphenator {
  public:
-  explicit nsHyphenator(nsIURI* aURI);
+  nsHyphenator(nsIURI* aURI, bool aHyphenateCapitalized);
 
   NS_INLINE_DECL_REFCOUNTING(nsHyphenator)
 
@@ -25,8 +25,11 @@ class nsHyphenator {
  private:
   ~nsHyphenator();
 
- protected:
+  void HyphenateWord(const nsAString& aString, uint32_t aStart,
+                     uint32_t aLimit, nsTArray<bool>& aHyphens);
+
   void* mDict;
+  bool mHyphenateCapitalized;
 };
 
 #endif  // nsHyphenator_h__

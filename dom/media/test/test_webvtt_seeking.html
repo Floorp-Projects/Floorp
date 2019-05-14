@@ -23,16 +23,16 @@ async function startTest() {
   const cues = createCues(video);
   await startVideo(video);
 
-  seekVideo(video, cues[0].startTime);
+  await seekVideo(video, cues[0].startTime);
   await waitUntilCueIsShowing(cues[0]);
   checkActiveCueAndInactiveCue(cues[0], cues[1]);
 
-  seekVideo(video, cues[1].startTime);
+  await seekVideo(video, cues[1].startTime);
   await waitUntilCueIsShowing(cues[1]);
   checkActiveCueAndInactiveCue(cues[1], cues[0]);
 
   // seek forward again
-  seekVideo(video, cues[0].startTime);
+  await seekVideo(video, cues[0].startTime);
   await waitUntilCueIsShowing(cues[0]);
   checkActiveCueAndInactiveCue(cues[0], cues[1]);
 
@@ -84,6 +84,7 @@ async function startVideo(video) {
 }
 
 async function waitUntilCueIsShowing(cue) {
+  info(`wait until cue ${cue.id} shows`);
   // cue has not been showing yet.
   if (!cue.getActive) {
     await once(cue, "enter");
@@ -98,6 +99,7 @@ async function seekVideo(video, time) {
   info(`seek video to ${time}`);
   video.currentTime = time;
   await once(video, "seeked");
+  info(`seek succeeded, current time=${video.currentTime}`);
 }
 
 function isInRange(value, lowerBound, higherBound) {

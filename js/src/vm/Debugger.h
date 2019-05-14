@@ -1448,6 +1448,8 @@ class DebuggerFrame : public NativeObject {
     RESERVED_SLOTS,
   };
 
+  static void trace(JSTracer* trc, JSObject* obj);
+
   static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor,
                                  Handle<GlobalObject*> global);
   static DebuggerFrame* create(JSContext* cx, HandleObject proto,
@@ -1506,6 +1508,8 @@ class DebuggerFrame : public NativeObject {
 
   static const JSPropertySpec properties_[];
   static const JSFunctionSpec methods_[];
+
+  static void finalize(FreeOp* fop, JSObject* obj);
 
   static AbstractFramePtr getReferent(HandleDebuggerFrame frame);
   static MOZ_MUST_USE bool getFrameIter(JSContext* cx,

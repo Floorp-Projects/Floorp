@@ -2019,7 +2019,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     }
 
     env_.asmJSSigToTableIndex[sigIndex] = env_.tables.length();
-    if (!env_.tables.emplaceBack(TableKind::TypedFunction, Limits(mask + 1))) {
+    if (!env_.tables.emplaceBack(TableKind::AsmJS, Limits(mask + 1))) {
       return false;
     }
 
@@ -6562,7 +6562,8 @@ static bool ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global,
         }
         case ValType::Ref:
         case ValType::NullRef:
-        case ValType::AnyRef: {
+        case ValType::AnyRef:
+        case ValType::FuncRef: {
           MOZ_CRASH("not available in asm.js");
         }
       }

@@ -10,7 +10,7 @@
  * @see nsIBinaryInputStream
  */
 
-[scriptable, uuid(6c248606-4eae-46fa-9df0-ba58502368eb)]
+[scriptable, builtinclass, uuid(6c248606-4eae-46fa-9df0-ba58502368eb)]
 interface nsIObjectInputStream : nsIBinaryInputStream
 {
     /**

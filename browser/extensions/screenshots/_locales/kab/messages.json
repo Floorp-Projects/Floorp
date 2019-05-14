@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "Sider"
   },
+  "downloadScreenshotTitle": {
+    "message": "Sider tuṭṭfa n ugdil"
+  },
   "downloadOnlyNotice": {
     "message": "Aql-ak tura deg umskar n usider kan."
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Nγel"
+  },
+  "copyScreenshotTitle": {
+    "message": "Nɣel tuṭṭfa ɣef afus"
   },
   "notificationImageCopiedTitle": {
     "message": "Tuṭṭfa tettwanγel"
@@ -125,9 +131,6 @@
   "genericErrorDetails": {
     "message": "Ur neẓri ara acu yeḍran. Ɛreḍ tikelt-nniḍen neɣ ṭṭef agdil n usebter-nniḍen?"
   },
-  "tourBodyIntro": {
-    "message": "Ṭṭef, sekles, bḍu igdilen war ma teffɣeḍ si Firefox."
-  },
   "tourHeaderPageAction": {
     "message": "Abrid amaynut i wsekles"
   },
@@ -145,18 +148,6 @@
   },
   "tourBodyFullPage": {
     "message": "Fren tiqeffalin s afella ayeffus akken ad teṭṭfeḍ tamnaṭ yettbanen deg usfaylu neɣ asebter i meṛṛa."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Akken tebγiḍ"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Sekles tuṭṭfiwin-ik ar Web i beṭṭu fessusen, neɣ sider-itent-id ar uselkim-ik. Tzemr€d daɣen ad tiseḍ ɣef tqeffalt Tiṭṭfiwin-iw akken ad tafeḍ akk tuṭṭfiwin n ugdil i teggid."
-  },
-  "tourHeaderAccounts": {
-    "message": "Tuṭṭfiwin n wegdil ara yeddun"
-  },
-  "tourBodyAccounts": {
-    "message": "Jerred s umiḍan-ik n Firefox akken ad tkecmeḍ ɣer tuṭṭfiwin-inek deg ibenkan-ik meṛṛa  wa ad tkelseḍ tuṭṭfiwin-inek i tḥemleḍ i lebda."
   },
   "tourSkip": {
     "message": "Zgel"

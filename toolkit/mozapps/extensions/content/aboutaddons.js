@@ -12,6 +12,7 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -121,6 +122,21 @@ function hasPermission(addon, permission) {
 function isPending(addon, action) {
   const amAction = AddonManager["PENDING_" + action.toUpperCase()];
   return !!(addon.pendingOperations & amAction);
+}
+
+// Don't change how we handle this while the page is open.
+const INLINE_OPTIONS_ENABLED = Services.prefs.getBoolPref(
+  "extensions.htmlaboutaddons.inline-options.enabled");
+const OPTIONS_TYPE_MAP = {
+  [AddonManager.OPTIONS_TYPE_TAB]: "tab",
+  [AddonManager.OPTIONS_TYPE_INLINE_BROWSER]:
+    INLINE_OPTIONS_ENABLED ? "inline" : "tab",
+};
+
+// Check if an add-on has the provided options type, accounting for the pref
+// to disable inline options.
+function getOptionsType(addon, type) {
+  return OPTIONS_TYPE_MAP[addon.optionsType];
 }
 
 /**
@@ -565,6 +581,10 @@ class AddonOptions extends HTMLElement {
     // Hide the expand button if we're expanded.
     this.querySelector('[action="expand"]').hidden = card.expanded;
 
+    // Show the preferences option if needed.
+    this.querySelector('[action="preferences"]').hidden =
+      getOptionsType(addon) != "tab";
+
     // Update the separators visibility based on the updated visibility
     // of the actions in the panel-list.
     this.updateSeparatorsVisibility();
@@ -931,6 +951,11 @@ class AddonCard extends HTMLElement {
               Services.scriptSecurityManager.createNullPrincipal({}),
           });
           break;
+        case "preferences":
+          if (getOptionsType(addon) == "tab") {
+            openOptionsInTab(addon.optionsURL);
+          }
+          break;
         case "remove":
           {
             this.panel.hide();
@@ -962,6 +987,13 @@ class AddonCard extends HTMLElement {
         case "report":
           this.panel.hide();
           openAbuseReport({addonId: addon.id, reportEntryPoint: "menu"});
+          break;
+        default:
+          // Handle a click on the card itself.
+          // Don't expand if expanded or a button was clicked.
+          if (!this.expanded && e.target.localName != "button") {
+            loadViewFn("detail", this.addon.id);
+          }
           break;
       }
     } else if (e.type == "change") {
@@ -995,11 +1027,6 @@ class AddonCard extends HTMLElement {
       if (action == "more-options") {
         this.panel.toggle(e);
       }
-    } else if (e.type == "dblclick") {
-      // Don't expand if expanded or a button is double clicked.
-      if (!this.expanded && e.target.tagName != "BUTTON") {
-        loadViewFn("detail", this.addon.id);
-      }
     }
   }
 
@@ -1010,14 +1037,12 @@ class AddonCard extends HTMLElement {
   registerListeners() {
     this.addEventListener("change", this);
     this.addEventListener("click", this);
-    this.addEventListener("dblclick", this);
     this.addEventListener("mousedown", this);
   }
 
   removeListeners() {
     this.removeEventListener("change", this);
     this.removeEventListener("click", this);
-    this.removeEventListener("dblclick", this);
     this.removeEventListener("mousedown", this);
   }
 
@@ -1305,12 +1330,43 @@ class RecommendedAddonCard extends HTMLElement {
     let action = event.target.getAttribute("action");
     switch (action) {
       case "install-addon":
+        AMTelemetry.recordActionEvent({
+          object: "aboutAddons",
+          view: this.getTelemetryViewName(),
+          action: "installFromRecommendation",
+          addon: this.discoAddon,
+        });
         this.installDiscoAddon();
         break;
       case "manage-addon":
+        AMTelemetry.recordActionEvent({
+          object: "aboutAddons",
+          view: this.getTelemetryViewName(),
+          action: "manage",
+          addon: this.discoAddon,
+        });
         loadViewFn("detail", this.addonId);
         break;
+      default:
+        if (event.target.matches(".disco-addon-author a[href]")) {
+          AMTelemetry.recordLinkEvent({
+            object: "aboutAddons",
+            // Note: This is not "author" nor "homepage", because the link text
+            // is the author name, but the link URL the add-on's listing URL.
+            value: "discohome",
+            extra: {
+              view: this.getTelemetryViewName(),
+            },
+          });
+        }
     }
+  }
+
+  /**
+   * The name of the view for use in addonsManager telemetry events.
+   */
+  getTelemetryViewName() {
+    return "discover";
   }
 
   async installDiscoAddon() {
@@ -1783,11 +1839,27 @@ class DiscoveryPane extends HTMLElement {
     let action = event.target.getAttribute("action");
     switch (action) {
       case "notice-learn-more":
+        // The element is a button but opens a URL, so record as link.
+        AMTelemetry.recordLinkEvent({
+          object: "aboutAddons",
+          value: "disconotice",
+          extra: {
+            view: "discover",
+          },
+        });
         windowRoot.ownerGlobal.openTrustedLinkIn(
           Services.urlFormatter.formatURLPref("app.support.baseURL") +
           "personalized-extension-recommendations", "tab");
         break;
       case "open-amo":
+        // The element is a button but opens a URL, so record as link.
+        AMTelemetry.recordLinkEvent({
+          object: "aboutAddons",
+          value: "discomore",
+          extra: {
+            view: "discover",
+          },
+        });
         let amoUrl =
           Services.urlFormatter.formatURLPref("extensions.getAddons.link.url");
         amoUrl = formatAmoUrl("find-more-link-bottom", amoUrl);

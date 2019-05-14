@@ -1570,29 +1570,6 @@ class MWasmNullConstant : public MNullaryInstruction {
   ALLOW_CLONE(MWasmNullConstant)
 };
 
-class MIsNullPointer : public MUnaryInstruction, public NoTypePolicy::Data {
-  explicit MIsNullPointer(MDefinition* value)
-      : MUnaryInstruction(classOpcode, value) {
-    MOZ_ASSERT(value->type() == MIRType::Pointer);
-    setResultType(MIRType::Boolean);
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(IsNullPointer);
-
-  static MIsNullPointer* New(TempAllocator& alloc, MDefinition* value) {
-    return new (alloc) MIsNullPointer(value);
-  }
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  ALLOW_CLONE(MIsNullPointer)
-};
-
 // Floating-point value as created by wasm. Just a constant value, used to
 // effectively inhibite all the MIR optimizations. This uses the same LIR nodes
 // as a MConstant of the same type would.
@@ -11798,31 +11775,6 @@ class MWasmDerivedPointer : public MUnaryInstruction,
   ALLOW_CLONE(MWasmDerivedPointer)
 };
 
-class MWasmLoadRef : public MUnaryInstruction, public NoTypePolicy::Data {
-  AliasSet::Flag aliasSet_;
-
-  explicit MWasmLoadRef(MDefinition* valueAddr, AliasSet::Flag aliasSet,
-                        bool isMovable = true)
-      : MUnaryInstruction(classOpcode, valueAddr), aliasSet_(aliasSet) {
-    MOZ_ASSERT(valueAddr->type() == MIRType::Pointer);
-    setResultType(MIRType::RefOrNull);
-    if (isMovable) {
-      setMovable();
-    }
-  }
-
- public:
-  INSTRUCTION_HEADER(WasmLoadRef)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::Load(aliasSet_); }
-
-  ALLOW_CLONE(MWasmLoadRef)
-};
-
 class MWasmStoreRef : public MAryInstruction<3>, public NoTypePolicy::Data {
   AliasSet::Flag aliasSet_;
 
@@ -11897,6 +11849,7 @@ class MWasmStackArg : public MUnaryInstruction, public NoTypePolicy::Data {
 class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   wasm::CallSiteDesc desc_;
   wasm::CalleeDesc callee_;
+  wasm::FailureMode builtinMethodFailureMode_;
   FixedList<AnyRegister> argRegs_;
   uint32_t stackArgAreaSizeUnaligned_;
   ABIArg instanceArg_;
@@ -11906,6 +11859,7 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
       : MVariadicInstruction(classOpcode),
         desc_(desc),
         callee_(callee),
+        builtinMethodFailureMode_(wasm::FailureMode::Infallible),
         stackArgAreaSizeUnaligned_(stackArgAreaSizeUnaligned) {}
 
  public:
@@ -11925,8 +11879,9 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
 
   static MWasmCall* NewBuiltinInstanceMethodCall(
       TempAllocator& alloc, const wasm::CallSiteDesc& desc,
-      const wasm::SymbolicAddress builtin, const ABIArg& instanceArg,
-      const Args& args, MIRType resultType, uint32_t stackArgAreaSizeUnaligned);
+      const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
+      const ABIArg& instanceArg, const Args& args, MIRType resultType,
+      uint32_t stackArgAreaSizeUnaligned);
 
   size_t numArgs() const { return argRegs_.length(); }
   AnyRegister registerForArg(size_t index) const {
@@ -11935,6 +11890,10 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   }
   const wasm::CallSiteDesc& desc() const { return desc_; }
   const wasm::CalleeDesc& callee() const { return callee_; }
+  wasm::FailureMode builtinMethodFailureMode() const {
+    MOZ_ASSERT(callee_.which() == wasm::CalleeDesc::BuiltinInstanceMethod);
+    return builtinMethodFailureMode_;
+  }
   uint32_t stackArgAreaSizeUnaligned() const {
     return stackArgAreaSizeUnaligned_;
   }

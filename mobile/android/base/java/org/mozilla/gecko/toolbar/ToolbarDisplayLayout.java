@@ -60,8 +60,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
     private static final int MIN_DOMAIN_SCROLL_MARGIN_DP = 10;
 
-    private boolean mTrackingProtectionEnabled;
-
     // To be used with updateFromTab() to allow the caller
     // to give enough context for the requested state change.
     enum UpdateFlags {
@@ -363,7 +361,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         final int imageLevel = type.getImageLevel();
 
         mSiteIdentityPopup.setSiteIdentity(siteIdentity);
-        mTrackingProtectionEnabled = SecurityModeUtil.isTrackingProtectionEnabled(siteIdentity);
 
         if (mSecurityImageLevel != imageLevel) {
             mSecurityImageLevel = imageLevel;
@@ -423,10 +420,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         final boolean shouldShowThrobber = tab.getState() == Tab.STATE_LOADING;
 
         updateUiMode(shouldShowThrobber ? UIMode.PROGRESS : UIMode.DISPLAY);
-
-        if (Tab.STATE_SUCCESS == tab.getState() && mTrackingProtectionEnabled) {
-            mActivity.showTrackingProtectionPromptIfApplicable();
-        }
     }
 
     private void updateUiMode(UIMode uiMode) {

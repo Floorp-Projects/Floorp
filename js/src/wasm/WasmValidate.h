@@ -611,6 +611,7 @@ class Decoder {
         *type = ValType::Code(code);
         return true;
 #ifdef ENABLE_WASM_REFTYPES
+      case uint8_t(ValType::FuncRef):
       case uint8_t(ValType::AnyRef):
         *type = ValType::Code(code);
         return true;

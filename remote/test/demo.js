@@ -6,7 +6,14 @@ async function demo() {
   let client;
   try {
     client = await CDP();
-    const {Log, Network, Page} = client;
+    const {Log, Network, Page, Runtime} = client;
+    let { result } = await Runtime.evaluate({expression: "this.obj = {foo:true}; this.obj"});
+    console.log("1", result);
+    ({ result } = await Runtime.evaluate({expression: "this.obj"}));
+    console.log("2", result);
+    ({ result } = await Runtime.evaluate({expression: "this.obj.foo"}));
+    console.log("3", result);
+
 
     // receive console.log messages and print them
     Log.enable();

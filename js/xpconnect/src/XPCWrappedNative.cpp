@@ -1520,6 +1520,12 @@ bool CallMethodHelper::ConvertIndependentParam(uint8_t i) {
       dp->ext.nsid.Clear();
       return true;
     }
+
+    if (type.Tag() == nsXPTType::T_ARRAY) {
+      // Use a default value of empty array for optional Array objects.
+      dp->ext.array.Clear();
+      return true;
+    }
   }
 
   // We're definitely some variety of 'in' now, so there's something to
