@@ -1,4 +1,5 @@
 /// Example showing how to obtain the ip address of the client, where possible.
+
 extern crate ws;
 
 struct Server {
@@ -6,8 +7,9 @@ struct Server {
 }
 
 impl ws::Handler for Server {
+
     fn on_open(&mut self, shake: ws::Handshake) -> ws::Result<()> {
-        if let Some(ip_addr) = shake.remote_addr()? {
+        if let Some(ip_addr) = try!(shake.remote_addr()) {
             println!("Connection opened from {}.", ip_addr)
         } else {
             println!("Unable to obtain client's IP address.")
@@ -20,6 +22,8 @@ impl ws::Handler for Server {
     }
 }
 
-fn main() {
-    ws::listen("127.0.0.1:3012", |out| Server { ws: out }).unwrap()
+fn main () {
+    ws::listen("127.0.0.1:3012", |out| {
+        Server { ws: out }
+    }).unwrap()
 }
