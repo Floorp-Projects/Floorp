@@ -114,8 +114,7 @@ PluginTag.prototype = {
 
   mimeTypes: [ PLUGIN_MIME_TYPE1, PLUGIN_MIME_TYPE2 ],
 
-  getMimeTypes(count) {
-    count.value = this.mimeTypes.length;
+  getMimeTypes() {
     return this.mimeTypes;
   },
 };
