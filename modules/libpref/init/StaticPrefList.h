@@ -2581,13 +2581,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-// Maximum size for an array to store the safebrowsing prefixset.
-VARCACHE_PREF(
-  "browser.safebrowsing.prefixset.max_array_size",
-   browser_safebrowsing_prefixset_max_array_size,
-  uint32_t, 512*1024
-)
-
 // When this pref is enabled document loads with a mismatched
 // Cross-Origin header will fail to load
 VARCACHE_PREF("browser.tabs.remote.useCrossOriginPolicy",
