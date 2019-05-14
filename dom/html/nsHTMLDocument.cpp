@@ -1199,9 +1199,6 @@ Document* nsHTMLDocument::Open(const Optional<nsAString>& /* unused */,
     return nullptr;
   }
 
-  // Some internal non-spec bookkeeping.
-  mContentTypeForWriteCalls.AssignLiteral("text/html");
-
   if (shell) {
     // Prepare the docshell and the document viewer for the impending
     // out-of-band document.write()
@@ -1243,7 +1240,7 @@ void nsHTMLDocument::Close(ErrorResult& rv) {
 
   ++mWriteLevel;
   rv = (static_cast<nsHtml5Parser*>(mParser.get()))
-           ->Parse(EmptyString(), nullptr, mContentTypeForWriteCalls, true);
+           ->Parse(EmptyString(), nullptr, true);
   --mWriteLevel;
 
   // Even if that Parse() call failed, do the rest of this method
@@ -1375,10 +1372,10 @@ void nsHTMLDocument::WriteCommon(const nsAString& aText, bool aNewlineTerminate,
   // why pay that price when we don't need to?
   if (aNewlineTerminate) {
     aRv = (static_cast<nsHtml5Parser*>(mParser.get()))
-              ->Parse(aText + new_line, key, mContentTypeForWriteCalls, false);
+              ->Parse(aText + new_line, key, false);
   } else {
-    aRv = (static_cast<nsHtml5Parser*>(mParser.get()))
-              ->Parse(aText, key, mContentTypeForWriteCalls, false);
+    aRv =
+        (static_cast<nsHtml5Parser*>(mParser.get()))->Parse(aText, key, false);
   }
 
   --mWriteLevel;

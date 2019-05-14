@@ -4419,10 +4419,6 @@ class Document : public nsINode,
   nsCString mContentType;
 
  protected:
-  // For document.write() we may need a different content type than
-  // mContentType.
-  nsCString mContentTypeForWriteCalls;
-
   // The document's security info
   nsCOMPtr<nsISupports> mSecurityInfo;
 
