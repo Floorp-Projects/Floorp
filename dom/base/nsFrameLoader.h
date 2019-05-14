@@ -95,7 +95,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   typedef mozilla::dom::PBrowserParent PBrowserParent;
   typedef mozilla::dom::Document Document;
   typedef mozilla::dom::BrowserParent BrowserParent;
-  typedef mozilla::dom::BrowsingContext BrowsingContext;
   typedef mozilla::layout::RenderFrame RenderFrame;
 
  public:
@@ -107,7 +106,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // Called by nsFrameLoaderOwner::ChangeRemoteness when switching out
   // FrameLoaders.
   static nsFrameLoader* Create(mozilla::dom::Element* aOwner,
-                               BrowsingContext* aPreservedBrowsingContext,
                                const mozilla::dom::RemotenessOptions& aOptions);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_FRAMELOADER_IID)
@@ -386,8 +384,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override;
-
-  void SkipBrowsingContextDetach();
 
  private:
   nsFrameLoader(mozilla::dom::Element* aOwner,
