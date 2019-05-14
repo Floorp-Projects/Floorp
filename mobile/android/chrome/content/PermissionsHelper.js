@@ -167,7 +167,7 @@ var PermissionsHelper = {
     // it seperately.
     if (aType == "password") {
       // Get rid of exisiting stored logings
-      let logins = Services.logins.findLogins({}, aURI.displayPrePath, "", "");
+      let logins = Services.logins.findLogins(aURI.displayPrePath, "", "");
       for (let i = 0; i < logins.length; i++) {
         Services.logins.removeLogin(logins[i]);
       }
