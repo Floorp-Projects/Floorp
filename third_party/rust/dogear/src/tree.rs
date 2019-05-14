@@ -16,6 +16,7 @@ use std::{
     borrow::Cow,
     cmp::Ordering,
     collections::{HashMap, HashSet},
+    convert::{TryFrom, TryInto},
     fmt, mem,
     ops::Deref,
     ptr,
@@ -23,17 +24,11 @@ use std::{
 
 use smallbitvec::SmallBitVec;
 
-use crate::error::{ErrorKind, Result};
+use crate::error::{Error, ErrorKind, Result};
 use crate::guid::Guid;
 
 /// The type for entry indices in the tree.
 type Index = usize;
-
-/// Anything that can be turned into a tree.
-pub trait IntoTree {
-    /// Performs the conversion.
-    fn into_tree(self) -> Result<Tree>;
-}
 
 /// A complete, rooted bookmark tree with tombstones.
 ///
@@ -115,13 +110,6 @@ impl Tree {
     #[inline]
     pub fn problems(&self) -> &Problems {
         &self.problems
-    }
-}
-
-impl IntoTree for Tree {
-    #[inline]
-    fn into_tree(self) -> Result<Tree> {
-        Ok(self)
     }
 }
 
@@ -224,8 +212,8 @@ impl PartialEq for Tree {
 ///
 /// # Resolving divergences
 ///
-/// Building a tree using `Builder::into_tree` resolves divergences using
-/// these rules:
+/// Building a tree using `std::convert::TryInto<Tree>::try_into` resolves
+/// divergences using these rules:
 ///
 /// 1. User content roots should always be children of the Places root. If
 ///    they appear in other parents, we move them.
@@ -287,28 +275,37 @@ impl Builder {
         };
         ParentBuilder(self, entry_child)
     }
+
+    /// Equivalent to using our implementation of`TryInto<Tree>::try_into`, but
+    /// provided both for convenience when updating from previous versions of
+    /// `dogear`, and for cases where a type hint would otherwise be needed to
+    /// clarify the target type of the conversion.
+    pub fn into_tree(self) -> Result<Tree> {
+        self.try_into()
+    }
 }
 
-impl IntoTree for Builder {
+impl TryFrom<Builder> for Tree {
+    type Error = Error;
     /// Builds a tree from all stored items and parent-child associations,
     /// resolving inconsistencies like orphans, multiple parents, and
     /// parent-child disagreements.
-    fn into_tree(self) -> Result<Tree> {
+    fn try_from(builder: Builder) -> Result<Tree> {
         let mut problems = Problems::default();
 
         // First, resolve parents for all entries, and build a lookup table for
         // items without a position.
-        let mut parents = Vec::with_capacity(self.entries.len());
+        let mut parents = Vec::with_capacity(builder.entries.len());
         let mut reparented_child_indices_by_parent: HashMap<Index, Vec<Index>> = HashMap::new();
-        for (entry_index, entry) in self.entries.iter().enumerate() {
-            let r = ResolveParent::new(&self, entry, &mut problems);
+        for (entry_index, entry) in builder.entries.iter().enumerate() {
+            let r = ResolveParent::new(&builder, entry, &mut problems);
             let resolved_parent = r.resolve();
             if let ResolvedParent::ByParentGuid(parent_index) = &resolved_parent {
                 // Reparented items are special: since they aren't mentioned in
                 // that parent's `children`, we don't know their positions. Note
                 // them for when we resolve children. We also clone the GUID,
                 // since we use it for sorting, but can't access it by
-                // reference once we call `self.entries.into_iter()` below.
+                // reference once we call `builder.entries.into_iter()` below.
                 let reparented_child_indices = reparented_child_indices_by_parent
                     .entry(*parent_index)
                     .or_default();
@@ -320,12 +317,12 @@ impl IntoTree for Builder {
         // If any parents form cycles, abort. We haven't seen cyclic trees in
         // the wild, and breaking cycles would add complexity.
         if let Some(index) = detect_cycles(&parents) {
-            return Err(ErrorKind::Cycle(self.entries[index].item.guid.clone()).into());
+            return Err(ErrorKind::Cycle(builder.entries[index].item.guid.clone()).into());
         }
 
         // Then, resolve children, and build a slab of entries for the tree.
-        let mut entries = Vec::with_capacity(self.entries.len());
-        for (entry_index, entry) in self.entries.into_iter().enumerate() {
+        let mut entries = Vec::with_capacity(builder.entries.len());
+        for (entry_index, entry) in builder.entries.into_iter().enumerate() {
             // Each entry is consistent, until proven otherwise!
             let mut divergence = Divergence::Consistent;
 
@@ -417,7 +414,7 @@ impl IntoTree for Builder {
 
         // Now we have a consistent tree.
         Ok(Tree {
-            entry_index_by_guid: self.entry_index_by_guid,
+            entry_index_by_guid: builder.entry_index_by_guid,
             entries,
             deleted_guids: HashSet::new(),
             problems,
@@ -472,7 +469,7 @@ impl<'b> ParentBuilder<'b> {
     /// Records a `parent_guid` from a valid tree structure. This is for
     /// callers who already know their structure is consistent, like
     /// `Store::fetch_local_tree()` on Desktop, and
-    /// `{MergedNode, Node}::into_tree()` in the tests.
+    /// `std::convert::TryInto<Tree>` in the tests.
     ///
     /// Both the item and `parent_guid` must exist, and the `parent_guid` must
     /// refer to a folder.
@@ -1477,11 +1474,18 @@ impl<'t> MergedRoot<'t> {
     pub fn to_ascii_string(&self) -> String {
         self.node.to_ascii_fragment("")
     }
+
+    /// Lets us avoid needing to specify the target type in tests.
+    #[cfg(test)]
+    pub(crate) fn into_tree(self) -> Result<Tree> {
+        self.try_into()
+    }
 }
 
 #[cfg(test)]
-impl<'t> IntoTree for MergedRoot<'t> {
-    fn into_tree(self) -> Result<Tree> {
+impl<'t> TryFrom<MergedRoot<'t>> for Tree {
+    type Error = Error;
+    fn try_from(merged_root: MergedRoot<'t>) -> Result<Tree> {
         fn to_item(merged_node: &MergedNode<'_>) -> Item {
             let node = merged_node.merge_state.node();
             let mut item = Item::new(merged_node.guid.clone(), node.kind);
@@ -1490,17 +1494,17 @@ impl<'t> IntoTree for MergedRoot<'t> {
             item
         }
 
-        let mut b = Tree::with_root(to_item(&self.node));
+        let mut b = Tree::with_root(to_item(&merged_root.node));
         for MergedDescendant {
             merged_parent_node,
             merged_node,
             ..
-        } in self.descendants()
+        } in merged_root.descendants()
         {
             b.item(to_item(merged_node))?
                 .by_structure(&merged_parent_node.guid)?;
         }
-        b.into_tree()
+        b.try_into()
     }
 }
 
@@ -1751,7 +1755,7 @@ impl<'t> MergeState<'t> {
 
     /// Returns the node from the preferred side. Unlike `local_node()` and
     /// `remote_node()`, this doesn't indicate which side, so it's only used
-    /// for logging and `into_tree()`.
+    /// for logging and `try_from()`.
     fn node(&self) -> &Node<'t> {
         match self {
             MergeState::LocalOnly(local_node) | MergeState::Local { local_node, .. } => local_node,
