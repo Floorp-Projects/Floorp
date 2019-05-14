@@ -363,13 +363,36 @@ body {
 }
 
 .badge {
+  display: inline-block;
   font: message-box;
+  font-size: var(--theme-body-font-size);
+  line-height: calc(14 / 11);
   border-radius: 3px;
-  padding: 0px 2px;
+  padding: 0px 3px;
   margin-inline-start: 5px;
   color: var(--accessible-label-color);
   background-color: var(--accessible-label-background-color);
   border: 1px solid var(--accessible-label-border-color);
+}
+
+.badge.audit-badge::before {
+  content: "";
+  display: inline-block;
+  vertical-align: -1px;
+  width: 10px;
+  height: 10px;
+  margin-inline-end: 1px;
+  background: url("chrome://devtools/skin/images/alert-tiny.svg") no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.9;
+}
+
+/* improve alignment in high res (where we can use half pixels) */
+@media (min-resolution: 1.5x) {
+  .badge.audit-badge::before {
+    vertical-align: -1.5px;
+  }
 }
 
 .badge.toggle-button {
