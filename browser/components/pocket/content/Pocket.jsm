@@ -13,7 +13,7 @@ ChromeUtils.defineModuleGetter(this, "BrowserUtils",
 
 var Pocket = {
   get site() { return Services.prefs.getCharPref("extensions.pocket.site"); },
-  get listURL() { return "https://" + Pocket.site + "/?src=ff_ext"; },
+  get listURL() { return "https://" + Pocket.site + "/firefox_learnmore?src=ff_library"; },
 
   openList(event) {
     let win = event.view;

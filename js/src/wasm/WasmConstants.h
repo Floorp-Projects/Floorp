@@ -49,7 +49,7 @@ enum class TypeCode {
   F64 = 0x7c,  // SLEB128(-0x04)
 
   // A function pointer with any signature
-  AnyFunc = 0x70,  // SLEB128(-0x10)
+  FuncRef = 0x70,  // SLEB128(-0x10)
 
   // A reference to any type.
   AnyRef = 0x6f,

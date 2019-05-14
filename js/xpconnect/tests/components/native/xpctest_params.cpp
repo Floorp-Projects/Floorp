@@ -360,3 +360,10 @@ nsXPCTestParams::TestInterfaceIsSequence(const nsIID* aIID,
   // Perform the generic sequence shuffle.
   SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_INTERFACE);
 }
+
+NS_IMETHODIMP
+nsXPCTestParams::TestOptionalSequence(const nsTArray<uint8_t>& aInArr,
+                                      nsTArray<uint8_t>& aReturnArr) {
+  aReturnArr = aInArr;
+  return NS_OK;
+}

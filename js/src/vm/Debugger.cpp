@@ -80,8 +80,6 @@ using mozilla::TimeStamp;
 
 /*** Forward declarations, ClassOps and Classes *****************************/
 
-static void DebuggerFrame_finalize(FreeOp* fop, JSObject* obj);
-static void DebuggerFrame_trace(JSTracer* trc, JSObject* obj);
 static void DebuggerEnv_trace(JSTracer* trc, JSObject* obj);
 static void DebuggerObject_trace(JSTracer* trc, JSObject* obj);
 static void DebuggerScript_trace(JSTracer* trc, JSObject* obj);
@@ -92,17 +90,19 @@ inline js::Debugger* js::DebuggerFrame::owner() const {
   return Debugger::fromJSObject(dbgobj);
 }
 
-const ClassOps DebuggerFrame::classOps_ = {nullptr, /* addProperty */
-                                           nullptr, /* delProperty */
-                                           nullptr, /* enumerate   */
-                                           nullptr, /* newEnumerate */
-                                           nullptr, /* resolve     */
-                                           nullptr, /* mayResolve  */
-                                           DebuggerFrame_finalize,
-                                           nullptr, /* call        */
-                                           nullptr, /* hasInstance */
-                                           nullptr, /* construct   */
-                                           DebuggerFrame_trace};
+const ClassOps DebuggerFrame::classOps_ = {
+    nullptr,  /* addProperty */
+    nullptr,  /* delProperty */
+    nullptr,  /* enumerate   */
+    nullptr,  /* newEnumerate */
+    nullptr,  /* resolve     */
+    nullptr,  /* mayResolve  */
+    finalize, /* finalize */
+    nullptr,  /* call        */
+    nullptr,  /* hasInstance */
+    nullptr,  /* construct   */
+    trace,    /* trace */
+};
 
 const Class DebuggerFrame::class_ = {
     "Frame",
@@ -3366,7 +3366,7 @@ void Debugger::removeAllocationsTrackingForAllDebuggees() {
 /*** Debugger JSObjects *****************************************************/
 
 void Debugger::traceCrossCompartmentEdges(JSTracer* trc) {
-  generatorFrames.traceCrossCompartmentEdges<DebuggerFrame_trace>(trc);
+  generatorFrames.traceCrossCompartmentEdges<DebuggerFrame::trace>(trc);
   objects.traceCrossCompartmentEdges<DebuggerObject_trace>(trc);
   environments.traceCrossCompartmentEdges<DebuggerEnv_trace>(trc);
   scripts.traceCrossCompartmentEdges<DebuggerScript_trace>(trc);
@@ -9602,7 +9602,8 @@ static void DebuggerFrame_maybeDecrementFrameScriptStepModeCount(
   }
 }
 
-static void DebuggerFrame_finalize(FreeOp* fop, JSObject* obj) {
+/* static */
+void DebuggerFrame::finalize(FreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->maybeOnHelperThread());
   DebuggerFrame& frameobj = obj->as<DebuggerFrame>();
   frameobj.freeFrameIterData(fop);
@@ -9616,7 +9617,8 @@ static void DebuggerFrame_finalize(FreeOp* fop, JSObject* obj) {
   }
 }
 
-static void DebuggerFrame_trace(JSTracer* trc, JSObject* obj) {
+/* static */
+void DebuggerFrame::trace(JSTracer* trc, JSObject* obj) {
   OnStepHandler* onStepHandler = obj->as<DebuggerFrame>().onStepHandler();
   if (onStepHandler) {
     onStepHandler->trace(trc);

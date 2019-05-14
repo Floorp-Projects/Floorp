@@ -91,7 +91,7 @@ interface nsIFlavorDataProvider : nsISupports
 };
 
 
-[scriptable, uuid(97e0c418-1c1e-4106-bad1-9fcb11dff2fe)]
+[scriptable, builtinclass, uuid(97e0c418-1c1e-4106-bad1-9fcb11dff2fe)]
 interface nsITransferable : nsISupports
 {
   /**

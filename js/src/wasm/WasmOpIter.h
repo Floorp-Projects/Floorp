@@ -46,6 +46,7 @@ class StackType {
       case TypeCode::F32:
       case TypeCode::F64:
       case TypeCode::AnyRef:
+      case TypeCode::FuncRef:
       case TypeCode::Ref:
       case TypeCode::NullRef:
       case TypeCode::Limit:
@@ -64,6 +65,7 @@ class StackType {
     F64 = uint8_t(ValType::F64),
 
     AnyRef = uint8_t(ValType::AnyRef),
+    FuncRef = uint8_t(ValType::FuncRef),
     Ref = uint8_t(ValType::Ref),
     NullRef = uint8_t(ValType::NullRef),
 
@@ -83,24 +85,16 @@ class StackType {
   Code code() const { return Code(UnpackTypeCodeType(tc_)); }
 
   uint32_t refTypeIndex() const { return UnpackTypeCodeIndex(tc_); }
-
   bool isRef() const { return UnpackTypeCodeType(tc_) == TypeCode::Ref; }
 
-  bool isReference() const {
-    TypeCode tc = UnpackTypeCodeType(tc_);
-    return tc == TypeCode::Ref || tc == TypeCode::AnyRef ||
-           tc == TypeCode::NullRef;
-  }
+  bool isReference() const { return IsReferenceType(tc_); }
 
   bool operator==(const StackType& that) const { return tc_ == that.tc_; }
-
   bool operator!=(const StackType& that) const { return tc_ != that.tc_; }
-
   bool operator==(Code that) const {
     MOZ_ASSERT(that != Code::Ref);
     return code() == that;
   }
-
   bool operator!=(Code that) const { return !(*this == that); }
 };
 
@@ -765,6 +759,7 @@ inline bool OpIter<Policy>::readBlockType(ExprType* type) {
     case uint8_t(ExprType::F64):
       known = true;
       break;
+    case uint8_t(ExprType::FuncRef):
     case uint8_t(ExprType::AnyRef):
 #ifdef ENABLE_WASM_REFTYPES
       known = true;
@@ -1564,7 +1559,7 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     }
     return fail("table index out of range for call_indirect");
   }
-  if (env_.tables[*tableIndex].kind != TableKind::AnyFunction) {
+  if (env_.tables[*tableIndex].kind != TableKind::FuncRef) {
     return fail("indirect calls must go through a table of 'funcref'");
   }
 
@@ -1955,7 +1950,7 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
 
     // Element segments must carry functions exclusively and funcref is not
     // yet a subtype of anyref.
-    if (env_.tables[*dstTableIndex].kind != TableKind::AnyFunction) {
+    if (env_.tables[*dstTableIndex].kind != TableKind::FuncRef) {
       return fail("only tables of 'funcref' may have element segments");
     }
     if (*segIndex >= env_.elemSegments.length()) {

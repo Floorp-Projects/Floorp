@@ -1316,6 +1316,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
       case ValType::Ref:
         offset = layout.addReference(ReferenceType::TYPE_OBJECT);
         break;
+      case ValType::FuncRef:
       case ValType::AnyRef:
         offset = layout.addReference(ReferenceType::TYPE_WASM_ANYREF);
         break;
@@ -1562,8 +1563,8 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool gcTypesEnabled,
   }
 
   TableKind tableKind;
-  if (elementType == uint8_t(TypeCode::AnyFunc)) {
-    tableKind = TableKind::AnyFunction;
+  if (elementType == uint8_t(TypeCode::FuncRef)) {
+    tableKind = TableKind::FuncRef;
 #ifdef ENABLE_WASM_REFTYPES
   } else if (elementType == uint8_t(TypeCode::AnyRef)) {
     tableKind = TableKind::AnyRef;
@@ -1602,6 +1603,7 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable) {
     case ValType::F32:
     case ValType::F64:
     case ValType::I64:
+    case ValType::FuncRef:
     case ValType::AnyRef:
       break;
 #ifdef WASM_PRIVATE_REFTYPES
@@ -1937,14 +1939,8 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
         return d.fail(
             "type mismatch: initializer type and expected type don't match");
       }
-      if (expected == ValType::AnyRef) {
-        *init = InitExpr(LitVal(AnyRef::null()));
-      } else {
-        if (!env->gcTypesEnabled()) {
-          return d.fail("unexpected initializer expression");
-        }
-        *init = InitExpr(LitVal(expected, nullptr));
-      }
+      MOZ_ASSERT_IF(expected.isRef(), env->gcTypesEnabled());
+      *init = InitExpr(LitVal(expected, AnyRef::null()));
       break;
     }
     case uint16_t(Op::GetGlobal): {
@@ -2271,7 +2267,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       // segments, there really is no segment index, and we should never
       // touch the field.
       tableIndex = (uint32_t)-1;
-    } else if (env->tables[tableIndex].kind != TableKind::AnyFunction) {
+    } else if (env->tables[tableIndex].kind != TableKind::FuncRef) {
       return d.fail("only tables of 'funcref' may have element segments");
     }
 
@@ -2292,7 +2288,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
         if (!d.readFixedU8(&form)) {
           return d.fail("expected type form");
         }
-        if (form != uint8_t(TypeCode::AnyFunc)) {
+        if (form != uint8_t(TypeCode::FuncRef)) {
           return d.fail(
               "passive segments can only contain function references");
         }

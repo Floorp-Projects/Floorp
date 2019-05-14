@@ -11,6 +11,7 @@ const sinon = require("sinon");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const Provider = createFactory(require("react-redux").Provider);
 const { setupStore } = require("devtools/client/webconsole/test/helpers");
+const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
 
 // Components under test.
 const PageError = require("devtools/client/webconsole/components/message-types/PageError");
@@ -21,7 +22,8 @@ const {
 const { INDENT_WIDTH } = require("devtools/client/webconsole/components/MessageIndent");
 
 // Test fakes.
-const { stubPreparedMessages } = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const { stubPackets, stubPreparedMessages } =
+  require("devtools/client/webconsole/test/fixtures/stubs/index");
 const serviceContainer = require("devtools/client/webconsole/test/fixtures/serviceContainer");
 
 describe("PageError component:", () => {
@@ -81,6 +83,51 @@ describe("PageError component:", () => {
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
     expect(text).toBe(`uncaught exception: tomato`);
+  });
+
+  it("renders URLs in message as actual, cropped, links", () => {
+    // Let's replace the packet data in order to mimick a pageError.
+    const packet = stubPackets.get("ReferenceError: asdf is not defined");
+
+    const evilDomain = `https://evil.com/?`;
+    const badDomain = `https://not-so-evil.com/?`;
+    const paramLength = 200;
+    const longParam = "a".repeat(paramLength);
+
+    const evilURL = `${evilDomain}${longParam}`;
+    const badURL = `${badDomain}${longParam}`;
+
+    packet.pageError.errorMessage =
+      `“${evilURL}“ is evil and “${badURL}“ is not good either`;
+
+    // We remove the exceptionDocURL to not have the "learn more" link.
+    packet.pageError.exceptionDocURL = null;
+
+    const message = prepareMessage(packet, {getNextId: () => "1"});
+    const wrapper = render(PageError({ message, serviceContainer }));
+
+    // Keep in sync with `urlCropLimit` in PageError.js.
+    const cropLimit = 120;
+    const partLength = cropLimit / 2;
+    const getCroppedUrl = url =>
+      `${url}${"a".repeat((partLength - url.length))}…${"a".repeat(partLength)}`;
+
+    const croppedEvil = getCroppedUrl(evilDomain);
+    const croppedbad = getCroppedUrl(badDomain);
+
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe(
+      `“${croppedEvil}“ is evil and “${croppedbad}“ is not good either`);
+
+    // There should be 2 links.
+    const links = wrapper.find(".message-body a");
+    expect(links.length).toBe(2);
+
+    expect(links.eq(0).attr("href")).toBe(evilURL);
+    expect(links.eq(0).attr("title")).toBe(evilURL);
+
+    expect(links.eq(1).attr("href")).toBe(badURL);
+    expect(links.eq(1).attr("title")).toBe(badURL);
   });
 
   it("displays a [Learn more] link", () => {

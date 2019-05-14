@@ -62,7 +62,8 @@ TEST(TestEventTargetQI, Thread)
 TEST(TestEventTargetQI, ThrottledEventQueue)
 {
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-  RefPtr<ThrottledEventQueue> thing = ThrottledEventQueue::Create(thread);
+  RefPtr<ThrottledEventQueue> thing =
+      ThrottledEventQueue::Create(thread, "test queue");
   EXPECT_TRUE(thing);
 
   EXPECT_TRUE(TestQITo<nsISerialEventTarget>(thing));

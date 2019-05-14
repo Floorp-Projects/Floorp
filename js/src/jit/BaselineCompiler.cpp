@@ -5779,18 +5779,21 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
   Label interpret;
   Register scratch1 = regs.takeAny();
   masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), scratch1);
+  Address baselineAddr(scratch1, JSScript::offsetOfBaselineScript());
   if (JitOptions.baselineInterpreter) {
     Address typesAddr(scratch1, JSScript::offsetOfTypes());
     masm.branchPtr(Assembler::Equal, typesAddr, ImmPtr(nullptr), &interpret);
   } else {
-    Address baselineAddr(scratch1, JSScript::offsetOfBaselineScript());
     masm.branchPtr(Assembler::BelowOrEqual, baselineAddr,
                    ImmPtr(BASELINE_DISABLED_SCRIPT), &interpret);
   }
 
 #ifdef JS_TRACE_LOGGING
-  if (JS::TraceLoggerSupported() && !emitTraceLoggerResume(scratch1, regs)) {
-    return false;
+  if (JS::TraceLoggerSupported()) {
+    masm.loadPtr(baselineAddr, scratch1);
+    if (!emitTraceLoggerResume(scratch1, regs)) {
+      return false;
+    }
   }
 #endif
 

@@ -298,5 +298,8 @@ https://mochitest.youtube.com:443
 # Host for U2F localhost tests
 https://localhost:443
 
+# Bug 1402530
+http://localhost:80                 privileged
+
 # Host for testing APIs whitelisted for mozilla.org
 https://www.mozilla.org:443

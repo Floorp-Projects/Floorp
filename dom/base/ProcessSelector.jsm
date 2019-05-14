@@ -11,8 +11,8 @@ RandomSelector.prototype = {
   classID:          Components.ID("{c616fcfd-9737-41f1-aa74-cee72a38f91b}"),
   QueryInterface:   ChromeUtils.generateQI([Ci.nsIContentProcessProvider]),
 
-  provideProcess(aType, aOpener, aProcesses, aCount, aMaxCount) {
-    if (aCount < aMaxCount) {
+  provideProcess(aType, aOpener, aProcesses, aMaxCount) {
+    if (aProcesses.length < aMaxCount) {
       return Ci.nsIContentProcessProvider.NEW_PROCESS;
     }
 
@@ -40,8 +40,8 @@ MinTabSelector.prototype = {
   classID:          Components.ID("{2dc08eaf-6eef-4394-b1df-a3a927c1290b}"),
   QueryInterface:   ChromeUtils.generateQI([Ci.nsIContentProcessProvider]),
 
-  provideProcess(aType, aOpener, aProcesses, aCount, aMaxCount) {
-    if (aCount < aMaxCount) {
+  provideProcess(aType, aOpener, aProcesses, aMaxCount) {
+    if (aProcesses.length < aMaxCount) {
       return Ci.nsIContentProcessProvider.NEW_PROCESS;
     }
 
@@ -49,7 +49,7 @@ MinTabSelector.prototype = {
     let candidate = Ci.nsIContentProcessProvider.NEW_PROCESS;
 
     // Note, that at this point aMaxCount is in the valid range and
-    // the reason for not using aCount here is because if we keep
+    // the reason for not using aProcesses.length here is because if we keep
     // processes alive for testing but want a test to use only single
     // content process we can just keep relying on dom.ipc.processCount = 1
     // this way.

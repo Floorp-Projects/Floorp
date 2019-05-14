@@ -275,29 +275,19 @@ class NetErrorChild extends ActorChild {
     }
 
     if (input.data.isNotValidAtThisTime) {
-      let nowTime = new Date().getTime() * 1000;
-      let msg = "";
-      let notAfterLocalTime = formatter.format(new Date(input.data.validity.notAfterLocalTime));
-      if (input.data.validity.notBefore) {
-        let notBeforeLocalTime = formatter.format(new Date(input.data.validity.notBeforeLocalTime));
-        if (nowTime > input.data.validity.notAfter) {
-          technicalInfo.textContent = "";
-          msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow3",
-                                                  [hostString, notAfterLocalTime], 2);
-          msg += "\n";
-        } else {
-          technicalInfo.textContent = "";
-          msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow3",
-                                                    [hostString, notBeforeLocalTime], 2);
-          msg += "\n";
-         }
-        } else {
-          // If something goes wrong, we assume the cert expired.
-          technicalInfo.textContent = "";
-          msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow3",
-                                                    [hostString, notAfterLocalTime], 2);
-          msg += "\n";
+      let msg;
+      if (input.data.validity.notBefore && (Date.now() < input.data.validity.notAfter)) {
+        let notBeforeLocalTime = formatter.format(new Date(input.data.validity.notBefore));
+        msg = gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow3",
+                                                 [hostString, notBeforeLocalTime], 2);
+      } else {
+        let notAfterLocalTime = formatter.format(new Date(input.data.validity.notAfter));
+        msg = gPipNSSBundle.formatStringFromName("certErrorExpiredNow3",
+                                                 [hostString, notAfterLocalTime], 2);
       }
+      msg += "\n";
+
+      technicalInfo.textContent = "";
       technicalInfo.append(msg);
     }
     technicalInfo.append("\n");
@@ -820,7 +810,8 @@ class NetErrorChild extends ActorChild {
       this.mm.sendAsyncMessage("Browser:SSLErrorGoBack", {});
       return;
     }
-    if (elmId != "errorTryAgain" || !/e=netOffline/.test(documentURI)) {
+
+    if (!event.originalTarget.classList.contains("try-again") || !/e=netOffline/.test(documentURI)) {
       return;
     }
     // browser front end will handle clearing offline mode and refreshing

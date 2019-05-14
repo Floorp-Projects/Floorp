@@ -336,7 +336,8 @@ public class PanZoomController {
         if (action == MotionEvent.ACTION_SCROLL) {
             if (event.getDownTime() >= mLastDownTime) {
                 mLastDownTime = event.getDownTime();
-            } else if ((InputDevice.getDevice(event.getDeviceId()).getSources() &
+            } else if ((InputDevice.getDevice(event.getDeviceId()) != null) &&
+                       (InputDevice.getDevice(event.getDeviceId()).getSources() &
                         InputDevice.SOURCE_TOUCHPAD) == InputDevice.SOURCE_TOUCHPAD) {
                 return false;
             }

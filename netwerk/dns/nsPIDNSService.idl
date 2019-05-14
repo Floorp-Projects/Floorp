@@ -10,7 +10,7 @@
  * This is a private interface used by the internals of the networking library.
  * It will never be frozen.  Do not use it in external code.
  */
-[scriptable, uuid(24e598fd-7b1a-436c-9154-14d8b38df8a5)]
+[scriptable, builtinclass, uuid(24e598fd-7b1a-436c-9154-14d8b38df8a5)]
 interface nsPIDNSService : nsIDNSService
 {
     /**

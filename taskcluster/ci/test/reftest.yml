@@ -117,6 +117,7 @@ reftest:
             android-em-4.3-arm7-api-16/debug: 56
             android-em-4.*: 28
             android-em-7.*: 5
+            linux64(-shippable|-devedition|-qr)?/opt: 5
             macosx64.*/opt: 2
             macosx64.*/debug: 3
             macosx64-ccov/debug: 6
@@ -177,6 +178,7 @@ reftest-no-accel:
         by-test-platform:
             macosx.*: 1
             windows.*: 4
+            linux64(-shippable|-devedition)?/opt: 4
             default: 8
     mozharness:
         chunked:

@@ -27,7 +27,7 @@ class PresState;
 template<typename> struct already_AddRefed;
 %}
 
-[scriptable, uuid(aef27cb3-4df9-4eeb-b0b0-ac56cf861d04)]
+[scriptable, builtinclass, uuid(aef27cb3-4df9-4eeb-b0b0-ac56cf861d04)]
 interface nsILayoutHistoryState : nsISupports
 {
   /**

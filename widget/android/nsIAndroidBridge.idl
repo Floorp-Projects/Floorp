@@ -34,7 +34,9 @@ interface nsIAndroidBrowserApp : nsISupports {
 [scriptable, uuid(e64c39b8-b8ec-477d-aef5-89d517ff9219)]
 interface nsIAndroidEventCallback : nsISupports
 {
+  [implicit_jscontext]
   void onSuccess([optional] in jsval data);
+  [implicit_jscontext]
   void onError([optional] in jsval data);
 };
 

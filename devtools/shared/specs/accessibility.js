@@ -21,15 +21,16 @@ types.addDictType("accessibleWithChildren", {
 });
 
 /**
- * Data passed via "audit-event" to the client. It may include a list of
+ * Data passed via "audit-event" to the client. It may include type, a list of
  * ancestries for accessible actors that have failing accessibility checks or
- * an error flag.
+ * a progress information.
  */
 types.addDictType("auditEventData", {
+  type: "string",
   // List of ancestries (array:accessibleWithChildren)
-  ancestries: "array:array:accessibleWithChildren",
-  // True if the audit failed.
-  error: "boolean",
+  ancestries: "nullable:array:array:accessibleWithChildren",
+  // Audit progress information
+  progress: "nullable:json",
 });
 
 /**

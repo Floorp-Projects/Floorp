@@ -19,6 +19,7 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
@@ -112,6 +113,17 @@ let apiManager = new class extends SchemaAPIManager {
       }));
     });
     /* eslint-enable mozilla/balanced-listeners */
+
+    // Handle any changes that happened during startup
+    let disabledIds = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
+    if (disabledIds.length > 0) {
+      this._callHandlers(disabledIds, "disable", "onDisable");
+    }
+
+    let uninstalledIds = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_UNINSTALLED);
+    if (uninstalledIds.length > 0) {
+      this._callHandlers(uninstalledIds, "uninstall", "onUninstall");
+    }
   }
 
   getModuleJSONURLs() {
@@ -182,6 +194,23 @@ let apiManager = new class extends SchemaAPIManager {
         target.messageManager.sendAsyncMessage("Extension:SetFrameData", result);
       }
     }
+  }
+
+  // Call static handlers for the given event on the given extension ids,
+  // and set up a shutdown blocker to ensure they all complete.
+  _callHandlers(ids, event, method) {
+    let promises = Array.from(this.eventModules.get(event))
+                        .map(async modName => {
+                          let module = await this.asyncLoadModule(modName);
+                          return ids.map(id => module[method](id));
+                        }).flat();
+    if (event === "disable") {
+      promises.push(...ids.map(id => this.emit("disable", id)));
+    }
+
+    AsyncShutdown.profileBeforeChange.addBlocker(
+      `Extension API ${event} handlers for ${ids.join(",")}`,
+      Promise.all(promises));
   }
 }();
 
@@ -825,17 +854,13 @@ ParentAPIManager = {
     }
   },
 
-  shutdownExtension(extensionId) {
+  shutdownExtension(extensionId, reason) {
+    if (["ADDON_DISABLE", "ADDON_UNINSTALL"].includes(reason)) {
+      apiManager._callHandlers([extensionId], "disable", "onDisable");
+    }
+
     for (let [childId, context] of this.proxyContexts) {
       if (context.extension.id == extensionId) {
-        if (["ADDON_DISABLE", "ADDON_UNINSTALL"].includes(context.extension.shutdownReason)) {
-          let modules = apiManager.eventModules.get("disable");
-          Array.from(modules).map(async apiName => {
-            let module = await apiManager.asyncLoadModule(apiName);
-            module.onDisable(extensionId);
-          });
-        }
-
         context.shutdown();
         this.proxyContexts.delete(childId);
       }

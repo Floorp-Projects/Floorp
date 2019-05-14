@@ -327,7 +327,7 @@ interface nsIUDPSocketListener : nsISupports
  *
  * This interface is used to encapsulate an incomming UDP message
  */
-[scriptable, uuid(afdc743f-9cc0-40d8-b442-695dc54bbb74)]
+[scriptable, builtinclass, uuid(afdc743f-9cc0-40d8-b442-695dc54bbb74)]
 interface nsIUDPMessage : nsISupports
 {
     /**

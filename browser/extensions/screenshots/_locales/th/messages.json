@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "ดาวน์โหลด"
   },
+  "downloadScreenshotTitle": {
+    "message": "ดาวน์โหลดภาพหน้าจอ"
+  },
   "downloadOnlyNotice": {
     "message": "คุณกำลังอยู่ในโหมดดาวน์โหลดเท่านั้น"
   },
@@ -67,6 +70,9 @@
   "copyScreenshot": {
     "message": "คัดลอก"
   },
+  "copyScreenshotTitle": {
+    "message": "คัดลอกภาพหน้าจอไปยังคลิปบอร์ด"
+  },
   "notificationImageCopiedTitle": {
     "message": "คัดลอกภาพหน้าจอแล้ว"
   },
@@ -74,6 +80,14 @@
     "message": "คัดลอกภาพของคุณไปยังคลิปบอร์ดแล้ว กด $META_KEY$-V เพื่อวาง",
     "placeholders": {
       "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "imageCropPopupWarning": {
+    "message": "ภาพที่บันทึกจะถูกครอบตัดให้มีความสูง $PIXELS$ พิกเซล",
+    "placeholders": {
+      "pixels": {
         "content": "$1"
       }
     }
@@ -117,8 +131,8 @@
   "genericErrorDetails": {
     "message": "เราไม่แน่ใจว่าเกิดอะไรขึ้น ต้องการลองอีกครั้งหรือจับภาพหน้าจอของหน้าอื่น?"
   },
-  "tourBodyIntro": {
-    "message": "จับ บันทึก และแบ่งปันภาพหน้าจอโดยไม่ต้องออกจาก Firefox"
+  "tourBodyIntroServerless": {
+    "message": "จับ คัดลอก และดาวน์โหลดภาพหน้าจอโดยไม่ต้องออกจาก Firefox"
   },
   "tourHeaderPageAction": {
     "message": "หนทางใหม่ในการบันทึก"
@@ -137,12 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "คลิกที่ปุ่มด้านบนขวาเพื่อจับภาพพื้นที่ที่มองเห็นในหน้าต่างหรือเพื่อจับภาพทั้งหน้า"
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "ตามใจชอบ"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "บันทึกภาพหน้าจอที่ครอบตัดของคุณไปยังเว็บเพื่อการแบ่งปันที่ง่ายขึ้น หรือดาวน์โหลดไปยังคอมพิวเตอร์ของคุณ คุณยังสามารถคลิกที่ปุ่ม ภาพหน้าจอของฉัน เพื่อค้นหาภาพหน้าจอทั้งหมดที่คุณได้จับไว้"
   },
   "tourSkip": {
     "message": "ข้าม"

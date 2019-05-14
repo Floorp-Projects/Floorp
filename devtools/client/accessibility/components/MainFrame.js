@@ -7,7 +7,7 @@
 
 // React & Redux
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
-const { div } = require("devtools/client/shared/vendor/react-dom-factories");
+const { span, div } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { reset } = require("../actions/ui");
@@ -17,6 +17,7 @@ const { SIDEBAR_WIDTH, PORTRAIT_MODE_WIDTH } = require("../constants");
 
 // Accessibility Panel
 const AccessibilityTree = createFactory(require("./AccessibilityTree"));
+const AuditProgressOverlay = createFactory(require("./AuditProgressOverlay"));
 const Description = createFactory(require("./Description").Description);
 const RightSidebar = createFactory(require("./RightSidebar"));
 const Toolbar = createFactory(require("./Toolbar"));
@@ -33,6 +34,7 @@ class MainFrame extends Component {
       walker: PropTypes.object.isRequired,
       enabled: PropTypes.bool.isRequired,
       dispatch: PropTypes.func.isRequired,
+      auditing: PropTypes.string,
     };
   }
 
@@ -89,7 +91,7 @@ class MainFrame extends Component {
    * Render Accessibility panel content
    */
   render() {
-    const { accessibility, walker, enabled } = this.props;
+    const { accessibility, walker, enabled, auditing } = this.props;
 
     if (!enabled) {
       return Description({ accessibility });
@@ -98,26 +100,33 @@ class MainFrame extends Component {
     return (
       div({ className: "mainFrame", role: "presentation" },
         Toolbar({ accessibility, walker }),
-        SplitBox({
-          ref: "splitBox",
-          initialSize: SIDEBAR_WIDTH,
-          minSize: "10px",
-          maxSize: "80%",
-          splitterSize: 1,
-          endPanelControl: true,
-          startPanel: div({
-            className: "main-panel",
-            role: "presentation",
-          }, AccessibilityTree({ walker })),
-          endPanel: RightSidebar({ walker }),
-          vert: this.useLandscapeMode,
-        })
+        auditing && AuditProgressOverlay(),
+        span({
+          "aria-hidden": !!auditing,
+          role: "presentation",
+          style: { display: "contents" },
+        },
+          SplitBox({
+            ref: "splitBox",
+            initialSize: SIDEBAR_WIDTH,
+            minSize: "10px",
+            maxSize: "80%",
+            splitterSize: 1,
+            endPanelControl: true,
+            startPanel: div({
+              className: "main-panel",
+              role: "presentation",
+            }, AccessibilityTree({ walker })),
+            endPanel: RightSidebar({ walker }),
+            vert: this.useLandscapeMode,
+          })),
       ));
   }
 }
 
-const mapStateToProps = ({ ui }) => ({
+const mapStateToProps = ({ ui, audit: { auditing } }) => ({
   enabled: ui.enabled,
+  auditing,
 });
 
 // Exports from this module

@@ -64,6 +64,7 @@
 #ifdef MOZ_GECKO_PROFILER
 #  include "ChildProfilerController.h"
 #endif
+#include "nsAppRunner.h"
 
 namespace mozilla {
 namespace gfx {
@@ -224,7 +225,16 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
 #endif
 
 #if defined(MOZ_WIDGET_GTK)
-  char* display_name = PR_GetEnv("DISPLAY");
+  char* display_name = PR_GetEnv("MOZ_GDK_DISPLAY");
+  if (!display_name) {
+    bool waylandDisabled = true;
+#  ifdef MOZ_WAYLAND
+    waylandDisabled = IsWaylandDisabled();
+#  endif
+    if (waylandDisabled) {
+      display_name = PR_GetEnv("DISPLAY");
+    }
+  }
   if (display_name) {
     int argc = 3;
     char option_name[] = "--display";

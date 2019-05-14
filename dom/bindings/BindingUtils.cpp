@@ -1143,6 +1143,17 @@ static int CompareIdsAtIndices(const void* aElement1, const void* aElement2,
   return JSID_BITS(infos[index1].Id()) < JSID_BITS(infos[index2].Id()) ? -1 : 1;
 }
 
+// {JSPropertySpec,JSFunctionSpec} use {JSPropertySpec,JSFunctionSpec}::Name
+// and ConstantSpec uses `const char*` for name field.
+static inline JSPropertySpec::Name ToPropertySpecName(
+    JSPropertySpec::Name name) {
+  return name;
+}
+
+static inline JSPropertySpec::Name ToPropertySpecName(const char* name) {
+  return JSPropertySpec::Name(name);
+}
+
 template <typename SpecT>
 static bool InitIdsInternal(JSContext* cx, const Prefable<SpecT>* pref,
                             PropertyInfo* infos, PropertyType type) {
@@ -1161,7 +1172,8 @@ static bool InitIdsInternal(JSContext* cx, const Prefable<SpecT>* pref,
     uint32_t specIndex = 0;
     do {
       jsid id;
-      if (!JS::PropertySpecNameToPermanentId(cx, spec->name, &id)) {
+      if (!JS::PropertySpecNameToPermanentId(cx, ToPropertySpecName(spec->name),
+                                             &id)) {
         return false;
       }
       infos->SetId(id);

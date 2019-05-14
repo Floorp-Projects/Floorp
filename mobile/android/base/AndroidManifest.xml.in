@@ -205,10 +205,6 @@
             android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
-        <activity android:name="org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt"
-                  android:launchMode="singleTop"
-                  android:theme="@style/OverlayActivity" />
-
         <activity android:name="org.mozilla.gecko.promotion.SimpleHelperUI"
                   android:launchMode="singleTop"
                   android:theme="@style/OverlayActivity" />

@@ -37,7 +37,7 @@ class ServiceWorkerDescriptor;
  * as a convenience to the programmer and in some cases to improve performance
  * by eliminating intermediate data structures and interfaces.
  */
-[scriptable, uuid(4286de5a-b2ea-446f-8f70-e2a461f42694)]
+[scriptable, builtinclass, uuid(4286de5a-b2ea-446f-8f70-e2a461f42694)]
 interface nsIIOService : nsISupports
 {
     /**

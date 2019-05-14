@@ -308,6 +308,7 @@
 #define gc_Scheduling_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/DebugOnly.h"
 
 #include "js/HashTable.h"
 
@@ -675,20 +676,25 @@ class MemoryTracker {
   void addMemory(Cell* cell, size_t nbytes, MemoryUse use) {
     MOZ_ASSERT(cell);
     MOZ_ASSERT(nbytes);
+    mozilla::DebugOnly<size_t> initialBytes(bytes_);
+    MOZ_ASSERT(initialBytes + nbytes > initialBytes);
+
+    bytes_ += nbytes;
+
 #ifdef DEBUG
     trackMemory(cell, nbytes, use);
 #endif
-    MOZ_ASSERT(bytes_ + nbytes >= bytes_);
-    bytes_ += nbytes;
   }
   void removeMemory(Cell* cell, size_t nbytes, MemoryUse use) {
     MOZ_ASSERT(cell);
     MOZ_ASSERT(nbytes);
+    MOZ_ASSERT(bytes_ >= nbytes);
+
+    bytes_ -= nbytes;
+
 #ifdef DEBUG
     untrackMemory(cell, nbytes, use);
 #endif
-    MOZ_ASSERT(bytes_ >= nbytes);
-    bytes_ -= nbytes;
   }
 
   size_t bytes() const { return bytes_; }

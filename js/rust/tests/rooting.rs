@@ -45,28 +45,36 @@ unsafe extern "C" fn generic_method(_: *mut JSContext, _: u32, _: *mut JS::Value
 lazy_static! {
     static ref METHODS: [JSFunctionSpec; 4] = [
         JSFunctionSpec {
-            name: b"addEventListener\0" as *const u8 as *const libc::c_char,
+            name: JSFunctionSpec_Name {
+                string_: b"addEventListener\0" as *const u8 as *const libc::c_char,
+            },
             call: JSNativeWrapper { op: Some(generic_method), info: ptr::null() },
             nargs: 2,
             flags: JSPROP_ENUMERATE as u16,
             selfHostedName: 0 as *const libc::c_char
         },
         JSFunctionSpec {
-            name: b"removeEventListener\0" as *const u8 as *const libc::c_char,
+            name: JSFunctionSpec_Name {
+                string_: b"removeEventListener\0" as *const u8 as *const libc::c_char,
+            },
             call: JSNativeWrapper { op: Some(generic_method), info: ptr::null() },
             nargs: 2,
             flags: JSPROP_ENUMERATE as u16,
             selfHostedName: 0 as *const libc::c_char
         },
         JSFunctionSpec {
-            name: b"dispatchEvent\0" as *const u8 as *const libc::c_char,
+            name: JSFunctionSpec_Name {
+                string_: b"dispatchEvent\0" as *const u8 as *const libc::c_char,
+            },
             call: JSNativeWrapper { op: Some(generic_method), info: ptr::null() },
             nargs: 1,
             flags: JSPROP_ENUMERATE as u16,
             selfHostedName: 0 as *const libc::c_char
         },
         JSFunctionSpec {
-            name: ptr::null(),
+            name: JSFunctionSpec_Name {
+                string_: ptr::null(),
+            },
             call: JSNativeWrapper { op: None, info: ptr::null() },
             nargs: 0,
             flags: 0,

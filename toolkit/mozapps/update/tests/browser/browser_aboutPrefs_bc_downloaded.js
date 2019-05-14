@@ -4,10 +4,11 @@
 "use strict";
 
 // Test for about:preferences background check for updates
-// with the update downloaded.
+// with the update downloaded when about:preferences is opened.
 add_task(async function aboutPrefs_backgroundCheck_downloaded() {
-  let updateParams = "";
-  await runAboutPrefsUpdateTest(updateParams, true, [
+  let params = {backgroundUpdate: true,
+                waitForUpdateState: STATE_PENDING};
+  await runAboutPrefsUpdateTest(params, [
     {
       panelId: "apply",
       checkActiveUpdate: {state: STATE_PENDING},

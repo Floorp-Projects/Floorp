@@ -312,6 +312,7 @@ static void StoreABIReturn(MacroAssembler& masm, const FuncExport& fe,
       masm.storeDouble(ReturnDoubleReg, Address(argv, 0));
       break;
     case ExprType::Ref:
+    case ExprType::FuncRef:
     case ExprType::AnyRef:
       masm.storePtr(ReturnReg, Address(argv, 0));
       break;
@@ -900,10 +901,9 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
       break;
     }
     case ExprType::Ref:
-      MOZ_CRASH("return ref in jitentry NYI");
-      break;
+    case ExprType::FuncRef:
     case ExprType::AnyRef:
-      MOZ_CRASH("return anyref in jitentry NYI");
+      MOZ_CRASH("returning reference in jitentry NYI");
       break;
     case ExprType::I64:
       MOZ_CRASH("unexpected return type when calling from ion to wasm");
@@ -1151,6 +1151,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
       GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
       break;
     case wasm::ExprType::Ref:
+    case wasm::ExprType::FuncRef:
     case wasm::ExprType::AnyRef:
     case wasm::ExprType::I64:
       MOZ_CRASH("unexpected return type when calling from ion to wasm");
@@ -1552,6 +1553,14 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
       break;
     case ExprType::Ref:
       MOZ_CRASH("No Ref support here yet");
+    case ExprType::FuncRef:
+      masm.call(SymbolicAddress::CallImport_FuncRef);
+      masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+      masm.loadPtr(argv, ReturnReg);
+      GenPrintf(DebugChannel::Import, masm, "wasm-import[%u]; returns ",
+                funcImportIndex);
+      GenPrintPtr(DebugChannel::Import, masm, ReturnReg);
+      break;
     case ExprType::AnyRef:
       masm.call(SymbolicAddress::CallImport_AnyRef);
       masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
@@ -1753,10 +1762,9 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
       GenPrintF64(DebugChannel::Import, masm, ReturnDoubleReg);
       break;
     case ExprType::Ref:
-      MOZ_CRASH("ref returned by import (jit exit) NYI");
-      break;
+    case ExprType::FuncRef:
     case ExprType::AnyRef:
-      MOZ_CRASH("anyref returned by import (jit exit) NYI");
+      MOZ_CRASH("reference returned by import (jit exit) NYI");
       break;
     case ExprType::NullRef:
       MOZ_CRASH("NullRef not expressible");

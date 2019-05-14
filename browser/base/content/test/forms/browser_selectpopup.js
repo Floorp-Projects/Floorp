@@ -640,7 +640,7 @@ async function performSelectSearchTests(win) {
   let selectPopup = win.document.getElementById("ContentSelectDropdown").menupopup;
   await openSelectPopup(selectPopup, false, "select", win);
 
-  let searchElement = selectPopup.querySelector("textbox");
+  let searchElement = selectPopup.querySelector(".contentSelectDropdown-searchbox");
   searchElement.focus();
 
   EventUtils.synthesizeKey("O", {}, win);

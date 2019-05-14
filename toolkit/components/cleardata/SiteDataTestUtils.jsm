@@ -102,12 +102,16 @@ var SiteDataTestUtils = {
         // eslint-disable-next-line no-undef
         let r = await content.navigator.serviceWorker.register(p);
         return new Promise(resolve => {
-          let worker = r.installing;
-          worker.addEventListener("statechange", () => {
-            if (worker.state === "installed") {
-              resolve();
-            }
-          });
+          let worker = r.installing || r.waiting || r.active;
+          if (worker.state == "activated") {
+            resolve();
+          } else {
+            worker.addEventListener("statechange", () => {
+              if (worker.state == "activated") {
+                resolve();
+              }
+            });
+          }
         });
       });
     });
@@ -164,6 +168,60 @@ var SiteDataTestUtils = {
       }
     }
     return false;
+  },
+
+  /**
+   * Waits for a ServiceWorker to be registered.
+   *
+   * @param {String} the url of the ServiceWorker to wait for
+   *
+   * @returns a Promise that resolves when a ServiceWorker at the
+   *          specified location has been registered.
+   */
+  promiseServiceWorkerRegistered(url) {
+    if (!(url instanceof Ci.nsIURI)) {
+      url = Services.io.newURI(url);
+    }
+
+    return new Promise(resolve => {
+      let listener = {
+        onRegister: registration => {
+          if (registration.principal.URI.host != url.host) {
+            return;
+          }
+          swm.removeListener(listener);
+          resolve(registration);
+        },
+      };
+      swm.addListener(listener);
+    });
+  },
+
+  /**
+   * Waits for a ServiceWorker to be unregistered.
+   *
+   * @param {String} the url of the ServiceWorker to wait for
+   *
+   * @returns a Promise that resolves when a ServiceWorker at the
+   *          specified location has been unregistered.
+   */
+  promiseServiceWorkerUnregistered(url) {
+    if (!(url instanceof Ci.nsIURI)) {
+      url = Services.io.newURI(url);
+    }
+
+    return new Promise(resolve => {
+      let listener = {
+        onUnregister: registration => {
+          if (registration.principal.URI.host != url.host) {
+            return;
+          }
+          swm.removeListener(listener);
+          resolve(registration);
+        },
+      };
+      swm.addListener(listener);
+    });
   },
 
   /**

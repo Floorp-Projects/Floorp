@@ -417,8 +417,10 @@ ScreenIntSize MobileViewportManager::GetCompositionSize(
       // Screen pixels for them.
       * LayoutDeviceToScreenScale(1.0f);
 
-  compositionSize.width -= scrollbars.LeftRight();
-  compositionSize.height -= scrollbars.TopBottom();
+  compositionSize.width =
+      std::max(0.0f, compositionSize.width - scrollbars.LeftRight());
+  compositionSize.height =
+      std::max(0.0f, compositionSize.height - scrollbars.TopBottom());
 
   return compositionSize;
 }

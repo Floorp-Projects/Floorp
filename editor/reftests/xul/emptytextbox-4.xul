@@ -7,6 +7,6 @@
 
   <script type="text/javascript" src="platform.js"/>
 
-  <textbox type="search"/>
-      
+  <textbox is="search-textbox"/>
+
 </window>

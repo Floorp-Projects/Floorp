@@ -20,7 +20,7 @@ this.commands = class extends ExtensionAPI {
     await shortcuts.register();
   }
 
-  onShutdown(reason) {
+  onShutdown() {
     this.extension.shortcuts.unregister();
   }
 

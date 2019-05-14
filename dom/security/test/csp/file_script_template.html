@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'">
+<template id="a">
+  <script src="file_script_template.js"></script>
+</template>
+</head>
+<body>
+<script>
+  var temp = document.getElementsByTagName("template")[0];
+  var clon = temp.content.cloneNode(true);
+  document.body.appendChild(clon);
+</script>
+</body>
+</html>

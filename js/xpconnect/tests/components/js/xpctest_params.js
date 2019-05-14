@@ -70,6 +70,7 @@ TestParams.prototype = {
   testInterfaceSequence: f,
   testJsvalSequence: f,
   testInterfaceIsSequence: f_is,
+  testOptionalSequence: function (arr) { return arr; },
   testShortArray: f_is,
   testDoubleArray: f_is,
   testStringArray: f_is,
@@ -86,7 +87,7 @@ TestParams.prototype = {
     var rv = "";
     arr.forEach((x) => rv += x);
     return rv;
-  }
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestParams]);

@@ -367,10 +367,10 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   }
 
   for (const ElemSegment* seg : env_->elemSegments) {
-    TableKind kind = !seg->active() ? TableKind::AnyFunction
+    TableKind kind = !seg->active() ? TableKind::FuncRef
                                     : env_->tables[seg->tableIndex].kind;
     switch (kind) {
-      case TableKind::AnyFunction:
+      case TableKind::FuncRef:
         for (uint32_t funcIndex : seg->elemFuncIndices) {
           if (funcIndex == NullFuncIndex) {
             continue;
@@ -378,7 +378,7 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
           addOrMerge(ExportedFunc(funcIndex, false));
         }
         break;
-      case TableKind::TypedFunction:
+      case TableKind::AsmJS:
         // asm.js functions are not exported.
         break;
       case TableKind::AnyRef:

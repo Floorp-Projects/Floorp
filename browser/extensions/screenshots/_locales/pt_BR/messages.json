@@ -12,7 +12,7 @@
     "message": "Minhas capturas"
   },
   "screenshotInstructions": {
-    "message": "Arraste ou clique na página para selecionar uma região. Pressione ESC para cancelar."
+    "message": "Clique e arraste ou aponte e clique para selecionar uma região. Tecle ESC para cancelar."
   },
   "saveScreenshotSelectedArea": {
     "message": "Salvar"
@@ -132,19 +132,19 @@
     "message": "Não temos certeza do que acabou de acontecer. Tentar novamente ou fazer uma captura de uma página diferente?"
   },
   "tourBodyIntroServerless": {
-    "message": "Faça, copie e baixe capturas de tela sem deixar o Firefox."
+    "message": "Capture telas, copie e baixe sem sair do Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Um novo jeito de salvar"
   },
   "tourBodyPageAction": {
-    "message": "Abra o menu de ações da página na barra de endereços sempre que quiser fazer uma captura de tela."
+    "message": "Abra o menu de ações da página na barra de endereços sempre que quiser capturar uma tela."
   },
   "tourHeaderClickAndDrag": {
     "message": "Capture apenas o que você quer"
   },
   "tourBodyClickAndDrag": {
-    "message": "Clique e arraste para capturar apenas uma parte de uma página. Você também pode passar o mouse para realçar sua seleção."
+    "message": "Clique e arraste para capturar apenas uma parte da página. Você também pode mover o mouse sobre a tela para realçar uma seleção."
   },
   "tourHeaderFullPage": {
     "message": "Capture janelas ou páginas inteiras"

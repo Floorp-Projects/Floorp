@@ -28,7 +28,7 @@ class OriginAttributes;
  * to register any listeners. The interface may also be used at runtime
  * to obtain the content DOM window and from that the rest of the DOM.
  */
-[scriptable, uuid(4052b6da-4faa-4646-b3a1-7e16a01c2dc2)]
+[scriptable, builtinclass, uuid(4052b6da-4faa-4646-b3a1-7e16a01c2dc2)]
 interface nsIWebBrowser : nsISupports
 {
     /**

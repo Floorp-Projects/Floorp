@@ -30,7 +30,7 @@ interface nsIProfilerStartParams : nsISupports
   [noscript, notxpcom, nostdcall] StringArrayRef getFilters();
 };
 
-[scriptable, uuid(ead3f75c-0e0e-4fbb-901c-1e5392ef5b2a)]
+[scriptable, builtinclass, uuid(ead3f75c-0e0e-4fbb-901c-1e5392ef5b2a)]
 interface nsIProfiler : nsISupports
 {
   boolean CanProfile();

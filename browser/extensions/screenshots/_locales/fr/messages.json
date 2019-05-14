@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "Télécharger"
   },
+  "downloadScreenshotTitle": {
+    "message": "Télécharger la capture d’écran"
+  },
   "downloadOnlyNotice": {
     "message": "Vous êtes actuellement dans un mode ne permettant que le téléchargement."
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Copier"
+  },
+  "copyScreenshotTitle": {
+    "message": "Copier la capture d’écran dans le presse-papiers"
   },
   "notificationImageCopiedTitle": {
     "message": "Capture copiée"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "Un problème non identifié est survenu. Vous pouvez réessayer ou effectuer une capture d’écran d’une autre page."
   },
-  "tourBodyIntro": {
-    "message": "Effectuez des captures d’écran, enregistrez et partagez-les sans quitter Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Prenez, copiez et téléchargez des captures d’écran sans quitter Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Une nouvelle façon d’enregistrer ses captures"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Utilisez les boutons en haut à droite pour capturer au choix la zone visible dans la fenêtre ou la page entière."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "À votre guise"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Sauvegardez en ligne vos captures recadrées pour les partager plus facilement, ou téléchargez-les sur votre ordinateur. Vous pouvez aussi cliquer sur « Mes captures d’écran » pour retrouver toutes vos captures."
-  },
-  "tourHeaderAccounts": {
-    "message": "Captures à emporter"
-  },
-  "tourBodyAccounts": {
-    "message": "Connectez-vous avec votre compte Firefox pour accéder à vos captures sur tous vos appareils et enregistrer définitivement vos préférées."
   },
   "tourSkip": {
     "message": "IGNORER"

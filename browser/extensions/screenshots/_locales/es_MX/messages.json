@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "Descarga"
   },
+  "downloadScreenshotTitle": {
+    "message": "Descargar captura de pantalla"
+  },
   "downloadOnlyNotice": {
     "message": "Estás en modo de Solo-Descargas."
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Copiar"
+  },
+  "copyScreenshotTitle": {
+    "message": "Copiar la captura de pantalla al portapapeles"
   },
   "notificationImageCopiedTitle": {
     "message": "Captura copiada"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "No estamos seguros qué pasó. ¿Te importaría intentarlo de nuevo o tomar una captura de una página diferente?"
   },
-  "tourBodyIntro": {
-    "message": "Toma, guarda y comparte capturas de pantalla sin dejar Firefox."
+  "tourBodyIntroServerless": {
+    "message": "Toma, copia y descarga capturas de pantalla sin salir de Firefox."
   },
   "tourHeaderPageAction": {
     "message": "Una nueva forma de guardar"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Selecciona los botones en la parte superior derecha para capturar el área visible en la ventana o para capturar una página completa."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Como te gusta"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Guarda tus capturas recortadas en la Web para compartirlas más fácilmente o descárgalas en tu computadora. También puedes hacer clic en el botón Mis Capturas para encontrar todas las fotos que has tomado."
-  },
-  "tourHeaderAccounts": {
-    "message": "Capturas en todos los dispositivos"
-  },
-  "tourBodyAccounts": {
-    "message": "Inicia sesión con tu cuenta de Firefox para acceder a tus capturas en todos tus dispositivos y guarda tus capturas favoritas para siempre."
   },
   "tourSkip": {
     "message": "Ignorar"

@@ -383,8 +383,8 @@ this.theme = class extends ExtensionAPI {
     });
   }
 
-  onShutdown(reason) {
-    if (reason === "APP_SHUTDOWN") {
+  onShutdown(isAppShutdown) {
+    if (isAppShutdown) {
       return;
     }
 

@@ -4,7 +4,7 @@
 "use strict";
 
 // Test for About Dialog background check for updates
-// with the update downloaded and staged.
+// with the update downloaded and staged when the About Dialog is opened.
 add_task(async function aboutDialog_backgroundCheck_downloaded_staged() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -14,8 +14,11 @@ add_task(async function aboutDialog_backgroundCheck_downloaded_staged() {
 
   // Since the partial should be successful specify an invalid size for the
   // complete update.
-  let updateParams = "&invalidCompleteSize=1";
-  await runAboutDialogUpdateTest(updateParams, true, [
+  let params = {queryString: "&invalidCompleteSize=1",
+                backgroundUpdate: true,
+                continueFile: CONTINUE_STAGING,
+                waitForUpdateState: STATE_APPLIED};
+  await runAboutDialogUpdateTest(params, [
     {
       panelId: "apply",
       checkActiveUpdate: {state: STATE_APPLIED},

@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "Shkarkoje"
   },
+  "downloadScreenshotTitle": {
+    "message": "Shkarkojeni foton e ekranit"
+  },
   "downloadOnlyNotice": {
     "message": "Gjendeni nën mënyrën Vetëm Shkarkim."
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "Kopjoje"
+  },
+  "copyScreenshotTitle": {
+    "message": "Kopjojeni foton e ekranit te e papastra"
   },
   "notificationImageCopiedTitle": {
     "message": "Fotoja u Kopjua"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "S’jemi të sigurt se ç’ndodhi. Ju prish punë të bëni një foto të një faqeje tjetër?"
   },
-  "tourBodyIntro": {
-    "message": "Bëni, ruani dhe ndani foto ekrani me të tjerët pa dalë nga Firefox-i."
+  "tourBodyIntroServerless": {
+    "message": "Bëni, kopjoni, dhe shkarkoni foto ekrani pa dalë nga Firefox-i."
   },
   "tourHeaderPageAction": {
     "message": "Një mënyrë e re për të ruajtur"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "Përzgjidhni butonat në cepin e sipërm djathtas që të fotografoni zonën e dukshme te dritarja ose një faqe të tërë."
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "Si T’ju Pëlqejë"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "Ruajini fotot tuaja në web, për ndarje më të lehtë me të tjerët, ose shkarkojini në kompjuterin tuaj. Mund edhe të klikoni te butoni Shkrepjet e Mia që të gjeni krejt shkrepjet që keni bërë."
-  },
-  "tourHeaderAccounts": {
-    "message": "Foto ekrani Kudo Me Vete"
-  },
-  "tourBodyAccounts": {
-    "message": "Hyni në Llogarinë tuaj Firefox që të përdorni shkrepjet tuaja në krejt pajisjet tuaja dhe t’i ruani shkrepjet e parapëlqyera përgjithmonë."
   },
   "tourSkip": {
     "message": "ANASHKALOJE"

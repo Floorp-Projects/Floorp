@@ -51,6 +51,6 @@ interface nsIContentProcessProvider : nsISupports
    * caller to create a new content process.
    */
   int32_t provideProcess(in AString aType, in nsIContentProcessInfo aOpener,
-                         [array, size_is(aCount)] in nsIContentProcessInfo aAliveProcesses,
-                         in uint32_t aCount, in uint32_t aMaxCount);
+                         in Array<nsIContentProcessInfo> aAliveProcesses,
+                         in uint32_t aMaxCount);
 };
