@@ -140,7 +140,7 @@ var PluginProvider = {
   getPluginList() {
     let tags = Cc["@mozilla.org/plugin/host;1"].
                getService(Ci.nsIPluginHost).
-               getPluginTags({});
+               getPluginTags();
 
     let list = {};
     let seenPlugins = {};
