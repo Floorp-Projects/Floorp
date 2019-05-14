@@ -64,8 +64,8 @@ class LoginItem extends ReflectedFluentElement {
     let hostnameNoScheme = this._login.hostname && new URL(this._login.hostname).hostname;
     this.shadowRoot.querySelector(".header").textContent = hostnameNoScheme || "";
     this.shadowRoot.querySelector(".hostname").textContent = this._login.hostname || "";
-    this.shadowRoot.querySelector("input[name='username']").value = this._login.username || "";
-    this.shadowRoot.querySelector("input[name='password']").value = this._login.password || "";
+    this.shadowRoot.querySelector("modal-input[name='username']").setAttribute("value", this._login.username || "");
+    this.shadowRoot.querySelector("modal-input[name='password']").setAttribute("value", this._login.password || "");
   }
 
   handleEvent(event) {
@@ -86,11 +86,11 @@ class LoginItem extends ReflectedFluentElement {
           let loginUpdates = {
             guid: this._login.guid,
           };
-          let formUsername = this.shadowRoot.querySelector("input[name='username']").value.trim();
+          let formUsername = this.shadowRoot.querySelector("modal-input[name='username']").value.trim();
           if (formUsername != this._login.username) {
             loginUpdates.username = formUsername;
           }
-          let formPassword = this.shadowRoot.querySelector("input[name='password']").value.trim();
+          let formPassword = this.shadowRoot.querySelector("modal-input[name='password']").value.trim();
           if (formPassword != this._login.password) {
             loginUpdates.password = formPassword;
           }
