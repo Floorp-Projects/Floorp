@@ -121,7 +121,7 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy* parent,
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowProgress(
+nsPrintingProxy::ShowPrintProgressDialog(
     mozIDOMWindowProxy* parent,
     nsIWebBrowserPrint* webBrowserPrint,  // ok to be null
     nsIPrintSettings* printSettings,      // ok to be null
@@ -176,8 +176,8 @@ nsPrintingProxy::ShowProgress(
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowPageSetup(mozIDOMWindowProxy* parent,
-                               nsIPrintSettings* printSettings) {
+nsPrintingProxy::ShowPageSetupDialog(mozIDOMWindowProxy* parent,
+                                     nsIPrintSettings* printSettings) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
