@@ -10,6 +10,16 @@ class PingFilter(object):
         return True
 
 
+class FirstShutdownPingFilter(PingFilter):
+    """Ping filter that accepts first-shutdown pings."""
+
+    def __call__(self, ping):
+        if not super(FirstShutdownPingFilter, self).__call__(ping):
+            return False
+
+        return ping["type"] == "first-shutdown"
+
+
 class MainPingFilter(PingFilter):
     """Ping filter that accepts main pings."""
 
@@ -36,7 +46,19 @@ class MainPingReasonFilter(MainPingFilter):
         return ping["payload"]["info"]["reason"] == self.reason
 
 
+class OptoutPingFilter(PingFilter):
+    """Ping filter that accepts optout pings."""
+
+    def __call__(self, ping):
+        if not super(OptoutPingFilter, self).__call__(ping):
+            return False
+
+        return ping["type"] == "optout"
+
+
 ANY_PING = PingFilter()
+FIRST_SHUTDOWN_PING = FirstShutdownPingFilter()
 MAIN_PING = MainPingFilter()
 MAIN_SHUTDOWN_PING = MainPingReasonFilter("shutdown")
 MAIN_ENVIRONMENT_CHANGE_PING = MainPingReasonFilter("environment-change")
+OPTOUT_PING = OptoutPingFilter()

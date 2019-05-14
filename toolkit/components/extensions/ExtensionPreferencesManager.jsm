@@ -40,10 +40,8 @@ Management.on("uninstall", (type, {id}) => {
   ExtensionPreferencesManager.removeAll(id);
 });
 
-Management.on("shutdown", (type, extension) => {
-  if (extension.shutdownReason == "ADDON_DISABLE") {
-    this.ExtensionPreferencesManager.disableAll(extension.id);
-  }
+Management.on("disable", (type, id) => {
+  this.ExtensionPreferencesManager.disableAll(id);
 });
 
 Management.on("startup", async (type, extension) => {

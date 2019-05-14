@@ -26,7 +26,7 @@ namespace mozilla { namespace net {
 /**
  * nsIDNSService
  */
-[scriptable, uuid(de5642c6-61fc-4fcf-9a47-03226b0d4e21)]
+[scriptable, builtinclass, uuid(de5642c6-61fc-4fcf-9a47-03226b0d4e21)]
 interface nsIDNSService : nsISupports
 {
     /**

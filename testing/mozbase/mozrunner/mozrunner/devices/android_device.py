@@ -323,56 +323,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
             _log_debug("network check skipped on emulator")
 
     if debugger:
-        # Optionally set up JimDB. See https://wiki.mozilla.org/Mobile/Fennec/Android/GDB.
-        build_platform = _get_device_platform(build_obj.substs)
-        jimdb_path = os.path.join(EMULATOR_HOME_DIR, 'jimdb-%s' % build_platform)
-        jimdb_utils_path = os.path.join(jimdb_path, 'utils')
-        gdb_path = os.path.join(jimdb_path, 'bin', 'gdb')
-        err = None
-        if not os.path.isdir(jimdb_path):
-            err = '%s does not exist' % jimdb_path
-        elif not os.path.isfile(gdb_path):
-            err = '%s not found' % gdb_path
-        if err:
-            _log_info("JimDB (%s) not found: %s" % (build_platform, err))
-            response = raw_input(
-                "Download and setup JimDB (%s)? (Y/n) " % build_platform).strip()
-            if response.lower().startswith('y') or response == '':
-                host_platform = _get_host_platform()
-                if host_platform:
-                    _log_info(
-                        "Installing JimDB (%s/%s). This may take a while..." % (host_platform,
-                                                                                build_platform))
-                    path = os.path.join(MANIFEST_PATH, host_platform,
-                                        'jimdb-%s.manifest' % build_platform)
-                    _get_tooltool_manifest(build_obj.substs, path,
-                                           EMULATOR_HOME_DIR, 'releng.manifest')
-                    _tooltool_fetch()
-                    if os.path.isfile(gdb_path):
-                        # Get JimDB utilities from git repository
-                        proc = ProcessHandler(['git', 'pull'], cwd=jimdb_utils_path)
-                        proc.run()
-                        git_pull_complete = False
-                        try:
-                            proc.wait()
-                            if proc.proc.returncode == 0:
-                                git_pull_complete = True
-                        except Exception:
-                            if proc.poll() is None:
-                                proc.kill(signal.SIGTERM)
-                        if not git_pull_complete:
-                            _log_warning("Unable to update JimDB utils from git -- "
-                                         "some JimDB features may be unavailable.")
-                    else:
-                        _log_warning("Unable to install JimDB -- unable to fetch from tooltool.")
-                else:
-                    _log_warning("Unable to install JimDB -- your platform is not supported!")
-        if os.path.isfile(gdb_path):
-            # sync gdbinit.local with build settings
-            _update_gdbinit(build_obj.substs, os.path.join(jimdb_utils_path, "gdbinit.local"))
-            # ensure JimDB is in system path, so that mozdebug can find it
-            bin_path = os.path.join(jimdb_path, 'bin')
-            os.environ['PATH'] = "%s:%s" % (bin_path, os.environ['PATH'])
+        _log_warning("JimDB is no longer supported")
 
     return device_verified
 

@@ -849,6 +849,8 @@ linux64-noopt/debug:
         platform: linux64-noopt/debug
         symbol: B
         tier: 2
+    attributes:
+        enable-full-crashsymbols: true
     worker-type: b-linux
     worker:
         max-run-time: 5400

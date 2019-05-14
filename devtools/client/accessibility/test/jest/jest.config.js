@@ -12,6 +12,7 @@ module.exports = {
     // Custom name mappers for modules that require m-c specific API.
     "^../utils/l10n": `${__dirname}/fixtures/l10n`,
     "^devtools/client/shared/link": `${__dirname}/fixtures/stub`,
+    "^devtools/shared/plural-form": `${__dirname}/fixtures/plural-form`,
     "^devtools/client/shared/components/tree/TreeView": `${__dirname}/fixtures/stub`,
     "^Services": `${__dirname}/fixtures/Services`,
     // Map all require("devtools/...") to the real devtools root.

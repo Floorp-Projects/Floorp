@@ -27,15 +27,15 @@ APPS = {
         "long_name": "Firefox Fennec on Android"},
     GECKOVIEW: {
         "long_name": "Firefox Geckoview on Android",
-        "default_activity": "GeckoViewActivity",
+        "default_activity": "org.mozilla.geckoview_example.GeckoViewActivity",
         "default_intent": "android.intent.action.MAIN"},
     REFBROW: {
         "long_name": "Firefox Android Components Reference Browser",
-        "default_activity": "BrowserTestActivity",
+        "default_activity": "org.mozilla.reference.browser.BrowserTestActivity",
         "default_intent": "android.intent.action.MAIN"},
     FENIX: {
         "long_name": "Firefox Android Fenix Browser",
-        "default_activity": "browser.BrowserPerformanceTestActivity",
+        "default_activity": "org.mozilla.fenix.browser.BrowserPerformanceTestActivity",
         "default_intent": "android.intent.action.VIEW"}
 }
 INTEGRATED_APPS = list(APPS.keys())

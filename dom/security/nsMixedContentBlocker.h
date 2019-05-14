@@ -51,6 +51,7 @@ class nsMixedContentBlocker : public nsIContentPolicy,
   // https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
   static bool IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL);
   static bool IsPotentiallyTrustworthyOnion(nsIURI* aURL);
+  static bool IsPotentiallyTrustworthyOrigin(nsIURI* aURI);
 
   /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
    * logic.  Called from non-static ShouldLoad().
@@ -70,6 +71,8 @@ class nsMixedContentBlocker : public nsIContentPolicy,
                              int16_t* aDecision);
   static void AccumulateMixedContentHSTS(
       nsIURI* aURI, bool aActive, const OriginAttributes& aOriginAttributes);
+
+  static bool URISafeToBeLoadedInSecureContext(nsIURI* aURI);
 
   static bool ShouldUpgradeMixedDisplayContent();
 

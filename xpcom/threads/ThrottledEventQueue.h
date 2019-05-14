@@ -69,6 +69,7 @@ class ThrottledEventQueue final : public nsISerialEventTarget {
   // Create a ThrottledEventQueue for the given target.
   static already_AddRefed<ThrottledEventQueue> Create(
       nsISerialEventTarget* aBaseTarget,
+      const char* aName,
       uint32_t aPriority = nsIRunnablePriority::PRIORITY_NORMAL);
 
   // Determine if there are any events pending in the queue.

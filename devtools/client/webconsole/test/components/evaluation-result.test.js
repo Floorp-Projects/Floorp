@@ -4,11 +4,8 @@
 
 // Test utils.
 const expect = require("expect");
-const { render } = require("enzyme");
-
-// Commented out for "displays a [Learn more] link"
-// const { render, mount } = require("enzyme");
-// const sinon = require("sinon");
+const { render, mount } = require("enzyme");
+const sinon = require("sinon");
 
 // React
 const { createFactory } = require("devtools/client/shared/vendor/react");
@@ -100,27 +97,30 @@ describe("EvaluationResult component:", () => {
     );
   });
 
-  // TODO: Regressed by Bug 1230194, disabled in Bug 1535484. Filed Bug 1550791 to fix it.
-  // it("displays a [Learn more] link", () => {
-  //   const store = setupStore();
+  it("displays a [Learn more] link", () => {
+    const store = setupStore();
 
-  //   const message = stubPreparedMessages.get("asdf()");
+    const message = stubPreparedMessages.get("asdf()");
 
-  //   serviceContainer.openLink = sinon.spy();
-  //   const wrapper = mount(
-  //     Provider({ store }, EvaluationResult({ message, serviceContainer }))
-  //   );
+    serviceContainer.openLink = sinon.spy();
+    const wrapper = mount(
+      Provider({ store }, EvaluationResult({
+        message,
+        serviceContainer,
+        dispatch: () => {},
+      }))
+    );
 
-  //   const url =
-  //     "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined";
-  //   const learnMore = wrapper.find(".learn-more-link");
-  //   expect(learnMore.length).toBe(1);
-  //   expect(learnMore.prop("title")).toBe(url);
+    const url =
+      "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined";
+    const learnMore = wrapper.find(".learn-more-link");
+    expect(learnMore.length).toBe(1);
+    expect(learnMore.prop("title")).toBe(url);
 
-  //   learnMore.simulate("click");
-  //   const call = serviceContainer.openLink.getCall(0);
-  //   expect(call.args[0]).toEqual(message.exceptionDocURL);
-  // });
+    learnMore.simulate("click");
+    const call = serviceContainer.openLink.getCall(0);
+    expect(call.args[0]).toEqual(message.exceptionDocURL);
+  });
 
   it("has the expected indent", () => {
     const message = stubPreparedMessages.get("new Date(0)");

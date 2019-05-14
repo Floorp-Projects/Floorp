@@ -10,6 +10,10 @@ loader.lazyGetter(this, "telemetry", () => new Telemetry());
 loader.lazyGetter(this, "sessionId", () => parseInt(telemetry.msSinceProcessStart(), 10));
 
 const {
+  CONNECT_RUNTIME_CANCEL,
+  CONNECT_RUNTIME_FAILURE,
+  CONNECT_RUNTIME_NOT_RESPONDING,
+  CONNECT_RUNTIME_START,
   CONNECT_RUNTIME_SUCCESS,
   DISCONNECT_RUNTIME_SUCCESS,
   REMOTE_RUNTIMES_UPDATED,
@@ -146,13 +150,41 @@ function onRemoteRuntimesUpdated(action, store) {
   }
 }
 
+function recordConnectionAttempt(connectionId, runtimeId, status, store) {
+  const runtime = findRuntimeById(runtimeId, store.getState().runtimes);
+  if (runtime.type === RUNTIMES.THIS_FIREFOX) {
+    // Only record connection_attempt events for remote runtimes.
+    return;
+  }
+
+  recordEvent("connection_attempt", {
+    "connection_id": connectionId,
+    "connection_type": runtime.type,
+    "runtime_id": getTelemetryRuntimeId(runtimeId),
+    "status": status,
+  });
+}
+
 /**
  * This middleware will record events to telemetry for some specific actions.
  */
 function eventRecordingMiddleware(store) {
   return next => action => {
     switch (action.type) {
+      case CONNECT_RUNTIME_CANCEL:
+        recordConnectionAttempt(action.connectionId, action.id, "cancelled", store);
+        break;
+      case CONNECT_RUNTIME_FAILURE:
+        recordConnectionAttempt(action.connectionId, action.id, "failed", store);
+        break;
+      case CONNECT_RUNTIME_NOT_RESPONDING:
+        recordConnectionAttempt(action.connectionId, action.id, "not responding", store);
+        break;
+      case CONNECT_RUNTIME_START:
+        recordConnectionAttempt(action.connectionId, action.id, "start", store);
+        break;
       case CONNECT_RUNTIME_SUCCESS:
+        recordConnectionAttempt(action.connectionId, action.runtime.id, "success", store);
         onConnectRuntimeSuccess(action, store);
         break;
       case DISCONNECT_RUNTIME_SUCCESS:

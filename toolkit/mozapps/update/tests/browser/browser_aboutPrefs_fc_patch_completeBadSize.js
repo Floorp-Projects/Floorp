@@ -17,8 +17,8 @@ add_task(async function aboutPrefs_foregroundCheck_completeBadSize() {
                        internalResult: gBadSizeResult};
   }
 
-  let updateParams = "&completePatchOnly=1&invalidCompleteSize=1";
-  await runAboutPrefsUpdateTest(updateParams, false, [
+  let params = {queryString: "&completePatchOnly=1&invalidCompleteSize=1"};
+  await runAboutPrefsUpdateTest(params, [
     {
       panelId: "checkingForUpdates",
       checkActiveUpdate: null,

@@ -41,3 +41,4 @@ fuzzy(0-2,0-40000) skip-if(!asyncPan) == 1464288-1.html 1464288-ref.html
 == 1504233-1.html 1504233-1-ref.html
 == 1533317-1.html 1533317-1-ref.html
 == 1544948-1.html 1544948-1-ref.html
+skip-if(retainedDisplayList) == 1551053-1.html 1551053-1-ref.html

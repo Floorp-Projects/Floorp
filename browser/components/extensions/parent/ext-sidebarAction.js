@@ -88,14 +88,14 @@ this.sidebarAction = class extends ExtensionAPI {
     this.build();
   }
 
-  onShutdown(reason) {
+  onShutdown(isAppShutdown) {
     sidebarActionMap.delete(this.this);
 
     this.tabContext.shutdown();
 
     // Don't remove everything on app shutdown so session restore can handle
     // restoring open sidebars.
-    if (reason === "APP_SHUTDOWN") {
+    if (isAppShutdown) {
       return;
     }
 
@@ -103,10 +103,6 @@ this.sidebarAction = class extends ExtensionAPI {
       let {document, SidebarUI} = window;
       if (SidebarUI.currentID === this.id) {
         SidebarUI.hide();
-      }
-      if (SidebarUI.lastOpenedId === this.id &&
-          reason === "ADDON_UNINSTALL") {
-        SidebarUI.lastOpenedId = null;
       }
       let menu = document.getElementById(this.menuId);
       if (menu) {
@@ -122,6 +118,16 @@ this.sidebarAction = class extends ExtensionAPI {
     }
     windowTracker.removeOpenListener(this.windowOpenListener);
     windowTracker.removeCloseListener(this.windowCloseListener);
+  }
+
+  static onUninstall(id) {
+    const sidebarId = `${makeWidgetId(id)}-sidebar-action`;
+    for (let window of windowTracker.browserWindows()) {
+      let {SidebarUI} = window;
+      if (SidebarUI.lastOpenedId === sidebarId) {
+        SidebarUI.lastOpenedId = null;
+      }
+    }
   }
 
   build() {

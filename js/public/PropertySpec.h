@@ -19,7 +19,7 @@
 #include "js/CallArgs.h"            // JSNative
 #include "js/PropertyDescriptor.h"  // JSPROP_*
 #include "js/RootingAPI.h"          // JS::MutableHandle
-#include "js/Symbol.h"              // JS::SymbolCode
+#include "js/Symbol.h"              // JS::SymbolCode, PropertySpecNameIsSymbol
 #include "js/Value.h"               // JS::Value
 
 struct JSContext;
@@ -148,7 +148,34 @@ struct JSPropertySpec {
     }
   };
 
-  const char* name;
+  union Name {
+   private:
+    const char* string_;
+    uintptr_t symbol_;
+
+   public:
+    Name() = delete;
+
+    explicit constexpr Name(const char* str) : string_(str) {}
+    explicit constexpr Name(JS::SymbolCode symbol)
+        : symbol_(uint32_t(symbol) + 1) {}
+
+    explicit operator bool() const { return !!symbol_; }
+
+    bool isSymbol() const { return JS::PropertySpecNameIsSymbol(symbol_); }
+    JS::SymbolCode symbol() const {
+      MOZ_ASSERT(isSymbol());
+      return JS::SymbolCode(symbol_ - 1);
+    }
+
+    bool isString() const { return !isSymbol(); }
+    const char* string() const {
+      MOZ_ASSERT(isString());
+      return string_;
+    }
+  };
+
+  Name name;
   uint8_t flags;
   AccessorsOrValue u;
 
@@ -157,12 +184,26 @@ struct JSPropertySpec {
 
   constexpr JSPropertySpec(const char* name, uint8_t flags, AccessorsOrValue u)
       : name(name), flags(flags), u(u) {}
+  constexpr JSPropertySpec(JS::SymbolCode name, uint8_t flags,
+                           AccessorsOrValue u)
+      : name(name), flags(flags), u(u) {}
 
  public:
   JSPropertySpec(const JSPropertySpec& other) = default;
 
   static constexpr JSPropertySpec nativeAccessors(
       const char* name, uint8_t flags, JSNative getter,
+      const JSJitInfo* getterInfo, JSNative setter = nullptr,
+      const JSJitInfo* setterInfo = nullptr) {
+    return JSPropertySpec(
+        name, flags,
+        AccessorsOrValue::fromAccessors(
+            JSPropertySpec::Accessor::nativeAccessor(getter, getterInfo),
+            JSPropertySpec::Accessor::nativeAccessor(setter, setterInfo)));
+  }
+
+  static constexpr JSPropertySpec nativeAccessors(
+      JS::SymbolCode name, uint8_t flags, JSNative getter,
       const JSJitInfo* getterInfo, JSNative setter = nullptr,
       const JSJitInfo* setterInfo = nullptr) {
     return JSPropertySpec(
@@ -184,7 +225,26 @@ struct JSPropertySpec {
                 : JSPropertySpec::Accessor::noAccessor()));
   }
 
+  static constexpr JSPropertySpec selfHostedAccessors(
+      JS::SymbolCode name, uint8_t flags, const char* getterName,
+      const char* setterName = nullptr) {
+    return JSPropertySpec(
+        name, flags | JSPROP_GETTER | (setterName ? JSPROP_SETTER : 0),
+        AccessorsOrValue::fromAccessors(
+            JSPropertySpec::Accessor::selfHostedAccessor(getterName),
+            setterName
+                ? JSPropertySpec::Accessor::selfHostedAccessor(setterName)
+                : JSPropertySpec::Accessor::noAccessor()));
+  }
+
   static constexpr JSPropertySpec int32Value(const char* name, uint8_t flags,
+                                             int32_t n) {
+    return JSPropertySpec(name, flags | JSPROP_INTERNAL_USE_BIT,
+                          AccessorsOrValue::fromValue(
+                              JSPropertySpec::ValueWrapper::int32Value(n)));
+  }
+
+  static constexpr JSPropertySpec int32Value(JS::SymbolCode name, uint8_t flags,
                                              int32_t n) {
     return JSPropertySpec(name, flags | JSPROP_INTERNAL_USE_BIT,
                           AccessorsOrValue::fromValue(
@@ -193,6 +253,13 @@ struct JSPropertySpec {
 
   static constexpr JSPropertySpec stringValue(const char* name, uint8_t flags,
                                               const char* s) {
+    return JSPropertySpec(name, flags | JSPROP_INTERNAL_USE_BIT,
+                          AccessorsOrValue::fromValue(
+                              JSPropertySpec::ValueWrapper::stringValue(s)));
+  }
+
+  static constexpr JSPropertySpec stringValue(JS::SymbolCode name,
+                                              uint8_t flags, const char* s) {
     return JSPropertySpec(name, flags | JSPROP_INTERNAL_USE_BIT,
                           AccessorsOrValue::fromValue(
                               JSPropertySpec::ValueWrapper::stringValue(s)));
@@ -249,20 +316,6 @@ struct JSPropertySpec {
   }
 };
 
-// JSPropertySpec::{nativeAccessors, selfHostedAccessors,int32Value,
-// stringValue} methods require symbol names to be casted to `const char*`,
-// and the cast is `reinterpret_cast`.
-//
-// Provide a macro for the cast because of the following reasons:
-//
-//   * `reinterpret_cast` cannot be used in constexpr
-//   * using non-constexpr static method in parameter disables constexpr of
-//     above methods
-//   * top-level `reinterpret_cast` doesn't disable constexpr of above methods
-//
-#define SYMBOL_TO_PROPERTY_NAME(symbol) \
-  reinterpret_cast<const char*>(uint32_t(symbol) + 1)
-
 #define JS_CHECK_ACCESSOR_FLAGS(flags)                                         \
   (static_cast<std::enable_if<((flags) & ~(JSPROP_ENUMERATE |                  \
                                            JSPROP_PERMANENT)) == 0>::type>(0), \
@@ -274,10 +327,10 @@ struct JSPropertySpec {
 #define JS_PSGS(name, getter, setter, flags)                            \
   JSPropertySpec::nativeAccessors(name, JS_CHECK_ACCESSOR_FLAGS(flags), \
                                   getter, nullptr, setter, nullptr)
-#define JS_SYM_GET(symbol, getter, flags)                \
-  JSPropertySpec::nativeAccessors(                       \
-      SYMBOL_TO_PROPERTY_NAME(::JS::SymbolCode::symbol), \
-      JS_CHECK_ACCESSOR_FLAGS(flags), getter, nullptr)
+#define JS_SYM_GET(symbol, getter, flags)                                 \
+  JSPropertySpec::nativeAccessors(::JS::SymbolCode::symbol,               \
+                                  JS_CHECK_ACCESSOR_FLAGS(flags), getter, \
+                                  nullptr)
 #define JS_SELF_HOSTED_GET(name, getterName, flags)                         \
   JSPropertySpec::selfHostedAccessors(name, JS_CHECK_ACCESSOR_FLAGS(flags), \
                                       getterName)
@@ -286,13 +339,11 @@ struct JSPropertySpec {
                                       getterName, setterName)
 #define JS_SELF_HOSTED_SYM_GET(symbol, getterName, flags) \
   JSPropertySpec::selfHostedAccessors(                    \
-      SYMBOL_TO_PROPERTY_NAME(::JS::SymbolCode::symbol),  \
-      JS_CHECK_ACCESSOR_FLAGS(flags), getterName)
+      ::JS::SymbolCode::symbol, JS_CHECK_ACCESSOR_FLAGS(flags), getterName)
 #define JS_STRING_PS(name, string, flags) \
   JSPropertySpec::stringValue(name, flags, string)
 #define JS_STRING_SYM_PS(symbol, string, flags) \
-  JSPropertySpec::stringValue(                  \
-      SYMBOL_TO_PROPERTY_NAME(::JS::SymbolCode::symbol), flags, string)
+  JSPropertySpec::stringValue(::JS::SymbolCode::symbol, flags, string)
 #define JS_INT32_PS(name, value, flags) \
   JSPropertySpec::int32Value(name, flags, value)
 #define JS_PS_END JSPropertySpec::sentinel()
@@ -303,7 +354,9 @@ struct JSPropertySpec {
  * compiled during JSRuntime::initSelfHosting.
  */
 struct JSFunctionSpec {
-  const char* name;
+  using Name = JSPropertySpec::Name;
+
+  Name name;
   JSNativeWrapper call;
   uint16_t nargs;
   uint16_t flags;
@@ -339,11 +392,9 @@ struct JSFunctionSpec {
   JS_FNSPEC(name, nullptr, nullptr, nargs, flags, selfHostedName)
 #define JS_SELF_HOSTED_SYM_FN(symbol, selfHostedName, nargs, flags) \
   JS_SYM_FNSPEC(symbol, nullptr, nullptr, nargs, flags, selfHostedName)
-#define JS_SYM_FNSPEC(symbol, call, info, nargs, flags, selfHostedName)      \
-  JS_FNSPEC(                                                                 \
-      reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
-      call, info, nargs, flags, selfHostedName)
+#define JS_SYM_FNSPEC(symbol, call, info, nargs, flags, selfHostedName) \
+  JS_FNSPEC(::JS::SymbolCode::symbol, call, info, nargs, flags, selfHostedName)
 #define JS_FNSPEC(name, call, info, nargs, flags, selfHostedName) \
-  { name, {call, info}, nargs, flags, selfHostedName }
+  { JSFunctionSpec::Name(name), {call, info}, nargs, flags, selfHostedName }
 
 #endif  // js_PropertySpec_h

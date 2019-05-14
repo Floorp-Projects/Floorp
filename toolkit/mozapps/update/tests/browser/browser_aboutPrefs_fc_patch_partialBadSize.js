@@ -17,8 +17,8 @@ add_task(async function aboutPrefs_foregroundCheck_partialBadSize() {
                        internalResult: gBadSizeResult};
   }
 
-  let updateParams = "&partialPatchOnly=1&invalidPartialSize=1";
-  await runAboutPrefsUpdateTest(updateParams, false, [
+  let params = {queryString: "&partialPatchOnly=1&invalidPartialSize=1"};
+  await runAboutPrefsUpdateTest(params, [
     {
       panelId: "checkingForUpdates",
       checkActiveUpdate: null,

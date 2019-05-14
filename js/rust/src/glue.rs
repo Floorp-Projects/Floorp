@@ -257,14 +257,14 @@ extern "C" {
     pub fn IsWrapper(obj: *mut JSObject) -> bool;
     pub fn UnwrapObjectStatic(obj: *mut JSObject) -> *mut JSObject;
     pub fn UncheckedUnwrapObject(obj: *mut JSObject, stopAtOuter: u8) -> *mut JSObject;
-    pub fn CreateRootedIdVector(cx: *mut JSContext) -> *mut JS::RootedIdVector;
-    pub fn AppendToRootedIdVector(v: *mut JS::RootedIdVector, id: jsid) -> bool;
-    pub fn SliceRootedIdVector(v: *const JS::RootedIdVector, length: *mut usize) -> *const jsid;
-    pub fn DestroyRootedIdVector(v: *mut JS::RootedIdVector);
-    pub fn GetMutableHandleIdVector(v: *mut JS::RootedIdVector)-> JS::MutableHandleIdVector;
-    pub fn CreateRootedObjectVector(aCx: *mut JSContext) -> *mut JS::RootedObjectVector;
-    pub fn AppendToRootedObjectVector(v: *mut JS::RootedObjectVector, obj: *mut JSObject) -> bool;
-    pub fn DeleteRootedObjectVector(v: *mut JS::RootedObjectVector);
+    pub fn CreateRootedIdVector(cx: *mut JSContext) -> *mut JS::PersistentRootedIdVector;
+    pub fn AppendToRootedIdVector(v: *mut JS::PersistentRootedIdVector, id: jsid) -> bool;
+    pub fn SliceRootedIdVector(v: *const JS::PersistentRootedIdVector, length: *mut usize) -> *const jsid;
+    pub fn DestroyRootedIdVector(v: *mut JS::PersistentRootedIdVector);
+    pub fn GetMutableHandleIdVector(v: *mut JS::PersistentRootedIdVector)-> JS::MutableHandleIdVector;
+    pub fn CreateRootedObjectVector(aCx: *mut JSContext) -> *mut JS::PersistentRootedObjectVector;
+    pub fn AppendToRootedObjectVector(v: *mut JS::PersistentRootedObjectVector, obj: *mut JSObject) -> bool;
+    pub fn DeleteRootedObjectVector(v: *mut JS::PersistentRootedObjectVector);
     pub fn CollectServoSizes(rt: *mut JSRuntime, sizes: *mut JS::ServoSizes) -> bool;
     pub fn CallIdTracer(trc: *mut JSTracer, idp: *mut Heap<jsid>, name: *const ::libc::c_char);
     pub fn CallValueTracer(trc: *mut JSTracer,

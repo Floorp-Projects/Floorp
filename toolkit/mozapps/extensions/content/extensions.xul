@@ -7,6 +7,10 @@
 <?xml-stylesheet href="chrome://mozapps/content/extensions/extensions.css"?>
 <?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
 
+<!-- Used for the modals related to the inline options_page XUL browser -->
+<?xml-stylesheet href="chrome://global/content/tabprompts.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/tabprompts.css" type="text/css"?>
+
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
@@ -226,7 +230,7 @@
                       class="warning" data-l10n-id="show-unsigned-extensions-button"
                       command="cmd_showUnsignedExtensions"/>
               <label id="search-label" control="header-search"/>
-              <textbox id="header-search" type="search" searchbutton="true"
+              <textbox id="header-search" is="search-textbox" searchbutton="true"
                        data-l10n-id="search-header"
                        data-l10n-attrs="searchbuttonlabel" maxlength="100"/>
             </hbox>

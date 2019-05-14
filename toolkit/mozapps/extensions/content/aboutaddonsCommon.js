@@ -5,7 +5,7 @@
 
 "use strict";
 
-/* exported attachUpdateHandler, getBrowserElement */
+/* exported attachUpdateHandler, getBrowserElement, openOptionsInTab */
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -63,4 +63,16 @@ function attachUpdateHandler(install) {
       Services.obs.notifyObservers(subject, "webextension-permission-prompt");
     });
   };
+}
+
+function openOptionsInTab(optionsURL) {
+  let mainWindow = window.windowRoot.ownerGlobal;
+  if ("switchToTabHavingURI" in mainWindow) {
+    mainWindow.switchToTabHavingURI(optionsURL, true, {
+      relatedToCurrent: true,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+    return true;
+  }
+  return false;
 }

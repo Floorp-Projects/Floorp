@@ -17,7 +17,7 @@ interface nsIFile;
  *   3) Support for uniquely identifying cached data in cases when the URL
  *      is insufficient (e.g., HTTP form submission).
  */
-[scriptable, uuid(dd1d6122-5ecf-4fe4-8f0f-995e7ab3121a)]
+[scriptable, builtinclass, uuid(dd1d6122-5ecf-4fe4-8f0f-995e7ab3121a)]
 interface nsICachingChannel : nsICacheInfoChannel
 {
     /**

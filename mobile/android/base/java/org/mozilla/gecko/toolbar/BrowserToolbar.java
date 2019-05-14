@@ -94,7 +94,12 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     public interface OnCommitListener {
-        public void onCommitByKey();
+        public void onCommit(CommitEventSource eventSource);
+    }
+
+    public enum CommitEventSource {
+        KEY_EVENT,
+        PRE_IME_KEY_EVENT
     }
 
     public interface OnDismissListener {

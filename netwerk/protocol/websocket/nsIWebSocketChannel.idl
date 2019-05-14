@@ -25,7 +25,7 @@ webidl Node;
  * We are also making it scriptable for now, but this may change once we have
  * WebSockets for Workers.
  */
-[scriptable, uuid(ce71d028-322a-4105-a947-a894689b52bf)]
+[scriptable, builtinclass, uuid(ce71d028-322a-4105-a947-a894689b52bf)]
 interface nsIWebSocketChannel : nsISupports
 {
     /**

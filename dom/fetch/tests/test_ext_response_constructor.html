@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test `Response` constructor in a WebExtension</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    add_task(async function testResponseConstructor() {
+      function contentScript() {
+        new Response();
+        browser.test.notifyPass("done");
+      }
+
+      const extension = ExtensionTestUtils.loadExtension({
+        manifest: {
+          content_scripts: [
+            {
+              matches: ["<all_urls>"],
+              js: ["content_script.js"],
+            },
+          ],
+        },
+
+        files: {
+          "content_script.js": contentScript,
+        },
+      });
+
+      await extension.startup();
+
+      const win = window.open("https://example.com");
+      await extension.awaitFinish("done");
+      win.close();
+
+      await extension.unload();
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

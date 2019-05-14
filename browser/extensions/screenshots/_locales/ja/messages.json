@@ -32,6 +32,9 @@
   "downloadScreenshot": {
     "message": "ダウンロード"
   },
+  "downloadScreenshotTitle": {
+    "message": "スクリーンショットをダウンロード"
+  },
   "downloadOnlyNotice": {
     "message": "ダウンロード専用モードが有効になっています。"
   },
@@ -66,6 +69,9 @@
   },
   "copyScreenshot": {
     "message": "コピー"
+  },
+  "copyScreenshotTitle": {
+    "message": "スクリーンショットをクリップボードにコピー"
   },
   "notificationImageCopiedTitle": {
     "message": "ショットをコピーしました"
@@ -125,8 +131,8 @@
   "genericErrorDetails": {
     "message": "何か問題が発生したようです。再度試すか、別のページのショットを撮ってみてください。"
   },
-  "tourBodyIntro": {
-    "message": "Firefox を離れることなく、スクリーンショットを撮影、保存、共有。"
+  "tourBodyIntroServerless": {
+    "message": "Firefox だけでスクリーンショットの撮影、コピー、ダウンロードができます。"
   },
   "tourHeaderPageAction": {
     "message": "新たな保存方法"
@@ -145,18 +151,6 @@
   },
   "tourBodyFullPage": {
     "message": "右上のボタンを選択して、ウィンドウ内の表示範囲もしくはページ全体をキャプチャしましょう。"
-  },
-  "tourHeaderDownloadUpload": {
-    "message": "お好きなように"
-  },
-  "tourBodyDownloadUpload": {
-    "message": "切り取ったショットを簡単に共有できるようウェブ上に保存したり、手元へダウンロードしたり。また「自分のショット」ボタンをクリックすれば、これまでに撮ったすべてのショットを見られます。"
-  },
-  "tourHeaderAccounts": {
-    "message": "Screenshots to Go"
-  },
-  "tourBodyAccounts": {
-    "message": "Firefox アカウントでログインすれば、お持ちのすべての端末からショットにアクセスでき、お気に入りのショットを保存しておけます。"
   },
   "tourSkip": {
     "message": "スキップ"

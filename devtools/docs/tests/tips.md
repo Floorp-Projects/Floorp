@@ -18,5 +18,5 @@ Example try syntax containing `MOZ_QUIET`:
 ```
 ./mach try -b do -p linux,linux64,macosx64,win32,win64 \
   -u xpcshell,mochitest-bc,mochitest-e10s-bc,mochitest-dt,mochitest-chrome \
-  -t damp-e10s --setenv MOZ_QUIET=1
+  -t damp --setenv MOZ_QUIET=1
 ```

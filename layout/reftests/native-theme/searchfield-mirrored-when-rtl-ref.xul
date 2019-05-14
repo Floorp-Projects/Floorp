@@ -4,7 +4,7 @@
 <window title="mirrored searchfield"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <hbox>
-    <textbox type="search" width="200" id="searchbox" style="-moz-transform: scaleX(-1);"/>
+    <textbox is="search-textbox" width="200" id="searchbox" style="-moz-transform: scaleX(-1);"/>
     <spacer flex="1"/>
   </hbox>
 </window>

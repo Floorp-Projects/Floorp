@@ -10,16 +10,9 @@ this.main = (function() {
 
   const manifest = browser.runtime.getManifest();
   let backend;
-  let _hasAnyShots = false;
-
-  startBackground.serverStatus.then((status) => {
-    _hasAnyShots = status.hasAny;
-  }).catch((e) => {
-    log.warn("Cannot see server status", e);
-  });
 
   exports.hasAnyShots = function() {
-    return _hasAnyShots;
+    return false;
   };
 
   let hasSeenOnboarding = browser.storage.local.get(["hasSeenOnboarding"]).then((result) => {

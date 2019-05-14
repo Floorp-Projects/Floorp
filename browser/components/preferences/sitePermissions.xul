@@ -36,7 +36,7 @@
     <separator class="thin"/>
     <hbox align="start">
       <textbox id="searchBox" flex="1" data-l10n-id="permissions-searchbox"
-               type="search" oncommand="gSitePermissionsManager.buildPermissionsList();"/>
+               is="search-textbox" oncommand="gSitePermissionsManager.buildPermissionsList();"/>
     </hbox>
     <separator class="thin"/>
     <listheader>
@@ -66,7 +66,7 @@
   <checkbox id="permissionsDisableCheckbox"/>
   <description id="permissionsDisableDescription"/>
   <spacer flex="1"/>
-  <hbox id="browserNotificationsPermissionExtensionContent" 
+  <hbox id="browserNotificationsPermissionExtensionContent"
         class="extension-controlled" align="center" hidden="true">
     <description control="disableNotificationsPermissionExtension" flex="1"/>
     <button id="disableNotificationsPermissionExtension"

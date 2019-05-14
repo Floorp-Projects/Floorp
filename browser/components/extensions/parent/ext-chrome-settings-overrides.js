@@ -175,6 +175,13 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     }
   }
 
+  static onDisable(id) {
+    homepagePopup.clearConfirmation(id);
+
+    chrome_settings_overrides.processDefaultSearchSetting("disable", id);
+    chrome_settings_overrides.removeEngine(id);
+  }
+
   async onManifestEntry(entryName) {
     let {extension} = this;
     let {manifest} = extension;
@@ -193,8 +200,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         let item = await ExtensionPreferencesManager.getSetting("homepage_override");
         inControl = item && item.id == extension.id;
       }
-      // We need to add the listener here too since onPrefsChanged won't trigger on a
-      // restart (the prefs are already set).
+
       if (inControl) {
         Services.prefs.setBoolPref(HOMEPAGE_PRIVATE_ALLOWED, extension.privateBrowsingAllowed);
         // Also set this now as an upgraded browser will need this.
@@ -225,14 +231,6 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
           }
         }
       });
-
-      extension.callOnClose({
-        close: () => {
-          if (extension.shutdownReason == "ADDON_DISABLE") {
-            homepagePopup.clearConfirmation(extension.id);
-          }
-        },
-      });
     }
     if (manifest.chrome_settings_overrides.search_provider) {
       // Registering a search engine can potentially take a long while,
@@ -261,14 +259,6 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         return;
       }
     }
-    extension.callOnClose({
-      close: () => {
-        if (extension.shutdownReason == "ADDON_DISABLE") {
-          chrome_settings_overrides.processDefaultSearchSetting("disable", extension.id);
-          chrome_settings_overrides.removeEngine(extension.id);
-        }
-      },
-    });
 
     let engineName = searchProvider.name.trim();
     if (searchProvider.is_default) {

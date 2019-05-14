@@ -2033,7 +2033,6 @@ class Extension extends ExtensionData {
   async shutdown(reason) {
     this.state = "Shutdown";
 
-    this.shutdownReason = reason;
     this.hasShutdown = true;
 
     if (!this.policy) {
@@ -2061,7 +2060,8 @@ class Extension extends ExtensionData {
       this.state = "Shutdown: Flushed jar cache";
     }
 
-    if (this.cleanupFile || reason !== "APP_SHUTDOWN") {
+    const isAppShutdown = reason === "APP_SHUTDOWN";
+    if (this.cleanupFile || !isAppShutdown) {
       StartupCache.clearAddonData(this.id);
     }
 
@@ -2074,7 +2074,7 @@ class Extension extends ExtensionData {
 
     Services.ppmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
-    this.updatePermissions(this.shutdownReason);
+    this.updatePermissions(reason);
 
     if (!this.manifest) {
       this.state = "Shutdown: Complete: No manifest";
@@ -2089,10 +2089,10 @@ class Extension extends ExtensionData {
       obj.close();
     }
 
-    ParentAPIManager.shutdownExtension(this.id);
+    ParentAPIManager.shutdownExtension(this.id, reason);
 
     Management.emit("shutdown", this);
-    this.emit("shutdown");
+    this.emit("shutdown", isAppShutdown);
 
     const TIMED_OUT = Symbol();
 

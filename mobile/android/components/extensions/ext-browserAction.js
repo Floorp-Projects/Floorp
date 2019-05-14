@@ -130,7 +130,7 @@ this.browserAction = class extends ExtensionAPI {
     browserActionMap.set(extension, browserAction);
   }
 
-  onShutdown(reason) {
+  onShutdown() {
     let {extension} = this;
 
     if (browserActionMap.has(extension)) {

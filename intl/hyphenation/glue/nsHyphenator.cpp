@@ -11,7 +11,8 @@
 
 #include "hyphen.h"
 
-nsHyphenator::nsHyphenator(nsIURI* aURI) : mDict(nullptr) {
+nsHyphenator::nsHyphenator(nsIURI* aURI, bool aHyphenateCapitalized)
+    : mDict(nullptr), mHyphenateCapitalized(aHyphenateCapitalized) {
   nsCString uriSpec;
   nsresult rv = aURI->GetSpec(uriSpec);
   if (NS_FAILED(rv)) {
@@ -70,79 +71,95 @@ nsresult nsHyphenator::Hyphenate(const nsAString& aString,
     }
 
     if (inWord) {
-      // Convert the word to utf-8 for libhyphen, lowercasing it as we go
-      // so that it will match the (lowercased) patterns (bug 1105644).
-      nsAutoCString utf8;
-      const char16_t* const begin = aString.BeginReading();
-      const char16_t* cur = begin + wordStart;
-      const char16_t* end = begin + wordLimit;
-      while (cur < end) {
-        uint32_t ch = *cur++;
-
-        if (NS_IS_HIGH_SURROGATE(ch)) {
-          if (cur < end && NS_IS_LOW_SURROGATE(*cur)) {
-            ch = SURROGATE_TO_UCS4(ch, *cur++);
-          } else {
-            ch = 0xfffd;  // unpaired surrogate, treat as REPLACEMENT CHAR
-          }
-        } else if (NS_IS_LOW_SURROGATE(ch)) {
-          ch = 0xfffd;  // unpaired surrogate
-        }
-
-        // XXX What about language-specific casing? Consider Turkish I/i...
-        // In practice, it looks like the current patterns will not be
-        // affected by this, as they treat dotted and undotted i similarly.
-        ch = ToLowerCase(ch);
-
-        if (ch < 0x80) {  // U+0000 - U+007F
-          utf8.Append(ch);
-        } else if (ch < 0x0800) {  // U+0100 - U+07FF
-          utf8.Append(0xC0 | (ch >> 6));
-          utf8.Append(0x80 | (0x003F & ch));
-        } else if (ch < 0x10000) {  // U+0800 - U+D7FF,U+E000 - U+FFFF
-          utf8.Append(0xE0 | (ch >> 12));
-          utf8.Append(0x80 | (0x003F & (ch >> 6)));
-          utf8.Append(0x80 | (0x003F & ch));
-        } else {
-          utf8.Append(0xF0 | (ch >> 18));
-          utf8.Append(0x80 | (0x003F & (ch >> 12)));
-          utf8.Append(0x80 | (0x003F & (ch >> 6)));
-          utf8.Append(0x80 | (0x003F & ch));
-        }
-      }
-
-      AutoTArray<char, 200> utf8hyphens;
-      utf8hyphens.SetLength(utf8.Length() + 5);
-      char** rep = nullptr;
-      int* pos = nullptr;
-      int* cut = nullptr;
-      int err = hnj_hyphen_hyphenate2((HyphenDict*)mDict, utf8.BeginReading(),
-                                      utf8.Length(), utf8hyphens.Elements(),
-                                      nullptr, &rep, &pos, &cut);
-      if (!err) {
-        // Surprisingly, hnj_hyphen_hyphenate2 converts the 'hyphens' buffer
-        // from utf8 code unit indexing (which would match the utf8 input
-        // string directly) to Unicode character indexing.
-        // We then need to convert this to utf16 code unit offsets for Gecko.
-        const char* hyphPtr = utf8hyphens.Elements();
-        const char16_t* cur = begin + wordStart;
-        const char16_t* end = begin + wordLimit;
-        while (cur < end) {
-          if (*hyphPtr & 0x01) {
-            aHyphens[cur - begin] = true;
-          }
-          cur++;
-          if (cur < end && NS_IS_LOW_SURROGATE(*cur) &&
-              NS_IS_HIGH_SURROGATE(*(cur - 1))) {
-            cur++;
-          }
-          hyphPtr++;
-        }
-      }
+      HyphenateWord(aString, wordStart, wordLimit, aHyphens);
+      inWord = false;
     }
-
-    inWord = false;
   }
 
   return NS_OK;
+}
+
+void nsHyphenator::HyphenateWord(const nsAString& aString, uint32_t aStart,
+                                 uint32_t aLimit, nsTArray<bool>& aHyphens) {
+  // Convert word from aStart and aLimit in aString to utf-8 for libhyphen,
+  // lowercasing it as we go so that it will match the (lowercased) patterns
+  // (bug 1105644).
+  nsAutoCString utf8;
+  const char16_t* const begin = aString.BeginReading();
+  const char16_t* cur = begin + aStart;
+  const char16_t* end = begin + aLimit;
+  bool firstLetter = true;
+  while (cur < end) {
+    uint32_t ch = *cur++;
+
+    if (NS_IS_HIGH_SURROGATE(ch)) {
+      if (cur < end && NS_IS_LOW_SURROGATE(*cur)) {
+        ch = SURROGATE_TO_UCS4(ch, *cur++);
+      } else {
+        ch = 0xfffd;  // unpaired surrogate, treat as REPLACEMENT CHAR
+      }
+    } else if (NS_IS_LOW_SURROGATE(ch)) {
+      ch = 0xfffd;  // unpaired surrogate
+    }
+
+    // XXX What about language-specific casing? Consider Turkish I/i...
+    // In practice, it looks like the current patterns will not be
+    // affected by this, as they treat dotted and undotted i similarly.
+    uint32_t origCh = ch;
+    ch = ToLowerCase(ch);
+
+    // Avoid hyphenating capitalized words (bug 1550532) unless explicitly
+    // allowed by prefs for the language in use.
+    if (firstLetter) {
+      if (!mHyphenateCapitalized && ch != origCh) {
+        return;
+      }
+      firstLetter = false;
+    }
+
+    if (ch < 0x80) {  // U+0000 - U+007F
+      utf8.Append(ch);
+    } else if (ch < 0x0800) {  // U+0100 - U+07FF
+      utf8.Append(0xC0 | (ch >> 6));
+      utf8.Append(0x80 | (0x003F & ch));
+    } else if (ch < 0x10000) {  // U+0800 - U+D7FF,U+E000 - U+FFFF
+      utf8.Append(0xE0 | (ch >> 12));
+      utf8.Append(0x80 | (0x003F & (ch >> 6)));
+      utf8.Append(0x80 | (0x003F & ch));
+    } else {
+      utf8.Append(0xF0 | (ch >> 18));
+      utf8.Append(0x80 | (0x003F & (ch >> 12)));
+      utf8.Append(0x80 | (0x003F & (ch >> 6)));
+      utf8.Append(0x80 | (0x003F & ch));
+    }
+  }
+
+  AutoTArray<char, 200> utf8hyphens;
+  utf8hyphens.SetLength(utf8.Length() + 5);
+  char** rep = nullptr;
+  int* pos = nullptr;
+  int* cut = nullptr;
+  int err = hnj_hyphen_hyphenate2((HyphenDict*)mDict, utf8.BeginReading(),
+                                  utf8.Length(), utf8hyphens.Elements(),
+                                  nullptr, &rep, &pos, &cut);
+  if (!err) {
+    // Surprisingly, hnj_hyphen_hyphenate2 converts the 'hyphens' buffer
+    // from utf8 code unit indexing (which would match the utf8 input
+    // string directly) to Unicode character indexing.
+    // We then need to convert this to utf16 code unit offsets for Gecko.
+    const char* hyphPtr = utf8hyphens.Elements();
+    const char16_t* cur = begin + aStart;
+    const char16_t* end = begin + aLimit;
+    while (cur < end) {
+      if (*hyphPtr & 0x01) {
+        aHyphens[cur - begin] = true;
+      }
+      cur++;
+      if (cur < end && NS_IS_LOW_SURROGATE(*cur) &&
+          NS_IS_HIGH_SURROGATE(*(cur - 1))) {
+        cur++;
+      }
+      hyphPtr++;
+    }
+  }
 }

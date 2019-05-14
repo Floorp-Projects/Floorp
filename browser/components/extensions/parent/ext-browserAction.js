@@ -115,7 +115,7 @@ this.browserAction = class extends ExtensionAPI {
     }
   }
 
-  onShutdown(reason) {
+  onShutdown() {
     browserActionMap.delete(this.extension);
 
     this.tabContext.shutdown();

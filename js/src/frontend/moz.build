@@ -76,6 +76,7 @@ if CONFIG['JS_BUILD_BINAST']:
         'BinASTRuntimeSupport.cpp',
         'BinASTToken.cpp',
         'BinASTTokenReaderBase.cpp',
+        'BinASTTokenReaderContext.cpp',
         'BinASTTokenReaderMultipart.cpp',
     ]
 

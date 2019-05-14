@@ -334,9 +334,9 @@ class ExtensionAPI extends EventEmitter {
 
     this.extension = extension;
 
-    extension.once("shutdown", () => {
+    extension.once("shutdown", (what, isAppShutdown) => {
       if (this.onShutdown) {
-        this.onShutdown(extension.shutdownReason);
+        this.onShutdown(isAppShutdown);
       }
       this.extension = null;
     });

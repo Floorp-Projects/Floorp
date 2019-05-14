@@ -141,18 +141,20 @@ addonsManager:
     description: >
       A link method event triggered when a user follows a link. The object is the page that the link is on:
       aboutAddons or aboutPreferences. The value is where the link goes: about:addons, about:preferences,
-      about:debugging, support (on SUMO) or rating, search, author or homepage (on AMO).
+      about:debugging, support (on SUMO) or rating, search, author (on AMO) or homepage (on AMO or elsewhere),
+      discohome (on AMO via a recommended add-on card),
+      discomore (on AMO via discover), disconotice (on SUMO via discover)
     objects:
       - aboutAddons
       - aboutPreferences
       - customize
     extra_keys:
-      view: The view the user was on (list, detail or updates).
+      view: The view the user was on (discover, list, detail or updates).
       type: "For search: the type of page for this view (especially extension or theme list)."
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
     record_in_processes: ["main"]
-    bug_numbers: [1500147]
+    bug_numbers: [1500147, 1546248]
     release_channel_collection: opt-out
   view:
     description: >
@@ -188,15 +190,15 @@ addonsManager:
       action: >
         The action that was performed. Options include disable, enable, uninstall, undo, contribute, preferences,
         installFromFile, manage, dismiss, checkForUpdates, checkForUpdate, setUpdatePolicy, setAddonUpdate,
-        resetUpdatePolicy, privateBrowsingAllowed and releaseNotes.
-      type: "For enable, disable, uninstall and undo: the add-on type that is being acted upon."
+        installFromRecommendation, resetUpdatePolicy, privateBrowsingAllowed and releaseNotes.
+      type: "For enable, disable, uninstall, undo and installFromRecommendation: the add-on type that is being acted upon."
       view: >
         The view for the event when object is aboutAddons, or the specific doorhanger when object is doorhanger.
       addonId: The id of the add-on being acted upon.
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
     record_in_processes: ["main"]
-    bug_numbers: [1500147, 1513344, 1529347]
+    bug_numbers: [1500147, 1513344, 1529347, 1546248]
     release_channel_collection: opt-out
   report:
     description: >
@@ -591,6 +593,20 @@ devtools.main:
     extra_keys:
       width: Toolbox width rounded up to the nearest 50px.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  connection_attempt:
+    objects: ["aboutdebugging"]
+    bug_numbers: [1549970]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User is trying to connect to a remote runtime.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      connection_id: Randomly generated id to keep to group various events related to the same connection attempt.
+      connection_type: Connection type
+      runtime_id: Random id generated to track events related to a single runtime
+      status: One of (cancelled, failed, not responding, start, success).
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   continue:
     objects: ["debugger"]
     bug_numbers: [1463122]
@@ -826,7 +842,7 @@ devtools.main:
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.   
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   pretty_print:
     objects: ["debugger"]
     bug_numbers: [1463125]

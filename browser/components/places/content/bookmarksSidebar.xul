@@ -37,7 +37,7 @@
 #include bookmarksHistoryTooltip.inc.xul
 
   <hbox id="sidebar-search-container" align="center">
-    <textbox id="search-box" flex="1" type="search"
+    <textbox id="search-box" flex="1" is="search-textbox"
              placeholder="&bookmarksSearch.placeholder;"
              aria-controls="bookmarks-view"
              oncommand="searchBookmarks(this.value);"/>

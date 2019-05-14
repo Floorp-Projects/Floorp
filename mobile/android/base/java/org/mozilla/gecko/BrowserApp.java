@@ -140,9 +140,9 @@ import org.mozilla.gecko.telemetry.TelemetryUploadService;
 import org.mozilla.gecko.telemetry.measurements.SearchCountMeasurements;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
+import org.mozilla.gecko.toolbar.BrowserToolbar.CommitEventSource;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.toolbar.PwaConfirm;
-import org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt;
 import org.mozilla.gecko.updater.PostUpdateHandler;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
@@ -1258,8 +1258,9 @@ public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.setOnCommitListener(new BrowserToolbar.OnCommitListener() {
             @Override
-            public void onCommitByKey() {
-                if (commitEditingMode()) {
+            public void onCommit(CommitEventSource eventSource) {
+                final boolean didCommit = commitEditingMode();
+                if (didCommit && eventSource == CommitEventSource.KEY_EVENT) {
                     // We're committing in response to a key-down event. Since we'll be hiding the
                     // ToolbarEditLayout, the corresponding key-up event will end up being sent to
                     // Gecko which we don't want, as this messes up tracking of the last user input.
@@ -2178,20 +2179,6 @@ public class BrowserApp extends GeckoApp
     @Override
     public void addPrivateTab() {
         Tabs.getInstance().addPrivateTab();
-    }
-
-    public void showTrackingProtectionPromptIfApplicable() {
-        final SharedPreferences prefs = getSharedPreferences();
-
-        final boolean hasTrackingProtectionPromptBeShownBefore = prefs.getBoolean(GeckoPreferences.PREFS_TRACKING_PROTECTION_PROMPT_SHOWN, false);
-
-        if (hasTrackingProtectionPromptBeShownBefore) {
-            return;
-        }
-
-        prefs.edit().putBoolean(GeckoPreferences.PREFS_TRACKING_PROTECTION_PROMPT_SHOWN, true).apply();
-
-        startActivity(new Intent(BrowserApp.this, TrackingProtectionPrompt.class));
     }
 
     @Override

@@ -62,6 +62,8 @@ template <typename T>
 class PersistentRooted;
 template <typename T>
 class RootedVector;
+template <typename T>
+class PersistentRootedVector;
 template <typename T, typename AllocPolicy = js::TempAllocPolicy>
 class StackGCVector;
 
@@ -110,6 +112,9 @@ typedef PersistentRooted<JSString*> PersistentRootedString;
 typedef PersistentRooted<JS::Symbol*> PersistentRootedSymbol;
 typedef PersistentRooted<JS::BigInt*> PersistentRootedBigInt;
 typedef PersistentRooted<Value> PersistentRootedValue;
+
+typedef PersistentRootedVector<PropertyKey> PersistentRootedIdVector;
+typedef PersistentRootedVector<JSObject*> PersistentRootedObjectVector;
 
 template <typename T>
 using HandleVector = Handle<StackGCVector<T>>;

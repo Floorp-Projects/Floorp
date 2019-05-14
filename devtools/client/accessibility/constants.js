@@ -34,6 +34,7 @@ exports.UPDATE_CAN_BE_ENABLED = "UPDATE_CAN_BE_ENABLED";
 exports.FILTER_TOGGLE = "FILTER_TOGGLE";
 exports.AUDIT = "AUDIT";
 exports.AUDITING = "AUDITING";
+exports.AUDIT_PROGRESS = "AUDIT_PROGRESS";
 
 // List of filters for accessibility checks.
 exports.FILTERS = {

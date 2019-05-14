@@ -1550,15 +1550,19 @@ nsresult nsSocketTransport::InitiateSocket() {
   }
 
   if (usingSSL && SSLTokensCache::IsEnabled()) {
-    nsTArray<uint8_t> token;
-    nsresult rv2 = SSLTokensCache::Get(mHost, token);
-    if (NS_SUCCEEDED(rv2) && token.Length() != 0) {
-      SECStatus srv =
-          SSL_SetResumptionToken(fd, token.Elements(), token.Length());
-      if (srv == SECFailure) {
-        SOCKET_LOG(("Setting token failed with NSS error %d [host=%s]",
-                    PORT_GetError(), PromiseFlatCString(mHost).get()));
-        SSLTokensCache::Remove(mHost);
+    PRIntn val;
+    // If SSL_NO_CACHE option was set, we must not use the cache
+    if (SSL_OptionGet(fd, SSL_NO_CACHE, &val) == SECSuccess && val == 0) {
+      nsTArray<uint8_t> token;
+      nsresult rv2 = SSLTokensCache::Get(mHost, token);
+      if (NS_SUCCEEDED(rv2) && token.Length() != 0) {
+        SECStatus srv =
+            SSL_SetResumptionToken(fd, token.Elements(), token.Length());
+        if (srv == SECFailure) {
+          SOCKET_LOG(("Setting token failed with NSS error %d [host=%s]",
+                      PORT_GetError(), PromiseFlatCString(mHost).get()));
+          SSLTokensCache::Remove(mHost);
+        }
       }
     }
 

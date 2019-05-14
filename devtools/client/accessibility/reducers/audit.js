@@ -6,6 +6,7 @@
 const {
   AUDIT,
   AUDITING,
+  AUDIT_PROGRESS,
   FILTER_TOGGLE,
   FILTERS,
   RESET,
@@ -21,6 +22,7 @@ function getInitialState() {
       [FILTERS.CONTRAST]: false,
     },
     auditing: null,
+    progress: null,
   };
 }
 
@@ -50,6 +52,14 @@ function audit(state = getInitialState(), action) {
       return {
         ...state,
         auditing: null,
+        progress: null,
+      };
+    case AUDIT_PROGRESS:
+      const { progress } = action;
+
+      return {
+        ...state,
+        progress,
       };
     case SELECT:
     case RESET:

@@ -41,7 +41,6 @@ DevToolsModules(
     'reflow.js',
     'root.js',
     'screenshot.js',
-    'script.js',
     'source.js',
     'storage.js',
     'string.js',
@@ -49,6 +48,7 @@ DevToolsModules(
     'stylesheets.js',
     'symbol-iterator.js',
     'symbol.js',
+    'thread.js',
     'timeline.js',
     'webconsole.js',
 )

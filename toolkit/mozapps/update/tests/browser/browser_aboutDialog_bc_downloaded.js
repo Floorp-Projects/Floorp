@@ -4,10 +4,11 @@
 "use strict";
 
 // Test for About Dialog background check for updates
-// with the update downloaded.
+// with the update downloaded when the About Dialog is opened.
 add_task(async function aboutDialog_backgroundCheck_downloaded() {
-  let updateParams = "";
-  await runAboutDialogUpdateTest(updateParams, true, [
+  let params = {backgroundUpdate: true,
+                waitForUpdateState: STATE_PENDING};
+  await runAboutDialogUpdateTest(params, [
     {
       panelId: "apply",
       checkActiveUpdate: {state: STATE_PENDING},

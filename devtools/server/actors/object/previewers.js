@@ -377,6 +377,10 @@ function GenericObject(objectActor, grip, rawObj, specialStringBehavior = false)
       for (let j = 0; j < rawObj.length; j++) {
         names.push(rawObj.key(j));
       }
+    } else if (isReplaying) {
+      // When replaying we can access a batch of properties for use in generating
+      // the preview. This avoids needing to enumerate all properties.
+      names = obj.getEnumerableOwnPropertyNamesForPreview();
     } else {
       names = obj.getOwnPropertyNames();
     }
@@ -780,6 +784,12 @@ previewers.Object = [
     // - At least it has the "0" array index.
     // - The array indices are consecutive.
     // - The value of "length", if present, is the number of array indices.
+
+    // Don't generate pseudo array previews when replaying. We don't want to
+    // have to enumerate all the properties in order to determine this.
+    if (isReplaying) {
+      return false;
+    }
 
     let keys;
     try {

@@ -19,3 +19,4 @@ fuzzy-if(skiaContent,0-1,0-30) == animateMotion-values-paced-1b.svg animateMotio
 == animateMotion-mpath-pathLength-1.svg lime.svg
 == animateMotion-mpath-targetChange-1.svg lime.svg
 == animateMotion-mpath-target-transform-1.svg lime.svg
+== animateMotion-mpath-shadow.svg lime.svg

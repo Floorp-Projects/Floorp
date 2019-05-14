@@ -8,8 +8,8 @@
 add_task(async function aboutPrefs_foregroundCheck_otherInstance() {
   setOtherInstanceHandlingUpdates();
 
-  let updateParams = "";
-  await runAboutPrefsUpdateTest(updateParams, false, [
+  let params = {};
+  await runAboutPrefsUpdateTest(params, [
     {
       panelId: "otherInstanceHandlingUpdates",
       checkActiveUpdate: null,

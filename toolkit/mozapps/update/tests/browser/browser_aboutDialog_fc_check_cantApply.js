@@ -8,8 +8,8 @@
 add_task(async function aboutDialog_foregroundCheck_cantApply() {
   lockWriteTestFile();
 
-  let updateParams = "";
-  await runAboutDialogUpdateTest(updateParams, false, [
+  let params = {};
+  await runAboutDialogUpdateTest(params, [
     {
       panelId: "checkingForUpdates",
       checkActiveUpdate: null,

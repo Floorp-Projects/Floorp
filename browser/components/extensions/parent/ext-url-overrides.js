@@ -93,14 +93,32 @@ ExtensionParent.apiManager.on("extension-setting-changed", async (eventName, set
 });
 
 this.urlOverrides = class extends ExtensionAPI {
-  static onUninstall(id) {
-    // TODO: This can be removed once bug 1438364 is fixed and all data is cleaned up.
+  static async onDisable(id) {
     newTabPopup.clearConfirmation(id);
+    await ExtensionSettingsStore.initialize();
+    if (ExtensionSettingsStore.hasSetting(id, STORE_TYPE, NEW_TAB_SETTING_NAME)) {
+      ExtensionSettingsStore.disable(id, STORE_TYPE, NEW_TAB_SETTING_NAME);
+    }
   }
 
-  processNewTabSetting(action) {
-    let {extension} = this;
-    ExtensionSettingsStore[action](extension.id, STORE_TYPE, NEW_TAB_SETTING_NAME);
+  static async onUninstall(id) {
+    // TODO: This can be removed once bug 1438364 is fixed and all data is cleaned up.
+    newTabPopup.clearConfirmation(id);
+
+    await ExtensionSettingsStore.initialize();
+    if (ExtensionSettingsStore.hasSetting(id, STORE_TYPE, NEW_TAB_SETTING_NAME)) {
+      ExtensionSettingsStore.removeSetting(id, STORE_TYPE, NEW_TAB_SETTING_NAME);
+    }
+  }
+
+  static async onUpdate(id, manifest) {
+    if (!manifest.chrome_url_overrides ||
+        !manifest.chrome_url_overrides.newtab) {
+      await ExtensionSettingsStore.initialize();
+      if (ExtensionSettingsStore.hasSetting(id, STORE_TYPE, NEW_TAB_SETTING_NAME)) {
+        ExtensionSettingsStore.removeSetting(id, STORE_TYPE, NEW_TAB_SETTING_NAME);
+      }
+    }
   }
 
   async onManifestEntry(entryName) {
@@ -110,39 +128,11 @@ this.urlOverrides = class extends ExtensionAPI {
     await ExtensionSettingsStore.initialize();
 
     if (manifest.chrome_url_overrides.newtab) {
-      // Set up the shutdown code for the setting.
-      extension.callOnClose({
-        close: () => {
-          switch (extension.shutdownReason) {
-            case "ADDON_DISABLE":
-              this.processNewTabSetting("disable");
-              newTabPopup.clearConfirmation(extension.id);
-              break;
-
-            // We can remove the setting on upgrade or downgrade because it will be
-            // added back in when the manifest is re-read. This will cover the case
-            // where a new version of an add-on removes the manifest key.
-            case "ADDON_DOWNGRADE":
-            case "ADDON_UPGRADE":
-            case "ADDON_UNINSTALL":
-              this.processNewTabSetting("removeSetting");
-              break;
-          }
-        },
-      });
-
       let url = extension.baseURI.resolve(manifest.chrome_url_overrides.newtab);
 
       let item = await ExtensionSettingsStore.addSetting(
         extension.id, STORE_TYPE, NEW_TAB_SETTING_NAME, url,
         () => aboutNewTabService.newTabURL);
-
-      // If the extension was just re-enabled, change the setting to enabled.
-      // This is required because addSetting above is used for both add and update.
-      if (["ADDON_ENABLE", "ADDON_UPGRADE", "ADDON_DOWNGRADE"]
-          .includes(extension.startupReason)) {
-        item = ExtensionSettingsStore.enable(extension.id, STORE_TYPE, NEW_TAB_SETTING_NAME);
-      }
 
       // Set the newTabURL to the current value of the setting.
       if (item) {
