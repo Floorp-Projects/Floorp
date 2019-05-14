@@ -127,8 +127,7 @@ var gInstalledPlugins = [
 
 // A fake plugin host for testing plugin telemetry environment.
 var PluginHost = {
-  getPluginTags(countRef) {
-    countRef.value = gInstalledPlugins.length;
+  getPluginTags() {
     return gInstalledPlugins.map(plugin => plugin.pluginTag);
   },
 
