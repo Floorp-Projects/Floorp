@@ -7,6 +7,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/background_dark"
+    android:clickable="true"
+    android:focusable="true"
     tools:ignore="Overdraw">
 
     <mozilla.components.support.base.android.view.AutoFitTextureView
@@ -16,10 +18,10 @@
         android:layout_centerInParent="true" />
 
     <ImageView
-        android:contentDescription="@string/mozac_feature_qr_scanner"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/qr_cam_focus"
-        android:layout_centerInParent="true" />
+        android:layout_centerInParent="true"
+        android:contentDescription="@string/mozac_feature_qr_scanner"
+        android:src="@drawable/qr_cam_focus" />
 
 </RelativeLayout>
