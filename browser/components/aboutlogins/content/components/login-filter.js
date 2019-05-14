@@ -11,6 +11,21 @@ class LoginFilter extends HTMLElement {
     let loginFilterTemplate = document.querySelector("#login-filter-template");
     this.attachShadow({mode: "open"})
         .appendChild(loginFilterTemplate.content.cloneNode(true));
+
+    this.addEventListener("input", this);
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "input": {
+        this.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+          bubbles: true,
+          composed: true,
+          detail: event.originalTarget.value,
+        }));
+        break;
+      }
+    }
   }
 
   static get observedAttributes() {

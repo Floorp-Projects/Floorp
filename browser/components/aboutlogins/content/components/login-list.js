@@ -21,6 +21,7 @@ class LoginList extends HTMLElement {
     this.render();
 
     window.addEventListener("AboutLoginsLoginSelected", this);
+    window.addEventListener("AboutLoginsFilterLogins", this);
   }
 
   render() {
@@ -32,6 +33,28 @@ class LoginList extends HTMLElement {
 
   handleEvent(event) {
     switch (event.type) {
+      case "AboutLoginsFilterLogins": {
+        let query = event.detail.toLocaleLowerCase();
+        let matchingLoginGuids;
+        if (query) {
+          matchingLoginGuids = this._logins.filter(login => {
+            return login.hostname.toLocaleLowerCase().includes(query) ||
+                   login.username.toLocaleLowerCase().includes(query);
+          }).map(login => login.guid);
+        } else {
+          matchingLoginGuids = this._logins.map(login => login.guid);
+        }
+        for (let listItem of this.shadowRoot.querySelectorAll("login-list-item")) {
+          if (matchingLoginGuids.includes(listItem.getAttribute("guid"))) {
+            if (listItem.hidden) {
+              listItem.hidden = false;
+            }
+          } else if (!listItem.hidden) {
+            listItem.hidden = true;
+          }
+        }
+        break;
+      }
       case "AboutLoginsLoginSelected": {
         if (this._selectedItem) {
           if (this._selectedItem.getAttribute("guid") == event.detail.guid) {
