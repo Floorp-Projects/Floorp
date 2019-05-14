@@ -32,8 +32,25 @@ async function typeAndSubmitAndStop(url) {
   await promiseAutocompleteResultPopup(url, window, true);
   is(gURLBar.textValue, gURLBar.trimValue(url), "location bar reflects loading page");
 
-  let promise =
+  let docLoadPromise =
     BrowserTestUtils.waitForDocLoadAndStopIt(url, gBrowser.selectedBrowser, false);
+
+  // When the load is stopped, tabbrowser calls URLBarSetURI and then calls
+  // onStateChange on its progress listeners.  So to properly wait until the
+  // urlbar value has been updated, add our own progress listener here.
+  let progressPromise = new Promise(resolve => {
+    let listener = {
+      onStateChange(browser, webProgress, request, stateFlags, status) {
+        if (webProgress.isTopLevel &&
+            (stateFlags & Ci.nsIWebProgressListener.STATE_STOP)) {
+          gBrowser.removeTabsProgressListener(listener);
+          resolve();
+        }
+      },
+    };
+    gBrowser.addTabsProgressListener(listener);
+  });
+
   gURLBar.handleCommand();
-  await promise;
+  await Promise.all([docLoadPromise, progressPromise]);
 }
