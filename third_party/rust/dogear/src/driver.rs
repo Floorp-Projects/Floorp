@@ -19,6 +19,40 @@ use log::{Level, LevelFilter, Log};
 use crate::error::{ErrorKind, Result};
 use crate::guid::Guid;
 
+/// An abort signal is used to abort merging. Implementations of `AbortSignal`
+/// can store an aborted flag, usually as an atomic integer or Boolean, set
+/// the flag on abort, and have `AbortSignal::aborted` return the flag's value.
+///
+/// Since merging is synchronous, it's not possible to interrupt a merge from
+/// the same thread that started it. In practice, this means a signal will
+/// implement `Send` and `Sync`, too, so that another thread can set the
+/// aborted flag.
+///
+/// The name comes from the `AbortSignal` DOM API.
+pub trait AbortSignal {
+    /// Indicates if the caller signaled to abort.
+    fn aborted(&self) -> bool;
+
+    /// Returns an error if the caller signaled to abort. This helper makes it
+    /// easier to use the signal with the `?` operator.
+    fn err_if_aborted(&self) -> Result<()> {
+        if self.aborted() {
+            Err(ErrorKind::Abort.into())
+        } else {
+            Ok(())
+        }
+    }
+}
+
+/// A default signal that can't be aborted.
+pub struct DefaultAbortSignal;
+
+impl AbortSignal for DefaultAbortSignal {
+    fn aborted(&self) -> bool {
+        false
+    }
+}
+
 /// A merge driver provides methods to customize merging behavior.
 pub trait Driver {
     /// Generates a new GUID for the given invalid GUID. This is used to fix up

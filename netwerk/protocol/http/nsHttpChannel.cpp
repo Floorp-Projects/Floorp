@@ -7949,7 +7949,8 @@ nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
     if (mListener) {
       MOZ_ASSERT(!mOnStartRequestCalled,
                  "We should not call OnStartRequest twice.");
-      mListener->OnStartRequest(this);
+      nsCOMPtr<nsIStreamListener> listener(mListener);
+      listener->OnStartRequest(this);
       mOnStartRequestCalled = true;
     } else {
       NS_WARNING("OnStartRequest skipped because of null listener");
