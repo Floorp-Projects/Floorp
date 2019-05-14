@@ -77,8 +77,8 @@ RefPtr<nsIFile> CrashReporterHost::TakeCrashedChildMinidump(
   MOZ_ASSERT(!HasMinidump());
 
   RefPtr<nsIFile> crashDump;
-  if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump),
-                                aOutSequence)) {
+  if (!CrashReporter::TakeMinidumpForChild(aPid, getter_AddRefs(crashDump),
+                                           aOutSequence)) {
     return nullptr;
   }
   if (!AdoptMinidump(crashDump)) {

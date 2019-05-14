@@ -401,10 +401,6 @@ XRE_API(void, XRE_SetAndroidChildFds,
 
 XRE_API(void, XRE_SetProcessType, (const char* aProcessTypeString))
 
-// Used in the "master" parent process hosting the crash server
-XRE_API(bool, XRE_TakeMinidumpForChild,
-        (uint32_t aChildPid, nsIFile** aDump, uint32_t* aSequence))
-
 // Used in child processes.
 #if defined(XP_WIN)
 // Uses uintptr_t, even though it's really a HANDLE, because including
