@@ -174,9 +174,7 @@ nsHtml5Parser::Parse(nsIURI* aURL, nsIRequestObserver* aObserver,
 }
 
 nsresult nsHtml5Parser::Parse(const nsAString& aSourceBuffer, void* aKey,
-                              const nsACString& aContentType, bool aLastCall,
-                              nsDTDMode aMode)  // ignored
-{
+                              bool aLastCall) {
   nsresult rv;
   if (NS_FAILED(rv = mExecutor->IsBroken())) {
     return rv;
