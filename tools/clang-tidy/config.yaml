@@ -40,6 +40,8 @@ clang_checkers:
     reliability: high
   - name: bugprone-misplaced-widening-cast
     reliability: high
+  - name: bugprone-move-forwarding-reference
+    reliability: high
   - name: bugprone-multiple-statement-macro
     # Incompatible with our code base, see bug 1496379.
     publish: !!bool no
