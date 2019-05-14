@@ -24,6 +24,7 @@ class LoginItem extends ReflectedFluentElement {
 
     for (let selector of [
       ".delete-button",
+      ".edit-button",
       ".save-changes-button",
       ".cancel-button",
     ]) {
@@ -40,6 +41,7 @@ class LoginItem extends ReflectedFluentElement {
     return [
       "cancel-button",
       "delete-button",
+      "edit-button",
       "hostname-label",
       "password-label",
       "save-changes-button",
@@ -75,11 +77,20 @@ class LoginItem extends ReflectedFluentElement {
         break;
       }
       case "click": {
+        if (event.target.classList.contains("cancel-button")) {
+          this.toggleEditing();
+          this.render();
+          return;
+        }
         if (event.target.classList.contains("delete-button")) {
           document.dispatchEvent(new CustomEvent("AboutLoginsDeleteLogin", {
             bubbles: true,
             detail: this._login,
           }));
+          return;
+        }
+        if (event.target.classList.contains("edit-button")) {
+          this.toggleEditing();
           return;
         }
         if (event.target.classList.contains("save-changes-button")) {
@@ -98,10 +109,6 @@ class LoginItem extends ReflectedFluentElement {
             bubbles: true,
             detail: loginUpdates,
           }));
-          return;
-        }
-        if (event.target.classList.contains("cancel-button")) {
-          this.render();
         }
         break;
       }
@@ -119,6 +126,7 @@ class LoginItem extends ReflectedFluentElement {
     }
 
     this._login = login;
+    this.toggleEditing(false);
     this.render();
   }
 
@@ -128,6 +136,14 @@ class LoginItem extends ReflectedFluentElement {
     }
     this._login = {};
     this.render();
+  }
+
+  toggleEditing(force) {
+    let shouldEdit = force !== undefined ? force : !this.hasAttribute("editing");
+    this.shadowRoot.querySelector(".edit-button").disabled = shouldEdit;
+    this.shadowRoot.querySelectorAll("modal-input")
+                   .forEach(el => el.toggleAttribute("editing", shouldEdit));
+    this.toggleAttribute("editing", shouldEdit);
   }
 }
 customElements.define("login-item", LoginItem);
