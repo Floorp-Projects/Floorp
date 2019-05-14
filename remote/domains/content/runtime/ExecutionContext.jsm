@@ -48,6 +48,10 @@ class ExecutionContext {
     return this._remoteObjects.has(id);
   }
 
+  releaseObject(id) {
+    return this._remoteObjects.delete(id);
+  }
+
   /**
    * Evaluate a Javascript expression.
    *
