@@ -385,8 +385,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
       mHasLoadedNonBlankURI(false),
       mBlankTiming(false),
       mTitleValidForCurrentURI(false),
-      mIsFrame(false),
-      mSkipBrowsingContextDetachOnDestroy(false) {
+      mIsFrame(false) {
   mHistoryID.m0 = 0;
   mHistoryID.m1 = 0;
   mHistoryID.m2 = 0;
@@ -5037,11 +5036,7 @@ nsDocShell::Destroy() {
     mSessionHistory = nullptr;
   }
 
-  // This will be skipped in cases where we want to preserve the browsing
-  // context between loads.
-  if (!mSkipBrowsingContextDetachOnDestroy) {
-    mBrowsingContext->Detach();
-  }
+  mBrowsingContext->Detach();
 
   SetTreeOwner(nullptr);
 
