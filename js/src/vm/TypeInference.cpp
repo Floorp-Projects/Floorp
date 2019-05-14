@@ -3497,6 +3497,12 @@ bool JSScript::makeTypes(JSContext* cx) {
 
   AutoEnterAnalysis enter(cx);
 
+  // Run the arguments-analysis if needed. Both the Baseline Interpreter and
+  // Compiler rely on this.
+  if (!ensureHasAnalyzedArgsUsage(cx)) {
+    return false;
+  }
+
   UniquePtr<jit::ICScript> icScript(jit::ICScript::create(cx, this));
   if (!icScript) {
     return false;

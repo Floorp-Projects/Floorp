@@ -1053,14 +1053,6 @@ bool InitFunctionEnvironmentObjects(JSContext* cx, BaselineFrame* frame) {
 
 bool NewArgumentsObject(JSContext* cx, BaselineFrame* frame,
                         MutableHandleValue res) {
-  // BaselineCompiler calls ensureHasAnalyzedArgsUsage at compile time. The
-  // interpreters have to do this as part of JSOP_ARGUMENTS.
-  if (frame->runningInInterpreter()) {
-    if (!frame->script()->ensureHasAnalyzedArgsUsage(cx)) {
-      return false;
-    }
-  }
-
   ArgumentsObject* obj = ArgumentsObject::createExpected(cx, frame);
   if (!obj) {
     return false;
