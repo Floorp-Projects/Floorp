@@ -463,7 +463,7 @@ class SystemEngineSessionTest {
 
         engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, request)
 
-        verify(observer).onLoadRequest(true)
+        verify(observer).onLoadRequest(true, true)
 
         val redirect: WebResourceRequest = mock()
         doReturn(true).`when`(redirect).isForMainFrame
@@ -472,7 +472,7 @@ class SystemEngineSessionTest {
 
         engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, redirect)
 
-        verify(observer).onLoadRequest(false)
+        verify(observer).onLoadRequest(false, true)
     }
 
     @Test
@@ -502,7 +502,7 @@ class SystemEngineSessionTest {
             engineSession.webView,
             request)
 
-        verify(observer, never()).onLoadRequest(anyBoolean())
+        verify(observer, never()).onLoadRequest(anyBoolean(), anyBoolean())
     }
 
     @Test

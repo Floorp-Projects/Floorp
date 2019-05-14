@@ -35,6 +35,10 @@ branches = [
   l10n = "components/browser/toolbar/src/main/res/values-{android_locale}/strings.xml"
 
 [[paths]]
+  reference = "components/feature/app-links/src/main/res/values/strings.xml"
+  l10n = "components/feature/app-links/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
   reference = "components/feature/contextmenu/src/main/res/values/strings.xml"
   l10n = "components/feature/contextmenu/src/main/res/values-{android_locale}/strings.xml"
 

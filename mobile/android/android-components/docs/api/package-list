@@ -150,6 +150,7 @@ mozilla.components.concept.sync
 mozilla.components.concept.tabstray
 mozilla.components.concept.toolbar
 mozilla.components.feature.accounts
+mozilla.components.feature.app.links
 mozilla.components.feature.awesomebar
 mozilla.components.feature.awesomebar.provider
 mozilla.components.feature.contextmenu

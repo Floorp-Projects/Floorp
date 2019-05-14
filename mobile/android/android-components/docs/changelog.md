@@ -162,6 +162,10 @@ permalink: /changelog/
   * Added ability for `SuggestionProvider` to return an initial list of suggestions from `onInputStarted()`.
   * Modified `ClipboardSuggestionProvider` to already return a suggestions from `onInputStarted()` if the clipboard contains a URL.
 
+* **feature-app-links**
+  *  🆕 New component: to detect and open links in other non-browser apps.
+  * Use cases to parse intent:// URLs, query the package manager for activities and generate Play store URLs.
+
 * **browser-engine-gecko-nightly**, **concept-engine**:
   * Added `EngineSession.Observer.onRecordingStateChanged()` to get list of recording devices currently used by web content.
 

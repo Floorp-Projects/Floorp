@@ -316,7 +316,7 @@ class GeckoEngineSession(
                     // Unlike the name LoadRequest.isRedirect may imply this flag is not about http redirects. The flag
                     // is "true if and only if the request was triggered by user interaction."
                     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1545170
-                    onLoadRequest(triggeredByUserInteraction = request.isRedirect)
+                    onLoadRequest(triggeredByRedirect = request.isRedirect, triggeredByWebContent = true)
                 }
 
                 GeckoResult.fromValue(AllowOrDeny.ALLOW)

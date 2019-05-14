@@ -58,10 +58,11 @@ abstract class EngineSession(
         /**
          * The engine received a request to load a request.
          *
-         * @param triggeredByUserInteraction True if and only if the request was triggered by user interaction (e.g.
-         * clicking on a link on a website).
+         * @param triggeredByRedirect True if and only if the request was triggered by an HTTP redirect.
+         * @param triggeredByWebContent True if and only if the request was triggered from within
+         * web content (as opposed to via the browser chrome).
          */
-        fun onLoadRequest(triggeredByUserInteraction: Boolean) = Unit
+        fun onLoadRequest(triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(

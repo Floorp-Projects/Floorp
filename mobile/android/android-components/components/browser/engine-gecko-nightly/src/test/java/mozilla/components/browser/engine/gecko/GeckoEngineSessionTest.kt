@@ -1701,24 +1701,24 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        var triggeredByUser: Boolean? = null
+        var observedTriggeredByRedirect: Boolean? = null
 
         engineSession.register(object : EngineSession.Observer {
-            override fun onLoadRequest(triggeredByUserInteraction: Boolean) {
-                triggeredByUser = triggeredByUserInteraction
+            override fun onLoadRequest(triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+                observedTriggeredByRedirect = triggeredByRedirect
             }
         })
 
         navigationDelegate.value.onLoadRequest(
-            mock(), mockLoadRequest("sample:about", triggeredByUserInteraction = true))
+            mock(), mockLoadRequest("sample:about", triggeredByRedirect = true))
 
-        assertNotNull(triggeredByUser)
-        assertTrue(triggeredByUser!!)
+        assertNotNull(observedTriggeredByRedirect)
+        assertTrue(observedTriggeredByRedirect!!)
 
         navigationDelegate.value.onLoadRequest(
-            mock(), mockLoadRequest("sample:about", triggeredByUserInteraction = false))
+            mock(), mockLoadRequest("sample:about", triggeredByRedirect = false))
 
-        assertFalse(triggeredByUser!!)
+        assertFalse(observedTriggeredByRedirect!!)
     }
 
     @Test
@@ -1738,9 +1738,9 @@ class GeckoEngineSessionTest {
         engineSession.register(observer)
 
         navigationDelegate.value.onLoadRequest(
-            mock(), mockLoadRequest("sample:about", triggeredByUserInteraction = true))
+            mock(), mockLoadRequest("sample:about", triggeredByRedirect = true))
 
-        verify(observer, never()).onLoadRequest(anyBoolean())
+        verify(observer, never()).onLoadRequest(anyBoolean(), anyBoolean())
     }
 
     private fun mockGeckoSession(): GeckoSession {
@@ -1753,10 +1753,10 @@ class GeckoEngineSessionTest {
     private fun mockLoadRequest(
         uri: String,
         target: Int = 0,
-        triggeredByUserInteraction: Boolean = false
+        triggeredByRedirect: Boolean = false
     ): GeckoSession.NavigationDelegate.LoadRequest {
         var flags = 0
-        if (triggeredByUserInteraction) {
+        if (triggeredByRedirect) {
             flags = flags or 0x800000
         }
 

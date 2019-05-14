@@ -40,6 +40,10 @@ projects:
     path: components/feature/accounts
     description: 'Component for tying an account manager with the tabs feature to facilitate auth flows.'
     publish: true
+  feature-app-links:
+    path: components/feature/app-links
+    description: 'Component opening URLs in other non-browser apps.'
+    publish: true
   feature-contextmenu:
     path: components/feature/contextmenu
     description: 'Component for displaying context menus for web content.'

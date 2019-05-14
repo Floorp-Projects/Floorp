@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
+import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
@@ -48,6 +49,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewIntegration>()
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
+    private val appLinksFeature = ViewBoundFeatureWrapper<AppLinksFeature>()
 
     @Suppress("LongMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -200,6 +202,17 @@ class BrowserFragment : Fragment(), BackHandler {
 
         thumbnailsFeature.set(
             feature = ThumbnailsFeature(requireContext(), layout.engineView, components.sessionManager),
+            owner = this,
+            view = layout
+        )
+
+        appLinksFeature.set(
+            feature = AppLinksFeature(
+                context = requireContext(),
+                sessionManager = components.sessionManager,
+                sessionId = sessionId,
+                fragmentManager = requireFragmentManager()
+            ),
             owner = this,
             view = layout
         )

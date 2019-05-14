@@ -6,6 +6,8 @@ package mozilla.components.browser.session
 
 import android.graphics.Bitmap
 import mozilla.components.browser.session.engine.EngineSessionHolder
+import mozilla.components.browser.session.engine.request.LoadRequestOption
+import mozilla.components.browser.session.engine.request.isSet
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -52,6 +54,7 @@ class Session(
         fun onProgress(session: Session, progress: Int) = Unit
         fun onLoadingStateChanged(session: Session, loading: Boolean) = Unit
         fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) = Unit
+        fun onLoadRequest(session: Session, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) = Unit
         fun onSearch(session: Session, searchTerms: String) = Unit
         fun onSecurityChanged(session: Session, securityInfo: SecurityInfo) = Unit
         fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?) = Unit
@@ -195,6 +198,19 @@ class Session(
     var searchTerms: String by Delegates.observable("") {
         _, _, new -> notifyObservers {
             onSearch(this@Session, new)
+        }
+    }
+
+    /**
+     * Set when a load request is received, indicating if the user was involved in the interaction.
+     */
+    var loadRequestTriggers: Int by Delegates.observable(0) {
+        _, _, new -> notifyObservers {
+            onLoadRequest(
+                this@Session,
+                new.isSet(LoadRequestOption.REDIRECT),
+                new.isSet(LoadRequestOption.WEB_CONTENT)
+            )
         }
     }
 
