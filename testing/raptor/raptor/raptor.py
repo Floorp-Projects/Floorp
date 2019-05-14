@@ -239,8 +239,8 @@ class Raptor(object):
 
     def set_browser_test_prefs(self, raw_prefs):
         # add test specific preferences
-        self.log.info("preferences were configured for the test, however \
-                        we currently do not install them on non Firefox browsers.")
+        self.log.info("setting test-specific Firefox preferences")
+        self.profile.set_preferences(json.loads(raw_prefs))
 
     def build_browser_profile(self):
         self.profile = create_profile(self.profile_class)
@@ -600,11 +600,6 @@ class RaptorDesktopFirefox(RaptorDesktop):
             # to disk; then profiles are picked up by gecko_profile.symbolicate
             self.control_server.gecko_profile_dir = self.gecko_profiler.gecko_profile_dir
 
-    def set_browser_test_prefs(self, raw_prefs):
-        # add test specific preferences
-        self.log.info("setting test-specific Firefox preferences")
-        self.profile.set_preferences(json.loads(raw_prefs))
-
 
 class RaptorDesktopChrome(RaptorDesktop):
 
@@ -635,6 +630,11 @@ class RaptorDesktopChrome(RaptorDesktop):
             self.setup_chrome_desktop_for_playback()
 
         self.start_runner_proc()
+
+    def set_browser_test_prefs(self, raw_prefs):
+        # add test-specific preferences
+        self.log.info("preferences were configured for the test, however \
+                        we currently do not install them on non-Firefox browsers.")
 
 
 class RaptorAndroid(Raptor):
