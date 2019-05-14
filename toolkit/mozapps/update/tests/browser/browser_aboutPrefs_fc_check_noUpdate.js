@@ -6,8 +6,8 @@
 // Test for about:preferences foreground check for updates
 // with no update available.
 add_task(async function aboutPrefs_foregroundCheck_noUpdate() {
-  let updateParams = "&noUpdates=1";
-  await runAboutPrefsUpdateTest(updateParams, false, [
+  let params = {queryString: "&noUpdates=1"};
+  await runAboutPrefsUpdateTest(params, [
     {
       panelId: "checkingForUpdates",
       checkActiveUpdate: null,

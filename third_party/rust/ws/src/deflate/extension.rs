@@ -1,28 +1,28 @@
 use std::mem::replace;
-use std::io::{Read, Write};
 
-#[cfg(feature="ssl")]
+#[cfg(feature = "ssl")]
 use openssl::ssl::SslStream;
+#[cfg(feature = "nativetls")]
+use native_tls::TlsStream as SslStream;
 use url;
 
-use handler::Handler;
-use message::Message;
 use frame::Frame;
-use protocol::{CloseCode, OpCode};
+use handler::Handler;
 use handshake::{Handshake, Request, Response};
-use result::{Result, Error, Kind};
-use util::{Token, Timeout};
-#[cfg(feature="ssl")]
+use message::Message;
+use protocol::{CloseCode, OpCode};
+use result::{Error, Kind, Result};
+#[cfg(any(feature = "ssl", feature = "nativetls"))]
 use util::TcpStream;
+use util::{Timeout, Token};
 
-use super::context::{Compresser, Decompresser};
-
+use super::context::{Compressor, Decompressor};
 
 /// Deflate Extension Handler Settings
 #[derive(Debug, Clone, Copy)]
 pub struct DeflateSettings {
     /// The max size of the sliding window. If the other endpoint selects a smaller size, that size
-    /// will be used instead. This must be an integer between 8 and 15 inclusive.
+    /// will be used instead. This must be an integer between 9 and 15 inclusive.
     /// Default: 15
     pub max_window_bits: u8,
     /// Indicates whether to ask the other endpoint to reset the sliding window for each message.
@@ -46,7 +46,6 @@ pub struct DeflateSettings {
 }
 
 impl Default for DeflateSettings {
-
     fn default() -> DeflateSettings {
         DeflateSettings {
             max_window_bits: 15,
@@ -82,8 +81,8 @@ impl DeflateBuilder {
     /// Wrap another handler in with a deflate handler as configured.
     pub fn build<H: Handler>(&self, handler: H) -> DeflateHandler<H> {
         DeflateHandler {
-            com: Compresser::new(self.settings.max_window_bits as i8),
-            dec: Decompresser::new(self.settings.max_window_bits as i8),
+            com: Compressor::new(self.settings.max_window_bits as i8),
+            dec: Decompressor::new(self.settings.max_window_bits as i8),
             fragments: Vec::with_capacity(self.settings.fragments_capacity),
             compress_reset: false,
             decompress_reset: false,
@@ -92,7 +91,6 @@ impl DeflateBuilder {
             inner: handler,
         }
     }
-
 }
 
 /// A WebSocket handler that implements the permessage-deflate extension.
@@ -102,8 +100,8 @@ impl DeflateBuilder {
 /// permessage-deflate specification and pass them to the child handler. Message frames sent from
 /// the child handler will be compressed and sent to the other endpoint using deflate compression.
 pub struct DeflateHandler<H: Handler> {
-    com: Compresser,
-    dec: Decompresser,
+    com: Compressor,
+    dec: Decompressor,
     fragments: Vec<Frame>,
     compress_reset: bool,
     decompress_reset: bool,
@@ -113,14 +111,13 @@ pub struct DeflateHandler<H: Handler> {
 }
 
 impl<H: Handler> DeflateHandler<H> {
-
     /// Wrap a child handler to provide the permessage-deflate extension.
     pub fn new(handler: H) -> DeflateHandler<H> {
         trace!("Using permessage-deflate handler.");
         let settings = DeflateSettings::default();
         DeflateHandler {
-            com: Compresser::new(settings.max_window_bits as i8),
-            dec: Decompresser::new(settings.max_window_bits as i8),
+            com: Compressor::new(settings.max_window_bits as i8),
+            dec: Decompressor::new(settings.max_window_bits as i8),
             fragments: Vec::with_capacity(settings.fragments_capacity),
             compress_reset: false,
             decompress_reset: false,
@@ -141,16 +138,15 @@ impl<H: Handler> DeflateHandler<H> {
 }
 
 impl<H: Handler> Handler for DeflateHandler<H> {
-
     fn build_request(&mut self, url: &url::Url) -> Result<Request> {
-        let mut req = try!(self.inner.build_request(url));
+        let mut req = self.inner.build_request(url)?;
         let mut req_ext = String::with_capacity(100);
         req_ext.push_str("permessage-deflate");
         if self.settings.max_window_bits < 15 {
             req_ext.push_str(&format!(
                 "; client_max_window_bits={}; server_max_window_bits={}",
-                self.settings.max_window_bits,
-                self.settings.max_window_bits))
+                self.settings.max_window_bits, self.settings.max_window_bits
+            ))
         } else {
             req_ext.push_str("; client_max_window_bits")
         }
@@ -162,9 +158,9 @@ impl<H: Handler> Handler for DeflateHandler<H> {
     }
 
     fn on_request(&mut self, req: &Request) -> Result<Response> {
-        let mut res = try!(Response::from_request(req));
+        let mut res = self.inner.on_request(req)?;
 
-        'ext: for req_ext in try!(req.extensions())
+        'ext: for req_ext in req.extensions()?
             .iter()
             .filter(|&&ext| ext.contains("permessage-deflate"))
         {
@@ -179,20 +175,20 @@ impl<H: Handler> Handler for DeflateHandler<H> {
                     "permessage-deflate" => res_ext.push_str("permessage-deflate"),
                     "server_no_context_takeover" => {
                         if s_takeover {
-                            return self.decline(res)
+                            return self.decline(res);
                         } else {
                             s_takeover = true;
                             if self.settings.accept_no_context_takeover {
                                 self.compress_reset = true;
                                 res_ext.push_str("; server_no_context_takeover");
                             } else {
-                                continue 'ext
+                                continue 'ext;
                             }
                         }
                     }
                     "client_no_context_takeover" => {
                         if c_takeover {
-                            return self.decline(res)
+                            return self.decline(res);
                         } else {
                             c_takeover = true;
                             self.decompress_reset = true;
@@ -201,91 +197,92 @@ impl<H: Handler> Handler for DeflateHandler<H> {
                     }
                     param if param.starts_with("server_max_window_bits") => {
                         if s_max {
-                            return self.decline(res)
+                            return self.decline(res);
                         } else {
                             s_max = true;
                             let mut param_iter = param.split('=');
                             param_iter.next(); // we already know the name
                             if let Some(window_bits_str) = param_iter.next() {
                                 if let Ok(window_bits) = window_bits_str.trim().parse() {
-                                    if window_bits >= 8 && window_bits <= 15 {
+                                    if window_bits >= 9 && window_bits <= 15 {
                                         if window_bits < self.settings.max_window_bits as i8 {
-                                            self.com = Compresser::new(window_bits);
+                                            self.com = Compressor::new(window_bits);
                                             res_ext.push_str("; ");
                                             res_ext.push_str(param)
                                         }
                                     } else {
-                                        return self.decline(res)
+                                        return self.decline(res);
                                     }
                                 } else {
-                                    return self.decline(res)
+                                    return self.decline(res);
                                 }
                             }
                         }
                     }
                     param if param.starts_with("client_max_window_bits") => {
                         if c_max {
-                            return self.decline(res)
+                            return self.decline(res);
                         } else {
                             c_max = true;
                             let mut param_iter = param.split('=');
                             param_iter.next(); // we already know the name
                             if let Some(window_bits_str) = param_iter.next() {
                                 if let Ok(window_bits) = window_bits_str.trim().parse() {
-                                    if window_bits >= 8 && window_bits <= 15 {
+                                    if window_bits >= 9 && window_bits <= 15 {
                                         if window_bits < self.settings.max_window_bits as i8 {
-                                            self.dec = Decompresser::new(window_bits);
+                                            self.dec = Decompressor::new(window_bits);
                                             res_ext.push_str("; ");
                                             res_ext.push_str(param);
-                                            continue
+                                            continue;
                                         }
                                     } else {
-                                        return self.decline(res)
+                                        return self.decline(res);
                                     }
                                 } else {
-                                    return self.decline(res)
+                                    return self.decline(res);
                                 }
                             }
                             res_ext.push_str("; ");
-                            res_ext.push_str(
-                                &format!(
-                                    "client_max_window_bits={}",
-                                    self.settings.max_window_bits))
+                            res_ext.push_str(&format!(
+                                "client_max_window_bits={}",
+                                self.settings.max_window_bits
+                            ))
                         }
                     }
                     _ => {
                         // decline all extension offers because we got a bad parameter
-                        return self.decline(res)
+                        return self.decline(res);
                     }
                 }
             }
 
-            if !res_ext.contains("client_no_context_takeover") && self.settings.request_no_context_takeover {
+            if !res_ext.contains("client_no_context_takeover")
+                && self.settings.request_no_context_takeover
+            {
                 self.decompress_reset = true;
                 res_ext.push_str("; client_no_context_takeover");
             }
 
             if !res_ext.contains("server_max_window_bits") {
                 res_ext.push_str("; ");
-                res_ext.push_str(
-                    &format!(
-                        "server_max_window_bits={}",
-                        self.settings.max_window_bits))
+                res_ext.push_str(&format!(
+                    "server_max_window_bits={}",
+                    self.settings.max_window_bits
+                ))
             }
 
             if !res_ext.contains("client_max_window_bits") && self.settings.max_window_bits < 15 {
-                continue
+                continue;
             }
 
             res.add_extension(&res_ext);
-            return Ok(res)
+            return Ok(res);
         }
         self.decline(res)
     }
 
     fn on_response(&mut self, res: &Response) -> Result<()> {
-
-        if let Some(res_ext) =try!(res.extensions())
+        if let Some(res_ext) = res.extensions()?
             .iter()
             .find(|&&ext| ext.contains("permessage-deflate"))
         {
@@ -301,7 +298,8 @@ impl<H: Handler> Handler for DeflateHandler<H> {
                         if name {
                             return Err(Error::new(
                                 Kind::Protocol,
-                                format!("Duplicate extension name permessage-deflate")))
+                                format!("Duplicate extension name permessage-deflate"),
+                            ));
                         } else {
                             name = true;
                         }
@@ -310,7 +308,8 @@ impl<H: Handler> Handler for DeflateHandler<H> {
                         if s_takeover {
                             return Err(Error::new(
                                 Kind::Protocol,
-                                format!("Duplicate extension parameter server_no_context_takeover")))
+                                format!("Duplicate extension parameter server_no_context_takeover"),
+                            ));
                         } else {
                             s_takeover = true;
                             self.decompress_reset = true;
@@ -320,7 +319,8 @@ impl<H: Handler> Handler for DeflateHandler<H> {
                         if c_takeover {
                             return Err(Error::new(
                                 Kind::Protocol,
-                                format!("Duplicate extension parameter client_no_context_takeover")))
+                                format!("Duplicate extension parameter client_no_context_takeover"),
+                            ));
                         } else {
                             c_takeover = true;
                             if self.settings.accept_no_context_takeover {
@@ -328,7 +328,8 @@ impl<H: Handler> Handler for DeflateHandler<H> {
                             } else {
                                 return Err(Error::new(
                                     Kind::Protocol,
-                                    format!("The client requires context takeover.")))
+                                    format!("The client requires context takeover."),
+                                ));
                             }
                         }
                     }
@@ -336,26 +337,35 @@ impl<H: Handler> Handler for DeflateHandler<H> {
                         if s_max {
                             return Err(Error::new(
                                 Kind::Protocol,
-                                format!("Duplicate extension parameter server_max_window_bits")))
+                                format!("Duplicate extension parameter server_max_window_bits"),
+                            ));
                         } else {
                             s_max = true;
                             let mut param_iter = param.split('=');
                             param_iter.next(); // we already know the name
                             if let Some(window_bits_str) = param_iter.next() {
                                 if let Ok(window_bits) = window_bits_str.trim().parse() {
-                                    if window_bits >= 8 && window_bits <= 15 {
+                                    if window_bits >= 9 && window_bits <= 15 {
                                         if window_bits as u8 != self.settings.max_window_bits {
-                                            self.dec = Decompresser::new(window_bits);
+                                            self.dec = Decompressor::new(window_bits);
                                         }
                                     } else {
                                         return Err(Error::new(
                                             Kind::Protocol,
-                                            format!("Invalid server_max_window_bits parameter: {}", window_bits)))
+                                            format!(
+                                                "Invalid server_max_window_bits parameter: {}",
+                                                window_bits
+                                            ),
+                                        ));
                                     }
                                 } else {
                                     return Err(Error::new(
                                         Kind::Protocol,
-                                        format!("Invalid server_max_window_bits parameter: {}", window_bits_str)))
+                                        format!(
+                                            "Invalid server_max_window_bits parameter: {}",
+                                            window_bits_str
+                                        ),
+                                    ));
                                 }
                             }
                         }
@@ -364,26 +374,35 @@ impl<H: Handler> Handler for DeflateHandler<H> {
                         if c_max {
                             return Err(Error::new(
                                 Kind::Protocol,
-                                format!("Duplicate extension parameter client_max_window_bits")))
+                                format!("Duplicate extension parameter client_max_window_bits"),
+                            ));
                         } else {
                             c_max = true;
                             let mut param_iter = param.split('=');
                             param_iter.next(); // we already know the name
                             if let Some(window_bits_str) = param_iter.next() {
                                 if let Ok(window_bits) = window_bits_str.trim().parse() {
-                                    if window_bits >= 8 && window_bits <= 15 {
+                                    if window_bits >= 9 && window_bits <= 15 {
                                         if window_bits as u8 != self.settings.max_window_bits {
-                                            self.com = Compresser::new(window_bits);
+                                            self.com = Compressor::new(window_bits);
                                         }
                                     } else {
                                         return Err(Error::new(
                                             Kind::Protocol,
-                                            format!("Invalid client_max_window_bits parameter: {}", window_bits)))
+                                            format!(
+                                                "Invalid client_max_window_bits parameter: {}",
+                                                window_bits
+                                            ),
+                                        ));
                                     }
                                 } else {
                                     return Err(Error::new(
                                         Kind::Protocol,
-                                        format!("Invalid client_max_window_bits parameter: {}", window_bits_str)))
+                                        format!(
+                                            "Invalid client_max_window_bits parameter: {}",
+                                            window_bits_str
+                                        ),
+                                    ));
                                 }
                             }
                         }
@@ -392,7 +411,8 @@ impl<H: Handler> Handler for DeflateHandler<H> {
                         // fail the connection because we got a bad parameter
                         return Err(Error::new(
                             Kind::Protocol,
-                            format!("Bad extension parameter: {}", param)))
+                            format!("Bad extension parameter: {}", param),
+                        ));
                     }
                 }
             }
@@ -410,47 +430,52 @@ impl<H: Handler> Handler for DeflateHandler<H> {
 
                 if !frame.is_final() {
                     self.fragments.push(frame);
-                    return Ok(None)
+                    return Ok(None);
                 } else {
                     if frame.opcode() == OpCode::Continue {
                         if self.fragments.is_empty() {
                             return Err(Error::new(
                                 Kind::Protocol,
-                                "Unable to reconstruct fragmented message. No first frame."))
+                                "Unable to reconstruct fragmented message. No first frame.",
+                            ));
                         } else {
-                            if !self.settings.fragments_grow && self.settings.fragments_capacity == self.fragments.len() {
-                                return Err(Error::new(Kind::Capacity, "Exceeded max fragments."))
+                            if !self.settings.fragments_grow
+                                && self.settings.fragments_capacity == self.fragments.len()
+                            {
+                                return Err(Error::new(Kind::Capacity, "Exceeded max fragments."));
                             } else {
                                 self.fragments.push(frame);
                             }
 
                             // it's safe to unwrap because of the above check for empty
                             let opcode = self.fragments.first().unwrap().opcode();
-                            let size = self.fragments.iter().fold(0, |len, frame| len + frame.payload().len());
+                            let size = self.fragments
+                                .iter()
+                                .fold(0, |len, frame| len + frame.payload().len());
                             let mut compressed = Vec::with_capacity(size);
                             let mut decompressed = Vec::with_capacity(size * 2);
                             for frag in replace(
                                 &mut self.fragments,
-                                Vec::with_capacity(self.settings.fragments_capacity))
-                            {
+                                Vec::with_capacity(self.settings.fragments_capacity),
+                            ) {
                                 compressed.extend(frag.into_data())
                             }
 
                             compressed.extend(&[0, 0, 255, 255]);
-                            try!(self.dec.decompress(&compressed, &mut decompressed));
+                            self.dec.decompress(&compressed, &mut decompressed)?;
                             frame = Frame::message(decompressed, opcode, true);
                         }
                     } else {
                         let mut decompressed = Vec::with_capacity(frame.payload().len() * 2);
                         frame.payload_mut().extend(&[0, 0, 255, 255]);
 
-                        try!(self.dec.decompress(frame.payload(), &mut decompressed));
+                        self.dec.decompress(frame.payload(), &mut decompressed)?;
 
                         *frame.payload_mut() = decompressed;
                     }
 
                     if self.decompress_reset {
-                        try!(self.dec.reset())
+                        self.dec.reset()?
                     }
                 }
             }
@@ -459,20 +484,26 @@ impl<H: Handler> Handler for DeflateHandler<H> {
     }
 
     fn on_send_frame(&mut self, frame: Frame) -> Result<Option<Frame>> {
-        if let Some(mut frame) = try!(self.inner.on_send_frame(frame)) {
+        if let Some(mut frame) = self.inner.on_send_frame(frame)? {
             if !self.pass && !frame.is_control() {
-                debug_assert!(frame.is_final(), "Received non-final frame from upstream handler!");
-                debug_assert!(frame.opcode() != OpCode::Continue, "Received continue frame from upstream handler!");
+                debug_assert!(
+                    frame.is_final(),
+                    "Received non-final frame from upstream handler!"
+                );
+                debug_assert!(
+                    frame.opcode() != OpCode::Continue,
+                    "Received continue frame from upstream handler!"
+                );
 
                 frame.set_rsv1(true);
                 let mut compressed = Vec::with_capacity(frame.payload().len());
-                try!(self.com.compress(frame.payload(), &mut compressed));
+                self.com.compress(frame.payload(), &mut compressed)?;
                 let len = compressed.len();
                 compressed.truncate(len - 4);
                 *frame.payload_mut() = compressed;
 
                 if self.compress_reset {
-                    try!(self.com.reset())
+                    self.com.reset()?
                 }
             }
             Ok(Some(frame))
@@ -517,15 +548,18 @@ impl<H: Handler> Handler for DeflateHandler<H> {
     }
 
     #[inline]
-    #[cfg(feature="ssl")]
-    fn upgrade_ssl_client(&mut self, stream: TcpStream, url: &url::Url) -> Result<SslStream<TcpStream>> {
+    #[cfg(any(feature = "ssl", feature = "nativetls"))]
+    fn upgrade_ssl_client(
+        &mut self,
+        stream: TcpStream,
+        url: &url::Url,
+    ) -> Result<SslStream<TcpStream>> {
         self.inner.upgrade_ssl_client(stream, url)
     }
 
     #[inline]
-    #[cfg(feature="ssl")]
+    #[cfg(any(feature = "ssl", feature = "nativetls"))]
     fn upgrade_ssl_server(&mut self, stream: TcpStream) -> Result<SslStream<TcpStream>> {
         self.inner.upgrade_ssl_server(stream)
     }
-
 }

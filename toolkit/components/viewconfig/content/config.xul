@@ -70,7 +70,7 @@
   <vbox flex="1">
     <hbox id="filterRow" align="center">
       <label data-l10n-id="config-search-prefs" control="textbox"/>
-      <textbox id="textbox" flex="1" type="search"
+      <textbox id="textbox" flex="1" is="search-textbox"
                aria-controls="configTree"
                oncommand="FilterPrefs();"/>
     </hbox>
