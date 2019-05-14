@@ -1388,8 +1388,11 @@ class OpenBSDToolchainTest(BaseToolchainTest):
 
 
 @memoize
-def gen_invoke_cargo(version):
+def gen_invoke_cargo(version, rustup_wrapper=False):
     def invoke_cargo(stdin, args):
+        args = tuple(args)
+        if not rustup_wrapper and args == ('+stable',):
+            return (101, '', 'we are the real thing')
         if args == ('--version', '--verbose'):
             return 0, 'cargo %s\nrelease: %s' % (version, version), ''
         raise NotImplementedError('unsupported arguments')
@@ -1397,8 +1400,13 @@ def gen_invoke_cargo(version):
 
 
 @memoize
-def gen_invoke_rustc(version):
+def gen_invoke_rustc(version, rustup_wrapper=False):
     def invoke_rustc(stdin, args):
+        args = tuple(args)
+        # TODO: we don't have enough machinery set up to test the `rustup which`
+        # fallback yet.
+        if not rustup_wrapper and args == ('+stable',):
+            return (1, '', 'error: couldn\'t read +stable: No such file or directory')
         if args == ('--version', '--verbose'):
             return (0, 'rustc %s\nrelease: %s\nhost: x86_64-unknown-linux-gnu'
                        % (version, version), '')
