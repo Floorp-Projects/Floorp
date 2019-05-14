@@ -87,7 +87,7 @@ class Raptor(object):
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, memory_test=False,
                  is_release_build=False, debug_mode=False, post_startup_delay=None,
-                 interrupt_handler=None, **kwargs):
+                 interrupt_handler=None, e10s=True, **kwargs):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == 'HOST_IP':
@@ -109,6 +109,7 @@ class Raptor(object):
             'memory_test': memory_test,
             'is_release_build': is_release_build,
             'enable_control_server_wait': memory_test,
+            'e10s': e10s,
         }
 
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
@@ -906,7 +907,7 @@ class RaptorAndroid(Raptor):
                     extras['args'] = " ".join(extra_args)
 
                 # add e10s=True
-                extras['use_multiprocess'] = True
+                extras['use_multiprocess'] = self.config['e10s']
 
                 self.device.launch_application(self.config['binary'],
                                                self.config['activity'],
