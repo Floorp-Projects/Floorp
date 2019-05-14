@@ -100,7 +100,7 @@ class RemoteAgentClass {
       const mainTarget = this.targets.getMainProcessTarget();
 
       this.server._start(port, host);
-      dump(`DevTools listening on ${mainTarget.wsDebuggerURL}`);
+      dump(`DevTools listening on ${mainTarget.wsDebuggerURL}\n`);
     } catch (e) {
       throw new Error(`Unable to start remote agent: ${e.message}`, e);
     }
