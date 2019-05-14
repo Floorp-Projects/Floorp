@@ -14,6 +14,7 @@
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
+    <script defer="defer" src="chrome://browser/content/aboutlogins/components/modal-input.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
     <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" type="text/css" href="chrome://browser/content/aboutlogins/aboutLogins.css">
@@ -66,11 +67,11 @@
       </label>
       <label>
         <span class="username-label field-label"></span>
-        <input name="username"/>
+        <modal-input name="username"/>
       </label>
       <label>
         <span class="password-label field-label"></span>
-        <input type="password" name="password"/>
+        <modal-input type="password" name="password"/>
       </label>
       <p class="time-created meta-info"></p>
       <p class="time-changed meta-info"></p>
