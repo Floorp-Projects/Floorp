@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const gBaseURL = "https://example.com/browser/browser/base/content/test/general/";
+const gBaseURL = "https://example.com/browser/browser/base/content/test/contextMenu/";
 
 add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gBaseURL + "subtst_contextmenu.html");

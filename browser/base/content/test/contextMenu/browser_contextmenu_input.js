@@ -4,11 +4,11 @@ let contextMenu;
 let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
 
 add_task(async function test_setup() {
-  const example_base = "http://example.com/browser/browser/base/content/test/general/";
+  const example_base = "http://example.com/browser/browser/base/content/test/contextMenu/";
   const url = example_base + "subtst_contextmenu_input.html";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  const chrome_base = "chrome://mochitests/content/browser/browser/base/content/test/general/";
+  const chrome_base = "chrome://mochitests/content/browser/browser/base/content/test/contextMenu/";
   const contextmenu_common = chrome_base + "contextmenu_common.js";
   /* import-globals-from contextmenu_common.js */
   Services.scriptloader.loadSubScript(contextmenu_common, this);
