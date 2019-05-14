@@ -57,7 +57,7 @@ def make_checksums_signing_description(config, jobs):
             "paths": [
                 "public/target-source.checksums",
             ],
-            "formats": ["gpg"]
+            "formats": ["autograph_gpg"]
         }]
 
         signing_cert_scope = get_signing_cert_scope(config)
@@ -71,7 +71,6 @@ def make_checksums_signing_description(config, jobs):
                        'max-run-time': 3600},
             'scopes': [
                 signing_cert_scope,
-                add_scope_prefix(config, 'signing:format:gpg'),
             ],
             'dependencies': dependencies,
             'attributes': attributes,
