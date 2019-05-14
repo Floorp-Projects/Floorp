@@ -74,6 +74,8 @@ parent:
   async Deactivate();
 
   async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
+
+  async SkipBrowsingContextDetach();
 };
 
 }  // namespace dom

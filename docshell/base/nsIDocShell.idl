@@ -546,7 +546,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Allows nsDocumentViewer to tell the top-level same-type docshell that
    * one of the documents under it is printing.
    */
-  void setIsPrinting(in boolean aIsPrinting);
+  [noscript, notxpcom] void setIsPrinting(in boolean aIsPrinting);
 
   /**
    * If the current content viewer isn't initialized for print preview,
