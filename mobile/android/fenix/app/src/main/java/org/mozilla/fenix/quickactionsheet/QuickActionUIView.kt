@@ -7,7 +7,6 @@ package org.mozilla.fenix.quickactionsheet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -17,11 +16,11 @@ import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.layout_quick_action_sheet.*
 import kotlinx.android.synthetic.main.layout_quick_action_sheet.view.*
-import mozilla.components.support.ktx.android.content.res.pxToDp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.UIView
+import org.mozilla.fenix.utils.Settings
 
 class QuickActionUIView(
     container: ViewGroup,
@@ -33,14 +32,11 @@ class QuickActionUIView(
         .inflate(R.layout.component_quick_action_sheet, container, true)
         .findViewById(R.id.nestedScrollQuickAction) as NestedScrollView
 
+    val quickActionSheet = view.quick_action_sheet as QuickActionSheet
+
     init {
         val quickActionSheetBehavior =
             BottomSheetBehavior.from(nestedScrollQuickAction as View) as QuickActionSheetBehavior
-
-        // set initial state
-        animateOverlay(initialOverlayAlpha)
-        quickActionSheetBehavior.isHideable = false
-        quickActionSheetBehavior.peekHeight = view.resources.pxToDp(initialPeekHeightInDps)
 
         quickActionSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(v: View, state: Int) {
@@ -54,8 +50,6 @@ class QuickActionUIView(
             }
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                quickActionSheetBehavior.peekHeight =
-                    bottomSheet.findViewById<ImageButton>(R.id.quick_action_sheet_handle).height
                 animateOverlay(slideOffset)
             }
         })
@@ -93,10 +87,10 @@ class QuickActionUIView(
 
     private fun updateImportantForAccessibility(state: Int) {
         view.findViewById<LinearLayout>(R.id.quick_action_buttons_layout).importantForAccessibility =
-            if (state == BottomSheetBehavior.STATE_COLLAPSED || state == BottomSheetBehavior.STATE_HIDDEN)
-                View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-            else
-                View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+                if (state == BottomSheetBehavior.STATE_COLLAPSED || state == BottomSheetBehavior.STATE_HIDDEN)
+                    View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+                else
+                    View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
     }
 
     private fun sendTelemetryEvent(state: Int) {
@@ -120,10 +114,9 @@ class QuickActionUIView(
         }
         view.quick_action_read_appearance.visibility = if (it.readerActive) View.VISIBLE else View.GONE
         view.quick_action_bookmark.isSelected = it.bookmarked
-    }
 
-    companion object {
-        const val initialOverlayAlpha = 0.5f
-        const val initialPeekHeightInDps = 30
+        if (it.bounceNeeded && Settings.getInstance(view.context).shouldAutoBounceQuickActionSheet) {
+            quickActionSheet.bounceSheet()
+        }
     }
 }

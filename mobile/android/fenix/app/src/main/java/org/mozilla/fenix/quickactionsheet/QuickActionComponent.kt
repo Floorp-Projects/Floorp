@@ -25,7 +25,8 @@ class QuickActionComponent(
     override var initialState: QuickActionState = QuickActionState(
         readable = false,
         bookmarked = false,
-        readerActive = false
+        readerActive = false,
+        bounceNeeded = false
     )
 ) : UIComponent<QuickActionState, QuickActionAction, QuickActionChange>(
     owner,
@@ -46,7 +47,12 @@ class QuickActionComponent(
     }
 }
 
-data class QuickActionState(val readable: Boolean, val bookmarked: Boolean, val readerActive: Boolean) : ViewState
+data class QuickActionState(
+    val readable: Boolean,
+    val bookmarked: Boolean,
+    val readerActive: Boolean,
+    val bounceNeeded: Boolean
+) : ViewState
 
 sealed class QuickActionAction : Action {
     object Opened : QuickActionAction()
@@ -62,6 +68,7 @@ sealed class QuickActionChange : Change {
     data class BookmarkedStateChange(val bookmarked: Boolean) : QuickActionChange()
     data class ReadableStateChange(val readable: Boolean) : QuickActionChange()
     data class ReaderActiveStateChange(val active: Boolean) : QuickActionChange()
+    object BounceNeededChange : QuickActionChange()
 }
 
 class QuickActionViewModel(initialState: QuickActionState, changesObservable: Observable<QuickActionChange>) :
@@ -83,6 +90,9 @@ class QuickActionViewModel(initialState: QuickActionState, changesObservable: Ob
     companion object {
         val reducer: Reducer<QuickActionState, QuickActionChange> = { state, change ->
             when (change) {
+                is QuickActionChange.BounceNeededChange -> {
+                    state.copy(bounceNeeded = true)
+                }
                 is QuickActionChange.BookmarkedStateChange -> {
                     state.copy(bookmarked = change.bookmarked)
                 }

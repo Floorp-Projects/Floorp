@@ -160,7 +160,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             QuickActionState(
                 readable = getSessionById()?.readerable ?: false,
                 bookmarked = findBookmarkedURL(getSessionById()),
-                readerActive = getSessionById()?.readerMode ?: false
+                readerActive = getSessionById()?.readerMode ?: false,
+                bounceNeeded = false
             )
         )
 
@@ -699,11 +700,13 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     private fun subscribeToSession(): Session.Observer {
         val observer = object : Session.Observer {
             override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-                super.onLoadingStateChanged(session, loading)
                 if (!loading) {
                     updateBookmarkState(session)
+                    getManagedEmitter<QuickActionChange>().onNext(QuickActionChange.BounceNeededChange)
                 }
+
                 setToolbarBehavior(loading)
+                super.onLoadingStateChanged(session, loading)
             }
         }
         getSessionById()?.register(observer)
