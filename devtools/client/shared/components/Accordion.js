@@ -74,7 +74,6 @@ class Accordion extends Component {
       li(
         {
           className,
-          "aria-expanded": opened,
           "aria-labelledby": labelledby,
           key: labelledby,
         },
@@ -83,6 +82,7 @@ class Accordion extends Component {
             className: "accordion-header",
             id: labelledby,
             tabIndex: 0,
+            "aria-expanded": opened,
             onKeyDown: e => this.onHandleHeaderKeyDown(e, i),
             onClick: () => this.handleHeaderClick(i),
           },
