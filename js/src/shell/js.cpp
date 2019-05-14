@@ -9482,6 +9482,7 @@ js::shell::AutoReportException::~AutoReportException() {
 
   FILE* fp = ErrorFilePointer();
   PrintError(cx, fp, report.toStringResult(), report.report(), reportWarnings);
+  JS_ClearPendingException(cx);
 
   if (!PrintStackTrace(cx, stack)) {
     fputs("(Unable to print stack trace)\n", fp);
