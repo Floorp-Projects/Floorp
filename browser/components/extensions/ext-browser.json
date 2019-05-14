@@ -35,7 +35,7 @@
   "chrome_settings_overrides": {
     "url": "chrome://browser/content/parent/ext-chrome-settings-overrides.js",
     "scopes": [],
-    "events": ["update", "uninstall"],
+    "events": ["update", "uninstall", "disable"],
     "schema": "chrome://browser/content/schemas/chrome_settings_overrides.json",
     "manifest": ["chrome_settings_overrides"]
   },
@@ -175,6 +175,7 @@
     "url": "chrome://browser/content/parent/ext-sidebarAction.js",
     "schema": "chrome://browser/content/schemas/sidebar_action.json",
     "scopes": ["addon_parent"],
+    "events": ["uninstall"],
     "manifest": ["sidebar_action"],
     "paths": [
       ["sidebarAction"]
@@ -193,7 +194,7 @@
     "url": "chrome://browser/content/parent/ext-url-overrides.js",
     "schema": "chrome://browser/content/schemas/url_overrides.json",
     "scopes": ["addon_parent"],
-    "events": ["uninstall"],
+    "events": ["update", "uninstall", "disable"],
     "manifest": ["chrome_url_overrides"],
     "paths": [
       ["urlOverrides"]

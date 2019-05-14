@@ -356,7 +356,7 @@ this.devtools = class extends ExtensionAPI {
     DevToolsShim.on("toolbox-destroy", this.onToolboxDestroy);
   }
 
-  onShutdown(reason) {
+  onShutdown() {
     DevToolsShim.off("toolbox-created", this.onToolboxCreated);
     DevToolsShim.off("toolbox-destroy", this.onToolboxDestroy);
 

@@ -16,8 +16,8 @@ XPCOMUtils.defineLazyGetter(this, "l10nStrings", function() {
 let l10nManifest;
 
 this.l10n = class extends ExtensionAPI {
-  onShutdown(reason) {
-    if (reason !== "APP_SHUTDOWN" && l10nManifest) {
+  onShutdown(isAppShutdown) {
+    if (!isAppShutdown && l10nManifest) {
       Components.manager.removeBootstrappedManifestLocation(l10nManifest);
     }
   }
