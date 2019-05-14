@@ -14492,6 +14492,14 @@
     ],
     "description": "The common combinations of BFCacheStatus when we determine whether the page can be BFCached or not; If it uses BFCache, we record BFCache_Success; If it's not and it falls under common failure reasons combinations, we record the corresponding combination; Otherwise, we record Other to indicate this is not a common failure"
   },
+  "BFCACHE_PAGE_RESTORED": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["sefeng@mozilla.com"],
+    "bug_numbers": [1531917],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether bfcache is used when loading a page from session history"
+  },
   "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["mozilla-telemetry@upsuper.org", "botond@mozilla.com"],
