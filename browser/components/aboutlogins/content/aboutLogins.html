@@ -15,10 +15,13 @@
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
     <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" type="text/css" href="chrome://browser/content/aboutlogins/aboutLogins.css">
   </head>
   <body>
-    <login-filter data-l10n-id="login-filter"
-                  data-l10n-attrs="placeholder"></login-filter>
+    <header>
+      <login-filter data-l10n-id="login-filter"
+                    data-l10n-attrs="placeholder"></login-filter>
+    </header>
     <login-list data-l10n-id="login-list"
                 data-l10n-attrs="login-list-header"></login-list>
     <login-item data-l10n-id="login-item"
