@@ -296,13 +296,9 @@ ContentPrefService2.prototype = {
 
   getCachedBySubdomainAndName: function CPS2_getCachedBySubdomainAndName(group,
                                                                          name,
-                                                                         context,
-                                                                         len) {
+                                                                         context) {
     checkGroupArg(group);
-    let prefs = this._getCached(group, name, true, context);
-    if (len)
-      len.value = prefs.length;
-    return prefs;
+    return this._getCached(group, name, true, context);
   },
 
   getCachedGlobal: function CPS2_getCachedGlobal(name, context) {
