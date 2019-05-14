@@ -69,6 +69,13 @@ else:
         'service',
     ]
 
+# Only target x64 for vrhost
+if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG['HAVE_64BIT_BUILD']:
+        DIRS += [
+            'vrhost'
+        ]
+
 IPDL_SOURCES = [
     'ipc/PVR.ipdl',
     'ipc/PVRGPU.ipdl',
