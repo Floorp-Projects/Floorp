@@ -12,7 +12,14 @@ body {
 }
 
 header {
+  display: flex;
   grid-area: header;
+  background-color: var(--in-content-box-background);
+}
+
+login-filter {
+  flex: auto;
+  align-self: center;
 }
 
 login-list {
