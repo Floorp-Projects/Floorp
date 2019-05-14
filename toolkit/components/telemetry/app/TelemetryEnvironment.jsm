@@ -828,7 +828,7 @@ EnvironmentAddonBuilder.prototype = {
       }];
     }
     let pluginTags =
-      Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost).getPluginTags({});
+      Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost).getPluginTags();
 
     let activePlugins = [];
     for (let tag of pluginTags) {
