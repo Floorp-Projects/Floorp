@@ -1203,7 +1203,6 @@
                      type="menu"
                      label="&bookmarksMenuButton2.label;"
                      tooltip="dynamic-shortcut-tooltip"
-                     anchor="dropmarker"
                      ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
                      ondragover="PlacesMenuDNDHandler.onDragOver(event);"
                      ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
