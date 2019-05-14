@@ -557,7 +557,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._parentClosed ? null : undefined;
   },
 
-  _makeOnEnterFrame: function({ pauseAndRespond }) {
+  _makeOnEnterFrame: function({ thread, pauseAndRespond }) {
     return frame => {
       const { generatedSourceActor } = this.sources.getFrameLocation(frame);
 
@@ -566,7 +566,27 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         return undefined;
       }
 
-      return pauseAndRespond(frame);
+      // If the initial frame offset is a step target, we are done.
+      if (frame.script.getOffsetMetadata(frame.offset).isStepStart) {
+        return pauseAndRespond(frame);
+      }
+
+      // Continue forward until we get to a valid step target.
+      const { onStep, onPop } = thread._makeSteppingHooks(
+        null, "next", false, null
+      );
+
+      if (thread.dbg.replaying) {
+        const offsets =
+          thread._findReplayingStepOffsets(null, frame,
+                                           /* rewinding = */ false);
+        frame.setReplayingOnStep(onStep, offsets);
+      } else {
+        frame.onStep = onStep;
+      }
+
+      frame.onPop = onPop;
+      return undefined;
     };
   },
 
@@ -646,7 +666,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     const generatedLocation = this.sources.getScriptOffsetLocation(script, offset);
 
-    if (startLocation.generatedUrl !== generatedLocation.generatedUrl) {
+    if (!startLocation || startLocation.generatedUrl !== generatedLocation.generatedUrl) {
       return true;
     }
 
@@ -675,12 +695,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _makeOnStep: function({ thread, pauseAndRespond, startFrame,
                           startLocation, steppingType, completion, rewinding }) {
-    // Breaking in place: we should always pause.
-    if (steppingType === "break") {
-      return () => pauseAndRespond(this);
-    }
-
-    // Otherwise take what a "step" means into consideration.
     return function() {
       // onStep is called with 'this' set to the current frame.
 
