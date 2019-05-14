@@ -210,7 +210,10 @@ describe("shouldLoadItemIndexedProperties", () => {
         value: gripStubs.get("testProxy")
       }
     });
-    const [targetNode] = getChildren({ item: proxyNode });
+    const loadedProperties = new Map([
+      [proxyNode.path, gripStubs.get("testProxySlots")]
+    ]);
+    const [targetNode] = getChildren({ item: proxyNode, loadedProperties });
     // Make sure we have the target node.
     expect(targetNode.name).toBe("<target>");
     expect(shouldLoadItemIndexedProperties(targetNode)).toBeTruthy();

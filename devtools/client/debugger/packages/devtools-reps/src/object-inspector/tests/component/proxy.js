@@ -6,7 +6,9 @@
 const { mountObjectInspector } = require("../test-utils");
 
 const { MODE } = require("../../../reps/constants");
-const stub = require("../../../reps/stubs/grip").get("testProxy");
+const gripStubs = require("../../../reps/stubs/grip");
+const stub = gripStubs.get("testProxy");
+const proxySlots = gripStubs.get("testProxySlots");
 const { formatObjectInspector } = require("../test-utils");
 
 const ObjectClient = require("../__mocks__/object-client");
@@ -32,11 +34,17 @@ function getEnumPropertiesMock() {
   }));
 }
 
+function getProxySlotsMock() {
+  return jest.fn(() => proxySlots);
+}
+
 function mount(props, { initialState } = {}) {
   const enumProperties = getEnumPropertiesMock();
+  const getProxySlots = getProxySlotsMock();
 
   const client = {
-    createObjectClient: grip => ObjectClient(grip, { enumProperties })
+    createObjectClient: grip =>
+      ObjectClient(grip, { enumProperties, getProxySlots })
   };
 
   const obj = mountObjectInspector({
@@ -45,19 +53,19 @@ function mount(props, { initialState } = {}) {
     initialState
   });
 
-  return { ...obj, enumProperties };
+  return { ...obj, enumProperties, getProxySlots };
 }
 
 describe("ObjectInspector - Proxy", () => {
   it("renders Proxy as expected", () => {
-    const { wrapper, enumProperties } = mount(
+    const { wrapper, enumProperties, getProxySlots } = mount(
       {},
       {
         initialState: {
           objectInspector: {
             // Have the prototype already loaded so the component does not call
             // enumProperties for the root's properties.
-            loadedProperties: new Map([["root", { prototype: {} }]]),
+            loadedProperties: new Map([["root", proxySlots]]),
             evaluations: new Map()
           }
         }
@@ -68,6 +76,9 @@ describe("ObjectInspector - Proxy", () => {
 
     // enumProperties should not have been called.
     expect(enumProperties.mock.calls).toHaveLength(0);
+
+    // getProxySlots should not have been called.
+    expect(getProxySlots.mock.calls).toHaveLength(0);
   });
 
   it("calls enumProperties on <target> and <handler> clicks", () => {
@@ -78,7 +89,7 @@ describe("ObjectInspector - Proxy", () => {
           objectInspector: {
             // Have the prototype already loaded so the component does not call
             // enumProperties for the root's properties.
-            loadedProperties: new Map([["root", { prototype: {} }]]),
+            loadedProperties: new Map([["root", proxySlots]]),
             evaluations: new Map()
           }
         }
