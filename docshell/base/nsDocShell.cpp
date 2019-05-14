@@ -385,7 +385,8 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
       mHasLoadedNonBlankURI(false),
       mBlankTiming(false),
       mTitleValidForCurrentURI(false),
-      mIsFrame(false) {
+      mIsFrame(false),
+      mSkipBrowsingContextDetachOnDestroy(false) {
   mHistoryID.m0 = 0;
   mHistoryID.m1 = 0;
   mHistoryID.m2 = 0;
@@ -5036,7 +5037,11 @@ nsDocShell::Destroy() {
     mSessionHistory = nullptr;
   }
 
-  mBrowsingContext->Detach();
+  // This will be skipped in cases where we want to preserve the browsing
+  // context between loads.
+  if (!mSkipBrowsingContextDetachOnDestroy) {
+    mBrowsingContext->Detach();
+  }
 
   SetTreeOwner(nullptr);
 
@@ -12905,10 +12910,8 @@ nsresult nsDocShell::CharsetChangeStopDocumentLoad() {
   return NS_ERROR_DOCSHELL_REQUEST_REJECTED;
 }
 
-NS_IMETHODIMP
-nsDocShell::SetIsPrinting(bool aIsPrinting) {
+void nsDocShell::SetIsPrinting(bool aIsPrinting) {
   mIsPrintingOrPP = aIsPrinting;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
