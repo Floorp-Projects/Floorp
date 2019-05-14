@@ -191,14 +191,11 @@ interface nsIContentPrefService2 : nsISupports
    * @param domain   The preferences' domain.
    * @param name     The preferences' name.
    * @param context  The private-browsing context, if any.
-   * @param len      The length of the returned array.
-   * @param prefs    The array of preferences.
+   * @return         The array of preferences.
    */
-  void getCachedBySubdomainAndName(in AString domain,
-                                   in AString name,
-                                   in nsILoadContext context,
-                                   [optional] out unsigned long len,
-                                   [retval,array,size_is(len)] out nsIContentPref prefs);
+  Array<nsIContentPref> getCachedBySubdomainAndName(in AString domain,
+                                                    in AString name,
+                                                    in nsILoadContext context);
 
   /**
    * Synchronously retrieves from the in-memory cache the preference with no
