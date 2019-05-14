@@ -24,8 +24,8 @@ class PartitionedLocalStorage final : public Storage {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PartitionedLocalStorage, Storage)
 
-  PartitionedLocalStorage(nsPIDOMWindowInner* aWindow,
-                          nsIPrincipal* aPrincipal);
+  PartitionedLocalStorage(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
+                          nsIPrincipal* aStoragePrincipal);
 
   StorageType Type() const override { return ePartitionedLocalStorage; }
 

@@ -18,6 +18,7 @@ use std::fmt::Write;
 use std::iter;
 use std::os::raw::c_void;
 use std::ptr;
+use style::profiler_label;
 use style::applicable_declarations::ApplicableDeclarationBlock;
 use style::author_styles::AuthorStyles;
 use style::context::ThreadLocalStyleContext;
@@ -1411,6 +1412,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
 
     if let Some(thread_pool) = STYLE_THREAD_POOL.style_thread_pool.as_ref() {
         thread_pool.spawn(|| {
+            profiler_label!(Parse);
             async_parser.parse();
         });
     } else {
