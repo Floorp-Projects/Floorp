@@ -248,16 +248,13 @@ this.LoginManagerStorage_json.prototype = {
   /**
    * @return {nsILoginInfo[]}
    */
-  getAllLogins(count) {
+  getAllLogins() {
     let [logins, ids] = this._searchLogins({});
 
     // decrypt entries for caller.
     logins = this._decryptLogins(logins);
 
     this.log("_getAllLogins: returning", logins.length, "logins.");
-    if (count) {
-      count.value = logins.length;
-    } // needed for XPCOM
     return logins;
   },
 
