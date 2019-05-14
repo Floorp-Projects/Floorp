@@ -183,6 +183,7 @@ class FunctionCompiler {
           ins = MConstant::New(alloc(), DoubleValue(0.0), MIRType::Double);
           break;
         case ValType::Ref:
+        case ValType::FuncRef:
         case ValType::AnyRef:
           ins = MWasmNullConstant::New(alloc());
           break;
@@ -680,66 +681,6 @@ class FunctionCompiler {
     return ins;
   }
 
-  bool checkI32NegativeMeansFailedResult(MDefinition* value) {
-    if (inDeadCode()) {
-      return true;
-    }
-
-    auto* zero = constant(Int32Value(0), MIRType::Int32);
-    auto* cond = compare(value, zero, JSOP_LT, MCompare::Compare_Int32);
-
-    MBasicBlock* failBlock;
-    if (!newBlock(curBlock_, &failBlock)) {
-      return false;
-    }
-
-    MBasicBlock* okBlock;
-    if (!newBlock(curBlock_, &okBlock)) {
-      return false;
-    }
-
-    curBlock_->end(MTest::New(alloc(), cond, failBlock, okBlock));
-    failBlock->end(
-        MWasmTrap::New(alloc(), wasm::Trap::ThrowReported, bytecodeOffset()));
-    curBlock_ = okBlock;
-    return true;
-  }
-
-  bool checkPointerNullMeansFailedResult(MDefinition* value) {
-    if (inDeadCode()) {
-      return true;
-    }
-
-    auto* cond = MIsNullPointer::New(alloc(), value);
-    curBlock_->add(cond);
-
-    MBasicBlock* failBlock;
-    if (!newBlock(curBlock_, &failBlock)) {
-      return false;
-    }
-
-    MBasicBlock* okBlock;
-    if (!newBlock(curBlock_, &okBlock)) {
-      return false;
-    }
-
-    curBlock_->end(MTest::New(alloc(), cond, failBlock, okBlock));
-    failBlock->end(
-        MWasmTrap::New(alloc(), wasm::Trap::ThrowReported, bytecodeOffset()));
-    curBlock_ = okBlock;
-    return true;
-  }
-
-  MDefinition* derefTableElementPointer(MDefinition* base) {
-    // Table element storage may be moved by GC operations, so reads from that
-    // storage are not movable.
-    MWasmLoadRef* load =
-        MWasmLoadRef::New(alloc(), base, AliasSet::WasmTableElement,
-                          /*isMovable=*/false);
-    curBlock_->add(load);
-    return load;
-  }
-
   MDefinition* load(MDefinition* base, MemoryAccessDesc* access,
                     ValType result) {
     if (inDeadCode()) {
@@ -1157,6 +1098,8 @@ class FunctionCompiler {
       return true;
     }
 
+    MOZ_ASSERT(builtin.failureMode == FailureMode::Infallible);
+
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto callee = CalleeDesc::builtin(builtin.identity);
     auto* ins =
@@ -1174,22 +1117,27 @@ class FunctionCompiler {
   bool builtinInstanceMethodCall(const SymbolicAddressSignature& builtin,
                                  uint32_t lineOrBytecode,
                                  const CallCompileState& call,
-                                 MDefinition** def) {
+                                 MDefinition** def = nullptr) {
+    MOZ_ASSERT_IF(!def, builtin.retType == MIRType::None);
     if (inDeadCode()) {
-      *def = nullptr;
+      if (def) {
+        *def = nullptr;
+      }
       return true;
     }
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto* ins = MWasmCall::NewBuiltinInstanceMethodCall(
-        alloc(), desc, builtin.identity, call.instanceArg_, call.regArgs_,
-        builtin.retType, StackArgAreaSizeUnaligned(builtin));
+        alloc(), desc, builtin.identity, builtin.failureMode, call.instanceArg_,
+        call.regArgs_, builtin.retType, StackArgAreaSizeUnaligned(builtin));
     if (!ins) {
       return false;
     }
 
     curBlock_->add(ins);
-    *def = ins;
+    if (def) {
+      *def = ins;
+    }
     return true;
   }
 
@@ -2183,8 +2131,9 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
     case ValType::F64:
       result = f.constant(value.f64());
       break;
+    case ValType::FuncRef:
     case ValType::AnyRef:
-      MOZ_ASSERT(value.anyref().isNull());
+      MOZ_ASSERT(value.ref().isNull());
       result = f.nullRefConstant();
       break;
     default:
@@ -2223,8 +2172,7 @@ static bool EmitSetGlobal(FunctionCompiler& f) {
       return false;
     }
     f.finishCall(&args);
-    MDefinition* ret;
-    if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
+    if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args)) {
       return false;
     }
   }
@@ -2848,10 +2796,6 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
     return false;
   }
 
-  if (!f.checkI32NegativeMeansFailedResult(ret)) {
-    return false;
-  }
-
   f.iter().setResult(ret);
   return true;
 }
@@ -2892,10 +2836,6 @@ static bool EmitWake(FunctionCompiler& f) {
 
   MDefinition* ret;
   if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
-    return false;
-  }
-
-  if (!f.checkI32NegativeMeansFailedResult(ret)) {
     return false;
   }
 
@@ -2974,16 +2914,7 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
     return false;
   }
 
-  MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
-    return false;
-  }
-
-  if (!f.checkI32NegativeMeansFailedResult(ret)) {
-    return false;
-  }
-
-  return true;
+  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
 
 static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
@@ -3015,16 +2946,7 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
     return false;
   }
 
-  MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
-    return false;
-  }
-
-  if (!f.checkI32NegativeMeansFailedResult(ret)) {
-    return false;
-  }
-
-  return true;
+  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
 
 static bool EmitMemFill(FunctionCompiler& f) {
@@ -3059,16 +2981,7 @@ static bool EmitMemFill(FunctionCompiler& f) {
     return false;
   }
 
-  MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
-    return false;
-  }
-
-  if (!f.checkI32NegativeMeansFailedResult(ret)) {
-    return false;
-  }
-
-  return true;
+  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
 
 static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
@@ -3120,16 +3033,7 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
     return false;
   }
 
-  MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
-    return false;
-  }
-
-  if (!f.checkI32NegativeMeansFailedResult(ret)) {
-    return false;
-  }
-
-  return true;
+  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
 #endif  // ENABLE_WASM_BULKMEM_OPS
 
@@ -3179,16 +3083,7 @@ static bool EmitTableFill(FunctionCompiler& f) {
     return false;
   }
 
-  MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
-    return false;
-  }
-
-  if (!f.checkI32NegativeMeansFailedResult(ret)) {
-    return false;
-  }
-
-  return true;
+  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
 
 static bool EmitTableGet(FunctionCompiler& f) {
@@ -3229,16 +3124,8 @@ static bool EmitTableGet(FunctionCompiler& f) {
 
   // The return value here is either null, denoting an error, or a short-lived
   // pointer to a location containing a possibly-null ref.
-  MDefinition* result;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &result)) {
-    return false;
-  }
-  if (!f.checkPointerNullMeansFailedResult(result)) {
-    return false;
-  }
-
-  MDefinition* ret = f.derefTableElementPointer(result);
-  if (!ret) {
+  MDefinition* ret;
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
     return false;
   }
 
@@ -3337,14 +3224,7 @@ static bool EmitTableSet(FunctionCompiler& f) {
     return false;
   }
 
-  MDefinition* ret;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
-    return false;
-  }
-  if (!f.checkI32NegativeMeansFailedResult(ret)) {
-    return false;
-  }
-  return true;
+  return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
 
 static bool EmitTableSize(FunctionCompiler& f) {
