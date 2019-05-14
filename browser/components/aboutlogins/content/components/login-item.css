@@ -24,8 +24,24 @@
   flex: auto;
 }
 
+.detail-row {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.detail-row > label {
+  flex: auto;
+}
+
+.detail-row > button {
+  align-self: end;
+}
+
 .field-label {
   display: block;
+  font-size: smaller;
+  opacity: .7;
+  margin-bottom: 5px;
 }
 
 .meta-info {
