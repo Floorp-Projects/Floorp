@@ -399,7 +399,7 @@ void Assembler::hint(Instruction* at, SystemHint code) {
 
 
 void Assembler::svc(Instruction* at, int code) {
-  VIXL_ASSERT(is_uint16(code));
+  VIXL_ASSERT(IsUint16(code));
   Emit(at, SVC | ImmException(code));
 }
 
@@ -424,7 +424,7 @@ BufferOffset Assembler::Logical(const Register& rd, const Register& rn,
 
     VIXL_ASSERT(immediate != 0);
     VIXL_ASSERT(immediate != -1);
-    VIXL_ASSERT(rd.Is64Bits() || is_uint32(immediate));
+    VIXL_ASSERT(rd.Is64Bits() || IsUint32(immediate));
 
     // If the operation is NOT, invert the operation and immediate.
     if ((op & NOT) == NOT) {
@@ -463,7 +463,7 @@ BufferOffset Assembler::DataProcShiftedRegister(const Register& rd, const Regist
                                                 const Operand& operand, FlagsUpdate S, Instr op)
 {
   VIXL_ASSERT(operand.IsShiftedRegister());
-  VIXL_ASSERT(rn.Is64Bits() || (rn.Is32Bits() && is_uint5(operand.shift_amount())));
+  VIXL_ASSERT(rn.Is64Bits() || (rn.Is32Bits() && IsUint5(operand.shift_amount())));
   return Emit(SF(rd) | op | Flags(S) |
               ShiftDP(operand.shift()) | ImmDPShift(operand.shift_amount()) |
               Rm(operand.reg()) | Rn(rn) | Rd(rd));
@@ -685,7 +685,7 @@ void MozBaseAssembler::RetargetNearBranch(Instruction* i, int byteOffset, bool f
     VIXL_ASSERT(byteOffset % kInstructionSize == 0);
     // Opposite of ImmTestBranchBit(): MSB in bit 5, 0:5 at bit 40.
     unsigned bit_pos = (i->ImmTestBranchBit5() << 5) | (i->ImmTestBranchBit40());
-    VIXL_ASSERT(is_uint6(bit_pos));
+    VIXL_ASSERT(IsUint6(bit_pos));
 
     // Register size doesn't matter for the encoding.
     Register rt = Register::XRegFromCode(i->Rt());
