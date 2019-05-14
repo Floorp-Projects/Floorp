@@ -6,3 +6,7 @@
 :host(:not([editing])) .unlocked-value {
   display: none;
 }
+
+:host(:not([type="password"])) .reveal-button {
+  display: none;
+}

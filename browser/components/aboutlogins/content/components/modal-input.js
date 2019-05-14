@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class ModalInput extends HTMLElement {
+/* globals ReflectedFluentElement */
+
+class ModalInput extends ReflectedFluentElement {
   static get LOCKED_PASSWORD_DISPLAY() {
     return "••••••••";
   }
@@ -24,13 +26,21 @@ class ModalInput extends HTMLElement {
       let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
       unlockedValue.setAttribute("type", "password");
     }
+
+    this.shadowRoot.querySelector(".reveal-button").addEventListener("click", this);
+  }
+
+  static get reflectedFluentIDs() {
+    return ["reveal-button"];
   }
 
   static get observedAttributes() {
-    return ["editing", "type", "value"];
+    return ["editing", "type", "value"].concat(ModalInput.reflectedFluentIDs);
   }
 
   attributeChangedCallback(attr, oldValue, newValue) {
+    super.attributeChangedCallback(attr, oldValue, newValue);
+
     if (!this.shadowRoot) {
       return;
     }
@@ -58,6 +68,27 @@ class ModalInput extends HTMLElement {
       }
       case "value": {
         this.value = newValue;
+        break;
+      }
+    }
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "click": {
+        if (event.target.classList.contains("reveal-button")) {
+          let lockedValue = this.shadowRoot.querySelector(".locked-value");
+          let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
+          let editing = this.hasAttribute("editing");
+          if ((editing && unlockedValue.getAttribute("type") == "password") ||
+              (!editing && lockedValue.textContent == this.constructor.LOCKED_PASSWORD_DISPLAY)) {
+            lockedValue.textContent = this.value;
+            unlockedValue.setAttribute("type", "text");
+          } else {
+            lockedValue.textContent = this.constructor.LOCKED_PASSWORD_DISPLAY;
+            unlockedValue.setAttribute("type", "password");
+          }
+        }
         break;
       }
     }
