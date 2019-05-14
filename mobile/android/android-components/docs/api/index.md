@@ -85,6 +85,7 @@
 | [mozilla.components.feature.readerview.view](mozilla.components.feature.readerview.view/index.md) |  |
 | [mozilla.components.feature.search](mozilla.components.feature.search/index.md) |  |
 | [mozilla.components.feature.session](mozilla.components.feature.session/index.md) |  |
+| [mozilla.components.feature.session.behavior](mozilla.components.feature.session.behavior/index.md) |  |
 | [mozilla.components.feature.session.bundling](mozilla.components.feature.session.bundling/index.md) |  |
 | [mozilla.components.feature.sitepermissions](mozilla.components.feature.sitepermissions/index.md) |  |
 | [mozilla.components.feature.sync](mozilla.components.feature.sync/index.md) |  |

@@ -14,3 +14,4 @@ The source of an [Icon](../index.md).
 | [DOWNLOAD](-d-o-w-n-l-o-a-d.md) | This icon was downloaded. |
 | [INLINE](-i-n-l-i-n-e.md) | This icon was inlined in the document. |
 | [MEMORY](-m-e-m-o-r-y.md) | This icon was loaded from an in-memory cache. |
+| [DISK](-d-i-s-k.md) | This icon was loaded from a disk cache. |

@@ -2,7 +2,7 @@
 
 # Result
 
-`sealed class Result` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/IconLoader.kt#L20)
+`sealed class Result` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/IconLoader.kt#L21)
 
 ### Types
 

@@ -2,7 +2,7 @@
 
 # MemoryIconProcessor
 
-`class MemoryIconProcessor : `[`IconProcessor`](../-icon-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/processor/MemoryIconProcessor.kt#L13)
+`class MemoryIconProcessor : `[`IconProcessor`](../-icon-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/processor/MemoryIconProcessor.kt#L14)
 
 An [IconProcessor](../-icon-processor/index.md) implementation that saves icons in the in-memory cache.
 
@@ -22,4 +22,4 @@ An [IconProcessor](../-icon-processor/index.md) implementation that saves icons 
 
 | Name | Summary |
 |---|---|
-| [process](process.md) | `fun process(request: `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md)`, resource: `[`Resource`](../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`?, icon: `[`Icon`](../../mozilla.components.browser.icons/-icon/index.md)`): `[`Icon`](../../mozilla.components.browser.icons/-icon/index.md) |
+| [process](process.md) | `fun process(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, request: `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md)`, resource: `[`Resource`](../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`?, icon: `[`Icon`](../../mozilla.components.browser.icons/-icon/index.md)`): `[`Icon`](../../mozilla.components.browser.icons/-icon/index.md) |

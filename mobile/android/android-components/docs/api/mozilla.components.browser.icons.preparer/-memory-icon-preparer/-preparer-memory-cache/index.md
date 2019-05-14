@@ -2,7 +2,7 @@
 
 # PreparerMemoryCache
 
-`interface PreparerMemoryCache` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/preparer/MemoryIconPreparer.kt#L16)
+`interface PreparerMemoryCache` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/preparer/MemoryIconPreparer.kt#L17)
 
 ### Functions
 

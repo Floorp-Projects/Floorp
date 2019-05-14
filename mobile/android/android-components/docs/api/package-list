@@ -77,6 +77,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$isEmail(kotlin.String)moz
 $dokka.location:mozilla.components.support.ktx.kotlin$isGeoLocation(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-geo-location.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isPhone(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-phone.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-url.md
+$dokka.location:mozilla.components.support.ktx.kotlin$sha1(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/sha1.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, android.graphics.BitmapFactory.Options)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, kotlin.Int, kotlin.Int, android.graphics.BitmapFactory.Options)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBundle(kotlin.collections.Map((mozilla.components.support.ktx.kotlin.toBundle.K, mozilla.components.support.ktx.kotlin.toBundle.V)))mozilla.components.support.ktx.kotlin/kotlin.collections.-map/to-bundle.md
@@ -165,6 +166,7 @@ mozilla.components.feature.readerview
 mozilla.components.feature.readerview.view
 mozilla.components.feature.search
 mozilla.components.feature.session
+mozilla.components.feature.session.behavior
 mozilla.components.feature.session.bundling
 mozilla.components.feature.sitepermissions
 mozilla.components.feature.sync

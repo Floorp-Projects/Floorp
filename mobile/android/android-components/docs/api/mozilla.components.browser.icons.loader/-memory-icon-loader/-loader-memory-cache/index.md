@@ -2,7 +2,7 @@
 
 # LoaderMemoryCache
 
-`interface LoaderMemoryCache` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/MemoryIconLoader.kt#L17)
+`interface LoaderMemoryCache` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/MemoryIconLoader.kt#L18)
 
 ### Functions
 

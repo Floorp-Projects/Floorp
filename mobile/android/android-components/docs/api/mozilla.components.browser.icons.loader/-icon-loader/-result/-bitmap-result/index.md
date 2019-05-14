@@ -2,7 +2,7 @@
 
 # BitmapResult
 
-`class BitmapResult : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/IconLoader.kt#L23)
+`class BitmapResult : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/IconLoader.kt#L24)
 
 ### Constructors
 
