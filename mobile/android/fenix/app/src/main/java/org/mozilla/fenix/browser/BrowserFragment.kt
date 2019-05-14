@@ -659,15 +659,17 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
 
     private fun showQuickSettingsDialog() {
         val session = requireNotNull(getSessionById())
-        val host = requireNotNull(session.url.toUri()?.host)
-
         launch {
-            val storage = requireContext().components.storage
-            val sitePermissions: SitePermissions? = storage.findSitePermissionsBy(host)
+            val host = session.url.toUri()?.host
+            val sitePermissions: SitePermissions? = host?.let {
+                val storage = requireContext().components.storage
+                storage.findSitePermissionsBy(it)
+            }
 
             launch(Main) {
                 view?.let {
                     val directions = BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
+                        sessionId = session.id,
                         url = session.url,
                         isSecured = session.securityInfo.secure,
                         isTrackingProtectionOn = session.trackerBlockingEnabled,

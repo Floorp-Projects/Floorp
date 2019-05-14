@@ -23,7 +23,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import mozilla.components.browser.session.Session
 import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.support.ktx.kotlin.toUri
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
@@ -43,6 +45,7 @@ private const val REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS = 4
 @SuppressWarnings("TooManyFunctions")
 class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineScope {
     private val safeArguments get() = requireNotNull(arguments)
+    private val sessionId: String by lazy { QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).sessionId }
     private val url: String by lazy { QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).url }
     private val isSecured: Boolean by lazy { QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).isSecured }
     private val isTrackingProtectionOn: Boolean by lazy {
@@ -68,6 +71,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
     ): View {
         sitePermissions = QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).sitePermissions
         val rootView = inflateRootView(container)
+        requireComponents.core.sessionManager.findSessionById(sessionId)?.register(sessionObserver, view = rootView)
         quickSettingsComponent = QuickSettingsComponent(
             rootView as NestedScrollView, this, ActionBusFactory.get(this),
             QuickSettingsState(
@@ -216,6 +220,53 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
         if (isVisible) {
             getManagedEmitter<QuickSettingsChange>()
                 .onNext(QuickSettingsChange.PromptRestarted(sitePermissions))
+        }
+    }
+
+    private val sessionObserver = object : Session.Observer {
+        override fun onUrlChanged(session: Session, url: String) {
+            super.onUrlChanged(session, url)
+            launch {
+                val host = session.url.toUri()?.host
+                val sitePermissions: SitePermissions? = host?.let {
+                    val storage = requireContext().components.storage
+                    storage.findSitePermissionsBy(it)
+                }
+                launch(Dispatchers.Main) {
+                    getManagedEmitter<QuickSettingsChange>().onNext(
+                        QuickSettingsChange.Change(
+                            url,
+                            session.securityInfo.secure,
+                            session.trackerBlockingEnabled,
+                            sitePermissions
+                        )
+                    )
+                }
+            }
+        }
+
+        override fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) {
+            super.onTrackerBlockingEnabledChanged(session, blockingEnabled)
+            getManagedEmitter<QuickSettingsChange>().onNext(
+                QuickSettingsChange.Change(
+                    session.url,
+                    session.securityInfo.secure,
+                    blockingEnabled,
+                    sitePermissions
+                )
+            )
+        }
+
+        override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {
+            super.onSecurityChanged(session, securityInfo)
+            getManagedEmitter<QuickSettingsChange>().onNext(
+                QuickSettingsChange.Change(
+                    session.url,
+                    securityInfo.secure,
+                    session.trackerBlockingEnabled,
+                    sitePermissions
+                )
+            )
         }
     }
 }

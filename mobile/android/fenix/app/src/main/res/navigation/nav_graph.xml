@@ -319,6 +319,9 @@
         android:name="org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment"
         android:label="QuickSettingsSheetDialogFragment" >
         <argument
+            android:name="sessionId"
+            app:argType="string" />
+        <argument
             android:name="url"
             app:argType="string" />
         <argument
