@@ -70,6 +70,20 @@ class Runtime extends ContentProcessDomain {
     return context.evaluate(request.expression);
   }
 
+  releaseObject({ objectId }) {
+    let context = null;
+    for (const ctx of this.contexts.values()) {
+      if (ctx.hasRemoteObject(objectId)) {
+        context = ctx;
+        break;
+      }
+    }
+    if (!context) {
+      throw new Error(`Unable to get execution context by ID: ${objectId}`);
+    }
+    context.releaseObject(objectId);
+  }
+
   callFunctionOn(request) {
     let context = null;
     // When an `objectId` is passed, we want to execute the function of a given object
