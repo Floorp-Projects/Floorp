@@ -15,9 +15,8 @@ const OLD_HOST = "http://mozilla.org";
 const NEW_HOST = "http://mozilla.com";
 
 function checkLoginExists(host, shouldExist) {
-  let count = {value: 0};
-  loginManager.findLogins(count, host, "", null);
-  equal(count.value, shouldExist ? 1 : 0, `Login was ${shouldExist ? "" : "not "} found.`);
+  let logins = loginManager.findLogins(host, "", null);
+  equal(logins.length, shouldExist ? 1 : 0, `Login was ${shouldExist ? "" : "not "} found.`);
 }
 
 function addLogin(host, timestamp) {
