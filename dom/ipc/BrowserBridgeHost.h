@@ -28,7 +28,8 @@ class BrowserBridgeHost : public RemoteBrowser {
 
   explicit BrowserBridgeHost(BrowserBridgeChild* aChild);
 
-  NS_INLINE_DECL_REFCOUNTING(BrowserBridgeHost, override);
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(BrowserBridgeHost)
 
   // Get the IPDL actor for the BrowserBridgeChild.
   BrowserBridgeChild* GetActor() { return mBridge; }

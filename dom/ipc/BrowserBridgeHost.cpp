@@ -9,6 +9,15 @@
 namespace mozilla {
 namespace dom {
 
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserBridgeHost)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION(BrowserBridgeHost)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(BrowserBridgeHost)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowserBridgeHost)
+
 BrowserBridgeHost::BrowserBridgeHost(BrowserBridgeChild* aChild)
     : mBridge(aChild) {}
 
