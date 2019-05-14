@@ -364,7 +364,7 @@ nsFrameLoader* nsFrameLoader::Create(Element* aOwner, BrowsingContext* aOpener,
 
 /* static */
 nsFrameLoader* nsFrameLoader::Create(
-    mozilla::dom::Element* aOwner,
+    mozilla::dom::Element* aOwner, BrowsingContext* aPreservedBrowsingContext,
     const mozilla::dom::RemotenessOptions& aOptions) {
   NS_ENSURE_TRUE(aOwner, nullptr);
   // This version of Create is only called for Remoteness updates, so we can
@@ -381,7 +381,12 @@ nsFrameLoader* nsFrameLoader::Create(
   if (hasOpener) {
     opener = aOptions.mOpener.Value().Value().get();
   }
-  RefPtr<BrowsingContext> context = CreateBrowsingContext(aOwner, opener);
+  RefPtr<BrowsingContext> context;
+  if (aPreservedBrowsingContext) {
+    context = aPreservedBrowsingContext;
+  } else {
+    context = CreateBrowsingContext(aOwner, opener);
+  }
   NS_ENSURE_TRUE(context, nullptr);
   return new nsFrameLoader(aOwner, context, aOptions);
 }
@@ -3489,4 +3494,23 @@ JSObject* nsFrameLoader::WrapObject(JSContext* cx,
   JS::RootedObject result(cx);
   FrameLoader_Binding::Wrap(cx, this, this, aGivenProto, &result);
   return result;
+}
+
+void nsFrameLoader::SkipBrowsingContextDetach() {
+  if (IsRemoteFrame()) {
+    // OOP Browser - Go directly over Browser Parent
+    if (mBrowserParent) {
+      Unused << mBrowserParent->SendSkipBrowsingContextDetach();
+    }
+    // OOP IFrame - Through Browser Bridge Parent, set on browser child
+    else if (mBrowserBridgeChild) {
+      Unused << mBrowserBridgeChild->SendSkipBrowsingContextDetach();
+    }
+    return;
+  }
+
+  // In process
+  RefPtr<nsDocShell> docshell = GetDocShell();
+  MOZ_ASSERT(docshell);
+  docshell->SkipBrowsingContextDetach();
 }
