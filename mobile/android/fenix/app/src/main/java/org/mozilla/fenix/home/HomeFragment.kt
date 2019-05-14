@@ -170,14 +170,6 @@ class HomeFragment : Fragment(), CoroutineScope {
         // This can get called before onCreateView, before the component is defined
         view?.let {
             val state = sessionControlComponent.stateObservable.blockingFirst()
-            outState.putParcelableArrayList(
-                KEY_TABS,
-                ArrayList(state.tabs)
-            )
-            outState.putParcelableArrayList(
-                KEY_COLLECTIONS,
-                ArrayList(state.collections)
-            )
             val modeInt = if (state.mode is Mode.Private) 0 else 1
             outState.putInt(KEY_MODE, modeInt)
         }
@@ -186,20 +178,7 @@ class HomeFragment : Fragment(), CoroutineScope {
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
         if (savedInstanceState != null) {
-            getManagedEmitter<SessionControlChange>().onNext(
-                SessionControlChange.TabsChange(
-                    (savedInstanceState.getParcelableArrayList<Tab>(
-                        KEY_TABS
-                    ) ?: arrayListOf()).toList()
-                )
-            )
-            getManagedEmitter<SessionControlChange>().onNext(
-                SessionControlChange.CollectionsChange(
-                    (savedInstanceState.getParcelableArrayList<TabCollection>(
-                        KEY_COLLECTIONS
-                    ) ?: arrayListOf()).toList()
-                )
-            )
+            emitSessionChanges()
             val mode = if (savedInstanceState.getInt(KEY_MODE) == 0) Mode.Private else Mode.Normal
             getManagedEmitter<SessionControlChange>().onNext(
                 SessionControlChange.ModeChange(mode)
