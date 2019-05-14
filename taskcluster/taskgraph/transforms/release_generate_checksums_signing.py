@@ -61,7 +61,7 @@ def make_release_generate_checksums_signing_description(config, jobs):
                 get_artifact_path(dep_job, "SHA256SUMS"),
                 get_artifact_path(dep_job, "SHA512SUMS"),
             ],
-            "formats": ["autograph_gpg"]
+            "formats": ["gpg"]
         }]
 
         signing_cert_scope = get_signing_cert_scope(config)
@@ -75,6 +75,7 @@ def make_release_generate_checksums_signing_description(config, jobs):
                        'max-run-time': 3600},
             'scopes': [
                 signing_cert_scope,
+                add_scope_prefix(config, 'signing:format:gpg'),
             ],
             'dependencies': dependencies,
             'attributes': attributes,

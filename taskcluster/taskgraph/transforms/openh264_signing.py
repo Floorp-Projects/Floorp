@@ -64,7 +64,8 @@ def make_signing_description(config, jobs):
             scopes.append(add_scope_prefix(config, "signing:format:sha2signcode"))
             formats = ['sha2signcode']
         else:
-            formats = ['autograph_gpg']
+            scopes.append(add_scope_prefix(config, 'signing:format:gpg'))
+            formats = ['gpg']
 
         rev = attributes['openh264_rev']
         upstream_artifacts = [{
