@@ -71,7 +71,7 @@ mochitest:
             linux64-asan/opt: 10
             linux64-.*cov/opt: 10
             windows10-64-ccov/debug: 10
-            macosx64-ccov/debug: 10
+            macosx.*64-ccov/debug: 10
             default: 5
     e10s:
         by-test-platform:
@@ -121,14 +121,14 @@ mochitest-browser-chrome:
         by-test-platform:
             linux.*/debug: 16
             linux64-asan/opt: 16
-            macosx64/debug: 12
+            macosx.*64/debug: 12
             default: 7
     max-run-time:
         by-test-platform:
             linux64-.*cov/opt: 7200
             windows10-64-ccov/debug: 7200
             windows10-aarch64/*: 7200
-            macosx64-ccov/debug: 10800
+            macosx.*64-ccov/debug: 10800
             linux.*/debug: 5400
             default: 3600
     mozharness:
@@ -166,7 +166,7 @@ browser-screenshots:
             windows10-64(?:-pgo|-shippable)(?:-qr)?/opt: ['mozilla-central', 'integration']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central']
             linux64-(?:pgo|shippable)(?:-qr)?/opt: ['mozilla-central', 'integration']
-            macosx64-shippable/opt: ['mozilla-central', 'integration']
+            macosx.*64-shippable/opt: ['mozilla-central', 'integration']
             default: []
     max-run-time: 3600
     mozharness:
@@ -221,14 +221,14 @@ mochitest-devtools-chrome:
     max-run-time:
         by-test-platform:
             windows10-64-ccov/debug: 7200
-            macosx64-ccov/debug: 9000
+            macosx.*64-ccov/debug: 9000
             linux64-ccov/debug: 7200
             default: 5400
     chunks:
         by-test-platform:
             .*-ccov/debug: 16
             linux64/debug: 12
-            macosx64/debug: 8
+            macosx.*64/debug: 8
             .*-asan/opt: 8
             default: 5
     mozharness:
@@ -252,8 +252,8 @@ mochitest-devtools-webreplay:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            macosx64/opt: ['mozilla-central', 'try']
-            macosx64.*/opt: ['trunk', 'try']
+            macosx.*64/opt: ['mozilla-central', 'try']
+            macosx.*64.*/opt: ['trunk', 'try']
             default: []
 
 mochitest-gpu:
@@ -291,7 +291,7 @@ mochitest-media:
     max-run-time:
         by-test-platform:
             windows10-64-ccov/debug: 7200
-            macosx64-ccov/debug: 7200
+            macosx.*64-ccov/debug: 7200
             default: 5400
     run-on-projects:
         by-test-platform:
@@ -317,8 +317,8 @@ mochitest-media:
         by-test-platform:
             android-em-7.*: 1
             windows10-64.*: 1
-            macosx64.*/opt: 2
-            macosx64.*/debug: 4
+            macosx.*64.*/opt: 2
+            macosx.*64.*/debug: 4
             windows10-aarch64/.*: 2
             windows7-32-shippable/.*: 2
             linux64(-shippable|-devedition|-.*qr)/opt: 2
@@ -328,7 +328,7 @@ mochitest-media:
         chunked:
             by-test-platform:
                 android.*: false
-                macosx64.*: false
+                macosx.*64.*: false
                 windows10-64.*: false
                 default: true
     tier:
@@ -397,7 +397,7 @@ mochitest-webgl1-core:
     max-run-time:
         by-test-platform:
             windows.*: 5400
-            macosx64-ccov/debug: 7200
+            macosx.*64-ccov/debug: 7200
             default: 3600
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false

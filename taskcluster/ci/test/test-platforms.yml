@@ -276,13 +276,51 @@ windows10-64-shippable-qr/opt:
 ##
 # MacOS X platforms (matching /macosx.*/)
 
-macosx64/debug:
+# macosx1014-64-shippable/opt:
+#    build-platform: macosx64-shippable/opt
+#    test-sets:
+#        - macosx1014-64-tests
+#        - macosx64-talos
+#        - desktop-screenshot-capture
+#        - awsy
+#        - raptor-chromium
+#        - raptor-firefox
+#        - raptor-profiling
+#        - marionette-media-tests
+
+# macosx1014-64/debug:
+#    build-platform: macosx64-shippable/opt
+#    test-sets:
+#        - macosx1014-64-tests
+#        - marionette-media-tests
+
+# macosx1014-64-devedition/opt:
+#    build-platform: macosx64-devedition-nightly/opt
+#    test-sets:
+#        - macosx1014-64-tests
+
+# macosx1014-64-shippable-qr/opt:
+#    build-platform: macosx64-shippable/opt
+#    test-sets:
+#        - macosx1014-64-qr-tests
+
+# macosx1014-64-qr/debug:
+#    build-platform: macosx64/debug
+#    test-sets:
+#        - macosx1014-64-qr-tests
+
+# macosx1014-64-ccov/debug:
+#    build-platform: macosx64-ccov/debug
+#    test-sets:
+#        - macosx1014-64-tests
+
+macosx1010-64/debug:
     build-platform: macosx64/debug
     test-sets:
         - macosx64-tests
         - marionette-media-tests
 
-macosx64-shippable/opt:
+macosx1010-64-shippable/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
         - macosx64-talos
@@ -293,22 +331,23 @@ macosx64-shippable/opt:
         - raptor-firefox
         - raptor-profiling
         - marionette-media-tests
-macosx64-devedition/opt:
+
+macosx1010-64-devedition/opt:
     build-platform: macosx64-devedition-nightly/opt
     test-sets:
         - macosx64-tests
 
-macosx64-shippable-qr/opt:
+macosx1010-64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
         - macosx64-qr-tests
 
-macosx64-qr/debug:
+macosx1010-64-qr/debug:
     build-platform: macosx64/debug
     test-sets:
         - macosx64-qr-tests
 
-macosx64-ccov/debug:
+macosx1010-64-ccov/debug:
     build-platform: macosx64-ccov/debug
     test-sets:
         - macosx64-tests

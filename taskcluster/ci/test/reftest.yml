@@ -91,13 +91,13 @@ jsreftest:
             linux64-qr/debug: 5
             linux32/debug: 5
             linux64/debug: 5
-            macosx64-ccov/debug: 5
+            macosx.*64-ccov/debug: 5
             default: 3
     max-run-time:
         by-test-platform:
             android-em.*: 7200
             windows10-64-ccov/debug: 7200
-            macosx64-ccov/debug: 7200
+            macosx.*64-ccov/debug: 7200
             default: 3600
     tier:
         by-test-platform:
@@ -118,9 +118,9 @@ reftest:
             android-em-4.*: 28
             android-em-7.*: 5
             linux64(-shippable|-devedition|-qr)?/opt: 5
-            macosx64.*/opt: 2
-            macosx64.*/debug: 3
-            macosx64-ccov/debug: 6
+            macosx101.*-64/opt: 2
+            macosx101.*-64/debug: 3
+            macosx.*64-ccov/debug: 6
             windows.*/opt: 2
             windows.*/debug: 4
             windows10-64-ccov/debug: 6
@@ -134,13 +134,13 @@ reftest:
             android-em.*: 7200
             windows10-64-ccov/debug: 5400
             windows10-64-asan/opt: 5400
-            macosx64-ccov/debug: 5400
+            macosx.*64-ccov/debug: 5400
             default: 3600
     mozharness:
         chunked:
             by-test-platform:
                 android-em.*: false
-                macosx64/opt: false
+                macosx.*64/opt: false
                 windows10-64.*/opt: false
                 default: true
     tier:
