@@ -1,78 +1,74 @@
-// Copyright 2018 Developers of the Rand project.
-// Copyright 2013 The Rust Project Developers.
+// Copyright 2013 The Rust Project Developers. See the COPYRIGHT
+// file at the top-level directory of this distribution and at
+// http://rust-lang.org/COPYRIGHT.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
 //! The exponential distribution.
 
-use {Rng};
-use distributions::{ziggurat_tables, Distribution};
-use distributions::utils::ziggurat;
+use {Rng, Rand};
+use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 
-/// Samples floating-point numbers according to the exponential distribution,
-/// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
-/// sampling with `-rng.gen::<f64>().ln()`, but faster.
+/// A wrapper around an `f64` to generate Exp(1) random numbers.
 ///
 /// See `Exp` for the general exponential distribution.
 ///
-/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method. The exact
-/// description in the paper was adjusted to use tables for the exponential
-/// distribution rather than normal.
+/// Implemented via the ZIGNOR variant[1] of the Ziggurat method. The
+/// exact description in the paper was adjusted to use tables for the
+/// exponential distribution rather than normal.
 ///
-/// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
-///       Generate Normal Random Samples*](
-///       https://www.doornik.com/research/ziggurat.pdf).
-///       Nuffield College, Oxford
+/// [1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
+/// Generate Normal Random
+/// Samples*](http://www.doornik.com/research/ziggurat.pdf). Nuffield
+/// College, Oxford
 ///
 /// # Example
-/// ```
-/// use rand::prelude::*;
-/// use rand::distributions::Exp1;
 ///
-/// let val: f64 = SmallRng::from_entropy().sample(Exp1);
-/// println!("{}", val);
+/// ```rust
+/// use rand::distributions::exponential::Exp1;
+///
+/// let Exp1(x) = rand::random();
+/// println!("{}", x);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Exp1;
+pub struct Exp1(pub f64);
 
 // This could be done via `-rng.gen::<f64>().ln()` but that is slower.
-impl Distribution<f64> for Exp1 {
+impl Rand for Exp1 {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+    fn rand<R:Rng>(rng: &mut R) -> Exp1 {
         #[inline]
         fn pdf(x: f64) -> f64 {
             (-x).exp()
         }
         #[inline]
-        fn zero_case<R: Rng + ?Sized>(rng: &mut R, _u: f64) -> f64 {
+        fn zero_case<R:Rng>(rng: &mut R, _u: f64) -> f64 {
             ziggurat_tables::ZIG_EXP_R - rng.gen::<f64>().ln()
         }
 
-        ziggurat(rng, false,
-                 &ziggurat_tables::ZIG_EXP_X,
-                 &ziggurat_tables::ZIG_EXP_F,
-                 pdf, zero_case)
+        Exp1(ziggurat(rng, false,
+                      &ziggurat_tables::ZIG_EXP_X,
+                      &ziggurat_tables::ZIG_EXP_F,
+                      pdf, zero_case))
     }
 }
 
 /// The exponential distribution `Exp(lambda)`.
 ///
-/// This distribution has density function: `f(x) = lambda * exp(-lambda * x)`
-/// for `x > 0`.
-/// 
-/// Note that [`Exp1`][crate::distributions::Exp1] is an optimised implementation for `lambda = 1`.
+/// This distribution has density function: `f(x) = lambda *
+/// exp(-lambda * x)` for `x > 0`.
 ///
 /// # Example
 ///
-/// ```
-/// use rand::distributions::{Exp, Distribution};
+/// ```rust
+/// use rand::distributions::{Exp, IndependentSample};
 ///
 /// let exp = Exp::new(2.0);
-/// let v = exp.sample(&mut rand::thread_rng());
+/// let v = exp.ind_sample(&mut rand::thread_rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -91,24 +87,28 @@ impl Exp {
     }
 }
 
-impl Distribution<f64> for Exp {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let n: f64 = rng.sample(Exp1);
+impl Sample<f64> for Exp {
+    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
+}
+impl IndependentSample<f64> for Exp {
+    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
+        let Exp1(n) = rng.gen::<Exp1>();
         n * self.lambda_inverse
     }
 }
 
 #[cfg(test)]
 mod test {
-    use distributions::Distribution;
+    use distributions::{Sample, IndependentSample};
     use super::Exp;
 
     #[test]
     fn test_exp() {
-        let exp = Exp::new(10.0);
-        let mut rng = ::test::rng(221);
+        let mut exp = Exp::new(10.0);
+        let mut rng = ::test::rng();
         for _ in 0..1000 {
             assert!(exp.sample(&mut rng) >= 0.0);
+            assert!(exp.ind_sample(&mut rng) >= 0.0);
         }
     }
     #[test]

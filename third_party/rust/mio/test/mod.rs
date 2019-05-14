@@ -45,6 +45,9 @@ mod test_tick;
 // platforms that were supported from before the features were deprecated
 #[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
 #[cfg(feature = "with-deprecated")]
+mod test_timer;
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))]
+#[cfg(feature = "with-deprecated")]
 mod test_battery;
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
