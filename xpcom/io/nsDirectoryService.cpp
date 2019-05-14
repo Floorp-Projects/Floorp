@@ -122,7 +122,7 @@ nsDirectoryService::Undefine(const char* aProp) {
 }
 
 NS_IMETHODIMP
-nsDirectoryService::GetKeys(uint32_t* aCount, char*** aKeys) {
+nsDirectoryService::GetKeys(nsTArray<nsCString>& aKeys) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
