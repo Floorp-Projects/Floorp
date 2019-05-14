@@ -289,10 +289,6 @@ class MacroAssemblerNone : public Assembler {
   void loadValue(T, S) {
     MOZ_CRASH();
   }
-  template <typename T, typename S>
-  void loadUnalignedValue(T, S) {
-    MOZ_CRASH();
-  }
   template <typename T>
   void pushValue(const T&) {
     MOZ_CRASH();

@@ -3050,6 +3050,9 @@ void MacroAssemblerARMCompat::loadValue(const BaseIndex& addr,
 }
 
 void MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val) {
+  Address payload = ToPayload(src);
+  Address type = ToType(src);
+
   // TODO: copy this code into a generic function that acts on all sequences
   // of memory accesses
   if (isValueDTRDCandidate(val)) {
@@ -3093,25 +3096,16 @@ void MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val) {
       return;
     }
   }
-
-  loadUnalignedValue(src, val);
-}
-
-void MacroAssemblerARMCompat::loadUnalignedValue(const Address& src,
-                                                 ValueOperand dest) {
-  Address payload = ToPayload(src);
-  Address type = ToType(src);
-
   // Ensure that loading the payload does not erase the pointer to the Value
   // in memory.
-  if (type.base != dest.payloadReg()) {
+  if (type.base != val.payloadReg()) {
     SecondScratchRegisterScope scratch2(asMasm());
-    ma_ldr(payload, dest.payloadReg(), scratch2);
-    ma_ldr(type, dest.typeReg(), scratch2);
+    ma_ldr(payload, val.payloadReg(), scratch2);
+    ma_ldr(type, val.typeReg(), scratch2);
   } else {
     SecondScratchRegisterScope scratch2(asMasm());
-    ma_ldr(type, dest.typeReg(), scratch2);
-    ma_ldr(payload, dest.payloadReg(), scratch2);
+    ma_ldr(type, val.typeReg(), scratch2);
+    ma_ldr(payload, val.payloadReg(), scratch2);
   }
 }
 
