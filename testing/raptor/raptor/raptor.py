@@ -1110,6 +1110,9 @@ class RaptorAndroid(Raptor):
         self.log.info('removing reverse socket connections')
         self.device.remove_socket_connections('reverse')
 
+        self.log.info("removing test folder for raptor: %s" % self.remote_test_root)
+        self.device.rm(self.remote_test_root, force=True, recursive=True)
+
         super(RaptorAndroid, self).clean_up()
 
 
