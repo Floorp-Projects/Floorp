@@ -9,6 +9,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';"/>
     <title data-l10n-id="about-logins-page-title"></title>
     <link rel="localization" href="browser/aboutLogins.ftl">
+    <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
@@ -16,6 +17,8 @@
     <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
   </head>
   <body>
+    <login-filter data-l10n-id="login-filter"
+                  data-l10n-attrs="placeholder"></login-filter>
     <login-list data-l10n-id="login-list"
                 data-l10n-attrs="login-list-header"></login-list>
     <login-item data-l10n-id="login-item"
@@ -64,6 +67,11 @@
       <p class="time-used meta-info"></p>
       <button class="save-changes-button"></button>
       <button class="cancel-button"></button>
+    </template>
+
+    <template id="login-filter-template">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-filter.css">
+      <input type="text"/>
     </template>
   </body>
 </html>
