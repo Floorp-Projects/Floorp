@@ -6005,6 +6005,8 @@ class nsDisplayRenderRoot : public nsDisplayWrapList {
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
  protected:
+  void ExpandDisplayListBuilderRenderRootRect(nsDisplayListBuilder* aBuilder);
+
   mozilla::wr::RenderRoot mRenderRoot;
   bool mBuiltWRCommands;
   mozilla::Maybe<mozilla::layers::RenderRootBoundary> mBoundary;
