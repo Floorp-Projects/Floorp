@@ -1456,6 +1456,7 @@ class DebuggerFrame : public NativeObject {
                                const FrameIter& iter,
                                HandleNativeObject debugger);
 
+  static MOZ_MUST_USE bool getScript(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool getArguments(JSContext* cx,
                                         HandleDebuggerFrame frame,
                                         MutableHandleDebuggerArguments result);
