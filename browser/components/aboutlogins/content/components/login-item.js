@@ -25,6 +25,7 @@ class LoginItem extends ReflectedFluentElement {
     for (let selector of [
       ".delete-button",
       ".edit-button",
+      ".open-site-button",
       ".save-changes-button",
       ".cancel-button",
     ]) {
@@ -44,6 +45,7 @@ class LoginItem extends ReflectedFluentElement {
       "edit-button",
       "hostname-label",
       "modal-input-reveal-button",
+      "open-site-button",
       "password-label",
       "save-changes-button",
       "time-created",
@@ -102,6 +104,13 @@ class LoginItem extends ReflectedFluentElement {
         }
         if (event.target.classList.contains("edit-button")) {
           this.toggleEditing();
+          return;
+        }
+        if (event.target.classList.contains("open-site-button")) {
+          document.dispatchEvent(new CustomEvent("AboutLoginsOpenSite", {
+            bubbles: true,
+            detail: this._login,
+          }));
           return;
         }
         if (event.target.classList.contains("save-changes-button")) {
