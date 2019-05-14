@@ -15,6 +15,7 @@ module.exports = {
   onViewSourceInStyleEditor: () => {},
   onViewSourceInScratchpad: () => {},
   openNetworkPanel: () => {},
+  resendNetworkRequest: () => {},
   sourceMapService: {
     subscribe: () => {},
     originalPositionFor: () => {

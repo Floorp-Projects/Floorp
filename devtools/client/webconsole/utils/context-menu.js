@@ -84,6 +84,17 @@ function createContextMenu(webConsoleUI, parentNode, {
     }));
   }
 
+  // Resend Network message.
+  if (serviceContainer.resendNetworkRequest && request) {
+    menu.append(new MenuItem({
+      id: "console-menu-resend-network-request",
+      label: l10n.getStr("webconsole.menu.resendNetworkRequest.label"),
+      accesskey: l10n.getStr("webconsole.menu.resendNetworkRequest.accesskey"),
+      visible: source === MESSAGE_SOURCE.NETWORK,
+      click: () => serviceContainer.resendNetworkRequest(message.messageId),
+    }));
+  }
+
   // Open URL in a new tab for a network request.
   menu.append(new MenuItem({
     id: "console-menu-open-url",
