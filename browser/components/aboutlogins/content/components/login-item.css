@@ -2,8 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-h2 {
+:host {
+  padding-top: 36px;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+.header {
+  display: flex;
   border-bottom: 1px solid var(--in-content-box-border-color);
+}
+
+.title {
+  margin-top: 0;
+  margin-bottom: 0;
+  flex: auto;
 }
 
 .field-label {
