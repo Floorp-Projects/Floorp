@@ -83,7 +83,7 @@ class SignalHandlerException(Exception):
 class Raptor(object):
     """Container class for Raptor"""
 
-    def __init__(self, app, binary, run_local=False, obj_path=None,
+    def __init__(self, app, binary, run_local=False, obj_path=None, profile_class=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, memory_test=False,
                  is_release_build=False, debug_mode=False, post_startup_delay=None,
@@ -121,7 +121,7 @@ class Raptor(object):
         self.gecko_profiler = None
         self.post_startup_delay = post_startup_delay
         self.device = None
-        self.profile_class = app
+        self.profile_class = profile_class or app
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
         self.interrupt_handler = interrupt_handler
 
@@ -138,6 +138,9 @@ class Raptor(object):
 
         # create results holder
         self.results_handler = RaptorResultsHandler()
+
+        self.create_browser_profile()
+        self.start_control_server()
 
     @property
     def profile_data_dir(self):
@@ -426,7 +429,9 @@ class Raptor(object):
 
 class RaptorDesktop(Raptor):
 
-    def create_browser_handler(self):
+    def __init__(self, *args, **kwargs):
+        super(RaptorDesktop, self).__init__(*args, **kwargs)
+
         # create the desktop browser runner
         self.log.info("creating browser runner using mozrunner")
         self.output_handler = OutputHandler()
@@ -635,14 +640,12 @@ class RaptorDesktopChrome(RaptorDesktop):
 class RaptorAndroid(Raptor):
 
     def __init__(self, app, binary, activity=None, intent=None, **kwargs):
-        super(RaptorAndroid, self).__init__(app, binary, **kwargs)
+        super(RaptorAndroid, self).__init__(app, binary, profile_class="firefox", **kwargs)
 
         self.config.update({
             'activity': activity,
             'intent': intent,
         })
-
-        self.profile_class = "firefox"
 
         self.remote_test_root = os.path.abspath(os.path.join(os.sep, 'sdcard', 'raptor'))
         self.remote_profile = os.path.join(self.remote_test_root, "profile")
@@ -651,41 +654,34 @@ class RaptorAndroid(Raptor):
         tcp_port = "tcp:{}".format(port)
         self.device.create_socket_connection('reverse', tcp_port, tcp_port)
 
-    def serve_benchmark_source(self, *args, **kwargs):
-        super(RaptorAndroid, self).serve_benchmark_source(*args, **kwargs)
-
-        # for Android we must make the benchmarks server available to the device
-        if self.config['host'] in ('localhost', '127.0.0.1'):
-            self.log.info("making the raptor benchmarks server port available to device")
-            self.set_reverse_port(self.benchmark_port)
-
-    def start_control_server(self):
-        super(RaptorAndroid, self).start_control_server()
-
-        # for Android we must make the control server available to the device
+    def set_reverse_ports(self, is_benchmark=False):
+        # Make services running on the host available to the device
         if self.config['host'] in ('localhost', '127.0.0.1'):
             self.log.info("making the raptor control server port available to device")
             self.set_reverse_port(self.control_server.port)
 
-    def start_playback(self, test):
-        super(RaptorAndroid, self).start_playback(test)
-
-        # for Android we must make the playback server available to the device
         if self.config['host'] in ('localhost', '127.0.0.1'):
             self.log.info("making the raptor playback server port available to device")
             self.set_reverse_port(8080)
 
-    def create_browser_handler(self):
-        # create the android device handler; it gets initiated and sets up adb etc
-        self.log.info("creating android device handler using mozdevice")
-        self.device = ADBDevice(verbose=True)
-        self.device.clear_logcat()
+        if is_benchmark and self.config['host'] in ('localhost', '127.0.0.1'):
+            self.log.info("making the raptor benchmarks server port available to device")
+            self.set_reverse_port(self.benchmark_port)
+
+    def setup_adb_device(self):
+        if self.device is None:
+            self.device = ADBDevice(verbose=True)
+            self.tune_performance()
+
+        self.log.info("creating remote root folder for raptor: %s" % self.remote_test_root)
+        self.device.rm(self.remote_test_root, force=True, recursive=True)
+        self.device.mkdir(self.remote_test_root)
+        self.device.chmod(self.remote_test_root, recursive=True, root=True)
 
         self.clear_app_data()
-        self.create_raptor_sdcard_folder()
 
     def tune_performance(self):
-        """Sets various performance-oriented parameters, to reduce jitter.
+        """Set various performance-oriented parameters, to reduce jitter.
 
         For more information, see https://bugzilla.mozilla.org/show_bug.cgi?id=1547135.
         """
@@ -873,12 +869,6 @@ class RaptorAndroid(Raptor):
             self.log.error("Unable to copy profile to device.")
             raise
 
-    def create_raptor_sdcard_folder(self):
-        self.log.info("creating test folder for raptor: %s" % self.remote_test_root)
-        self.device.rm(self.remote_test_root, force=True, recursive=True)
-        self.device.mkdir(self.remote_test_root)
-        self.device.chmod(self.remote_test_root, recursive=True, root=True)
-
     def turn_on_android_app_proxy(self):
         # for geckoview/android pageload playback we can't use a policy to turn on the
         # proxy; we need to set prefs instead; note that the 'host' may be different
@@ -953,6 +943,23 @@ class RaptorAndroid(Raptor):
                 shutil.copyfile(_source, _dest)
             else:
                 self.log.critical("unable to find ssl cert db file: %s" % _source)
+
+    def run_tests(self, tests, test_names):
+        self.setup_adb_device()
+
+        return super(RaptorAndroid, self).run_tests(tests, test_names)
+
+    def run_test_setup(self, test):
+        super(RaptorAndroid, self).run_test_setup(test)
+
+        is_benchmark = test.get('type') == "benchmark"
+        self.set_reverse_ports(is_benchmark=is_benchmark)
+
+    def run_test_teardown(self):
+        self.log.info('removing reverse socket connections')
+        self.device.remove_socket_connections('reverse')
+
+        super(RaptorAndroid, self).run_test_teardown()
 
     def run_test(self, test, timeout=None):
         # tests will be run warm (i.e. NO browser restart between page-cycles)
@@ -1120,9 +1127,6 @@ class RaptorAndroid(Raptor):
                 self.log.warning("unable to remove directory: %s" % dump_dir)
 
     def clean_up(self):
-        self.log.info('removing reverse socket connections')
-        self.device.remove_socket_connections('reverse')
-
         self.log.info("removing test folder for raptor: %s" % self.remote_test_root)
         self.device.rm(self.remote_test_root, force=True, recursive=True)
 
@@ -1180,13 +1184,6 @@ def main(args=sys.argv[1:]):
                           intent=args.intent,
                           interrupt_handler=SignalHandler(),
                           )
-
-    raptor.create_browser_profile()
-    raptor.create_browser_handler()
-    if type(raptor) == RaptorAndroid:
-        # only Raptor Android supports device performance tuning
-        raptor.tune_performance()
-    raptor.start_control_server()
 
     success = raptor.run_tests(raptor_test_list, raptor_test_names)
 
