@@ -7212,8 +7212,52 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
 
   // If the document does not want its presentation cached, then don't.
   RefPtr<Document> doc = mScriptGlobal->GetExtantDoc();
-  return doc && doc->CanSavePresentation(aNewRequest);
+
+  uint16_t bfCacheCombo = 0;
+  bool canSavePresentation =
+      doc->CanSavePresentation(aNewRequest, bfCacheCombo);
+  ReportBFCacheComboTelemetry(bfCacheCombo);
+
+  return doc && canSavePresentation;
 }
+
+void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
+  switch (aCombo) {
+    case BFCACHE_SUCCESS:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::BFCache_Success);
+      break;
+    case UNLOAD:
+      Telemetry::AccumulateCategorical(Telemetry::LABELS_BFCACHE_COMBO::Unload);
+      break;
+    case UNLOAD_REQUEST:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Unload_Req);
+      break;
+    case REQUEST:
+      Telemetry::AccumulateCategorical(Telemetry::LABELS_BFCACHE_COMBO::Req);
+      break;
+    case UNLOAD_REQUEST_PEER:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Unload_Req_Peer);
+      break;
+    case UNLOAD_REQUEST_PEER_MSE:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Unload_Req_Peer_MSE);
+      break;
+    case UNLOAD_REQUEST_MSE:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Unload_Req_MSE);
+      break;
+    case SUSPENDED_UNLOAD_REQUEST_PEER:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::SPD_Unload_Req_Peer);
+      break;
+    default:
+      Telemetry::AccumulateCategorical(Telemetry::LABELS_BFCACHE_COMBO::Other);
+      break;
+  }
+};
 
 void nsDocShell::ReattachEditorToWindow(nsISHEntry* aSHEntry) {
   MOZ_ASSERT(!mIsBeingDestroyed);
