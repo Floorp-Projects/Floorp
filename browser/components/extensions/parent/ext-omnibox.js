@@ -20,7 +20,7 @@ this.omnibox = class extends ExtensionAPI {
     }
   }
 
-  onShutdown(reason) {
+  onShutdown() {
     ExtensionSearchHandler.unregisterKeyword(this.keyword);
   }
 

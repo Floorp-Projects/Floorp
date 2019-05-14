@@ -255,6 +255,12 @@ static inline uint32_t UnpackTypeCodeIndex(PackedTypeCode ptc) {
   return uint32_t(ptc) >> 8;
 }
 
+static inline bool IsReferenceType(PackedTypeCode ptc) {
+  TypeCode tc = UnpackTypeCodeType(ptc);
+  return tc == TypeCode::Ref || tc == TypeCode::AnyRef ||
+         tc == TypeCode::FuncRef || tc == TypeCode::NullRef;
+}
+
 // The ExprType represents the type of a WebAssembly expression or return value
 // and may either be a ValType or void.
 //
@@ -275,6 +281,7 @@ class ExprType {
       case TypeCode::F32:
       case TypeCode::F64:
       case TypeCode::AnyRef:
+      case TypeCode::FuncRef:
       case TypeCode::NullRef:
       case TypeCode::Ref:
       case TypeCode::BlockVoid:
@@ -295,6 +302,7 @@ class ExprType {
     F32 = uint8_t(TypeCode::F32),
     F64 = uint8_t(TypeCode::F64),
     AnyRef = uint8_t(TypeCode::AnyRef),
+    FuncRef = uint8_t(TypeCode::FuncRef),
     NullRef = uint8_t(TypeCode::NullRef),
     Ref = uint8_t(TypeCode::Ref),
 
@@ -321,32 +329,23 @@ class ExprType {
   explicit inline ExprType(const ValType& t);
 
   PackedTypeCode packed() const { return tc_; }
-
   PackedTypeCode* packedPtr() { return &tc_; }
 
   Code code() const { return Code(UnpackTypeCodeType(tc_)); }
 
-  uint32_t refTypeIndex() const { return UnpackTypeCodeIndex(tc_); }
-
   bool isValid() const { return IsValid(tc_); }
 
+  uint32_t refTypeIndex() const { return UnpackTypeCodeIndex(tc_); }
   bool isRef() const { return UnpackTypeCodeType(tc_) == TypeCode::Ref; }
 
-  bool isReference() const {
-    TypeCode tc = UnpackTypeCodeType(tc_);
-    return tc == TypeCode::Ref || tc == TypeCode::AnyRef ||
-           tc == TypeCode::NullRef;
-  }
+  bool isReference() const { return IsReferenceType(tc_); }
 
   bool operator==(const ExprType& that) const { return tc_ == that.tc_; }
-
   bool operator!=(const ExprType& that) const { return tc_ != that.tc_; }
-
   bool operator==(Code that) const {
     MOZ_ASSERT(that != Code::Ref);
     return code() == that;
   }
-
   bool operator!=(Code that) const { return !(*this == that); }
 };
 
@@ -364,6 +363,7 @@ class ValType {
       case TypeCode::F32:
       case TypeCode::F64:
       case TypeCode::AnyRef:
+      case TypeCode::FuncRef:
       case TypeCode::NullRef:
       case TypeCode::Ref:
         return true;
@@ -381,6 +381,7 @@ class ValType {
     F64 = uint8_t(TypeCode::F64),
 
     AnyRef = uint8_t(TypeCode::AnyRef),
+    FuncRef = uint8_t(TypeCode::FuncRef),
     NullRef = uint8_t(TypeCode::NullRef),
     Ref = uint8_t(TypeCode::Ref),
   };
@@ -431,27 +432,19 @@ class ValType {
 
   Code code() const { return Code(UnpackTypeCodeType(tc_)); }
 
-  uint32_t refTypeIndex() const { return UnpackTypeCodeIndex(tc_); }
-
   bool isValid() const { return IsValid(tc_); }
 
+  uint32_t refTypeIndex() const { return UnpackTypeCodeIndex(tc_); }
   bool isRef() const { return UnpackTypeCodeType(tc_) == TypeCode::Ref; }
 
-  bool isReference() const {
-    TypeCode tc = UnpackTypeCodeType(tc_);
-    return tc == TypeCode::Ref || tc == TypeCode::AnyRef ||
-           tc == TypeCode::NullRef;
-  }
+  bool isReference() const { return IsReferenceType(tc_); }
 
   bool operator==(const ValType& that) const { return tc_ == that.tc_; }
-
   bool operator!=(const ValType& that) const { return tc_ != that.tc_; }
-
   bool operator==(Code that) const {
     MOZ_ASSERT(that != Code::Ref);
     return code() == that;
   }
-
   bool operator!=(Code that) const { return !(*this == that); }
 };
 
@@ -471,6 +464,7 @@ static inline unsigned SizeOf(ValType vt) {
     case ValType::F64:
       return 8;
     case ValType::AnyRef:
+    case ValType::FuncRef:
     case ValType::NullRef:
     case ValType::Ref:
       return sizeof(intptr_t);
@@ -490,6 +484,7 @@ static inline jit::MIRType ToMIRType(ValType vt) {
       return jit::MIRType::Double;
     case ValType::Ref:
     case ValType::AnyRef:
+    case ValType::FuncRef:
     case ValType::NullRef:
       return jit::MIRType::RefOrNull;
   }
@@ -527,6 +522,8 @@ static inline const char* ToCString(ExprType type) {
       return "f64";
     case ExprType::AnyRef:
       return "anyref";
+    case ExprType::FuncRef:
+      return "funcref";
     case ExprType::NullRef:
       return "nullref";
     case ExprType::Ref:
@@ -571,11 +568,16 @@ static inline const char* ToCString(ValType type) {
 class AnyRef {
   JSObject* value_;
 
+  explicit AnyRef() : value_((JSObject*)-1) {}
   explicit AnyRef(JSObject* p) : value_(p) {
     MOZ_ASSERT(((uintptr_t)p & 0x03) == 0);
   }
 
  public:
+  // An invalid AnyRef cannot arise naturally from wasm and so can be used as
+  // a sentinel value to indicate failure from an AnyRef-returning function.
+  static AnyRef invalid() { return AnyRef(); }
+
   // Given a void* that comes from compiled wasm code, turn it into AnyRef.
   static AnyRef fromCompiledCode(void* p) { return AnyRef((JSObject*)p); }
 
@@ -702,8 +704,7 @@ class LitVal {
     uint64_t i64_;
     float f32_;
     double f64_;
-    JSObject* ref_;  // Note, this breaks an abstraction boundary
-    AnyRef anyref_;
+    AnyRef ref_;
   } u;
 
  public:
@@ -715,17 +716,11 @@ class LitVal {
   explicit LitVal(float f32) : type_(ValType::F32) { u.f32_ = f32; }
   explicit LitVal(double f64) : type_(ValType::F64) { u.f64_ = f64; }
 
-  explicit LitVal(AnyRef any) : type_(ValType::AnyRef) {
+  explicit LitVal(ValType type, AnyRef any) : type_(type) {
+    MOZ_ASSERT(type.isReference());
     MOZ_ASSERT(any.isNull(),
                "use Val for non-nullptr ref types to get tracing");
-    u.anyref_ = any;
-  }
-
-  explicit LitVal(ValType refType, JSObject* ref) : type_(refType) {
-    MOZ_ASSERT(refType.isRef());
-    MOZ_ASSERT(ref == nullptr,
-               "use Val for non-nullptr ref types to get tracing");
-    u.ref_ = ref;
+    u.ref_ = any;
   }
 
   ValType type() const { return type_; }
@@ -747,13 +742,9 @@ class LitVal {
     MOZ_ASSERT(type_ == ValType::F64);
     return u.f64_;
   }
-  JSObject* ref() const {
-    MOZ_ASSERT(type_.isRef());
+  AnyRef ref() const {
+    MOZ_ASSERT(type_.isReference());
     return u.ref_;
-  }
-  AnyRef anyref() const {
-    MOZ_ASSERT(type_ == ValType::AnyRef);
-    return u.anyref_;
   }
 };
 
@@ -770,9 +761,9 @@ class MOZ_NON_PARAM Val : public LitVal {
   explicit Val(uint64_t i64) : LitVal(i64) {}
   explicit Val(float f32) : LitVal(f32) {}
   explicit Val(double f64) : LitVal(f64) {}
-  explicit Val(AnyRef val) : LitVal(AnyRef::null()) { u.anyref_ = val; }
-  explicit Val(ValType type, JSObject* obj) : LitVal(type, (JSObject*)nullptr) {
-    u.ref_ = obj;
+  explicit Val(ValType type, AnyRef val) : LitVal(type, AnyRef::null()) {
+    MOZ_ASSERT(type.isReference());
+    u.ref_ = val;
   }
   void trace(JSTracer* trc);
 };
@@ -1863,6 +1854,7 @@ enum class SymbolicAddress {
   CallImport_I32,
   CallImport_I64,
   CallImport_F64,
+  CallImport_FuncRef,
   CallImport_AnyRef,
   CoerceInPlace_ToInt32,
   CoerceInPlace_ToNumber,
@@ -1913,6 +1905,18 @@ enum class SymbolicAddress {
   Limit
 };
 
+// The FailureMode indicates whether, immediately after a call to a builtin
+// returns, the return value should be checked against an error condition
+// (and if so, which one) which signals that the C++ calle has already
+// reported an error and thus wasm needs to wasmTrap(Trap::ThrowReported).
+
+enum class FailureMode : uint8_t {
+  Infallible,
+  FailOnNegI32,
+  FailOnNullPtr,
+  FailOnInvalidRef
+};
+
 // SymbolicAddressSignature carries type information for a function referred
 // to by a SymbolicAddress.  In order that |argTypes| can be written out as a
 // static initialiser, it has to have fixed length.  At present
@@ -1928,6 +1932,8 @@ struct SymbolicAddressSignature {
   const SymbolicAddress identity;
   // The return type, or MIRType::None to denote 'void'.
   const jit::MIRType retType;
+  // The failure mode, which is checked by masm.wasmCallBuiltinInstanceMethod.
+  const FailureMode failureMode;
   // The number of arguments, 0 .. SymbolicAddressSignatureMaxArgs only.
   const uint8_t numArgs;
   // The argument types; SymbolicAddressSignatureMaxArgs + 1 guard, which
@@ -1966,10 +1972,13 @@ struct Limits {
 };
 
 // TableDesc describes a table as well as the offset of the table's base pointer
-// in global memory. Currently, wasm only has "any function" and asm.js only
-// "typed function".
+// in global memory. The TableKind determines the representation:
+//  - AnyRef: a wasm anyref word (wasm::AnyRef)
+//  - FuncRef: a two-word FunctionTableElem (wasm indirect call ABI)
+//  - AsmJS: a two-word FunctionTableElem (asm.js ABI)
+// Eventually there should be a single unified AnyRef representation.
 
-enum class TableKind { AnyFunction, AnyRef, TypedFunction };
+enum class TableKind { AnyRef, FuncRef, AsmJS };
 
 struct TableDesc {
   TableKind kind;
@@ -2106,8 +2115,8 @@ struct TableTls {
   void* functionBase;
 };
 
-// Table elements for TableKind::AnyFunctions carry both the code pointer and an
-// instance pointer.
+// Table element for TableKind::FuncRef which carries both the code pointer and
+// an instance pointer.
 
 struct FunctionTableElem {
   // The code to call when calling this element. The table ABI is the system

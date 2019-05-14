@@ -215,7 +215,7 @@ this.pageAction = class extends ExtensionAPI {
     pageActionMap.set(extension, pageAction);
   }
 
-  onShutdown(reason) {
+  onShutdown() {
     let {extension} = this;
 
     if (pageActionMap.has(extension)) {

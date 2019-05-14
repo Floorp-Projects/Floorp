@@ -78,10 +78,9 @@ Val::Val(const LitVal& val) {
       u.f64_ = val.f64();
       return;
     case ValType::Ref:
-      u.ref_ = val.ref();
-      return;
+    case ValType::FuncRef:
     case ValType::AnyRef:
-      u.anyref_ = val.anyref();
+      u.ref_ = val.ref();
       return;
     case ValType::NullRef:
       break;
@@ -90,16 +89,12 @@ Val::Val(const LitVal& val) {
 }
 
 void Val::trace(JSTracer* trc) {
-  if (type_.isValid()) {
-    if (type_.isRef() && u.ref_) {
-      TraceManuallyBarrieredEdge(trc, &u.ref_, "wasm ref/anyref global");
-    } else if (type_ == ValType::AnyRef && !u.anyref_.isNull()) {
-      // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-      // barrier is going to have to be more complicated.
-      ASSERT_ANYREF_IS_JSOBJECT;
-      TraceManuallyBarrieredEdge(trc, u.anyref_.asJSObjectAddress(),
-                                 "wasm ref/anyref global");
-    }
+  if (type_.isValid() && type_.isReference() && !u.ref_.isNull()) {
+    // TODO/AnyRef-boxing: With boxed immediates and strings, the write
+    // barrier is going to have to be more complicated.
+    ASSERT_ANYREF_IS_JSOBJECT;
+    TraceManuallyBarrieredEdge(trc, u.ref_.asJSObjectAddress(),
+                               "wasm reference-typed global");
   }
 }
 
@@ -273,6 +268,7 @@ static bool IsImmediateType(ValType vt) {
     case ValType::I64:
     case ValType::F32:
     case ValType::F64:
+    case ValType::FuncRef:
     case ValType::AnyRef:
       return true;
     case ValType::NullRef:
@@ -293,8 +289,10 @@ static unsigned EncodeImmediateType(ValType vt) {
       return 2;
     case ValType::F64:
       return 3;
-    case ValType::AnyRef:
+    case ValType::FuncRef:
       return 4;
+    case ValType::AnyRef:
+      return 5;
     case ValType::NullRef:
     case ValType::Ref:
       break;
@@ -724,6 +722,7 @@ void DebugFrame::updateReturnJSValue() {
     case ExprType::Ref:
       cachedReturnJSValue_ = ObjectOrNullValue((JSObject*)resultRef_);
       break;
+    case ExprType::FuncRef:
     case ExprType::AnyRef:
       cachedReturnJSValue_ = UnboxAnyRef(resultAnyRef_);
       break;
