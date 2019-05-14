@@ -12,17 +12,11 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
-import androidx.navigation.Navigation
+import androidx.navigation.fragment.NavHostFragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
 
-class PairInstructionsFragment : BottomSheetDialogFragment(), BackHandler {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        (activity as AppCompatActivity).title = getString(R.string.preferences_sync)
-    }
-
+class PairInstructionsFragment : BottomSheetDialogFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_pair_instructions, container, false)
     }
@@ -37,22 +31,20 @@ class PairInstructionsFragment : BottomSheetDialogFragment(), BackHandler {
         super.onViewCreated(view, savedInstanceState)
 
         val instructionsText = view.findViewById(R.id.pair_instructions_info) as TextView
-        instructionsText.setText(HtmlCompat.fromHtml(getString(R.string.pair_instructions),
-            HtmlCompat.FROM_HTML_MODE_LEGACY))
+        instructionsText.text = HtmlCompat.fromHtml(
+            getString(R.string.pair_instructions),
+            HtmlCompat.FROM_HTML_MODE_LEGACY
+        )
 
         val openCamera = view.findViewById(R.id.pair_open_camera) as Button
-        openCamera.setOnClickListener(View.OnClickListener {
+        openCamera.setOnClickListener {
             val directions = PairInstructionsFragmentDirections.actionPairInstructionsFragmentToPairFragment()
-            Navigation.findNavController(view!!).navigate(directions)
-        })
+            findNavController(this@PairInstructionsFragment).navigate(directions)
+        }
 
         val cancelCamera = view.findViewById(R.id.pair_cancel) as Button
-        cancelCamera.setOnClickListener(View.OnClickListener {
-            onBackPressed()
-        })
-    }
-
-    override fun onBackPressed(): Boolean {
-        return true
+        cancelCamera.setOnClickListener {
+            findNavController(this@PairInstructionsFragment).navigateUp()
+        }
     }
 }
