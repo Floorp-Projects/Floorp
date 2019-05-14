@@ -122,7 +122,7 @@ typedef FetchThreatListUpdatesRequest_ListUpdateRequest ListUpdateRequest;
 typedef FetchThreatListUpdatesRequest_ListUpdateRequest_Constraints Constraints;
 
 static void InitListUpdateRequest(ThreatType aThreatType,
-                                  const char* aStateBase64,
+                                  const nsCString& aStateBase64,
                                   ListUpdateRequest* aListUpdateRequest) {
   aListUpdateRequest->set_threat_type(aThreatType);
   PlatformType platform = GetPlatformType();
@@ -141,9 +141,9 @@ static void InitListUpdateRequest(ThreatType aThreatType,
   aListUpdateRequest->set_allocated_constraints(contraints);
 
   // Only set non-empty state.
-  if (aStateBase64[0] != '\0') {
+  if (!aStateBase64.IsEmpty()) {
     nsCString stateBinary;
-    nsresult rv = Base64Decode(nsDependentCString(aStateBase64), stateBinary);
+    nsresult rv = Base64Decode(aStateBase64, stateBinary);
     if (NS_SUCCEEDED(rv)) {
       aListUpdateRequest->set_state(stateBinary.get(), stateBinary.Length());
     }
@@ -392,19 +392,21 @@ nsUrlClassifierUtils::GetProtocolVersion(const nsACString& aProvider,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
-                                          const char** aStatesBase64,
-                                          uint32_t aCount,
-                                          nsACString& aRequest) {
+nsUrlClassifierUtils::MakeUpdateRequestV4(
+    const nsTArray<nsCString>& aListNames,
+    const nsTArray<nsCString>& aStatesBase64, nsACString& aRequest) {
   using namespace mozilla::safebrowsing;
+
+  if (aListNames.Length() != aStatesBase64.Length()) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   FetchThreatListUpdatesRequest r;
   r.set_allocated_client(CreateClientInfo());
 
-  for (uint32_t i = 0; i < aCount; i++) {
-    nsCString listName(aListNames[i]);
+  for (uint32_t i = 0; i < aListNames.Length(); i++) {
     uint32_t threatType;
-    nsresult rv = ConvertListNameToThreatType(listName, &threatType);
+    nsresult rv = ConvertListNameToThreatType(aListNames[i], &threatType);
     if (NS_FAILED(rv)) {
       continue;  // Unknown list name.
     }
@@ -412,7 +414,7 @@ nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
       NS_WARNING(
           nsPrintfCString(
               "Threat type %d (%s) is unsupported on current platform: %d",
-              threatType, aListNames[i], GetPlatformType())
+              threatType, aListNames[i].get(), GetPlatformType())
               .get());
       continue;  // Some threat types are not available on some platforms.
     }
@@ -436,12 +438,14 @@ nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
-                                                const char** aListStatesBase64,
-                                                const char** aPrefixesBase64,
-                                                uint32_t aListCount,
-                                                uint32_t aPrefixCount,
-                                                nsACString& aRequest) {
+nsUrlClassifierUtils::MakeFindFullHashRequestV4(
+    const nsTArray<nsCString>& aListNames,
+    const nsTArray<nsCString>& aListStatesBase64,
+    const nsTArray<nsCString>& aPrefixesBase64, nsACString& aRequest) {
+  if (aListNames.Length() != aListStatesBase64.Length()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   FindFullHashesRequest r;
   r.set_allocated_client(CreateClientInfo());
 
@@ -454,17 +458,16 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
   PlatformType platform = GetPlatformType();
 
   // 1) Set threat types.
-  for (uint32_t i = 0; i < aListCount; i++) {
+  for (uint32_t i = 0; i < aListNames.Length(); i++) {
     // Add threat types.
     uint32_t threatType;
-    rv = ConvertListNameToThreatType(nsDependentCString(aListNames[i]),
-                                     &threatType);
+    rv = ConvertListNameToThreatType(aListNames[i], &threatType);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!IsAllowedOnCurrentPlatform(threatType)) {
       NS_WARNING(
           nsPrintfCString(
               "Threat type %d (%s) is unsupported on current platform: %d",
-              threatType, aListNames[i], GetPlatformType())
+              threatType, aListNames[i].get(), GetPlatformType())
               .get());
       continue;
     }
@@ -481,7 +484,7 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
     // Add client states for index 'i' only when the threat type is available
     // on current platform.
     nsCString stateBinary;
-    rv = Base64Decode(nsDependentCString(aListStatesBase64[i]), stateBinary);
+    rv = Base64Decode(aListStatesBase64[i], stateBinary);
     NS_ENSURE_SUCCESS(rv, rv);
     r.add_client_states(stateBinary.get(), stateBinary.Length());
   }
@@ -493,9 +496,9 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
   threatInfo->add_threat_entry_types(URL);
 
   // 4) Set threat entries.
-  for (uint32_t i = 0; i < aPrefixCount; i++) {
+  for (const nsCString& prefix : aPrefixesBase64) {
     nsCString prefixBinary;
-    rv = Base64Decode(nsDependentCString(aPrefixesBase64[i]), prefixBinary);
+    rv = Base64Decode(prefix, prefixBinary);
     threatInfo->add_threat_entries()->set_hash(prefixBinary.get(),
                                                prefixBinary.Length());
   }

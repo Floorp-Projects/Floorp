@@ -37,7 +37,7 @@ pub trait IsValidGuid {
 #[derive(Clone)]
 enum Repr {
     Valid([u8; 12]),
-    Invalid(String),
+    Invalid(Box<str>),
 }
 
 /// The Places root GUID, used to root all items in a bookmark tree.
@@ -95,7 +95,7 @@ impl Guid {
             Repr::Valid(bytes)
         } else {
             match String::from_utf16(b) {
-                Ok(s) => Repr::Invalid(s),
+                Ok(s) => Repr::Invalid(s.into()),
                 Err(err) => return Err(err.into()),
             }
         };
@@ -107,7 +107,7 @@ impl Guid {
     pub fn as_bytes(&self) -> &[u8] {
         match self.0 {
             Repr::Valid(ref bytes) => bytes,
-            Repr::Invalid(ref s) => s.as_ref(),
+            Repr::Invalid(ref s) => s.as_bytes(),
         }
     }
 
@@ -214,7 +214,7 @@ impl PartialOrd for Guid {
 impl PartialEq<str> for Guid {
     #[inline]
     fn eq(&self, other: &str) -> bool {
-        self.as_str() == other
+        self.as_bytes() == other.as_bytes()
     }
 }
 

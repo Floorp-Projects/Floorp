@@ -2,16 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::{collections::HashMap, fmt};
+use std::{collections::HashMap, convert::TryFrom, fmt};
 
 use dogear::{
-    Content, Deletion, Guid, IntoTree, Item, Kind, MergedDescendant, MergedRoot, Tree,
+    AbortSignal, Content, Deletion, Guid, Item, Kind, MergedDescendant, MergedRoot, Tree,
     UploadReason, Validity,
 };
 use nsstring::{nsCString, nsString};
 use storage::{Conn, Step};
 use xpcom::interfaces::{mozISyncedBookmarksMerger, nsINavBookmarksService};
 
+use crate::driver::AbortController;
 use crate::error::{Error, Result};
 
 pub const LMANNO_FEEDURI: &'static str = "livemark/feedURI";
@@ -40,6 +41,7 @@ fn total_sync_changes() -> i64 {
 
 pub struct Store<'s> {
     db: &'s mut Conn,
+    controller: &'s AbortController,
 
     /// The total Sync change count before merging. We store this before
     /// accessing Places, and compare the current and stored counts after
@@ -55,12 +57,14 @@ pub struct Store<'s> {
 impl<'s> Store<'s> {
     pub fn new(
         db: &'s mut Conn,
+        controller: &'s AbortController,
         local_time_millis: i64,
         remote_time_millis: i64,
         weak_uploads: &'s [nsString],
     ) -> Store<'s> {
         Store {
             db,
+            controller,
             total_sync_changes: total_sync_changes(),
             local_time_millis,
             remote_time_millis,
@@ -152,6 +156,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         };
         while let Some(step) = items_statement.step()? {
             // All subsequent rows are descendants.
+            self.controller.err_if_aborted()?;
             let raw_parent_guid: nsString = step.get_by_name("parentGuid")?;
             let parent_guid = Guid::from_utf16(&*raw_parent_guid)?;
             builder
@@ -159,10 +164,11 @@ impl<'s> dogear::Store<Error> for Store<'s> {
                 .by_structure(&parent_guid)?;
         }
 
-        let mut tree = builder.into_tree()?;
+        let mut tree = Tree::try_from(builder)?;
 
         let mut deletions_statement = self.db.prepare("SELECT guid FROM moz_bookmarks_deleted")?;
         while let Some(step) = deletions_statement.step()? {
+            self.controller.err_if_aborted()?;
             let raw_guid: nsString = step.get_by_name("guid")?;
             let guid = Guid::from_utf16(&*raw_guid)?;
             tree.note_deleted(guid);
@@ -191,6 +197,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         statement.bind_by_name("rootGuid", nsCString::from(&*dogear::ROOT_GUID))?;
         statement.bind_by_name("syncStatus", nsINavBookmarksService::SYNC_STATUS_NORMAL)?;
         while let Some(step) = statement.step()? {
+            self.controller.err_if_aborted()?;
             let typ: i64 = step.get_by_name("type")?;
             let content = match typ {
                 nsINavBookmarksService::TYPE_BOOKMARK => {
@@ -246,6 +253,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         )?;
         items_statement.bind_by_name("rootGuid", nsCString::from(&*dogear::ROOT_GUID))?;
         while let Some(step) = items_statement.step()? {
+            self.controller.err_if_aborted()?;
             let p = builder.item(self.remote_row_to_item(&step)?)?;
             let raw_parent_guid: Option<nsString> = step.get_by_name("parentGuid")?;
             if let Some(raw_parent_guid) = raw_parent_guid {
@@ -260,6 +268,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         )?;
         structure_statement.bind_by_name("rootGuid", nsCString::from(&*dogear::ROOT_GUID))?;
         while let Some(step) = structure_statement.step()? {
+            self.controller.err_if_aborted()?;
             let raw_guid: nsString = step.get_by_name("guid")?;
             let guid = Guid::from_utf16(&*raw_guid)?;
 
@@ -269,7 +278,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
             builder.parent_for(&guid).by_children(&parent_guid)?;
         }
 
-        let mut tree = builder.into_tree()?;
+        let mut tree = Tree::try_from(builder)?;
 
         let mut deletions_statement = self.db.prepare(
             "SELECT guid FROM items
@@ -277,6 +286,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
                    needsMerge",
         )?;
         while let Some(step) = deletions_statement.step()? {
+            self.controller.err_if_aborted()?;
             let raw_guid: nsString = step.get_by_name("guid")?;
             let guid = Guid::from_utf16(&*raw_guid)?;
             tree.note_deleted(guid);
@@ -305,6 +315,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         statement.bind_by_name("unfiledGuid", nsCString::from(&*dogear::UNFILED_GUID))?;
         statement.bind_by_name("rootGuid", nsCString::from(&*dogear::ROOT_GUID))?;
         while let Some(step) = statement.step()? {
+            self.controller.err_if_aborted()?;
             let kind: i64 = step.get_by_name("kind")?;
             let content = match kind {
                 mozISyncedBookmarksMerger::KIND_BOOKMARK
@@ -344,7 +355,10 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         root: MergedRoot<'t>,
         deletions: impl Iterator<Item = Deletion<'t>>,
     ) -> Result<()> {
+        self.controller.err_if_aborted()?;
         let descendants = root.descendants();
+
+        self.controller.err_if_aborted()?;
         let deletions = deletions.collect::<Vec<_>>();
 
         // Apply the merged tree and stage outgoing items. This transaction
@@ -354,8 +368,13 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         if self.total_sync_changes != total_sync_changes() {
             return Err(Error::MergeConflict);
         }
+
+        self.controller.err_if_aborted()?;
         update_local_items_in_places(&tx, descendants, deletions)?;
+
+        self.controller.err_if_aborted()?;
         stage_items_to_upload(&tx, &self.weak_uploads)?;
+
         cleanup(&tx)?;
         tx.commit()?;
 

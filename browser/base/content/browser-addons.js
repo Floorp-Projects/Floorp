@@ -352,13 +352,10 @@ var gXPInstallObserver = {
   // IDs of addon install related notifications
   NOTIFICATION_IDS: [
     "addon-install-blocked",
-    "addon-install-blocked-silent",
     "addon-install-complete",
     "addon-install-confirmation",
-    "addon-install-disabled",
     "addon-install-failed",
     "addon-install-origin-blocked",
-    "addon-install-started",
     "addon-progress",
     "addon-webext-permissions",
     "xpinstall-disabled",

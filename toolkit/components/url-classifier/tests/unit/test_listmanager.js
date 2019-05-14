@@ -152,8 +152,7 @@ const SERVER_INVOLVED_TEST_CASE_LIST = [
     // would be appened to the query string. The request is generated
     // by protobuf API (binary) then encoded to base64 format.
     let requestV4 = gUrlUtils.makeUpdateRequestV4([TEST_TABLE_DATA_V4.tableName],
-                                                  [""],
-                                                  1);
+                                                  [""]);
     gExpectedQueryV4 = "&$req=" + requestV4;
 
     forceTableUpdate();
@@ -172,8 +171,7 @@ add_test(function test_partialUpdateV4() {
   // test_update_all_tables, this update request should send
   // a partial update to the server.
   let requestV4 = gUrlUtils.makeUpdateRequestV4([TEST_TABLE_DATA_V4.tableName],
-                                                [btoa(NEW_CLIENT_STATE)],
-                                                1);
+                                                [btoa(NEW_CLIENT_STATE)]);
   gExpectedQueryV4 = "&$req=" + requestV4;
 
   forceTableUpdate();

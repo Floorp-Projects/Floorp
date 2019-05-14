@@ -828,7 +828,7 @@ EnvironmentAddonBuilder.prototype = {
       }];
     }
     let pluginTags =
-      Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost).getPluginTags({});
+      Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost).getPluginTags();
 
     let activePlugins = [];
     for (let tag of pluginTags) {
@@ -848,7 +848,7 @@ EnvironmentAddonBuilder.prototype = {
           blocklisted: tag.blocklisted,
           disabled: tag.disabled,
           clicktoplay: tag.clicktoplay,
-          mimeTypes: tag.getMimeTypes({}),
+          mimeTypes: tag.getMimeTypes(),
           updateDay: Utils.millisecondsToDays(updateDate.getTime()),
         });
       } catch (ex) {

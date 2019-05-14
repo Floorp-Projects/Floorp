@@ -389,12 +389,12 @@ pub(crate) mod desc {
             VertexAttribute {
                 name: "aBlurRenderTaskAddress",
                 count: 1,
-                kind: VertexAttributeKind::I32,
+                kind: VertexAttributeKind::U16,
             },
             VertexAttribute {
                 name: "aBlurSourceTaskAddress",
                 count: 1,
-                kind: VertexAttributeKind::I32,
+                kind: VertexAttributeKind::U16,
             },
             VertexAttribute {
                 name: "aBlurDirection",
@@ -566,12 +566,12 @@ pub(crate) mod desc {
             VertexAttribute {
                 name: "aScaleRenderTaskAddress",
                 count: 1,
-                kind: VertexAttributeKind::I32,
+                kind: VertexAttributeKind::U16,
             },
             VertexAttribute {
                 name: "aScaleSourceTaskAddress",
                 count: 1,
-                kind: VertexAttributeKind::I32,
+                kind: VertexAttributeKind::U16,
             },
         ],
     };
@@ -2839,8 +2839,8 @@ impl Renderer {
             for pass in &render_doc.frame.passes {
                 let mut debug_targets = Vec::new();
                 match pass.kind {
-                    RenderPassKind::MainFramebuffer(ref target) => {
-                        debug_targets.push(Self::debug_color_target(target));
+                    RenderPassKind::MainFramebuffer { ref main_target, .. } => {
+                        debug_targets.push(Self::debug_color_target(main_target));
                     }
                     RenderPassKind::OffScreen { ref alpha, ref color, ref texture_cache } => {
                         debug_targets.extend(alpha.targets.iter().map(Self::debug_alpha_target));
@@ -4738,7 +4738,7 @@ impl Renderer {
             );
 
             match pass.kind {
-                RenderPassKind::MainFramebuffer(ref target) => {
+                RenderPassKind::MainFramebuffer { ref main_target, .. } => {
                     if let Some(device_size) = device_size {
                         stats.color_target_count += 1;
 
@@ -4771,7 +4771,7 @@ impl Renderer {
 
                         self.draw_color_target(
                             draw_target,
-                            target,
+                            main_target,
                             frame.content_origin,
                             None,
                             None,

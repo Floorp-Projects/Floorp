@@ -14,7 +14,7 @@
 
 use std::{collections::HashMap, time::Duration};
 
-use crate::driver::{DefaultDriver, Driver};
+use crate::driver::{AbortSignal, DefaultAbortSignal, DefaultDriver, Driver};
 use crate::error::{Error, ErrorKind};
 use crate::guid::Guid;
 use crate::merge::{Deletion, Merger, StructureCounts};
@@ -81,32 +81,42 @@ pub trait Store<E: From<Error>> {
 
     /// Builds and applies a merged tree using the default merge driver.
     fn merge(&mut self) -> Result<Stats, E> {
-        self.merge_with_driver(&DefaultDriver)
+        self.merge_with_driver(&DefaultDriver, &DefaultAbortSignal)
     }
 
     /// Builds a complete merged tree from the local and remote trees, resolves
     /// conflicts, dedupes local items, and applies the merged tree using the
     /// given driver.
-    fn merge_with_driver<D: Driver>(&mut self, driver: &D) -> Result<Stats, E> {
+    fn merge_with_driver<D: Driver, A: AbortSignal>(
+        &mut self,
+        driver: &D,
+        signal: &A,
+    ) -> Result<Stats, E> {
         let mut merge_timings = MergeTimings::default();
+
+        signal.err_if_aborted()?;
         let local_tree = time!(merge_timings, fetch_local_tree, { self.fetch_local_tree() })?;
         debug!(driver, "Built local tree from mirror\n{}", local_tree);
 
+        signal.err_if_aborted()?;
         let new_local_contents = time!(merge_timings, fetch_new_local_contents, {
             self.fetch_new_local_contents()
         })?;
 
+        signal.err_if_aborted()?;
         let remote_tree = time!(merge_timings, fetch_remote_tree, {
             self.fetch_remote_tree()
         })?;
         debug!(driver, "Built remote tree from mirror\n{}", remote_tree);
 
+        signal.err_if_aborted()?;
         let new_remote_contents = time!(merge_timings, fetch_new_remote_contents, {
             self.fetch_new_remote_contents()
         })?;
 
         let mut merger = Merger::with_driver(
             driver,
+            signal,
             &local_tree,
             &new_local_contents,
             &remote_tree,
@@ -132,9 +142,13 @@ pub trait Store<E: From<Error>> {
         // The merged tree should know about all items mentioned in the local
         // and remote trees. Otherwise, it's incomplete, and we can't apply it.
         // This indicates a bug in the merger.
+
+        signal.err_if_aborted()?;
         if !merger.subsumes(&local_tree) {
             Err(E::from(ErrorKind::UnmergedLocalItems.into()))?;
         }
+
+        signal.err_if_aborted()?;
         if !merger.subsumes(&remote_tree) {
             Err(E::from(ErrorKind::UnmergedRemoteItems.into()))?;
         }

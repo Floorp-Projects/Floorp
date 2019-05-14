@@ -114,8 +114,7 @@ PluginTag.prototype = {
 
   mimeTypes: [ PLUGIN_MIME_TYPE1, PLUGIN_MIME_TYPE2 ],
 
-  getMimeTypes(count) {
-    count.value = this.mimeTypes.length;
+  getMimeTypes() {
     return this.mimeTypes;
   },
 };
@@ -128,8 +127,7 @@ var gInstalledPlugins = [
 
 // A fake plugin host for testing plugin telemetry environment.
 var PluginHost = {
-  getPluginTags(countRef) {
-    countRef.value = gInstalledPlugins.length;
+  getPluginTags() {
     return gInstalledPlugins.map(plugin => plugin.pluginTag);
   },
 

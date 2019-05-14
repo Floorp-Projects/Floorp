@@ -13,11 +13,15 @@ let LOGIN_FILL_ITEMS = [
 let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
 let hasContainers = Services.prefs.getBoolPref("privacy.userContext.enabled");
 
-const example_base = "http://example.com/browser/browser/base/content/test/general/";
-const chrome_base = "chrome://mochitests/content/browser/browser/base/content/test/general/";
+const example_base = "http://example.com/browser/browser/base/content/test/contextMenu/";
+const chrome_base = "chrome://mochitests/content/browser/browser/base/content/test/contextMenu/";
+const head_base = "chrome://mochitests/content/browser/browser/base/content/test/contextMenu/";
 
 /* import-globals-from contextmenu_common.js */
 Services.scriptloader.loadSubScript(chrome_base + "contextmenu_common.js", this);
+
+/* import-globals-from ../general/head.js */
+Services.scriptloader.loadSubScript(head_base + "head.js", this);
 
 add_task(async function init() {
   // Ensure screenshots is really disabled (bug 1498738)

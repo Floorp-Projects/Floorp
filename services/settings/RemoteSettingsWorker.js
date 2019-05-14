@@ -15,7 +15,7 @@ importScripts("resource://gre/modules/workers/require.js",
               "resource://gre/modules/third_party/jsesc/jsesc.js");
 
 const IDB_NAME = "remote-settings";
-const IDB_VERSION = 1;
+const IDB_VERSION = 2;
 const IDB_RECORDS_STORE = "records";
 const IDB_TIMESTAMPS_STORE = "timestamps";
 

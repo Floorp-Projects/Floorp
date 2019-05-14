@@ -1333,6 +1333,32 @@ impl PrimitiveVisibilityIndex {
     pub const INVALID: PrimitiveVisibilityIndex = PrimitiveVisibilityIndex(u32::MAX);
 }
 
+/// A bit mask describing which dirty regions a primitive is visible in.
+/// A value of 0 means not visible in any region, while a mask of 0xffff
+/// would be considered visible in all regions.
+pub struct PrimitiveVisibilityMask {
+    bits: u16,
+}
+
+impl PrimitiveVisibilityMask {
+    /// Construct a default mask, where no regions are considered visible
+    pub fn empty() -> Self {
+        PrimitiveVisibilityMask {
+            bits: 0,
+        }
+    }
+
+    /// Mark a given region index as visible
+    pub fn set_visible(&mut self, region_index: usize) {
+        self.bits |= 1 << region_index;
+    }
+
+    /// Returns true if there are no visible regions
+    pub fn is_empty(&self) -> bool {
+        self.bits == 0
+    }
+}
+
 /// Information stored for a visible primitive about the visible
 /// rect and associated clip information.
 pub struct PrimitiveVisibility {
@@ -1351,6 +1377,9 @@ pub struct PrimitiveVisibility {
     /// global clip mask task for this primitive, or the first of
     /// a list of clip task ids (one per segment).
     pub clip_task_index: ClipTaskIndex,
+
+    /// A mask defining which of the dirty regions this primitive is visible in.
+    pub visibility_mask: PrimitiveVisibilityMask,
 
     /// The current combined local clip for this primitive, from
     /// the primitive local clip above and the current clip chain.
@@ -1902,6 +1931,7 @@ impl PrimitiveStore {
                         combined_local_clip_rect: LayoutRect::zero(),
                         snap_offsets: SnapOffsets::empty(),
                         shadow_snap_offsets: SnapOffsets::empty(),
+                        visibility_mask: PrimitiveVisibilityMask::empty(),
                     }
                 );
 
@@ -2110,6 +2140,7 @@ impl PrimitiveStore {
                         combined_local_clip_rect,
                         snap_offsets,
                         shadow_snap_offsets,
+                        visibility_mask: PrimitiveVisibilityMask::empty(),
                     }
                 );
 
@@ -2658,14 +2689,13 @@ impl PrimitiveStore {
                         // is inside the overal dirty rect, but doesn't intersect any of the individual
                         // dirty rects. If that's the case, then we can skip drawing this primitive too.
                         if dirty_region.dirty_rects.len() > 1 {
-                            let in_dirty_rects = dirty_region
-                                .dirty_rects
-                                .iter()
-                                .any(|dirty_rect| {
-                                    visibility_info.clipped_world_rect.intersects(&dirty_rect.world_rect)
-                                });
+                            for (region_index, region) in dirty_region.dirty_rects.iter().enumerate() {
+                                if visibility_info.clipped_world_rect.intersects(&region.world_rect) {
+                                    visibility_info.visibility_mask.set_visible(region_index);
+                                }
+                            }
 
-                            if !in_dirty_rects {
+                            if visibility_info.visibility_mask.is_empty() {
                                 prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
                                 continue;
                             }

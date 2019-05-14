@@ -77,10 +77,15 @@ class Page extends ContentProcessDomain {
   }
 
   getFrameTree() {
+    const frameId = this.content.windowUtils.outerWindowID;
     return {
       frameTree: {
         frame: {
-          // id, parentId
+          id: frameId,
+          url: this.content.location.href,
+          loaderId: null,
+          securityOrigin: null,
+          mimeType: null,
         },
         childFrames: [],
       },
