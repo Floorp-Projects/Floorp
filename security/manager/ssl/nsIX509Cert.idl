@@ -25,7 +25,7 @@ interface nsICertVerificationListener;
  *       read the old uuid.  If you change the format of the object
  *       serialization then more complex changes will be needed.
  */
-[scriptable, uuid(bdc3979a-5422-4cd5-8589-696b6e96ea83)]
+[scriptable, builtinclass, uuid(bdc3979a-5422-4cd5-8589-696b6e96ea83)]
 interface nsIX509Cert : nsISupports {
 
   /**

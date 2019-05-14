@@ -1027,6 +1027,48 @@ raptor-speedometer-geckoview-power:
             - --host HOST_IP
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
 
+raptor-scn-power-idle-geckoview:
+    description: "Raptor idle-browser power-use measurement on GeckoView"
+    try-name: raptor-scn-power-idle-geckoview
+    treeherder-symbol: Rap-P(idl)
+    target: geckoview_example.apk
+    run-on-projects:
+        by-test-platform:
+            android-hw.*/pgo: ['try', 'trunk', 'mozilla-central']
+            default: ['try']
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --power-test
+            - --host HOST_IP
+            - --activity=GeckoViewActivity
+
+raptor-scn-power-idle-refbrow:
+    description: "Raptor idle-browser power-use measurement on Reference Browser"
+    try-name: raptor-scn-power-idle-refbrow
+    treeherder-symbol: Rap-refbrow(idl)
+    target:
+        index: project.mobile.reference-browser.signed-nightly.nightly.latest
+        name: target.arm.apk
+    run-on-projects:
+        by-test-platform:
+            android-hw.*/pgo: ['try']
+            default: ['try']
+    tier: 3
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-scn-power-idle
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser
+            - --power-test
+            - --host HOST_IP
+            - --activity=BrowserTestActivity
+
 raptor-speedometer-fennec:
     description: "Raptor Speedometer on Fennec"
     try-name: raptor-speedometer-fennec

@@ -364,8 +364,6 @@ PeerConnectionImpl::~PeerConnectionImpl() {
   CSFLogInfo(LOGTAG, "%s: PeerConnectionImpl destructor invoked for %s",
              __FUNCTION__, mHandle.c_str());
 
-  Close();
-
   // Since this and Initialize() occur on MainThread, they can't both be
   // running at once
 

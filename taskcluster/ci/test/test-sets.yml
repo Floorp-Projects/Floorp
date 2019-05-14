@@ -416,7 +416,6 @@ android-x86_64-opt-tests:
     - crashtest
     # geckoview-junit perma-fail on opt and debug; bug 1521195
     # - geckoview-junit
-    - mochitest
     - web-platform-tests
     - web-platform-tests-reftests
 
@@ -425,6 +424,7 @@ android-x86_64-tests:
     - cppunit
     - jsreftest
     - marionette
+    - mochitest
     - mochitest-gpu
     # various reftest (plain) failures; bug 1501582
     # - reftest
@@ -564,9 +564,13 @@ android-hw-aarch64-raptor:
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
+    - raptor-scn-power-idle-geckoview
+    - raptor-scn-power-idle-refbrow
 
 android-hw-aarch64-raptor-power:
     - raptor-speedometer-geckoview-power
+    - raptor-scn-power-idle-geckoview
+    - raptor-scn-power-idle-refbrow
 
 android-hw-arm7-raptor-nightly:
     - raptor-speedometer-fennec

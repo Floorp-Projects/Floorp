@@ -196,12 +196,6 @@ static NSMutableDictionary* sNativeKeyEventsMap = [NSMutableDictionary dictionar
 - (void)drawTitleString;
 - (void)maskTopCornersInContext:(CGContextRef)aContext;
 
-#if USE_CLICK_HOLD_CONTEXTMENU
-// called on a timer two seconds after a mouse down to see if we should display
-// a context menu (click-hold)
-- (void)clickHoldCallback:(id)inEvent;
-#endif
-
 #ifdef ACCESSIBILITY
 - (id<mozAccessible>)accessible;
 #endif
@@ -3429,42 +3423,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [super viewWillDraw];
 }
 
-#if USE_CLICK_HOLD_CONTEXTMENU
-//
-// -clickHoldCallback:
-//
-// called from a timer two seconds after a mouse down to see if we should display
-// a context menu (click-hold). |anEvent| is the original mouseDown event. If we're
-// still in that mouseDown by this time, put up the context menu, otherwise just
-// fuhgeddaboutit. |anEvent| has been retained by the OS until after this callback
-// fires so we're ok there.
-//
-// This code currently messes in a bunch of edge cases (bugs 234751, 232964, 232314)
-// so removing it until we get it straightened out.
-//
-- (void)clickHoldCallback:(id)theEvent;
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (theEvent == [NSApp currentEvent]) {
-    // we're still in the middle of the same mousedown event here, activate
-    // click-hold context menu by triggering the right mouseDown action.
-    NSEvent* clickHoldEvent = [NSEvent mouseEventWithType:NSRightMouseDown
-                                                 location:[theEvent locationInWindow]
-                                            modifierFlags:[theEvent modifierFlags]
-                                                timestamp:[theEvent timestamp]
-                                             windowNumber:[theEvent windowNumber]
-                                                  context:[theEvent context]
-                                              eventNumber:[theEvent eventNumber]
-                                               clickCount:[theEvent clickCount]
-                                                 pressure:[theEvent pressure]];
-    [self rightMouseDown:clickHoldEvent];
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-#endif
-
 // If we've just created a non-native context menu, we need to mark it as
 // such and let the OS (and other programs) know when it opens and closes
 // (this is how the OS knows to close other programs' context menus when
@@ -3961,11 +3919,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mBlockedLastMouseDown = YES;
     return;
   }
-
-#if USE_CLICK_HOLD_CONTEXTMENU
-  // fire off timer to check for click-hold after two seconds. retains |theEvent|
-  [self performSelector:@selector(clickHoldCallback:) withObject:theEvent afterDelay:2.0];
-#endif
 
   // in order to send gecko events we'll need a gecko widget
   if (!mGeckoChild) return;
