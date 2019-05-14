@@ -1,20 +1,18 @@
 extern crate ws;
 
-use std::sync::mpsc::channel;
 use std::thread;
 use std::time::Duration;
+use std::sync::mpsc::channel;
 
 #[test]
 fn shutdown_before_connections() {
     let (tx, rx) = channel();
     let mut connections = 0;
 
-    let socket = ws::Builder::new()
-        .build(move |_| {
-            tx.send(1).unwrap();
-            |_| Ok(())
-        })
-        .unwrap();
+    let socket = ws::Builder::new().build(move |_| {
+        tx.send(1).unwrap();
+        |_| Ok(())
+    }).unwrap();
 
     let handle = socket.broadcaster();
 
@@ -28,7 +26,7 @@ fn shutdown_before_connections() {
         assert!(res.is_err());
         match res {
             Ok(n) => connections += n,
-            Err(_) => {
+            Err(_) =>  {
                 if connections < 1 {
                     handle.shutdown().unwrap();
                     break;
@@ -38,4 +36,5 @@ fn shutdown_before_connections() {
     }
 
     assert!(t.join().is_ok());
+
 }
