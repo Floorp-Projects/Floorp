@@ -33,8 +33,8 @@ class ExceptionsComponent(
     ) {
 
     override fun render(): Observable<ExceptionsState> =
-        ViewModelProviders.of(owner, ExceptionsViewModel.Factory(initialState, changesObservable))
-            .get(ExceptionsViewModel::class.java).render(uiView)
+        ViewModelProviders.of(owner, ExceptionsViewModel.Factory(initialState))
+            .get(ExceptionsViewModel::class.java).render(changesObservable, uiView)
 
     override fun initView() = ExceptionsUIView(container, actionEmitter, changesObservable)
 
@@ -56,20 +56,18 @@ sealed class ExceptionsChange : Change {
     data class Change(val list: List<ExceptionsItem>) : ExceptionsChange()
 }
 
-class ExceptionsViewModel(initialState: ExceptionsState, changesObservable: Observable<ExceptionsChange>) :
+class ExceptionsViewModel(initialState: ExceptionsState) :
     UIComponentViewModel<ExceptionsState, ExceptionsAction, ExceptionsChange>(
         initialState,
-        changesObservable,
         reducer
     ) {
 
     class Factory(
-        private val initialState: ExceptionsState,
-        private val changesObservable: Observable<ExceptionsChange>
+        private val initialState: ExceptionsState
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            ExceptionsViewModel(initialState, changesObservable) as T
+            ExceptionsViewModel(initialState) as T
     }
 
     companion object {

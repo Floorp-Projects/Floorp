@@ -39,8 +39,8 @@ class QuickActionComponent(
     override fun render(): Observable<QuickActionState> =
         ViewModelProvider(
             owner,
-            QuickActionViewModel.Factory(initialState, changesObservable)
-        ).get(QuickActionViewModel::class.java).render(uiView)
+            QuickActionViewModel.Factory(initialState)
+        ).get(QuickActionViewModel::class.java).render(changesObservable, uiView)
 
     init {
         render()
@@ -71,20 +71,18 @@ sealed class QuickActionChange : Change {
     object BounceNeededChange : QuickActionChange()
 }
 
-class QuickActionViewModel(initialState: QuickActionState, changesObservable: Observable<QuickActionChange>) :
+class QuickActionViewModel(initialState: QuickActionState) :
     UIComponentViewModel<QuickActionState, QuickActionAction, QuickActionChange>(
         initialState,
-        changesObservable,
         reducer
     ) {
 
     class Factory(
-        private val initialState: QuickActionState,
-        private val changesObservable: Observable<QuickActionChange>
+        private val initialState: QuickActionState
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            QuickActionViewModel(initialState, changesObservable) as T
+            QuickActionViewModel(initialState) as T
     }
 
     companion object {

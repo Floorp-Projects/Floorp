@@ -40,9 +40,9 @@ class QuickSettingsComponent(
     }
 
     override fun render(): Observable<QuickSettingsState> =
-        ViewModelProvider(owner, QuickSettingsViewModel.Factory(initialState, changesObservable)).get(
+        ViewModelProvider(owner, QuickSettingsViewModel.Factory(initialState)).get(
             QuickSettingsViewModel::class.java
-        ).render(uiView)
+        ).render(changesObservable, uiView)
 
     init {
         render()
@@ -120,20 +120,18 @@ sealed class QuickSettingsChange : Change {
     data class Stored(val phoneFeature: PhoneFeature, val sitePermissions: SitePermissions?) : QuickSettingsChange()
 }
 
-class QuickSettingsViewModel(initialState: QuickSettingsState, changesObservable: Observable<QuickSettingsChange>) :
+class QuickSettingsViewModel(initialState: QuickSettingsState) :
     UIComponentViewModel<QuickSettingsState, QuickSettingsAction, QuickSettingsChange>(
         initialState,
-        changesObservable,
         reducer
     ) {
 
     class Factory(
-        private val initialState: QuickSettingsState,
-        private val changesObservable: Observable<QuickSettingsChange>
+        private val initialState: QuickSettingsState
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            QuickSettingsViewModel(initialState, changesObservable) as T
+            QuickSettingsViewModel(initialState) as T
     }
 
     companion object {

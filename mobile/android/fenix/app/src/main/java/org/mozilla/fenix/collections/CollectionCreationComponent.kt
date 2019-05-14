@@ -67,9 +67,9 @@ class CollectionCreationComponent(
     override fun initView() = CollectionCreationUIView(container, actionEmitter, changesObservable)
 
     override fun render(): Observable<CollectionCreationState> =
-        ViewModelProvider(owner, CollectionCreationViewModel.Factory(initialState, changesObservable)).get(
+        ViewModelProvider(owner, CollectionCreationViewModel.Factory(initialState)).get(
             CollectionCreationViewModel::class.java
-        ).render(uiView)
+        ).render(changesObservable, uiView)
 
     init {
         render()
@@ -77,22 +77,19 @@ class CollectionCreationComponent(
 }
 
 class CollectionCreationViewModel(
-    initialState: CollectionCreationState,
-    changesObservable: Observable<CollectionCreationChange>
+    initialState: CollectionCreationState
 ) :
     UIComponentViewModel<CollectionCreationState, CollectionCreationAction, CollectionCreationChange>(
         initialState,
-        changesObservable,
         reducer
     ) {
 
     class Factory(
-        private val initialState: CollectionCreationState,
-        private val changesObservable: Observable<CollectionCreationChange>
+        private val initialState: CollectionCreationState
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            CollectionCreationViewModel(initialState, changesObservable) as T
+            CollectionCreationViewModel(initialState) as T
     }
 
     companion object {

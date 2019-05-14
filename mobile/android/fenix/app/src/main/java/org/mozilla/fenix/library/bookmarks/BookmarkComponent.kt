@@ -39,8 +39,8 @@ class BookmarkComponent(
     override fun render(): Observable<BookmarkState> {
         return ViewModelProvider(
             owner,
-            BookmarkViewModel.Factory(initialState, changesObservable)
-        ).get(BookmarkViewModel::class.java).render(uiView)
+            BookmarkViewModel.Factory(initialState)
+        ).get(BookmarkViewModel::class.java).render(changesObservable, uiView)
     }
 
     init {
@@ -81,16 +81,15 @@ operator fun BookmarkNode.contains(item: BookmarkNode): Boolean {
     return children?.contains(item) ?: false
 }
 
-class BookmarkViewModel(initialState: BookmarkState, changesObservable: Observable<BookmarkChange>) :
-    UIComponentViewModel<BookmarkState, BookmarkAction, BookmarkChange>(initialState, changesObservable, reducer) {
+class BookmarkViewModel(initialState: BookmarkState) :
+    UIComponentViewModel<BookmarkState, BookmarkAction, BookmarkChange>(initialState, reducer) {
 
     class Factory(
-        private val initialState: BookmarkState,
-        private val changesObservable: Observable<BookmarkChange>
+        private val initialState: BookmarkState
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            BookmarkViewModel(initialState, changesObservable) as T
+            BookmarkViewModel(initialState) as T
     }
 
     companion object {

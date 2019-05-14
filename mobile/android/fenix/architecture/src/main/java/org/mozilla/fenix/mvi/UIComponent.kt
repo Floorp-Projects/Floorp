@@ -28,32 +28,33 @@ abstract class UIComponent<S : ViewState, A : Action, C : Change>(
 }
 
 open class UIComponentViewModel<S : ViewState, A : Action, C : Change>(
-    private val initialState: S,
-    val changesObservable: Observable<C>,
-    reducer: Reducer<S, C>
+    initialState: S,
+    private val reducer: Reducer<S, C>
 ) : ViewModel() {
 
-    private val statesObservable: Observable<S> = internalRender(reducer)
+    private var currentState: S = initialState
     private var statesDisposable: Disposable? = null
 
     /**
      * Render the ViewState to the View through the Reducer
      */
-    fun render(uiView: UIView<S, A, C>): Observable<S> {
+    fun render(changesObservable: Observable<C>, uiView: UIView<S, A, C>): Observable<S> {
+        val statesObservable = internalRender(changesObservable, reducer)
         statesDisposable = statesObservable
             .subscribe(uiView.updateView())
         return statesObservable
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    protected fun internalRender(reducer: Reducer<S, C>): Observable<S> =
+    protected fun internalRender(changesObservable: Observable<C>, reducer: Reducer<S, C>): Observable<S> =
         changesObservable
-            .scan(initialState, reducer)
+            .scan(currentState, reducer)
             .distinctUntilChanged()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .replay(1)
             .autoConnect(0)
+            .doOnNext { currentState = it }
 
     override fun onCleared() {
         super.onCleared()

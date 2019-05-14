@@ -155,33 +155,37 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         privateBrowsingButton.setOnClickListener {
             val browsingModeManager = (activity as HomeActivity).browsingModeManager
-            browsingModeManager.mode = when (browsingModeManager.mode) {
+            val newMode = when (browsingModeManager.mode) {
                 BrowsingModeManager.Mode.Normal -> BrowsingModeManager.Mode.Private
                 BrowsingModeManager.Mode.Private -> BrowsingModeManager.Mode.Normal
             }
+
+            val mode = if (newMode == BrowsingModeManager.Mode.Private) Mode.Private else Mode.Normal
+            getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
+
+            browsingModeManager.mode = newMode
         }
 
         // We need the shadow to be above the components.
         homeDividerShadow.bringToFront()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        // This can get called before onCreateView, before the component is defined
-        view?.let {
-            val state = sessionControlComponent.stateObservable.blockingFirst()
-            val modeInt = if (state.mode is Mode.Private) 0 else 1
-            outState.putInt(KEY_MODE, modeInt)
-        }
-    }
-
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
         if (savedInstanceState != null) {
-            emitSessionChanges()
-            val mode = if (savedInstanceState.getInt(KEY_MODE) == 0) Mode.Private else Mode.Normal
             getManagedEmitter<SessionControlChange>().onNext(
-                SessionControlChange.ModeChange(mode)
+                SessionControlChange.TabsChange(
+                    (savedInstanceState.getParcelableArrayList<Tab>(
+                        KEY_TABS
+                    ) ?: arrayListOf()).toList()
+                )
+            )
+            getManagedEmitter<SessionControlChange>().onNext(
+                SessionControlChange.CollectionsChange(
+                    (savedInstanceState.getParcelableArrayList<TabCollection>(
+                        KEY_COLLECTIONS
+                    ) ?: arrayListOf()).toList()
+                )
             )
         }
     }
@@ -209,6 +213,9 @@ class HomeFragment : Fragment(), CoroutineScope {
                     }
                 }
         }
+
+        val mode = if ((activity as HomeActivity).browsingModeManager.isPrivate) Mode.Private else Mode.Normal
+        getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
 
         emitSessionChanges()
         sessionObserver = subscribeToSessions()

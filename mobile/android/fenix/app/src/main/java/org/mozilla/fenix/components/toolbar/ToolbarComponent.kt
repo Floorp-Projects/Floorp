@@ -53,7 +53,7 @@ class ToolbarComponent(
 
     override fun render(): Observable<SearchState> =
         ViewModelProviders.of(owner, ToolbarViewModel.Factory(initialState, changesObservable))
-            .get(ToolbarViewModel::class.java).render(uiView)
+            .get(ToolbarViewModel::class.java).render(changesObservable, uiView)
 
     init {
         render()
@@ -99,8 +99,8 @@ sealed class SearchChange : Change {
     data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchChange()
 }
 
-class ToolbarViewModel(initialState: SearchState, changesObservable: Observable<SearchChange>) :
-    UIComponentViewModel<SearchState, SearchAction, SearchChange>(initialState, changesObservable, reducer) {
+class ToolbarViewModel(initialState: SearchState) :
+    UIComponentViewModel<SearchState, SearchAction, SearchChange>(initialState, reducer) {
 
     class Factory(
         private val initialState: SearchState,
@@ -108,7 +108,7 @@ class ToolbarViewModel(initialState: SearchState, changesObservable: Observable<
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            ToolbarViewModel(initialState, changesObservable) as T
+            ToolbarViewModel(initialState) as T
     }
 
     companion object {

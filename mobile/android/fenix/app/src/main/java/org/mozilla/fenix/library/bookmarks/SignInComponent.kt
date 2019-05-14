@@ -35,8 +35,8 @@ class SignInComponent(
     override fun render(): Observable<SignInState> =
         ViewModelProvider(
             owner,
-            SignInViewModel.Factory(initialState, changesObservable)
-        ).get(SignInViewModel::class.java).render(uiView)
+            SignInViewModel.Factory(initialState)
+        ).get(SignInViewModel::class.java).render(changesObservable, uiView)
 
     init {
         render()
@@ -54,18 +54,17 @@ sealed class SignInChange : Change {
     object SignedOut : SignInChange()
 }
 
-class SignInViewModel(initialState: SignInState, changesObservable: Observable<SignInChange>) :
+class SignInViewModel(initialState: SignInState) :
     UIComponentViewModel<SignInState, SignInAction, SignInChange>(
-        initialState, changesObservable, reducer
+        initialState, reducer
     ) {
 
     class Factory(
-        private val initialState: SignInState,
-        private val changesObservable: Observable<SignInChange>
+        private val initialState: SignInState
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            SignInViewModel(initialState, changesObservable) as T
+            SignInViewModel(initialState) as T
     }
 
     companion object {

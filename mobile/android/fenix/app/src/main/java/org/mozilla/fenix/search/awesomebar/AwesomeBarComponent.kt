@@ -51,28 +51,26 @@ class AwesomeBarComponent(
     override fun initView() = AwesomeBarUIView(container, actionEmitter, changesObservable)
 
     override fun render(): Observable<AwesomeBarState> =
-        ViewModelProviders.of(owner, AwesomeBarViewModel.Factory(initialState, changesObservable))
-            .get(AwesomeBarViewModel::class.java).render(uiView)
+        ViewModelProviders.of(owner, AwesomeBarViewModel.Factory(initialState))
+            .get(AwesomeBarViewModel::class.java).render(changesObservable, uiView)
 
     init {
         render()
     }
 }
 
-class AwesomeBarViewModel(initialState: AwesomeBarState, changesObservable: Observable<AwesomeBarChange>) :
+class AwesomeBarViewModel(initialState: AwesomeBarState) :
     UIComponentViewModel<AwesomeBarState, AwesomeBarAction, AwesomeBarChange>(
         initialState,
-        changesObservable,
         reducer
     ) {
 
     class Factory(
-        private val initialState: AwesomeBarState,
-        private val changesObservable: Observable<AwesomeBarChange>
+        private val initialState: AwesomeBarState
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            AwesomeBarViewModel(initialState, changesObservable) as T
+            AwesomeBarViewModel(initialState) as T
     }
 
     companion object {

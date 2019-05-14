@@ -42,9 +42,9 @@ class SessionControlComponent(
         get() = uiView.view as RecyclerView
 
     override fun render(): Observable<SessionControlState> {
-        viewModel = ViewModelProviders.of(owner, SessionControlViewModel.Factory(initialState, changesObservable))
+        viewModel = ViewModelProviders.of(owner, SessionControlViewModel.Factory(initialState))
             .get(SessionControlViewModel::class.java)
-        return viewModel.render(uiView)
+        return viewModel.render(changesObservable, uiView)
     }
 
     init {
@@ -123,20 +123,18 @@ sealed class SessionControlChange : Change {
     data class CollectionsChange(val collections: List<TabCollection>) : SessionControlChange()
 }
 
-class SessionControlViewModel(initialState: SessionControlState, changesObservable: Observable<SessionControlChange>) :
+class SessionControlViewModel(initialState: SessionControlState) :
     UIComponentViewModel<SessionControlState, SessionControlAction, SessionControlChange>(
         initialState,
-        changesObservable,
         reducer
     ) {
 
     class Factory(
-        private val initialState: SessionControlState,
-        private val changesObservable: Observable<SessionControlChange>
+        private val initialState: SessionControlState
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            SessionControlViewModel(initialState, changesObservable) as T
+            SessionControlViewModel(initialState) as T
     }
 
     companion object {

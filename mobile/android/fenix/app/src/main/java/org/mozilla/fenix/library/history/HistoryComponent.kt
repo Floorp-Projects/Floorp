@@ -36,8 +36,8 @@ class HistoryComponent(
     override fun render(): Observable<HistoryState> =
         ViewModelProvider(
             owner,
-            HistoryViewModel.Factory(initialState, changesObservable)
-        ).get(HistoryViewModel::class.java).render(uiView)
+            HistoryViewModel.Factory(initialState)
+        ).get(HistoryViewModel::class.java).render(changesObservable, uiView)
 
     init {
         render()
@@ -74,16 +74,15 @@ sealed class HistoryChange : Change {
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryChange()
 }
 
-class HistoryViewModel(initialState: HistoryState, changesObservable: Observable<HistoryChange>) :
-    UIComponentViewModel<HistoryState, HistoryAction, HistoryChange>(initialState, changesObservable, reducer) {
+class HistoryViewModel(initialState: HistoryState) :
+    UIComponentViewModel<HistoryState, HistoryAction, HistoryChange>(initialState, reducer) {
 
     class Factory(
-        private val initialState: HistoryState,
-        private val changesObservable: Observable<HistoryChange>
+        private val initialState: HistoryState
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            HistoryViewModel(initialState, changesObservable) as T
+            HistoryViewModel(initialState) as T
     }
 
     companion object {
