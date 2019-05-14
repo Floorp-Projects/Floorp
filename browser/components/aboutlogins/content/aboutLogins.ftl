@@ -27,6 +27,7 @@ login-item =
   .delete-button = Delete
   .edit-button = Edit
   .hostname-label = Website Address
+  .modal-input-reveal-button = Toggle password visibility
   .password-label = Password
   .save-changes-button = Save Changes
   .time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }

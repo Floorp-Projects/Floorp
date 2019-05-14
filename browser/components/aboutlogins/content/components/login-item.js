@@ -43,6 +43,7 @@ class LoginItem extends ReflectedFluentElement {
       "delete-button",
       "edit-button",
       "hostname-label",
+      "modal-input-reveal-button",
       "password-label",
       "save-changes-button",
       "time-created",
@@ -54,6 +55,16 @@ class LoginItem extends ReflectedFluentElement {
 
   static get observedAttributes() {
     return this.reflectedFluentIDs;
+  }
+
+  handleSpecialCaseFluentString(attrName) {
+    if (attrName != "modal-input-reveal-button") {
+      return false;
+    }
+
+    this.shadowRoot.querySelector("modal-input[name='password']")
+                   .setAttribute("reveal-button", this.getAttribute(attrName));
+    return true;
   }
 
   render() {
