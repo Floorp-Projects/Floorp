@@ -73,7 +73,8 @@ export type ObjectClient = {
   enumEntries: () => Promise<PropertiesIterator>,
   enumProperties: (options: Object) => Promise<PropertiesIterator>,
   enumSymbols: () => Promise<PropertiesIterator>,
-  getPrototype: () => Promise<{ prototype: Object }>
+  getPrototype: () => Promise<{ prototype: Object }>,
+  getProxySlots: () => Promise<{ proxyTarget: Object, proxyHandler: Object }>
 };
 
 export type LongStringClient = {

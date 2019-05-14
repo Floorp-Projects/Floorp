@@ -124,7 +124,8 @@ describe("Grip - Proxy", () => {
 
   it("renders as expected", () => {
     const renderRep = props => shallowRenderRep(object, props);
-    const handlerLength = getGripLengthBubbleText(object.proxyHandler, {
+    const handler = object.preview.ownProperties["<handler>"].value;
+    const handlerLength = getGripLengthBubbleText(handler, {
       mode: MODE.TINY
     });
     const out = `Proxy { <target>: {…}, <handler>: ${handlerLength} […] }`;
