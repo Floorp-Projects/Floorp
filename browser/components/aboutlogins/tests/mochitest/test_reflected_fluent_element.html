@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the reflected-fluent-element component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the reflected-fluent-element component</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="reflected-fluent-element.js"></script>
+  <script src="aboutlogins_common.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+  <iframe id="templateFrame" src="aboutLogins.html"
+          sandbox="allow-same-origin"></iframe>
+</div>
+<pre id="test">
+</pre>
+<script>
+/** Test the reflected-fluent-element component **/
+
+const TEST_STRINGS = {
+  loginFilter: {
+    placeholder: "Sample placeholder",
+  },
+  loginItem: {
+    "cancel-button": "Cancel",
+    "delete-button": "Delete",
+    "hostname-label": "Website Address",
+    "password-label": "Password",
+    "save-changes-button": "Save Changes",
+    // See stubFluentL10n for the following three
+    "time-created": "",
+    "time-changed": "",
+    "time-used": "",
+    "username-label": "Username",
+  },
+};
+
+let gLoginFilter;
+let gLoginItem;
+add_task(async function setup() {
+  stubFluentL10n({
+    "time-created": "timeCreated",
+    "time-changed": "timeChanged",
+    "time-used": "timeUsed",
+  });
+
+  let displayEl = document.getElementById("display");
+
+  // Create and append the login-filter element before its template
+  // is cloned the custom element defined.
+  gLoginFilter = document.createElement("login-filter");
+  gLoginFilter.setAttribute("placeholder", TEST_STRINGS.loginFilter.placeholder);
+  displayEl.appendChild(gLoginFilter);
+
+  // ... and do the same with the login-item.
+  gLoginItem = document.createElement("login-item");
+  for (let attrKey of Object.keys(TEST_STRINGS.loginItem)) {
+    gLoginItem.setAttribute(attrKey, TEST_STRINGS.loginItem[attrKey]);
+  }
+  displayEl.appendChild(gLoginItem);
+
+  let templateFrame = document.getElementById("templateFrame");
+  importDependencies(templateFrame, displayEl);
+
+  // The script needs to be inserted after the element and template are appended
+  // to match the environment of the locale text being applied before the custom
+  // element is defined.
+  for (let scriptSrc of ["login-filter.js", "login-item.js", "login-list.js"]) {
+    let scriptEl = document.createElement("script");
+    scriptEl.setAttribute("src", scriptSrc);
+    document.head.appendChild(scriptEl);
+  }
+});
+
+add_task(async function test_placeholder_on_login_filter() {
+  ok(gLoginFilter, "loginFilter exists");
+  await SimpleTest.promiseWaitForCondition(() => !!gLoginFilter.shadowRoot, "Wait for shadowRoot");
+  is(gLoginFilter.shadowRoot.querySelector("input").placeholder,
+     TEST_STRINGS.loginFilter.placeholder,
+     "Placeholder text should be present when set before the element is defined");
+});
+
+add_task(async function test_login_item() {
+  ok(gLoginItem, "loginItem exists");
+  await SimpleTest.promiseWaitForCondition(() => !!gLoginItem.shadowRoot, "Wait for shadowRoot");
+
+  for (let attrKey of Object.keys(TEST_STRINGS.loginItem)) {
+    let selector = "." + attrKey;
+    is(gLoginItem.shadowRoot.querySelector(selector).textContent,
+       TEST_STRINGS.loginItem[attrKey],
+       selector + " textContent should be present when set before the element is defined");
+  }
+});
+
+add_task(async function test_attribute_changed_callback() {
+  let displayEl = document.getElementById("display");
+  let loginList = document.createElement("login-list");
+  displayEl.appendChild(loginList);
+  await SimpleTest.promiseWaitForCondition(() => !!loginList.shadowRoot, "Wait for element to get templated");
+
+  loginList.setAttribute("count", "1234");
+  await SimpleTest.promiseWaitForCondition(() => loginList.shadowRoot.querySelector(".count").textContent.includes("1234"),
+                                           "Wait for text to get localized");
+  ok(loginList.shadowRoot.querySelector(".count").textContent.includes("1234"),
+     "The count attribute should be inherited by the .count span");
+});
+</script>
+
+</body>
+</html>

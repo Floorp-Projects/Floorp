@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class LoginItem extends HTMLElement {
+/* globals ReflectedFluentElement */
+
+class LoginItem extends ReflectedFluentElement {
   constructor() {
     super();
     this._login = {};
@@ -18,6 +20,8 @@ class LoginItem extends HTMLElement {
     this.attachShadow({mode: "open"})
         .appendChild(loginItemTemplate.content.cloneNode(true));
 
+    this.reflectFluentStrings();
+
     for (let selector of [
       ".delete-button",
       ".save-changes-button",
@@ -32,7 +36,7 @@ class LoginItem extends HTMLElement {
     this.render();
   }
 
-  static get observedAttributes() {
+  static get reflectedFluentIDs() {
     return [
       "cancel-button",
       "delete-button",
@@ -46,17 +50,8 @@ class LoginItem extends HTMLElement {
     ];
   }
 
-  /* Fluent doesn't handle localizing into Shadow DOM yet so strings
-     need to get reflected in to their targeted element. */
-  attributeChangedCallback(attr, oldValue, newValue) {
-    if (!this.shadowRoot) {
-      return;
-    }
-
-    // Strings that are reflected to their shadowed element are assigned
-    // to an attribute name that matches a className on the element.
-    let shadowedElement = this.shadowRoot.querySelector("." + attr);
-    shadowedElement.textContent = newValue;
+  static get observedAttributes() {
+    return this.reflectedFluentIDs;
   }
 
   render() {
