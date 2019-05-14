@@ -89,8 +89,7 @@ import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
-    AccessibilityManager.TouchExplorationStateChangeListener {
+class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private lateinit var toolbarComponent: ToolbarComponent
 
     private var sessionObserver: Session.Observer? = null
@@ -369,6 +368,10 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         super.onStart()
         sessionObserver = subscribeToSession()
         sessionManagerObserver = subscribeToSessions()
+        val accessibilityManager = activity?.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+        accessibilityManager?.addTouchExplorationStateChangeListener {
+            updateToolbar()
+        }
         updateToolbar()
         getSessionById()?.let { updateBookmarkState(it) }
         getAutoDisposeObservable<SearchAction>()
@@ -722,10 +725,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 (activity as HomeActivity).updateThemeForSession(session)
             }
         }.also { requireComponents.core.sessionManager.register(it) }
-    }
-
-    override fun onTouchExplorationStateChanged(enabled: Boolean) {
-        updateToolbar()
     }
 
     private fun updateToolbar() {
