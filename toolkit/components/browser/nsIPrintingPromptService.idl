@@ -35,9 +35,9 @@ interface nsIPrintingPromptService : nsISupports
    *           if it does not have valid fields for printer name, etc. it may also terminate.
    *
    *           Defaults for platform service:           
-   *             showPrintDialog       - displays a native dialog
-   *             showPageSetup         - displays a XUL dialog
-   *             showProgress          - displays a XUL dialog
+   *             showPrintDialog           - displays a native dialog
+   *             showPrintProgressDialog   - displays a XUL dialog
+   *             showPageSetupDialog       - displays a XUL dialog
    *
    *           Summary for Windows Embedders:
    *             Stated once again: There is no "fallback" native platform support in GFX for the
@@ -68,21 +68,16 @@ interface nsIPrintingPromptService : nsISupports
    *       If an embedder implemented service returns NS_ERROR_NOT_IMPLEMENTED for "showPrintDialog"
    *       The toolkit will display the native print dialog.
    *
-   *       Defaults for platform service:           
-   *       Mac OS9: showPrintDialog       - displays a native dialog
-   *                showPageSetup         - displays a native dialog
-   *                showProgress          - displays a XUL dialog
-   *
-   *       Mac OSX: showPrintDialog       - displays a native dialog
-   *                showPageSetup         - displays a native dialog
-   *                showProgress          - not implemented (provided by OS)
+   *       Mac OSX: showPrintDialog           - displays a native dialog
+   *                showPrintProgressDialog   - not implemented (provided by OS)
+   *                showPageSetupDialog       - displays a native dialog
    *
    *  GTK: There are no native dialog for GTK.
    *
    *       Defaults for platform service:
-   *         showPrintDialog       - displays a native dialog
-   *         showPageSetup         - displays a native dialog
-   *         showProgress          - displays a XUL dialog
+   *         showPrintDialog           - displays a native dialog
+   *         showPrintProgressDialog   - displays a XUL dialog
+   *         showPageSetupDialog       - displays a native dialog
    *
    */
  
@@ -115,23 +110,23 @@ interface nsIPrintingPromptService : nsISupports
    *                        (usually the caller) shouldn't wait
    *                        For Print Preview Progress there is intermediate progress
    */
-  void showProgress(in mozIDOMWindowProxy parent,
-                    in nsIWebBrowserPrint webBrowserPrint,
-                    in nsIPrintSettings printSettings,
-                    in nsIObserver openDialogObserver,
-                    in boolean isForPrinting,
-                    out nsIWebProgressListener webProgressListener,
-                    out nsIPrintProgressParams printProgressParams,
-                    out boolean notifyOnOpen);
+  void showPrintProgressDialog(in mozIDOMWindowProxy parent,
+                               in nsIWebBrowserPrint webBrowserPrint,
+                               in nsIPrintSettings printSettings,
+                               in nsIObserver openDialogObserver,
+                               in boolean isForPrinting,
+                               out nsIWebProgressListener webProgressListener,
+                               out nsIPrintProgressParams printProgressParams,
+                               out boolean notifyOnOpen);
 
   /**
-   *  Shows the print progress dialog
+   *  Shows the print page setup dialog
    *
    *  @param parent - a DOM windows the dialog will be parented to (required)
    *  @param printSettings - PrintSettings for page setup (required)
    */
-  void showPageSetup(in mozIDOMWindowProxy parent,
-                     in nsIPrintSettings printSettings);
+  void showPageSetupDialog(in mozIDOMWindowProxy parent,
+                           in nsIPrintSettings printSettings);
 
 };
 
