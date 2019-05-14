@@ -698,9 +698,9 @@ class RaptorAndroid(Raptor):
             self.set_kernel_performance_parameters()
         self.device.clear_logcat()
 
-    def _set_value_and_check_exitcode(self, file_name, value):
+    def _set_value_and_check_exitcode(self, file_name, value, root=False):
         self.log.info('setting {} to {}'.format(file_name, value))
-        process = self.device.shell(' '.join(['echo', str(value), '>', str(file_name)]), root=True)
+        process = self.device.shell(' '.join(['echo', str(value), '>', str(file_name)]), root=root)
         if process.exitcode == 0:
             self.log.info('successfully set {} to {}'.format(file_name, value))
         else:
@@ -768,7 +768,7 @@ class RaptorAndroid(Raptor):
         }
 
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value)
+            self._set_value_and_check_exitcode(key, value, root=True)
 
     def set_cpu_performance_parameters(self, device_name):
         self.log.info('setting cpu performance parameters')
@@ -800,7 +800,7 @@ class RaptorAndroid(Raptor):
             pass
 
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value)
+            self._set_value_and_check_exitcode(key, value, root=True)
 
     def set_gpu_performance_parameters(self, device_name):
         self.log.info('setting gpu performance parameters')
@@ -836,7 +836,7 @@ class RaptorAndroid(Raptor):
         else:
             pass
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value)
+            self._set_value_and_check_exitcode(key, value, root=True)
 
     def set_kernel_performance_parameters(self):
         self.log.info('setting kernel performance parameters')
@@ -847,7 +847,7 @@ class RaptorAndroid(Raptor):
             '/sys/kernel/debug/msm-bus-dbg/shell-client/slv': '512',
         }
         for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value)
+            self._set_value_and_check_exitcode(key, value, root=True)
 
     def clear_app_data(self):
         self.log.info("clearing %s app data" % self.config['binary'])
