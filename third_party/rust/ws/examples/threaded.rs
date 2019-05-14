@@ -1,17 +1,19 @@
-extern crate env_logger;
 /// A thread-based client + server example. It also demonstrates using a struct as a WebSocket
 /// handler to implement more handler methods than a closure handler allows.
+
 extern crate ws;
+extern crate env_logger;
 
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
 
-use ws::{connect, listen, CloseCode, Handler, Message, Result, Sender};
+use ws::{connect, listen, CloseCode, Sender, Handler, Message, Result};
 
-fn main() {
+fn main () {
+
     // Setup logging
-    env_logger::init();
+    env_logger::init().unwrap();
 
     // Server WebSocket handler
     struct Server {
@@ -19,6 +21,7 @@ fn main() {
     }
 
     impl Handler for Server {
+
         fn on_message(&mut self, msg: Message) -> Result<()> {
             println!("Server got message '{}'. ", msg);
             self.out.send(msg)
@@ -32,21 +35,31 @@ fn main() {
     }
 
     // Server thread
-    let server = thread::spawn(move || listen("127.0.0.1:3012", |out| Server { out }).unwrap());
+    let server = thread::spawn(move || {
+        listen("127.0.0.1:3012", |out| {
+
+            Server { out: out }
+
+        }).unwrap()
+    });
 
     // Give the server a little time to get going
     sleep(Duration::from_millis(10));
 
     // Client thread
     let client = thread::spawn(move || {
+
         connect("ws://127.0.0.1:3012", |out| {
+
             out.send("Hello WebSocket").unwrap();
 
             move |msg| {
                 println!("Client got message '{}'. ", msg);
                 out.close(CloseCode::Normal)
             }
+
         }).unwrap()
+
     });
 
     let _ = server.join();
@@ -54,3 +67,4 @@ fn main() {
 
     println!("All done.")
 }
+
