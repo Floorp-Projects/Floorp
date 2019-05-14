@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Badges component: contrast ratio fail range render 1`] = `"<span class=\\"badges\\" role=\\"group\\" aria-label=\\"accessibility.badges\\"><span class=\\"audit-badge badge\\" title=\\"accessibility.badge.contrast.tooltip\\" aria-label=\\"accessibility.badge.contrast\\">accessibility.badge.contrast</span></span>"`;
+exports[`Badges component: contrast ratio fail range render 1`] = `"<span class=\\"badges\\" role=\\"group\\" aria-label=\\"accessibility.badges\\"><span class=\\"audit-badge badge\\" title=\\"accessibility.badge.contrast.tooltip\\" aria-label=\\"accessibility.badge.contrast.warning\\">accessibility.badge.contrast</span></span>"`;
 
-exports[`Badges component: contrast ratio fail render 1`] = `"<span class=\\"badges\\" role=\\"group\\" aria-label=\\"accessibility.badges\\"><span class=\\"audit-badge badge\\" title=\\"accessibility.badge.contrast.tooltip\\" aria-label=\\"accessibility.badge.contrast\\">accessibility.badge.contrast</span></span>"`;
+exports[`Badges component: contrast ratio fail render 1`] = `"<span class=\\"badges\\" role=\\"group\\" aria-label=\\"accessibility.badges\\"><span class=\\"audit-badge badge\\" title=\\"accessibility.badge.contrast.tooltip\\" aria-label=\\"accessibility.badge.contrast.warning\\">accessibility.badge.contrast</span></span>"`;
 
 exports[`Badges component: contrast ratio success render 1`] = `"<span class=\\"badges\\" role=\\"group\\" aria-label=\\"accessibility.badges\\"></span>"`;
 
