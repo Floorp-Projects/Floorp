@@ -172,14 +172,14 @@ var LoginHelper = {
   },
 
   /**
-   * Helper to avoid the `count` argument and property bags when calling
+   * Helper to avoid the property bags when calling
    * Services.logins.searchLogins from JS.
    *
    * @param {Object} aSearchOptions - A regular JS object to copy to a property bag before searching
    * @return {nsILoginInfo[]} - The result of calling searchLogins.
    */
   searchLoginsWithObject(aSearchOptions) {
-    return Services.logins.searchLogins({}, this.newPropertyBag(aSearchOptions));
+    return Services.logins.searchLogins(this.newPropertyBag(aSearchOptions));
   },
 
   /**
