@@ -109,9 +109,60 @@ void getBar();
                 pass
         try:
             header.print_header(i, FdMock(), filename='f')
+            self.assertTrue(False, "Header printing failed to fail")
         except Exception as e:
             self.assertEqual(
                 e.args[0], "Unexpected overloaded virtual method GetBar in interface foo")
+
+    def testBuiltinClassParent(self):
+        i = self.p.parse("""
+        [scriptable, builtinclass, uuid(abc)] interface foo {};
+        [scriptable, uuid(def)] interface bar : foo {};
+        """, filename='f')
+        self.assertTrue(isinstance(i, xpidl.IDL))
+        try:
+            i.resolve([], self.p, {})
+            self.assertTrue(False,
+                            "non-builtinclasses can't inherit from builtinclasses")
+        except xpidl.IDLError as e:
+            self.assertEqual(
+                e.message,
+                "interface 'bar' is not builtinclass but derives from builtinclass 'foo'")
+
+    def testScriptableNotXPCOM(self):
+        # notxpcom method requires builtinclass on the interface
+        i = self.p.parse("""
+        [scriptable, uuid(abc)] interface nsIScriptableWithNotXPCOM {
+          [notxpcom] void method2();
+        };
+        """, filename='f')
+        self.assertTrue(isinstance(i, xpidl.IDL))
+        try:
+            i.resolve([], self.p, {})
+            self.assertTrue(False,
+                            "Resolve should fail for non-builtinclasses with notxpcom methods")
+        except xpidl.IDLError as e:
+            self.assertEqual(
+                e.message, ("scriptable interface 'nsIScriptableWithNotXPCOM' "
+                            "must be marked [builtinclass] because it contains a [notxpcom] "
+                            "method 'method2'"))
+
+        # notxpcom attribute requires builtinclass on the interface
+        i = self.p.parse("""
+        interface nsISomeInterface;
+        [scriptable, uuid(abc)] interface nsIScriptableWithNotXPCOM {
+          [notxpcom] attribute nsISomeInterface attrib;
+        };
+        """, filename='f')
+        self.assertTrue(isinstance(i, xpidl.IDL))
+        try:
+            i.resolve([], self.p, {})
+            self.assertTrue(False,
+                            "Resolve should fail for non-builtinclasses with notxpcom attributes")
+        except xpidl.IDLError as e:
+            self.assertEqual(
+                e.message, ("scriptable interface 'nsIScriptableWithNotXPCOM' must be marked "
+                            "[builtinclass] because it contains a [notxpcom] attribute 'attrib'"))
 
 
 if __name__ == '__main__':
