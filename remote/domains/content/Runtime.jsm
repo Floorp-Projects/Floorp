@@ -22,6 +22,9 @@ class Runtime extends ContentProcessDomain {
     // Map of all the ExecutionContext instances:
     // [Execution context id (Number) => ExecutionContext instance]
     this.contexts = new Map();
+
+    this.onContextCreated = this.onContextCreated.bind(this);
+    this.onContextDestroyed = this.onContextDestroyed.bind(this);
   }
 
   destructor() {
@@ -33,21 +36,16 @@ class Runtime extends ContentProcessDomain {
   async enable() {
     if (!this.enabled) {
       this.enabled = true;
-      this.chromeEventHandler.addEventListener("DOMWindowCreated", this,
-        {mozSystemGroup: true});
-
-      // Listen for pageshow and pagehide to track pages going in/out to/from the BF Cache
-      this.chromeEventHandler.addEventListener("pageshow", this,
-        {mozSystemGroup: true});
-      this.chromeEventHandler.addEventListener("pagehide", this,
-        {mozSystemGroup: true});
-
-      Services.obs.addObserver(this, "inner-window-destroyed");
+      this.contextObserver.on("context-created", this.onContextCreated);
+      this.contextObserver.on("context-destroyed", this.onContextDestroyed);
 
       // Spin the event loop in order to send the `executionContextCreated` event right
       // after we replied to `enable` request.
       Services.tm.dispatchToMainThread(() => {
-        this._createContext(this.content);
+        this.onContextCreated("context-created", {
+          id: this.content.windowUtils.currentInnerWindowID,
+          window: this.content,
+        });
       });
     }
   }
@@ -55,13 +53,8 @@ class Runtime extends ContentProcessDomain {
   disable() {
     if (this.enabled) {
       this.enabled = false;
-      this.chromeEventHandler.removeEventListener("DOMWindowCreated", this,
-        {mozSystemGroup: true});
-      this.chromeEventHandler.removeEventListener("pageshow", this,
-        {mozSystemGroup: true});
-      this.chromeEventHandler.removeEventListener("pagehide", this,
-        {mozSystemGroup: true});
-      Services.obs.removeObserver(this, "inner-window-destroyed");
+      this.contextObserver.off("context-created", this.onContextCreated);
+      this.contextObserver.off("context-destroyed", this.onContextDestroyed);
     }
   }
 
@@ -120,38 +113,13 @@ class Runtime extends ContentProcessDomain {
     return this.__debugger;
   }
 
-  handleEvent({type, target, persisted}) {
-    if (target.defaultView != this.content) {
-      // Ignore iframes for now.
-      return;
-    }
-    switch (type) {
-    case "DOMWindowCreated":
-      this._createContext(target.defaultView);
-      break;
-
-    case "pageshow":
-      // `persisted` is true when this is about a page being resurected from BF Cache
-      if (!persisted) {
-        return;
+  getContextByFrameId(frameId) {
+    for (const ctx of this.contexts.values()) {
+      if (ctx.frameId === frameId) {
+        return ctx;
       }
-      this._createContext(target.defaultView);
-      break;
-
-    case "pagehide":
-      // `persisted` is true when this is about a page being frozen into BF Cache
-      if (!persisted) {
-        return;
-      }
-      const id = target.defaultView.windowUtils.currentInnerWindowID;
-      this._destroyContext(id);
-      break;
     }
-  }
-
-  observe(subject, topic, data) {
-    const innerWindowID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    this._destroyContext(innerWindowID);
+    return null;
   }
 
   /**
@@ -162,9 +130,7 @@ class Runtime extends ContentProcessDomain {
    * @param {Window} window
    *     The window object of the newly instantiated document.
    */
-  _createContext(window) {
-    const { windowUtils } = window;
-    const id = windowUtils.currentInnerWindowID;
+  onContextCreated(name, { id, window }) {
     if (this.contexts.has(id)) {
       return;
     }
@@ -172,13 +138,12 @@ class Runtime extends ContentProcessDomain {
     const context = new ExecutionContext(this._debugger, window);
     this.contexts.set(id, context);
 
-    const frameId = windowUtils.outerWindowID;
     this.emit("Runtime.executionContextCreated", {
       context: {
         id,
         auxData: {
           isDefault: window == this.content,
-          frameId,
+          frameId: context.frameId,
         },
       },
     });
@@ -187,18 +152,32 @@ class Runtime extends ContentProcessDomain {
   /**
    * Helper method to destroy the ExecutionContext of the given id. Also emit
    * the related `Runtime.executionContextDestroyed` event.
+   * ContextObserver will call this method with either `id` or `frameId` argument
+   * being set.
    *
    * @param {Number} id
    *     The execution context id to destroy.
+   * @param {Number} frameId
+   *     The frame id of execution context to destroy.
+   * Eiter `id` or `frameId` is passed.
    */
-  _destroyContext(id) {
-    const context = this.contexts.get(id);
+  onContextDestroyed(name, { id, frameId }) {
+    let context;
+    if (id && frameId) {
+      throw new Error("Expects only id *or* frameId argument to be passed");
+    }
+
+    if (id) {
+      context = this.contexts.get(id);
+    } else {
+      context = this.getContextByFrameId(frameId);
+    }
 
     if (context) {
       context.destructor();
-      this.contexts.delete(id);
+      this.contexts.delete(context.id);
       this.emit("Runtime.executionContextDestroyed", {
-        executionContextId: id,
+        executionContextId: context.id,
       });
     }
   }
