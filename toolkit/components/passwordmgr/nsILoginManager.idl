@@ -109,18 +109,13 @@ interface nsILoginManager : nsISupports {
   /**
    * Obtain a list of all hosts for which password saving is disabled.
    *
-   * @param count
-   *        The number of elements in the array. JS callers can simply use
-   *        the array's .length property and omit this param.
-   * @param hostnames
-   *        An array of hostname strings, in origin URL format without a
-   *        pathname. For example: "https://www.site.com".
+   * @return An array of hostname strings, in origin URL format without a
+   *         pathname. For example: "https://www.site.com".
    *
    * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.getDisabledAllLogins();
+   *       var logins = pwmgr.getAllDisabledHosts();
    */
-  void getAllDisabledHosts([optional] out unsigned long count,
-                    [retval, array, size_is(count)] out wstring hostnames);
+  Array<AString> getAllDisabledHosts();
 
 
   /**
