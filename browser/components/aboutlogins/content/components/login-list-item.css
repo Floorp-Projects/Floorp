@@ -9,6 +9,11 @@
   padding: 10px;
 }
 
+/* [hidden] isn't applying to elements in Shadow DOM. */
+:host([hidden]) {
+  display: none;
+}
+
 :host(:hover) {
   background-color: var(--grey-90-a10);
 }
