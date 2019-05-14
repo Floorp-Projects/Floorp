@@ -8,6 +8,11 @@
   padding-right: 40px;
 }
 
+:host(:not([editing])) .save-changes-button,
+:host(:not([editing])) .cancel-button {
+  display: none;
+}
+
 .header {
   display: flex;
   border-bottom: 1px solid var(--in-content-box-border-color);
