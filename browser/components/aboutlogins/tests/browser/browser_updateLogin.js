@@ -44,8 +44,8 @@ add_task(async function test_login_item() {
     }, "Waiting for login item to get populated");
     ok(loginItemPopulated, "The login item should get populated");
 
-    let usernameInput = loginItem.shadowRoot.querySelector("input[name='username']");
-    let passwordInput = loginItem.shadowRoot.querySelector("input[name='password']");
+    let usernameInput = loginItem.shadowRoot.querySelector("modal-input[name='username']");
+    let passwordInput = loginItem.shadowRoot.querySelector("modal-input[name='password']");
 
     usernameInput.value += "-undome";
     passwordInput.value += "-undome";
