@@ -32,7 +32,9 @@ class Element;
  * See `dom/docs/Fission-IPC-Diagram.svg` for an overview of the DOM IPC
  * actors.
  */
-class BrowserHost : public RemoteBrowser, public nsIRemoteTab {
+class BrowserHost : public RemoteBrowser,
+                    public nsIRemoteTab,
+                    public nsSupportsWeakReference {
  public:
   typedef mozilla::layers::LayersId LayersId;
 
@@ -40,9 +42,12 @@ class BrowserHost : public RemoteBrowser, public nsIRemoteTab {
 
   static BrowserHost* GetFrom(nsIRemoteTab* aRemoteTab);
 
-  NS_DECL_ISUPPORTS
+  // NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   // nsIRemoteTab
   NS_DECL_NSIREMOTETAB
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(BrowserHost, RemoteBrowser)
 
   // Get the IPDL actor for the root BrowserParent. This method should be
   // avoided and consumers migrated to use this class.

@@ -11,6 +11,7 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsILoadContext.h"
+#include "nsISupports.h"
 #include "nsISupportsImpl.h"
 #include "nsIURI.h"
 #include "nsRect.h"
@@ -33,10 +34,8 @@ class BrowserBridgeHost;
  * nsFrameLoader will use BrowserHost, and a content process nsFrameLoader will
  * use BrowserBridgeHost.
  */
-class RemoteBrowser {
+class RemoteBrowser : public nsISupports {
  public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
   typedef mozilla::layers::LayersId LayersId;
 
   // Try to cast this RemoteBrowser to a BrowserHost, may return null
