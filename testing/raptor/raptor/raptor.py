@@ -177,6 +177,48 @@ class Raptor(object):
         # if 'alert_on' was provided in the test INI, add to our config for results/output
         self.config['subtest_alert_on'] = test.get('alert_on')
 
+    def run_tests(self, tests, test_names):
+        try:
+            for test in tests:
+                self.run_test(test, timeout=int(test['page_timeout']))
+
+            return self.process_results(test_names)
+
+        finally:
+            self.clean_up()
+
+    def run_test(self, test, timeout=None):
+        raise NotImplementedError()
+
+    def wait_for_test_finish(self, test, timeout):
+        # convert timeout to seconds and account for page cycles
+        timeout = int(timeout / 1000) * int(test.get('page_cycles', 1))
+        # account for the pause the raptor webext runner takes after browser startup
+        # and the time an exception is propagated through the framework
+        timeout += (int(self.post_startup_delay / 1000) + 10)
+
+        # if geckoProfile enabled, give browser more time for profiling
+        if self.config['gecko_profile'] is True:
+            timeout += 5 * 60
+
+        elapsed_time = 0
+        while not self.control_server._finished:
+            if self.config['enable_control_server_wait']:
+                response = self.control_server_wait_get()
+                if response == 'webext_status/__raptor_shutdownBrowser':
+                    if self.config['memory_test']:
+                        generate_android_memory_profile(self, test['name'])
+                    self.control_server_wait_continue()
+            time.sleep(1)
+            # we only want to force browser-shutdown on timeout if not in debug mode;
+            # in debug-mode we leave the browser running (require manual shutdown)
+            if not self.debug_mode:
+                elapsed_time += 1
+                if elapsed_time > (timeout) - 5:  # stop 5 seconds early
+                    self.log.info("application timed out after {} seconds".format(timeout))
+                    self.control_server.wait_for_quit()
+                    break
+
     def run_test_teardown(self):
         self.check_for_crashes()
 
@@ -330,35 +372,6 @@ class Raptor(object):
             self.gecko_profiler = GeckoProfile(upload_dir,
                                                self.config,
                                                test)
-
-    def wait_for_test_finish(self, test, timeout):
-        # convert timeout to seconds and account for page cycles
-        timeout = int(timeout / 1000) * int(test.get('page_cycles', 1))
-        # account for the pause the raptor webext runner takes after browser startup
-        # and the time an exception is propagated through the framework
-        timeout += (int(self.post_startup_delay / 1000) + 10)
-
-        # if geckoProfile enabled, give browser more time for profiling
-        if self.config['gecko_profile'] is True:
-            timeout += 5 * 60
-
-        elapsed_time = 0
-        while not self.control_server._finished:
-            if self.config['enable_control_server_wait']:
-                response = self.control_server_wait_get()
-                if response == 'webext_status/__raptor_shutdownBrowser':
-                    if self.config['memory_test']:
-                        generate_android_memory_profile(self, test['name'])
-                    self.control_server_wait_continue()
-            time.sleep(1)
-            # we only want to force browser-shutdown on timeout if not in debug mode;
-            # in debug-mode we leave the browser running (require manual shutdown)
-            if not self.debug_mode:
-                elapsed_time += 1
-                if elapsed_time > (timeout) - 5:  # stop 5 seconds early
-                    self.log.info("application timed out after {} seconds".format(timeout))
-                    self.control_server.wait_for_quit()
-                    break
 
     def process_results(self, test_names):
         # when running locally output results in build/raptor.json; when running
@@ -1175,14 +1188,7 @@ def main(args=sys.argv[1:]):
         raptor.tune_performance()
     raptor.start_control_server()
 
-    try:
-        for next_test in raptor_test_list:
-            raptor.run_test(next_test, timeout=int(next_test['page_timeout']))
-
-        success = raptor.process_results(raptor_test_names)
-
-    finally:
-        raptor.clean_up()
+    success = raptor.run_tests(raptor_test_list, raptor_test_names)
 
     if not success:
         # didn't get test results; test timed out or crashed, etc. we want job to fail
