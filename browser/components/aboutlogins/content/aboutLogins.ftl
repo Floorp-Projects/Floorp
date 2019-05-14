@@ -12,6 +12,9 @@
 
 about-logins-page-title = Login Manager
 
+login-filter =
+  .placeholder = Search Logins
+
 login-list =
   .login-list-header = Logins
 
