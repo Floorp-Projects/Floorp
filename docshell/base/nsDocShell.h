@@ -405,6 +405,10 @@ class nsDocShell final : public nsDocLoader,
   // Clear the document's storage access flag if needed.
   void MaybeClearStorageAccessFlag();
 
+  void SkipBrowsingContextDetach() {
+    mSkipBrowsingContextDetachOnDestroy = true;
+  }
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
@@ -1236,6 +1240,11 @@ class nsDocShell final : public nsDocLoader,
   bool mTitleValidForCurrentURI : 1;
 
   bool mIsFrame : 1;
+
+  // If mSkipBrowsingContextDetachOnDestroy is set to true, then when the
+  // docshell is destroyed, the browsing context will not be detached. This is
+  // for cases where we want to preserve the BC for future use.
+  bool mSkipBrowsingContextDetachOnDestroy : 1;
 };
 
 #endif /* nsDocShell_h__ */
