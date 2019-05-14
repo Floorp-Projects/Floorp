@@ -530,9 +530,7 @@ HashCompleterRequest.prototype = {
 
     return gUrlUtil.makeFindFullHashRequestV4(tableNameArray,
                                               stateArray,
-                                              prefixArray,
-                                              tableNameArray.length,
-                                              prefixArray.length);
+                                              prefixArray);
   },
 
   // Returns a string for the request body based on the contents of
