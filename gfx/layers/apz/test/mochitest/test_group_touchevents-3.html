@@ -10,10 +10,11 @@
   <script type="application/javascript">
 
 var touch_action_prefs = getPrefs("TOUCH_ACTION");
+var with_meta_viewport = [...touch_action_prefs, ["dom.meta-viewport.enabled", true]];
 
 var subtests = [
   // Simple test to exercise touch-action CSS property
-  {"file": "helper_touch_action.html", "prefs": touch_action_prefs},
+  {"file": "helper_touch_action.html", "prefs": with_meta_viewport},
   // More complex touch-action tests, with overlapping regions and such
   {"file": "helper_touch_action_complex.html", "prefs": touch_action_prefs},
   // Tests that touch-action CSS properties are handled in APZ without waiting
