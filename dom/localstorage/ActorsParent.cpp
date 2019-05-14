@@ -39,6 +39,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/storage/Variant.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsExceptionHandler.h"
@@ -3380,6 +3381,7 @@ bool DeallocPBackgroundLSObserverParent(PBackgroundLSObserverParent* aActor) {
 
 bool VerifyPrincipalInfo(const Maybe<ContentParentId>& aContentParentId,
                          const PrincipalInfo& aPrincipalInfo,
+                         const PrincipalInfo& aStoragePrincipalInfo,
                          const Maybe<nsID>& aClientId) {
   AssertIsOnBackgroundThread();
 
@@ -3397,7 +3399,9 @@ bool VerifyPrincipalInfo(const Maybe<ContentParentId>& aContentParentId,
     }
   }
 
-  return true;
+  return StoragePrincipalHelper::
+      VerifyValidStoragePrincipalInfoForPrincipalInfo(aStoragePrincipalInfo,
+                                                      aPrincipalInfo);
 }
 
 bool VerifyOriginKey(const nsACString& aOriginKey,
@@ -3432,8 +3436,9 @@ bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
       const LSRequestCommonParams& params =
           aParams.get_LSRequestPreloadDatastoreParams().commonParams();
 
-      if (NS_WARN_IF(!VerifyPrincipalInfo(aContentParentId,
-                                          params.principalInfo(), Nothing()))) {
+      if (NS_WARN_IF(
+              !VerifyPrincipalInfo(aContentParentId, params.principalInfo(),
+                                   params.storagePrincipalInfo(), Nothing()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
@@ -3452,9 +3457,9 @@ bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
 
       const LSRequestCommonParams& commonParams = params.commonParams();
 
-      if (NS_WARN_IF(!VerifyPrincipalInfo(aContentParentId,
-                                          commonParams.principalInfo(),
-                                          params.clientId()))) {
+      if (NS_WARN_IF(!VerifyPrincipalInfo(
+              aContentParentId, commonParams.principalInfo(),
+              commonParams.storagePrincipalInfo(), params.clientId()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
@@ -3472,7 +3477,8 @@ bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
           aParams.get_LSRequestPrepareObserverParams();
 
       if (NS_WARN_IF(!VerifyPrincipalInfo(
-              aContentParentId, params.principalInfo(), params.clientId()))) {
+              aContentParentId, params.principalInfo(),
+              params.storagePrincipalInfo(), params.clientId()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
@@ -3593,8 +3599,9 @@ bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
       const LSSimpleRequestPreloadedParams& params =
           aParams.get_LSSimpleRequestPreloadedParams();
 
-      if (NS_WARN_IF(!VerifyPrincipalInfo(aContentParentId,
-                                          params.principalInfo(), Nothing()))) {
+      if (NS_WARN_IF(
+              !VerifyPrincipalInfo(aContentParentId, params.principalInfo(),
+                                   params.storagePrincipalInfo(), Nothing()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
