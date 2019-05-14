@@ -346,8 +346,11 @@ function makeNodesForPromiseProperties(item: Node): Array<Node> {
   return properties;
 }
 
-function makeNodesForProxyProperties(item: Node): Array<Node> {
-  const { proxyHandler, proxyTarget } = getValue(item);
+function makeNodesForProxyProperties(
+  loadedProps: GripProperties,
+  item: Node
+): Array<Node> {
+  const { proxyHandler, proxyTarget } = loadedProps;
 
   return [
     createNode({
@@ -792,8 +795,8 @@ function getChildren(options: {
     return addToCache(makeNodesForMapEntry(item));
   }
 
-  if (nodeIsProxy(item)) {
-    return addToCache(makeNodesForProxyProperties(item));
+  if (nodeIsProxy(item) && hasLoadedProps) {
+    return addToCache(makeNodesForProxyProperties(loadedProps, item));
   }
 
   if (nodeIsLongString(item) && hasLoadedProps) {

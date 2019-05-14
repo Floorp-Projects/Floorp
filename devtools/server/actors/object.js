@@ -866,6 +866,24 @@ const proto = {
   },
 
   /**
+   * Handle a protocol request to get the target and handler internal slots of a proxy.
+   */
+  proxySlots: function() {
+    // There could be transparent security wrappers, unwrap to check if it's a proxy.
+    // However, retrieve proxyTarget and proxyHandler from `this.obj` to avoid exposing
+    // the unwrapped target and handler.
+    const unwrapped = DevToolsUtils.unwrap(this.obj);
+    if (!unwrapped || !unwrapped.isProxy) {
+      return this.throwError("objectNotProxy",
+        "'proxySlots' request is only valid for grips with a 'Proxy' class.");
+    }
+    return {
+      proxyTarget: this.hooks.createValueGrip(this.obj.proxyTarget),
+      proxyHandler: this.hooks.createValueGrip(this.obj.proxyHandler),
+    };
+  },
+
+  /**
    * Release the actor, when it isn't needed anymore.
    * Protocol.js uses this release method to call the destroy method.
    */
