@@ -33,6 +33,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
+import mozilla.components.browser.domains.autocomplete.DomainAutocompleteResult
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.support.utils.ThreadUtils
@@ -797,16 +798,20 @@ class UrlInputFragment :
         }
 
         view?.let {
-            val result = if (useShipped) {
-                shippedDomainsProvider.getAutocompleteSuggestion(searchText)
-            } else if (useCustom) {
-                customDomainsProvider.getAutocompleteSuggestion(searchText)
-            } else {
-                null
+            var result : DomainAutocompleteResult? = null
+            if (useCustom) {
+                result = customDomainsProvider.getAutocompleteSuggestion(searchText)
             }
+
+            if (useShipped && result == null) {
+                result = shippedDomainsProvider.getAutocompleteSuggestion(searchText)
+            }
+
             if (result != null) {
                 view.applyAutocompleteResult(AutocompleteResult(
                         result.text, result.source, result.totalItems, { result.url }))
+            } else {
+                view.noAutocompleteResult()
             }
         }
 
