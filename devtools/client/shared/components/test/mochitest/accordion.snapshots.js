@@ -15,7 +15,6 @@ window._snapshots = {
         "type": "li",
         "props": {
           "className": "accordion-item-1",
-          "aria-expanded": false,
           "aria-labelledby": "label-id-1",
         },
         "children": [
@@ -25,6 +24,7 @@ window._snapshots = {
               "className": "accordion-header",
               "id": "label-id-1",
               "tabIndex": 0,
+              "aria-expanded": false,
               "onKeyDown": "e => this.onHandleHeaderKeyDown(e, i)",
               "onClick": "() => this.handleHeaderClick(i)",
             },
@@ -46,7 +46,6 @@ window._snapshots = {
         "type": "li",
         "props": {
           "className": "accordion-item-2",
-          "aria-expanded": false,
           "aria-labelledby": "label-id-2",
         },
         "children": [
@@ -56,6 +55,7 @@ window._snapshots = {
               "className": "accordion-header",
               "id": "label-id-2",
               "tabIndex": 0,
+              "aria-expanded": false,
               "onKeyDown": "e => this.onHandleHeaderKeyDown(e, i)",
               "onClick": "() => this.handleHeaderClick(i)",
             },
@@ -91,7 +91,6 @@ window._snapshots = {
         "type": "li",
         "props": {
           "className": "accordion-item-3",
-          "aria-expanded": true,
           "aria-labelledby": "label-id-3",
         },
         "children": [
@@ -101,6 +100,7 @@ window._snapshots = {
               "className": "accordion-header",
               "id": "label-id-3",
               "tabIndex": 0,
+              "aria-expanded": true,
               "onKeyDown": "e => this.onHandleHeaderKeyDown(e, i)",
               "onClick": "() => this.handleHeaderClick(i)",
             },
