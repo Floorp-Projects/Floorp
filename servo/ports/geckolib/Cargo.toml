@@ -11,6 +11,7 @@ path = "lib.rs"
 [features]
 bindgen = ["style/use_bindgen"]
 gecko_debug = ["style/gecko_debug", "nsstring/gecko_debug"]
+gecko_profiler = ["style/gecko_profiler"]
 
 [dependencies]
 atomic_refcell = "0.1"
