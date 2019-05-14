@@ -47,8 +47,6 @@ class PluginDocument final : public MediaDocument, public nsIPluginDocument {
   const nsCString& GetType() const { return mMimeType; }
   Element* GetPluginContent() { return mPluginContent; }
 
-  void StartLayout() { MediaDocument::StartLayout(); }
-
   virtual void Destroy() override {
     if (mStreamListener) {
       mStreamListener->DropDocumentRef();
