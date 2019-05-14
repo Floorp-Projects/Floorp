@@ -17,8 +17,8 @@ add_task(async function aboutDialog_foregroundCheck_completeBadSize() {
                        internalResult: gBadSizeResult};
   }
 
-  let updateParams = "&completePatchOnly=1&invalidCompleteSize=1";
-  await runAboutDialogUpdateTest(updateParams, false, [
+  let params = {queryString: "&completePatchOnly=1&invalidCompleteSize=1"};
+  await runAboutDialogUpdateTest(params, [
     {
       panelId: "checkingForUpdates",
       checkActiveUpdate: null,

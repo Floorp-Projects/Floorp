@@ -51,6 +51,9 @@ interface nsIXPCTestParams : nsISupports {
                                                 inout nsIIDPtr bIID, [iid_is(bIID)] inout Array<nsQIResult> b,
                                                 out nsIIDPtr rvIID, [retval, iid_is(rvIID)] out Array<nsQIResult> rv);
 
+  // Returns whatever was passed in.
+  Array<uint8_t>        testOptionalSequence([optional] in Array<uint8_t> arr);
+
   //
   // Dependent parameters use the same types as above, but are handled much differently.
   //

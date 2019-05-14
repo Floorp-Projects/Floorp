@@ -695,8 +695,8 @@ impl Poll {
     /// readiness. `Poll` will only return readiness events for operations
     /// specified by this argument.
     ///
-    /// If a socket is registered with [`readable`] interest and the socket
-    /// becomes writable, no event will be returned from [`poll`].
+    /// If a socket is registered with readable interest and the socket becomes
+    /// writable, no event will be returned from [`poll`].
     ///
     /// The readiness interest for an `Evented` handle can be changed at any
     /// time by calling [`reregister`].
@@ -860,7 +860,7 @@ impl Poll {
     ///
     /// When an `Evented` handle is deregistered, the `Poll` instance will
     /// no longer monitor it for readiness state changes. Unlike disabling
-    /// handles with [`oneshot`], deregistering clears up any internal resources
+    /// handles with oneshot, deregistering clears up any internal resources
     /// needed to track the handle.
     ///
     /// A handle can be passed back to `register` after it has been
@@ -1157,6 +1157,8 @@ impl Poll {
         if timeout == Some(Duration::from_millis(0)) {
             // If blocking is not requested, then there is no need to prepare
             // the queue for sleep
+            //
+            // The sleep_marker should be removed by readiness_queue.poll().
         } else if self.readiness_queue.prepare_for_sleep() {
             // The readiness queue is empty. The call to `prepare_for_sleep`
             // inserts `sleep_marker` into the queue. This signals to any
@@ -2116,6 +2118,13 @@ impl ReadinessQueue {
         // loop where `Poll::poll` will keep dequeuing nodes it enqueues.
         let mut until = ptr::null_mut();
 
+        if dst.len() == dst.capacity() {
+            // If `dst` is already full, the readiness queue won't be drained.
+            // This might result in `sleep_marker` staying in the queue and
+            // unecessary pipe writes occuring.
+            self.inner.clear_sleep_marker();
+        }
+
         'outer:
         while dst.len() < dst.capacity() {
             // Dequeue a node. If the queue is in an inconsistent state, then
@@ -2353,6 +2362,37 @@ impl ReadinessQueueInner {
         }
     }
 
+    fn clear_sleep_marker(&self) {
+        let end_marker = self.end_marker();
+        let sleep_marker = self.sleep_marker();
+
+        unsafe {
+            let tail = *self.tail_readiness.get();
+
+            if tail != self.sleep_marker() {
+                return;
+            }
+
+            // The empty markeer is *not* currently in the readiness queue
+            // (since the sleep markeris).
+            self.end_marker.next_readiness.store(ptr::null_mut(), Relaxed);
+
+            let actual = self.head_readiness.compare_and_swap(
+                sleep_marker, end_marker, AcqRel);
+
+            debug_assert!(actual != end_marker);
+
+            if actual != sleep_marker {
+                // The readiness queue is not empty, we cannot remove the sleep
+                // markeer
+                return;
+            }
+
+            // Update the tail pointer.
+            *self.tail_readiness.get() = end_marker;
+        }
+    }
+
     /// Must only be called in `poll` or `drop`
     unsafe fn dequeue_node(&self, until: *mut ReadinessNode) -> Dequeue {
         // This is the 1024cores.net intrusive MPSC queue [1] "pop" function
@@ -2362,6 +2402,10 @@ impl ReadinessQueueInner {
 
         if tail == self.end_marker() || tail == self.sleep_marker() || tail == self.closed_marker() {
             if next.is_null() {
+                // Make sure the sleep marker is removed (as we are no longer
+                // sleeping
+                self.clear_sleep_marker();
+
                 return Dequeue::Empty;
             }
 

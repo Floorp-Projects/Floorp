@@ -51,7 +51,7 @@ time = "0.1"
 api = { version = "0.60.0", path = "../webrender_api", package = "webrender_api" }
 webrender_build = { version = "0.0.1", path = "../webrender_build" }
 malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of", package = "wr_malloc_size_of" }
-ws = { optional = true, version = "0.7.3" }
+ws = { optional = true, version = "0.8" }
 svg_fmt = "0.4"
 
 [dependencies.pathfinder_font_renderer]

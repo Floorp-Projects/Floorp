@@ -23,7 +23,7 @@ class nsNPAPIPluginInstance;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, uuid(2eb3195e-3eea-4083-bb1d-d2d70fa35ccb)]
+[scriptable, builtinclass, uuid(2eb3195e-3eea-4083-bb1d-d2d70fa35ccb)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**

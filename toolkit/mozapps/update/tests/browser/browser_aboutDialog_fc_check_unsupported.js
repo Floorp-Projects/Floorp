@@ -6,8 +6,8 @@
 // Test for About Dialog foreground check for updates
 // with an unsupported update.
 add_task(async function aboutDialog_foregroundCheck_unsupported() {
-  let updateParams = "&unsupported=1";
-  await runAboutDialogUpdateTest(updateParams, false, [
+  let params = {queryString: "&unsupported=1"};
+  await runAboutDialogUpdateTest(params, [
     {
       panelId: "checkingForUpdates",
       checkActiveUpdate: null,

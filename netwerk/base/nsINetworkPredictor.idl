@@ -21,7 +21,7 @@ typedef unsigned long PredictorLearnReason;
  *                       NOTE: nsINetworkPredictor should only
  *                       be used on the main thread.
  */
-[scriptable, uuid(acc88e7c-3f39-42c7-ac31-6377c2c3d73e)]
+[scriptable, builtinclass, uuid(acc88e7c-3f39-42c7-ac31-6377c2c3d73e)]
 interface nsINetworkPredictor : nsISupports
 {
   /**
