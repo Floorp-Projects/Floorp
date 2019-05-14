@@ -4,6 +4,7 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
+import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Fact
@@ -108,6 +109,11 @@ sealed class Event {
     data class LibrarySelectedItem(val item: String) : Event() {
         override val extras: Map<String, String>?
             get() = mapOf("source" to item)
+    }
+
+    data class ErrorPageVisited(val errorType: ErrorType) : Event() {
+        override val extras: Map<String, String>?
+            get() = mapOf("errorType" to errorType.name)
     }
 
     data class SearchBarTapped(val source: Source) : Event() {

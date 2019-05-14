@@ -9,6 +9,7 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
@@ -45,11 +46,11 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         errorType: ErrorType,
         uri: String?
     ): RequestInterceptor.ErrorResponse? {
-
         val riskLevel = getRiskLevel(errorType)
         val htmlResource = getPageForRiskLevel(riskLevel)
         val cssResource = getStyleForRiskLevel(riskLevel)
 
+        context.components.analytics.metrics.track(Event.ErrorPageVisited(errorType))
         return RequestInterceptor.ErrorResponse(
             ErrorPages
                 .createErrorPage(context, errorType, uri = uri, htmlResource = htmlResource, cssResource = cssResource)

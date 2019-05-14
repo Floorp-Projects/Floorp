@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.mozilla.fenix.GleanMetrics.QrScanner
 import org.mozilla.fenix.GleanMetrics.Library
+import org.mozilla.fenix.GleanMetrics.ErrorPage
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -182,6 +183,10 @@ private val Event.wrapper
         is Event.LibrarySelectedItem -> EventWrapper(
             { Library.selectedItem },
             { Library.selectedItemKeys.valueOf(it) }
+        )
+        is Event.ErrorPageVisited -> EventWrapper(
+            { ErrorPage.visitedError },
+            { ErrorPage.visitedErrorKeys.valueOf(it) }
         )
 
         // Don't track other events with Glean

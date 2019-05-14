@@ -263,7 +263,6 @@ quick_action_sheet:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466
     notification_emails:
-
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   share_tapped:
@@ -715,6 +714,22 @@ library:
     - 976
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
+error_page:
+  visited_error:
+    type: event
+    description: >
+      A user encountered an error page
+    extra_keys:
+      error_type:
+        description: "The error type of the error page encountered"
+    bugs:
+    - 1242
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2491#issuecomment-492414486
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
