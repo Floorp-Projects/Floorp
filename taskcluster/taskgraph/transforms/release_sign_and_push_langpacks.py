@@ -11,6 +11,7 @@ from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
+from taskgraph.util.treeherder import inherit_treeherder_from_dep
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required
 
@@ -103,15 +104,10 @@ def make_task_description(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
 
-        treeherder = job.get('treeherder', {})
+        treeherder = inherit_treeherder_from_dep(job, dep_job)
         treeherder.setdefault('symbol', 'langpack(SnP{})'.format(
             job['attributes'].get('l10n_chunk', '')
         ))
-        dep_th_platform = dep_job.task.get('extra', {}).get(
-            'treeherder', {}).get('machine', {}).get('platform', '')
-        treeherder.setdefault('platform', '{}/opt'.format(dep_th_platform))
-        treeherder.setdefault('tier', 1)
-        treeherder.setdefault('kind', 'build')
 
         job['description'] = job['description'].format(
             locales='/'.join(job['attributes']['chunk_locales']),
