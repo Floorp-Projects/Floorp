@@ -62,7 +62,7 @@ class BrowsingContextGroup final : public nsWrapperCache {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  BrowsingContextGroup() = default;
+  BrowsingContextGroup();
 
   static already_AddRefed<BrowsingContextGroup> Select(
       BrowsingContext* aParent, BrowsingContext* aOpener) {

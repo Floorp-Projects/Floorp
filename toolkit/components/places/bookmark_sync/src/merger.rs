@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::{cell::RefCell, fmt::Write, mem, time::Duration};
+use std::{cell::RefCell, fmt::Write, mem, sync::Arc, time::Duration};
 
 use atomic_refcell::AtomicRefCell;
 use dogear::{MergeTimings, Stats, Store, StructureCounts};
@@ -20,7 +20,7 @@ use xpcom::{
     RefPtr,
 };
 
-use crate::driver::{Driver, Logger};
+use crate::driver::{AbortController, Driver, Logger};
 use crate::error;
 use crate::store;
 
@@ -28,6 +28,7 @@ use crate::store;
 #[xpimplements(mozISyncedBookmarksMerger)]
 #[refcnt = "nonatomic"]
 pub struct InitSyncedBookmarksMerger {
+    controller: Arc<AbortController>,
     db: RefCell<Option<Conn>>,
     logger: RefCell<Option<RefPtr<mozISyncedBookmarksMirrorLogger>>>,
 }
@@ -35,6 +36,7 @@ pub struct InitSyncedBookmarksMerger {
 impl SyncedBookmarksMerger {
     pub fn new() -> RefPtr<SyncedBookmarksMerger> {
         SyncedBookmarksMerger::allocate(InitSyncedBookmarksMerger {
+            controller: Arc::new(AbortController::default()),
             db: RefCell::default(),
             logger: RefCell::default(),
         })
@@ -94,6 +96,7 @@ impl SyncedBookmarksMerger {
         let async_thread = db.thread()?;
         let task = MergeTask::new(
             &db,
+            Arc::clone(&self.controller),
             logger.as_ref().cloned(),
             local_time_seconds,
             remote_time_seconds,
@@ -111,6 +114,7 @@ impl SyncedBookmarksMerger {
 
     xpcom_method!(finalize => Finalize());
     fn finalize(&self) -> Result<(), nsresult> {
+        self.controller.abort();
         mem::drop(self.db.borrow_mut().take());
         mem::drop(self.logger.borrow_mut().take());
         Ok(())
@@ -119,6 +123,7 @@ impl SyncedBookmarksMerger {
 
 struct MergeTask {
     db: Conn,
+    controller: Arc<AbortController>,
     max_log_level: LevelFilter,
     logger: Option<ThreadPtrHandle<mozISyncedBookmarksMirrorLogger>>,
     local_time_millis: i64,
@@ -131,6 +136,7 @@ struct MergeTask {
 impl MergeTask {
     fn new(
         db: &Conn,
+        controller: Arc<AbortController>,
         logger: Option<RefPtr<mozISyncedBookmarksMirrorLogger>>,
         local_time_seconds: i64,
         remote_time_seconds: i64,
@@ -161,6 +167,7 @@ impl MergeTask {
         };
         Ok(MergeTask {
             db: db.clone(),
+            controller,
             max_log_level,
             logger,
             local_time_millis: local_time_seconds * 1000,
@@ -177,13 +184,14 @@ impl Task for MergeTask {
         let mut db = self.db.clone();
         let mut store = store::Store::new(
             &mut db,
+            &self.controller,
             self.local_time_millis,
             self.remote_time_millis,
             &self.weak_uploads,
         );
         let log = Logger::new(self.max_log_level, self.logger.clone());
         let driver = Driver::new(log);
-        *self.result.borrow_mut() = Some(store.merge_with_driver(&driver));
+        *self.result.borrow_mut() = Some(store.merge_with_driver(&driver, &*self.controller));
     }
 
     fn done(&self) -> Result<(), nsresult> {

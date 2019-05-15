@@ -1663,6 +1663,10 @@ var AddonManagerInternal = {
       throw Components.Exception("aInstallingPrincipal must be a nsIPrincipal",
                                  Cr.NS_ERROR_INVALID_ARG);
 
+    if (this.isInstallAllowedByPolicy(aInstallingPrincipal, null, true /* explicit */)) {
+      return true;
+    }
+
     let providers = [...this.providers];
     for (let provider of providers) {
       if (callProvider(provider, "supportsMimetype", false, aMimetype) &&
@@ -1670,6 +1674,40 @@ var AddonManagerInternal = {
         return true;
     }
     return false;
+  },
+
+  /**
+   * Checks whether a particular source is allowed to install add-ons based
+   * on policy.
+   *
+   * @param  aInstallingPrincipal
+   *         The nsIPrincipal that initiated the install
+   * @param  aInstall
+   *         The AddonInstall to be installed
+   * @param  explicit
+   *         If this is set, we only return true if the source is explicitly
+   *         blocked via policy.
+   *
+   * @return boolean
+   *         By default, returns true if the source is blocked by policy
+   *         or there is no policy.
+   *         If explicit is set, only returns true of the source is
+   *         blocked by policy, false otherwise. This is needed for
+   *         handling inverse cases.
+   */
+  isInstallAllowedByPolicy(aInstallingPrincipal, aInstall, explicit) {
+    if (Services.policies) {
+      let extensionSettings = Services.policies.getExtensionSettings("*");
+      if (extensionSettings && extensionSettings.install_sources) {
+        if ((!aInstall || Services.policies.allowedInstallSource(aInstall.sourceURI)) &&
+            (!aInstallingPrincipal || !aInstallingPrincipal.URI ||
+            Services.policies.allowedInstallSource(aInstallingPrincipal.URI))) {
+          return true;
+        }
+        return false;
+      }
+    }
+    return !explicit;
   },
 
   installNotifyObservers(aTopic, aBrowser, aUri, aInstall, aInstallFn) {
@@ -1794,25 +1832,27 @@ var AddonManagerInternal = {
       topBrowser = docShell.chromeEventHandler;
 
     try {
-      if (!this.isInstallEnabled(aMimetype)) {
-        aInstall.cancel();
-
-        this.installNotifyObservers("addon-install-disabled", topBrowser,
-                                    aInstallingPrincipal.URI, aInstall);
-        return;
-      } else if (aInstallingPrincipal.isNullPrincipal || !aBrowser.contentPrincipal || !aInstallingPrincipal.subsumes(aBrowser.contentPrincipal)) {
-        aInstall.cancel();
-
-        this.installNotifyObservers("addon-install-origin-blocked", topBrowser,
-                                    aInstallingPrincipal.URI, aInstall);
-        return;
-      } else if (topBrowser.ownerGlobal.fullScreen) {
+      if (topBrowser.ownerGlobal.fullScreen) {
         // Addon installation and the resulting notifications should be blocked in fullscreen for security and usability reasons.
         // Installation prompts in fullscreen can trick the user into installing unwanted addons.
         // In fullscreen the notification box does not have a clear visual association with its parent anymore.
         aInstall.cancel();
 
         this.installNotifyObservers("addon-install-blocked-silent", topBrowser,
+                                    aInstallingPrincipal.URI, aInstall);
+        return;
+      } else if (!this.isInstallEnabled(aMimetype)) {
+        aInstall.cancel();
+
+        this.installNotifyObservers("addon-install-disabled", topBrowser,
+                                    aInstallingPrincipal.URI, aInstall);
+        return;
+      } else if (aInstallingPrincipal.isNullPrincipal || !aBrowser.contentPrincipal ||
+                 !aInstallingPrincipal.subsumes(aBrowser.contentPrincipal) ||
+                 !this.isInstallAllowedByPolicy(aInstallingPrincipal, aInstall, false /* explicit */)) {
+        aInstall.cancel();
+
+        this.installNotifyObservers("addon-install-origin-blocked", topBrowser,
                                     aInstallingPrincipal.URI, aInstall);
         return;
       }
@@ -1855,6 +1895,13 @@ var AddonManagerInternal = {
    *         The AddonInstall to be installed
    */
   installAddonFromAOM(browser, uri, install) {
+    if (!this.isInstallAllowedByPolicy(null, install)) {
+      install.cancel();
+
+      this.installNotifyObservers("addon-install-origin-blocked", browser,
+                                  install.sourceURI, install);
+      return;
+    }
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);

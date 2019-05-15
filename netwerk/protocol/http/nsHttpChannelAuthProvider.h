@@ -131,7 +131,8 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
                                     const char* aRealm, const char* aChallenge,
                                     const nsHttpAuthIdentity& aIdent,
                                     const char* aCreds, uint32_t aGenerateFlags,
-                                    nsISupports* aSessionState);
+                                    nsISupports* aSessionState,
+                                    bool aProxyAuth);
 
  private:
   nsIHttpAuthenticableChannel* mAuthChannel;  // weak ref

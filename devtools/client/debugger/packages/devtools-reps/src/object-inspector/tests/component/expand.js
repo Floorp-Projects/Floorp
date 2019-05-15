@@ -54,7 +54,8 @@ function mount(props, { initialState } = {}) {
   const client = {
     createObjectClient: grip =>
       ObjectClient(grip, {
-        getPrototype: () => Promise.resolve(protoStub)
+        getPrototype: () => Promise.resolve(protoStub),
+        getProxySlots: () => Promise.resolve(gripRepStubs.get("testProxySlots"))
       }),
 
     createLongStringClient: grip =>

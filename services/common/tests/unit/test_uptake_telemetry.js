@@ -49,7 +49,9 @@ add_task(async function test_age_is_converted_to_string_and_reported() {
   const status = UptakeTelemetry.STATUS.SUCCESS;
   const age = 42;
 
-  await UptakeTelemetry.report(COMPONENT, status, { source: "s", age });
+  await withFakeChannel("nightly", async () => { // no sampling.
+    await UptakeTelemetry.report(COMPONENT, status, { source: "s", age });
+  });
 
   TelemetryTestUtils.assertEvents(
     [["uptake.remotecontent.result", "uptake", COMPONENT, status, { source: "s", age: `${age}` }]]);

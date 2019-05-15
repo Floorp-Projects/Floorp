@@ -297,11 +297,7 @@ bool AnyContentAncestorModified(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
       break;
     }
 
-    if (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
-      f = f->GetParent();
-    } else {
-      f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f);
-    }
+    f = nsLayoutUtils::GetDisplayListParent(f);
   }
 
   return false;
@@ -1206,7 +1202,7 @@ static void AddFramesForContainingBlock(nsIFrame* aBlock,
 static void FindContainingBlocks(nsIFrame* aFrame,
                                  nsTArray<nsIFrame*>& aExtraFrames) {
   for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
+       f = nsLayoutUtils::GetDisplayListParent(f)) {
     if (f->ForceDescendIntoIfVisible()) return;
     f->SetForceDescendIntoIfVisible(true);
     CRR_LOG("Considering OOFs for %p\n", f);

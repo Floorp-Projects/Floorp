@@ -33,7 +33,7 @@ const global = this;
 var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 12.3.0 - f7a9e81
+ * Version 12.4.0 - 896d337
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
@@ -69,7 +69,9 @@ var _utils = require("../src/utils");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 ChromeUtils.import("resource://gre/modules/Timer.jsm", global);
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {
+  XPCOMUtils
+} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(global, ["fetch", "indexedDB"]);
 ChromeUtils.defineModuleGetter(global, "EventEmitter", "resource://gre/modules/EventEmitter.jsm"); // Use standalone kinto-http module landed in FFx.
 
@@ -502,6 +504,15 @@ function createListRequest(cid, store, filters, done) {
 
   if (!indexField) {
     // Iterate on all records for this collection (ie. cid)
+    const isSubQuery = Object.keys(filters).some(key => key.includes(".")); // (ie. filters: {"article.title": "hello"})
+
+    if (isSubQuery) {
+      const newFilter = (0, _utils.transformSubObjectFilters)(filters);
+      const request = store.index("cid").openCursor(IDBKeyRange.only(cid));
+      request.onsuccess = cursorHandlers.all(newFilter, done);
+      return request;
+    }
+
     const request = store.index("cid").openCursor(IDBKeyRange.only(cid));
     request.onsuccess = cursorHandlers.all(filters, done);
     return request;
@@ -588,24 +599,34 @@ class IDB extends _base.default {
 
     const dataToMigrate = this._options.migrateOldData ? await migrationRequired(this.cid) : null;
     this._db = await open(this.dbName, {
-      version: 1,
+      version: 2,
       onupgradeneeded: event => {
-        const db = event.target.result; // Records store
+        const db = event.target.result;
 
-        const recordsStore = db.createObjectStore("records", {
-          keyPath: ["_cid", "id"]
-        }); // An index to obtain all the records in a collection.
+        if (event.oldVersion < 1) {
+          // Records store
+          const recordsStore = db.createObjectStore("records", {
+            keyPath: ["_cid", "id"]
+          }); // An index to obtain all the records in a collection.
 
-        recordsStore.createIndex("cid", "_cid"); // Here we create indices for every known field in records by collection.
-        // Local record status ("synced", "created", "updated", "deleted")
+          recordsStore.createIndex("cid", "_cid"); // Here we create indices for every known field in records by collection.
+          // Local record status ("synced", "created", "updated", "deleted")
 
-        recordsStore.createIndex("_status", ["_cid", "_status"]); // Last modified field
+          recordsStore.createIndex("_status", ["_cid", "_status"]); // Last modified field
 
-        recordsStore.createIndex("last_modified", ["_cid", "last_modified"]); // Timestamps store
+          recordsStore.createIndex("last_modified", ["_cid", "last_modified"]); // Timestamps store
 
-        db.createObjectStore("timestamps", {
-          keyPath: "cid"
-        });
+          db.createObjectStore("timestamps", {
+            keyPath: "cid"
+          });
+        }
+
+        if (event.oldVersion < 2) {
+          // Collections store
+          db.createObjectStore("collections", {
+            keyPath: "cid"
+          });
+        }
       }
     });
 
@@ -937,6 +958,32 @@ class IDB extends _base.default {
     }
   }
 
+  async saveMetadata(metadata) {
+    try {
+      await this.prepare("collections", store => store.put({
+        cid: this.cid,
+        metadata
+      }), {
+        mode: "readwrite"
+      });
+      return metadata;
+    } catch (e) {
+      this._handleError("saveMetadata", e);
+    }
+  }
+
+  async getMetadata() {
+    try {
+      let entry = null;
+      await this.prepare("collections", store => {
+        store.get(this.cid).onsuccess = e => entry = e.target.result;
+      });
+      return entry ? entry.metadata : null;
+    } catch (e) {
+      this._handleError("getMetadata", e);
+    }
+  }
+
 }
 /**
  * IDB transaction proxy.
@@ -1155,6 +1202,14 @@ class BaseAdapter {
     throw new Error("Not Implemented.");
   }
 
+  saveMetadata(metadata) {
+    throw new Error("Not Implemented.");
+  }
+
+  getMetadata() {
+    throw new Error("Not Implemented.");
+  }
+
 }
 
 exports.default = BaseAdapter;
@@ -1166,6 +1221,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.recordsEqual = recordsEqual;
+exports.createKeyValueStoreIdSchema = createKeyValueStoreIdSchema;
 exports.CollectionTransaction = exports.default = exports.ServerWasFlushedError = exports.SyncResultObject = void 0;
 
 var _base = _interopRequireDefault(require("./adapters/base"));
@@ -1313,6 +1369,30 @@ function createUUIDSchema() {
 
     validate(id) {
       return typeof id == "string" && _utils.RE_RECORD_ID.test(id);
+    }
+
+  };
+}
+/**
+ * IDSchema for when using kinto.js as a key-value store.
+ * Using this IDSchema requires you to set a property as the id.
+ * This will be the property used to retrieve this record.
+ *
+ * @example
+ * const exampleCollection = db.collection("example", { idSchema: createKeyValueStoreIdSchema() })
+ * await exampleCollection.create({ title: "How to tie a tie", favoriteColor: "blue", id: "user123" }, { useRecordId: true })
+ * await exampleCollection.getAny("user123")
+ */
+
+
+function createKeyValueStoreIdSchema() {
+  return {
+    generate() {
+      throw new Error("createKeyValueStoreIdSchema() does not generate an id");
+    },
+
+    validate() {
+      return true;
     }
 
   };
@@ -1675,6 +1755,7 @@ class Collection {
 
   async clear() {
     await this.db.clear();
+    await this.db.saveMetadata(null);
     await this.db.saveLastModified(null);
     return {
       data: [],
@@ -2556,7 +2637,9 @@ class Collection {
     const result = new SyncResultObject();
 
     try {
-      // Fetch last changes from the server.
+      // Fetch collection metadata.
+      await this.pullMetadata(client, options); // Fetch last changes from the server.
+
       await this.pullChanges(client, result, options);
       const {
         lastModified
@@ -2678,6 +2761,23 @@ class Collection {
       return shouldKeep;
     });
     return await this.db.importBulk(newRecords.map(markSynced));
+  }
+
+  async pullMetadata(client, options = {}) {
+    const {
+      expectedTimestamp
+    } = options;
+    const query = expectedTimestamp ? {
+      query: {
+        _expected: expectedTimestamp
+      }
+    } : undefined;
+    const metadata = await client.getData(query);
+    return this.db.saveMetadata(metadata);
+  }
+
+  async metadata() {
+    return this.db.getMetadata();
   }
 
 }
@@ -3058,6 +3158,7 @@ exports.waterfall = waterfall;
 exports.deepEqual = deepEqual;
 exports.omitKeys = omitKeys;
 exports.arrayEqual = arrayEqual;
+exports.transformSubObjectFilters = transformSubObjectFilters;
 exports.RE_RECORD_ID = void 0;
 const RE_RECORD_ID = /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/;
 /**
@@ -3115,6 +3216,11 @@ function filterObject(filters, entry) {
 
     if (Array.isArray(value)) {
       return value.some(candidate => candidate === entry[filter]);
+    } else if (typeof value === "object") {
+      return filterObject(value, entry[filter]);
+    } else if (!entry.hasOwnProperty(filter)) {
+      console.error(`The property ${filter} does not exist`);
+      return false;
     }
 
     return entry[filter] === value;
@@ -3220,6 +3326,31 @@ function arrayEqual(a, b) {
   }
 
   return true;
+}
+
+function makeNestedObjectFromArr(arr, val, nestedFiltersObj) {
+  const last = arr.length - 1;
+  return arr.reduce((acc, cv, i) => {
+    if (i === last) {
+      return acc[cv] = val;
+    } else if (acc.hasOwnProperty(cv)) {
+      return acc[cv];
+    } else {
+      return acc[cv] = {};
+    }
+  }, nestedFiltersObj);
+}
+
+function transformSubObjectFilters(filtersObj) {
+  const transformedFilters = {};
+
+  for (const key in filtersObj) {
+    const keysArr = key.split(".");
+    const val = filtersObj[key];
+    makeNestedObjectFromArr(keysArr, val, transformedFilters);
+  }
+
+  return transformedFilters;
 }
 
 },{}]},{},[1])(1)

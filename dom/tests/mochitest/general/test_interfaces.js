@@ -25,16 +25,18 @@
 // channel/OS) or one of the is* constants below (in cases when
 // exposure is affected by channel or OS in a nontrivial way).
 
-const version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
-const isNightly = version.endsWith("a1");
-const isEarlyBetaOrEarlier = SpecialPowers.EARLY_BETA_OR_EARLIER;
-const isRelease = !version.includes("a");
+const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+
+const isNightly = AppConstants.NIGHTLY_BUILD;
+const isEarlyBetaOrEarlier = AppConstants.EARLY_BETA_OR_EARLIER;
+const isRelease = AppConstants.RELEASE_OR_BETA;
 const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
-const isMac = /Mac OS/.test(navigator.oscpu);
-const isWindows = /Windows/.test(navigator.oscpu);
-const isAndroid = navigator.userAgent.includes("Android");
-const isLinux = /Linux/.test(navigator.oscpu) && !isAndroid;
+const isMac = AppConstants.platform == "macosx";
+const isWindows = AppConstants.platform == "win";
+const isAndroid = AppConstants.platform == "android";
+const isLinux = AppConstants.platform == "linux";
 const isInsecureContext = !window.isSecureContext;
+// Currently, MOZ_APP_NAME is always "fennec" for all mobile builds, so we can't use AppConstants for this
 const isFennec = isAndroid && SpecialPowers.Cc["@mozilla.org/android/bridge;1"].getService(SpecialPowers.Ci.nsIAndroidBridge).isFennec;
 
 // IMPORTANT: Do not change this list without review from

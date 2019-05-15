@@ -75,14 +75,15 @@ describe("getChildren", () => {
   });
 
   it("returns the expected nodes for Proxy", () => {
-    const nodes = getChildren({
-      item: createNode({
-        name: "root",
-        path: "rootpath",
-        contents: { value: gripStubs.get("testProxy") }
-      })
+    const proxyNode = createNode({
+      name: "root",
+      path: "rootpath",
+      contents: { value: gripStubs.get("testProxy") }
     });
-
+    const loadedProperties = new Map([
+      [proxyNode.path, gripStubs.get("testProxySlots")]
+    ]);
+    const nodes = getChildren({ item: proxyNode, loadedProperties });
     const names = nodes.map(n => n.name);
     const paths = nodes.map(n => n.path.toString());
 
@@ -248,7 +249,7 @@ describe("getChildren", () => {
     const children = getChildren({
       cachedNodes,
       item: node,
-      loadedProperties: new Map([[node.path, { prototype: {} }]])
+      loadedProperties: new Map([[node.path, gripStubs.get("testProxySlots")]])
     });
     expect(cachedNodes.get(node.path)).toBe(children);
   });

@@ -1009,13 +1009,12 @@ RasterImage::Undefine(const char* prop) {
 }
 
 NS_IMETHODIMP
-RasterImage::GetKeys(uint32_t* count, char*** keys) {
+RasterImage::GetKeys(nsTArray<nsCString>& keys) {
   if (!mProperties) {
-    *count = 0;
-    *keys = nullptr;
+    keys.Clear();
     return NS_OK;
   }
-  return mProperties->GetKeys(count, keys);
+  return mProperties->GetKeys(keys);
 }
 
 void RasterImage::Discard() {

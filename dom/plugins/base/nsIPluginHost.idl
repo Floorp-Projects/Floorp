@@ -30,8 +30,7 @@ interface nsIPluginHost : nsISupports
    */
   void reloadPlugins();
 
-  void getPluginTags([optional] out unsigned long aPluginCount,
-    [retval, array, size_is(aPluginCount)] out nsIPluginTag aResults);
+  Array<nsIPluginTag> getPluginTags();
 
   /*
    * Flags for use with clearSiteData.

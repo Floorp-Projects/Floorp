@@ -735,6 +735,12 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSet*, nsCSSPropertyID);
 void Gecko_RegisterProfilerThread(const char* name);
 void Gecko_UnregisterProfilerThread();
 
+#ifdef MOZ_GECKO_PROFILER
+void Gecko_Construct_AutoProfilerLabel(mozilla::AutoProfilerLabel*,
+                                       JS::ProfilingCategoryPair);
+void Gecko_Destroy_AutoProfilerLabel(mozilla::AutoProfilerLabel*);
+#endif
+
 bool Gecko_DocumentRule_UseForPresentation(
     const mozilla::dom::Document*, const nsACString* aPattern,
     mozilla::css::DocumentMatchingFunction);

@@ -4,11 +4,7 @@
 
 /* Webconsole specific theme variables */
 :root {
-  /* Output rows should be 20px tall for a single line of text;
-   * 20 = 3 (top padding) + 14 (line-height) + 3 (bottom padding)
-   */
-  --console-output-font-size: 11px;
-  --console-output-line-height: calc(14 / 11);
+  --console-output-line-height: 14px;
   --console-output-vertical-padding: 3px;
   /* Width of the left gutter where icons appear */
   --console-inline-start-gutter: 32px;
@@ -18,27 +14,51 @@
 }
 
 .theme-dark {
-  --console-output-icon-error-color: var(--red-40);
-  --console-output-icon-warning-color: var(--yellow-60);
-  --console-output-indent-border-color: var(--theme-highlight-blue);
+  --console-input-background: var(--theme-tab-toolbar-background);
+  --console-message-background: var(--theme-body-background);
+  --console-message-border: var(--theme-splitter-color);
+  --console-message-color: var(--theme-text-color-strong);
+  --console-error-background: hsl(345, 23%, 24%);
+  --console-error-border: hsl(345, 30%, 35%);
+  --console-error-color: var(--red-20);
+  --console-error-icon-color: var(--red-40);
+  --console-warning-background: hsl(42, 37%, 19%);
+  --console-warning-border: hsl(60, 30%, 26%);
+  --console-warning-color: hsl(43, 94%, 81%);
+  --console-warning-icon-color: var(--yellow-60);
+  --console-navigation-color: var(--theme-highlight-blue);
+  --console-navigation-border: var(--blue-60);
+  --console-indent-border-color: var(--theme-highlight-blue);
+  --console-repeat-bubble-background: var(--blue-60);
+
+  /* TODO in bug 1549195: colors used in shared components (e.g. Reps) should
+     be renamed and/or moved to variables.css so they work everywhere */
   --error-color: var(--red-20);
-  --error-background-color: hsl(345, 23%, 24%);
-  --warning-color: hsl(43, 94%, 81%);
-  --warning-background-color: hsl(42, 37%, 19%);
   --console-output-color: white;
-  --repeat-bubble-background-color: var(--blue-60);
 }
 
 .theme-light {
-  --console-output-icon-error-color: var(--red-60);
-  --console-output-icon-warning-color: var(--yellow-65);
-  --console-output-indent-border-color: var(--theme-highlight-blue);
+  --console-input-background: var(--theme-body-background);
+  --console-message-background: var(--theme-body-background);
+  --console-message-border: #f2f2f4; /* between Grey 10 and Grey 20 */
+  --console-message-color: var(--theme-text-color-strong);
+  --console-error-background: hsl(344, 73%, 97%);
+  --console-error-border: rgba(215, 0, 34, 0.12); /* Red 60 + opacity */
+  --console-error-color: var(--red-70);
+  --console-error-icon-color: var(--red-60);
+  --console-warning-background: hsl(54, 100%, 92%);
+  --console-warning-border: rgba(215, 182, 0, 0.28); /* Yellow 60 + opacity */
+  --console-warning-color: var(--yellow-80);
+  --console-warning-icon-color: var(--yellow-65);
+  --console-navigation-color: var(--theme-highlight-blue);
+  --console-navigation-border: var(--blue-30);
+  --console-indent-border-color: var(--theme-highlight-blue);
+  --console-repeat-bubble-background: var(--theme-highlight-blue);
+
+  /* TODO in bug 1549195: colors used in shared components (e.g. Reps) should
+     be renamed and/or moved to variables.css so they work everywhere */
   --error-color: var(--red-70);
-  --error-background-color: hsl(344, 73%, 97%);
-  --warning-color: var(--yellow-80);
-  --warning-background-color: hsl(54, 100%, 92%);
   --console-output-color: var(--grey-90);
-  --repeat-bubble-background-color: var(--theme-highlight-blue);
 }
 
 /* General output styles */
@@ -57,23 +77,77 @@ a {
   box-sizing: border-box;
 }
 
+/*
+ * Stack messages on the z axis so that we can make their borders overlap
+ * and show color borders on top:
+ *
+ *   -----------------  <-- Red
+ *   Error message
+ *   -----------------  <-- Red
+ *   Normal message
+ *   -----------------  <-- Grey
+ *
+ * and:
+ *
+ *   -----------------  <-- Grey
+ *   Normal message
+ *   -----------------  <-- Red
+ *   Error message
+ *   -----------------  <-- Red
+ *
+ * The exact stacking order is:
+ * 
+ *   - z-index: 3 = Navigation and Paused markers
+ *   - z-index: 2 = Errors and warnings
+ *   - z-index: 1 = Other (console.log, console.info, requests, etc.)
+ */
 .message {
+  position: relative;
+  z-index: 1;
   display: flex;
   width: 100%;
+  /* Make the top border cover the previous message's bottom border */
+  margin-top: -1px;
+  border-top: 1px solid var(--console-message-border);
+  border-bottom: 1px solid var(--console-message-border);
   /* Avoid vertical padding, so that we can draw full-height items (e.g. indent guides).
-   * Use vertical margins on children instead. */
-  padding-inline-start: 1px;
+   * Use vertical margins of --console-output-vertical-padding on children instead. */
+  padding-block: 0;
+  /* Layout of the 32px-wide left gutter:
+   * | 4px message padding | 24px icon container | 4px icon margin |
+   * Note: on hover we show a 3px pseudo-border on top of the left padding. */
+  padding-inline-start: 4px;
   padding-inline-end: 8px;
-  border-inline-start: solid 3px transparent;
-  font-size: var(--console-output-font-size);
+  font-size: var(--theme-code-font-size);
   line-height: var(--console-output-line-height);
-  position: relative;
+  color: var(--console-message-color);
+  background-color: var(--console-message-background);
 }
 
 @media (min-width: 1000px) {
   .message {
     padding-inline-end: 12px;
   }
+}
+
+/* We already paint a top border on jsterm-input-container (and we need to keep
+ * it when scrolling console content), so remove the last item's border. */
+.message:last-child {
+  border-bottom-width: 0;
+}
+
+/*
+ * Show a blue border on the left side of rows on hover. Avoid using border
+ * properties because the top/bottom borders would not span the full width.
+ */
+.message:hover::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--theme-highlight-blue);
+  width: 3px;
 }
 
 /*
@@ -89,45 +163,38 @@ a {
   overflow: unset;
 }
 
-.message:hover {
-  border-inline-start-color: var(--theme-highlight-blue);
-}
-
 .message.error {
-  color: var(--error-color);
-  background-color: var(--error-background-color);
-}
-
-.message.navigationMarker {
-  border-top: 1px solid var(--theme-emphasized-splitter-color);
-  color: var(--object-color);
-}
-
-/* Removes the top border for message in console (See Bug 1512621). */
-.webconsole-output:first-child.message.navigationMarker {
-  border-top: none;
+  z-index: 2;
+  color: var(--console-error-color);
+  border-color: var(--console-error-border);
+  background-color: var(--console-error-background);
 }
 
 .message.warn {
-  color: var(--warning-color);
-  background-color: var(--warning-background-color);
+  z-index: 2;
+  color: var(--console-warning-color);
+  border-color: var(--console-warning-border);
+  background-color: var(--console-warning-background);
 }
 
-.message.paused::before {
-  background: var(--purple-50);
-  opacity: 0.6;
-  width: 100vw;
-  height: 1px;
-  bottom: 0px;
-  left: -3px;
-  display: block;
-  content: "";
-  position: absolute;
+.message.navigationMarker {
+  z-index: 3;
+  color: var(--console-navigation-color);
+  border-color: var(--console-navigation-border);
 }
 
-.message.paused.paused-before::before {
-  top: 0px;
-  bottom: inherit;
+.message.paused {
+  z-index: 3;
+}
+
+.message.paused.paused-before {
+  border-top-color: var(--purple-50);
+}
+
+.message.paused:not(.paused-before) {
+  border-bottom-color: var(--purple-50);
+  /* always show the border, even for the last child */
+  border-bottom-width: 1px;
 }
 
 .message.paused ~ .message:not(.command):not(.result) .message-body-wrapper,
@@ -137,7 +204,12 @@ a {
 
 .message.startGroup,
 .message.startGroupCollapsed {
-  --console-output-indent-border-color: transparent;
+  --console-indent-border-color: transparent;
+}
+
+/* Hide border between a command and its result */
+.message.command + .result.log {
+  border-top-width: 0;
 }
 
 .message > .prefix,
@@ -156,12 +228,15 @@ a {
 .message > .indent {
   flex: none;
   display: inline-block;
+  /* Display indent borders above the message's top and bottom border.
+   * This avoids interrupted indent lines (looking like dashes). */
+  margin-block: -1px;
   margin-inline-start: 12px;
-  border-inline-end: solid 1px var(--console-output-indent-border-color);
+  border-inline-end: solid 1px var(--console-indent-border-color);
 }
 
 .message > .indent.warning-indent {
-  border-inline-end-color: var(--warning-color);
+  border-inline-end-color: var(--console-warning-color);
 }
 
 .message > .indent[data-indent="0"] {
@@ -213,17 +288,17 @@ a {
 }
 
 .message.error > .icon {
-  color: var(--console-output-icon-error-color);
+  color: var(--console-error-icon-color);
   background-image: url(chrome://devtools/skin/images/webconsole/error.svg);
 }
 
 .message.warn > .icon {
-  color: var(--console-output-icon-warning-color);
+  color: var(--console-warning-icon-color);
   background-image: url(chrome://devtools/skin/images/alert.svg);
 }
 
 .message.navigationMarker > .icon {
-  color: var(--object-color);
+  color: var(--console-navigation-color);
   background-image: url(chrome://devtools/skin/images/webconsole/navigation.svg);
 }
 
@@ -278,7 +353,7 @@ a {
 .message-repeats {
   display: inline-block;
   color: white;
-  background-color: var(--repeat-bubble-background-color);
+  background-color: var(--console-repeat-bubble-background);
 }
 
 .message-repeats[value="1"] {
@@ -287,8 +362,8 @@ a {
 
 .warning-group-badge {
   display: inline-block;
-  color: var(--warning-background-color);
-  background-color: var(--warning-color);
+  color: var(--console-warning-background);
+  background-color: var(--console-warning-color);
 }
 
 .message-location {
@@ -400,7 +475,7 @@ html #webconsole-notificationbox {
 }
 
 .jsterm-input-container {
-  background-color: var(--theme-tab-toolbar-background);
+  background-color: var(--console-input-background);
   border-top: 1px solid var(--theme-splitter-color);
   position: relative;
 }
@@ -421,13 +496,6 @@ html #webconsole-notificationbox {
 
 .jsterm-complete-node {
   color: var(--theme-comment);
-}
-
-.theme-light .jsterm-input-container {
-  /* For light theme use a white background for the input - it looks better
-     than off-white */
-  background-color: #fff;
-  border-top-color: #e0e0e0;
 }
 
 textarea.jsterm-input-node,
@@ -460,7 +528,7 @@ textarea.jsterm-input-node:focus {
 
 /* CodeMirror-powered JsTerm */
 .jsterm-cm .jsterm-input-container > .CodeMirror {
-  font-size: var(--console-output-font-size);
+  font-size: var(--theme-code-font-size);
   line-height: var(--console-output-line-height);
   /* aim for a 32px left space (a descendent has 4px padding) */
   padding-inline-start: calc(var(--console-inline-start-gutter) - 4px);
@@ -680,7 +748,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 .theme-dark .message.error .tree.object-inspector,
 .theme-dark .message.warn .tree.object-inspector {
-  --console-output-indent-border-color: var(--theme-body-color);
+  --console-indent-border-color: var(--theme-body-color);
 }
 
 .webconsole-app .message-flex-body > .message-body {
@@ -897,7 +965,7 @@ body {
 }
 
 .webconsole-app .object-inspector.tree .tree-indent {
-  border-inline-start-color: var(--console-output-indent-border-color);
+  border-inline-start-color: var(--console-indent-border-color);
 }
 
 .webconsole-app .object-inspector.tree .tree-node:hover:not(.focused) {

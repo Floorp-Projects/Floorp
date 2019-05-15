@@ -35,6 +35,12 @@ add_task(async function() {
   await Page.enable();
   ok(true, "Page domain has been enabled");
 
+  const { frameTree } = await Page.getFrameTree();
+  ok(!!frameTree.frame, "getFrameTree exposes one frame");
+  is(frameTree.childFrames.length, 0, "getFrameTree reports no child frame");
+  ok(frameTree.frame.id, "getFrameTree's frame has an id");
+  is(frameTree.frame.url, TEST_URI, "getFrameTree's frame has the right url");
+
   // Save the given `promise` resolution into the `promises` global Set
   function recordPromise(name, promise) {
     promise.then(event => {
@@ -59,6 +65,8 @@ add_task(async function() {
   const { frameId } = await Page.navigate({ url });
   ok(true, "A new page has been loaded");
   ok(frameId, "Page.navigate returned a frameId");
+  is(frameId, frameTree.frame.id, "The Page.navigate's frameId is the same than " +
+    "getFrameTree's one");
 
   await assertNavigationEvents({ url, frameId });
 

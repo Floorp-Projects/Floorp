@@ -58,14 +58,9 @@ interface nsIPluginTag : nsISupports
 
   readonly attribute PRTime lastModifiedTime;
 
-  void getMimeTypes([optional] out unsigned long aCount,
-                    [retval, array, size_is(aCount)] out wstring aResults);
-  void getMimeDescriptions([optional] out unsigned long aCount,
-                           [retval, array, size_is(aCount)]
-                           out wstring aResults);
-  void getExtensions([optional] out unsigned long aCount,
-                     [retval, array, size_is(aCount)]
-                     out wstring aResults);
+  Array<AUTF8String> getMimeTypes();
+  Array<AUTF8String> getMimeDescriptions();
+  Array<AUTF8String> getExtensions();
 };
 
 /**

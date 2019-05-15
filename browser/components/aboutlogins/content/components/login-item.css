@@ -2,12 +2,46 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-h2 {
-  border-bottom: 1px solid var(--grey-30);
+:host {
+  padding-top: 36px;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+:host(:not([editing])) .save-changes-button,
+:host(:not([editing])) .cancel-button {
+  display: none;
+}
+
+.header {
+  display: flex;
+  border-bottom: 1px solid var(--in-content-box-border-color);
+}
+
+.title {
+  margin-top: 0;
+  margin-bottom: 0;
+  flex: auto;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.detail-row > label {
+  flex: auto;
+}
+
+.detail-row > button {
+  align-self: end;
 }
 
 .field-label {
   display: block;
+  font-size: smaller;
+  opacity: .7;
+  margin-bottom: 5px;
 }
 
 .meta-info {
@@ -23,5 +57,5 @@ h2 {
 }
 
 .meta-info:first-of-type {
-  border-top: 1px solid var(--grey-30);
+  border-top: 1px solid var(--in-content-box-border-color);
 }

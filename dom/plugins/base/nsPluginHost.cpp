@@ -1090,33 +1090,15 @@ void nsPluginHost::GetPlugins(
 
 // FIXME-jsplugins Check users for order of fake v non-fake
 NS_IMETHODIMP
-nsPluginHost::GetPluginTags(uint32_t* aPluginCount, nsIPluginTag*** aResults) {
+nsPluginHost::GetPluginTags(nsTArray<RefPtr<nsIPluginTag>>& aResults) {
   LoadPlugins();
 
-  uint32_t count = 0;
-  uint32_t fakeCount = mFakePlugins.Length();
-  RefPtr<nsPluginTag> plugin = mPlugins;
-  while (plugin != nullptr) {
-    count++;
-    plugin = plugin->mNext;
+  for (nsPluginTag* plugin = mPlugins; plugin; plugin = plugin->mNext) {
+    aResults.AppendElement(plugin);
   }
 
-  *aResults = static_cast<nsIPluginTag**>(
-      moz_xmalloc((fakeCount + count) * sizeof(**aResults)));
-
-  *aPluginCount = count + fakeCount;
-
-  plugin = mPlugins;
-  for (uint32_t i = 0; i < count; i++) {
-    (*aResults)[i] = plugin;
-    NS_ADDREF((*aResults)[i]);
-    plugin = plugin->mNext;
-  }
-
-  for (uint32_t i = 0; i < fakeCount; i++) {
-    (*aResults)[i + count] =
-        static_cast<nsIInternalPluginTag*>(mFakePlugins[i]);
-    NS_ADDREF((*aResults)[i + count]);
+  for (nsIInternalPluginTag* plugin : mFakePlugins) {
+    aResults.AppendElement(plugin);
   }
 
   return NS_OK;

@@ -13,7 +13,7 @@ The tests that use a real device are located in `devtools/client/aboutdebugging-
 3. Enable USB debugging on your Firefox
 4. Connect to your PC via USB
 
-You can refer to https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE#Setting_up_the_Android_device.
+You can refer to https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Debugging_over_USB
 
 ### PC side
 Setup the real device information to evaluate the validity in tests.

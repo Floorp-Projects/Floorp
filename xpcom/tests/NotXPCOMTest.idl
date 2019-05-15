@@ -10,14 +10,8 @@ interface nsIScriptableOK : nsISupports
   void method1();
 };
 
-[scriptable, uuid(237d01a3-771e-4c6e-adf9-c97f9aab2950)]
+[scriptable, builtinclass, uuid(237d01a3-771e-4c6e-adf9-c97f9aab2950)]
 interface nsIScriptableWithNotXPCOM : nsISupports
 {
   [notxpcom] void method2();
-};
-
-[scriptable, uuid(4f06ec60-3bb3-4712-ab18-b2b595285558)]
-interface nsIScriptableWithNotXPCOMBase : nsIScriptableWithNotXPCOM
-{
-  void method3();
 };

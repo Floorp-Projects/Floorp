@@ -39,6 +39,8 @@ interface nsIDOMStorageManager : nsISupports
    *    The parent window.
    * @param aPrincipal
    *    Principal to bound storage to.
+   * @param aStoragePrincipal
+   *    StoragePrincipal to bound storage to.
    * @param aDocumentURI
    *    URL of the demanding document, used for DOM storage event only.
    * @param aPrivate
@@ -46,6 +48,7 @@ interface nsIDOMStorageManager : nsISupports
    */
   Storage createStorage(in mozIDOMWindow aWindow,
                         in nsIPrincipal aPrincipal,
+                        in nsIPrincipal aStoragePrincipal,
                         in AString aDocumentURI,
                         [optional] in bool aPrivate);
   /**
@@ -63,11 +66,14 @@ interface nsIDOMStorageManager : nsISupports
    *    The parent window.
    * @param aPrincipal
    *    Principal to bound storage to.
+   * @param aStoragePrincipal
+   *    StoragePrincipal to bound storage to.
    * @param aPrivate
    *    Whether the demanding document is running in Private Browsing mode or not.
    */
   Storage getStorage(in mozIDOMWindow aWindow,
                      in nsIPrincipal aPrincipal,
+                     in nsIPrincipal aStoragePrincipal,
                      [optional] in bool aPrivate);
 
   /**

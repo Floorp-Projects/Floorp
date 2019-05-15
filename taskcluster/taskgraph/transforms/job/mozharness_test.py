@@ -312,6 +312,12 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'bash',
             "./{}".format(bitbar_script)
         ]
+    elif is_macosx and 'macosx1014-64' in test['test-platform']:
+        mh_command = [
+            '/usr/local/bin/python2',
+            '-u',
+            'mozharness/scripts/' + mozharness['script']
+        ]
     else:
         # is_linux or is_macosx
         mh_command = [

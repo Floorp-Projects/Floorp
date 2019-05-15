@@ -13,6 +13,7 @@ dictionary RemotenessOptions {
   // it will be used rather than the `src` & `srcdoc` attributes on the
   // frameloader to control the load behaviour.
   unsigned long long pendingSwitchID;
+  boolean replaceBrowsingContext = false;
 };
 
 [NoInterfaceObject]

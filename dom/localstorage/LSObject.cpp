@@ -195,8 +195,9 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
 
 }  // namespace
 
-LSObject::LSObject(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
-    : Storage(aWindow, aPrincipal),
+LSObject::LSObject(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
+                   nsIPrincipal* aStoragePrincipal)
+    : Storage(aWindow, aPrincipal, aStoragePrincipal),
       mPrivateBrowsingId(0),
       mInExplicitSnapshot(false) {
   AssertIsOnOwningThread();
@@ -244,7 +245,7 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aStorage);
   MOZ_ASSERT(NextGenLocalStorageEnabled());
-  MOZ_ASSERT(nsContentUtils::StorageAllowedForWindow(aWindow) >
+  MOZ_ASSERT(nsContentUtils::StorageAllowedForWindow(aWindow) !=
              nsContentUtils::StorageAccess::eDeny);
 
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aWindow);
@@ -252,6 +253,11 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
   if (NS_WARN_IF(!principal)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPrincipal> storagePrincipal = sop->GetEffectiveStoragePrincipal();
+  if (NS_WARN_IF(!storagePrincipal)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -264,7 +270,8 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   // for the check.
   nsCString originAttrSuffix;
   nsCString originKey;
-  nsresult rv = GenerateOriginKey(principal, originAttrSuffix, originKey);
+  nsresult rv =
+      GenerateOriginKey(storagePrincipal, originAttrSuffix, originKey);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -277,13 +284,23 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo);
 
-  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
+  nsAutoPtr<PrincipalInfo> storagePrincipalInfo(new PrincipalInfo());
+  rv = PrincipalToPrincipalInfo(storagePrincipal, storagePrincipalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(storagePrincipalInfo->type() ==
+             PrincipalInfo::TContentPrincipalInfo);
+
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*storagePrincipalInfo))) {
     return NS_ERROR_FAILURE;
   }
 
   nsCString suffix;
   nsCString origin;
-  rv = QuotaManager::GetInfoFromPrincipal(principal, &suffix, nullptr, &origin);
+  rv = QuotaManager::GetInfoFromPrincipal(storagePrincipal, &suffix, nullptr,
+                                          &origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -291,7 +308,7 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(originAttrSuffix == suffix);
 
   uint32_t privateBrowsingId;
-  rv = principal->GetPrivateBrowsingId(&privateBrowsingId);
+  rv = storagePrincipal->GetPrivateBrowsingId(&privateBrowsingId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -311,8 +328,9 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
     }
   }
 
-  RefPtr<LSObject> object = new LSObject(aWindow, principal);
+  RefPtr<LSObject> object = new LSObject(aWindow, principal, storagePrincipal);
   object->mPrincipalInfo = std::move(principalInfo);
+  object->mStoragePrincipalInfo = std::move(storagePrincipalInfo);
   object->mPrivateBrowsingId = privateBrowsingId;
   object->mClientId = clientId;
   object->mOrigin = origin;
@@ -326,15 +344,18 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
 // static
 nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
                                       nsIPrincipal* aPrincipal,
+                                      nsIPrincipal* aStoragePrincipal,
                                       const nsAString& aDocumentURI,
                                       bool aPrivate, LSObject** aObject) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aStoragePrincipal);
   MOZ_ASSERT(aObject);
 
   nsCString originAttrSuffix;
   nsCString originKey;
-  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
+  nsresult rv =
+      GenerateOriginKey(aStoragePrincipal, originAttrSuffix, originKey);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -348,14 +369,24 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo ||
              principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo);
 
-  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
+  nsAutoPtr<PrincipalInfo> storagePrincipalInfo(new PrincipalInfo());
+  rv = PrincipalToPrincipalInfo(aStoragePrincipal, storagePrincipalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(
+      storagePrincipalInfo->type() == PrincipalInfo::TContentPrincipalInfo ||
+      storagePrincipalInfo->type() == PrincipalInfo::TSystemPrincipalInfo);
+
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*storagePrincipalInfo))) {
     return NS_ERROR_FAILURE;
   }
 
   nsCString suffix;
   nsCString origin;
 
-  if (principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo) {
+  if (storagePrincipalInfo->type() == PrincipalInfo::TSystemPrincipalInfo) {
     QuotaManager::GetInfoForChrome(&suffix, nullptr, &origin);
   } else {
     rv = QuotaManager::GetInfoFromPrincipal(aPrincipal, &suffix, nullptr,
@@ -377,8 +408,10 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
     clientId = Some(clientInfo.ref().Id());
   }
 
-  RefPtr<LSObject> object = new LSObject(aWindow, aPrincipal);
+  RefPtr<LSObject> object =
+      new LSObject(aWindow, aPrincipal, aStoragePrincipal);
   object->mPrincipalInfo = std::move(principalInfo);
+  object->mStoragePrincipalInfo = std::move(storagePrincipalInfo);
   object->mPrivateBrowsingId = aPrivate ? 1 : 0;
   object->mClientId = clientId;
   object->mOrigin = origin;
@@ -811,6 +844,7 @@ nsresult LSObject::EnsureDatabase() {
 
   LSRequestCommonParams commonParams;
   commonParams.principalInfo() = *mPrincipalInfo;
+  commonParams.storagePrincipalInfo() = *mStoragePrincipalInfo;
   commonParams.originKey() = mOriginKey;
 
   LSRequestPrepareDatastoreParams params;
@@ -844,7 +878,7 @@ nsresult LSObject::EnsureDatabase() {
   LSDatabaseChild* actor = new LSDatabaseChild(database);
 
   MOZ_ALWAYS_TRUE(backgroundActor->SendPBackgroundLSDatabaseConstructor(
-      actor, *mPrincipalInfo, mPrivateBrowsingId, datastoreId));
+      actor, *mStoragePrincipalInfo, mPrivateBrowsingId, datastoreId));
 
   database->SetActor(actor);
 
@@ -879,6 +913,7 @@ nsresult LSObject::EnsureObserver() {
 
   LSRequestPrepareObserverParams params;
   params.principalInfo() = *mPrincipalInfo;
+  params.storagePrincipalInfo() = *mStoragePrincipalInfo;
   params.clientId() = mClientId;
 
   LSRequestResponse response;
@@ -932,8 +967,8 @@ void LSObject::OnChange(const nsAString& aKey, const nsAString& aOldValue,
                         const nsAString& aNewValue) {
   AssertIsOnOwningThread();
 
-  NotifyChange(/* aStorage */ this, Principal(), aKey, aOldValue, aNewValue,
-               /* aStorageType */ kLocalStorageType, mDocumentURI,
+  NotifyChange(/* aStorage */ this, StoragePrincipal(), aKey, aOldValue,
+               aNewValue, /* aStorageType */ kLocalStorageType, mDocumentURI,
                /* aIsPrivate */ !!mPrivateBrowsingId,
                /* aImmediateDispatch */ false);
 }

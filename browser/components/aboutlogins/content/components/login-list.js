@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals LoginListItem */
+/* globals ReflectedFluentElement, LoginListItem */
 
-class LoginList extends HTMLElement {
+class LoginList extends ReflectedFluentElement {
   constructor() {
     super();
     this._logins = [];
@@ -18,9 +18,13 @@ class LoginList extends HTMLElement {
     let loginListTemplate = document.querySelector("#login-list-template");
     this.attachShadow({mode: "open"})
         .appendChild(loginListTemplate.content.cloneNode(true));
+
+    this.reflectFluentStrings();
+
     this.render();
 
     window.addEventListener("AboutLoginsLoginSelected", this);
+    window.addEventListener("AboutLoginsFilterLogins", this);
   }
 
   render() {
@@ -28,10 +32,34 @@ class LoginList extends HTMLElement {
     for (let login of this._logins) {
       list.append(new LoginListItem(login));
     }
+    document.l10n.setAttributes(this, "login-list", {count: this._logins.length});
   }
 
   handleEvent(event) {
     switch (event.type) {
+      case "AboutLoginsFilterLogins": {
+        let query = event.detail.toLocaleLowerCase();
+        let matchingLoginGuids;
+        if (query) {
+          matchingLoginGuids = this._logins.filter(login => {
+            return login.hostname.toLocaleLowerCase().includes(query) ||
+                   login.username.toLocaleLowerCase().includes(query);
+          }).map(login => login.guid);
+        } else {
+          matchingLoginGuids = this._logins.map(login => login.guid);
+        }
+        for (let listItem of this.shadowRoot.querySelectorAll("login-list-item")) {
+          if (matchingLoginGuids.includes(listItem.getAttribute("guid"))) {
+            if (listItem.hidden) {
+              listItem.hidden = false;
+            }
+          } else if (!listItem.hidden) {
+            listItem.hidden = true;
+          }
+        }
+        document.l10n.setAttributes(this, "login-list", {count: matchingLoginGuids.length});
+        break;
+      }
       case "AboutLoginsLoginSelected": {
         if (this._selectedItem) {
           if (this._selectedItem.getAttribute("guid") == event.detail.guid) {
@@ -46,22 +74,12 @@ class LoginList extends HTMLElement {
     }
   }
 
-  static get observedAttributes() {
-    return ["login-list-header"];
+  static get reflectedFluentIDs() {
+    return ["count"];
   }
 
-  /* Fluent doesn't handle localizing into Shadow DOM yet so strings
-     need to get reflected in to their targeted element. */
-  attributeChangedCallback(attr, oldValue, newValue) {
-    if (!this.shadowRoot) {
-      return;
-    }
-
-    switch (attr) {
-      case "login-list-header":
-        this.shadowRoot.querySelector("h2").textContent = newValue;
-        break;
-    }
+  static get observedAttributes() {
+    return this.reflectedFluentIDs;
   }
 
   setLogins(logins) {

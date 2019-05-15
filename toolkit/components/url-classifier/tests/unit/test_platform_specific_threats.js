@@ -13,10 +13,10 @@ function testMobileOnlyThreats() {
   (function testUpdateRequest() {
     let requestWithPHA =
       urlUtils.makeUpdateRequestV4(["goog-phish-proto", "goog-harmful-proto"],
-                                   ["AAAAAA", "AAAAAA"], 2);
+                                   ["AAAAAA", "AAAAAA"]);
 
     let requestNoPHA =
-      urlUtils.makeUpdateRequestV4(["goog-phish-proto"], ["AAAAAA"], 1);
+      urlUtils.makeUpdateRequestV4(["goog-phish-proto"], ["AAAAAA"]);
 
     if (AppConstants.platform === "android") {
       notEqual(requestWithPHA, requestNoPHA,
@@ -31,14 +31,12 @@ function testMobileOnlyThreats() {
     let requestWithPHA =
       urlUtils.makeFindFullHashRequestV4(["goog-phish-proto", "goog-harmful-proto"],
                                          ["", ""], // state.
-                                         [btoa("0123")], // prefix.
-                                         2, 1);
+                                         [btoa("0123")]); // prefix.
 
     let requestNoPHA =
       urlUtils.makeFindFullHashRequestV4(["goog-phish-proto"],
                                          [""], // state.
-                                         [btoa("0123")], // prefix.
-                                         1, 1);
+                                         [btoa("0123")]); // prefix.
 
     if (AppConstants.platform === "android") {
       notEqual(requestWithPHA, requestNoPHA,
@@ -59,10 +57,10 @@ function testDesktopOnlyThreats() {
     urlUtils.makeUpdateRequestV4(["goog-phish-proto",
                                   "goog-downloadwhite-proto",
                                   "goog-badbinurl-proto"],
-                                 ["", "", ""], 3);
+                                 ["", "", ""]);
 
   let requestNoDesktopOnlyThreats =
-    urlUtils.makeUpdateRequestV4(["goog-phish-proto"], [""], 1);
+    urlUtils.makeUpdateRequestV4(["goog-phish-proto"], [""]);
 
   if (AppConstants.platform === "android") {
     equal(requestWithDesktopOnlyThreats, requestNoDesktopOnlyThreats,

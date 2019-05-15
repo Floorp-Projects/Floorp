@@ -104,10 +104,10 @@ add_task(async function test_support_of_preferences_filters() {
     filter_expression: '"services.settings.last_etag"|preferenceValue == 42',
   }, {
     willMatch: true,
-    filter_expression: '"services.settings.changes.path"|preferenceExists == true',
+    filter_expression: '"services.settings.default_bucket"|preferenceExists == true',
   }, {
     willMatch: true,
-    filter_expression: '"services.settings.changes.path"|preferenceIsUserSet == false',
+    filter_expression: '"services.settings.default_bucket"|preferenceIsUserSet == false',
   }, {
     willMatch: true,
     filter_expression: '"services.settings.last_etag"|preferenceIsUserSet == true',

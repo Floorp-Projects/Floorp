@@ -24,7 +24,7 @@
 </commandset>
 
 <html:textarea />
-
+<html:input />
 <textbox is="search-textbox"/>
 
 </window>

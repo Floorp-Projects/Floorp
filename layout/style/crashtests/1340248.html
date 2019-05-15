@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            o1 = document.createElement('style');
+            o1.textContent = "* { position: absolute; }";
+            o1.className = 'c2';
+            document.head.appendChild(o1);
+            document.styleSheets[0].insertRule("*::first-line { border-inline-end-style: solid; }", 0);
+            document.styleSheets[0].insertRule("* { display: table-row ; }", 0);
+            document.styleSheets[0].insertRule(".c2::first-line { border-style: none ; }", 0);
+        </script>
+    </head>
+</html>

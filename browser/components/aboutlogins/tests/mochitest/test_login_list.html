@@ -7,6 +7,7 @@ Test the login-list component
   <meta charset="utf-8">
   <title>Test the login-list component</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="reflected-fluent-element.js"></script>
   <script src="login-list-item.js"></script>
   <script src="login-list.js"></script>
   <script src="aboutlogins_common.js"></script>
@@ -40,6 +41,10 @@ const TEST_LOGIN_2 = {
 };
 
 add_task(async function setup() {
+  stubFluentL10n({
+    "count": "count",
+  });
+
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
   importDependencies(templateFrame, displayEl);
@@ -69,6 +74,54 @@ add_task(async function test_populated_list() {
   loginListItems[0].click();
   ok(loginListItems[0].classList.contains("selected"), "The first item should be selected");
   ok(!loginListItems[1].classList.contains("selected"), "The second item should still not be selected");
+});
+
+add_task(async function test_filtered_list() {
+  is(gLoginList.shadowRoot.querySelectorAll("login-list-item:not([hidden])").length, 2, "Both logins should be visible");
+  let countSpan = gLoginList.shadowRoot.querySelector(".count");
+  is(countSpan.textContent, "2", "Count should match full list length");
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    composed: true,
+    detail: "user1",
+  }));
+  is(countSpan.textContent, "1", "Count should match result amount");
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  is(loginListItems[0].shadowRoot.querySelector(".username").textContent, "user1", "user1 is expected first");
+  ok(!loginListItems[0].hidden, "user1 should remain visible");
+  ok(loginListItems[1].hidden, "user2 should be hidden");
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    composed: true,
+    detail: "user2",
+  }));
+  is(countSpan.textContent, "1", "Count should match result amount");
+  ok(loginListItems[0].hidden, "user1 should be hidden");
+  ok(!loginListItems[1].hidden, "user2 should be visible");
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    composed: true,
+    detail: "user",
+  }));
+  is(countSpan.textContent, "2", "Count should match result amount");
+  ok(!loginListItems[0].hidden, "user1 should be visible");
+  ok(!loginListItems[1].hidden, "user2 should be visible");
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    composed: true,
+    detail: "foo",
+  }));
+  is(countSpan.textContent, "0", "Count should match result amount");
+  ok(loginListItems[0].hidden, "user1 should be hidden");
+  ok(loginListItems[1].hidden, "user2 should be hidden");
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    composed: true,
+    detail: "",
+  }));
+  is(countSpan.textContent, "2", "Count should be reset to full list length");
+  ok(!loginListItems[0].hidden, "user1 should be visible");
+  ok(!loginListItems[1].hidden, "user2 should be visible");
 });
 
 add_task(async function test_login_modified() {

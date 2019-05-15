@@ -205,7 +205,12 @@ def package(manifest, pkg, target):
     '''Pull out the package dict for a particular package and target
     from the given manifest.'''
     version = manifest['pkg'][pkg]['version']
-    info = manifest['pkg'][pkg]['target'][target]
+    if target in manifest['pkg'][pkg]['target']:
+        info = manifest['pkg'][pkg]['target'][target]
+    else:
+        # rust-src is the same for all targets, and has a literal '*' in the
+        # section key/name instead of a target
+        info = manifest['pkg'][pkg]['target']['*']
     return (version, info)
 
 
@@ -226,8 +231,8 @@ def fetch_package(manifest, pkg, host):
 def fetch_std(manifest, targets):
     stds = []
     for target in targets:
-        info = fetch_package(manifest, 'rust-std', target)
-        stds.append(info)
+        stds.append(fetch_package(manifest, 'rust-std', target))
+        stds.append(fetch_package(manifest, 'rust-analysis', target))
     return stds
 
 
@@ -278,6 +283,7 @@ def repack(host, targets, channel='stable', cargo_channel=None):
     rustc = fetch_package(manifest, 'rustc', host)
     cargo = fetch_package(cargo_manifest, 'cargo', host)
     stds = fetch_std(manifest, targets)
+    rustsrc = fetch_package(manifest, 'rust-src', host)
     rustfmt = fetch_optional(manifest, 'rustfmt-preview', host)
 
     log('Installing packages...')
@@ -290,6 +296,7 @@ def repack(host, targets, channel='stable', cargo_channel=None):
             raise
     install(os.path.basename(rustc['url']), install_dir)
     install(os.path.basename(cargo['url']), install_dir)
+    install(os.path.basename(rustsrc['url']), install_dir)
     if rustfmt:
         install(os.path.basename(rustfmt['url']), install_dir)
     for std in stds:

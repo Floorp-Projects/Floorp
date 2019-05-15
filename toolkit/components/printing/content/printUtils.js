@@ -87,7 +87,7 @@ var PrintUtils = {
       var printSettings = this.getPrintSettings();
       var PRINTPROMPTSVC = Cc["@mozilla.org/embedcomp/printingprompt-service;1"]
                              .getService(Ci.nsIPrintingPromptService);
-      PRINTPROMPTSVC.showPageSetup(window, printSettings, null);
+      PRINTPROMPTSVC.showPageSetupDialog(window, printSettings, null);
       if (gSavePrintSettings) {
         // Page Setup data is a "native" setting on the Mac
         var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
@@ -217,8 +217,8 @@ var PrintUtils = {
     // just in case we are already printing,
     // an error code could be returned if the Progress Dialog is already displayed
     try {
-      PPROMPTSVC.showProgress(window, null, printSettings, this._obsPP, false,
-                              this._webProgressPP, ppParams, notifyOnOpen);
+      PPROMPTSVC.showPrintProgressDialog(window, null, printSettings, this._obsPP, false,
+                                         this._webProgressPP, ppParams, notifyOnOpen);
       if (ppParams.value) {
         ppParams.value.docTitle = this._originalTitle;
         ppParams.value.docURL   = this._originalURL;
@@ -424,7 +424,7 @@ var PrintUtils = {
   enterPrintPreview() {
     // Send a message to the print preview browser to initialize
     // print preview. If we happen to have gotten a print preview
-    // progress listener from nsIPrintingPromptService.showProgress
+    // progress listener from nsIPrintingPromptService.showPrintProgressDialog
     // in printPreview, we add listeners to feed that progress
     // listener.
     let ppBrowser = this._shouldSimplify ?

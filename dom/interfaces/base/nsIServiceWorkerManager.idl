@@ -172,8 +172,7 @@ interface nsIServiceWorkerManager : nsISupports
 
   [optional_argc] void sendPushEvent(in ACString aOriginAttributes,
                                      in ACString aScope,
-                                     [optional] in uint32_t aDataLength,
-                                     [optional, array, size_is(aDataLength)] in uint8_t aDataBytes);
+                                     [optional] in Array<uint8_t> aDataBytes);
   void sendPushSubscriptionChangeEvent(in ACString aOriginAttributes,
                                        in ACString scope);
 

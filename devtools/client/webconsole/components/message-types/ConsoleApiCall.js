@@ -93,8 +93,17 @@ function ConsoleApiCall(props) {
         className: "console-message-prefix",
       }, `${prefix}: `));
     }
-  } else {
+  } else if (typeof messageText === "string") {
     messageBody = messageText;
+  } else if (messageText) {
+    messageBody = GripMessageBody({
+      dispatch,
+      messageId,
+      grip: messageText,
+      serviceContainer,
+      useQuotes: false,
+      type,
+    });
   }
 
   let attachment = null;
@@ -140,6 +149,7 @@ function ConsoleApiCall(props) {
     timeStamp,
     timestampsVisible,
     parameters,
+    message,
     maybeScrollToBottom,
   });
 }

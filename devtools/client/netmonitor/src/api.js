@@ -203,6 +203,19 @@ NetMonitorAPI.prototype = {
     await this.harExportConnectorReady;
     return this.harExportConnector;
   },
+
+  /**
+   * Resends a given network request
+   * @param {String} requestId
+   *        Id of the network request
+   */
+  resendRequest(requestId) {
+    // Flush queued requests.
+    this.store.dispatch(Actions.batchFlush());
+    // Send custom request with same url, headers and body as the request
+    // with the given requestId.
+    this.store.dispatch(Actions.sendCustomRequest(this.connector, requestId));
+  },
 };
 
 exports.NetMonitorAPI = NetMonitorAPI;

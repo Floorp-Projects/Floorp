@@ -237,6 +237,24 @@ function checkSelected(row, expected) {
 }
 
 /**
+ * Check level for a given row in the accessibility tree.
+ * @param   {DOMNode} row
+ *          DOMNode for a given accessibility row.
+ * @param   {Boolean} expected
+ *          Expected row level (aria-level).
+ *
+ * @returns {Boolean}
+ *          True if the aria-level for the row is as expected.
+ */
+function checkLevel(row, expected) {
+  if (!expected) {
+    return true;
+  }
+
+  return parseInt(row.getAttribute("aria-level"), 10) === expected;
+}
+
+/**
  * Check the state of the accessibility tree.
  * @param  {document} doc       panel documnent.
  * @param  {Array}    expected  an array that represents an expected row list.
@@ -245,11 +263,12 @@ async function checkTreeState(doc, expected) {
   info("Checking tree state.");
   const hasExpectedStructure = await BrowserTestUtils.waitForCondition(() =>
     [...doc.querySelectorAll(".treeRow")].every((row, i) => {
-      const { role, name, badges, selected } = expected[i];
+      const { role, name, badges, selected, level } = expected[i];
       return row.querySelector(".treeLabelCell").textContent === role &&
         row.querySelector(".treeValueCell").textContent === name &&
         compareBadges(row.querySelector(".badges"), badges) &&
-        checkSelected(row, selected);
+        checkSelected(row, selected) &&
+        checkLevel(row, level);
     }), "Wait for the right tree update.");
 
   ok(hasExpectedStructure, "Tree structure is correct.");

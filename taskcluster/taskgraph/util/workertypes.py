@@ -26,6 +26,7 @@ WORKER_TYPES = {
     "scriptworker-prov-v1/shipit-dev": ('shipit', None),
     "scriptworker-prov-v1/treescript-v1": ('treescript', None),
     'terraform-packet/gecko-t-linux': ('docker-worker', 'linux'),
+    'releng-hardware/gecko-t-osx-1014': ('generic-worker', 'macosx'),
 }
 
 

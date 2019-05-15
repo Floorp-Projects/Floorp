@@ -1070,8 +1070,7 @@ class MockPluginTag {
 
 function mockPluginHost(plugins) {
   let PluginHost = {
-    getPluginTags(count) {
-      count.value = plugins.length;
+    getPluginTags() {
       return plugins.map(p => p.pluginTag);
     },
 

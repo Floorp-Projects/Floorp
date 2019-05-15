@@ -656,20 +656,10 @@ class Interface(object):
         self.namemap = NameMap()
         self.doccomments = doccomments
         self.nativename = name
-        self.implicit_builtinclass = False
 
         for m in members:
             if not isinstance(m, CDATA):
                 self.namemap.set(m)
-
-            if ((m.kind == 'method' or m.kind == 'attribute') and
-                m.notxpcom and name != 'nsISupports'):
-                # An interface cannot be implemented by JS if it has a notxpcom
-                # method or attribute. Such a type is an "implicit builtinclass".
-                #
-                # XXX(nika): Why does nostdcall not imply builtinclass?
-                # It could screw up the shims as well...
-                self.implicit_builtinclass = True
 
     def __eq__(self, other):
         return self.name == other.name and self.location == other.location
@@ -714,9 +704,6 @@ class Interface(object):
                 raise IDLError("interface '%s' is not builtinclass but derives from "
                                "builtinclass '%s'" %
                                (self.name, self.base), self.location)
-
-            if realbase.implicit_builtinclass:
-                self.implicit_builtinclass = True  # Inherit implicit builtinclass from base
 
         for member in self.members:
             member.resolve(self)
@@ -963,6 +950,25 @@ class CEnum(object):
         return "\tcenum %s : %d { %s };\n" % (self.name, self.width, body)
 
 
+# An interface cannot be implemented by JS if it has a notxpcom
+# method or attribute, so it must be marked as builtinclass.
+#
+# XXX(nika): Why does nostdcall not imply builtinclass?
+# It could screw up the shims as well...
+def ensureBuiltinClassIfNeeded(methodOrAttribute):
+    iface = methodOrAttribute.iface
+    if not iface.attributes.scriptable or iface.attributes.builtinclass:
+        return
+    if iface.name == 'nsISupports':
+        return
+    if methodOrAttribute.notxpcom:
+        raise IDLError(
+            ("scriptable interface '%s' must be marked [builtinclass] because it "
+             "contains a [notxpcom] %s '%s'") %
+            (iface.name, methodOrAttribute.kind, methodOrAttribute.name),
+            methodOrAttribute.location)
+
+
 class Attribute(object):
     kind = 'attribute'
     noscript = False
@@ -1032,6 +1038,8 @@ class Attribute(object):
             raise IDLError('[infallible] attributes are only allowed on '
                            '[builtinclass] interfaces',
                            self.location)
+
+        ensureBuiltinClassIfNeeded(self)
 
     def toIDL(self):
         attribs = attlistToIDL(self.attlist)
@@ -1112,6 +1120,9 @@ class Method(object):
     def resolve(self, iface):
         self.iface = iface
         self.realtype = self.iface.idl.getName(self.type, self.location)
+
+        ensureBuiltinClassIfNeeded(self)
+
         for p in self.params:
             p.resolve(self)
         for p in self.params:

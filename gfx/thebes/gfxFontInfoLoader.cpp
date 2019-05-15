@@ -6,6 +6,7 @@
 #include "gfxFontInfoLoader.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
+#include "nsXPCOM.h"        // for gXPCOMThreadsShutDown
 #include "nsThreadUtils.h"  // for nsRunnable
 #include "gfxPlatformFontList.h"
 
@@ -111,12 +112,15 @@ nsresult AsyncFontInfoLoader::Run() {
 
 NS_IMPL_ISUPPORTS(gfxFontInfoLoader::ShutdownObserver, nsIObserver)
 
+static bool sFontLoaderShutdownObserved = false;
+
 NS_IMETHODIMP
 gfxFontInfoLoader::ShutdownObserver::Observe(nsISupports* aSubject,
                                              const char* aTopic,
                                              const char16_t* someData) {
   if (!nsCRT::strcmp(aTopic, "quit-application")) {
     mLoader->CancelLoader();
+    sFontLoaderShutdownObserved = true;
   } else {
     MOZ_ASSERT_UNREACHABLE("unexpected notification topic");
   }
@@ -147,12 +151,25 @@ void gfxFontInfoLoader::StartLoader(uint32_t aDelay, uint32_t aInterval) {
 
   // delay? ==> start async thread after a delay
   if (aDelay) {
+    NS_ASSERTION(!sFontLoaderShutdownObserved,
+                 "Bug 1508626 - Setting delay timer for font loader after "
+                 "shutdown observed");
+    NS_ASSERTION(!gXPCOMThreadsShutDown,
+                 "Bug 1508626 - Setting delay timer for font loader after "
+                 "shutdown but before observer");
     mState = stateTimerOnDelay;
     mTimer->InitWithNamedFuncCallback(DelayedStartCallback, this, aDelay,
                                       nsITimer::TYPE_ONE_SHOT,
                                       "gfxFontInfoLoader::StartLoader");
     return;
   }
+
+  NS_ASSERTION(
+      !sFontLoaderShutdownObserved,
+      "Bug 1508626 - Initializing font loader after shutdown observed");
+  NS_ASSERTION(!gXPCOMThreadsShutDown,
+               "Bug 1508626 - Initializing font loader after shutdown but "
+               "before observer");
 
   mFontInfo = CreateFontInfoData();
 
@@ -195,6 +212,13 @@ void gfxFontInfoLoader::FinalizeLoader(FontInfoData* aFontInfo) {
     return;
   }
 
+  NS_ASSERTION(!sFontLoaderShutdownObserved,
+               "Bug 1508626 - Finalize with interval timer for font loader "
+               "after shutdown observed");
+  NS_ASSERTION(!gXPCOMThreadsShutDown,
+               "Bug 1508626 - Finalize with interval timer for font loader "
+               "after shutdown but before observer");
+
   // not all work completed ==> run load on interval
   mState = stateTimerOnInterval;
   mTimer->InitWithNamedFuncCallback(LoadFontInfoCallback, this, mInterval,
@@ -223,6 +247,13 @@ void gfxFontInfoLoader::CancelLoader() {
 
 void gfxFontInfoLoader::LoadFontInfoTimerFire() {
   if (mState == stateTimerOnDelay) {
+    NS_ASSERTION(!sFontLoaderShutdownObserved,
+                 "Bug 1508626 - Setting interval timer for font loader after "
+                 "shutdown observed");
+    NS_ASSERTION(!gXPCOMThreadsShutDown,
+                 "Bug 1508626 - Setting interval timer for font loader after "
+                 "shutdown but before observer");
+
     mState = stateTimerOnInterval;
     mTimer->SetDelay(mInterval);
   }

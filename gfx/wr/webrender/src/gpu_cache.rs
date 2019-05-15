@@ -177,12 +177,10 @@ impl GpuCacheAddress {
         }
     }
 
-    pub fn invalid() -> Self {
-        GpuCacheAddress {
-            u: u16::MAX,
-            v: u16::MAX,
-        }
-    }
+    pub const INVALID: GpuCacheAddress = GpuCacheAddress {
+        u: u16::MAX,
+        v: u16::MAX,
+    };
 }
 
 impl Add<usize> for GpuCacheAddress {

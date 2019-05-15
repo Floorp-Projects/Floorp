@@ -75,7 +75,7 @@ class AccessibilityTreeFilter extends Component {
     const { auditing, filters } = this.props;
     const filterButtons = Object.entries(filters).map(([filterKey, active]) =>
       ToggleButton({
-        className: "audit-badge badge",
+        className: "badge",
         key: filterKey,
         active,
         label: L10N.getStr(FILTER_LABELS[filterKey]),

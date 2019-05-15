@@ -1397,6 +1397,15 @@ class nsLayoutUtils {
   static nsIFrame* GetParentOrPlaceholderForCrossDoc(nsIFrame* aFrame);
 
   /**
+   * Returns the frame that would act as the parent of aFrame when
+   * descending through the frame tree in display list building.
+   * Usually the same as GetParentOrPlaceholderForCrossDoc, except
+   * that pushed floats are treated as children of their containing
+   * block.
+   */
+  static nsIFrame* GetDisplayListParent(nsIFrame* aFrame);
+
+  /**
    * Get a frame's next-in-flow, or, if it doesn't have one, its
    * block-in-inline-split sibling.
    */
@@ -3023,7 +3032,7 @@ class nsLayoutUtils {
 
   /**
    * Returns true if there are any preferences or overrides that indicate a
-   * need to create a MobileViewportManager.
+   * need to handle <meta name="viewport"> tags.
    */
   static bool ShouldHandleMetaViewport(const mozilla::dom::Document*);
 

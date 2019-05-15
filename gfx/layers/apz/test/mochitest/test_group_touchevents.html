@@ -18,19 +18,17 @@ var subtests = [
   {"file": "helper_iframe_pan.html", "prefs": basic_pan_prefs},
 
   // Simple test to exercise touch-tapping behaviour
-  {"file": "helper_tap.html", "prefs": [["dom.meta-viewport.enabled", true]]},
+  {"file": "helper_tap.html"},
   // Tapping, but with a full-zoom applied
-  {"file": "helper_tap_fullzoom.html", "prefs": [["dom.meta-viewport.enabled", true]]},
+  {"file": "helper_tap_fullzoom.html"},
 
   // For the following two tests, disable displayport suppression to make sure it
   // doesn't interfere with the test by scheduling paints non-deterministically.
   {"file": "helper_scrollto_tap.html?true",
-   "prefs": [["apz.paint_skipping.enabled", true],
-             ["dom.meta-viewport.enabled", true]],
+   "prefs": [["apz.paint_skipping.enabled", true]],
    "dp_suppression": false},
   {"file": "helper_scrollto_tap.html?false",
-   "prefs": [["apz.paint_skipping.enabled", false],
-             ["dom.meta-viewport.enabled", true]],
+   "prefs": [["apz.paint_skipping.enabled", false]],
    "dp_suppression": false},
 
   // Add new subtests to test_group_touch_events-4.html, not this file.

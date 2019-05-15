@@ -133,7 +133,8 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
     'Android 7.0 Moto G5 32bit': ['android-hw-g5-7.0-arm7-api-16'],
     'Android 8.0 Google Pixel 2 32bit': ['android-hw-p2-8.0-arm7-api-16'],
     'Android 8.0 Google Pixel 2 64bit': ['android-hw-p2-8.0-android-aarch64'],
-    '10.10': ['macosx64'],
+    '10.10': ['macosx1010-64'],
+    '10.14': ['macosx1014-64'],
     # other commonly-used substrings for platforms not yet supported with
     # in-tree taskgraphs:
     # '10.10.5': [..TODO..],
@@ -602,6 +603,8 @@ class TryOptionSyntax(object):
                 return False
             tier = task.task['extra']['treeherder']['tier']
             if 'platforms' in test:
+                if 'all' in test['platforms']:
+                    return True
                 platform = attr('test_platform', '').split('/')[0]
                 # Platforms can be forced by syntax like "-u xpcshell[Windows 8]"
                 return platform in test['platforms']

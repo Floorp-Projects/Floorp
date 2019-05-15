@@ -433,15 +433,23 @@ bool FeatureData::MaybeCompleteClassification(nsIChannel* aChannel) {
 
   nsTArray<nsCString> list;
   nsTArray<nsCString> hashes;
-  list.AppendElement(mHostInPrefTables[nsIUrlClassifierFeature::blacklist]);
+  if (!mHostInPrefTables[nsIUrlClassifierFeature::blacklist].IsEmpty()) {
+    list.AppendElement(mHostInPrefTables[nsIUrlClassifierFeature::blacklist]);
+
+    // Telemetry expects every tracking channel has hash, create it for test
+    // entry
+    Completion complete;
+    complete.FromPlaintext(
+        mHostInPrefTables[nsIUrlClassifierFeature::blacklist]);
+    hashes.AppendElement(complete.ToString());
+  }
 
   for (TableData* tableData : mBlacklistTables) {
     if (tableData->MatchState() == TableData::eMatch) {
       list.AppendElement(tableData->Table());
 
       for (const auto& r : tableData->Result()) {
-        nsCString* hash = hashes.AppendElement();
-        r->hash.complete.ToString(*hash);
+        hashes.AppendElement(r->hash.complete.ToString());
       }
     }
   }

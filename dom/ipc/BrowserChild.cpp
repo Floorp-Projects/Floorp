@@ -1052,6 +1052,17 @@ BrowserChild::~BrowserChild() {
   mozilla::DropJSObjects(this);
 }
 
+mozilla::ipc::IPCResult BrowserChild::RecvSkipBrowsingContextDetach() {
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (!docShell) {
+    return IPC_OK();
+  }
+  RefPtr<nsDocShell> docshell = nsDocShell::Cast(docShell);
+  MOZ_ASSERT(docshell);
+  docshell->SkipBrowsingContextDetach();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserChild::RecvLoadURL(const nsCString& aURI,
                                                   const ShowInfo& aInfo) {
   if (!mDidLoadURLInit) {

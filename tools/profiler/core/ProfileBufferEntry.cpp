@@ -158,7 +158,7 @@ template <typename LambdaT>
 ForEachTrackedOptimizationTypeInfoLambdaOp<LambdaT>
 MakeForEachTrackedOptimizationTypeInfoLambdaOp(LambdaT&& aLambda) {
   return ForEachTrackedOptimizationTypeInfoLambdaOp<LambdaT>(
-      std::move(aLambda));
+      std::forward<LambdaT>(aLambda));
 }
 
 // As mentioned in ProfileBufferEntry.h, the JSON format contains many

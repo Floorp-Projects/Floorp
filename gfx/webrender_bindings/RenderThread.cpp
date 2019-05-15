@@ -344,13 +344,12 @@ static void NotifyDidStartRender(layers::CompositorBridgeParent* aBridge) {
   }
 }
 
-void RenderThread::UpdateAndRender(wr::WindowId aWindowId,
-                                   const VsyncId& aStartId,
-                                   const TimeStamp& aStartTime, bool aRender,
-                                   const Maybe<gfx::IntSize>& aReadbackSize,
-                                   const Maybe<wr::ImageFormat>& aReadbackFormat,
-                                   const Maybe<Range<uint8_t>>& aReadbackBuffer,
-                                   bool aHadSlowFrame) {
+void RenderThread::UpdateAndRender(
+    wr::WindowId aWindowId, const VsyncId& aStartId,
+    const TimeStamp& aStartTime, bool aRender,
+    const Maybe<gfx::IntSize>& aReadbackSize,
+    const Maybe<wr::ImageFormat>& aReadbackFormat,
+    const Maybe<Range<uint8_t>>& aReadbackBuffer, bool aHadSlowFrame) {
   AUTO_PROFILER_TRACING("Paint", "Composite", GRAPHICS);
   MOZ_ASSERT(IsInRenderThread());
   MOZ_ASSERT(aRender || aReadbackBuffer.isNothing());
@@ -372,8 +371,8 @@ void RenderThread::UpdateAndRender(wr::WindowId aWindowId,
   bool rendered = false;
   RendererStats stats = {0};
   if (aRender) {
-    rendered = renderer->UpdateAndRender(aReadbackSize, aReadbackFormat,
-                                         aReadbackBuffer, aHadSlowFrame, &stats);
+    rendered = renderer->UpdateAndRender(
+        aReadbackSize, aReadbackFormat, aReadbackBuffer, aHadSlowFrame, &stats);
   } else {
     renderer->Update();
   }
@@ -487,30 +486,6 @@ void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
   it->second->mStartTimes.push(aStartTime);
   it->second->mStartIds.push(aStartId);
   it->second->mDocFrameCounts.push(aDocFrameCount);
-}
-
-void RenderThread::DecPendingFrameCount(wr::WindowId aWindowId) {
-  auto windows = mWindowInfos.Lock();
-  auto it = windows->find(AsUint64(aWindowId));
-  if (it == windows->end()) {
-    MOZ_ASSERT(false);
-    return;
-  }
-  WindowInfo* info = it->second;
-  MOZ_ASSERT(info->mPendingCount > 0);
-  if (info->mPendingCount <= 0) {
-    return;
-  }
-  info->mPendingCount--;
-  // This function gets called for "nop frames" where nothing was rendered or
-  // composited. But we count this time because the non-WR codepath equivalent
-  // in CompositorBridgeParent::ComposeToTarget also counts such frames. And
-  // anyway this should be relatively infrequent so it shouldn't skew the
-  // numbers much.
-  mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
-                                          info->mStartTimes.front());
-  info->mStartTimes.pop();
-  info->mStartIds.pop();
 }
 
 mozilla::Pair<bool, bool> RenderThread::IncRenderingFrameCount(

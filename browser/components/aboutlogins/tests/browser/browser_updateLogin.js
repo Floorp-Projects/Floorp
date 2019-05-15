@@ -44,8 +44,12 @@ add_task(async function test_login_item() {
     }, "Waiting for login item to get populated");
     ok(loginItemPopulated, "The login item should get populated");
 
-    let usernameInput = loginItem.shadowRoot.querySelector("input[name='username']");
-    let passwordInput = loginItem.shadowRoot.querySelector("input[name='password']");
+    let usernameInput = loginItem.shadowRoot.querySelector("modal-input[name='username']");
+    let passwordInput = loginItem.shadowRoot.querySelector("modal-input[name='password']");
+
+    let editButton = loginItem.shadowRoot.querySelector(".edit-button");
+    editButton.click();
+    await Promise.resolve();
 
     usernameInput.value += "-undome";
     passwordInput.value += "-undome";
@@ -55,6 +59,9 @@ add_task(async function test_login_item() {
     await Promise.resolve();
     is(usernameInput.value, login.username, "Username change should be reverted");
     is(passwordInput.value, login.password, "Password change should be reverted");
+
+    editButton.click();
+    await Promise.resolve();
 
     usernameInput.value += "-saveme";
     passwordInput.value += "-saveme";

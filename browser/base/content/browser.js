@@ -113,6 +113,8 @@ XPCOMUtils.defineLazyScriptGetter(this, ["PointerLock", "FullScreen"],
                                   "chrome://browser/content/browser-fullScreenAndPointerLock.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gIdentityHandler",
                                   "chrome://browser/content/browser-siteIdentity.js");
+XPCOMUtils.defineLazyScriptGetter(this, "gProtectionsHandler",
+                                  "chrome://browser/content/browser-siteProtections.js");
 XPCOMUtils.defineLazyScriptGetter(this, ["gGestureSupport", "gHistorySwipeAnimation"],
                                   "chrome://browser/content/browser-gestureSupport.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gSafeBrowsing",

@@ -389,8 +389,8 @@ class nsGlobalWindowObserver final : public nsIObserver,
     }
   }
 
-  nsIPrincipal* GetPrincipal() const override {
-    return mWindow ? mWindow->GetPrincipal() : nullptr;
+  nsIPrincipal* GetEffectiveStoragePrincipal() const override {
+    return mWindow ? mWindow->GetEffectiveStoragePrincipal() : nullptr;
   }
 
   bool IsPrivateBrowsing() const override {
@@ -4354,8 +4354,9 @@ Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
     }
 
     RefPtr<Storage> storage;
-    aError = storageManager->CreateStorage(this, principal, documentURI,
-                                           IsPrivateBrowsing(),
+    // No StoragePrincipal for sessions.
+    aError = storageManager->CreateStorage(this, principal, principal,
+                                           documentURI, IsPrivateBrowsing(),
                                            getter_AddRefs(storage));
     if (aError.Failed()) {
       return nullptr;
@@ -4406,7 +4407,7 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   if (access == nsContentUtils::StorageAccess::ePartitionedOrDeny) {
     if (!mDoc) {
       access = nsContentUtils::StorageAccess::eDeny;
-    } else {
+    } else if (!StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
       nsCOMPtr<nsIURI> uri;
       Unused << mDoc->NodePrincipal()->GetURI(getter_AddRefs(uri));
       static const char* kPrefName =
@@ -4432,7 +4433,8 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   // tracker, we pass from the partitioned LocalStorage to the 'normal'
   // LocalStorage. The previous data is lost and the 2 window.localStorage
   // objects, before and after the permission granted, will be different.
-  if (access != nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+  if ((StaticPrefs::privacy_storagePrincipal_enabledForTrackers() ||
+       access != nsContentUtils::StorageAccess::ePartitionedOrDeny) &&
       (!mLocalStorage ||
        mLocalStorage->Type() == Storage::ePartitionedLocalStorage)) {
     RefPtr<Storage> storage;
@@ -4462,8 +4464,14 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
         return nullptr;
       }
 
-      aError = storageManager->CreateStorage(this, principal, documentURI,
-                                             IsPrivateBrowsing(),
+      nsIPrincipal* storagePrincipal = GetEffectiveStoragePrincipal();
+      if (!storagePrincipal) {
+        aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return nullptr;
+      }
+
+      aError = storageManager->CreateStorage(this, principal, storagePrincipal,
+                                             documentURI, IsPrivateBrowsing(),
                                              getter_AddRefs(storage));
     }
 
@@ -4483,11 +4491,20 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
       return nullptr;
     }
 
-    mLocalStorage = new PartitionedLocalStorage(this, principal);
+    nsIPrincipal* storagePrincipal = GetEffectiveStoragePrincipal();
+    if (!storagePrincipal) {
+      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return nullptr;
+    }
+
+    mLocalStorage =
+        new PartitionedLocalStorage(this, principal, storagePrincipal);
   }
 
-  MOZ_ASSERT((access == nsContentUtils::StorageAccess::ePartitionedOrDeny) ==
-             (mLocalStorage->Type() == Storage::ePartitionedLocalStorage));
+  MOZ_ASSERT_IF(
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers(),
+      (access == nsContentUtils::StorageAccess::ePartitionedOrDeny) ==
+          (mLocalStorage->Type() == Storage::ePartitionedLocalStorage));
 
   return mLocalStorage;
 }
@@ -4874,6 +4891,11 @@ void nsGlobalWindowInner::ObserveStorageNotification(
     return;
   }
 
+  nsIPrincipal* storagePrincipal = GetEffectiveStoragePrincipal();
+  if (!storagePrincipal) {
+    return;
+  }
+
   bool fireMozStorageChanged = false;
   nsAutoString eventType;
   eventType.AssignLiteral("storage");
@@ -4914,8 +4936,8 @@ void nsGlobalWindowInner::ObserveStorageNotification(
   else {
     MOZ_ASSERT(!NS_strcmp(aStorageType, u"localStorage"));
 
-    MOZ_DIAGNOSTIC_ASSERT(
-        StorageUtils::PrincipalsEqual(aEvent->GetPrincipal(), principal));
+    MOZ_DIAGNOSTIC_ASSERT(StorageUtils::PrincipalsEqual(aEvent->GetPrincipal(),
+                                                        storagePrincipal));
 
     fireMozStorageChanged =
         mLocalStorage && mLocalStorage == aEvent->GetStorageArea();

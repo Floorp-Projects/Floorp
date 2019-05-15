@@ -1455,8 +1455,8 @@ class DebuggerFrame : public NativeObject {
   static DebuggerFrame* create(JSContext* cx, HandleObject proto,
                                const FrameIter& iter,
                                HandleNativeObject debugger);
-  void freeFrameIterData(FreeOp* fop);
 
+  static MOZ_MUST_USE bool getScript(JSContext* cx, unsigned argc, Value* vp);
   static MOZ_MUST_USE bool getArguments(JSContext* cx,
                                         HandleDebuggerFrame frame,
                                         MutableHandleDebuggerArguments result);
@@ -1489,6 +1489,12 @@ class DebuggerFrame : public NativeObject {
                                 ResumeMode& resumeMode,
                                 MutableHandleValue value,
                                 MutableHandleSavedFrame exnStack);
+
+  MOZ_MUST_USE bool requireLive(JSContext* cx);
+  static MOZ_MUST_USE DebuggerFrame* checkThis(JSContext* cx,
+                                               const CallArgs& args,
+                                               const char* fnname,
+                                               bool checkLive);
 
   bool isLive() const;
   OnStepHandler* onStepHandler() const;
@@ -1553,6 +1559,9 @@ class DebuggerFrame : public NativeObject {
 
  public:
   FrameIter::Data* frameIterData() const;
+  void freeFrameIterData(FreeOp* fop);
+  void maybeDecrementFrameScriptStepModeCount(FreeOp* fop,
+                                              AbstractFramePtr frame);
 };
 
 class DebuggerObject : public NativeObject {
@@ -1868,14 +1877,14 @@ class BreakpointSite {
 
  protected:
   virtual void recompile(FreeOp* fop) = 0;
-  inline bool isEnabled() const { return enabledCount > 0; }
+  bool isEnabled() const { return enabledCount > 0; }
 
  public:
   BreakpointSite(Type type);
   Breakpoint* firstBreakpoint() const;
   virtual ~BreakpointSite() {}
   bool hasBreakpoint(Breakpoint* bp);
-  inline Type type() const { return type_; }
+  Type type() const { return type_; }
 
   void inc(FreeOp* fop);
   void dec(FreeOp* fop);

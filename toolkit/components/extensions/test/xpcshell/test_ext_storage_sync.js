@@ -34,6 +34,10 @@ function handleCannedResponse(cannedResponse, request, response) {
   response.write(cannedResponse.responseBody);
 }
 
+function collectionPath(collectionId) {
+  return `/buckets/default/collections/${collectionId}`;
+}
+
 function collectionRecordsPath(collectionId) {
   return `/buckets/default/collections/${collectionId}/records`;
 }
@@ -256,8 +260,21 @@ class KintoServer {
       return;
     }
     this.collections.add(collectionId);
+    const remoteCollectionPath = "/v1" + collectionPath(encodeURIComponent(collectionId));
+    this.httpServer.registerPathHandler(remoteCollectionPath, this.handleGetCollection.bind(this, collectionId));
     const remoteRecordsPath = "/v1" + collectionRecordsPath(encodeURIComponent(collectionId));
     this.httpServer.registerPathHandler(remoteRecordsPath, this.handleGetRecords.bind(this, collectionId));
+  }
+
+  handleGetCollection(collectionId, request, response) {
+    response.setStatusLine(null, 200, "OK");
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
+    response.setHeader("Date", (new Date()).toUTCString());
+    response.write(JSON.stringify({
+      data: {
+        id: collectionId,
+      },
+    }));
   }
 
   handleGetRecords(collectionId, request, response) {
