@@ -88,7 +88,7 @@ export const getOriginalLocations = async (
   locations: SourceLocation[],
   options: LocationOptions = {}
 ): Promise<SourceLocation[]> =>
-  dispatcher.invoke("getOriginalLocations", locations, options);
+  dispatcher.invoke("getOriginalLocations", sourceId, locations, options);
 
 export const getGeneratedRangesForOriginal = async (
   sourceId: SourceId,

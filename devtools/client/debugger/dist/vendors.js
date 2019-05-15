@@ -2719,11 +2719,6 @@ function inToolbox() {
   }
 }
 
-// Copied from m-c DevToolsUtils.
-function getTopWindow(win) {
-  return win.windowRoot ? win.windowRoot.ownerGlobal : win.top;
-}
-
 /**
  * A partial implementation of the Menu API provided by electron:
  * https://github.com/electron/electron/blob/master/docs/api/menu.md.
@@ -2766,6 +2761,11 @@ Menu.prototype.insert = function (pos, menuItem) {
   throw Error("Not implemented");
 };
 
+// Copied from m-c DevToolsUtils.
+function getTopWindow(win) {
+  return win.windowRoot ? win.windowRoot.ownerGlobal : win.top;
+}
+
 /**
  * Show the Menu at a specified location on the screen
  *
@@ -2775,16 +2775,12 @@ Menu.prototype.insert = function (pos, menuItem) {
  *
  * @param {int} screenX
  * @param {int} screenY
- * @param {Document} doc
- *        The document that should own the context menu.
+ * @param Toolbox toolbox (non standard)
+ *        Needed so we in which window to inject XUL
  */
 Menu.prototype.popup = function (screenX, screenY, doc) {
-  // The context-menu will be created in the topmost window to preserve keyboard
-  // navigation. See Bug 1543940. Keep a reference on the window owning the menu to hide
-  // the popup on unload.
   const win = doc.defaultView;
   doc = getTopWindow(doc.defaultView).document;
-
   let popupset = doc.querySelector("popupset");
   if (!popupset) {
     popupset = doc.createXULElement("popupset");
@@ -2806,7 +2802,6 @@ Menu.prototype.popup = function (screenX, screenY, doc) {
     popup.id = this.id;
   }
   this._createMenuItems(popup);
-
   // The context menu will be created in the topmost chrome window. Hide it manually when
   // the owner document is unloaded.
   const onWindowUnload = () => popup.hidePopup();

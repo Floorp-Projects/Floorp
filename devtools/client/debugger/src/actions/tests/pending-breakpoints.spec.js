@@ -65,7 +65,7 @@ function mockSourceMaps() {
     getGeneratedRangesForOriginal: async () => [
       { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } }
     ],
-    getOriginalLocations: async items => items
+    getOriginalLocations: async (sourceId, items) => items
   };
 }
 
@@ -387,7 +387,7 @@ describe("adding sources", () => {
       getGeneratedRangesForOriginal: async () => [
         { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } }
       ],
-      getOriginalLocations: async items => items
+      getOriginalLocations: async (sourceId, items) => items
     });
 
     const { getState, dispatch } = store;
