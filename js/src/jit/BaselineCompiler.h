@@ -697,7 +697,13 @@ using BaselineInterpreterCodeGen = BaselineCodeGen<BaselineInterpreterHandler>;
 
 class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
   // Offsets of patchable call instructions for debugger breakpoints/stepping.
-  js::Vector<uint32_t, 0, SystemAllocPolicy> debugTrapOffsets_;
+  Vector<uint32_t, 0, SystemAllocPolicy> debugTrapOffsets_;
+
+  // Offsets of move instructions for tableswitch base address.
+  Vector<CodeOffset, 0, SystemAllocPolicy> tableLabels_;
+
+  // Offset of the first tableswitch entry.
+  uint32_t tableOffset_ = 0;
 
   // Offset of the code to start interpreting a bytecode op.
   uint32_t interpretOpOffset_ = 0;

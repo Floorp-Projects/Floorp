@@ -6630,7 +6630,111 @@ bool BaselineInterpreterGenerator::emitDebugTrap() {
 }
 
 bool BaselineInterpreterGenerator::emitInterpreterLoop() {
-  MOZ_CRASH("NYI: interpreter emitInterpreterLoop");
+  Register scratch1 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
+
+  Address pcAddr = frame.addressOfInterpreterPC();
+
+  // Entry point for interpreting a bytecode op. No registers are live. PC is
+  // loaded from frame->interpreterPC.
+  masm.bind(handler.interpretOpLabel());
+  interpretOpOffset_ = masm.currentOffset();
+
+  // Emit a patchable call for debugger breakpoints/stepping.
+  if (!emitDebugTrap()) {
+    return false;
+  }
+
+  // Load pc, bytecode op.
+  masm.loadPtr(pcAddr, PCRegAtStart);
+  masm.load8ZeroExtend(Address(PCRegAtStart, 0), scratch1);
+
+  // Jump to table[op].
+  {
+    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), scratch2);
+    if (!tableLabels_.append(label)) {
+      return false;
+    }
+    BaseIndex pointer(scratch2, scratch1, ScalePointer);
+    masm.branchToComputedAddress(pointer);
+  }
+
+  // At the end of each op, emit code to bump the pc and jump to the
+  // next op (this is also known as a threaded interpreter).
+  auto opEpilogue = [&](JSOp op, size_t opLength) -> bool {
+    MOZ_ASSERT(masm.framePushed() == 0);
+
+    if (!BytecodeFallsThrough(op)) {
+      // Nothing to do.
+      masm.assumeUnreachable("unexpected fall through");
+      return true;
+    }
+
+    // Bump frame->interpreterICEntry if needed.
+    if (BytecodeOpHasIC(op)) {
+      masm.addPtr(Imm32(sizeof(ICEntry)), frame.addressOfInterpreterICEntry());
+    }
+
+    // Bump frame->interpreterPC, keep pc in PCRegAtStart.
+    masm.loadPtr(pcAddr, PCRegAtStart);
+    masm.addPtr(Imm32(opLength), PCRegAtStart);
+    masm.storePtr(PCRegAtStart, pcAddr);
+
+    if (!emitDebugTrap()) {
+      return false;
+    }
+
+    // Load the opcode, jump to table[op].
+    masm.load8ZeroExtend(Address(PCRegAtStart, 0), scratch1);
+    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), scratch2);
+    if (!tableLabels_.append(label)) {
+      return false;
+    }
+    BaseIndex pointer(scratch2, scratch1, ScalePointer);
+    masm.branchToComputedAddress(pointer);
+    return true;
+  };
+
+  // Emit code for each bytecode op.
+  Label opLabels[JSOP_LIMIT];
+#define EMIT_OP(OP)                     \
+  {                                     \
+    masm.bind(&opLabels[OP]);           \
+    if (!this->emit_##OP()) {           \
+      return false;                     \
+    }                                   \
+    if (!opEpilogue(OP, OP##_LENGTH)) { \
+      return false;                     \
+    }                                   \
+  }
+  OPCODE_LIST(EMIT_OP)
+#undef EMIT_OP
+
+  // Emit code for JSOP_UNUSED* ops.
+  Label invalidOp;
+  masm.bind(&invalidOp);
+  masm.assumeUnreachable("Invalid op");
+
+  // Emit the table.
+  masm.haltingAlign(sizeof(void*));
+
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+  size_t numInstructions = JSOP_LIMIT * (sizeof(uintptr_t) / sizeof(uint32_t));
+  AutoForbidPoolsAndNops afp(&masm, numInstructions);
+#endif
+
+  tableOffset_ = masm.currentOffset();
+
+  for (size_t i = 0; i < JSOP_LIMIT; i++) {
+    // Store a pointer to the code for the current op. If the op's label is not
+    // bound it must be a JSOP_UNUSED* op and we use |invalidOp| instead.
+    const Label& opLabel = opLabels[i];
+    uint32_t opOffset = opLabel.bound() ? opLabel.offset() : invalidOp.offset();
+    CodeLabel cl;
+    masm.writeCodePointer(&cl);
+    cl.target()->bind(opOffset);
+    masm.addCodeLabel(cl);
+  }
 
   return true;
 }
@@ -6661,6 +6765,13 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
   JitCode* code = linker.newCode(cx, CodeKind::Other);
   if (!code) {
     return false;
+  }
+
+  // Patch loads now that we know the tableswitch base address.
+  for (CodeOffset off : tableLabels_) {
+    Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, off),
+                                       ImmPtr(code->raw() + tableOffset_),
+                                       ImmPtr((void*)-1));
   }
 
 #ifdef JS_ION_PERF
