@@ -106,7 +106,6 @@ this.AboutPreferences = class AboutPreferences {
 
       if (obj.id === "topstories") {
         obj.rowsPref = "";
-        obj.pref.descString = {id: "prefs_content_discovery_description"};
       }
     });
     return sectionsCopy;

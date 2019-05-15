@@ -36,6 +36,9 @@ describe("<Trailhead>", () => {
     dummyNode = document.createElement("body");
     sandbox.stub(dummyNode, "querySelector").returns(dummyNode);
     const fakeDocument = {
+      get activeElement() {
+        return dummyNode;
+      },
       get body() {
         return dummyNode;
       },
@@ -68,9 +71,20 @@ describe("<Trailhead>", () => {
     assert.notCalled(dispatch);
   });
 
-  it("should emit UserEvent SUBMIT_EMAIL when you submit the form", () => {
+  it("should prevent submissions with no email", () => {
+    const form = wrapper.find("form");
+    const preventDefault = sandbox.stub();
+
+    form.simulate("submit", {preventDefault});
+
+    assert.calledOnce(preventDefault);
+    assert.notCalled(dispatch);
+  });
+  it("should emit UserEvent SUBMIT_EMAIL when you submit a valid email", () => {
     let form = wrapper.find("form");
     assert.ok(form.exists());
+    form.getDOMNode().elements.email.value = "a@b.c";
+
     form.simulate("submit");
 
     assert.calledOnce(dispatch);

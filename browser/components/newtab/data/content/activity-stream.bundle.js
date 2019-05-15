@@ -197,7 +197,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_FEED_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_OPT_OUT", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_FILL", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "TRAILHEAD_ENROLL_EVENT", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TARGETING_UPDATE", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_FEED_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_FILL", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_SEARCH", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "TRAILHEAD_ENROLL_EVENT", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 } // These are acceptable actions for AS Router messages to have. They can show up
 // as call-to-action buttons in snippets, onboarding tour, etc.
@@ -841,7 +841,6 @@ function relativeTime(timestamp) {
   return new Date(timestamp).toLocaleString();
 }
 
-const OPT_OUT_PREF = "discoverystream.optOut.0";
 const LAYOUT_VARIANTS = {
   "basic": "Basic default layout (on by default in nightly)",
   "dev-test-all": "A little bit of everything. Good layout for testing all components",
@@ -873,10 +872,6 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
     this.state = {
       toggledStories: {}
     };
-  }
-
-  get isOptedOut() {
-    return this.props.otherPrefs[OPT_OUT_PREF];
   }
 
   setConfigValue(name, value) {
@@ -996,9 +991,6 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
 
   render() {
     const {
-      isOptedOut
-    } = this;
-    const {
       config,
       lastUpdated,
       layout
@@ -1009,9 +1001,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
       type: "checkbox",
       checked: config.enabled,
       onChange: this.onEnableToggle
-    }), " enabled", isOptedOut ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", {
-      className: "optOutNote"
-    }, "(Note: User has opted-out. Check this box to reset)") : ""), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", null, "Endpoint variant"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", null, "You can also change this manually by changing this pref: ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("code", null, "browser.newtabpage.activity-stream.discoverystream.config")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", {
+    }), " enabled "), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", null, "Endpoint variant"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", null, "You can also change this manually by changing this pref: ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("code", null, "browser.newtabpage.activity-stream.discoverystream.config")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", {
       style: config.enabled ? null : {
         opacity: 0.5
       }
@@ -1946,7 +1936,8 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_8___default.a.Pur
 
     if (!message && !extraProps.message_id) {
       throw new Error(`You must provide a message_id for bundled messages`);
-    }
+    } // snippets_user_event, onboarding_user_event
+
 
     const eventType = `${message.provider || bundle.provider}_user_event`;
     ASRouterUtils.sendTelemetry({
@@ -2014,7 +2005,16 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_8___default.a.Pur
   }
 
   dismissBundle(bundle) {
-    return () => ASRouterUtils.dismissBundle(bundle);
+    return () => {
+      ASRouterUtils.dismissBundle(bundle);
+      this.sendUserActionTelemetry({
+        event: "DISMISS",
+        id: "onboarding-cards",
+        message_id: bundle.map(m => m.id).join(","),
+        // Passing the action because some bundles (Trailhead) don't have a provider set
+        action: "onboarding_user_event"
+      });
+    };
   }
 
   triggerOnboarding() {
@@ -2026,6 +2026,16 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_8___default.a.Pur
         }
       }
     });
+  }
+
+  clearMessage(id) {
+    if (id === this.state.message.id) {
+      this.setState({
+        message: {}
+      }); // Remove any styles related to the RTAMO message
+
+      document.body.classList.remove("welcome", "hide-main", "amo");
+    }
   }
 
   onMessageFromParent({
@@ -2045,14 +2055,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_8___default.a.Pur
         break;
 
       case "CLEAR_MESSAGE":
-        if (action.data.id === this.state.message.id) {
-          this.setState({
-            message: {}
-          }); // Remove any styles related to the RTAMO message
-
-          document.body.classList.remove("welcome", "hide-main", "amo");
-        }
-
+        this.clearMessage(action.data.id);
         break;
 
       case "CLEAR_PROVIDER":
@@ -2078,6 +2081,11 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_8___default.a.Pur
           message: {},
           bundle: {}
         });
+        break;
+
+      case "AS_ROUTER_TARGETING_UPDATE":
+        action.data.forEach(id => this.clearMessage(id));
+        break;
     }
   }
 
@@ -2155,7 +2163,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_8___default.a.Pur
       return react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_7__["OnboardingMessage"], _extends({}, this.state.bundle, {
         UISurface: "NEWTAB_OVERLAY",
         onAction: ASRouterUtils.executeAction,
-        onDoneButton: this.dismissBundle(this.state.bundle.bundle),
+        onDismissBundle: this.dismissBundle(this.state.bundle.bundle),
         sendUserActionTelemetry: this.sendUserActionTelemetry
       }));
     }
@@ -2185,9 +2193,11 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_8___default.a.Pur
           "amo_html": message.content.text
         })
       }, react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(_templates_ReturnToAMO_ReturnToAMO__WEBPACK_IMPORTED_MODULE_10__["ReturnToAMO"], _extends({}, message, {
+        UISurface: "NEWTAB_OVERLAY",
         onReady: this.triggerOnboarding,
         onBlock: this.onDismissById(message.id),
-        onAction: ASRouterUtils.executeAction
+        onAction: ASRouterUtils.executeAction,
+        sendUserActionTelemetry: this.sendUserActionTelemetry
       })));
     }
 
@@ -2204,7 +2214,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_8___default.a.Pur
         document: this.props.document,
         message: message,
         onAction: ASRouterUtils.executeAction,
-        onDoneButton: this.dismissBundle(this.state.bundle.bundle),
+        onDismissBundle: this.dismissBundle(this.state.message.bundle),
         sendUserActionTelemetry: this.sendUserActionTelemetry,
         dispatch: this.props.dispatch,
         fxaEndpoint: this.props.fxaEndpoint
@@ -2748,12 +2758,12 @@ class ModalOverlay extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
       button_label
     } = this.props;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(ModalOverlayWrapper, {
-      onClose: this.props.onDoneButton
+      onClose: this.props.onDismissBundle
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, " ", title, " "), this.props.children, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "footer"
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "button primary modalButton",
-      onClick: this.props.onDoneButton
+      onClick: this.props.onDismissBundle
     }, " ", button_label, " ")));
   }
 
@@ -2787,15 +2797,27 @@ class ReturnToAMO extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCompo
 
   componentDidMount() {
     this.props.onReady();
+    this.props.sendUserActionTelemetry({
+      event: "IMPRESSION",
+      id: this.props.UISurface
+    });
   }
 
   onClickAddExtension() {
     this.props.onAction(this.props.content.primary_button.action);
+    this.props.sendUserActionTelemetry({
+      event: "INSTALL",
+      id: this.props.UISurface
+    });
   }
 
   onBlockButton() {
     this.props.onBlock();
     document.body.classList.remove("welcome", "hide-main", "amo");
+    this.props.sendUserActionTelemetry({
+      event: "BLOCK",
+      id: this.props.UISurface
+    });
   }
 
   renderText() {
@@ -3420,7 +3442,20 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
     }
   }
 
-  onSubmit() {
+  onSubmit(event) {
+    // Dynamically require the email on submission so screen readers don't read
+    // out it's always required because there's also ways to skip the modal
+    const {
+      email
+    } = event.target.elements;
+
+    if (!email.value.length) {
+      email.required = true;
+      email.checkValidity();
+      event.preventDefault();
+      return;
+    }
+
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent({
       event: "SUBMIT_EMAIL",
       ...this._getFormInfo()
@@ -3443,7 +3478,10 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
         event: "SKIPPED_SIGNIN",
         ...this._getFormInfo()
       }));
-    }
+    } // Bug 1190882 - Focus in a disappearing dialog confuses screen readers
+
+
+    this.props.document.activeElement.blur();
   }
   /**
    * Report to telemetry additional information about the form submission.
@@ -3472,6 +3510,7 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
     this.setState({
       showCardPanel: false
     });
+    this.props.onDismissBundle();
   }
 
   revealCards() {
@@ -3644,7 +3683,6 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       placeholder: this.getStringValue(content.form.email),
       name: "email",
       type: "email",
-      required: "required",
       onInvalid: this.onInputInvalid,
       onChange: this.onInputChange
     }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("p", {
