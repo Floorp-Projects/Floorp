@@ -687,14 +687,14 @@ void ParticularProcessPriorityManager::OnBrowserParentDestroyed(
   nsCOMPtr<nsIRemoteTab> remoteTab = do_QueryInterface(aSubject);
   NS_ENSURE_TRUE_VOID(remoteTab);
   BrowserHost* browserHost = BrowserHost::GetFrom(remoteTab.get());
-  BrowserParent* browserParent = browserHost->GetActor();
 
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (browserParent->Manager() != mContentParent) {
+  if (browserHost->GetContentParent() &&
+      browserHost->GetContentParent() != mContentParent) {
     return;
   }
 
-  mActiveBrowserParents.RemoveEntry(browserParent->GetTabId());
+  mActiveBrowserParents.RemoveEntry(browserHost->GetTabId());
 
   ResetPriority();
 }
