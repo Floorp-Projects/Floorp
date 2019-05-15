@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/EventStateManager.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Encoding.h"
 #include "nsString.h"
@@ -103,6 +104,11 @@ class HTMLFormSubmission {
    */
   void GetTarget(nsAString& aTarget) { aTarget = mTarget; }
 
+  /**
+   * Return true if this form submission was user-initiated.
+   */
+  bool IsInitiatedFromUserInput() const { return mInitiatedFromUserInput; }
+
  protected:
   /**
    * Can only be constructed by subclasses.
@@ -116,7 +122,8 @@ class HTMLFormSubmission {
       : mActionURL(aActionURL),
         mTarget(aTarget),
         mEncoding(aEncoding),
-        mOriginatingElement(aOriginatingElement) {
+        mOriginatingElement(aOriginatingElement),
+        mInitiatedFromUserInput(EventStateManager::IsHandlingUserInput()) {
     MOZ_COUNT_CTOR(HTMLFormSubmission);
   }
 
@@ -131,6 +138,9 @@ class HTMLFormSubmission {
 
   // Originating element.
   RefPtr<Element> mOriginatingElement;
+
+  // Keep track of whether this form submission was user-initiated or not
+  bool mInitiatedFromUserInput;
 };
 
 class EncodingFormSubmission : public HTMLFormSubmission {

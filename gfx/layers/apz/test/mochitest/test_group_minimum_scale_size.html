@@ -27,8 +27,8 @@ const prefs = [
   // Explicitly enable pinch-zooming, so this test can run on desktop
   // even though zooming isn't enabled by default on desktop yet.
   ["apz.allow_zooming", true],
-  // Pinch-zooming currently requires meta viewport support (this requirement
-  // will eventually be removed).
+  // Similarly, explicitly enable support for meta viewport tags (which the
+  // test cases use) so they're processed even on desktop.
   ["dom.meta-viewport.enabled", true],
   // We use the Visual Viewport API to tell the visual viewport offset.
   ["dom.visualviewport.enabled", true],

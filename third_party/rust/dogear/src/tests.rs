@@ -12,17 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{cell::Cell, collections::HashMap, sync::Once};
+use std::{
+    cell::Cell,
+    collections::HashMap,
+    convert::{TryFrom, TryInto},
+    sync::Once,
+};
 
 use env_logger;
 
-use crate::driver::Driver;
-use crate::error::{ErrorKind, Result};
+use crate::driver::{DefaultAbortSignal, Driver};
+use crate::error::{Error, ErrorKind, Result};
 use crate::guid::{Guid, ROOT_GUID, UNFILED_GUID};
 use crate::merge::{Merger, StructureCounts};
 use crate::tree::{
-    Builder, Content, DivergedParent, DivergedParentGuid, IntoTree, Item, Kind, Problem, Problems,
-    Tree, Validity,
+    Builder, Content, DivergedParent, DivergedParentGuid, Item, Kind, Problem, Problems, Tree,
+    Validity,
 };
 
 #[derive(Debug)]
@@ -38,8 +43,16 @@ impl Node {
             children: Vec::new(),
         }
     }
+    /// For convenience.
+    fn into_tree(self) -> Result<Tree> {
+        self.try_into()
+    }
+}
 
-    fn into_builder(self) -> Result<Builder> {
+impl TryFrom<Node> for Builder {
+    type Error = Error;
+
+    fn try_from(node: Node) -> Result<Builder> {
         fn inflate(b: &mut Builder, parent_guid: &Guid, node: Node) -> Result<()> {
             let guid = node.item.guid.clone();
             b.item(node.item)
@@ -55,19 +68,20 @@ impl Node {
             Ok(())
         }
 
-        let guid = self.item.guid.clone();
-        let mut builder = Tree::with_root(self.item);
+        let guid = node.item.guid.clone();
+        let mut builder = Tree::with_root(node.item);
         builder.reparent_orphans_to(&UNFILED_GUID);
-        for child in self.children {
+        for child in node.children {
             inflate(&mut builder, &guid, child)?;
         }
         Ok(builder)
     }
 }
 
-impl IntoTree for Node {
-    fn into_tree(self) -> Result<Tree> {
-        self.into_builder()?.into_tree()
+impl TryFrom<Node> for Tree {
+    type Error = Error;
+    fn try_from(node: Node) -> Result<Tree> {
+        Builder::try_from(node)?.try_into()
     }
 }
 
@@ -2279,6 +2293,7 @@ fn invalid_guids() {
     let driver = GenerateNewGuid::default();
     let mut merger = Merger::with_driver(
         &driver,
+        &DefaultAbortSignal,
         &local_tree,
         &new_local_contents,
         &remote_tree,
@@ -2401,7 +2416,7 @@ fn reparent_orphans() {
     .into_tree()
     .unwrap();
 
-    let mut remote_tree_builder = nodes!({
+    let mut remote_tree_builder: Builder = nodes!({
         ("toolbar_____", Folder[needs_merge = true], {
             ("bookmarkBBBB", Bookmark),
             ("bookmarkAAAA", Bookmark)
@@ -2411,7 +2426,7 @@ fn reparent_orphans() {
             ("bookmarkCCCC", Bookmark)
         })
     })
-    .into_builder()
+    .try_into()
     .unwrap();
     remote_tree_builder
         .item(Item {
@@ -2613,7 +2628,7 @@ fn cycle() {
 
     // Try to create a cycle: move A into B, and B into the menu, but keep
     // B's parent by children as A.
-    let mut b = nodes!({ ("menu________", Folder) }).into_builder().unwrap();
+    let mut b: Builder = nodes!({ ("menu________", Folder) }).try_into().unwrap();
 
     b.item(Item::new("folderAAAAAA".into(), Kind::Folder))
         .and_then(|p| p.by_parent_guid("folderBBBBBB".into()))

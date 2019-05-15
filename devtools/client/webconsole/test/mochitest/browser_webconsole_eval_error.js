@@ -19,4 +19,18 @@ add_task(async function() {
 
   hud.jsterm.execute("throwValue(40 + 2)");
   await checkMessageStack(hud, "42", [14, 10, 1]);
+
+  hud.jsterm.execute(`
+    a = () => {throw "bloop"};
+    b =  () => a();
+    c =  () => b();
+    d =  () => c();
+    d();
+  `);
+  await checkMessageStack(hud, "Error: bloop", [2, 3, 4, 5, 6]);
+
+  hud.jsterm.execute(`1 + @`);
+  const messageNode = await waitFor(() => findMessage(hud, "illegal character"));
+  is(messageNode.querySelector(".frames"), null,
+    "There's no stacktrace for a SyntaxError evaluation");
 });

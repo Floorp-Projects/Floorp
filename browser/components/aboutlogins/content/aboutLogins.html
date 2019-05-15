@@ -9,20 +9,32 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';"/>
     <title data-l10n-id="about-logins-page-title"></title>
     <link rel="localization" href="browser/aboutLogins.ftl">
+    <script defer="defer" src="chrome://browser/content/aboutlogins/components/reflected-fluent-element.js"></script>
+    <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
+    <script defer="defer" src="chrome://browser/content/aboutlogins/components/modal-input.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
     <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" type="text/css" href="chrome://browser/content/aboutlogins/aboutLogins.css">
   </head>
   <body>
+    <header>
+      <login-filter data-l10n-id="login-filter"
+                    data-l10n-attrs="placeholder"></login-filter>
+    </header>
     <login-list data-l10n-id="login-list"
-                data-l10n-attrs="login-list-header"></login-list>
+                data-l10n-attrs="count"
+                data-l10n-args='{"count": 0}'></login-list>
     <login-item data-l10n-id="login-item"
                 data-l10n-args='{"timeCreated": 0, "timeChanged": 0, "timeUsed": 0}'
                 data-l10n-attrs="cancel-button,
                                  delete-button,
+                                 edit-button,
                                  hostname-label,
+                                 modal-input-reveal-button,
+                                 open-site-button,
                                  password-label,
                                  save-changes-button,
                                  time-created,
@@ -31,39 +43,68 @@
                                  username-label"></login-item>
 
     <template id="login-list-template">
+      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list.css">
-      <h2></h2>
+      <div class="meta">
+        <span class="count"></span>
+      </div>
       <ol>
       </ol>
     </template>
 
     <template id="login-list-item-template">
+      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list-item.css">
       <span class="hostname"></span>
       <span class="username"></span>
     </template>
 
     <template id="login-item-template">
+      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-item.css">
-      <h2 class="header"></h2>
-      <button class="delete-button"></button>
-      <label>
-        <span class="hostname-label field-label"></span>
-        <span class="hostname"/>
-      </label>
-      <label>
-        <span class="username-label field-label"></span>
-        <input name="username"/>
-      </label>
-      <label>
-        <span class="password-label field-label"></span>
-        <input type="password" name="password"/>
-      </label>
+      <div class="header">
+        <h2 class="title"></h2>
+        <button class="edit-button"></button>
+        <button class="delete-button"></button>
+      </div>
+      <div class="detail-row">
+        <label>
+          <span class="hostname-label field-label"></span>
+          <span class="hostname"/>
+        </label>
+        <button class="open-site-button"></button>
+      </div>
+      <div class="detail-row">
+        <label>
+          <span class="username-label field-label"></span>
+          <modal-input name="username"/>
+        </label>
+      </div>
+      <div class="detail-row">
+        <label>
+          <span class="password-label field-label"></span>
+          <modal-input type="password" name="password"/>
+        </label>
+      </div>
       <p class="time-created meta-info"></p>
       <p class="time-changed meta-info"></p>
       <p class="time-used meta-info"></p>
       <button class="save-changes-button"></button>
       <button class="cancel-button"></button>
+    </template>
+
+    <template id="login-filter-template">
+      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-filter.css">
+      <input type="text"/>
+    </template>
+
+    <template id="modal-input-template">
+      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/modal-input.css">
+      <span class="locked-value"></span>
+      <input type="text" class="unlocked-value"/>
+      <button class="reveal-button"/>
     </template>
   </body>
 </html>

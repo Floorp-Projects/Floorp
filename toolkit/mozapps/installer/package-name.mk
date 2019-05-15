@@ -87,6 +87,7 @@ CODE_COVERAGE_ARCHIVE_BASENAME = $(PKG_BASENAME).code-coverage-gcno
 # Mozsearch package naming
 MOZSEARCH_ARCHIVE_BASENAME = $(PKG_BASENAME).mozsearch-index
 MOZSEARCH_RUST_ANALYSIS_BASENAME = $(PKG_BASENAME).mozsearch-rust
+MOZSEARCH_RUST_STDLIB_BASENAME = $(PKG_BASENAME).mozsearch-rust-stdlib
 MOZSEARCH_INCLUDEMAP_BASENAME = $(PKG_BASENAME).mozsearch-distinclude
 
 # Mozharness naming

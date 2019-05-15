@@ -2725,9 +2725,7 @@ pref("security.strict_security_checks.enabled", false);
 // Remote settings preferences
 pref("services.settings.poll_interval", 86400); // 24H
 pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
-pref("services.settings.changes.path", "/buckets/monitor/collections/changes/records");
 pref("services.settings.default_bucket", "main");
-pref("services.settings.default_signer", "remote-settings.content-signature.mozilla.org");
 
 // The percentage of clients who will report uptake telemetry as
 // events instead of just a histogram. This only applies on Release;
@@ -6042,6 +6040,10 @@ pref("dom.sidebar.enabled", true);
 
 // Turn on fission frameloader swapping
 pref("fission.rebuild_frameloaders_on_remoteness_change", true);
+
+// If true, preserve browsing contexts between process swaps. Should be set to
+// true in bug 1550571.
+pref("fission.preserve_browsing_contexts", false);
 
 // Support for legacy customizations that rely on checking the
 // user profile directory for these stylesheets:

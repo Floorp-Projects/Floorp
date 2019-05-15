@@ -32,8 +32,26 @@ nsFrameLoaderOwner::GetBrowsingContext() {
 
 void nsFrameLoaderOwner::ChangeRemoteness(
     const mozilla::dom::RemotenessOptions& aOptions, mozilla::ErrorResult& rv) {
-  // If we already have a Frameloader, destroy it.
+  RefPtr<mozilla::dom::BrowsingContext> bc;
+
+  // If we already have a Frameloader, destroy it, possibly preserving its
+  // browsing context.
   if (mFrameLoader) {
+    // Don't preserve contexts if this is a chrome (parent process) window that
+    // is changing from remote to local.
+    bool isChromeRemoteToLocal =
+        XRE_IsParentProcess() && (!aOptions.mRemoteType.WasPassed() ||
+                                  aOptions.mRemoteType.Value().IsVoid());
+
+    // If this is a process switch due to a difference in Cross Origin Opener
+    // Policy, do not preserve the browsing context. Otherwise, save off the
+    // browsing context and use it when creating our new FrameLoader.
+    if (!aOptions.mReplaceBrowsingContext && !isChromeRemoteToLocal &&
+        mozilla::Preferences::GetBool("fission.preserve_browsing_contexts", false)) {
+      bc = mFrameLoader->GetBrowsingContext();
+      mFrameLoader->SkipBrowsingContextDetach();
+    }
+
     mFrameLoader->Destroy();
     mFrameLoader = nullptr;
   }
@@ -43,7 +61,8 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   // owner.
   RefPtr<Element> owner = do_QueryObject(this);
   MOZ_ASSERT(owner);
-  mFrameLoader = nsFrameLoader::Create(owner, aOptions);
+  mFrameLoader = nsFrameLoader::Create(owner, bc, aOptions);
+
   if (NS_WARN_IF(!mFrameLoader)) {
     return;
   }
@@ -70,9 +89,8 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   // FrameLoader, fire an event to act like we've recreated ourselves, similar
   // to what XULFrameElement does after rebinding to the tree.
   // ChromeOnlyDispatch is turns on to make sure this isn't fired into content.
-  (new mozilla::AsyncEventDispatcher(owner,
-                                     NS_LITERAL_STRING("XULFrameLoaderCreated"),
-                                     mozilla::CanBubble::eYes,
-                                     mozilla::ChromeOnlyDispatch::eYes))
+  (new mozilla::AsyncEventDispatcher(
+       owner, NS_LITERAL_STRING("XULFrameLoaderCreated"),
+       mozilla::CanBubble::eYes, mozilla::ChromeOnlyDispatch::eYes))
       ->RunDOMEventWhenSafe();
 }

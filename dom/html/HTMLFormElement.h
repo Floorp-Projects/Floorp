@@ -594,8 +594,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool mNotifiedObservers;
   /** If we notified the listeners early, what was the result? */
   bool mNotifiedObserversResult;
-  /** Keep track of whether a submission was user-initiated or not */
-  bool mSubmitInitiatedFromUserInput;
   /**
    * Whether the submission of this form has been ever prevented because of
    * being invalid.

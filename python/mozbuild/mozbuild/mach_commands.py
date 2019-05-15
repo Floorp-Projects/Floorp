@@ -3053,15 +3053,23 @@ class StaticAnalysis(MachCommandBase):
         if end is not None:
             clang_output = clang_output[:end.start()-1]
 
-        # Sort headers by positions
-        regex_header = re.compile(
-            r'(.+):(\d+):(\d+): (warning|error): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
+        platform, _ = self.platform
+        # Starting with clang 8, for the diagnostic messages we have multiple `LF CR`
+        # in order to be compatiable with msvc compiler format, and for this
+        # we are not interested to match the end of line.
+        regex_string = r'(.+):(\d+):(\d+): (warning|error): ([^\[\]\n]+)(?: \[([\.\w-]+)\])'
 
+        # For non 'win' based platforms we also need the 'end of the line' regex
+        if platform not in ('win64', 'win32'):
+            regex_string += '?$'
+
+        regex_header = re.compile(regex_string, re.MULTILINE)
+
+        # Sort headers by positions
         headers = sorted(
             regex_header.finditer(clang_output),
             key=lambda h: h.start()
         )
-
         issues = []
         for _, header in enumerate(headers):
             header_group = header.groups()

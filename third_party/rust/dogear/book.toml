@@ -1,0 +1,9 @@
+[book]
+title = "The Dogeared Book"
+author = "Lina Cambridge"
+description = "A guided introduction to bookmark merging with Dogear."
+src = "docs"
+
+[build]
+build-dir = "book"
+create-missing = false

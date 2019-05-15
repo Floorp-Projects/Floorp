@@ -182,6 +182,11 @@ IPCResult BrowserBridgeParent::RecvDispatchSynthesizedMouseEvent(
   return IPC_OK();
 }
 
+IPCResult BrowserBridgeParent::RecvSkipBrowsingContextDetach() {
+  mBrowserParent->SkipBrowsingContextDetach();
+  return IPC_OK();
+}
+
 IPCResult BrowserBridgeParent::RecvActivate() {
   mBrowserParent->Activate();
   return IPC_OK();

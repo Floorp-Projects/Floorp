@@ -51,6 +51,8 @@ static bool StrEquivalent(const char16_t* a, const char16_t* b) {
 
 nsHttpAuthCache::nsHttpAuthCache()
     : mDB(128), mObserver(new OriginClearObserver(this)) {
+  LOG(("nsHttpAuthCache::nsHttpAuthCache %p", this));
+
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
   if (obsSvc) {
     obsSvc->AddObserver(mObserver, "clear-origin-attributes-data", false);
@@ -58,6 +60,8 @@ nsHttpAuthCache::nsHttpAuthCache()
 }
 
 nsHttpAuthCache::~nsHttpAuthCache() {
+  LOG(("nsHttpAuthCache::~nsHttpAuthCache %p", this));
+
   DebugOnly<nsresult> rv = ClearAll();
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
@@ -72,14 +76,14 @@ nsresult nsHttpAuthCache::GetAuthEntryForPath(const char* scheme,
                                               const char* path,
                                               nsACString const& originSuffix,
                                               nsHttpAuthEntry** entry) {
-  LOG(("nsHttpAuthCache::GetAuthEntryForPath [key=%s://%s:%d path=%s]\n",
-       scheme, host, port, path));
+  LOG(("nsHttpAuthCache::GetAuthEntryForPath %p [path=%s]\n", this, path));
 
   nsAutoCString key;
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);
   if (!node) return NS_ERROR_NOT_AVAILABLE;
 
   *entry = node->LookupEntryByPath(path);
+  LOG(("  returning %p", *entry));
   return *entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
@@ -90,14 +94,14 @@ nsresult nsHttpAuthCache::GetAuthEntryForDomain(const char* scheme,
                                                 nsHttpAuthEntry** entry)
 
 {
-  LOG(("nsHttpAuthCache::GetAuthEntryForDomain [key=%s://%s:%d realm=%s]\n",
-       scheme, host, port, realm));
+  LOG(("nsHttpAuthCache::GetAuthEntryForDomain %p [realm=%s]\n", this, realm));
 
   nsAutoCString key;
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);
   if (!node) return NS_ERROR_NOT_AVAILABLE;
 
   *entry = node->LookupEntryByRealm(realm);
+  LOG(("  returning %p", *entry));
   return *entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
@@ -110,10 +114,8 @@ nsresult nsHttpAuthCache::SetAuthEntry(const char* scheme, const char* host,
                                        nsISupports* metadata) {
   nsresult rv;
 
-  LOG(
-      ("nsHttpAuthCache::SetAuthEntry [key=%s://%s:%d realm=%s path=%s "
-       "metadata=%p]\n",
-       scheme, host, port, realm, path, metadata));
+  LOG(("nsHttpAuthCache::SetAuthEntry %p [realm=%s path=%s metadata=%p]\n",
+       this, realm, path, metadata));
 
   nsAutoCString key;
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);
@@ -121,6 +123,7 @@ nsresult nsHttpAuthCache::SetAuthEntry(const char* scheme, const char* host,
   if (!node) {
     // create a new entry node and set the given entry
     node = new nsHttpAuthNode();
+    LOG(("  new nsHttpAuthNode %p for key='%s'", node, key.get()));
     rv = node->SetAuthEntry(path, realm, creds, challenge, ident, metadata);
     if (NS_FAILED(rv))
       delete node;
@@ -137,11 +140,12 @@ void nsHttpAuthCache::ClearAuthEntry(const char* scheme, const char* host,
                                      nsACString const& originSuffix) {
   nsAutoCString key;
   GetAuthKey(scheme, host, port, originSuffix, key);
+  LOG(("nsHttpAuthCache::ClearAuthEntry %p key='%s'\n", this, key.get()));
   mDB.Remove(key);
 }
 
 nsresult nsHttpAuthCache::ClearAll() {
-  LOG(("nsHttpAuthCache::ClearAll\n"));
+  LOG(("nsHttpAuthCache::ClearAll %p\n", this));
   mDB.Clear();
   return NS_OK;
 }
@@ -155,7 +159,11 @@ nsHttpAuthNode* nsHttpAuthCache::LookupAuthNode(const char* scheme,
                                                 nsACString const& originSuffix,
                                                 nsCString& key) {
   GetAuthKey(scheme, host, port, originSuffix, key);
-  return mDB.Get(key);
+  nsHttpAuthNode* result = mDB.Get(key);
+
+  LOG(("nsHttpAuthCache::LookupAuthNode %p key='%s' found node=%p", this,
+       key.get(), result));
+  return result;
 }
 
 NS_IMPL_ISUPPORTS(nsHttpAuthCache::OriginClearObserver, nsIObserver)
@@ -177,6 +185,8 @@ nsHttpAuthCache::OriginClearObserver::Observe(nsISupports* subject,
 }
 
 void nsHttpAuthCache::ClearOriginData(OriginAttributesPattern const& pattern) {
+  LOG(("nsHttpAuthCache::ClearOriginData %p", this));
+
   for (auto iter = mDB.Iter(); !iter.Done(); iter.Next()) {
     const nsACString& key = iter.Key();
 

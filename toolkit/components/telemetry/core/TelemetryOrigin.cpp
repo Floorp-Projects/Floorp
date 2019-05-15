@@ -234,7 +234,7 @@ nsresult AppEncodeTo(const StaticMutexAutoLock& lock,
         }
       }
       aResult.AppendElement(MakePair(id, metricData));
-    } while (generation < maxGeneration);
+    } while (generation++ < maxGeneration);
   }
   return NS_OK;
 }

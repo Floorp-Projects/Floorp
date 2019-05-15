@@ -145,7 +145,8 @@ WINDOWS_WORKER_TYPES = {
 
 # os x worker types keyed by test-platform
 MACOSX_WORKER_TYPES = {
-    'macosx64': 't-osx-1010',
+    'macosx1010-64': 't-osx-1010',
+    'macosx1014-64': 'releng-hardware/gecko-t-osx-1014',
 }
 
 
@@ -691,9 +692,12 @@ def set_treeherder_machine_platform(config, tests):
         # treeherder.
         'linux64-asan/opt': 'linux64/asan',
         'linux64-pgo/opt': 'linux64/pgo',
-        'macosx64/debug': 'osx-10-10/debug',
-        'macosx64/opt': 'osx-10-10/opt',
-        'macosx64-shippable/opt': 'osx-10-10-shippable/opt',
+        'macosx1010-64/debug': 'osx-10-10/debug',
+        'macosx1010-64/opt': 'osx-10-10/opt',
+        'macosx1010-64-shippable/opt': 'osx-10-10-shippable/opt',
+        'macosx1014-64/debug': 'osx-10-14/debug',
+        'macosx1014-64/opt': 'osx-10-14/opt',
+        'macosx1014-64-shippable/opt': 'osx-10-14-shippable/opt',
         'win64-asan/opt': 'windows10-64/asan',
         'win64-aarch64/opt': 'windows10-aarch64/opt',
         'win32-pgo/opt': 'windows7-32/pgo',
@@ -778,14 +782,22 @@ def set_tier(config, tests):
                                          'windows10-64-qr/debug',
                                          'windows10-64-pgo-qr/opt',
                                          'windows10-64-shippable-qr/opt',
-                                         'macosx64/opt',
-                                         'macosx64/debug',
-                                         'macosx64-nightly/opt',
-                                         'macosx64-shippable/opt',
-                                         'macosx64-devedition/opt',
-                                         'macosx64-qr/opt',
-                                         'macosx64-shippable-qr/opt',
-                                         'macosx64-qr/debug',
+                                         'macosx1010-64/opt',
+                                         'macosx1010-64/debug',
+                                         'macosx1010-64-nightly/opt',
+                                         'macosx1010-64-shippable/opt',
+                                         'macosx1010-64-devedition/opt',
+                                         'macosx1010-64-qr/opt',
+                                         'macosx1010-64-shippable-qr/opt',
+                                         'macosx1010-64-qr/debug',
+                                         'macosx1014-64/opt',
+                                         'macosx1014-64/debug',
+                                         'macosx1014-64-nightly/opt',
+                                         'macosx1014-64-shippable/opt',
+                                         'macosx1014-64-devedition/opt',
+                                         'macosx1014-64-qr/opt',
+                                         'macosx1014-64-shippable-qr/opt',
+                                         'macosx1014-64-qr/debug',
                                          'android-em-4.3-arm7-api-16/opt',
                                          'android-em-4.3-arm7-api-16/debug',
                                          'android-em-4.3-arm7-api-16/pgo',
@@ -1168,8 +1180,10 @@ def set_worker_type(config, tests):
         if test.get('worker-type'):
             # This test already has its worker type defined, so just use that (yields below)
             pass
-        elif test_platform.startswith('macosx'):
-            test['worker-type'] = MACOSX_WORKER_TYPES['macosx64']
+        elif test_platform.startswith('macosx1010-64'):
+            test['worker-type'] = MACOSX_WORKER_TYPES['macosx1010-64']
+        elif test_platform.startswith('macosx1014-64'):
+            test['worker-type'] = MACOSX_WORKER_TYPES['macosx1014-64']
         elif test_platform.startswith('win'):
             # figure out what platform the job needs to run on
             if test['virtualization'] == 'hardware':

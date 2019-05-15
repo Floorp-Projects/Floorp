@@ -10495,10 +10495,11 @@ RefPtr<MobileViewportManager> PresShell::GetMobileViewportManager() const {
 }
 
 void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
-  // Determine if we require a MobileViewportManager. This logic is
-  // equivalent to ShouldHandleMetaViewport, which will check gfxPrefs if
-  // there are not meta viewport overrides.
-  bool needMVM = nsLayoutUtils::ShouldHandleMetaViewport(mDocument);
+  // Determine if we require a MobileViewportManager. We need one any
+  // time we allow resolution zooming for a document, and any time we
+  // want to obey <meta name="viewport"> tags for it.
+  bool needMVM = nsLayoutUtils::ShouldHandleMetaViewport(mDocument) ||
+                 nsLayoutUtils::AllowZoomingForDocument(mDocument);
 
   if (needMVM == !!mMobileViewportManager) {
     // Either we've need one and we've already got it, or we don't need one

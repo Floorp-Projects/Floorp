@@ -38,11 +38,12 @@ class VideoDocument final : public MediaDocument {
     MediaDocument::Destroy();
   }
 
+  nsresult StartLayout() override;
+
  protected:
+  nsresult CreateVideoElement();
   // Sets document <title> to reflect the file name and description.
   void UpdateTitle(nsIChannel* aChannel);
-
-  nsresult CreateSyntheticVideoDocument();
 
   RefPtr<MediaDocumentStreamListener> mStreamListener;
 };
@@ -62,6 +63,22 @@ nsresult VideoDocument::StartDocumentLoad(const char* aCommand,
   return rv;
 }
 
+nsresult VideoDocument::StartLayout() {
+  // Create video element, and begin loading the media resource. Note we
+  // delay creating the video element until now (we're called from
+  // MediaDocumentStreamListener::OnStartRequest) as the PresShell is likely
+  // to have been created by now, so the MediaDecoder will be able to tell
+  // what kind of compositor we have, so the video element knows whether
+  // it can create a hardware accelerated video decoder or not.
+  nsresult rv = CreateVideoElement();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = MediaDocument::StartLayout();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 void VideoDocument::SetScriptGlobalObject(
     nsIScriptGlobalObject* aScriptGlobalObject) {
   // Set the script global object on the superclass before doing
@@ -69,11 +86,7 @@ void VideoDocument::SetScriptGlobalObject(
   MediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
   if (aScriptGlobalObject && !InitialSetupHasBeenDone()) {
-    // Create synthetic document
-#ifdef DEBUG
-    nsresult rv =
-#endif
-        CreateSyntheticVideoDocument();
+    DebugOnly<nsresult> rv = CreateSyntheticDocument();
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic video document");
 
     if (!nsContentUtils::IsChildOfSameType(this)) {
@@ -88,11 +101,7 @@ void VideoDocument::SetScriptGlobalObject(
   }
 }
 
-nsresult VideoDocument::CreateSyntheticVideoDocument() {
-  // make our generic document
-  nsresult rv = MediaDocument::CreateSyntheticDocument();
-  NS_ENSURE_SUCCESS(rv, rv);
-
+nsresult VideoDocument::CreateVideoElement() {
   Element* body = GetBodyElement();
   if (!body) {
     NS_WARNING("no body on video document!");

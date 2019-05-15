@@ -25,16 +25,16 @@ from raptor.raptor import RaptorDesktopFirefox, RaptorDesktopChrome, RaptorAndro
 
 
 class TestBrowserThread(threading.Thread):
-        def __init__(self, raptor_instance, test, timeout=None):
+        def __init__(self, raptor_instance, tests, names):
             super(TestBrowserThread, self).__init__()
             self.raptor_instance = raptor_instance
-            self.test = test
-            self.timeout = timeout
+            self.tests = tests
+            self.names = names
             self.exc = None
 
         def run(self):
             try:
-                self.raptor_instance.run_test(self.test, self.timeout)
+                self.raptor_instance.run_tests(self.tests, self.names)
             except BaseException:
                 self.exc = sys.exc_info()
 
@@ -46,13 +46,9 @@ class TestBrowserThread(threading.Thread):
                          [RaptorAndroid, "fennec"],
                          [RaptorAndroid, "geckoview"],
                          ])
-def test_create_profile(options, raptor_class, app_name, get_prefs):
+def test_build_profile(options, raptor_class, app_name, get_prefs):
     options['app'] = app_name
     raptor = raptor_class(**options)
-
-    if app_name in ["fennec", "geckoview"]:
-        raptor.profile_class = "firefox"
-    raptor.create_browser_profile()
 
     assert isinstance(raptor.profile, BaseProfile)
     if app_name != 'firefox':
@@ -77,12 +73,6 @@ def test_create_profile(options, raptor_class, app_name, get_prefs):
 
 
 def test_start_and_stop_server(raptor):
-    assert raptor.control_server is None
-
-    raptor.create_browser_profile()
-    raptor.create_browser_handler()
-    raptor.start_control_server()
-
     assert raptor.control_server._server_thread.is_alive()
     assert raptor.control_server.port is not None
     assert raptor.control_server.server is not None
@@ -100,12 +90,6 @@ def test_server_wait_states(raptor):
         requests.post("http://127.0.0.1:%s/" % raptor.control_server.port,
                       json={"type": "webext_status",
                             "data": "test status"})
-
-    assert raptor.control_server is None
-
-    raptor.create_browser_profile()
-    raptor.create_browser_handler()
-    raptor.start_control_server()
 
     wait_time = 5
     message_state = 'webext_status/test status'
@@ -144,7 +128,7 @@ def test_server_wait_states(raptor):
     assert rhc.wait_timeout == wait_time
     start = datetime.datetime.now()
     post_state()
-    assert datetime.datetime.now() - start < datetime.timedelta(seconds=wait_time+2)
+    assert datetime.datetime.now() - start < datetime.timedelta(seconds=wait_time + 2)
     assert raptor.control_server_wait_get() == 'None'
     assert message_state not in rhc.wait_after_messages
 
@@ -162,14 +146,14 @@ def test_start_browser(get_binary, app):
     assert binary
 
     raptor = RaptorDesktopFirefox(app, binary, post_startup_delay=0)
-    raptor.create_browser_profile()
-    raptor.create_browser_handler()
-    raptor.start_control_server()
 
-    test = {}
-    test['name'] = 'raptor-{}-tp6'.format(app)
+    tests = [{
+        'name': 'raptor-{}-tp6'.format(app),
+        'page_timeout': 1000
+    }]
+    test_names = [test['name'] for test in tests]
 
-    thread = TestBrowserThread(raptor, test, timeout=0)
+    thread = TestBrowserThread(raptor, tests, test_names)
     thread.start()
 
     timeout = time.time() + 5  # seconds

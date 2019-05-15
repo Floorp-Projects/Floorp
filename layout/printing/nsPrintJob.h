@@ -200,7 +200,16 @@ class nsPrintJob final : public nsIObserver,
 
   void DisconnectPagePrintTimer();
 
-  nsresult AfterNetworkPrint(bool aHandleError);
+  /**
+   * This method is called to resume printing after all outstanding resources
+   * referenced by the static clone have finished loading.  (It is possibly
+   * called synchronously if there are no resources to load.)  While a static
+   * clone will generally just be able to reference the (already loaded)
+   * resources that the original document references, the static clone may
+   * reference additional resources that have not previously been loaded
+   * (if it has a 'print' style sheet, for example).
+   */
+  nsresult ResumePrintAfterResourcesLoaded(bool aCleanupOnError);
 
   nsresult SetRootView(nsPrintObject* aPO, bool& aDoReturn,
                        bool& aDocumentIsTopLevel, nsSize& aAdjSize);

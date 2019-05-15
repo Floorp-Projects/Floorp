@@ -184,7 +184,7 @@ class AccessibilityTree extends Component {
       TreeView({
         object: walker,
         mode: MODE.SHORT,
-        provider: new Provider(accessibles, dispatch),
+        provider: new Provider(accessibles, filtered, dispatch),
         columns: columns,
         className,
         renderValue: this.renderValue,

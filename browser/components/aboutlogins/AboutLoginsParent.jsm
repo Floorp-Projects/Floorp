@@ -61,6 +61,17 @@ var AboutLoginsParent = {
         Services.logins.removeLogin(login);
         break;
       }
+      case "AboutLogins:OpenSite": {
+        let guid = message.data.login.guid;
+        let logins = LoginHelper.searchLoginsWithObject({guid});
+        if (!logins || logins.length != 1) {
+          log.warn(`AboutLogins:OpenSite: expected to find a login for guid: ${guid} but found ${(logins || []).length}`);
+          return;
+        }
+
+        message.target.ownerGlobal.openWebLinkIn(logins[0].hostname, "tab", {relatedToCurrent: true});
+        break;
+      }
       case "AboutLogins:Subscribe": {
         if (!ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers).length) {
           Services.obs.addObserver(this, "passwordmgr-storage-changed");

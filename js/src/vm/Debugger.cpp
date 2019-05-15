@@ -932,9 +932,6 @@ ResumeMode Debugger::slowPathOnResumeFrame(JSContext* cx,
   return slowPathOnEnterFrame(cx, frame);
 }
 
-static void DebuggerFrame_maybeDecrementFrameScriptStepModeCount(
-    FreeOp* fop, AbstractFramePtr frame, NativeObject* frameobj);
-
 /*
  * RAII class to mark a generator as "running" temporarily while running
  * debugger code.
@@ -4497,8 +4494,7 @@ void Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
     DebuggerFrame* frameobj = e.front().value();
     if (frame.hasGlobal(global)) {
       frameobj->freeFrameIterData(fop);
-      DebuggerFrame_maybeDecrementFrameScriptStepModeCount(fop, frame,
-                                                           frameobj);
+      frameobj->maybeDecrementFrameScriptStepModeCount(fop, frame);
       e.removeFront();
     }
   }
@@ -7783,7 +7779,7 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
       // lambda. Manually clean it up here.
       FreeOp* fop = cx->runtime()->defaultFreeOp();
       frameobj->freeFrameIterData(fop);
-      DebuggerFrame_maybeDecrementFrameScriptStepModeCount(fop, to, frameobj);
+      frameobj->maybeDecrementFrameScriptStepModeCount(fop, to);
 
       ReportOutOfMemory(cx);
       return false;
@@ -7812,8 +7808,7 @@ void Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx,
     FreeOp* fop = cx->runtime()->defaultFreeOp();
     frameobj->freeFrameIterData(fop);
     if (!suspending) {
-      DebuggerFrame_maybeDecrementFrameScriptStepModeCount(fop, frame,
-                                                           frameobj);
+      frameobj->maybeDecrementFrameScriptStepModeCount(fop, frame);
     }
 
     Debugger* dbg = Debugger::fromChildJSObject(frameobj);
@@ -9538,9 +9533,8 @@ void DebuggerFrame::setOnPopHandler(OnPopHandler* handler) {
                   handler ? PrivateValue(handler) : UndefinedValue());
 }
 
-static bool DebuggerFrame_requireLive(JSContext* cx,
-                                      HandleDebuggerFrame frame) {
-  if (!frame->isLive()) {
+bool DebuggerFrame::requireLive(JSContext* cx) {
+  if (!isLive()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_DEBUG_NOT_LIVE, "Debugger.Frame");
     return false;
@@ -9586,11 +9580,10 @@ void DebuggerFrame::freeFrameIterData(FreeOp* fop) {
   }
 }
 
-static void DebuggerFrame_maybeDecrementFrameScriptStepModeCount(
-    FreeOp* fop, AbstractFramePtr frame, NativeObject* frameobj) {
+void DebuggerFrame::maybeDecrementFrameScriptStepModeCount(
+    FreeOp* fop, AbstractFramePtr frame) {
   // If this frame has an onStep handler, decrement the script's count.
-  if (frameobj->getReservedSlot(DebuggerFrame::ONSTEP_HANDLER_SLOT)
-          .isUndefined()) {
+  if (getReservedSlot(ONSTEP_HANDLER_SLOT).isUndefined()) {
     return;
   }
   if (frame.isWasmDebugFrame()) {
@@ -9629,15 +9622,14 @@ void DebuggerFrame::trace(JSTracer* trc, JSObject* obj) {
   }
 }
 
-static DebuggerFrame* DebuggerFrame_checkThis(JSContext* cx,
-                                              const CallArgs& args,
-                                              const char* fnname,
-                                              bool checkLive) {
+/* static */
+DebuggerFrame* DebuggerFrame::checkThis(JSContext* cx, const CallArgs& args,
+                                        const char* fnname, bool checkLive) {
   JSObject* thisobj = NonNullObject(cx, args.thisv());
   if (!thisobj) {
     return nullptr;
   }
-  if (thisobj->getClass() != &DebuggerFrame::class_) {
+  if (thisobj->getClass() != &class_) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Frame",
                               fnname, thisobj->getClass()->name);
@@ -9651,7 +9643,7 @@ static DebuggerFrame* DebuggerFrame_checkThis(JSContext* cx,
   // is distinguished by having a nullptr private value. Also, forbid popped
   // frames.
   if (!frame->getPrivate() &&
-      frame->getReservedSlot(DebuggerFrame::OWNER_SLOT).isUndefined()) {
+      frame->getReservedSlot(OWNER_SLOT).isUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INCOMPATIBLE_PROTO, "Debugger.Frame",
                               fnname, "prototype object");
@@ -9659,7 +9651,7 @@ static DebuggerFrame* DebuggerFrame_checkThis(JSContext* cx,
   }
 
   if (checkLive) {
-    if (!DebuggerFrame_requireLive(cx, frame)) {
+    if (!frame->requireLive(cx)) {
       return nullptr;
     }
   }
@@ -9673,10 +9665,10 @@ static DebuggerFrame* DebuggerFrame_checkThis(JSContext* cx,
  *
  * Methods that need the AbstractFramePtr should use THIS_FRAME.
  */
-#define THIS_DEBUGGER_FRAME(cx, argc, vp, fnname, args, frame)                \
-  CallArgs args = CallArgsFromVp(argc, vp);                                   \
-  RootedDebuggerFrame frame(cx,                                               \
-                            DebuggerFrame_checkThis(cx, args, fnname, true)); \
+#define THIS_DEBUGGER_FRAME(cx, argc, vp, fnname, args, frame)                 \
+  CallArgs args = CallArgsFromVp(argc, vp);                                    \
+  RootedDebuggerFrame frame(cx,                                                \
+                            DebuggerFrame::checkThis(cx, args, fnname, true)); \
   if (!frame) return false;
 
 #define THIS_FRAME(cx, argc, vp, fnname, args, thisobj, iter, frame) \
@@ -9819,7 +9811,7 @@ bool DebuggerFrame::olderGetter(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 // The getter used for each element of frame.arguments.
-// See DebuggerFrame_getArguments.
+// See DebuggerFrame::getArguments.
 static bool DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   int32_t i = args.callee().as<JSFunction>().getExtendedSlot(0).toInt32();
@@ -9940,7 +9932,8 @@ bool DebuggerFrame::argumentsGetter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool DebuggerFrame_getScript(JSContext* cx, unsigned argc, Value* vp) {
+/* static */
+bool DebuggerFrame::getScript(JSContext* cx, unsigned argc, Value* vp) {
   THIS_FRAME(cx, argc, vp, "get script", args, thisobj, frameIter, frame);
   Debugger* debug = Debugger::fromChildJSObject(thisobj);
 
@@ -9980,8 +9973,7 @@ bool DebuggerFrame::offsetGetter(JSContext* cx, unsigned argc, Value* vp) {
 /* static */
 bool DebuggerFrame::liveGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedDebuggerFrame frame(
-      cx, DebuggerFrame_checkThis(cx, args, "get live", false));
+  RootedDebuggerFrame frame(cx, checkThis(cx, args, "get live", false));
   if (!frame) {
     return false;
   }
@@ -10158,7 +10150,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
     JS_PSG("live", DebuggerFrame::liveGetter, 0),
     JS_PSG("offset", DebuggerFrame::offsetGetter, 0),
     JS_PSG("older", DebuggerFrame::olderGetter, 0),
-    JS_PSG("script", DebuggerFrame_getScript, 0),
+    JS_PSG("script", DebuggerFrame::getScript, 0),
     JS_PSG("this", DebuggerFrame::thisGetter, 0),
     JS_PSG("type", DebuggerFrame::typeGetter, 0),
     JS_PSG("implementation", DebuggerFrame::implementationGetter, 0),

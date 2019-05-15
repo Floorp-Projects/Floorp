@@ -352,13 +352,10 @@ var gXPInstallObserver = {
   // IDs of addon install related notifications
   NOTIFICATION_IDS: [
     "addon-install-blocked",
-    "addon-install-blocked-silent",
     "addon-install-complete",
     "addon-install-confirmation",
-    "addon-install-disabled",
     "addon-install-failed",
     "addon-install-origin-blocked",
-    "addon-install-started",
     "addon-progress",
     "addon-webext-permissions",
     "xpinstall-disabled",
@@ -581,6 +578,16 @@ var gXPInstallObserver = {
         } else {
           error += "Incompatible";
           args = [brandShortName, Services.appinfo.version, install.name];
+        }
+
+        if (install.addon && !Services.policies.mayInstallAddon(install.addon)) {
+          error = "addonInstallBlockedByPolicy";
+          let extensionSettings = Services.policies.getExtensionSettings(install.addon.id);
+          let message = "";
+          if (extensionSettings && "blocked_install_message" in extensionSettings) {
+            message = " " + extensionSettings.blocked_install_message;
+          }
+          args = [install.name, install.addon.id, message];
         }
 
         // Add Learn More link when refusing to install an unsigned add-on

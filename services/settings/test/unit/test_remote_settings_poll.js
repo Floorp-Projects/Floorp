@@ -12,6 +12,7 @@ const {
   remoteSettingsBroadcastHandler,
   BROADCAST_ID,
 } = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const { Utils } = ChromeUtils.import("resource://services-settings/Utils.jsm");
 const { TelemetryTestUtils } = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
 
@@ -27,7 +28,7 @@ const DB_NAME = "remote-settings";
 // Telemetry report result.
 const TELEMETRY_HISTOGRAM_POLL_KEY = "settings-changes-monitoring";
 const TELEMETRY_HISTOGRAM_SYNC_KEY = "settings-sync";
-const CHANGES_PATH = "/v1/buckets/monitor/collections/changes/records";
+const CHANGES_PATH = "/v1" + Utils.CHANGES_PATH;
 
 var server;
 

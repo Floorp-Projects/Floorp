@@ -310,6 +310,11 @@ class WebConsoleWrapper {
               return panel.panelWin.Netmonitor.inspectRequest(requestId);
             });
           },
+          resendNetworkRequest: (requestId) => {
+            return this.toolbox.getNetMonitorAPI().then((api) => {
+              return api.resendRequest(requestId);
+            });
+          },
           sourceMapService: this.toolbox ? this.toolbox.sourceMapURLService : null,
           highlightDomElement: async (grip, options = {}) => {
             await this.toolbox.initInspector();

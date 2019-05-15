@@ -4707,6 +4707,13 @@ nsIFrame* nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(nsIFrame* aFrame) {
   return GetCrossDocParentFrame(aFrame);
 }
 
+nsIFrame* nsLayoutUtils::GetDisplayListParent(nsIFrame* aFrame) {
+  if (aFrame->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
+    return aFrame->GetParent();
+  }
+  return nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(aFrame);
+}
+
 nsIFrame* nsLayoutUtils::GetNextContinuationOrIBSplitSibling(nsIFrame* aFrame) {
   nsIFrame* result = aFrame->GetNextContinuation();
   if (result) return result;

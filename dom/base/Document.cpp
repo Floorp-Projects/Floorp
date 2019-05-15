@@ -6888,7 +6888,9 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
 
   if (!nsLayoutUtils::ShouldHandleMetaViewport(this)) {
     return nsViewportInfo(aDisplaySize, defaultScale,
-                          nsViewportInfo::ZoomFlag::DisallowZoom);
+                          nsLayoutUtils::AllowZoomingForDocument(this)
+                              ? nsViewportInfo::ZoomFlag::AllowZoom
+                              : nsViewportInfo::ZoomFlag::DisallowZoom);
   }
 
   // In cases where the width of the CSS viewport is less than or equal to the
@@ -7632,9 +7634,13 @@ void Document::CollectDescendantDocuments(
   }
 }
 
-bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
+bool Document::CanSavePresentation(nsIRequest* aNewRequest,
+                                   uint16_t& aBFCacheCombo) {
+  bool ret = true;
+
   if (!IsBFCachingAllowed()) {
-    return false;
+    aBFCacheCombo |= BFCacheStatus::NOT_ALLOWED;
+    ret = false;
   }
 
   nsAutoCString uri;
@@ -7647,7 +7653,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
   if (EventHandlingSuppressed()) {
     MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
             ("Save of %s blocked on event handling suppression", uri.get()));
-    return false;
+    aBFCacheCombo |= BFCacheStatus::EVENT_HANDLING_SUPPRESSED;
+    ret = false;
   }
 
   // Do not allow suspended windows to be placed in the
@@ -7659,7 +7666,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
   if (win && win->IsSuspended() && !win->IsFrozen()) {
     MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
             ("Save of %s blocked on suspended Window", uri.get()));
-    return false;
+    aBFCacheCombo |= BFCacheStatus::SUSPENDED;
+    ret = false;
   }
 
   // Check our event listener manager for unload/beforeunload listeners.
@@ -7669,7 +7677,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
     if (manager && manager->HasUnloadListeners()) {
       MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
               ("Save of %s blocked due to unload handlers", uri.get()));
-      return false;
+      aBFCacheCombo |= BFCacheStatus::UNLOAD_LISTENER;
+      ret = false;
     }
   }
 
@@ -7713,8 +7722,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
                   ("Save of %s blocked because document has request %s",
                    uri.get(), requestName.get()));
         }
-
-        return false;
+        aBFCacheCombo |= BFCacheStatus::REQUEST;
+        ret = false;
       }
     }
   }
@@ -7724,7 +7733,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
       MediaManager::Get()->IsWindowStillActive(win->WindowID())) {
     MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
             ("Save of %s blocked due to GetUserMedia", uri.get()));
-    return false;
+    aBFCacheCombo |= BFCacheStatus::ACTIVE_GET_USER_MEDIA;
+    ret = false;
   }
 
 #ifdef MOZ_WEBRTC
@@ -7732,14 +7742,16 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
   if (win && win->HasActivePeerConnections()) {
     MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
             ("Save of %s blocked due to PeerConnection", uri.get()));
-    return false;
+    aBFCacheCombo |= BFCacheStatus::ACTIVE_PEER_CONNECTION;
+    ret = false;
   }
 #endif  // MOZ_WEBRTC
 
   // Don't save presentations for documents containing EME content, so that
   // CDMs reliably shutdown upon user navigation.
   if (ContainsEMEContent()) {
-    return false;
+    aBFCacheCombo |= BFCacheStatus::CONTAINS_EME_CONTENT;
+    ret = false;
   }
 
   // Don't save presentations for documents containing MSE content, to
@@ -7747,7 +7759,8 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
   if (ContainsMSEContent()) {
     MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
             ("Save of %s blocked due to MSE use", uri.get()));
-    return false;
+    aBFCacheCombo |= BFCacheStatus::CONTAINS_MSE_CONTENT;
+    ret = false;
   }
 
   if (mSubDocuments) {
@@ -7755,12 +7768,16 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
       auto entry = static_cast<SubDocMapEntry*>(iter.Get());
       Document* subdoc = entry->mSubDocument;
 
+      uint16_t subDocBFCacheCombo = 0;
       // The aIgnoreRequest we were passed is only for us, so don't pass it on.
-      bool canCache = subdoc ? subdoc->CanSavePresentation(nullptr) : false;
+      bool canCache =
+          subdoc ? subdoc->CanSavePresentation(nullptr, subDocBFCacheCombo)
+                 : false;
       if (!canCache) {
         MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
                 ("Save of %s blocked due to subdocument blocked", uri.get()));
-        return false;
+        aBFCacheCombo |= subDocBFCacheCombo;
+        ret = false;
       }
     }
   }
@@ -7771,17 +7788,19 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest) {
     if (globalWindow->HasActiveSpeechSynthesis()) {
       MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
               ("Save of %s blocked due to Speech use", uri.get()));
-      return false;
+      aBFCacheCombo |= BFCacheStatus::HAS_ACTIVE_SPEECH_SYNTHESIS;
+      ret = false;
     }
 #endif
     if (globalWindow->HasUsedVR()) {
       MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
               ("Save of %s blocked due to having used VR", uri.get()));
-      return false;
+      aBFCacheCombo |= BFCacheStatus::HAS_USED_VR;
+      ret = false;
     }
   }
 
-  return true;
+  return ret;
 }
 
 void Document::Destroy() {

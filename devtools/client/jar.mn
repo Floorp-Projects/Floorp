@@ -65,6 +65,7 @@ devtools.jar:
     skin/images/accessibility.svg (themes/images/accessibility.svg)
     skin/images/add.svg (themes/images/add.svg)
     skin/images/alert.svg (themes/images/alert.svg)
+    skin/images/alert-tiny.svg (themes/images/alert-tiny.svg)
     skin/images/arrow.svg (themes/images/arrow.svg)
     skin/images/arrow-big.svg (themes/images/arrow-big.svg)
     skin/images/arrowhead-left.svg (themes/images/arrowhead-left.svg)

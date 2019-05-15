@@ -1216,9 +1216,9 @@ void DocAccessible::UnbindFromDocument(Accessible* aAccessible) {
   NS_ASSERTION(mAccessibleCache.GetWeak(aAccessible->UniqueID()),
                "Unbinding the unbound accessible!");
 
-  // Fire focus event on accessible having DOM focus if active item was removed
+  // Fire focus event on accessible having DOM focus if last focus was removed
   // from the tree.
-  if (FocusMgr()->IsActiveItem(aAccessible)) {
+  if (FocusMgr()->WasLastFocused(aAccessible)) {
     FocusMgr()->ActiveItemChanged(nullptr);
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eFocus))

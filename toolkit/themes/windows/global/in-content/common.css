@@ -26,6 +26,11 @@ xul|radio {
   }
 }
 
+/* Override menulist.css */
+xul|menulist[disabled="true"] {
+  background-color: var(--in-content-button-background);
+}
+
 xul|menulist:-moz-focusring > xul|*.menulist-label-box {
   outline: none !important;
 }

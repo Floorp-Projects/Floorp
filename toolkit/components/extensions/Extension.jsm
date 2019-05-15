@@ -272,7 +272,7 @@ var UninstallObserver = {
       // the old API.
       if (!Services.lsm.nextGenLocalStorageEnabled) {
         // Clear localStorage created by the extension
-        let storage = Services.domStorageManager.getStorage(null, principal);
+        let storage = Services.domStorageManager.getStorage(null, principal, storagePrincipal);
         if (storage) {
           storage.clear();
         }

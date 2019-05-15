@@ -15,7 +15,7 @@ const Message = createFactory(require("./shared/Message"));
 const { MESSAGE_LEVEL } = require("../constants");
 const { COMPATIBILITY_STATUS } = require("devtools/client/shared/remote-debugging/version-checker");
 
-const TROUBLESHOOTING_URL = "https://developer.mozilla.org/docs/Tools/WebIDE/Troubleshooting";
+const TROUBLESHOOTING_URL = "https://developer.mozilla.org/docs/Tools/about:debugging#Troubleshooting";
 
 const Types = require("../types/index");
 

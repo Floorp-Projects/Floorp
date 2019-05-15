@@ -39,16 +39,20 @@ const tests = [{
     tree: [{
       role: "document",
       name: `"Accessibility Panel Test"`,
+      level: 1,
     }, {
       role: "heading",
       name: `"Top level header"`,
+      level: 2,
     }, {
       role: "text leaf",
       name: `"Top level header "contrast`,
       badges: [ "contrast" ],
+      level: 3,
     }, {
       role: "heading",
       name: `"Second level header"`,
+      level: 2,
     }],
   },
 }, {
@@ -61,11 +65,13 @@ const tests = [{
       role: "text leaf",
       name: `"Top level header "contrast`,
       badges: [ "contrast" ],
+      level: 1,
     }, {
       role: "text leaf",
       name: `"Second level header "contrast`,
       badges: [ "contrast" ],
       selected: true,
+      level: 1,
     }],
   },
 }, {
@@ -77,21 +83,26 @@ const tests = [{
     tree: [{
       role: "document",
       name: `"Accessibility Panel Test"`,
+      level: 1,
     }, {
       role: "heading",
       name: `"Top level header"`,
+      level: 2,
     }, {
       role: "text leaf",
       name: `"Top level header "contrast`,
       badges: [ "contrast" ],
+      level: 3,
     }, {
       role: "heading",
       name: `"Second level header"`,
+      level: 2,
     }, {
       role: "text leaf",
       name: `"Second level header "contrast`,
       badges: [ "contrast" ],
       selected: true,
+      level: 3,
     }],
   },
 }];

@@ -6,6 +6,7 @@
 
 #include "StoragePrincipalHelper.h"
 
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
@@ -95,6 +96,90 @@ nsresult StoragePrincipalHelper::PrepareOriginAttributes(
   aOriginAttributes.SetFirstPartyDomain(false, principalURI,
                                         true /* aForced */);
   return NS_OK;
+}
+
+// static
+bool StoragePrincipalHelper::VerifyValidStoragePrincipalInfoForPrincipalInfo(
+    const mozilla::ipc::PrincipalInfo& aStoragePrincipalInfo,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
+  if (aStoragePrincipalInfo.type() != aPrincipalInfo.type()) {
+    return false;
+  }
+
+  if (aStoragePrincipalInfo.type() ==
+      mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) {
+    const mozilla::ipc::ContentPrincipalInfo& spInfo =
+        aStoragePrincipalInfo.get_ContentPrincipalInfo();
+    const mozilla::ipc::ContentPrincipalInfo& pInfo =
+        aPrincipalInfo.get_ContentPrincipalInfo();
+
+    if (!spInfo.attrs().EqualsIgnoringFPD(pInfo.attrs()) ||
+        spInfo.originNoSuffix() != pInfo.originNoSuffix() ||
+        spInfo.spec() != pInfo.spec() || spInfo.domain() != pInfo.domain() ||
+        spInfo.baseDomain() != pInfo.baseDomain() ||
+        spInfo.securityPolicies().Length() !=
+            pInfo.securityPolicies().Length()) {
+      return false;
+    }
+
+    for (uint32_t i = 0; i < spInfo.securityPolicies().Length(); ++i) {
+      if (spInfo.securityPolicies()[i].policy() !=
+              pInfo.securityPolicies()[i].policy() ||
+          spInfo.securityPolicies()[i].reportOnlyFlag() !=
+              pInfo.securityPolicies()[i].reportOnlyFlag() ||
+          spInfo.securityPolicies()[i].deliveredViaMetaTagFlag() !=
+              pInfo.securityPolicies()[i].deliveredViaMetaTagFlag()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  if (aStoragePrincipalInfo.type() ==
+      mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
+    // Nothing to check here.
+    return true;
+  }
+
+  if (aStoragePrincipalInfo.type() ==
+      mozilla::ipc::PrincipalInfo::TNullPrincipalInfo) {
+    const mozilla::ipc::NullPrincipalInfo& spInfo =
+        aStoragePrincipalInfo.get_NullPrincipalInfo();
+    const mozilla::ipc::NullPrincipalInfo& pInfo =
+        aPrincipalInfo.get_NullPrincipalInfo();
+
+    return spInfo.spec() == pInfo.spec() &&
+           spInfo.attrs().EqualsIgnoringFPD(pInfo.attrs());
+  }
+
+  if (aStoragePrincipalInfo.type() ==
+      mozilla::ipc::PrincipalInfo::TExpandedPrincipalInfo) {
+    const mozilla::ipc::ExpandedPrincipalInfo& spInfo =
+        aStoragePrincipalInfo.get_ExpandedPrincipalInfo();
+    const mozilla::ipc::ExpandedPrincipalInfo& pInfo =
+        aPrincipalInfo.get_ExpandedPrincipalInfo();
+
+    if (!spInfo.attrs().EqualsIgnoringFPD(pInfo.attrs())) {
+      return false;
+    }
+
+    if (spInfo.allowlist().Length() != pInfo.allowlist().Length()) {
+      return false;
+    }
+
+    for (uint32_t i = 0; i < spInfo.allowlist().Length(); ++i) {
+      if (!VerifyValidStoragePrincipalInfoForPrincipalInfo(
+              spInfo.allowlist()[i], pInfo.allowlist()[i])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  MOZ_CRASH("Invalid principalInfo type");
+  return false;
 }
 
 }  // namespace mozilla

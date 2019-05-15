@@ -608,7 +608,8 @@
 #include popup-notifications.inc
 
 #include ../../components/customizableui/content/panelUI.inc.xul
-#include ../../components/controlcenter/content/panel.inc.xul
+#include ../../components/controlcenter/content/identityPanel.inc.xul
+#include ../../components/controlcenter/content/protectionsPanel.inc.xul
 #include ../../components/downloads/content/downloadsPanel.inc.xul
 #include browser-allTabsMenu.inc.xul
 
@@ -851,7 +852,6 @@
                      autocompletepopup="PopupAutoCompleteRichResult"
                      completeselectedindex="true"
                      tabscrolling="true"
-                     newlines="stripsurroundingwhitespace"
                      ontextentered="this.handleCommand(param);"
                      ontextreverted="return this.handleRevert();"
                      pageproxystate="invalid">

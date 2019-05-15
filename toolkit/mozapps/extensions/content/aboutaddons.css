@@ -258,14 +258,17 @@ addon-details {
   color: var(--grey-90);
 }
 
+.addon-detail-row.addon-detail-help-row {
+  display: block;
+  color: var(--grey-60);
+  padding-top: 4px;
+  padding-bottom: var(--card-padding);
+  border: none;
+}
+
 .addon-detail-row-has-help,
 .addon-detail-row:last-of-type {
   padding-bottom: 0;
-}
-
-.addon-detail-row-help {
-  color: var(--grey-60);
-  padding-bottom: var(--card-padding);
 }
 
 .addon-detail-row input[type="checkbox"] {

@@ -29,7 +29,7 @@ async function testSteps() {
   ];
 
   function getLocalStorage(principal) {
-    return Services.domStorageManager.createStorage(null, principal, "");
+    return Services.domStorageManager.createStorage(null, principal, principal, "");
   }
 
   info("Clearing");

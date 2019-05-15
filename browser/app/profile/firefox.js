@@ -1639,6 +1639,11 @@ pref("browser.contentblocking.maxIntroCount", 5);
 // 1800 = 30 min in seconds
 pref("browser.contentblocking.introDelaySeconds", 1800);
 
+// Enables the new Protections Panel.
+#ifdef NIGHTLY_BUILD
+pref("browser.protections_panel.enabled", true);
+#endif
+
 pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/content-blocking/start/");
 
 // Always enable newtab segregation using containers

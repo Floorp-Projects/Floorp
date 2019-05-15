@@ -1957,11 +1957,7 @@ MediaManager* MediaManager::Get() {
     sSingleton->mMediaThread = new base::Thread("MediaManager");
 #endif
     base::Thread::Options options;
-#if defined(_WIN32)
-    options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINUITHREAD;
-#else
     options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINTHREAD;
-#endif
     if (!sSingleton->mMediaThread->StartWithOptions(options)) {
       MOZ_CRASH();
     }

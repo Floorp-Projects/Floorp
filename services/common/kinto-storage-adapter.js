@@ -110,7 +110,8 @@ const statements = {
   "createCollectionMetadata": `
     CREATE TABLE collection_metadata (
       collection_name TEXT PRIMARY KEY,
-      last_modified INTEGER
+      last_modified INTEGER,
+      metadata TEXT
     ) WITHOUT ROWID;`,
 
   "createCollectionDataRecordIdIndex": `
@@ -135,11 +136,22 @@ const statements = {
       AND record_id = :record_id;`,
 
   "saveLastModified": `
-    REPLACE INTO collection_metadata (collection_name, last_modified)
-      VALUES (:collection_name, :last_modified);`,
+    INSERT INTO collection_metadata(collection_name, last_modified)
+      VALUES(:collection_name, :last_modified)
+        ON CONFLICT(collection_name) DO UPDATE SET last_modified = :last_modified`,
 
   "getLastModified": `
     SELECT last_modified
+      FROM collection_metadata
+        WHERE collection_name = :collection_name;`,
+
+  "saveMetadata": `
+    INSERT INTO collection_metadata(collection_name, metadata)
+      VALUES(:collection_name, :metadata)
+        ON CONFLICT(collection_name) DO UPDATE SET metadata = :metadata`,
+
+  "getMetadata": `
+    SELECT metadata
       FROM collection_metadata
         WHERE collection_name = :collection_name;`,
 
@@ -174,6 +186,10 @@ const statements = {
     SELECT collection_name, SUM(LENGTH(record)) as size, COUNT(record) as num_records
       FROM collection_data
         GROUP BY collection_name;`,
+
+  "addMetadataColumn": `
+    ALTER TABLE collection_metadata
+      ADD COLUMN metadata TEXT;`,
 };
 
 const createStatements = [
@@ -182,7 +198,7 @@ const createStatements = [
   "createCollectionDataRecordIdIndex",
 ];
 
-const currentSchemaVersion = 1;
+const currentSchemaVersion = 2;
 
 /**
  * Firefox adapter.
@@ -216,9 +232,11 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
         for (let statementName of createStatements) {
           await connection.execute(statements[statementName]);
         }
-
         await connection.setSchemaVersion(currentSchemaVersion);
-      } else if (schema != 1) {
+      } else if (schema == 1) {
+        await connection.execute(statements.addMetadataColumn);
+        await connection.setSchemaVersion(currentSchemaVersion);
+      } else if (schema != 2) {
         throw new Error("Unknown database schema: " + schema);
       }
     });
@@ -399,6 +417,26 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
         }
         return result[0].getResultByName("last_modified");
       });
+  }
+
+  async saveMetadata(metadata) {
+    const params = {
+      collection_name: this.collection,
+      metadata: JSON.stringify(metadata),
+    };
+    await this._executeStatement(statements.saveMetadata, params);
+    return metadata;
+  }
+
+  async getMetadata() {
+    const params = {
+      collection_name: this.collection,
+    };
+    const result = await this._executeStatement(statements.getMetadata, params);
+    if (result.length == 0) {
+      return null;
+    }
+    return JSON.parse(result[0].getResultByName("metadata"));
   }
 
   calculateStorage() {

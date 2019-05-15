@@ -87,6 +87,7 @@ class DisplayItemData final {
   void ClearAnimationCompositorState();
   void SetItem(nsDisplayItem* aItem) { mItem = aItem; }
   nsDisplayItem* GetItem() const { return mItem; }
+  nsIFrame* FirstFrame() const { return mFrameList[0]; }
 
   bool HasMergedFrames() const { return mFrameList.Length() > 1; }
 

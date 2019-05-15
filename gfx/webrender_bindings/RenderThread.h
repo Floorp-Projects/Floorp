@@ -218,8 +218,6 @@ class RenderThread final {
                             const TimeStamp& aStartTime,
                             uint8_t aDocFrameCount);
   /// Can be called from any thread.
-  void DecPendingFrameCount(wr::WindowId aWindowId);
-  /// Can be called from any thread.
   mozilla::Pair<bool, bool> IncRenderingFrameCount(wr::WindowId aWindowId,
                                                    bool aRender);
   /// Can be called from any thread.

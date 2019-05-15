@@ -303,6 +303,29 @@ ObjectClient.prototype = {
       return packet;
     },
   }),
+
+  /**
+   * Request the target and handler internal slots of a proxy.
+   */
+  getProxySlots: DebuggerClient.requester({
+    type: "proxySlots",
+  }, {
+    before: function(packet) {
+      if (this._grip.class !== "Proxy") {
+        throw new Error("getProxySlots is only valid for proxy grips.");
+      }
+      return packet;
+    },
+    after: function(response) {
+      // Before Firefox 68 (bug 1392760), the proxySlots request didn't exist.
+      // The proxy target and handler were directly included in the grip.
+      if (response.error === "unrecognizedPacketType") {
+        const {proxyTarget, proxyHandler} = this._grip;
+        return {proxyTarget, proxyHandler};
+      }
+      return response;
+    },
+  }),
 };
 
 module.exports = ObjectClient;

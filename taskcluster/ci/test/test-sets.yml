@@ -308,6 +308,41 @@ marionette-gpu-tests:
 marionette-media-tests:
     - marionette-media
 
+# macosx1014-64-tests:
+#    - cppunit
+#    - crashtest
+#    - firefox-ui-functional-local
+#    - firefox-ui-functional-remote
+#    - gtest
+#    - jittest
+#    - jsreftest
+#    - marionette
+#    - mochitest
+#    - mochitest-a11y
+#    - mochitest-browser-chrome
+#    - mochitest-chrome
+#    - mochitest-devtools-chrome
+#    - mochitest-devtools-webreplay
+#    - mochitest-gpu
+#    - mochitest-media
+#    - mochitest-webgl1-core
+#    - mochitest-webgl1-ext
+#    - mochitest-webgl2-core
+#     - mochitest-webgl2-ext test  # timeouts
+#    - reftest
+#    - telemetry-tests-client
+#    - test-verify
+#    - test-verify-gpu
+#    - test-verify-wpt
+#    - web-platform-tests
+#    - web-platform-tests-reftests
+#    - web-platform-tests-wdspec
+#    - xpcshell
+
+# macosx1014-64-qr-tests:
+#    - crashtest
+#    - reftest
+
 macosx64-tests:
     - cppunit
     - crashtest

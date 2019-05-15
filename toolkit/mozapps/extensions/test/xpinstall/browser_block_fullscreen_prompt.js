@@ -10,32 +10,6 @@
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
-const ADDON_FILE_URI = "http://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/amosigned.xpi";
-
-const ADDON_EVENTS = [
-  "addon-install-blocked",
-  "addon-install-blocked-silent",
-  "addon-install-complete",
-  "addon-install-confirmation",
-  "addon-install-disabled",
-  "addon-install-failed",
-  "addon-install-origin-blocked",
-  "addon-install-started",
-  "addon-progress",
-  "addon-webext-permissions",
-  "xpinstall-disabled",
-];
-
-/**
- * Registers observers for addon installation events and resolves promise on first matching event
- */
-function waitForNextAddonEvent() {
-  return Promise.race(ADDON_EVENTS.map( async (eventStr) => {
-    await TestUtils.topicObserved(eventStr);
-    return eventStr;
-  }));
-}
-
 /**
  * Spawns content task in browser to enter / leave fullscreen
  * @param browser - Browser to use for JS fullscreen requests
@@ -51,58 +25,65 @@ function changeFullscreen(browser, fullscreenState) {
   });
 }
 
+function triggerInstall(browser, trigger) {
+  return ContentTask.spawn(browser, trigger, async function(trigger) {
+    content.InstallTrigger.install(trigger);
+  });
+}
+
 // This tests if addon installation is blocked when requested in fullscreen
 add_task(async function testFullscreenBlockAddonInstallPrompt() {
   // Open example.com
-  await BrowserTestUtils.withNewTab("http://example.com", async function(browser) {
-    await changeFullscreen(browser, true);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT);
 
-    // Navigate to addon file path
-    BrowserTestUtils.loadURI(browser, ADDON_FILE_URI);
+  // Enter and wait for fullscreen
+  await changeFullscreen(gBrowser.selectedBrowser, true);
+  await TestUtils.waitForCondition(() => window.fullScreen, "Waiting for window to enter fullscreen");
 
-    // Wait for addon manager event and check if installation has been blocked
-    let eventStr = await waitForNextAddonEvent();
+  // Trigger addon installation and expect it to be blocked
+  let addonEventPromise = TestUtils.topicObserved("addon-install-blocked-silent");
+  await triggerInstall(gBrowser.selectedBrowser, {"XPI": "amosigned.xpi"});
+  await addonEventPromise;
 
-    Assert.equal(eventStr, "addon-install-blocked-silent", "Addon installation was blocked");
+  // Test if addon installation prompt has been blocked
+  let panelOpened;
+  try {
+    panelOpened = await TestUtils.waitForCondition(() => PopupNotifications.isPanelOpen, 100, 10);
+  } catch (ex) {
+    panelOpened = false;
+  }
+  is(panelOpened, false, "Addon installation prompt not opened");
 
-    // Test if addon installation prompt has been blocked
-    let panelOpened;
-    try {
-      panelOpened = await TestUtils.waitForCondition(() => PopupNotifications.isPanelOpen, 100, 10);
-    } catch (ex) {
-      panelOpened = false;
-    }
-    is(panelOpened, false, "Addon installation prompt not opened");
-
-    window.fullScreen = false;
-  });
+  window.fullScreen = false;
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 
 // This tests if the addon install prompt is closed when entering fullscreen
 add_task(async function testFullscreenCloseAddonInstallPrompt() {
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "amosigned.xpi",
+  }));
+  let target = TESTROOT + "installtrigger.html?" + triggers;
+
   // Open example.com
-  await BrowserTestUtils.withNewTab("http://example.com", async function(browser) {
-    // Navigate to addon file path
-    BrowserTestUtils.loadURI(browser, ADDON_FILE_URI);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
 
-    // Test if addon installation started
-    let eventStr = await waitForNextAddonEvent();
+  // Trigger addon installation
+  let addonEventPromise = TestUtils.topicObserved("addon-install-blocked");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, target);
+  // Wait for addon install event
+  await addonEventPromise;
 
-    Assert.ok(eventStr === "addon-install-started", "Addon installation started");
+  // Test if addon installation prompt is visible
+  await TestUtils.waitForCondition(() => PopupNotifications.isPanelOpen, "Waiting for addon installation prompt to open");
+  Assert.ok(PopupNotifications.getNotification("addon-install-blocked", gBrowser.selectedBrowser) != null, "Opened notification is installation blocked prompt");
 
-    // Test if addon installation prompt is visible
-    await TestUtils.waitForCondition(() => PopupNotifications.isPanelOpen, "Waiting for addon installation prompt to open");
-    Assert.ok(ADDON_EVENTS.some(id => PopupNotifications.getNotification(id, browser) != null), "Opened notification is installation prompt");
+  // Switch to fullscreen and test for addon installation prompt close
+  await changeFullscreen(gBrowser.selectedBrowser, true);
+  await TestUtils.waitForCondition(() => window.fullScreen, "Waiting for window to enter fullscreen");
+  await TestUtils.waitForCondition(() => !PopupNotifications.isPanelOpen, "Waiting for addon installation prompt to close");
 
-    // Test for addon installation prompt close
-    let panelClosePromise = TestUtils.waitForCondition(() => !PopupNotifications.isPanelOpen, "Waiting for addon installation prompt to close");
-
-    // Switch to fullscreen
-    await changeFullscreen(browser, true);
-
-    await panelClosePromise;
-
-    window.fullScreen = false;
-  });
+  window.fullScreen = false;
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

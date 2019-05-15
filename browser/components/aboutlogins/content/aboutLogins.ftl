@@ -12,13 +12,23 @@
 
 about-logins-page-title = Login Manager
 
+login-filter =
+  .placeholder = Search Logins
+
 login-list =
-  .login-list-header = Logins
+  .count =
+    { $count ->
+        [one] { $count } entry
+       *[other] { $count } entries
+    }
 
 login-item =
   .cancel-button = Cancel
   .delete-button = Delete
+  .edit-button = Edit
   .hostname-label = Website Address
+  .modal-input-reveal-button = Toggle password visibility
+  .open-site-button = Launch
   .password-label = Password
   .save-changes-button = Save Changes
   .time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }

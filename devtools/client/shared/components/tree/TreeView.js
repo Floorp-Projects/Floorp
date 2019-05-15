@@ -65,6 +65,7 @@ define(function(require, exports, module) {
    *   getChildren: function(object);
    *   hasChildren: function(object);
    *   getLabel: function(object, colId);
+   *   getLevel: function(object); // optional
    *   getValue: function(object, colId);
    *   getKey: function(object);
    *   getType: function(object);
@@ -521,7 +522,7 @@ define(function(require, exports, module) {
           // Class attribute computed from the type.
           rowClass: "treeRow-" + type,
           // Level of the child within the hierarchy (top == 0)
-          level: level,
+          level: provider.getLevel ? provider.getLevel(child, level) : level,
           // True if this node has children.
           hasChildren: hasChildren,
           // Value associated with this node (as provided by the data provider)

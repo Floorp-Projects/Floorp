@@ -146,15 +146,15 @@ class ConnectPage extends PureComponent {
             steps: [
               {
                 localizationId: "about-debugging-setup-usb-step-enable-dev-menu",
-                url: "https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE#Setting_up_the_Android_device",
+                url: "https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_over_USB",
               },
               {
                 localizationId: "about-debugging-setup-usb-step-enable-debug",
-                url: "https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE#Setting_up_the_Android_device",
+                url: "https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_over_USB",
               },
               {
                 localizationId: "about-debugging-setup-usb-step-enable-debug-firefox",
-                url: "https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE#Setting_up_the_Android_device",
+                url: "https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_over_USB",
               },
               { localizationId: "about-debugging-setup-usb-step-plug-device" },
             ],

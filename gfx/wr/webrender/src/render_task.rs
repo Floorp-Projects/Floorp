@@ -73,7 +73,7 @@ impl RenderTaskId {
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct RenderTaskAddress(pub u32);
+pub struct RenderTaskAddress(pub u16);
 
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -391,7 +391,7 @@ impl RenderTaskTree {
     pub fn get_task_address(&self, id: RenderTaskId) -> RenderTaskAddress {
         #[cfg(debug_assertions)]
         debug_assert_eq!(self.frame_id, id.frame_id);
-        RenderTaskAddress(id.index)
+        RenderTaskAddress(id.index as u16)
     }
 
     pub fn write_task_data(&mut self) {

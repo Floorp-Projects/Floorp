@@ -1232,7 +1232,7 @@ void nsPrintJob::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify) {
       nsCOMPtr<nsIWebProgressListener> printProgressListener;
 
       nsCOMPtr<nsIWebBrowserPrint> wbp(do_QueryInterface(mDocViewerPrint));
-      nsresult rv = printPromptService->ShowProgress(
+      nsresult rv = printPromptService->ShowPrintProgressDialog(
           domWin, wbp, printData->mPrintSettings, this, aIsForPrinting,
           getter_AddRefs(printProgressListener),
           getter_AddRefs(printData->mPrintProgressParams), &aDoNotify);
@@ -1887,12 +1887,12 @@ nsresult nsPrintJob::InitPrintDocConstruction(bool aHandleError) {
   FirePrintPreviewUpdateEvent();
 
   if (mLoadCounter == 0) {
-    AfterNetworkPrint(aHandleError);
+    ResumePrintAfterResourcesLoaded(aHandleError);
   }
   return rv;
 }
 
-nsresult nsPrintJob::AfterNetworkPrint(bool aHandleError) {
+nsresult nsPrintJob::ResumePrintAfterResourcesLoaded(bool aCleanupOnError) {
   // If Destroy() has already been called, mPtr is nullptr.  Then, the instance
   // needs to do nothing anymore in this method.
   // Note: it shouldn't be possible for mPrt->mPrintObject to be null; we
@@ -1918,9 +1918,9 @@ nsresult nsPrintJob::AfterNetworkPrint(bool aHandleError) {
   }
 
   /* cleaup on failure + notify user */
-  if (aHandleError && NS_FAILED(rv)) {
+  if (aCleanupOnError && NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_ABORT,
-                         "nsPrintJob::AfterNetworkPrint failed");
+                         "nsPrintJob::ResumePrintAfterResourcesLoaded failed");
     CleanupOnFailure(rv, !mIsDoingPrinting);
   }
 
@@ -1947,7 +1947,7 @@ nsPrintJob::OnStateChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
     // If all resources are loaded, then do a small timeout and if there
     // are still no new requests, then another reflow.
     if (mLoadCounter == 0) {
-      AfterNetworkPrint(true);
+      ResumePrintAfterResourcesLoaded(/* aCleanupOnError */ true);
     }
   }
   return NS_OK;

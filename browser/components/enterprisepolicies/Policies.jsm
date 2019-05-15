@@ -542,7 +542,7 @@ var Policies = {
                 await addon.uninstall();
               } catch (e) {
                 // This can fail for add-ons that can't be uninstalled.
-                // Just ignore.
+                log.debug(`Add-on ID (${addon.id}) couldn't be uninstalled.`);
               }
             }
           }
@@ -552,61 +552,29 @@ var Policies = {
         runOncePerModification("extensionsInstall", JSON.stringify(param.Install), async () => {
           await uninstallingPromise;
           for (let location of param.Install) {
-            let url;
-            if (location.includes("://")) {
-              // Assume location is an URI
-              url = location;
-            } else {
+            let uri;
+            try {
+              uri = Services.io.newURI(location);
+            } catch (e) {
+              // If it's not a URL, it's probably a file path.
               // Assume location is a file path
-              let xpiFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+              // This is done for legacy support (old API)
               try {
-                xpiFile.initWithPath(location);
-              } catch (e) {
+                let xpiFile = new FileUtils.File(location);
+                uri = Services.io.newFileURI(xpiFile);
+              } catch (ex) {
                 log.error(`Invalid extension path location - ${location}`);
-                continue;
-              }
-              url = Services.io.newFileURI(xpiFile).spec;
-            }
-            AddonManager.getInstallForURL(url, {
-              telemetryInfo: {source: "enterprise-policy"},
-            }).then(install => {
-              if (install.addon && install.addon.appDisabled) {
-                log.error(`Incompatible add-on - ${location}`);
-                install.cancel();
                 return;
               }
-              let listener = {
-              /* eslint-disable-next-line no-shadow */
-                onDownloadEnded: (install) => {
-                  if (install.addon && install.addon.appDisabled) {
-                    log.error(`Incompatible add-on - ${location}`);
-                    install.removeListener(listener);
-                    install.cancel();
-                  }
-                },
-                onDownloadFailed: () => {
-                  install.removeListener(listener);
-                  log.error(`Download failed - ${location}`);
-                  clearRunOnceModification("extensionsInstall");
-                },
-                onInstallFailed: () => {
-                  install.removeListener(listener);
-                  log.error(`Installation failed - ${location}`);
-                },
-                onInstallEnded: () => {
-                  install.removeListener(listener);
-                  log.debug(`Installation succeeded - ${location}`);
-                },
-              };
-              install.addListener(listener);
-              install.install();
-            });
+            }
+            installAddonFromURL(uri.spec);
           }
         });
       }
       if ("Locked" in param) {
         for (let ID of param.Locked) {
-          manager.disallowFeature(`modify-extension:${ID}`);
+          manager.disallowFeature(`uninstall-extension:${ID}`);
+          manager.disallowFeature(`disable-extension:${ID}`);
         }
       }
     },
@@ -614,7 +582,79 @@ var Policies = {
 
   "ExtensionSettings": {
     onBeforeAddons(manager, param) {
-      manager.setExtensionSettings(param);
+      try {
+        manager.setExtensionSettings(param);
+      } catch (e) {
+       log.error("Invalid ExtensionSettings");
+      }
+    },
+    async onBeforeUIStartup(manager, param) {
+      let extensionSettings = param;
+      let blockAllExtensions = false;
+      if ("*" in extensionSettings) {
+        if ("installation_mode" in extensionSettings["*"] &&
+            extensionSettings["*"].installation_mode == "blocked") {
+          blockAllExtensions = true;
+          // Turn off discovery pane in about:addons
+          setAndLockPref("extensions.getAddons.showPane", false);
+          // Block about:debugging
+          blockAboutPage(manager, "about:debugging");
+        }
+      }
+      let {addons} = await AddonManager.getActiveAddons();
+      let allowedExtensions = [];
+      for (let extensionID in extensionSettings) {
+        if (extensionID == "*") {
+          // Ignore global settings
+          continue;
+        }
+        if ("installation_mode" in extensionSettings[extensionID]) {
+          if (extensionSettings[extensionID].installation_mode == "force_installed" ||
+              extensionSettings[extensionID].installation_mode == "normal_installed") {
+            if (!extensionSettings[extensionID].install_url) {
+              throw new Error(`Missing install_url for ${extensionID}`);
+            }
+            if (!addons.find(addon => addon.id == extensionID)) {
+              installAddonFromURL(extensionSettings[extensionID].install_url, extensionID);
+            }
+            manager.disallowFeature(`uninstall-extension:${extensionID}`);
+            if (extensionSettings[extensionID].installation_mode == "force_installed") {
+              manager.disallowFeature(`disable-extension:${extensionID}`);
+            }
+            allowedExtensions.push(extensionID);
+          } else if (extensionSettings[extensionID].installation_mode == "allowed") {
+            allowedExtensions.push(extensionID);
+          } else if (extensionSettings[extensionID].installation_mode == "blocked") {
+            if (addons.find(addon => addon.id == extensionID)) {
+              // Can't use the addon from getActiveAddons since it doesn't have uninstall.
+              let addon = await AddonManager.getAddonByID(extensionID);
+              try {
+                await addon.uninstall();
+              } catch (e) {
+                // This can fail for add-ons that can't be uninstalled.
+                log.debug(`Add-on ID (${addon.id}) couldn't be uninstalled.`);
+              }
+            }
+          }
+        }
+      }
+      if (blockAllExtensions) {
+        for (let addon of addons) {
+          if (addon.isSystem || addon.isBuiltin) {
+            continue;
+          }
+          if (!allowedExtensions.includes(addon.id)) {
+            try {
+              // Can't use the addon from getActiveAddons since it doesn't have uninstall.
+              let addonToUninstall = await AddonManager.getAddonByID(addon.id);
+              await addonToUninstall.uninstall();
+            } catch (e) {
+              // This can fail for add-ons that can't be uninstalled.
+              log.debug(`Add-on ID (${addon.id}) couldn't be uninstalled.`);
+            }
+          }
+        }
+      }
     },
   },
 
@@ -1302,6 +1342,54 @@ function replacePathVariables(path) {
     return path.replace("${home}", FileUtils.getFile("Home", []).path);
   }
   return path;
+}
+
+/**
+ * installAddonFromURL
+ *
+ * Helper function that installs an addon from a URL
+ * and verifies that the addon ID matches.
+*/
+function installAddonFromURL(url, extensionID) {
+  AddonManager.getInstallForURL(url, {
+    telemetryInfo: {source: "enterprise-policy"},
+  }).then(install => {
+    if (install.addon && install.addon.appDisabled) {
+      log.error(`Incompatible add-on - ${location}`);
+      install.cancel();
+      return;
+    }
+    let listener = {
+    /* eslint-disable-next-line no-shadow */
+      onDownloadEnded: (install) => {
+        if (extensionID && install.addon.id != extensionID) {
+          log.error(`Add-on downloaded from ${url} had unexpected id (got ${install.addon.id} expected ${extensionID})`);
+          install.removeListener(listener);
+          install.cancel();
+        }
+        if (install.addon && install.addon.appDisabled) {
+          log.error(`Incompatible add-on - ${url}`);
+          install.removeListener(listener);
+          install.cancel();
+        }
+      },
+      onDownloadFailed: () => {
+        install.removeListener(listener);
+        log.error(`Download failed - ${url}`);
+        clearRunOnceModification("extensionsInstall");
+      },
+      onInstallFailed: () => {
+        install.removeListener(listener);
+        log.error(`Installation failed - ${url}`);
+      },
+      onInstallEnded: () => {
+        install.removeListener(listener);
+        log.debug(`Installation succeeded - ${url}`);
+      },
+    };
+    install.addListener(listener);
+    install.install();
+  });
 }
 
 let gChromeURLSBlocked = false;

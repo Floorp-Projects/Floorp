@@ -439,12 +439,12 @@ impl RenderTarget for ColorRenderTarget {
                     let mut alpha_batch_builder = AlphaBatchBuilder::new(
                         self.screen_size,
                         ctx.break_advanced_blend_batches,
+                        *task_id,
                     );
 
                     self.batch_builder.add_pic_to_batch(
                         pic,
                         &mut alpha_batch_builder,
-                        *task_id,
                         ctx,
                         gpu_cache,
                         render_tasks,
@@ -909,7 +909,9 @@ impl TextureCacheRenderTarget {
 pub enum RenderPassKind {
     /// The final pass to the main frame buffer, where we have a single color
     /// target for display to the user.
-    MainFramebuffer(ColorRenderTarget),
+    MainFramebuffer {
+        main_target: ColorRenderTarget,
+    },
     /// An intermediate pass, where we may have multiple targets.
     OffScreen {
         alpha: RenderTargetList<AlphaRenderTarget>,
@@ -941,9 +943,11 @@ impl RenderPass {
         screen_size: DeviceIntSize,
         gpu_supports_fast_clears: bool,
     ) -> Self {
-        let target = ColorRenderTarget::new(screen_size, gpu_supports_fast_clears);
+        let main_target = ColorRenderTarget::new(screen_size, gpu_supports_fast_clears);
         RenderPass {
-            kind: RenderPassKind::MainFramebuffer(target),
+            kind: RenderPassKind::MainFramebuffer {
+                main_target,
+            },
             tasks: vec![],
         }
     }
@@ -1016,10 +1020,10 @@ impl RenderPass {
         profile_scope!("RenderPass::build");
 
         match self.kind {
-            RenderPassKind::MainFramebuffer(ref mut target) => {
+            RenderPassKind::MainFramebuffer { ref mut main_target, .. } => {
                 for &task_id in &self.tasks {
                     assert_eq!(render_tasks[task_id].target_kind(), RenderTargetKind::Color);
-                    target.add_task(
+                    main_target.add_task(
                         task_id,
                         ctx,
                         gpu_cache,
@@ -1029,7 +1033,7 @@ impl RenderPass {
                         deferred_resolves,
                     );
                 }
-                target.build(
+                main_target.build(
                     ctx,
                     gpu_cache,
                     render_tasks,

@@ -27,12 +27,12 @@ mod tree;
 #[cfg(test)]
 mod tests;
 
-pub use crate::driver::{DefaultDriver, Driver};
+pub use crate::driver::{AbortSignal, DefaultAbortSignal, DefaultDriver, Driver};
 pub use crate::error::{Error, ErrorKind, Result};
 pub use crate::guid::{Guid, MENU_GUID, MOBILE_GUID, ROOT_GUID, TOOLBAR_GUID, UNFILED_GUID};
 pub use crate::merge::{Deletion, Merger, StructureCounts};
 pub use crate::store::{MergeTimings, Stats, Store};
 pub use crate::tree::{
-    Content, IntoTree, Item, Kind, MergeState, MergedDescendant, MergedNode, MergedRoot, Tree,
-    UploadReason, Validity,
+    Content, Item, Kind, MergeState, MergedDescendant, MergedNode, MergedRoot, Tree, UploadReason,
+    Validity,
 };

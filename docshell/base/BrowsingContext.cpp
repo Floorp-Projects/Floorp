@@ -813,6 +813,21 @@ void BrowsingContext::Transaction::Apply(BrowsingContext* aBrowsingContext,
 #include "mozilla/dom/BrowsingContextFieldList.h"
 }
 
+BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
+  MOZ_ASSERT(
+      !mozilla::Preferences::GetBool("fission.preserve_browsing_contexts", false) ||
+      IsContent());
+
+  IPCInitializer init;
+  init.mId = Id();
+  init.mParentId = mParent ? mParent->Id() : 0;
+  init.mCached = IsCached();
+
+#define MOZ_BC_FIELD(name, type) init.m##name = m##name;
+#include "mozilla/dom/BrowsingContextFieldList.h"
+  return init;
+}
+
 already_AddRefed<BrowsingContext> BrowsingContext::IPCInitializer::GetParent() {
   RefPtr<BrowsingContext> parent;
   if (mParentId != 0) {

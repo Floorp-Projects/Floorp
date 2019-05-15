@@ -35,6 +35,7 @@ headers = [
     "nsNameSpaceManager.h",
     "nsMediaFeatures.h",
     "nsXBLBinding.h",
+    "GeckoProfiler.h",
 ]
 raw-lines = [
     # FIXME(emilio): Incrementally remove these "pub use"s. Probably
@@ -159,6 +160,7 @@ whitelist-vars = [
     "GECKO_IS_NIGHTLY",
     "mozilla::detail::gGkAtoms",
     "mozilla::detail::kGkAtomsArrayOffset",
+    "mozilla::profiler::detail::RacyFeatures::sActiveAndFeatures",
 ]
 # TODO(emilio): A bunch of types here can go away once we generate bindings and
 # structs together.
@@ -328,6 +330,7 @@ whitelist-types = [
     "mozilla::dom::MediaList",
     "mozilla::StyleRuleInclusion",
     "nsStyleTransformMatrix::MatrixTransformOperator",
+    "mozilla::profiler::detail::RacyFeatures",
 ]
 opaque-types = [
     "mozilla::StyleThinArc", # https://github.com/rust-lang/rust-bindgen/issues/1557

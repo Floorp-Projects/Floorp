@@ -3,30 +3,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  border-inline-start: 4px solid transparent;
-  border-bottom: 1px solid var(--grey-30);
   display: block;
   padding: 10px;
+  border-bottom: 1px solid var(--in-content-box-border-color);
+  border-inline-start: 4px solid transparent;
+}
+
+/* [hidden] isn't applying to elements in Shadow DOM. */
+:host([hidden]) {
+  display: none;
 }
 
 :host(:hover) {
-  background-color: var(--grey-90-a10);
+  background-color: var(--in-content-box-background-hover);
 }
 
 :host(:hover:active) {
-  background-color: var(--grey-90-a20);
+  background-color: var(--in-content-box-background-active);
 }
 
 :host(.selected) {
-  border-inline-start-color: var(--blue-40);
-  background-color: var(--grey-20);
-}
-
-:host(.selected:hover) {
-}
-
-:host(.selected:hover:active) {
-  background-color: var(--grey-30);
+  border-inline-start-color: var(--in-content-border-highlight);
+  background-color: var(--in-content-box-background-hover);
 }
 
 .hostname {

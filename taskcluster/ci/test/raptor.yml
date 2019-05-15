@@ -20,7 +20,7 @@ job-defaults:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             android-hw-.*-api-16/opt: ['try']
             android-hw-.*-aarch64/opt: ['try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['try', 'trunk', 'mozilla-beta']
     tier:
         by-test-platform:
@@ -610,7 +610,7 @@ raptor-tp6m-1-fennec:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-1-fennec
+            - --test=raptor-tp6m-1
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
 
@@ -623,7 +623,7 @@ raptor-tp6m-2-fennec:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-2-fennec
+            - --test=raptor-tp6m-2
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
 
@@ -636,7 +636,7 @@ raptor-tp6m-3-fennec:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-3-fennec
+            - --test=raptor-tp6m-3
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
 
@@ -649,7 +649,7 @@ raptor-tp6m-4-fennec:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-4-fennec
+            - --test=raptor-tp6m-4
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
 
@@ -662,7 +662,7 @@ raptor-tp6m-5-fennec:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-5-fennec
+            - --test=raptor-tp6m-5
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
 
@@ -675,7 +675,7 @@ raptor-tp6m-6-fennec:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-6-fennec
+            - --test=raptor-tp6m-6
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
 
@@ -688,7 +688,7 @@ raptor-tp6m-7-fennec:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-7-fennec
+            - --test=raptor-tp6m-7
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
 
@@ -701,7 +701,7 @@ raptor-tp6m-8-fennec:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-8-fennec
+            - --test=raptor-tp6m-8
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
 
@@ -714,7 +714,7 @@ raptor-tp6m-9-fennec:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-9-fennec
+            - --test=raptor-tp6m-9
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
 
@@ -727,7 +727,7 @@ raptor-tp6m-10-fennec:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-10-fennec
+            - --test=raptor-tp6m-10
             - --app=fennec
             - --binary=org.mozilla.fennec_aurora
 

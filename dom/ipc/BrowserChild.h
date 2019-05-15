@@ -555,6 +555,7 @@ class BrowserChild final : public BrowserChildBase,
   mozilla::ipc::IPCResult RecvUpdateNativeWindowHandle(
       const uintptr_t& aNewHandle);
 
+  mozilla::ipc::IPCResult RecvSkipBrowsingContextDetach();
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
    */

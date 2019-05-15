@@ -18,7 +18,7 @@
 /**
  * Simplified PrintSettings for Windows interface
  */
-[scriptable, uuid(c63eed41-6ac5-459e-8a64-033eb9ad770a)]
+[uuid(c63eed41-6ac5-459e-8a64-033eb9ad770a)]
 interface nsIPrintSettingsWin : nsISupports
 {
   /**

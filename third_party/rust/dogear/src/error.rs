@@ -88,6 +88,7 @@ impl fmt::Display for Error {
             }
             ErrorKind::InvalidByte(b) => write!(f, "Invalid byte {} in UTF-16 encoding", b),
             ErrorKind::MalformedString(err) => err.fmt(f),
+            ErrorKind::Abort => write!(f, "Operation aborted"),
         }
     }
 }
@@ -106,4 +107,5 @@ pub enum ErrorKind {
     InvalidGuid(Guid),
     InvalidByte(u16),
     MalformedString(Box<dyn error::Error + Send + Sync + 'static>),
+    Abort,
 }

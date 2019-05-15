@@ -318,16 +318,18 @@ VariablesViewController.prototype = {
    */
   _populateFromObject: function(aTarget, aGrip) {
     if (aGrip.class === "Proxy") {
-      this.addExpander(
-        aTarget.addItem("<target>", { value: aGrip.proxyTarget }, { internalItem: true }),
-        aGrip.proxyTarget);
-      this.addExpander(
-        aTarget.addItem("<handler>", { value: aGrip.proxyHandler }, { internalItem: true }),
-        aGrip.proxyHandler);
-
-      // Refuse to play the proxy's stupid game and return immediately
+      // Refuse to play the proxy's stupid game and just expose the target and handler.
       const deferred = defer();
-      deferred.resolve();
+      const objectClient = this._getObjectClient(aGrip);
+      objectClient.getProxySlots(aResponse => {
+        const target = aTarget.addItem("<target>", { value: aResponse.proxyTarget },
+          { internalItem: true });
+        this.addExpander(target, aResponse.proxyTarget);
+        const handler = aTarget.addItem("<handler>", { value: aResponse.proxyHandler },
+          { internalItem: true });
+        this.addExpander(handler, aResponse.proxyHandler);
+        deferred.resolve();
+      });
       return deferred.promise;
     }
 

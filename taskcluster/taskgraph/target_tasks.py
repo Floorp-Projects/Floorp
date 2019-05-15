@@ -210,7 +210,11 @@ def target_tasks_ash(full_task_graph, parameters, graph_config):
         if task.attributes['kind'] == 'upload-symbols':
             return False
         return True
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+    return [l for l, t in full_task_graph.tasks.iteritems()
+            if filter(t)
+            and standard_filter(t, parameters)
+            and filter_out_nightly(t, parameters)]
 
 
 @_target_task('graphics_tasks')

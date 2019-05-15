@@ -441,7 +441,7 @@ async function test_storage_cleared() {
   function getStorageForURI(aURI) {
     let principal = Services.scriptSecurityManager.createCodebasePrincipal(aURI, {});
 
-    return Services.domStorageManager.createStorage(null, principal, "");
+    return Services.domStorageManager.createStorage(null, principal, principal, "");
   }
 
   Services.prefs.setBoolPref("dom.storage.client_validation", false);

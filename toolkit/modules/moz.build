@@ -9,9 +9,6 @@ include('../components/telemetry/telemetry-constants.mozbuild')
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
-with Files('addons/**'):
-    BUG_COMPONENT = ('WebExtensions', 'General')
-
 with Files('docs/**'):
     BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
@@ -167,15 +164,6 @@ EXTRA_JS_MODULES += [
     'ActorChild.jsm',
     'ActorManagerChild.jsm',
     'ActorManagerParent.jsm',
-    'addons/MatchURLFilters.jsm',
-    'addons/SecurityInfo.jsm',
-    'addons/WebNavigation.jsm',
-    'addons/WebNavigationContent.js',
-    'addons/WebNavigationFrames.jsm',
-    'addons/WebRequest.jsm',
-    'addons/WebRequestCommon.jsm',
-    'addons/WebRequestContent.js',
-    'addons/WebRequestUpload.jsm',
     'AppMenuNotifications.jsm',
     'AsyncPrefs.jsm',
     'AutoCompletePopupContent.jsm',

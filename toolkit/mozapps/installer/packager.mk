@@ -78,6 +78,12 @@ ifdef ENABLE_MOZSEARCH_PLUGIN
 	$(RM) $(MOZSEARCH_RUST_ANALYSIS_BASENAME).zip
 	cd $(topobjdir)/ && \
           find . -type d -name save-analysis | xargs zip -r5D '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_RUST_ANALYSIS_BASENAME).zip'
+	@echo 'Generating mozsearch rust stdlib analysis tarball ($(RUST_TARGET))...'
+	$(RM) $(MOZSEARCH_RUST_STDLIB_BASENAME).zip
+	cd $(topsrcdir)/rustc/lib && \
+          zip -r5D '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_RUST_STDLIB_BASENAME).zip' \
+          rustlib/$(RUST_TARGET)/analysis/ rustlib/src/
+	@echo 'Generating mozsearch distinclude map...'
 	cd $(topobjdir)/ && cp _build_manifests/install/dist_include '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_INCLUDEMAP_BASENAME).map'
 endif
 ifeq (Darwin, $(OS_ARCH))

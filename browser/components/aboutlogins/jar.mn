@@ -3,11 +3,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+  content/browser/aboutlogins/components/login-filter.css      (content/components/login-filter.css)
+  content/browser/aboutlogins/components/login-filter.js       (content/components/login-filter.js)
   content/browser/aboutlogins/components/login-item.css        (content/components/login-item.css)
   content/browser/aboutlogins/components/login-item.js         (content/components/login-item.js)
   content/browser/aboutlogins/components/login-list.css        (content/components/login-list.css)
   content/browser/aboutlogins/components/login-list.js         (content/components/login-list.js)
   content/browser/aboutlogins/components/login-list-item.css   (content/components/login-list-item.css)
   content/browser/aboutlogins/components/login-list-item.js    (content/components/login-list-item.js)
+  content/browser/aboutlogins/components/modal-input.css       (content/components/modal-input.css)
+  content/browser/aboutlogins/components/modal-input.js        (content/components/modal-input.js)
+  content/browser/aboutlogins/components/reflected-fluent-element.js  (content/components/reflected-fluent-element.js)
+  content/browser/aboutlogins/aboutLogins.css   (content/aboutLogins.css)
   content/browser/aboutlogins/aboutLogins.js    (content/aboutLogins.js)
   content/browser/aboutlogins/aboutLogins.html  (content/aboutLogins.html)

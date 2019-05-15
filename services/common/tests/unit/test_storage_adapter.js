@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const {Sqlite} = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
 const {FirefoxAdapter} = ChromeUtils.import("resource://services-common/kinto-storage-adapter.js");
 
 // set up what we need to make storage adapters
@@ -221,6 +222,19 @@ function test_collection_operations() {
     Assert.equal(lastModified, 1458796543);
     await sqliteHandle.close();
   });
+
+  add_task(async function test_save_metadata_preserves_lastModified() {
+    let sqliteHandle = await do_get_kinto_connection();
+
+    let adapter = do_get_kinto_adapter(sqliteHandle);
+    await adapter.saveLastModified(42);
+
+    await adapter.saveMetadata({id: "col"});
+
+    let lastModified = await adapter.getLastModified();
+    Assert.equal(lastModified, 42);
+    await sqliteHandle.close();
+  });
 }
 
 // test kinto db setup and operations in various scenarios
@@ -248,6 +262,38 @@ add_test(function test_creation_from_empty_db() {
 
     let emptyDB = do_get_file("test_storage_adapter/empty.sqlite");
     emptyDB.copyTo(profile, kintoFilename);
+
+    run_next_test();
+  });
+
+  test_collection_operations();
+
+  cleanup_kinto();
+  run_next_test();
+});
+
+// test schema version upgrade at v2
+add_test(function test_migration_from_v1_to_v2() {
+  add_test(function test_migrate_from_v1_to_v2() {
+    // place an empty kinto db file in the profile
+    let profile = do_get_profile();
+
+    let v1DB = do_get_file("test_storage_adapter/v1.sqlite");
+    v1DB.copyTo(profile, kintoFilename);
+
+    run_next_test();
+  });
+
+  add_test(async function schema_is_update_from_1_to_2() {
+    // The `v1.sqlite` has schema version 1.
+    let sqliteHandle = await Sqlite.openConnection({ path: kintoFilename });
+    Assert.equal(await sqliteHandle.getSchemaVersion(), 1);
+    await sqliteHandle.close();
+
+    // The `.openConnection()` migrates it to version 2.
+    sqliteHandle = await FirefoxAdapter.openConnection({ path: kintoFilename });
+    Assert.equal(await sqliteHandle.getSchemaVersion(), 2);
+    await sqliteHandle.close();
 
     run_next_test();
   });

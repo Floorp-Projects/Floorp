@@ -232,6 +232,13 @@ var gIdentityHandler = {
                                           "security.insecure_connection_text.pbmode.enabled");
     return this._insecureConnectionTextPBModeEnabled;
   },
+  get _protectionsPanelEnabled() {
+    delete this._protectionsPanelEnabled;
+    XPCOMUtils.defineLazyPreferenceGetter(this, "_protectionsPanelEnabled",
+                                          "browser.protections_panel.enabled",
+                                          false);
+    return this._protectionsPanelEnabled;
+  },
 
   /**
    * Handles clicks on the "Clear Cookies and Site Data" button.
@@ -832,6 +839,14 @@ var gIdentityHandler = {
    * Click handler for the identity-box element in primary chrome.
    */
   handleIdentityButtonEvent(event) {
+    // For Nightly users, show the WIP protections panel if the tracking
+    // protection icon was clicked.
+    if (this._protectionsPanelEnabled &&
+        event.originalTarget.id == "tracking-protection-icon-animatable-image") {
+      gProtectionsHandler.handleProtectionsButtonEvent(event);
+      return;
+    }
+
     event.stopPropagation();
 
     if ((event.type == "click" && event.button != 0) ||

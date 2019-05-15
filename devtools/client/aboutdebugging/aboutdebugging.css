@@ -31,6 +31,8 @@ button {
   background-color: transparent;
   display: flex;
   flex-direction: row;
+  /* Override button min-width set by common.inc.css for compact width case */
+  min-width: initial;
 }
 
 .category.selected {

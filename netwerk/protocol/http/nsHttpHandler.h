@@ -315,7 +315,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
                                            nsIInterfaceRequestor* callbacks,
                                            uint32_t caps = 0) {
     TickleWifi(callbacks);
-    return mConnMgr->SpeculativeConnect(ci, callbacks, caps);
+    RefPtr<nsHttpConnectionInfo> clone = ci->Clone();
+    return mConnMgr->SpeculativeConnect(clone, callbacks, caps);
   }
 
   // Alternate Services Maps are main thread only

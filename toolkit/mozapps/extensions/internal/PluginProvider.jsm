@@ -140,7 +140,7 @@ var PluginProvider = {
   getPluginList() {
     let tags = Cc["@mozilla.org/plugin/host;1"].
                getService(Ci.nsIPluginHost).
-               getPluginTags({});
+               getPluginTags();
 
     let list = {};
     let seenPlugins = {};
@@ -387,9 +387,9 @@ PluginWrapper.prototype = {
   get pluginMimeTypes() {
     let types = [];
     for (let tag of pluginFor(this).tags) {
-      let mimeTypes = tag.getMimeTypes({});
-      let mimeDescriptions = tag.getMimeDescriptions({});
-      let extensions = tag.getExtensions({});
+      let mimeTypes = tag.getMimeTypes();
+      let mimeDescriptions = tag.getMimeDescriptions();
+      let extensions = tag.getExtensions();
       for (let i = 0; i < mimeTypes.length; i++) {
         let type = {};
         type.type = mimeTypes[i];
