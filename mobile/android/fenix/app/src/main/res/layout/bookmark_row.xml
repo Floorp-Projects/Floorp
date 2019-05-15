@@ -14,7 +14,7 @@
     android:paddingTop="8dp"
     android:paddingBottom="8dp"
     android:paddingStart="16dp"
-    android:paddingEnd="16dp"
+    android:paddingEnd="0dp"
     android:background="?android:attr/selectableItemBackground">
 
     <ImageView
@@ -47,16 +47,15 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Internet" />
 
-    <ImageView
+    <ImageButton
         android:id="@+id/bookmark_overflow"
-        android:layout_width="24dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
+        android:layout_width="@dimen/glyph_button_width"
+        android:layout_height="@dimen/glyph_button_height"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/bookmark_menu_content_description"
         android:src="@drawable/ic_menu"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/bookmark_title"
         app:layout_constraintTop_toTopOf="parent" />
     
     <View

@@ -11,7 +11,8 @@
     android:clickable="true"
     android:focusable="true"
     android:padding="4dp"
-    android:paddingStart="20dp">
+    android:paddingStart="20dp"
+    android:paddingEnd="0dp">
 
     <ImageButton
         android:id="@+id/history_item_overflow"
