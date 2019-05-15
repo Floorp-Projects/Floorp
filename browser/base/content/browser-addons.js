@@ -580,6 +580,16 @@ var gXPInstallObserver = {
           args = [brandShortName, Services.appinfo.version, install.name];
         }
 
+        if (install.addon && !Services.policies.mayInstallAddon(install.addon)) {
+          error = "addonInstallBlockedByPolicy";
+          let extensionSettings = Services.policies.getExtensionSettings(install.addon.id);
+          let message = "";
+          if (extensionSettings && "blocked_install_message" in extensionSettings) {
+            message = " " + extensionSettings.blocked_install_message;
+          }
+          args = [install.name, install.addon.id, message];
+        }
+
         // Add Learn More link when refusing to install an unsigned add-on
         if (install.error == AddonManager.ERROR_SIGNEDSTATE_REQUIRED) {
           options.learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";

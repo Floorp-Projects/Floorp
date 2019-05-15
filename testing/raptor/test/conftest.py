@@ -10,7 +10,7 @@ from argparse import Namespace
 
 # need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))
-if os.environ.get('SCRIPTSPATH', None) is not None:
+if os.environ.get('SCRIPTSPATH') is not None:
     # in production it is env SCRIPTS_PATH
     mozharness_dir = os.environ['SCRIPTSPATH']
 else:

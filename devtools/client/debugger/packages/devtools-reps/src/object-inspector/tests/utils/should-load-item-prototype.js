@@ -152,14 +152,14 @@ describe("shouldLoadItemPrototype", () => {
     expect(shouldLoadItemPrototype(node)).toBeFalsy();
   });
 
-  it("returns true for a Proxy node", () => {
+  it("returns false for a Proxy node", () => {
     const node = createNode({
       name: "root",
       contents: {
         value: gripStubs.get("testProxy")
       }
     });
-    expect(shouldLoadItemPrototype(node)).toBeTruthy();
+    expect(shouldLoadItemPrototype(node)).toBeFalsy();
   });
 
   it("returns true for a Proxy target node", () => {
@@ -169,7 +169,10 @@ describe("shouldLoadItemPrototype", () => {
         value: gripStubs.get("testProxy")
       }
     });
-    const [targetNode] = getChildren({ item: proxyNode });
+    const loadedProperties = new Map([
+      [proxyNode.path, gripStubs.get("testProxySlots")]
+    ]);
+    const [targetNode] = getChildren({ item: proxyNode, loadedProperties });
     // Make sure we have the target node.
     expect(targetNode.name).toBe("<target>");
     expect(shouldLoadItemPrototype(targetNode)).toBeTruthy();

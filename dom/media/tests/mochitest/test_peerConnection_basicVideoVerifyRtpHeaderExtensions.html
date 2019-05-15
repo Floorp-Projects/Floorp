@@ -36,18 +36,24 @@
 
         const sdpExtmapIds = sdputils.findExtmapIds(test.originalAnswer.sdp);
 
-        let pc = SpecialPowers.wrap(test.pcRemote._pc);
-        let [level, type, sending, data] =  await getRtpPacket(pc);
-        let extensions = ParseRtpPacket(data).header.extensions;
-
+        const pc = SpecialPowers.wrap(test.pcRemote._pc);
+        const [level, type, sending, data] =  await getRtpPacket(pc);
+        const packet = ParseRtpPacket(data);
+        const extIds = packet.header.extensions.map(e => `${e.id}`);
         // make sure we got the same number of rtp header extensions in
         // the received packet as were negotiated in the sdp.  Then
         // check to make sure each of the received extension ids were in
         // the sdp.
-        is(sdpExtmapIds.length, extensions.length, "number of received ids match sdp ids");
+        is(sdpExtmapIds.length, extIds.length,
+           `number of sdp ids match received ids ` +
+           `${JSON.stringify(sdpExtmapIds)} == ${JSON.stringify(extIds)}\n` +
+           `sdp = ${test.originalAnswer.sdp}\n` +
+           `packet = ${JSON.stringify(packet, null, 2)}`);
         // note, we are comparing a number (from the parsed rtp packet)
         // and a string (from the answer sdp)
-        ok(extensions.every((ext) => sdpExtmapIds.includes(""+ext.id)), "extension id arrays equivalent");
+        ok(extIds.every(id => sdpExtmapIds.includes(id)) &&
+           sdpExtmapIds.every(id => extIds.includes(id)),
+          `extension id arrays equivalent`);
       }
     ]);
 

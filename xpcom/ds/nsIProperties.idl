@@ -42,5 +42,5 @@ interface nsIProperties : nsISupports
     /**
      *  Returns an array of the keys.
      */
-    void getKeys(out uint32_t count, [array, size_is(count), retval] out string keys);
+    Array<ACString> getKeys();
 };

@@ -38,9 +38,9 @@ describe("AccessibilityTreeFilter component:", () => {
 
     const button = filterButtons.at(0).childAt(0);
     expect(button.is("button")).toBe(true);
-    expect(button.hasClass("audit-badge")).toBe(true);
     expect(button.hasClass("badge")).toBe(true);
     expect(button.hasClass("toggle-button")).toBe(true);
+    expect(button.hasClass("audit-badge")).toBe(false);
     expect(button.prop("aria-pressed")).toBe(false);
     expect(button.text()).toBe("accessibility.badge.contrast");
   });
@@ -105,13 +105,13 @@ describe("AccessibilityTreeFilter component:", () => {
 
     const filterInstance = wrapper.find(AccessibilityTreeFilterClass).instance();
     filterInstance.toggleFilter = jest.fn();
-    wrapper.find("button.audit-badge.badge").simulate("keydown", { key: " " });
+    wrapper.find("button.toggle-button.badge").simulate("keydown", { key: " " });
     expect(filterInstance.toggleFilter.mock.calls.length).toBe(1);
 
-    wrapper.find("button.audit-badge.badge").simulate("keydown", { key: "Enter" });
+    wrapper.find("button.toggle-button.badge").simulate("keydown", { key: "Enter" });
     expect(filterInstance.toggleFilter.mock.calls.length).toBe(2);
 
-    wrapper.find("button.audit-badge.badge").simulate("click", { clientX: 1 });
+    wrapper.find("button.toggle-button.badge").simulate("click", { clientX: 1 });
     expect(filterInstance.toggleFilter.mock.calls.length).toBe(3);
   });
 });
