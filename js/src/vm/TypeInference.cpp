@@ -3497,6 +3497,17 @@ bool JSScript::makeTypes(JSContext* cx) {
 
   AutoEnterAnalysis enter(cx);
 
+  // Run the arguments-analysis if needed. Both the Baseline Interpreter and
+  // Compiler rely on this.
+  if (!ensureHasAnalyzedArgsUsage(cx)) {
+    return false;
+  }
+
+  // If ensureHasAnalyzedArgsUsage allocated the TypeScript we're done.
+  if (types_) {
+    return true;
+  }
+
   UniquePtr<jit::ICScript> icScript(jit::ICScript::create(cx, this));
   if (!icScript) {
     return false;
@@ -3526,6 +3537,7 @@ bool JSScript::makeTypes(JSContext* cx) {
 
   prepareForDestruction.release();
 
+  MOZ_ASSERT(!types_);
   types_ = new (typeScript) TypeScript(this, std::move(icScript), numTypeSets);
 
   // We have a TypeScript so we can set the script's jitCodeRaw_ pointer to the
