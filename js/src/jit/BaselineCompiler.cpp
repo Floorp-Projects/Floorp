@@ -5684,6 +5684,38 @@ bool BaselineCodeGen<Handler>::emit_JSOP_AWAIT() {
   return emit_JSOP_YIELD();
 }
 
+template <>
+template <typename F>
+bool BaselineCompilerCodeGen::emitAfterYieldDebugInstrumentation(
+    const F& ifDebuggee, Register) {
+  if (handler.compileDebugInstrumentation()) {
+    return ifDebuggee();
+  }
+  return true;
+}
+
+template <>
+template <typename F>
+bool BaselineInterpreterCodeGen::emitAfterYieldDebugInstrumentation(
+    const F& ifDebuggee, Register scratch) {
+  // Note that we can't use emitDebugInstrumentation here because the frame's
+  // DEBUGGEE flag hasn't been initialized yet.
+
+  // If the current Realm is not a debuggee we're done.
+  Label done;
+  masm.loadPtr(AbsoluteAddress(cx->addressOfRealm()), scratch);
+  masm.branchTest32(Assembler::Zero,
+                    Address(scratch, Realm::offsetOfDebugModeBits()),
+                    Imm32(Realm::debugModeIsDebuggeeBit()), &done);
+
+  if (!ifDebuggee()) {
+    return false;
+  }
+
+  masm.bind(&done);
+  return true;
+}
+
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_AFTERYIELD() {
   if (!emit_JSOP_JUMPTARGET()) {
@@ -5713,7 +5745,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_AFTERYIELD() {
     masm.bind(&done);
     return true;
   };
-  return emitDebugInstrumentation(ifDebuggee);
+  return emitAfterYieldDebugInstrumentation(ifDebuggee, R0.scratchReg());
 }
 
 template <typename Handler>
@@ -6669,7 +6701,9 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
   masm.bind(handler.interpretOpLabel());
   interpretOpOffset_ = masm.currentOffset();
 
-  // Emit a patchable call for debugger breakpoints/stepping.
+  // Emit a patchable call for debugger breakpoints/stepping. Note: there must
+  // be no code between interpretOpOffset_ and this debug trap. EnterBaseline
+  // and BaselineCompileFromBaselineInterpreter depend on this.
   if (!emitDebugTrap()) {
     return false;
   }
