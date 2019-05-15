@@ -323,10 +323,44 @@
 
     "ExtensionSettings": {
       "type": "object",
+      "properties": {
+        "*": {
+          "type": "object",
+          "properties": {
+            "installation_mode": {
+              "type": "string",
+              "enum": ["allowed", "blocked"]
+            },
+            "allowed_types": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["extension", "dictionary", "locale", "theme"]
+              }
+            },
+            "blocked_install_message": {
+              "type": "string"
+            },
+            "install_sources": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
       "patternProperties": {
         "^.*$": {
           "type": "object",
           "properties": {
+            "installation_mode": {
+              "type": "string",
+              "enum": ["allowed", "blocked", "force_installed", "normal_installed"]
+            },
+            "install_url": {
+              "type": "string"
+            },
             "blocked_install_message": {
               "type": "string"
             }

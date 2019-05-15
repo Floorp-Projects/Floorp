@@ -90,6 +90,8 @@ policy-EnableTrackingProtection = Enable or disable Content Blocking and optiona
 # English or translate them as verbs.
 policy-Extensions = Install, uninstall or lock extensions. The Install option takes URLs or paths as parameters. The Uninstall and Locked options take extension IDs.
 
+policy-ExtensionSettings = Manage all aspects of extension installation.
+
 policy-ExtensionUpdate = Enable or disable automatic extension updates.
 
 policy-FirefoxHome = Configure Firefox Home.

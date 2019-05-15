@@ -1,0 +1,23 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script type="text/javascript">
+function installTrigger(url) {
+  InstallTrigger.install({extension: url});
+}
+</script>
+</head>
+<body>
+<p>
+<a id="policytest" href="policytest_v0.1.xpi">policytest@mozilla.com</a>
+</p>
+<p>
+<a id="policytest_installtrigger" onclick="installTrigger(this.href);return false;" href="policytest_v0.1.xpi">policytest@mozilla.com</a>
+</p>
+<p>
+<a id="policytest_otherdomain" href="http://example.org:80/browser/browser/components/enterprisepolicies/tests/browser/policytest_v0.1.xpi">policytest@mozilla.com</a>
+</p>
+</body>
+</html>

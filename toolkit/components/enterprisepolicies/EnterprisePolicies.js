@@ -300,16 +300,53 @@ EnterprisePoliciesManager.prototype = {
 
   setExtensionSettings(extensionSettings) {
     ExtensionSettings = extensionSettings;
+    if ("*" in extensionSettings &&
+        "install_sources" in extensionSettings["*"]) {
+      InstallSources = new MatchPatternSet(extensionSettings["*"].install_sources);
+    }
   },
 
   getExtensionSettings(extensionID) {
     let settings = null;
-    if (extensionID in ExtensionSettings) {
-      settings = ExtensionSettings[extensionID];
-    } else if ("*" in ExtensionSettings) {
-      settings = ExtensionSettings["*"];
+    if (ExtensionSettings) {
+      if (extensionID in ExtensionSettings) {
+        settings = ExtensionSettings[extensionID];
+      } else if ("*" in ExtensionSettings) {
+        settings = ExtensionSettings["*"];
+      }
     }
     return settings;
+  },
+
+  mayInstallAddon(addon) {
+    // See https://dev.chromium.org/administrators/policy-list-3/extension-settings-full
+    if (!ExtensionSettings) {
+      return true;
+    }
+    if (addon.id in ExtensionSettings) {
+      if ("installation_mode" in ExtensionSettings[addon.id]) {
+        switch (ExtensionSettings[addon.id].installation_mode) {
+          case "blocked":
+            return false;
+          default:
+            return true;
+        }
+      }
+    }
+    if ("*" in ExtensionSettings) {
+      if (ExtensionSettings["*"].installation_mode &&
+          ExtensionSettings["*"].installation_mode == "blocked") {
+        return false;
+      }
+      if ("allowed_types" in ExtensionSettings["*"]) {
+        return ExtensionSettings["*"].allowed_types.includes(addon.type);
+      }
+    }
+    return true;
+  },
+
+  allowedInstallSource(uri) {
+    return InstallSources ? InstallSources.matches(uri) : true;
   },
 };
 
@@ -317,6 +354,7 @@ let DisallowedFeatures = {};
 let SupportMenu = null;
 let ExtensionPolicies = null;
 let ExtensionSettings = null;
+let InstallSources = null;
 
 /**
  * areEnterpriseOnlyPoliciesAllowed
