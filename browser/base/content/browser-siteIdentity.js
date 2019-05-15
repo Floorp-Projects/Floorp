@@ -947,7 +947,11 @@ var gIdentityHandler = {
     canvas.width = 550 * scale;
     let ctx = canvas.getContext("2d");
     ctx.font = `${14 * scale}px sans-serif`;
-    ctx.fillText(`${value}`, 10, 50);
+    ctx.fillText(`${value}`, 20 * scale, 14 * scale);
+    let tabIcon = document.getAnonymousElementByAttribute(gBrowser.selectedTab, "anonid", "tab-icon-image");
+    let image = new Image();
+    image.src = tabIcon.src;
+    ctx.drawImage(image, 0, 0, 16 * scale, 16 * scale);
 
     let dt = event.dataTransfer;
     dt.setData("text/x-moz-url", urlString);
