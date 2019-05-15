@@ -6,6 +6,7 @@ import contextlib
 import os
 import re
 import textwrap
+import time
 
 from marionette_driver.addons import Addons
 from marionette_driver.errors import MarionetteException
@@ -65,6 +66,10 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
             urlbar = self.marionette.find_element(By.ID, "urlbar")
             urlbar.send_keys(keys.Keys.DELETE)
             urlbar.send_keys(text + keys.Keys.ENTER)
+
+        # Wait for 0.1 seconds before proceeding to decrease the chance
+        # of Firefox being shut down before Telemetry is recorded
+        time.sleep(0.1)
 
     def search_in_new_tab(self, text):
         """Open a new tab and perform a search via the browser's URL bar,

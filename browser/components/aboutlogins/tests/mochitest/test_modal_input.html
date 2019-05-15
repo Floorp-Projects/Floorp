@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the modal-input component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the modal-input component</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="reflected-fluent-element.js"></script>
+  <script src="modal-input.js"></script>
+  <script src="aboutlogins_common.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+  <iframe id="templateFrame" src="aboutLogins.html"
+          sandbox="allow-same-origin"></iframe>
+</div>
+<pre id="test">
+</pre>
+<script>
+/** Test the modal-input component **/
+
+let gModalInput;
+const TEST_INPUT_VALUE = "fakeValue";
+add_task(async function setup() {
+  let templateFrame = document.getElementById("templateFrame");
+  let displayEl = document.getElementById("display");
+  importDependencies(templateFrame, displayEl);
+
+  gModalInput = document.createElement("modal-input");
+  gModalInput.setAttribute("value", TEST_INPUT_VALUE);
+  displayEl.appendChild(gModalInput);
+});
+
+add_task(async function test_initial_state() {
+  ok(gModalInput, "modalInput exists");
+  is(gModalInput.shadowRoot.querySelector(".locked-value").textContent, TEST_INPUT_VALUE, "Values are set initially");
+  is(gModalInput.shadowRoot.querySelector(".unlocked-value").value, TEST_INPUT_VALUE, "Values are set initially");
+  is(getComputedStyle(gModalInput.shadowRoot.querySelector(".locked-value")).display, "inline", ".locked-value is visible by default");
+  is(getComputedStyle(gModalInput.shadowRoot.querySelector(".unlocked-value")).display, "none", ".unlocked-value is hidden by default");
+});
+
+add_task(async function test_editing_set_unset() {
+  let lockedValue = gModalInput.shadowRoot.querySelector(".locked-value");
+  let unlockedValue = gModalInput.shadowRoot.querySelector(".unlocked-value");
+  gModalInput.setAttribute("editing", "");
+  is(getComputedStyle(lockedValue).display, "none", ".locked-value is hidden when editing");
+  is(getComputedStyle(unlockedValue).display, "inline", ".unlocked-value is visible when editing");
+
+  const NEW_VALUE = "editedValue";
+  SpecialPowers.wrap(unlockedValue).setUserInput(NEW_VALUE);
+  gModalInput.removeAttribute("editing");
+
+  is(lockedValue.textContent, NEW_VALUE, "Values are updated from edit");
+  is(unlockedValue.value, NEW_VALUE, "Values are updated from edit");
+  is(gModalInput.getAttribute("value"), NEW_VALUE, "The value attribute on the host element is updated from edit");
+  is(getComputedStyle(lockedValue).display, "inline", ".locked-value is visible when not editing");
+  is(getComputedStyle(unlockedValue).display, "none", ".unlocked-value is hidden when not editing");
+});
+
+add_task(async function test_password() {
+  gModalInput.setAttribute("type", "password");
+  let lockedValue = gModalInput.shadowRoot.querySelector(".locked-value");
+  let unlockedValue = gModalInput.shadowRoot.querySelector(".unlocked-value");
+
+  is(lockedValue.textContent, gModalInput.constructor.LOCKED_PASSWORD_DISPLAY,
+     "type=password should display masked characters when locked");
+  is(unlockedValue.value, gModalInput.getAttribute("value"), "type=password should have actual value in .unlocked-value");
+  is(unlockedValue.getAttribute("type"), "password", "input[type=password] should be used for .unlocked-value with type=password");
+
+  gModalInput.removeAttribute("value");
+  is(lockedValue.textContent, "",
+     "type=password should display nothing when locked without a value (.locked-value)");
+  is(unlockedValue.value, "",
+     "type=password should display nothing when locked without a value (.unlocked-value)");
+});
+</script>
+
+</body>
+</html>

@@ -11,6 +11,12 @@
 namespace mozilla {
 namespace dom {
 
+BrowsingContextGroup::BrowsingContextGroup() {
+  if (XRE_IsContentProcess()) {
+    ContentChild::GetSingleton()->HoldBrowsingContextGroup(this);
+  }
+}
+
 bool BrowsingContextGroup::Contains(BrowsingContext* aBrowsingContext) {
   return aBrowsingContext->Group() == this;
 }

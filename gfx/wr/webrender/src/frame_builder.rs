@@ -613,8 +613,8 @@ impl FrameBuilder {
                 );
 
                 match pass.kind {
-                    RenderPassKind::MainFramebuffer(ref color) => {
-                        has_texture_cache_tasks |= color.must_be_drawn();
+                    RenderPassKind::MainFramebuffer { ref main_target, .. } => {
+                        has_texture_cache_tasks |= main_target.must_be_drawn();
                     }
                     RenderPassKind::OffScreen { ref texture_cache, ref color, .. } => {
                         has_texture_cache_tasks |= !texture_cache.is_empty();

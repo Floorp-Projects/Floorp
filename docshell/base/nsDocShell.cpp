@@ -385,7 +385,8 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
       mHasLoadedNonBlankURI(false),
       mBlankTiming(false),
       mTitleValidForCurrentURI(false),
-      mIsFrame(false) {
+      mIsFrame(false),
+      mSkipBrowsingContextDetachOnDestroy(false) {
   mHistoryID.m0 = 0;
   mHistoryID.m1 = 0;
   mHistoryID.m2 = 0;
@@ -5036,7 +5037,11 @@ nsDocShell::Destroy() {
     mSessionHistory = nullptr;
   }
 
-  mBrowsingContext->Detach();
+  // This will be skipped in cases where we want to preserve the browsing
+  // context between loads.
+  if (!mSkipBrowsingContextDetachOnDestroy) {
+    mBrowsingContext->Detach();
+  }
 
   SetTreeOwner(nullptr);
 
@@ -7212,8 +7217,52 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
 
   // If the document does not want its presentation cached, then don't.
   RefPtr<Document> doc = mScriptGlobal->GetExtantDoc();
-  return doc && doc->CanSavePresentation(aNewRequest);
+
+  uint16_t bfCacheCombo = 0;
+  bool canSavePresentation =
+      doc->CanSavePresentation(aNewRequest, bfCacheCombo);
+  ReportBFCacheComboTelemetry(bfCacheCombo);
+
+  return doc && canSavePresentation;
 }
+
+void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
+  switch (aCombo) {
+    case BFCACHE_SUCCESS:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::BFCache_Success);
+      break;
+    case UNLOAD:
+      Telemetry::AccumulateCategorical(Telemetry::LABELS_BFCACHE_COMBO::Unload);
+      break;
+    case UNLOAD_REQUEST:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Unload_Req);
+      break;
+    case REQUEST:
+      Telemetry::AccumulateCategorical(Telemetry::LABELS_BFCACHE_COMBO::Req);
+      break;
+    case UNLOAD_REQUEST_PEER:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Unload_Req_Peer);
+      break;
+    case UNLOAD_REQUEST_PEER_MSE:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Unload_Req_Peer_MSE);
+      break;
+    case UNLOAD_REQUEST_MSE:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Unload_Req_MSE);
+      break;
+    case SUSPENDED_UNLOAD_REQUEST_PEER:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::SPD_Unload_Req_Peer);
+      break;
+    default:
+      Telemetry::AccumulateCategorical(Telemetry::LABELS_BFCACHE_COMBO::Other);
+      break;
+  }
+};
 
 void nsDocShell::ReattachEditorToWindow(nsISHEntry* aSHEntry) {
   MOZ_ASSERT(!mIsBeingDestroyed);
@@ -9481,8 +9530,10 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     bool restoring;
     rv = RestorePresentation(aLoadState->SHEntry(), &restoring);
     if (restoring) {
+      Telemetry::Accumulate(Telemetry::BFCACHE_PAGE_RESTORED, true);
       return rv;
     }
+    Telemetry::Accumulate(Telemetry::BFCACHE_PAGE_RESTORED, false);
 
     // We failed to restore the presentation, so clean up.
     // Both the old and new history entries could potentially be in
@@ -12859,10 +12910,8 @@ nsresult nsDocShell::CharsetChangeStopDocumentLoad() {
   return NS_ERROR_DOCSHELL_REQUEST_REJECTED;
 }
 
-NS_IMETHODIMP
-nsDocShell::SetIsPrinting(bool aIsPrinting) {
+void nsDocShell::SetIsPrinting(bool aIsPrinting) {
   mIsPrintingOrPP = aIsPrinting;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

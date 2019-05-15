@@ -285,6 +285,7 @@ add_task(clear_collection);
 // kinto.js), more making sure things are basically working as expected.
 add_task(async function test_kinto_sync() {
   const configPath = "/v1/";
+  const metadataPath = "/v1/buckets/default/collections/test_collection";
   const recordsPath = "/v1/buckets/default/collections/test_collection/records";
   // register a handler
   function handleResponse(request, response) {
@@ -309,6 +310,7 @@ add_task(async function test_kinto_sync() {
     }
   }
   server.registerPathHandler(configPath, handleResponse);
+  server.registerPathHandler(metadataPath, handleResponse);
   server.registerPathHandler(recordsPath, handleResponse);
 
   // create an empty collection, sync to populate
@@ -392,6 +394,22 @@ function getSampleResponse(req, port) {
         "hello": "kinto",
       }),
     },
+    "GET:/v1/buckets/default/collections/test_collection": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"1234\"",
+      ],
+      "status": { status: 200, statusText: "OK" },
+      "responseBody": JSON.stringify({
+        "data": {
+          "id": "test_collection",
+          "last_modified": 1234,
+        },
+      }),
+    },
     "GET:/v1/buckets/default/collections/test_collection/records?_sort=-last_modified": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
@@ -453,5 +471,6 @@ function getSampleResponse(req, port) {
     },
   };
   return responses[`${req.method}:${req.path}?${req.queryString}`] ||
+         responses[`${req.method}:${req.path}`] ||
          responses[req.method];
 }

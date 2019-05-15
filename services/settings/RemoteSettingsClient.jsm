@@ -35,8 +35,6 @@ const TELEMETRY_COMPONENT = "remotesettings";
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "gServerURL",
                                       "services.settings.server");
-XPCOMUtils.defineLazyPreferenceGetter(this, "gChangesPath",
-                                      "services.settings.changes.path");
 
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
@@ -66,43 +64,6 @@ class ClientEnvironment extends ClientEnvironmentBase {
     Services.appinfo.QueryInterface(Ci.nsIPlatformInfo);
     return Services.appinfo.platformVersion;
   }
-}
-
-/**
- * Retrieve the Autograph signature information from the collection metadata.
- *
- * @param {String} bucket Bucket name.
- * @param {String} collection Collection name.
- * @param {int} expectedTimestamp Timestamp to be used for cache busting.
- * @returns {Promise<{String, String}>}
- */
-async function fetchCollectionSignature(bucket, collection, expectedTimestamp) {
-  const client = new KintoHttpClient(gServerURL);
-  const { signature: signaturePayload } = await client.bucket(bucket)
-    .collection(collection)
-    .getData({ query: { _expected: expectedTimestamp } });
-  if (!signaturePayload) {
-    throw new RemoteSettingsClient.MissingSignatureError(`${bucket}/${collection}`);
-  }
-  const { x5u, signature } = signaturePayload;
-  const certChainResponse = await fetch(x5u);
-  const certChain = await certChainResponse.text();
-
-  return { signature, certChain };
-}
-
-/**
- * Retrieve the current list of remote records.
- *
- * @param {String} bucket Bucket name.
- * @param {String} collection Collection name.
- * @param {int} expectedTimestamp Timestamp to be used for cache busting.
- */
-async function fetchRemoteRecords(bucket, collection, expectedTimestamp) {
-  const client = new KintoHttpClient(gServerURL);
-  return client.bucket(bucket)
-    .collection(collection)
-    .listRecords({ sort: "id", filters: { _expected: expectedTimestamp } });
 }
 
 /**
@@ -188,6 +149,7 @@ class RemoteSettingsClient extends EventEmitter {
     this.filterFunc = filterFunc;
     this.localFields = localFields;
     this._lastCheckTimePref = lastCheckTimePref;
+    this._verifier = null;
 
     // This attribute allows signature verification to be disabled, when running tests
     // or when pulling data from a dev server.
@@ -229,10 +191,11 @@ class RemoteSettingsClient extends EventEmitter {
   /**
    * Lists settings.
    *
-   * @param  {Object} options             The options object.
-   * @param  {Object} options.filters     Filter the results (default: `{}`).
-   * @param  {Object} options.order       The order to apply (eg. `"-last_modified"`).
-   * @param  {Object} options.syncIfEmpty Synchronize from server if local data is empty (default: `true`).
+   * @param  {Object} options                  The options object.
+   * @param  {Object} options.filters          Filter the results (default: `{}`).
+   * @param  {String} options.order            The order to apply (eg. `"-last_modified"`).
+   * @param  {boolean} options.syncIfEmpty     Synchronize from server if local data is empty (default: `true`).
+   * @param  {boolean} options.verifySignature Verify the signature of the local data (default: `false`).
    * @return {Promise}
    */
   async get(options = {}) {
@@ -241,6 +204,7 @@ class RemoteSettingsClient extends EventEmitter {
       order = "", // not sorted by default.
       syncIfEmpty = true,
     } = options;
+    let { verifySignature = false } = options;
 
     if (syncIfEmpty && !(await Utils.hasLocalData(this))) {
       try {
@@ -253,6 +217,8 @@ class RemoteSettingsClient extends EventEmitter {
           // There is no JSON dump, force a synchronization from the server.
           await this.sync({ loadDump: false });
         }
+        // Either from trusted dump, or already done during sync.
+        verifySignature = false;
       } catch (e) {
         // Report but return an empty list since there will be no data anyway.
         Cu.reportError(e);
@@ -261,8 +227,20 @@ class RemoteSettingsClient extends EventEmitter {
     }
 
     // Read from the local DB.
-    const kintoCol = await this.openCollection();
-    const { data } = await kintoCol.list({ filters, order });
+    const kintoCollection = await this.openCollection();
+    const { data } = await kintoCollection.list({ filters, order });
+
+    // Verify signature of local data.
+    if (verifySignature) {
+      const localRecords = data.map(r => kintoCollection.cleanLocalFields(r));
+      const timestamp = await kintoCollection.db.getLastModified();
+      const metadata = await kintoCollection.metadata();
+      await this._validateCollectionSignature([],
+                                              timestamp,
+                                              metadata,
+                                              { localRecords });
+    }
+
     // Filter the records based on `this.filterFunc` results.
     return this._filterEntries(data);
   }
@@ -275,7 +253,7 @@ class RemoteSettingsClient extends EventEmitter {
   async sync(options) {
     // We want to know which timestamp we are expected to obtain in order to leverage
     // cache busting. We don't provide ETag because we don't want a 304.
-    const { changes } = await Utils.fetchLatestChanges(gServerURL + gChangesPath, {
+    const { changes } = await Utils.fetchLatestChanges(gServerURL, {
       filters: {
         collection: this.collectionName,
         bucket: this.bucketName,
@@ -336,10 +314,15 @@ class RemoteSettingsClient extends EventEmitter {
       // for incoming changes that validates the signature.
       if (this.verifySignature) {
         kintoCollection.hooks["incoming-changes"] = [async (payload, collection) => {
-          await this._validateCollectionSignature(payload.changes,
-                                                  payload.lastModified,
-                                                  collection,
-                                                  { expectedTimestamp });
+          const { changes: remoteRecords, lastModified: timestamp } = payload;
+          const { data } = await kintoCollection.list({ order: "" }); // no need to sort.
+          const metadata = await collection.metadata();
+          // Local fields are stripped to compute the collection signature (server does not have them).
+          const localRecords = data.map(r => kintoCollection.cleanLocalFields(r));
+          await this._validateCollectionSignature(remoteRecords,
+                                                  timestamp,
+                                                  metadata,
+                                                  { localRecords });
           // In case the signature is valid, apply the changes locally.
           return payload;
         }];
@@ -433,37 +416,35 @@ class RemoteSettingsClient extends EventEmitter {
    *
    * @param {Array<Object>} remoteRecords   The list of changes to apply to the local database.
    * @param {int} timestamp                 The timestamp associated with the list of remote records.
-   * @param {Collection} kintoCollection    Kinto.js Collection instance.
+   * @param {Object} metadata               The collection metadata, that contains the signature payload.
    * @param {Object} options
-   * @param {int} options.expectedTimestamp Cache busting of collection metadata
-   * @param {Boolean} options.ignoreLocal   When the signature verification is retried, since we refetch
-   *                                        the whole collection, we don't take into account the local
-   *                                        data (default: `false`)
+   * @param {Array<Object>} options.localRecords List of additional local records to take into account (default: `[]`).
    * @returns {Promise}
    */
-  async _validateCollectionSignature(remoteRecords, timestamp, kintoCollection, options = {}) {
-    const { expectedTimestamp, ignoreLocal = false } = options;
-    // this is a content-signature field from an autograph response.
-    const { name: collection, bucket } = kintoCollection;
-    const { signature, certChain } = await fetchCollectionSignature(bucket, collection, expectedTimestamp);
+  async _validateCollectionSignature(remoteRecords, timestamp, metadata, options = {}) {
+    const { localRecords = [] } = options;
 
-    let localRecords = [];
-    if (!ignoreLocal) {
-      const { data } = await kintoCollection.list({ order: "" }); // no need to sort.
-      // Local fields are stripped to compute the collection signature (server does not have them).
-      localRecords = data.map(r => kintoCollection.cleanLocalFields(r));
+    if (!metadata || !metadata.signature) {
+      throw new RemoteSettingsClient.MissingSignatureError(this.identifier);
     }
 
+    if (!this._verifier) {
+        this._verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
+          .createInstance(Ci.nsIContentSignatureVerifier);
+    }
+
+    // This is a content-signature field from an autograph response.
+    const { signature: { x5u, signature } } = metadata;
+    const certChain = await (await fetch(x5u)).text();
+    // Merge remote records with local ones and serialize as canonical JSON.
     const serialized = await RemoteSettingsWorker.canonicalStringify(localRecords,
                                                                      remoteRecords,
                                                                      timestamp);
-    const verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
-      .createInstance(Ci.nsIContentSignatureVerifier);
-    if (!await verifier.asyncVerifyContentSignature(serialized,
-                                                    "p384ecdsa=" + signature,
-                                                    certChain,
-                                                    this.signerName)) {
-      throw new RemoteSettingsClient.InvalidSignatureError(`${bucket}/${collection}`);
+    if (!await this._verifier.asyncVerifyContentSignature(serialized,
+                                                          "p384ecdsa=" + signature,
+                                                          certChain,
+                                                          this.signerName)) {
+      throw new RemoteSettingsClient.InvalidSignatureError(this.identifier);
     }
   }
 
@@ -478,14 +459,23 @@ class RemoteSettingsClient extends EventEmitter {
    * @returns {Promise<Object>} the computed sync result.
    */
   async _retrySyncFromScratch(kintoCollection, expectedTimestamp) {
-    const payload = await fetchRemoteRecords(kintoCollection.bucket, kintoCollection.name, expectedTimestamp);
-    await this._validateCollectionSignature(payload.data,
-      payload.last_modified,
-      kintoCollection,
-      { expectedTimestamp, ignoreLocal: true });
+    // Fetch collection metadata.
+    const api = new KintoHttpClient(gServerURL);
+    const client = await api.bucket(this.bucketName).collection(this.collectionName);
+    const metadata = await client.getData({ query: { _expected: expectedTimestamp }});
+    // Fetch whole list of records.
+    const {
+      data: remoteRecords,
+      last_modified: timestamp,
+    } = await client.listRecords({ sort: "id", filters: { _expected: expectedTimestamp } });
+    // Verify signature of remote content, before importing it locally.
+    await this._validateCollectionSignature(remoteRecords,
+                                            timestamp,
+                                            metadata);
 
-    // The signature is good (we haven't thrown).
-    // Now we will Inspect what we had locally.
+    // The signature of this remote content is good (we haven't thrown).
+    // Now we will store it locally. In order to replicate what `.sync()` returns
+    // we will inspect what we had locally.
     const { data: oldData } = await kintoCollection.list({ order: "" }); // no need to sort.
 
     // We build a sync result as if a diff-based sync was performed.
@@ -494,14 +484,15 @@ class RemoteSettingsClient extends EventEmitter {
     // If the remote last_modified is newer than the local last_modified,
     // replace the local data
     const localLastModified = await kintoCollection.db.getLastModified();
-    if (payload.last_modified >= localLastModified) {
-      const { data: newData } = payload;
+    if (timestamp >= localLastModified) {
       await kintoCollection.clear();
-      await kintoCollection.loadDump(newData);
+      await kintoCollection.loadDump(remoteRecords);
+      await kintoCollection.db.saveLastModified(timestamp);
+      await kintoCollection.db.saveMetadata(metadata);
 
       // Compare local and remote to populate the sync result
       const oldById = new Map(oldData.map(e => [e.id, e]));
-      for (const r of newData) {
+      for (const r of remoteRecords) {
         const old = oldById.get(r.id);
         if (old) {
           if (old.last_modified != r.last_modified) {

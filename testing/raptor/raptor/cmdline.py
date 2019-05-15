@@ -129,6 +129,8 @@ def create_parser(mach_interface=False):
             help="Print all available Raptor tests")
     add_arg('--debug-mode', dest="debug_mode", action="store_true",
             help="Run Raptor in debug mode (open browser console, limited page-cycles, etc.)")
+    add_arg('--disable-e10s', dest="e10s", action="store_false", default=True,
+            help="Run without multiple processes (e10s).")
     if not mach_interface:
         add_arg('--run-local', dest="run_local", default=False, action="store_true",
                 help="Flag that indicates if raptor is running locally or in production")

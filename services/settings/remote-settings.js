@@ -33,12 +33,10 @@ const PREF_SETTINGS_BRANCH             = "services.settings.";
 const PREF_SETTINGS_SERVER             = "server";
 const PREF_SETTINGS_DEFAULT_SIGNER     = "default_signer";
 const PREF_SETTINGS_SERVER_BACKOFF     = "server.backoff";
-const PREF_SETTINGS_CHANGES_PATH       = "changes.path";
 const PREF_SETTINGS_LAST_UPDATE        = "last_update_seconds";
 const PREF_SETTINGS_LAST_ETAG          = "last_etag";
 const PREF_SETTINGS_CLOCK_SKEW_SECONDS = "clock_skew_seconds";
 const PREF_SETTINGS_LOAD_DUMP          = "load_dump";
-
 
 // Telemetry identifiers.
 const TELEMETRY_COMPONENT = "remotesettings";
@@ -48,11 +46,13 @@ const TELEMETRY_SOURCE_SYNC = "settings-sync";
 // Push broadcast id.
 const BROADCAST_ID = "remote-settings/monitor_changes";
 
+// Signer to be used when not specified (see Ci.nsIContentSignatureVerifier).
+const DEFAULT_SIGNER = "remote-settings.content-signature.mozilla.org";
+
 XPCOMUtils.defineLazyGetter(this, "gPrefs", () => {
   return Services.prefs.getBranch(PREF_SETTINGS_BRANCH);
 });
 XPCOMUtils.defineLazyPreferenceGetter(this, "gServerURL", PREF_SETTINGS_BRANCH + PREF_SETTINGS_SERVER);
-XPCOMUtils.defineLazyPreferenceGetter(this, "gChangesPath", PREF_SETTINGS_BRANCH + PREF_SETTINGS_CHANGES_PATH);
 
 /**
  * Default entry filtering function, in charge of excluding remote settings entries
@@ -84,10 +84,9 @@ function remoteSettingsFunction() {
   let _invalidatePolling = false;
 
   // If not explicitly specified, use the default signer.
-  const defaultSigner = gPrefs.getCharPref(PREF_SETTINGS_DEFAULT_SIGNER);
   const defaultOptions = {
     bucketNamePref: PREF_SETTINGS_DEFAULT_BUCKET,
-    signerName: defaultSigner,
+    signerName: DEFAULT_SIGNER,
     filterFunc: jexlFilterFunc,
   };
 
@@ -111,12 +110,6 @@ function remoteSettingsFunction() {
     }
     return _clients.get(collectionName);
   };
-
-  Object.defineProperty(remoteSettings, "pollingEndpoint", {
-    get() {
-      return gServerURL + gChangesPath;
-    },
-  });
 
   /**
    * Internal helper to retrieve existing instances of clients or new instances
@@ -186,7 +179,7 @@ function remoteSettingsFunction() {
 
     let pollResult;
     try {
-      pollResult = await Utils.fetchLatestChanges(remoteSettings.pollingEndpoint, { expectedTimestamp, lastEtag });
+      pollResult = await Utils.fetchLatestChanges(gServerURL, { expectedTimestamp, lastEtag });
     } catch (e) {
       // Report polling error to Uptake Telemetry.
       let reportStatus;
@@ -291,7 +284,7 @@ function remoteSettingsFunction() {
    * known remote settings collections.
    */
   remoteSettings.inspect = async () => {
-    const { changes, currentEtag: serverTimestamp } = await Utils.fetchLatestChanges(remoteSettings.pollingEndpoint);
+    const { changes, currentEtag: serverTimestamp } = await Utils.fetchLatestChanges(gServerURL);
 
     const collections = await Promise.all(changes.map(async (change) => {
       const { bucket, collection, last_modified: serverTimestamp } = change;
@@ -314,11 +307,12 @@ function remoteSettingsFunction() {
 
     return {
       serverURL: gServerURL,
+      pollingEndpoint: gServerURL + Utils.CHANGES_PATH,
       serverTimestamp,
       localTimestamp: gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG, null),
       lastCheck: gPrefs.getIntPref(PREF_SETTINGS_LAST_UPDATE, 0),
       mainBucket: Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_BUCKET),
-      defaultSigner,
+      defaultSigner: DEFAULT_SIGNER,
       collections: collections.filter(c => !!c),
     };
   };

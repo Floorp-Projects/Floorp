@@ -948,6 +948,7 @@ child:
      */
     async GetContentBlockingLog() returns(nsCString log, bool success);
 
+    async SkipBrowsingContextDetach();
 parent:
     /** Records a history visit. */
     async VisitURI(URIParams aURI, URIParams? aLastVisitedURI,

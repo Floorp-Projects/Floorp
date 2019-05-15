@@ -59,6 +59,8 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   mozilla::ipc::IPCResult RecvDispatchSynthesizedMouseEvent(
       const WidgetMouseEvent& aEvent);
 
+  mozilla::ipc::IPCResult RecvSkipBrowsingContextDetach();
+
   mozilla::ipc::IPCResult RecvActivate();
 
   mozilla::ipc::IPCResult RecvDeactivate();

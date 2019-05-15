@@ -31,6 +31,7 @@ remote.jar:
   # domains
   content/domains/ContentProcessDomain.jsm (domains/ContentProcessDomain.jsm)
   content/domains/ContentProcessDomains.jsm (domains/ContentProcessDomains.jsm)
+  content/domains/ContextObserver.jsm (domains/ContextObserver.jsm)
   content/domains/Domain.jsm (domains/Domain.jsm)
   content/domains/Domains.jsm (domains/Domains.jsm)
   content/domains/ParentProcessDomains.jsm (domains/ParentProcessDomains.jsm)

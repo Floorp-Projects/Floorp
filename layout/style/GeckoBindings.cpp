@@ -2170,6 +2170,20 @@ void Gecko_RegisterProfilerThread(const char* name) {
 
 void Gecko_UnregisterProfilerThread() { PROFILER_UNREGISTER_THREAD(); }
 
+#ifdef MOZ_GECKO_PROFILER
+void Gecko_Construct_AutoProfilerLabel(AutoProfilerLabel* aAutoLabel,
+                                       JS::ProfilingCategoryPair aCatPair) {
+  new (aAutoLabel) AutoProfilerLabel(
+      "", nullptr, aCatPair,
+      uint32_t(
+          js::ProfilingStackFrame::Flags::LABEL_DETERMINED_BY_CATEGORY_PAIR));
+}
+
+void Gecko_Destroy_AutoProfilerLabel(AutoProfilerLabel* aAutoLabel) {
+  aAutoLabel->~AutoProfilerLabel();
+}
+#endif
+
 bool Gecko_DocumentRule_UseForPresentation(
     const Document* aDocument, const nsACString* aPattern,
     DocumentMatchingFunction aMatchingFunction) {

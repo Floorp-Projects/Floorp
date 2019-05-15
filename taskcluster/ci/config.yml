@@ -328,6 +328,11 @@ workers:
             implementation: generic-worker
             os: macosx
             worker-type: 'gecko-{alias}'
+        t-osx-1014:
+            provisioner: releng-hardware
+            implementation: generic-worker
+            os: macosx
+            worker-type: 'gecko-{alias}'
         t-linux-xlarge-pgo:
             provisioner: aws-provisioner-v1
             implementation: docker-worker
@@ -344,6 +349,14 @@ workers:
                 by-level:
                     '3': 'gecko-{level}-t-osx-1010'
                     default: 'gecko-t-osx-1010'
+        t-osx-1014-pgo:
+            provisioner: releng-hardware
+            implementation: generic-worker
+            os: macosx
+            worker-type:
+                by-level:
+                    '3': 'gecko-{level}-t-osx-1014'
+                    default: 'gecko-t-osx-1014'
         t-win10-64(|-gpu):
             provisioner: aws-provisioner-v1
             implementation: generic-worker

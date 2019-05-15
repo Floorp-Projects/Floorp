@@ -9,9 +9,8 @@
 [scriptable, uuid(bca19e01-b34e-4a48-8875-2f4cb871febf)]
 interface nsISDBResult : nsISupports
 {
-  [must_use] void
-  getAsArray([optional] out uint32_t dataLen,
-             [array, retval, size_is(dataLen)] out uint8_t data);
+  [must_use] Array<uint8_t>
+  getAsArray();
 
   [must_use, implicit_jscontext] jsval
   getAsArrayBuffer();

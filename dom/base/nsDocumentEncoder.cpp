@@ -338,8 +338,15 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
                                                int32_t aEndOffset,
                                                nsAString& aStr,
                                                nsINode* aFixupNode) {
-  if (mNeedsPreformatScanning && aOriginalNode.IsElement()) {
-    mSerializer->ScanElementForPreformat(aOriginalNode.AsElement());
+  if (mNeedsPreformatScanning) {
+    if (aOriginalNode.IsElement()) {
+      mSerializer->ScanElementForPreformat(aOriginalNode.AsElement());
+    } else if (aOriginalNode.IsText()) {
+      const nsCOMPtr<nsINode> parent = aOriginalNode.GetParent();
+      if (parent && parent->IsElement()) {
+        mSerializer->ScanElementForPreformat(parent->AsElement());
+      }
+    }
   }
 
   if (!IsVisibleNode(&aOriginalNode)) {
@@ -393,8 +400,15 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
 }
 
 nsresult nsDocumentEncoder::SerializeNodeEnd(nsINode& aNode, nsAString& aStr) {
-  if (mNeedsPreformatScanning && aNode.IsElement()) {
-    mSerializer->ForgetElementForPreformat(aNode.AsElement());
+  if (mNeedsPreformatScanning) {
+    if (aNode.IsElement()) {
+      mSerializer->ForgetElementForPreformat(aNode.AsElement());
+    } else if (aNode.IsText()) {
+      const nsCOMPtr<nsINode> parent = aNode.GetParent();
+      if (parent && parent->IsElement()) {
+        mSerializer->ForgetElementForPreformat(parent->AsElement());
+      }
+    }
   }
 
   if (!IsVisibleNode(&aNode)) {

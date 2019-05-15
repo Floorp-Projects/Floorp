@@ -16,6 +16,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=116083
 <div style="white-space: pre-wrap">foo  bar</div>
 <div style="white-space: pre-line">foo  bar</div>
 <div style="white-space: -moz-pre-space">foo  bar</div>
+<div style="white-space: pre" data-collapse-selection-to-child-and-extend>foo  bar</div>
+<div style="white-space: pre-wrap" data-collapse-selection-to-child-and-extend>foo  bar</div>
+<div style="white-space: pre-line" data-collapse-selection-to-child-and-extend>foo  bar</div>
+<div style="white-space: -moz-pre-space" data-collapse-selection-to-child-and-extend>foo  bar</div>
 <div data-result="bar  baz"><span style="white-space: pre">bar  </span>baz</div>
 <div data-result="bar  baz"><span style="white-space: pre-wrap">bar  </span>baz</div>
 <div data-result="bar  baz"><span style="white-space: pre-line">bar  </span>baz</div>
@@ -70,16 +74,35 @@ function hasExpectedFlavors() {
   }
 }
 
+function collapseSelectionToChildAndExtend(divElement) {
+  is(divElement.childNodes.length, 1, "Expected exactly one child node.");
+  var textChildNode = divElement.childNodes[0];
+  getSelection().collapse(textChildNode);
+  getSelection().extend(textChildNode, divElement.textContent.length);
+}
+
+function selectDependingOnAttributes(divElement) {
+  if (divElement.hasAttribute("data-collapse-selection-to-child-and-extend")) {
+    // Selecting text as follow comes closest to user behaviour.
+    collapseSelectionToChildAndExtend(divElement);
+  } else {
+    getSelection().selectAllChildren(divElement);
+  }
+}
+
 function nextTest() {
   var div = document.querySelector("#content>div");
   if (!div) {
     SimpleTest.finish();
     return;
   }
-  getSelection().selectAllChildren(div);
+
+  selectDependingOnAttributes(div);
+
   var expected = div.hasAttribute("data-result") ?
                  div.getAttribute("data-result") :
                  div.textContent;
+
   SimpleTest.waitForClipboard(expected, function() {
     synthesizeKey("C", {accelKey: true});
   }, function() {

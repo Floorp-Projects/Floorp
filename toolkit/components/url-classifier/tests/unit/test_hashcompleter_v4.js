@@ -82,9 +82,7 @@ add_test(function test_update_v4() {
 add_test(function test_getHashRequestV4() {
   let request = gUrlUtil.makeFindFullHashRequestV4([TEST_TABLE_DATA_V4.tableName],
                                                    [btoa(NEW_CLIENT_STATE)],
-                                                   [btoa("0123"), btoa("1234567"), btoa("1111")].sort(),
-                                                   1,
-                                                   3);
+                                                   [btoa("0123"), btoa("1234567"), btoa("1111")].sort());
   registerHandlerGethashV4("&$req=" + request);
   let completeFinishedCnt = 0;
 
@@ -187,9 +185,7 @@ add_test(function test_minWaitDuration() {
 
   let request = gUrlUtil.makeFindFullHashRequestV4([TEST_TABLE_DATA_V4.tableName],
                                                    [btoa(NEW_CLIENT_STATE)],
-                                                   [btoa("1234567")],
-                                                   1,
-                                                   1);
+                                                   [btoa("1234567")]);
   registerHandlerGethashV4("&$req=" + request);
 
   // The last gethash response contained a min wait duration 12 secs 10 nano

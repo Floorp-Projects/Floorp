@@ -9,7 +9,6 @@
 #include "jsapi.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsCSPContext.h"
@@ -115,7 +114,6 @@ HTMLFormElement::HTMLFormElement(
       mDeferSubmission(false),
       mNotifiedObservers(false),
       mNotifiedObserversResult(false),
-      mSubmitInitiatedFromUserInput(false),
       mEverTriedInvalidSubmit(false) {
   // We start out valid.
   AddStatesSilently(NS_EVENT_STATE_VALID);
@@ -571,8 +569,6 @@ nsresult HTMLFormElement::DoSubmit(WidgetEvent* aEvent) {
     mSubmitPopupState = PopupBlocker::openAbused;
   }
 
-  mSubmitInitiatedFromUserInput = EventStateManager::IsHandlingUserInput();
-
   if (mDeferSubmission) {
     // we are in an event handler, JS submitted so we have to
     // defer this submission. let's remember it and return
@@ -696,7 +692,7 @@ nsresult HTMLFormElement::SubmitSubmission(
     nsAutoPopupStatePusher popupStatePusher(mSubmitPopupState);
 
     AutoHandlingUserInputStatePusher userInpStatePusher(
-        mSubmitInitiatedFromUserInput, nullptr, doc);
+        aFormSubmission->IsInitiatedFromUserInput(), nullptr, doc);
 
     nsCOMPtr<nsIInputStream> postDataStream;
     rv = aFormSubmission->GetEncodedSubmission(
@@ -708,7 +704,7 @@ nsresult HTMLFormElement::SubmitSubmission(
     rv = linkHandler->OnLinkClickSync(
         this, actionURI, target, VoidString(), postDataStream, nullptr, false,
         getter_AddRefs(docShell), getter_AddRefs(mSubmittingRequest),
-        EventStateManager::IsHandlingUserInput());
+        aFormSubmission->IsInitiatedFromUserInput());
     NS_ENSURE_SUBMIT_SUCCESS(rv);
   }
 

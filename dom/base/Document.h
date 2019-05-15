@@ -221,6 +221,20 @@ class CallbackObjectHolder;
 
 enum class CallerType : uint32_t;
 
+enum BFCacheStatus {
+  NOT_ALLOWED = 1 << 0,                  // Status 0
+  EVENT_HANDLING_SUPPRESSED = 1 << 1,    // Status 1
+  SUSPENDED = 1 << 2,                    // Status 2
+  UNLOAD_LISTENER = 1 << 3,              // Status 3
+  REQUEST = 1 << 4,                      // Status 4
+  ACTIVE_GET_USER_MEDIA = 1 << 5,        // Status 5
+  ACTIVE_PEER_CONNECTION = 1 << 6,       // Status 6
+  CONTAINS_EME_CONTENT = 1 << 7,         // Status 7
+  CONTAINS_MSE_CONTENT = 1 << 8,         // Status 8
+  HAS_ACTIVE_SPEECH_SYNTHESIS = 1 << 9,  // Status 9
+  HAS_USED_VR = 1 << 10,                 // Status 10
+};
+
 }  // namespace dom
 }  // namespace mozilla
 
@@ -2252,8 +2266,12 @@ class Document : public nsINode,
    * replace this document in the docshell.  The new document's request
    * will be ignored when checking for active requests.  If there is no
    * request associated with the new document, this parameter may be null.
+   *
+   * |aBFCacheCombo| is used as a bitmask to indicate what the status
+   * combination is when we try to BFCache aNewRequest
    */
-  virtual bool CanSavePresentation(nsIRequest* aNewRequest);
+  virtual bool CanSavePresentation(nsIRequest* aNewRequest,
+                                   uint16_t& aBFCacheCombo);
 
   virtual nsresult Init();
 

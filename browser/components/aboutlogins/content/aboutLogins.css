@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  grid-template-rows: 75px 1fr;
+  grid-template-areas: "header header"
+                       "logins login";
+  height: 100vh;
+}
+
+header {
+  display: flex;
+  grid-area: header;
+  background-color: var(--in-content-box-background);
+  border-bottom: 1px solid var(--in-content-box-border-color);
+}
+
+login-filter {
+  flex: auto;
+  align-self: center;
+}
+
+login-list {
+  grid-area: logins;
+}
+
+login-item {
+  grid-area: login;
+  max-width: 800px;
+}

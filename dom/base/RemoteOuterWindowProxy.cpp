@@ -19,12 +19,7 @@ namespace dom {
  * Window objects that live in a different process.
  *
  * RemoteOuterWindowProxy holds a BrowsingContext, which is cycle collected.
- * However, RemoteOuterWindowProxy only holds BrowsingContexts that don't have a
- * reference to a docshell, so there's no need to declare the edge from
- * RemoteOuterWindowProxy to its BrowsingContext to the cycle collector.
- *
- * FIXME Verify that this is correct:
- *       https://bugzilla.mozilla.org/show_bug.cgi?id=1516350.
+ * This reference is declared to the cycle collector via NoteChildren().
  */
 
 class RemoteOuterWindowProxy

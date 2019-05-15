@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { BATCH_ACTIONS, BATCH_ENABLE, BATCH_RESET } = require("../constants");
+const { BATCH_ACTIONS, BATCH_ENABLE, BATCH_RESET, BATCH_FLUSH } = require("../constants");
 
 const REQUESTS_REFRESH_RATE = 50; // ms
 
@@ -28,6 +28,10 @@ function batchingMiddleware(store) {
 
       if (action.type === BATCH_RESET) {
         return resetQueue();
+      }
+
+      if (action.type === BATCH_FLUSH) {
+        return flushQueue();
       }
 
       if (action.meta && action.meta.batch) {
@@ -63,6 +67,12 @@ function batchingMiddleware(store) {
       if (flushTask) {
         flushTask.cancel();
         flushTask = null;
+      }
+    }
+
+    function flushQueue() {
+      if (flushTask) {
+        flushTask.runNow();
       }
     }
 

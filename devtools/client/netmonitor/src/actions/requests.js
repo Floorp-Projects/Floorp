@@ -13,7 +13,7 @@ const {
   TOGGLE_RECORDING,
   UPDATE_REQUEST,
 } = require("../constants");
-const { getSelectedRequest } = require("../selectors/index");
+const { getSelectedRequest, getRequestById } = require("../selectors/index");
 
 function addRequest(id, data, batch) {
   return {
@@ -46,26 +46,31 @@ function cloneSelectedRequest() {
 /**
  * Send a new HTTP request using the data in the custom request form.
  */
-function sendCustomRequest(connector) {
+function sendCustomRequest(connector, requestId = null) {
   return (dispatch, getState) => {
-    const selected = getSelectedRequest(getState());
+    let request;
+    if (requestId) {
+      request = getRequestById(getState(), requestId);
+    } else {
+      request = getSelectedRequest(getState());
+    }
 
-    if (!selected) {
+    if (!request) {
       return;
     }
 
     // Send a new HTTP request using the data in the custom request form
     const data = {
-      cause: selected.cause,
-      url: selected.url,
-      method: selected.method,
-      httpVersion: selected.httpVersion,
+      cause: request.cause,
+      url: request.url,
+      method: request.method,
+      httpVersion: request.httpVersion,
     };
-    if (selected.requestHeaders) {
-      data.headers = selected.requestHeaders.headers;
+    if (request.requestHeaders) {
+      data.headers = request.requestHeaders.headers;
     }
-    if (selected.requestPostData) {
-      data.body = selected.requestPostData.postData.text;
+    if (request.requestPostData) {
+      data.body = request.requestPostData.postData.text;
     }
 
     connector.sendHTTPRequest(data, (response) => {

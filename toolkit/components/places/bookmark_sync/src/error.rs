@@ -4,7 +4,10 @@
 
 use std::{error, fmt, result, string::FromUtf16Error};
 
-use nserror::{nsresult, NS_ERROR_INVALID_ARG, NS_ERROR_STORAGE_BUSY, NS_ERROR_UNEXPECTED};
+use nserror::{
+    nsresult, NS_ERROR_ABORT, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_ERROR_STORAGE_BUSY,
+    NS_ERROR_UNEXPECTED,
+};
 
 pub type Result<T> = result::Result<T, Error>;
 
@@ -58,9 +61,11 @@ impl From<FromUtf16Error> for Error {
 impl From<Error> for nsresult {
     fn from(error: Error) -> nsresult {
         match error {
-            Error::Dogear(_) | Error::InvalidLocalRoots | Error::InvalidRemoteRoots => {
-                NS_ERROR_UNEXPECTED
-            }
+            Error::Dogear(err) => match err.kind() {
+                dogear::ErrorKind::Abort => NS_ERROR_ABORT,
+                _ => NS_ERROR_FAILURE,
+            },
+            Error::InvalidLocalRoots | Error::InvalidRemoteRoots => NS_ERROR_UNEXPECTED,
             Error::Storage(err) => err.into(),
             Error::Nsresult(result) => result.clone(),
             Error::UnknownItemKind(_)

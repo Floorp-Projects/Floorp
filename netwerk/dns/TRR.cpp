@@ -240,7 +240,8 @@ nsresult TRR::SendHTTPRequest() {
       nullptr,  // PerformanceStorage
       nullptr,  // aLoadGroup
       this,
-      nsIRequest::LOAD_ANONYMOUS | (mPB ? nsIRequest::INHIBIT_CACHING : 0),
+      nsIRequest::LOAD_ANONYMOUS | (mPB ? nsIRequest::INHIBIT_CACHING : 0) |
+          nsIChannel::LOAD_BYPASS_URL_CLASSIFIER,
       ios);
   if (NS_FAILED(rv)) {
     LOG(("TRR:SendHTTPRequest: NewChannel failed!\n"));

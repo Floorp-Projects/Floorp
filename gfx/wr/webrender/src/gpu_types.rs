@@ -240,7 +240,7 @@ impl PrimitiveHeaders {
 
         self.headers_int.push(PrimitiveHeaderI {
             z,
-            task_address: prim_header.task_address,
+            unused: 0,
             specific_prim_address: prim_header.specific_prim_address.as_int(),
             transform_id: prim_header.transform_id,
             user_data,
@@ -257,7 +257,6 @@ pub struct PrimitiveHeader {
     pub local_rect: LayoutRect,
     pub local_clip_rect: LayoutRect,
     pub snap_offsets: SnapOffsets,
-    pub task_address: RenderTaskAddress,
     pub specific_prim_address: GpuCacheAddress,
     pub transform_id: TransformPaletteId,
 }
@@ -281,9 +280,9 @@ pub struct PrimitiveHeaderF {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimitiveHeaderI {
     pub z: ZBufferId,
-    pub task_address: RenderTaskAddress,
     pub specific_prim_address: i32,
     pub transform_id: TransformPaletteId,
+    pub unused: i32,                    // To ensure required 16 byte alignment of vertex textures
     pub user_data: [i32; 4],
 }
 
@@ -319,18 +318,21 @@ pub struct SplitCompositeInstance {
     pub prim_header_index: PrimitiveHeaderIndex,
     pub polygons_address: GpuCacheAddress,
     pub z: ZBufferId,
+    pub render_task_address: RenderTaskAddress,
 }
 
 impl SplitCompositeInstance {
     pub fn new(
         prim_header_index: PrimitiveHeaderIndex,
         polygons_address: GpuCacheAddress,
+        render_task_address: RenderTaskAddress,
         z: ZBufferId,
     ) -> Self {
         SplitCompositeInstance {
             prim_header_index,
             polygons_address,
             z,
+            render_task_address,
         }
     }
 }
@@ -342,7 +344,7 @@ impl From<SplitCompositeInstance> for PrimitiveInstanceData {
                 instance.prim_header_index.0,
                 instance.polygons_address.as_int(),
                 instance.z.0,
-                0,
+                instance.render_task_address.0 as i32,
             ],
         }
     }
@@ -375,6 +377,7 @@ bitflags! {
 #[repr(C)]
 pub struct BrushInstance {
     pub prim_header_index: PrimitiveHeaderIndex,
+    pub render_task_address: RenderTaskAddress,
     pub clip_task_address: RenderTaskAddress,
     pub segment_index: i32,
     pub edge_flags: EdgeAaSegmentMask,
@@ -387,6 +390,7 @@ impl From<BrushInstance> for PrimitiveInstanceData {
         PrimitiveInstanceData {
             data: [
                 instance.prim_header_index.0,
+                ((instance.render_task_address.0 as i32) << 16) |
                 instance.clip_task_address.0 as i32,
                 instance.segment_index |
                 ((instance.edge_flags.bits() as i32) << 16) |

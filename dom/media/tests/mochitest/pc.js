@@ -2176,10 +2176,9 @@ var setupIceServerConfig = useIceServer => {
 
 async function runNetworkTest(testFunction, fixtureOptions = {}) {
 
-  let version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].
-    getService(SpecialPowers.Ci.nsIXULAppInfo).version;
-  let isNightly = version.endsWith("a1");
-  let isAndroid = !!navigator.userAgent.includes("Android");
+  let {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+  let isNightly = AppConstants.NIGHTLY_BUILD;
+  let isAndroid = AppConstants.platform == "android";
 
   await scriptsReady;
   await runTestWhenReady(async options =>

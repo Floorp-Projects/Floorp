@@ -11,7 +11,7 @@
   <script class="testbody" type="application/javascript">
     var testPlugin = getTestPlugin("Test Plug-in");
 
-    var mimeDescriptions = testPlugin.getMimeDescriptions({});
+    var mimeDescriptions = testPlugin.getMimeDescriptions();
 
     is(mimeDescriptions[0], "Test \u2122 mimetype",
        "Plugin should handle non-ascii mime description");

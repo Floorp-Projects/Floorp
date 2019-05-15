@@ -2,9 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::fmt::Write;
+use std::{
+    fmt::Write,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
-use dogear::Guid;
+use dogear::{AbortSignal, Guid};
 use log::{Level, LevelFilter, Log, Metadata, Record};
 use moz_task::{Task, TaskRunnable, ThreadPtrHandle};
 use nserror::nsresult;
@@ -22,6 +25,33 @@ fn generate_guid() -> Result<nsCString, nsresult> {
         Ok(guid)
     } else {
         Err(rv)
+    }
+}
+
+/// An abort controller is used to abort merges running on the storage thread
+/// from the main thread. Its design is based on the DOM API of the same name.
+pub struct AbortController {
+    aborted: AtomicBool,
+}
+
+impl AbortController {
+    /// Signals the store to stop merging as soon as it can.
+    pub fn abort(&self) {
+        self.aborted.store(true, Ordering::Release)
+    }
+}
+
+impl Default for AbortController {
+    fn default() -> AbortController {
+        AbortController {
+            aborted: AtomicBool::new(false),
+        }
+    }
+}
+
+impl AbortSignal for AbortController {
+    fn aborted(&self) -> bool {
+        self.aborted.load(Ordering::Acquire)
     }
 }
 

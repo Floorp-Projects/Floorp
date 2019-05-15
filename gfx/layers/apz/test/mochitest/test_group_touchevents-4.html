@@ -9,14 +9,14 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-var basic_pan_prefs = getPrefs("TOUCH_EVENTS:PAN");
 var touch_action_prefs = getPrefs("TOUCH_ACTION");
 
 var subtests = [
   // clicking on element with :active::after CSS property
-  {"file": "helper_bug1473108.html", "prefs": [["dom.meta-viewport.enabled", true]]},
+  {"file": "helper_bug1473108.html"},
   // Resetting isFirstPaint shouldn't clobber the visual viewport
-  {"file": "helper_bug1509575.html", "prefs": basic_pan_prefs},
+  {"file": "helper_bug1509575.html", "prefs": [["dom.meta-viewport.enabled", true],
+                                               ...getPrefs("TOUCH_EVENTS:PAN")]},
   // Exercise one of the main-thread touch-action determination codepaths.
   {"file": "helper_bug1506497_touch_action_fixed_on_fixed.html", "prefs": touch_action_prefs},
   // Add new subtests here. If this starts timing out because it's taking too

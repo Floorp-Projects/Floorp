@@ -163,6 +163,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": False,
             "help": "Run Raptor in debug mode (open browser console, limited page-cycles, etc.)",
         }],
+        [["--disable-e10s"], {
+            "dest": "e10s",
+            "action": "store_false",
+            "default": True,
+            "help": "Run without multiple processes (e10s).",
+        }],
 
     ] + testing_config_options + copy.deepcopy(code_coverage_config_options)
 

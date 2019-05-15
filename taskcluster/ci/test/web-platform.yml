@@ -42,16 +42,14 @@ web-platform-tests:
         by-test-platform:
             android.*: 18
             linux.*/debug: 18
-            macosx64.*/opt: 8
-            macosx64/debug: 16
+            macosx*/opt: 8
+            macosx.*/debug: 16
             windows10.*/debug: 18
             windows10-aarch64/opt: 12
-            macosx64-ccov/debug: 24
             default: 12
     max-run-time:
         by-test-platform:
-            linux64-ccov/debug: 10800
-            windows10-64-ccov/debug: 10800
+            .*-ccov/debug: 10800
             default: 7200
     e10s:
         by-test-platform:
@@ -82,8 +80,8 @@ web-platform-tests-headless:
     treeherder-symbol: W(wptH)
     chunks:
         by-test-platform:
-            macosx64.*/opt: 8
-            macosx64/debug: 16
+            macosx.*/opt: 8
+            macosx.*/debug: 16
     e10s:
         by-test-platform:
             macosx.*: true
@@ -114,7 +112,7 @@ web-platform-tests-reftests:
             .*-ccov/debug: 8
             linux64(-qr|-asan)/.*: 6
             linux64(-shippable|-devedition)?/opt: 3
-            macosx64/debug: 6
+            macosx10(10|14)-64/debug: 6
             windows.*-(32|64)(-qr)?/debug: 5
             android.*: 6
             default: 4
@@ -169,8 +167,7 @@ web-platform-tests-wdspec:
     treeherder-symbol: W(Wd)
     chunks:
         by-test-platform:
-            linux64-ccov/debug: 4
-            windows10-64-ccov/debug: 4
+            .*-ccov/debug: 4
             default: 2
     mozharness:
         extra-options:
@@ -221,7 +218,7 @@ test-verify-wpt:
             .*-ccov/.*: []
             .*-asan/.*: []
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
     tier: 2

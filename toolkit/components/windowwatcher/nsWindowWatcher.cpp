@@ -1184,9 +1184,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       RefPtr<Storage> storage;
       nsCOMPtr<nsPIDOMWindowInner> pInnerWin =
           parentWindow->GetCurrentInnerWindow();
-      parentStorageManager->GetStorage(pInnerWin, subjectPrincipal,
-                                       isPrivateBrowsingWindow,
-                                       getter_AddRefs(storage));
+      parentStorageManager->GetStorage(
+          pInnerWin, subjectPrincipal, subjectPrincipal,
+          isPrivateBrowsingWindow, getter_AddRefs(storage));
       if (storage) {
         newStorageManager->CloneStorage(storage);
       }

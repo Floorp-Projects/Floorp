@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class LoginItem extends HTMLElement {
+/* globals ReflectedFluentElement */
+
+class LoginItem extends ReflectedFluentElement {
   constructor() {
     super();
     this._login = {};
@@ -18,8 +20,12 @@ class LoginItem extends HTMLElement {
     this.attachShadow({mode: "open"})
         .appendChild(loginItemTemplate.content.cloneNode(true));
 
+    this.reflectFluentStrings();
+
     for (let selector of [
       ".delete-button",
+      ".edit-button",
+      ".open-site-button",
       ".save-changes-button",
       ".cancel-button",
     ]) {
@@ -32,11 +38,14 @@ class LoginItem extends HTMLElement {
     this.render();
   }
 
-  static get observedAttributes() {
+  static get reflectedFluentIDs() {
     return [
       "cancel-button",
       "delete-button",
+      "edit-button",
       "hostname-label",
+      "modal-input-reveal-button",
+      "open-site-button",
       "password-label",
       "save-changes-button",
       "time-created",
@@ -46,17 +55,18 @@ class LoginItem extends HTMLElement {
     ];
   }
 
-  /* Fluent doesn't handle localizing into Shadow DOM yet so strings
-     need to get reflected in to their targeted element. */
-  attributeChangedCallback(attr, oldValue, newValue) {
-    if (!this.shadowRoot) {
-      return;
+  static get observedAttributes() {
+    return this.reflectedFluentIDs;
+  }
+
+  handleSpecialCaseFluentString(attrName) {
+    if (attrName != "modal-input-reveal-button") {
+      return false;
     }
 
-    // Strings that are reflected to their shadowed element are assigned
-    // to an attribute name that matches a className on the element.
-    let shadowedElement = this.shadowRoot.querySelector("." + attr);
-    shadowedElement.textContent = newValue;
+    this.shadowRoot.querySelector("modal-input[name='password']")
+                   .setAttribute("reveal-button", this.getAttribute(attrName));
+    return true;
   }
 
   render() {
@@ -67,10 +77,10 @@ class LoginItem extends HTMLElement {
     };
     document.l10n.setAttributes(this, "login-item", l10nArgs);
     let hostnameNoScheme = this._login.hostname && new URL(this._login.hostname).hostname;
-    this.shadowRoot.querySelector(".header").textContent = hostnameNoScheme || "";
+    this.shadowRoot.querySelector(".title").textContent = hostnameNoScheme || "";
     this.shadowRoot.querySelector(".hostname").textContent = this._login.hostname || "";
-    this.shadowRoot.querySelector("input[name='username']").value = this._login.username || "";
-    this.shadowRoot.querySelector("input[name='password']").value = this._login.password || "";
+    this.shadowRoot.querySelector("modal-input[name='username']").setAttribute("value", this._login.username || "");
+    this.shadowRoot.querySelector("modal-input[name='password']").setAttribute("value", this._login.password || "");
   }
 
   handleEvent(event) {
@@ -80,8 +90,24 @@ class LoginItem extends HTMLElement {
         break;
       }
       case "click": {
+        if (event.target.classList.contains("cancel-button")) {
+          this.toggleEditing();
+          this.render();
+          return;
+        }
         if (event.target.classList.contains("delete-button")) {
           document.dispatchEvent(new CustomEvent("AboutLoginsDeleteLogin", {
+            bubbles: true,
+            detail: this._login,
+          }));
+          return;
+        }
+        if (event.target.classList.contains("edit-button")) {
+          this.toggleEditing();
+          return;
+        }
+        if (event.target.classList.contains("open-site-button")) {
+          document.dispatchEvent(new CustomEvent("AboutLoginsOpenSite", {
             bubbles: true,
             detail: this._login,
           }));
@@ -91,11 +117,11 @@ class LoginItem extends HTMLElement {
           let loginUpdates = {
             guid: this._login.guid,
           };
-          let formUsername = this.shadowRoot.querySelector("input[name='username']").value.trim();
+          let formUsername = this.shadowRoot.querySelector("modal-input[name='username']").value.trim();
           if (formUsername != this._login.username) {
             loginUpdates.username = formUsername;
           }
-          let formPassword = this.shadowRoot.querySelector("input[name='password']").value.trim();
+          let formPassword = this.shadowRoot.querySelector("modal-input[name='password']").value.trim();
           if (formPassword != this._login.password) {
             loginUpdates.password = formPassword;
           }
@@ -103,10 +129,6 @@ class LoginItem extends HTMLElement {
             bubbles: true,
             detail: loginUpdates,
           }));
-          return;
-        }
-        if (event.target.classList.contains("cancel-button")) {
-          this.render();
         }
         break;
       }
@@ -124,6 +146,7 @@ class LoginItem extends HTMLElement {
     }
 
     this._login = login;
+    this.toggleEditing(false);
     this.render();
   }
 
@@ -133,6 +156,14 @@ class LoginItem extends HTMLElement {
     }
     this._login = {};
     this.render();
+  }
+
+  toggleEditing(force) {
+    let shouldEdit = force !== undefined ? force : !this.hasAttribute("editing");
+    this.shadowRoot.querySelector(".edit-button").disabled = shouldEdit;
+    this.shadowRoot.querySelectorAll("modal-input")
+                   .forEach(el => el.toggleAttribute("editing", shouldEdit));
+    this.toggleAttribute("editing", shouldEdit);
   }
 }
 customElements.define("login-item", LoginItem);

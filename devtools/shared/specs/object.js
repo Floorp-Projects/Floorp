@@ -102,6 +102,11 @@ types.addDictType("object.originalSourceLocation", {
   functionDisplayName: "string",
 });
 
+types.addDictType("object.proxySlots", {
+  proxyTarget: "object.descriptor",
+  proxyHandler: "object.descriptor",
+});
+
 const objectSpec = generateActorSpec({
   typeName: "obj",
 
@@ -197,6 +202,10 @@ const objectSpec = generateActorSpec({
       response: {
         rejectionStack: RetVal("array:object.originalSourceLocation"),
       },
+    },
+    proxySlots: {
+      request: {},
+      response: RetVal("object.proxySlots"),
     },
     release: { release: true },
     scope: {

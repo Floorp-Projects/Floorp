@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIURI.idl"
 
 [scriptable, uuid(6a568972-cc91-4bf5-963e-3768f3319b8a)]
 interface nsIEnterprisePolicies : nsISupports
@@ -48,4 +49,20 @@ interface nsIEnterprisePolicies : nsISupports
    * @returns A JS object that settings or null if unavailable.
    */
   jsval getExtensionSettings(in ACString extensionID);
+
+  /**
+   * Uses the whitelist, blacklist and settings to determine if an extension
+   * may be installed.
+   *
+   * @returns A boolean - true of the extension may be installed.
+   */
+  bool mayInstallAddon(in jsval addon);
+
+  /**
+   * Uses install_sources to determine if an extension can be installed
+   * from the given URI.
+   *
+   * @returns A boolean - true of the extension may be installed.
+   */
+  bool allowedInstallSource(in nsIURI uri);
 };

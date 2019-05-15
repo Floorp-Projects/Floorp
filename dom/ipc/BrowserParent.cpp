@@ -536,7 +536,7 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
 
   // Set our BrowsingContext's embedder if we're not embedded within a
   // BrowserBridgeParent.
-  if (!GetBrowserBridgeParent() && mBrowsingContext) {
+  if (!GetBrowserBridgeParent() && mBrowsingContext && mFrameElement) {
     mBrowsingContext->SetEmbedderElement(mFrameElement);
   }
 
@@ -3742,6 +3742,12 @@ BrowserParent::StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId) {
     }
   }
   return NS_OK;
+}
+
+void BrowserParent::SkipBrowsingContextDetach() {
+  RefPtr<nsFrameLoader> fl = GetFrameLoader();
+  MOZ_ASSERT(fl);
+  fl->SkipBrowsingContextDetach();
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvLookUpDictionary(

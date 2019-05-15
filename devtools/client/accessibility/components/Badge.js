@@ -12,19 +12,22 @@ class Badge extends Component {
   static get propTypes() {
     return {
       label: PropTypes.string.isRequired,
+      ariaLabel: PropTypes.string,
       tooltip: PropTypes.string,
     };
   }
 
   render() {
-    const { label, tooltip } = this.props;
+    const { label, ariaLabel, tooltip } = this.props;
 
-    return span({
-      className: "audit-badge badge",
-      title: tooltip,
-      "aria-label": label,
-    },
-      label);
+    return span(
+      {
+        className: "audit-badge badge",
+        title: tooltip,
+        "aria-label": ariaLabel || label,
+      },
+      label
+    );
   }
 }
 
