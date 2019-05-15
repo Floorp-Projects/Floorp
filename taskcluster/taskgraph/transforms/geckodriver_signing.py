@@ -95,7 +95,7 @@ def _craft_upstream_artifacts(dependency_kind, build_platform):
         signing_format = 'sha2signcode'
         extension = 'zip'
     elif build_platform.startswith('linux'):
-        signing_format = 'gpg'
+        signing_format = 'autograph_gpg'
         extension = 'tar.gz'
     else:
         raise ValueError('Unsupported build platform "{}"'.format(build_platform))
