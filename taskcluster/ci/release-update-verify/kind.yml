@@ -38,15 +38,6 @@ jobs:
     firefox-linux64:
         description: linux64 update verify
         shipping-product: firefox
-        worker:
-            env:
-                CHANNEL:
-                    by-release-type:
-                        beta: "beta-localtest"
-                        release(-rc)?: "release-localtest"
-                        esr60: "esr-localtest"
-                        nightly: "nightly"
-                        default: "default"
         treeherder:
             symbol: UV(UV)
             platform: linux64/opt
@@ -58,15 +49,6 @@ jobs:
     firefox-linux:
         description: linux update verify
         shipping-product: firefox
-        worker:
-            env:
-                CHANNEL:
-                    by-release-type:
-                        beta: "beta-localtest"
-                        release(-rc)?: "release-localtest"
-                        esr60: "esr-localtest"
-                        nightly: "nightly"
-                        default: "default"
         treeherder:
             symbol: UV(UV)
             platform: linux32/opt
@@ -78,15 +60,6 @@ jobs:
     firefox-win64:
         description: win64 update verify
         shipping-product: firefox
-        worker:
-            env:
-                CHANNEL:
-                    by-release-type:
-                        beta: "beta-localtest"
-                        release(-rc)?: "release-localtest"
-                        esr60: "esr-localtest"
-                        nightly: "nightly"
-                        default: "default"
         treeherder:
             symbol: UV(UV)
             platform: windows2012-64/opt
@@ -98,15 +71,6 @@ jobs:
     firefox-win64-aarch64:
         description: win64-aarch64 update verify
         shipping-product: firefox
-        worker:
-            env:
-                CHANNEL:
-                    by-release-type:
-                        beta: "beta-localtest"
-                        release(-rc)?: "release-localtest"
-                        esr60: "esr-localtest"
-                        nightly: "nightly"
-                        default: "default"
         treeherder:
             symbol: UV(UV)
             platform: windows2012-aarch64/opt
@@ -118,15 +82,6 @@ jobs:
     firefox-win32:
         description: win32 update verify
         shipping-product: firefox
-        worker:
-            env:
-                CHANNEL:
-                    by-release-type:
-                        beta: "beta-localtest"
-                        release(-rc)?: "release-localtest"
-                        esr60: "esr-localtest"
-                        nightly: "nightly"
-                        default: "default"
         treeherder:
             symbol: UV(UV)
             platform: windows2012-32/opt
@@ -138,15 +93,6 @@ jobs:
     firefox-macosx64:
         description: macosx64 update verify
         shipping-product: firefox
-        worker:
-            env:
-                CHANNEL:
-                    by-release-type:
-                        beta: "beta-localtest"
-                        release(-rc)?: "release-localtest"
-                        esr60: "esr-localtest"
-                        nightly: "nightly"
-                        default: "default"
         treeherder:
             symbol: UV(UV)
             platform: osx-cross/opt
@@ -158,9 +104,6 @@ jobs:
     devedition-linux64:
         description: linux64 update verify
         shipping-product: devedition
-        worker:
-            env:
-                CHANNEL: "aurora-localtest"
         treeherder:
             symbol: UV(UV)
             platform: linux64-devedition/opt
@@ -172,9 +115,6 @@ jobs:
     devedition-linux:
         description: linux update verify
         shipping-product: devedition
-        worker:
-            env:
-                CHANNEL: "aurora-localtest"
         treeherder:
             symbol: UV(UV)
             platform: linux32-devedition/opt
@@ -186,9 +126,6 @@ jobs:
     devedition-win64:
         description: win64 update verify
         shipping-product: devedition
-        worker:
-            env:
-                CHANNEL: "aurora-localtest"
         treeherder:
             symbol: UV(UV)
             platform: windows2012-64-devedition/opt
@@ -200,9 +137,6 @@ jobs:
     devedition-win64-aarch64:
         description: win64-aarch64 update verify
         shipping-product: devedition
-        worker:
-            env:
-                CHANNEL: "aurora-localtest"
         treeherder:
             symbol: UV(UV)
             platform: windows2012-aarch64-devedition/opt
@@ -214,9 +148,6 @@ jobs:
     devedition-win32:
         description: win32 update verify
         shipping-product: devedition
-        worker:
-            env:
-                CHANNEL: "aurora-localtest"
         treeherder:
             symbol: UV(UV)
             platform: windows2012-32-devedition/opt
@@ -228,9 +159,6 @@ jobs:
     devedition-macosx64:
         description: macosx64 update verify
         shipping-product: devedition
-        worker:
-            env:
-                CHANNEL: "aurora-localtest"
         treeherder:
             symbol: UV(UV)
             platform: osx-cross-devedition/opt
