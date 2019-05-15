@@ -16,7 +16,7 @@ class LSDatabase;
 class LSNotifyInfo;
 class LSSnapshotChild;
 class LSSnapshotInitInfo;
-class LSWriteInfo;
+class LSWriteAndNotifyInfo;
 
 class LSSnapshot final : public nsIRunnable {
  public:
@@ -79,7 +79,7 @@ class LSSnapshot final : public nsIRunnable {
   nsTHashtable<nsStringHashKey> mLoadedItems;
   nsTHashtable<nsStringHashKey> mUnknownItems;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
-  nsTArray<LSWriteInfo> mWriteInfos;
+  nsTArray<LSWriteAndNotifyInfo> mWriteAndNotifyInfos;
 
   uint32_t mInitLength;
   uint32_t mLength;

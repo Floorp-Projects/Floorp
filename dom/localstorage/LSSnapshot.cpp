@@ -241,12 +241,12 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
       mLength++;
     }
 
-    LSSetItemInfo setItemInfo;
-    setItemInfo.key() = aKey;
-    setItemInfo.oldValue() = LSValue(oldValue);
-    setItemInfo.value() = LSValue(aValue);
+    LSSetItemAndNotifyInfo setItemAndNotifyInfo;
+    setItemAndNotifyInfo.key() = aKey;
+    setItemAndNotifyInfo.oldValue() = LSValue(oldValue);
+    setItemAndNotifyInfo.value() = LSValue(aValue);
 
-    mWriteInfos.AppendElement(std::move(setItemInfo));
+    mWriteAndNotifyInfos.AppendElement(std::move(setItemAndNotifyInfo));
   }
 
   aNotifyInfo.changed() = changed;
@@ -287,11 +287,11 @@ nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
       mLength--;
     }
 
-    LSRemoveItemInfo removeItemInfo;
-    removeItemInfo.key() = aKey;
-    removeItemInfo.oldValue() = LSValue(oldValue);
+    LSRemoveItemAndNotifyInfo removeItemAndNotifyInfo;
+    removeItemAndNotifyInfo.key() = aKey;
+    removeItemAndNotifyInfo.oldValue() = LSValue(oldValue);
 
-    mWriteInfos.AppendElement(std::move(removeItemInfo));
+    mWriteAndNotifyInfos.AppendElement(std::move(removeItemAndNotifyInfo));
   }
 
   aNotifyInfo.changed() = changed;
@@ -336,7 +336,7 @@ nsresult LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo) {
 
     LSClearInfo clearInfo;
 
-    mWriteInfos.AppendElement(std::move(clearInfo));
+    mWriteAndNotifyInfos.AppendElement(std::move(clearInfo));
   }
 
   aNotifyInfo.changed() = changed;
@@ -593,19 +593,22 @@ nsresult LSSnapshot::EnsureAllKeys() {
     newValues.Put(key, VoidString());
   }
 
-  for (uint32_t index = 0; index < mWriteInfos.Length(); index++) {
-    const LSWriteInfo& writeInfo = mWriteInfos[index];
+  for (uint32_t index = 0; index < mWriteAndNotifyInfos.Length(); index++) {
+    const LSWriteAndNotifyInfo& writeAndNotifyInfo =
+        mWriteAndNotifyInfos[index];
 
-    switch (writeInfo.type()) {
-      case LSWriteInfo::TLSSetItemInfo: {
-        newValues.Put(writeInfo.get_LSSetItemInfo().key(), VoidString());
+    switch (writeAndNotifyInfo.type()) {
+      case LSWriteAndNotifyInfo::TLSSetItemAndNotifyInfo: {
+        newValues.Put(writeAndNotifyInfo.get_LSSetItemAndNotifyInfo().key(),
+                      VoidString());
         break;
       }
-      case LSWriteInfo::TLSRemoveItemInfo: {
-        newValues.Remove(writeInfo.get_LSRemoveItemInfo().key());
+      case LSWriteAndNotifyInfo::TLSRemoveItemAndNotifyInfo: {
+        newValues.Remove(
+            writeAndNotifyInfo.get_LSRemoveItemAndNotifyInfo().key());
         break;
       }
-      case LSWriteInfo::TLSClearInfo: {
+      case LSWriteAndNotifyInfo::TLSClearInfo: {
         newValues.Clear();
         break;
       }
@@ -679,10 +682,10 @@ nsresult LSSnapshot::Checkpoint() {
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
-  if (!mWriteInfos.IsEmpty()) {
-    MOZ_ALWAYS_TRUE(mActor->SendCheckpoint(mWriteInfos));
+  if (!mWriteAndNotifyInfos.IsEmpty()) {
+    MOZ_ALWAYS_TRUE(mActor->SendCheckpointAndNotify(mWriteAndNotifyInfos));
 
-    mWriteInfos.Clear();
+    mWriteAndNotifyInfos.Clear();
   }
 
   return NS_OK;

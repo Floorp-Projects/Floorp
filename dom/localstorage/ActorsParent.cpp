@@ -1750,14 +1750,12 @@ class Datastore final
    * Used by Snapshot::RecvCheckpoint to set a key/value pair as part of a an
    * explicit batch.
    */
-  void SetItem(Database* aDatabase, const nsString& aDocumentURI,
-               const nsString& aKey, const LSValue& aOldValue,
+  void SetItem(Database* aDatabase, const nsString& aKey,
                const LSValue& aValue);
 
-  void RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
-                  const nsString& aKey, const LSValue& aOldValue);
+  void RemoveItem(Database* aDatabase, const nsString& aKey);
 
-  void Clear(Database* aDatabase, const nsString& aDocumentURI);
+  void Clear(Database* aDatabase);
 
   void PrivateBrowsingClear();
 
@@ -1766,6 +1764,10 @@ class Datastore final
   int64_t EndUpdateBatch(int64_t aSnapshotPeakUsage);
 
   int64_t RequestUpdateUsage(int64_t aRequestedSize, int64_t aMinSize);
+
+  void NotifyObservers(Database* aDatabase, const nsString& aDocumentURI,
+                       const nsString& aKey, const LSValue& aOldValue,
+                       const LSValue& aNewValue);
 
   NS_INLINE_DECL_REFCOUNTING(Datastore)
 
@@ -1785,10 +1787,6 @@ class Datastore final
                        const LSValue& aOldValue, bool aAffectsOrder);
 
   void MarkSnapshotsDirty();
-
-  void NotifyObservers(Database* aDatabase, const nsString& aDocumentURI,
-                       const nsString& aKey, const LSValue& aOldValue,
-                       const LSValue& aNewValue);
 };
 
 class PreparedDatastore {
@@ -2123,8 +2121,8 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
-  mozilla::ipc::IPCResult RecvCheckpoint(
-      nsTArray<LSWriteInfo>&& aWriteInfos) override;
+  mozilla::ipc::IPCResult RecvCheckpointAndNotify(
+      nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) override;
 
   mozilla::ipc::IPCResult RecvFinish() override;
 
@@ -5157,8 +5155,7 @@ void Datastore::GetKeys(nsTArray<nsString>& aKeys) const {
   }
 }
 
-void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
-                        const nsString& aKey, const LSValue& aOldValue,
+void Datastore::SetItem(Database* aDatabase, const nsString& aKey,
                         const LSValue& aValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
@@ -5204,12 +5201,9 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
       mConnection->SetItem(aKey, aValue, delta, isNewItem);
     }
   }
-
-  NotifyObservers(aDatabase, aDocumentURI, aKey, aOldValue, aValue);
 }
 
-void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
-                           const nsString& aKey, const LSValue& aOldValue) {
+void Datastore::RemoveItem(Database* aDatabase, const nsString& aKey) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
@@ -5238,11 +5232,9 @@ void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
       mConnection->RemoveItem(aKey, delta);
     }
   }
-
-  NotifyObservers(aDatabase, aDocumentURI, aKey, aOldValue, VoidLSValue());
 }
 
-void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
+void Datastore::Clear(Database* aDatabase) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
@@ -5273,9 +5265,6 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
       mConnection->Clear(delta);
     }
   }
-
-  NotifyObservers(aDatabase, aDocumentURI, VoidString(), VoidLSValue(),
-                  VoidLSValue());
 }
 
 void Datastore::PrivateBrowsingClear() {
@@ -5376,6 +5365,35 @@ int64_t Datastore::RequestUpdateUsage(int64_t aRequestedSize,
   return 0;
 }
 
+void Datastore::NotifyObservers(Database* aDatabase,
+                                const nsString& aDocumentURI,
+                                const nsString& aKey, const LSValue& aOldValue,
+                                const LSValue& aNewValue) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
+
+  if (!gObservers) {
+    return;
+  }
+
+  nsTArray<Observer*>* array;
+  if (!gObservers->Get(mOrigin, &array)) {
+    return;
+  }
+
+  MOZ_ASSERT(array);
+
+  // We do not want to send information about events back to the content process
+  // that caused the change.
+  PBackgroundParent* databaseBackgroundActor = aDatabase->Manager();
+
+  for (Observer* observer : *array) {
+    if (observer->Manager() != databaseBackgroundActor) {
+      observer->Observe(aDatabase, aDocumentURI, aKey, aOldValue, aNewValue);
+    }
+  }
+}
+
 bool Datastore::UpdateUsage(int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
@@ -5474,35 +5492,6 @@ void Datastore::MarkSnapshotsDirty() {
     Snapshot* snapshot = database->GetSnapshot();
     if (snapshot) {
       snapshot->MarkDirty();
-    }
-  }
-}
-
-void Datastore::NotifyObservers(Database* aDatabase,
-                                const nsString& aDocumentURI,
-                                const nsString& aKey, const LSValue& aOldValue,
-                                const LSValue& aNewValue) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aDatabase);
-
-  if (!gObservers) {
-    return;
-  }
-
-  nsTArray<Observer*>* array;
-  if (!gObservers->Get(mOrigin, &array)) {
-    return;
-  }
-
-  MOZ_ASSERT(array);
-
-  // We do not want to send information about events back to the content process
-  // that caused the change.
-  PBackgroundParent* databaseBackgroundActor = aDatabase->Manager();
-
-  for (Observer* observer : *array) {
-    if (observer->Manager() != databaseBackgroundActor) {
-      observer->Observe(aDatabase, aDocumentURI, aKey, aOldValue, aNewValue);
     }
   }
 }
@@ -5862,42 +5851,53 @@ mozilla::ipc::IPCResult Snapshot::RecvDeleteMe() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult Snapshot::RecvCheckpoint(
-    nsTArray<LSWriteInfo>&& aWriteInfos) {
+mozilla::ipc::IPCResult Snapshot::RecvCheckpointAndNotify(
+    nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mUsage >= 0);
   MOZ_ASSERT(mPeakUsage >= mUsage);
 
-  if (NS_WARN_IF(aWriteInfos.IsEmpty())) {
+  if (NS_WARN_IF(aWriteAndNotifyInfos.IsEmpty())) {
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
   mDatastore->BeginUpdateBatch(mUsage);
 
-  for (uint32_t index = 0; index < aWriteInfos.Length(); index++) {
-    const LSWriteInfo& writeInfo = aWriteInfos[index];
-    switch (writeInfo.type()) {
-      case LSWriteInfo::TLSSetItemInfo: {
-        const LSSetItemInfo& info = writeInfo.get_LSSetItemInfo();
+  for (uint32_t index = 0; index < aWriteAndNotifyInfos.Length(); index++) {
+    const LSWriteAndNotifyInfo& writeAndNotifyInfo =
+        aWriteAndNotifyInfos[index];
 
-        mDatastore->SetItem(mDatabase, mDocumentURI, info.key(),
-                            info.oldValue(), info.value());
+    switch (writeAndNotifyInfo.type()) {
+      case LSWriteAndNotifyInfo::TLSSetItemAndNotifyInfo: {
+        const LSSetItemAndNotifyInfo& info =
+            writeAndNotifyInfo.get_LSSetItemAndNotifyInfo();
 
-        break;
-      }
+        mDatastore->SetItem(mDatabase, info.key(), info.value());
 
-      case LSWriteInfo::TLSRemoveItemInfo: {
-        const LSRemoveItemInfo& info = writeInfo.get_LSRemoveItemInfo();
-
-        mDatastore->RemoveItem(mDatabase, mDocumentURI, info.key(),
-                               info.oldValue());
+        mDatastore->NotifyObservers(mDatabase, mDocumentURI, info.key(),
+                                    info.oldValue(), info.value());
 
         break;
       }
 
-      case LSWriteInfo::TLSClearInfo: {
-        mDatastore->Clear(mDatabase, mDocumentURI);
+      case LSWriteAndNotifyInfo::TLSRemoveItemAndNotifyInfo: {
+        const LSRemoveItemAndNotifyInfo& info =
+            writeAndNotifyInfo.get_LSRemoveItemAndNotifyInfo();
+
+        mDatastore->RemoveItem(mDatabase, info.key());
+
+        mDatastore->NotifyObservers(mDatabase, mDocumentURI, info.key(),
+                                    info.oldValue(), VoidLSValue());
+
+        break;
+      }
+
+      case LSWriteAndNotifyInfo::TLSClearInfo: {
+        mDatastore->Clear(mDatabase);
+
+        mDatastore->NotifyObservers(mDatabase, mDocumentURI, VoidString(),
+                                    VoidLSValue(), VoidLSValue());
 
         break;
       }
