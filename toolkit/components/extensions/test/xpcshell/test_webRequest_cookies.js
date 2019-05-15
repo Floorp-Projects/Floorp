@@ -2,8 +2,22 @@
 
 var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm");
 
-const BASE = "http://example.com/browser/toolkit/modules/tests/browser";
-const URL = BASE + "/WebRequest_dynamic.sjs";
+const server = createHttpServer({hosts: ["example.com"]});
+server.registerPathHandler("/", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  if (request.hasHeader("Cookie")) {
+    let value = request.getHeader("Cookie");
+    if (value == "blinky=1") {
+      response.setHeader("Set-Cookie", "dinky=1", false);
+    }
+    response.write("cookie-present");
+  } else {
+    response.setHeader("Set-Cookie", "foopy=1", false);
+    response.write("cookie-not-present");
+  }
+});
+
+const URL = "http://example.com/";
 
 var countBefore = 0;
 var countAfter = 0;
@@ -21,7 +35,7 @@ function onBeforeSendHeaders(details) {
   for (let {name, value} of details.requestHeaders) {
     info(`Saw header ${name} '${value}'`);
     if (name == "Cookie") {
-      is(value, "foopy=1", "Cookie is correct");
+      equal(value, "foopy=1", "Cookie is correct");
       headers.push({name, value: "blinky=1"});
       found = true;
     } else {
@@ -29,6 +43,7 @@ function onBeforeSendHeaders(details) {
     }
   }
   ok(found, "Saw cookie header");
+  equal(countBefore, 1, "onBeforeSendHeaders hit once");
 
   return {requestHeaders: headers};
 }
@@ -44,37 +59,27 @@ function onResponseStarted(details) {
   let found = false;
   for (let {name, value} of details.responseHeaders) {
     info(`Saw header ${name} '${value}'`);
-    if (name == "Set-Cookie") {
-      is(value, "dinky=1", "Cookie is correct");
+    if (name == "set-cookie") {
+      equal(value, "dinky=1", "Cookie is correct");
       found = true;
     }
   }
   ok(found, "Saw cookie header");
+  equal(countAfter, 1, "onResponseStarted hit once");
 }
 
 add_task(async function filter_urls() {
   // First load the URL so that we set cookie foopy=1.
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
-  await waitForLoad();
-  gBrowser.removeCurrentTab();
+  let contentPage = await ExtensionTestUtils.loadContentPage(URL);
+  await contentPage.close();
 
   // Now load with WebRequest set up.
-  WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, null, ["blocking"]);
-  WebRequest.onResponseStarted.addListener(onResponseStarted, null);
+  WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, null, ["blocking", "requestHeaders"]);
+  WebRequest.onResponseStarted.addListener(onResponseStarted, null, ["responseHeaders"]);
 
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
-
-  await waitForLoad();
-
-  gBrowser.removeCurrentTab();
+  contentPage = await ExtensionTestUtils.loadContentPage(URL);
+  await contentPage.close();
 
   WebRequest.onBeforeSendHeaders.removeListener(onBeforeSendHeaders);
   WebRequest.onResponseStarted.removeListener(onResponseStarted);
-
-  is(countBefore, 1, "onBeforeSendHeaders hit once");
-  is(countAfter, 1, "onResponseStarted hit once");
 });
-
-function waitForLoad(browser = gBrowser.selectedBrowser) {
-  return BrowserTestUtils.browserLoaded(browser);
-}
