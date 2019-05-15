@@ -180,7 +180,10 @@ var security = {
    * Open the login manager window
    */
   viewPasswords() {
-    LoginHelper.openPasswordManager(window, this._getSecurityInfo().hostName);
+    LoginHelper.openPasswordManager(window, {
+      filterString: this._getSecurityInfo().hostName,
+      entryPoint: "pageinfo",
+    });
   },
 
   _cert: null,
