@@ -32,6 +32,8 @@ ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "RemoteSettings",
                                "resource://services-settings/remote-settings.js");
+ChromeUtils.defineModuleGetter(this, "jexlFilterFunc",
+                               "resource://services-settings/remote-settings.js");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
                                "resource://gre/modules/ServiceRequest.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",
@@ -276,6 +278,75 @@ const Utils = {
 };
 
 /**
+ * This custom filter function is used to limit the entries returned
+ * by `RemoteSettings("...").get()` depending on the target app information
+ * defined on entries.
+ *
+ * Note that this is async because `jexlFilterFunc` is async.
+ *
+ * @param {Object} entry a Remote Settings record
+ * @param {Object} environment the JEXL environment object.
+ * @returns {Object} The entry if it matches, `null` otherwise.
+ */
+async function targetAppFilter(entry, environment) {
+  // If the entry has a JEXL filter expression, it should prevail.
+  // The legacy target app mechanism will be kept in place for old entries.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1463377
+  const { filter_expression } = entry;
+  if (filter_expression) {
+    return jexlFilterFunc(entry, environment);
+  }
+
+  // Keep entries without target information.
+  if (!("versionRange" in entry)) {
+    return entry;
+  }
+
+  const { appID, version: appVersion, toolkitVersion } = environment;
+  const { versionRange } = entry;
+
+  // Everywhere in this method, we avoid checking the minVersion, because
+  // we want to retain items whose minVersion is higher than the current
+  // app version, so that we have the items around for app updates.
+
+  // Gfx blocklist has a specific versionRange object, which is not a list.
+  if (!Array.isArray(versionRange)) {
+    const { maxVersion = "*" } = versionRange;
+    const matchesRange = (Services.vc.compare(appVersion, maxVersion) <= 0);
+    return matchesRange ? entry : null;
+  }
+
+  // Iterate the targeted applications, at least one of them must match.
+  // If no target application, keep the entry.
+  if (versionRange.length == 0) {
+    return entry;
+  }
+  for (const vr of versionRange) {
+    const { targetApplication = [] } = vr;
+    if (targetApplication.length == 0) {
+      return entry;
+    }
+    for (const ta of targetApplication) {
+      const { guid } = ta;
+      if (!guid) {
+        return entry;
+      }
+      const { maxVersion = "*" } = ta;
+      if (guid == appID &&
+        Services.vc.compare(appVersion, maxVersion) <= 0) {
+        return entry;
+      }
+      if (guid == "toolkit@mozilla.org" &&
+        Services.vc.compare(toolkitVersion, maxVersion) <= 0) {
+        return entry;
+      }
+    }
+  }
+  // Skip this entry.
+  return null;
+}
+
+/**
  * The Graphics blocklist implementation. The JSON objects for graphics blocks look
  * something like:
  *
@@ -310,7 +381,7 @@ this.GfxBlocklistRS = {
       bucketNamePref: PREF_BLOCKLIST_BUCKET,
       lastCheckTimePref: PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
       signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_SIGNER),
-      filterFunc: BlocklistClients.targetAppFilter,
+      filterFunc: targetAppFilter,
     });
     this.checkForEntries = this.checkForEntries.bind(this);
     this._client.on("sync", this.checkForEntries);
@@ -485,7 +556,7 @@ this.PluginBlocklistRS = {
   },
 
   async _filterItem(entry) {
-    if (!(await BlocklistClients.targetAppFilter(entry, {appID: gAppID, version: gApp.version}))) {
+    if (!(await targetAppFilter(entry, {appID: gAppID, version: gApp.version}))) {
       return null;
     }
     if (!Utils.matchesOSABI(entry)) {
@@ -860,7 +931,7 @@ this.ExtensionBlocklistRS = {
   },
 
   async _filterItem(entry) {
-    if (!(await BlocklistClients.targetAppFilter(entry, {appID: gAppID, version: gApp.version}))) {
+    if (!(await targetAppFilter(entry, {appID: gAppID, version: gApp.version}))) {
       return null;
     }
     if (!Utils.matchesOSABI(entry)) {
