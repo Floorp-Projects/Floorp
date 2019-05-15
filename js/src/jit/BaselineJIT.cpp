@@ -1158,6 +1158,33 @@ void BaselineInterpreter::toggleDebuggerInstrumentation(bool enable) {
   }
 }
 
+void BaselineInterpreter::toggleCodeCoverageInstrumentationUnchecked(
+    bool enable) {
+  if (!JitOptions.baselineInterpreter) {
+    return;
+  }
+
+  AutoWritableJitCode awjc(code_);
+
+  for (uint32_t offset : codeCoverageOffsets_) {
+    CodeLocationLabel label(code_, CodeOffset(offset));
+    if (enable) {
+      Assembler::ToggleToCmp(label);
+    } else {
+      Assembler::ToggleToJmp(label);
+    }
+  }
+}
+
+void BaselineInterpreter::toggleCodeCoverageInstrumentation(bool enable) {
+  if (coverage::IsLCovEnabled()) {
+    // Instrumentation is enabled no matter what.
+    return;
+  }
+
+  toggleCodeCoverageInstrumentationUnchecked(enable);
+}
+
 void ICScript::purgeOptimizedStubs(JSScript* script) {
   MOZ_ASSERT(script->icScript() == this);
 
@@ -1426,13 +1453,15 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
                                uint32_t debuggeeCheckOffset,
-                               DebugTrapOffsets&& debugTrapOffsets) {
+                               CodeOffsetVector&& debugTrapOffsets,
+                               CodeOffsetVector&& codeCoverageOffsets) {
   code_ = code;
   interpretOpOffset_ = interpretOpOffset;
   profilerEnterToggleOffset_ = profilerEnterToggleOffset;
   profilerExitToggleOffset_ = profilerExitToggleOffset;
   debuggeeCheckOffset_ = debuggeeCheckOffset;
   debugTrapOffsets_ = std::move(debugTrapOffsets);
+  codeCoverageOffsets_ = std::move(codeCoverageOffsets);
 }
 
 bool jit::GenerateBaselineInterpreter(JSContext* cx,

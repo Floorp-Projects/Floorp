@@ -497,6 +497,8 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitTraceLoggerEnter();
   MOZ_MUST_USE bool emitTraceLoggerExit();
 
+  MOZ_MUST_USE bool emitHandleCodeCoverageAtPrologue();
+
   void emitInitFrameFields();
   void emitIsDebuggeeCheck();
   void emitInitializeLocals();
@@ -656,6 +658,12 @@ class BaselineInterpreterHandler {
   Label interpretOp_;
   CodeOffset debuggeeCheckOffset_;
 
+  // Offsets of toggled jumps for code coverage instrumentation.
+  using CodeOffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
+  CodeOffsetVector codeCoverageOffsets_;
+  Label codeCoverageAtPrologueLabel_;
+  Label codeCoverageAtPCLabel_;
+
  public:
   using FrameInfoT = InterpreterFrameInfo;
 
@@ -664,6 +672,10 @@ class BaselineInterpreterHandler {
   InterpreterFrameInfo& frame() { return frame_; }
 
   Label* interpretOpLabel() { return &interpretOp_; }
+  Label* codeCoverageAtPrologueLabel() { return &codeCoverageAtPrologueLabel_; }
+  Label* codeCoverageAtPCLabel() { return &codeCoverageAtPCLabel_; }
+
+  CodeOffsetVector& codeCoverageOffsets() { return codeCoverageOffsets_; }
 
   // Interpreter doesn't know the script and pc statically.
   jsbytecode* maybePC() const { return nullptr; }
@@ -716,6 +728,8 @@ class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
  private:
   MOZ_MUST_USE bool emitInterpreterLoop();
   MOZ_MUST_USE bool emitDebugTrap();
+
+  void emitOutOfLineCodeCoverageInstrumentation();
 };
 
 }  // namespace jit

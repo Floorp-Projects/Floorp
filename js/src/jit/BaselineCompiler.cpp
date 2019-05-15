@@ -796,6 +796,38 @@ void BaselineInterpreterCodeGen::emitIsDebuggeeCheck() {
   handler.setDebuggeeCheckOffset(toggleOffset);
 }
 
+static void MaybeIncrementCodeCoverageCounter(MacroAssembler& masm,
+                                              JSScript* script,
+                                              jsbytecode* pc) {
+  if (!script->hasScriptCounts()) {
+    return;
+  }
+  PCCounts* counts = script->maybeGetPCCounts(pc);
+  uint64_t* counterAddr = &counts->numExec();
+  masm.inc64(AbsoluteAddress(counterAddr));
+}
+
+template <>
+bool BaselineCompilerCodeGen::emitHandleCodeCoverageAtPrologue() {
+  // If the main instruction is not a jump target, then we emit the
+  // corresponding code coverage counter.
+  JSScript* script = handler.script();
+  jsbytecode* main = script->main();
+  if (!BytecodeIsJumpTarget(JSOp(*main))) {
+    MaybeIncrementCodeCoverageCounter(masm, script, main);
+  }
+  return true;
+}
+
+template <>
+bool BaselineInterpreterCodeGen::emitHandleCodeCoverageAtPrologue() {
+  Label skipCoverage;
+  CodeOffset toggleOffset = masm.toggledJump(&skipCoverage);
+  masm.call(handler.codeCoverageAtPrologueLabel());
+  masm.bind(&skipCoverage);
+  return handler.codeCoverageOffsets().append(toggleOffset.offset());
+}
+
 template <>
 void BaselineCompilerCodeGen::subtractScriptSlotsSize(Register reg,
                                                       Register scratch) {
@@ -6110,13 +6142,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_IS_CONSTRUCTING() {
 
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_JUMPTARGET() {
-  JSScript* script = handler.script();
-  if (!script->hasScriptCounts()) {
-    return true;
-  }
-  PCCounts* counts = script->maybeGetPCCounts(handler.pc());
-  uint64_t* counterAddr = &counts->numExec();
-  masm.inc64(AbsoluteAddress(counterAddr));
+  MaybeIncrementCodeCoverageCounter(masm, handler.script(), handler.pc());
   return true;
 }
 
@@ -6124,6 +6150,14 @@ template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_JUMPTARGET() {
   Register scratch1 = R0.scratchReg();
   Register scratch2 = R1.scratchReg();
+
+  Label skipCoverage;
+  CodeOffset toggleOffset = masm.toggledJump(&skipCoverage);
+  masm.call(handler.codeCoverageAtPCLabel());
+  masm.bind(&skipCoverage);
+  if (!handler.codeCoverageOffsets().append(toggleOffset.offset())) {
+    return false;
+  }
 
   // Load icIndex in scratch1.
   LoadInt32Operand(masm, PCRegAtStart, scratch1);
@@ -6466,6 +6500,10 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
     return false;
   }
 
+  if (!emitHandleCodeCoverageAtPrologue()) {
+    return false;
+  }
+
   if (!emitWarmUpCounterIncrement()) {
     return false;
   }
@@ -6584,14 +6622,6 @@ MethodStatus BaselineCompiler::emitBody() {
     }
 
     MOZ_ASSERT(masm.framePushed() == 0);
-
-    // If the main instruction is not a jump target, then we emit the
-    // corresponding code coverage counter.
-    if (handler.pc() == script->main() && !BytecodeIsJumpTarget(op)) {
-      if (!emit_JSOP_JUMPTARGET()) {
-        return Method_Error;
-      }
-    }
 
     // Test if last instructions and stop emitting in that case.
     handler.moveToNextPC();
@@ -6738,6 +6768,40 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
   return true;
 }
 
+void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
+  masm.bind(handler.codeCoverageAtPrologueLabel());
+#ifdef JS_USE_LINK_REGISTER
+  masm.pushReturnAddress();
+#endif
+
+  masm.Push(BaselineFrameReg);
+  masm.setupUnalignedABICall(R0.scratchReg());
+  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.passABIArg(R0.scratchReg());
+  masm.callWithABI(
+      JS_FUNC_TO_DATA_PTR(void*, jit::HandleCodeCoverageAtPrologue));
+  masm.Pop(BaselineFrameReg);
+
+  masm.ret();
+
+  masm.bind(handler.codeCoverageAtPCLabel());
+#ifdef JS_USE_LINK_REGISTER
+  masm.pushReturnAddress();
+#endif
+
+  masm.Push(BaselineFrameReg);
+  masm.Push(PCRegAtStart);
+  masm.setupUnalignedABICall(R0.scratchReg());
+  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+  masm.passABIArg(R0.scratchReg());
+  masm.passABIArg(PCRegAtStart);
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::HandleCodeCoverageAtPC));
+  masm.Pop(PCRegAtStart);
+  masm.Pop(BaselineFrameReg);
+
+  masm.ret();
+}
+
 bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
   if (!emitPrologue()) {
     return false;
@@ -6755,36 +6819,45 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
     return false;
   }
 
-  Linker linker(masm, "BaselineInterpreter");
-  if (masm.oom()) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
+  emitOutOfLineCodeCoverageInstrumentation();
 
-  JitCode* code = linker.newCode(cx, CodeKind::Other);
-  if (!code) {
-    return false;
-  }
+  {
+    Linker linker(masm, "BaselineInterpreter");
+    if (masm.oom()) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
 
-  // Patch loads now that we know the tableswitch base address.
-  for (CodeOffset off : tableLabels_) {
-    Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, off),
-                                       ImmPtr(code->raw() + tableOffset_),
-                                       ImmPtr((void*)-1));
-  }
+    JitCode* code = linker.newCode(cx, CodeKind::Other);
+    if (!code) {
+      return false;
+    }
+
+    // Patch loads now that we know the tableswitch base address.
+    for (CodeOffset off : tableLabels_) {
+      Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, off),
+                                         ImmPtr(code->raw() + tableOffset_),
+                                         ImmPtr((void*)-1));
+    }
 
 #ifdef JS_ION_PERF
-  writePerfSpewerJitCodeProfile(code, "BaselineInterpreter");
+    writePerfSpewerJitCodeProfile(code, "BaselineInterpreter");
 #endif
 
 #ifdef MOZ_VTUNE
-  vtune::MarkStub(code, "BaselineInterpreter");
+    vtune::MarkStub(code, "BaselineInterpreter");
 #endif
 
-  interpreter.init(
-      code, interpretOpOffset_, profilerEnterFrameToggleOffset_.offset(),
-      profilerExitFrameToggleOffset_.offset(),
-      handler.debuggeeCheckOffset().offset(), std::move(debugTrapOffsets_));
+    interpreter.init(
+        code, interpretOpOffset_, profilerEnterFrameToggleOffset_.offset(),
+        profilerExitFrameToggleOffset_.offset(),
+        handler.debuggeeCheckOffset().offset(), std::move(debugTrapOffsets_),
+        std::move(handler.codeCoverageOffsets()));
+  }
+
+  if (coverage::IsLCovEnabled()) {
+    interpreter.toggleCodeCoverageInstrumentationUnchecked(true);
+  }
 
   return true;
 }
