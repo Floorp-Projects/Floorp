@@ -196,6 +196,7 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
 
   nsCOMPtr<nsIDNSService> mDNSService;
   std::set<RefPtr<DNSListener>> mPendingDNSRequests;
+  std::set<std::string> mSignaledAddresses;
 };
 
 /* static */
@@ -742,7 +743,11 @@ void MediaTransportHandlerSTS::AddIceCandidate(const std::string& aTransportId,
   }
 
   nsresult rv = stream->ParseTrickleCandidate(aCandidate, aUfrag, "");
-  if (NS_FAILED(rv)) {
+  if (NS_SUCCEEDED(rv)) {
+    if (tokens.size() > 4) {
+      mSignaledAddresses.insert(tokens[4]);
+    }
+  } else {
     CSFLogError(LOGTAG,
                 "Couldn't process ICE candidate with transport id %s: "
                 "%s",
@@ -1065,7 +1070,8 @@ void MediaTransportHandlerSTS::ExitPrivateMode() {
 static void ToRTCIceCandidateStats(
     const std::vector<NrIceCandidate>& candidates,
     dom::RTCStatsType candidateType, const nsString& transportId,
-    DOMHighResTimeStamp now, dom::RTCStatsReportInternal* report) {
+    DOMHighResTimeStamp now, dom::RTCStatsReportInternal* report,
+    const std::set<std::string>& signaledAddresses) {
   MOZ_ASSERT(report);
   for (const auto& candidate : candidates) {
     dom::RTCIceCandidateStats cand;
@@ -1081,6 +1087,10 @@ static void ToRTCIceCandidateStats(
     if (!candidate.mdns_addr.empty()) {
       cand.mAddress.Construct(
           NS_ConvertASCIItoUTF16(candidate.mdns_addr.c_str()));
+    } else if (candidate.type == NrIceCandidate::ICE_PEER_REFLEXIVE &&
+               signaledAddresses.find(candidate.cand_addr.host) ==
+                   signaledAddresses.end()) {
+      cand.mAddress.Construct(NS_ConvertASCIItoUTF16("(redacted)"));
     } else {
       cand.mAddress.Construct(
           NS_ConvertASCIItoUTF16(candidate.cand_addr.host.c_str()));
@@ -1148,7 +1158,7 @@ void MediaTransportHandlerSTS::GetIceStats(
   std::vector<NrIceCandidate> candidates;
   if (NS_SUCCEEDED(aStream.GetLocalCandidates(&candidates))) {
     ToRTCIceCandidateStats(candidates, dom::RTCStatsType::Local_candidate,
-                           transportId, aNow, aReport);
+                           transportId, aNow, aReport, mSignaledAddresses);
     // add the local candidates unparsed string to a sequence
     for (const auto& candidate : candidates) {
       aReport->mRawLocalCandidates.Value().AppendElement(
@@ -1159,7 +1169,7 @@ void MediaTransportHandlerSTS::GetIceStats(
 
   if (NS_SUCCEEDED(aStream.GetRemoteCandidates(&candidates))) {
     ToRTCIceCandidateStats(candidates, dom::RTCStatsType::Remote_candidate,
-                           transportId, aNow, aReport);
+                           transportId, aNow, aReport, mSignaledAddresses);
     // add the remote candidates unparsed string to a sequence
     for (const auto& candidate : candidates) {
       aReport->mRawRemoteCandidates.Value().AppendElement(
@@ -1392,8 +1402,23 @@ nsresult MediaTransportHandlerSTS::DNSListener::OnLookupComplete(
         }
 
         std::string mungedCandidate = o.str();
-        mTransportHandler.AddIceCandidate(mTransportId, mungedCandidate,
-                                          mUfrag);
+
+        RefPtr<NrIceMediaStream> stream(
+            mTransportHandler.mIceCtx->GetStream(mTransportId));
+        if (!stream) {
+          CSFLogError(LOGTAG,
+                      "No ICE stream for candidate with transport id %s: %s",
+                      mTransportId.c_str(), mCandidate.c_str());
+          return NS_OK;
+        }
+
+        nsresult rv = stream->ParseTrickleCandidate(mCandidate, mUfrag, "");
+        if (NS_FAILED(rv)) {
+          CSFLogError(LOGTAG,
+                      "Couldn't process ICE candidate with transport id %s: "
+                      "%s",
+                      mTransportId.c_str(), mCandidate.c_str());
+        }
       } else {
         CSFLogError(LOGTAG,
                     "More than one mDNS result for candidate with transport"
