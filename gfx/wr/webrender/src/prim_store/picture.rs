@@ -38,7 +38,7 @@ pub enum PictureCompositeKey {
     OpacityBinding(PropertyBindingId, Au),
     Saturate(Au),
     Sepia(Au),
-    DropShadowStack(Vec<(VectorKey, Au, ColorU)>),
+    DropShadows(Vec<(VectorKey, Au, ColorU)>),
     ColorMatrix([Au; 20]),
     SrgbToLinear,
     LinearToSrgb,
@@ -98,8 +98,8 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
                     Filter::SrgbToLinear => PictureCompositeKey::SrgbToLinear,
                     Filter::LinearToSrgb => PictureCompositeKey::LinearToSrgb,
                     Filter::Identity => PictureCompositeKey::Identity,
-                    Filter::DropShadowStack(ref shadows) => {
-                        PictureCompositeKey::DropShadowStack(
+                    Filter::DropShadows(ref shadows) => {
+                        PictureCompositeKey::DropShadows(
                             shadows.iter().map(|shadow| {
                                 (shadow.offset.into(), Au::from_f32_px(shadow.blur_radius), shadow.color.into())
                             }).collect()
