@@ -303,7 +303,7 @@ ContentAreaDropListener.prototype =
     return links;
   },
 
-  validateURIsForDrop: function(aEvent, aURIsCount, aURIs, aDisallowInherit)
+  validateURIsForDrop: function(aEvent, aURIs, aDisallowInherit)
   {
     let dataTransfer = aEvent.dataTransfer;
     let triggeringPrincipal = this._getTriggeringPrincipalFromDataTransfer(dataTransfer, false);

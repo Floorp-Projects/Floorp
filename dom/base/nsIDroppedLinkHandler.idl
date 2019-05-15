@@ -87,8 +87,7 @@ interface nsIDroppedLinkHandler : nsISupports
    * text, like home button that splits the text with "|".
    */
   void validateURIsForDrop(in DragEvent aEvent,
-                           in unsigned long aURIsCount,
-                           [array, size_is(aURIsCount)] in wstring aURIs,
+                           in Array<AString> aURIs,
                            [optional] in boolean aDisallowInherit);
 
   /**
