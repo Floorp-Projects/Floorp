@@ -669,8 +669,11 @@ class BaselineInterpreter {
 
   // Offsets of toggled calls to the DebugTrapHandler trampoline (for
   // breakpoints and stepping).
-  using DebugTrapOffsets = js::Vector<uint32_t, 0, SystemAllocPolicy>;
-  DebugTrapOffsets debugTrapOffsets_;
+  using CodeOffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
+  CodeOffsetVector debugTrapOffsets_;
+
+  // Offsets of toggled jumps for code coverage.
+  CodeOffsetVector codeCoverageOffsets_;
 
  public:
   BaselineInterpreter() = default;
@@ -681,7 +684,8 @@ class BaselineInterpreter {
   void init(JitCode* code, uint32_t interpretOpOffset,
             uint32_t profilerEnterToggleOffset,
             uint32_t profilerExitToggleOffset, uint32_t debuggeeCheckOffset,
-            DebugTrapOffsets&& debugTrapOffsets);
+            CodeOffsetVector&& debugTrapOffsets,
+            CodeOffsetVector&& codeCoverageOffsets);
 
   uint8_t* codeRaw() const { return code_->raw(); }
 
@@ -691,6 +695,9 @@ class BaselineInterpreter {
 
   void toggleProfilerInstrumentation(bool enable);
   void toggleDebuggerInstrumentation(bool enable);
+
+  void toggleCodeCoverageInstrumentationUnchecked(bool enable);
+  void toggleCodeCoverageInstrumentation(bool enable);
 };
 
 MOZ_MUST_USE bool GenerateBaselineInterpreter(JSContext* cx,

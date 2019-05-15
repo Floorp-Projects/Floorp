@@ -1068,6 +1068,9 @@ MOZ_MUST_USE bool EqualStringsHelperPure(JSString* str1, JSString* str2);
 MOZ_MUST_USE bool CheckIsCallable(JSContext* cx, HandleValue v,
                                   CheckIsCallableKind kind);
 
+void HandleCodeCoverageAtPC(BaselineFrame* frame, jsbytecode* pc);
+void HandleCodeCoverageAtPrologue(BaselineFrame* frame);
+
 template <bool HandleMissing>
 bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
                                Value* vp);

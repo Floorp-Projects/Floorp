@@ -7,7 +7,7 @@ use super::stylesheet_loader::{AsyncStylesheetParser, StylesheetLoader};
 use cssparser::ToCss as ParserToCss;
 use cssparser::{ParseErrorKind, Parser, ParserInput, SourceLocation, UnicodeRange};
 use malloc_size_of::MallocSizeOfOps;
-use nsstring::{nsCString, nsString, nsStringRepr};
+use nsstring::{nsCString, nsString};
 use selectors::matching::{matches_selector, MatchingContext, MatchingMode};
 use selectors::{NthIndexCache, SelectorList};
 use servo_arc::{Arc, ArcBorrow, RawOffsetArc};
@@ -1148,9 +1148,7 @@ pub unsafe extern "C" fn Servo_Property_GetCSSValuesForProperty(
 
     let result = result.as_mut().unwrap();
     let len = extras.len() + values.len();
-    // FIXME(emilio): This is one place where our nsString -> nsStringRepr
-    // conversion during bindgen goes bad.
-    bindings::Gecko_ResizeTArrayForStrings(result as *mut _ as *mut nsTArray<nsStringRepr>, len as u32);
+    bindings::Gecko_ResizeTArrayForStrings(result as *mut _ as *mut nsTArray<nsString>, len as u32);
 
     for (src, dest) in extras.iter().chain(values.iter()).zip(result.iter_mut()) {
         dest.write_str(src).unwrap();

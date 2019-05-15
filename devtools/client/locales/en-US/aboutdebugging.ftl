@@ -101,10 +101,6 @@ about-debugging-setup-title = Setup
 # Introduction text in the Setup page to explain how to configure remote debugging.
 about-debugging-setup-intro = Configure the connection method you wish to remotely debug your device with.
 
-# Link displayed in the Setup page that leads to MDN page with list of supported devices.
-# Temporarily leads to https://support.mozilla.org/en-US/kb/will-firefox-work-my-mobile-device#w_android-devices
-about-debugging-setup-link-android-devices = View list of supported Android devices
-
 # Explanatory text in the Setup page about what the 'This Firefox' page is for
 about-debugging-setup-this-firefox = Use <a>{ about-debugging-this-firefox-runtime-name }</a> to debug tabs, extensions and service workers on this version of { -brand-shorter-name }.
 
@@ -134,20 +130,28 @@ about-debugging-setup-usb-status-disabled = Disabled
 about-debugging-setup-usb-status-updating = Updating…
 
 # USB section step by step guide
-about-debugging-setup-usb-step-enable-dev-menu = Enable Developer menu on your Android device. <a>Learn how</a>
+about-debugging-setup-usb-step-enable-dev-menu2 = Enable Developer menu on your Android device.
 
 # USB section step by step guide
-about-debugging-setup-usb-step-enable-debug = Enable USB Debugging in the Android Developer Menu. <a>Learn how</a>
+about-debugging-setup-usb-step-enable-debug2 = Enable USB Debugging in the Android Developer Menu.
 
 # USB section step by step guide
-about-debugging-setup-usb-step-enable-debug-firefox = Enable USB Debugging in Firefox on the Android device. <a>Learn how</a>
+about-debugging-setup-usb-step-enable-debug-firefox2 = Enable USB Debugging in Firefox on the Android device.
 
 # USB section step by step guide
 about-debugging-setup-usb-step-plug-device = Connect the Android device to your computer.
 
+# Text shown in the USB section of the setup page with a link to troubleshoot connection errors.
+# The link goes to https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_over_USB
+about-debugging-setup-usb-troubleshoot = Problems connecting to the USB device? <a>Troubleshoot</a>
+
 # Network section of the Setup page
 about-debugging-setup-network =
   .title = Network Location
+
+# Text shown in the Network section of the setup page with a link to troubleshoot connection errors.
+# The link goes to https://developer.mozilla.org/en-US/docs/Tools/Remote_Debugging/Debugging_over_a_network
+about-debugging-setup-network-troubleshoot = Problems connecting via network location? <a>Troubleshoot</a>
 
 # Text of a button displayed after the network locations "Host" input.
 # Clicking on it will add the new network location to the list.

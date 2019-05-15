@@ -129,6 +129,16 @@ class RequestListContent extends Component {
     // Uninstall the tooltip event handler
     this.tooltip.stopTogglingOnHover();
     window.removeEventListener("resize", this.onResize);
+
+    // Performance optimization. React is slow when removing long lists
+    // of elements (i.e. the list of HTTP requests in this case), and so
+    // let's clean up the content through `innerHTML` property in advance.
+    // This significantly speeds up Network panel closing time.
+    // This isn't React friendly since React has no way to know the DOM
+    // has been modified. But, the panel is closing at this point anyway.
+    // See also: Bug 1546513 - Closing the network panel with many
+    // entries takes multiple seconds
+    this.refs.rowGroupEl.innerHTML = "";
   }
 
   /*
