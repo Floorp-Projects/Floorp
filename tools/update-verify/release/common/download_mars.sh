@@ -31,24 +31,24 @@ download_mars () {
     update_line=`fgrep "<update " update.xml`
     grep_rv=$?
     if [ 0 -ne $grep_rv ]; then
-        echo "FAIL: no <update/> found for $update_url"
+        echo "TEST-UNEXPECTED-FAIL: no <update/> found for $update_url"
         return 1
     fi
     command=`echo $update_line | sed -e 's/^.*<update //' -e 's:>.*$::' -e 's:\&amp;:\&:g'`
     eval "export $command"
 
     if [ ! -z "$to_build_id" -a "$buildID" != "$to_build_id" ]; then
-        echo "FAIL: expected buildID $to_build_id does not match actual $buildID"
+        echo "TEST-UNEXPECTED-FAIL: expected buildID $to_build_id does not match actual $buildID"
         return 1
     fi
 
     if [ ! -z "$to_display_version" -a "$displayVersion" != "$to_display_version" ]; then
-        echo "FAIL: expected displayVersion $to_display_version does not match actual $displayVersion"
+        echo "TEST-UNEXPECTED-FAIL: expected displayVersion $to_display_version does not match actual $displayVersion"
         return 1
     fi
 
     if [ ! -z "$to_app_version" -a "$appVersion" != "$to_app_version" ]; then
-        echo "FAIL: expected appVersion $to_app_version does not match actual $appVersion"
+        echo "TEST-UNEXPECTED-FAIL: expected appVersion $to_app_version does not match actual $appVersion"
         return 1
     fi
 
@@ -62,7 +62,7 @@ download_mars () {
       grep_rv=$?
 
       if [ 0 -ne $grep_rv ]; then
-        echo "FAIL: no $patch_type update found for $update_url"
+        echo "TEST-UNEXPECTED-FAIL: no $patch_type update found for $update_url"
         return 1
       fi
 
@@ -85,16 +85,16 @@ download_mars () {
       actual_hash=`openssl dgst -$hashFunction update/$patch_type.mar | sed -e 's/^.*= //'`
 
       if [ $actual_size != $size ]; then
-          echo "FAIL: $patch_type from $update_url wrong size"
-          echo "FAIL: update.xml size: $size"
-          echo "FAIL: actual size: $actual_size"
+          echo "TEST-UNEXPECTED-FAIL: $patch_type from $update_url wrong size"
+          echo "TEST-UNEXPECTED-FAIL: update.xml size: $size"
+          echo "TEST-UNEXPECTED-FAIL: actual size: $actual_size"
           return 1
       fi
 
       if [ $actual_hash != $hashValue ]; then
-          echo "FAIL: $patch_type from $update_url wrong hash"
-          echo "FAIL: update.xml hash: $hashValue"
-          echo "FAIL: actual hash: $actual_hash"
+          echo "TEST-UNEXPECTED-FAIL: $patch_type from $update_url wrong hash"
+          echo "TEST-UNEXPECTED-FAIL: update.xml hash: $hashValue"
+          echo "TEST-UNEXPECTED-FAIL: actual hash: $actual_hash"
           return 1
       fi
 
