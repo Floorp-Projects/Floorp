@@ -9,7 +9,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.view.View
-import androidx.annotation.VisibleForTesting
 import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
@@ -34,8 +33,6 @@ data class ContextMenuCandidate(
     val action: (Session, HitResult) -> Unit
 ) {
     companion object {
-        @VisibleForTesting internal var snackbarDelegate = SnackbarDelegate()
-
         /**
          * Returns the default list of context menu candidates.
          *
@@ -44,15 +41,16 @@ data class ContextMenuCandidate(
         fun defaultCandidates(
             context: Context,
             tabsUseCases: TabsUseCases,
-            snackBarParentView: View
+            snackBarParentView: View,
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
         ): List<ContextMenuCandidate> = listOf(
-            createOpenInNewTabCandidate(context, tabsUseCases, snackBarParentView),
-            createOpenInPrivateTabCandidate(context, tabsUseCases, snackBarParentView),
-            createCopyLinkCandidate(context, snackBarParentView),
+            createOpenInNewTabCandidate(context, tabsUseCases, snackBarParentView, snackbarDelegate),
+            createOpenInPrivateTabCandidate(context, tabsUseCases, snackBarParentView, snackbarDelegate),
+            createCopyLinkCandidate(context, snackBarParentView, snackbarDelegate),
             createShareLinkCandidate(context),
-            createOpenImageInNewTabCandidate(context, tabsUseCases, snackBarParentView),
+            createOpenImageInNewTabCandidate(context, tabsUseCases, snackBarParentView, snackbarDelegate),
             createSaveImageCandidate(context),
-            createCopyImageLocationCandidate(context, snackBarParentView)
+            createCopyImageLocationCandidate(context, snackBarParentView, snackbarDelegate)
         )
 
         /**
@@ -61,7 +59,8 @@ data class ContextMenuCandidate(
         fun createOpenInNewTabCandidate(
             context: Context,
             tabsUseCases: TabsUseCases,
-            snackBarParentView: View
+            snackBarParentView: View,
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.open_in_new_tab",
             label = context.getString(R.string.mozac_feature_contextmenu_open_link_in_new_tab),
@@ -87,7 +86,8 @@ data class ContextMenuCandidate(
         fun createOpenInPrivateTabCandidate(
             context: Context,
             tabsUseCases: TabsUseCases,
-            snackBarParentView: View
+            snackBarParentView: View,
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.open_in_private_tab",
             label = context.getString(R.string.mozac_feature_contextmenu_open_link_in_private_tab),
@@ -113,7 +113,8 @@ data class ContextMenuCandidate(
         fun createOpenImageInNewTabCandidate(
             context: Context,
             tabsUseCases: TabsUseCases,
-            snackBarParentView: View
+            snackBarParentView: View,
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.open_image_in_new_tab",
             label = context.getString(R.string.mozac_feature_contextmenu_open_image_in_new_tab),
@@ -184,7 +185,8 @@ data class ContextMenuCandidate(
          */
         fun createCopyLinkCandidate(
             context: Context,
-            snackBarParentView: View
+            snackBarParentView: View,
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.copy_link",
             label = context.getString(R.string.mozac_feature_contextmenu_copy_link),
@@ -207,7 +209,8 @@ data class ContextMenuCandidate(
          */
         fun createCopyImageLocationCandidate(
             context: Context,
-            snackBarParentView: View
+            snackBarParentView: View,
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.copy_image_location",
             label = context.getString(R.string.mozac_feature_contextmenu_copy_image_location),
@@ -223,6 +226,28 @@ data class ContextMenuCandidate(
                     duration = Snackbar.LENGTH_SHORT
                 )
             }
+        )
+    }
+
+    /**
+     * Delegate to display a snackbar.
+     */
+    interface SnackbarDelegate {
+        /**
+         * Displays a snackbar.
+         *
+         * @param snackBarParentView The view to find a parent from for displaying the Snackbar.
+         * @param text The text to show. Can be formatted text.
+         * @param duration How long to display the message
+         * @param action String resource to display for the action.
+         * @param listener callback to be invoked when the action is clicked
+         */
+        fun show(
+            snackBarParentView: View,
+            text: Int,
+            duration: Int,
+            action: Int = 0,
+            listener: ((v: View) -> Unit)? = null
         )
     }
 }
@@ -243,13 +268,16 @@ private fun HitResult.getLink(): String = when (this) {
     else -> "about:blank"
 }
 
-internal open class SnackbarDelegate {
-    open fun show(
+/**
+ * Default implementation for [ContextMenuCandidate.SnackbarDelegate]. Will display a standard default Snackbar.
+ */
+class DefaultSnackbarDelegate : ContextMenuCandidate.SnackbarDelegate {
+    override fun show(
         snackBarParentView: View,
         text: Int,
         duration: Int,
-        action: Int = 0,
-        listener: ((v: View) -> Unit)? = null
+        action: Int,
+        listener: ((v: View) -> Unit)?
     ) {
         val snackbar = Snackbar.make(
             snackBarParentView,

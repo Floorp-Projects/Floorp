@@ -38,7 +38,6 @@ class ContextMenuCandidateTest {
     @Before
     fun setUp() {
         snackbarDelegate = TestSnackbarDelegate()
-        ContextMenuCandidate.snackbarDelegate = snackbarDelegate
     }
 
     @Test
@@ -58,7 +57,7 @@ class ContextMenuCandidateTest {
         val parentView = CoordinatorLayout(context)
 
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
-            context, tabsUseCases, parentView)
+            context, tabsUseCases, parentView, snackbarDelegate)
 
         // showFor
 
@@ -112,7 +111,7 @@ class ContextMenuCandidateTest {
         val parentView = CoordinatorLayout(context)
 
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-            context, tabsUseCases, parentView)
+            context, tabsUseCases, parentView, snackbarDelegate)
 
         // showFor
 
@@ -167,7 +166,7 @@ class ContextMenuCandidateTest {
         val parentView = CoordinatorLayout(context)
 
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
-            context, tabsUseCases, parentView)
+            context, tabsUseCases, parentView, snackbarDelegate)
 
         // showFor
 
@@ -226,7 +225,7 @@ class ContextMenuCandidateTest {
         val parentView = CoordinatorLayout(context)
 
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
-            context, tabsUseCases, parentView)
+            context, tabsUseCases, parentView, snackbarDelegate)
 
         assertEquals(1, sessionManager.size)
 
@@ -327,7 +326,8 @@ class ContextMenuCandidateTest {
     fun `Candidate "Copy Link"`() {
         val parentView = CoordinatorLayout(context)
 
-        val copyLink = ContextMenuCandidate.createCopyLinkCandidate(context, parentView)
+        val copyLink = ContextMenuCandidate.createCopyLinkCandidate(
+            context, parentView, snackbarDelegate)
 
         // showFor
 
@@ -370,7 +370,8 @@ class ContextMenuCandidateTest {
     fun `Candidate "Copy Image Location"`() {
         val parentView = CoordinatorLayout(context)
 
-        val copyImageLocation = ContextMenuCandidate.createCopyImageLocationCandidate(context, parentView)
+        val copyImageLocation = ContextMenuCandidate.createCopyImageLocationCandidate(
+            context, parentView, snackbarDelegate)
 
         // showFor
 
@@ -410,7 +411,7 @@ class ContextMenuCandidateTest {
     }
 }
 
-private class TestSnackbarDelegate : SnackbarDelegate() {
+private class TestSnackbarDelegate : ContextMenuCandidate.SnackbarDelegate {
     var hasShownSnackbar = false
     var lastAcionListener: ((v: View) -> Unit)? = null
 

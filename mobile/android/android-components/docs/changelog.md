@@ -24,6 +24,9 @@ permalink: /changelog/
 * **browser-session**
   * Fixed a bug where the title and icon of a `Session` was cleared too early.
 
+* **browser-contextmenu**
+  * Added ability to provide a custom `SnackbarDelegate` to show a customized `Snackbar`.
+
 # 0.52.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.51.0...v0.52.0)
