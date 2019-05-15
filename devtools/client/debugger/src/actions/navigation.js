@@ -12,13 +12,6 @@ import { waitForMs } from "../utils/utils";
 import { newGeneratedSources } from "./sources";
 import { updateWorkers } from "./debuggee";
 
-import {
-  clearASTs,
-  clearSymbols,
-  clearScopes,
-  clearSources
-} from "../workers/parser";
-
 import { clearWasmStates } from "../utils/wasm";
 import { getMainThread } from "../selectors";
 import type { Action, ThunkArgs } from "./types";
@@ -33,15 +26,18 @@ import type { Action, ThunkArgs } from "./types";
  * @static
  */
 export function willNavigate(event: Object) {
-  return function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
+  return async function({
+    dispatch,
+    getState,
+    client,
+    sourceMaps,
+    parser
+  }: ThunkArgs) {
     sourceQueue.clear();
     sourceMaps.clearSourceMaps();
     clearWasmStates();
     clearDocuments();
-    clearSymbols();
-    clearASTs();
-    clearScopes();
-    clearSources();
+    parser.clear();
     client.detachWorkers();
     const thread = getMainThread(getState());
 

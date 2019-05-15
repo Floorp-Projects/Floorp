@@ -15,6 +15,7 @@ import reducers from "../reducers";
 import actions from "../actions";
 import * as selectors from "../selectors";
 import { getHistory } from "../test/utils/history";
+import { parserWorker } from "../test/tests-setup";
 import configureStore from "../actions/utils/create-store";
 import sourceQueue from "../utils/source-queue";
 import type { Source, OriginalSourceData, GeneratedSourceData } from "../types";
@@ -41,7 +42,8 @@ function createStore(client: any, initialState: any = {}, sourceMapsMock: any) {
       return {
         ...args,
         client,
-        sourceMaps: sourceMapsMock !== undefined ? sourceMapsMock : sourceMaps
+        sourceMaps: sourceMapsMock !== undefined ? sourceMapsMock : sourceMaps,
+        parser: parserWorker
       };
     }
   })(combineReducers(reducers), initialState);

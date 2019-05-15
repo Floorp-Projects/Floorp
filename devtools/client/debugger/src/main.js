@@ -19,7 +19,7 @@ module.exports = {
     threadClient,
     tabTarget,
     debuggerClient,
-    sourceMaps,
+    workers,
     panel
   }: any) =>
     onConnect(
@@ -31,7 +31,7 @@ module.exports = {
           debuggerClient
         }
       },
-      sourceMaps,
+      workers,
       panel
     ),
   destroy: () => {
