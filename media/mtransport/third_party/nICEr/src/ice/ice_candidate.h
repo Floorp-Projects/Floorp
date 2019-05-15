@@ -65,6 +65,7 @@ struct nr_ice_candidate_ {
   nr_transport_addr addr;             /* The advertised address;
                                          JDR calls this the candidate */
   nr_transport_addr base;             /* The base address (S 2.1)*/
+  char *mdns_addr;                    /* MDNS address, if any */
   char *foundation;                   /* Foundation for the candidate (S 4) */
   UINT4 priority;                     /* The priority value (S 5.4 */
   nr_ice_stun_server *stun_server;
