@@ -27,7 +27,7 @@ use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer}
 use crate::profiler::FrameProfileCounters;
 use crate::render_backend::{DataStores, FrameId};
 use crate::render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
-use crate::render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree, ScalingTask};
+use crate::render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskGraph, ScalingTask};
 use crate::resource_cache::ResourceCache;
 use std::{cmp, usize, f32, i32, mem};
 use crate::texture_allocator::{ArrayAllocationTracker, FreeRectSlice};
@@ -92,7 +92,7 @@ pub trait RenderTarget {
         &mut self,
         _ctx: &mut RenderTargetContext,
         _gpu_cache: &mut GpuCache,
-        _render_tasks: &mut RenderTaskTree,
+        _render_tasks: &mut RenderTaskGraph,
         _deferred_resolves: &mut Vec<DeferredResolve>,
         _prim_headers: &mut PrimitiveHeaders,
         _transforms: &mut TransformPalette,
@@ -114,7 +114,7 @@ pub trait RenderTarget {
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         clip_store: &ClipStore,
         transforms: &mut TransformPalette,
         deferred_resolves: &mut Vec<DeferredResolve>,
@@ -201,7 +201,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         &mut self,
         ctx: &mut RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskTree,
+        render_tasks: &mut RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
         saved_index: Option<SavedTargetIndex>,
         prim_headers: &mut PrimitiveHeaders,
@@ -404,7 +404,7 @@ impl RenderTarget for ColorRenderTarget {
         &mut self,
         ctx: &mut RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskTree,
+        render_tasks: &mut RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
@@ -478,7 +478,7 @@ impl RenderTarget for ColorRenderTarget {
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         _: &ClipStore,
         _: &mut TransformPalette,
         deferred_resolves: &mut Vec<DeferredResolve>,
@@ -646,7 +646,7 @@ impl RenderTarget for AlphaRenderTarget {
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         clip_store: &ClipStore,
         transforms: &mut TransformPalette,
         _: &mut Vec<DeferredResolve>,
@@ -786,7 +786,7 @@ impl TextureCacheRenderTarget {
     fn add_task(
         &mut self,
         task_id: RenderTaskId,
-        render_tasks: &mut RenderTaskTree,
+        render_tasks: &mut RenderTaskGraph,
     ) {
         let task_address = render_tasks.get_task_address(task_id);
         let src_task_address = render_tasks[task_id].children.get(0).map(|src_task_id| {
@@ -932,7 +932,7 @@ pub struct RenderPass {
     /// kind of pass.
     pub kind: RenderPassKind,
     /// The set of tasks to be performed in this pass, as indices into the
-    /// `RenderTaskTree`.
+    /// `RenderTaskGraph`.
     pub tasks: Vec<RenderTaskId>,
 }
 
@@ -1010,7 +1010,7 @@ impl RenderPass {
         &mut self,
         ctx: &mut RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskTree,
+        render_tasks: &mut RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
         clip_store: &ClipStore,
         transforms: &mut TransformPalette,
@@ -1203,7 +1203,7 @@ pub struct Frame {
     pub profile_counters: FrameProfileCounters,
 
     pub transform_palette: Vec<TransformData>,
-    pub render_tasks: RenderTaskTree,
+    pub render_tasks: RenderTaskGraph,
     pub prim_headers: PrimitiveHeaders,
 
     /// The GPU cache frame that the contents of Self depend on
