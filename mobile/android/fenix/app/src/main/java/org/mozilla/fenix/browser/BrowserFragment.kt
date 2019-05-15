@@ -769,20 +769,24 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     private fun setToolbarBehavior(loading: Boolean) {
-        if (customTabSessionId != null) {
-            return
-        }
-
         val toolbarView = toolbarComponent.uiView.view
         (toolbarView.layoutParams as CoordinatorLayout.LayoutParams).apply {
             // Stop toolbar from collapsing if TalkBack is enabled or page is loading
             val accessibilityManager = context
                 ?.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
-            if (loading || accessibilityManager?.isTouchExplorationEnabled == true) {
-                (behavior as? BrowserToolbarBottomBehavior)?.forceExpand(toolbarView)
-                behavior = null
-            } else {
-                behavior = BrowserToolbarBottomBehavior(context, null)
+
+            behavior = when {
+                loading || accessibilityManager?.isTouchExplorationEnabled == true -> {
+                    (behavior as? BrowserToolbarBottomBehavior)?.forceExpand(toolbarView)
+                    (behavior as? BrowserToolbarTopBehavior)?.forceExpand(toolbarView)
+                    null
+                }
+                customTabSessionId != null -> {
+                    BrowserToolbarTopBehavior(context, null)
+                }
+                else -> {
+                    BrowserToolbarBottomBehavior(context, null)
+                }
             }
         }
     }
