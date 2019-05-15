@@ -39,10 +39,12 @@
   flex-shrink: 0;
 }
 
-.debugger .tree-indent {
-  width: 16px;
-  margin-inline-start: 0px;
-  border-inline-start: 0;
+.tree-node[data-expandable="false"] .tree-last-indent {
+  /* The 13px value is taken from the total width and margins of the arrow
+  element of expandables nodes (10px width + 3px margins). That way the
+  node's text are indented the same for both expandable and non-expandable
+  nodes */
+  margin-inline-end: 13px;
 }
 
 /* For non expandable root nodes, we don't have .tree-indent elements, so we declare
