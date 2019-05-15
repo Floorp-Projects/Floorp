@@ -60,7 +60,8 @@ class nsAttrHashKey : public PLDHashEntryHdr {
   typedef const nsAttrKey* KeyTypePointer;
 
   explicit nsAttrHashKey(KeyTypePointer aKey) : mKey(*aKey) {}
-  nsAttrHashKey(const nsAttrHashKey& aCopy) : mKey(aCopy.mKey) {}
+  nsAttrHashKey(const nsAttrHashKey& aCopy)
+      : PLDHashEntryHdr{}, mKey(aCopy.mKey) {}
   ~nsAttrHashKey() {}
 
   KeyType GetKey() const { return mKey; }
