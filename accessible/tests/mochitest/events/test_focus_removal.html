@@ -1,0 +1,82 @@
+<html>
+
+<head>
+  <title>Test removal of focused accessible</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    async function setFocus(aNodeToFocus, aExpectedFocus) {
+      let expected = aExpectedFocus || aNodeToFocus;
+      let focused = waitForEventPromise(EVENT_FOCUS, expected);
+      info("Focusing " + aNodeToFocus.id);
+      aNodeToFocus.focus();
+      await focused;
+      ok(true, expected.id + " focused after " +
+        aNodeToFocus.id + ".focus()");
+    }
+
+    async function expectFocusAfterRemove(aNodeToRemove, aExpectedFocus) {
+      let focused = waitForEventPromise(EVENT_FOCUS, aExpectedFocus);
+      info("Removing " + aNodeToRemove.id);
+      aNodeToRemove.remove();
+      await focused;
+      let friendlyExpected = aExpectedFocus == document ?
+        "document" : aExpectedFocus.id;
+      ok(true, friendlyExpected + " focused after " +
+        aNodeToRemove.id + " removed");
+    }
+
+    async function doTests() {
+      info("Testing removal of focused node itself");
+      let button = getNode("button");
+      await setFocus(button);
+      await expectFocusAfterRemove(button, document);
+
+      info("Testing removal of focused node's parent");
+      let dialog = getNode("dialog");
+      let dialogButton = getNode("dialogButton");
+      await setFocus(dialogButton);
+      await expectFocusAfterRemove(dialog, document);
+
+      info("Testing removal of aria-activedescendant target");
+      let listbox = getNode("listbox");
+      let option = getNode("option");
+      await setFocus(listbox, option);
+      await expectFocusAfterRemove(option, listbox);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <button id="button"></button>
+
+  <div role="dialog" id="dialog">
+    <button id="dialogButton"></button>
+  </div>
+
+  <div role="listbox" id="listbox" tabindex="0" aria-activedescendant="option">
+    <div role="option" id="option"></div>
+  </div>
+
+</body>
+</html>

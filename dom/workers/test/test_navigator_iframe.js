@@ -46,8 +46,8 @@ worker.onerror = function(event) {
   SimpleTest.finish();
 }
 
-var version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
-var isNightly = version.endsWith("a1");
-var isRelease = !version.includes("a");
+var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+var isNightly = AppConstants.NIGHTLY_BUILD;
+var isRelease = AppConstants.RELEASE_OR_BETA;
 
 worker.postMessage({ isNightly, isRelease });

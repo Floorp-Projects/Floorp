@@ -236,7 +236,7 @@ def build_interface(iface):
         'parent': iface.base,
         'flags': flags(
             ('function', iface.attributes.function),
-            ('builtinclass', iface.attributes.builtinclass or iface.implicit_builtinclass),
+            ('builtinclass', iface.attributes.builtinclass),
             ('main_process_only', iface.attributes.main_process_scriptable_only),
         )
     }

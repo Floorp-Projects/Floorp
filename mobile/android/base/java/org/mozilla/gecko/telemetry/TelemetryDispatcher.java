@@ -9,8 +9,6 @@ package org.mozilla.gecko.telemetry;
 import android.content.Context;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
-
-import org.mozilla.gecko.telemetry.pingbuilders.TelemetryActivationPingBuilder;
 import org.mozilla.gecko.telemetry.pingbuilders.TelemetryCorePingBuilder;
 import org.mozilla.gecko.telemetry.pingbuilders.TelemetryCrashPingBuilder;
 import org.mozilla.gecko.telemetry.schedulers.TelemetryUploadScheduler;
@@ -88,14 +86,6 @@ public class TelemetryDispatcher {
      * Queues the given ping for upload and potentially schedules upload. This method can be called from any thread.
      */
     public void queuePingForUpload(final Context context, final TelemetryCorePingBuilder pingBuilder) {
-        final TelemetryOutgoingPing ping = pingBuilder.build();
-        queuePingForUpload(context, ping, coreStore, uploadAllPingsImmediatelyScheduler);
-    }
-
-    /**
-     * Queues the given ping for upload and potentially schedules upload. This method can be called from any thread.
-     */
-    public void queuePingForUpload(final Context context, final TelemetryActivationPingBuilder pingBuilder) {
         final TelemetryOutgoingPing ping = pingBuilder.build();
         queuePingForUpload(context, ping, coreStore, uploadAllPingsImmediatelyScheduler);
     }

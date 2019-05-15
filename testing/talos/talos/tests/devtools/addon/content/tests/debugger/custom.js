@@ -103,7 +103,9 @@ async function testProjectSearch(tab, toolbox) {
 
   dump("Executing project search\n");
   const test = runTest(`custom.jsdebugger.project-search.DAMP`);
+  await dbg.actions.setActiveSearch("project");
   await dbg.actions.searchSources(cx, "return");
+  await dbg.actions.closeActiveSearch();
   test.done();
   await garbageCollect();
 }

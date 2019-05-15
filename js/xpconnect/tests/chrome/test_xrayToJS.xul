@@ -170,9 +170,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   // Xray-safe.
   //
   // DO NOT CHANGE WTIHOUT REVIEW FROM AN XPCONNECT PEER.
-  var version = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).version;
-  var isNightlyBuild = version.endsWith("a1");
-  var isReleaseOrBeta = !version.includes("a");
+  var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+  var isNightlyBuild = AppConstants.NIGHTLY_BUILD;
+  var isReleaseOrBeta = AppConstants.RELEASE_OR_BETA;
   var gPrototypeProperties = {};
   var gConstructorProperties = {};
   function constructorProps(arr) {
