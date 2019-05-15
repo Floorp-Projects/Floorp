@@ -2876,6 +2876,22 @@ void AssertIsOnConnectionThread() {
   gConnectionThread->AssertIsOnConnectionThread();
 }
 
+already_AddRefed<Datastore> GetDatastore(const nsACString& aOrigin) {
+  AssertIsOnBackgroundThread();
+
+  if (gDatastores) {
+    CheckedUnsafePtr<Datastore> datastore;
+    if (gDatastores->Get(aOrigin, &datastore)) {
+      MOZ_ASSERT(datastore);
+
+      RefPtr<Datastore> result(datastore);
+      return result.forget();
+    }
+  }
+
+  return nullptr;
+}
+
 void InitUsageForOrigin(const nsACString& aOrigin, int64_t aUsage) {
   AssertIsOnIOThread();
 
@@ -6709,8 +6725,7 @@ nsresult PrepareDatastoreOp::CheckClosingDatastoreInternal() {
   mNestedState = NestedState::PreparationPending;
 
   RefPtr<Datastore> datastore;
-  if (gDatastores && (datastore = gDatastores->Get(mOrigin)) &&
-      datastore->IsClosed()) {
+  if ((datastore = GetDatastore(mOrigin)) && datastore->IsClosed()) {
     datastore->WaitForConnectionToComplete(this);
 
     return NS_OK;
@@ -6749,7 +6764,7 @@ nsresult PrepareDatastoreOp::BeginDatastorePreparationInternal() {
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
   MOZ_ASSERT(MayProceed());
 
-  if (gDatastores && (mDatastore = gDatastores->Get(mOrigin))) {
+  if ((mDatastore = GetDatastore(mOrigin))) {
     MOZ_ASSERT(!mDatastore->IsClosed());
 
     mDatastore->NoteLivePrepareDatastoreOp(this);
@@ -8062,8 +8077,7 @@ void PreloadedOp::GetResponse(LSSimpleRequestResponse& aResponse) {
 
   bool preloaded;
   RefPtr<Datastore> datastore;
-  if (gDatastores && (datastore = gDatastores->Get(mOrigin)) &&
-      !datastore->IsClosed()) {
+  if ((datastore = GetDatastore(mOrigin)) && !datastore->IsClosed()) {
     preloaded = true;
   } else {
     preloaded = false;
