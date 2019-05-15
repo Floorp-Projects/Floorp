@@ -5655,7 +5655,20 @@ void CanvasPath::EnsurePathBuilder() const {
 }
 
 size_t BindingJSObjectMallocBytes(CanvasRenderingContext2D* aContext) {
-  return aContext->GetWidth() * aContext->GetHeight() * 4;
+  int32_t width = aContext->GetWidth();
+  int32_t height = aContext->GetHeight();
+
+  int32_t max = gfxPrefs::MaxCanvasSize();
+  if (width > max || height > max) {
+    return 0;
+  }
+
+  CheckedInt<uint32_t> bytes = CheckedInt<uint32_t>(width) * height * 4;
+  if (!bytes.isValid()) {
+    return 0;
+  }
+
+  return bytes.value();
 }
 
 }  // namespace dom
