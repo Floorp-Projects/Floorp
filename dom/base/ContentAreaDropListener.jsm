@@ -276,7 +276,7 @@ ContentAreaDropListener.prototype =
     return url;
   },
 
-  dropLinks: function(aEvent, aDisallowInherit, aCount)
+  dropLinks: function(aEvent, aDisallowInherit)
   {
     if (aEvent && this._eventTargetIsDisabled(aEvent))
       return [];
@@ -297,8 +297,6 @@ ContentAreaDropListener.prototype =
         throw ex;
       }
     }
-    if (aCount)
-      aCount.value = links.length;
 
     return links;
   },

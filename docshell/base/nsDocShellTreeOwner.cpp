@@ -873,11 +873,9 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
   } else if (eventType.EqualsLiteral("drop")) {
     nsIWebNavigation* webnav = static_cast<nsIWebNavigation*>(mWebBrowser);
 
-    uint32_t linksCount;
-    nsIDroppedLinkItem** links;
-    if (webnav && NS_SUCCEEDED(handler->DropLinks(dragEvent, true, &linksCount,
-                                                  &links))) {
-      if (linksCount >= 1) {
+    nsTArray<RefPtr<nsIDroppedLinkItem>> links;
+    if (webnav && NS_SUCCEEDED(handler->DropLinks(dragEvent, true, links))) {
+      if (links.Length() >= 1) {
         nsCOMPtr<nsIPrincipal> triggeringPrincipal;
         handler->GetTriggeringPrincipal(dragEvent,
                                         getter_AddRefs(triggeringPrincipal));
@@ -888,11 +886,7 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
             nsCOMPtr<nsIBrowserChild> browserChild =
                 do_QueryInterface(webBrowserChrome);
             if (browserChild) {
-              nsresult rv = browserChild->RemoteDropLinks(linksCount, links);
-              for (uint32_t i = 0; i < linksCount; i++) {
-                NS_RELEASE(links[i]);
-              }
-              free(links);
+              nsresult rv = browserChild->RemoteDropLinks(links);
               return rv;
             }
           }
@@ -912,11 +906,6 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
               webnav->LoadURI(url, loadURIOptions);
             }
           }
-
-          for (uint32_t i = 0; i < linksCount; i++) {
-            NS_RELEASE(links[i]);
-          }
-          free(links);
         }
       }
     } else {
