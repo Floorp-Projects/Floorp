@@ -65,13 +65,13 @@ label.findbar-find-fast:-moz-lwtheme {
 }
 
 @media (-moz-mac-yosemite-theme: 0) {
-  .findbar-textbox,
+  html|input.findbar-textbox,
   .findbar-find-next {
     border-radius: 10000px;
   }
 }
 
-.findbar-textbox {
+html|input.findbar-textbox {
   border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ var(--lwt-toolbar-field-border-color, @roundButtonBorderColor@);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
@@ -83,11 +83,11 @@ label.findbar-find-fast:-moz-lwtheme {
   padding-inline-start: 19px;
 }
 
-.findbar-textbox[focused="true"] {
+html|input.findbar-textbox:focus {
   box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
               0 0 0 1px var(--toolbar-field-focus-border-color);
 }
 
-.findbar-textbox:-moz-locale-dir(rtl) {
+html|input.findbar-textbox:-moz-locale-dir(rtl) {
   background-position-x: right 5px;
 }
