@@ -1083,13 +1083,14 @@ class nsHTMLCopyEncoder : public nsDocumentEncoder {
   nsresult GetPromotedPoint(Endpoint aWhere, nsINode* aNode, int32_t aOffset,
                             nsCOMPtr<nsINode>* outNode, int32_t* outOffset,
                             nsINode* aCommon);
-  nsCOMPtr<nsINode> GetChildAt(nsINode* aParent, int32_t aOffset);
-  bool IsMozBR(Element* aNode);
-  nsresult GetNodeLocation(nsINode* inChild, nsCOMPtr<nsINode>* outParent,
-                           int32_t* outOffset);
+  static nsCOMPtr<nsINode> GetChildAt(nsINode* aParent, int32_t aOffset);
+  static bool IsMozBR(Element* aNode);
+  static nsresult GetNodeLocation(nsINode* inChild,
+                                  nsCOMPtr<nsINode>* outParent,
+                                  int32_t* outOffset);
   bool IsRoot(nsINode* aNode);
-  bool IsFirstNode(nsINode* aNode);
-  bool IsLastNode(nsINode* aNode);
+  static bool IsFirstNode(nsINode* aNode);
+  static bool IsLastNode(nsINode* aNode);
   virtual bool IncludeInContext(nsINode* aNode) override;
   virtual int32_t GetImmediateContextCount(
       const nsTArray<nsINode*>& aAncestorArray) override;
