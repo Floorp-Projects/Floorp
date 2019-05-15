@@ -73,6 +73,8 @@ class ClonedMessageData;
 class ContentParent;
 class Element;
 class DataTransfer;
+class BrowserHost;
+class BrowserBridgeParent;
 
 namespace ipc {
 class StructuredCloneData;
@@ -93,7 +95,6 @@ class BrowserParent final : public PBrowserParent,
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
   friend class PBrowserParent;
-  friend class BrowserBridgeParent;  // for clearing mBrowserBridgeParent
 
   virtual ~BrowserParent();
 
@@ -113,8 +114,7 @@ class BrowserParent final : public PBrowserParent,
   BrowserParent(ContentParent* aManager, const TabId& aTabId,
                 const TabContext& aContext,
                 CanonicalBrowsingContext* aBrowsingContext,
-                uint32_t aChromeFlags,
-                BrowserBridgeParent* aBrowserBridgeParent = nullptr);
+                uint32_t aChromeFlags);
 
   // Call from LayoutStatics only
   static void InitializeStatics();
@@ -154,12 +154,6 @@ class BrowserParent final : public PBrowserParent,
 
   nsIBrowserDOMWindow* GetBrowserDOMWindow() const { return mBrowserDOMWindow; }
 
-  // Returns the BrowserBridgeParent if this BrowserParent is for an
-  // out-of-process iframe and nullptr otherwise.
-  BrowserBridgeParent* GetBrowserBridgeParent() const {
-    return mBrowserBridgeParent;
-  }
-
   already_AddRefed<nsPIDOMWindowOuter> GetParentWindowOuter();
 
   already_AddRefed<nsIWidget> GetTopLevelWidget();
@@ -178,6 +172,14 @@ class BrowserParent final : public PBrowserParent,
   a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
 
   layout::RenderFrame* GetRenderFrame();
+
+  // Returns the BrowserBridgeParent if this BrowserParent is for an
+  // out-of-process iframe and nullptr otherwise.
+  BrowserBridgeParent* GetBrowserBridgeParent() const;
+
+  // Returns the BrowserHost if this BrowserParent is for a top-level browser
+  // and nullptr otherwise.
+  BrowserHost* GetBrowserHost() const;
 
   ShowInfo GetShowInfo();
 
@@ -677,6 +679,12 @@ class BrowserParent final : public PBrowserParent,
   void SkipBrowsingContextDetach();
 
  protected:
+  friend BrowserBridgeParent;
+  friend BrowserHost;
+
+  void SetBrowserBridgeParent(BrowserBridgeParent* aBrowser);
+  void SetBrowserHost(BrowserHost* aBrowser);
+
   bool ReceiveMessage(
       const nsString& aMessage, bool aSync, ipc::StructuredCloneData* aData,
       mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
@@ -787,6 +795,10 @@ class BrowserParent final : public PBrowserParent,
   // by the BrowserBridgeParent instance, which has the strong reference
   // to this BrowserParent.
   BrowserBridgeParent* mBrowserBridgeParent;
+  // Pointer to the BrowserHost that owns us, if any. This is mutually
+  // exclusive with mBrowserBridgeParent, and one is guaranteed to be
+  // non-null.
+  BrowserHost* mBrowserHost;
 
   ContentCacheInParent mContentCache;
 
