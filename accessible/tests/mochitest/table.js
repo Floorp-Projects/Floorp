@@ -392,10 +392,9 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg) {
      msg + "Wrong count of selected columns for " + prettyName(aIdentifier));
 
   // getSelectedColumns test
-  var actualSelColsCountObj = { value: null };
-  var actualSelCols = acc.getSelectedColumnIndices(actualSelColsCountObj);
+  var actualSelCols = acc.getSelectedColumnIndices();
 
-  var actualSelColsCount = actualSelColsCountObj.value;
+  var actualSelColsCount = actualSelCols.length;
   is(actualSelColsCount, selCols.length,
       msg + "Wrong count of selected columns for " + prettyName(aIdentifier) +
       "from getSelectedColumns.");
@@ -432,10 +431,9 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg) {
      msg + "Wrong count of selected rows for " + prettyName(aIdentifier));
 
   // getSelectedRows test
-  var actualSelrowCountObj = { value: null };
-  var actualSelRows = acc.getSelectedRowIndices(actualSelrowCountObj);
+  var actualSelRows = acc.getSelectedRowIndices();
 
-  var actualSelrowCount = actualSelrowCountObj.value;
+  var actualSelrowCount = actualSelRows.length;
   is(actualSelrowCount, selRows.length,
       msg + "Wrong count of selected rows for " + prettyName(aIdentifier) +
       "from getSelectedRows.");
@@ -469,10 +467,9 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg) {
      msg + "Wrong count of selected cells for " + prettyName(aIdentifier));
 
   // getSelectedCellIndices test
-  var actualSelCellsCountObj = { value: null };
-  var actualSelCells = acc.getSelectedCellIndices(actualSelCellsCountObj);
+  var actualSelCells = acc.getSelectedCellIndices();
 
-  var actualSelCellsCount = actualSelCellsCountObj.value;
+  var actualSelCellsCount = actualSelCells.length;
   is(actualSelCellsCount, selCells.length,
      msg + "Wrong count of selected cells for " + prettyName(aIdentifier) +
      "from getSelectedCells.");

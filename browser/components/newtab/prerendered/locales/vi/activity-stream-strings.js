@@ -20,7 +20,7 @@ window.gActivityStreamStrings = {
   "menu_action_pin": "Ghim",
   "menu_action_unpin": "Bỏ ghim",
   "confirm_history_delete_p1": "Bạn có chắc bạn muốn xóa bỏ mọi thứ của trang này từ lịch sử?",
-  "confirm_history_delete_notice_p2": "Hành động này không thể hoàn tác.",
+  "confirm_history_delete_notice_p2": "Thao tác này không thể hoàn tác được.",
   "menu_action_save_to_pocket": "Lưu vào Pocket",
   "menu_action_delete_pocket": "Xóa khỏi Pocket",
   "menu_action_archive_pocket": "Lưu trữ trong Pocket",

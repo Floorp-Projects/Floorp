@@ -24,7 +24,7 @@ def generate_specifications_of_artifacts_to_sign(
             'artifacts': [
                 get_artifact_path(task, 'source.tar.xz')
             ],
-            'formats': ['gpg'],
+            'formats': ['autograph_gpg'],
         }]
     elif 'android' in build_platform:
         artifacts_specifications = [{
@@ -64,7 +64,7 @@ def generate_specifications_of_artifacts_to_sign(
     elif 'linux' in build_platform:
         artifacts_specifications = [{
             'artifacts': [get_artifact_path(task, '{locale}/target.tar.bz2')],
-            'formats': ['gpg', 'widevine'],
+            'formats': ['autograph_gpg', 'widevine'],
         }]
     else:
         raise Exception("Platform not implemented for signing")
@@ -108,7 +108,7 @@ def get_signed_artifacts(input, formats):
         artifacts.add(input.replace('.dmg', '.tar.gz'))
     else:
         artifacts.add(input)
-    if 'gpg' in formats:
+    if 'autograph_gpg' in formats:
         artifacts.add('{}.asc'.format(input))
 
     return artifacts
