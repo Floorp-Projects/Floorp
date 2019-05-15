@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_localstorage_LSWriteOptimizer_h
 #define mozilla_dom_localstorage_LSWriteOptimizer_h
 
+#include "mozilla/CheckedInt.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -14,6 +16,8 @@ namespace dom {
  * Base class for coalescing manipulation queue.
  */
 class LSWriteOptimizerBase {
+  class WriteInfoComparator;
+
  protected:
   class WriteInfo;
   class DeleteItemInfo;
@@ -21,12 +25,13 @@ class LSWriteOptimizerBase {
 
   nsAutoPtr<WriteInfo> mTruncateInfo;
   nsClassHashtable<nsStringHashKey, WriteInfo> mWriteInfos;
+  CheckedUint64 mLastSerialNumber;
   int64_t mTotalDelta;
 
   NS_DECL_OWNINGTHREAD
 
  public:
-  LSWriteOptimizerBase() : mTotalDelta(0) {}
+  LSWriteOptimizerBase() : mLastSerialNumber(0), mTotalDelta(0) {}
 
   LSWriteOptimizerBase(LSWriteOptimizerBase&& aWriteOptimizer)
       : mTruncateInfo(std::move(aWriteOptimizer.mTruncateInfo)) {
@@ -58,14 +63,37 @@ class LSWriteOptimizerBase {
     mTruncateInfo = nullptr;
     mWriteInfos.Clear();
   }
+
+ protected:
+  uint64_t NextSerialNumber() {
+    AssertIsOnOwningThread();
+
+    mLastSerialNumber++;
+
+    MOZ_ASSERT(mLastSerialNumber.isValid());
+
+    return mLastSerialNumber.value();
+  }
+
+  /**
+   * This method can be used by derived classes to get a sorted list of write
+   * infos. Write infos are sorted by the serial number.
+   */
+  void GetSortedWriteInfos(nsTArray<WriteInfo*>& aWriteInfos);
 };
 
 /**
  * Base class for specific mutations.
  */
 class LSWriteOptimizerBase::WriteInfo {
+  uint64_t mSerialNumber;
+
  public:
+  WriteInfo(uint64_t aSerialNumber) : mSerialNumber(aSerialNumber) {}
+
   virtual ~WriteInfo() = default;
+
+  uint64_t SerialNumber() const { return mSerialNumber; }
 
   enum Type { InsertItem = 0, UpdateItem, DeleteItem, Truncate };
 
@@ -76,7 +104,8 @@ class LSWriteOptimizerBase::DeleteItemInfo final : public WriteInfo {
   nsString mKey;
 
  public:
-  explicit DeleteItemInfo(const nsAString& aKey) : mKey(aKey) {}
+  DeleteItemInfo(uint64_t aSerialNumber, const nsAString& aKey)
+      : WriteInfo(aSerialNumber), mKey(aKey) {}
 
   const nsAString& GetKey() const { return mKey; }
 
@@ -89,7 +118,7 @@ class LSWriteOptimizerBase::DeleteItemInfo final : public WriteInfo {
  */
 class LSWriteOptimizerBase::TruncateInfo final : public WriteInfo {
  public:
-  TruncateInfo() {}
+  explicit TruncateInfo(uint64_t aSerialNumber) : WriteInfo(aSerialNumber) {}
 
  private:
   Type GetType() override { return Truncate; }
@@ -122,8 +151,8 @@ class LSWriteOptimizer<T, U>::InsertItemInfo : public WriteInfo {
   U mValue;
 
  public:
-  InsertItemInfo(const nsAString& aKey, const T& aValue)
-      : mKey(aKey), mValue(aValue) {}
+  InsertItemInfo(uint64_t aSerialNumber, const nsAString& aKey, const T& aValue)
+      : WriteInfo(aSerialNumber), mKey(aKey), mValue(aValue) {}
 
   const nsAString& GetKey() const { return mKey; }
 
@@ -138,9 +167,15 @@ class LSWriteOptimizer<T, U>::InsertItemInfo : public WriteInfo {
  */
 template <typename T, typename U>
 class LSWriteOptimizer<T, U>::UpdateItemInfo final : public InsertItemInfo {
+  bool mUpdateWithMove;
+
  public:
-  UpdateItemInfo(const nsAString& aKey, const T& aValue)
-      : InsertItemInfo(aKey, aValue) {}
+  UpdateItemInfo(uint64_t aSerialNumber, const nsAString& aKey, const T& aValue,
+                 bool aUpdateWithMove)
+      : InsertItemInfo(aSerialNumber, aKey, aValue),
+        mUpdateWithMove(aUpdateWithMove) {}
+
+  bool UpdateWithMove() const { return mUpdateWithMove; }
 
  private:
   WriteInfo::Type GetType() override { return WriteInfo::UpdateItem; }
