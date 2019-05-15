@@ -147,6 +147,7 @@ android {
                 if (!mozconfig.substs.MOZ_ANDROID_GCM) {
                     exclude 'org/mozilla/gecko/gcm/**/*.java'
                     exclude 'org/mozilla/gecko/push/**/*.java'
+                    exclude 'org/mozilla/gecko/advertising/**'
                 }
 
                 if (!mozconfig.substs.MOZ_ANDROID_GOOGLE_PLAY_SERVICES) {
@@ -177,6 +178,7 @@ android {
                 if (!mozconfig.substs.MOZ_ANDROID_GCM) {
                     exclude 'org/mozilla/gecko/gcm/**/*.java'
                     exclude 'org/mozilla/gecko/push/**/*.java'
+                    exclude 'org/mozilla/gecko/advertising/**'
                 }
             }
             resources {
@@ -244,6 +246,8 @@ dependencies {
         implementation "com.google.android.gms:play-services-basement:$google_play_services_version"
         implementation "com.google.android.gms:play-services-base:$google_play_services_version"
         implementation "com.google.android.gms:play-services-gcm:$google_play_services_version"
+        implementation "com.google.android.gms:play-services-ads-identifier:$google_play_services_version"
+        implementation "org.mindrot:jbcrypt:0.4"
     }
 
     if (mozconfig.substs.MOZ_ANDROID_GOOGLE_PLAY_SERVICES) {
