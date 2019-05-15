@@ -80,8 +80,14 @@ html[dir="rtl"] .tree-node button:not(.expanded) {
 }
 
 .tree .tree-node.focused {
-  color: white;
-  background-color: var(--theme-selection-background, #0a84ff);
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}
+
+/* Invert text selection color in selected rows */
+.tree .tree-node.focused ::selection {
+  color: var(--theme-selection-background);
+  background-color: var(--theme-selection-color);
 }
 
 .tree-node.focused button.arrow {
