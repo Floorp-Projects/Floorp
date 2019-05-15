@@ -14495,9 +14495,10 @@
   "BFCACHE_PAGE_RESTORED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["sefeng@mozilla.com"],
-    "bug_numbers": [1531917],
+    "bug_numbers": [1531917, 1551935],
     "expires_in_version": "never",
     "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
     "description": "Whether bfcache is used when loading a page from session history"
   },
   "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {
