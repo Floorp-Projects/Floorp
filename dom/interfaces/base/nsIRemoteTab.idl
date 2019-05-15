@@ -57,6 +57,8 @@ interface nsIRemoteTab : nsISupports
 
   readonly attribute uint64_t tabId;
 
+  readonly attribute uint64_t contentProcessId;
+
   /**
    * The OS level process Id of the related child process.
    */

@@ -35,7 +35,7 @@ interface WindowGlobalParent {
   JSWindowActorParent getActor(DOMString name);
 
   [Throws]
-  Promise<RemoteTab> changeFrameRemoteness(
+  Promise<unsigned long long> changeFrameRemoteness(
     BrowsingContext? bc, DOMString remoteType,
     unsigned long long pendingSwitchId);
 };
