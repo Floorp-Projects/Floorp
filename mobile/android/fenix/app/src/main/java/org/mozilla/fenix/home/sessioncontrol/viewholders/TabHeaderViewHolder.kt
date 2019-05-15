@@ -12,6 +12,7 @@ import kotlinx.android.synthetic.main.tab_header.view.*
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabAction
@@ -80,13 +81,20 @@ class TabHeaderViewHolder(
                     context.getString(R.string.tabs_menu_share_tabs)
                 ) {
                     onItemTapped.invoke(Item.Share)
-                },
-                SimpleBrowserMenuItem(
-                    context.getString(R.string.tabs_menu_save_to_collection)
-                ) {
-                    onItemTapped.invoke(Item.SaveToCollection)
                 }
-            )
+            ).let {
+                val list = it.toMutableList()
+                if (BuildConfig.COLLECTIONS_ENABLED) {
+                    list.add(
+                        SimpleBrowserMenuItem(
+                            context.getString(R.string.tabs_menu_save_to_collection)
+                        ) {
+                            onItemTapped.invoke(Item.SaveToCollection)
+                        }
+                    )
+                }
+                list
+            }
         }
     }
 
