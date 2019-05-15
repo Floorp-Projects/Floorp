@@ -202,7 +202,9 @@ class ToolbarActivity : AppCompatActivity() {
 
         val forward = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
-            "Forward") {
+            "Forward",
+            isEnabled = { canGoForward() }
+        ) {
             simulateReload()
         }
 

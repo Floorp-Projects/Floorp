@@ -4,7 +4,9 @@
 
 package mozilla.components.browser.menu.item
 
+import android.app.Activity
 import android.view.LayoutInflater
+import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -19,6 +21,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
@@ -111,6 +114,91 @@ class BrowserMenuItemToolbarTest {
     }
 
     @Test
+    fun `Disabled Button is not enabled`() {
+        val buttons = listOf(
+            BrowserMenuItemToolbar.Button(
+                imageResource = R.drawable.abc_ic_go_search_api_material,
+                contentDescription = "Button01",
+                iconTintColorResource = R.color.accent_material_light,
+                isEnabled = { false }
+            ) {}
+        )
+
+        val menu = mock(BrowserMenu::class.java)
+        val layout = LinearLayout(RuntimeEnvironment.application)
+
+        val toolbar = BrowserMenuItemToolbar(buttons)
+        toolbar.bind(menu, layout)
+
+        val child1 = layout.getChildAt(0)
+        assertEquals("Button01", child1.contentDescription)
+        assertFalse(child1.isEnabled)
+    }
+
+    @Test
+    fun `Button redraws when update is triggered`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).create().get()
+
+        var isEnabled = false
+        val buttons = listOf(
+            BrowserMenuItemToolbar.Button(
+                imageResource = R.drawable.abc_ic_go_search_api_material,
+                contentDescription = "Button01",
+                isEnabled = { isEnabled }
+            ) {}
+        )
+
+        val menu = mock(BrowserMenu::class.java)
+        val layout = LinearLayout(RuntimeEnvironment.application)
+        activity.windowManager.addView(layout, WindowManager.LayoutParams(100, 100))
+
+        val toolbar = BrowserMenuItemToolbar(buttons)
+        toolbar.bind(menu, layout)
+
+        val child1 = layout.getChildAt(0)
+        assertEquals("Button01", child1.contentDescription)
+        assertFalse(child1.isEnabled)
+
+        isEnabled = true
+        buttons[0].update()
+        assertTrue(child1.isEnabled)
+    }
+
+    @Test
+    fun `Button is not observed when view is detached`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).create().get()
+
+        var isEnabled = false
+        val buttons = listOf(
+            BrowserMenuItemToolbar.Button(
+                imageResource = R.drawable.abc_ic_go_search_api_material,
+                contentDescription = "Button01",
+                isEnabled = { isEnabled }
+            ) {}
+        )
+
+        val menu = mock(BrowserMenu::class.java)
+        val layout = LinearLayout(RuntimeEnvironment.application)
+        activity.windowManager.addView(layout, WindowManager.LayoutParams(100, 100))
+
+        val toolbar = BrowserMenuItemToolbar(buttons)
+        toolbar.bind(menu, layout)
+
+        val child1 = layout.getChildAt(0)
+        assertEquals("Button01", child1.contentDescription)
+        assertFalse(child1.isEnabled)
+
+        isEnabled = true
+        buttons[0].update()
+        assertTrue(child1.isEnabled)
+
+        activity.windowManager.removeView(layout)
+        isEnabled = false
+        buttons[0].update()
+        assertTrue(child1.isEnabled)
+    }
+
+    @Test
     fun `Disabled TwoState Button in secondary state is disabled`() {
         val buttons = listOf(
             BrowserMenuItemToolbar.TwoStateButton(
@@ -142,19 +230,57 @@ class BrowserMenuItemToolbarTest {
         var reloadPageAction = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = primaryResource,
             primaryContentDescription = "primary",
+            primaryImageTintResource = R.color.accent_material_dark,
             secondaryImageResource = secondaryResource,
-            secondaryContentDescription = "secondary"
+            secondaryContentDescription = "secondary",
+            secondaryImageTintResource = R.color.accent_material_light
         ) {}
         assertTrue(reloadPageAction.isInPrimaryState.invoke())
 
         reloadPageAction = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = primaryResource,
             primaryContentDescription = "primary",
+            primaryImageTintResource = R.color.accent_material_dark,
             secondaryImageResource = secondaryResource,
             secondaryContentDescription = "secondary",
+            secondaryImageTintResource = R.color.accent_material_light,
             isInPrimaryState = { false }
         ) {}
         assertFalse(reloadPageAction.isInPrimaryState.invoke())
+    }
+
+    @Test
+    fun `TwoStateButton redraws when update is triggered`() {
+        val activity = Robolectric.buildActivity(Activity::class.java).create().get()
+
+        var isInPrimaryState = true
+        val buttons = listOf(
+            BrowserMenuItemToolbar.TwoStateButton(
+                primaryImageResource = R.drawable.abc_ic_go_search_api_material,
+                primaryContentDescription = "TwoStateEnabled",
+                secondaryImageResource = R.drawable.abc_ic_clear_material,
+                secondaryContentDescription = "TwoStateDisabled",
+                isInPrimaryState = { isInPrimaryState },
+                disableInSecondaryState = true
+            ) {}
+        )
+
+        val menu = mock(BrowserMenu::class.java)
+        val layout = LinearLayout(RuntimeEnvironment.application)
+
+        val toolbar = BrowserMenuItemToolbar(buttons)
+        toolbar.bind(menu, layout)
+
+        activity.windowManager.addView(layout, WindowManager.LayoutParams(100, 100))
+
+        val child1 = layout.getChildAt(0)
+        assertEquals("TwoStateEnabled", child1.contentDescription)
+        assertTrue(child1.isEnabled)
+
+        isInPrimaryState = false
+        buttons[0].update()
+        assertEquals("TwoStateDisabled", child1.contentDescription)
+        assertFalse(child1.isEnabled)
     }
 
     @Test
