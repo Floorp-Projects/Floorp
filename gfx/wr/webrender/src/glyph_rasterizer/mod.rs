@@ -845,7 +845,7 @@ mod test_glyph_rasterizer {
         use crate::texture_cache::TextureCache;
         use crate::glyph_cache::GlyphCache;
         use crate::gpu_cache::GpuCache;
-        use crate::render_task::{RenderTaskCache, RenderTaskTree, RenderTaskTreeCounters};
+        use crate::render_task::{RenderTaskCache, RenderTaskGraph, RenderTaskGraphCounters};
         use crate::profiler::TextureCacheProfileCounters;
         use api::{FontKey, FontInstanceKey, FontTemplate, FontRenderMode,
                   IdNamespace, ColorU};
@@ -867,7 +867,7 @@ mod test_glyph_rasterizer {
         let mut gpu_cache = GpuCache::new_for_testing();
         let mut texture_cache = TextureCache::new_for_testing(2048, 1024);
         let mut render_task_cache = RenderTaskCache::new();
-        let mut render_task_tree = RenderTaskTree::new(FrameId::INVALID, &RenderTaskTreeCounters::new());
+        let mut render_task_tree = RenderTaskGraph::new(FrameId::INVALID, &RenderTaskGraphCounters::new());
         let mut font_file =
             File::open("../wrench/reftests/text/VeraBd.ttf").expect("Couldn't open font file");
         let mut font_data = vec![];
