@@ -14,6 +14,6 @@ internal class TabCollectionWithTabs {
     @Embedded
     lateinit var collection: TabCollectionEntity
 
-    @Relation(parentColumn = "id", entityColumn = "tab_collection_id")
+    @Relation(parentColumn = "id", entityColumn = "tab_collection_id", entity = TabEntity::class)
     lateinit var tabs: List<TabEntity>
 }

@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.tab.collections.db
 
+import androidx.lifecycle.LiveData
 import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Delete
@@ -32,4 +33,12 @@ internal interface TabCollectionDao {
         ORDER BY created_at DESC
     """)
     fun getTabCollectionsPaged(): DataSource.Factory<Int, TabCollectionWithTabs>
+
+    @Query("""
+        SELECT *
+        FROM tab_collections
+        ORDER BY created_at DESC
+        LIMIT :limit
+    """)
+    fun getTabCollections(limit: Int): LiveData<List<TabCollectionWithTabs>>
 }
