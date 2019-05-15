@@ -21,7 +21,6 @@ import { prettyPrintSource } from "./prettyPrint";
 import { setBreakableLines } from "./breakableLines";
 import { isFulfilled } from "../../utils/async-value";
 
-import * as parser from "../../workers/parser";
 import { isOriginal, isPretty } from "../../utils/source";
 import {
   memoizeableAction,
@@ -93,7 +92,7 @@ async function loadSource(
 async function loadSourceTextPromise(
   cx: Context,
   source: Source,
-  { dispatch, getState, client, sourceMaps }: ThunkArgs
+  { dispatch, getState, client, sourceMaps, parser }: ThunkArgs
 ): Promise<?Source> {
   const epoch = getSourcesEpoch(getState());
   await dispatch({

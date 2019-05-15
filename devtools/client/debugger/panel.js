@@ -33,7 +33,10 @@ DebuggerPanel.prototype = {
       threadClient: this.toolbox.threadClient,
       tabTarget: this.toolbox.target,
       debuggerClient: this.toolbox.target.client,
-      sourceMaps: this.toolbox.sourceMapService,
+      workers: {
+        sourceMaps: this.toolbox.sourceMapService,
+        evaluationsParser: this.toolbox.parserService
+      },
       panel: this
     });
 

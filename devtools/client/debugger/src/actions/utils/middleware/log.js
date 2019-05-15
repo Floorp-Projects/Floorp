@@ -20,7 +20,8 @@ const blacklist = [
   "REMOVE_BREAKPOINT",
   "NODE_PROPERTIES_LOADED",
   "SET_FOCUSED_SOURCE_ITEM",
-  "NODE_EXPAND"
+  "NODE_EXPAND",
+  "IN_SCOPE_LINES"
 ];
 
 function cloneAction(action: any) {
