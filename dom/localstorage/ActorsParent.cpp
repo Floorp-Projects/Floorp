@@ -3686,6 +3686,15 @@ void DatastoreWriteOptimizer::ApplyAndReset(
     nsTArray<LSItemInfo>& aOrderedItems) {
   AssertIsOnOwningThread();
 
+  // The mWriteInfos hash table contains all write infos, but it keeps them in
+  // an arbitrary order, which means write infos need to be sorted before being
+  // processed. However, the order is not important for deletions and normal
+  // updates. Usually, filtering out deletions and updates would require extra
+  // work, but we have to check the hash table for each ordered item anyway, so
+  // we can remove the write info if it is a deletion or update without adding
+  // extra overhead. In the end, only insertions need to be sorted before being
+  // processed.
+
   if (mTruncateInfo) {
     aOrderedItems.Clear();
     mTruncateInfo = nullptr;
@@ -3705,8 +3714,18 @@ void DatastoreWriteOptimizer::ApplyAndReset(
 
         case WriteInfo::UpdateItem: {
           auto updateItemInfo = static_cast<UpdateItemInfo*>(writeInfo);
-          item.value() = updateItemInfo->GetValue();
-          entry.Remove();
+          if (updateItemInfo->UpdateWithMove()) {
+            // See the comment in LSWriteOptimizer::InsertItem for more details
+            // about the UpdateWithMove flag.
+
+            aOrderedItems.RemoveElementAt(index);
+            entry.Data() = new InsertItemInfo(updateItemInfo->SerialNumber(),
+                                              updateItemInfo->GetKey(),
+                                              updateItemInfo->GetValue());
+          } else {
+            item.value() = updateItemInfo->GetValue();
+            entry.Remove();
+          }
           break;
         }
 
@@ -3719,9 +3738,10 @@ void DatastoreWriteOptimizer::ApplyAndReset(
     }
   }
 
-  for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
-    WriteInfo* writeInfo = iter.Data();
+  nsTArray<WriteInfo*> writeInfos;
+  GetSortedWriteInfos(writeInfos);
 
+  for (WriteInfo* writeInfo : writeInfos) {
     MOZ_ASSERT(writeInfo->GetType() == WriteInfo::InsertItem);
 
     auto insertItemInfo = static_cast<InsertItemInfo*>(writeInfo);
@@ -3743,6 +3763,9 @@ nsresult ConnectionWriteOptimizer::Perform(Connection* aConnection,
                                            int64_t& aOutUsage) {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
+
+  // The order of elements is not stored in the database, so write infos don't
+  // need to be sorted before being processed.
 
   nsresult rv;
 
