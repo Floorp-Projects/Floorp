@@ -6,6 +6,7 @@
 
 #include "jit/BaselineFrameInfo.h"
 
+#include "jit/BaselineIC.h"
 #ifdef DEBUG
 #  include "jit/BytecodeAnalysis.h"
 #endif
@@ -159,6 +160,10 @@ void InterpreterFrameInfo::popRegsAndSync(uint32_t uses) {
     default:
       MOZ_CRASH("Invalid uses");
   }
+}
+
+void InterpreterFrameInfo::bumpInterpreterICEntry() {
+  masm.addPtr(Imm32(sizeof(ICEntry)), addressOfInterpreterICEntry());
 }
 
 void CompilerFrameInfo::storeStackValue(int32_t depth, const Address& dest,
