@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from mozbuild.util import memoize
 
+from .taskcluster import get_root_url
 from .keyed_by import evaluate_keyed_by
 from .attributes import keymatch
 
@@ -36,6 +37,7 @@ def _get(graph_config, alias, level):
     """Get the configuration for this worker_type alias: {provisioner,
     worker-type, implementation, os}"""
     level = str(level)
+
     # handle the legacy (non-alias) format
     if '/' in alias:
         alias = alias.format(level=level)
@@ -61,12 +63,12 @@ def _get(graph_config, alias, level):
         raise KeyError("No matches for worker-type alias " + alias)
     worker_config = matches[0]
 
-    def eval_field(field, value):
-        return evaluate_keyed_by(
-            value,
-            "worker-type alias {} field {}".format(alias, field),
-            {"level": level}).format(level=level, alias=alias)
-    return {field: eval_field(field, value) for field, value in worker_config.iteritems()}
+    worker_config['worker-type'] = evaluate_keyed_by(
+        worker_config['worker-type'],
+        "worker-type alias {} field worker-type".format(alias),
+        {"level": level}).format(level=level, alias=alias)
+
+    return worker_config
 
 
 @memoize
@@ -85,4 +87,14 @@ def get_worker_type(graph_config, worker_type, level):
     aliases from the graph config.
     """
     worker_config = _get(graph_config, worker_type, level)
-    return worker_config["provisioner"], worker_config['worker-type']
+
+    # translate the provisionerId to 'ec2' everywhere but the original
+    # https://taskcluster.net deployment.  Once that deployment is no longer in
+    # use, this can be removed and all corresponding provisioners changed to
+    # `ec2`
+    root_url = get_root_url(False)
+    provisioner = worker_config["provisioner"]
+    if root_url != 'https://taskcluster.net' and provisioner == 'aws-provisioner-v1':
+        provisioner = 'ec2'
+
+    return provisioner, worker_config['worker-type']
