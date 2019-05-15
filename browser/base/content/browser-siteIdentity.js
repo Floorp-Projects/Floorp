@@ -467,6 +467,32 @@ var gIdentityHandler = {
     }
   },
 
+  getHostForDisplay() {
+    let host = "";
+
+    try {
+      host = this.getEffectiveHost();
+    } catch (e) {
+      // Some URIs might have no hosts.
+    }
+
+    let readerStrippedURI = ReaderMode.getOriginalUrlObjectForDisplay(this._uri.displaySpec);
+    if (readerStrippedURI) {
+      host = readerStrippedURI.host;
+    }
+
+    if (this._pageExtensionPolicy) {
+      host = this._pageExtensionPolicy.name;
+    }
+
+    // Fallback for special protocols.
+    if (!host) {
+      host = this._uri.specIgnoringRef;
+    }
+
+    return host;
+  },
+
   /**
    * Return the CSS class name to set on the "fullscreen-warning" element to
    * display information about connection security in the notification shown
@@ -741,28 +767,8 @@ var gIdentityHandler = {
     // Initialize the optional strings to empty values
     let supplemental = "";
     let verifier = "";
-    let host = "";
+    let host = this.getHostForDisplay();
     let owner = "";
-
-    try {
-      host = this.getEffectiveHost();
-    } catch (e) {
-      // Some URIs might have no hosts.
-    }
-
-    let readerStrippedURI = ReaderMode.getOriginalUrlObjectForDisplay(this._uri.displaySpec);
-    if (readerStrippedURI) {
-      host = readerStrippedURI.host;
-    }
-
-    if (this._pageExtensionPolicy) {
-      host = this._pageExtensionPolicy.name;
-    }
-
-    // Fallback for special protocols.
-    if (!host) {
-      host = this._uri.specIgnoringRef;
-    }
 
     // Fill in the CA name if we have a valid TLS certificate.
     if (this._isSecure || this._isCertUserOverridden) {

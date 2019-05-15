@@ -15,9 +15,13 @@
                descriptionheightworkaround="true">
       <vbox id="protections-popup-mainView-panel-header">
         <label>
-          <html:span id="protections-popup-mainView-panel-header-span">
-            <html:h1>Watch this space! :)</html:h1>
-          </html:span>
+          <html:span id="protections-popup-mainView-panel-header-span"/>
+        </label>
+      </vbox>
+
+      <vbox id="protections-popup-placeholder" class="identity-popup-section">
+        <label>
+          <html:h2>Watch this space! :)</html:h2>
         </label>
       </vbox>
     </panelview>
