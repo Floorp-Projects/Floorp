@@ -55,6 +55,7 @@ const POST_DATA_URL = EXAMPLE_URL + "html_post-data-test-page.html";
 const POST_ARRAY_DATA_URL = EXAMPLE_URL + "html_post-array-data-test-page.html";
 const POST_JSON_URL = EXAMPLE_URL + "html_post-json-test-page.html";
 const POST_RAW_URL = EXAMPLE_URL + "html_post-raw-test-page.html";
+const POST_RAW_URL_WITH_HASH = EXAMPLE_URL + "html_header-test-page.html";
 const POST_RAW_WITH_HEADERS_URL = EXAMPLE_URL + "html_post-raw-with-headers-test-page.html";
 const PARAMS_URL = EXAMPLE_URL + "html_params-test-page.html";
 const JSONP_URL = EXAMPLE_URL + "html_jsonp-test-page.html";
