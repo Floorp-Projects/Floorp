@@ -314,13 +314,9 @@ ContentAreaDropListener.prototype =
     }
   },
 
-  queryLinks: function(aDataTransfer, aCount)
+  queryLinks: function(aDataTransfer)
   {
-    let links = this._getDropLinks(aDataTransfer);
-    if (aCount) {
-      aCount.value = links.length;
-    }
-    return links;
+    return this._getDropLinks(aDataTransfer);
   },
 
   _eventTargetIsDisabled: function(aEvent)
