@@ -9,6 +9,18 @@
 namespace mozilla {
 namespace dom {
 
+class LSWriteOptimizerBase::WriteInfoComparator {
+ public:
+  bool Equals(const WriteInfo* a, const WriteInfo* b) const {
+    return a && b ? a->SerialNumber() == b->SerialNumber()
+                  : !a && !b ? true : false;
+  }
+
+  bool LessThan(const WriteInfo* a, const WriteInfo* b) const {
+    return a && b ? a->SerialNumber() < b->SerialNumber() : b ? true : false;
+  }
+};
+
 void LSWriteOptimizerBase::DeleteItem(const nsAString& aKey, int64_t aDelta) {
   AssertIsOnOwningThread();
 
@@ -17,7 +29,8 @@ void LSWriteOptimizerBase::DeleteItem(const nsAString& aKey, int64_t aDelta) {
       existingWriteInfo->GetType() == WriteInfo::InsertItem) {
     mWriteInfos.Remove(aKey);
   } else {
-    nsAutoPtr<WriteInfo> newWriteInfo(new DeleteItemInfo(aKey));
+    nsAutoPtr<WriteInfo> newWriteInfo(
+        new DeleteItemInfo(NextSerialNumber(), aKey));
     mWriteInfos.Put(aKey, newWriteInfo.forget());
   }
 
@@ -30,10 +43,25 @@ void LSWriteOptimizerBase::Truncate(int64_t aDelta) {
   mWriteInfos.Clear();
 
   if (!mTruncateInfo) {
-    mTruncateInfo = new TruncateInfo();
+    mTruncateInfo = new TruncateInfo(NextSerialNumber());
   }
 
   mTotalDelta += aDelta;
+}
+
+void LSWriteOptimizerBase::GetSortedWriteInfos(
+    nsTArray<WriteInfo*>& aWriteInfos) {
+  AssertIsOnOwningThread();
+
+  if (mTruncateInfo) {
+    aWriteInfos.InsertElementSorted(mTruncateInfo, WriteInfoComparator());
+  }
+
+  for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
+    WriteInfo* writeInfo = iter.Data();
+
+    aWriteInfos.InsertElementSorted(writeInfo, WriteInfoComparator());
+  }
 }
 
 template <typename T, typename U>
@@ -45,9 +73,19 @@ void LSWriteOptimizer<T, U>::InsertItem(const nsAString& aKey, const T& aValue,
   nsAutoPtr<WriteInfo> newWriteInfo;
   if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
       existingWriteInfo->GetType() == WriteInfo::DeleteItem) {
-    newWriteInfo = new UpdateItemInfo(aKey, aValue);
+    // We could just simply replace the deletion with ordinary update, but that
+    // would preserve item's original position/index. Imagine a case when we
+    // have only one existing key k1. Now let's create a new optimizer and
+    // remove k1, add k2 and add k1 back. The final order should be k2, k1
+    // (ordinary update would produce k1, k2). So we need to differentiate
+    // between normal update and "optimized" update which resulted from a
+    // deletion followed by an insertion. We use the UpdateWithMove flag for
+    // this.
+
+    newWriteInfo = new UpdateItemInfo(NextSerialNumber(), aKey, aValue,
+                                      /* aUpdateWithMove */ true);
   } else {
-    newWriteInfo = new InsertItemInfo(aKey, aValue);
+    newWriteInfo = new InsertItemInfo(NextSerialNumber(), aKey, aValue);
   }
   mWriteInfos.Put(aKey, newWriteInfo.forget());
 
@@ -63,9 +101,10 @@ void LSWriteOptimizer<T, U>::UpdateItem(const nsAString& aKey, const T& aValue,
   nsAutoPtr<WriteInfo> newWriteInfo;
   if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
       existingWriteInfo->GetType() == WriteInfo::InsertItem) {
-    newWriteInfo = new InsertItemInfo(aKey, aValue);
+    newWriteInfo = new InsertItemInfo(NextSerialNumber(), aKey, aValue);
   } else {
-    newWriteInfo = new UpdateItemInfo(aKey, aValue);
+    newWriteInfo = new UpdateItemInfo(NextSerialNumber(), aKey, aValue,
+                                      /* aUpdateWithMove */ false);
   }
   mWriteInfos.Put(aKey, newWriteInfo.forget());
 
