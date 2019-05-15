@@ -537,7 +537,22 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   // This happens in mobile platforms with async pinch zooming.
   offset = offset.RemoveResolution(presContext->PresShell()->GetResolution());
 
-  nsIFrame* foundFrame = nsLayoutUtils::GetFrameForPoint(startFrame, offset);
+  // We need to translate with the offset of the edge of the visual
+  // viewport from top edge of the layout viewport.
+  offset += presContext->PresShell()->GetVisualViewportOffset() -
+            presContext->PresShell()->GetLayoutViewportOffset();
+
+  EnumSet<nsLayoutUtils::FrameForPointOption> options = {
+#ifdef MOZ_WIDGET_ANDROID
+      // This is needed in Android to ignore the clipping of the scroll frame
+      // when zoomed in. May regress something on other platforms, so
+      // keeping it Android-exclusive for now.
+      nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame
+#endif
+  };
+
+  nsIFrame* foundFrame =
+      nsLayoutUtils::GetFrameForPoint(startFrame, offset, options);
 
   nsIContent* content = nullptr;
   if (!foundFrame || !(content = foundFrame->GetContent()))
@@ -645,11 +660,18 @@ nsRect Accessible::BoundsInAppUnits() const {
     return nsRect();
   }
 
+  PresShell* presShell = mDoc->PresContext()->PresShell();
+
+  // We need to inverse translate with the offset of the edge of the visual
+  // viewport from top edge of the layout viewport.
+  nsPoint viewportOffset = presShell->GetVisualViewportOffset() -
+                           presShell->GetLayoutViewportOffset();
+  unionRectTwips.MoveBy(-viewportOffset);
+
   // We need to take into account a non-1 resolution set on the presshell.
   // This happens in mobile platforms with async pinch zooming. Here we
   // scale the bounds before adding the screen-relative offset.
-  unionRectTwips.ScaleRoundOut(
-      mDoc->PresContext()->PresShell()->GetResolution());
+  unionRectTwips.ScaleRoundOut(presShell->GetResolution());
   // We have the union of the rectangle, now we need to put it in absolute
   // screen coords.
   nsRect orgRectPixels = boundingFrame->GetScreenRectInAppUnits();
