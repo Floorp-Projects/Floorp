@@ -205,9 +205,6 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
   return false;
 }
 
-void RenameAdditionalHangMinidump(nsIFile* minidump, nsIFile* childMinidump,
-                                  const nsACString& name) {}
-
 ThreadId CurrentThreadId() { return -1; }
 
 bool TakeMinidump(nsIFile** aResult, bool aMoveToPending) { return false; }

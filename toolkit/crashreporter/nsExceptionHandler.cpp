@@ -182,8 +182,6 @@ typedef std::string xpstring;
 static const XP_CHAR dumpFileExtension[] = XP_TEXT(".dmp");
 #endif
 
-static const XP_CHAR childCrashAnnotationBaseName[] =
-    XP_TEXT("GeckoChildCrash");
 static const XP_CHAR extraFileExtension[] = XP_TEXT(".extra");
 static const XP_CHAR memoryReportExtension[] = XP_TEXT(".memory.json.gz");
 static xpstring* defaultMemoryReportPath = nullptr;
@@ -3333,8 +3331,19 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
 // CreatePairedMinidumps() and helpers
 //
 
-void RenameAdditionalHangMinidump(nsIFile* minidump, nsIFile* childMinidump,
-                                  const nsACString& name) {
+/*
+ * Renames the stand alone dump file aDumpFile to:
+ *  |aOwnerDumpFile-aDumpFileProcessType.dmp|
+ * and moves it into the same directory as aOwnerDumpFile. Does not
+ * modify aOwnerDumpFile in any way.
+ *
+ * @param aDumpFile - the dump file to associate with aOwnerDumpFile.
+ * @param aOwnerDumpFile - the new owner of aDumpFile.
+ * @param aDumpFileProcessType - process name associated with aDumpFile.
+ */
+static void RenameAdditionalHangMinidump(nsIFile* minidump,
+                                         nsIFile* childMinidump,
+                                         const nsACString& name) {
   nsCOMPtr<nsIFile> directory;
   childMinidump->GetParent(getter_AddRefs(directory));
   if (!directory) return;
