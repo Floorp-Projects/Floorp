@@ -10921,7 +10921,15 @@ void PresShell::SetIsUnderHiddenEmbedderElement(
     // Propagate to children.
     for (BrowsingContext* child : bc->GetChildren()) {
       Element* embedderElement = child->GetEmbedderElement();
-      MOZ_ASSERT(embedderElement);
+      if (!embedderElement) {
+        // TODO: We shouldn't need to null check here since `child` and the
+        // element returned by `child->GetEmbedderElement()` are in our
+        // process (the actual browsing context represented by `child` may not
+        // be, but that doesn't matter).  However, there are currently a very
+        // small number of crashes due to `embedderElement` being null, somehow
+        // - see bug 1551241.  For now we wallpaper the crash.
+        continue;
+      }
 
       bool embedderFrameIsHidden = true;
       if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
