@@ -1100,6 +1100,8 @@ class AddonInstall {
    *        included in the addon manager telemetry events.
    * @param {boolean} [options.isUserRequestedUpdate]
    *        An optional boolean, true if the install object is related to a user triggered update.
+   * @param {nsIURL} [options.releaseNotesURI]
+   *        An optional nsIURL that release notes where release notes can be retrieved.
    * @param {function(string) : Promise<void>} [options.promptHandler]
    *        A callback to prompt the user before installing.
    */
@@ -1118,7 +1120,7 @@ class AddonInstall {
     this.hash = this.originalHash;
     this.existingAddon = options.existingAddon || null;
     this.promptHandler = options.promptHandler || (() => Promise.resolve());
-    this.releaseNotesURI = null;
+    this.releaseNotesURI = options.releaseNotesURI || null;
 
     this._startupPromise = null;
 
@@ -2286,18 +2288,19 @@ function createUpdate(aCallback, aAddon, aUpdate, isUserRequested) {
       isUserRequestedUpdate: isUserRequested,
     };
 
+    try {
+      if (aUpdate.updateInfoURL)
+        opts.releaseNotesURI = Services.io.newURI(escapeAddonURI(aAddon, aUpdate.updateInfoURL));
+    } catch (e) {
+      // If the releaseNotesURI cannot be parsed then just ignore it.
+    }
+
     let install;
     if (url instanceof Ci.nsIFileURL) {
       install = new LocalAddonInstall(aAddon.location, url, opts);
       await install.init();
     } else {
       install = new DownloadAddonInstall(aAddon.location, url, opts);
-    }
-    try {
-      if (aUpdate.updateInfoURL)
-        install.releaseNotesURI = Services.io.newURI(escapeAddonURI(aAddon, aUpdate.updateInfoURL));
-    } catch (e) {
-      // If the releaseNotesURI cannot be parsed then just ignore it.
     }
 
     aCallback(install);
