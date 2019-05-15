@@ -16,7 +16,7 @@ namespace mozilla {
 namespace dom {
 
 /**
- * Initial LSSnapshot state as produced by Datastore::GetSnapshotInitInfo.  See
+ * Initial LSSnapshot state as produced by Datastore::GetSnapshotLoadInfo.  See
  * `LSSnapshot::LoadState` for more details about the possible states and a
  * high level overview.
  */
