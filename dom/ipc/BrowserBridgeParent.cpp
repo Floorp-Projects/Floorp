@@ -61,9 +61,9 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                            constructorSender->ChildID());
 
   // Construct the BrowserParent object for our subframe.
-  RefPtr<BrowserParent> browserParent(
-      new BrowserParent(constructorSender, tabId, tabContext, aBrowsingContext,
-                        aChromeFlags, this));
+  RefPtr<BrowserParent> browserParent(new BrowserParent(
+      constructorSender, tabId, tabContext, aBrowsingContext, aChromeFlags));
+  browserParent->SetBrowserBridgeParent(this);
 
   // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
   // releases the ref taken.
