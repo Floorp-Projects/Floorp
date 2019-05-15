@@ -17,6 +17,7 @@ class LSNotifyInfo;
 class LSSnapshotChild;
 class LSSnapshotInitInfo;
 class LSWriteAndNotifyInfo;
+class SnapshotWriteOptimizer;
 
 class LSSnapshot final : public nsIRunnable {
  public:
@@ -79,7 +80,8 @@ class LSSnapshot final : public nsIRunnable {
   nsTHashtable<nsStringHashKey> mLoadedItems;
   nsTHashtable<nsStringHashKey> mUnknownItems;
   nsDataHashtable<nsStringHashKey, nsString> mValues;
-  nsTArray<LSWriteAndNotifyInfo> mWriteAndNotifyInfos;
+  nsAutoPtr<SnapshotWriteOptimizer> mWriteOptimizer;
+  nsAutoPtr<nsTArray<LSWriteAndNotifyInfo>> mWriteAndNotifyInfos;
 
   uint32_t mInitLength;
   uint32_t mLength;
@@ -88,6 +90,7 @@ class LSSnapshot final : public nsIRunnable {
 
   LoadState mLoadState;
 
+  bool mHasOtherProcessObservers;
   bool mExplicit;
   bool mHasPendingStableStateCallback;
   bool mHasPendingTimerCallback;
