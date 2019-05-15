@@ -30,7 +30,7 @@ popd &>/dev/null
 retry="$MY_DIR/../../../../mach python -m redo.cmd -s 1 -a 3"
 cert_replacer="$MY_DIR/../replace-updater-certs.py"
 
-dep_overrides="nightly_aurora_level3_primary.der dep1.der nightly_aurora_level3_secondary.der dep2.der release_primary.der dep1.der release_secondary.der dep2.der"
+dep_overrides="nightly_aurora_level3_primary.der dep1.der nightly_aurora_level3_secondary.der dep2.der release_primary.der dep1.der release_secondary.der dep2.der sha1/release_primary.der sha1/dep1.der sha1/release_secondary.der sha1/dep2.der"
 nightly_overrides="dep1.der nightly_aurora_level3_primary.der dep2.der nightly_aurora_level3_secondary.der release_primary.der nightly_aurora_level3_primary.der release_secondary.der nightly_aurora_level3_secondary.der"
 release_overrides="dep1.der release_primary.der dep2.der release_secondary.der nightly_aurora_level3_primary.der release_primary.der nightly_aurora_level3_secondary.der release_secondary.der"
 
