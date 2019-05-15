@@ -114,10 +114,10 @@ registerCleanupFunction(async () => {
  * @throws If the file already exists.
  */
 async function continueFileHandler(leafName) {
-  // The total time to wait with 200 retries and the default interval of 100 is
-  // approximately 20 seconds.
+  // The total time to wait with 300 retries and the default interval of 100 is
+  // approximately 30 seconds.
   let interval = 100;
-  let retries = 200;
+  let retries = 300;
   let continueFile;
   if (leafName == CONTINUE_STAGING) {
     // The total time to wait with 600 retries and an interval of 200 is
