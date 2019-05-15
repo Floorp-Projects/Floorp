@@ -2486,12 +2486,12 @@ static void UpdateThreadFunc(void* param) {
         NS_tsnprintf(continueFilePath,
                      sizeof(continueFilePath) / sizeof(continueFilePath[0]),
                      NS_T("%s/continueStaging"), gInstallDirPath);
-        // Use 50 retries for staging requests to lessen the likelihood of tests
-        // intermittently failing on verify tasks due to launching the updater.
-        // The total time to wait with the default interval of 100 ms is
-        // approximately 5 seconds. The total time for tests is longer to
+        // Use 300 retries for staging requests to lessen the likelihood of
+        // tests intermittently failing on verify tasks due to launching the
+        // updater. The total time to wait with the default interval of 100 ms
+        // is approximately 30 seconds. The total time for tests is longer to
         // account for the extra time it takes for the updater to launch.
-        const int max_retries = 50;
+        const int max_retries = 300;
         int retries = 0;
         while (retries++ < max_retries) {
 #  ifdef XP_WIN
