@@ -188,6 +188,9 @@ async function testObjectTypes(testFunction) {
     { expression: "[1, 2]", type: "object", subtype: "array" },
     { expression: "new Proxy({}, {})", type: "object", subtype: "proxy" },
     { expression: "new Date()", type: "object", subtype: "date" },
+    { expression: "document", type: "object", subtype: "node" },
+    { expression: "document.documentElement", type: "object", subtype: "node" },
+    { expression: "document.createElement('div')", type: "object", subtype: "node" },
   ];
 
   for (const { expression, type, subtype } of expressions) {
