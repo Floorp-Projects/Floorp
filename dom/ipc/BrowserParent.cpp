@@ -809,15 +809,12 @@ mozilla::ipc::IPCResult BrowserParent::RecvDropLinks(
     if (aLinks.Length() != mVerifyDropLinks.Length()) {
       loadUsingSystemPrincipal = false;
     }
-    UniquePtr<const char16_t*[]> links;
-    links = MakeUnique<const char16_t*[]>(aLinks.Length());
     for (uint32_t i = 0; i < aLinks.Length(); i++) {
       if (loadUsingSystemPrincipal) {
         if (!aLinks[i].Equals(mVerifyDropLinks[i])) {
           loadUsingSystemPrincipal = false;
         }
       }
-      links[i] = aLinks[i].get();
     }
     mVerifyDropLinks.Clear();
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
@@ -826,7 +823,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvDropLinks(
     } else {
       triggeringPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
     }
-    browser->DropLinks(aLinks.Length(), links.get(), triggeringPrincipal);
+    browser->DropLinks(aLinks, triggeringPrincipal);
   }
   return IPC_OK();
 }
@@ -2163,25 +2160,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvEnableDisableCommands(
     browser->GetIsRemoteBrowser(&isRemoteBrowser);
   }
   if (isRemoteBrowser) {
-    UniquePtr<const char*[]> enabledCommands, disabledCommands;
-
-    if (aEnabledCommands.Length()) {
-      enabledCommands = MakeUnique<const char*[]>(aEnabledCommands.Length());
-      for (uint32_t c = 0; c < aEnabledCommands.Length(); c++) {
-        enabledCommands[c] = aEnabledCommands[c].get();
-      }
-    }
-
-    if (aDisabledCommands.Length()) {
-      disabledCommands = MakeUnique<const char*[]>(aDisabledCommands.Length());
-      for (uint32_t c = 0; c < aDisabledCommands.Length(); c++) {
-        disabledCommands[c] = aDisabledCommands[c].get();
-      }
-    }
-
-    browser->EnableDisableCommandsRemoteOnly(
-        aAction, aEnabledCommands.Length(), enabledCommands.get(),
-        aDisabledCommands.Length(), disabledCommands.get());
+    browser->EnableDisableCommandsRemoteOnly(aAction, aEnabledCommands,
+                                             aDisabledCommands);
   }
 
   return IPC_OK();

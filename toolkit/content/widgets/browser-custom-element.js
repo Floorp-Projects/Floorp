@@ -1348,11 +1348,10 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     return undefined;
   }
 
-  enableDisableCommandsRemoteOnly(aAction, aEnabledLength, aEnabledCommands, aDisabledLength, aDisabledCommands) {
+  enableDisableCommandsRemoteOnly(aAction, aEnabledCommands, aDisabledCommands) {
     if (this._controller) {
-      this._controller.enableDisableCommands(aAction,
-        aEnabledLength, aEnabledCommands,
-        aDisabledLength, aDisabledCommands);
+      this._controller.enableDisableCommands(aAction, aEnabledCommands,
+                                             aDisabledCommands);
     }
   }
 
@@ -1832,12 +1831,12 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     return this.frameLoader.drawSnapshot(x, y, w, h, scale, backgroundColor);
   }
 
-  dropLinks(aLinksCount, aLinks, aTriggeringPrincipal) {
+  dropLinks(aLinks, aTriggeringPrincipal) {
     if (!this.droppedLinkHandler) {
       return false;
     }
     let links = [];
-    for (let i = 0; i < aLinksCount; i += 3) {
+    for (let i = 0; i < aLinks.length; i += 3) {
       links.push({
         url: aLinks[i],
         name: aLinks[i + 1],
