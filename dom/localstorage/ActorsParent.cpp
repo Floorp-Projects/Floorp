@@ -83,6 +83,7 @@ class ArchivedOriginScope;
 class Connection;
 class ConnectionThread;
 class Database;
+class Observer;
 class PrepareDatastoreOp;
 class PreparedDatastore;
 class QuotaClient;
@@ -1776,6 +1777,8 @@ class Datastore final
                                    const LSValue& aOldValue,
                                    const LSValue& aNewValue);
 
+  void NoteChangedObserverArray(const nsTArray<Observer*>& aObservers);
+
   NS_INLINE_DECL_REFCOUNTING(Datastore)
 
  private:
@@ -2068,6 +2071,8 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   bool mLoadKeysReceived;
   bool mSentMarkDirty;
 
+  bool mHasOtherProcessObservers;
+
  public:
   // Created in AllocPBackgroundLSSnapshotParent.
   Snapshot(Database* aDatabase, const nsAString& aDocumentURI);
@@ -2076,7 +2081,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
             nsTHashtable<nsStringHashKey>& aUnknownItems,
             uint32_t aNextLoadIndex, uint32_t aTotalLength,
             int64_t aInitialUsage, int64_t aPeakUsage,
-            LSSnapshot::LoadState aLoadState) {
+            LSSnapshot::LoadState aLoadState, bool aHasOtherProcessObservers) {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(aInitialUsage >= 0);
     MOZ_ASSERT(aPeakUsage >= aInitialUsage);
@@ -2103,6 +2108,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
       mLoadedAllItems = true;
       mLoadKeysReceived = true;
     }
+    mHasOtherProcessObservers = aHasOtherProcessObservers;
   }
 
   /**
@@ -2114,6 +2120,18 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
                 bool aAffectsOrder);
 
   void MarkDirty();
+
+  bool IsDirty() const {
+    AssertIsOnBackgroundThread();
+
+    return mSentMarkDirty;
+  }
+
+  bool HasOtherProcessObservers() const {
+    AssertIsOnBackgroundThread();
+
+    return mHasOtherProcessObservers;
+  }
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Snapshot)
 
@@ -3300,6 +3318,10 @@ bool RecvPBackgroundLSObserverConstructor(PBackgroundLSObserverParent* aActor,
     gObservers->Put(observer->Origin(), array);
   }
   array->AppendElement(observer);
+
+  if (RefPtr<Datastore> datastore = GetDatastore(observer->Origin())) {
+    datastore->NoteChangedObserverArray(*array);
+  }
 
   return true;
 }
@@ -5440,6 +5462,37 @@ void Datastore::NotifyOtherProcessObservers(Database* aDatabase,
   }
 }
 
+void Datastore::NoteChangedObserverArray(
+    const nsTArray<Observer*>& aObservers) {
+  AssertIsOnBackgroundThread();
+
+  for (auto iter = mActiveDatabases.ConstIter(); !iter.Done(); iter.Next()) {
+    Database* database = iter.Get()->GetKey();
+
+    Snapshot* snapshot = database->GetSnapshot();
+    MOZ_ASSERT(snapshot);
+
+    if (snapshot->IsDirty()) {
+      continue;
+    }
+
+    bool hasOtherProcessObservers = false;
+
+    PBackgroundParent* databaseBackgroundActor = database->Manager();
+
+    for (Observer* observer : aObservers) {
+      if (observer->Manager() != databaseBackgroundActor) {
+        hasOtherProcessObservers = true;
+        break;
+      }
+    }
+
+    if (snapshot->HasOtherProcessObservers() != hasOtherProcessObservers) {
+      snapshot->MarkDirty();
+    }
+  }
+}
+
 bool Datastore::UpdateUsage(int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
@@ -5782,7 +5835,7 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
   bool hasOtherProcessObservers = mDatastore->HasOtherProcessObservers(this);
 
   snapshot->Init(loadedItems, unknownItems, nextLoadIndex, totalLength,
-                 initialUsage, peakUsage, loadState);
+                 initialUsage, peakUsage, loadState, hasOtherProcessObservers);
 
   RegisterSnapshot(snapshot);
 
@@ -5913,6 +5966,11 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpoint(
     return IPC_FAIL_NO_REASON(this);
   }
 
+  if (NS_WARN_IF(mHasOtherProcessObservers)) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   mDatastore->BeginUpdateBatch(mUsage);
 
   for (uint32_t index = 0; index < aWriteInfos.Length(); index++) {
@@ -5958,6 +6016,11 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpointAndNotify(
   MOZ_ASSERT(mPeakUsage >= mUsage);
 
   if (NS_WARN_IF(aWriteAndNotifyInfos.IsEmpty())) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (NS_WARN_IF(!mHasOtherProcessObservers)) {
     ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
@@ -6308,6 +6371,10 @@ void Observer::ActorDestroy(ActorDestroyReason aWhy) {
   MOZ_ASSERT(array);
 
   array->RemoveElement(this);
+
+  if (RefPtr<Datastore> datastore = GetDatastore(mOrigin)) {
+    datastore->NoteChangedObserverArray(*array);
+  }
 
   if (array->IsEmpty()) {
     gObservers->Remove(mOrigin);
