@@ -82,8 +82,8 @@ abstract class EngineSession(
      */
     open class TrackingProtectionPolicy internal constructor(
         val categories: Int,
-        var useForPrivateSessions: Boolean = true,
-        var useForRegularSessions: Boolean = true
+        val useForPrivateSessions: Boolean = true,
+        val useForRegularSessions: Boolean = true
     ) {
         companion object {
             internal const val NONE: Int = 0
@@ -97,7 +97,7 @@ abstract class EngineSession(
             const val FINGERPRINTING = 1 shl 7
             internal const val ALL: Int = AD + ANALYTICS + SOCIAL + CONTENT + TEST + CRYPTOMINING + FINGERPRINTING
 
-            fun none(): TrackingProtectionPolicy = TrackingProtectionPolicy(NONE)
+            fun none() = TrackingProtectionPolicy(NONE)
             fun all() = TrackingProtectionPolicyForSessionTypes(ALL)
             fun select(vararg categories: Int) = TrackingProtectionPolicyForSessionTypes(categories.sum())
         }
@@ -113,9 +113,7 @@ abstract class EngineSession(
             return true
         }
 
-        override fun hashCode(): Int {
-            return categories
-        }
+        override fun hashCode() = categories
     }
 
     /**
@@ -128,20 +126,20 @@ abstract class EngineSession(
         /**
          * Marks this policy to be used for private sessions only.
          */
-        fun forPrivateSessionsOnly(): TrackingProtectionPolicy {
-            useForPrivateSessions = true
+        fun forPrivateSessionsOnly() = TrackingProtectionPolicy(
+            categories,
+            useForPrivateSessions = true,
             useForRegularSessions = false
-            return this
-        }
+        )
 
         /**
          * Marks this policy to be used for regular (non-private) sessions only.
          */
-        fun forRegularSessionsOnly(): TrackingProtectionPolicy {
+        fun forRegularSessionsOnly() = TrackingProtectionPolicy(
+            categories,
+            useForPrivateSessions = false,
             useForRegularSessions = true
-            useForPrivateSessions = false
-            return this
-        }
+        )
     }
 
     /**
