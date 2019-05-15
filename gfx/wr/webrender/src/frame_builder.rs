@@ -21,7 +21,7 @@ use crate::prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebu
 use crate::prim_store::{PrimitiveStoreStats};
 use crate::profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use crate::render_backend::{DataStores, FrameStamp};
-use crate::render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree, RenderTaskTreeCounters};
+use crate::render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskGraph, RenderTaskGraphCounters};
 use crate::resource_cache::{ResourceCache};
 use crate::scene::{ScenePipeline, SceneProperties};
 use crate::scene_builder::DocumentStats;
@@ -133,7 +133,7 @@ pub struct FrameVisibilityState<'a> {
     pub retained_tiles: &'a mut RetainedTiles,
     pub data_stores: &'a mut DataStores,
     pub clip_chain_stack: ClipChainStack,
-    pub render_tasks: &'a mut RenderTaskTree,
+    pub render_tasks: &'a mut RenderTaskGraph,
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -148,7 +148,7 @@ pub struct FrameBuildingContext<'a> {
 }
 
 pub struct FrameBuildingState<'a> {
-    pub render_tasks: &'a mut RenderTaskTree,
+    pub render_tasks: &'a mut RenderTaskGraph,
     pub profile_counters: &'a mut FrameProfileCounters,
     pub clip_store: &'a mut ClipStore,
     pub resource_cache: &'a mut ResourceCache,
@@ -303,7 +303,7 @@ impl FrameBuilder {
         pipelines: &FastHashMap<PipelineId, Arc<ScenePipeline>>,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskTree,
+        render_tasks: &mut RenderTaskGraph,
         profile_counters: &mut FrameProfileCounters,
         global_device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
@@ -516,7 +516,7 @@ impl FrameBuilder {
         scene_properties: &SceneProperties,
         data_stores: &mut DataStores,
         scratch: &mut PrimitiveScratchBuffer,
-        render_task_counters: &mut RenderTaskTreeCounters,
+        render_task_counters: &mut RenderTaskGraphCounters,
         debug_flags: DebugFlags,
     ) -> Frame {
         profile_scope!("build");
@@ -539,7 +539,7 @@ impl FrameBuilder {
         let mut transform_palette = clip_scroll_tree.build_transform_palette();
         self.clip_store.clear_old_instances();
 
-        let mut render_tasks = RenderTaskTree::new(
+        let mut render_tasks = RenderTaskGraph::new(
             stamp.frame_id(),
             render_task_counters,
         );
