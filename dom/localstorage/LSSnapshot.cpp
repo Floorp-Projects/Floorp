@@ -32,23 +32,43 @@ class SnapshotWriteOptimizer final
 void SnapshotWriteOptimizer::Enumerate(nsTArray<LSWriteInfo>& aWriteInfos) {
   AssertIsOnOwningThread();
 
-  if (mTruncateInfo) {
-    LSClearInfo clearInfo;
+  // The mWriteInfos hash table contains all write infos, but it keeps them in
+  // an arbitrary order, which means write infos need to be sorted before being
+  // processed.
 
-    aWriteInfos.AppendElement(std::move(clearInfo));
-  }
+  nsTArray<WriteInfo*> writeInfos;
+  GetSortedWriteInfos(writeInfos);
 
-  for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
-    WriteInfo* writeInfo = iter.Data();
-
+  for (WriteInfo* writeInfo : writeInfos) {
     switch (writeInfo->GetType()) {
-      case WriteInfo::InsertItem:
-      case WriteInfo::UpdateItem: {
+      case WriteInfo::InsertItem: {
         auto insertItemInfo = static_cast<InsertItemInfo*>(writeInfo);
 
         LSSetItemInfo setItemInfo;
         setItemInfo.key() = insertItemInfo->GetKey();
         setItemInfo.value() = LSValue(insertItemInfo->GetValue());
+
+        aWriteInfos.AppendElement(std::move(setItemInfo));
+
+        break;
+      }
+
+      case WriteInfo::UpdateItem: {
+        auto updateItemInfo = static_cast<UpdateItemInfo*>(writeInfo);
+
+        if (updateItemInfo->UpdateWithMove()) {
+          // See the comment in LSWriteOptimizer::InsertItem for more details
+          // about the UpdateWithMove flag.
+
+          LSRemoveItemInfo removeItemInfo;
+          removeItemInfo.key() = updateItemInfo->GetKey();
+
+          aWriteInfos.AppendElement(std::move(removeItemInfo));
+        }
+
+        LSSetItemInfo setItemInfo;
+        setItemInfo.key() = updateItemInfo->GetKey();
+        setItemInfo.value() = LSValue(updateItemInfo->GetValue());
 
         aWriteInfos.AppendElement(std::move(setItemInfo));
 
@@ -62,6 +82,14 @@ void SnapshotWriteOptimizer::Enumerate(nsTArray<LSWriteInfo>& aWriteInfos) {
         removeItemInfo.key() = deleteItemInfo->GetKey();
 
         aWriteInfos.AppendElement(std::move(removeItemInfo));
+
+        break;
+      }
+
+      case WriteInfo::Truncate: {
+        LSClearInfo clearInfo;
+
+        aWriteInfos.AppendElement(std::move(clearInfo));
 
         break;
       }
