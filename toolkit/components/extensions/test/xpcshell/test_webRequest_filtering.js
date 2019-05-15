@@ -2,7 +2,10 @@
 
 var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm");
 
-const BASE = "http://example.com/browser/toolkit/modules/tests/browser";
+const server = createHttpServer({hosts: ["example.com"]});
+server.registerDirectory("/data/", do_get_file("data"));
+
+const BASE = "http://example.com/data/";
 const URL = BASE + "/file_WebRequest_page2.html";
 
 var requested = [];
@@ -53,12 +56,12 @@ function compareLists(list1, list2, kind) {
   removeDupes(list1);
   list2.sort();
   removeDupes(list2);
-  is(String(list1), String(list2), `${kind} URLs correct`);
+  equal(String(list1), String(list2), `${kind} URLs correct`);
 }
 
 add_task(async function setup() {
   // Disable rcwn to make cache behavior deterministic.
-  await SpecialPowers.pushPrefEnv({set: [["network.http.rcwn.enabled", false]]});
+  Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
 });
 
 add_task(async function filter_urls() {
@@ -68,11 +71,8 @@ add_task(async function filter_urls() {
   WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, ["blocking"]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
 
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
-
-  await waitForLoad();
-
-  gBrowser.removeCurrentTab();
+  let contentPage = await ExtensionTestUtils.loadContentPage(URL);
+  await contentPage.close();
 
   compareLists(requested, expected_urls, "requested");
   compareLists(sendHeaders, expected_urls, "sendHeaders");
@@ -90,11 +90,8 @@ add_task(async function filter_types() {
   WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, filter, ["blocking"]);
   WebRequest.onResponseStarted.addListener(onResponseStarted, filter);
 
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, URL);
-
-  await waitForLoad();
-
-  gBrowser.removeCurrentTab();
+  let contentPage = await ExtensionTestUtils.loadContentPage(URL);
+  await contentPage.close();
 
   compareLists(requested, expected_urls, "requested");
   compareLists(sendHeaders, expected_urls, "sendHeaders");
@@ -104,7 +101,3 @@ add_task(async function filter_types() {
   WebRequest.onBeforeSendHeaders.removeListener(onBeforeSendHeaders);
   WebRequest.onResponseStarted.removeListener(onResponseStarted);
 });
-
-function waitForLoad(browser = gBrowser.selectedBrowser) {
-  return BrowserTestUtils.browserLoaded(browser);
-}

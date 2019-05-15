@@ -1,11 +1,10 @@
 "use strict";
 
-// This test requires an XMLHttpRequest constructor which isn't
-// associated with a window.
-const {XMLHttpRequest} = Cu.Sandbox(window, {wantGlobalProperties: ["XMLHttpRequest"]});
-
 var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm");
 var {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+
+const server = createHttpServer({hosts: ["example.com"]});
+server.registerDirectory("/data/", do_get_file("data"));
 
 add_task(async function test_ancestors_exist() {
   let deferred = PromiseUtils.defer();
@@ -15,11 +14,11 @@ add_task(async function test_ancestors_exist() {
     deferred.resolve();
   }
 
-  WebRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: new MatchPatternSet(["http://mochi.test/test/*"])}, ["blocking"]);
+  WebRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: new MatchPatternSet(["http://example.com/*"])}, ["blocking"]);
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/test/");
+  let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/data/file_sample.html");
   await deferred.promise;
-  BrowserTestUtils.removeTab(tab);
+  await contentPage.close();
 
   WebRequest.onBeforeRequest.removeListener(onBeforeRequest);
 });
@@ -47,7 +46,7 @@ add_task(async function test_ancestors_null() {
     });
   }
 
-  await fetch("http://mochi.test:8888/test/");
+  await fetch("http://example.com/data/file_sample.html");
   await deferred.promise;
 
   WebRequest.onBeforeRequest.removeListener(onBeforeRequest);
