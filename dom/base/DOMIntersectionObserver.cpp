@@ -293,8 +293,7 @@ void DOMIntersectionObserver::Update(Document* aDocument,
         nsLayoutUtils::ComputeCBDependentValue(basis, mRootMargin.Get(side));
   }
 
-  for (size_t i = 0; i < mObservationTargets.Length(); ++i) {
-    Element* target = mObservationTargets.ElementAt(i);
+  for (Element* target : mObservationTargets) {
     nsIFrame* targetFrame = target->GetPrimaryFrame();
     nsIFrame* originalTargetFrame = targetFrame;
     nsRect targetRect;
