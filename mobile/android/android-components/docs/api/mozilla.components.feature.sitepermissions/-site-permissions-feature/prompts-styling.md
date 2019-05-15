@@ -2,7 +2,7 @@
 
 # promptsStyling
 
-`var promptsStyling: `[`PromptsStyling`](-prompts-styling/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsFeature.kt#L70)
+`var promptsStyling: `[`PromptsStyling`](-prompts-styling/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/sitepermissions/src/main/java/mozilla/components/feature/sitepermissions/SitePermissionsFeature.kt#L71)
 
 optional styling for prompts.
 
