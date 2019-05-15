@@ -24,9 +24,6 @@
  *    (b) the regular cookie is available.
  */
 
-SimpleTest.registerCleanupFunction(() => {
-  SpecialPowers.clearUserPref("network.cookie.same-site.enabled");
-});
 SimpleTest.waitForExplicitFinish();
 
 const CROSS_ORIGIN = "http://example.com/";
@@ -36,32 +33,16 @@ let curTest = 0;
 
 var tests = [
   {
-    description: "regular cookie in cross origin context (same-site: on)",
+    description: "regular cookie in cross origin context",
     imgSRC: CROSS_ORIGIN + PATH + "?setRegularCookie",
     frameSRC: CROSS_ORIGIN + PATH + "?loadFrame",
-    sameSiteEnabled: true,
     result: "myKey=regularCookie",
   },
   {
-    description: "same-site cookie in cross origin context (same-site: on)",
+    description: "same-site cookie in cross origin context",
     imgSRC: CROSS_ORIGIN + PATH + "?setSameSiteCookie",
     frameSRC: CROSS_ORIGIN + PATH + "?loadFrame",
-    sameSiteEnabled: true,
     result: "", // no cookie should be set
-  },
-  {
-    description: "regular cookie in cross origin context (same-site: off)",
-    imgSRC: CROSS_ORIGIN + PATH + "?setRegularCookie",
-    frameSRC: CROSS_ORIGIN + PATH + "?loadFrame",
-    sameSiteEnabled: false,
-    result: "myKey=regularCookie",
-  },
-  {
-    description: "same-site cookie in cross origin context (same-site: off)",
-    imgSRC: CROSS_ORIGIN + PATH + "?setSameSiteCookie",
-    frameSRC: CROSS_ORIGIN + PATH + "?loadFrame",
-    sameSiteEnabled: false,
-    result: "myKey=strictSameSiteCookie",
   },
 ];
 
@@ -87,7 +68,6 @@ function setupQueryResultAndRunTest() {
 }
 
 function setCookieAndInitTest() {
-  SpecialPowers.setBoolPref("network.cookie.same-site.enabled", tests[curTest].sameSiteEnabled);
   var cookieImage = document.getElementById("cookieImage");
   cookieImage.onload = function() {
     ok(true, "trying to set cookie for test (" + tests[curTest].description + ")");
