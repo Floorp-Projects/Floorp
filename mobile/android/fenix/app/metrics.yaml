@@ -634,3 +634,49 @@ activation:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2019-10-01"
+
+qr_scanner:
+  opened:
+    type: event
+    description: >
+      A user opened the QR scanner
+    bugs:
+    - 1857
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  prompt_displayed:
+    type: event
+    description: >
+      A user scanned a QR code, causing a confirmation prompt to display asking if they want to navigate to the page
+    bugs:
+    - 1857
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  navigation_allowed:
+    type: event
+    description: >
+      A user tapped "allow" on the prompt, directing the user to the website scanned
+    bugs:
+    - 1857
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  navigation_denied:
+    type: event
+    description: >
+      A user tapped "deny" on the prompt, putting the user back to the scanning view
+    bugs:
+    - 1857
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"

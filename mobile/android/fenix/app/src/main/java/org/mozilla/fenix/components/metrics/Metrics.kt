@@ -74,6 +74,10 @@ sealed class Event {
     object CustomTabsActionTapped : Event()
     object CustomTabsMenuOpened : Event()
     object UriOpened : Event()
+    object QRScannerOpened : Event()
+    object QRScannerPromptDisplayed : Event()
+    object QRScannerNavigationAllowed : Event()
+    object QRScannerNavigationDenied : Event()
 
     data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
         private val switchPreferenceTelemetryAllowList = listOf(

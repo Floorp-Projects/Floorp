@@ -110,6 +110,7 @@ class SearchFragment : Fragment(), BackHandler {
                     requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
                 },
                 onScanResult = { result ->
+                    search_scan_button.isChecked = false
                     activity?.let {
                         AlertDialog.Builder(it).apply {
                             val spannable = resources.getSpannable(
@@ -121,9 +122,11 @@ class SearchFragment : Fragment(), BackHandler {
                             )
                             setMessage(spannable)
                             setNegativeButton("DENY") { dialog: DialogInterface, _ ->
+                                requireComponents.analytics.metrics.track(Event.QRScannerNavigationDenied)
                                 dialog.cancel()
                             }
                             setPositiveButton("ALLOW") { dialog: DialogInterface, _ ->
+                                requireComponents.analytics.metrics.track(Event.QRScannerNavigationAllowed)
                                 (activity as HomeActivity)
                                     .openToBrowserAndLoad(
                                         searchTermOrURL = result,
@@ -131,10 +134,10 @@ class SearchFragment : Fragment(), BackHandler {
                                         from = BrowserDirection.FromSearch
                                     )
                                 dialog.dismiss()
-                                // TODO add metrics
                             }
                             create()
                         }.show()
+                        requireComponents.analytics.metrics.track(Event.QRScannerPromptDisplayed)
                     }
                 }),
             owner = this,
@@ -143,6 +146,7 @@ class SearchFragment : Fragment(), BackHandler {
 
         view.search_scan_button.setOnClickListener {
             getManagedEmitter<SearchChange>().onNext(SearchChange.ToolbarClearedFocus)
+            requireComponents.analytics.metrics.track(Event.QRScannerOpened)
             qrFeature.get()?.scan(R.id.container)
         }
 
