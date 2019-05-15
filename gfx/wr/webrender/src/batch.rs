@@ -21,7 +21,7 @@ use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, VECS_PER_SEGM
 use crate::prim_store::{recompute_snap_offsets};
 use crate::prim_store::image::ImageSource;
 use crate::render_backend::DataStores;
-use crate::render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree, TileBlit};
+use crate::render_task::{RenderTaskAddress, RenderTaskId, RenderTaskGraph, TileBlit};
 use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache, ImageProperties};
@@ -568,7 +568,7 @@ impl BatchBuilder {
         batcher: &mut AlphaBatchBuilder,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
@@ -602,7 +602,7 @@ impl BatchBuilder {
         batcher: &mut AlphaBatchBuilder,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
@@ -1327,7 +1327,7 @@ impl BatchBuilder {
                                         );
 
                                         // Gets the saved render task ID of the content, which is
-                                        // deeper in the render task tree than the direct child.
+                                        // deeper in the render task graph than the direct child.
                                         let secondary_id = picture.secondary_render_task_id.expect("no secondary!?");
                                         let saved_index = render_tasks[secondary_id].saved_index.expect("no saved index!?");
                                         debug_assert_ne!(saved_index, SavedTargetIndex::PENDING);
@@ -2373,7 +2373,7 @@ impl BatchBuilder {
         alpha_blend_mode: BlendMode,
         bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         z_id: ZBufferId,
         prim_opacity: PrimitiveOpacity,
         render_task_address: RenderTaskAddress,
@@ -2435,7 +2435,7 @@ impl BatchBuilder {
         prim_header_index: PrimitiveHeaderIndex,
         bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         z_id: ZBufferId,
         render_task_address: RenderTaskAddress,
         clip_task_index: ClipTaskIndex,
@@ -2704,7 +2704,7 @@ impl PrimitiveInstance {
     }
 }
 
-impl RenderTaskTree {
+impl RenderTaskGraph {
     fn resolve_surface(
         &self,
         task_id: RenderTaskId,
@@ -3172,7 +3172,7 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
         &self,
         clip_task_index: ClipTaskIndex,
         offset: i32,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
     ) -> Option<RenderTaskAddress> {
         let address = match self.scratch.clip_mask_instances[clip_task_index.0 as usize + offset as usize] {
             ClipMaskKind::Mask(task_id) => {
@@ -3194,7 +3194,7 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
     fn get_prim_clip_task_address(
         &self,
         clip_task_index: ClipTaskIndex,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
     ) -> Option<RenderTaskAddress> {
         self.get_clip_task_address(
             clip_task_index,
