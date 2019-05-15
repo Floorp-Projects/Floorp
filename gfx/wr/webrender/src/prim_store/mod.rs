@@ -1417,7 +1417,7 @@ pub struct PrimitiveInstance {
     #[cfg(debug_assertions)]
     pub id: PrimitiveDebugId,
 
-    /// The last frame ID (of the `RenderTaskTree`) this primitive
+    /// The last frame ID (of the `RenderTaskGraph`) this primitive
     /// was prepared for rendering in.
     #[cfg(debug_assertions)]
     pub prepared_frame_id: FrameId,
@@ -2676,7 +2676,7 @@ impl PrimitiveStore {
                         // It does intersect the overall dirty rect, so it *might* be visible.
                         // Store this reduced rect here, which is used for clip mask and other
                         // render task size calculations. In future, we may consider creating multiple
-                        // render task trees, one per dirty region.
+                        // render task graphs, one per dirty region.
                         visibility_info.clipped_world_rect = rect;
 
                         // If there is more than one dirty region, it's possible that this primitive

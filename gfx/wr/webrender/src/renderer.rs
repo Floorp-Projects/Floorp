@@ -82,7 +82,7 @@ use crate::render_backend::{FrameId, RenderBackend};
 use crate::scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
 use crate::shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
-use crate::render_task::{RenderTask, RenderTaskData, RenderTaskKind, RenderTaskTree};
+use crate::render_task::{RenderTask, RenderTaskData, RenderTaskKind, RenderTaskGraph};
 use crate::resource_cache::ResourceCache;
 use crate::util::drain_filter;
 
@@ -3583,7 +3583,7 @@ impl Renderer {
         device: &mut Device,
         texture_resolver: &TextureResolver,
         blits: &[BlitJob],
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         draw_target: DrawTarget,
         content_origin: &DeviceIntPoint,
     ) {
@@ -3668,7 +3668,7 @@ impl Renderer {
         content_origin: DeviceIntPoint,
         clear_color: Option<[f32; 4]>,
         clear_depth: Option<f32>,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         projection: &Transform3D<f32>,
         frame_id: GpuFrameId,
         stats: &mut RendererStats,
@@ -4193,7 +4193,7 @@ impl Renderer {
         draw_target: DrawTarget,
         target: &AlphaRenderTarget,
         projection: &Transform3D<f32>,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
         self.profile_counters.alpha_targets.inc();
@@ -4308,7 +4308,7 @@ impl Renderer {
         texture: &CacheTextureId,
         layer: LayerIndex,
         target: &TextureCacheRenderTarget,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
         let texture_source = TextureSource::TextureCache(*texture);
