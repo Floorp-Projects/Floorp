@@ -1763,9 +1763,6 @@ main {
     border: 1px solid var(--newtab-border-secondary-color); }
   .asrouter-admin .ds-component {
     margin-bottom: 20px; }
-  .asrouter-admin .optOutNote {
-    font-size: 12px;
-    margin-inline-start: 4px; }
 
 .pocket-logged-in-cta {
   font-size: 13px;
