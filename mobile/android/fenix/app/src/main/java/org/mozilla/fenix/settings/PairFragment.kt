@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.NavHostFragment.findNavController
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -61,10 +62,9 @@ class PairFragment : Fragment(), BackHandler {
     }
 
     override fun onBackPressed(): Boolean {
-        return when {
-            qrFeature.onBackPressed() -> true
-            else -> false
-        }
+        qrFeature.onBackPressed()
+        findNavController(this@PairFragment).navigateUp()
+        return true
     }
 
     companion object {
