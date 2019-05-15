@@ -65,13 +65,13 @@ label.findbar-find-fast:-moz-lwtheme {
 }
 
 @media (-moz-mac-yosemite-theme: 0) {
-  html|input.findbar-textbox,
+  .findbar-textbox,
   .findbar-find-next {
     border-radius: 10000px;
   }
 }
 
-html|input.findbar-textbox {
+.findbar-textbox {
   border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ var(--lwt-toolbar-field-border-color, @roundButtonBorderColor@);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
@@ -83,11 +83,11 @@ html|input.findbar-textbox {
   padding-inline-start: 19px;
 }
 
-html|input.findbar-textbox:focus {
+.findbar-textbox[focused="true"] {
   box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
               0 0 0 1px var(--toolbar-field-focus-border-color);
 }
 
-html|input.findbar-textbox:-moz-locale-dir(rtl) {
+.findbar-textbox:-moz-locale-dir(rtl) {
   background-position-x: right 5px;
 }
