@@ -69,10 +69,12 @@ class RaptorRunner(MozbuildObject):
         Benchmarks can either live in-tree or in an external repository. In the latter
         case also clone/update the repository if necessary.
         """
-        print("Updating external benchmarks from {}".format(BENCHMARK_REPOSITORY))
 
         # Set up the external repo
         external_repo_path = os.path.join(get_state_dir(), 'performance-tests')
+
+        print("Updating external benchmarks from {}".format(BENCHMARK_REPOSITORY))
+        print("Cloning the benchmarks to {}".format(external_repo_path))
 
         try:
             subprocess.check_output(['git', '--version'])
