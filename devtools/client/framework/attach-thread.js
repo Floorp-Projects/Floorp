@@ -15,11 +15,6 @@ function handleThreadState(toolbox, event, packet) {
     return;
   }
 
-  // TODO: Bug 1225492, we continue emitting events on the target
-  // like we used to, but we should emit these only on the
-  // threadClient now.
-  toolbox.target.emit("thread-" + event);
-
   if (event === "paused") {
     toolbox.highlightTool("jsdebugger");
 
