@@ -15,8 +15,29 @@ using mozilla::dom::LSValue
 namespace mozilla {
 namespace dom {
 
+struct LSSetItemInfo
+{
+  nsString key;
+  LSValue value;
+};
+
+struct LSRemoveItemInfo
+{
+  nsString key;
+};
+
 struct LSClearInfo
 {
+};
+
+/**
+ * Union of LocalStorage mutation types.
+ */
+union LSWriteInfo
+{
+  LSSetItemInfo;
+  LSRemoveItemInfo;
+  LSClearInfo;
 };
 
 struct LSSetItemAndNotifyInfo
@@ -48,6 +69,8 @@ sync protocol PBackgroundLSSnapshot
 
 parent:
   async DeleteMe();
+
+  async Checkpoint(LSWriteInfo[] writeInfos);
 
   async CheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
 
