@@ -6037,8 +6037,9 @@ pref("dom.datatransfer.mozAtAPIs", true);
 // cycles.
 pref("dom.sidebar.enabled", true);
 
-// Turn on fission frameloader swapping
-pref("fission.rebuild_frameloaders_on_remoteness_change", true);
+// Turn off fission frameloader swapping while regressions are being fixed.
+// Should be turned back on to resolve bug 1551993.
+pref("fission.rebuild_frameloaders_on_remoteness_change", false);
 
 // If true, preserve browsing contexts between process swaps. Should be set to
 // true in bug 1550571.
