@@ -14,7 +14,8 @@
     <mozilla.components.concept.engine.EngineView
         android:id="@+id/engineView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        app:layout_behavior="mozilla.components.feature.session.behavior.EngineViewBottomBehavior"/>
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/nestedScrollQuickAction"
