@@ -294,7 +294,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                 "-DCMAKE_OSX_ARCHITECTURES=x86_64",
                 "-DDARWIN_osx_ARCHS=x86_64",
                 "-DDARWIN_osx_SYSROOT=%s" % slashify_path(os.getenv("CROSS_SYSROOT")),
-                "-DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-darwin11"
+                "-DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-apple-darwin"
             ]
         return cmake_args
 
@@ -786,7 +786,7 @@ if __name__ == "__main__":
         extra_cxxflags = ["-stdlib=libc++"]
         extra_cxxflags2 = ["-stdlib=libc++"]
 
-        extra_flags = ["-target", "x86_64-darwin11", "-mlinker-version=137",
+        extra_flags = ["-target", "x86_64-apple-darwin", "-mlinker-version=137",
                        "-B", "%s/bin" % os.getenv("CROSS_CCTOOLS_PATH"),
                        "-isysroot", os.getenv("CROSS_SYSROOT"),
                        # technically the sysroot flag there should be enough to deduce this,

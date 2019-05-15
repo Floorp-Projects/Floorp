@@ -37,7 +37,7 @@ export HOST_CFLAGS="-g"
 export HOST_CXXFLAGS="-g"
 export HOST_LDFLAGS="-g"
 
-ac_add_options --target=x86_64-apple-darwin11
+ac_add_options --target=x86_64-apple-darwin
 export MACOS_SDK_DIR=$CROSS_SYSROOT
 export MACOS_PRIVATE_FRAMEWORKS_DIR=$CROSS_PRIVATE_FRAMEWORKS
 
