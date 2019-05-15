@@ -76,6 +76,7 @@ android-api-16-beta/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16-beta-debug
+        update-channel: beta
     toolchains:
         - linux64-sccache
 
@@ -138,6 +139,7 @@ android-x86-beta/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86-beta-debug
+        update-channel: beta
 
 android-x86-fuzzing/debug:
     description: "Android x86 Fuzzing Debug"
@@ -181,6 +183,7 @@ android-x86-nightly/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: x86
+        update-channel: nightly
 
 android-x86-beta/opt:
     description: "Android 4.2 x86 Beta"
@@ -209,6 +212,7 @@ android-x86-beta/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: x86-beta
+        update-channel: beta
 
 android-api-16/opt:
     description: "Android 4.0 api-16+ Opt"
@@ -293,6 +297,7 @@ android-api-16-nightly/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: api-16-profile-use
+        update-channel: nightly
 
 android-api-16-beta/opt:
     description: "Android 4.0 api-16+ Beta"
@@ -322,6 +327,7 @@ android-api-16-beta/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: api-16-beta
+        update-channel: beta
 
 android-aarch64/opt:
     description: "Android 5.0 AArch64 Opt"
@@ -401,6 +407,7 @@ android-aarch64-beta/debug:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: aarch64-beta-debug
+        update-channel: beta
     toolchains:
         - linux64-sccache
 
@@ -428,6 +435,7 @@ android-aarch64-nightly/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: aarch64-pgo
+        update-channel: nightly
 
 android-aarch64-beta/opt:
     description: "Android 5.0 AArch64 Beta"
@@ -457,6 +465,7 @@ android-aarch64-beta/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: aarch64-beta-pgo
+        update-channel: beta
 
 android-x86_64/opt:
     description: "Android 5.0 x86-64 Opt"
@@ -501,6 +510,7 @@ android-x86_64-nightly/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: x86_64
+        update-channel: nightly
 
 android-x86_64-beta/opt:
     description: "Android 5.0 x86-64 Beta"
@@ -529,6 +539,7 @@ android-x86_64-beta/opt:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
         custom-build-variant-cfg: x86_64-beta
+        update-channel: beta
 
 android-x86_64/debug:
     description: "Android 5.0 x86-64 Debug"

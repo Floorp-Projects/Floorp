@@ -705,6 +705,7 @@ def set_treeherder_machine_platform(config, tests):
         # The build names for Android platforms have partially evolved over the
         # years and need to be translated.
         'android-api-16/debug': 'android-em-4-3-armv7-api16/debug',
+        'android-api-16-beta/debug': 'android-em-4-3-armv7-api16-beta/debug',
         'android-api-16-ccov/debug': 'android-em-4-3-armv7-api16-ccov/debug',
         'android-api-16/opt': 'android-em-4-3-armv7-api16/opt',
         'android-api-16-pgo/opt': 'android-em-4-3-armv7-api16/pgo',
@@ -726,15 +727,12 @@ def set_treeherder_machine_platform(config, tests):
             test['treeherder-machine-platform'] = test['test-platform']
         elif 'android-hw' in test['test-platform']:
             test['treeherder-machine-platform'] = test['test-platform']
-        elif 'android-em-7.0-x86_64' in test['test-platform']:
-            opt = test['test-platform'].split('/')[1]
-            test['treeherder-machine-platform'] = 'android-em-7-0-x86_64/'+opt
-        elif 'android-em-7.0-x86' in test['test-platform']:
-            opt = test['test-platform'].split('/')[1]
-            test['treeherder-machine-platform'] = 'android-em-7-0-x86/'+opt
         else:
             test['treeherder-machine-platform'] = translation.get(
                 test['build-platform'], test['test-platform'])
+
+        test['treeherder-machine-platform'] = test['treeherder-machine-platform'].replace('.', '-')
+
         yield test
 
 
