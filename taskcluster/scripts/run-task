@@ -27,6 +27,7 @@ import errno
 import io
 import json
 import os
+import platform
 import random
 import re
 import shutil
@@ -36,7 +37,6 @@ import subprocess
 
 import urllib.error
 import urllib.request
-
 
 FINGERPRINT_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgfingerprint'
 FALLBACK_FINGERPRINT = {
@@ -405,7 +405,12 @@ def vcs_checkout(source_repo, dest, store_path,
         sys.exit(1)
 
     if IS_MACOSX:
+        release = platform.mac_ver()
+        versionNums = release[0].split('.')[:2]
+        os_version = "%s.%s" % (versionNums[0], versionNums[1])
         hg_bin = '/tools/python27-mercurial/bin/hg'
+        if os_version == "10.14":
+            hg_bin = 'hg'
     elif IS_POSIX:
         hg_bin = 'hg'
     elif IS_WINDOWS:
