@@ -1103,6 +1103,11 @@ int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pco
       if(!nr_ice_component_can_candidate_tcptype_pair(lcand->tcp_type, pcand->tcp_type))
         continue;
 
+      /* https://tools.ietf.org/html/draft-ietf-rtcweb-mdns-ice-candidates-03#section-3.3.2 */
+      if(lcand->type == RELAYED && pcand->mdns_addr && strlen(pcand->mdns_addr)) {
+        continue;
+      }
+
       /*
         Two modes, depending on |pair_all_remote|
 
