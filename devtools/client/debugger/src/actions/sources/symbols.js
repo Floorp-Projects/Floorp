@@ -10,8 +10,6 @@ import { PROMISE } from "../utils/middleware/promise";
 import { updateTab } from "../tabs";
 import { loadSourceText } from "./loadSourceText";
 
-import * as parser from "../../workers/parser";
-
 import {
   memoizeableAction,
   type MemoizedAction
@@ -20,7 +18,7 @@ import {
 import type { Source, Context } from "../../types";
 import type { Symbols } from "../../reducers/types";
 
-async function doSetSymbols(cx, source, { dispatch, getState }) {
+async function doSetSymbols(cx, source, { dispatch, getState, parser }) {
   const sourceId = source.id;
 
   await dispatch(loadSourceText({ cx, source }));

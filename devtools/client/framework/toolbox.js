@@ -937,6 +937,24 @@ Toolbox.prototype = {
     return this._createSourceMapService();
   },
 
+    /**
+   * A common access point for the client-side parser service that any panel can use.
+   */
+  get parserService() {
+    if (this._parserService) {
+      return this._parserService;
+    }
+
+    const { ParserDispatcher } =
+      require("devtools/client/debugger/src/workers/parser/index");
+
+    this._parserService = new ParserDispatcher();
+    this._parserService.start(
+      "resource://devtools/client/debugger/dist/parser-worker.js",
+      this.win);
+    return this._parserService;
+  },
+
   /**
    * Clients wishing to use source maps but that want the toolbox to
    * track the source and style sheet actor mapping can use this
@@ -3074,9 +3092,15 @@ Toolbox.prototype = {
       this._sourceMapURLService.destroy();
       this._sourceMapURLService = null;
     }
+
     if (this._sourceMapService) {
       this._sourceMapService.stopSourceMapWorker();
       this._sourceMapService = null;
+    }
+
+    if (this._parserService) {
+      this._parserService.stop();
+      this._parserService = null;
     }
 
     if (this.webconsolePanel) {
