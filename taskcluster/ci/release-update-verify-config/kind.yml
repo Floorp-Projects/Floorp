@@ -77,7 +77,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: linux32/opt
+            platform: linux32-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -101,7 +101,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: linux64/opt
+            platform: linux64-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -125,7 +125,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: osx-cross/opt
+            platform: osx-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -149,7 +149,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: windows2012-32/opt
+            platform: windows2012-32-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -173,7 +173,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: windows2012-64/opt
+            platform: windows2012-64-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -197,7 +197,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: windows2012-aarch64/opt
+            platform: windows2012-aarch64-shippable/opt
             kind: test
             tier: 1
         attributes:
