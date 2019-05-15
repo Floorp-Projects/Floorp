@@ -89,6 +89,9 @@ class BrowserHost : public RemoteBrowser,
  private:
   virtual ~BrowserHost() = default;
 
+  // The TabID for the root BrowserParent, we cache this so that we can access
+  // it after the remote browser has been destroyed
+  TabId mId;
   // The root BrowserParent of this remote browser
   RefPtr<BrowserParent> mRoot;
 };
