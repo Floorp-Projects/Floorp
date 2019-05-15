@@ -382,7 +382,7 @@ def run_test_harness(parser, options):
         retVal = 1
 
     if not device_exception and options.log_mach is None and not options.verify:
-        mochitest.printDeviceInfo(printLogcat=True)
+        mochitest.printDeviceInfo(printLogcat=(retVal != 0))
 
     mochitest.archiveMozLogs()
     mochitest.message_logger.finish()
