@@ -99,6 +99,9 @@ MozElements.NotificationBox = class NotificationBox {
    *          popup:
    *            If specified, the button will open the popup element with this
    *            ID, anchored to the button. This is alternative to "callback".
+   *          is:
+   *            Defines a Custom Element name to use as the "is" value on
+   *            button creation.
    *        }
    * @param aEventCallback
    *        This may be called with the "removed" or "dismissed" parameter.
@@ -148,7 +151,8 @@ MozElements.NotificationBox = class NotificationBox {
     if (aButtons) {
       for (var b = 0; b < aButtons.length; b++) {
         var button = aButtons[b];
-        var buttonElem = document.createXULElement("button");
+        var buttonElem = document.createXULElement("button",
+          button.is ? { is: button.is } : {});
 
         if (button["l10n-id"]) {
             buttonElem.setAttribute("data-l10n-id", button["l10n-id"]);
