@@ -474,6 +474,9 @@ class BrowserChild final : public BrowserChildBase,
 
   void NotifyPainted();
 
+  virtual mozilla::ipc::IPCResult RecvUpdateEffects(
+      const EffectsInfo& aEffects);
+
   void RequestEditCommands(nsIWidget::NativeKeyBindingsType aType,
                            const WidgetKeyboardEvent& aEvent,
                            nsTArray<CommandInt>& aCommands);

@@ -154,6 +154,11 @@ IPCResult BrowserBridgeParent::RecvUpdateDimensions(
   return IPC_OK();
 }
 
+IPCResult BrowserBridgeParent::RecvUpdateEffects(const EffectsInfo& aEffects) {
+  Unused << mBrowserParent->SendUpdateEffects(aEffects);
+  return IPC_OK();
+}
+
 IPCResult BrowserBridgeParent::RecvRenderLayers(
     const bool& aEnabled, const bool& aForceRepaint,
     const layers::LayersObserverEpoch& aEpoch) {
