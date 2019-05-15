@@ -78,7 +78,7 @@ pub struct RenderTaskAddress(pub u16);
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct RenderTaskGraph {
+pub struct RenderTaskTree {
     pub tasks: Vec<RenderTask>,
     pub task_data: Vec<RenderTaskData>,
     /// Tasks that don't have dependencies, and that may be shared between
@@ -91,15 +91,15 @@ pub struct RenderTaskGraph {
 }
 
 #[derive(Debug)]
-pub struct RenderTaskGraphCounters {
+pub struct RenderTaskTreeCounters {
     tasks_len: usize,
     task_data_len: usize,
     cacheable_render_tasks_len: usize,
 }
 
-impl RenderTaskGraphCounters {
+impl RenderTaskTreeCounters {
     pub fn new() -> Self {
-        RenderTaskGraphCounters {
+        RenderTaskTreeCounters {
             tasks_len: 0,
             task_data_len: 0,
             cacheable_render_tasks_len: 0,
@@ -107,12 +107,12 @@ impl RenderTaskGraphCounters {
     }
 }
 
-impl RenderTaskGraph {
-    pub fn new(frame_id: FrameId, counters: &RenderTaskGraphCounters) -> Self {
+impl RenderTaskTree {
+    pub fn new(frame_id: FrameId, counters: &RenderTaskTreeCounters) -> Self {
         // Preallocate a little more than what we needed in the previous frame so that small variations
         // in the number of items don't cause us to constantly reallocate.
         let extra_items = 8;
-        RenderTaskGraph {
+        RenderTaskTree {
             tasks: Vec::with_capacity(counters.tasks_len + extra_items),
             task_data: Vec::with_capacity(counters.task_data_len + extra_items),
             cacheable_render_tasks: Vec::with_capacity(counters.cacheable_render_tasks_len + extra_items),
@@ -121,8 +121,8 @@ impl RenderTaskGraph {
         }
     }
 
-    pub fn counters(&self) -> RenderTaskGraphCounters {
-        RenderTaskGraphCounters {
+    pub fn counters(&self) -> RenderTaskTreeCounters {
+        RenderTaskTreeCounters {
             tasks_len: self.tasks.len(),
             task_data_len: self.task_data.len(),
             cacheable_render_tasks_len: self.cacheable_render_tasks.len(),
@@ -412,7 +412,7 @@ impl RenderTaskGraph {
     }
 }
 
-impl ops::Index<RenderTaskId> for RenderTaskGraph {
+impl ops::Index<RenderTaskId> for RenderTaskTree {
     type Output = RenderTask;
     fn index(&self, id: RenderTaskId) -> &RenderTask {
         #[cfg(debug_assertions)]
@@ -421,7 +421,7 @@ impl ops::Index<RenderTaskId> for RenderTaskGraph {
     }
 }
 
-impl ops::IndexMut<RenderTaskId> for RenderTaskGraph {
+impl ops::IndexMut<RenderTaskId> for RenderTaskTree {
     fn index_mut(&mut self, id: RenderTaskId) -> &mut RenderTask {
         #[cfg(debug_assertions)]
         debug_assert_eq!(self.frame_id, id.frame_id);
@@ -878,7 +878,7 @@ impl RenderTask {
         clip_store: &mut ClipStore,
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
-        render_tasks: &mut RenderTaskGraph,
+        render_tasks: &mut RenderTaskTree,
         clip_data_store: &mut ClipDataStore,
         snap_offsets: SnapOffsets,
         device_pixel_scale: DevicePixelScale,
@@ -1045,7 +1045,7 @@ impl RenderTask {
     pub fn new_blur(
         blur_std_deviation: DeviceSize,
         src_task_id: RenderTaskId,
-        render_tasks: &mut RenderTaskGraph,
+        render_tasks: &mut RenderTaskTree,
         target_kind: RenderTargetKind,
         clear_mode: ClearMode,
         mut blur_cache: Option<&mut BlurTaskCache>,
@@ -1153,7 +1153,7 @@ impl RenderTask {
 
     pub fn new_scaling(
         src_task_id: RenderTaskId,
-        render_tasks: &mut RenderTaskGraph,
+        render_tasks: &mut RenderTaskTree,
         target_kind: RenderTargetKind,
         target_size: DeviceIntSize,
     ) -> Self {
@@ -1464,7 +1464,7 @@ impl RenderTask {
     }
 
     #[cfg(feature = "debugger")]
-    pub fn print_with<T: PrintTreePrinter>(&self, pt: &mut T, tree: &RenderTaskGraph) -> bool {
+    pub fn print_with<T: PrintTreePrinter>(&self, pt: &mut T, tree: &RenderTaskTree) -> bool {
         match self.kind {
             RenderTaskKind::Picture(ref task) => {
                 pt.new_level(format!("Picture of {:?}", task.pic_index));
@@ -1635,7 +1635,7 @@ impl RenderTaskCache {
         render_task_id: RenderTaskId,
         gpu_cache: &mut GpuCache,
         texture_cache: &mut TextureCache,
-        render_tasks: &mut RenderTaskGraph,
+        render_tasks: &mut RenderTaskTree,
     ) {
         let render_task = &mut render_tasks[render_task_id];
         let target_kind = render_task.target_kind();
@@ -1705,13 +1705,13 @@ impl RenderTaskCache {
         key: RenderTaskCacheKey,
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskGraph,
+        render_tasks: &mut RenderTaskTree,
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
         f: F,
     ) -> Result<RenderTaskCacheEntryHandle, ()>
     where
-        F: FnOnce(&mut RenderTaskGraph) -> Result<RenderTaskId, ()>,
+        F: FnOnce(&mut RenderTaskTree) -> Result<RenderTaskId, ()>,
     {
         // Get the texture cache handle for this cache key,
         // or create one.
@@ -1784,7 +1784,7 @@ impl RenderTaskCache {
 // the extra part pixel in the case of fractional sizes is correctly
 // handled. For now, just use rounding which passes the existing
 // Gecko tests.
-// Note: zero-square tasks are prohibited in WR task graph, so
+// Note: zero-square tasks are prohibited in WR task tree, so
 // we ensure each dimension to be at least the length of 1 after rounding.
 pub fn to_cache_size(size: DeviceSize) -> DeviceIntSize {
     DeviceIntSize::new(
@@ -1796,7 +1796,7 @@ pub fn to_cache_size(size: DeviceSize) -> DeviceIntSize {
 // Dump an SVG visualization of the render graph for debugging purposes
 #[allow(dead_code)]
 pub fn dump_render_tasks_as_svg(
-    render_tasks: &RenderTaskGraph,
+    render_tasks: &RenderTaskTree,
     passes: &[RenderPass],
     output: &mut dyn io::Write,
 ) -> io::Result<()> {
@@ -1996,8 +1996,8 @@ fn diamond_task_graph() {
 
     let color = RenderTargetKind::Color;
 
-    let counters = RenderTaskGraphCounters::new();
-    let mut tasks = RenderTaskGraph::new(FrameId::first(), &counters);
+    let counters = RenderTaskTreeCounters::new();
+    let mut tasks = RenderTaskTree::new(FrameId::first(), &counters);
 
     let a = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), Vec::new()));
     let b1 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), vec![a]));
@@ -2033,8 +2033,8 @@ fn blur_task_graph() {
 
     let color = RenderTargetKind::Color;
 
-    let counters = RenderTaskGraphCounters::new();
-    let mut tasks = RenderTaskGraph::new(FrameId::first(), &counters);
+    let counters = RenderTaskTreeCounters::new();
+    let mut tasks = RenderTaskTree::new(FrameId::first(), &counters);
 
     let pic = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), Vec::new()));
     let scale1 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), vec![pic]));
@@ -2118,8 +2118,8 @@ fn culled_tasks() {
 
     let color = RenderTargetKind::Color;
 
-    let counters = RenderTaskGraphCounters::new();
-    let mut tasks = RenderTaskGraph::new(FrameId::first(), &counters);
+    let counters = RenderTaskTreeCounters::new();
+    let mut tasks = RenderTaskTree::new(FrameId::first(), &counters);
 
     let a1 = tasks.add(RenderTask::new_test(color, dyn_location(640, 640), Vec::new()));
     let _a2 = tasks.add(RenderTask::new_test(color, dyn_location(320, 320), vec![a1]));
