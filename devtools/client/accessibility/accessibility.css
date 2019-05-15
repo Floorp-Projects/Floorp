@@ -528,6 +528,13 @@ body {
   color: var(--theme-selection-color);
 }
 
+/* Invert text selection color in selected rows */
+.accessible .tree:focus .node.focused ::selection,
+.accessible .tree .tree-node-active .node.focused ::selection {
+  color: var(--theme-selection-background);
+  background-color: var(--theme-selection-color);
+}
+
 .accessible .tree:focus .node.focused .open-inspector,
 .accessible .tree .tree-node-active .node.focused .open-inspector {
   background-color: var(--grey-30);
