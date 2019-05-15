@@ -59,6 +59,11 @@ struct LSSnapshotInitInfo
   int64_t peakUsage;
   // See `LSSnapshot::LoadState` in `LSSnapshot.h`
   LoadState loadState;
+  /**
+   * Boolean indicating whether there where cross-process observers registered
+   * for this origin at the time the snapshot was created.
+   */
+  bool hasOtherProcessObservers;
 };
 
 /**

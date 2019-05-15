@@ -1285,7 +1285,7 @@ pref("dom.storage.default_quota",      5120);
 pref("dom.storage.shadow_writes", true);
 pref("dom.storage.snapshot_prefill", 16384);
 pref("dom.storage.snapshot_gradual_prefill", 4096);
-pref("dom.storage.snapshot_reusing", true);
+pref("dom.storage.snapshot_reusing", false);
 pref("dom.storage.testing", false);
 pref("dom.storage.client_validation", true);
 

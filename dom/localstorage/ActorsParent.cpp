@@ -1768,9 +1768,13 @@ class Datastore final
 
   int64_t RequestUpdateUsage(int64_t aRequestedSize, int64_t aMinSize);
 
-  void NotifyObservers(Database* aDatabase, const nsString& aDocumentURI,
-                       const nsString& aKey, const LSValue& aOldValue,
-                       const LSValue& aNewValue);
+  bool HasOtherProcessObservers(Database* aDatabase);
+
+  void NotifyOtherProcessObservers(Database* aDatabase,
+                                   const nsString& aDocumentURI,
+                                   const nsString& aKey,
+                                   const LSValue& aOldValue,
+                                   const LSValue& aNewValue);
 
   NS_INLINE_DECL_REFCOUNTING(Datastore)
 
@@ -2123,6 +2127,9 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
+
+  mozilla::ipc::IPCResult RecvCheckpoint(
+      nsTArray<LSWriteInfo>&& aWriteInfos) override;
 
   mozilla::ipc::IPCResult RecvCheckpointAndNotify(
       nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) override;
@@ -5361,10 +5368,37 @@ int64_t Datastore::RequestUpdateUsage(int64_t aRequestedSize,
   return 0;
 }
 
-void Datastore::NotifyObservers(Database* aDatabase,
-                                const nsString& aDocumentURI,
-                                const nsString& aKey, const LSValue& aOldValue,
-                                const LSValue& aNewValue) {
+bool Datastore::HasOtherProcessObservers(Database* aDatabase) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
+
+  if (!gObservers) {
+    return false;
+  }
+
+  nsTArray<Observer*>* array;
+  if (!gObservers->Get(mOrigin, &array)) {
+    return false;
+  }
+
+  MOZ_ASSERT(array);
+
+  PBackgroundParent* databaseBackgroundActor = aDatabase->Manager();
+
+  for (Observer* observer : *array) {
+    if (observer->Manager() != databaseBackgroundActor) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void Datastore::NotifyOtherProcessObservers(Database* aDatabase,
+                                            const nsString& aDocumentURI,
+                                            const nsString& aKey,
+                                            const LSValue& aOldValue,
+                                            const LSValue& aNewValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
 
@@ -5729,6 +5763,8 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
     peakUsage += size;
   }
 
+  bool hasOtherProcessObservers = mDatastore->HasOtherProcessObservers(this);
+
   snapshot->Init(loadedItems, unknownItems, nextLoadIndex, totalLength,
                  initialUsage, peakUsage, loadState);
 
@@ -5740,6 +5776,7 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
   aInitInfo->initialUsage() = initialUsage;
   aInitInfo->peakUsage() = peakUsage;
   aInitInfo->loadState() = loadState;
+  aInitInfo->hasOtherProcessObservers() = hasOtherProcessObservers;
 
   return IPC_OK();
 }
@@ -5849,6 +5886,55 @@ mozilla::ipc::IPCResult Snapshot::RecvDeleteMe() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult Snapshot::RecvCheckpoint(
+    nsTArray<LSWriteInfo>&& aWriteInfos) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mUsage >= 0);
+  MOZ_DIAGNOSTIC_ASSERT(mPeakUsage >= mUsage);
+
+  if (NS_WARN_IF(aWriteInfos.IsEmpty())) {
+    ASSERT_UNLESS_FUZZING();
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  mDatastore->BeginUpdateBatch(mUsage);
+
+  for (uint32_t index = 0; index < aWriteInfos.Length(); index++) {
+    const LSWriteInfo& writeInfo = aWriteInfos[index];
+
+    switch (writeInfo.type()) {
+      case LSWriteInfo::TLSSetItemInfo: {
+        const LSSetItemInfo& info = writeInfo.get_LSSetItemInfo();
+
+        mDatastore->SetItem(mDatabase, info.key(), info.value());
+
+        break;
+      }
+
+      case LSWriteInfo::TLSRemoveItemInfo: {
+        const LSRemoveItemInfo& info = writeInfo.get_LSRemoveItemInfo();
+
+        mDatastore->RemoveItem(mDatabase, info.key());
+
+        break;
+      }
+
+      case LSWriteInfo::TLSClearInfo: {
+        mDatastore->Clear(mDatabase);
+
+        break;
+      }
+
+      default:
+        MOZ_CRASH("Should never get here!");
+    }
+  }
+
+  mUsage = mDatastore->EndUpdateBatch(-1);
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult Snapshot::RecvCheckpointAndNotify(
     nsTArray<LSWriteAndNotifyInfo>&& aWriteAndNotifyInfos) {
   AssertIsOnBackgroundThread();
@@ -5873,8 +5959,8 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpointAndNotify(
 
         mDatastore->SetItem(mDatabase, info.key(), info.value());
 
-        mDatastore->NotifyObservers(mDatabase, mDocumentURI, info.key(),
-                                    info.oldValue(), info.value());
+        mDatastore->NotifyOtherProcessObservers(
+            mDatabase, mDocumentURI, info.key(), info.oldValue(), info.value());
 
         break;
       }
@@ -5885,8 +5971,9 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpointAndNotify(
 
         mDatastore->RemoveItem(mDatabase, info.key());
 
-        mDatastore->NotifyObservers(mDatabase, mDocumentURI, info.key(),
-                                    info.oldValue(), VoidLSValue());
+        mDatastore->NotifyOtherProcessObservers(mDatabase, mDocumentURI,
+                                                info.key(), info.oldValue(),
+                                                VoidLSValue());
 
         break;
       }
@@ -5894,8 +5981,9 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpointAndNotify(
       case LSWriteAndNotifyInfo::TLSClearInfo: {
         mDatastore->Clear(mDatabase);
 
-        mDatastore->NotifyObservers(mDatabase, mDocumentURI, VoidString(),
-                                    VoidLSValue(), VoidLSValue());
+        mDatastore->NotifyOtherProcessObservers(mDatabase, mDocumentURI,
+                                                VoidString(), VoidLSValue(),
+                                                VoidLSValue());
 
         break;
       }
