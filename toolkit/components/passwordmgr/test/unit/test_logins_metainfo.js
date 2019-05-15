@@ -24,7 +24,7 @@ var gLooksLikeUUIDRegex = /^\{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}\}$/;
  * hostname, the test fails.
  */
 function retrieveLoginMatching(aLoginInfo) {
-  let logins = Services.logins.findLogins({}, aLoginInfo.hostname, "", "");
+  let logins = Services.logins.findLogins(aLoginInfo.hostname, "", "");
   Assert.equal(logins.length, 1);
   return logins[0].QueryInterface(Ci.nsILoginMetaInfo);
 }
@@ -235,7 +235,7 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo_duplicate() {
  */
 add_task(function test_searchLogins_metainfo() {
   // Find by GUID.
-  let logins = Services.logins.searchLogins({}, newPropertyBag({
+  let logins = Services.logins.searchLogins(newPropertyBag({
     guid: gLoginMetaInfo1.guid,
   }));
   Assert.equal(logins.length, 1);
@@ -243,7 +243,7 @@ add_task(function test_searchLogins_metainfo() {
   assertMetaInfoEqual(foundLogin, gLoginMetaInfo1);
 
   // Find by timestamp.
-  logins = Services.logins.searchLogins({}, newPropertyBag({
+  logins = Services.logins.searchLogins(newPropertyBag({
     timePasswordChanged: gLoginMetaInfo2.timePasswordChanged,
   }));
   Assert.equal(logins.length, 1);
@@ -251,7 +251,7 @@ add_task(function test_searchLogins_metainfo() {
   assertMetaInfoEqual(foundLogin, gLoginMetaInfo2);
 
   // Find using two properties at the same time.
-  logins = Services.logins.searchLogins({}, newPropertyBag({
+  logins = Services.logins.searchLogins(newPropertyBag({
     guid: gLoginMetaInfo3.guid,
     timePasswordChanged: gLoginMetaInfo3.timePasswordChanged,
   }));

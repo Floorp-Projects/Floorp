@@ -7,6 +7,7 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PROVIDER_PREF_BRANCH = "browser.newtabpage.activity-stream.asrouter.providers.";
 const DEVTOOLS_PREF = "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
+const FXA_USERNAME_PREF = "services.sync.username";
 
 const DEFAULT_STATE = {
   _initialized: false,
@@ -26,6 +27,10 @@ const USER_PREFERENCES = {
   cfrAddons: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",
   cfrFeatures: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
 };
+
+// Preferences that influence targeting attributes. When these change we need
+// to re-evaluate if the message targeting still matches
+const TARGETING_PREFERENCES = [FXA_USERNAME_PREF];
 
 const TEST_PROVIDERS = [{
   id: "snippets_local_testing",
@@ -169,6 +174,9 @@ class _ASRouterPreferences {
     for (const id of Object.keys(USER_PREFERENCES)) {
       Services.prefs.addObserver(USER_PREFERENCES[id], this);
     }
+    for (const targetingPref of TARGETING_PREFERENCES) {
+      Services.prefs.addObserver(targetingPref, this);
+    }
     this._initialized = true;
   }
 
@@ -179,6 +187,9 @@ class _ASRouterPreferences {
       for (const id of Object.keys(USER_PREFERENCES)) {
         Services.prefs.removeObserver(USER_PREFERENCES[id], this);
       }
+      for (const targetingPref of TARGETING_PREFERENCES) {
+        Services.prefs.removeObserver(targetingPref, this);
+      }
     }
     Object.assign(this, DEFAULT_STATE);
     this._callbacks.clear();
@@ -188,5 +199,6 @@ this._ASRouterPreferences = _ASRouterPreferences;
 
 this.ASRouterPreferences = new _ASRouterPreferences();
 this.TEST_PROVIDERS = TEST_PROVIDERS;
+this.TARGETING_PREFERENCES = TARGETING_PREFERENCES;
 
-const EXPORTED_SYMBOLS = ["_ASRouterPreferences", "ASRouterPreferences", "TEST_PROVIDERS"];
+const EXPORTED_SYMBOLS = ["_ASRouterPreferences", "ASRouterPreferences", "TEST_PROVIDERS", "TARGETING_PREFERENCES"];

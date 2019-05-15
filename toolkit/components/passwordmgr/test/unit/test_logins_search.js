@@ -41,9 +41,7 @@ function checkSearchLogins(aQuery, aExpectedCount) {
   let expectedLogins = buildExpectedLogins(aQuery);
   Assert.equal(expectedLogins.length, aExpectedCount);
 
-  let outCount = {};
-  let logins = Services.logins.searchLogins(outCount, newPropertyBag(aQuery));
-  Assert.equal(outCount.value, expectedLogins.length);
+  let logins = Services.logins.searchLogins(newPropertyBag(aQuery));
   LoginTestUtils.assertLoginListsEqual(logins, expectedLogins);
 }
 
@@ -74,10 +72,7 @@ function checkAllSearches(aQuery, aExpectedCount) {
   let httpRealm = ("httpRealm" in aQuery) ? aQuery.httpRealm : "";
 
   // Test findLogins.
-  let outCount = {};
-  let logins = Services.logins.findLogins(outCount, hostname, formSubmitURL,
-                                          httpRealm);
-  Assert.equal(outCount.value, expectedLogins.length);
+  let logins = Services.logins.findLogins(hostname, formSubmitURL, httpRealm);
   LoginTestUtils.assertLoginListsEqual(logins, expectedLogins);
 
   // Test countLogins.
@@ -172,8 +167,7 @@ add_task(function test_searchLogins() {
  * Tests searchLogins with invalid arguments.
  */
 add_task(function test_searchLogins_invalid() {
-  Assert.throws(() => Services.logins.searchLogins({},
-                                                   newPropertyBag({ username: "value" })),
+  Assert.throws(() => Services.logins.searchLogins(newPropertyBag({ username: "value" })),
                 /Unexpected field/);
 });
 
