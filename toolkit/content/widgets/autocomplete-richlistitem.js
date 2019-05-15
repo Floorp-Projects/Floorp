@@ -988,7 +988,10 @@ class MozAutocompleteRichlistitemLoginsFooter extends MozElements.MozAutocomplet
         return;
       }
 
-      LoginHelper.openPasswordManager(this.ownerGlobal, this._data.hostname);
+      LoginHelper.openPasswordManager(this.ownerGlobal, {
+        filterString: this._data.hostname,
+        entryPoint: "autocomplete",
+      });
     }
 
     this.addEventListener("click", handleEvent);

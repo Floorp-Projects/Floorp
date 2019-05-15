@@ -294,6 +294,8 @@ var gPrivacyPane = {
     this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
 
+    Services.telemetry.setEventRecordingEnabled("pwmgr", true);
+
     Preferences.get("media.autoplay.default").on("change",
       gPrivacyPane.blockAutoplayReadPrefs.bind(gPrivacyPane));
 
@@ -1422,9 +1424,12 @@ var gPrivacyPane = {
  */
   showPasswords() {
     if (LoginHelper.managementURI) {
-      window.docShell.messageManager.sendAsyncMessage("PasswordManager:OpenPreferences", {});
+      window.docShell.messageManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
+        entryPoint: "preferences",
+      });
       return;
     }
+    Services.telemetry.recordEvent("pwmgr", "open_management", "preferences");
     gSubDialog.open("chrome://passwordmgr/content/passwordManager.xul");
   },
 

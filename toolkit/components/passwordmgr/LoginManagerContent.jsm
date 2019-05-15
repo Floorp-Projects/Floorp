@@ -259,7 +259,10 @@ var LoginManagerContent = {
       return;
     }
     let hostname = eventTarget.ownerDocument.documentURIObject.host;
-    mm.sendAsyncMessage("PasswordManager:OpenPreferences", {hostname});
+    mm.sendAsyncMessage("PasswordManager:OpenPreferences", {
+      hostname,
+      entryPoint: "autocomplete",
+    });
   },
 
   receiveMessage(msg, topWindow) {

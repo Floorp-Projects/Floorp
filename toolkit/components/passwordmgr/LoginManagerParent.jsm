@@ -122,7 +122,10 @@ var LoginManagerParent = {
       }
 
       case "PasswordManager:OpenPreferences": {
-        LoginHelper.openPasswordManager(msg.target.ownerGlobal, msg.data.hostname);
+        LoginHelper.openPasswordManager(msg.target.ownerGlobal, {
+          filterString: msg.data.hostname,
+          entryPoint: msg.data.entryPoint,
+        });
         break;
       }
     }
