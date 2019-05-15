@@ -33,6 +33,9 @@ job-defaults:
             - 255
         env:
             CHANNEL: "beta-localtest"
+    treeherder:
+        symbol: UV(UVS)
+        kind: test
     extra:
         chunks: 12
 
@@ -40,65 +43,35 @@ jobs:
     firefox-secondary-linux64:
         description: linux64 secondary channel update verify
         shipping-product: firefox
-        treeherder:
-            symbol: UV(UVS)
-            platform: linux64/opt
-            kind: test
-            tier: 1
         attributes:
             build_platform: linux64-shippable
 
     firefox-secondary-linux:
         description: linux secondary channel update verify
         shipping-product: firefox
-        treeherder:
-            symbol: UV(UVS)
-            platform: linux32/opt
-            kind: test
-            tier: 1
         attributes:
             build_platform: linux-shippable
 
     firefox-secondary-win64:
         description: win64 secondary channel update verify
         shipping-product: firefox
-        treeherder:
-            symbol: UV(UVS)
-            platform: windows2012-64/opt
-            kind: test
-            tier: 1
         attributes:
             build_platform: win64-shippable
 
     firefox-secondary-win64-aarch64:
         description: win64 secondary channel update verify
         shipping-product: firefox
-        treeherder:
-            symbol: UV(UVS)
-            platform: windows2012-aarch6464/opt
-            kind: test
-            tier: 1
         attributes:
             build_platform: win64-aarch64-shippable
 
     firefox-secondary-win32:
         description: win32 secondary channel update verify
         shipping-product: firefox
-        treeherder:
-            symbol: UV(UVS)
-            platform: windows2012-32/opt
-            kind: test
-            tier: 1
         attributes:
             build_platform: win32-shippable
 
     firefox-secondary-macosx64:
         description: macosx64 secondary channel update verify
         shipping-product: firefox
-        treeherder:
-            symbol: UV(UVS)
-            platform: osx-cross/opt
-            kind: test
-            tier: 1
         attributes:
             build_platform: macosx64-shippable

@@ -10,7 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.treeherder import add_suffix
+from taskgraph.util.treeherder import add_suffix, inherit_treeherder_from_dep
 
 transforms = TransformSequence()
 
@@ -31,6 +31,7 @@ def add_command(config, tasks):
         task.setdefault('fetches', {})[config_task.label] = [
             "update-verify.cfg",
         ]
+        task['treeherder'] = inherit_treeherder_from_dep(task, config_task)
 
         for this_chunk in range(1, total_chunks+1):
             chunked = deepcopy(task)

@@ -57,7 +57,7 @@ jobs:
     firefox-secondary-linux:
         treeherder:
             symbol: UVCS
-            platform: linux/opt
+            platform: linux-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -69,7 +69,7 @@ jobs:
     firefox-secondary-linux64:
         treeherder:
             symbol: UVCS
-            platform: linux64/opt
+            platform: linux64-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -93,7 +93,7 @@ jobs:
     firefox-secondary-win32:
         treeherder:
             symbol: UVCS
-            platform: win32/opt
+            platform: windows2012-32-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -105,7 +105,7 @@ jobs:
     firefox-secondary-win64:
         treeherder:
             symbol: UVCS
-            platform: win64/opt
+            platform: windows2012-64-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -117,7 +117,7 @@ jobs:
     firefox-secondary-win64-aarch64:
         treeherder:
             symbol: UVCS
-            platform: win64-aarch64/opt
+            platform: windows2012-aarch64-shippable/opt
             kind: test
             tier: 1
         attributes:
