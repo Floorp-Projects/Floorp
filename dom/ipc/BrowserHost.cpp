@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/BrowserHost.h"
 
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
@@ -24,7 +25,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(BrowserHost)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowserHost)
 
 BrowserHost::BrowserHost(BrowserParent* aParent)
-    : mId(aParent->GetTabId()), mRoot(aParent) {
+    : mId(aParent->GetTabId()),
+      mRoot(aParent),
+      mEffectsInfo{EffectsInfo::FullyHidden()} {
   mRoot->SetBrowserHost(this);
 }
 
@@ -73,6 +76,14 @@ bool BrowserHost::Show(const ScreenIntSize& aSize, bool aParentIsActive) {
 void BrowserHost::UpdateDimensions(const nsIntRect& aRect,
                                    const ScreenIntSize& aSize) {
   mRoot->UpdateDimensions(aRect, aSize);
+}
+
+void BrowserHost::UpdateEffects(EffectsInfo aEffects) {
+  if (!mRoot || mEffectsInfo == aEffects) {
+    return;
+  }
+  mEffectsInfo = aEffects;
+  Unused << mRoot->SendUpdateEffects(mEffectsInfo);
 }
 
 /* attribute boolean docShellIsActive; */

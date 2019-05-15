@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/BrowserBridgeHost.h"
 
+#include "mozilla/Unused.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -95,6 +97,14 @@ void BrowserBridgeHost::UpdateDimensions(const nsIntRect& aRect,
                    chromeOffset);
 
   Unused << mBridge->SendUpdateDimensions(di);
+}
+
+void BrowserBridgeHost::UpdateEffects(EffectsInfo aEffects) {
+  if (!mBridge || mEffectsInfo == aEffects) {
+    return;
+  }
+  mEffectsInfo = aEffects;
+  Unused << mBridge->SendUpdateEffects(mEffectsInfo);
 }
 
 }  // namespace dom
