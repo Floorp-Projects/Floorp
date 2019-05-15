@@ -2331,7 +2331,7 @@ var SessionStoreInternal = {
     // Tell our caller to redirect the load into this newly created process.
     let remoteTab = aBrowser.frameLoader.remoteTab;
     debug(`[process-switch]: new tabID: ${remoteTab.tabId}`);
-    return remoteTab;
+    return remoteTab.contentProcessId;
   },
 
   /**

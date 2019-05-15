@@ -277,12 +277,13 @@ already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
         }
 
         // If we got a BrowserBridgeParent, the frame is out-of-process, so pull
-        // our target BrowserParent off of it. Otherwise, it's an in-process
+        // our target content process off of it. Otherwise, it's an in-process
         // frame, so we can directly use ours.
         if (bridge) {
-          promise->MaybeResolve(bridge->GetBrowserParent());
+          promise->MaybeResolve(
+              bridge->GetBrowserParent()->Manager()->ChildID());
         } else {
-          promise->MaybeResolve(browserParent);
+          promise->MaybeResolve(browserParent->Manager()->ChildID());
         }
       };
 
