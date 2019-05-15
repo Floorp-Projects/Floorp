@@ -50,7 +50,7 @@ pub enum Filter {
     Opacity(api::PropertyBinding<f32>, f32),
     Saturate(f32),
     Sepia(f32),
-    DropShadowStack(SmallVec<[Shadow; 1]>),
+    DropShadows(SmallVec<[Shadow; 1]>),
     ColorMatrix(Box<[f32; 20]>),
     SrgbToLinear,
     LinearToSrgb,
@@ -65,7 +65,7 @@ impl Filter {
             Filter::Blur(ref mut radius) => {
                 *radius = radius.min(MAX_BLUR_RADIUS);
             }
-            Filter::DropShadowStack(ref mut stack) => {
+            Filter::DropShadows(ref mut stack) => {
                 for shadow in stack {
                     shadow.blur_radius = shadow.blur_radius.min(MAX_BLUR_RADIUS);
                 }
@@ -85,7 +85,7 @@ impl Filter {
             Filter::Invert(..) |
             Filter::Saturate(..) |
             Filter::Sepia(..) |
-            Filter::DropShadowStack(..) |
+            Filter::DropShadows(..) |
             Filter::ColorMatrix(..) |
             Filter::SrgbToLinear |
             Filter::LinearToSrgb |
@@ -108,7 +108,7 @@ impl Filter {
             Filter::Opacity(_, amount) => amount >= 1.0,
             Filter::Saturate(amount) => amount == 1.0,
             Filter::Sepia(amount) => amount == 0.0,
-            Filter::DropShadowStack(ref shadows) => {
+            Filter::DropShadows(ref shadows) => {
                 for shadow in shadows {
                     if shadow.offset.x != 0.0 || shadow.offset.y != 0.0 || shadow.blur_radius != 0.0 {
                         return false;
@@ -150,7 +150,7 @@ impl From<FilterOp> for Filter {
             FilterOp::SrgbToLinear => Filter::SrgbToLinear,
             FilterOp::LinearToSrgb => Filter::LinearToSrgb,
             FilterOp::ComponentTransfer => Filter::ComponentTransfer,
-            FilterOp::DropShadow(shadow) => Filter::DropShadowStack(smallvec![shadow]),
+            FilterOp::DropShadow(shadow) => Filter::DropShadows(smallvec![shadow]),
         }
     }
 }
