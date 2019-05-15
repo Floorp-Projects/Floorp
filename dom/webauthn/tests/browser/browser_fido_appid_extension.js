@@ -93,6 +93,7 @@ function promiseWebAuthnSign(tab, key_handle, extensions = {}) {
 add_task(function test_setup() {
   Services.prefs.setBoolPref("security.webauth.u2f", true);
   Services.prefs.setBoolPref("security.webauth.webauthn", true);
+  Services.prefs.setBoolPref("security.webauth.webauthn_enable_android_fido2", false);
   Services.prefs.setBoolPref("security.webauth.webauthn_enable_softtoken", true);
   Services.prefs.setBoolPref("security.webauth.webauthn_enable_usbtoken", false);
 });
