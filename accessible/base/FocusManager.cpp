@@ -99,6 +99,10 @@ FocusManager::FocusDisposition FocusManager::IsInOrContainsFocus(
   return eNone;
 }
 
+bool FocusManager::WasLastFocused(const Accessible* aAccessible) const {
+  return mLastFocus == aAccessible;
+}
+
 void FocusManager::NotifyOfDOMFocus(nsISupports* aTarget) {
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eFocus))
@@ -340,6 +344,7 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
   RefPtr<AccEvent> focusEvent = new AccEvent(nsIAccessibleEvent::EVENT_FOCUS,
                                              target, aEvent->FromUserInput());
   nsEventShell::FireEvent(focusEvent);
+  mLastFocus = target;
 
   // Fire scrolling_start event when the document receives the focus if it has
   // an anchor jump. If an accessible within the document receive the focus
