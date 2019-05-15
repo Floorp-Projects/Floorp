@@ -18,6 +18,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ClientManagerService.h"
+#include "mozilla/dom/LSWriteOptimizer.h"
 #include "mozilla/dom/PBackgroundLSDatabaseParent.h"
 #include "mozilla/dom/PBackgroundLSObserverParent.h"
 #include "mozilla/dom/PBackgroundLSRequestParent.h"
@@ -1237,135 +1238,42 @@ nsresult LoadUsageFile(nsIFile* aUsageFile, int64_t* aUsage) {
  ******************************************************************************/
 
 /**
- * Coalescing manipulation queue used by `Connection` and `DataStore`.  Used by
- * `Connection` to buffer and coalesce manipulations applied to the Datastore
- * in batches by Snapshot Checkpointing until flushed to disk.  Used by
- * `Datastore` to update `DataStore::mOrderedItems` efficiently/for code
- * simplification.  (DataStore does not actually depend on the coalescing, as
- * mutations are applied atomically when a Snapshot Checkpoints, and with
- * `Datastore::mValues` being updated at the same time the mutations are applied
- * to Datastore's mWriteOptimizer.)
+ * Coalescing manipulation queue used by `Datastore`.  Used by `Datastore` to
+ * update `Datastore::mOrderedItems` efficiently/for code simplification.
+ * (Datastore does not actually depend on the coalescing, as mutations are
+ * applied atomically when a Snapshot Checkpoints, and with `Datastore::mValues`
+ * being updated at the same time the mutations are applied to Datastore's
+ * mWriteOptimizer.)
  */
-class WriteOptimizer final {
-  class WriteInfo;
-  class AddItemInfo;
-  class UpdateItemInfo;
-  class RemoveItemInfo;
-  class ClearInfo;
-
-  nsAutoPtr<WriteInfo> mClearInfo;
-  nsClassHashtable<nsStringHashKey, WriteInfo> mWriteInfos;
-  int64_t mTotalDelta;
-
+class DatastoreWriteOptimizer final : public LSWriteOptimizer<LSValue> {
  public:
-  WriteOptimizer() : mTotalDelta(0) {}
-
-  WriteOptimizer(WriteOptimizer&& aWriteOptimizer)
-      : mClearInfo(std::move(aWriteOptimizer.mClearInfo)) {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(&aWriteOptimizer != this);
-
-    mWriteInfos.SwapElements(aWriteOptimizer.mWriteInfos);
-    mTotalDelta = aWriteOptimizer.mTotalDelta;
-    aWriteOptimizer.mTotalDelta = 0;
-  }
-
-  void AddItem(const nsString& aKey, const LSValue& aValue, int64_t aDelta = 0);
-
-  void UpdateItem(const nsString& aKey, const LSValue& aValue,
-                  int64_t aDelta = 0);
-
-  void RemoveItem(const nsString& aKey, int64_t aDelta = 0);
-
-  void Clear(int64_t aDelta = 0);
-
-  bool HasWrites() const {
-    AssertIsOnBackgroundThread();
-
-    return mClearInfo || !mWriteInfos.IsEmpty();
-  }
-
-  void ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems);
-
-  nsresult PerformWrites(Connection* aConnection, bool aShadowWrites,
-                         int64_t& aOutUsage);
+  void ApplyAndReset(nsTArray<LSItemInfo>& aOrderedItems);
 };
 
 /**
- * Base class for specific mutations.  Each subclass knows how to `Perform` the
- * manipulation against a `Connection` and the "shadow" database (legacy
- * webappsstore.sqlite database that exists so LSNG can be disabled/safely
- * downgraded from.)
+ * Coalescing manipulation queue used by `Connection`.  Used by `Connection` to
+ * buffer and coalesce manipulations applied to the Datastore in batches by
+ * Snapshot Checkpointing until flushed to disk.
  */
-class WriteOptimizer::WriteInfo {
+class ConnectionWriteOptimizer final : public LSWriteOptimizer<LSValue> {
  public:
-  enum Type { AddItem = 0, UpdateItem, RemoveItem, Clear };
-
-  virtual Type GetType() = 0;
-
-  virtual nsresult Perform(Connection* aConnection, bool aShadowWrites) = 0;
-
-  virtual ~WriteInfo() = default;
-};
-
-/**
- * SetItem mutation where the key did not previously exist.
- */
-class WriteOptimizer::AddItemInfo : public WriteInfo {
-  nsString mKey;
-  LSValue mValue;
-
- public:
-  AddItemInfo(const nsAString& aKey, const LSValue& aValue)
-      : mKey(aKey), mValue(aValue) {}
-
-  const nsAString& GetKey() const { return mKey; }
-
-  const LSValue& GetValue() const { return mValue; }
+  nsresult Perform(Connection* aConnection, bool aShadowWrites,
+                   int64_t& aOutUsage);
 
  private:
-  Type GetType() override { return AddItem; }
+  /**
+   * Handlers for specific mutations.  Each method knows how to `Perform` the
+   * manipulation against a `Connection` and the "shadow" database (legacy
+   * webappsstore.sqlite database that exists so LSNG can be disabled/safely
+   * downgraded from.)
+   */
+  nsresult PerformInsertOrUpdate(Connection* aConnection, bool aShadowWrites,
+                                 const nsAString& aKey, const LSValue& aValue);
 
-  nsresult Perform(Connection* aConnection, bool aShadowWrites) override;
-};
+  nsresult PerformDelete(Connection* aConnection, bool aShadowWrites,
+                         const nsAString& aKey);
 
-/**
- * SetItem mutation where the key already existed.
- */
-class WriteOptimizer::UpdateItemInfo final : public AddItemInfo {
- public:
-  UpdateItemInfo(const nsAString& aKey, const LSValue& aValue)
-      : AddItemInfo(aKey, aValue) {}
-
- private:
-  Type GetType() override { return UpdateItem; }
-};
-
-class WriteOptimizer::RemoveItemInfo final : public WriteInfo {
-  nsString mKey;
-
- public:
-  explicit RemoveItemInfo(const nsAString& aKey) : mKey(aKey) {}
-
-  const nsAString& GetKey() const { return mKey; }
-
- private:
-  Type GetType() override { return RemoveItem; }
-
-  nsresult Perform(Connection* aConnection, bool aShadowWrites) override;
-};
-
-/**
- * Clear mutation.
- */
-class WriteOptimizer::ClearInfo final : public WriteInfo {
- public:
-  ClearInfo() {}
-
- private:
-  Type GetType() override { return Clear; }
-
-  nsresult Perform(Connection* aConnection, bool aShadowWrites) override;
+  nsresult PerformTruncate(Connection* aConnection, bool aShadowWrites);
 };
 
 class DatastoreOperationBase : public Runnable {
@@ -1500,7 +1408,7 @@ class Connection final {
   nsAutoPtr<ArchivedOriginScope> mArchivedOriginScope;
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
       mCachedStatements;
-  WriteOptimizer mWriteOptimizer;
+  ConnectionWriteOptimizer mWriteOptimizer;
   const nsCString mSuffix;
   const nsCString mGroup;
   const nsCString mOrigin;
@@ -1543,9 +1451,8 @@ class Connection final {
   // connection thread.
   void Close(nsIRunnable* aCallback);
 
-  void AddItem(const nsString& aKey, const LSValue& aValue, int64_t aDelta);
-
-  void UpdateItem(const nsString& aKey, const LSValue& aValue, int64_t aDelta);
+  void SetItem(const nsString& aKey, const LSValue& aValue, int64_t aDelta,
+               bool aIsNewItem);
 
   void RemoveItem(const nsString& aKey, int64_t aDelta);
 
@@ -1654,14 +1561,16 @@ class Connection::InitOriginHelper final : public Runnable {
 };
 
 class Connection::FlushOp final : public ConnectionDatastoreOperationBase {
-  WriteOptimizer mWriteOptimizer;
+  ConnectionWriteOptimizer mWriteOptimizer;
   bool mShadowWrites;
 
  public:
-  FlushOp(Connection* aConnection, WriteOptimizer&& aWriteOptimizer);
+  FlushOp(Connection* aConnection, ConnectionWriteOptimizer&& aWriteOptimizer);
 
  private:
   nsresult DoDatastoreWork() override;
+
+  void Cleanup() override;
 };
 
 class Connection::CloseOp final : public ConnectionDatastoreOperationBase {
@@ -1760,7 +1669,7 @@ class Datastore final
    */
   nsTArray<LSItemInfo> mOrderedItems;
   nsTArray<int64_t> mPendingUsageDeltas;
-  WriteOptimizer mWriteOptimizer;
+  DatastoreWriteOptimizer mWriteOptimizer;
   const nsCString mOrigin;
   const uint32_t mPrivateBrowsingId;
   int64_t mUsage;
@@ -3724,76 +3633,16 @@ already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient() {
 }  // namespace localstorage
 
 /*******************************************************************************
- * WriteOptimizer
+ * DatastoreWriteOptimizer
  ******************************************************************************/
 
-void WriteOptimizer::AddItem(const nsString& aKey, const LSValue& aValue,
-                             int64_t aDelta) {
-  AssertIsOnBackgroundThread();
+void DatastoreWriteOptimizer::ApplyAndReset(
+    nsTArray<LSItemInfo>& aOrderedItems) {
+  AssertIsOnOwningThread();
 
-  WriteInfo* existingWriteInfo;
-  nsAutoPtr<WriteInfo> newWriteInfo;
-  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
-      existingWriteInfo->GetType() == WriteInfo::RemoveItem) {
-    newWriteInfo = new UpdateItemInfo(aKey, aValue);
-  } else {
-    newWriteInfo = new AddItemInfo(aKey, aValue);
-  }
-  mWriteInfos.Put(aKey, newWriteInfo.forget());
-
-  mTotalDelta += aDelta;
-}
-
-void WriteOptimizer::UpdateItem(const nsString& aKey, const LSValue& aValue,
-                                int64_t aDelta) {
-  AssertIsOnBackgroundThread();
-
-  WriteInfo* existingWriteInfo;
-  nsAutoPtr<WriteInfo> newWriteInfo;
-  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
-      existingWriteInfo->GetType() == WriteInfo::AddItem) {
-    newWriteInfo = new AddItemInfo(aKey, aValue);
-  } else {
-    newWriteInfo = new UpdateItemInfo(aKey, aValue);
-  }
-  mWriteInfos.Put(aKey, newWriteInfo.forget());
-
-  mTotalDelta += aDelta;
-}
-
-void WriteOptimizer::RemoveItem(const nsString& aKey, int64_t aDelta) {
-  AssertIsOnBackgroundThread();
-
-  WriteInfo* existingWriteInfo;
-  if (mWriteInfos.Get(aKey, &existingWriteInfo) &&
-      existingWriteInfo->GetType() == WriteInfo::AddItem) {
-    mWriteInfos.Remove(aKey);
-  } else {
-    nsAutoPtr<WriteInfo> newWriteInfo(new RemoveItemInfo(aKey));
-    mWriteInfos.Put(aKey, newWriteInfo.forget());
-  }
-
-  mTotalDelta += aDelta;
-}
-
-void WriteOptimizer::Clear(int64_t aDelta) {
-  AssertIsOnBackgroundThread();
-
-  mWriteInfos.Clear();
-
-  if (!mClearInfo) {
-    mClearInfo = new ClearInfo();
-  }
-
-  mTotalDelta += aDelta;
-}
-
-void WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems) {
-  AssertIsOnBackgroundThread();
-
-  if (mClearInfo) {
+  if (mTruncateInfo) {
     aOrderedItems.Clear();
-    mClearInfo = nullptr;
+    mTruncateInfo = nullptr;
   }
 
   for (int32_t index = aOrderedItems.Length() - 1; index >= 0; index--) {
@@ -3803,7 +3652,7 @@ void WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems) {
       WriteInfo* writeInfo = entry.Data();
 
       switch (writeInfo->GetType()) {
-        case WriteInfo::RemoveItem:
+        case WriteInfo::DeleteItem:
           aOrderedItems.RemoveElementAt(index);
           entry.Remove();
           break;
@@ -3815,7 +3664,7 @@ void WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems) {
           break;
         }
 
-        case WriteInfo::AddItem:
+        case WriteInfo::InsertItem:
           break;
 
         default:
@@ -3827,36 +3676,69 @@ void WriteOptimizer::ApplyWrites(nsTArray<LSItemInfo>& aOrderedItems) {
   for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
     WriteInfo* writeInfo = iter.Data();
 
-    MOZ_ASSERT(writeInfo->GetType() == WriteInfo::AddItem);
+    MOZ_ASSERT(writeInfo->GetType() == WriteInfo::InsertItem);
 
-    auto addItemInfo = static_cast<AddItemInfo*>(writeInfo);
+    auto insertItemInfo = static_cast<InsertItemInfo*>(writeInfo);
 
     LSItemInfo* itemInfo = aOrderedItems.AppendElement();
-    itemInfo->key() = addItemInfo->GetKey();
-    itemInfo->value() = addItemInfo->GetValue();
+    itemInfo->key() = insertItemInfo->GetKey();
+    itemInfo->value() = insertItemInfo->GetValue();
   }
 
   mWriteInfos.Clear();
 }
 
-nsresult WriteOptimizer::PerformWrites(Connection* aConnection,
-                                       bool aShadowWrites, int64_t& aOutUsage) {
+/*******************************************************************************
+ * ConnectionWriteOptimizer
+ ******************************************************************************/
+
+nsresult ConnectionWriteOptimizer::Perform(Connection* aConnection,
+                                           bool aShadowWrites,
+                                           int64_t& aOutUsage) {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
 
   nsresult rv;
 
-  if (mClearInfo) {
-    rv = mClearInfo->Perform(aConnection, aShadowWrites);
+  if (mTruncateInfo) {
+    rv = PerformTruncate(aConnection, aShadowWrites);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
   for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
-    rv = iter.Data()->Perform(aConnection, aShadowWrites);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    WriteInfo* writeInfo = iter.Data();
+
+    switch (writeInfo->GetType()) {
+      case WriteInfo::InsertItem:
+      case WriteInfo::UpdateItem: {
+        auto insertItemInfo = static_cast<InsertItemInfo*>(writeInfo);
+
+        rv = PerformInsertOrUpdate(aConnection, aShadowWrites,
+                                   insertItemInfo->GetKey(),
+                                   insertItemInfo->GetValue());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        break;
+      }
+
+      case WriteInfo::DeleteItem: {
+        auto deleteItemInfo = static_cast<DeleteItemInfo*>(writeInfo);
+
+        rv =
+            PerformDelete(aConnection, aShadowWrites, deleteItemInfo->GetKey());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        break;
+      }
+
+      default:
+        MOZ_CRASH("Bad type!");
     }
   }
 
@@ -3906,8 +3788,9 @@ nsresult WriteOptimizer::PerformWrites(Connection* aConnection,
   return NS_OK;
 }
 
-nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
-                                              bool aShadowWrites) {
+nsresult ConnectionWriteOptimizer::PerformInsertOrUpdate(
+    Connection* aConnection, bool aShadowWrites, const nsAString& aKey,
+    const LSValue& aValue) {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
 
@@ -3921,24 +3804,24 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
     return rv;
   }
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), mValue);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), aValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("utf16Length"),
-                             mValue.UTF16Length());
+                             aValue.UTF16Length());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("compressed"),
-                             mValue.IsCompressed());
+                             aValue.IsCompressed());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3978,19 +3861,19 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
     return rv;
   }
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (mValue.IsCompressed()) {
+  if (aValue.IsCompressed()) {
     nsCString value;
-    if (NS_WARN_IF(!SnappyUncompress(mValue, value))) {
+    if (NS_WARN_IF(!SnappyUncompress(aValue, value))) {
       return NS_ERROR_FAILURE;
     }
     rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), value);
   } else {
-    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), mValue);
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), aValue);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4004,8 +3887,9 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
   return NS_OK;
 }
 
-nsresult WriteOptimizer::RemoveItemInfo::Perform(Connection* aConnection,
-                                                 bool aShadowWrites) {
+nsresult ConnectionWriteOptimizer::PerformDelete(Connection* aConnection,
+                                                 bool aShadowWrites,
+                                                 const nsAString& aKey) {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
 
@@ -4018,7 +3902,7 @@ nsresult WriteOptimizer::RemoveItemInfo::Perform(Connection* aConnection,
     return rv;
   }
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4047,7 +3931,7 @@ nsresult WriteOptimizer::RemoveItemInfo::Perform(Connection* aConnection,
     return rv;
   }
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), mKey);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key"), aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4060,8 +3944,8 @@ nsresult WriteOptimizer::RemoveItemInfo::Perform(Connection* aConnection,
   return NS_OK;
 }
 
-nsresult WriteOptimizer::ClearInfo::Perform(Connection* aConnection,
-                                            bool aShadowWrites) {
+nsresult ConnectionWriteOptimizer::PerformTruncate(Connection* aConnection,
+                                                   bool aShadowWrites) {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection);
 
@@ -4261,34 +4145,30 @@ void Connection::Close(nsIRunnable* aCallback) {
   Dispatch(op);
 }
 
-void Connection::AddItem(const nsString& aKey, const LSValue& aValue,
-                         int64_t aDelta) {
+void Connection::SetItem(const nsString& aKey, const LSValue& aValue,
+                         int64_t aDelta, bool aIsNewItem) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.AddItem(aKey, aValue, aDelta);
-}
-
-void Connection::UpdateItem(const nsString& aKey, const LSValue& aValue,
-                            int64_t aDelta) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mInUpdateBatch);
-
-  mWriteOptimizer.UpdateItem(aKey, aValue, aDelta);
+  if (aIsNewItem) {
+    mWriteOptimizer.InsertItem(aKey, aValue, aDelta);
+  } else {
+    mWriteOptimizer.UpdateItem(aKey, aValue, aDelta);
+  }
 }
 
 void Connection::RemoveItem(const nsString& aKey, int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.RemoveItem(aKey, aDelta);
+  mWriteOptimizer.DeleteItem(aKey, aDelta);
 }
 
 void Connection::Clear(int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.Clear(aDelta);
+  mWriteOptimizer.Truncate(aDelta);
 }
 
 void Connection::BeginUpdateBatch() {
@@ -4639,7 +4519,7 @@ Connection::InitOriginHelper::Run() {
 }
 
 Connection::FlushOp::FlushOp(Connection* aConnection,
-                             WriteOptimizer&& aWriteOptimizer)
+                             ConnectionWriteOptimizer&& aWriteOptimizer)
     : ConnectionDatastoreOperationBase(aConnection),
       mWriteOptimizer(std::move(aWriteOptimizer)),
       mShadowWrites(gShadowWrites) {}
@@ -4716,7 +4596,7 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
   }
 
   int64_t usage;
-  rv = mWriteOptimizer.PerformWrites(mConnection, mShadowWrites, usage);
+  rv = mWriteOptimizer.Perform(mConnection, mShadowWrites, usage);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4777,6 +4657,16 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
       quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
 
   return NS_OK;
+}
+
+void Connection::FlushOp::Cleanup() {
+  AssertIsOnOwningThread();
+
+  mWriteOptimizer.Reset();
+
+  MOZ_ASSERT(!mWriteOptimizer.HasWrites());
+
+  ConnectionDatastoreOperationBase::Cleanup();
 }
 
 nsresult Connection::CloseOp::DoDatastoreWork() {
@@ -5288,7 +5178,7 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
     int64_t delta;
 
     if (isNewItem) {
-      mWriteOptimizer.AddItem(aKey, aValue);
+      mWriteOptimizer.InsertItem(aKey, aValue);
 
       int64_t sizeOfKey = static_cast<int64_t>(aKey.Length());
 
@@ -5298,7 +5188,6 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
 
       mSizeOfKeys += sizeOfKey;
       mSizeOfItems += sizeOfKey + static_cast<int64_t>(aValue.Length());
-      ;
     } else {
       mWriteOptimizer.UpdateItem(aKey, aValue);
 
@@ -5312,11 +5201,7 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
     }
 
     if (IsPersistent()) {
-      if (oldValue.IsVoid()) {
-        mConnection->AddItem(aKey, aValue, delta);
-      } else {
-        mConnection->UpdateItem(aKey, aValue, delta);
-      }
+      mConnection->SetItem(aKey, aValue, delta, isNewItem);
     }
   }
 
@@ -5338,7 +5223,7 @@ void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
 
     mValues.Remove(aKey);
 
-    mWriteOptimizer.RemoveItem(aKey);
+    mWriteOptimizer.DeleteItem(aKey);
 
     int64_t sizeOfKey = static_cast<int64_t>(aKey.Length());
 
@@ -5377,7 +5262,7 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
 
     mValues.Clear();
 
-    mWriteOptimizer.Clear();
+    mWriteOptimizer.Truncate();
 
     mUpdateBatchUsage += delta;
 
@@ -5437,7 +5322,9 @@ int64_t Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage) {
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mInUpdateBatch);
 
-  mWriteOptimizer.ApplyWrites(mOrderedItems);
+  mWriteOptimizer.ApplyAndReset(mOrderedItems);
+
+  MOZ_ASSERT(!mWriteOptimizer.HasWrites());
 
   if (aSnapshotPeakUsage >= 0) {
     int64_t delta = mUpdateBatchUsage - aSnapshotPeakUsage;
