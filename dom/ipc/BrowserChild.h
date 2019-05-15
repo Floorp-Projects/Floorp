@@ -307,6 +307,7 @@ class BrowserChild final : public BrowserChildBase,
   mozilla::ipc::IPCResult RecvResumeLoad(const uint64_t& aPendingSwitchID,
                                          const ShowInfo& aInfo);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvShow(const ScreenIntSize& aSize,
                                    const ShowInfo& aInfo,
                                    const bool& aParentIsActive,
@@ -474,21 +475,23 @@ class BrowserChild final : public BrowserChildBase,
 
   void NotifyPainted();
 
-  virtual mozilla::ipc::IPCResult RecvUpdateEffects(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual mozilla::ipc::IPCResult RecvUpdateEffects(
       const EffectsInfo& aEffects);
 
   void RequestEditCommands(nsIWidget::NativeKeyBindingsType aType,
                            const WidgetKeyboardEvent& aEvent,
                            nsTArray<CommandInt>& aCommands);
 
+  bool IsVisible();
+
   /**
    * Signal to this BrowserChild that it should be made visible:
    * activated widget, retained layer tree, etc.  (Respectively,
    * made not visible.)
    */
-  void MakeVisible();
+  MOZ_CAN_RUN_SCRIPT void UpdateVisibility(bool aForceRepaint);
+  MOZ_CAN_RUN_SCRIPT void MakeVisible(bool aForceRepaint);
   void MakeHidden();
-  bool IsVisible();
 
   ContentChild* Manager() const { return mManager; }
 
@@ -925,6 +928,9 @@ class BrowserChild final : public BrowserChildBase,
   bool mCoalesceMouseMoveEvents;
 
   bool mShouldSendWebProgressEventsToParent;
+
+  // Whether we are rendering to the compositor or not.
+  bool mRenderLayers;
 
   // In some circumstances, a DocShell might be in a state where it is
   // "blocked", and we should not attempt to change its active state or
