@@ -1401,7 +1401,59 @@ bool BaselineCompilerCodeGen::emitArgumentTypeChecks() {
 
 template <>
 bool BaselineInterpreterCodeGen::emitArgumentTypeChecks() {
-  MOZ_CRASH("NYI: interpreter emitArgumentTypeChecks");
+  Register scratch1 = R1.scratchReg();
+
+  // If the script is not a function, we're done.
+  Label done;
+  masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
+  masm.branchTestPtr(Assembler::NonZero, scratch1, Imm32(CalleeTokenScriptBit),
+                     &done);
+
+  // CalleeToken_Function or CalleeToken_FunctionConstructing.
+  masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
+
+  // Store nargs in the frame's scratch slot.
+  masm.load16ZeroExtend(Address(scratch1, JSFunction::offsetOfNargs()),
+                        scratch1);
+  masm.store32(scratch1, frame.addressOfScratchValue());
+
+  // Type check |this|.
+  masm.loadValue(frame.addressOfThis(), R0);
+  if (!emitNextIC()) {
+    return false;
+  }
+  frame.bumpInterpreterICEntry();
+
+  // Type check arguments. Scratch1 holds the next argument's index.
+  masm.move32(Imm32(0), scratch1);
+
+  // Bounds check.
+  Label top;
+  masm.bind(&top);
+  masm.branch32(Assembler::Equal, frame.addressOfScratchValue(), scratch1,
+                &done);
+  {
+    // Load the argument, increment argument index. Use the frame's return value
+    // slot to store this index across the IC call.
+    BaseValueIndex addr(BaselineFrameReg, scratch1,
+                        BaselineFrame::offsetOfArg(0));
+    masm.loadValue(addr, R0);
+    masm.add32(Imm32(1), scratch1);
+    masm.store32(scratch1, frame.addressOfReturnValue());
+
+    // Type check the argument.
+    if (!emitNextIC()) {
+      return false;
+    }
+    frame.bumpInterpreterICEntry();
+
+    // Restore argument index.
+    masm.load32(frame.addressOfReturnValue(), scratch1);
+    masm.jump(&top);
+  }
+
+  masm.bind(&done);
+  return true;
 }
 
 bool BaselineCompiler::emitDebugTrap() {
@@ -6739,7 +6791,7 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 
     // Bump frame->interpreterICEntry if needed.
     if (BytecodeOpHasIC(op)) {
-      masm.addPtr(Imm32(sizeof(ICEntry)), frame.addressOfInterpreterICEntry());
+      frame.bumpInterpreterICEntry();
     }
 
     // Bump frame->interpreterPC, keep pc in PCRegAtStart.
