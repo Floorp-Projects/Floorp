@@ -1728,12 +1728,13 @@ class Datastore final
 
   void NoteInactiveDatabase(Database* aDatabase);
 
-  void GetSnapshotInitInfo(const nsString& aKey, bool& aAddKeyToUnknownItems,
+  void GetSnapshotLoadInfo(const nsString& aKey, bool& aAddKeyToUnknownItems,
                            nsTHashtable<nsStringHashKey>& aLoadedItems,
                            nsTArray<LSItemInfo>& aItemInfos,
-                           uint32_t& aNextLoadIndex, uint32_t& aTotalLength,
-                           int64_t& aInitialUsage, int64_t& aPeakUsage,
+                           uint32_t& aNextLoadIndex,
                            LSSnapshot::LoadState& aLoadState);
+
+  uint32_t GetLength() const { return mValues.Count(); }
 
   const nsTArray<LSItemInfo>& GetOrderedItems() const { return mOrderedItems; }
 
@@ -1762,6 +1763,8 @@ class Datastore final
   void BeginUpdateBatch(int64_t aSnapshotInitialUsage);
 
   int64_t EndUpdateBatch(int64_t aSnapshotPeakUsage);
+
+  int64_t GetUsage() const { return mUsage; }
 
   int64_t RequestUpdateUsage(int64_t aRequestedSize, int64_t aMinSize);
 
@@ -4930,13 +4933,11 @@ void Datastore::NoteInactiveDatabase(Database* aDatabase) {
   }
 }
 
-void Datastore::GetSnapshotInitInfo(const nsString& aKey,
+void Datastore::GetSnapshotLoadInfo(const nsString& aKey,
                                     bool& aAddKeyToUnknownItems,
                                     nsTHashtable<nsStringHashKey>& aLoadedItems,
                                     nsTArray<LSItemInfo>& aItemInfos,
                                     uint32_t& aNextLoadIndex,
-                                    uint32_t& aTotalLength,
-                                    int64_t& aInitialUsage, int64_t& aPeakUsage,
                                     LSSnapshot::LoadState& aLoadState) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mClosed);
@@ -5128,11 +5129,6 @@ void Datastore::GetSnapshotInitInfo(const nsString& aKey,
     default:
       MOZ_CRASH("Bad load state value!");
   }
-
-  aTotalLength = mValues.Count();
-
-  aInitialUsage = mUsage;
-  aPeakUsage = aInitialUsage;
 
   aLoadState = loadState;
 }
@@ -5713,18 +5709,20 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundLSSnapshotConstructor(
   nsTHashtable<nsStringHashKey> loadedItems;
   nsTArray<LSItemInfo> itemInfos;
   uint32_t nextLoadIndex;
-  uint32_t totalLength;
-  int64_t initialUsage;
-  int64_t peakUsage;
   LSSnapshot::LoadState loadState;
-  mDatastore->GetSnapshotInitInfo(aKey, addKeyToUnknownItems, loadedItems,
-                                  itemInfos, nextLoadIndex, totalLength,
-                                  initialUsage, peakUsage, loadState);
+  mDatastore->GetSnapshotLoadInfo(aKey, addKeyToUnknownItems, loadedItems,
+                                  itemInfos, nextLoadIndex, loadState);
 
   nsTHashtable<nsStringHashKey> unknownItems;
   if (addKeyToUnknownItems) {
     unknownItems.PutEntry(aKey);
   }
+
+  uint32_t totalLength = mDatastore->GetLength();
+
+  int64_t initialUsage = mDatastore->GetUsage();
+
+  int64_t peakUsage = initialUsage;
 
   if (aIncreasePeakUsage) {
     int64_t size = mDatastore->RequestUpdateUsage(aRequestedSize, aMinSize);
