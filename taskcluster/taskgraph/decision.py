@@ -82,6 +82,11 @@ PER_PROJECT_PARAMETERS = {
         'release_type': 'esr60',
     },
 
+    'mozilla-esr68': {
+        'target_tasks_method': 'mozilla_esr68_tasks',
+        'release_type': 'esr68',
+    },
+
     'comm-central': {
         'target_tasks_method': 'default',
         'release_type': 'nightly',
@@ -94,6 +99,11 @@ PER_PROJECT_PARAMETERS = {
 
     'comm-esr60': {
         'target_tasks_method': 'mozilla_esr60_tasks',
+        'release_type': 'release',
+    },
+
+    'comm-esr68': {
+        'target_tasks_method': 'mozilla_esr68_tasks',
         'release_type': 'release',
     },
 
