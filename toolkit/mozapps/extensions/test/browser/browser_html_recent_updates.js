@@ -33,6 +33,7 @@ add_task(async function enableHtmlViews() {
     creator: {name: "The creator"},
     version: "3.1",
     type: "extension",
+    releaseNotesURI: "http://example.com/notes.txt",
     updateDate: dateHoursAgo(1),
   }, {
     id: "addon-yesterday-1@mochi.test",
@@ -90,6 +91,28 @@ add_task(async function testRecentUpdatesList() {
     "addon-yesterday-2@mochi.test",
   ], "The add-ons are in the right order");
 
+  info("Check that release notes are shown on the details page");
+  let card = list.querySelector(
+    'addon-card[addon-id="addon-today-1@mochi.test"]');
+  loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
+
+  card = doc.querySelector("addon-card");
+  ok(card.expanded, "The card is expanded");
+  ok(!card.details.tabGroup.hidden, "The tabs are shown");
+  ok(!card.details.tabGroup.querySelector('[name="release-notes"]').hidden,
+     "The release notes button is shown");
+
+  info("Go back to the recent updates view");
+  loaded = waitForViewLoad(win);
+  managerDoc.getElementById("utils-viewUpdates").doCommand();
+  await loaded;
+
+  // Find the list again.
+  list = doc.querySelector("addon-list");
+
+  info("Install a new add-on, it should be first in the list");
   // Install a new extension.
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -110,7 +133,7 @@ add_task(async function testRecentUpdatesList() {
   ], "The new add-on went to the top");
 
   // Open the detail view for the new add-on.
-  let card = list.querySelector('addon-card[addon-id="new@mochi.test"]');
+  card = list.querySelector('addon-card[addon-id="new@mochi.test"]');
   loaded = waitForViewLoad(win);
   card.querySelector('[action="expand"]').click();
   await loaded;
