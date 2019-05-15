@@ -556,7 +556,6 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
     resolve_keyed_by(
         job, 'attributes.artifact_map',
         'artifact map',
-        release_type=config.params['release_type'],
         platform=platform
     )
     map_config = deepcopy(cached_load_yaml(job['attributes']['artifact_map']))
