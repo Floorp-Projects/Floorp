@@ -1318,7 +1318,7 @@ impl BatchBuilder {
                                             PrimitiveInstanceData::from(instance),
                                         );
                                     }
-                                    Filter::DropShadowStack(shadows) => {
+                                    Filter::DropShadows(shadows) => {
                                         // Draw an instance per shadow first, following by the content.
 
                                         // The shadows and the content get drawn as a brush image.
@@ -1431,7 +1431,7 @@ impl BatchBuilder {
                                             Filter::Sepia(..) => 6,
                                             Filter::Brightness(..) => 7,
                                             Filter::Opacity(..) => 8,
-                                            Filter::DropShadowStack(..) => 9,
+                                            Filter::DropShadows(..) => 9,
                                             Filter::ColorMatrix(..) => 10,
                                             Filter::SrgbToLinear => 11,
                                             Filter::LinearToSrgb => 12,
@@ -1455,7 +1455,7 @@ impl BatchBuilder {
                                             }
                                             // Go through different paths
                                             Filter::Blur(..) |
-                                            Filter::DropShadowStack(..) => {
+                                            Filter::DropShadows(..) => {
                                                 unreachable!();
                                             }
                                             Filter::ColorMatrix(_) => {
