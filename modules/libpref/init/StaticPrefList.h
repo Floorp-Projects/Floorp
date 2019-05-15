@@ -2182,6 +2182,13 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 0
 )
 
+// Stale threshold for cookies in seconds.
+VARCACHE_PREF(
+  "network.cookie.staleThreshold",
+   network_cookie_staleThreshold,
+  uint32_t, 60
+)
+
 // Cookie lifetime policy. Possible values:
 // 0 - accept all cookies
 // 1 - deprecated. don't use it.
