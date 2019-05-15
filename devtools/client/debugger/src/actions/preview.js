@@ -70,7 +70,7 @@ export function updatePreview(
       return;
     }
 
-    dispatch(setPreview(cx, expression, location, tokenPos, cursorPos));
+    dispatch(setPreview(cx, expression, location, tokenPos, cursorPos, target));
   };
 }
 
@@ -79,13 +79,18 @@ export function setPreview(
   expression: string,
   location: AstLocation,
   tokenPos: Position,
-  cursorPos: ClientRect
+  cursorPos: ClientRect,
+  target: HTMLElement
 ) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     await dispatch({
       type: "SET_PREVIEW",
       cx,
       [PROMISE]: (async function() {
+        if (getPreview(getState())) {
+          dispatch(clearPreview(cx));
+        }
+
         const source = getSelectedSource(getState());
         if (!source) {
           return;
@@ -131,6 +136,13 @@ export function setPreview(
         };
         const properties = await client.loadObjectProperties(root);
 
+        // The first time a popup is rendered, the mouse should be hovered
+        // on the token. If it happens to be hovered on whitespace, it should
+        // not render anything
+        if (!target.matches(":hover")) {
+          return;
+        }
+
         return {
           expression,
           result,
@@ -138,7 +150,8 @@ export function setPreview(
           root,
           location,
           tokenPos,
-          cursorPos
+          cursorPos,
+          target
         };
       })()
     });
