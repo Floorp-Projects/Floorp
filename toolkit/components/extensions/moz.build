@@ -27,6 +27,7 @@ EXTRA_JS_MODULES += [
     'ExtensionTelemetry.jsm',
     'ExtensionUtils.jsm',
     'FindContent.jsm',
+    'MatchURLFilters.jsm',
     'MessageChannel.jsm',
     'MessageManagerProxy.jsm',
     'NativeManifests.jsm',
@@ -34,6 +35,9 @@ EXTRA_JS_MODULES += [
     'PerformanceCounters.jsm',
     'ProxyScriptContext.jsm',
     'Schemas.jsm',
+    'WebNavigation.jsm',
+    'WebNavigationContent.js',
+    'WebNavigationFrames.jsm',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != "android":
