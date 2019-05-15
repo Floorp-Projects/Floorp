@@ -14,6 +14,7 @@ import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.ext.components
@@ -174,12 +175,13 @@ class GleanMetricsService(private val context: Context) : MetricsService {
     private val activationPing = ActivationPing(context)
 
     override fun start() {
+        Glean.setUploadEnabled(true)
 
         if (initialized) return
         initialized = true
 
         starter = CoroutineScope(Dispatchers.Default).launch {
-            Glean.setUploadEnabled(true)
+            Glean.registerPings(Pings)
             Glean.initialize(context)
 
             Metrics.apply {
