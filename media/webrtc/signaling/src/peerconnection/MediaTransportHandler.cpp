@@ -36,6 +36,10 @@
 
 #include "mozilla/dom/RTCStatsReportBinding.h"
 
+// mDNS
+#include "nsIDNSRecord.h"
+#include "mozilla/net/DNS.h"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -153,6 +157,45 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   RefPtr<NrIceResolver> mDNSResolver;
   std::map<std::string, Transport> mTransports;
   bool mProxyOnly = false;
+
+  // mDNS Support
+  class DNSListener final : public nsIDNSListener {
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIDNSLISTENER
+
+   public:
+    DNSListener(MediaTransportHandlerSTS& aTransportHandler,
+                const std::string& aTransportId, const std::string& aCandidate,
+                std::vector<std::string> aTokenizedCandidate,
+                const std::string& aUfrag)
+        : mTransportHandler(aTransportHandler),
+          mTransportId(aTransportId),
+          mCandidate(aCandidate),
+          mTokenizedCandidate(aTokenizedCandidate),
+          mUfrag(aUfrag) {}
+
+    void Cancel() {
+      mCancel->Cancel(NS_ERROR_ABORT);
+      mCancel = nullptr;
+    }
+
+    MediaTransportHandlerSTS& mTransportHandler;
+
+    const std::string mTransportId;
+    const std::string mCandidate;
+    std::vector<std::string> mTokenizedCandidate;
+    const std::string mUfrag;
+
+    nsCOMPtr<nsICancelable> mCancel;
+
+   private:
+    ~DNSListener() = default;
+  };
+
+  void PendingDNSRequestResolved(DNSListener* aListener);
+
+  nsCOMPtr<nsIDNSService> mDNSService;
+  std::set<RefPtr<DNSListener>> mPendingDNSRequests;
 };
 
 /* static */
@@ -175,6 +218,11 @@ MediaTransportHandlerSTS::MediaTransportHandlerSTS(
   nsresult rv;
   mStsThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   if (!mStsThread) {
+    MOZ_CRASH();
+  }
+
+  mDNSService = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
     MOZ_CRASH();
   }
 }
@@ -389,6 +437,11 @@ void MediaTransportHandlerSTS::Destroy() {
                          NS_DISPATCH_NORMAL);
     return;
   }
+
+  for (auto& listener : mPendingDNSRequests) {
+    listener->Cancel();
+  }
+  mPendingDNSRequests.clear();
 
   disconnect_all();
   if (mIceCtx) {
@@ -621,6 +674,17 @@ void MediaTransportHandlerSTS::StartIceChecks(
   }
 }
 
+static void TokenizeCandidate(const std::string& aCandidate,
+                              std::vector<std::string>& aTokens) {
+  aTokens.clear();
+
+  std::istringstream iss(aCandidate);
+  std::string token;
+  while (std::getline(iss, token, ' ')) {
+    aTokens.push_back(token);
+  }
+}
+
 void MediaTransportHandlerSTS::AddIceCandidate(const std::string& aTransportId,
                                                const std::string& aCandidate,
                                                const std::string& aUfrag) {
@@ -631,6 +695,43 @@ void MediaTransportHandlerSTS::AddIceCandidate(const std::string& aTransportId,
                      aCandidate, aUfrag),
         NS_DISPATCH_NORMAL);
     return;
+  }
+
+  std::vector<std::string> tokens;
+  TokenizeCandidate(aCandidate, tokens);
+
+  if (tokens.size() > 4) {
+    std::string addr = tokens[4];
+
+    // Check for address ending with .local
+    size_t nPeriods = std::count(addr.begin(), addr.end(), '.');
+    size_t dotLocalLength = 6;  // length of ".local"
+
+    if (nPeriods == 1 &&
+        addr.rfind(".local") + dotLocalLength == addr.length()) {
+      CSFLogDebug(LOGTAG,
+                  "Using mDNS to resolve candidate with transport id: %s: %s",
+                  aTransportId.c_str(), aCandidate.c_str());
+
+      auto listener =
+          *(mPendingDNSRequests
+                .emplace(new DNSListener(*this, aTransportId, aCandidate,
+                                         tokens, aUfrag))
+                .first);
+      OriginAttributes attrs;
+
+      if (NS_FAILED(mDNSService->AsyncResolveNative(
+              nsAutoCString(tokens[4].c_str()), 0, listener, mStsThread, attrs,
+              getter_AddRefs(listener->mCancel)))) {
+        CSFLogError(LOGTAG,
+                    "Error using mDNS to resolve candidate with transport id "
+                    "%s: %s",
+                    aTransportId.c_str(), aCandidate.c_str());
+      }
+      // TODO: Bug 1535690, we don't want to tell the ICE context that remote
+      // trickle is done if we are waiting to resolve a mDNS candidate.
+      return;
+    }
   }
 
   RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aTransportId));
@@ -887,6 +988,11 @@ MediaTransportHandlerSTS::GetIceStats(
         }
         return StatsPromise::CreateAndResolve(std::move(aReport), __func__);
       });
+}
+
+void MediaTransportHandlerSTS::PendingDNSRequestResolved(
+    DNSListener* aListener) {
+  mPendingDNSRequests.erase(aListener);
 }
 
 RefPtr<MediaTransportHandler::IceLogPromise>
@@ -1240,4 +1346,75 @@ void MediaTransportHandlerSTS::EncryptedPacketSending(TransportLayer* aLayer,
                                                       MediaPacket& aPacket) {
   OnEncryptedSending(aLayer->flow_id(), aPacket);
 }
+
+NS_IMPL_ISUPPORTS(MediaTransportHandlerSTS::DNSListener, nsIDNSListener);
+
+nsresult MediaTransportHandlerSTS::DNSListener::OnLookupComplete(
+    nsICancelable* aRequest, nsIDNSRecord* aRecord, nsresult aStatus) {
+  MOZ_ASSERT(mTransportHandler.mStsThread->IsOnCurrentThread());
+
+  if (mCancel) {
+    if (NS_SUCCEEDED(aStatus)) {
+      nsTArray<net::NetAddr> addresses;
+      aRecord->GetAddresses(addresses);
+
+      // https://tools.ietf.org/html/draft-ietf-rtcweb-mdns-ice-candidates-03#section-3.2.2
+      if (addresses.Length() == 1) {
+        char buf[net::kIPv6CStrBufSize];
+        if (!net::NetAddrToString(&addresses[0], buf, sizeof(buf))) {
+          CSFLogError(LOGTAG,
+                      "Unable to convert mDNS address for candidate with"
+                      " transport id %s: %s",
+                      mTransportId.c_str(), mCandidate.c_str());
+          return NS_OK;
+        }
+
+        CSFLogDebug(LOGTAG,
+                    "Adding mDNS candidate with transport id: %s: %s:"
+                    " resolved to: %s",
+                    mTransportId.c_str(), mCandidate.c_str(), buf);
+
+        // Replace obfuscated address with actual address
+        mTokenizedCandidate[4] = buf;
+        std::ostringstream o;
+        for (size_t i = 0; i < mTokenizedCandidate.size(); ++i) {
+          o << mTokenizedCandidate[i];
+          if (i + 1 != mTokenizedCandidate.size()) {
+            o << " ";
+          }
+        }
+
+        std::string mungedCandidate = o.str();
+        mTransportHandler.AddIceCandidate(mTransportId, mungedCandidate,
+                                          mUfrag);
+      } else {
+        CSFLogError(LOGTAG,
+                    "More than one mDNS result for candidate with transport"
+                    " id: %s: %s, candidate ignored",
+                    mTransportId.c_str(), mCandidate.c_str());
+      }
+    } else {
+      CSFLogError(LOGTAG,
+                  "Using mDNS failed for candidate with transport id: %s: %s",
+                  mTransportId.c_str(), mCandidate.c_str());
+    }
+
+    mCancel = nullptr;
+    mTransportHandler.PendingDNSRequestResolved(this);
+  }
+
+  return NS_OK;
+}
+
+nsresult MediaTransportHandlerSTS::DNSListener::OnLookupByTypeComplete(
+    nsICancelable* aRequest, nsIDNSByTypeRecord* aResult, nsresult aStatus) {
+  MOZ_ASSERT_UNREACHABLE(
+      "MediaTranportHandlerSTS::DNSListener::OnLookupByTypeComplete");
+  if (mCancel) {
+    mCancel = nullptr;
+    mTransportHandler.PendingDNSRequestResolved(this);
+  }
+  return NS_OK;
+}
+
 }  // namespace mozilla
