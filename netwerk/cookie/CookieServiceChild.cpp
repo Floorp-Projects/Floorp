@@ -346,7 +346,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
 
     int32_t sameSiteAttr = 0;
     cookie->GetSameSite(&sameSiteAttr);
-    if (aIsSameSiteForeign && nsCookieService::IsSameSiteEnabled()) {
+    if (aIsSameSiteForeign) {
       // it if's a cross origin request and the cookie is same site only
       // (strict) don't send it
       if (sameSiteAttr == nsICookie2::SAMESITE_STRICT) {

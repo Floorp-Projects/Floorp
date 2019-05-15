@@ -119,7 +119,17 @@ export class _Trailhead extends React.PureComponent {
     }
   }
 
-  onSubmit() {
+  onSubmit(event) {
+    // Dynamically require the email on submission so screen readers don't read
+    // out it's always required because there's also ways to skip the modal
+    const {email} = event.target.elements;
+    if (!email.value.length) {
+      email.required = true;
+      email.checkValidity();
+      event.preventDefault();
+      return;
+    }
+
     this.props.dispatch(ac.UserEvent({event: "SUBMIT_EMAIL", ...this._getFormInfo()}));
 
     global.addEventListener("visibilitychange", this.closeModal);
@@ -137,6 +147,9 @@ export class _Trailhead extends React.PureComponent {
     if (!ev || ev.type !== "visibilitychange") {
       this.props.dispatch(ac.UserEvent({event: "SKIPPED_SIGNIN", ...this._getFormInfo()}));
     }
+
+    // Bug 1190882 - Focus in a disappearing dialog confuses screen readers
+    this.props.document.activeElement.blur();
   }
 
   /**
@@ -157,6 +170,7 @@ export class _Trailhead extends React.PureComponent {
 
   hideCardPanel() {
     this.setState({showCardPanel: false});
+    this.props.onDismissBundle();
   }
 
   revealCards() {
@@ -256,7 +270,6 @@ export class _Trailhead extends React.PureComponent {
               placeholder={this.getStringValue(content.form.email)}
               name="email"
               type="email"
-              required="required"
               onInvalid={this.onInputInvalid}
               onChange={this.onInputChange} />
             <p className="trailheadTerms" data-l10n-id="onboarding-join-form-legal">

@@ -25,7 +25,6 @@ function relativeTime(timestamp) {
   return new Date(timestamp).toLocaleString();
 }
 
-const OPT_OUT_PREF = "discoverystream.optOut.0";
 const LAYOUT_VARIANTS = {
   "basic": "Basic default layout (on by default in nightly)",
   "dev-test-all": "A little bit of everything. Good layout for testing all components",
@@ -58,10 +57,6 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
     this.state = {
       toggledStories: {},
     };
-  }
-
-  get isOptedOut() {
-    return this.props.otherPrefs[OPT_OUT_PREF];
   }
 
   setConfigValue(name, value) {
@@ -200,13 +195,10 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
   }
 
   render() {
-    const {isOptedOut} = this;
     const {config, lastUpdated, layout} = this.props.state;
     return (<div>
 
-      <div className="dsEnabled"><input type="checkbox" checked={config.enabled} onChange={this.onEnableToggle} /> enabled
-        {isOptedOut ? (<span className="optOutNote">(Note: User has opted-out. Check this box to reset)</span>) : ""}</div>
-
+      <div className="dsEnabled"><input type="checkbox" checked={config.enabled} onChange={this.onEnableToggle} /> enabled </div>
       <h3>Endpoint variant</h3>
       <p>You can also change this manually by changing this pref: <code>browser.newtabpage.activity-stream.discoverystream.config</code></p>
       <table style={config.enabled ? null : {opacity: 0.5}}><tbody>

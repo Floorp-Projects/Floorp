@@ -13,7 +13,6 @@ from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.scriptworker import (
     get_signing_cert_scope,
     get_worker_type_for_scope,
-    add_scope_prefix,
 )
 from taskgraph.util.treeherder import replace_group
 from taskgraph.transforms.task import task_description_schema
@@ -75,7 +74,7 @@ def make_checksums_signing_description(config, jobs):
             "paths": [
                 "public/target.checksums",
             ],
-            "formats": ["gpg"]
+            "formats": ["autograph_gpg"]
         }]
 
         signing_cert_scope = get_signing_cert_scope(config)
@@ -88,7 +87,6 @@ def make_checksums_signing_description(config, jobs):
                        'max-run-time': 3600},
             'scopes': [
                 signing_cert_scope,
-                add_scope_prefix(config, 'signing:format:gpg'),
             ],
             'dependencies': dependencies,
             'attributes': attributes,

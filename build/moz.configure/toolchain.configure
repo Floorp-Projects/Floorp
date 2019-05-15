@@ -257,7 +257,8 @@ js_option(env='CCACHE_PREFIX',
           nargs=1,
           help='Compiler prefix to use when using ccache')
 
-set_config('CCACHE_PREFIX', depends_if('CCACHE_PREFIX')(lambda prefix: prefix[0]))
+ccache_prefix = depends_if('CCACHE_PREFIX')(lambda prefix: prefix[0])
+set_config('CCACHE_PREFIX', ccache_prefix)
 
 # Distinguish ccache from sccache.
 
@@ -1167,12 +1168,15 @@ host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
 building_with_gcc = depends(c_compiler)(lambda info: info.type == 'gcc')
 
 
-@depends(cxx_compiler)
+@depends(cxx_compiler, ccache_prefix)
 @imports('os')
-def cxx_is_icecream(info):
+def cxx_is_icecream(info, ccache_prefix):
     if (os.path.islink(info.compiler) and os.path.basename(
             os.readlink(info.compiler)) == 'icecc'):
         return True
+    if ccache_prefix and os.path.basename(ccache_prefix) == 'icecc':
+        return True
+
 set_config('CXX_IS_ICECREAM', cxx_is_icecream)
 
 

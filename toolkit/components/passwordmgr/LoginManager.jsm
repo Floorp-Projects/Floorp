@@ -147,7 +147,7 @@ LoginManager.prototype = {
     }
 
     clearAndGetHistogram("PWMGR_BLOCKLIST_NUM_SITES").add(
-      this.getAllDisabledHosts({}).length
+      this.getAllDisabledHosts().length
     );
     clearAndGetHistogram("PWMGR_NUM_SAVED_PASSWORDS").add(
       this.countLogins("", "", "")
@@ -168,7 +168,7 @@ LoginManager.prototype = {
       return;
     }
 
-    let logins = this.getAllLogins({});
+    let logins = this.getAllLogins();
 
     let usernamePresentHistogram = clearAndGetHistogram("PWMGR_USERNAME_PRESENT");
     let loginLastUsedDaysHistogram = clearAndGetHistogram("PWMGR_LOGIN_LAST_USED_DAYS");
@@ -258,7 +258,7 @@ LoginManager.prototype = {
     this._checkLogin(login);
 
     // Look for an existing entry.
-    var logins = this.findLogins({}, login.hostname, login.formSubmitURL,
+    var logins = this.findLogins(login.hostname, login.formSubmitURL,
                                  login.httpRealm);
 
     if (logins.some(l => login.matches(l, true))) {
@@ -323,12 +323,11 @@ LoginManager.prototype = {
   /**
    * Get a dump of all stored logins. Used by the login manager UI.
    *
-   * @param count - only needed for XPCOM.
    * @return {nsILoginInfo[]} - If there are no logins, the array is empty.
    */
-  getAllLogins(count) {
+  getAllLogins() {
     log.debug("Getting a list of all logins");
-    return this._storage.getAllLogins(count);
+    return this._storage.getAllLogins();
   },
 
 
@@ -348,7 +347,7 @@ LoginManager.prototype = {
    * @return {String[]} of disabled origins. If there are no disabled origins,
    *                    the array is empty.
    */
-  getAllDisabledHosts(count) {
+  getAllDisabledHosts() {
     log.debug("Getting a list of all disabled origins");
 
     let disabledHosts = [];
@@ -358,10 +357,6 @@ LoginManager.prototype = {
       }
     }
 
-    if (count) {
-      count.value = disabledHosts.length;
-    } // needed for XPCOM
-
     log.debug("getAllDisabledHosts: returning", disabledHosts.length, "disabled hosts.");
     return disabledHosts;
   },
@@ -370,12 +365,11 @@ LoginManager.prototype = {
   /**
    * Search for the known logins for entries matching the specified criteria.
    */
-  findLogins(count, origin, formActionOrigin, httpRealm) {
+  findLogins(origin, formActionOrigin, httpRealm) {
     log.debug("Searching for logins matching origin:", origin,
               "formActionOrigin:", formActionOrigin, "httpRealm:", httpRealm);
 
-    return this._storage.findLogins(count, origin, formActionOrigin,
-                                    httpRealm);
+    return this._storage.findLogins(origin, formActionOrigin, httpRealm);
   },
 
 
@@ -385,7 +379,7 @@ LoginManager.prototype = {
    *
    * @return {nsILoginInfo[]} which are decrypted.
    */
-  searchLogins(count, matchData) {
+  searchLogins(matchData) {
     log.debug("Searching for logins");
 
     matchData.QueryInterface(Ci.nsIPropertyBag2);
@@ -399,7 +393,7 @@ LoginManager.prototype = {
       }
     }
 
-    return this._storage.searchLogins(count, matchData);
+    return this._storage.searchLogins(matchData);
   },
 
 

@@ -36,9 +36,8 @@ function BaseTraversalRule(aRoles, aMatchFunc, aPreFilter, aContainerRule) {
 }
 
 BaseTraversalRule.prototype = {
-    getMatchRoles: function BaseTraversalRule_getmatchRoles(aRoles) {
-      aRoles.value = this._matchRoles;
-      return aRoles.value.length;
+    getMatchRoles: function BaseTraversalRule_getmatchRoles() {
+      return this._matchRoles;
     },
 
     match: function BaseTraversalRule_match(aAccessible) {

@@ -4221,7 +4221,7 @@ Tab.prototype = {
       case "DOMFormHasPassword": {
         // Send logins for this hostname to Java.
         let hostname = aEvent.target.baseURIObject.displayPrePath;
-        let foundLogins = Services.logins.findLogins({}, hostname, "", "");
+        let foundLogins = Services.logins.findLogins(hostname, "", "");
         if (foundLogins.length > 0) {
           let displayHost = IdentityHandler.getEffectiveHost();
           let title = { text: displayHost, resource: hostname };

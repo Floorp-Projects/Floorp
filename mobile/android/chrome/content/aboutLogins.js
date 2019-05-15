@@ -285,7 +285,7 @@ var Logins = {
         return;
       }
 
-      let logins = Services.logins.findLogins({}, this._selectedLogin.hostname, this._selectedLogin.formSubmitURL, this._selectedLogin.httpRealm);
+      let logins = Services.logins.findLogins(this._selectedLogin.hostname, this._selectedLogin.formSubmitURL, this._selectedLogin.httpRealm);
 
       for (let i = 0; i < logins.length; i++) {
         if (logins[i].username == origUsername) {
