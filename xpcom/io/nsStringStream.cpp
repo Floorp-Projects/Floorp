@@ -22,6 +22,7 @@
 #include "nsIClassInfoImpl.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "XPCOMModule.h"
@@ -54,6 +55,8 @@ class nsStringInputStream final : public nsIStringInputStream,
 
   nsresult Init(nsCString&& aString);
 
+  nsresult Init(nsTArray<uint8_t>&& aArray);
+
  private:
   ~nsStringInputStream() {}
 
@@ -72,17 +75,39 @@ class nsStringInputStream final : public nsIStringInputStream,
   nsDependentCSubstring mData;
   uint32_t mOffset;
 
+  // If we were initialized from an nsTArray, we store its data here.
+  Maybe<nsTArray<uint8_t>> mArray;
+
   mozilla::ReentrantMonitor mMon;
 };
 
 nsresult nsStringInputStream::Init(nsCString&& aString) {
   ReentrantMonitorAutoEnter lock(mMon);
 
+  mArray.reset();
   if (!mData.Assign(std::move(aString), fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   mOffset = 0;
+  return NS_OK;
+}
+
+nsresult nsStringInputStream::Init(nsTArray<uint8_t>&& aArray) {
+  ReentrantMonitorAutoEnter lock(mMon);
+
+  mArray.reset();
+  mArray.emplace(std::move(aArray));
+  mOffset = 0;
+
+  if (mArray->IsEmpty()) {
+    // Not sure it's safe to Rebind() with a null pointer.  Pretty
+    // sure it's not, in fact.
+    mData.Truncate();
+  } else {
+    mData.Rebind(reinterpret_cast<const char*>(mArray->Elements()),
+                 mArray->Length());
+  }
   return NS_OK;
 }
 
@@ -132,6 +157,7 @@ NS_IMETHODIMP
 nsStringInputStream::SetData(const nsACString& aData) {
   ReentrantMonitorAutoEnter lock(mMon);
 
+  mArray.reset();
   if (NS_WARN_IF(!mData.Assign(aData, fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -158,6 +184,7 @@ nsStringInputStream::SetData(const char* aData, int32_t aDataLen) {
     return NS_ERROR_INVALID_ARG;
   }
 
+  mArray.reset();
   if (NS_WARN_IF(!mData.Assign(aData, aDataLen, fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -173,6 +200,7 @@ nsStringInputStream::AdoptData(char* aData, int32_t aDataLen) {
   if (NS_WARN_IF(!aData)) {
     return NS_ERROR_INVALID_ARG;
   }
+  mArray.reset();
   mData.Adopt(aData, aDataLen);
   mOffset = 0;
   return NS_OK;
@@ -186,6 +214,7 @@ nsStringInputStream::ShareData(const char* aData, int32_t aDataLen) {
     return NS_ERROR_INVALID_ARG;
   }
 
+  mArray.reset();
   if (aDataLen < 0) {
     aDataLen = strlen(aData);
   }
@@ -479,6 +508,21 @@ nsresult NS_NewByteInputStream(nsIInputStream** aStreamResult,
   }
 
   if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  stream.forget(aStreamResult);
+  return NS_OK;
+}
+
+nsresult NS_NewByteInputStream(nsIInputStream** aStreamResult,
+                               nsTArray<uint8_t>&& aArray) {
+  MOZ_ASSERT(aStreamResult, "null out ptr");
+
+  RefPtr<nsStringInputStream> stream = new nsStringInputStream();
+
+  nsresult rv = stream->Init(std::move(aArray));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
