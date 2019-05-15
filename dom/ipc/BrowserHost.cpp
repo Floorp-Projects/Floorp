@@ -124,9 +124,7 @@ BrowserHost::SetRenderLayers(bool aRenderLayers) {
   if (!mRoot) {
     return NS_OK;
   }
-  VisitAll([&](BrowserParent* aBrowserParent) {
-    aBrowserParent->SetRenderLayers(aRenderLayers);
-  });
+  mRoot->SetRenderLayers(aRenderLayers);
   return NS_OK;
 }
 
