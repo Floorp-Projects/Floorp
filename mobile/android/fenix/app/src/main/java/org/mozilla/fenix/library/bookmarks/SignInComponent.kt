@@ -5,41 +5,30 @@
 package org.mozilla.fenix.library.bookmarks
 
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import io.reactivex.Observable
+import org.mozilla.fenix.mvi.ViewState
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
-import org.mozilla.fenix.mvi.UIComponentViewModel
+import org.mozilla.fenix.mvi.UIComponentViewModelBase
+import org.mozilla.fenix.mvi.UIComponentViewModelProvider
 import org.mozilla.fenix.mvi.UIView
-import org.mozilla.fenix.mvi.ViewState
 
 class SignInComponent(
     private val container: ViewGroup,
-    owner: Fragment,
     bus: ActionBusFactory,
-    override var initialState: SignInState =
-        SignInState(false)
+    viewModelProvider: UIComponentViewModelProvider<SignInState, SignInChange>
 ) : UIComponent<SignInState, SignInAction, SignInChange>(
-    owner,
     bus.getManagedEmitter(SignInAction::class.java),
-    bus.getSafeManagedObservable(SignInChange::class.java)
+    bus.getSafeManagedObservable(SignInChange::class.java),
+    viewModelProvider
 ) {
     override fun initView(): UIView<SignInState, SignInAction, SignInChange> =
         SignInUIView(container, actionEmitter, changesObservable)
 
-    override fun render(): Observable<SignInState> =
-        ViewModelProvider(
-            owner,
-            SignInViewModel.Factory(initialState)
-        ).get(SignInViewModel::class.java).render(changesObservable, uiView)
-
     init {
-        render()
+        bind()
     }
 }
 
@@ -54,19 +43,9 @@ sealed class SignInChange : Change {
     object SignedOut : SignInChange()
 }
 
-class SignInViewModel(initialState: SignInState) :
-    UIComponentViewModel<SignInState, SignInAction, SignInChange>(
-        initialState, reducer
-    ) {
-
-    class Factory(
-        private val initialState: SignInState
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            SignInViewModel(initialState) as T
-    }
-
+class SignInViewModel(
+    initialState: SignInState
+) : UIComponentViewModelBase<SignInState, SignInChange>(initialState, reducer) {
     companion object {
         val reducer = object : Reducer<SignInState, SignInChange> {
             override fun invoke(state: SignInState, change: SignInChange): SignInState {

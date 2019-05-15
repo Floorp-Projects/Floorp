@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
+import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.*
 import kotlinx.android.synthetic.main.fragment_select_bookmark_folder.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -31,6 +32,7 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
@@ -39,6 +41,8 @@ import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.library.bookmarks.SignInAction
 import org.mozilla.fenix.library.bookmarks.SignInChange
 import org.mozilla.fenix.library.bookmarks.SignInComponent
+import org.mozilla.fenix.library.bookmarks.SignInState
+import org.mozilla.fenix.library.bookmarks.SignInViewModel
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
@@ -68,7 +72,16 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_select_bookmark_folder, container, false)
-        signInComponent = SignInComponent(view.select_bookmark_layout, this, ActionBusFactory.get(this))
+        signInComponent = SignInComponent(
+            view.bookmark_layout,
+            ActionBusFactory.get(this),
+            FenixViewModelProvider.create(
+                this,
+                SignInViewModel::class.java
+            ) {
+                SignInViewModel(SignInState(false))
+            }
+        )
         return view
     }
 

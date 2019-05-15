@@ -4,10 +4,7 @@
 
 package org.mozilla.fenix.library.history
 
-import android.view.ViewGroup
 import io.mockk.MockKAnnotations
-import io.mockk.mockk
-import io.mockk.spyk
 import io.reactivex.Observer
 import io.reactivex.observers.TestObserver
 import org.junit.Before
@@ -15,13 +12,11 @@ import org.junit.Test
 import org.mozilla.fenix.TestUtils.bus
 import org.mozilla.fenix.TestUtils.owner
 import org.mozilla.fenix.TestUtils.setRxSchedulers
-import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.UIView
 import org.mozilla.fenix.mvi.getManagedEmitter
 
-class HistoryComponentTest {
+class HistoryViewModelTest {
 
-    private lateinit var historyComponent: TestHistoryComponent
+    private lateinit var historyViewModel: HistoryViewModel
     private lateinit var historyObserver: TestObserver<HistoryState>
     private lateinit var emitter: Observer<HistoryChange>
 
@@ -30,11 +25,11 @@ class HistoryComponentTest {
         MockKAnnotations.init(this)
         setRxSchedulers()
 
-        historyComponent = spyk(
-            TestHistoryComponent(mockk(), bus),
-            recordPrivateCalls = true
-        )
-        historyObserver = historyComponent.render().test()
+        historyViewModel = HistoryViewModel.create()
+        historyObserver = historyViewModel.state.test()
+        bus.getSafeManagedObservable(HistoryChange::class.java)
+            .subscribe(historyViewModel.changes::onNext)
+
         emitter = owner.getManagedEmitter()
     }
 
@@ -96,13 +91,5 @@ class HistoryComponentTest {
                 HistoryState(historyItems, HistoryState.Mode.Editing(listOf(historyItems[0]))),
                 HistoryState(historyItems, HistoryState.Mode.Normal)
             )
-    }
-
-    @Suppress("MemberVisibilityCanBePrivate")
-    class TestHistoryComponent(container: ViewGroup, bus: ActionBusFactory) :
-        HistoryComponent(container, mockk(relaxed = true), bus) {
-
-        override val uiView: UIView<HistoryState, HistoryAction, HistoryChange>
-            get() = mockk(relaxed = true)
     }
 }

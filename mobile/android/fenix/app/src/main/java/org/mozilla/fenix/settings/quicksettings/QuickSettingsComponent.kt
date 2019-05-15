@@ -6,20 +6,17 @@ package org.mozilla.fenix.settings.quicksettings
 
 import android.content.Context
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import io.reactivex.Observable
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.support.ktx.kotlin.toUri
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.mvi.ViewState
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
-import org.mozilla.fenix.mvi.UIComponentViewModel
+import org.mozilla.fenix.mvi.UIComponentViewModelBase
+import org.mozilla.fenix.mvi.UIComponentViewModelProvider
 import org.mozilla.fenix.mvi.UIView
-import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.toStatus
 import org.mozilla.fenix.settings.toggle
@@ -27,25 +24,19 @@ import org.mozilla.fenix.utils.Settings
 
 class QuickSettingsComponent(
     private val container: ViewGroup,
-    owner: Fragment,
     bus: ActionBusFactory,
-    override var initialState: QuickSettingsState
+    viewModelProvider: UIComponentViewModelProvider<QuickSettingsState, QuickSettingsChange>
 ) : UIComponent<QuickSettingsState, QuickSettingsAction, QuickSettingsChange>(
-    owner,
     bus.getManagedEmitter(QuickSettingsAction::class.java),
-    bus.getSafeManagedObservable(QuickSettingsChange::class.java)
+    bus.getSafeManagedObservable(QuickSettingsChange::class.java),
+    viewModelProvider
 ) {
     override fun initView(): UIView<QuickSettingsState, QuickSettingsAction, QuickSettingsChange> {
         return QuickSettingsUIView(container, actionEmitter, changesObservable, container)
     }
 
-    override fun render(): Observable<QuickSettingsState> =
-        ViewModelProvider(owner, QuickSettingsViewModel.Factory(initialState)).get(
-            QuickSettingsViewModel::class.java
-        ).render(changesObservable, uiView)
-
     init {
-        render()
+        bind()
     }
 
     fun toggleSitePermission(
@@ -121,20 +112,9 @@ sealed class QuickSettingsChange : Change {
     data class Stored(val phoneFeature: PhoneFeature, val sitePermissions: SitePermissions?) : QuickSettingsChange()
 }
 
-class QuickSettingsViewModel(initialState: QuickSettingsState) :
-    UIComponentViewModel<QuickSettingsState, QuickSettingsAction, QuickSettingsChange>(
-        initialState,
-        reducer
-    ) {
-
-    class Factory(
-        private val initialState: QuickSettingsState
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            QuickSettingsViewModel(initialState) as T
-    }
-
+class QuickSettingsViewModel(
+    initialState: QuickSettingsState
+) : UIComponentViewModelBase<QuickSettingsState, QuickSettingsChange>(initialState, reducer) {
     companion object {
         val reducer: (QuickSettingsState, QuickSettingsChange) -> QuickSettingsState = { state, change ->
             when (change) {

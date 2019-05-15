@@ -7,48 +7,35 @@ package org.mozilla.fenix.home.sessioncontrol
 import android.graphics.Bitmap
 import android.os.Parcelable
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observable
 import io.reactivex.Observer
 import kotlinx.android.parcel.Parcelize
+import org.mozilla.fenix.mvi.ViewState
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
-import org.mozilla.fenix.mvi.UIComponentViewModel
-import org.mozilla.fenix.mvi.ViewState
+import org.mozilla.fenix.mvi.UIComponentViewModelBase
+import org.mozilla.fenix.mvi.UIComponentViewModelProvider
 
 class SessionControlComponent(
     private val container: ViewGroup,
-    owner: Fragment,
     bus: ActionBusFactory,
-    override var initialState: SessionControlState = SessionControlState(emptyList(), emptyList(), Mode.Normal)
+    viewModelProvider: UIComponentViewModelProvider<SessionControlState, SessionControlChange>
 ) :
     UIComponent<SessionControlState, SessionControlAction, SessionControlChange>(
-        owner,
         bus.getManagedEmitter(SessionControlAction::class.java),
-        bus.getSafeManagedObservable(SessionControlChange::class.java)
+        bus.getSafeManagedObservable(SessionControlChange::class.java),
+        viewModelProvider
     ) {
 
-    var stateObservable: Observable<SessionControlState>
-    lateinit var viewModel: SessionControlViewModel
-
     override fun initView() = SessionControlUIView(container, actionEmitter, changesObservable)
+
     val view: RecyclerView
         get() = uiView.view as RecyclerView
 
-    override fun render(): Observable<SessionControlState> {
-        viewModel = ViewModelProviders.of(owner, SessionControlViewModel.Factory(initialState))
-            .get(SessionControlViewModel::class.java)
-        return viewModel.render(changesObservable, uiView)
-    }
-
     init {
-        stateObservable = render()
+        bind()
     }
 }
 
@@ -124,18 +111,10 @@ sealed class SessionControlChange : Change {
 }
 
 class SessionControlViewModel(initialState: SessionControlState) :
-    UIComponentViewModel<SessionControlState, SessionControlAction, SessionControlChange>(
+    UIComponentViewModelBase<SessionControlState, SessionControlChange>(
         initialState,
         reducer
     ) {
-
-    class Factory(
-        private val initialState: SessionControlState
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            SessionControlViewModel(initialState) as T
-    }
 
     companion object {
         val reducer: (SessionControlState, SessionControlChange) -> SessionControlState = { state, change ->

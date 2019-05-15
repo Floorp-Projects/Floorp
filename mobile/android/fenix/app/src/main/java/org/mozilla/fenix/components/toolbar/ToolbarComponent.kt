@@ -7,37 +7,32 @@ package org.mozilla.fenix.components.toolbar
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
-import io.reactivex.Observable
 import kotlinx.android.synthetic.main.component_search.*
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.toolbar.BrowserToolbar
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.mvi.ViewState
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
-import org.mozilla.fenix.mvi.UIComponentViewModel
-import org.mozilla.fenix.mvi.ViewState
+import org.mozilla.fenix.mvi.UIComponentViewModelBase
+import org.mozilla.fenix.mvi.UIComponentViewModelProvider
 
 class ToolbarComponent(
     private val container: ViewGroup,
-    owner: Fragment,
     bus: ActionBusFactory,
     private val sessionId: String?,
     private val isPrivate: Boolean,
-    override var initialState: SearchState = SearchState("", "", false),
-    private val engineIconView: ImageView? = null
+    private val engineIconView: ImageView? = null,
+    viewModelProvider: UIComponentViewModelProvider<SearchState, SearchChange>
 ) :
     UIComponent<SearchState, SearchAction, SearchChange>(
-        owner,
         bus.getManagedEmitter(SearchAction::class.java),
-        bus.getSafeManagedObservable(SearchChange::class.java)
+        bus.getSafeManagedObservable(SearchChange::class.java),
+        viewModelProvider
     ) {
 
     fun getView(): BrowserToolbar = uiView.toolbar
@@ -51,12 +46,8 @@ class ToolbarComponent(
         engineIconView
     )
 
-    override fun render(): Observable<SearchState> =
-        ViewModelProviders.of(owner, ToolbarViewModel.Factory(initialState, changesObservable))
-            .get(ToolbarViewModel::class.java).render(changesObservable, uiView)
-
     init {
-        render()
+        bind()
         applyTheme()
     }
 
@@ -100,16 +91,7 @@ sealed class SearchChange : Change {
 }
 
 class ToolbarViewModel(initialState: SearchState) :
-    UIComponentViewModel<SearchState, SearchAction, SearchChange>(initialState, reducer) {
-
-    class Factory(
-        private val initialState: SearchState,
-        val changesObservable: Observable<SearchChange>
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            ToolbarViewModel(initialState) as T
-    }
+    UIComponentViewModelBase<SearchState, SearchChange>(initialState, reducer) {
 
     companion object {
         val reducer: Reducer<SearchState, SearchChange> = { state, change ->

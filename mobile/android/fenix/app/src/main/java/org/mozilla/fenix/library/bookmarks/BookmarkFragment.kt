@@ -37,6 +37,7 @@ import mozilla.components.concept.sync.Profile
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
@@ -74,8 +75,25 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_bookmark, container, false)
-        bookmarkComponent = BookmarkComponent(view.bookmark_layout, this, ActionBusFactory.get(this))
-        signInComponent = SignInComponent(view.bookmark_layout, this, ActionBusFactory.get(this))
+        bookmarkComponent = BookmarkComponent(
+            view.bookmark_layout,
+            ActionBusFactory.get(this),
+            FenixViewModelProvider.create(
+                this,
+                BookmarkViewModel::class.java,
+                BookmarkViewModel.Companion::create
+            )
+        )
+        signInComponent = SignInComponent(
+            view.bookmark_layout,
+            ActionBusFactory.get(this),
+            FenixViewModelProvider.create(
+                this,
+                SignInViewModel::class.java
+            ) {
+                SignInViewModel(SignInState(false))
+            }
+        )
         return view
     }
 

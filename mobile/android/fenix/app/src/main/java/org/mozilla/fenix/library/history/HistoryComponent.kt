@@ -4,16 +4,13 @@
 package org.mozilla.fenix.library.history
 
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import io.reactivex.Observable
+import org.mozilla.fenix.mvi.ViewState
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
-import org.mozilla.fenix.mvi.UIComponentViewModel
-import org.mozilla.fenix.mvi.ViewState
+import org.mozilla.fenix.mvi.UIComponentViewModelBase
+import org.mozilla.fenix.mvi.UIComponentViewModelProvider
 import org.mozilla.fenix.test.Mockable
 
 data class HistoryItem(val id: Int, val title: String, val url: String, val visitedAt: Long)
@@ -21,26 +18,19 @@ data class HistoryItem(val id: Int, val title: String, val url: String, val visi
 @Mockable
 class HistoryComponent(
     private val container: ViewGroup,
-    owner: Fragment,
     bus: ActionBusFactory,
-    override var initialState: HistoryState = HistoryState(emptyList(), HistoryState.Mode.Normal)
+    viewModelProvider: UIComponentViewModelProvider<HistoryState, HistoryChange>
 ) :
     UIComponent<HistoryState, HistoryAction, HistoryChange>(
-        owner,
         bus.getManagedEmitter(HistoryAction::class.java),
-        bus.getSafeManagedObservable(HistoryChange::class.java)
+        bus.getSafeManagedObservable(HistoryChange::class.java),
+        viewModelProvider
     ) {
 
     override fun initView() = HistoryUIView(container, actionEmitter, changesObservable)
 
-    override fun render(): Observable<HistoryState> =
-        ViewModelProvider(
-            owner,
-            HistoryViewModel.Factory(initialState)
-        ).get(HistoryViewModel::class.java).render(changesObservable, uiView)
-
     init {
-        render()
+        bind()
     }
 }
 
@@ -74,18 +64,11 @@ sealed class HistoryChange : Change {
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryChange()
 }
 
-class HistoryViewModel(initialState: HistoryState) :
-    UIComponentViewModel<HistoryState, HistoryAction, HistoryChange>(initialState, reducer) {
-
-    class Factory(
-        private val initialState: HistoryState
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            HistoryViewModel(initialState) as T
-    }
-
+class HistoryViewModel(
+    initialState: HistoryState
+) : UIComponentViewModelBase<HistoryState, HistoryChange>(initialState, reducer) {
     companion object {
+        fun create() = HistoryViewModel(HistoryState(emptyList(), HistoryState.Mode.Normal))
         val reducer: (HistoryState, HistoryChange) -> HistoryState = { state, change ->
             when (change) {
                 is HistoryChange.Change -> state.copy(mode = HistoryState.Mode.Normal, items = change.list)

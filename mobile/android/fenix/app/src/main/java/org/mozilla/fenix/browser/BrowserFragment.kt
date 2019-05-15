@@ -55,6 +55,7 @@ import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import mozilla.components.support.ktx.kotlin.toUri
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
+import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
@@ -70,6 +71,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
+import org.mozilla.fenix.components.toolbar.ToolbarViewModel
 import org.mozilla.fenix.customtabs.CustomTabsIntegration
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
@@ -84,6 +86,7 @@ import org.mozilla.fenix.quickactionsheet.QuickActionAction
 import org.mozilla.fenix.quickactionsheet.QuickActionChange
 import org.mozilla.fenix.quickactionsheet.QuickActionComponent
 import org.mozilla.fenix.quickactionsheet.QuickActionState
+import org.mozilla.fenix.quickactionsheet.QuickActionViewModel
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
@@ -129,11 +132,17 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
         toolbarComponent = ToolbarComponent(
             view.browserLayout,
-            this,
             ActionBusFactory.get(this), customTabSessionId,
             (activity as HomeActivity).browsingModeManager.isPrivate,
-            SearchState("", getSessionById()?.searchTerms ?: "", isEditing = false),
-            search_engine_icon
+            search_engine_icon,
+            FenixViewModelProvider.create(
+                this,
+                ToolbarViewModel::class.java
+            ) {
+                ToolbarViewModel(
+                    SearchState("", getSessionById()?.searchTerms ?: "", isEditing = false)
+                )
+            }
         )
 
         toolbarComponent.uiView.view.apply {
@@ -154,14 +163,20 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
         QuickActionComponent(
             view.nestedScrollQuickAction,
-            this,
             ActionBusFactory.get(this),
-            QuickActionState(
-                readable = getSessionById()?.readerable ?: false,
-                bookmarked = findBookmarkedURL(getSessionById()),
-                readerActive = getSessionById()?.readerMode ?: false,
-                bounceNeeded = false
+            FenixViewModelProvider.create(
+                this,
+                QuickActionViewModel::class.java
+            ) {
+                QuickActionViewModel(
+                QuickActionState(
+                    readable = getSessionById()?.readerable ?: false,
+                    bookmarked = findBookmarkedURL(getSessionById()),
+                    readerActive = getSessionById()?.readerMode ?: false,
+                    bounceNeeded = false
+                )
             )
+            }
         )
 
         val activity = activity as HomeActivity

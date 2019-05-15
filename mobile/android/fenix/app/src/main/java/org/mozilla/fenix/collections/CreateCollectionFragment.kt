@@ -14,6 +14,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
+import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.getRootView
@@ -50,13 +51,13 @@ class CreateCollectionFragment : DialogFragment() {
 
         collectionCreationComponent = CollectionCreationComponent(
             view.create_collection_wrapper,
-            this,
             ActionBusFactory.get(this),
-            CollectionCreationState(
-                tabs = tabs,
-                selectedTabs = selectedTabs,
-                saveCollectionStep = step
-            )
+            FenixViewModelProvider.create(
+                this,
+                CollectionCreationViewModel::class.java
+            ) {
+                CollectionCreationViewModel(CollectionCreationState(tabs, selectedTabs, step))
+            }
         )
         return view
     }

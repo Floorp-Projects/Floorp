@@ -26,6 +26,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -34,6 +35,7 @@ import org.mozilla.fenix.components.toolbar.SearchChange
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
+import org.mozilla.fenix.components.toolbar.ToolbarViewModel
 import org.mozilla.fenix.ext.getSpannable
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -42,7 +44,9 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.search.awesomebar.AwesomeBarAction
 import org.mozilla.fenix.search.awesomebar.AwesomeBarChange
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComponent
+import org.mozilla.fenix.search.awesomebar.AwesomeBarState
 import org.mozilla.fenix.search.awesomebar.AwesomeBarUIView
+import org.mozilla.fenix.search.awesomebar.AwesomeBarViewModel
 
 @Suppress("TooManyFunctions")
 class SearchFragment : Fragment(), BackHandler {
@@ -67,15 +71,28 @@ class SearchFragment : Fragment(), BackHandler {
 
         toolbarComponent = ToolbarComponent(
             view.toolbar_component_wrapper,
-            this,
             ActionBusFactory.get(this),
             sessionId,
             isPrivate,
-            SearchState(url, session?.searchTerms ?: "", isEditing = true),
-            view.search_engine_icon
+            view.search_engine_icon,
+            FenixViewModelProvider.create(
+                this,
+                ToolbarViewModel::class.java
+            ) {
+                ToolbarViewModel(SearchState(url, session?.searchTerms ?: "", isEditing = true))
+            }
         )
 
-        awesomeBarComponent = AwesomeBarComponent(view.search_layout, this, ActionBusFactory.get(this))
+        awesomeBarComponent = AwesomeBarComponent(
+            view.search_layout,
+            ActionBusFactory.get(this),
+            FenixViewModelProvider.create(
+                this,
+                AwesomeBarViewModel::class.java
+            ) {
+                AwesomeBarViewModel(AwesomeBarState("", false))
+            }
+        )
         ActionBusFactory.get(this).logMergedObservables()
         return view
     }

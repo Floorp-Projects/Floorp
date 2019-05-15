@@ -4,10 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks
 
-import android.view.ViewGroup
 import io.mockk.MockKAnnotations
-import io.mockk.mockk
-import io.mockk.spyk
 import io.reactivex.Observer
 import io.reactivex.observers.TestObserver
 import mozilla.appservices.places.BookmarkRoot
@@ -16,13 +13,12 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.TestUtils
-import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.UIView
+import org.mozilla.fenix.TestUtils.bus
 import org.mozilla.fenix.mvi.getManagedEmitter
 
-class BookmarkComponentTest {
+class BookmarkViewModelTest {
 
-    private lateinit var bookmarkComponent: TestBookmarkComponent
+    private lateinit var bookmarkViewModel: BookmarkViewModel
     private lateinit var bookmarkObserver: TestObserver<BookmarkState>
     private lateinit var emitter: Observer<BookmarkChange>
 
@@ -31,11 +27,10 @@ class BookmarkComponentTest {
         MockKAnnotations.init(this)
         TestUtils.setRxSchedulers()
 
-        bookmarkComponent = spyk(
-            TestBookmarkComponent(mockk(), TestUtils.bus),
-            recordPrivateCalls = true
-        )
-        bookmarkObserver = bookmarkComponent.render().test()
+        bookmarkViewModel = BookmarkViewModel.create()
+        bookmarkObserver = bookmarkViewModel.state.test()
+        bus.getSafeManagedObservable(BookmarkChange::class.java)
+            .subscribe(bookmarkViewModel.changes::onNext)
         emitter = TestUtils.owner.getManagedEmitter()
     }
 
@@ -83,13 +78,5 @@ class BookmarkComponentTest {
                 BookmarkState(tree, BookmarkState.Mode.Selecting(setOf(itemToSelect))),
                 BookmarkState(tree - itemToSelect.guid, BookmarkState.Mode.Normal)
             )
-    }
-
-    @Suppress("MemberVisibilityCanBePrivate")
-    class TestBookmarkComponent(container: ViewGroup, bus: ActionBusFactory) :
-        BookmarkComponent(container, mockk(relaxed = true), bus) {
-
-        override val uiView: UIView<BookmarkState, BookmarkAction, BookmarkChange>
-            get() = mockk(relaxed = true)
     }
 }

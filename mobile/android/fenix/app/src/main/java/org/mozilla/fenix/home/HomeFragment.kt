@@ -33,6 +33,7 @@ import org.jetbrains.anko.constraint.layout.applyConstraintSet
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
+import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.collections.CreateCollectionViewModel
@@ -48,6 +49,7 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.SessionControlComponent
 import org.mozilla.fenix.home.sessioncontrol.SessionControlState
+import org.mozilla.fenix.home.sessioncontrol.SessionControlViewModel
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabAction
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
@@ -88,9 +90,13 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         sessionControlComponent = SessionControlComponent(
             view.homeLayout,
-            this,
             bus,
-            SessionControlState(listOf(), listOf(), mode)
+            FenixViewModelProvider.create(
+                this,
+                SessionControlViewModel::class.java
+            ) {
+                SessionControlViewModel(SessionControlState(listOf(), listOf(), mode))
+            }
         )
 
         view.homeLayout.applyConstraintSet {
@@ -450,6 +456,7 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     private fun emitSessionChanges() {
         val sessionManager = requireComponents.core.sessionManager
+
         getManagedEmitter<SessionControlChange>().onNext(
             SessionControlChange.TabsChange(
                 sessionManager.sessions

@@ -5,45 +5,30 @@
 package org.mozilla.fenix.quickactionsheet
 
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import io.reactivex.Observable
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.UIComponentViewModelProvider
+import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
-import org.mozilla.fenix.mvi.UIComponentViewModel
+import org.mozilla.fenix.mvi.UIComponentViewModelBase
 import org.mozilla.fenix.mvi.UIView
-import org.mozilla.fenix.mvi.ViewState
 
 class QuickActionComponent(
     private val container: ViewGroup,
-    owner: Fragment,
     bus: ActionBusFactory,
-    override var initialState: QuickActionState = QuickActionState(
-        readable = false,
-        bookmarked = false,
-        readerActive = false,
-        bounceNeeded = false
-    )
+    viewModelProvider: UIComponentViewModelProvider<QuickActionState, QuickActionChange>
 ) : UIComponent<QuickActionState, QuickActionAction, QuickActionChange>(
-    owner,
     bus.getManagedEmitter(QuickActionAction::class.java),
-    bus.getSafeManagedObservable(QuickActionChange::class.java)
+    bus.getSafeManagedObservable(QuickActionChange::class.java),
+    viewModelProvider
 ) {
     override fun initView(): UIView<QuickActionState, QuickActionAction, QuickActionChange> =
         QuickActionUIView(container, actionEmitter, changesObservable)
 
-    override fun render(): Observable<QuickActionState> =
-        ViewModelProvider(
-            owner,
-            QuickActionViewModel.Factory(initialState)
-        ).get(QuickActionViewModel::class.java).render(changesObservable, uiView)
-
     init {
-        render()
+        bind()
     }
 }
 
@@ -71,20 +56,9 @@ sealed class QuickActionChange : Change {
     object BounceNeededChange : QuickActionChange()
 }
 
-class QuickActionViewModel(initialState: QuickActionState) :
-    UIComponentViewModel<QuickActionState, QuickActionAction, QuickActionChange>(
-        initialState,
-        reducer
-    ) {
-
-    class Factory(
-        private val initialState: QuickActionState
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-            QuickActionViewModel(initialState) as T
-    }
-
+class QuickActionViewModel(
+    initialState: QuickActionState
+) : UIComponentViewModelBase<QuickActionState, QuickActionChange>(initialState, reducer) {
     companion object {
         val reducer: Reducer<QuickActionState, QuickActionChange> = { state, change ->
             when (change) {

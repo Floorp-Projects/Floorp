@@ -29,6 +29,7 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
@@ -59,7 +60,15 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_history, container, false)
-        historyComponent = HistoryComponent(view.history_layout, this, ActionBusFactory.get(this))
+        historyComponent = HistoryComponent(
+            view.history_layout,
+            ActionBusFactory.get(this),
+            FenixViewModelProvider.create(
+                this,
+                HistoryViewModel::class.java,
+                HistoryViewModel.Companion::create
+            )
+        )
         return view
     }
 

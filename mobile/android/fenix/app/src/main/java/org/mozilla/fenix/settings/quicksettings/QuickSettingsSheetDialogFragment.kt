@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.support.ktx.kotlin.toUri
+import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
@@ -74,15 +75,23 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
         val rootView = inflateRootView(container)
         requireComponents.core.sessionManager.findSessionById(sessionId)?.register(sessionObserver, view = rootView)
         quickSettingsComponent = QuickSettingsComponent(
-            rootView as NestedScrollView, this, ActionBusFactory.get(this),
-            QuickSettingsState(
-                QuickSettingsState.Mode.Normal(
-                    url,
-                    isSecured,
-                    isTrackingProtectionOn,
-                    sitePermissions
+            rootView as NestedScrollView,
+            ActionBusFactory.get(this),
+            FenixViewModelProvider.create(
+                this,
+                QuickSettingsViewModel::class.java
+            ) {
+                QuickSettingsViewModel(
+                    QuickSettingsState(
+                        QuickSettingsState.Mode.Normal(
+                            url,
+                            isSecured,
+                            isTrackingProtectionOn,
+                            sitePermissions
+                        )
+                    )
                 )
-            )
+            }
         )
         return rootView
     }

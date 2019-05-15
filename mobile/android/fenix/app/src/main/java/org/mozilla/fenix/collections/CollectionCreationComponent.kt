@@ -5,19 +5,18 @@ package org.mozilla.fenix.collections
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import io.reactivex.Observable
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
+import org.mozilla.fenix.mvi.ViewState
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
-import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Reducer
 import org.mozilla.fenix.mvi.UIComponent
-import org.mozilla.fenix.mvi.UIComponentViewModel
-import org.mozilla.fenix.mvi.ViewState
+import org.mozilla.fenix.mvi.UIComponentViewModelBase
+import org.mozilla.fenix.mvi.UIComponentViewModelProvider
 
 sealed class SaveCollectionStep {
     object SelectTabs : SaveCollectionStep()
@@ -56,30 +55,24 @@ sealed class CollectionCreationAction : Action {
 
 class CollectionCreationComponent(
     private val container: ViewGroup,
-    owner: Fragment,
     bus: ActionBusFactory,
-    override var initialState: CollectionCreationState = CollectionCreationState()
+    viewModelProvider: UIComponentViewModelProvider<CollectionCreationState, CollectionCreationChange>
 ) : UIComponent<CollectionCreationState, CollectionCreationAction, CollectionCreationChange>(
-    owner,
     bus.getManagedEmitter(CollectionCreationAction::class.java),
-    bus.getSafeManagedObservable(CollectionCreationChange::class.java)
+    bus.getSafeManagedObservable(CollectionCreationChange::class.java),
+    viewModelProvider
 ) {
     override fun initView() = CollectionCreationUIView(container, actionEmitter, changesObservable)
 
-    override fun render(): Observable<CollectionCreationState> =
-        ViewModelProvider(owner, CollectionCreationViewModel.Factory(initialState)).get(
-            CollectionCreationViewModel::class.java
-        ).render(changesObservable, uiView)
-
     init {
-        render()
+        bind()
     }
 }
 
 class CollectionCreationViewModel(
     initialState: CollectionCreationState
 ) :
-    UIComponentViewModel<CollectionCreationState, CollectionCreationAction, CollectionCreationChange>(
+    UIComponentViewModelBase<CollectionCreationState, CollectionCreationChange>(
         initialState,
         reducer
     ) {

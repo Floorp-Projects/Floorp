@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -48,9 +49,13 @@ class ExceptionsFragment : Fragment(), CoroutineScope {
         val view = inflater.inflate(R.layout.fragment_exceptions, container, false)
         exceptionsComponent = ExceptionsComponent(
             view.exceptions_layout,
-            this,
             ActionBusFactory.get(this),
-            ExceptionsState(loadAndMapExceptions())
+            FenixViewModelProvider.create(
+                this,
+                ExceptionsViewModel::class.java
+            ) {
+                ExceptionsViewModel(ExceptionsState(loadAndMapExceptions()))
+            }
         )
         return view
     }
