@@ -5,6 +5,7 @@
 
 #include "mozilla/Encoding.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsAutoPtr.h"
 #include "nsCookie.h"
 #include <stdlib.h>
@@ -126,7 +127,8 @@ bool nsCookie::IsStale() const {
   int64_t currentTimeInUsec = PR_Now();
 
   return currentTimeInUsec - LastAccessed() >
-         CookieStaleThreshold() * PR_USEC_PER_SEC;
+         mozilla::StaticPrefs::network_cookie_staleThreshold() *
+             PR_USEC_PER_SEC;
 }
 
 /******************************************************************************
