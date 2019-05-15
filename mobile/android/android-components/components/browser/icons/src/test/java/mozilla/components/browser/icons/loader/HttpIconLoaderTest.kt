@@ -6,16 +6,22 @@ package mozilla.components.browser.icons.loader
 
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.MutableHeaders
+import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.lib.fetch.okhttp.OkHttpClient
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
@@ -85,5 +91,57 @@ class HttpIconLoaderTest {
 
         assertEquals(IconLoader.Result.NoResult, result)
         verify(client, never()).fetch(any())
+    }
+
+    @Test
+    fun `Request has timeouts applied`() {
+        val client: Client = mock()
+
+        val loader = HttpIconLoader(client)
+        doReturn(
+            Response(
+                url = "https://www.example.org",
+                headers = MutableHeaders(),
+                status = 404,
+                body = Response.Body.empty())
+        ).`when`(client).fetch(any())
+
+        loader.load(
+            mock(), mock(), IconRequest.Resource(
+                url = "https://www.example.org",
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+            )
+        )
+
+        val captor = argumentCaptor<Request>()
+        verify(client).fetch(captor.capture())
+
+        val request = captor.value
+        assertNotNull(request)
+        assertNotNull(request.connectTimeout)
+        assertNotNull(request.readTimeout)
+    }
+
+    @Test
+    fun `NoResult is returned for non-successful requests`() {
+        val client: Client = mock()
+
+        val loader = HttpIconLoader(client)
+        doReturn(
+            Response(
+                url = "https://www.example.org",
+                headers = MutableHeaders(),
+                status = 404,
+                body = Response.Body.empty())
+        ).`when`(client).fetch(any())
+
+        val result = loader.load(
+            mock(), mock(), IconRequest.Resource(
+                url = "https://www.example.org",
+                type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+            )
+        )
+
+        assertEquals(IconLoader.Result.NoResult, result)
     }
 }
