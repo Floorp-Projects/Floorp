@@ -2073,6 +2073,22 @@ bool BaselineCodeGen<Handler>::emit_JSOP_LOOPHEAD() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emitIncExecutionProgressCounter(
+    Register scratch) {
+  if (!mozilla::recordreplay::IsRecordingOrReplaying()) {
+    return true;
+  }
+
+  auto incCounter = [this]() {
+    masm.inc64(
+        AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
+    return true;
+  };
+  return emitTestScriptFlag(JSScript::MutableFlags::TrackRecordReplayProgress,
+                            true, incCounter, scratch);
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_LOOPENTRY() {
   if (!emit_JSOP_JUMPTARGET()) {
     return false;
@@ -2082,13 +2098,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_LOOPENTRY() {
     return false;
   }
 
-  auto incCounter = [this]() {
-    masm.inc64(
-        AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
-    return true;
-  };
-  return emitTestScriptFlag(JSScript::MutableFlags::TrackRecordReplayProgress,
-                            true, incCounter, R2.scratchReg());
+  return emitIncExecutionProgressCounter(R0.scratchReg());
 }
 
 template <typename Handler>
@@ -6447,13 +6457,7 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
   // on a bogus EnvironmentChain value in the frame.
   emitPreInitEnvironmentChain(R1.scratchReg());
 
-  auto incCounter = [this]() {
-    masm.inc64(
-        AbsoluteAddress(mozilla::recordreplay::ExecutionProgressCounter()));
-    return true;
-  };
-  if (!emitTestScriptFlag(JSScript::MutableFlags::TrackRecordReplayProgress,
-                          true, incCounter, R2.scratchReg())) {
+  if (!emitIncExecutionProgressCounter(R2.scratchReg())) {
     return false;
   }
 
