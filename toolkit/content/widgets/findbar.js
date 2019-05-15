@@ -29,7 +29,7 @@ class MozFindbar extends XULElement {
     this.content = MozXULElement.parseXULToFragment(`
       <hbox anonid="findbar-container" class="findbar-container" flex="1" align="center">
         <hbox anonid="findbar-textbox-wrapper" align="stretch">
-          <textbox anonid="findbar-textbox" class="findbar-textbox findbar-find-fast" />
+          <html:input anonid="findbar-textbox" class="findbar-textbox findbar-find-fast" />
           <toolbarbutton anonid="find-previous" class="findbar-find-previous tabbable" data-l10n-attrs="tooltiptext" data-l10n-id="findbar-previous" oncommand="onFindAgainCommand(true);" disabled="true" />
           <toolbarbutton anonid="find-next" class="findbar-find-next tabbable" data-l10n-id="findbar-next" oncommand="onFindAgainCommand(false);" disabled="true" />
         </hbox>
