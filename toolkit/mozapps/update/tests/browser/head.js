@@ -979,7 +979,7 @@ function removeUpdateSettingsIni() {
 function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
   return (async function() {
     Services.telemetry.clearScalars();
-    gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
+    gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
@@ -995,12 +995,6 @@ function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
     let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + gDetailsURL +
                     updateParams + getVersionParams();
     setUpdateURL(updateURL);
-    if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
-      // Since MOZ_TEST_SKIP_UPDATE_STAGE is checked before
-      // MOZ_TEST_SLOW_SKIP_UPDATE_STAGE in updater.cpp this removes the need
-      // for the continue file to continue staging the update.
-      gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
-    }
     gAUS.checkForBackgroundUpdates();
     await waitForEvent(event);
   })();
