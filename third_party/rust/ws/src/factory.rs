@@ -1,5 +1,5 @@
-use handler::Handler;
 use communication::Sender;
+use handler::Handler;
 
 /// A trait for creating new WebSocket handlers.
 pub trait Factory {
@@ -98,39 +98,39 @@ pub trait Factory {
     /// You can use this to track connections being destroyed or to finalize
     /// state that was not internally tracked by the handler.
     #[inline]
-    fn connection_lost(&mut self, _: Self::Handler) {
-    }
-
+    fn connection_lost(&mut self, _: Self::Handler) {}
 }
 
 impl<F, H> Factory for F
-    where H: Handler, F: FnMut(Sender) -> H
+where
+    H: Handler,
+    F: FnMut(Sender) -> H,
 {
     type Handler = H;
 
     fn connection_made(&mut self, out: Sender) -> H {
         self(out)
     }
-
 }
 
 mod test {
     #![allow(unused_imports, unused_variables, dead_code)]
     use super::*;
-    use mio;
     use communication::{Command, Sender};
-    use handshake::{Request, Response, Handshake};
-    use protocol::CloseCode;
     use frame;
-    use message;
     use handler::Handler;
+    use handshake::{Handshake, Request, Response};
+    use message;
+    use mio;
+    use protocol::CloseCode;
     use result::Result;
 
     #[derive(Debug, Eq, PartialEq)]
     struct M;
     impl Handler for M {
         fn on_message(&mut self, _: message::Message) -> Result<()> {
-            Ok(println!("test"))
+            println!("test");
+            Ok(())
         }
 
         fn on_frame(&mut self, f: frame::Frame) -> Result<Option<frame::Frame>> {
@@ -140,7 +140,6 @@ mod test {
 
     #[test]
     fn impl_factory() {
-
         struct X;
 
         impl Factory for X {
@@ -153,9 +152,7 @@ mod test {
         let (chn, _) = mio::channel::sync_channel(42);
 
         let mut x = X;
-        let m = x.connection_made(
-            Sender::new(mio::Token(0), chn, 0)
-        );
+        let m = x.connection_made(Sender::new(mio::Token(0), chn, 0));
         assert_eq!(m, M);
     }
 
@@ -163,13 +160,9 @@ mod test {
     fn closure_factory() {
         let (chn, _) = mio::channel::sync_channel(42);
 
-        let mut factory = |_| {
-            |_| {Ok(())}
-        };
+        let mut factory = |_| |_| Ok(());
 
-        factory.connection_made(
-            Sender::new(mio::Token(0), chn, 0)
-        );
+        factory.connection_made(Sender::new(mio::Token(0), chn, 0));
     }
 
     #[test]
@@ -189,9 +182,7 @@ mod test {
         let (chn, _) = mio::channel::sync_channel(42);
 
         let mut x = X;
-        let m = x.connection_made(
-            Sender::new(mio::Token(0), chn, 0)
-        );
+        let m = x.connection_made(Sender::new(mio::Token(0), chn, 0));
         x.connection_lost(m);
     }
 }
