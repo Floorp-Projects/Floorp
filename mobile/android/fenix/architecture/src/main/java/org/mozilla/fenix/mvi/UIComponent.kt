@@ -38,7 +38,13 @@ abstract class UIComponent<S : ViewState, A : Action, C : Change>(
         val viewModel = viewModelProvider.fetchViewModel()
 
         compositeDisposable.add(changesObservable.subscribe(viewModel.changes::onNext))
-        compositeDisposable.add(viewModel.state.subscribe(uiView.updateView()))
+        compositeDisposable.add(
+            viewModel
+                .state
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(uiView.updateView())
+        )
 
         return compositeDisposable
     }
@@ -61,8 +67,6 @@ abstract class UIComponentViewModelBase<S : ViewState, C : Change>(
             .withLatestFrom(_state)
             .map { reducer(it.second, it.first) }
             .distinctUntilChanged()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
             .subscribe(_state)
     }
 }
