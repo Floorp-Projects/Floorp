@@ -46,7 +46,7 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
             // We could auto-close this tab once we get to the end of the authentication process?
             // Via an interceptor, perhaps.
             view?.let {
-                (activity as HomeActivity).openToBrowser(BrowserDirection.FromSettings)
+                (activity as HomeActivity).openToBrowser(BrowserDirection.FromTurnOnSync)
             }
             true
         }

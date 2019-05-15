@@ -31,7 +31,9 @@ import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.search.SearchFragmentDirections
+import org.mozilla.fenix.settings.PairFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
+import org.mozilla.fenix.settings.TurnOnSyncFragmentDirections
 import org.mozilla.fenix.utils.Settings
 
 @SuppressWarnings("TooManyFunctions")
@@ -176,6 +178,10 @@ open class HomeActivity : AppCompatActivity() {
                     .actionBookmarkSelectFolderFragmentToBrowserFragment(customTabSessionId)
             BrowserDirection.FromHistory ->
                 HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(customTabSessionId)
+            BrowserDirection.FromPair -> PairFragmentDirections.actionPairFragmentToBrowserFragment(customTabSessionId)
+            BrowserDirection.FromTurnOnSync -> TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToBrowserFragment(
+                customTabSessionId
+            )
         }
         if (sessionObserver == null)
             sessionObserver = subscribeToSessions()
@@ -263,5 +269,6 @@ open class HomeActivity : AppCompatActivity() {
 }
 
 enum class BrowserDirection {
-    FromGlobal, FromHome, FromSearch, FromSettings, FromBookmarks, FromBookmarksFolderSelect, FromHistory
+    FromGlobal, FromHome, FromSearch, FromSettings, FromBookmarks,
+    FromBookmarksFolderSelect, FromHistory, FromPair, FromTurnOnSync
 }

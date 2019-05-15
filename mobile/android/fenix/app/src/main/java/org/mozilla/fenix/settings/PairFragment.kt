@@ -43,9 +43,7 @@ class PairFragment : Fragment(), BackHandler {
                 },
                 onScanResult = { pairingUrl ->
                     requireComponents.services.accountsAuthFeature.beginPairingAuthentication(pairingUrl)
-                    view?.let {
-                        (activity as HomeActivity).openToBrowser(BrowserDirection.FromSettings)
-                    }
+                    (activity as HomeActivity).openToBrowser(BrowserDirection.FromPair)
                 }),
             owner = this,
             view = view

@@ -304,7 +304,8 @@
         <action
             android:id="@+id/action_turnOnSyncFragment_to_browserFragment"
             app:destination="@id/browserFragment"
-            app:popUpTo="@+id/settingsFragment" />
+            app:popUpTo="@+id/settingsFragment"
+            app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_turnOnSyncFragment_to_pairInstructionsFragment"
             app:destination="@id/pairInstructionsFragment" />
@@ -326,7 +327,8 @@
         <action
             android:id="@+id/action_pairFragment_to_browserFragment"
             app:destination="@id/browserFragment"
-            app:popUpTo="@+id/settingsFragment" />
+            app:popUpTo="@+id/settingsFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
