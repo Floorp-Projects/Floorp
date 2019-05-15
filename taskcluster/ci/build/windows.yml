@@ -270,6 +270,7 @@ win32-shippable/opt:
             nightly: true
             beta: true
             release: true
+            esr.*: false
             default:
                 by-project:
                     # browser/confvars.sh looks for nightly-try
