@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the login-filter component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the login-filter component</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="reflected-fluent-element.js"></script>
+  <script src="login-filter.js"></script>
+  <script src="login-list-item.js"></script>
+  <script src="login-list.js"></script>
+  <script src="aboutlogins_common.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+  <iframe id="templateFrame" src="aboutLogins.html"
+          sandbox="allow-same-origin"></iframe>
+</div>
+<pre id="test">
+</pre>
+<script>
+/** Test the login-filter component **/
+
+let gLoginFilter;
+let gLoginList;
+add_task(async function setup() {
+  stubFluentL10n({
+    "count": "count",
+  });
+
+  let templateFrame = document.getElementById("templateFrame");
+  let displayEl = document.getElementById("display");
+  importDependencies(templateFrame, displayEl);
+
+  gLoginFilter = document.createElement("login-filter");
+  displayEl.appendChild(gLoginFilter);
+
+  gLoginList = document.createElement("login-list");
+  displayEl.appendChild(gLoginList);
+});
+
+add_task(async function test_empty_filter() {
+  ok(gLoginFilter, "loginFilter exists");
+  is(gLoginFilter.shadowRoot.querySelector("input").value, "", "Initially empty");
+});
+
+add_task(async function test_input_events() {
+  let filterEvent = null;
+  window.addEventListener("AboutLoginsFilterLogins", event => filterEvent = event);
+  let input = SpecialPowers.wrap(gLoginFilter.shadowRoot.querySelector("input"));
+  input.setUserInput("test");
+  ok(filterEvent, "Filter event received");
+  is(filterEvent.detail, "test", "Event includes input value");
+});
+
+add_task(async function test_list_filtered() {
+  const LOGINS = [{
+    guid: "123456789",
+    hostname: "https://example.com",
+    username: "user1",
+    password: "pass1",
+  }, {
+    guid: "987654321",
+    hostname: "https://example.com",
+    username: "user2",
+    password: "pass2",
+  }];
+  gLoginList.setLogins(LOGINS);
+
+  let tests = [
+    ["", 2],
+    [LOGINS[0].username, 1],
+    [LOGINS[0].username + "-notfound", 0],
+    [LOGINS[0].username.substr(2, 3), 1],
+    ["", 2],
+    // The password is not used for search.
+    [LOGINS[0].password, 0],
+    [LOGINS[0].password + "-notfound", 0],
+    [LOGINS[0].password.substr(2, 3), 0],
+    ["", 2],
+    [LOGINS[0].hostname, 2],
+    [LOGINS[0].hostname + "-notfound", 0],
+    [LOGINS[0].hostname.substr(2, 3), 2],
+    ["", 2],
+    // The guid is not used for search.
+    [LOGINS[0].guid, 0],
+    [LOGINS[0].guid + "-notfound", 0],
+    [LOGINS[0].guid.substr(0, 2), 0],
+    ["", 2],
+  ];
+
+  let loginFilterInput = gLoginFilter.shadowRoot.querySelector("input");
+  loginFilterInput.focus();
+
+  for (let i = 0; i < tests.length; i++) {
+    info("Testcase: " + i);
+
+    let testObj = {
+      testCase: i,
+      query: tests[i][0],
+      resultExpectedCount: tests[i][1],
+    };
+
+    let filterLength = loginFilterInput.value.length;
+    while (filterLength-- > 0) {
+      sendKey("BACK_SPACE");
+    }
+    sendString(testObj.query);
+
+    await SimpleTest.promiseWaitForCondition(() => {
+      return gLoginList.hasAttribute("count") &&
+             +gLoginList.getAttribute("count") == testObj.resultExpectedCount;
+    }, `Waiting for the search result count to update to ${testObj.resultExpectedCount} (tc#${testObj.testCase})`);
+    let count = +gLoginList.getAttribute("count");
+    is(count, testObj.resultExpectedCount,
+       `The login list count should match the expected result (tc#${testObj.testCase})`);
+  }
+});
+</script>
+
+</body>
+</html>

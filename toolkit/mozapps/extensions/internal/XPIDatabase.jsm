@@ -659,10 +659,13 @@ class AddonInternal {
       permissions |= AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS;
     }
 
-    if (Services.policies &&
-        !Services.policies.isAllowed(`modify-extension:${this.id}`)) {
-      permissions &= ~AddonManager.PERM_CAN_UNINSTALL;
-      permissions &= ~AddonManager.PERM_CAN_DISABLE;
+    if (Services.policies) {
+      if (!Services.policies.isAllowed(`uninstall-extension:${this.id}`)) {
+        permissions &= ~AddonManager.PERM_CAN_UNINSTALL;
+      }
+      if (!Services.policies.isAllowed(`disable-extension:${this.id}`)) {
+        permissions &= ~AddonManager.PERM_CAN_DISABLE;
+      }
     }
 
     return permissions;
@@ -1943,6 +1946,14 @@ this.XPIDatabase = {
         logger.warn(`Add-on ${aAddon.id} is not compatible with target application.`);
         return false;
       }
+    }
+
+    if (aAddon.location.isSystem || aAddon.location.isBuiltin) {
+      return true;
+    }
+
+    if (Services.policies && !Services.policies.mayInstallAddon(aAddon)) {
+      return false;
     }
 
     return true;

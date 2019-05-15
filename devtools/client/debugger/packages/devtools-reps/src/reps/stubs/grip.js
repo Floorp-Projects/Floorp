@@ -303,22 +303,6 @@ stubs.set("testProxy", {
   type: "object",
   actor: "server1.conn1.child1/obj47",
   class: "Proxy",
-  proxyTarget: {
-    type: "object",
-    actor: "server1.conn1.child1/obj48",
-    class: "Object",
-    ownPropertyLength: 1
-  },
-  proxyHandler: {
-    type: "object",
-    actor: "server1.conn1.child1/obj49",
-    class: "Array",
-    ownPropertyLength: 4,
-    preview: {
-      kind: "ArrayLike",
-      length: 3
-    }
-  },
   preview: {
     kind: "Object",
     ownProperties: {
@@ -344,6 +328,24 @@ stubs.set("testProxy", {
       }
     },
     ownPropertiesLength: 2
+  }
+});
+stubs.set("testProxySlots", {
+  proxyTarget: {
+    type: "object",
+    actor: "server1.conn1.child1/obj48",
+    class: "Object",
+    ownPropertyLength: 1
+  },
+  proxyHandler: {
+    type: "object",
+    actor: "server1.conn1.child1/obj49",
+    class: "Array",
+    ownPropertyLength: 4,
+    preview: {
+      kind: "ArrayLike",
+      length: 3
+    }
   }
 });
 stubs.set("testArrayBuffer", {

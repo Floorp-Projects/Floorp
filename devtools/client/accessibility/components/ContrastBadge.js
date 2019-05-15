@@ -38,6 +38,7 @@ class ContrastBadge extends Component {
 
     return Badge({
       label: L10N.getStr("accessibility.badge.contrast"),
+      ariaLabel: L10N.getStr("accessibility.badge.contrast.warning"),
       tooltip: L10N.getStr("accessibility.badge.contrast.tooltip"),
     });
   }

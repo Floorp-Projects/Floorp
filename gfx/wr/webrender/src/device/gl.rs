@@ -2422,7 +2422,7 @@ impl Device {
                     gl::PIXEL_PACK_BUFFER,
                     0,
                     pbo.reserved_size as _,
-                    gl::READ_ONLY)
+                    gl::MAP_READ_BIT)
             }
         };
 
