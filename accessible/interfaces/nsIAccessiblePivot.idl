@@ -245,11 +245,9 @@ interface nsIAccessibleTraversalRule : nsISupports
    * at the start of a traversal, so changing the method's return result after
    * that would have no affect.
    *
-   * @param aRoles [out] an array of the roles to match.
-   * @param aCount [out] the length of the array.
+   * @return an array of the roles to match.
    */
-  void getMatchRoles([array, size_is(aCount)]out unsigned long aRoles,
-                     [retval]out unsigned long aCount);
+  Array<unsigned long> getMatchRoles();
 
   /**
    * Determines if a given accessible is to be accepted in our traversal rule
