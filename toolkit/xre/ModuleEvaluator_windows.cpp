@@ -36,16 +36,76 @@ static bool GetDirectoryName(const nsCOMPtr<nsIFile> aFile,
   return true;
 }
 
+ModuleLoadEvent::ModuleInfo::ModuleInfo(uintptr_t aBase)
+    : mBase(aBase), mTrustFlags(ModuleTrustFlags::None) {}
+
 ModuleLoadEvent::ModuleInfo::ModuleInfo(
     const glue::ModuleLoadEvent::ModuleInfo& aOther)
-    : mBase(aOther.mBase), mLoadDurationMS(Some(aOther.mLoadDurationMS)) {
+    : mBase(aOther.mBase),
+      mLoadDurationMS(Some(aOther.mLoadDurationMS)),
+      mTrustFlags(ModuleTrustFlags::None) {
   if (aOther.mLdrName) {
     mLdrName.Assign(aOther.mLdrName.get());
   }
+
   if (aOther.mFullPath) {
     nsDependentString tempPath(aOther.mFullPath.get());
-    Unused << NS_NewLocalFile(tempPath, false, getter_AddRefs(mFile));
+    DebugOnly<nsresult> rv =
+        NS_NewLocalFile(tempPath, false, getter_AddRefs(mFile));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
+}
+
+bool ModuleLoadEvent::ModuleInfo::PopulatePathInfo() {
+  MOZ_ASSERT(mBase && mLdrName.IsEmpty() && !mFile);
+  if (!widget::WinUtils::GetModuleFullPath(reinterpret_cast<HMODULE>(mBase),
+                                           mLdrName)) {
+    return false;
+  }
+
+  return NS_SUCCEEDED(NS_NewLocalFile(mLdrName, false, getter_AddRefs(mFile)));
+}
+
+bool ModuleLoadEvent::ModuleInfo::PrepForTelemetry() {
+  MOZ_ASSERT(!mLdrName.IsEmpty() && mFile);
+  if (mLdrName.IsEmpty() || !mFile) {
+    return false;
+  }
+
+  using PathTransformFlags = widget::WinUtils::PathTransformFlags;
+
+  if (!widget::WinUtils::PreparePathForTelemetry(
+          mLdrName,
+          PathTransformFlags::Default & ~PathTransformFlags::Canonicalize)) {
+    return false;
+  }
+
+  nsAutoString dllFullPath;
+  if (NS_FAILED(mFile->GetPath(dllFullPath))) {
+    return false;
+  }
+
+  if (!widget::WinUtils::MakeLongPath(dllFullPath)) {
+    return false;
+  }
+
+  // Replace mFile with the lengthened version
+  if (NS_FAILED(NS_NewLocalFile(dllFullPath, false, getter_AddRefs(mFile)))) {
+    return false;
+  }
+
+  nsAutoString sanitized(dllFullPath);
+
+  if (!widget::WinUtils::PreparePathForTelemetry(
+          sanitized,
+          PathTransformFlags::Default & ~(PathTransformFlags::Canonicalize |
+                                          PathTransformFlags::Lengthen))) {
+    return false;
+  }
+
+  mFilePathClean = std::move(sanitized);
+
+  return true;
 }
 
 ModuleLoadEvent::ModuleLoadEvent(const ModuleLoadEvent& aOther,
@@ -117,50 +177,44 @@ static void GetKeyboardLayoutDlls(
 ModuleEvaluator::ModuleEvaluator() {
   GetKeyboardLayoutDlls(mKeyboardLayoutDlls);
 
-  nsCOMPtr<nsIFile> sysDir;
-  if (NS_SUCCEEDED(
-          NS_GetSpecialDirectory(NS_OS_SYSTEM_DIR, getter_AddRefs(sysDir)))) {
-    sysDir->GetPath(mSysDirectory);
-  }
+  nsresult rv =
+      NS_GetSpecialDirectory(NS_OS_SYSTEM_DIR, getter_AddRefs(mSysDirectory));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsIFile> winSxSDir;
-  if (NS_SUCCEEDED(NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR,
-                                          getter_AddRefs(winSxSDir)))) {
-    if (NS_SUCCEEDED(winSxSDir->Append(NS_LITERAL_STRING("WinSxS")))) {
-      winSxSDir->GetPath(mWinSxSDirectory);
+  rv = NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(winSxSDir));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = winSxSDir->Append(NS_LITERAL_STRING("WinSxS"));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (NS_SUCCEEDED(rv)) {
+      mWinSxSDirectory = std::move(winSxSDir);
     }
   }
 
 #ifdef _M_IX86
-  mSysWOW64Directory.SetLength(MAX_PATH);
-  UINT sysWOWlen =
-      ::GetSystemWow64DirectoryW((char16ptr_t)mSysWOW64Directory.BeginWriting(),
-                                 mSysWOW64Directory.Length());
-  if (!sysWOWlen || (sysWOWlen > mSysWOW64Directory.Length())) {
-    // This could be the following cases:
-    // - Genuine error
-    // - GetLastError == ERROR_CALL_NOT_IMPLEMENTED (32-bit Windows)
-    // - Buffer too small. The buffer being MAX_PATH, this should be so rare we
-    //   don't bother with this case.
-    // In all these cases, consider this directory unavailable.
-    mSysWOW64Directory.Truncate();
-  } else {
-    // In this case, GetSystemWow64DirectoryW returns the length of the string,
-    // not including the null-terminator.
-    mSysWOW64Directory.SetLength(sysWOWlen);
+  WCHAR sysWow64Buf[MAX_PATH + 1] = {};
+
+  UINT sysWowLen =
+      ::GetSystemWow64DirectoryW(sysWow64Buf, ArrayLength(sysWow64Buf));
+  if (sysWowLen > 0 && sysWowLen < ArrayLength(sysWow64Buf)) {
+    rv = NS_NewLocalFile(nsDependentString(sysWow64Buf, sysWowLen), false,
+                         getter_AddRefs(mSysWOW64Directory));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 #endif  // _M_IX86
 
-  nsCOMPtr<nsIFile> exeDir;
-  if (NS_SUCCEEDED(
-          NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(exeDir)))) {
-    exeDir->GetPath(mExeDirectory);
-  }
+  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(mExeDirectory));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsIFile> exeFile;
-  if (NS_SUCCEEDED(XRE_GetBinaryPath(getter_AddRefs(exeFile)))) {
+  rv = XRE_GetBinaryPath(getter_AddRefs(exeFile));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (NS_SUCCEEDED(rv)) {
     nsAutoString exePath;
-    if (NS_SUCCEEDED(exeFile->GetPath(exePath))) {
+    rv = exeFile->GetPath(exePath);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (NS_SUCCEEDED(rv)) {
       ModuleVersionInfo exeVi;
       if (exeVi.GetFromImage(exePath)) {
         mExeVersion = Some(exeVi.mFileVersion.Version64());
@@ -172,42 +226,38 @@ ModuleEvaluator::ModuleEvaluator() {
 Maybe<bool> ModuleEvaluator::IsModuleTrusted(
     ModuleLoadEvent::ModuleInfo& aDllInfo, const ModuleLoadEvent& aEvent,
     Authenticode* aSvc) const {
-  // The JIT profiling module doesn't really have any other practical way to
-  // match; hard-code it as being trusted.
-  if (aDllInfo.mLdrName.EqualsLiteral("JitPI.dll")) {
-    aDllInfo.mTrustFlags = ModuleTrustFlags::JitPI;
-    return Some(true);
-  }
-
-  aDllInfo.mTrustFlags = ModuleTrustFlags::None;
-
-  if (!aDllInfo.mFile) {
-    return Nothing();  // Every check here depends on having a valid image file.
-  }
-
-  using PathTransformFlags = widget::WinUtils::PathTransformFlags;
-
-  Unused << widget::WinUtils::PreparePathForTelemetry(
-      aDllInfo.mLdrName,
-      PathTransformFlags::Default & ~PathTransformFlags::Canonicalize);
+  MOZ_ASSERT(aDllInfo.mTrustFlags == ModuleTrustFlags::None);
+  MOZ_ASSERT(aDllInfo.mFile);
 
   nsAutoString dllFullPath;
   if (NS_FAILED(aDllInfo.mFile->GetPath(dllFullPath))) {
     return Nothing();
   }
-  widget::WinUtils::MakeLongPath(dllFullPath);
 
-  aDllInfo.mFilePathClean = dllFullPath;
-  if (!widget::WinUtils::PreparePathForTelemetry(
-          aDllInfo.mFilePathClean,
-          PathTransformFlags::Default & ~(PathTransformFlags::Canonicalize |
-                                          PathTransformFlags::Lengthen))) {
-    return Nothing();
-  }
+  // We start by checking authenticode signatures, since any result from this
+  // test will produce an immediate pass/fail.
+  if (aSvc) {
+    UniquePtr<wchar_t[]> szSignedBy = aSvc->GetBinaryOrgName(dllFullPath.get());
 
-  if (NS_FAILED(NS_NewLocalFile(dllFullPath, false,
-                                getter_AddRefs(aDllInfo.mFile)))) {
-    return Nothing();
+    if (szSignedBy) {
+      nsDependentString signedBy(szSignedBy.get());
+
+      if (signedBy.EqualsLiteral("Microsoft Windows")) {
+        aDllInfo.mTrustFlags |= ModuleTrustFlags::MicrosoftWindowsSignature;
+        return Some(true);
+      } else if (signedBy.EqualsLiteral("Microsoft Corporation")) {
+        aDllInfo.mTrustFlags |= ModuleTrustFlags::MicrosoftWindowsSignature;
+        return Some(true);
+      } else if (signedBy.EqualsLiteral("Mozilla Corporation")) {
+        aDllInfo.mTrustFlags |= ModuleTrustFlags::MozillaSignature;
+        return Some(true);
+      } else {
+        // Being signed by somebody who is neither Microsoft nor us is an
+        // automatic disqualification.
+        aDllInfo.mTrustFlags = ModuleTrustFlags::None;
+        return Some(false);
+      }
+    }
   }
 
   nsAutoString dllDirectory;
@@ -219,12 +269,21 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
   if (NS_FAILED(aDllInfo.mFile->GetLeafName(dllLeafLower))) {
     return Nothing();
   }
+
   ToLowerCase(dllLeafLower);  // To facilitate case-insensitive searching
+
+  // The JIT profiling module doesn't really have any other practical way to
+  // match; hard-code it as being trusted.
+  if (dllLeafLower.EqualsLiteral("jitpi.dll")) {
+    aDllInfo.mTrustFlags = ModuleTrustFlags::JitPI;
+    return Some(true);
+  }
 
   // Accumulate a trustworthiness score as the module passes through several
   // checks. If the score ever reaches above the threshold, it's considered
   // trusted.
-  int scoreThreshold = 100;
+  uint32_t scoreThreshold = 100;
+
 #ifdef ENABLE_TESTS
   // Check whether we are running as an xpcshell test.
   if (mozilla::EnvHasValue("XPCSHELL_TEST_PROFILE_DIR")) {
@@ -239,33 +298,37 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
   }
 #endif
 
-  int score = 0;
+  nsresult rv;
+  bool contained;
 
-  // Is the DLL in the system directory?
-  if (!mSysDirectory.IsEmpty() &&
-      StringBeginsWith(dllFullPath, mSysDirectory,
-                       nsCaseInsensitiveStringComparator())) {
-    aDllInfo.mTrustFlags |= ModuleTrustFlags::SystemDirectory;
-    score += 50;
+  uint32_t score = 0;
+
+  if (score < scoreThreshold) {
+    // Is the DLL in the system directory?
+    rv = mSysDirectory->Contains(aDllInfo.mFile, &contained);
+    if (NS_SUCCEEDED(rv) && contained) {
+      aDllInfo.mTrustFlags |= ModuleTrustFlags::SystemDirectory;
+      score += 50;
+    }
   }
 
 #ifdef _M_IX86
   // Under WOW64, SysWOW64 is the effective system directory. Give SysWOW64 the
   // same trustworthiness as ModuleTrustFlags::SystemDirectory.
-  if (!mSysWOW64Directory.IsEmpty() &&
-      StringBeginsWith(dllFullPath, mSysWOW64Directory,
-                       nsCaseInsensitiveStringComparator())) {
-    aDllInfo.mTrustFlags |= ModuleTrustFlags::SysWOW64Directory;
-    score += 50;
+  if (mSysWOW64Directory) {
+    rv = mSysWOW64Directory->Contains(aDllInfo.mFile, &contained);
+    if (NS_SUCCEEDED(rv) && contained) {
+      aDllInfo.mTrustFlags |= ModuleTrustFlags::SysWOW64Directory;
+      score += 50;
+    }
   }
 #endif  // _M_IX86
 
   // Is the DLL in the WinSxS directory? Some Microsoft DLLs (e.g. comctl32) are
   // loaded from here and don't have digital signatures. So while this is not a
   // guarantee of trustworthiness, but is at least as valid as system32.
-  if (!mWinSxSDirectory.IsEmpty() &&
-      StringBeginsWith(dllFullPath, mWinSxSDirectory,
-                       nsCaseInsensitiveStringComparator())) {
+  rv = mWinSxSDirectory->Contains(aDllInfo.mFile, &contained);
+  if (NS_SUCCEEDED(rv) && contained) {
     aDllInfo.mTrustFlags |= ModuleTrustFlags::WinSxSDirectory;
     score += 50;
   }
@@ -289,9 +352,8 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
         score += 50;
       }
 
-      if (!mExeDirectory.IsEmpty() &&
-          StringBeginsWith(dllFullPath, mExeDirectory,
-                           nsCaseInsensitiveStringComparator())) {
+      rv = mExeDirectory->Contains(aDllInfo.mFile, &contained);
+      if (NS_SUCCEEDED(rv) && contained) {
         score += 50;
         aDllInfo.mTrustFlags |= ModuleTrustFlags::FirefoxDirectory;
 
@@ -308,26 +370,6 @@ Maybe<bool> ModuleEvaluator::IsModuleTrusted(
             (vi.mFileVersion.Version64() == mExeVersion.value())) {
           aDllInfo.mTrustFlags |= ModuleTrustFlags::FirefoxDirectoryAndVersion;
           score += 50;
-        }
-      }
-    }
-  }
-
-  if (score < scoreThreshold) {
-    if (aSvc) {
-      UniquePtr<wchar_t[]> szSignedBy =
-          aSvc->GetBinaryOrgName(dllFullPath.get());
-      if (szSignedBy) {
-        nsAutoString signedBy(szSignedBy.get());
-        if (signedBy.EqualsLiteral("Microsoft Windows")) {
-          aDllInfo.mTrustFlags |= ModuleTrustFlags::MicrosoftWindowsSignature;
-          score = 100;
-        } else if (signedBy.EqualsLiteral("Microsoft Corporation")) {
-          aDllInfo.mTrustFlags |= ModuleTrustFlags::MicrosoftWindowsSignature;
-          score = 100;
-        } else if (signedBy.EqualsLiteral("Mozilla Corporation")) {
-          aDllInfo.mTrustFlags |= ModuleTrustFlags::MozillaSignature;
-          score = 100;
         }
       }
     }
