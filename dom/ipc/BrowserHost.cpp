@@ -12,7 +12,9 @@
 namespace mozilla {
 namespace dom {
 
-BrowserHost::BrowserHost(BrowserParent* aParent) : mRoot(aParent) {}
+BrowserHost::BrowserHost(BrowserParent* aParent) : mRoot(aParent) {
+  mRoot->SetBrowserHost(this);
+}
 
 mozilla::layers::LayersId BrowserHost::GetLayersId() const {
   return mRoot->GetRenderFrame()->GetLayersId();

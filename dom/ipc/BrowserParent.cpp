@@ -173,8 +173,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowserParent)
 BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
                              const TabContext& aContext,
                              CanonicalBrowsingContext* aBrowsingContext,
-                             uint32_t aChromeFlags,
-                             BrowserBridgeParent* aBrowserBridgeParent)
+                             uint32_t aChromeFlags)
     : TabContext(aContext),
       mTabId(aTabId),
       mManager(aManager),
@@ -184,7 +183,8 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mBrowserDOMWindow(nullptr),
       mFrameLoader(nullptr),
       mChromeFlags(aChromeFlags),
-      mBrowserBridgeParent(aBrowserBridgeParent),
+      mBrowserBridgeParent(nullptr),
+      mBrowserHost(nullptr),
       mContentCache(*this),
       mRenderFrame{},
       mLayerTreeEpoch{1},
@@ -441,6 +441,12 @@ RenderFrame* BrowserParent::GetRenderFrame() {
   }
   return &mRenderFrame;
 }
+
+BrowserBridgeParent* BrowserParent::GetBrowserBridgeParent() const {
+  return mBrowserBridgeParent;
+}
+
+BrowserHost* BrowserParent::GetBrowserHost() const { return mBrowserHost; }
 
 ShowInfo BrowserParent::GetShowInfo() {
   TryCacheDPIAndScale();
@@ -3826,6 +3832,24 @@ mozilla::ipc::IPCResult BrowserParent::RecvQueryVisitedState(
 void BrowserParent::LiveResizeStarted() { SuppressDisplayport(true); }
 
 void BrowserParent::LiveResizeStopped() { SuppressDisplayport(false); }
+
+void BrowserParent::SetBrowserBridgeParent(BrowserBridgeParent* aBrowser) {
+  // We should not have either a browser bridge or browser host yet
+  MOZ_ASSERT(!mBrowserBridgeParent);
+  MOZ_ASSERT(!mBrowserHost);
+  // We should not have owner content yet
+  MOZ_ASSERT(!mFrameElement);
+  mBrowserBridgeParent = aBrowser;
+}
+
+void BrowserParent::SetBrowserHost(BrowserHost* aBrowser) {
+  // We should not have either a browser bridge or browser host yet
+  MOZ_ASSERT(!mBrowserBridgeParent);
+  MOZ_ASSERT(!mBrowserHost);
+  // We should not have owner content yet
+  MOZ_ASSERT(!mFrameElement);
+  mBrowserHost = aBrowser;
+}
 
 /* static */
 size_t BrowserParent::gNumActiveRecordReplayTabs;
