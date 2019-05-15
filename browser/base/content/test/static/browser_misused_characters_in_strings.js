@@ -34,14 +34,6 @@ let gWhitelist = [{
     type: "single-quote",
   }, {
     file: "netError.dtd",
-    key: "certerror.wrongSystemTime2",
-    type: "single-quote",
-  }, {
-    file: "netError.dtd",
-    key: "certerror.wrongSystemTimeWithoutReference",
-    type: "single-quote",
-  }, {
-    file: "netError.dtd",
     key: "clockSkewError.longDesc",
     type: "single-quote",
   }, {
