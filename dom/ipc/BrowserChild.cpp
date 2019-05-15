@@ -405,6 +405,7 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mTopLevelDocAccessibleChild(nullptr),
 #endif
       mShouldSendWebProgressEventsToParent(false),
+      mRenderLayers(true),
       mPendingDocShellIsActive(false),
       mPendingDocShellReceivedMessage(false),
       mPendingRenderLayers(false),
@@ -1210,6 +1211,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvShow(const ScreenIntSize& aSize,
   if (recordreplay::IsRecordingOrReplaying()) {
     recordreplay::child::CreateCheckpoint();
   }
+
+  UpdateVisibility(false);
 
   return IPC_OK();
 }
@@ -2486,6 +2489,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
     lm->SetLayersObserverEpoch(mLayersObserverEpoch);
   }
 
+  mRenderLayers = aEnabled;
+
   if (aEnabled) {
     if (!aForceRepaint && IsVisible()) {
       // This request is a no-op. In this case, we still want a
@@ -2497,57 +2502,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
         return IPC_OK();
       }
     }
-
-    if (!sVisibleTabs) {
-      sVisibleTabs = new nsTHashtable<nsPtrHashKey<BrowserChild>>();
-    }
-    sVisibleTabs->PutEntry(this);
-
-    MakeVisible();
-
-    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-    if (!docShell) {
-      return IPC_OK();
-    }
-
-    // We don't use BrowserChildBase::GetPresShell() here because that would
-    // create a content viewer if one doesn't exist yet. Creating a content
-    // viewer can cause JS to run, which we want to avoid.
-    // nsIDocShell::GetPresShell returns null if no content viewer exists yet.
-    if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
-      presShell->SetIsActive(true);
-
-      if (nsIFrame* root = presShell->GetRootFrame()) {
-        FrameLayerBuilder::InvalidateAllLayersForFrame(
-            nsLayoutUtils::GetDisplayRootFrame(root));
-        root->SchedulePaint();
-      }
-
-      Telemetry::AutoTimer<Telemetry::TABCHILD_PAINT_TIME> timer;
-      // If we need to repaint, let's do that right away. No sense waiting until
-      // we get back to the event loop again. We suppress the display port so
-      // that we only paint what's visible. This ensures that the tab we're
-      // switching to paints as quickly as possible.
-      presShell->SuppressDisplayport(true);
-      if (nsContentUtils::IsSafeToRunScript()) {
-        WebWidget()->PaintNowIfNeeded();
-      } else {
-        RefPtr<nsViewManager> vm = presShell->GetViewManager();
-        if (nsView* view = vm->GetRootView()) {
-          presShell->Paint(view, view->GetBounds(), PaintFlags::PaintLayers);
-        }
-      }
-      presShell->SuppressDisplayport(false);
-    }
-  } else {
-    if (sVisibleTabs) {
-      sVisibleTabs->RemoveEntry(this);
-      // We don't delete sVisibleTabs here when it's empty since that
-      // could cause a lot of churn. Instead, we wait until ~BrowserChild.
-    }
-
-    MakeHidden();
   }
+
+  UpdateVisibility(true);
 
   return IPC_OK();
 }
@@ -2801,20 +2758,94 @@ void BrowserChild::NotifyPainted() {
 
 IPCResult BrowserChild::RecvUpdateEffects(const EffectsInfo& aEffects) {
   mEffectsInfo = aEffects;
+  UpdateVisibility(false);
   return IPC_OK();
 }
 
-void BrowserChild::MakeVisible() {
+bool BrowserChild::IsVisible() {
+  return mPuppetWidget && mPuppetWidget->IsVisible();
+}
+
+void BrowserChild::UpdateVisibility(bool aForceRepaint) {
+  bool shouldBeVisible = mIsTopLevel ? mRenderLayers : mEffectsInfo.mVisible;
+  bool isVisible = IsVisible();
+
+  if (shouldBeVisible != isVisible) {
+    if (shouldBeVisible) {
+      MakeVisible(aForceRepaint);
+    } else {
+      MakeHidden();
+    }
+  }
+}
+
+void BrowserChild::MakeVisible(bool aForceRepaint) {
   if (IsVisible()) {
     return;
   }
 
+  if (!sVisibleTabs) {
+    sVisibleTabs = new nsTHashtable<nsPtrHashKey<BrowserChild>>();
+  }
+  sVisibleTabs->PutEntry(this);
+
   if (mPuppetWidget) {
     mPuppetWidget->Show(true);
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (!docShell) {
+    return;
+  }
+
+  // We don't use BrowserChildBase::GetPresShell() here because that would
+  // create a content viewer if one doesn't exist yet. Creating a content
+  // viewer can cause JS to run, which we want to avoid.
+  // nsIDocShell::GetPresShell returns null if no content viewer exists yet.
+  if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
+    presShell->SetIsActive(true);
+  }
+
+  if (!aForceRepaint) {
+    return;
+  }
+
+  // We don't use BrowserChildBase::GetPresShell() here because that would
+  // create a content viewer if one doesn't exist yet. Creating a content
+  // viewer can cause JS to run, which we want to avoid.
+  // nsIDocShell::GetPresShell returns null if no content viewer exists yet.
+  if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
+    if (nsIFrame* root = presShell->GetRootFrame()) {
+      FrameLayerBuilder::InvalidateAllLayersForFrame(
+          nsLayoutUtils::GetDisplayRootFrame(root));
+      root->SchedulePaint();
+    }
+
+    Telemetry::AutoTimer<Telemetry::TABCHILD_PAINT_TIME> timer;
+    // If we need to repaint, let's do that right away. No sense waiting until
+    // we get back to the event loop again. We suppress the display port so
+    // that we only paint what's visible. This ensures that the tab we're
+    // switching to paints as quickly as possible.
+    presShell->SuppressDisplayport(true);
+    if (nsContentUtils::IsSafeToRunScript()) {
+      WebWidget()->PaintNowIfNeeded();
+    } else {
+      RefPtr<nsViewManager> vm = presShell->GetViewManager();
+      if (nsView* view = vm->GetRootView()) {
+        presShell->Paint(view, view->GetBounds(), PaintFlags::PaintLayers);
+      }
+    }
+    presShell->SuppressDisplayport(false);
   }
 }
 
 void BrowserChild::MakeHidden() {
+  if (sVisibleTabs) {
+    sVisibleTabs->RemoveEntry(this);
+    // We don't delete sVisibleTabs here when it's empty since that
+    // could cause a lot of churn. Instead, we wait until ~BrowserChild.
+  }
+
   if (!IsVisible()) {
     return;
   }
@@ -2850,10 +2881,6 @@ void BrowserChild::MakeHidden() {
   if (mPuppetWidget) {
     mPuppetWidget->Show(false);
   }
-}
-
-bool BrowserChild::IsVisible() {
-  return mPuppetWidget && mPuppetWidget->IsVisible();
 }
 
 NS_IMETHODIMP
