@@ -383,6 +383,10 @@ class BaselineCodeGen {
     return emitDebugInstrumentation(ifDebuggee, mozilla::Maybe<F>());
   }
 
+  template <typename F>
+  MOZ_MUST_USE bool emitAfterYieldDebugInstrumentation(const F& ifDebuggee,
+                                                       Register scratch);
+
   // ifSet should be a function emitting code for when the script has |flag|
   // set. ifNotSet emits code for when the flag isn't set.
   template <typename F1, typename F2>
