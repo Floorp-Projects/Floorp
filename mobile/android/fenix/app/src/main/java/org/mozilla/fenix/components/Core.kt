@@ -9,10 +9,11 @@ import android.content.res.Configuration
 import android.os.Bundle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
@@ -25,6 +26,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import org.mozilla.fenix.AppRequestInterceptor
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.test.Mockable
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.geckoview.GeckoRuntime
@@ -97,35 +99,32 @@ class Core(private val context: Context) {
      */
     val sessionManager by lazy {
         SessionManager(engine).also { sessionManager ->
-            // Restore a previous, still active bundle.
-            GlobalScope.launch(Dispatchers.Main) {
-                val snapshot = async(Dispatchers.IO) {
-                    sessionStorage.restore()
-                }
+            // Install the "icons" WebExtension to automatically load icons for every visited website.
+            icons.install(engine, sessionManager)
 
-                // There's an active bundle with a snapshot: Feed it into the SessionManager.
-                snapshot.await()?.let {
-                    try {
-                        val selected = sessionManager.selectedSession
-                        sessionManager.restore(it)
-                        selected?.let {
-                            sessionManager.select(selected)
-                        }
-                    } catch (_: IllegalArgumentException) {
-                        return@let
-                    }
+            // Restore the previous state.
+            GlobalScope.launch(Dispatchers.Main) {
+                withContext(Dispatchers.IO) {
+                    sessionStorage.restore()
+                }?.let { snapshot ->
+                    sessionManager.restore(snapshot, updateSelection = (sessionManager.selectedSession == null))
                 }
 
                 // Now that we have restored our previous state (if there's one) let's setup auto saving the state while
                 // the app is used.
-                sessionStorage.apply {
-                    autoSave(sessionManager)
-                        .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
-                        .whenGoingToBackground()
-                        .whenSessionsChange()
-                }
+                sessionStorage.autoSave(sessionManager)
+                    .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
+                    .whenGoingToBackground()
+                    .whenSessionsChange()
             }
         }
+    }
+
+    /**
+     * Icons component for loading, caching and processing website icons.
+     */
+    val icons by lazy {
+        BrowserIcons(context, context.components.core.client)
     }
 
     /**

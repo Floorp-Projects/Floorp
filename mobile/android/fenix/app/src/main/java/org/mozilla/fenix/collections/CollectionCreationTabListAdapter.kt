@@ -140,7 +140,7 @@ class TabViewHolder(
         checkbox.setOnCheckedChangeListener(checkboxListener)
 
         launch(Dispatchers.IO) {
-            val bitmap = view.favicon_image.context.components.utils.icons
+            val bitmap = view.favicon_image.context.components.core.icons
                 .loadIcon(IconRequest(tab.url)).await().bitmap
             launch(Dispatchers.Main) {
                 view.favicon_image.setImageBitmap(bitmap)

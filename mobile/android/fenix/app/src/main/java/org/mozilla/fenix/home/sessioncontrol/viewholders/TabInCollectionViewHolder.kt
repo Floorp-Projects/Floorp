@@ -78,7 +78,7 @@ class TabInCollectionViewHolder(
         collection_tab_hostname.text = tab.url.urlToTrimmedHost()
         collection_tab_title.text = tab.title
         launch(Dispatchers.IO) {
-            val bitmap = collection_tab_icon.context.components.utils.icons
+            val bitmap = collection_tab_icon.context.components.core.icons
                 .loadIcon(IconRequest(tab.url)).await().bitmap
             launch(Dispatchers.Main) {
                 collection_tab_icon.setImageBitmap(bitmap)

@@ -109,21 +109,21 @@ class AwesomeBarUIView(
                 SessionSuggestionProvider(
                     components.core.sessionManager,
                     components.useCases.tabsUseCases.selectTab,
-                    components.utils.icons
+                    components.core.icons
                 )
 
             historyStorageProvider =
                 HistoryStorageSuggestionProvider(
                     components.core.historyStorage,
                     loadUrlUseCase,
-                    components.utils.icons
+                    components.core.icons
                 )
 
             bookmarksStorageSuggestionProvider =
                 BookmarksStorageSuggestionProvider(
                     components.core.bookmarksStorage,
                     loadUrlUseCase,
-                    components.utils.icons
+                    components.core.icons
                 )
 
             if (Settings.getInstance(container.context).showSearchSuggestions()) {

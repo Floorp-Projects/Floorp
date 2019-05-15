@@ -92,7 +92,7 @@ class TabViewHolder(
         hostname.text = tab.hostname
         tab_title.text = tab.title
         launch(Dispatchers.IO) {
-            val bitmap = favicon_image.context.components.utils.icons
+            val bitmap = favicon_image.context.components.core.icons
                 .loadIcon(IconRequest(tab.url)).await().bitmap
             launch(Dispatchers.Main) {
                 favicon_image.setImageBitmap(bitmap)

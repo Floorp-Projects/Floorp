@@ -50,7 +50,7 @@ class ExceptionsListItemViewHolder(
 
     private fun updateFavIcon(url: String) {
         launch(Dispatchers.IO) {
-            val bitmap = favicon.context.components.utils.icons
+            val bitmap = favicon.context.components.core.icons
                 .loadIcon(IconRequest(url)).await().bitmap
             launch(Dispatchers.Main) {
                 favicon.setImageBitmap(bitmap)

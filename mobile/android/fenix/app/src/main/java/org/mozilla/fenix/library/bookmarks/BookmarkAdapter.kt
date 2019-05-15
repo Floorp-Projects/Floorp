@@ -17,7 +17,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.concept.storage.BookmarkNode
@@ -196,7 +195,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
             if (!selected && item.url?.startsWith("http") == true) {
                 launch(Dispatchers.IO) {
-                    val bitmap = BrowserIcons(bookmark_favicon.context, bookmark_layout.context.components.core.client)
+                    val bitmap = bookmark_layout.context.components.core.icons
                         .loadIcon(IconRequest(item.url!!)).await().bitmap
                     launch(Dispatchers.Main) {
                         bookmark_favicon.setImageBitmap(bitmap)
