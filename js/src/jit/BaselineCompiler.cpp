@@ -163,8 +163,7 @@ MethodStatus BaselineCompiler::compile() {
   AutoTraceLog logCompile(logger, TraceLogger_BaselineCompilation);
 
   AutoKeepTypeScripts keepTypes(cx);
-  if (!script->ensureHasTypes(cx, keepTypes) ||
-      !script->ensureHasAnalyzedArgsUsage(cx)) {
+  if (!script->ensureHasTypes(cx, keepTypes)) {
     return Method_Error;
   }
 
