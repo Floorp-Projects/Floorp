@@ -175,6 +175,7 @@ class ArrowExpander extends Component {
 }
 
 const treeIndent = _reactDomFactories2.default.span({ className: "tree-indent" }, "\u200B");
+const treeLastIndent = _reactDomFactories2.default.span({ className: "tree-indent tree-last-indent" }, "\u200B");
 
 class TreeNode extends Component {
   static get propTypes() {
@@ -300,7 +301,13 @@ class TreeNode extends Component {
       ariaExpanded = true;
     }
 
-    const indents = Array.from({ length: depth }).fill(treeIndent);
+    const indents = Array.from({ length: depth }, (_, i) => {
+      if (i == depth - 1) {
+        return treeLastIndent;
+      }
+      return treeIndent;
+    });
+
     const items = indents.concat(renderItem(item, depth, focused, arrow, expanded));
 
     return _reactDomFactories2.default.div({
