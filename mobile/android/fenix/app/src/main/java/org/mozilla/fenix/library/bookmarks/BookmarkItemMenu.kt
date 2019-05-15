@@ -37,11 +37,6 @@ class BookmarkItemMenu(
                     onItemTapped.invoke(BookmarkItemMenu.Item.Edit)
                 }
             } else null,
-            if (item.type in listOf(BookmarkNodeType.ITEM, BookmarkNodeType.FOLDER)) {
-                SimpleBrowserMenuItem(context.getString(R.string.bookmark_menu_select_button)) {
-                    onItemTapped.invoke(BookmarkItemMenu.Item.Select)
-                }
-            } else null,
             if (item.type == BookmarkNodeType.ITEM) {
                 SimpleBrowserMenuItem(context.getString(R.string.bookmark_menu_copy_button)) {
                     onItemTapped.invoke(BookmarkItemMenu.Item.Copy)
