@@ -41,8 +41,6 @@ job-template:
     shipping-phase: promote
     attributes:
         artifact_map:
-            by-release-type:
-                release: taskcluster/taskgraph/manifests/fennec_candidates.yml
-                beta: taskcluster/taskgraph/manifests/fennec_candidates.yml
-                nightly: taskcluster/taskgraph/manifests/fennec_nightly.yml
-                default: taskcluster/taskgraph/manifests/fennec_nightly.yml
+            by-platform:
+                android-(aarch64|api-16|x86|x86_64)-(beta|release): taskcluster/taskgraph/manifests/fennec_candidates.yml
+                android-(aarch64|api-16|x86|x86_64)-nightly: taskcluster/taskgraph/manifests/fennec_nightly.yml

@@ -10,13 +10,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.transforms.push_apk import (
-    validate_dependent_tasks,
     generate_dependencies,
     delete_non_required_fields,
 )
-from taskgraph.transforms.google_play_strings import set_worker_data
 from taskgraph.transforms.job.mozharness_test import get_artifact_url
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
+from taskgraph.util.schema import Schema
 
 from voluptuous import Required
 
@@ -27,17 +25,15 @@ transforms.add_validate(Schema({
     Required('label'): task_description_schema['label'],
     Required('description'): task_description_schema['description'],
     Required('job-from'): task_description_schema['job-from'],
-    Required('attributes'): task_description_schema['attributes'],
+    Required('attributes'): object,
     Required('treeherder'): task_description_schema['treeherder'],
-    Required('package-name'): optionally_keyed_by('project', basestring),
+    Required('package-name'): basestring,
     Required('run-on-projects'): task_description_schema['run-on-projects'],
     Required('worker-type'): basestring,
     Required('worker'): object,
     Required('shipping-phase'): task_description_schema['shipping-phase'],
     Required('shipping-product'): task_description_schema['shipping-product'],
 }))
-transforms.add(validate_dependent_tasks)
-transforms.add(set_worker_data)
 
 
 @transforms.add
@@ -45,10 +41,6 @@ def make_task_description(config, jobs):
     for job in jobs:
         job['dependencies'] = generate_dependencies(job['dependent-tasks'])
         dependencies_labels = job['dependencies'].keys()
-
-        resolve_keyed_by(
-            job, 'package-name', item_name=job['name'], project=config.params['project']
-        )
 
         commands = [
             'curl --location "{}" > "<{}>.apk"'.format(

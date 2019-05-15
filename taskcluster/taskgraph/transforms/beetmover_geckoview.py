@@ -11,8 +11,9 @@ import re
 
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.transforms.beetmover import \
-    craft_release_properties as beetmover_craft_release_properties
+from taskgraph.transforms.beetmover import (
+    craft_release_properties as beetmover_craft_release_properties,
+)
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
 from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
@@ -120,6 +121,7 @@ def make_task_description(config, jobs):
             'run-on-projects': job['run-on-projects'],
             'treeherder': treeherder,
             'shipping-phase': job['shipping-phase'],
+            'shipping-product': job.get('shipping-product'),
         }
 
         yield task

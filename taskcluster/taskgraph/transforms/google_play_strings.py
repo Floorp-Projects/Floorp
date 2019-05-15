@@ -9,7 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
-from taskgraph.util.schema import resolve_keyed_by, Schema
+from taskgraph.util.schema import Schema
 
 from voluptuous import Required
 
@@ -28,24 +28,3 @@ google_play_description_schema = Schema({
 
 transforms = TransformSequence()
 transforms.add_validate(google_play_description_schema)
-
-
-@transforms.add
-def set_label(config, jobs):
-    for job in jobs:
-        job['label'] = job['name']
-        yield job
-
-
-@transforms.add
-def set_worker_data(config, jobs):
-    for job in jobs:
-        worker = job['worker']
-
-        env = worker.setdefault('env', {})
-        resolve_keyed_by(
-            env, 'PACKAGE_NAME', item_name=job['name'],
-            project=config.params['project']
-        )
-
-        yield job

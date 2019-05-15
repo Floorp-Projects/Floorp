@@ -11,30 +11,37 @@ transforms:
 kind-dependencies:
     - build-signing
 
+job-defaults:
+    attributes:
+        nightly: true
+    shipping-phase: promote
+    shipping-product: fennec
+    worker-type: b-linux
+    worker:
+        implementation: docker-worker
+        os: linux
+        docker-image: {in-tree: mozapkpublisher}
+        chain-of-trust: true
+        max-run-time: 600
+    treeherder:
+        platform: Android/opt
+        tier: 1
+        kind: test
+    run-on-projects: ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+
 jobs:
-    push-apk-checks/opt:
-        description: Verify APKs are sane before uploading them onto Google Play Store
+    push-apk-checks-nightly/opt:
+        description: Verify Nightly APKs are sane before uploading them onto Google Play Store
         attributes:
             build_platform: android-nightly
-            nightly: true
-        shipping-phase: promote
-        shipping-product: fennec
-        package-name:
-            by-project:
-                mozilla-central: org.mozilla.fennec_aurora
-                mozilla-beta: org.mozilla.firefox_beta
-                mozilla-release: org.mozilla.firefox
-                default: org.mozilla.fennec_aurora
-        worker-type: b-linux
-        worker:
-            implementation: docker-worker
-            os: linux
-            docker-image: {in-tree: mozapkpublisher}
-            chain-of-trust: true
-            max-run-time: 600
+        package-name: org.mozilla.fennec_aurora
         treeherder:
-            symbol: pub(gpc)
-            platform: Android/opt
-            tier: 1
-            kind: test
-        run-on-projects: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+            symbol: pub(gpc-n)
+
+    push-apk-checks-beta/opt:
+        description: Verify Beta APKs are sane before uploading them onto Google Play Store
+        attributes:
+            build_platform: android-beta
+        package-name: org.mozilla.firefox_beta
+        treeherder:
+            symbol: pub(gpc-b)
