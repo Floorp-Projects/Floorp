@@ -2784,6 +2784,10 @@ bool nsFrameLoader::IsRemoteFrame() {
   return false;
 }
 
+RemoteBrowser* nsFrameLoader::GetRemoteBrowser() const {
+  return mRemoteBrowser;
+}
+
 BrowserParent* nsFrameLoader::GetBrowserParent() const {
   if (!mRemoteBrowser) {
     return nullptr;
