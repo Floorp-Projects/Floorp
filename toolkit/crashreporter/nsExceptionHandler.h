@@ -128,20 +128,6 @@ bool GetExtraFileForMinidump(nsIFile* minidump, nsIFile** extraFile);
 bool AppendExtraData(const nsAString& id, const AnnotationTable& data);
 bool AppendExtraData(nsIFile* extraFile, const AnnotationTable& data);
 
-/*
- * Renames the stand alone dump file aDumpFile to:
- *  |aOwnerDumpFile-aDumpFileProcessType.dmp|
- * and moves it into the same directory as aOwnerDumpFile. Does not
- * modify aOwnerDumpFile in any way.
- *
- * @param aDumpFile - the dump file to associate with aOwnerDumpFile.
- * @param aOwnerDumpFile - the new owner of aDumpFile.
- * @param aDumpFileProcessType - process name associated with aDumpFile.
- */
-void RenameAdditionalHangMinidump(nsIFile* aDumpFile,
-                                  const nsIFile* aOwnerDumpFile,
-                                  const nsACString& aDumpFileProcessType);
-
 #ifdef XP_WIN
 nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo);
 #endif
