@@ -39,8 +39,7 @@ export type PreviewValue = {|
   location: AstLocation,
   cursorPos: any,
   tokenPos: AstLocation,
-  updating: false,
-  target: HTMLDivElement
+  updating: false
 |};
 
 export type ASTState = {
