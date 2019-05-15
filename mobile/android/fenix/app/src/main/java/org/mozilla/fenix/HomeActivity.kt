@@ -163,6 +163,7 @@ open class HomeActivity : AppCompatActivity() {
         load(searchTermOrURL, newTab, engine, forceSearch)
     }
 
+    @Suppress("ComplexMethod")
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
         val directions = when (from) {
             BrowserDirection.FromGlobal -> NavGraphDirections.actionGlobalBrowser(customTabSessionId)
