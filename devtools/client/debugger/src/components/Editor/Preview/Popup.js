@@ -21,7 +21,7 @@ const {
 } = utils;
 
 import actions from "../../../actions";
-import { getThreadContext, getPreview } from "../../../selectors";
+import { getThreadContext } from "../../../selectors";
 import Popover from "../../shared/Popover";
 import PreviewFunction from "../../shared/PreviewFunction";
 
@@ -36,6 +36,7 @@ import type { PreviewValue } from "../../../reducers/types";
 type Props = {
   cx: ThreadContext,
   preview: PreviewValue,
+  onClose: () => void,
   editor: any,
   editorRef: ?HTMLDivElement,
   addExpression: typeof actions.addExpression,
@@ -43,19 +44,35 @@ type Props = {
   openLink: typeof actions.openLink,
   openElementInInspector: typeof actions.openElementInInspectorCommand,
   highlightDomElement: typeof actions.highlightDomElement,
-  unHighlightDomElement: typeof actions.unHighlightDomElement,
-  clearPreview: typeof actions.clearPreview
+  unHighlightDomElement: typeof actions.unHighlightDomElement
 };
 
 type State = {
   top: number
 };
 
+function inPreview(event) {
+  const relatedTarget: Element = (event.relatedTarget: any);
+
+  if (
+    !relatedTarget ||
+    (relatedTarget.classList &&
+      relatedTarget.classList.contains("preview-expression"))
+  ) {
+    return true;
+  }
+
+  // $FlowIgnore
+  const inPreviewSelection = document
+    .elementsFromPoint(event.clientX, event.clientY)
+    .some(el => el.classList.contains("preview-selection"));
+
+  return inPreviewSelection;
+}
+
 export class Popup extends Component<Props, State> {
   marker: any;
   pos: any;
-  popup: ?HTMLDivElement;
-  timerId: ?IntervalID;
 
   constructor(props: Props) {
     super(props);
@@ -64,37 +81,22 @@ export class Popup extends Component<Props, State> {
     };
   }
 
-  componentDidMount() {
-    this.startTimer();
-  }
+  onMouseLeave = (e: SyntheticMouseEvent<HTMLDivElement>) => {
+    const relatedTarget: Element = (e.relatedTarget: any);
 
-  componentWillUnmount() {
-    if (this.timerId) {
-      clearInterval(this.timerId);
-    }
-  }
-
-  startTimer() {
-    this.timerId = setInterval(this.onInterval, 300);
-  }
-
-  onInterval = () => {
-    const { preview, clearPreview, cx } = this.props;
-
-    // Don't clear the current preview if mouse is hovered on
-    // the current preview's element (target) or the popup element
-    const currentTarget = preview.target;
-    if (
-      currentTarget.matches(":hover") ||
-      (this.popup && this.popup.matches(":hover"))
-    ) {
-      return;
+    if (!relatedTarget) {
+      return this.props.onClose();
     }
 
-    // Clear the interval and the preview if it is not hovered
-    // on the current preview's element or the popup element
-    clearInterval(this.timerId);
-    return clearPreview(cx);
+    if (!inPreview(e)) {
+      this.props.onClose();
+    }
+  };
+
+  onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      this.props.onClose();
+    }
   };
 
   calculateMaxHeight = () => {
@@ -115,7 +117,6 @@ export class Popup extends Component<Props, State> {
     return (
       <div
         className="preview-popup"
-        ref={a => (this.popup = a)}
         onClick={() =>
           selectSourceURL(cx, result.location.url, {
             line: result.location.line
@@ -140,7 +141,6 @@ export class Popup extends Component<Props, State> {
       <div
         className="preview-popup"
         style={{ maxHeight: this.calculateMaxHeight() }}
-        ref={a => (this.popup = a)}
       >
         <ObjectInspector
           roots={properties}
@@ -164,7 +164,7 @@ export class Popup extends Component<Props, State> {
       preview: { result }
     } = this.props;
     return (
-      <div className="preview-popup" ref={a => (this.popup = a)}>
+      <div className="preview-popup">
         {Rep({
           object: result,
           mode: MODE.LONG,
@@ -223,6 +223,8 @@ export class Popup extends Component<Props, State> {
     return (
       <Popover
         targetPosition={cursorPos}
+        onMouseLeave={this.onMouseLeave}
+        onKeyDown={this.onKeyDown}
         type={type}
         onPopoverCoords={this.onPopoverCoords}
         editorRef={editorRef}
@@ -234,8 +236,7 @@ export class Popup extends Component<Props, State> {
 }
 
 const mapStateToProps = state => ({
-  cx: getThreadContext(state),
-  preview: getPreview(state)
+  cx: getThreadContext(state)
 });
 
 const {
@@ -244,8 +245,7 @@ const {
   openLink,
   openElementInInspectorCommand,
   highlightDomElement,
-  unHighlightDomElement,
-  clearPreview
+  unHighlightDomElement
 } = actions;
 
 const mapDispatchToProps = {
@@ -254,8 +254,7 @@ const mapDispatchToProps = {
   openLink,
   openElementInInspector: openElementInInspectorCommand,
   highlightDomElement,
-  unHighlightDomElement,
-  clearPreview
+  unHighlightDomElement
 };
 
 export default connect(
