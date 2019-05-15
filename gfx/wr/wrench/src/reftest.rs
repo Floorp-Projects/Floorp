@@ -4,6 +4,7 @@
 
 use crate::{WindowWrapper, NotifierEvent};
 use base64;
+use semver;
 use image::load as load_piston_image;
 use image::png::PNGEncoder;
 use image::{ColorType, ImageFormat};
@@ -14,6 +15,7 @@ use std::fmt::{Display, Error, Formatter};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::mpsc::Receiver;
 use webrender::RenderResults;
 use webrender::api::*;
@@ -349,6 +351,7 @@ struct YamlRenderOutput {
 
 struct ReftestEnvironment {
     pub platform: &'static str,
+    pub version: Option<semver::Version>,
     pub mode: &'static str,
 }
 
@@ -356,12 +359,20 @@ impl ReftestEnvironment {
     fn new() -> Self {
         Self {
             platform: Self::platform(),
+            version: Self::version(),
             mode: Self::mode(),
         }
     }
 
     fn has(&self, condition: &str) -> bool {
-        self.platform == condition || self.mode == condition
+        if self.platform == condition || self.mode == condition {
+            return true;
+        }
+        match (&self.version, &semver::VersionReq::parse(condition)) {
+            (None, _) => false,
+            (_, Err(_)) => false,
+            (Some(v), Ok(r)) => r.matches(v),
+        }
     }
 
     fn platform() -> &'static str {
@@ -375,6 +386,32 @@ impl ReftestEnvironment {
             "android"
         } else {
             "other"
+        }
+    }
+
+    fn version() -> Option<semver::Version> {
+        if cfg!(target_os = "macos") {
+            use std::str;
+            let version_bytes = Command::new("defaults")
+                .arg("read")
+                .arg("loginwindow")
+                .arg("SystemVersionStampAsString")
+                .output()
+                .expect("Failed to get macOS version")
+                .stdout;
+            let mut version_string = str::from_utf8(&version_bytes)
+                .expect("Failed to read macOS version")
+                .trim()
+                .to_string();
+            // On some machines this produces just the major.minor and on
+            // some machines this gives major.minor.patch. But semver requires
+            // the patch so we fake one if it's not there.
+            if version_string.chars().filter(|c| *c == '.').count() == 1 {
+                version_string.push_str(".0");
+            }
+            Some(semver::Version::parse(&version_string).expect(&format!("Failed to parse macOS version {}", version_string)))
+        } else {
+            None
         }
     }
 
