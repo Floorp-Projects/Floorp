@@ -15,30 +15,30 @@ using mozilla::dom::LSValue
 namespace mozilla {
 namespace dom {
 
-struct LSSetItemInfo
+struct LSClearInfo
+{
+};
+
+struct LSSetItemAndNotifyInfo
 {
   nsString key;
   LSValue oldValue;
   LSValue value;
 };
 
-struct LSRemoveItemInfo
+struct LSRemoveItemAndNotifyInfo
 {
   nsString key;
   LSValue oldValue;
 };
 
-struct LSClearInfo
-{
-};
-
 /**
  * Union of LocalStorage mutation types.
  */
-union LSWriteInfo
+union LSWriteAndNotifyInfo
 {
-  LSSetItemInfo;
-  LSRemoveItemInfo;
+  LSSetItemAndNotifyInfo;
+  LSRemoveItemAndNotifyInfo;
   LSClearInfo;
 };
 
@@ -49,7 +49,7 @@ sync protocol PBackgroundLSSnapshot
 parent:
   async DeleteMe();
 
-  async Checkpoint(LSWriteInfo[] writeInfos);
+  async CheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
 
   async Finish();
 
