@@ -85,6 +85,8 @@ class SearchConfigTest {
     await AddonTestUtils.promiseStartupManager();
     await Services.search.init();
 
+    // Note: we don't use the helper function here, so that we have at least
+    // one message output per process.
     Assert.ok(Services.search.isInitialized,
       "Should have correctly initialized the search service");
   }
@@ -112,7 +114,7 @@ class SearchConfigTest {
       }
     }
 
-    Assert.ok(!this._testDebug, "Should not have test debug turned on in production");
+    this.assertOk(!this._testDebug, "Should not have test debug turned on in production");
   }
 
   /**
@@ -132,7 +134,7 @@ class SearchConfigTest {
     Services.search.reInit();
     await reinitCompletePromise;
 
-    Assert.ok(Services.search.isInitialized,
+    this.assertOk(Services.search.isInitialized,
       "Should have completely re-initialization, if it fails check logs for if reinit was successful");
   }
 
@@ -143,7 +145,11 @@ class SearchConfigTest {
     if (this._testDebug) {
       return new Set(["by", "cn", "kz", "us", "ru", "tr"]);
     }
-    return Services.intl.getAvailableLocaleDisplayNames("region");
+    const chunk = Services.prefs.getIntPref("browser.search.config.test.section", -1) - 1;
+    const regions = Services.intl.getAvailableLocaleDisplayNames("region");
+    const chunkSize =  Math.ceil(regions.length / 4);
+    const startPoint = chunk * chunkSize;
+    return regions.slice(startPoint, startPoint + chunkSize);
   }
 
   /**
@@ -250,7 +256,7 @@ class SearchConfigTest {
 
     // If there's not included/excluded, then this shouldn't be the default anywhere.
     if (section == "default" && !hasIncluded && !hasExcluded) {
-      Assert.ok(!identifierIncluded,
+      this.assertOk(!identifierIncluded,
         `Should not be ${section} for any locale/region,
          currently set for ${infoString}`);
       return false;
@@ -265,10 +271,10 @@ class SearchConfigTest {
      !this._localeRegionInSection(config.excluded, region, locale));
 
     if (included || notExcluded) {
-      Assert.ok(identifierIncluded, `Should be ${section} for ${infoString}`);
+      this.assertOk(identifierIncluded, `Should be ${section} for ${infoString}`);
       return true;
     }
-    Assert.ok(!identifierIncluded, `Should not be ${section} for ${infoString}`);
+    this.assertOk(!identifierIncluded, `Should not be ${section} for ${infoString}`);
     return false;
   }
 
@@ -316,33 +322,48 @@ class SearchConfigTest {
       Object.entries(this._config.domains).find(([key, value]) =>
         this._localeRegionInSection(value.included, region, locale));
 
-    Assert.ok(expectedDomain,
+    this.assertOk(expectedDomain,
       `Should have an expectedDomain for the engine in region: "${region}" locale: "${locale}"`);
 
     const engine = this._findEngine(engines, this._config.identifier);
-    Assert.ok(engine, "Should have an engine present");
+    this.assertOk(engine, "Should have an engine present");
 
     const searchForm = new URL(engine.searchForm);
-    Assert.ok(searchForm.host.endsWith(expectedDomain),
+    this.assertOk(searchForm.host.endsWith(expectedDomain),
       `Should have the correct search form domain for region: "${region}" locale: "${locale}".
        Got "${searchForm.host}", expected to end with "${expectedDomain}".`);
 
     for (const urlType of [URLTYPE_SUGGEST_JSON, URLTYPE_SEARCH_HTML]) {
-      info(`Checking urlType ${urlType}`);
-
       const submission = engine.getSubmission("test", urlType);
       if (urlType == URLTYPE_SUGGEST_JSON &&
           (this._config.noSuggestionsURL || domainConfig.noSuggestionsURL)) {
-        Assert.ok(!submission, "Should not have a submission url");
+        this.assertOk(!submission, "Should not have a submission url");
       } else if (this._config.searchUrlBase) {
-          Assert.equal(submission.uri.prePath + submission.uri.filePath,
+          this.assertEqual(submission.uri.prePath + submission.uri.filePath,
             this._config.searchUrlBase + domainConfig.searchUrlEnd,
-            `Should have the correct domain for region: "${region}" locale: "${locale}".`);
+            `Should have the correct domain for type: ${urlType} region: "${region}" locale: "${locale}".`);
       } else {
-        Assert.ok(submission.uri.host.endsWith(expectedDomain),
-          `Should have the correct domain for region: "${region}" locale: "${locale}".
+        this.assertOk(submission.uri.host.endsWith(expectedDomain),
+          `Should have the correct domain for type: ${urlType} region: "${region}" locale: "${locale}".
            Got "${submission.uri.host}", expected to end with "${expectedDomain}".`);
       }
+    }
+  }
+
+  /**
+   * Helper functions which avoid outputting test results when there are no
+   * failures. These help the tests to run faster, and avoid clogging up the
+   * python test runner process.
+   */
+  assertOk(value, message) {
+    if (!value || this._testDebug) {
+      Assert.ok(value, message);
+    }
+  }
+
+  assertEqual(actual, expected, message) {
+    if (actual != expected || this._testDebug) {
+      Assert.equal(actual, expected, message);
     }
   }
 }
