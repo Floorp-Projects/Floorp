@@ -385,9 +385,12 @@ def target_tasks_promote_fennec(full_task_graph, parameters, graph_config):
         # Don't ship single locale fennec anymore - Bug 1408083
         if attr("locale") or attr("chunk_locales"):
             return False
+
         if task.attributes.get('shipping_product') == 'fennec' and \
-                task.attributes.get('shipping_phase') == 'promote':
+                task.attributes.get('shipping_phase') == 'promote' and \
+                '-nightly' not in task.label:
             return True
+        return False
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(full_task_graph[l])]
 
@@ -408,9 +411,10 @@ def target_tasks_ship_fennec(full_task_graph, parameters, graph_config):
         if task.attributes.get('shipping_product') != 'fennec' or \
                 task.attributes.get('shipping_phase') not in ('ship', 'push'):
             return False
-        # We always run push-apk during ship
-        if task.kind == 'push-apk':
-            return True
+
+        if task.attributes.get('build_platform', '').endswith('-nightly'):
+            return False
+
         # secondary-notify-ship is only for RC
         if task.kind in (
             'release-secondary-notify-ship',
@@ -446,14 +450,28 @@ def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     def filter(task):
-        # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview to be
-        # uploaded
-        return task.label in (
+        # XXX Starting 68, we ship Fennec outside of mozilla-central, but geckoview must remain
+        # shipped from there
+        if task.label in (
             'beetmover-geckoview-android-aarch64-nightly/opt',
             'beetmover-geckoview-android-api-16-nightly/opt',
             'beetmover-geckoview-android-x86-nightly/opt',
             'beetmover-geckoview-android-x86_64-nightly/opt',
-        )
+        ):
+            return False
+
+        platform = task.attributes.get('build_platform')
+        if not filter_for_project(task, parameters):
+            return False
+        if platform in ('android-aarch64-nightly',
+                        'android-api-16-nightly',
+                        'android-nightly',
+                        'android-x86-nightly',
+                        'android-x86_64-nightly',
+                        ):
+            if not task.attributes.get('nightly', False):
+                return False
+            return filter_for_project(task, parameters)
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 

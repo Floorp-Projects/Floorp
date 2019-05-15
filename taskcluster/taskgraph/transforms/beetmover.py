@@ -199,6 +199,7 @@ def make_task_description(config, jobs):
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
             'shipping-phase': job['shipping-phase'],
+            'shipping-product': job.get('shipping-product'),
         }
 
         yield task
