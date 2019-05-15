@@ -97,9 +97,7 @@ interface nsIDroppedLinkHandler : nsISupports
    * it allows the parent to verify that the child did not modify links
    * being dropped.
    */
-  void queryLinks(in DataTransfer aDataTransfer,
-                  [optional] out unsigned long aCount,
-                  [retval, array, size_is(aCount)] out nsIDroppedLinkItem aLinks);
+  Array<nsIDroppedLinkItem> queryLinks(in DataTransfer aDataTransfer);
 
   /**
    * Given a drop event aEvent, determines the triggering principal for the
