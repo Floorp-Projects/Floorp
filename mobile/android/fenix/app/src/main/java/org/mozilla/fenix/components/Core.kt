@@ -49,6 +49,12 @@ class Core(private val context: Context) {
             .crashHandler(CrashHandlerService::class.java)
             .build()
 
+        val fontSize = Settings.getInstance(context).fontSizeFactor
+        if (fontSize != 1f) {
+            runtimeSettings.automaticFontSizeAdjustment = false
+            runtimeSettings.fontSizeFactor = fontSize
+        }
+
         GeckoRuntime.create(context, runtimeSettings)
     }
 
@@ -65,7 +71,8 @@ class Core(private val context: Context) {
             testingModeEnabled = false,
             trackingProtectionPolicy = createTrackingProtectionPolicy(),
             historyTrackingDelegate = HistoryDelegate(historyStorage),
-            preferredColorScheme = getPreferredColorScheme()
+            preferredColorScheme = getPreferredColorScheme(),
+            automaticFontSizeAdjustment = Settings.getInstance(context).fontSizeFactor == 1f
         )
 
         GeckoEngine(context, defaultSettings, runtime)

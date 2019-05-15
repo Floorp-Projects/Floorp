@@ -77,6 +77,17 @@ class Settings private constructor(context: Context) {
         ).apply()
     }
 
+    fun setFontSizeFactor(newValue: Float) {
+        preferences.edit().putFloat(appContext.getPreferenceKey(R.string.pref_key_accessibility_font_scale), newValue)
+            .apply()
+    }
+
+    val fontSizeFactor: Float
+        get() = preferences.getFloat(
+            appContext.getPreferenceKey(R.string.pref_key_accessibility_font_scale),
+            1f
+        )
+
     val shouldShowVisitedSitesBookmarks: Boolean
         get() = preferences.getBoolean(
             appContext.getPreferenceKey(R.string.pref_key_show_visited_sites_bookmarks),

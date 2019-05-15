@@ -6,18 +6,33 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
+import org.mozilla.fenix.utils.Settings
 
 class AccessibilityFragment : PreferenceFragmentCompat() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onResume() {
+        super.onResume()
         (activity as AppCompatActivity).title = getString(R.string.preferences_accessibility)
         (activity as AppCompatActivity).supportActionBar?.show()
+        val textSizePreference =
+            findPreference<PercentageSeekBarPreference>(getString(R.string.pref_key_accessibility_font_scale))
+        textSizePreference?.onPreferenceChangeListener =
+            Preference.OnPreferenceChangeListener { _, newValue ->
+                (newValue as? Int).let {
+                    val newTextScale = (newValue as Int).toFloat() / PERCENT_TO_DECIMAL
+                    Settings.getInstance(context!!).setFontSizeFactor(newTextScale)
+                }
+                true
+            }
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.accessibility_preferences, rootKey)
+    }
+
+    companion object {
+        const val PERCENT_TO_DECIMAL = 100f
     }
 }

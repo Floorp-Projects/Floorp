@@ -7,6 +7,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.preference.Preference
+        app:allowDividerBelow="false"
         android:key="@string/pref_key_sign_in"
         android:layout="@layout/sign_in_preference"
         android:summary="@string/preferences_sign_in_description"
@@ -36,6 +37,11 @@
             android:icon="@drawable/ic_customize"
             android:key="@string/pref_key_theme"
             android:title="@string/preferences_theme" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_accessibility"
+            android:key="@string/pref_key_accessibility"
+            android:title="@string/preferences_accessibility" />
 
         <org.mozilla.fenix.settings.DefaultBrowserPreference
             android:key="@string/pref_key_make_default_browser"
