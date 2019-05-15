@@ -680,3 +680,41 @@ qr_scanner:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
+
+library:
+  opened:
+    type: event
+    description: >
+      A user opened the library
+    bugs:
+    - 976
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  closed:
+    type: event
+    description: >
+      A user closed the library
+    bugs:
+    - 976
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  selected_item:
+    type: event
+    description: >
+      A user selected a library item
+    extra_keys:
+      item:
+        description: "The library item the user selected"
+    bugs:
+    - 976
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"

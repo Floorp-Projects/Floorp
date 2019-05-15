@@ -20,8 +20,9 @@ import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_library.*
 import mozilla.appservices.places.BookmarkRoot
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getColorFromAttr
-import org.mozilla.fenix.library.bookmarks.BookmarkFragmentArgs
+import org.mozilla.fenix.ext.requireComponents
 
 class LibraryFragment : Fragment() {
 
@@ -49,19 +50,21 @@ class LibraryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        libraryHistory.setOnClickListener(
-            Navigation.createNavigateOnClickListener(
-                LibraryFragmentDirections.actionLibraryFragmentToHistoryFragment().actionId,
-                null
-            )
-        )
+        libraryHistory.setOnClickListener {
+            requireComponents.analytics.metrics
+                .track(Event.LibrarySelectedItem(view.context.getString(R.string.library_history)))
+            Navigation.findNavController(view)
+                .navigate(LibraryFragmentDirections.actionLibraryFragmentToHistoryFragment())
+        }
 
-        libraryBookmarks.setOnClickListener(
-            Navigation.createNavigateOnClickListener(
-                LibraryFragmentDirections.actionLibraryFragmentToBookmarksFragment(BookmarkRoot.Mobile.id).actionId,
-                BookmarkFragmentArgs(BookmarkRoot.Mobile.id).toBundle()
-            )
-        )
+        libraryBookmarks.setOnClickListener {
+            requireComponents.analytics.metrics
+                .track(Event.LibrarySelectedItem(view.context.getString(R.string.library_bookmarks)))
+            Navigation.findNavController(view)
+                .navigate(LibraryFragmentDirections.actionLibraryFragmentToBookmarksFragment(BookmarkRoot.Mobile.id))
+        }
+
+        requireComponents.analytics.metrics.track(Event.LibraryOpened)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -76,6 +79,11 @@ class LibraryFragment : Fragment() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        requireComponents.analytics.metrics.track(Event.LibraryClosed)
     }
 
     private fun setToolbarColor() {

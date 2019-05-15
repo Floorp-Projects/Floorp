@@ -78,6 +78,8 @@ sealed class Event {
     object QRScannerPromptDisplayed : Event()
     object QRScannerNavigationAllowed : Event()
     object QRScannerNavigationDenied : Event()
+    object LibraryOpened : Event()
+    object LibraryClosed : Event()
 
     data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
         private val switchPreferenceTelemetryAllowList = listOf(
@@ -103,6 +105,11 @@ sealed class Event {
     }
 
     // Interaction Events
+    data class LibrarySelectedItem(val item: String) : Event() {
+        override val extras: Map<String, String>?
+            get() = mapOf("source" to item)
+    }
+
     data class SearchBarTapped(val source: Source) : Event() {
         enum class Source { HOME, BROWSER }
         override val extras: Map<String, String>?
