@@ -3189,6 +3189,12 @@ BrowserParent::GetTabId(uint64_t* aId) {
 }
 
 NS_IMETHODIMP
+BrowserParent::GetContentProcessId(uint64_t* aId) {
+  *aId = Manager()->GetChildID();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BrowserParent::GetOsPid(int32_t* aId) {
   *aId = Manager()->Pid();
   return NS_OK;
