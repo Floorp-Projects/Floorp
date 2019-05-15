@@ -388,8 +388,6 @@ struct InlineBackgroundData {
              // Make sure aFrame1 and aFrame2 are in the same continuation of
              // blockFrame.
              it1.GetContainer() == it2.GetContainer() &&
-             // And both in the same line list
-             it1.GetLineList() == it2.GetLineList() &&
              // And on the same line in it
              it1.GetLine() == it2.GetLine();
     }
