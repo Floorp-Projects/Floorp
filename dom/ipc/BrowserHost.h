@@ -52,7 +52,12 @@ class BrowserHost : public RemoteBrowser,
   // Get the IPDL actor for the root BrowserParent. This method should be
   // avoided and consumers migrated to use this class.
   BrowserParent* GetActor() { return mRoot; }
-  ContentParent* GetContentParent() const { return mRoot->Manager(); }
+  ContentParent* GetContentParent() const {
+    return mRoot ? mRoot->Manager() : nullptr;
+  }
+  TabId GetTabId() const {
+    return mId;
+  }
 
   BrowserHost* AsBrowserHost() override { return this; }
   BrowserBridgeHost* AsBrowserBridgeHost() override { return nullptr; }
@@ -89,6 +94,9 @@ class BrowserHost : public RemoteBrowser,
  private:
   virtual ~BrowserHost() = default;
 
+  // The TabID for the root BrowserParent, we cache this so that we can access
+  // it after the remote browser has been destroyed
+  TabId mId;
   // The root BrowserParent of this remote browser
   RefPtr<BrowserParent> mRoot;
 };
