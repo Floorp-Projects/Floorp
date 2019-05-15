@@ -38,6 +38,7 @@ var LoginHelper = {
     // Watch for pref changes to update cached pref values.
     Services.prefs.addObserver("signon.", () => this.updateSignonPrefs());
     this.updateSignonPrefs();
+    Services.telemetry.setEventRecordingEnabled("pwmgr", true);
   },
 
   updateSignonPrefs() {
@@ -593,11 +594,16 @@ var LoginHelper = {
    * @param {Window} window
    *                 the window from where we want to open the dialog
    *
-   * @param {string} [filterString=""]
+   * @param {object?} args
+   *                  params for opening the password manager
+   * @param {string} [args.filterString=""]
    *                 the domain (not origin) to pass to the login manager dialog
    *                 to pre-filter the results
+   * @param {string} args.entryPoint
+   *                 The name of the entry point, used for telemetry
    */
-  openPasswordManager(window, filterString = "") {
+  openPasswordManager(window, { filterString = "", entryPoint = "" } = {}) {
+    Services.telemetry.recordEvent("pwmgr", "open_management", entryPoint);
     if (this.managementURI && window.openTrustedLinkIn) {
       let managementURL = this.managementURI.replace("%DOMAIN%", window.encodeURIComponent(filterString));
       window.openTrustedLinkIn(managementURL, "tab");
