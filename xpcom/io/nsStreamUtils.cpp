@@ -646,12 +646,12 @@ nsresult DoConsumeStream(nsIInputStream* aStream, uint32_t aMaxCount,
 
     // resize aResult buffer
     uint32_t length = aResult.Length();
-    if (avail > UINT32_MAX - length) {
+    CheckedInt<uint32_t> newLength = CheckedInt<uint32_t>(length) + avail;
+    if (!newLength.isValid()) {
       return NS_ERROR_FILE_TOO_BIG;
     }
 
-    aResult.SetLength(length + avail);
-    if (aResult.Length() != (length + avail)) {
+    if (!aResult.SetLength(newLength.value(), fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     char* buf = ResultTraits<T>::GetStorage(aResult) + length;
@@ -662,6 +662,7 @@ nsresult DoConsumeStream(nsIInputStream* aStream, uint32_t aMaxCount,
       break;
     }
     if (n != avail) {
+      MOZ_ASSERT(n < avail, "What happened there???");
       aResult.SetLength(length + n);
     }
     if (n == 0) {
