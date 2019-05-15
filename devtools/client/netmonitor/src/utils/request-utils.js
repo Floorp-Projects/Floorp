@@ -315,13 +315,18 @@ function parseQueryString(query) {
     return null;
   }
 
-  return query.replace(/^[?&]/, "").split("&").map(e => {
-    const param = e.split("=");
-    return {
-      name: param[0] ? getUnicodeUrlPath(param[0]) : "",
-      value: param[1] ? getUnicodeUrlPath(param.slice(1).join("=")) : "",
-    };
-  });
+  return query
+    .replace(/^[?&]/, "")
+    .split("&")
+    .map(e => {
+      const param = e.split("=");
+      return {
+        name: param[0] ? getUnicodeUrlPath(param[0]) : "",
+        value: param[1]
+          ? getUnicodeUrlPath(param.slice(1).join("=")).replace(/\+/g, " ")
+          : "",
+      };
+    });
 }
 
 /**

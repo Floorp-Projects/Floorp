@@ -5,7 +5,8 @@ platform(linux,mac) == border-gradient-nine-patch.yaml border-gradient-nine-patc
 platform(linux,mac) == border-radial-gradient-nine-patch.yaml border-radial-gradient-nine-patch.png
 == border-radii.yaml border-radii.png
 == border-none.yaml border-none-ref.yaml
-fuzzy(1,68) == border-overlapping.yaml border-overlapping-ref.yaml
+fuzzy(1,68) == border-overlapping-corner.yaml border-overlapping-corner-ref.yaml
+== border-overlapping-edge.yaml border-overlapping-edge-ref.yaml
 == border-invisible.yaml border-invisible-ref.yaml
 platform(linux,mac) == border-suite.yaml border-suite.png
 platform(linux,mac) fuzzy(8,8) == border-suite-2.yaml border-suite-2.png

@@ -793,6 +793,9 @@ void Realm::setIsDebuggee() {
 
 void Realm::unsetIsDebuggee() {
   if (isDebuggee()) {
+    if (debuggerObservesCoverage()) {
+      runtime_->decrementNumDebuggeeRealmsObservingCoverage();
+    }
     debugModeBits_ &= ~DebuggerObservesMask;
     DebugEnvironments::onRealmUnsetIsDebuggee(this);
     runtimeFromMainThread()->decrementNumDebuggeeRealms();
@@ -815,8 +818,11 @@ void Realm::updateDebuggerObservesCoverage() {
         iter->asInterpreter()->enableInterruptsUnconditionally();
       }
     }
+    runtime_->incrementNumDebuggeeRealmsObservingCoverage();
     return;
   }
+
+  runtime_->decrementNumDebuggeeRealmsObservingCoverage();
 
   // If code coverage is enabled by any other means, keep it.
   if (collectCoverage()) {

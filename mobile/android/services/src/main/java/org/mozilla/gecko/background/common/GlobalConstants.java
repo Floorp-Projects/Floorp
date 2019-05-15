@@ -42,9 +42,21 @@ public class GlobalConstants {
   public static final String[] DEFAULT_PROTOCOLS;
 
   static {
-    // Prioritize 128 over 256 as a tradeoff between device CPU/battery and the minor
-    // increase in strength.
-    if (Versions.feature26Plus) {
+    // ChaCha20-Poly1305 seems fastest on mobile.
+    // Otherwise prioritize 128 over 256 as a tradeoff between device CPU/battery
+    // and the minor increase in strength.
+    if (Versions.feature29Plus) {
+      DEFAULT_CIPHER_SUITES = new String[]
+          {
+          "TLS_CHACHA20_POLY1305_SHA256",               // 29+
+          "TLS_AES_128_GCM_SHA256",                     // 29+
+          "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",      // 20+
+          "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",         // 20+
+          "TLS_AES_256_GCM_SHA384",                     // 29+
+          "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",      // 20+
+          "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",         // 11+
+          };
+    } else if (Versions.feature26Plus) {
       DEFAULT_CIPHER_SUITES = new String[]
           {
            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",   // 20+
@@ -86,18 +98,18 @@ public class GlobalConstants {
           };
     }
 
-    if (Versions.feature16Plus) {
+    if (Versions.feature29Plus) {
+      DEFAULT_PROTOCOLS = new String[]
+          {
+          "TLSv1.3",
+          "TLSv1.2",
+          };
+    } else {
       DEFAULT_PROTOCOLS = new String[]
           {
            "TLSv1.2",
            "TLSv1.1",
            "TLSv1",             // We would like to remove this, and will do so when we can.
-          };
-    } else {
-      // Fall back to TLSv1 if there's nothing better.
-      DEFAULT_PROTOCOLS = new String[]
-          {
-           "TLSv1",
           };
     }
   }
