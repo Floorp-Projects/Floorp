@@ -22,21 +22,6 @@ use crate::wrench::{Wrench, WrenchThing};
 use crate::yaml_frame_reader::YamlFrameReader;
 
 
-#[cfg(target_os = "windows")]
-const PLATFORM: &str = "win";
-#[cfg(target_os = "linux")]
-const PLATFORM: &str = "linux";
-#[cfg(target_os = "macos")]
-const PLATFORM: &str = "mac";
-#[cfg(target_os = "android")]
-const PLATFORM: &str = "android";
-#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows", target_os = "android")))]
-const PLATFORM: &str = "other";
-#[cfg(debug)]
-const MODE: &str = "debug";
-#[cfg(not(debug))]
-const MODE: &str = "release";
-
 const OPTION_DISABLE_SUBPX: &str = "disable-subpixel";
 const OPTION_DISABLE_AA: &str = "disable-aa";
 const OPTION_DISABLE_DUAL_SOURCE_BLENDING: &str = "disable-dual-source-blending";
@@ -202,7 +187,7 @@ struct ReftestManifest {
     reftests: Vec<Reftest>,
 }
 impl ReftestManifest {
-    fn new(manifest: &Path, options: &ReftestOptions) -> ReftestManifest {
+    fn new(manifest: &Path, environment: &ReftestEnvironment, options: &ReftestOptions) -> ReftestManifest {
         let dir = manifest.parent().unwrap();
         let f =
             File::open(manifest).expect(&format!("couldn't open manifest: {}", manifest.display()));
@@ -240,7 +225,7 @@ impl ReftestManifest {
                         let include = dir.join(tokens[1]);
 
                         reftests.append(
-                            &mut ReftestManifest::new(include.as_path(), options).reftests,
+                            &mut ReftestManifest::new(include.as_path(), environment, options).reftests,
                         );
 
                         break;
@@ -249,13 +234,13 @@ impl ReftestManifest {
                         // e.g. skip_on(android,debug) will skip only when
                         // running on a debug android build.
                         let (_, args, _) = parse_function(platform);
-                        if args.iter().all(|arg| arg == &PLATFORM || arg == &MODE) {
+                        if args.iter().all(|arg| environment.has(arg)) {
                             break;
                         }
                     }
                     platform if platform.starts_with("platform") => {
                         let (_, args, _) = parse_function(platform);
-                        if !args.iter().any(|arg| arg == &PLATFORM) {
+                        if !args.iter().any(|arg| arg == &environment.platform) {
                             // Skip due to platform not matching
                             break;
                         }
@@ -362,18 +347,60 @@ struct YamlRenderOutput {
     results: RenderResults,
 }
 
+struct ReftestEnvironment {
+    pub platform: &'static str,
+    pub mode: &'static str,
+}
+
+impl ReftestEnvironment {
+    fn new() -> Self {
+        Self {
+            platform: Self::platform(),
+            mode: Self::mode(),
+        }
+    }
+
+    fn has(&self, condition: &str) -> bool {
+        self.platform == condition || self.mode == condition
+    }
+
+    fn platform() -> &'static str {
+        if cfg!(target_os = "windows") {
+            "win"
+        } else if cfg!(target_os = "linux") {
+            "linux"
+        } else if cfg!(target_os = "macos") {
+            "mac"
+        } else if cfg!(target_os = "android") {
+            "android"
+        } else {
+            "other"
+        }
+    }
+
+    fn mode() -> &'static str {
+        if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        }
+    }
+}
+
 pub struct ReftestHarness<'a> {
     wrench: &'a mut Wrench,
     window: &'a mut WindowWrapper,
     rx: &'a Receiver<NotifierEvent>,
+    environment: ReftestEnvironment,
 }
 impl<'a> ReftestHarness<'a> {
     pub fn new(wrench: &'a mut Wrench, window: &'a mut WindowWrapper, rx: &'a Receiver<NotifierEvent>) -> Self {
-        ReftestHarness { wrench, window, rx }
+        let environment = ReftestEnvironment::new();
+        ReftestHarness { wrench, window, rx, environment }
     }
 
     pub fn run(mut self, base_manifest: &Path, reftests: Option<&Path>, options: &ReftestOptions) -> usize {
-        let manifest = ReftestManifest::new(base_manifest, options);
+        let manifest = ReftestManifest::new(base_manifest, &self.environment, options);
         let reftests = manifest.find(reftests.unwrap_or(&PathBuf::new()));
 
         let mut total_passing = 0;
