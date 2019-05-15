@@ -23,7 +23,9 @@ SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
                                    ["security.webauth.webauthn_enable_softtoken", true],
-                                   ["security.webauth.webauthn_enable_usbtoken", false]]},
+                                   ["security.webauth.webauthn_enable_usbtoken", false],
+                                   ["security.webauth.webauthn_enable_android_fido2", false],
+                                  ]},
 function() {
   PublicKeyCredential.isExternalCTAP2SecurityKeySupported()
   .then(aResult => ok(true, `Should always return either true or false: ${aResult}`))
