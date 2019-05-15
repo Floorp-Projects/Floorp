@@ -741,7 +741,7 @@ void MediaTransportHandlerSTS::AddIceCandidate(const std::string& aTransportId,
     return;
   }
 
-  nsresult rv = stream->ParseTrickleCandidate(aCandidate, aUfrag);
+  nsresult rv = stream->ParseTrickleCandidate(aCandidate, aUfrag, "");
   if (NS_FAILED(rv)) {
     CSFLogError(LOGTAG,
                 "Couldn't process ICE candidate with transport id %s: "
@@ -1076,8 +1076,15 @@ static void ToRTCIceCandidateStats(
     cand.mTimestamp.Construct(now);
     cand.mCandidateType.Construct(dom::RTCIceCandidateType(candidate.type));
     cand.mPriority.Construct(candidate.priority);
-    cand.mAddress.Construct(
-        NS_ConvertASCIItoUTF16(candidate.cand_addr.host.c_str()));
+    // https://tools.ietf.org/html/draft-ietf-rtcweb-mdns-ice-candidates-03#section-3.3.1
+    // This obfuscates the address with the mDNS address if one exists
+    if (!candidate.mdns_addr.empty()) {
+      cand.mAddress.Construct(
+          NS_ConvertASCIItoUTF16(candidate.mdns_addr.c_str()));
+    } else {
+      cand.mAddress.Construct(
+          NS_ConvertASCIItoUTF16(candidate.cand_addr.host.c_str()));
+    }
     cand.mPort.Construct(candidate.cand_addr.port);
     cand.mProtocol.Construct(
         NS_ConvertASCIItoUTF16(candidate.cand_addr.transport.c_str()));

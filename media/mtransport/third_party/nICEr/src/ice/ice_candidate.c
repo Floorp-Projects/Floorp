@@ -346,6 +346,7 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
         break;
     }
 
+    RFREE(cand->mdns_addr);
     RFREE(cand->foundation);
     RFREE(cand->label);
     RFREE(cand);
