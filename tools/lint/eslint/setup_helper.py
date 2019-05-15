@@ -178,7 +178,9 @@ def expected_eslint_modules():
     # Read the expected version of ESLint and external modules
     expected_modules_path = os.path.join(get_project_root(), "package.json")
     with open(expected_modules_path, "r") as f:
-        expected_modules = json.load(f)["dependencies"]
+        sections = json.load(f)
+        expected_modules = sections["dependencies"]
+        expected_modules.update(sections["devDependencies"])
 
     # Also read the in-tree ESLint plugin mozilla information, to ensure the
     # dependencies are up to date.
