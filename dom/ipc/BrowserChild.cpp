@@ -2797,6 +2797,11 @@ void BrowserChild::NotifyPainted() {
   }
 }
 
+IPCResult BrowserChild::RecvUpdateEffects(const EffectsInfo& aEffects) {
+  mEffectsInfo = aEffects;
+  return IPC_OK();
+}
+
 void BrowserChild::MakeVisible() {
   if (IsVisible()) {
     return;
