@@ -1,12 +1,28 @@
-rand
-====
+# Rand
 
-A Rust library for random number generators and other randomness functionality.
+[![Build Status](https://travis-ci.org/rust-random/rand.svg?branch=master)](https://travis-ci.org/rust-random/rand)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/rust-random/rand)
+[![Crate](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
+[![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
+[![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand)
+[![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
-[![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/rand)
-[![Build status](https://ci.appveyor.com/api/projects/status/rm5c9o33k3jhchbw?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
+A Rust library for random number generation.
 
-[Documentation](https://docs.rs/rand)
+Rand provides utilities to generate random numbers, to convert them to useful
+types and distributions, and some randomness-related algorithms.
+
+The core random number generation traits of Rand live in the [rand_core](
+https://crates.io/crates/rand_core) crate but are also exposed here; RNG
+implementations should prefer to use `rand_core` while most other users should
+depend on `rand`.
+
+Documentation:
+-   [The Rust Rand Book](https://rust-random.github.io/book)
+-   [API reference (master)](https://rust-random.github.io/rand)
+-   [API reference (docs.rs)](https://docs.rs/rand)
+
 
 ## Usage
 
@@ -14,126 +30,93 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.4"
+rand = "0.6"
 ```
 
-and this to your crate root:
+To get started using Rand, see [The Book](https://rust-random.github.io/book).
 
-```rust
-extern crate rand;
-```
 
-### Versions
+## Versions
 
-Version `0.4`was released in December 2017. It contains almost no breaking
-changes since the `0.3` series, but nevertheless contains some significant
-new code, including a new "external" entropy source (`JitterRng`) and `no_std`
-support.
+The Rand lib is not yet stable, however we are careful to limit breaking changes
+and warn via deprecation wherever possible. Patch versions never introduce
+breaking changes. The following minor versions are supported:
 
-Version `0.5` is in development and contains significant performance
-improvements for the ISAAC random number generators.
+-   Version 0.6 was released in November 2018, redesigning the `seq` module,
+    moving most PRNGs to external crates, and many small changes.
+-   Version 0.5 was released in May 2018, as a major reorganisation
+    (introducing `RngCore` and `rand_core`, and deprecating `Rand` and the
+    previous distribution traits).
+-   Version 0.4 was released in December 2017, but contained almost no breaking
+    changes from the 0.3 series.
 
-## Examples
+A detailed [changelog](CHANGELOG.md) is available.
 
-There is built-in support for a random number generator (RNG) associated with each thread stored in thread-local storage. This RNG can be accessed via thread_rng, or used implicitly via random. This RNG is normally randomly seeded from an operating-system source of randomness, e.g. /dev/urandom on Unix systems, and will automatically reseed itself from this source after generating 32 KiB of random data.
+When upgrading to the next minor series (especially 0.4 → 0.5), we recommend
+reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
 
-```rust
-let tuple = rand::random::<(f64, char)>();
-println!("{:?}", tuple)
-```
+### Rust version requirements
 
-```rust
-use rand::Rng;
+Since version 0.5, Rand requires **Rustc version 1.22 or greater**.
+Rand 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
+greater. Subsets of the Rand code may work with older Rust versions, but this
+is not supported.
 
-let mut rng = rand::thread_rng();
-if rng.gen() { // random bool
-    println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
-}
-```
+Travis CI always has a build with a pinned version of Rustc matching the oldest
+supported Rust release. The current policy is that this can be updated in any
+Rand release if required, but the change must be noted in the changelog.
 
-It is also possible to use other RNG types, which have a similar interface. The following uses the "ChaCha" algorithm instead of the default.
+To avoid bumping the required version unnecessarily, we use a `build.rs` script
+to auto-detect the compiler version and enable certain features or change code
+paths automatically. Since this makes it easy to unintentionally make use of
+features requiring a more recent Rust version, we recommend testing with a
+pinned version of Rustc if you require compatibility with a specific version.
 
-```rust
-use rand::{Rng, ChaChaRng};
+## Crate Features
 
-let mut rng = rand::ChaChaRng::new_unseeded();
-println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
-```
+Rand is built with the `std` and `rand_os` features enabled by default:
 
-## Features
+-   `std` enables functionality dependent on the `std` lib and implies `alloc`
+    and `rand_os`
+-   `rand_os` enables the `rand_os` crate, `rngs::OsRng` and enables its usage;
+    the continued existance of this feature is not guaranteed so users are
+    encouraged to specify `std` instead
 
-By default, `rand` is built with all stable features available. The following
-optional features are available:
+The following optional features are available:
 
--   `i128_support` enables support for generating `u128` and `i128` values
--   `nightly` enables all unstable features (`i128_support`)
--   `std` enabled by default; by setting "default-features = false" `no_std`
-    mode is activated; this removes features depending on `std` functionality:
-    
-        -   `OsRng` is entirely unavailable
-        -   `JitterRng` code is still present, but a nanosecond timer must be
-            provided via `JitterRng::new_with_timer`
-        -   Since no external entropy is available, it is not possible to create
-            generators with fresh seeds (user must provide entropy)
-        -   `thread_rng`, `weak_rng` and `random` are all disabled
-        -   exponential, normal and gamma type distributions are unavailable
-            since `exp` and `log` functions are not provided in `core`
-        -   any code requiring `Vec` or `Box`
--   `alloc` can be used instead of `std` to provide `Vec` and `Box`
+- `alloc` can be used instead of `std` to provide `Vec` and `Box`.
+- `log` enables some logging via the `log` crate.
+- `nightly` enables all unstable features (`simd_support`).
+- `serde1` enables serialization for some types, via Serde version 1.
+- `simd_support` enables uniform sampling of SIMD types (integers and floats).
+- `stdweb` enables support for `OsRng` on `wasm32-unknown-unknown` via `stdweb`
+  combined with `cargo-web`.
+- `wasm-bindgen` enables support for `OsRng` on `wasm32-unknown-unknown` via
+  [`wasm-bindgen`]
 
-## Testing
+[`wasm-bindgen`]: https://github.com/rustwasm/wasm-bindgen
 
-Unfortunately, `cargo test` does not test everything. The following tests are
-recommended:
+`no_std` mode is activated by setting `default-features = false`; this removes
+functionality depending on `std`:
 
-```
-# Basic tests for rand and sub-crates
-cargo test --all
-
-# Test no_std support (build only since nearly all tests require std)
-cargo build --all --no-default-features
-
-# Test 128-bit support (requires nightly)
-cargo test --all --features nightly
-
-# Benchmarks (requires nightly)
-cargo bench
-# or just to test the benchmark code:
-cargo test --benches
-```
-
-# `derive(Rand)`
-
-You can derive the `Rand` trait for your custom type via the `#[derive(Rand)]`
-directive. To use this first add this to your Cargo.toml:
-
-```toml
-rand = "0.4"
-rand_derive = "0.3"
-```
-
-Next in your crate:
-
-```rust
-extern crate rand;
-#[macro_use]
-extern crate rand_derive;
-
-#[derive(Rand, Debug)]
-struct MyStruct {
-    a: i32,
-    b: u32,
-}
-
-fn main() {
-    println!("{:?}", rand::random::<MyStruct>());
-}
-```
+- `thread_rng()`, and `random()` are not available, as they require thread-local
+  storage and an entropy source.
+- `OsRng` and `EntropyRng` are unavailable.
+- `JitterRng` code is still present, but a nanosecond timer must be provided via
+  `JitterRng::new_with_timer`
+- Since no external entropy is available, it is not possible to create
+  generators with fresh seeds using the `FromEntropy` trait (user must provide
+  a seed).
+- Several non-linear distributions distributions are unavailable since `exp`
+  and `log` functions are not provided in `core`.
+- Large parts of the `seq`-uence module are unavailable, unless the `alloc`
+  feature is used (several APIs and many implementations require `Vec`).
 
 
 # License
 
-`rand` is primarily distributed under the terms of both the MIT
-license and the Apache License (Version 2.0).
+Rand is distributed under the terms of both the MIT license and the
+Apache License (Version 2.0).
 
-See LICENSE-APACHE, and LICENSE-MIT for details.
+See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT), and
+[COPYRIGHT](COPYRIGHT) for details.
