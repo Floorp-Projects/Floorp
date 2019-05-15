@@ -811,6 +811,10 @@ class JS::Realm : public JS::shadow::Realm {
   static constexpr size_t offsetOfRegExps() {
     return offsetof(JS::Realm, regExps);
   }
+  static constexpr size_t offsetOfDebugModeBits() {
+    return offsetof(JS::Realm, debugModeBits_);
+  }
+  static constexpr uint32_t debugModeIsDebuggeeBit() { return IsDebuggee; }
 
   // Note: global_ is a read-barriered object, but it's fine to skip the read
   // barrier when the realm is active. See the comment in JSContext::global().
