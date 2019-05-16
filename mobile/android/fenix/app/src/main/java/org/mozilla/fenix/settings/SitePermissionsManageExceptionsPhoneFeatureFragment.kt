@@ -172,7 +172,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment(), Coroutin
             PhoneFeature.NOTIFICATION -> sitePermissions.copy(notification = status)
         }
         launch(IO) {
-            requireContext().components.storage.updateSitePermissions(updatedSitePermissions)
+            requireContext().components.core.permissionStorage.updateSitePermissions(updatedSitePermissions)
         }
     }
 }

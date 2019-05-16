@@ -127,8 +127,11 @@ class Core(private val context: Context) {
      */
     val historyStorage by lazy { PlacesHistoryStorage(context) }
 
-    val bookmarksStorage
-            by lazy { PlacesBookmarksStorage(context) }
+    val bookmarksStorage by lazy { PlacesBookmarksStorage(context) }
+
+    val tabCollectionStorage by lazy { TabCollectionStorage(context, sessionManager) }
+
+    val permissionStorage by lazy { PermissionStorage(context) }
 
     /**
      * Constructs a [TrackingProtectionPolicy] based on current preferences.

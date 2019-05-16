@@ -43,7 +43,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
         view.current_session_card_title.text = getCardTitle()
         view.current_session_card_tab_list.text = getTabTitles()
         view.archive_session_button.apply {
-            val drawable = ContextCompat.getDrawable(context!!, R.drawable.ic_archive)
+            val drawable = ContextCompat.getDrawable(context!!, R.drawable.ic_tab_collection)
             drawable?.setColorFilter(
                 ContextCompat.getColor(
                     context!!,

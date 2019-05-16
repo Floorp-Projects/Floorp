@@ -60,10 +60,11 @@ class QuickSettingsComponent(
                 PhoneFeature.MICROPHONE -> microphone = microphone.toggle()
                 PhoneFeature.NOTIFICATION -> notification = notification.toggle()
             }
-            context.components.storage.addSitePermissionException(origin, location, notification, microphone, camera)
+            context.components.core.permissionStorage
+                .addSitePermissionException(origin, location, notification, microphone, camera)
         } else {
             val updatedSitePermissions = sitePermissions.toggle(featurePhone)
-            context.components.storage.updateSitePermissions(updatedSitePermissions)
+            context.components.core.permissionStorage.updateSitePermissions(updatedSitePermissions)
             updatedSitePermissions
         }
     }

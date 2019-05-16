@@ -28,6 +28,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingPr
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingSectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingThemePickerViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTrackingProtectionViewHolder
+import mozilla.components.feature.tab.collections.Tab as ComponentTab
 import java.lang.IllegalStateException
 
 sealed class AdapterItem {
@@ -42,7 +43,11 @@ sealed class AdapterItem {
     object CollectionHeader : AdapterItem()
     object NoCollectionMessage : AdapterItem()
     data class CollectionItem(val collection: TabCollection) : AdapterItem()
-    data class TabInCollectionItem(val collection: TabCollection, val tab: Tab, val isLastTab: Boolean) : AdapterItem()
+    data class TabInCollectionItem(
+        val collection: TabCollection,
+        val tab: ComponentTab,
+        val isLastTab: Boolean
+    ) : AdapterItem()
 
     object OnboardingHeader : AdapterItem()
     data class OnboardingSectionHeader(val labelBuilder: (Context) -> String) : AdapterItem()
@@ -82,9 +87,11 @@ class SessionControlAdapter(
 
     private var items: List<AdapterItem> = listOf()
     private lateinit var job: Job
+    private lateinit var expandedCollections: Set<Long>
 
-    fun reloadData(items: List<AdapterItem>) {
+    fun reloadData(items: List<AdapterItem>, expandedCollections: Set<Long>) {
         this.items = items
+        this.expandedCollections = expandedCollections
         notifyDataSetChanged()
     }
 
@@ -138,9 +145,10 @@ class SessionControlAdapter(
             is TabViewHolder -> holder.bindSession(
                 (items[position] as AdapterItem.TabItem).tab
             )
-            is CollectionViewHolder -> holder.bindSession(
-                (items[position] as AdapterItem.CollectionItem).collection
-            )
+            is CollectionViewHolder -> {
+                val collection = (items[position] as AdapterItem.CollectionItem).collection
+                holder.bindSession(collection, expandedCollections.contains(collection.id))
+            }
             is TabInCollectionViewHolder -> {
                 val item = items[position] as AdapterItem.TabInCollectionItem
                 holder.bindSession(item.collection, item.tab, item.isLastTab)

@@ -16,7 +16,7 @@
             android:id="@+id/no_collection_header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:drawableEnd="@drawable/ic_archive"
+            android:drawableEnd="@drawable/ic_tab_collection"
             android:drawableTint="?primaryText"
             android:drawablePadding="8dp"
             android:text="@string/no_collections_header"

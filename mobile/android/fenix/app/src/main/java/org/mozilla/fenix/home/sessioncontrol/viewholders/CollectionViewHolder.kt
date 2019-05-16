@@ -21,6 +21,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
@@ -40,6 +41,7 @@ class CollectionViewHolder(
         get() = Dispatchers.IO + job
 
     private lateinit var collection: TabCollection
+    private var expanded = false
     private var state = CollectionState.Collapsed
     private var collectionMenu: CollectionItemMenu
 
@@ -78,8 +80,9 @@ class CollectionViewHolder(
         )
     }
 
-    fun bindSession(collection: TabCollection) {
+    fun bindSession(collection: TabCollection, expanded: Boolean) {
         this.collection = collection
+        this.expanded = expanded
         updateCollectionUI()
     }
 
@@ -89,7 +92,7 @@ class CollectionViewHolder(
         var hostNameList = listOf<String>()
 
         collection.tabs.forEach {
-            hostNameList += it.hostname.capitalize()
+            hostNameList += it.url.urlToTrimmedHost().capitalize()
         }
 
         var tabsDisplayed = 0
@@ -106,7 +109,7 @@ class CollectionViewHolder(
 
         view.collection_description.text = titleList
 
-        if (collection.expanded) {
+        if (expanded) {
             (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = 0
             collection_title.setPadding(0, 0, 0, EXPANDED_PADDING)
             view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_top_corners)

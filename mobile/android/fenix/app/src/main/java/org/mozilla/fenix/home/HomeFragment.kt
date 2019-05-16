@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_home.*
@@ -68,6 +69,8 @@ import kotlin.math.roundToInt
 class HomeFragment : Fragment(), CoroutineScope {
     private val bus = ActionBusFactory.get(this)
     private var sessionObserver: SessionManager.Observer? = null
+    private var tabCollectionObserver: Observer<List<TabCollection>>? = null
+
     private var homeMenu: HomeMenu? = null
 
     var deleteSessionJob: (suspend () -> Unit)? = null
@@ -78,9 +81,6 @@ class HomeFragment : Fragment(), CoroutineScope {
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
-
-    // TODO Remove this stub when we have the a-c version!
-    var storedCollections = mutableListOf<TabCollection>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -99,7 +99,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                 this,
                 SessionControlViewModel::class.java
             ) {
-                SessionControlViewModel(SessionControlState(listOf(), listOf(), mode))
+                SessionControlViewModel(SessionControlState(listOf(), setOf(), listOf(), mode))
             }
         )
 
@@ -190,13 +190,6 @@ class HomeFragment : Fragment(), CoroutineScope {
                     ) ?: arrayListOf()).toList()
                 )
             )
-            getManagedEmitter<SessionControlChange>().onNext(
-                SessionControlChange.CollectionsChange(
-                    (savedInstanceState.getParcelableArrayList<TabCollection>(
-                        KEY_COLLECTIONS
-                    ) ?: arrayListOf()).toList()
-                )
-            )
         }
     }
 
@@ -230,12 +223,17 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         emitSessionChanges()
         sessionObserver = subscribeToSessions()
+        tabCollectionObserver = subscribeToTabCollections()
     }
 
     override fun onStop() {
         sessionObserver?.let {
             requireComponents.core.sessionManager.unregister(it)
         }
+        tabCollectionObserver?.let {
+            requireComponents.core.tabCollectionStorage.getCollections().removeObserver(it)
+        }
+
         super.onStop()
     }
 
@@ -317,13 +315,17 @@ class HomeFragment : Fragment(), CoroutineScope {
     private fun handleCollectionAction(action: CollectionAction) {
         when (action) {
             is CollectionAction.Expand -> {
-                storedCollections.find { it.id == action.collection.id }?.apply { expanded = true }
+                getManagedEmitter<SessionControlChange>()
+                    .onNext(SessionControlChange.ExpansionChange(action.collection, true))
             }
             is CollectionAction.Collapse -> {
-                storedCollections.find { it.id == action.collection.id }?.apply { expanded = false }
+                getManagedEmitter<SessionControlChange>()
+                    .onNext(SessionControlChange.ExpansionChange(action.collection, false))
             }
             is CollectionAction.Delete -> {
-                storedCollections.find { it.id == action.collection.id }?.let { storedCollections.remove(it) }
+                launch(Dispatchers.IO) {
+                    requireComponents.core.tabCollectionStorage.removeCollection(action.collection)
+                }
             }
             is CollectionAction.AddTab -> {
                 ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1575")
@@ -338,16 +340,10 @@ class HomeFragment : Fragment(), CoroutineScope {
                 ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1585")
             }
             is CollectionAction.RemoveTab -> {
-                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1578")
+                launch(Dispatchers.IO) {
+                    requireComponents.core.tabCollectionStorage.removeTabFromCollection(action.collection, action.tab)
+                }
             }
-        }
-
-        emitCollectionChange()
-    }
-
-    private fun emitCollectionChange() {
-        storedCollections.map { it.copy() }.let {
-            getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
         }
     }
 
@@ -394,6 +390,14 @@ class HomeFragment : Fragment(), CoroutineScope {
                 R.string.content_description_private_browsing_button
 
         return getString(resourceId)
+    }
+
+    private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
+        val observer = Observer<List<TabCollection>> {
+            getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
+        }
+        requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
+        return observer
     }
 
     private fun subscribeToSessions(): SessionManager.Observer {
@@ -520,6 +524,5 @@ class HomeFragment : Fragment(), CoroutineScope {
     companion object {
         private const val toolbarPaddingDp = 12f
         private const val KEY_TABS = "tabs"
-        private const val KEY_COLLECTIONS = "collections"
     }
 }

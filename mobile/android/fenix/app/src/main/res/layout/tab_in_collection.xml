@@ -27,7 +27,7 @@
                 android:layout_marginBottom="24dp"
                 android:layout_marginStart="16dp"
                 android:tint="@null"
-                android:src="@drawable/ic_archive"
+                android:src="@drawable/ic_tab_collection"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"/>
 

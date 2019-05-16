@@ -53,7 +53,8 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat(), Cor
         super.onResume()
         launch(IO) {
             val context = requireContext()
-            sitePermissions = requireNotNull(context.components.storage.findSitePermissionsBy(sitePermissions.origin))
+            sitePermissions =
+                requireNotNull(context.components.core.permissionStorage.findSitePermissionsBy(sitePermissions.origin))
             launch(Main) {
                 bindCategoryPhoneFeatures()
             }
@@ -112,7 +113,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat(), Cor
 
     private fun clearSitePermissions() {
         launch(IO) {
-            requireContext().components.storage.deleteSitePermissions(sitePermissions)
+            requireContext().components.core.permissionStorage.deleteSitePermissions(sitePermissions)
             launch(Main) {
                 Navigation.findNavController(requireNotNull(view)).popBackStack()
             }

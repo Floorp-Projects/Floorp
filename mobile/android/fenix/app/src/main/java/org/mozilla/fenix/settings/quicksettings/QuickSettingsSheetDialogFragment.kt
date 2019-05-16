@@ -245,7 +245,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
             launch {
                 val host = session.url.toUri()?.host
                 val sitePermissions: SitePermissions? = host?.let {
-                    val storage = requireContext().components.storage
+                    val storage = requireContext().components.core.permissionStorage
                     storage.findSitePermissionsBy(it)
                 }
                 launch(Dispatchers.Main) {

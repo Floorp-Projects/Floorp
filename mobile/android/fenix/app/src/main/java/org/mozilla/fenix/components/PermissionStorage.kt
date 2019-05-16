@@ -12,7 +12,7 @@ import mozilla.components.feature.sitepermissions.SitePermissionsStorage
 import org.mozilla.fenix.test.Mockable
 
 @Mockable
-class Storage(private val context: Context) {
+class PermissionStorage(private val context: Context) {
 
     private val permissionsStorage by lazy {
         SitePermissionsStorage(context)

@@ -23,7 +23,7 @@
         android:layout_gravity="center"
         android:clickable="false"
         android:drawableTint="?foundation"
-        android:drawableStart="@drawable/ic_archive"
+        android:drawableStart="@drawable/ic_tab_collection"
         android:drawablePadding="8dp"
         android:focusable="false"
         android:gravity="center"

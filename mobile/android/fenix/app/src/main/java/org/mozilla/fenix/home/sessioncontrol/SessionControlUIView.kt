@@ -16,7 +16,11 @@ import org.mozilla.fenix.mvi.UIView
 import androidx.recyclerview.widget.ItemTouchHelper
 import org.mozilla.fenix.BuildConfig
 
-private fun normalModeAdapterItems(tabs: List<Tab>, collections: List<TabCollection>): List<AdapterItem> {
+private fun normalModeAdapterItems(
+    tabs: List<Tab>,
+    collections: List<TabCollection>,
+    expandedCollections: Set<Long>
+): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
     items.add(AdapterItem.TabHeader(false, tabs.isNotEmpty()))
 
@@ -33,9 +37,9 @@ private fun normalModeAdapterItems(tabs: List<Tab>, collections: List<TabCollect
     if (collections.isNotEmpty()) {
 
         // If the collection is expanded, we want to add all of its tabs beneath it in the adapter
-        collections.reversed().map(AdapterItem::CollectionItem).forEach {
+        collections.map(AdapterItem::CollectionItem).forEach {
             items.add(it)
-            if (it.collection.expanded) {
+            if (it.collection.isExpanded(expandedCollections)) {
                 items.addAll(collectionTabItems(it.collection))
             }
         }
@@ -76,14 +80,18 @@ private fun onboardingAdapterItems(): List<AdapterItem> = listOf(
 )
 
 private fun SessionControlState.toAdapterList(): List<AdapterItem> = when (mode) {
-    is Mode.Normal -> normalModeAdapterItems(tabs, collections)
+    is Mode.Normal -> normalModeAdapterItems(tabs, collections, expandedCollections)
     is Mode.Private -> privateModeAdapterItems(tabs)
     is Mode.Onboarding -> onboardingAdapterItems()
 }
 
 private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapIndexed { index, tab ->
         AdapterItem.TabInCollectionItem(collection, tab, index == collection.tabs.lastIndex)
-    }
+}
+
+private fun TabCollection.isExpanded(expandedCollections: Set<Long>): Boolean {
+    return expandedCollections.contains(this.id)
+}
 
 class SessionControlUIView(
     container: ViewGroup,
@@ -101,6 +109,7 @@ class SessionControlUIView(
         .findViewById(R.id.home_component)
 
     private val sessionControlAdapter = SessionControlAdapter(actionEmitter)
+    private var expandedCollections = setOf<Long>()
 
     init {
         view.apply {
@@ -117,8 +126,8 @@ class SessionControlUIView(
     }
 
     override fun updateView() = Consumer<SessionControlState> {
-        sessionControlAdapter.reloadData(it.toAdapterList())
-
+        sessionControlAdapter.reloadData(it.toAdapterList(), it.expandedCollections)
+        expandedCollections = it.expandedCollections
         // There is a current bug in the combination of MotionLayout~alhpa4 and RecyclerView where it doesn't think
         // it has to redraw itself. For some reason calling scrollBy forces this to happen every time
         // https://stackoverflow.com/a/42549611

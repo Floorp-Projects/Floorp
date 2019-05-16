@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.os.Parcelable
 import android.view.ViewGroup
@@ -12,6 +13,10 @@ import io.reactivex.Observer
 import kotlinx.android.parcel.Parcelize
 import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.mvi.Change
+import mozilla.components.browser.session.Session
+import mozilla.components.feature.tab.collections.TabCollection as ACTabCollection
+import mozilla.components.feature.tab.collections.Tab as ComponentTab
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.UIComponent
@@ -49,15 +54,6 @@ data class Tab(
     val thumbnail: Bitmap? = null
 ) : Parcelable
 
-@Parcelize
-data class TabCollection(
-    val id: Int,
-    val title: String,
-    val tabs: MutableList<Tab>,
-    val iconColor: Int = 0,
-    var expanded: Boolean = false
-) : Parcelable
-
 sealed class Mode {
     object Normal : Mode()
     object Private : Mode()
@@ -66,9 +62,12 @@ sealed class Mode {
 
 data class SessionControlState(
     val tabs: List<Tab>,
+    val expandedCollections: Set<Long>,
     val collections: List<TabCollection>,
     val mode: Mode
 ) : ViewState
+
+typealias TabCollection = ACTabCollection
 
 sealed class TabAction : Action {
     data class SaveTabGroup(val selectedTabSessionId: String?) : TabAction()
@@ -89,7 +88,7 @@ sealed class CollectionAction : Action {
     data class Rename(val collection: TabCollection) : CollectionAction()
     data class OpenTabs(val collection: TabCollection) : CollectionAction()
     data class ShareTabs(val collection: TabCollection) : CollectionAction()
-    data class RemoveTab(val collection: TabCollection, val tab: Tab) : CollectionAction()
+    data class RemoveTab(val collection: TabCollection, val tab: ComponentTab) : CollectionAction()
 }
 
 sealed class OnboardingAction : Action {
@@ -118,17 +117,33 @@ sealed class SessionControlChange : Change {
     data class TabsChange(val tabs: List<Tab>) : SessionControlChange()
     data class ModeChange(val mode: Mode) : SessionControlChange()
     data class CollectionsChange(val collections: List<TabCollection>) : SessionControlChange()
+    data class ExpansionChange(val collection: TabCollection, val expand: Boolean) : SessionControlChange()
 }
 
 class SessionControlViewModel(
     initialState: SessionControlState
 ) : UIComponentViewModelBase<SessionControlState, SessionControlChange>(initialState, reducer) {
     companion object {
+        fun getSessionFromTab(context: Context, tab: Tab): Session? {
+            return context.components.core.sessionManager.findSessionById(tab.sessionId)
+        }
+
         val reducer: (SessionControlState, SessionControlChange) -> SessionControlState = { state, change ->
             when (change) {
                 is SessionControlChange.CollectionsChange -> state.copy(collections = change.collections)
                 is SessionControlChange.TabsChange -> state.copy(tabs = change.tabs)
                 is SessionControlChange.ModeChange -> state.copy(mode = change.mode)
+                is SessionControlChange.ExpansionChange -> {
+                    val newExpandedCollection = state.expandedCollections.toMutableSet()
+
+                    if (change.expand) {
+                        newExpandedCollection.add(change.collection.id)
+                    } else {
+                        newExpandedCollection.remove(change.collection.id)
+                    }
+
+                    state.copy(expandedCollections = newExpandedCollection)
+                }
             }
         }
     }

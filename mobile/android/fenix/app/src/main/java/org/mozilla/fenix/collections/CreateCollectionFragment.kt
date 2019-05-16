@@ -14,20 +14,26 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.mozilla.fenix.FenixViewModelProvider
+import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.getRootView
-import org.mozilla.fenix.home.sessioncontrol.TabCollection
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
-import java.util.Random
+import kotlin.coroutines.CoroutineContext
 
-class CreateCollectionFragment : DialogFragment() {
-    // Temporary callback. In the future we will just directly add the collection to the core session manager.
-    var onCollectionSaved: ((TabCollection) -> Unit)? = null
+class CreateCollectionFragment : DialogFragment(), CoroutineScope {
     private lateinit var collectionCreationComponent: CollectionCreationComponent
+    private lateinit var job: Job
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +46,7 @@ class CreateCollectionFragment : DialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        job = Job()
         val view = inflater.inflate(R.layout.fragment_create_collection, container, false)
 
         val viewModel = activity?.run {
@@ -76,6 +83,12 @@ class CreateCollectionFragment : DialogFragment() {
         subscribeToActions()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        job.cancel()
+    }
+
+    @Suppress("ComplexMethod")
     private fun subscribeToActions() {
         getAutoDisposeObservable<CollectionCreationAction>().subscribe {
             when (it) {
@@ -97,8 +110,17 @@ class CreateCollectionFragment : DialogFragment() {
                 is CollectionCreationAction.SaveCollectionName -> {
                     showSavedSnackbar(it.tabs.size)
                     dismiss()
-                    val newCollection = TabCollection(Random().nextInt(), it.name, it.tabs.toMutableList())
-                    onCollectionSaved?.invoke(newCollection)
+
+                    val sessionBundle = mutableListOf<Session>()
+                    it.tabs.forEach {
+                        requireComponents.core.sessionManager.findSessionById(it.sessionId)?.let { session ->
+                            sessionBundle.add(session)
+                        }
+                    }
+
+                    launch(Dispatchers.IO) {
+                        requireComponents.core.tabCollectionStorage.createCollection(it.name, sessionBundle)
+                    }
                 }
             }
         }

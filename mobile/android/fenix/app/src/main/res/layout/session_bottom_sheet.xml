@@ -100,7 +100,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?foundation"
-        android:drawableStart="@drawable/ic_archive"
+        android:drawableStart="@drawable/ic_tab_collection"
         android:drawablePadding="14dp"
         android:drawableTint="?accent"
         android:paddingStart="20dp"

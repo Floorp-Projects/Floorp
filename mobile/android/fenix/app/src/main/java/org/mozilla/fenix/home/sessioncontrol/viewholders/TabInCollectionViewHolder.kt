@@ -23,12 +23,13 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
-import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.home.sessioncontrol.onNext
 import kotlin.coroutines.CoroutineContext
+import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 class TabInCollectionViewHolder(
     val view: View,
@@ -42,7 +43,7 @@ class TabInCollectionViewHolder(
 
     lateinit var collection: TabCollection
         private set
-    lateinit var tab: Tab
+    lateinit var tab: ComponentTab
         private set
     var isLastTab = false
 
@@ -66,7 +67,7 @@ class TabInCollectionViewHolder(
         }
     }
 
-    fun bindSession(collection: TabCollection, tab: Tab, isLastTab: Boolean) {
+    fun bindSession(collection: TabCollection, tab: ComponentTab, isLastTab: Boolean) {
         this.collection = collection
         this.tab = tab
         this.isLastTab = isLastTab
@@ -74,7 +75,7 @@ class TabInCollectionViewHolder(
     }
 
     private fun updateTabUI() {
-        collection_tab_hostname.text = tab.hostname
+        collection_tab_hostname.text = tab.url.urlToTrimmedHost()
         collection_tab_title.text = tab.title
         launch(Dispatchers.IO) {
             val bitmap = collection_tab_icon.context.components.utils.icons

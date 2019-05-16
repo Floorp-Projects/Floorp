@@ -164,7 +164,7 @@ class DefaultToolbarMenu(
 
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_save_to_collection),
-                R.drawable.ic_archive,
+                R.drawable.ic_tab_collection,
                 DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(ToolbarMenu.Item.SaveToCollection)
