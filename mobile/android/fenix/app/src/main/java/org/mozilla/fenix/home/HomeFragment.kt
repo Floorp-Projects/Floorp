@@ -252,6 +252,7 @@ class HomeFragment : Fragment(), CoroutineScope {
     private fun handleTabAction(action: TabAction) {
         Do exhaustive when (action) {
             is TabAction.SaveTabGroup -> {
+                if ((activity as HomeActivity).browsingModeManager.isPrivate) { return }
                 showCollectionCreationFragment(action.selectedTabSessionId)
             }
             is TabAction.Select -> {
@@ -497,7 +498,7 @@ class HomeFragment : Fragment(), CoroutineScope {
     }
 
     private fun showCollectionCreationFragment(selectedTabId: String?) {
-        val tabs = requireComponents.core.sessionManager.sessions
+        val tabs = requireComponents.core.sessionManager.sessions.filter { !it.private }
             .map { Tab(it.id, it.url, it.url.urlToTrimmedHost(), it.title) }
 
         val viewModel = activity?.run {

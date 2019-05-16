@@ -83,7 +83,6 @@ class CollectionCreationUIView(
                         v.text.toString()
                     )
                 )
-                true
             }
             false
         }
@@ -194,7 +193,7 @@ class CollectionCreationUIView(
                         1
                     )
                 )
-                name_collection_edittext.setSelection(name_collection_edittext.text.length)
+                name_collection_edittext.setSelection(0, name_collection_edittext.text.length)
                 back_button.text =
                     view.context.getString(R.string.create_collection_name_collection)
             }
