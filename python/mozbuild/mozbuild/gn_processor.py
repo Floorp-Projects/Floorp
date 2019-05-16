@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 from collections import defaultdict
 from copy import deepcopy
@@ -78,7 +78,10 @@ class MozbuildWriter(object):
             self.write('\n')
             self.write(self.indent + key)
             self.write(' += [\n    ' + self.indent)
-            self.write((',\n    ' + self.indent).join(alphabetical_sorted(self.mb_serialize(v) for v in value)))
+            self.write(
+                (',\n    ' + self.indent).join(
+                    alphabetical_sorted(self.mb_serialize(v) for v in value))
+                )
             self.write('\n')
             self.write_ln(']')
 
@@ -111,7 +114,6 @@ class MozbuildWriter(object):
 
                 if not wrote_ln:
                     self.write_ln("%s[%s] = %s" % subst_vals)
-
 
     def write_condition(self, values):
         def mk_condition(k, v):
@@ -275,9 +277,9 @@ def process_gn_config(gn_config, srcdir, config, output, non_unified_sources,
             context_attrs['LOCAL_INCLUDES'] += [include]
 
         context_attrs['ASFLAGS'] = spec.get('asflags_mozilla', [])
-        if use_defines_in_asflags and defines:
-            context_attrs['ASFLAGS'] += ['-D' + d for d in defines]
-        flags = [f for f in spec.get('cflags', []) if f in mozilla_flags]
+        if use_defines_in_asflags and context_attrs['DEFINES']:
+            context_attrs['ASFLAGS'] += ['-D' + d for d in context_attrs['DEFINES']]
+        flags = [_f for _f in spec.get('cflags', []) if _f in mozilla_flags]
         if flags:
             suffix_map = {
                 '.c': 'CFLAGS',
@@ -432,7 +434,6 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
             mb.write('\n')
             mb.write(generated_header)
 
-            all_attr_sets = [attrs for _, attrs in configs]
             all_args = [args for args, _ in configs]
 
             # Start with attributes that will be a part of the mozconfig

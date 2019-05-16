@@ -108,8 +108,8 @@ class Daemon(object):
                   ['name', '.hg', 'wholename'],
                   ['dirname', '.git'],
                   ['name', '.git', 'wholename'],
+                  ],
                  ],
-                ],
             ],
             'fields': ['name'],
         }
@@ -204,7 +204,7 @@ class Daemon(object):
 
             while True:
                 try:
-                    _watch_result = self.client.receive()
+                    self.client.receive()
 
                     changed = self.changed_files()
                     if not changed:
@@ -228,7 +228,7 @@ class Daemon(object):
 
                 except pywatchman.SocketTimeout:
                     # Let's check to see if we're still functional.
-                    _version = self.client.query('version')
+                    self.client.query('version')
 
         except pywatchman.CommandError as e:
             # Abstract away pywatchman errors.

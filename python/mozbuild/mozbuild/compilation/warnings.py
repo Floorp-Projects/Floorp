@@ -4,7 +4,7 @@
 
 # This modules provides functionality for dealing with compiler warnings.
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
 import json
@@ -87,22 +87,22 @@ class CompilerWarning(dict):
         return func(self._cmpkey(), other._cmpkey())
 
     def __eq__(self, other):
-        return self._compare(other, lambda s,o: s == o)
+        return self._compare(other, lambda s, o: s == o)
 
     def __neq__(self, other):
-        return self._compare(other, lambda s,o: s != o)
+        return self._compare(other, lambda s, o: s != o)
 
     def __lt__(self, other):
-        return self._compare(other, lambda s,o: s < o)
+        return self._compare(other, lambda s, o: s < o)
 
     def __le__(self, other):
-        return self._compare(other, lambda s,o: s <= o)
+        return self._compare(other, lambda s, o: s <= o)
 
     def __gt__(self, other):
-        return self._compare(other, lambda s,o: s > o)
+        return self._compare(other, lambda s, o: s > o)
 
     def __ge__(self, other):
-        return self._compare(other, lambda s,o: s >= o)
+        return self._compare(other, lambda s, o: s >= o)
 
     def __hash__(self):
         """Define so this can exist inside a set, etc."""
@@ -132,6 +132,7 @@ class WarningsDatabase(object):
     Callers should periodically prune old, invalid warnings from the database
     by calling prune(). A good time to do this is at the end of a build.
     """
+
     def __init__(self):
         """Create an empty database."""
         self._files = {}
@@ -304,6 +305,7 @@ class WarningsCollector(object):
     output from the compiler. Therefore, it can maintain state to parse
     multi-line warning messages.
     """
+
     def __init__(self, cb, objdir=None):
         """Initialize a new collector.
 

@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from collections import defaultdict
+from __future__ import absolute_import, print_function
+
 import json
 import os
 import re
-import urlparse
 
 from mach.config import ConfigSettings
 from mach.logging import LoggingManager
@@ -22,10 +22,12 @@ from mozpack.files import PreprocessedFile
 from mozpack.manifests import InstallManifest
 import mozpack.path as mozpath
 
-from manifest_handler import ChromeManifestHandler
+from .manifest_handler import ChromeManifestHandler
 
 
 _line_comment_re = re.compile('^//@line (\d+) "(.+)"$')
+
+
 def generate_pp_info(path, topsrcdir):
     with open(path) as fh:
         # (start, end) -> (included_source, start)
@@ -57,6 +59,8 @@ def generate_pp_info(path, topsrcdir):
 
 # This build backend is assuming the build to have happened already, as it is parsing
 # built preprocessed files to generate data to map them to the original sources.
+
+
 class ChromeMapBackend(CommonBackend):
     def _init(self):
         CommonBackend._init(self)
@@ -116,9 +120,11 @@ class ChromeMapBackend(CommonBackend):
         #  A map from url prefixes to objdir directories:
         #  { "chrome://mozapps/content/": [ "dist/bin/chrome/toolkit/content/mozapps" ], ... }
         #  A map of overrides.
-        #  A map from objdir paths to sourcedir paths, and an object storing mapping information for preprocessed files:
+        #  A map from objdir paths to sourcedir paths, and an object storing mapping
+        #    information for preprocessed files:
         #  { "dist/bin/browser/chrome/browser/content/browser/aboutSessionRestore.js":
-        #    [ "$topsrcdir/browser/components/sessionstore/content/aboutSessionRestore.js", {} ], ... }
+        #    [ "$topsrcdir/browser/components/sessionstore/content/aboutSessionRestore.js", {} ],
+        #    ... }
         #  An object containing build configuration information.
         outputfile = os.path.join(self.environment.topobjdir, 'chrome-map.json')
         with self._write_file(outputfile) as fh:

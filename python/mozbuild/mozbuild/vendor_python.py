@@ -31,7 +31,8 @@ class VendorPython(MozbuildObject):
         self._activate_virtualenv()
         pip_compile = os.path.join(self.virtualenv_manager.bin_path, 'pip-compile')
         if not os.path.exists(pip_compile):
-            path = os.path.normpath(os.path.join(self.topsrcdir, 'third_party', 'python', 'pip-tools'))
+            path = os.path.normpath(os.path.join(
+                self.topsrcdir, 'third_party', 'python', 'pip-tools'))
             self.virtualenv_manager.install_pip_package(path, vendored=True)
         spec = os.path.join(vendor_dir, 'requirements.in')
         requirements = os.path.join(vendor_dir, 'requirements.txt')

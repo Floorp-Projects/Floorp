@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import json
 import os
 import tempfile
@@ -201,6 +203,7 @@ class TestWriteMozinfo(unittest.TestCase, Base):
     """
     Test the write_mozinfo function.
     """
+
     def setUp(self):
         fd, self.f = tempfile.mkstemp()
         os.close(fd)

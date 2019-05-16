@@ -386,7 +386,8 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
       mBlankTiming(false),
       mTitleValidForCurrentURI(false),
       mIsFrame(false),
-      mSkipBrowsingContextDetachOnDestroy(false) {
+      mSkipBrowsingContextDetachOnDestroy(false),
+      mWatchedByDevtools(false) {
   mHistoryID.m0 = 0;
   mHistoryID.m1 = 0;
   mHistoryID.m2 = 0;
@@ -13547,4 +13548,17 @@ bool nsDocShell::GetIsAttemptingToNavigate() {
   }
 
   return false;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetWatchedByDevtools(bool* aWatched) {
+  NS_ENSURE_ARG(aWatched);
+  *aWatched = mWatchedByDevtools;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetWatchedByDevtools(bool aWatched) {
+  mWatchedByDevtools = aWatched;
+  return NS_OK;
 }
