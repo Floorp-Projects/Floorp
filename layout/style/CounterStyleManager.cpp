@@ -1102,13 +1102,12 @@ void CustomCounterStyle::GetPrefix(nsAString& aResult) {
   if (!(mFlags & FLAG_PREFIX_INITED)) {
     mFlags |= FLAG_PREFIX_INITED;
 
-    nsCSSValue value = GetDesc(eCSSCounterDesc_Prefix);
-    if (value.UnitHasStringValue()) {
-      value.GetStringValue(mPrefix);
-    } else if (IsExtendsSystem()) {
-      GetExtends()->GetPrefix(mPrefix);
-    } else {
-      mPrefix.Truncate();
+    if (!Servo_CounterStyleRule_GetPrefix(mRule, &mPrefix)) {
+      if (IsExtendsSystem()) {
+        GetExtends()->GetPrefix(mPrefix);
+      } else {
+        mPrefix.Truncate();
+      }
     }
   }
   aResult = mPrefix;
@@ -1119,13 +1118,12 @@ void CustomCounterStyle::GetSuffix(nsAString& aResult) {
   if (!(mFlags & FLAG_SUFFIX_INITED)) {
     mFlags |= FLAG_SUFFIX_INITED;
 
-    nsCSSValue value = GetDesc(eCSSCounterDesc_Suffix);
-    if (value.UnitHasStringValue()) {
-      value.GetStringValue(mSuffix);
-    } else if (IsExtendsSystem()) {
-      GetExtends()->GetSuffix(mSuffix);
-    } else {
-      mSuffix.AssignLiteral(u". ");
+    if (!Servo_CounterStyleRule_GetSuffix(mRule, &mSuffix)) {
+      if (IsExtendsSystem()) {
+        GetExtends()->GetSuffix(mSuffix);
+      } else {
+        mSuffix.AssignLiteral(u". ");
+      }
     }
   }
   aResult = mSuffix;
@@ -1164,26 +1162,14 @@ bool CustomCounterStyle::IsBullet() {
 void CustomCounterStyle::GetNegative(NegativeType& aResult) {
   if (!(mFlags & FLAG_NEGATIVE_INITED)) {
     mFlags |= FLAG_NEGATIVE_INITED;
-    nsCSSValue value = GetDesc(eCSSCounterDesc_Negative);
-    switch (value.GetUnit()) {
-      case eCSSUnit_Ident:
-      case eCSSUnit_String:
-        value.GetStringValue(mNegative.before);
+    if (!Servo_CounterStyleRule_GetNegative(mRule,
+                                            &mNegative.before,
+                                            &mNegative.after)) {
+      if (IsExtendsSystem()) {
+        GetExtends()->GetNegative(mNegative);
+      } else {
+        mNegative.before.AssignLiteral(u"-");
         mNegative.after.Truncate();
-        break;
-      case eCSSUnit_Pair: {
-        const nsCSSValuePair& pair = value.GetPairValue();
-        pair.mXValue.GetStringValue(mNegative.before);
-        pair.mYValue.GetStringValue(mNegative.after);
-        break;
-      }
-      default: {
-        if (IsExtendsSystem()) {
-          GetExtends()->GetNegative(mNegative);
-        } else {
-          mNegative.before.AssignLiteral(u"-");
-          mNegative.after.Truncate();
-        }
       }
     }
   }
