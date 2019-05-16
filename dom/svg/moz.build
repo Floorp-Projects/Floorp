@@ -181,6 +181,7 @@ UNIFIED_SOURCES += [
     'SVGFragmentIdentifier.cpp',
     'SVGGElement.cpp',
     'SVGGeometryElement.cpp',
+    'SVGGeometryProperty.cpp',
     'SVGGradientElement.cpp',
     'SVGGraphicsElement.cpp',
     'SVGImageElement.cpp',

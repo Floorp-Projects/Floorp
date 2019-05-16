@@ -148,6 +148,10 @@ bool ResolveAll(const SVGElement* aElement,
   return false;
 }
 
+nsCSSUnit SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit);
+nsCSSPropertyID AttrEnumToCSSPropId(const SVGElement* aElement,
+                                    uint8_t aAttrEnum);
+
 }  // namespace SVGGeometryProperty
 }  // namespace dom
 }  // namespace mozilla
