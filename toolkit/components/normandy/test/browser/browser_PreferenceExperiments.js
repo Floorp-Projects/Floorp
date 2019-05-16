@@ -142,10 +142,13 @@ decorate_task(
       PreferenceExperiments.start({
         name: "test",
         branch: "branch",
-        preferenceName: "fake.preference",
-        preferenceValue: "value",
-        preferenceType: "string",
-        preferenceBranchType: "default",
+        preferences: {
+          "fake.preference": {
+            preferenceValue: "value",
+            preferenceType: "string",
+            preferenceBranchType: "default",
+          },
+        },
       }),
       /test.*already exists/,
       "start threw an error due to a conflicting experiment name",
@@ -157,19 +160,28 @@ decorate_task(
   }
 );
 
-// start should throw if an experiment for the given preference is active
+// start should throw if an experiment for any of the given
+// preferences are active
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test", preferences: {"fake.preference": {}} })]),
+  withMockExperiments([experimentFactory({ name: "test", preferences: {"fake.preferenceinteger": {}} })]),
   withSendEventStub,
   async function(experiments, sendEventStub) {
     await Assert.rejects(
       PreferenceExperiments.start({
         name: "different",
         branch: "branch",
-        preferenceName: "fake.preference",
-        preferenceValue: "value",
-        preferenceType: "string",
-        preferenceBranchType: "default",
+        preferences: {
+          "fake.preference": {
+            preferenceValue: "value",
+            preferenceType: "string",
+            preferenceBranchType: "default",
+          },
+          "fake.preferenceinteger": {
+            preferenceValue: 2,
+            preferenceType: "integer",
+            preferenceBranchType: "default",
+          },
+        },
       }),
       /another.*is currently active/i,
       "start threw an error due to an active experiment for the given preference",
@@ -190,10 +202,13 @@ decorate_task(
       PreferenceExperiments.start({
         name: "test",
         branch: "branch",
-        preferenceName: "fake.preference",
-        preferenceValue: "value",
-        preferenceType: "string",
-        preferenceBranchType: "invalid",
+        preferences: {
+          "fake.preference": {
+            preferenceValue: "value",
+            preferenceType: "string",
+            preferenceBranchType: "invalid",
+          },
+        },
       }),
       /invalid value for preferenceBranchType: invalid/i,
       "start threw an error due to an invalid preference branch type",
@@ -205,7 +220,7 @@ decorate_task(
   }
 );
 
-// start should save experiment data, modify the preference, and register a
+// start should save experiment data, modify preferences, and register a
 // watcher.
 decorate_task(
   withMockExperiments(),
@@ -215,18 +230,29 @@ decorate_task(
   async function testStart(experiments, mockPreferences, startObserverStub, sendEventStub) {
     mockPreferences.set("fake.preference", "oldvalue", "default");
     mockPreferences.set("fake.preference", "uservalue", "user");
+    mockPreferences.set("fake.preferenceinteger", 1, "default");
+    mockPreferences.set("fake.preferenceinteger", 101, "user");
 
-    await PreferenceExperiments.start({
+    const experiment = {
       name: "test",
       branch: "branch",
-      preferenceName: "fake.preference",
-      preferenceValue: "newvalue",
-      preferenceBranchType: "default",
-      preferenceType: "string",
-    });
+      preferences: {
+        "fake.preference": {
+          preferenceValue: "newvalue",
+          preferenceBranchType: "default",
+          preferenceType: "string",
+        },
+        "fake.preferenceinteger": {
+          preferenceValue: 2,
+          preferenceBranchType: "default",
+          preferenceType: "integer",
+        },
+      },
+    };
+    await PreferenceExperiments.start(experiment);
     ok(await PreferenceExperiments.get("test"), "start saved the experiment");
     ok(
-      startObserverStub.calledWith("test", {"fake.preference": {preferenceType: "string", preferenceValue: "newvalue"}}),
+      startObserverStub.calledWith("test", experiment.preferences),
       "start registered an observer",
     );
 
@@ -241,12 +267,18 @@ decorate_task(
           previousPreferenceValue: "oldvalue",
           preferenceBranchType: "default",
         },
+        "fake.preferenceinteger": {
+          preferenceValue: 2,
+          preferenceType: "integer",
+          previousPreferenceValue: 1,
+          preferenceBranchType: "default",
+        },
       },
     };
-    const experiment = {};
+    const experimentSubset = {};
     const actualExperiment = await PreferenceExperiments.get("test");
-    Object.keys(expectedExperiment).forEach(key => experiment[key] = actualExperiment[key]);
-    Assert.deepEqual(experiment, expectedExperiment, "start saved the experiment");
+    Object.keys(expectedExperiment).forEach(key => experimentSubset[key] = actualExperiment[key]);
+    Assert.deepEqual(experimentSubset, expectedExperiment, "start saved the experiment");
 
     is(
       DefaultPreferences.get("fake.preference"),
@@ -263,6 +295,21 @@ decorate_task(
       "newvalue",
       "start saved the experiment value to the startup prefs tree",
     );
+    is(
+      DefaultPreferences.get("fake.preferenceinteger"),
+      2,
+      "start modified the default preference",
+    );
+    is(
+      Preferences.get("fake.preferenceinteger"),
+      101,
+      "start did not modify the user preference",
+    );
+    is(
+      Preferences.get(`${startupPrefs}.fake.preferenceinteger`),
+      2,
+      "start saved the experiment value to the startup prefs tree",
+    );
   },
 );
 
@@ -275,16 +322,21 @@ decorate_task(
     mockPreferences.set("fake.preference", "olddefaultvalue", "default");
     mockPreferences.set("fake.preference", "oldvalue", "user");
 
-    await PreferenceExperiments.start({
+    const experiment = {
       name: "test",
       branch: "branch",
-      preferenceName: "fake.preference",
-      preferenceValue: "newvalue",
-      preferenceType: "string",
-      preferenceBranchType: "user",
-    });
+      preferences: {
+        "fake.preference": {
+          preferenceValue: "newvalue",
+          preferenceType: "string",
+          preferenceBranchType: "user",
+        },
+      },
+    };
+    await PreferenceExperiments.start(experiment);
     ok(
-      startObserver.calledWith("test", {"fake.preference": {preferenceType: "string", preferenceValue: "newvalue"}}),
+
+      startObserver.calledWith("test", experiment.preferences),
       "start registered an observer",
     );
 
@@ -302,10 +354,10 @@ decorate_task(
       },
     };
 
-    const experiment = {};
+    const experimentSubset = {};
     const actualExperiment = await PreferenceExperiments.get("test");
-    Object.keys(expectedExperiment).forEach(key => experiment[key] = actualExperiment[key]);
-    Assert.deepEqual(experiment, expectedExperiment, "start saved the experiment");
+    Object.keys(expectedExperiment).forEach(key => experimentSubset[key] = actualExperiment[key]);
+    Assert.deepEqual(experimentSubset, expectedExperiment, "start saved the experiment");
 
     Assert.notEqual(
       DefaultPreferences.get("fake.preference"),
@@ -327,10 +379,13 @@ decorate_task(
       PreferenceExperiments.start({
         name: "test",
         branch: "branch",
-        preferenceName: "fake.type_preference",
-        preferenceBranchType: "user",
-        preferenceValue: 12345,
-        preferenceType: "integer",
+        preferences: {
+          "fake.type_preference": {
+            preferenceBranchType: "user",
+            preferenceValue: 12345,
+            preferenceType: "integer",
+          },
+        },
       }),
       /previous preference value is of type/i,
       "start threw error for incompatible preference type"
@@ -886,10 +941,13 @@ decorate_task(
     await PreferenceExperiments.start({
       name: "test",
       branch: "branch",
-      preferenceName: "fake.preference",
-      preferenceValue: "value",
-      preferenceType: "string",
-      preferenceBranchType: "default",
+      preferences: {
+        "fake.preference": {
+          preferenceValue: "value",
+          preferenceType: "string",
+          preferenceBranchType: "default",
+        },
+      },
     });
 
     Assert.deepEqual(
@@ -926,10 +984,13 @@ decorate_task(
     await PreferenceExperiments.start({
       name: "test",
       branch: "branch",
-      preferenceName: "fake.preference",
-      preferenceValue: "value",
-      preferenceType: "string",
-      preferenceBranchType: "default",
+      preferences: {
+        "fake.preference": {
+          preferenceValue: "value",
+          preferenceType: "string",
+          preferenceBranchType: "default",
+        },
+      },
       experimentType: "pref-test",
     });
 
@@ -1160,10 +1221,13 @@ decorate_task(
     await PreferenceExperiments.start({
       name: "test",
       branch: "branch",
-      preferenceName: prefName,
-      preferenceValue: "experiment value",
-      preferenceBranchType: "default",
-      preferenceType: "string",
+      preferences: {
+        [prefName]: {
+          preferenceValue: "experiment value",
+          preferenceBranchType: "default",
+          preferenceType: "string",
+        },
+      },
     });
 
     is(
@@ -1208,10 +1272,13 @@ decorate_task(
     await PreferenceExperiments.start({
       name: "test",
       branch: "branch",
-      preferenceName: prefName,
-      preferenceValue: "experiment value",
-      preferenceBranchType: "default",
-      preferenceType: "string",
+      preferences: {
+        [prefName]: {
+          preferenceValue: "experiment value",
+          preferenceBranchType: "default",
+          preferenceType: "string",
+        },
+      },
     });
 
     is(
