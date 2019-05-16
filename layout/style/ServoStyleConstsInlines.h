@@ -10,6 +10,7 @@
 #define mozilla_ServoStyleConstsInlines_h
 
 #include "mozilla/ServoStyleConsts.h"
+#include "nsGkAtoms.h"
 #include <type_traits>
 
 // TODO(emilio): there are quite a few other implementations scattered around
@@ -27,6 +28,11 @@ static constexpr const uint64_t kArcSliceCanary = 0xf3f3f3f3f3f3f3f3;
 
 #define ASSERT_CANARY \
   MOZ_DIAGNOSTIC_ASSERT(_0.ptr->data.header.header == kArcSliceCanary, "Uh?");
+
+template <typename T>
+inline StyleArcSlice<T>::StyleArcSlice() {
+  _0.ptr = reinterpret_cast<decltype(_0.ptr)>(Servo_StyleArcSlice_EmptyPtr());
+}
 
 template <typename T>
 inline StyleArcSlice<T>::StyleArcSlice(const StyleArcSlice& aOther) {
@@ -90,6 +96,20 @@ inline StyleArcSlice<T>::~StyleArcSlice() {
 }
 
 #undef ASSERT_CANARY
+
+inline bool StyleAtom::IsStatic() const { return !!(_0 & 1); }
+
+inline StyleAtom::~StyleAtom() {
+  if (!IsStatic()) {
+    reinterpret_cast<nsAtom*>(_0)->Release();
+  }
+}
+
+inline StyleAtom::StyleAtom(const StyleAtom& aOther) : _0(aOther._0) {
+  if (!IsStatic()) {
+    reinterpret_cast<nsAtom*>(_0)->AddRef();
+  }
+}
 
 }  // namespace mozilla
 
