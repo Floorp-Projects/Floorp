@@ -989,12 +989,6 @@ class CustomCounterStyle final : public CounterStyle {
  private:
   ~CustomCounterStyle() {}
 
-  nsCSSValue GetDesc(nsCSSCounterDesc aDesc) const {
-    nsCSSValue value;
-    Servo_CounterStyleRule_GetDescriptor(mRule, aDesc, &value);
-    return value;
-  }
-
   Span<const nsString> GetSymbols();
   Span<const AdditiveSymbol> GetAdditiveSymbols();
 
