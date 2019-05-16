@@ -163,5 +163,22 @@ bool SVGEllipseElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
          newSVGReset->mRy != oldSVGReset->mRy;
 }
 
+nsCSSPropertyID SVGEllipseElement::GetCSSPropertyIdForAttrEnum(
+    uint8_t aAttrEnum) {
+  switch (aAttrEnum) {
+    case CX:
+      return eCSSProperty_cx;
+    case CY:
+      return eCSSProperty_cy;
+    case RX:
+      return eCSSProperty_rx;
+    case RY:
+      return eCSSProperty_ry;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown attr enum");
+      return eCSSProperty_UNKNOWN;
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla
