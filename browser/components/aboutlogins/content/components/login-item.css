@@ -40,7 +40,7 @@
 .field-label {
   display: block;
   font-size: smaller;
-  opacity: .7;
+  color: var(--in-content-deemphasized-text);
   margin-bottom: 5px;
 }
 
