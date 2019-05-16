@@ -218,8 +218,7 @@ function assertUpdateState({
       `The update check button is ${shown ? "hidden" : "shown"}`);
 
     let {tabGroup} = card.details;
-    is(tabGroup.hidden, !releaseNotes,
-       `The tab group is ${releaseNotes ? "shown" : "hidden"}`);
+    is(tabGroup.hidden, false, "The tab group is shown");
     let notesBtn = tabGroup.querySelector('[name="release-notes"]');
     is(notesBtn.hidden, !releaseNotes,
        `The release notes button is ${releaseNotes ? "shown" : "hidden"}`);
