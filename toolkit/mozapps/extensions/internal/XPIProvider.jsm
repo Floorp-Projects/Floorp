@@ -2524,10 +2524,13 @@ var XPIProvider = {
    *        reload them later
    * @param {string} [aAppChanged]
    *        See checkForChanges
+   * @param {string?} [aOldAppVersion]
+   *        The version of the application last run with this profile or null
+   *        if it is a new profile or the version is unknown
    * @returns {boolean}
    *        True if any new add-ons were installed
    */
-  installDistributionAddons(aManifests, aAppChanged) {
+  installDistributionAddons(aManifests, aAppChanged, aOldAppVersion) {
     let distroDir;
     try {
       distroDir = FileUtils.getDir(KEY_APP_DISTRIBUTION, [DIR_EXTENSIONS]);
@@ -2556,7 +2559,7 @@ var XPIProvider = {
 
       try {
         let loc = XPIStates.getLocation(KEY_APP_PROFILE);
-        let addon = awaitPromise(XPIInstall.installDistributionAddon(id, file, loc));
+        let addon = awaitPromise(XPIInstall.installDistributionAddon(id, file, loc, aOldAppVersion));
 
         if (addon) {
           // aManifests may contain a copy of a newly installed add-on's manifest
@@ -2631,7 +2634,7 @@ var XPIProvider = {
 
     // If the application has changed then check for new distribution add-ons
     if (Services.prefs.getBoolPref(PREF_INSTALL_DISTRO_ADDONS, true)) {
-      updated = this.installDistributionAddons(manifests, aAppChanged);
+      updated = this.installDistributionAddons(manifests, aAppChanged, aOldAppVersion);
       if (updated) {
         updateReasons.push("installDistributionAddons");
       }
