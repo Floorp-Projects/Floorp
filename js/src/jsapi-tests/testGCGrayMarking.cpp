@@ -57,8 +57,13 @@ BEGIN_TEST(testGCGrayMarking) {
 
   InitGrayRootTracer();
 
+  // Enable incremental GC.
+  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE_INCREMENTAL);
+
   bool ok = TestMarking() && TestJSWeakMaps() && TestInternalWeakMaps() &&
             TestCCWs() && TestGrayUnmarking();
+
+  JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_GLOBAL);
 
   global1 = nullptr;
   global2 = nullptr;
@@ -162,6 +167,11 @@ bool TestJSWeakMaps() {
                                                        mapColor);
         CHECK(TestJSWeakMap(markKeyOrDelegate, keyOrDelegateColor, mapColor,
                             expected));
+#ifdef JS_GC_ZEAL
+        CHECK(TestJSWeakMapWithGrayUnmarking(markKeyOrDelegate,
+                                             keyOrDelegateColor, mapColor,
+                                             expected));
+#endif
       }
     }
   }
@@ -182,6 +192,12 @@ bool TestInternalWeakMaps() {
       CellColor expected = ExpectedWeakMapValueColor(keyOrDelegateColor,
                                                      CellColor::Black);
       CHECK(TestInternalWeakMap(keyMarkColor, delegateMarkColor, expected));
+
+#ifdef JS_GC_ZEAL
+      CHECK(TestInternalWeakMapWithGrayUnmarking(keyMarkColor,
+                                                 delegateMarkColor,
+                                                 expected));
+#endif
     }
   }
 
@@ -233,6 +249,72 @@ bool TestJSWeakMap(MarkKeyOrDelegate markKey, CellColor weakMapMarkColor,
 
   return true;
 }
+
+#ifdef JS_GC_ZEAL
+
+bool TestJSWeakMapWithGrayUnmarking(MarkKeyOrDelegate markKey,
+                                    CellColor weakMapMarkColor,
+                                    CellColor keyOrDelegateMarkColor,
+                                    CellColor expectedValueColor) {
+  // This is like the previous test, but things are marked black by gray
+  // unmarking during incremental GC.
+
+  JSObject* weakMap;
+  JSObject* key;
+  JSObject* value;
+
+  // If both map and key are marked the same color, test both possible
+  // orderings.
+  unsigned markOrderings = weakMapMarkColor == keyOrDelegateMarkColor ? 2 : 1;
+
+  JS_SetGCZeal(cx, uint8_t(ZealMode::YieldWhileGrayMarking), 0);
+
+  for (unsigned markOrder = 0; markOrder < markOrderings; markOrder++) {
+    CHECK(CreateJSWeakMapObjects(&weakMap, &key, &value));
+
+    JSObject* delegate = UncheckedUnwrapWithoutExpose(key);
+    JSObject* keyOrDelegate = markKey ? key : delegate;
+
+    grayRoots.grayRoot1 = keyOrDelegate;
+    grayRoots.grayRoot2 = weakMap;
+
+    // Start an incremental GC and run until gray roots have been pushed onto
+    // the mark stack.
+    JS::PrepareForFullGC(cx);
+    JS::StartIncrementalGC(cx, GC_NORMAL, JS::GCReason::DEBUG_GC, 1000000);
+    MOZ_ASSERT(cx->runtime()->gc.state() == gc::State::Sweep);
+    MOZ_ASSERT(cx->zone()->gcState() == Zone::MarkBlackAndGray);
+
+    // Unmark gray things as specified.
+    if (markOrder != 0) {
+      MaybeExposeObject(weakMap, weakMapMarkColor);
+      MaybeExposeObject(keyOrDelegate, keyOrDelegateMarkColor);
+    } else {
+      MaybeExposeObject(keyOrDelegate, keyOrDelegateMarkColor);
+      MaybeExposeObject(weakMap, weakMapMarkColor);
+    }
+
+    JS::FinishIncrementalGC(cx, JS::GCReason::API);
+
+    ClearGrayRoots();
+
+    CHECK(GetCellColor(weakMap) == weakMapMarkColor);
+    CHECK(GetCellColor(keyOrDelegate) == keyOrDelegateMarkColor);
+    CHECK(GetCellColor(value) == expectedValueColor);
+  }
+
+  JS_UnsetGCZeal(cx, uint8_t(ZealMode::YieldWhileGrayMarking));
+
+  return true;
+}
+
+static void MaybeExposeObject(JSObject* object, CellColor color) {
+  if (color == CellColor::Black) {
+      JS::ExposeObjectToActiveJS(object);
+  }
+}
+
+#endif // JS_GC_ZEAL
 
 bool CreateJSWeakMapObjects(JSObject** weakMapOut, JSObject** keyOut,
                             JSObject** valueOut) {
@@ -296,6 +378,62 @@ bool TestInternalWeakMap(CellColor keyMarkColor, CellColor delegateMarkColor,
 
   return true;
 }
+
+#ifdef JS_GC_ZEAL
+
+bool TestInternalWeakMapWithGrayUnmarking(CellColor keyMarkColor,
+                                          CellColor delegateMarkColor,
+                                          CellColor expectedColor) {
+  UniquePtr<GCManagedObjectWeakMap> weakMap;
+  JSObject* key;
+  JSObject* value;
+
+  // If both key and delegate are marked the same color, test both possible
+  // orderings.
+  unsigned markOrderings = keyMarkColor == delegateMarkColor ? 2 : 1;
+
+  JS_SetGCZeal(cx, uint8_t(ZealMode::YieldWhileGrayMarking), 0);
+
+  for (unsigned markOrder = 0; markOrder < markOrderings; markOrder++) {
+    CHECK(CreateInternalWeakMapObjects(&weakMap, &key, &value));
+
+    JSObject* delegate = UncheckedUnwrapWithoutExpose(key);
+
+    Rooted<GCManagedObjectWeakMap*> rootMap(cx, weakMap.get());
+    grayRoots.grayRoot1 = key;
+    grayRoots.grayRoot2 = delegate;
+
+    // Start an incremental GC and run until gray roots have been pushed onto
+    // the mark stack.
+    JS::PrepareForFullGC(cx);
+    JS::StartIncrementalGC(cx, GC_NORMAL, JS::GCReason::DEBUG_GC, 1000000);
+    MOZ_ASSERT(cx->runtime()->gc.state() == gc::State::Sweep);
+    MOZ_ASSERT(cx->zone()->gcState() == Zone::MarkBlackAndGray);
+
+    // Unmark gray things as specified.
+    if (markOrder != 0) {
+      MaybeExposeObject(key, keyMarkColor);
+      MaybeExposeObject(delegate, delegateMarkColor);
+    } else {
+      MaybeExposeObject(key, keyMarkColor);
+      MaybeExposeObject(delegate, delegateMarkColor);
+    }
+
+    JS::FinishIncrementalGC(cx, JS::GCReason::API);
+
+    ClearGrayRoots();
+
+    CHECK(GetCellColor(key) == expectedColor);
+    CHECK(GetCellColor(delegate) == expectedColor);
+    CHECK(GetCellColor(value) == expectedColor);
+  }
+
+  JS_UnsetGCZeal(cx, uint8_t(ZealMode::YieldWhileGrayMarking));
+
+  return true;
+}
+
+#endif // JS_GC_ZEAL
 
 bool CreateInternalWeakMapObjects(UniquePtr<GCManagedObjectWeakMap>* weakMapOut,
                                   JSObject** keyOut, JSObject** valueOut) {
