@@ -623,6 +623,9 @@ pref("media.audioipc.stack_size", 262144);
 pref("media.cubeb.sandbox", false);
 #endif
 
+// GraphRunner (fixed MediaStreamGraph thread) control
+pref("media.audiograph.single_thread.enabled", false);
+
 #ifdef MOZ_AV1
 #if defined(XP_WIN) && !defined(_ARM64_)
 pref("media.av1.enabled", true);
