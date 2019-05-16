@@ -12,19 +12,113 @@ const DefaultPreferences = new Preferences({defaultBranch: true});
 const startupPrefs = "app.normandy.startupExperimentPrefs";
 
 function experimentFactory(attrs) {
+  const defaultPref = {
+    "fake.preference": {},
+  };
+  const defaultPrefInfo = {
+    preferenceValue: "fakevalue",
+    preferenceType: "string",
+    previousPreferenceValue: "oldfakevalue",
+    preferenceBranchType: "default",
+  };
+  const preferences = {};
+  for (const [prefName, prefInfo] of Object.entries(attrs.preferences || defaultPref)) {
+    preferences[prefName] = { ...defaultPrefInfo, ...prefInfo };
+  }
+
   return Object.assign({
     name: "fakename",
     branch: "fakebranch",
     expired: false,
     lastSeen: new Date().toJSON(),
-    preferenceName: "fake.preference",
-    preferenceValue: "fakevalue",
-    preferenceType: "string",
-    previousPreferenceValue: "oldfakevalue",
+    experimentType: "exp",
+  }, attrs, {
+    preferences,
+  });
+}
+
+const mockOldData = {
+  "hypothetical_experiment": {
+    name: "hypothetical_experiment",
+    branch: "hypo_1",
+    expired: false,
+    lastSeen: new Date().toJSON(),
+    preferenceName: "some.pref",
+    preferenceValue: 2,
+    preferenceType: "integer",
+    previousPreferenceValue: 1,
+    preferenceBranchType: "user",
+    experimentType: "exp",
+  },
+  "another_experiment": {
+    name: "another_experiment",
+    branch: "another_4",
+    expired: true,
+    lastSeen: new Date().toJSON(),
+    preferenceName: "another.pref",
+    preferenceValue: true,
+    preferenceType: "boolean",
+    previousPreferenceValue: false,
     preferenceBranchType: "default",
     experimentType: "exp",
-  }, attrs);
-}
+  },
+};
+
+add_task(function migrateStorage_migrates_to_new_format() {
+  const mockJsonFile = {
+    // Deep clone the data in case migrateStorage mutates it.
+    data: JSON.parse(JSON.stringify(mockOldData)),
+  };
+  migrateStorage(mockJsonFile);
+  Assert.deepEqual(mockJsonFile.data, {
+    __version: 2,
+    experiments: {
+      "hypothetical_experiment": {
+        name: "hypothetical_experiment",
+        branch: "hypo_1",
+        expired: false,
+        lastSeen: mockOldData.hypothetical_experiment.lastSeen,
+        preferences: {
+          "some.pref": {
+            preferenceValue: 2,
+            preferenceType: "integer",
+            previousPreferenceValue: 1,
+            preferenceBranchType: "user",
+          },
+        },
+        experimentType: "exp",
+      },
+      "another_experiment": {
+        name: "another_experiment",
+        branch: "another_4",
+        expired: true,
+        lastSeen: mockOldData.another_experiment.lastSeen,
+        preferences: {
+          "another.pref": {
+            preferenceValue: true,
+            preferenceType: "boolean",
+            previousPreferenceValue: false,
+            preferenceBranchType: "default",
+          },
+        },
+        experimentType: "exp",
+      },
+    },
+  });
+});
+
+add_task(function migrateStorage_is_idempotent() {
+  const mockJsonFileOnce = {
+    data: JSON.parse(JSON.stringify(mockOldData)),
+  };
+  const mockJsonFileTwice = {
+    data: JSON.parse(JSON.stringify(mockOldData)),
+  };
+  migrateStorage(mockJsonFileOnce);
+  migrateStorage(mockJsonFileTwice);
+  migrateStorage(mockJsonFileTwice);
+  Assert.deepEqual(mockJsonFileOnce, mockJsonFileTwice);
+});
 
 // clearAllExperimentStorage
 decorate_task(
@@ -65,7 +159,7 @@ decorate_task(
 
 // start should throw if an experiment for the given preference is active
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test", preferenceName: "fake.preference" })]),
+  withMockExperiments([experimentFactory({ name: "test", preferences: {"fake.preference": {}} })]),
   withSendEventStub,
   async function(experiments, sendEventStub) {
     await Assert.rejects(
@@ -140,11 +234,14 @@ decorate_task(
       name: "test",
       branch: "branch",
       expired: false,
-      preferenceName: "fake.preference",
-      preferenceValue: "newvalue",
-      preferenceType: "string",
-      previousPreferenceValue: "oldvalue",
-      preferenceBranchType: "default",
+      preferences: {
+        "fake.preference": {
+          preferenceValue: "newvalue",
+          preferenceType: "string",
+          previousPreferenceValue: "oldvalue",
+          preferenceBranchType: "default",
+        },
+      },
     };
     const experiment = {};
     const actualExperiment = await PreferenceExperiments.get("test");
@@ -195,11 +292,14 @@ decorate_task(
       name: "test",
       branch: "branch",
       expired: false,
-      preferenceName: "fake.preference",
-      preferenceValue: "newvalue",
-      preferenceType: "string",
-      previousPreferenceValue: "oldvalue",
-      preferenceBranchType: "user",
+      preferences: {
+        "fake.preference": {
+          preferenceValue: "newvalue",
+          preferenceType: "string",
+          previousPreferenceValue: "oldvalue",
+          preferenceBranchType: "user",
+        },
+      },
     };
 
     const experiment = {};
@@ -447,11 +547,14 @@ decorate_task(
       name: "test",
       expired: false,
       branch: "fakebranch",
-      preferenceName: "fake.preference",
-      preferenceValue: "experimentvalue",
-      preferenceType: "string",
-      previousPreferenceValue: "oldvalue",
-      preferenceBranchType: "default",
+      preferences: {
+        "fake.preference": {
+          preferenceValue: "experimentvalue",
+          preferenceType: "string",
+          previousPreferenceValue: "oldvalue",
+          preferenceBranchType: "default",
+        },
+      },
     }),
   ]),
   withMockPreferences,
@@ -497,11 +600,14 @@ decorate_task(
   withMockExperiments([experimentFactory({
     name: "test",
     expired: false,
-    preferenceName: "fake.preference",
-    preferenceValue: "experimentvalue",
-    preferenceType: "string",
-    previousPreferenceValue: "oldvalue",
-    preferenceBranchType: "user",
+    preferences: {
+      "fake.preference": {
+        preferenceValue: "experimentvalue",
+        preferenceType: "string",
+        previousPreferenceValue: "oldvalue",
+        preferenceBranchType: "user",
+      },
+    },
   })]),
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
@@ -531,11 +637,14 @@ decorate_task(
   withMockExperiments([experimentFactory({
     name: "test",
     expired: false,
-    preferenceName: "fake.preference",
-    preferenceValue: "experimentvalue",
-    preferenceType: "string",
-    previousPreferenceValue: null,
-    preferenceBranchType: "user",
+    preferences: {
+      "fake.preference": {
+        preferenceValue: "experimentvalue",
+        preferenceType: "string",
+        previousPreferenceValue: null,
+        preferenceBranchType: "user",
+      },
+    },
   })]),
   withMockPreferences,
   async function(experiments, mockPreferences) {
@@ -558,11 +667,14 @@ decorate_task(
     name: "test",
     expired: false,
     branch: "fakebranch",
-    preferenceName: "fake.preference",
-    preferenceValue: "experimentvalue",
-    preferenceType: "string",
-    previousPreferenceValue: "oldvalue",
-    preferenceBranchType: "default",
+    preferences: {
+      "fake.preference": {
+        preferenceValue: "experimentvalue",
+        preferenceType: "string",
+        previousPreferenceValue: "oldvalue",
+        preferenceBranchType: "default",
+      },
+    },
   })]),
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
@@ -683,10 +795,13 @@ decorate_task(
   withMockExperiments([experimentFactory({
     name: "test",
     branch: "branch",
-    preferenceName: "fake.pref",
-    preferenceValue: "experiment value",
-    expired: false,
-    preferenceBranchType: "default",
+    preferences: {
+      "fake.pref": {
+        preferenceValue: "experiment value",
+        expired: false,
+        preferenceBranchType: "default",
+      },
+    },
   })]),
   withMockPreferences,
   withStub(TelemetryEnvironment, "setExperimentActive"),
@@ -706,8 +821,11 @@ decorate_task(
   withMockExperiments([experimentFactory({
     name: "test",
     branch: "branch",
-    preferenceName: "fake.pref",
-    preferenceValue: "experiment value",
+    preferences: {
+      "fake.pref": {
+        preferenceValue: "experiment value",
+      },
+    },
     experimentType: "pref-test",
   })]),
   withMockPreferences,
@@ -813,8 +931,11 @@ decorate_task(
 decorate_task(
   withMockExperiments([experimentFactory({
     name: "test",
-    preferenceName: "fake.preference",
-    preferenceValue: "experiment value",
+    preferences: {
+      "fake.preference": {
+        preferenceValue: "experiment value",
+      },
+    },
   })]),
   withMockPreferences,
   withStub(PreferenceExperiments, "stop"),
@@ -840,8 +961,11 @@ decorate_task(
 decorate_task(
   withMockExperiments([experimentFactory({
     name: "test",
-    preferenceName: "fake.preference",
-    preferenceValue: "experiment value",
+    preferences: {
+      "fake.preference": {
+        preferenceValue: "experiment value",
+      },
+    },
   })]),
   withMockPreferences,
   withStub(PreferenceExperiments, "startObserver"),
@@ -867,18 +991,27 @@ decorate_task(
   withMockExperiments([
     experimentFactory({
       name: "char",
-      preferenceName: `fake.char`,
-      preferenceValue: "string",
+      preferences: {
+        "fake.char": {
+          preferenceValue: "string",
+        },
+      },
     }),
     experimentFactory({
       name: "int",
-      preferenceName: `fake.int`,
-      preferenceValue: 2,
+      preferences: {
+        "fake.int": {
+          preferenceValue: 2,
+        },
+      },
     }),
     experimentFactory({
       name: "bool",
-      preferenceName: `fake.bool`,
-      preferenceValue: true,
+      preferences: {
+        "fake.bool": {
+          preferenceValue: true,
+        },
+      },
     }),
   ]),
   async function testSaveStartupPrefs(experiments) {
@@ -911,8 +1044,11 @@ decorate_task(
 decorate_task(
   withMockExperiments([experimentFactory({
     name: "test",
-    preferenceName: "fake.invalidValue",
-    preferenceValue: new Date(),
+    preferences: {
+      "fake.invalidValue": {
+        preferenceValue: new Date(),
+      },
+    },
   })]),
   async function testSaveStartupPrefsError(experiments) {
     await Assert.rejects(
@@ -928,15 +1064,21 @@ decorate_task(
   withMockExperiments([
     experimentFactory({
       name: "defaultBranchRecipe",
-      preferenceName: "fake.default",
-      preferenceValue: "experiment value",
-      preferenceBranchType: "default",
+      preferences: {
+        "fake.default": {
+          preferenceValue: "experiment value",
+          preferenceBranchType: "default",
+        },
+      },
     }),
     experimentFactory({
       name: "userBranchRecipe",
-      preferenceName: "fake.user",
-      preferenceValue: "experiment value",
-      preferenceBranchType: "user",
+      preferences: {
+        "fake.user": {
+          preferenceValue: "experiment value",
+          preferenceBranchType: "user",
+        },
+      },
     }),
   ]),
   async function testSaveStartupPrefsUserBranch(experiments) {
@@ -1061,7 +1203,7 @@ decorate_task(
 
 // stop should pass "unknown" to telemetry event for `reason` if none is specified
 decorate_task(
-  withMockExperiments([experimentFactory({ name: "test", preferenceName: "fake.preference" })]),
+  withMockExperiments([experimentFactory({ name: "test", preferences: { "fake.preference": {} }})]),
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
   withSendEventStub,
@@ -1079,8 +1221,8 @@ decorate_task(
 // stop should pass along the value for resetValue to Telemetry Events as didResetValue
 decorate_task(
   withMockExperiments([
-    experimentFactory({ name: "test1", preferenceName: "fake.preference1" }),
-    experimentFactory({ name: "test2", preferenceName: "fake.preference2" }),
+    experimentFactory({ name: "test1", preferences: { "fake.preference1": {} }}),
+    experimentFactory({ name: "test2", preferences: { "fake.preference2": {} }}),
   ]),
   withMockPreferences,
   withStub(PreferenceExperiments, "stopObserver"),
@@ -1115,11 +1257,14 @@ decorate_task(
     name: "test",
     expired: false,
     branch: "fakebranch",
-    preferenceName: "fake.preference",
-    preferenceValue: "experimentvalue",
-    preferenceType: "string",
-    previousPreferenceValue: "oldvalue",
-    preferenceBranchType: "default",
+    preferences: {
+      "fake.preference": {
+        preferenceValue: "experimentvalue",
+        preferenceType: "string",
+        previousPreferenceValue: "oldvalue",
+        preferenceBranchType: "default",
+      },
+    },
   })]),
   async function testPrefChangeEventTelemetry(mockPreferences, sendEventStub, mockExperiments) {
     is(Preferences.get("fake.preference"), null, "preference should start unset");

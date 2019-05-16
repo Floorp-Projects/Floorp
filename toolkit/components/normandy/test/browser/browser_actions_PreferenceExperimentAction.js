@@ -180,7 +180,9 @@ decorate_task(
   PreferenceExperiments.withMockExperiments([
     {
       name: "conflict",
-      preferenceName: "conflict.pref",
+      preferences: {
+        "conflict.pref": {},
+      },
       expired: false,
     },
   ]),

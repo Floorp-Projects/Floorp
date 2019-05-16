@@ -251,14 +251,16 @@ class PreferenceStudyListItem extends React.Component {
   render() {
     const { study, translations } = this.props;
 
+    // Assume there is exactly one preference (old-style preference experiment).
+    const [preferenceName, { preferenceValue }] = Object.entries(study.preferences)[0];
     // Sanitize the values by setting them as the text content of an element,
     // and then getting the HTML representation of that text. This will have the
     // browser safely sanitize them. Use outerHTML to also include the <code>
     // element in the string.
     const sanitizer = document.createElement("code");
-    sanitizer.textContent = study.preferenceName;
+    sanitizer.textContent = preferenceName;
     const sanitizedPreferenceName = sanitizer.outerHTML;
-    sanitizer.textContent = study.preferenceValue;
+    sanitizer.textContent = preferenceValue;
     const sanitizedPreferenceValue = sanitizer.outerHTML;
     const description = translations.preferenceStudyDescription
       .replace(/%(?:1\$)?S/, sanitizedPreferenceName)
