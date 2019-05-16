@@ -36,8 +36,7 @@ async function checkFaviconDataConversion(aFileName, aFileMimeType, aFileLength,
   let faviconURI = NetUtil.newURI("http://places.test/icon/" + aFileName);
   let fileData = readFileOfLength(aFileName, aFileLength);
 
-  PlacesUtils.favicons.replaceFaviconData(faviconURI, fileData, fileData.length,
-                                          aFileMimeType);
+  PlacesUtils.favicons.replaceFaviconData(faviconURI, fileData, aFileMimeType);
   await new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, faviconURI, true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
