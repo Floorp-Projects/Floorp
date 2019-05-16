@@ -60,10 +60,14 @@ private fun privateModeAdapterItems(tabs: List<Tab>): List<AdapterItem> {
     return items
 }
 
+private fun onboardingAdapterItems(): List<AdapterItem> = listOf(
+    AdapterItem.OnboardingHeader
+)
+
 private fun SessionControlState.toAdapterList(): List<AdapterItem> = when (mode) {
     is Mode.Normal -> normalModeAdapterItems(tabs, collections)
     is Mode.Private -> privateModeAdapterItems(tabs)
-    is Mode.Onboarding -> listOf()
+    is Mode.Onboarding -> onboardingAdapterItems()
 }
 
 private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapIndexed { index, tab ->

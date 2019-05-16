@@ -58,7 +58,6 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.onboarding.FenixOnboarding
-import org.mozilla.fenix.onboarding.Onboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import kotlin.coroutines.CoroutineContext

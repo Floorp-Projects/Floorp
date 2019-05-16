@@ -19,6 +19,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHol
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionMessageViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingHeaderViewHolder
 import java.lang.IllegalStateException
 
 sealed class AdapterItem {
@@ -33,6 +34,8 @@ sealed class AdapterItem {
     data class CollectionItem(val collection: TabCollection) : AdapterItem()
     data class TabInCollectionItem(val collection: TabCollection, val tab: Tab, val isLastTab: Boolean) : AdapterItem()
 
+    object OnboardingHeader : AdapterItem()
+
     val viewType: Int
         get() = when (this) {
             is TabHeader -> TabHeaderViewHolder.LAYOUT_ID
@@ -45,6 +48,7 @@ sealed class AdapterItem {
             NoCollectionMessage -> NoCollectionMessageViewHolder.LAYOUT_ID
             is CollectionItem -> CollectionViewHolder.LAYOUT_ID
             is TabInCollectionItem -> TabInCollectionViewHolder.LAYOUT_ID
+            OnboardingHeader -> OnboardingHeaderViewHolder.LAYOUT_ID
         }
 }
 
@@ -75,6 +79,7 @@ class SessionControlAdapter(
             NoCollectionMessageViewHolder.LAYOUT_ID -> NoCollectionMessageViewHolder(view)
             CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, actionEmitter, job)
             TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, actionEmitter, job)
+            OnboardingHeaderViewHolder.LAYOUT_ID -> OnboardingHeaderViewHolder(view)
             else -> throw IllegalStateException()
         }
     }
