@@ -31,6 +31,7 @@ def fake_short_path(path):
                         for p in mozpath.split(path))
     return path
 
+
 def ensure_exe_extension(path):
     if sys.platform.startswith('win'):
         return path + '.exe'
@@ -73,6 +74,7 @@ class ConfigureTestSandbox(ConfigureSandbox):
     This class is only meant to implement the minimal things to make
     moz.configure testing possible. As such, it takes shortcuts.
     '''
+
     def __init__(self, paths, config, environ, *args, **kwargs):
         self._search_path = environ.get('PATH', '').split(os.pathsep)
 
@@ -152,7 +154,6 @@ class ConfigureTestSandbox(ConfigureSandbox):
 
                 def __call__(self, *args, **kwargs):
                     return self._func(*args, **kwargs)
-
 
             return ReadOnlyNamespace(
                 create_unicode_buffer=self.create_unicode_buffer,

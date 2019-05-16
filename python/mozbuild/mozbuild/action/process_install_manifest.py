@@ -29,8 +29,8 @@ COMPLETE = 'Elapsed: {elapsed:.2f}s; From {dest}: Kept {existing} existing; ' \
 
 
 def process_manifest(destdir, paths, track,
-        no_symlinks=False,
-        defines={}):
+                     no_symlinks=False,
+                     defines={}):
 
     if os.path.exists(track):
         # We use the same format as install manifests for the tracking
@@ -44,15 +44,15 @@ def process_manifest(destdir, paths, track,
             for p, f in finder.find(dest):
                 remove_unaccounted.add(p, dummy_file)
 
-        remove_empty_directories=True
-        remove_all_directory_symlinks=True
+        remove_empty_directories = True
+        remove_all_directory_symlinks = True
 
     else:
         # If tracking is enabled and there is no file, we don't want to
         # be removing anything.
         remove_unaccounted = False
-        remove_empty_directories=False
-        remove_all_directory_symlinks=False
+        remove_empty_directories = False
+        remove_all_directory_symlinks = False
 
     manifest = InstallManifest()
     for path in paths:
@@ -64,9 +64,9 @@ def process_manifest(destdir, paths, track,
         copier, defines_override=defines, link_policy=link_policy
     )
     result = copier.copy(destdir,
-        remove_unaccounted=remove_unaccounted,
-        remove_all_directory_symlinks=remove_all_directory_symlinks,
-        remove_empty_directories=remove_empty_directories)
+                         remove_unaccounted=remove_unaccounted,
+                         remove_all_directory_symlinks=remove_all_directory_symlinks,
+                         remove_empty_directories=remove_empty_directories)
 
     if track:
         # We should record files that we actually copied.
@@ -83,21 +83,21 @@ def main(argv):
     parser.add_argument('destdir', help='Destination directory.')
     parser.add_argument('manifests', nargs='+', help='Path to manifest file(s).')
     parser.add_argument('--no-symlinks', action='store_true',
-        help='Do not install symbolic links. Always copy files')
+                        help='Do not install symbolic links. Always copy files')
     parser.add_argument('--track', metavar="PATH", required=True,
-        help='Use installed files tracking information from the given path.')
+                        help='Use installed files tracking information from the given path.')
     parser.add_argument('-D', action=DefinesAction,
-        dest='defines', metavar="VAR[=VAL]",
-        help='Define a variable to override what is specified in the manifest')
+                        dest='defines', metavar="VAR[=VAL]",
+                        help='Define a variable to override what is specified in the manifest')
 
     args = parser.parse_args(argv)
 
     start = time.time()
 
     result = process_manifest(args.destdir, args.manifests,
-        track=args.track,
-        no_symlinks=args.no_symlinks,
-        defines=args.defines)
+                              track=args.track,
+                              no_symlinks=args.no_symlinks,
+                              defines=args.defines)
 
     elapsed = time.time() - start
 
@@ -108,6 +108,7 @@ def main(argv):
         updated=result.updated_files_count,
         rm_files=result.removed_files_count,
         rm_dirs=result.removed_directories_count))
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])

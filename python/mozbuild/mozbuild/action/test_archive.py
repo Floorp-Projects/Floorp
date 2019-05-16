@@ -642,7 +642,7 @@ for k, v in ARCHIVE_FILES.items():
         continue
 
     ignores = set(itertools.chain(*(e.get('ignore', [])
-                                  for e in ARCHIVE_FILES['common'])))
+                                    for e in ARCHIVE_FILES['common'])))
 
     if not any(p.startswith('%s/' % k) for p in ignores):
         raise Exception('"common" ignore list probably should contain %s' % k)

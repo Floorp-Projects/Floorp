@@ -22,3 +22,8 @@ You can pad the PrintableString with spaces to increase the length of the cert (
 
 Then, convert back to der:
 ascii2der -i dep1.ascii -o newdep1.der
+
+The certificats in the sha1 subdirectory are from
+https://hg.mozilla.org/mozilla-central/file/0fcbe72581bc/toolkit/mozapps/update/updater
+which are the SHA-1 certs from before they where updated in Bug 1105689. They only include the release 
+certs, since the nightly certs are different length, and we only care about updates from old ESRs.

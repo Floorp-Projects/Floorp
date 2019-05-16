@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import unittest
@@ -139,7 +139,6 @@ class TestMozconfigLoader(unittest.TestCase):
 
         srcdir = self.get_temp_dir()
         curdir = self.get_temp_dir()
-        dirs = [srcdir, curdir]
         loader = MozconfigLoader(srcdir)
 
         path = os.path.join(srcdir, relative_mozconfig)
@@ -199,7 +198,7 @@ class TestMozconfigLoader(unittest.TestCase):
             MozconfigLoader(d).find_mozconfig()
 
         self.assertIn('Multiple default mozconfig files present',
-            e.exception.message)
+                      e.exception.message)
 
     def test_find_deprecated_path_srcdir(self):
         """Ensure we error when deprecated path locations are present."""
@@ -212,7 +211,7 @@ class TestMozconfigLoader(unittest.TestCase):
                 MozconfigLoader(d).find_mozconfig()
 
             self.assertIn('This implicit location is no longer',
-                e.exception.message)
+                          e.exception.message)
             self.assertIn(d, e.exception.message)
 
     def test_find_deprecated_home_paths(self):
@@ -230,7 +229,7 @@ class TestMozconfigLoader(unittest.TestCase):
                 self.get_loader().find_mozconfig()
 
             self.assertIn('This implicit location is no longer',
-                e.exception.message)
+                          e.exception.message)
             self.assertIn(path, e.exception.message)
 
     def test_read_no_mozconfig(self):
@@ -327,7 +326,7 @@ class TestMozconfigLoader(unittest.TestCase):
             result = loader.read_mozconfig(mozconfig.name)
 
             self.assertEqual(result['topobjdir'], '%s/some-objdir' %
-                loader.topsrcdir)
+                             loader.topsrcdir)
 
     def test_read_new_variables(self):
         """New variables declared in mozconfig file are detected."""
@@ -427,7 +426,7 @@ class TestMozconfigLoader(unittest.TestCase):
             result = loader.read_mozconfig(mozconfig.name)
 
             self.assertEqual(result['vars']['added']['TEST'],
-                loader.topsrcdir.replace(os.sep, '/'))
+                             loader.topsrcdir.replace(os.sep, '/'))
             self.assertEqual(result['env']['added'], {})
 
     def test_read_empty_variable_value(self):
@@ -459,7 +458,7 @@ class TestMozconfigLoader(unittest.TestCase):
             self.assertTrue(e.exception.message.startswith(
                 'Evaluation of your mozconfig exited with an error'))
             self.assertEquals(e.exception.path,
-                mozconfig.name.replace(os.sep, '/'))
+                              mozconfig.name.replace(os.sep, '/'))
             self.assertEquals(e.exception.output, ['hello world'])
 
 

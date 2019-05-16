@@ -1167,4 +1167,9 @@ interface nsIDocShell : nsIDocShellTreeItem
    * sense that's relevant to document.open.
    */
   [notxpcom, nostdcall] readonly attribute boolean isAttemptingToNavigate;
+
+  /**
+   * Whether developer tools are watching activity in this docshell.
+   */
+  [infallible] attribute boolean watchedByDevtools;
 };

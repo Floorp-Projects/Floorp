@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import os
 import tempfile
 import shutil
@@ -16,16 +18,17 @@ _MSI_ARCH = {
     'x86_64': 'x64',
 }
 
+
 def update_wsx(wfile, pvalues):
 
     parsed = minidom.parse(wfile)
 
     # construct a dictinary for the pre-processing options
     # iterate over that list and add them to the wsx xml doc
-    for k,v in pvalues.items():
-         entry = parsed.createProcessingInstruction('define', k + ' = "' + v + '"')
-         root = parsed.firstChild
-         parsed.insertBefore(entry, root)
+    for k, v in pvalues.items():
+        entry = parsed.createProcessingInstruction('define', k + ' = "' + v + '"')
+        root = parsed.firstChild
+        parsed.insertBefore(entry, root)
     # write out xml to new wfile
     new_w_file = wfile + ".new"
     fh = open(new_w_file, "wb")
@@ -56,7 +59,7 @@ def repackage_msi(topsrcdir, wsx, version, locale, arch, setupexe, candle, light
         raise Exception("%s does not exist." % light)
     embeddedVersion = '0.0.0.0'
     # Version string cannot contain 'a' or 'b' when embedding in msi manifest.
-    if not 'a' in version and not 'b' in version:
+    if 'a' not in version and 'b' not in version:
         if version.endswith('esr'):
             parts = version[:-3].split('.')
         else:
@@ -76,8 +79,8 @@ def repackage_msi(topsrcdir, wsx, version, locale, arch, setupexe, candle, light
         try:
             wsx_file = os.path.split(wsx)[1]
             shutil.copy(wsx, tmpdir)
-            temp_wsx_file  = os.path.join(tmpdir, wsx_file)
-            temp_wsx_file  = mozpath.realpath(temp_wsx_file)
+            temp_wsx_file = os.path.join(tmpdir, wsx_file)
+            temp_wsx_file = mozpath.realpath(temp_wsx_file)
             pre_values = {'Vendor': 'Mozilla',
                           'BrandFullName': 'Mozilla Firefox',
                           'Version': version,
@@ -100,7 +103,7 @@ def repackage_msi(topsrcdir, wsx, version, locale, arch, setupexe, candle, light
                          '-out', wix_installer, wix_object_file]
             subprocess.check_call(light_cmd, env=env)
             os.remove(wix_object_file)
-            #mv file to output dir
+            # mv file to output dir
             shutil.move(wix_installer, output)
         finally:
             os.chdir(old_cwd)

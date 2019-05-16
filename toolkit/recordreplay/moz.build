@@ -18,7 +18,6 @@ if CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['NIGHTLY_BUILD']:
         'HashTable.cpp',
         'ipc/Channel.cpp',
         'ipc/ChildIPC.cpp',
-        'ipc/ChildNavigation.cpp',
         'ipc/ChildProcess.cpp',
         'ipc/JSControl.cpp',
         'ipc/ParentForwarding.cpp',

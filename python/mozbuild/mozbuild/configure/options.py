@@ -106,6 +106,7 @@ class PositiveOptionValue(OptionValue):
     in the form of a tuple for when values are given to the option (in the form
     --option=value[,value2...].
     '''
+
     def __nonzero__(self):
         return True
 
@@ -424,6 +425,7 @@ class CommandLineHelper(object):
     Extra options can be added afterwards through API calls. For those,
     conflicting values will raise an exception.
     '''
+
     def __init__(self, environ=os.environ, argv=sys.argv):
         self._environ = dict(environ)
         self._args = OrderedDict()

@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 # We invoke a Python program to dump our environment in order to get
 # native paths printed on Windows so that these paths can be incorporated
 # into Python configure's environment.

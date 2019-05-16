@@ -71,9 +71,9 @@ var PrintUtils = {
     window.messageManager.addMessageListener("Printing:Error", this);
   },
 
-  get bundle() {
-    delete this.bundle;
-    return this.bundle = Services.strings.createBundle("chrome://global/locale/printing.properties");
+  get _bundle() {
+    delete this._bundle;
+    return this._bundle = Services.strings.createBundle("chrome://global/locale/printing.properties");
   },
 
   /**
@@ -101,7 +101,7 @@ var PrintUtils = {
     return true;
   },
 
-  getDefaultPrinterName() {
+  _getDefaultPrinterName() {
     try {
       let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
                     .getService(Ci.nsIPrintSettingsService);
@@ -124,7 +124,7 @@ var PrintUtils = {
    */
   printWindow(aWindowID, aBrowser) {
     let mm = aBrowser.messageManager;
-    let defaultPrinterName = this.getDefaultPrinterName();
+    let defaultPrinterName = this._getDefaultPrinterName();
     mm.sendAsyncMessage("Printing:Print", {
       windowID: aWindowID,
       simplifiedMode: this._shouldSimplify,
@@ -189,7 +189,7 @@ var PrintUtils = {
       printPreviewTB.disableUpdateTriggers(true);
 
       // collapse the browser here -- it will be shown in
-      // enterPrintPreview; this forces a reflow which fixes display
+      // _enterPrintPreview; this forces a reflow which fixes display
       // issues in bug 267422.
       // We use the print preview browser as the source browser to avoid
       // re-initializing print preview with a document that might now have changed.
@@ -227,10 +227,10 @@ var PrintUtils = {
       // this tells us whether we should continue on with PP or
       // wait for the callback via the observer
       if (!notifyOnOpen.value.valueOf() || this._webProgressPP.value == null) {
-        this.enterPrintPreview();
+        this._enterPrintPreview();
       }
     } catch (e) {
-      this.enterPrintPreview();
+      this._enterPrintPreview();
     }
   },
 
@@ -244,7 +244,7 @@ var PrintUtils = {
   _originalURL: "",
   _shouldSimplify: false,
 
-  displayPrintingError(nsresult, isPrinting) {
+  _displayPrintingError(nsresult, isPrinting) {
     // The nsresults from a printing error are mapped to strings that have
     // similar names to the errors themselves. For example, for error
     // NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE, the name of the string
@@ -287,7 +287,7 @@ var PrintUtils = {
       // Try first with _PP suffix.
       let ppMsgName = msgName + "_PP";
       try {
-        msg = this.bundle.GetStringFromName(ppMsgName);
+        msg = this._bundle.GetStringFromName(ppMsgName);
       } catch (e) {
         // We allow localizers to not have the print preview error string,
         // and just fall back to the printing error string.
@@ -295,19 +295,19 @@ var PrintUtils = {
     }
 
     if (!msg) {
-      msg = this.bundle.GetStringFromName(msgName);
+      msg = this._bundle.GetStringFromName(msgName);
     }
 
-    title = this.bundle.GetStringFromName(isPrinting ? "print_error_dialog_title"
-                                                     : "printpreview_error_dialog_title");
+    title = this._bundle.GetStringFromName(isPrinting ? "print_error_dialog_title"
+                                                      : "printpreview_error_dialog_title");
 
     Services.prompt.alert(window, title, msg);
   },
 
   receiveMessage(aMessage) {
     if (aMessage.name == "Printing:Error") {
-      this.displayPrintingError(aMessage.data.nsresult,
-                                aMessage.data.isPrinting);
+      this._displayPrintingError(aMessage.data.nsresult,
+                                 aMessage.data.isPrinting);
       return undefined;
     }
 
@@ -356,7 +356,7 @@ var PrintUtils = {
     return undefined;
   },
 
-  setPrinterDefaultsForSelectedPrinter(aPSSVC, aPrintSettings) {
+  _setPrinterDefaultsForSelectedPrinter(aPSSVC, aPrintSettings) {
     if (!aPrintSettings.printerName)
       aPrintSettings.printerName = aPSSVC.defaultPrinterName;
 
@@ -376,7 +376,7 @@ var PrintUtils = {
                     .getService(Ci.nsIPrintSettingsService);
       if (gPrintSettingsAreGlobal) {
         printSettings = PSSVC.globalPrintSettings;
-        this.setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
+        this._setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
       } else {
         printSettings = PSSVC.newPrintSettings;
       }
@@ -396,11 +396,15 @@ var PrintUtils = {
       }
 
       // delay the print preview to show the content of the progress dialog
-      setTimeout(function() { PrintUtils.enterPrintPreview(); }, 0);
+      setTimeout(function() { PrintUtils._enterPrintPreview(); }, 0);
     },
 
     QueryInterface: ChromeUtils.generateQI(["nsIObserver",
                                             "nsISupportsWeakReference"]),
+  },
+
+  get shouldSimplify() {
+    return this._shouldSimplify;
   },
 
   setSimplifiedMode(shouldSimplify) {
@@ -421,7 +425,7 @@ var PrintUtils = {
   _ppBrowsers: new Set(),
   _currentPPBrowser: null,
 
-  enterPrintPreview() {
+  _enterPrintPreview() {
     // Send a message to the print preview browser to initialize
     // print preview. If we happen to have gotten a print preview
     // progress listener from nsIPrintingPromptService.showPrintProgressDialog
@@ -443,7 +447,7 @@ var PrintUtils = {
     }
     this._currentPPBrowser = ppBrowser;
     let mm = ppBrowser.messageManager;
-    let defaultPrinterName = this.getDefaultPrinterName();
+    let defaultPrinterName = this._getDefaultPrinterName();
 
     let sendEnterPreviewMessage = function(browser, simplified) {
       mm.sendAsyncMessage("Printing:Preview:Enter", {
