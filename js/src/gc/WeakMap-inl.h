@@ -96,6 +96,15 @@ void WeakMap<K, V>::trace(JSTracer* trc) {
   if (trc->isMarkingTracer()) {
     MOZ_ASSERT(trc->weakMapAction() == ExpandWeakMaps);
     auto marker = GCMarker::fromTracer(trc);
+
+    // Don't change the map color from black to gray. This can happen when a
+    // barrier pushes the map object onto the black mark stack when it's already
+    // present on the gray mark stack, which is marked later.
+    if (marked && markColor == gc::MarkColor::Black &&
+        marker->markColor() == gc::MarkColor::Gray) {
+      return;
+    }
+
     marked = true;
     markColor = marker->markColor();
     (void)markIteratively(marker);

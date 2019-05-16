@@ -1524,6 +1524,7 @@ bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget) {
     if (hasGrayEntries()) {
       AutoSetMarkColor autoSetGray(*this, MarkColor::Gray);
       do {
+        MOZ_ASSERT(!hasBlackEntries());
         processMarkStackTop(budget);
         if (budget.isOverBudget()) {
           return false;
