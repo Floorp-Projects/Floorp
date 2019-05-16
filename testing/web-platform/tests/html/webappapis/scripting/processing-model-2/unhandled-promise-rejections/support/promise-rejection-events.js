@@ -38,7 +38,7 @@ async_test(function(t) {
   onUnhandledSucceed(t, e, function() { return p; });
 
   p = new Promise(function(_, reject) {
-    postMessageTask(function() {
+    queueTask(function() {
       reject(e);
     });
   });
@@ -279,7 +279,7 @@ async_test(function(t) {
 
   onUnhandledFail(t, function() { return p; });
 
-  postMessageTask(function() {
+  queueTask(function() {
     p = Promise.resolve().then(function() {
       return Promise.reject(e);
     })
@@ -381,7 +381,7 @@ async_test(function(t) {
 
   onUnhandledFail(t, function() { return p; });
 
-  postMessageTask(function() {
+  queueTask(function() {
     p = Promise.reject(e);
     mutationObserverMicrotask(function() {
       Promise.resolve().then(function() {
@@ -394,7 +394,7 @@ async_test(function(t) {
     });
   });
 }, 'microtask nesting: attaching a handler inside a combination of mutationObserverMicrotask + promise microtasks, ' +
-   'all inside a postMessageTask');
+   'all inside a queueTask');
 
 async_test(function(t) {
   var e = new Error();
@@ -441,7 +441,7 @@ async_test(function(t) {
 
   onUnhandledFail(t, function() { return p; });
 
-  postMessageTask(function() {
+  queueTask(function() {
     p = Promise.reject(e);
     Promise.resolve().then(function() {
       mutationObserverMicrotask(function() {
@@ -454,7 +454,7 @@ async_test(function(t) {
     });
   });
 }, 'microtask nesting: attaching a handler inside a combination of promise microtasks + mutationObserverMicrotask, ' +
-   'all inside a postMessageTask');
+   'all inside a queueTask');
 
 async_test(function(t) {
   var e = new Error();
@@ -478,7 +478,7 @@ async_test(function(t) {
    'all inside a setTimeout');
 
 
-// For workers, postMessageTask() involves posting tasks to other threads, so
+// For workers, queueTask() involves posting tasks to other threads, so
 // the following tests don't work there.
 
 if ('document' in self) {
@@ -497,7 +497,7 @@ if ('document' in self) {
       _reject = reject;
     });
     _reject(e);
-    postMessageTask(function() {
+    queueTask(function() {
       var unreached = t.unreached_func('promise should not be fulfilled');
       p.then(unreached, function() {});
     });
@@ -510,12 +510,12 @@ if ('document' in self) {
     onUnhandledFail(t, function() { return p; });
 
     p = Promise.reject(e);
-    postMessageTask(function() {
+    queueTask(function() {
       Promise.resolve().then(function() {
         p.catch(function() {});
       });
     });
-  }, 'delayed handling: postMessageTask after promise creation/rejection, plus promise microtasks, is not too late to ' +
+  }, 'delayed handling: queueTask after promise creation/rejection, plus promise microtasks, is not too late to ' +
      'attach a rejection handler');
 
   async_test(function(t) {
@@ -524,7 +524,7 @@ if ('document' in self) {
 
     onUnhandledFail(t, function() { return p; });
 
-    postMessageTask(function() {
+    queueTask(function() {
       Promise.resolve().then(function() {
         Promise.resolve().then(function() {
           Promise.resolve().then(function() {
@@ -536,7 +536,7 @@ if ('document' in self) {
       });
     });
     p = Promise.reject(e);
-  }, 'delayed handling: postMessageTask before promise creation/rejection, plus many promise microtasks, is not too ' +
+  }, 'delayed handling: queueTask before promise creation/rejection, plus many promise microtasks, is not too ' +
      'late to attach a rejection handler');
 
   async_test(function(t) {
@@ -546,7 +546,7 @@ if ('document' in self) {
     onUnhandledFail(t, function() { return p; });
 
     p = Promise.reject(e);
-    postMessageTask(function() {
+    queueTask(function() {
       Promise.resolve().then(function() {
         Promise.resolve().then(function() {
           Promise.resolve().then(function() {
@@ -557,7 +557,7 @@ if ('document' in self) {
         });
       });
     });
-  }, 'delayed handling: postMessageTask after promise creation/rejection, plus many promise microtasks, is not too ' +
+  }, 'delayed handling: queueTask after promise creation/rejection, plus many promise microtasks, is not too ' +
      'late to attach a rejection handler');
 }
 
@@ -576,8 +576,8 @@ async_test(function(t) {
     _reject = reject;
   });
   _reject(e);
-  postMessageTask(function() {
-    postMessageTask(function() {
+  queueTask(function() {
+    queueTask(function() {
       var unreached = t.unreached_func('promise should not be fulfilled');
       p.then(unreached, function() {});
     });
@@ -591,14 +591,14 @@ async_test(function(t) {
   onUnhandledSucceed(t, e, function() { return p; });
 
   p = Promise.reject(e);
-  postMessageTask(function() {
-    postMessageTask(function() {
+  queueTask(function() {
+    queueTask(function() {
       Promise.resolve().then(function() {
         p.catch(function() {});
       });
     });
   });
-}, 'delayed handling: a nested-postMessageTask after promise creation/rejection, plus promise microtasks, is too ' +
+}, 'delayed handling: a nested-queueTask after promise creation/rejection, plus promise microtasks, is too ' +
    'late to attach a rejection handler');
 
 async_test(function(t) {
@@ -607,8 +607,8 @@ async_test(function(t) {
 
   onUnhandledSucceed(t, e, function() { return p; });
 
-  postMessageTask(function() {
-    postMessageTask(function() {
+  queueTask(function() {
+    queueTask(function() {
       Promise.resolve().then(function() {
         Promise.resolve().then(function() {
           Promise.resolve().then(function() {
@@ -621,7 +621,7 @@ async_test(function(t) {
     });
   });
   p = Promise.reject(e);
-}, 'delayed handling: a nested-postMessageTask before promise creation/rejection, plus many promise microtasks, is ' +
+}, 'delayed handling: a nested-queueTask before promise creation/rejection, plus many promise microtasks, is ' +
    'too late to attach a rejection handler');
 
 async_test(function(t) {
@@ -631,8 +631,8 @@ async_test(function(t) {
   onUnhandledSucceed(t, e, function() { return p; });
 
   p = Promise.reject(e);
-  postMessageTask(function() {
-    postMessageTask(function() {
+  queueTask(function() {
+    queueTask(function() {
       Promise.resolve().then(function() {
         Promise.resolve().then(function() {
           Promise.resolve().then(function() {
@@ -644,7 +644,7 @@ async_test(function(t) {
       });
     });
   });
-}, 'delayed handling: a nested-postMessageTask after promise creation/rejection, plus many promise microtasks, is ' +
+}, 'delayed handling: a nested-queueTask after promise creation/rejection, plus many promise microtasks, is ' +
    'too late to attach a rejection handler');
 
 async_test(function(t) {
@@ -746,9 +746,9 @@ async_test(function(t) {
   addEventListener('unhandledrejection', l);
   ensureCleanup(t, l);
   Promise.reject(e);
-}, 'mutationObserverMicrotask vs. postMessageTask ordering is not disturbed inside unhandledrejection events');
+}, 'mutationObserverMicrotask vs. queueTask ordering is not disturbed inside unhandledrejection events');
 
-// For workers, postMessageTask() involves posting tasks to other threads, so
+// For workers, queueTask() involves posting tasks to other threads, so
 // the following tests don't work there.
 
 if ('document' in self) {
@@ -764,10 +764,10 @@ if ('document' in self) {
 
     var p1 = Promise.reject();
     var p2;
-    postMessageTask(function() {
+    queueTask(function() {
       p2 = Promise.reject();
-      postMessageTask(function() {
-        sequenceOfEvents.push('postMessageTask');
+      queueTask(function() {
+        sequenceOfEvents.push('queueTask');
         checkSequence();
       });
     });
@@ -782,12 +782,12 @@ if ('document' in self) {
     function checkSequence() {
       if (sequenceOfEvents.length === 3) {
         t.step(function() {
-          assert_array_equals(sequenceOfEvents, [p1, 'postMessageTask', p2]);
+          assert_array_equals(sequenceOfEvents, [p1, 'queueTask', p2]);
         });
         t.done();
       }
     }
-  }, 'postMessageTask ordering vs. the task queued for unhandled rejection notification (1)');
+  }, 'queueTask ordering vs. the task queued for unhandled rejection notification (1)');
 
   async_test(function(t) {
     var sequenceOfEvents = [];
@@ -796,10 +796,10 @@ if ('document' in self) {
     ensureCleanup(t, l);
 
     var p2;
-    postMessageTask(function() {
+    queueTask(function() {
       p2 = Promise.reject();
-      postMessageTask(function() {
-        sequenceOfEvents.push('postMessageTask');
+      queueTask(function() {
+        sequenceOfEvents.push('queueTask');
         checkSequence();
       });
     });
@@ -814,12 +814,12 @@ if ('document' in self) {
     function checkSequence() {
       if (sequenceOfEvents.length === 2) {
         t.step(function() {
-          assert_array_equals(sequenceOfEvents, ['postMessageTask', p2]);
+          assert_array_equals(sequenceOfEvents, ['queueTask', p2]);
         });
         t.done();
       }
     }
-  }, 'postMessageTask ordering vs. the task queued for unhandled rejection notification (2)');
+  }, 'queueTask ordering vs. the task queued for unhandled rejection notification (2)');
 
   async_test(function(t) {
     var sequenceOfEvents = [];
@@ -832,7 +832,7 @@ if ('document' in self) {
     var p = Promise.reject();
 
     setTimeout(function() {
-      postMessageTask(function() {
+      queueTask(function() {
         sequenceOfEvents.push('task before catch');
         checkSequence();
       });
@@ -842,7 +842,7 @@ if ('document' in self) {
         checkSequence();
       });
 
-      postMessageTask(function() {
+      queueTask(function() {
         sequenceOfEvents.push('task after catch');
         checkSequence();
       });
@@ -881,21 +881,18 @@ if ('document' in self) {
 // HELPERS
 //
 
-var globalPostMessageCounter = 0;
-
-function postMessageTask(f) {
+// This function queues a task in "DOM manipulation task source" in window
+// context, but not in workers.
+function queueTask(f) {
   if ('document' in self) {
-    var message = 'abusingpostmessageforfunandprofit' + globalPostMessageCounter;
-    globalPostMessageCounter++;
-    var l = function(ev) {
-      if (ev.data === message) {
-        removeEventListener('message', l);
-        f();
-      }
+    var d = document.createElement("details");
+    d.ontoggle = function() {
+      f();
     };
-    addEventListener('message', l);
-    postMessage(message, '*');
+    d.setAttribute("open", "");
   } else {
+    // We need to fix this to use something that can queue tasks in
+    // "DOM manipulation task source" to ensure the order is correct
     var channel = new MessageChannel();
     channel.port1.onmessage = function() { channel.port1.close(); f(); };
     channel.port2.postMessage('abusingpostmessageforfunandprofit');
