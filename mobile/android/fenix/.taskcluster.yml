@@ -155,7 +155,6 @@ tasks:
               - {$eval: 'default_task_definition'}
               - scopes:
                   - ${assume_scope_prefix}:branch:${short_head_branch}
-                  - ${assume_scope_prefix}:pull-request
                 payload:
                   command:
                     - >-
