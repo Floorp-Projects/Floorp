@@ -38,6 +38,8 @@ function argumentsFactory(args) {
   const branches = defaultBranches.map(branchFactory);
   return {
     slug: "test",
+    userFacingName: "Super Cool Test Experiment",
+    userFacingDescription: "Test experiment from browser_actions_PreferenceExperimentAction.",
     isHighPopulation: false,
     ...args,
     branches,

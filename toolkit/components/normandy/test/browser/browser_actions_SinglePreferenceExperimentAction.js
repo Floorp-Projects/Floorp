@@ -68,6 +68,8 @@ decorate_task(
       name: "preference-experiment",
       arguments: {
         slug: "test",
+        userFacingName: null,
+        userFacingDescription: null,
         isHighPopulation: false,
         branches: [{
           slug: "branch1",

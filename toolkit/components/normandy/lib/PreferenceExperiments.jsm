@@ -22,6 +22,14 @@
  * @typedef {Object} Experiment
  * @property {string} name
  *   Unique name of the experiment
+ * @property {string|null} userFacingName
+ *   A user-friendly name for the experiment. Null on old-style
+ *   single-preference experiments, which do not have a
+ *   userFacingName.
+ * @property {string|null} userFacingDescription
+ *   A user-friendly description of the experiment. Null on old-style
+ *   single-preference experiments, which do not have a
+ *   userFacingDescription.
  * @property {string} branch
  *   Experiment branch that the user was matched to
  * @property {boolean} expired
@@ -383,6 +391,8 @@ var PreferenceExperiments = {
     branch,
     preferences,
     experimentType = "exp",
+    userFacingName = null,
+    userFacingDescription = null,
   }) {
     log.debug(`PreferenceExperiments.start(${name}, ${branch})`);
 
@@ -457,6 +467,8 @@ var PreferenceExperiments = {
       lastSeen: new Date().toJSON(),
       preferences,
       experimentType,
+      userFacingName,
+      userFacingDescription,
     };
 
     store.data.experiments[name] = experiment;
