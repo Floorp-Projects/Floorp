@@ -137,7 +137,7 @@
 }
 
 .urlbarView-tags,
-.urlbarView-secondary {
+.urlbarView-title:not(:empty) ~ .urlbarView-secondary {
   font-size: .85em;
 }
 
