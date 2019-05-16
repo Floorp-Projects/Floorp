@@ -3315,13 +3315,6 @@ exports.CSS_PROPERTIES = {
       "mask-size",
       "mask-composite",
       "mask-image",
-      "x",
-      "y",
-      "cx",
-      "cy",
-      "rx",
-      "ry",
-      "r",
       "-moz-box-align",
       "-moz-box-direction",
       "-moz-box-flex",
@@ -5837,32 +5830,6 @@ exports.CSS_PROPERTIES = {
       "wait",
       "zoom-in",
       "zoom-out"
-    ]
-  },
-  "cx": {
-    "isInherited": false,
-    "subproperties": [
-      "cx"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "revert",
-      "unset"
-    ]
-  },
-  "cy": {
-    "isInherited": false,
-    "subproperties": [
-      "cy"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "revert",
-      "unset"
     ]
   },
   "direction": {
@@ -8948,19 +8915,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "r": {
-    "isInherited": false,
-    "subproperties": [
-      "r"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "revert",
-      "unset"
-    ]
-  },
   "resize": {
     "isInherited": false,
     "subproperties": [
@@ -9037,34 +8991,6 @@ exports.CSS_PROPERTIES = {
       "over",
       "revert",
       "under",
-      "unset"
-    ]
-  },
-  "rx": {
-    "isInherited": false,
-    "subproperties": [
-      "rx"
-    ],
-    "supports": [],
-    "values": [
-      "auto",
-      "inherit",
-      "initial",
-      "revert",
-      "unset"
-    ]
-  },
-  "ry": {
-    "isInherited": false,
-    "subproperties": [
-      "ry"
-    ],
-    "supports": [],
-    "values": [
-      "auto",
-      "inherit",
-      "initial",
-      "revert",
       "unset"
     ]
   },
@@ -10518,32 +10444,6 @@ exports.CSS_PROPERTIES = {
       "vertical-rl"
     ]
   },
-  "x": {
-    "isInherited": false,
-    "subproperties": [
-      "x"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "revert",
-      "unset"
-    ]
-  },
-  "y": {
-    "isInherited": false,
-    "subproperties": [
-      "y"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "revert",
-      "unset"
-    ]
-  },
   "z-index": {
     "isInherited": false,
     "subproperties": [
@@ -10697,38 +10597,6 @@ exports.PREFERENCES = [
     "layout.css.moz-binding.content.enabled"
   ],
   [
-    "scroll-margin-block-end",
-    "layout.css.scroll-snap-v1.enabled"
-  ],
-  [
-    "scroll-margin-block-start",
-    "layout.css.scroll-snap-v1.enabled"
-  ],
-  [
-    "scroll-margin-bottom",
-    "layout.css.scroll-snap-v1.enabled"
-  ],
-  [
-    "scroll-margin-inline-end",
-    "layout.css.scroll-snap-v1.enabled"
-  ],
-  [
-    "scroll-margin-inline-start",
-    "layout.css.scroll-snap-v1.enabled"
-  ],
-  [
-    "scroll-margin-left",
-    "layout.css.scroll-snap-v1.enabled"
-  ],
-  [
-    "scroll-margin-right",
-    "layout.css.scroll-snap-v1.enabled"
-  ],
-  [
-    "scroll-margin-top",
-    "layout.css.scroll-snap-v1.enabled"
-  ],
-  [
     "scroll-padding-block-end",
     "layout.css.scroll-snap-v1.enabled"
   ],
@@ -10758,6 +10626,38 @@ exports.PREFERENCES = [
   ],
   [
     "scroll-padding-top",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-margin-block-end",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-margin-block-start",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-margin-bottom",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-margin-inline-end",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-margin-inline-start",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-margin-left",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-margin-right",
+    "layout.css.scroll-snap-v1.enabled"
+  ],
+  [
+    "scroll-margin-top",
     "layout.css.scroll-snap-v1.enabled"
   ],
   [
