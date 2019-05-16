@@ -65,7 +65,7 @@
       var searchStr = "text inside an input element";
       await promiseEnterStringIntoFindField(searchStr);
       is(document.commandDispatcher.focusedElement,
-         gFindBar._findField.inputField, "Find field isn't focused");
+         gFindBar._findField, "Find field isn't focused");
 
       // Make sure "find again" correctly transfers focus to the content element
       // when the find bar is closed.
@@ -107,7 +107,7 @@
         let event = document.createEvent("KeyboardEvent");
         event.initKeyEvent("keypress", true, true, null, false, false,
                            false, false, 0, str.charCodeAt(i));
-        gFindBar._findField.inputField.dispatchEvent(event);
+        gFindBar._findField.dispatchEvent(event);
       }
       return promise;
     }
