@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -20,21 +21,25 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionMessageView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingHeaderViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingSectionHeaderViewHolder
 import java.lang.IllegalStateException
 
 sealed class AdapterItem {
     data class TabHeader(val isPrivate: Boolean, val hasTabs: Boolean) : AdapterItem()
     object NoTabMessage : AdapterItem()
     data class TabItem(val tab: Tab) : AdapterItem()
-    object PrivateBrowsingDescription : AdapterItem()
     object SaveTabGroup : AdapterItem()
     object DeleteTabs : AdapterItem()
+
+    object PrivateBrowsingDescription : AdapterItem()
+
     object CollectionHeader : AdapterItem()
     object NoCollectionMessage : AdapterItem()
     data class CollectionItem(val collection: TabCollection) : AdapterItem()
     data class TabInCollectionItem(val collection: TabCollection, val tab: Tab, val isLastTab: Boolean) : AdapterItem()
 
     object OnboardingHeader : AdapterItem()
+    data class OnboardingSectionHeader(val labelBuilder: (Context) -> String) : AdapterItem()
 
     val viewType: Int
         get() = when (this) {
@@ -49,6 +54,7 @@ sealed class AdapterItem {
             is CollectionItem -> CollectionViewHolder.LAYOUT_ID
             is TabInCollectionItem -> TabInCollectionViewHolder.LAYOUT_ID
             OnboardingHeader -> OnboardingHeaderViewHolder.LAYOUT_ID
+            is OnboardingSectionHeader -> OnboardingSectionHeaderViewHolder.LAYOUT_ID
         }
 }
 
@@ -80,6 +86,7 @@ class SessionControlAdapter(
             CollectionViewHolder.LAYOUT_ID -> CollectionViewHolder(view, actionEmitter, job)
             TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, actionEmitter, job)
             OnboardingHeaderViewHolder.LAYOUT_ID -> OnboardingHeaderViewHolder(view)
+            OnboardingSectionHeaderViewHolder.LAYOUT_ID -> OnboardingSectionHeaderViewHolder(view)
             else -> throw IllegalStateException()
         }
     }
@@ -114,6 +121,9 @@ class SessionControlAdapter(
                 val item = items[position] as AdapterItem.TabInCollectionItem
                 holder.bindSession(item.collection, item.tab, item.isLastTab)
             }
+            is OnboardingSectionHeaderViewHolder -> holder.bind(
+                (items[position] as AdapterItem.OnboardingSectionHeader).labelBuilder
+            )
         }
     }
 }

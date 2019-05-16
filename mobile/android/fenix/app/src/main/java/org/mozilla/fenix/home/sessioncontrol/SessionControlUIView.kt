@@ -61,7 +61,12 @@ private fun privateModeAdapterItems(tabs: List<Tab>): List<AdapterItem> {
 }
 
 private fun onboardingAdapterItems(): List<AdapterItem> = listOf(
-    AdapterItem.OnboardingHeader
+    AdapterItem.OnboardingHeader,
+    AdapterItem.OnboardingSectionHeader() { it.getString(R.string.onboarding_fxa_section_header) },
+    AdapterItem.OnboardingSectionHeader() {
+        val appName = it.getString(R.string.app_name)
+        it.getString(R.string.onboarding_feature_section_header, appName)
+    }
 )
 
 private fun SessionControlState.toAdapterList(): List<AdapterItem> = when (mode) {
