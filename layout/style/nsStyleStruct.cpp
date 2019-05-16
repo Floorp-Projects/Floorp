@@ -480,12 +480,12 @@ nsChangeHint nsStyleOutline::CalcDifference(
 //
 nsStyleList::nsStyleList(const Document& aDocument)
     : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE),
+      mQuotes{StyleArcSlice<StyleQuotePair>(Servo_Quotes_GetInitialValue())},
       mMozListReversed(StyleMozListReversed::False) {
   MOZ_COUNT_CTOR(nsStyleList);
   MOZ_ASSERT(NS_IsMainThread());
 
   mCounterStyle = nsGkAtoms::disc;
-  mQuotes = Servo_Quotes_GetInitialValue().Consume();
 }
 
 nsStyleList::~nsStyleList() { MOZ_COUNT_DTOR(nsStyleList); }
@@ -514,8 +514,7 @@ nsChangeHint nsStyleList::CalcDifference(
     const nsStyleList& aNewData, const nsStyleDisplay& aOldDisplay) const {
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
-  if (mQuotes != aNewData.mQuotes &&
-      !Servo_Quotes_Equal(mQuotes.get(), aNewData.mQuotes.get())) {
+  if (mQuotes != aNewData.mQuotes) {
     return nsChangeHint_ReconstructFrame;
   }
   nsChangeHint hint = nsChangeHint(0);
