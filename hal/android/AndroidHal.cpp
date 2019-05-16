@@ -103,7 +103,7 @@ void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
 
   int32_t colorDepth, pixelDepth;
   int16_t angle;
-  ScreenOrientation orientation;
+  hal::ScreenOrientation orientation;
   nsCOMPtr<nsIScreen> screen;
 
   int32_t rectX, rectY, rectWidth, rectHeight;
@@ -113,7 +113,8 @@ void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
   screen->GetRect(&rectX, &rectY, &rectWidth, &rectHeight);
   screen->GetColorDepth(&colorDepth);
   screen->GetPixelDepth(&pixelDepth);
-  orientation = static_cast<ScreenOrientation>(bridge->GetScreenOrientation());
+  orientation =
+    static_cast<hal::ScreenOrientation>(bridge->GetScreenOrientation());
   angle = bridge->GetScreenAngle();
 
   *aScreenConfiguration =
@@ -121,11 +122,12 @@ void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
                                orientation, angle, colorDepth, pixelDepth);
 }
 
-bool LockScreenOrientation(const ScreenOrientation& aOrientation) {
+bool LockScreenOrientation(const hal::ScreenOrientation& aOrientation) {
   // Force the default orientation to be portrait-primary.
-  ScreenOrientation orientation = aOrientation == eScreenOrientation_Default
-                                      ? eScreenOrientation_PortraitPrimary
-                                      : aOrientation;
+  hal::ScreenOrientation orientation =
+      aOrientation == eScreenOrientation_Default
+          ? eScreenOrientation_PortraitPrimary
+          : aOrientation;
 
   switch (orientation) {
     // The Android backend only supports these orientations.
