@@ -23,7 +23,7 @@ static constexpr const size_t kStaticRefcount =
     std::numeric_limits<size_t>::max();
 static constexpr const size_t kMaxRefcount =
     std::numeric_limits<intptr_t>::max();
-static constexpr const uint32_t kArcSliceCanary = 0xf3f3f3f3;
+static constexpr const uint64_t kArcSliceCanary = 0xf3f3f3f3f3f3f3f3;
 
 #define ASSERT_CANARY \
   MOZ_DIAGNOSTIC_ASSERT(_0.ptr->data.header.header == kArcSliceCanary, "Uh?");
