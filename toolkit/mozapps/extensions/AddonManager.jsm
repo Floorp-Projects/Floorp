@@ -1867,12 +1867,21 @@ var AddonManagerInternal = {
 
         AddonManagerInternal.startInstall(aBrowser, aInstallingPrincipal.URI, aInstall);
       };
-      if (!this.isInstallAllowed(aMimetype, aInstallingPrincipal)) {
-        this.installNotifyObservers("addon-install-blocked", topBrowser,
-                                    aInstallingPrincipal.URI, aInstall,
-                                    () => startInstall("other"));
-      } else {
+
+      let installAllowed = this.isInstallAllowed(aMimetype, aInstallingPrincipal);
+      let installPerm = Services.perms.testPermissionFromPrincipal(aInstallingPrincipal, "install");
+
+      if (installAllowed) {
         startInstall("AMO");
+      } else if (installPerm === Ci.nsIPermissionManager.DENY_ACTION) {
+        // Block without prompt
+        aInstall.cancel();
+        this.installNotifyObservers("addon-install-blocked-silent", topBrowser, aInstallingPrincipal.URI, aInstall);
+      } else {
+        // Block with prompt
+        this.installNotifyObservers("addon-install-blocked", topBrowser,
+          aInstallingPrincipal.URI, aInstall,
+          () => startInstall("other"));
       }
     } catch (e) {
       // In the event that the weblistener throws during instantiation or when

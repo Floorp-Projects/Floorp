@@ -299,11 +299,6 @@ var SitePermissions = {
 
       // filter out unknown permissions
       if (gPermissionObject[permission.type]) {
-        // XXX Bug 1303108 - Control Center should only show non-default permissions
-        if (permission.type == "install") {
-          continue;
-        }
-
         // Hide canvas permission when privacy.resistFingerprinting is false.
         if ((permission.type == "canvas") && !this.resistFingerprinting) {
           continue;
@@ -919,9 +914,8 @@ var gPermissionObject = {
   "install": {
     getDefault() {
       return Services.prefs.getBoolPref("xpinstall.whitelist.required") ?
-               SitePermissions.BLOCK : SitePermissions.ALLOW;
+               SitePermissions.UNKNOWN : SitePermissions.ALLOW;
     },
-    states: [ SitePermissions.ALLOW, SitePermissions.BLOCK ],
   },
 
   "geo": {
