@@ -2600,7 +2600,12 @@ BarProp* nsGlobalWindowInner::GetScrollbars(ErrorResult& aError) {
 }
 
 bool nsGlobalWindowInner::GetClosed(ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(GetClosedOuter, (), aError, false);
+  // If we're called from JS (which is the only way we should be getting called
+  // here) and we reach this point, that means our JS global is the current
+  // target of the WindowProxy, which means that we are the "current inner"
+  // of our outer. So if FORWARD_TO_OUTER fails to forward, that means the
+  // outer is already torn down, which corresponds to the closed state.
+  FORWARD_TO_OUTER(GetClosedOuter, (), true);
 }
 
 nsDOMWindowList* nsGlobalWindowInner::GetFrames() {
