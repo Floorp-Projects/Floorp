@@ -19,7 +19,7 @@ interface mozIStorageBindingParamsArray;
  * (mozIStorageStatement) that can be used for both synchronous and asynchronous
  * purposes.
  */
-[scriptable, uuid(16ca67aa-1325-43e2-aac7-859afd1590b2)]
+[scriptable, builtinclass, uuid(16ca67aa-1325-43e2-aac7-859afd1590b2)]
 interface mozIStorageBaseStatement : mozIStorageBindingParams {
   /**
    * Finalizes a statement so you can successfully close a database connection.
