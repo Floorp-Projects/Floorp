@@ -207,13 +207,14 @@ class TaskBuilder(object):
                 'symbol': 'dependencies',
                 'tier': 1,
             },
+            routes=['index.project.mobile.fenix.v2.branch.master.latest'],
             artifacts={
                 'public/dependencies.txt': {
                     "type": 'file',
                     "path": '/opt/fenix/dependencies.txt',
                     "expires": taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
                 }
-            }
+            },
         )
 
     def _craft_clean_gradle_task(
