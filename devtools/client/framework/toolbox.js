@@ -24,7 +24,6 @@ var {gDevTools} = require("devtools/client/framework/devtools");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
-var { attachThread } = require("./attach-thread");
 var { DOMHelpers } = require("resource://devtools/client/shared/DOMHelpers.jsm");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(Ci.nsISupports)
@@ -486,6 +485,37 @@ Toolbox.prototype = {
     this.threadClient.removeListener("resumed", this._onResumedState);
   },
 
+  _attachAndResumeThread: async function() {
+    const threadOptions = {
+      autoBlackBox: false,
+      ignoreFrameEnvironment: true,
+      pauseOnExceptions:
+        Services.prefs.getBoolPref("devtools.debugger.pause-on-exceptions"),
+      ignoreCaughtExceptions:
+        Services.prefs.getBoolPref("devtools.debugger.ignore-caught-exceptions"),
+    };
+    const [, threadClient] = await this._target.attachThread(threadOptions);
+
+    try {
+      await threadClient.resume();
+    } catch (ex) {
+      // Interpret a possible error thrown by ThreadActor.resume
+      if (ex.error === "wrongOrder") {
+        const box = this.getNotificationBox();
+        box.appendNotification(
+          L10N.getStr("toolbox.resumeOrderWarning"),
+          "wrong-resume-order",
+          "",
+          box.PRIORITY_WARNING_HIGH
+        );
+      } else {
+        throw ex;
+      }
+    }
+
+    return threadClient;
+  },
+
   /**
    * Open the toolbox
    */
@@ -525,26 +555,7 @@ Toolbox.prototype = {
         ]);
       }
 
-      // Attach the thread
-      this._threadClient = await attachThread(this._target);
-
-      try {
-        await this._threadClient.resume();
-      } catch (ex) {
-        // Interpret a possible error thrown by ThreadActor.resume
-        if (ex.error === "wrongOrder") {
-          const box = this.getNotificationBox();
-          box.appendNotification(
-            L10N.getStr("toolbox.resumeOrderWarning"),
-            "wrong-resume-order",
-            "",
-            box.PRIORITY_WARNING_HIGH
-          );
-        } else {
-          throw ex;
-        }
-      }
-
+      this._threadClient = await this._attachAndResumeThread();
       this._startThreadClientListeners();
 
       await domReady;
