@@ -55,19 +55,6 @@ const SUPPORTED_TARGET_PANE_BY_RUNTIME = {
 };
 
 /**
- * If extension debug setting is needed for given runtime type, return true.
- *
- * @param {String} runtimeType
- * @return {bool} true: needed
- */
-function isExtensionDebugSettingNeeded(runtimeType) {
-  // Debugging local addons for This Firefox reuses the Browser Toolbox, which requires
-  // some preferences to be enabled.
-  return runtimeType === RUNTIMES.THIS_FIREFOX;
-}
-exports.isExtensionDebugSettingNeeded = isExtensionDebugSettingNeeded;
-
-/**
  * A debug target pane is more specialized than a debug target. For instance EXTENSION is
  * a DEBUG_TARGET but INSTALLED_EXTENSION and TEMPORARY_EXTENSION are DEBUG_TARGET_PANES.
  */
