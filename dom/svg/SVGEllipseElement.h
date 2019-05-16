@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_SVGEllipseElement_h
 #define mozilla_dom_SVGEllipseElement_h
 
+#include "nsCSSPropertyID.h"
 #include "SVGAnimatedLength.h"
 #include "SVGGeometryElement.h"
 
@@ -47,6 +48,7 @@ class SVGEllipseElement final : public SVGEllipseElementBase {
 
   static bool IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
                                     const ComputedStyle& aOldStyle);
+  static nsCSSPropertyID GetCSSPropertyIdForAttrEnum(uint8_t aAttrEnum);
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedLength> Cx();
