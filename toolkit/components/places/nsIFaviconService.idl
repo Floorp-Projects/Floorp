@@ -168,8 +168,6 @@ interface nsIFaviconService : nsISupports
    *        URI of the favicon whose data is being set.
    * @param aData
    *        Binary contents of the favicon to save
-   * @param aDataLength
-   *        Length of binary data
    * @param aMimeType
    *        MIME type of the data to store.  This is important so that we know
    *        what to report when the favicon is used.  You should always set this
@@ -181,8 +179,7 @@ interface nsIFaviconService : nsISupports
    *         Thrown if the favicon is overbloated and won't be saved to the db.
    */
   void replaceFaviconData(in nsIURI aFaviconURI,
-                          [const,array,size_is(aDataLen)] in octet aData,
-                          in unsigned long aDataLen,
+                          in Array<octet> aData,
                           in AUTF8String aMimeType,
                           [optional] in PRTime aExpiration);
 
