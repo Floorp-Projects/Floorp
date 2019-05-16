@@ -642,7 +642,6 @@ pub enum OverflowClipBox {
 #[derive(
     Clone,
     Debug,
-    Default,
     MallocSizeOf,
     PartialEq,
     SpecifiedValueInfo,
@@ -651,38 +650,38 @@ pub enum OverflowClipBox {
     ToResolvedValue,
     ToShmem,
 )]
-#[css(comma)]
-#[repr(C)]
-/// Provides a rendering hint to the user agent, stating what kinds of changes
-/// the author expects to perform on the element.
-///
-/// `auto` is represented by an empty `features` list.
+/// Provides a rendering hint to the user agent,
+/// stating what kinds of changes the author expects
+/// to perform on the element
 ///
 /// <https://drafts.csswg.org/css-will-change/#will-change>
-pub struct WillChange {
-    /// The features that are supposed to change.
-    ///
-    /// TODO(emilio): Consider using ArcSlice since we just clone them from the
-    /// specified value? That'd save an allocation, which could be worth it.
-    #[css(iterable, if_empty = "auto")]
-    features: crate::OwnedSlice<CustomIdent>,
-    /// A bitfield with the kind of change that the value will create, based
-    /// on the above field.
-    #[css(skip)]
-    bits: WillChangeBits,
+pub enum WillChange {
+    /// Expresses no particular intent
+    Auto,
+    /// <custom-ident>
+    #[css(comma)]
+    AnimateableFeatures {
+        /// The features that are supposed to change.
+        #[css(iterable)]
+        features: Box<[CustomIdent]>,
+        /// A bitfield with the kind of change that the value will create, based
+        /// on the above field.
+        #[css(skip)]
+        bits: WillChangeBits,
+    },
 }
 
 impl WillChange {
     #[inline]
     /// Get default value of `will-change` as `auto`
-    pub fn auto() -> Self {
-        Self::default()
+    pub fn auto() -> WillChange {
+        WillChange::Auto
     }
 }
 
 bitflags! {
     /// The change bits that we care about.
-    #[derive(Default, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
     #[repr(C)]
     pub struct WillChangeBits: u8 {
         /// Whether the stacking context will change.
@@ -747,7 +746,7 @@ impl Parse for WillChange {
             .try(|input| input.expect_ident_matching("auto"))
             .is_ok()
         {
-            return Ok(Self::default());
+            return Ok(WillChange::Auto);
         }
 
         let mut bits = WillChangeBits::empty();
@@ -768,8 +767,8 @@ impl Parse for WillChange {
             Ok(ident)
         })?;
 
-        Ok(Self {
-            features: custom_idents.into(),
+        Ok(WillChange::AnimateableFeatures {
+            features: custom_idents.into_boxed_slice(),
             bits,
         })
     }

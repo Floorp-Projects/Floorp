@@ -5,7 +5,6 @@
 //! Value information for devtools.
 
 use crate::arc_slice::ArcSlice;
-use crate::owned_slice::OwnedSlice;
 use servo_arc::Arc;
 use std::ops::Range;
 use std::sync::Arc as StdArc;
@@ -84,7 +83,6 @@ impl SpecifiedValueInfo for u16 {}
 impl SpecifiedValueInfo for u32 {}
 impl SpecifiedValueInfo for str {}
 impl SpecifiedValueInfo for String {}
-impl SpecifiedValueInfo for crate::owned_str::OwnedStr {}
 
 #[cfg(feature = "servo")]
 impl SpecifiedValueInfo for ::servo_atoms::Atom {}
@@ -116,7 +114,6 @@ macro_rules! impl_generic_specified_value_info {
     };
 }
 impl_generic_specified_value_info!(Option<T>);
-impl_generic_specified_value_info!(OwnedSlice<T>);
 impl_generic_specified_value_info!(Vec<T>);
 impl_generic_specified_value_info!(Arc<T>);
 impl_generic_specified_value_info!(StdArc<T>);

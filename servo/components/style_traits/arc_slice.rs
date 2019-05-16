@@ -5,7 +5,7 @@
 //! A thin atomically-reference-counted slice.
 
 use servo_arc::ThinArc;
-use std::{iter, mem};
+use std::mem;
 use std::ops::Deref;
 use std::ptr::NonNull;
 
@@ -34,26 +34,12 @@ impl<T> Deref for ArcSlice<T> {
     }
 }
 
-lazy_static! {
-    // ThinArc doesn't support alignments greater than align_of::<u64>.
-    static ref EMPTY_ARC_SLICE: ArcSlice<u64> = {
-        ArcSlice(ThinArc::from_header_and_iter(ARC_SLICE_CANARY, iter::empty()))
-    };
-}
-
-impl<T> Default for ArcSlice<T> {
-    #[allow(unsafe_code)]
-    fn default() -> Self {
-        debug_assert!(
-            mem::align_of::<T>() <= mem::align_of::<u64>(),
-            "Need to increase the alignment of EMPTY_ARC_SLICE"
-        );
-        unsafe {
-            let empty: ArcSlice<_> = EMPTY_ARC_SLICE.clone();
-            mem::transmute(empty)
-        }
-    }
-}
+/// The inner pointer of an ArcSlice<T>, to be sent via FFI.
+/// The type of the pointer is a bit of a lie, we just want to preserve the type
+/// but these pointers cannot be constructed outside of this crate, so we're
+/// good.
+#[repr(C)]
+pub struct ForgottenArcSlicePtr<T>(NonNull<T>);
 
 impl<T> ArcSlice<T> {
     /// Creates an Arc for a slice using the given iterator to generate the
@@ -63,9 +49,6 @@ impl<T> ArcSlice<T> {
     where
         I: Iterator<Item = T> + ExactSizeIterator,
     {
-        if items.len() == 0 {
-            return Self::default();
-        }
         ArcSlice(ThinArc::from_header_and_iter(ARC_SLICE_CANARY, items))
     }
 
@@ -80,21 +63,4 @@ impl<T> ArcSlice<T> {
         mem::forget(self);
         ret
     }
-
-    /// Leaks an empty arc slice pointer, and returns it. Only to be used to
-    /// construct ArcSlices from FFI.
-    #[inline]
-    pub fn leaked_empty_ptr() -> *mut std::os::raw::c_void {
-        let empty: ArcSlice<_> = EMPTY_ARC_SLICE.clone();
-        let ptr = empty.0.ptr();
-        std::mem::forget(empty);
-        ptr as *mut _
-    }
 }
-
-/// The inner pointer of an ArcSlice<T>, to be sent via FFI.
-/// The type of the pointer is a bit of a lie, we just want to preserve the type
-/// but these pointers cannot be constructed outside of this crate, so we're
-/// good.
-#[repr(C)]
-pub struct ForgottenArcSlicePtr<T>(NonNull<T>);

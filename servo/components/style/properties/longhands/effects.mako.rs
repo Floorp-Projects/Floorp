@@ -23,7 +23,6 @@ ${helpers.predefined_type(
     "BoxShadow",
     None,
     vector=True,
-    simple_vector_bindings=True,
     animation_value_type="AnimatedBoxShadowList",
     vector_animation_type="with_zero",
     extra_prefixes="webkit",

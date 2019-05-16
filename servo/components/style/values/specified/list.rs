@@ -10,6 +10,7 @@ use crate::values::generics::CounterStyleOrNone;
 #[cfg(feature = "gecko")]
 use crate::values::CustomIdent;
 use cssparser::{Parser, Token};
+use servo_arc::Arc;
 use style_traits::{ParseError, StyleParseErrorKind};
 
 /// Specified and computed `list-style-type` property.
@@ -95,20 +96,18 @@ impl Parse for ListStyleType {
     ToResolvedValue,
     ToShmem,
 )]
-#[repr(C)]
 pub struct QuotePair {
     /// The opening quote.
-    pub opening: crate::OwnedStr,
+    pub opening: Box<str>,
 
     /// The closing quote.
-    pub closing: crate::OwnedStr,
+    pub closing: Box<str>,
 }
 
 /// Specified and computed `quotes` property.
 #[derive(
     Clone,
     Debug,
-    Default,
     MallocSizeOf,
     PartialEq,
     SpecifiedValueInfo,
@@ -117,11 +116,10 @@ pub struct QuotePair {
     ToResolvedValue,
     ToShmem,
 )]
-#[repr(C)]
 pub struct Quotes(
     #[css(iterable, if_empty = "none")]
     #[ignore_malloc_size_of = "Arc"]
-    pub crate::ArcSlice<QuotePair>,
+    pub Arc<Box<[QuotePair]>>,
 );
 
 impl Parse for Quotes {
@@ -133,26 +131,24 @@ impl Parse for Quotes {
             .try(|input| input.expect_ident_matching("none"))
             .is_ok()
         {
-            return Ok(Self::default());
+            return Ok(Quotes(Arc::new(Box::new([]))));
         }
 
         let mut quotes = Vec::new();
         loop {
             let location = input.current_source_location();
             let opening = match input.next() {
-                Ok(&Token::QuotedString(ref value)) => {
-                    value.as_ref().to_owned().into()
-                },
+                Ok(&Token::QuotedString(ref value)) => value.as_ref().to_owned().into_boxed_str(),
                 Ok(t) => return Err(location.new_unexpected_token_error(t.clone())),
                 Err(_) => break,
             };
 
-            let closing = input.expect_string()?.as_ref().to_owned().into();
+            let closing = input.expect_string()?.as_ref().to_owned().into_boxed_str();
             quotes.push(QuotePair { opening, closing });
         }
 
         if !quotes.is_empty() {
-            Ok(Quotes(crate::ArcSlice::from_iter(quotes.into_iter())))
+            Ok(Quotes(Arc::new(quotes.into_boxed_slice())))
         } else {
             Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
         }

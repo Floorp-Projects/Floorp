@@ -118,7 +118,7 @@ class AnonymousCounterStyle final : public CounterStyle {
 
   bool IsSingleString() const { return mSingleString; }
   uint8_t GetSystem() const { return mSystem; }
-  Span<const nsString> GetSymbols() const { return MakeSpan(mSymbols); }
+  const nsTArray<nsString>& GetSymbols() const { return mSymbols; }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnonymousCounterStyle)
 

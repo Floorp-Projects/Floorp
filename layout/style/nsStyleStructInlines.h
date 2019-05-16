@@ -35,6 +35,10 @@ inline imgIContainer* nsStyleImage::GetSubImage(uint8_t aIndex) const {
   return (mCachedBIData) ? mCachedBIData->GetSubImage(aIndex) : nullptr;
 }
 
+bool nsStyleText::HasTextShadow() const { return mTextShadow; }
+
+nsCSSShadowArray* nsStyleText::GetTextShadow() const { return mTextShadow; }
+
 bool nsStyleText::NewlineIsSignificant(const nsTextFrame* aContextFrame) const {
   NS_ASSERTION(aContextFrame->StyleText() == this, "unexpected aContextFrame");
   return NewlineIsSignificantStyle() &&
@@ -131,7 +135,7 @@ bool nsStyleDisplay::IsFixedPosContainingBlockForNonSVGTextFrames(
   // should have the FIXPOS_CB flag set on them.
   NS_ASSERTION(aStyle.StyleDisplay() == this, "unexpected aStyle");
 
-  if (mWillChange.bits & mozilla::StyleWillChangeBits_FIXPOS_CB) {
+  if (mWillChangeBitField & mozilla::StyleWillChangeBits_FIXPOS_CB) {
     return true;
   }
 
@@ -176,7 +180,7 @@ bool nsStyleDisplay::IsAbsPosContainingBlockForNonSVGTextFrames() const {
   // NOTE: Any CSS properties that influence the output of this function
   // should have the ABSPOS_CB set on them.
   return IsAbsolutelyPositionedStyle() || IsRelativelyPositionedStyle() ||
-         (mWillChange.bits & mozilla::StyleWillChangeBits_ABSPOS_CB);
+         (mWillChangeBitField & mozilla::StyleWillChangeBits_ABSPOS_CB);
 }
 
 bool nsStyleDisplay::IsAbsPosContainingBlock(

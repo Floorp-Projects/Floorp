@@ -103,8 +103,8 @@ void nsDisplayButtonBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayButtonBoxShadowOuter::CanBuildWebRenderDisplayItems() {
-  // FIXME(emilio): Is this right? That doesn't make much sense.
-  if (mFrame->StyleEffects()->mBoxShadow.IsEmpty()) {
+  nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+  if (!shadows) {
     return false;
   }
 
@@ -159,26 +159,22 @@ bool nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
     }
   }
 
-  const Span<const StyleBoxShadow> shadows =
-      mFrame->StyleEffects()->mBoxShadow.AsSpan();
-  MOZ_ASSERT(!shadows.IsEmpty());
+  nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+  MOZ_ASSERT(shadows);
 
-  for (const StyleBoxShadow& shadow : Reversed(shadows)) {
-    if (shadow.inset) {
+  for (uint32_t i = shadows->Length(); i > 0; i--) {
+    nsCSSShadowItem* shadow = shadows->ShadowAt(i - 1);
+    if (shadow->mInset) {
       continue;
     }
-    float blurRadius =
-        float(shadow.base.blur.ToAppUnits()) / float(appUnitsPerDevPixel);
+    float blurRadius = float(shadow->mRadius) / float(appUnitsPerDevPixel);
     gfx::Color shadowColor =
-        nsCSSRendering::GetShadowColor(shadow.base, mFrame, 1.0);
+        nsCSSRendering::GetShadowColor(shadow, mFrame, 1.0);
 
     LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
-        nsPoint(shadow.base.horizontal.ToAppUnits(),
-                shadow.base.vertical.ToAppUnits()),
-        appUnitsPerDevPixel);
+        nsPoint(shadow->mXOffset, shadow->mYOffset), appUnitsPerDevPixel);
 
-    float spreadRadius =
-        float(shadow.spread.ToAppUnits()) / float(appUnitsPerDevPixel);
+    float spreadRadius = float(shadow->mSpread) / float(appUnitsPerDevPixel);
 
     aBuilder.PushBoxShadow(deviceBoxRect, deviceClipRect, !BackfaceIsHidden(),
                            deviceBoxRect, wr::ToLayoutVector2D(shadowOffset),
@@ -389,7 +385,7 @@ bool nsDisplayButtonForeground::CreateWebRenderCommands(
 nsresult nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
                                               nsDisplayList* aBackground,
                                               nsDisplayList* aForeground) {
-  if (!mFrame->StyleEffects()->mBoxShadow.IsEmpty()) {
+  if (mFrame->StyleEffects()->mBoxShadow) {
     aBackground->AppendNewToTop<nsDisplayButtonBoxShadowOuter>(aBuilder,
                                                                GetFrame());
   }
