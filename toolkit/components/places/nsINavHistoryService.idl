@@ -794,14 +794,12 @@ interface nsINavHistoryQuery : nsISupports
    *
    * Limit results to the specified list of transition types.
    */
-  void setTransitions([const,array, size_is(count)] in unsigned long transitions,
-                      in unsigned long count);
+  void setTransitions(in Array<unsigned long> transitions);
 
   /**
    * Get the transitions set for this query.
    */
-  void getTransitions([optional] out unsigned long count,
-                      [retval,array,size_is(count)] out unsigned long transitions);
+  Array<unsigned long> getTransitions();
 
   /**
    * Get the count of the set query transitions.

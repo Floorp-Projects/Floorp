@@ -911,19 +911,9 @@ NS_IMETHODIMP nsNavHistoryQuery::SetParents(const char** aGuids,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::GetTransitions(uint32_t* aCount,
-                                                uint32_t** aTransitions) {
-  uint32_t count = mTransitions.Length();
-  uint32_t* transitions = nullptr;
-  if (count > 0) {
-    transitions =
-        reinterpret_cast<uint32_t*>(moz_xmalloc(count * sizeof(uint32_t)));
-    for (uint32_t i = 0; i < count; ++i) {
-      transitions[i] = mTransitions[i];
-    }
-  }
-  *aCount = count;
-  *aTransitions = transitions;
+NS_IMETHODIMP nsNavHistoryQuery::GetTransitions(
+    nsTArray<uint32_t>& aTransitions) {
+  aTransitions = mTransitions;
   return NS_OK;
 }
 
@@ -932,12 +922,11 @@ NS_IMETHODIMP nsNavHistoryQuery::GetTransitionCount(uint32_t* aCount) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::SetTransitions(const uint32_t* aTransitions,
-                                                uint32_t aCount) {
-  if (!mTransitions.ReplaceElementsAt(0, mTransitions.Length(), aTransitions,
-                                      aCount))
+NS_IMETHODIMP nsNavHistoryQuery::SetTransitions(
+    const nsTArray<uint32_t>& aTransitions) {
+  if (!mTransitions.Assign(aTransitions, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
-
+  }
   return NS_OK;
 }
 

@@ -318,15 +318,14 @@ const querySwitches = [
     },
     runs: [
       function(aQuery, aQueryOptions) {
-        aQuery.setTransitions([], 0);
+        aQuery.setTransitions([]);
       },
       function(aQuery, aQueryOptions) {
-        aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD],
-                              1);
+        aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD]);
       },
       function(aQuery, aQueryOptions) {
         aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_TYPED,
-                               Ci.nsINavHistoryService.TRANSITION_BOOKMARK], 2);
+                               Ci.nsINavHistoryService.TRANSITION_BOOKMARK]);
       },
     ],
   },
