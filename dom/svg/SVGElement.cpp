@@ -1072,6 +1072,9 @@ class MOZ_STACK_CLASS MappedAttrParser {
   void ParseMappedAttrValue(nsAtom* aMappedAttrName,
                             const nsAString& aMappedAttrValue);
 
+  void TellStyleAlreadyParsedResult(nsAtom const* aAtom,
+                                    SVGAnimatedLength const& aLength);
+
   // If we've parsed any values for mapped attributes, this method returns the
   // already_AddRefed css::Declaration that incorporates the parsed
   // values. Otherwise, this method returns null.
@@ -1159,6 +1162,18 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
   }
 }
 
+void MappedAttrParser::TellStyleAlreadyParsedResult(
+    nsAtom const* aAtom, SVGAnimatedLength const& aLength) {
+  if (!mDecl) {
+    mDecl = new DeclarationBlock();
+  }
+  nsCSSPropertyID propertyID =
+      nsCSSProps::LookupProperty(nsDependentAtomString(aAtom));
+
+  SVGElement::UpdateDeclarationBlockFromLength(*mDecl, propertyID, aLength,
+                                               SVGElement::ValToUse::Base);
+}
+
 already_AddRefed<DeclarationBlock> MappedAttrParser::GetDeclarationBlock() {
   return mDecl.forget();
 }
@@ -1181,6 +1196,9 @@ void SVGElement::UpdateContentDeclarationBlock() {
   Document* doc = OwnerDoc();
   MappedAttrParser mappedAttrParser(doc->CSSLoader(), doc->GetDocumentURI(),
                                     GetBaseURI(), this);
+
+  bool lengthAffectsStyle =
+      SVGGeometryProperty::ElementMapsLengthsToStyle(this);
 
   for (uint32_t i = 0; i < attrCount; ++i) {
     const nsAttrName* attrName = mAttrs.AttrNameAt(i);
@@ -1210,6 +1228,20 @@ void SVGElement::UpdateContentDeclarationBlock() {
       }
       if (attrName->Atom() == nsGkAtoms::height &&
           !GetAnimatedLength(nsGkAtoms::height)->HasBaseVal()) {
+        continue;
+      }
+    }
+
+    if (lengthAffectsStyle) {
+      auto const* length = GetAnimatedLength(attrName->Atom());
+
+      if (length && length->HasBaseVal()) {
+        // This is an element with geometry property set via SVG attribute,
+        // and the attribute is already successfully parsed. We want to go
+        // through the optimized path to tell the style system the result
+        // directly, rather than let it parse the same thing again.
+        mappedAttrParser.TellStyleAlreadyParsedResult(attrName->Atom(),
+                                                      *length);
         continue;
       }
     }
@@ -1457,7 +1489,6 @@ SVGAnimatedLength* SVGElement::GetAnimatedLength(const nsAtom* aAttrName) {
       return &lengthInfo.mLengths[i];
     }
   }
-  MOZ_ASSERT(false, "no matching length found");
   return nullptr;
 }
 
