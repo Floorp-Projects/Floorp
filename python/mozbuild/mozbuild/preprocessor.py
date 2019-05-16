@@ -27,7 +27,6 @@ from __future__ import absolute_import, print_function
 import sys
 import os
 import re
-import six
 from optparse import OptionParser
 import errno
 from mozbuild.makeutil import Makefile
@@ -247,7 +246,7 @@ class Expression:
         def __repr__(self):
             return self.value.__repr__()
 
-    class ParseError(Exception):
+    class ParseError(StandardError):
         """
         Error raised when parsing fails.
         It has two members, offset and content, which give the offset of the
@@ -297,11 +296,10 @@ class Preprocessor:
 
     def __init__(self, defines=None, marker='#'):
         self.context = Context()
-        self.context.update({
-            'FILE': '',
-            'LINE': 0,
-            'DIRECTORY': os.path.abspath('.')
-            })
+        for k, v in {'FILE': '',
+                     'LINE': 0,
+                     'DIRECTORY': os.path.abspath('.')}.iteritems():
+            self.context[k] = v
         try:
             # Can import globally because of bootstrapping issues.
             from buildconfig import topsrcdir, topobjdir
@@ -321,25 +319,23 @@ class Preprocessor:
         self.checkLineNumbers = False
         self.filters = []
         self.cmds = {}
-        for cmd, level in (
-            ('define', 0),
-            ('undef', 0),
-            ('if', sys.maxint),
-            ('ifdef', sys.maxint),
-            ('ifndef', sys.maxint),
-            ('else', 1),
-            ('elif', 1),
-            ('elifdef', 1),
-            ('elifndef', 1),
-            ('endif', sys.maxint),
-            ('expand', 0),
-            ('literal', 0),
-            ('filter', 0),
-            ('unfilter', 0),
-            ('include', 0),
-            ('includesubst', 0),
-            ('error', 0),
-        ):
+        for cmd, level in {'define': 0,
+                           'undef': 0,
+                           'if': sys.maxint,
+                           'ifdef': sys.maxint,
+                           'ifndef': sys.maxint,
+                           'else': 1,
+                           'elif': 1,
+                           'elifdef': 1,
+                           'elifndef': 1,
+                           'endif': sys.maxint,
+                           'expand': 0,
+                           'literal': 0,
+                           'filter': 0,
+                           'unfilter': 0,
+                           'include': 0,
+                           'includesubst': 0,
+                           'error': 0}.iteritems():
             self.cmds[cmd] = (level, getattr(self, 'do_' + cmd))
         self.out = sys.stdout
         self.setMarker(marker)
@@ -718,7 +714,7 @@ class Preprocessor:
         for i in range(1, len(lst), 2):
             lst[i] = vsubst(lst[i])
         lst.append('\n')  # add back the newline
-        self.write(six.moves.reduce(lambda x, y: x+y, lst, ''))
+        self.write(reduce(lambda x, y: x+y, lst, ''))
 
     def do_literal(self, args):
         self.write(args + '\n')
@@ -792,7 +788,7 @@ class Preprocessor:
         args can either be a file name, or a file-like object.
         Files should be opened, and will be closed after processing.
         """
-        isName = isinstance(args, six.string_types)
+        isName = type(args) == str or type(args) == unicode
         oldCheckLineNumbers = self.checkLineNumbers
         self.checkLineNumbers = False
         if isName:
