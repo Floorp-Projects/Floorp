@@ -3217,24 +3217,6 @@ macro_rules! counter_style_descriptors {
         ]
     } => {
         #[no_mangle]
-        pub unsafe extern "C" fn Servo_CounterStyleRule_GetDescriptor(
-            rule: &RawServoCounterStyleRule,
-            desc: nsCSSCounterDesc,
-            result: &mut structs::nsCSSValue,
-        ) {
-            read_locked_arc(rule, |rule: &CounterStyleRule| {
-                match desc {
-                    $(nsCSSCounterDesc::$desc => {
-                        if let Some(value) = rule.$getter() {
-                            result.set_from(value);
-                        }
-                    })+
-                    $(nsCSSCounterDesc::$i_desc => unreachable!(),)+
-                }
-            });
-        }
-
-        #[no_mangle]
         pub unsafe extern "C" fn Servo_CounterStyleRule_GetDescriptorCssText(
             rule: &RawServoCounterStyleRule,
             desc: nsCSSCounterDesc,
