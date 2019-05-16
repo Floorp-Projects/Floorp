@@ -9,11 +9,9 @@
  */
 
 #include "nsStyleTransformMatrix.h"
-#include "nsCSSValue.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsSVGUtils.h"
-#include "nsCSSKeywords.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "gfxMatrix.h"
@@ -278,98 +276,6 @@ class Interpolate {
   }
 };
 
-/**
- * Calculate 2 matrices by decomposing them with Operator.
- *
- * @param aMatrix1   First matrix, using CSS pixel units.
- * @param aMatrix2   Second matrix, using CSS pixel units.
- * @param aProgress  Coefficient for the Operator.
- */
-template <typename Operator>
-static Matrix4x4 OperateTransformMatrix(const Matrix4x4& aMatrix1,
-                                        const Matrix4x4& aMatrix2,
-                                        double aProgress) {
-  // Decompose both matrices
-
-  Point3D scale1(1, 1, 1), translate1;
-  Point4D perspective1(0, 0, 0, 1);
-  gfxQuaternion rotate1;
-  nsStyleTransformMatrix::ShearArray shear1{0.0f, 0.0f, 0.0f};
-
-  Point3D scale2(1, 1, 1), translate2;
-  Point4D perspective2(0, 0, 0, 1);
-  gfxQuaternion rotate2;
-  nsStyleTransformMatrix::ShearArray shear2{0.0f, 0.0f, 0.0f};
-
-  // Check if both matrices are decomposable.
-  bool wasDecomposed;
-  Matrix matrix2d1, matrix2d2;
-  if (aMatrix1.Is2D(&matrix2d1) && aMatrix2.Is2D(&matrix2d2)) {
-    wasDecomposed =
-        Decompose2DMatrix(matrix2d1, scale1, shear1, rotate1, translate1) &&
-        Decompose2DMatrix(matrix2d2, scale2, shear2, rotate2, translate2);
-  } else {
-    wasDecomposed = Decompose3DMatrix(aMatrix1, scale1, shear1, rotate1,
-                                      translate1, perspective1) &&
-                    Decompose3DMatrix(aMatrix2, scale2, shear2, rotate2,
-                                      translate2, perspective2);
-  }
-
-  // Fallback to discrete operation if one of the matrices is not decomposable.
-  if (!wasDecomposed) {
-    return Operator::operateForFallback(aMatrix1, aMatrix2, aProgress);
-  }
-
-  Matrix4x4 result;
-
-  // Operate each of the pieces in response to |Operator|.
-  Point4D perspective =
-      Operator::operateForPerspective(perspective1, perspective2, aProgress);
-  result.SetTransposedVector(3, perspective);
-
-  Point3D translate = Operator::operate(translate1, translate2, aProgress);
-  result.PreTranslate(translate.x, translate.y, translate.z);
-
-  Matrix4x4 rotate = Operator::operateForRotate(rotate1, rotate2, aProgress);
-  if (!rotate.IsIdentity()) {
-    result = rotate * result;
-  }
-
-  // TODO: Would it be better to operate these as angles?
-  //       How do we convert back to angles?
-  float yzshear = Operator::operate(shear1[ShearType::YZ],
-                                    shear2[ShearType::YZ], aProgress);
-  if (yzshear != 0.0) {
-    result.SkewYZ(yzshear);
-  }
-
-  float xzshear = Operator::operate(shear1[ShearType::XZ],
-                                    shear2[ShearType::XZ], aProgress);
-  if (xzshear != 0.0) {
-    result.SkewXZ(xzshear);
-  }
-
-  float xyshear = Operator::operate(shear1[ShearType::XY],
-                                    shear2[ShearType::XY], aProgress);
-  if (xyshear != 0.0) {
-    result.SkewXY(xyshear);
-  }
-
-  Point3D scale = Operator::operateForScale(scale1, scale2, aProgress);
-  if (scale != Point3D(1.0, 1.0, 1.0)) {
-    result.PreScale(scale.x, scale.y, scale.z);
-  }
-
-  return result;
-}
-
-template <typename Operator>
-static Matrix4x4 OperateTransformMatrixByServo(const Matrix4x4& aMatrix1,
-                                               const Matrix4x4& aMatrix2,
-                                               double aProgress) {
-  return Operator::operateByServo(aMatrix1, aMatrix2, aProgress);
-}
-
 template <typename Operator>
 static void ProcessMatrixOperator(Matrix4x4& aMatrix,
                                   const StyleTransform& aFrom,
@@ -378,19 +284,7 @@ static void ProcessMatrixOperator(Matrix4x4& aMatrix,
   float appUnitPerCSSPixel = AppUnitsPerCSSPixel();
   Matrix4x4 matrix1 = ReadTransforms(aFrom, aRefBox, appUnitPerCSSPixel);
   Matrix4x4 matrix2 = ReadTransforms(aTo, aRefBox, appUnitPerCSSPixel);
-
-  // TODO(emilio): I think the legacy decomposition code couldn't be reached
-  // before, probably just remove it?
-  const bool kUseLegacyDecomposition = false;
-  if (kUseLegacyDecomposition) {
-    aMatrix =
-        OperateTransformMatrix<Operator>(matrix1, matrix2, aProgress) * aMatrix;
-    return;
-  }
-
-  aMatrix =
-      OperateTransformMatrixByServo<Operator>(matrix1, matrix2, aProgress) *
-      aMatrix;
+  aMatrix = Operator::operateByServo(matrix1, matrix2, aProgress) * aMatrix;
 }
 
 /* Helper function to process two matrices that we need to interpolate between
@@ -571,38 +465,6 @@ static void MatrixForTransformFunction(Matrix4x4& aMatrix,
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown transform function!");
-  }
-}
-
-/**
- * Return the transform function, as an nsCSSKeyword, for the given
- * nsCSSValue::Array from a transform list.
- */
-nsCSSKeyword TransformFunctionOf(const nsCSSValue::Array* aData) {
-  MOZ_ASSERT(aData->Item(0).GetUnit() == eCSSUnit_Enumerated);
-  return aData->Item(0).GetKeywordValue();
-}
-
-void SetIdentityMatrix(nsCSSValue::Array* aMatrix) {
-  MOZ_ASSERT(aMatrix, "aMatrix should be non-null");
-
-  nsCSSKeyword tfunc = TransformFunctionOf(aMatrix);
-  MOZ_ASSERT(tfunc == eCSSKeyword_matrix || tfunc == eCSSKeyword_matrix3d,
-             "Only accept matrix and matrix3d");
-
-  if (tfunc == eCSSKeyword_matrix) {
-    MOZ_ASSERT(aMatrix->Count() == 7, "Invalid matrix");
-    Matrix m;
-    for (size_t i = 0; i < 6; ++i) {
-      aMatrix->Item(i + 1).SetFloatValue(m.components[i], eCSSUnit_Number);
-    }
-    return;
-  }
-
-  MOZ_ASSERT(aMatrix->Count() == 17, "Invalid matrix3d");
-  Matrix4x4 m;
-  for (size_t i = 0; i < 16; ++i) {
-    aMatrix->Item(i + 1).SetFloatValue(m.components[i], eCSSUnit_Number);
   }
 }
 
