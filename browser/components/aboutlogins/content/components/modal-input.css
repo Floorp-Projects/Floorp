@@ -7,6 +7,6 @@
   display: none;
 }
 
-:host(:not([type="password"])) .reveal-button {
+:host(:not([type="password"])) .reveal-checkbox {
   display: none;
 }
