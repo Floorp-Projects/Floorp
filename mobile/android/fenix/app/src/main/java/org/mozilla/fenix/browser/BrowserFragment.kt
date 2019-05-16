@@ -631,7 +631,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             ToolbarMenu.Item.ReportIssue -> getSessionById()?.let { session ->
                 session.url.apply {
                     val reportUrl = String.format(REPORT_SITE_ISSUE_URL, this)
-                    sessionUseCases.loadUrl.invoke(reportUrl)
+                    requireComponents.useCases.tabsUseCases.addTab.invoke(reportUrl)
                 }
             }
             ToolbarMenu.Item.Help -> {

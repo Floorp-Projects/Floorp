@@ -188,7 +188,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
                         launch(Dispatchers.Main) {
                             val reportUrl =
                                 String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, it.url)
-                            requireComponents.useCases.sessionUseCases.loadUrl.invoke(reportUrl)
+                            requireComponents.useCases.tabsUseCases.addTab.invoke(reportUrl)
                         }
                         dismiss()
                     }
