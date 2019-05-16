@@ -106,7 +106,7 @@
       let event = document.createEvent("KeyboardEvent");
       event.initKeyEvent("keypress", true, true, null, false, false,
                          false, false, 0, query.charCodeAt(0));
-      gFindBar._findField.inputField.dispatchEvent(event);
+      gFindBar._findField.dispatchEvent(event);
 
       let e = await promise;
       ok(e.detail.query === query, "find event query should match '" + query + "'");

@@ -13,7 +13,7 @@
   <script type="application/javascript"><![CDATA[
     // Global variable that holds a reference to the find bar.
     var gFindBar;
-  
+
     // Define the generator-iterator for the tests.
     var tests = testIterator();
 
@@ -25,7 +25,7 @@
     }
 
     ////
-    // Generator function for test steps for bug 298622:  
+    // Generator function for test steps for bug 298622:
     // Find should work correctly on a page loaded from the
     // bfcache.
     //
@@ -33,7 +33,7 @@
     {
       // Make sure bfcache is on.
       enableBFCache(true);
-      
+
       // Load a test page which contains some text to be found.
       doPageNavigation({
         uri: "data:text/html,<html><head><title>test1</title></head>" +
@@ -79,12 +79,12 @@
       // before continuing
       waitForTrue(function() {
         return (
-          TestWindow.getWindow().getSelection().toString().toLowerCase() == 
+          TestWindow.getWindow().getSelection().toString().toLowerCase() ==
           "a generic page");
       }, nextTest, 20);
       yield undefined;
 
-      is(gFindBar._findField.inputField.value, "A generic page",
+      is(gFindBar._findField.value, "A generic page",
         "expected text not present in find input field");
       is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
          "a generic page",
@@ -103,7 +103,7 @@
       yield undefined;
 
       // Search for some text that's on the original page (but not
-      // the dummy page loaded above), and verify that it can 
+      // the dummy page loaded above), and verify that it can
       // be found.
       gFindBar = document.getElementById("FindToolbar");
       document.getElementById("cmd_find").doCommand();
@@ -117,12 +117,12 @@
       isnot(gFindBar._findField.getAttribute("status"), "notfound",
          "Findfield status attribute should not have been 'notfound'" +
          " after Find");
- 
+
       // Make sure the key events above have time to be processed
       // before continuing
       waitForTrue(function() {
         return (
-          TestWindow.getWindow().getSelection().toString().toLowerCase() == 
+          TestWindow.getWindow().getSelection().toString().toLowerCase() ==
           "find this");
       }, nextTest, 20);
       yield undefined;
@@ -130,11 +130,11 @@
       is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
          "find this",
          "find failed on page loaded from bfcache");
-      
+
       // Tell the framework the test is finished.
       finish();
     }
-    
+
   ]]></script>
 
   <commandset>
