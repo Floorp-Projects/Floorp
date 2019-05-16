@@ -1188,7 +1188,6 @@ pref("services.sync.prefs.sync.addons.ignoreUserEnabledChanges", true);
 // source, and this would propagate automatically to other,
 // uncompromised Sync-connected devices.
 pref("services.sync.prefs.sync.browser.contentblocking.category", true);
-pref("services.sync.prefs.sync.browser.contentblocking.features.standard", true);
 pref("services.sync.prefs.sync.browser.contentblocking.features.strict", true);
 pref("services.sync.prefs.sync.browser.contentblocking.introCount", true);
 pref("services.sync.prefs.sync.browser.crashReports.unsubmittedCheck.autoSubmit2", true);
@@ -1591,7 +1590,7 @@ pref("browser.contentblocking.control-center.ui.showAllowedLabels", false);
 pref("browser.contentblocking.cryptomining.preferences.ui.enabled", true);
 pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", true);
 
-// Possible values for browser.contentblocking.features.* prefs:
+// Possible values for browser.contentblocking.features.strict pref:
 //   Tracking Protection:
 //     "tp": tracking protection enabled
 //     "-tp": tracking protection disabled
@@ -1610,17 +1609,8 @@ pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", true);
 //     "cookieBehavior2": cookie behaviour BEHAVIOR_REJECT
 //     "cookieBehavior3": cookie behaviour BEHAVIOR_LIMIT_FOREIGN
 //     "cookieBehavior4": cookie behaviour BEHAVIOR_REJECT_TRACKER
-// One value from each section must be included in each browser.contentblocking.features.* pref.
+// One value from each section must be included in the browser.contentblocking.features.strict pref.
 pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior4,cm,fp");
-// Enable blocking access to storage from tracking resources only in nightly
-// and early beta. By default the value is "cookieBehavior0": BEHAVIOR_ACCEPT
-// Enable cryptomining blocking in standard in nightly and early beta.
-// Enable fingerprinting blocking in standard in nightly and early beta.
-#ifdef EARLY_BETA_OR_EARLIER
-pref("browser.contentblocking.features.standard", "-tp,tpPrivate,cookieBehavior4,cm,fp");
-#else
-pref("browser.contentblocking.features.standard", "-tp,tpPrivate,cookieBehavior0,-cm,-fp");
-#endif
 
 // Enable the Report Breakage UI on Nightly and Beta but not on Release yet.
 #ifdef EARLY_BETA_OR_EARLIER
