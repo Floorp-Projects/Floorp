@@ -362,6 +362,10 @@ panel-item-separator[hidden] {
   text-decoration: none;
 }
 
+addon-permissions-list > .addon-detail-row:first-of-type {
+  border-top: none;
+}
+
 .deck-tab-group {
   border-bottom: 1px solid var(--grey-90-a20);
   border-top: 1px solid var(--grey-90-a20);

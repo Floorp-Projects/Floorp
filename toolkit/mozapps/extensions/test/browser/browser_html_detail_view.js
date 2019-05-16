@@ -61,6 +61,26 @@ function checkOptions(doc, options, expectedOptions) {
   }
 }
 
+function assertDeckHeadingHidden(group) {
+  ok(group.hidden, "The tab group is hidden");
+  for (let button of group.children) {
+    ok(button.offsetHeight == 0, `The ${button.name} is hidden`);
+  }
+}
+
+function assertDeckHeadingButtons(group, visibleButtons) {
+  ok(!group.hidden, "The tab group is shown");
+  ok(group.children.length >= visibleButtons.length,
+     `There should be at least ${visibleButtons.length} buttons`);
+  for (let button of group.children) {
+    if (visibleButtons.includes(button.name)) {
+      ok(!button.hidden, `The ${button.name} is shown`);
+    } else {
+      ok(button.hidden, `The ${button.name} is hidden`);
+    }
+  }
+}
+
 async function hasPrivateAllowed(id) {
   let perms = await ExtensionPermissions.get(id);
   return perms.permissions.includes("internal:privateBrowsingAllowed");
@@ -83,6 +103,10 @@ add_task(async function enableHtmlViews() {
     type: "extension",
     contributionURL: "http://foo.com",
     averageRating: 4.279,
+    userPermissions: {
+      origins: ["<all_urls>", "file://*/*"],
+      permissions: ["alarms", "contextMenus", "tabs", "webNavigation"],
+    },
     reviewCount: 5,
     reviewURL: "http://example.com/reviews",
     homepageURL: "http://example.com/addon1",
@@ -93,6 +117,10 @@ add_task(async function enableHtmlViews() {
     name: "Test add-on 2",
     creator: {name: "I made it"},
     description: "Short description",
+    userPermissions: {
+      origins: [],
+      permissions: ["alarms", "contextMenus"],
+    },
     type: "extension",
   }, {
     id: "theme1@mochi.test",
@@ -284,6 +312,10 @@ add_task(async function testFullDetails() {
   is(preview.hidden, true, "The preview is hidden");
 
   let details = card.querySelector("addon-details");
+
+  // Check all the deck buttons are hidden.
+  assertDeckHeadingButtons(details.tabGroup, ["details", "permissions"]);
+
   let desc = details.querySelector(".addon-detail-description");
   is(desc.innerHTML, "Longer description<br>With brs!",
      "The full description replaces newlines with <br>");
@@ -291,7 +323,8 @@ add_task(async function testFullDetails() {
   let contrib = details.querySelector(".addon-detail-contribute");
   ok(contrib, "The contribution section is visible");
 
-  let rows = Array.from(details.querySelectorAll(".addon-detail-row"));
+  let rows = Array.from(
+    card.querySelectorAll('[name="details"] .addon-detail-row'));
 
   // Auto updates.
   let row = rows.shift();
@@ -396,13 +429,17 @@ add_task(async function testMinimalExtension() {
   card = getAddonCard(doc, "addon2@mochi.test");
   let details = card.querySelector("addon-details");
 
+  // Check all the deck buttons are hidden.
+  assertDeckHeadingButtons(details.tabGroup, ["details", "permissions"]);
+
   let desc = details.querySelector(".addon-detail-description");
   is(desc.textContent, "", "There is no full description");
 
   let contrib = details.querySelector(".addon-detail-contribute");
   ok(!contrib, "There is no contribution element");
 
-  let rows = Array.from(details.querySelectorAll(".addon-detail-row"));
+  let rows = Array.from(
+    card.querySelectorAll('[name="details"] .addon-detail-row'));
 
   // Automatic updates.
   let row = rows.shift();
@@ -454,7 +491,11 @@ add_task(async function testDefaultTheme() {
   ok(preview, "There is a preview");
   is(preview.hidden, true, "The preview is hidden");
 
-  let rows = Array.from(card.querySelectorAll(".addon-detail-row"));
+  // Check all the deck buttons are hidden.
+  assertDeckHeadingHidden(card.details.tabGroup);
+
+  let rows = Array.from(
+    card.querySelectorAll('[name="details"] .addon-detail-row'));
 
   // Author.
   let author = rows.shift();
@@ -508,7 +549,11 @@ add_task(async function testStaticTheme() {
   is(preview.height, "90", "The height is set");
   is(preview.hidden, false, "The preview is visible");
 
-  let rows = Array.from(card.querySelectorAll(".addon-detail-row"));
+  // Check all the deck buttons are hidden.
+  assertDeckHeadingHidden(card.details.tabGroup);
+
+  let rows = Array.from(
+    card.querySelectorAll('[name="details"] .addon-detail-row'));
 
   // Automatic updates.
   let row = rows.shift();
@@ -620,4 +665,62 @@ add_task(async function testPrivateBrowsingAllowedListView() {
 
   await extension.unload();
   await closeView(win);
+});
+
+add_task(async function testPermissions() {
+  async function runTest(id, permissions) {
+    let win = await loadInitialView("extension");
+    let doc = win.document;
+
+    let card = getAddonCard(doc, id);
+    ok(!card.hasAttribute("expanded"), "The list card is not expanded");
+    let loaded = waitForViewLoad(win);
+    card.querySelector('[action="expand"]').click();
+    await loaded;
+
+    card = getAddonCard(doc, id);
+    let {deck, tabGroup} = card.details;
+
+    // Check all the deck buttons are hidden.
+    assertDeckHeadingButtons(tabGroup, ["details", "permissions"]);
+
+    let permsBtn = tabGroup.querySelector('[name="permissions"]');
+    let permsShown = BrowserTestUtils.waitForEvent(deck, "view-changed");
+    permsBtn.click();
+    await permsShown;
+
+    let permsSection = card.querySelector("addon-permissions-list");
+    let rows = Array.from(permsSection.querySelectorAll(".addon-detail-row"));
+
+    info("Check displayed permissions");
+    if (permissions) {
+      for (let name in permissions) {
+        // Check the permission-info class to make sure it's for a permission.
+        let row = rows.shift();
+        ok(row.classList.contains("permission-info"),
+           `There's a row for ${name}`);
+      }
+    } else {
+      let row = rows.shift();
+      is(doc.l10n.getAttributes(row).id, "addon-permissions-empty",
+        "There's a message when no permissions are shown");
+    }
+
+    info("Check learn more link");
+    let row = rows.shift();
+    is(row.children.length, 1, "There's one child for learn more");
+    let link = row.firstElementChild;
+    let rootUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    let url = rootUrl + "extension-permissions";
+    is(link.href, url, "The URL is set");
+    is(link.getAttribute("target"), "_blank", "The link opens in a new tab");
+
+    await closeView(win);
+  }
+
+  info("Check permissions for add-on with permission message");
+  await runTest("addon1@mochi.test", ["<all_urls>", "tabs", "webNavigation"]);
+
+  info("Check permissions for add-on without permission messages");
+  await runTest("addon2@mochi.test");
 });

@@ -18,6 +18,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(this, "browserBundle", () => {
+  return Services.strings.createBundle(
+    "chrome://browser/locale/browser.properties");
+});
+XPCOMUtils.defineLazyGetter(this, "brandBundle", () => {
+  return Services.strings.createBundle(
+      "chrome://branding/locale/brand.properties");
+});
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this, "allowPrivateBrowsingByDefault",
   "extensions.allowPrivateBrowsingByDefault", true);
@@ -753,6 +762,49 @@ class UpdateReleaseNotes extends HTMLElement {
 }
 customElements.define("update-release-notes", UpdateReleaseNotes);
 
+class AddonPermissionsList extends HTMLElement {
+  setAddon(addon) {
+    this.addon = addon;
+    this.render();
+  }
+
+  render() {
+    let appName = brandBundle.GetStringFromName("brandShortName");
+    let {msgs} = Extension.formatPermissionStrings({
+      permissions: this.addon.userPermissions,
+      appName,
+    }, browserBundle);
+
+    this.textContent = "";
+
+    if (msgs.length > 0) {
+      // Add a row for each permission message.
+      for (let msg of msgs) {
+        let row = document.createElement("div");
+        row.classList.add("addon-detail-row", "permission-info");
+        row.textContent = msg;
+        this.appendChild(row);
+      }
+    } else {
+      let emptyMessage = document.createElement("div");
+      emptyMessage.classList.add("addon-detail-row");
+      document.l10n.setAttributes(emptyMessage, "addon-permissions-empty");
+      this.appendChild(emptyMessage);
+    }
+
+    // Add a learn more link.
+    let learnMoreRow = document.createElement("div");
+    learnMoreRow.classList.add("addon-detail-row");
+    let learnMoreLink = document.createElement("a");
+    learnMoreLink.setAttribute("target", "_blank");
+    learnMoreLink.href = SUPPORT_URL + "extension-permissions";
+    learnMoreLink.textContent =
+      browserBundle.GetStringFromName("webextPerms.learnMore");
+    learnMoreRow.appendChild(learnMoreLink);
+    this.appendChild(learnMoreRow);
+  }
+}
+customElements.define("addon-permissions-list", AddonPermissionsList);
 
 class AddonDetails extends HTMLElement {
   connectedCallback() {
@@ -793,6 +845,8 @@ class AddonDetails extends HTMLElement {
     // Hide tab buttons that won't have any content.
     let getButtonByName =
       name => this.tabGroup.querySelector(`[name="${name}"]`);
+    let permsBtn = getButtonByName("permissions");
+    permsBtn.hidden = addon.type != "extension";
     let notesBtn = getButtonByName("release-notes");
     notesBtn.hidden = !this.releaseNotesUri;
 
@@ -827,6 +881,10 @@ class AddonDetails extends HTMLElement {
 
     this.deck = this.querySelector("named-deck");
     this.tabGroup = this.querySelector(".deck-tab-group");
+
+    // Set the add-on for the permissions section.
+    this.permissionsList = this.querySelector("addon-permissions-list");
+    this.permissionsList.setAddon(addon);
 
     // Full description.
     let description = this.querySelector(".addon-detail-description");

@@ -87,6 +87,7 @@
     <template name="addon-details">
       <div class="deck-tab-group">
         <named-deck-button deck="details-deck" name="details" data-l10n-id="details-addon-button"></named-deck-button>
+        <named-deck-button deck="details-deck" name="permissions" data-l10n-id="permissions-addon-button"></named-deck-button>
         <named-deck-button deck="details-deck" name="release-notes" data-l10n-id="release-notes-addon-button"></named-deck-button>
       </div>
       <named-deck id="details-deck">
@@ -156,6 +157,7 @@
             </div>
           </div>
         </section>
+        <addon-permissions-list name="permissions"></addon-permissions-list>
         <update-release-notes name="release-notes"></update-release-notes>
       </named-deck>
     </template>
