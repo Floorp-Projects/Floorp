@@ -2011,6 +2011,17 @@ void imgLoader::RemoveFromUncachedImages(imgRequest* aRequest) {
   mUncachedImages.RemoveEntry(aRequest);
 }
 
+bool imgLoader::PreferLoadFromCache(nsIURI* aURI) const {
+  // If we are trying to load an image from a protocol that doesn't support
+  // caching (e.g. thumbnails via the moz-page-thumb:// protocol, or icons via
+  // the moz-extension:// protocol), load it directly from the cache to prevent
+  // re-decoding the image. See Bug 1373258.
+  // TODO: Bug 1406134
+  bool match = false;
+  return (NS_SUCCEEDED(aURI->SchemeIs("moz-page-thumb", &match)) && match) ||
+         (NS_SUCCEEDED(aURI->SchemeIs("moz-extension", &match)) && match);
+}
+
 #define LOAD_FLAGS_CACHE_MASK \
   (nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::LOAD_FROM_CACHE)
 
@@ -2095,14 +2106,7 @@ nsresult imgLoader::LoadImage(
   // Get the default load flags from the loadgroup (if possible)...
   if (aLoadGroup) {
     aLoadGroup->GetLoadFlags(&requestFlags);
-
-    // If we are trying to load a thumbnail via the moz-page-thumb:// protocol,
-    // load it directly from the cache to prevent re-decoding the image. See Bug
-    // 1373258
-    // TODO: Bug 1406134
-    bool isThumbnailScheme = false;
-    if (NS_SUCCEEDED(aURI->SchemeIs("moz-page-thumb", &isThumbnailScheme)) &&
-        isThumbnailScheme) {
+    if (PreferLoadFromCache(aURI)) {
       requestFlags |= nsIRequest::LOAD_FROM_CACHE;
     }
   }
@@ -2379,13 +2383,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
   nsLoadFlags requestFlags = nsIRequest::LOAD_NORMAL;
   channel->GetLoadFlags(&requestFlags);
 
-  // If we are trying to load a thumbnail via the moz-page-thumb:// protocol,
-  // load it directly from the cache to prevent re-decoding the image. See Bug
-  // 1373258
-  // TODO: Bug 1406134
-  bool isThumbnailScheme = false;
-  if (NS_SUCCEEDED(uri->SchemeIs("moz-page-thumb", &isThumbnailScheme)) &&
-      isThumbnailScheme) {
+  if (PreferLoadFromCache(uri)) {
     requestFlags |= nsIRequest::LOAD_FROM_CACHE;
   }
 
