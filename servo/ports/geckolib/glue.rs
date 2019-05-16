@@ -4725,7 +4725,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
     let url = SpecifiedImageUrl::parse_from_string(string.into(), &context);
     let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(vec![Either::Second(
         Image::Url(url),
-    )]));
+    )].into()));
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(decl, Importance::Normal);
     });
