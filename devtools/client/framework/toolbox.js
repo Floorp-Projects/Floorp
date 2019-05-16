@@ -24,7 +24,6 @@ var {gDevTools} = require("devtools/client/framework/devtools");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
-var { attachThread, detachThread } = require("./attach-thread");
 var { DOMHelpers } = require("resource://devtools/client/shared/DOMHelpers.jsm");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(Ci.nsISupports)
@@ -184,6 +183,8 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
   this.toggleOptions = this.toggleOptions.bind(this);
   this.togglePaintFlashing = this.togglePaintFlashing.bind(this);
   this.toggleDragging = this.toggleDragging.bind(this);
+  this._onPausedState = this._onPausedState.bind(this);
+  this._onResumedState = this._onResumedState.bind(this);
   this.isPaintFlashing = false;
 
   this._target.on("close", this._onTargetClosed);
@@ -453,6 +454,68 @@ Toolbox.prototype = {
       this.doc.querySelector("#toolbox-panel-iframe-webconsole").contentWindow;
   },
 
+  _onPausedState: function(_, packet) {
+    // Suppress interrupted events by default because the thread is
+    // paused/resumed a lot for various actions.
+    if (packet.why.type === "interrupted") {
+      return;
+    }
+
+    this.highlightTool("jsdebugger");
+
+    if (packet.why.type === "debuggerStatement" ||
+       packet.why.type === "breakpoint" ||
+       packet.why.type === "exception") {
+      this.raise();
+      this.selectTool("jsdebugger", packet.why.type);
+    }
+  },
+
+  _onResumedState: function() {
+    this.unhighlightTool("jsdebugger");
+  },
+
+  _startThreadClientListeners: function() {
+    this.threadClient.addListener("paused", this._onPausedState);
+    this.threadClient.addListener("resumed", this._onResumedState);
+  },
+
+  _stopThreadClientListeners: function() {
+    this.threadClient.removeListener("paused", this._onPausedState);
+    this.threadClient.removeListener("resumed", this._onResumedState);
+  },
+
+  _attachAndResumeThread: async function() {
+    const threadOptions = {
+      autoBlackBox: false,
+      ignoreFrameEnvironment: true,
+      pauseOnExceptions:
+        Services.prefs.getBoolPref("devtools.debugger.pause-on-exceptions"),
+      ignoreCaughtExceptions:
+        Services.prefs.getBoolPref("devtools.debugger.ignore-caught-exceptions"),
+    };
+    const [, threadClient] = await this._target.attachThread(threadOptions);
+
+    try {
+      await threadClient.resume();
+    } catch (ex) {
+      // Interpret a possible error thrown by ThreadActor.resume
+      if (ex.error === "wrongOrder") {
+        const box = this.getNotificationBox();
+        box.appendNotification(
+          L10N.getStr("toolbox.resumeOrderWarning"),
+          "wrong-resume-order",
+          "",
+          box.PRIORITY_WARNING_HIGH
+        );
+      } else {
+        throw ex;
+      }
+    }
+
+    return threadClient;
+  },
+
   /**
    * Open the toolbox
    */
@@ -492,8 +555,9 @@ Toolbox.prototype = {
         ]);
       }
 
-      // Attach the thread
-      this._threadClient = await attachThread(this);
+      this._threadClient = await this._attachAndResumeThread();
+      this._startThreadClientListeners();
+
       await domReady;
 
       this.browserRequire = BrowserLoader({
@@ -3142,7 +3206,7 @@ Toolbox.prototype = {
     outstanding.push(this.resetPreference());
 
     // Detach the thread
-    detachThread(this._threadClient);
+    this._stopThreadClientListeners();
     this._threadClient = null;
 
     // Unregister buttons listeners

@@ -18,6 +18,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(this, "browserBundle", () => {
+  return Services.strings.createBundle(
+    "chrome://browser/locale/browser.properties");
+});
+XPCOMUtils.defineLazyGetter(this, "brandBundle", () => {
+  return Services.strings.createBundle(
+      "chrome://branding/locale/brand.properties");
+});
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this, "allowPrivateBrowsingByDefault",
   "extensions.allowPrivateBrowsingByDefault", true);
@@ -684,11 +693,146 @@ class FiveStarRating extends HTMLElement {
 }
 customElements.define("five-star-rating", FiveStarRating);
 
+class UpdateReleaseNotes extends HTMLElement {
+  connectedCallback() {
+    this.addEventListener("click", this);
+  }
+
+  disconnectedCallback() {
+    this.removeEventListener("click", this);
+  }
+
+  handleEvent(e) {
+    // We used to strip links, but ParserUtils.parseFragment() leaves them in,
+    // so just make sure we open them using the null principal in a new tab.
+    if (e.type == "click" && e.target.localName == "a" && e.target.href) {
+      e.preventDefault();
+      e.stopPropagation();
+      windowRoot.ownerGlobal.openWebLinkIn(e.target.href, "tab");
+    }
+  }
+
+  async loadForUri(uri) {
+    // Can't load the release notes without a URL to load.
+    if (!uri || !uri.spec) {
+      this.setErrorMessage();
+      this.dispatchEvent(new CustomEvent("release-notes-error"));
+      return;
+    }
+
+    // Don't try to load for the same update a second time.
+    if (this.url == uri.spec) {
+      this.dispatchEvent(new CustomEvent("release-notes-cached"));
+      return;
+    }
+
+    // Store the URL to skip the network if loaded again.
+    this.url = uri.spec;
+
+    // Set the loading message before hitting the network.
+    this.setLoadingMessage();
+    this.dispatchEvent(new CustomEvent("release-notes-loading"));
+
+    try {
+      // loadReleaseNotes will fetch and sanitize the release notes.
+      let fragment = await loadReleaseNotes(uri);
+      this.textContent = "";
+      this.appendChild(fragment);
+      this.dispatchEvent(new CustomEvent("release-notes-loaded"));
+    } catch (e) {
+      this.setErrorMessage();
+      this.dispatchEvent(new CustomEvent("release-notes-error"));
+    }
+  }
+
+  setMessage(id) {
+    this.textContent = "";
+    let message = document.createElement("p");
+    document.l10n.setAttributes(message, id);
+    this.appendChild(message);
+  }
+
+  setLoadingMessage() {
+    this.setMessage("release-notes-loading");
+  }
+
+  setErrorMessage() {
+    this.setMessage("release-notes-error");
+  }
+}
+customElements.define("update-release-notes", UpdateReleaseNotes);
+
+class AddonPermissionsList extends HTMLElement {
+  setAddon(addon) {
+    this.addon = addon;
+    this.render();
+  }
+
+  render() {
+    let appName = brandBundle.GetStringFromName("brandShortName");
+    let {msgs} = Extension.formatPermissionStrings({
+      permissions: this.addon.userPermissions,
+      appName,
+    }, browserBundle);
+
+    this.textContent = "";
+
+    if (msgs.length > 0) {
+      // Add a row for each permission message.
+      for (let msg of msgs) {
+        let row = document.createElement("div");
+        row.classList.add("addon-detail-row", "permission-info");
+        row.textContent = msg;
+        this.appendChild(row);
+      }
+    } else {
+      let emptyMessage = document.createElement("div");
+      emptyMessage.classList.add("addon-detail-row");
+      document.l10n.setAttributes(emptyMessage, "addon-permissions-empty");
+      this.appendChild(emptyMessage);
+    }
+
+    // Add a learn more link.
+    let learnMoreRow = document.createElement("div");
+    learnMoreRow.classList.add("addon-detail-row");
+    let learnMoreLink = document.createElement("a");
+    learnMoreLink.setAttribute("target", "_blank");
+    learnMoreLink.href = SUPPORT_URL + "extension-permissions";
+    learnMoreLink.textContent =
+      browserBundle.GetStringFromName("webextPerms.learnMore");
+    learnMoreRow.appendChild(learnMoreLink);
+    this.appendChild(learnMoreRow);
+  }
+}
+customElements.define("addon-permissions-list", AddonPermissionsList);
+
 class AddonDetails extends HTMLElement {
   connectedCallback() {
     if (this.children.length == 0) {
       this.render();
     }
+    this.deck.addEventListener("view-changed", this);
+  }
+
+  disconnectedCallback() {
+    this.deck.removeEventListener("view-changed", this);
+  }
+
+  handleEvent(e) {
+    if (e.type == "view-changed" && e.target == this.deck) {
+      if (this.deck.selectedViewName == "release-notes") {
+        let releaseNotes = this.querySelector("update-release-notes");
+        let uri = this.releaseNotesUri;
+        if (uri) {
+          releaseNotes.loadForUri(uri);
+        }
+      }
+    }
+  }
+
+  get releaseNotesUri() {
+    return this.addon.updateInstall ?
+      this.addon.updateInstall.releaseNotesURI : this.addon.releaseNotesURI;
   }
 
   setAddon(addon) {
@@ -697,6 +841,19 @@ class AddonDetails extends HTMLElement {
 
   update() {
     let {addon} = this;
+
+    // Hide tab buttons that won't have any content.
+    let getButtonByName =
+      name => this.tabGroup.querySelector(`[name="${name}"]`);
+    let permsBtn = getButtonByName("permissions");
+    permsBtn.hidden = addon.type != "extension";
+    let notesBtn = getButtonByName("release-notes");
+    notesBtn.hidden = !this.releaseNotesUri;
+
+    // Hide the tab group if "details" is the only visible button.
+    this.tabGroup.hidden = Array.from(this.tabGroup.children).every(button => {
+      return button.name == "details" || button.hidden;
+    });
 
     // Show the update check button if necessary. The button might not exist if
     // the add-on doesn't support updates.
@@ -721,6 +878,13 @@ class AddonDetails extends HTMLElement {
 
     this.textContent = "";
     this.appendChild(importTemplate("addon-details"));
+
+    this.deck = this.querySelector("named-deck");
+    this.tabGroup = this.querySelector(".deck-tab-group");
+
+    // Set the add-on for the permissions section.
+    this.permissionsList = this.querySelector("addon-permissions-list");
+    this.permissionsList.setAddon(addon);
 
     // Full description.
     let description = this.querySelector(".addon-detail-description");

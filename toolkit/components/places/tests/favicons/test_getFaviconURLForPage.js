@@ -51,7 +51,7 @@ add_task(async function test_fallback() {
   await PlacesTestUtils.addVisits(ROOT_URL);
   let data = readFileData(do_get_file("favicon-normal16.png"));
   PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(ROOT_ICON_URL),
-                                          data, data.length, "image/png");
+                                          data, "image/png");
   await setFaviconForPage(ROOT_URL, ROOT_ICON_URL);
 
   info("check fallback icons");
@@ -64,7 +64,7 @@ add_task(async function test_fallback() {
   await PlacesTestUtils.addVisits(SUBPAGE_URL);
   let data32 = readFileData(do_get_file("favicon-normal32.png"));
   PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(ICON32_URL),
-                                          data32, data32.length, "image/png");
+                                          data32, "image/png");
   await setFaviconForPage(SUBPAGE_URL, ICON32_URL);
 
   info("check no fallback icons");

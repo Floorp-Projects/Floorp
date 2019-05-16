@@ -94,9 +94,6 @@ class nsCOMArray_base {
     mArray.SwapElements(aOther.mArray);
   }
 
-  void Adopt(nsISupports** aElements, uint32_t aCount);
-  uint32_t Forget(nsISupports*** aElements);
-
  public:
   // elements in the array (including null elements!)
   int32_t Count() const { return mArray.Length(); }
@@ -343,33 +340,6 @@ class nsCOMArray : public nsCOMArray_base {
   T** Elements() { return reinterpret_cast<T**>(nsCOMArray_base::Elements()); }
   void SwapElements(nsCOMArray<T>& aOther) {
     nsCOMArray_base::SwapElements(aOther);
-  }
-
-  /**
-   * Adopt parameters that resulted from an XPIDL outparam. The aElements
-   * parameter will be freed as a result of the call.
-   *
-   * Example usage:
-   * nsCOMArray<nsISomeInterface> array;
-   * nsISomeInterface** elements;
-   * uint32_t length;
-   * ptr->GetSomeArray(&elements, &length);
-   * array.Adopt(elements, length);
-   */
-  void Adopt(T** aElements, uint32_t aSize) {
-    nsCOMArray_base::Adopt(reinterpret_cast<nsISupports**>(aElements), aSize);
-  }
-
-  /**
-   * Export the contents of this array to an XPIDL outparam. The array will be
-   * Clear()'d after this operation.
-   *
-   * Example usage:
-   * nsCOMArray<nsISomeInterface> array;
-   * *length = array.Forget(retval);
-   */
-  uint32_t Forget(T*** aElements) {
-    return nsCOMArray_base::Forget(reinterpret_cast<nsISupports***>(aElements));
   }
 
   // Methods for range-based for loops.

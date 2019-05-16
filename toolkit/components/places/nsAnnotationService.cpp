@@ -339,9 +339,12 @@ nsAnnotationService::GetItemAnnotationInfo(int64_t aItemId,
   return GetValueFromStatement(statement, _value);
 }
 
-nsresult nsAnnotationService::GetItemAnnotationNamesTArray(
-    int64_t aItemId, nsTArray<nsCString>* _result) {
-  _result->Clear();
+NS_IMETHODIMP
+nsAnnotationService::GetItemAnnotationNames(int64_t aItemId,
+                                            nsTArray<nsCString>& _result) {
+  NS_ENSURE_ARG_MIN(aItemId, 1);
+
+  _result.Clear();
 
   nsCOMPtr<mozIStorageStatement> statement;
   statement = mDB->GetStatement(
@@ -361,44 +364,10 @@ nsresult nsAnnotationService::GetItemAnnotationNamesTArray(
     nsAutoCString name;
     rv = statement->GetUTF8String(0, name);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!_result->AppendElement(name)) return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAnnotationService::GetItemAnnotationNames(int64_t aItemId, uint32_t* _count,
-                                            nsIVariant*** _result) {
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-  NS_ENSURE_ARG_POINTER(_count);
-  NS_ENSURE_ARG_POINTER(_result);
-
-  *_count = 0;
-  *_result = nullptr;
-
-  nsTArray<nsCString> names;
-  nsresult rv = GetItemAnnotationNamesTArray(aItemId, &names);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (names.Length() == 0) return NS_OK;
-
-  *_result = static_cast<nsIVariant**>(
-      moz_xmalloc(sizeof(nsIVariant*) * names.Length()));
-
-  for (uint32_t i = 0; i < names.Length(); i++) {
-    nsCOMPtr<nsIWritableVariant> var = new nsVariant();
-    if (!var) {
-      // need to release all the variants we've already created
-      for (uint32_t j = 0; j < i; j++) NS_RELEASE((*_result)[j]);
-      free(*_result);
-      *_result = nullptr;
+    if (!_result.AppendElement(name, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    var->SetAsAUTF8String(names[i]);
-    NS_ADDREF((*_result)[i] = var);
   }
-  *_count = names.Length();
 
   return NS_OK;
 }
