@@ -13,8 +13,9 @@ const CFR_USER_PREF_FEATURES = "browser.newtabpage.activity-stream.asrouter.user
  *  3. browser.newtabpage.activity-stream.feeds.snippets (user preference - snippets)
  *  4. browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons (user preference - cfr)
  *  4. browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features (user preference - cfr)
+ *  5. services.sync.username
  */
-const NUMBER_OF_PREFS_TO_OBSERVE = 5;
+const NUMBER_OF_PREFS_TO_OBSERVE = 6;
 
 describe("ASRouterPreferences", () => {
   let ASRouterPreferences;

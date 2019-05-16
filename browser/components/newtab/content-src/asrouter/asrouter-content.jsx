@@ -108,6 +108,7 @@ export class ASRouterUISurface extends React.PureComponent {
     if (!message && !extraProps.message_id) {
       throw new Error(`You must provide a message_id for bundled messages`);
     }
+    // snippets_user_event, onboarding_user_event
     const eventType = `${message.provider || bundle.provider}_user_event`;
     ASRouterUtils.sendTelemetry({
       message_id: message.id || extraProps.message_id,
@@ -160,11 +161,28 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   dismissBundle(bundle) {
-    return () => ASRouterUtils.dismissBundle(bundle);
+    return () => {
+      ASRouterUtils.dismissBundle(bundle);
+      this.sendUserActionTelemetry({
+        event: "DISMISS",
+        id: "onboarding-cards",
+        message_id: bundle.map(m => m.id).join(","),
+        // Passing the action because some bundles (Trailhead) don't have a provider set
+        action: "onboarding_user_event",
+      });
+    };
   }
 
   triggerOnboarding() {
     ASRouterUtils.sendMessage({type: "TRIGGER", data: {trigger: {id: "showOnboarding"}}});
+  }
+
+  clearMessage(id) {
+    if (id === this.state.message.id) {
+      this.setState({message: {}});
+      // Remove any styles related to the RTAMO message
+      document.body.classList.remove("welcome", "hide-main", "amo");
+    }
   }
 
   onMessageFromParent({data: action}) {
@@ -176,11 +194,7 @@ export class ASRouterUISurface extends React.PureComponent {
         this.setState({bundle: action.data});
         break;
       case "CLEAR_MESSAGE":
-        if (action.data.id === this.state.message.id) {
-          this.setState({message: {}});
-          // Remove any styles related to the RTAMO message
-          document.body.classList.remove("welcome", "hide-main", "amo");
-        }
+        this.clearMessage(action.data.id);
         break;
       case "CLEAR_PROVIDER":
         if (action.data.id === this.state.message.provider) {
@@ -194,6 +208,10 @@ export class ASRouterUISurface extends React.PureComponent {
         break;
       case "CLEAR_ALL":
         this.setState({message: {}, bundle: {}});
+        break;
+      case "AS_ROUTER_TARGETING_UPDATE":
+        action.data.forEach(id => this.clearMessage(id));
+        break;
     }
   }
 
@@ -259,7 +277,7 @@ export class ASRouterUISurface extends React.PureComponent {
           {...this.state.bundle}
           UISurface="NEWTAB_OVERLAY"
           onAction={ASRouterUtils.executeAction}
-          onDoneButton={this.dismissBundle(this.state.bundle.bundle)}
+          onDismissBundle={this.dismissBundle(this.state.bundle.bundle)}
           sendUserActionTelemetry={this.sendUserActionTelemetry} />);
     }
     return null;
@@ -283,9 +301,11 @@ export class ASRouterUISurface extends React.PureComponent {
         <LocalizationProvider messages={generateMessages({"amo_html": message.content.text})}>
           <ReturnToAMO
             {...message}
+            UISurface="NEWTAB_OVERLAY"
             onReady={this.triggerOnboarding}
             onBlock={this.onDismissById(message.id)}
-            onAction={ASRouterUtils.executeAction} />
+            onAction={ASRouterUtils.executeAction}
+            sendUserActionTelemetry={this.sendUserActionTelemetry} />
         </LocalizationProvider>
       );
     }
@@ -299,7 +319,7 @@ export class ASRouterUISurface extends React.PureComponent {
         document={this.props.document}
         message={message}
         onAction={ASRouterUtils.executeAction}
-        onDoneButton={this.dismissBundle(this.state.bundle.bundle)}
+        onDismissBundle={this.dismissBundle(this.state.message.bundle)}
         sendUserActionTelemetry={this.sendUserActionTelemetry}
         dispatch={this.props.dispatch}
         fxaEndpoint={this.props.fxaEndpoint} />);

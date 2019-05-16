@@ -30,7 +30,7 @@
 }
 
 .managed-tree .tree .node.focused {
-  color: white;
+  color: var(--theme-selection-color);
   background-color: var(--theme-selection-background);
 }
 

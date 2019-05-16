@@ -122,7 +122,10 @@ var LoginManagerParent = {
       }
 
       case "PasswordManager:OpenPreferences": {
-        LoginHelper.openPasswordManager(msg.target.ownerGlobal, msg.data.hostname);
+        LoginHelper.openPasswordManager(msg.target.ownerGlobal, {
+          filterString: msg.data.hostname,
+          entryPoint: msg.data.entryPoint,
+        });
         break;
       }
     }
@@ -394,8 +397,7 @@ var LoginManagerParent = {
         // but since we don't have the username, we don't know if the user is
         // changing a second account to the new password so we ask anyways.
 
-        prompter.promptToChangePasswordWithUsernames(
-          logins, logins.length, formLogin);
+        prompter.promptToChangePasswordWithUsernames(logins, formLogin);
       }
 
       return;

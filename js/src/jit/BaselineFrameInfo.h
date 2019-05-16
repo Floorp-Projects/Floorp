@@ -396,6 +396,8 @@ class InterpreterFrameInfo : public FrameInfo {
     masm.storeValue(scratch, dest);
   }
 
+  void bumpInterpreterICEntry();
+
   Address addressOfInterpreterScript() const {
     return Address(BaselineFrameReg,
                    BaselineFrame::reverseOffsetOfInterpreterScript());

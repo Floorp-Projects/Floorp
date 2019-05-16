@@ -10,6 +10,7 @@
 #include "nsIStringStream.h"
 #include "nsString.h"
 #include "nsMemory.h"
+#include "nsTArray.h"
 
 /**
  * Implements:
@@ -43,13 +44,20 @@
  * If aAssignment is NS_ASSIGNMENT_ADOPT, then the resulting stream refers
  * directly to the given buffer (aStringToRead) and will free aStringToRead
  * once the stream is closed.
- *
- * If aLength is less than zero, then the length of aStringToRead will be
- * determined by scanning the buffer for the first null byte.
  */
 extern nsresult NS_NewByteInputStream(nsIInputStream** aStreamResult,
                                       mozilla::Span<const char> aStringToRead,
                                       nsAssignmentType aAssignment);
+
+/**
+ * Factory method to get an nsIInputStream from an nsTArray representing a byte
+ * buffer.  This will take ownership of the data and empty out the nsTArray.
+ *
+ * Result will implement nsIStringInputStream, nsITellableStream and
+ * nsISeekableStream.
+ */
+extern nsresult NS_NewByteInputStream(nsIInputStream** aStreamResult,
+                                      nsTArray<uint8_t>&& aArray);
 
 /**
  * Factory method to get an nsInputStream from an nsACString.  Result will

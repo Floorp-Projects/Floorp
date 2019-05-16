@@ -293,6 +293,7 @@ void DOMIntersectionObserver::Update(Document* aDocument,
   for (size_t i = 0; i < mObservationTargets.Length(); ++i) {
     Element* target = mObservationTargets.ElementAt(i);
     nsIFrame* targetFrame = target->GetPrimaryFrame();
+    nsIFrame* originalTargetFrame = targetFrame;
     nsRect targetRect;
     Maybe<nsRect> intersectionRect;
     bool isSameDoc = root && root->GetComposedDoc() == target->GetComposedDoc();
@@ -374,7 +375,7 @@ void DOMIntersectionObserver::Update(Document* aDocument,
           intersectionRectRelativeToRoot, rootIntersectionRect);
       if (intersectionRect.isSome() && !isSameDoc) {
         nsRect rect = intersectionRect.value();
-        nsPresContext* presContext = targetFrame->PresContext();
+        nsPresContext* presContext = originalTargetFrame->PresContext();
         nsIFrame* rootScrollFrame =
             presContext->PresShell()->GetRootScrollFrame();
         if (rootScrollFrame) {

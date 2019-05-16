@@ -264,7 +264,7 @@ partner-urls:
 task-priority:
     by-project:
         'mozilla-release': 'highest'
-        'mozilla-esr60': 'very-high'
+        'mozilla-esr.*': 'very-high'
         'mozilla-beta': 'high'
         'mozilla-central': 'medium'
         'autoland': 'low'

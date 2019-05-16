@@ -17,7 +17,6 @@ class ConnectSteps extends PureComponent {
       steps: PropTypes.arrayOf(
         PropTypes.shape({
           localizationId: PropTypes.string.isRequired,
-          url: PropTypes.string,
         }).isRequired,
       ),
     };
@@ -32,17 +31,13 @@ class ConnectSteps extends PureComponent {
         Localized(
           {
             id: step.localizationId,
-            a: step.url ? dom.a({
-              href: step.url,
-              target: "_blank",
-            }) : null,
           },
           dom.li(
             {
               className: "connect-page__step",
-              key: step,
+              key: step.localizationId,
             },
-            step
+            step.localizationId
           )
         )
       )

@@ -48,6 +48,10 @@ class ExecutionContext {
     return this._remoteObjects.has(id);
   }
 
+  releaseObject(id) {
+    return this._remoteObjects.delete(id);
+  }
+
   /**
    * Evaluate a Javascript expression.
    *
@@ -262,7 +266,7 @@ class ExecutionContext {
         subtype = "promise";
       } else if (TYPED_ARRAY_CLASSES.includes(cls)) {
         subtype = "typedarray";
-      } else if (cls == "Object" && Node.isInstance(rawObj)) {
+      } else if (Node.isInstance(rawObj)) {
         subtype = "node";
       }
 

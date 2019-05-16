@@ -50,7 +50,7 @@ class RenderCompositorANGLE : public RenderCompositor {
 
   bool UseDComp() const override { return !!mCompositionDevice; }
 
-  bool UseTripleBuffering() const { return mUseTripleBuffering; }
+  bool UseTripleBuffering() const override { return mUseTripleBuffering; }
 
   LayoutDeviceIntSize GetBufferSize() override;
 

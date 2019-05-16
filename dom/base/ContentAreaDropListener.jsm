@@ -276,7 +276,7 @@ ContentAreaDropListener.prototype =
     return url;
   },
 
-  dropLinks: function(aEvent, aDisallowInherit, aCount)
+  dropLinks: function(aEvent, aDisallowInherit)
   {
     if (aEvent && this._eventTargetIsDisabled(aEvent))
       return [];
@@ -297,13 +297,11 @@ ContentAreaDropListener.prototype =
         throw ex;
       }
     }
-    if (aCount)
-      aCount.value = links.length;
 
     return links;
   },
 
-  validateURIsForDrop: function(aEvent, aURIsCount, aURIs, aDisallowInherit)
+  validateURIsForDrop: function(aEvent, aURIs, aDisallowInherit)
   {
     let dataTransfer = aEvent.dataTransfer;
     let triggeringPrincipal = this._getTriggeringPrincipalFromDataTransfer(dataTransfer, false);
@@ -314,13 +312,9 @@ ContentAreaDropListener.prototype =
     }
   },
 
-  queryLinks: function(aDataTransfer, aCount)
+  queryLinks: function(aDataTransfer)
   {
-    let links = this._getDropLinks(aDataTransfer);
-    if (aCount) {
-      aCount.value = links.length;
-    }
-    return links;
+    return this._getDropLinks(aDataTransfer);
   },
 
   _eventTargetIsDisabled: function(aEvent)

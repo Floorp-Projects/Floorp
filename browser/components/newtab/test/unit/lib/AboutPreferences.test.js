@@ -113,7 +113,6 @@ describe("AboutPreferences Feed", () => {
       assert.equal(stub.firstCall.args[2][1].id, "topsites");
       assert.equal(stub.firstCall.args[2][2].id, "topstories");
       assert.isEmpty(stub.firstCall.args[2][2].rowsPref);
-      assert.equal(stub.firstCall.args[2][2].pref.descString.id, "prefs_content_discovery_description");
     });
   });
   describe("#strings", () => {

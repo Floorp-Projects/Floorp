@@ -781,7 +781,10 @@ nsContextMenu.prototype = {
   },
 
   openPasswordManager() {
-    LoginHelper.openPasswordManager(window, gContextMenuContentData.documentURIObject.host);
+    LoginHelper.openPasswordManager(window, {
+      filterString: gContextMenuContentData.documentURIObject.host,
+      entryPoint: "contextmenu",
+    });
   },
 
   inspectNode() {

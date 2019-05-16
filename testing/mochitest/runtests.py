@@ -622,6 +622,9 @@ class SSLTunnel:
 
             if option in (
                     'tls1',
+                    'tls1_1',
+                    'tls1_2',
+                    'tls1_3',
                     'ssl3',
                     'rc4',
                     'failHandshake'):

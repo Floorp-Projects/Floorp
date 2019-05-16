@@ -39,8 +39,8 @@ async function togglePasswords() {
 }
 
 async function editUsernamePromises(site, oldUsername, newUsername) {
-  is(Services.logins.findLogins({}, site, "", "").length, 1, "Correct login found");
-  let login = Services.logins.findLogins({}, site, "", "")[0];
+  is(Services.logins.findLogins(site, "", "").length, 1, "Correct login found");
+  let login = Services.logins.findLogins(site, "", "")[0];
   is(login.username, oldUsername, "Correct username saved");
   is(getUsername(0), oldUsername, "Correct username shown");
   let focusPromise = BrowserTestUtils.waitForEvent(signonsTree.inputField, "focus", true);
@@ -53,15 +53,15 @@ async function editUsernamePromises(site, oldUsername, newUsername) {
   await ContentTaskUtils.waitForCondition(() => !signonsTree.getAttribute("editing"),
                                           "Waiting for editing to stop");
 
-  is(Services.logins.findLogins({}, site, "", "").length, 1, "Correct login replaced");
-  login = Services.logins.findLogins({}, site, "", "")[0];
+  is(Services.logins.findLogins(site, "", "").length, 1, "Correct login replaced");
+  login = Services.logins.findLogins(site, "", "")[0];
   is(login.username, newUsername, "Correct username updated");
   is(getUsername(0), newUsername, "Correct username shown after the update");
 }
 
 async function editPasswordPromises(site, oldPassword, newPassword) {
-  is(Services.logins.findLogins({}, site, "", "").length, 1, "Correct login found");
-  let login = Services.logins.findLogins({}, site, "", "")[0];
+  is(Services.logins.findLogins(site, "", "").length, 1, "Correct login found");
+  let login = Services.logins.findLogins(site, "", "")[0];
   is(login.password, oldPassword, "Correct password saved");
   is(getPassword(0), oldPassword, "Correct password shown");
 
@@ -75,8 +75,8 @@ async function editPasswordPromises(site, oldPassword, newPassword) {
   await ContentTaskUtils.waitForCondition(() => !signonsTree.getAttribute("editing"),
                                           "Waiting for editing to stop");
 
-  is(Services.logins.findLogins({}, site, "", "").length, 1, "Correct login replaced");
-  login = Services.logins.findLogins({}, site, "", "")[0];
+  is(Services.logins.findLogins(site, "", "").length, 1, "Correct login replaced");
+  login = Services.logins.findLogins(site, "", "")[0];
   is(login.password, newPassword, "Correct password updated");
   is(getPassword(0), newPassword, "Correct password shown after the update");
 }

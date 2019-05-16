@@ -963,7 +963,7 @@ static bool ParseISOStyleDate(const CharT* s, size_t length,
     }
     ++i;
     NEED_NDIGITS(6, year);
-  } else if (!PEEK('T')) {
+  } else {
     NEED_NDIGITS(4, year);
   }
   DONE_DATE_UNLESS('-');
@@ -1051,6 +1051,7 @@ done:
 #undef NEED
 #undef DONE_UNLESS
 #undef NEED_NDIGITS
+#undef NEED_NDIGITS_OR_LESS
 }
 
 template <typename CharT>

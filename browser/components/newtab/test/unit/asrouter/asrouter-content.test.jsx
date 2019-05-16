@@ -304,5 +304,18 @@ describe("ASRouterUISurface", () => {
       assert.propertyVal(payload, "action", `${FAKE_MESSAGE.provider}_user_event`);
       assert.propertyVal(payload, "source", "NEWTAB_FOOTER_BAR");
     });
+
+    it("should call .sendTelemetry with the right message data when a bundle is dismissed", () => {
+      wrapper.instance().dismissBundle([{id: 1}, {id: 2}, {id: 3}])();
+
+      assert.calledOnce(ASRouterUtils.sendTelemetry);
+      assert.calledWith(ASRouterUtils.sendTelemetry, {
+        action: "onboarding_user_event",
+        event: "DISMISS",
+        id: "onboarding-cards",
+        message_id: "1,2,3",
+        source: "onboarding-cards",
+      });
+    });
   });
 });

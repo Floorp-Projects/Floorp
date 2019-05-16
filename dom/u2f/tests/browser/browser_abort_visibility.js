@@ -70,6 +70,7 @@ add_task(async function test_abort() {
   Services.prefs.setBoolPref("security.webauth.u2f", true);
   Services.prefs.setBoolPref("security.webauth.webauthn_enable_softtoken", false);
   Services.prefs.setBoolPref("security.webauth.webauthn_enable_usbtoken", true);
+  Services.prefs.setBoolPref("security.webauth.webauthn_enable_android_fido2", false);
 
   // Create a new tab for the MakeCredential() request.
   let tab_create = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);

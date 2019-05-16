@@ -11,11 +11,18 @@ FORCE_STATIC_LIB = True
 UNIFIED_SOURCES += [
     '/ipc/mscom/ProcessRuntime.cpp',
     '/widget/windows/WindowsConsole.cpp',
-    'DllBlocklistWin.cpp',
     'ErrorHandler.cpp',
     'LauncherProcessWin.cpp',
     'LaunchUnelevated.cpp',
 ]
+
+SOURCES += [
+    'DllBlocklistWin.cpp',
+]
+# Our patched NtMapViewOfSection can be called before the process's import
+# table is populated.  Don't let the compiler insert any instrumentation
+# that might call an import.
+SOURCES['DllBlocklistWin.cpp'].no_pgo = True
 
 OS_LIBS += [
     'ntdll',

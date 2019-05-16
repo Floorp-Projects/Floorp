@@ -23,7 +23,9 @@ SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
                                    ["security.webauth.webauthn_enable_softtoken", true],
-                                   ["security.webauth.webauthn_enable_usbtoken", false]]},
+                                   ["security.webauth.webauthn_enable_usbtoken", false],
+                                   ["security.webauth.webauthn_enable_android_fido2", false],
+                                  ]},
 async function() {
   // This test ensures that isUserVerifyingPlatformAuthenticatorAvailable()
   // is a callable method, but with the softtoken enabled, it's not useful to

@@ -154,6 +154,10 @@ JitExecStatus jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp,
     const BaselineInterpreter& interp =
         cx->runtime()->jitRuntime()->baselineInterpreter();
     data.jitcode = interp.interpretOpAddr().value;
+    if (fp->isDebuggee()) {
+      // Skip the debug trap emitted by emitInterpreterLoop.
+      data.jitcode += MacroAssembler::ToggledCallSize(data.jitcode);
+    }
   }
 
   // Note: keep this in sync with SetEnterJitData.
@@ -423,8 +427,16 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
     case Method_Compiled: {
       if (*pc == JSOP_LOOPENTRY) {
         PCMappingSlotInfo slotInfo;
-        *res = script->baselineScript()->nativeCodeForPC(script, pc, &slotInfo);
+        BaselineScript* baselineScript = script->baselineScript();
+        *res = baselineScript->nativeCodeForPC(script, pc, &slotInfo);
         MOZ_ASSERT(slotInfo.isStackSynced());
+        if (frame->isDebuggee()) {
+          // Skip the debug trap emitted by emitInterpreterLoop because the
+          // Baseline Interpreter already handled it for the current op. This
+          // matches EnterBaseline.
+          MOZ_RELEASE_ASSERT(baselineScript->hasDebugInstrumentation());
+          *res += MacroAssembler::ToggledCallSize(*res);
+        }
       } else {
         *res = script->baselineScript()->warmUpCheckPrologueAddr();
       }
@@ -1158,6 +1170,33 @@ void BaselineInterpreter::toggleDebuggerInstrumentation(bool enable) {
   }
 }
 
+void BaselineInterpreter::toggleCodeCoverageInstrumentationUnchecked(
+    bool enable) {
+  if (!JitOptions.baselineInterpreter) {
+    return;
+  }
+
+  AutoWritableJitCode awjc(code_);
+
+  for (uint32_t offset : codeCoverageOffsets_) {
+    CodeLocationLabel label(code_, CodeOffset(offset));
+    if (enable) {
+      Assembler::ToggleToCmp(label);
+    } else {
+      Assembler::ToggleToJmp(label);
+    }
+  }
+}
+
+void BaselineInterpreter::toggleCodeCoverageInstrumentation(bool enable) {
+  if (coverage::IsLCovEnabled()) {
+    // Instrumentation is enabled no matter what.
+    return;
+  }
+
+  toggleCodeCoverageInstrumentationUnchecked(enable);
+}
+
 void ICScript::purgeOptimizedStubs(JSScript* script) {
   MOZ_ASSERT(script->icScript() == this);
 
@@ -1426,13 +1465,15 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
                                uint32_t debuggeeCheckOffset,
-                               DebugTrapOffsets&& debugTrapOffsets) {
+                               CodeOffsetVector&& debugTrapOffsets,
+                               CodeOffsetVector&& codeCoverageOffsets) {
   code_ = code;
   interpretOpOffset_ = interpretOpOffset;
   profilerEnterToggleOffset_ = profilerEnterToggleOffset;
   profilerExitToggleOffset_ = profilerExitToggleOffset;
   debuggeeCheckOffset_ = debuggeeCheckOffset;
   debugTrapOffsets_ = std::move(debugTrapOffsets);
+  codeCoverageOffsets_ = std::move(codeCoverageOffsets);
 }
 
 bool jit::GenerateBaselineInterpreter(JSContext* cx,

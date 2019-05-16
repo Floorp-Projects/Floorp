@@ -610,7 +610,7 @@ const getAllGeneratedLocations = exports.getAllGeneratedLocations = async (locat
 
 const getOriginalLocation = exports.getOriginalLocation = async (location, options = {}) => _getOriginalLocation(location, options);
 
-const getOriginalLocations = exports.getOriginalLocations = async (locations, options = {}) => dispatcher.invoke("getOriginalLocations", locations, options);
+const getOriginalLocations = exports.getOriginalLocations = async (sourceId, locations, options = {}) => dispatcher.invoke("getOriginalLocations", sourceId, locations, options);
 
 const getGeneratedRangesForOriginal = exports.getGeneratedRangesForOriginal = async (sourceId, url, mergeUnmappedRegions) => dispatcher.invoke("getGeneratedRangesForOriginal", sourceId, url, mergeUnmappedRegions);
 

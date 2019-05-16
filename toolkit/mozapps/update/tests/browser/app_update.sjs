@@ -50,7 +50,7 @@ const BAD_SERVICE_URL = URL_HOST + "/" + REL_PATH_DATA + "not_here.mar";
 // A value of 10 caused the tests to intermittently fail on Mac OS X so be
 // careful when changing this value.
 const SLOW_RESPONSE_INTERVAL = 100;
-const MAX_SLOW_RESPONSE_RETRIES = 50;
+const MAX_SLOW_RESPONSE_RETRIES = 200;
 var gSlowDownloadTimer;
 var gSlowCheckTimer;
 

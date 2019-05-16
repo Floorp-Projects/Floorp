@@ -246,10 +246,6 @@ const PREFS_CONFIG = new Map([
     title: "Endpoint prefixes (comma-separated) that are allowed to be requested",
     value: "https://getpocket.cdn.mozilla.net/",
   }],
-  ["discoverystream.optOut.0", {
-    title: "Opt out of new layout v0",
-    value: false,
-  }],
   ["discoverystream.spoc.impressions", {
     title: "Track spoc impressions",
     skipBroadcast: true,
@@ -302,7 +298,7 @@ const FEEDS_DATA = [
   },
   {
     name: "section.topstories",
-    factory: () => new TopStoriesFeed(),
+    factory: () => new TopStoriesFeed(PREFS_CONFIG.get("discoverystream.config")),
     title: "Fetches content recommendations from a configurable content provider",
     // Dynamically determine if Pocket should be shown for a geo / locale
     getValue: ({geo, locale}) => {

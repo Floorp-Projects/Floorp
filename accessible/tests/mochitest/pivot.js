@@ -23,9 +23,8 @@ const NS_ERROR_INVALID_ARG = 0x80070057;
  */
 var HeadersTraversalRule =
 {
-  getMatchRoles(aRules) {
-    aRules.value = [ROLE_HEADING];
-    return aRules.value.length;
+  getMatchRoles() {
+    return [ROLE_HEADING];
   },
 
   preFilter: PREFILTER_INVISIBLE,
@@ -42,9 +41,8 @@ var HeadersTraversalRule =
  */
 var ObjectTraversalRule =
 {
-  getMatchRoles(aRules) {
-    aRules.value = [];
-    return 0;
+  getMatchRoles() {
+    return [];
   },
 
   preFilter: PREFILTER_INVISIBLE | PREFILTER_TRANSPARENT,

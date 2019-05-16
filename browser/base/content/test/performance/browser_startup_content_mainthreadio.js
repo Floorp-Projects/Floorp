@@ -73,18 +73,6 @@ const processes = {
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
-    { // bug 1543761
-      path: "GreD:chrome.manifest",
-      condition: !WIN, // Visible on Windows with an open marker
-      stat: 1,
-      close: 1,
-    },
-    { // bug 1376994, bug 1543761
-      path: "XCurProcD:chrome.manifest",
-      condition: !WIN, // Visible on Windows with an open marker
-      stat: 1,
-      close: 1,
-    },
     { // Exists call in ScopedXREEmbed::SetAppDir
       path: "XCurProcD:",
       condition: WIN,
@@ -112,18 +100,6 @@ const processes = {
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
     },
-    { // bug 1543761
-      path: "GreD:chrome.manifest",
-      condition: !WIN, // Visible on Windows with an open marker
-      stat: 1,
-      close: 1,
-    },
-    { // bug 1376994, bug 1543761
-      path: "XCurProcD:chrome.manifest",
-      condition: !WIN, // Visible on Windows with an open marker
-      stat: 1,
-      close: 1,
-    },
     { // Exists call in ScopedXREEmbed::SetAppDir
       path: "XCurProcD:",
       condition: WIN,
@@ -145,18 +121,6 @@ const processes = {
       path: "XCurProcD:omni.ja",
       condition: !WIN, // Visible on Windows with an open marker
       stat: 1,
-    },
-    { // bug 1543761
-      path: "GreD:chrome.manifest",
-      condition: !WIN, // Visible on Windows with an open marker
-      stat: 1,
-      close: 1,
-    },
-    { // bug 1376994, bug 1543761
-      path: "XCurProcD:chrome.manifest",
-      condition: !WIN, // Visible on Windows with an open marker
-      stat: 1,
-      close: 1,
     },
     { // Exists call in ScopedXREEmbed::SetAppDir
       path: "XCurProcD:",

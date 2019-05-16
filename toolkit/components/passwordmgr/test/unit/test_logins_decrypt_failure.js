@@ -38,8 +38,8 @@ add_task(function test_logins_decrypt_failure() {
 
   // These functions don't see the non-decryptable entries anymore.
   Assert.equal(Services.logins.getAllLogins().length, 0);
-  Assert.equal(Services.logins.findLogins({}, "", "", "").length, 0);
-  Assert.equal(Services.logins.searchLogins({}, newPropertyBag()).length, 0);
+  Assert.equal(Services.logins.findLogins("", "", "").length, 0);
+  Assert.equal(Services.logins.searchLogins(newPropertyBag()).length, 0);
   Assert.throws(() => Services.logins.modifyLogin(logins[0], newPropertyBag()),
                 /No matching logins/);
   Assert.throws(() => Services.logins.removeLogin(logins[0]),
@@ -56,10 +56,10 @@ add_task(function test_logins_decrypt_failure() {
   Assert.equal(Services.logins.countLogins("", "", ""), logins.length * 2);
 
   // Finding logins doesn't return the non-decryptable duplicates.
-  Assert.equal(Services.logins.findLogins({}, "http://www.example.com",
+  Assert.equal(Services.logins.findLogins("http://www.example.com",
                                           "", "").length, 1);
   let matchData = newPropertyBag({ hostname: "http://www.example.com" });
-  Assert.equal(Services.logins.searchLogins({}, matchData).length, 1);
+  Assert.equal(Services.logins.searchLogins(matchData).length, 1);
 
   // Removing single logins does not remove non-decryptable logins.
   for (let loginInfo of TestData.loginList()) {
@@ -100,7 +100,7 @@ add_task(function test_add_logins_with_decrypt_failure() {
                    .createInstance(Ci.nsIWritablePropertyBag2);
   searchProp.setPropertyAsAUTF8String("guid", login.guid);
 
-  equal(Services.logins.searchLogins({}, searchProp).length, 1);
+  equal(Services.logins.searchLogins(searchProp).length, 1);
 
   // We should fail to re-add it as it remains good.
   Assert.throws(() => Services.logins.addLogin(login),
@@ -113,11 +113,11 @@ add_task(function test_add_logins_with_decrypt_failure() {
   resetMasterPassword();
 
   // We can no longer find it in our search.
-  equal(Services.logins.searchLogins({}, searchProp).length, 0);
+  equal(Services.logins.searchLogins(searchProp).length, 0);
 
   // So we should be able to re-add a login with that same GUID.
   Services.logins.addLogin(login);
-  equal(Services.logins.searchLogins({}, searchProp).length, 1);
+  equal(Services.logins.searchLogins(searchProp).length, 1);
 
   Services.logins.removeAllLogins();
 });

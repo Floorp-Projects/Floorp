@@ -13141,6 +13141,10 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
   // Call into InternalLoad with the pending channel when it is received.
   cpcl->RegisterCallback(
       aIdentifier, [self, aHistoryIndex](nsIChildChannel* aChannel) {
+        if (NS_WARN_IF(self->mIsBeingDestroyed)) {
+          return;
+        }
+
         RefPtr<nsDocShellLoadState> loadState;
         nsresult rv = nsDocShellLoadState::CreateFromPendingChannel(
             aChannel, getter_AddRefs(loadState));
@@ -13150,7 +13154,7 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
 
         // If we're performing a history load, locate the correct history entry,
         // and set the relevant bits on our loadState.
-        if (aHistoryIndex >= 0) {
+        if (aHistoryIndex >= 0 && self->mSessionHistory) {
           nsCOMPtr<nsISHistory> legacySHistory =
               self->mSessionHistory->LegacySHistory();
 

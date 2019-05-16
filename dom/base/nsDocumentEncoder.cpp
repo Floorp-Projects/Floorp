@@ -1083,13 +1083,14 @@ class nsHTMLCopyEncoder : public nsDocumentEncoder {
   nsresult GetPromotedPoint(Endpoint aWhere, nsINode* aNode, int32_t aOffset,
                             nsCOMPtr<nsINode>* outNode, int32_t* outOffset,
                             nsINode* aCommon);
-  nsCOMPtr<nsINode> GetChildAt(nsINode* aParent, int32_t aOffset);
-  bool IsMozBR(Element* aNode);
-  nsresult GetNodeLocation(nsINode* inChild, nsCOMPtr<nsINode>* outParent,
-                           int32_t* outOffset);
+  static nsCOMPtr<nsINode> GetChildAt(nsINode* aParent, int32_t aOffset);
+  static bool IsMozBR(Element* aNode);
+  static nsresult GetNodeLocation(nsINode* inChild,
+                                  nsCOMPtr<nsINode>* outParent,
+                                  int32_t* outOffset);
   bool IsRoot(nsINode* aNode);
-  bool IsFirstNode(nsINode* aNode);
-  bool IsLastNode(nsINode* aNode);
+  static bool IsFirstNode(nsINode* aNode);
+  static bool IsLastNode(nsINode* aNode);
   virtual bool IncludeInContext(nsINode* aNode) override;
   virtual int32_t GetImmediateContextCount(
       const nsTArray<nsINode*>& aAncestorArray) override;
@@ -1167,48 +1168,6 @@ nsHTMLCopyEncoder::SetSelection(Selection* aSelection) {
       mIsTextWidget = true;
       break;
     }
-#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
-    else if (selContent->IsHTMLElement(nsGkAtoms::body)) {
-      // Currently, setting mIsTextWidget to 'true' will result in the selection
-      // being encoded/copied as pre-formatted plain text.
-      // This is fine for copying pre-formatted plain text with Firefox, it is
-      // already not correct for copying pre-formatted "rich" text (bold,
-      // colour) with Firefox. As long as the serialisers aren't fixed, copying
-      // pre-formatted text in Firefox is broken. If we set mIsTextWidget,
-      // pre-formatted plain text is copied, but pre-formatted "rich" text loses
-      // the "rich" formatting. If we don't set mIsTextWidget, "rich" text
-      // attributes aren't lost, but white-space is lost.
-      // So far the story for Firefox.
-      //
-      // Thunderbird has two *conflicting* requirements.
-      // Case 1:
-      // When selecting and copying text, even pre-formatted text, as a quote
-      // to be placed into a reply, we *always* expect HTML to be copied.
-      // Case 2:
-      // When copying text in a so-called "plain text" message, that is
-      // one where the body carries style "white-space:pre-wrap", the text
-      // should be copied as pre-formatted plain text.
-      //
-      // Therefore the following code checks for "pre-wrap" on the body.
-      // This is a terrible hack.
-      //
-      // The proper fix would be this:
-      // For case 1:
-      // Communicate the fact that HTML is required to EncodeToString(),
-      // bug 1141786.
-      // For case 2:
-      // Wait for Firefox to get fixed to detect pre-formatting correctly,
-      // bug 1174452.
-      nsAutoString styleVal;
-      if (selContent->IsElement() &&
-          selContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                                           styleVal) &&
-          styleVal.Find(NS_LITERAL_STRING("pre-wrap")) != kNotFound) {
-        mIsTextWidget = true;
-        break;
-      }
-    }
-#endif
   }
 
   // normalize selection if we are not in a widget

@@ -12,7 +12,6 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/Preferences.h"
 
 using mozilla::OriginAttributes;
 
@@ -54,17 +53,6 @@ class nsCookie final : public nsICookie2 {
         mIsHttpOnly(aIsHttpOnly),
         mOriginAttributes(aOriginAttributes),
         mSameSite(aSameSite) {}
-
-  static int CookieStaleThreshold() {
-    static bool initialized = false;
-    static int value = 60;
-    if (!initialized) {
-      mozilla::Preferences::AddIntVarCache(&value,
-                                           "network.cookie.staleThreshold", 60);
-      initialized = true;
-    }
-    return value;
-  }
 
  public:
   // Generate a unique and monotonically increasing creation time. See comment

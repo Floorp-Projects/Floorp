@@ -85,7 +85,7 @@ PasswordEngine.prototype = {
       try {
         let ids = [];
         for (let host of Utils.getSyncCredentialsHosts()) {
-          for (let info of Services.logins.findLogins({}, host, "", "")) {
+          for (let info of Services.logins.findLogins(host, "", "")) {
             ids.push(info.QueryInterface(Ci.nsILoginMetaInfo).guid);
           }
         }
@@ -120,7 +120,7 @@ PasswordEngine.prototype = {
       return null;
     }
 
-    let logins = Services.logins.findLogins({}, login.hostname, login.formSubmitURL, login.httpRealm);
+    let logins = Services.logins.findLogins(login.hostname, login.formSubmitURL, login.httpRealm);
 
     await Async.promiseYield(); // Yield back to main thread after synchronous operation.
 
@@ -199,7 +199,7 @@ PasswordStore.prototype = {
     let prop = this._newPropertyBag();
     prop.setPropertyAsAUTF8String("guid", id);
 
-    let logins = Services.logins.searchLogins({}, prop);
+    let logins = Services.logins.searchLogins(prop);
     await Async.promiseYield(); // Yield back to main thread after synchronous operation.
 
     if (logins.length > 0) {
@@ -213,7 +213,7 @@ PasswordStore.prototype = {
 
   async getAllIDs() {
     let items = {};
-    let logins = Services.logins.getAllLogins({});
+    let logins = Services.logins.getAllLogins();
 
     for (let i = 0; i < logins.length; i++) {
       // Skip over Weave password/passphrase entries.
@@ -402,7 +402,7 @@ class PasswordValidator extends CollectionValidator {
   }
 
   getClientItems() {
-    let logins = Services.logins.getAllLogins({});
+    let logins = Services.logins.getAllLogins();
     let syncHosts = Utils.getSyncCredentialsHosts();
     let result = logins.map(l => l.QueryInterface(Ci.nsILoginMetaInfo))
                        .filter(l => !syncHosts.has(l.hostname));

@@ -518,6 +518,11 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
     loadValue(dest.toAddress(), val);
   }
   void loadValue(const BaseIndex& addr, ValueOperand val);
+
+  void loadUnalignedValue(const Address& src, ValueOperand dest) {
+    loadValue(src, dest);
+  }
+
   void tagValue(JSValueType type, Register payload, ValueOperand dest);
 
   void pushValue(ValueOperand val);

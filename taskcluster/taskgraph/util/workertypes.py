@@ -6,7 +6,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from mozbuild.util import memoize
 
+from .taskcluster import get_root_url
 from .keyed_by import evaluate_keyed_by
+from .attributes import keymatch
 
 WORKER_TYPES = {
     'gce/gecko-1-b-linux': ('docker-worker', 'linux'),
@@ -31,40 +33,68 @@ WORKER_TYPES = {
 
 
 @memoize
+def _get(graph_config, alias, level):
+    """Get the configuration for this worker_type alias: {provisioner,
+    worker-type, implementation, os}"""
+    level = str(level)
+
+    # handle the legacy (non-alias) format
+    if '/' in alias:
+        alias = alias.format(level=level)
+        provisioner, worker_type = alias.split("/", 1)
+        try:
+            implementation, os = WORKER_TYPES[alias]
+            return {
+                'provisioner': provisioner,
+                'worker-type': worker_type,
+                'implementation': implementation,
+                'os': os,
+            }
+        except KeyError:
+            return {
+                'provisioner': provisioner,
+                'worker-type': worker_type,
+            }
+
+    matches = keymatch(graph_config['workers']['aliases'], alias)
+    if len(matches) > 1:
+        raise KeyError("Multiple matches for worker-type alias " + alias)
+    elif not matches:
+        raise KeyError("No matches for worker-type alias " + alias)
+    worker_config = matches[0].copy()
+
+    worker_config['worker-type'] = evaluate_keyed_by(
+        worker_config['worker-type'],
+        "worker-type alias {} field worker-type".format(alias),
+        {"level": level}).format(level=level, alias=alias)
+
+    return worker_config
+
+
+@memoize
 def worker_type_implementation(graph_config, worker_type):
     """Get the worker implementation and OS for the given workerType, where the
     OS represents the host system, not the target OS, in the case of
     cross-compiles."""
-    if '/' in worker_type:
-        worker_type = worker_type.replace('{level}', '1')
-        return WORKER_TYPES[worker_type]
-    else:
-        worker_config = evaluate_keyed_by(
-            {"by-worker-type": graph_config["workers"]["aliases"]},
-            "worker-types.yml",
-            {'worker-type': worker_type},
-        )
-        return worker_config['implementation'], worker_config['os']
+    worker_config = _get(graph_config, worker_type, '1')
+    return worker_config['implementation'], worker_config['os']
 
 
 @memoize
 def get_worker_type(graph_config, worker_type, level):
     """
-    Get the worker type based, evaluating aliases from the graph config.
+    Get the worker type provisioner and worker-type, optionally evaluating
+    aliases from the graph config.
     """
-    level = str(level)
-    if '/' in worker_type:
-        worker_type = worker_type.format(level=level)
-        return worker_type.split("/", 1)
-    else:
-        worker_config = evaluate_keyed_by(
-            {"by-worker-type": graph_config["workers"]["aliases"]},
-            "worker-types.yml",
-            {"worker-type": worker_type},
-        )
-        worker_type = evaluate_keyed_by(
-            worker_config["worker-type"],
-            worker_type,
-            {"level": level},
-        ).format(level=level, alias=worker_type)
-        return worker_config["provisioner"], worker_type
+    worker_config = _get(graph_config, worker_type, level)
+
+    # translate the provisionerId to 'ec2' everywhere but the original
+    # https://taskcluster.net deployment.  Once that deployment is no longer in
+    # use, this can be removed and all corresponding provisioners changed to
+    # `ec2`
+    root_url = get_root_url(False)
+    provisioner = worker_config["provisioner"]
+    if root_url != 'https://taskcluster.net' and provisioner == 'aws-provisioner-v1':
+        provisioner = 'ec2'
+
+    return provisioner, worker_config['worker-type']

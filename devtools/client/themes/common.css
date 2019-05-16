@@ -59,6 +59,11 @@
   scrollbar-color: var(--grey-40) var(--grey-20);
 }
 
+::selection {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
 .devtools-monospace {
   font-family: var(--monospace-font-family);
   font-size: var(--theme-code-font-size);

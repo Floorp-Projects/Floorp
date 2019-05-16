@@ -25,6 +25,9 @@ abstract class TelemetryPingBuilder {
     // In the server url, the initial path directly after the "scheme://host:port/"
     private static final String SERVER_INITIAL_PATH = "submit/telemetry";
 
+    // Modern pings now use a structured ingestion where we capture the schema version as one of the URI parameters.
+    private static final String SERVER_INITIAL_PATH_MODERN = "submit/mobile";
+
     // By default Fennec ping's use the old telemetry version, this can be overridden
     private static final int DEFAULT_TELEMETRY_VERSION = 1;
 
@@ -45,6 +48,12 @@ abstract class TelemetryPingBuilder {
     public TelemetryPingBuilder(int version) {
         docID = UUID.randomUUID().toString();
         serverPath = getTelemetryServerPath(getDocType(), docID, version);
+        payload = new ExtendedJSONObject();
+    }
+
+    public TelemetryPingBuilder(int version, boolean modernPing) {
+        docID = UUID.randomUUID().toString();
+        serverPath = modernPing ? getModernTelemetryServerPath(getDocType(), docID, version) : getTelemetryServerPath(getDocType(), docID, version);
         payload = new ExtendedJSONObject();
     }
 
@@ -99,5 +108,23 @@ abstract class TelemetryPingBuilder {
                 appUpdateChannel + '/' +
                 appBuildId +
                 (version == UNIFIED_TELEMETRY_VERSION ? "?v=4" : "");
+    }
+
+    /**
+     * Returns a url of the format:
+     *   http://hostname/submit/mobile/docType/appVersion/docId/
+     *
+     *   User for modern structured ingestion.
+     *
+     * @param docType The name of the ping (e.g. "main")
+     * @param docID A UUID that identifies the ping
+     * @param version The ping format version
+     * @return a url at which to POST the telemetry data to
+     */
+    private static String getModernTelemetryServerPath(final String docType, final String docID, int version) {
+        return SERVER_INITIAL_PATH_MODERN + '/' +
+                docType + '/' +
+                version + '/' +
+                docID;
     }
 }

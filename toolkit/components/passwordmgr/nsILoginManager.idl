@@ -97,35 +97,25 @@ interface nsILoginManager : nsISupports {
    * Fetch all logins in the login manager. An array is always returned;
    * if there are no logins the array is empty.
    *
-   * @param count
-   *        The number of elements in the array. JS callers can simply use
-   *        the array's .length property and omit this param.
-   * @param logins
-   *        An array of nsILoginInfo objects.
+   * @return An array of nsILoginInfo objects.
    *
    * NOTE: This can be called from JS as:
    *       var logins = pwmgr.getAllLogins();
    *       (|logins| is an array).
    */
-  void getAllLogins([optional] out unsigned long count,
-                    [retval, array, size_is(count)] out nsILoginInfo logins);
+  Array<nsILoginInfo> getAllLogins();
 
 
   /**
    * Obtain a list of all hosts for which password saving is disabled.
    *
-   * @param count
-   *        The number of elements in the array. JS callers can simply use
-   *        the array's .length property and omit this param.
-   * @param hostnames
-   *        An array of hostname strings, in origin URL format without a
-   *        pathname. For example: "https://www.site.com".
+   * @return An array of hostname strings, in origin URL format without a
+   *         pathname. For example: "https://www.site.com".
    *
    * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.getDisabledAllLogins();
+   *       var logins = pwmgr.getAllDisabledHosts();
    */
-  void getAllDisabledHosts([optional] out unsigned long count,
-                    [retval, array, size_is(count)] out wstring hostnames);
+  Array<AString> getAllDisabledHosts();
 
 
   /**
@@ -157,10 +147,6 @@ interface nsILoginManager : nsISupports {
    * Search for logins matching the specified criteria. Called when looking
    * for logins that might be applicable to a form or authentication request.
    *
-   * @param count
-   *        The number of elements in the array. JS callers can simply use
-   *        the array's .length property, and supply an dummy object for
-   *        this out param. For example: |findLogins({}, hostname, ...)|
    * @param aHostname
    *        The hostname to restrict searches to, in URL format. For
    *        example: "http://www.site.com".
@@ -176,16 +162,14 @@ interface nsILoginManager : nsISupports {
    *        WWW-Authenticate header. See RFC2617. For form logins,
    *        specify null.
    *        An empty string ("") will match any value (except null).
-   * @param logins
-   *        An array of nsILoginInfo objects.
+   * @return An array of nsILoginInfo objects.
    *
    * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.findLogins({}, hostname, ...);
+   *       var logins = pwmgr.findLogins(hostname, ...);
    *
    */
-  void findLogins(out unsigned long count, in AString aHostname,
-                  in AString aActionURL,   in AString aHttpRealm,
-                  [retval, array, size_is(count)] out nsILoginInfo logins);
+  Array<nsILoginInfo> findLogins(in AString aHostname, in AString aActionURL,
+				 in AString aHttpRealm);
 
 
   /**
@@ -215,23 +199,17 @@ interface nsILoginManager : nsISupports {
    * Search for logins in the login manager. An array is always returned;
    * if there are no logins the array is empty.
    *
-   * @param count
-   *        The number of elements in the array. JS callers can simply use
-   *        the array's .length property, and supply an dummy object for
-   *        this out param. For example: |searchLogins({}, matchData)|
    * @param matchData
    *        The data used to search. This does not follow the same
    *        requirements as findLogins for those fields. Wildcard matches are
    *        simply not specified.
-   * @param logins
-   *        An array of nsILoginInfo objects.
+   * @return An array of nsILoginInfo objects.
    *
    * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.searchLogins({}, matchData);
+   *       var logins = pwmgr.searchLogins(matchData);
    *       (|logins| is an array).
    */
-  void searchLogins(out unsigned long count, in nsIPropertyBag matchData,
-                    [retval, array, size_is(count)] out nsILoginInfo logins);
+  Array<nsILoginInfo> searchLogins(in nsIPropertyBag matchData);
 
  /**
   * True when a master password prompt is being displayed.

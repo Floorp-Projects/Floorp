@@ -16,16 +16,20 @@ import mapExpression from "./mapExpression";
 import { workerUtils } from "devtools-utils";
 const { workerHandler } = workerUtils;
 
+function clearState() {
+  clearASTs();
+  clearScopes();
+  clearSources();
+  clearSymbols();
+}
+
 self.onmessage = workerHandler({
   findOutOfScopeLocations,
   getSymbols,
   getScopes,
-  clearSymbols,
-  clearScopes,
-  clearASTs,
-  setSource,
-  clearSources,
+  clearState,
   getNextStep,
   hasSyntaxError,
-  mapExpression
+  mapExpression,
+  setSource
 });

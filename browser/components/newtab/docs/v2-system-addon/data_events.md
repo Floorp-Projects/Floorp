@@ -985,7 +985,7 @@ This reports the user's interaction with Activity Stream Router.
   "locale": "en-US",
   "source": "ONBOARDING",
   "message_id": "onboarding_message_1",
-  "event": "CLICK_BUTTION"
+  "event": ["IMPRESSION" | "CLICK_BUTTION" | "INSTALL" | "BLOCK"]
 }
 ```
 

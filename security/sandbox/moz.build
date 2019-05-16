@@ -144,6 +144,10 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'chromium/sandbox/win/src/window.cc',
         'win/SandboxInitialization.cpp',
     ]
+    # Sandbox interceptors can be called before the process's import table
+    # is populated.  Don't let the compiler insert any instrumentation that
+    # might call an import.
+    SOURCES['chromium/sandbox/win/src/process_thread_interception.cc'].no_pgo = True
 
     if CONFIG['CPU_ARCH'] in ('x86_64', 'aarch64'):
         SOURCES += [

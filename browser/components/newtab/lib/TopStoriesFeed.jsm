@@ -30,17 +30,33 @@ const SPOC_IMPRESSION_TRACKING_PREF = "feeds.section.topstories.spoc.impressions
 const REC_IMPRESSION_TRACKING_PREF = "feeds.section.topstories.rec.impressions";
 const OPTIONS_PREF = "feeds.section.topstories.options";
 const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
+const DISCOVERY_STREAM_PREF = "discoverystream.config";
 
 this.TopStoriesFeed = class TopStoriesFeed {
-  constructor() {
-    this.spocCampaignMap = new Map();
+  constructor(ds) {
+    // Use discoverystream config pref default values for fast path and
+    // if needed lazy load activity stream top stories feed based on
+    // actual user preference when PREFS_INITIAL_VALUES and PREF_CHANGED is invoked
+    this.discoveryStreamEnabled = ds && ds.value && JSON.parse(ds.value).enabled;
+    if (!this.discoveryStreamEnabled) {
+      this.initializeProperties();
+    }
+  }
+
+  initializeProperties() {
     this.contentUpdateQueue = [];
+    this.spocCampaignMap = new Map();
     this.cache = new PersistentCache(SECTION_ID, true);
     this._prefs = new Prefs();
+    this.propertiesInitialized = true;
   }
 
   async onInit() {
     SectionsManager.enableSection(SECTION_ID);
+    if (this.discoveryStreamEnabled) {
+      return;
+    }
+
     try {
       const {options} = SectionsManager.sections.get(SECTION_ID);
       const apiKey = this.getApiKeyFromPref(options.api_key_pref);
@@ -99,7 +115,12 @@ this.TopStoriesFeed = class TopStoriesFeed {
 
   uninit() {
     this.storiesLoaded = false;
-    Services.obs.removeObserver(this, "idle-daily");
+    try {
+      Services.obs.removeObserver(this, "idle-daily");
+    } catch (e) {
+      // Attempt to remove unassociated observer which is possible when discovery stream
+      // is enabled and user never used activity stream experience
+    }
     SectionsManager.disableSection(SECTION_ID);
   }
 
@@ -643,10 +664,52 @@ this.TopStoriesFeed = class TopStoriesFeed {
     return false;
   }
 
-  async onAction(action) {
+  lazyLoadTopStories(dsPref) {
+    try {
+      this.discoveryStreamEnabled = JSON.parse(dsPref).enabled;
+    } catch (e) {
+      // Load activity stream top stories if fail to determine discovery stream state
+      this.discoveryStreamEnabled = false;
+    }
+
+    // Return without invoking initialization if top stories are loaded
+    if (this.storiesLoaded) {
+      return;
+    }
+
+    if (!this.discoveryStreamEnabled && !this.propertiesInitialized) {
+      this.initializeProperties();
+    }
+    this.init();
+  }
+
+  handleDisabled(action) {
     switch (action.type) {
-      case at.INIT:
-        this.init();
+      case at.PREFS_INITIAL_VALUES:
+        this.lazyLoadTopStories(action.data[DISCOVERY_STREAM_PREF]);
+        break;
+      case at.PREF_CHANGED:
+        if (action.data.name === DISCOVERY_STREAM_PREF) {
+          this.lazyLoadTopStories(action.data.value);
+        }
+        break;
+      case at.UNINIT:
+        this.uninit();
+        break;
+    }
+  }
+
+  async onAction(action) {
+    if (this.discoveryStreamEnabled) {
+      this.handleDisabled(action);
+      return;
+    }
+    switch (action.type) {
+      // Check for pref initial values to lazy load activity stream top stories
+      // Here we are not using usual INIT and relying on PREFS_INITIAL_VALUES
+      // to check discoverystream pref and load activity stream top stories only if needed.
+      case at.PREFS_INITIAL_VALUES:
+        this.lazyLoadTopStories(action.data[DISCOVERY_STREAM_PREF]);
         break;
       case at.SYSTEM_TICK:
         let stories;
@@ -710,6 +773,9 @@ this.TopStoriesFeed = class TopStoriesFeed {
         break;
       }
       case at.PREF_CHANGED:
+        if (action.data.name === DISCOVERY_STREAM_PREF) {
+          this.lazyLoadTopStories(action.data.value);
+        }
         // Check if spocs was disabled. Remove them if they were.
         if (action.data.name === "showSponsored" && !action.data.value) {
           await this.removeSpocs();

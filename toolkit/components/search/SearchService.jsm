@@ -24,6 +24,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  gEnvironment: ["@mozilla.org/process/environment;1", "nsIEnvironment"],
+});
+
 XPCOMUtils.defineLazyPreferenceGetter(this, "gGeoSpecificDefaultsEnabled",
   SearchUtils.BROWSER_SEARCH_PREF + "geoSpecificDefaults", false);
 
@@ -848,6 +852,7 @@ SearchService.prototype = {
     SearchUtils.log("_loadEngines: start");
     Services.obs.notifyObservers(null, SearchUtils.TOPIC_SEARCH_SERVICE, "find-jar-engines");
     let engines = await this._findEngines();
+    SearchUtils.log("_loadEngines: loading - " + engines.join(","));
 
     // Get the non-empty distribution directories into distDirs...
     let distDirs = [];
@@ -899,12 +904,15 @@ SearchService.prototype = {
     }
 
     let buildID = Services.appinfo.platformBuildID;
-    let rebuildCache = !cache.engines ||
+    let rebuildCache = gEnvironment.get("RELOAD_ENGINES") ||
+                       !cache.engines ||
                        cache.version != CACHE_VERSION ||
                        cache.locale != Services.locale.requestedLocale ||
                        cache.buildID != buildID ||
                        cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
                        this._visibleDefaultEngines.some(notInCacheVisibleEngines);
+
+    await WebExtensionPolicy.readyPromise;
 
     // If we are reiniting, delete previously installed built in
     // extensions that arent in the current engine list.
@@ -971,11 +979,16 @@ SearchService.prototype = {
           }
           this._extensions.set(id, localeMap);
           let path = EXT_SEARCH_PREFIX + id.split("@")[0] + "/";
-          await AddonManager.installBuiltinAddon(path);
-          // The AddonManager will install the engine asynchronously
-          // We can manually wait on that happening here.
-          await ExtensionParent.apiManager.global.pendingSearchSetupTasks.get(id);
-          SearchUtils.log("_loadEngines: " + id + " installed");
+          try {
+            await AddonManager.installBuiltinAddon(path);
+            // The AddonManager will install the engine asynchronously
+            // We can manually wait on that happening here.
+            await ExtensionParent.apiManager.global.pendingSearchSetupTasks.get(id);
+            SearchUtils.log("_loadEngines: " + id + " installed");
+          } catch (err) {
+            this._extensions.delete(id);
+            Cu.reportError("Failed to install engine: " + err.message + "\n" + err.stack);
+          }
         }
       }
     }
@@ -1815,6 +1828,7 @@ SearchService.prototype = {
   },
 
   async addEngineWithDetails(name, iconURL, alias, description, method, template, extensionID) {
+    SearchUtils.log("addEngineWithDetails: Adding \"" + template + "\".");
     let isCurrent = false;
     var params;
 

@@ -57,7 +57,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   </binding>
 
   <binding id="legacy-urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
-    <content newlines="stripsurroundingwhitespace">
+    <content newlines="stripsurroundingwhitespace"
+             type="autocomplete"
+             autocompletesearch="unifiedcomplete"
+             autocompletesearchparam="enable-actions"
+             autocompletepopup="PopupAutoCompleteRichResult"
+             completeselectedindex="true"
+             tabscrolling="true"
+             ontextentered="this.handleCommand(param);"
+             ontextreverted="return this.handleRevert();">
       <children includes="box"/>
       <xul:moz-input-box anonid="moz-input-box"
                          tooltip="aHTMLTooltip"

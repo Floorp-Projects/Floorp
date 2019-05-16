@@ -348,7 +348,7 @@ this.BrowserIDManager.prototype = {
    */
   deleteSyncCredentials() {
     for (let host of Utils.getSyncCredentialsHosts()) {
-      let logins = Services.logins.findLogins({}, host, "", "");
+      let logins = Services.logins.findLogins(host, "", "");
       for (let login of logins) {
         Services.logins.removeLogin(login);
       }
