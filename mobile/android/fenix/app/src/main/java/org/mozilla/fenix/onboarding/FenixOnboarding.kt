@@ -31,7 +31,7 @@ class FenixOnboarding(private val context: Context) {
     }
 
     fun userHasBeenOnboarded(): Boolean {
-        if (!BuildConfig.DEBUG || tempFinish) return true
+        if (!BuildConfig.DEBUG || tempFinish || !ENABLED) return true
 
         return onboardingPrefs.onboardedVersion == CURRENT_ONBOARDING_VERSION
     }
@@ -43,5 +43,6 @@ class FenixOnboarding(private val context: Context) {
 
     companion object {
         private const val CURRENT_ONBOARDING_VERSION = 1
+        private const val ENABLED = false
     }
 }
