@@ -2997,10 +2997,10 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mBackfaceVisibility(aSource.mBackfaceVisibility),
       mTransformStyle(aSource.mTransformStyle),
       mTransformBox(aSource.mTransformBox),
-      mSpecifiedTransform(aSource.mSpecifiedTransform),
-      mSpecifiedRotate(aSource.mSpecifiedRotate),
-      mSpecifiedTranslate(aSource.mSpecifiedTranslate),
-      mSpecifiedScale(aSource.mSpecifiedScale),
+      mTransform(aSource.mTransform),
+      mRotate(aSource.mRotate),
+      mTranslate(aSource.mTranslate),
+      mScale(aSource.mScale),
       // We intentionally leave mIndividualTransform as null, is the caller's
       // responsibility to call GenerateCombinedIndividualTransform when
       // appropriate.
@@ -3030,40 +3030,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   MOZ_COUNT_CTOR(nsStyleDisplay);
 }
 
-static void ReleaseSharedListOnMainThread(const char* aName,
-                                          RefPtr<nsCSSValueSharedList>& aList) {
-  // We don't allow releasing nsCSSValues with refcounted data in the Servo
-  // traversal, since the refcounts aren't threadsafe. Since Servo may trigger
-  // the deallocation of style structs during styling, we need to handle it
-  // here.
-  if (aList && ServoStyleSet::IsInServoTraversal()) {
-    // The default behavior of NS_ReleaseOnMainThreadSystemGroup is to only
-    // proxy the release if we're not already on the main thread. This is a nice
-    // optimization for the cases we happen to be doing a sequential traversal
-    // (i.e. a single-core machine), but it trips our assertions which check
-    // whether we're in a Servo traversal, parallel or not. So we
-    // unconditionally proxy in debug builds.
-    bool alwaysProxy =
-#ifdef DEBUG
-        true;
-#else
-        false;
-#endif
-    NS_ReleaseOnMainThreadSystemGroup(aName, aList.forget(), alwaysProxy);
-  }
-}
-
 nsStyleDisplay::~nsStyleDisplay() {
-  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedTransform",
-                                mSpecifiedTransform);
-  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedRotate",
-                                mSpecifiedRotate);
-  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedTranslate",
-                                mSpecifiedTranslate);
-  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedScale",
-                                mSpecifiedScale);
-  ReleaseSharedListOnMainThread("nsStyleDisplay::mIndividualTransform",
-                                mIndividualTransform);
   MOZ_COUNT_DTOR(nsStyleDisplay);
 }
 
@@ -3075,22 +3042,16 @@ void nsStyleDisplay::TriggerImageLoads(Document& aDocument,
       aDocument, aOldStyle ? &aOldStyle->mShapeOutside : nullptr);
 }
 
-static inline bool TransformListChanged(
-    const RefPtr<nsCSSValueSharedList>& aList,
-    const RefPtr<nsCSSValueSharedList>& aNewList) {
-  return !aList != !aNewList || (aList && *aList != *aNewList);
-}
-
+template <typename TransformLike>
 static inline nsChangeHint CompareTransformValues(
-    const RefPtr<nsCSSValueSharedList>& aList,
-    const RefPtr<nsCSSValueSharedList>& aNewList) {
+    const TransformLike& aOldTransform, const TransformLike& aNewTransform) {
   nsChangeHint result = nsChangeHint(0);
 
   // Note: If we add a new change hint for transform changes here, we have to
   // modify KeyframeEffect::CalculateCumulativeChangeHint too!
-  if (!aList != !aNewList || (aList && *aList != *aNewList)) {
+  if (aOldTransform != aNewTransform) {
     result |= nsChangeHint_UpdateTransformLayer;
-    if (aList && aNewList) {
+    if (!aOldTransform.IsNone() && !aNewTransform.IsNone()) {
       result |= nsChangeHint_UpdatePostTransformOverflow;
     } else {
       result |= nsChangeHint_UpdateOverflow;
@@ -3239,14 +3200,10 @@ nsChangeHint nsStyleDisplay::CalcDifference(
      */
     nsChangeHint transformHint = nsChangeHint(0);
 
-    transformHint |= CompareTransformValues(mSpecifiedTransform,
-                                            aNewData.mSpecifiedTransform);
-    transformHint |=
-        CompareTransformValues(mSpecifiedRotate, aNewData.mSpecifiedRotate);
-    transformHint |= CompareTransformValues(mSpecifiedTranslate,
-                                            aNewData.mSpecifiedTranslate);
-    transformHint |=
-        CompareTransformValues(mSpecifiedScale, aNewData.mSpecifiedScale);
+    transformHint |= CompareTransformValues(mTransform, aNewData.mTransform);
+    transformHint |= CompareTransformValues(mRotate, aNewData.mRotate);
+    transformHint |= CompareTransformValues(mTranslate, aNewData.mTranslate);
+    transformHint |= CompareTransformValues(mScale, aNewData.mScale);
     transformHint |= CompareMotionValues(mMotion.get(), aNewData.mMotion.get());
 
     if (mTransformOrigin != aNewData.mTransformOrigin) {
@@ -3357,68 +3314,6 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   }
 
   return hint;
-}
-
-bool nsStyleDisplay::TransformChanged(const nsStyleDisplay& aNewData) const {
-  return TransformListChanged(mSpecifiedTransform,
-                              aNewData.mSpecifiedTransform);
-}
-
-/* static */
-already_AddRefed<nsCSSValueSharedList>
-nsStyleDisplay::GenerateCombinedIndividualTransform(
-    nsCSSValueSharedList* aTranslate, nsCSSValueSharedList* aRotate,
-    nsCSSValueSharedList* aScale) {
-  // Follow the order defined in the spec to append transform functions.
-  // https://drafts.csswg.org/css-transforms-2/#ctm
-  AutoTArray<nsCSSValueSharedList*, 3> shareLists;
-  if (aTranslate) {
-    shareLists.AppendElement(aTranslate);
-  }
-
-  if (aRotate) {
-    shareLists.AppendElement(aRotate);
-  }
-
-  if (aScale) {
-    shareLists.AppendElement(aScale);
-  }
-
-  if (shareLists.IsEmpty()) {
-    return nullptr;
-  }
-
-  if (shareLists.Length() == 1) {
-    return RefPtr<nsCSSValueSharedList>(shareLists[0]).forget();
-  }
-
-  // In common, we may have 3 transform functions:
-  // 1. one rotate function in aRotate,
-  // 2. one translate function in aTranslate,
-  // 3. one scale function in aScale.
-  AutoTArray<nsCSSValueList*, 3> valueLists;
-  for (auto list : shareLists) {
-    if (list) {
-      valueLists.AppendElement(list->mHead->Clone());
-    }
-  }
-
-  // Check we have at least one list or else valueLists.Length() - 1 below will
-  // underflow.
-  MOZ_ASSERT(!valueLists.IsEmpty());
-
-  for (uint32_t i = 0; i < valueLists.Length() - 1; i++) {
-    valueLists[i]->mNext = valueLists[i + 1];
-  }
-
-  RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList(valueLists[0]);
-  return list.forget();
-}
-
-void nsStyleDisplay::GenerateCombinedIndividualTransform() {
-  MOZ_ASSERT(!mIndividualTransform);
-  mIndividualTransform = GenerateCombinedIndividualTransform(
-      mSpecifiedTranslate, mSpecifiedRotate, mSpecifiedScale);
 }
 
 // --------------------
@@ -3985,7 +3880,6 @@ nsStyleUIReset::nsStyleUIReset(const Document& aDocument)
       mWindowDragging(StyleWindowDragging::Default),
       mWindowShadow(NS_STYLE_WINDOW_SHADOW_DEFAULT),
       mWindowOpacity(1.0),
-      mSpecifiedWindowTransform(nullptr),
       mWindowTransformOrigin{LengthPercentage::FromPercentage(0.5),
                              LengthPercentage::FromPercentage(0.5),
                              {0.}} {
@@ -4000,16 +3894,13 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
       mWindowDragging(aSource.mWindowDragging),
       mWindowShadow(aSource.mWindowShadow),
       mWindowOpacity(aSource.mWindowOpacity),
-      mSpecifiedWindowTransform(aSource.mSpecifiedWindowTransform),
+      mMozWindowTransform(aSource.mMozWindowTransform),
       mWindowTransformOrigin(aSource.mWindowTransformOrigin) {
   MOZ_COUNT_CTOR(nsStyleUIReset);
 }
 
 nsStyleUIReset::~nsStyleUIReset() {
   MOZ_COUNT_DTOR(nsStyleUIReset);
-
-  ReleaseSharedListOnMainThread("nsStyleUIReset::mSpecifiedWindowTransform",
-                                mSpecifiedWindowTransform);
 }
 
 nsChangeHint nsStyleUIReset::CalcDifference(
@@ -4040,10 +3931,7 @@ nsChangeHint nsStyleUIReset::CalcDifference(
   }
 
   if (mWindowOpacity != aNewData.mWindowOpacity ||
-      !mSpecifiedWindowTransform != !aNewData.mSpecifiedWindowTransform ||
-      (mSpecifiedWindowTransform &&
-       *mSpecifiedWindowTransform != *aNewData.mSpecifiedWindowTransform) ||
-      mWindowTransformOrigin != aNewData.mWindowTransformOrigin) {
+      mMozWindowTransform != aNewData.mMozWindowTransform) {
     hint |= nsChangeHint_UpdateWidgetProperties;
   }
 
