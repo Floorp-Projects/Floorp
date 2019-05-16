@@ -14,35 +14,23 @@ job-defaults:
         env:
             DO_HSTS:
                 by-project:
-                    mozilla-central: "1"
-                    mozilla-esr60: "1"
-                    mozilla-beta: "1"
+                    mozilla-(central|beta|esr.*): "1"
                     default: ""
             DO_HPKP:
                 by-project:
-                    mozilla-central: "1"
-                    mozilla-esr60: "1"
-                    mozilla-beta: "1"
+                    mozilla-(central|beta|esr.*): "1"
                     default: ""
             DO_BLOCKLIST:
                 by-project:
-                    mozilla-central: "1"
-                    mozilla-esr60: "1"
-                    mozilla-beta: "1"
-                    mozilla-release: "1"
+                    mozilla-(central|beta|release|esr.*): "1"
                     default: ""
             DO_REMOTE_SETTINGS:
                 by-project:
-                    mozilla-central: "1"
-                    mozilla-esr60: "1"
-                    mozilla-beta: "1"
-                    mozilla-release: "1"
+                    mozilla-(central|beta|release|esr.*): "1"
                     default: ""
             DO_SUFFIX_LIST:
                 by-project:
-                    mozilla-central: "1"
-                    mozilla-esr60: "1"
-                    mozilla-beta: "1"
+                    mozilla-(central|beta|esr.*): "1"
                     default: ""
             USE_MOZILLA_CENTRAL:
                 by-project:

@@ -79,8 +79,6 @@ interface nsILoginManagerPrompter : nsISupports {
    *
    * @param logins
    *        An array of existing logins.
-   * @param count
-   *        (length of the array)
    * @param aNewLogin
    *        The new login.
    *
@@ -90,8 +88,7 @@ interface nsILoginManagerPrompter : nsISupports {
    *       is called.
    */
   void promptToChangePasswordWithUsernames(
-          [array, size_is(count)] in nsILoginInfo logins,
-          in uint32_t count,
+          in Array<nsILoginInfo> logins,
           in nsILoginInfo aNewLogin);
 };
 %{C++

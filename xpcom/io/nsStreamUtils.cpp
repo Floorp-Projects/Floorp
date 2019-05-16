@@ -600,10 +600,34 @@ nsresult NS_CancelAsyncCopy(nsISupports* aCopierCtx, nsresult aReason) {
 
 //-----------------------------------------------------------------------------
 
-nsresult NS_ConsumeStream(nsIInputStream* aStream, uint32_t aMaxCount,
-                          nsACString& aResult) {
+namespace {
+template <typename T>
+struct ResultTraits {};
+
+template <>
+struct ResultTraits<nsACString> {
+  static void Clear(nsACString& aString) { aString.Truncate(); }
+
+  static char* GetStorage(nsACString& aString) {
+    return aString.BeginWriting();
+  }
+};
+
+template <>
+struct ResultTraits<nsTArray<uint8_t>> {
+  static void Clear(nsTArray<uint8_t>& aArray) { aArray.Clear(); }
+
+  static char* GetStorage(nsTArray<uint8_t>& aArray) {
+    return reinterpret_cast<char*>(aArray.Elements());
+  }
+};
+}  // namespace
+
+template <typename T>
+nsresult DoConsumeStream(nsIInputStream* aStream, uint32_t aMaxCount,
+                         T& aResult) {
   nsresult rv = NS_OK;
-  aResult.Truncate();
+  ResultTraits<T>::Clear(aResult);
 
   while (aMaxCount) {
     uint64_t avail64;
@@ -622,15 +646,15 @@ nsresult NS_ConsumeStream(nsIInputStream* aStream, uint32_t aMaxCount,
 
     // resize aResult buffer
     uint32_t length = aResult.Length();
-    if (avail > UINT32_MAX - length) {
+    CheckedInt<uint32_t> newLength = CheckedInt<uint32_t>(length) + avail;
+    if (!newLength.isValid()) {
       return NS_ERROR_FILE_TOO_BIG;
     }
 
-    aResult.SetLength(length + avail);
-    if (aResult.Length() != (length + avail)) {
+    if (!aResult.SetLength(newLength.value(), fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    char* buf = aResult.BeginWriting() + length;
+    char* buf = ResultTraits<T>::GetStorage(aResult) + length;
 
     uint32_t n;
     rv = aStream->Read(buf, avail, &n);
@@ -638,6 +662,7 @@ nsresult NS_ConsumeStream(nsIInputStream* aStream, uint32_t aMaxCount,
       break;
     }
     if (n != avail) {
+      MOZ_ASSERT(n < avail, "What happened there???");
       aResult.SetLength(length + n);
     }
     if (n == 0) {
@@ -647,6 +672,16 @@ nsresult NS_ConsumeStream(nsIInputStream* aStream, uint32_t aMaxCount,
   }
 
   return rv;
+}
+
+nsresult NS_ConsumeStream(nsIInputStream* aStream, uint32_t aMaxCount,
+                          nsACString& aResult) {
+  return DoConsumeStream(aStream, aMaxCount, aResult);
+}
+
+nsresult NS_ConsumeStream(nsIInputStream* aStream, uint32_t aMaxCount,
+                          nsTArray<uint8_t>& aResult) {
+  return DoConsumeStream(aStream, aMaxCount, aResult);
 }
 
 //-----------------------------------------------------------------------------

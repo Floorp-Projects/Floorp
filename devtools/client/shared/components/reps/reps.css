@@ -39,10 +39,12 @@
   flex-shrink: 0;
 }
 
-.debugger .tree-indent {
-  width: 16px;
-  margin-inline-start: 0px;
-  border-inline-start: 0;
+.tree-node[data-expandable="false"] .tree-last-indent {
+  /* The 13px value is taken from the total width and margins of the arrow
+  element of expandables nodes (10px width + 3px margins). That way the
+  node's text are indented the same for both expandable and non-expandable
+  nodes */
+  margin-inline-end: 13px;
 }
 
 /* For non expandable root nodes, we don't have .tree-indent elements, so we declare
@@ -78,8 +80,14 @@ html[dir="rtl"] .tree-node button:not(.expanded) {
 }
 
 .tree .tree-node.focused {
-  color: white;
-  background-color: var(--theme-selection-background, #0a84ff);
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}
+
+/* Invert text selection color in selected rows */
+.tree .tree-node.focused ::selection {
+  color: var(--theme-selection-background);
+  background-color: var(--theme-selection-color);
 }
 
 .tree-node.focused button.arrow {

@@ -367,7 +367,7 @@ InternalPrompt.prototype = {
     let canSave = PromptUtils.canSaveLogin(hostname, aSavePassword);
     if (canSave) {
       // Look for existing logins.
-      let foundLogins = PromptUtils.pwmgr.findLogins({}, hostname, null, realm);
+      let foundLogins = PromptUtils.pwmgr.findLogins(hostname, null, realm);
       [checkMsg, check] = PromptUtils.getUsernameAndPassword(foundLogins, aUser, aPass);
     }
 
@@ -392,7 +392,7 @@ InternalPrompt.prototype = {
     let message = PromptUtils.makeDialogText(aChannel, aAuthInfo);
     let [username, password] = PromptUtils.getAuthInfo(aAuthInfo);
     let [hostname, httpRealm] = PromptUtils.getAuthTarget(aChannel, aAuthInfo);
-    let foundLogins = PromptUtils.pwmgr.findLogins({}, hostname, null, httpRealm);
+    let foundLogins = PromptUtils.pwmgr.findLogins(hostname, null, httpRealm);
 
     let canSave = PromptUtils.canSaveLogin(hostname, null);
     if (canSave)
@@ -442,7 +442,7 @@ InternalPrompt.prototype = {
     let prompt = this._asyncPrompts[hashKey];
     let prompter = prompt.prompter;
     let [hostname, httpRealm] = PromptUtils.getAuthTarget(prompt.channel, prompt.authInfo);
-    let foundLogins = PromptUtils.pwmgr.findLogins({}, hostname, null, httpRealm);
+    let foundLogins = PromptUtils.pwmgr.findLogins(hostname, null, httpRealm);
     if (foundLogins.length > 0 && PromptUtils.pwmgr.uiBusy)
       return;
 

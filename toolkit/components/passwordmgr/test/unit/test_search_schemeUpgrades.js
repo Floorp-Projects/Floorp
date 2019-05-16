@@ -47,9 +47,7 @@ function checkSearch(aQuery, aExpectedCount) {
   let expectedLogins = buildExpectedLogins(aQuery);
   Assert.equal(expectedLogins.length, aExpectedCount);
 
-  let outCount = {};
-  let logins = Services.logins.searchLogins(outCount, newPropertyBag(aQuery));
-  Assert.equal(outCount.value, expectedLogins.length);
+  let logins = Services.logins.searchLogins(newPropertyBag(aQuery));
   LoginTestUtils.assertLoginListsEqual(logins, expectedLogins);
 }
 

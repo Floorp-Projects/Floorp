@@ -490,7 +490,7 @@ LoginManagerStorage.prototype = {
       if (!this._isLoggedIn) {
         return false;
       }
-      let logins = Services.logins.findLogins({}, FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
+      let logins = Services.logins.findLogins(FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
       for (let login of logins) {
         Services.logins.removeLogin(login);
       }
@@ -536,7 +536,7 @@ LoginManagerStorage.prototype = {
                                 "", // aUsernameField
                                 "");// aPasswordField
 
-      let existingLogins = Services.logins.findLogins({}, FXA_PWDMGR_HOST, null,
+      let existingLogins = Services.logins.findLogins(FXA_PWDMGR_HOST, null,
                                                       FXA_PWDMGR_REALM);
       if (existingLogins.length) {
         Services.logins.modifyLogin(existingLogins[0], login);
@@ -566,7 +566,7 @@ LoginManagerStorage.prototype = {
         throw new this.STORAGE_LOCKED();
       }
 
-      let logins = Services.logins.findLogins({}, FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
+      let logins = Services.logins.findLogins(FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
       if (logins.length == 0) {
         // This could happen if the MP was locked when we wrote the data.
         log.info("Can't find any credentials in the login manager");

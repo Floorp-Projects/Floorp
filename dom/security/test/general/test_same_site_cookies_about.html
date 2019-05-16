@@ -23,9 +23,6 @@
  * 3) We evaluate that the same-site cookie is available in the same-origin case.
  */
 
-SimpleTest.registerCleanupFunction(() => {
-  SpecialPowers.clearUserPref("network.cookie.same-site.enabled");
-});
 SimpleTest.waitForExplicitFinish();
 
 const SAME_ORIGIN = "http://mochi.test:8888/"
@@ -39,99 +36,43 @@ var tests = [
   {
     description: "nested same origin iframe about:srcdoc navigation [mochi.test -> mochi.test -> about:srcdoc -> mochi.test]",
     frameSRC: SAME_ORIGIN + PATH + "?loadsrcdocframeNav",
-    sameSiteEnabled: true,
     result: "myKey=mySameSiteAboutCookie", // cookie should be set for baseline test
   },
   {
     description: "nested cross origin iframe about:srcdoc navigation [mochi.test -> example.com -> about:srcdoc -> mochi.test]",
     frameSRC: CROSS_ORIGIN + PATH + "?loadsrcdocframeNav",
-    sameSiteEnabled: true,
     result: "", // no same-site cookie should be available
   },
   {
     description: "nested same origin iframe about:blank navigation [mochi.test -> mochi.test -> about:blank -> mochi.test]",
     frameSRC: SAME_ORIGIN + PATH + "?loadblankframeNav",
-    sameSiteEnabled: true,
     result: "myKey=mySameSiteAboutCookie", // cookie should be set for baseline test
   },
   {
     description: "nested cross origin iframe about:blank navigation [mochi.test -> example.com -> about:blank -> mochi.test]",
     frameSRC: CROSS_ORIGIN + PATH + "?loadblankframeNav",
-    sameSiteEnabled: true,
     result: "", // no same-site cookie should be available
-  },
-  {
-    description: "nested same origin iframe about:srcdoc navigation [mochi.test -> mochi.test -> about:srcdoc -> mochi.test] (same-site off)",
-    frameSRC: SAME_ORIGIN + PATH + "?loadsrcdocframeNav",
-    sameSiteEnabled: false,
-    result: "myKey=mySameSiteAboutCookie",
-  },
-  {
-    description: "nested cross origin iframe about:srcdoc navigation [mochi.test -> example.com -> about:srcdoc -> mochi.test] (same-site off)",
-    frameSRC: CROSS_ORIGIN + PATH + "?loadsrcdocframeNav",
-    sameSiteEnabled: false,
-    result: "myKey=mySameSiteAboutCookie",
-  },
-  {
-    description: "nested same origin iframe about:blank navigation [mochi.test -> mochi.test -> about:blank -> mochi.test] (same-site off)",
-    frameSRC: SAME_ORIGIN + PATH + "?loadblankframeNav",
-    sameSiteEnabled: false,
-    result: "myKey=mySameSiteAboutCookie",
-  },
-  {
-    description: "nested cross origin iframe about:blank navigation [mochi.test -> example.com -> about:blank -> mochi.test] (same-site off)",
-    frameSRC: CROSS_ORIGIN + PATH + "?loadblankframeNav",
-    sameSiteEnabled: false,
-    result: "myKey=mySameSiteAboutCookie",
   },
   // INCLUSION TESTS
   {
     description: "nested same origin iframe about:srcdoc inclusion [mochi.test -> mochi.test -> about:srcdoc -> mochi.test]",
     frameSRC: SAME_ORIGIN + PATH + "?loadsrcdocframeInc",
-    sameSiteEnabled: true,
     result: "myKey=mySameSiteAboutCookie", // cookie should be set for baseline test
   },
   {
     description: "nested cross origin iframe about:srcdoc inclusion [mochi.test -> example.com -> about:srcdoc -> mochi.test]",
     frameSRC: CROSS_ORIGIN + PATH + "?loadsrcdocframeInc",
-    sameSiteEnabled: true,
     result: "", // no same-site cookie should be available
   },
   {
     description: "nested same origin iframe about:blank inclusion [mochi.test -> mochi.test -> about:blank -> mochi.test]",
     frameSRC: SAME_ORIGIN + PATH + "?loadblankframeInc",
-    sameSiteEnabled: true,
     result: "myKey=mySameSiteAboutCookie", // cookie should be set for baseline test
   },
   {
     description: "nested cross origin iframe about:blank inclusion [mochi.test -> example.com -> about:blank -> mochi.test]",
     frameSRC: CROSS_ORIGIN + PATH + "?loadblankframeInc",
-    sameSiteEnabled: true,
     result: "", // no same-site cookie should be available
-  },
-  {
-    description: "nested same origin iframe about:srcdoc inclusion [mochi.test -> mochi.test -> about:srcdoc -> mochi.test] (same-site off)",
-    frameSRC: SAME_ORIGIN + PATH + "?loadsrcdocframeInc",
-    sameSiteEnabled: false,
-    result: "myKey=mySameSiteAboutCookie",
-  },
-  {
-    description: "nested cross origin iframe about:srcdoc inclusion [mochi.test -> example.com -> about:srcdoc -> mochi.test] (same-site off)",
-    frameSRC: CROSS_ORIGIN + PATH + "?loadsrcdocframeInc",
-    sameSiteEnabled: false,
-    result: "myKey=mySameSiteAboutCookie",
-  },
-  {
-    description: "nested same origin iframe about:blank inclusion [mochi.test -> mochi.test -> about:blank -> mochi.test] (same-site off)",
-    frameSRC: SAME_ORIGIN + PATH + "?loadblankframeInc",
-    sameSiteEnabled: false,
-    result: "myKey=mySameSiteAboutCookie",
-  },
-  {
-    description: "nested cross origin iframe about:blank inclusion [mochi.test -> example.com -> about:blank -> mochi.test] (same-site off)",
-    frameSRC: CROSS_ORIGIN + PATH + "?loadblankframeInc",
-    sameSiteEnabled: false,
-    result: "myKey=mySameSiteAboutCookie",
   },
 ];
 
@@ -156,7 +97,6 @@ function setupQueryResultAndRunTest() {
 }
 
 function setCookieAndInitTest() {
-  SpecialPowers.setBoolPref("network.cookie.same-site.enabled", tests[curTest].sameSiteEnabled);
   var cookieImage = document.getElementById("cookieImage");
   cookieImage.onload = function() {
     ok(true, "trying to set cookie for test (" + tests[curTest].description + ")");

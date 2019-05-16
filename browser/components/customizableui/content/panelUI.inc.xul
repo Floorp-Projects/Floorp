@@ -336,7 +336,7 @@
         <toolbarbutton id="appMenu-logins-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&logins.label;"
-                       oncommand="LoginHelper.openPasswordManager(window)"
+                       oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'mainmenu' })"
                        />
         <toolbarbutton id="appMenu-addons-button"
                        class="subviewbutton subviewbutton-iconic"
@@ -425,7 +425,7 @@
         <toolbarbutton id="appMenuViewHistorySidebar"
                        label="&appMenuHistory.viewSidebar.label;"
                        label-checked="&appMenuHistory.hideSidebar.label;"
-                       label-unchecked="&appMenuHistory.viewSidebar.label;"                      
+                       label-unchecked="&appMenuHistory.viewSidebar.label;"
                        type="checkbox"
                        class="subviewbutton subviewbutton-iconic"
                        key="key_gotoHistory"

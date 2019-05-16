@@ -12168,17 +12168,6 @@
     "kind": "count",
     "description": "Count of times that Remove All was used from the password management interface"
   },
-  "PWMGR_MANAGE_OPENED": {
-    "record_in_processes": ["main"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values" : 5,
-    "description": "Accumulates how the password management interface was opened. (0=Preferences, 1=Page Info)",
-    "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733, 1545172],
-    "releaseChannelCollection": "opt-out",
-    "record_into_store": ["main", "pre-account"]
-  },
   "PWMGR_MANAGE_SORTED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -14495,9 +14484,10 @@
   "BFCACHE_PAGE_RESTORED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["sefeng@mozilla.com"],
-    "bug_numbers": [1531917],
+    "bug_numbers": [1531917, 1551935],
     "expires_in_version": "never",
     "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
     "description": "Whether bfcache is used when loading a page from session history"
   },
   "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {

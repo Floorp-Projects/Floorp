@@ -321,7 +321,7 @@ add_task(async function test_passwordsNotAvailable() {
 
   let migrator = getFirstResourceOfType(MigrationUtils.resourceTypes.PASSWORDS);
   Assert.ok(migrator.exists, "The migrator has to exist");
-  let logins = Services.logins.getAllLogins({});
+  let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 0, "There are no logins at the beginning of the test");
 
   let uris = []; // the uris of the migrated logins
@@ -330,7 +330,7 @@ add_task(async function test_passwordsNotAvailable() {
      // in this test, there is no IE login data in the registry, so after the migration, the number
      // of logins in the store should be 0
     await migrator._migrateURIs(uris);
-    logins = Services.logins.getAllLogins({});
+    logins = Services.logins.getAllLogins();
     Assert.equal(logins.length, 0,
                  "There are no logins after doing the migration without adding values to the registry");
   }
@@ -346,7 +346,7 @@ add_task(async function test_passwordsAvailable() {
 
   registerCleanupFunction(() => {
     Services.logins.removeAllLogins();
-    logins = Services.logins.getAllLogins({});
+    logins = Services.logins.getAllLogins();
     Assert.equal(logins.length, 0, "There are no logins after the cleanup");
     // remove all the values created in this test from the registry
     removeAllValues(Storage2Key, hashes);
@@ -363,7 +363,7 @@ add_task(async function test_passwordsAvailable() {
 
   let migrator = getFirstResourceOfType(MigrationUtils.resourceTypes.PASSWORDS);
   Assert.ok(migrator.exists, "The migrator has to exist");
-  let logins = Services.logins.getAllLogins({});
+  let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 0, "There are no logins at the beginning of the test");
 
   let uris = []; // the uris of the migrated logins
@@ -381,7 +381,7 @@ add_task(async function test_passwordsAvailable() {
     hashes.push(website.hash);
 
     await migrator._migrateURIs(uris);
-    logins = Services.logins.getAllLogins({});
+    logins = Services.logins.getAllLogins();
     // check that the number of logins in the password manager has increased as expected which means
     // that all the values for the current website were imported
     loginCount += website.logins.length;

@@ -292,8 +292,13 @@ raptor-tp6m-1-fenix:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -307,8 +312,13 @@ raptor-tp6m-1-refbrow:
     treeherder-symbol: Rap-refbrow(tp6m-1)
     run-on-projects: ['try']
     target:
-        index: project.mobile.reference-browser.signed-nightly.nightly.latest
-        name: target.arm.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.reference-browser.signed-nightly.nightly.latest
+                name: target.aarch64.apk
+            default:
+                index: project.mobile.reference-browser.signed-nightly.nightly.latest
+                name: target.arm.apk
     tier: 2
     mozharness:
         extra-options:
@@ -738,8 +748,13 @@ raptor-tp6m-1-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -755,8 +770,13 @@ raptor-tp6m-2-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -772,8 +792,13 @@ raptor-tp6m-3-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -789,8 +814,13 @@ raptor-tp6m-4-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -806,8 +836,13 @@ raptor-tp6m-5-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -823,8 +858,13 @@ raptor-tp6m-6-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -840,8 +880,13 @@ raptor-tp6m-7-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -857,8 +902,13 @@ raptor-tp6m-8-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -874,8 +924,13 @@ raptor-tp6m-9-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -891,8 +946,13 @@ raptor-tp6m-10-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -908,8 +968,13 @@ raptor-tp6m-11-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -925,8 +990,13 @@ raptor-tp6m-12-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -942,8 +1012,13 @@ raptor-tp6m-13-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -959,8 +1034,13 @@ raptor-tp6m-14-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
-        name: target.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                name: target.apk
     tier: 2
     mozharness:
         extra-options:
@@ -1091,8 +1171,13 @@ raptor-speedometer-refbrow:
     treeherder-symbol: Rap-refbrow(sp)
     run-on-projects: ['try']
     target:
-        index: project.mobile.reference-browser.signed-nightly.nightly.latest
-        name: target.arm.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.reference-browser.signed-nightly.nightly.latest
+                name: target.aarch64.apk
+            default:
+                index: project.mobile.reference-browser.signed-nightly.nightly.latest
+                name: target.arm.apk
     tier: 2
     mozharness:
         extra-options:
@@ -1254,8 +1339,13 @@ raptor-unity-webgl-refbrow:
     treeherder-symbol: Rap-refbrow(ugl)
     run-on-projects: ['try']
     target:
-        index: project.mobile.reference-browser.signed-nightly.nightly.latest
-        name: target.arm.apk
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.reference-browser.signed-nightly.nightly.latest
+                name: target.aarch64.apk
+            default:
+                index: project.mobile.reference-browser.signed-nightly.nightly.latest
+                name: target.arm.apk
     tier: 2
     mozharness:
         extra-options:

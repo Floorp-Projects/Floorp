@@ -1205,19 +1205,6 @@ describe("DiscoveryStreamFeed", () => {
         type: at.SET_PREF,
       });
     });
-    it("should disable opt-out when setting config enabled", () => {
-      sandbox.spy(feed.store, "dispatch");
-
-      feed.onAction({type: at.DISCOVERY_STREAM_CONFIG_SET_VALUE, data: {name: "enabled", value: true}});
-
-      assert.calledWithMatch(feed.store.dispatch, {
-        data: {
-          name: "discoverystream.optOut.0",
-          value: false,
-        },
-        type: at.SET_PREF,
-      });
-    });
   });
 
   describe("#onAction: DISCOVERY_STREAM_CONFIG_CHANGE", () => {
@@ -1284,22 +1271,6 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
-  describe("#onAction: DISCOVERY_STREAM_OPT_OUT", () => {
-    it("should update opt-out pref", async () => {
-      sandbox.spy(feed.store, "dispatch");
-
-      await feed.onAction({type: at.DISCOVERY_STREAM_OPT_OUT});
-
-      assert.calledWithMatch(feed.store.dispatch, {
-        data: {
-          name: "discoverystream.optOut.0",
-          value: true,
-        },
-        type: at.SET_PREF,
-      });
-    });
-  });
-
   describe("#onAction: UNINIT", () => {
     it("should reset pref cache", async () => {
       feed._prefCache = {cached: "value"};
@@ -1315,13 +1286,6 @@ describe("DiscoveryStreamFeed", () => {
       setPref(CONFIG_PREF_NAME, {enabled: true, show_spocs: false, layout_endpoint: "foo"});
 
       assert.deepEqual(feed.store.getState().DiscoveryStream.config, {enabled: true, show_spocs: false, layout_endpoint: "foo"});
-    });
-    it("should handle pref changes when opt out changes", async () => {
-      setPref(CONFIG_PREF_NAME, {enabled: true, show_spocs: false, layout_endpoint: "foo"});
-
-      setPref("discoverystream.optOut.0", true);
-
-      assert.deepEqual(feed.store.getState().DiscoveryStream.config, {enabled: false, show_spocs: false, layout_endpoint: "foo"});
     });
     it("should fire loadSpocs is showSponsored pref changes", async () => {
       sandbox.stub(feed, "loadSpocs").returns(Promise.resolve());

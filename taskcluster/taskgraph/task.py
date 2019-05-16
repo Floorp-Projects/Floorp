@@ -46,6 +46,15 @@ class Task(object):
     def __attrs_post_init__(self):
         self.attributes['kind'] = self.kind
 
+    @property
+    def name(self):
+        if self.label.startswith(self.kind + "-"):
+            return self.label[len(self.kind)+1:]
+        elif self.label.startswith("build-docker-image-"):
+            return self.label[len("build-docker-image-"):]
+        else:
+            raise AttributeError("Task {} does not have a name.".format(self.label))
+
     def to_json(self):
         rv = {
             'kind': self.kind,

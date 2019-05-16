@@ -10,15 +10,27 @@ export class ReturnToAMO extends React.PureComponent {
 
   componentDidMount() {
     this.props.onReady();
+    this.props.sendUserActionTelemetry({
+      event: "IMPRESSION",
+      id: this.props.UISurface,
+    });
   }
 
   onClickAddExtension() {
     this.props.onAction(this.props.content.primary_button.action);
+    this.props.sendUserActionTelemetry({
+      event: "INSTALL",
+      id: this.props.UISurface,
+    });
   }
 
   onBlockButton() {
     this.props.onBlock();
     document.body.classList.remove("welcome", "hide-main", "amo");
+    this.props.sendUserActionTelemetry({
+      event: "BLOCK",
+      id: this.props.UISurface,
+    });
   }
 
   renderText() {

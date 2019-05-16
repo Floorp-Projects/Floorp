@@ -98,8 +98,7 @@ Password.prototype = {
    * @return the guid of the password if found, otherwise -1
    */
   Find() {
-    let logins = Services.logins.findLogins({},
-                                            this.props.hostname,
+    let logins = Services.logins.findLogins(this.props.hostname,
                                             this.props.submitURL,
                                             this.props.realm);
     for (var i = 0; i < logins.length; i++) {

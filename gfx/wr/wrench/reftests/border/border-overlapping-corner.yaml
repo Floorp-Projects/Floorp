@@ -1,4 +1,4 @@
----
+--- # Checks that corners are clipped correctly when they overlap with an adjacent corner
 root:
   items:
     - type: stacking-context

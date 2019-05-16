@@ -55,7 +55,8 @@ export function mapScopes(
   scopes: Promise<Scope>,
   frame: Frame
 ) {
-  return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
+  return async function(thunkArgs: ThunkArgs) {
+    const { dispatch, getState } = thunkArgs;
     assert(cx.thread == frame.thread, "Thread mismatch");
 
     const generatedSource = getSource(
@@ -99,8 +100,7 @@ export function mapScopes(
               : { type: "text", value: "", contentType: undefined },
             frame,
             await scopes,
-            sourceMaps,
-            client
+            thunkArgs
           );
         } catch (e) {
           log(e);

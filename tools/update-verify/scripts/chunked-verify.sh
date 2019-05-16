@@ -50,7 +50,7 @@ echo "--------------------------------------"
 # Testing for failures first is important because it's OK to to mark as failed
 # when there's failures+warnings, but not OK to mark as warnings in the same
 # situation.
-( ! grep 'FAIL:' $SCRIPTS_DIR/../verify_log.txt ) || print_failed_msg
+( ! grep 'TEST-UNEXPECTED-FAIL:' $SCRIPTS_DIR/../verify_log.txt ) || print_failed_msg
 ( ! grep 'WARN:' $SCRIPTS_DIR/../verify_log.txt ) || print_warning_msg
 
 echo "-------------------------"

@@ -210,7 +210,7 @@ this.LoginManagerStorage_json.prototype = {
 
     // Look for an existing entry in case key properties changed.
     if (!newLogin.matches(oldLogin, true)) {
-      let logins = this.findLogins({}, newLogin.hostname,
+      let logins = this.findLogins(newLogin.hostname,
                                    newLogin.formSubmitURL,
                                    newLogin.httpRealm);
 
@@ -248,16 +248,13 @@ this.LoginManagerStorage_json.prototype = {
   /**
    * @return {nsILoginInfo[]}
    */
-  getAllLogins(count) {
+  getAllLogins() {
     let [logins, ids] = this._searchLogins({});
 
     // decrypt entries for caller.
     logins = this._decryptLogins(logins);
 
     this.log("_getAllLogins: returning", logins.length, "logins.");
-    if (count) {
-      count.value = logins.length;
-    } // needed for XPCOM
     return logins;
   },
 
@@ -267,7 +264,7 @@ this.LoginManagerStorage_json.prototype = {
    *
    * @return {nsILoginInfo[]} which are decrypted.
    */
-  searchLogins(count, matchData) {
+  searchLogins(matchData) {
     let realMatchData = {};
     let options = {};
     // Convert nsIPropertyBag to normal JS object
@@ -290,7 +287,6 @@ this.LoginManagerStorage_json.prototype = {
     // Decrypt entries found for the caller.
     logins = this._decryptLogins(logins);
 
-    count.value = logins.length; // needed for XPCOM
     return logins;
   },
 
@@ -398,7 +394,7 @@ this.LoginManagerStorage_json.prototype = {
     LoginHelper.notifyStorageChanged("removeAllLogins", null);
   },
 
-  findLogins(count, hostname, formSubmitURL, httpRealm) {
+  findLogins(hostname, formSubmitURL, httpRealm) {
     let loginData = {
       hostname,
       formSubmitURL,
@@ -416,7 +412,6 @@ this.LoginManagerStorage_json.prototype = {
     logins = this._decryptLogins(logins);
 
     this.log("_findLogins: returning", logins.length, "logins");
-    count.value = logins.length; // needed for XPCOM
     return logins;
   },
 

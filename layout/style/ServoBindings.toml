@@ -491,14 +491,11 @@ mapped-generic-types = [
     { generic = false, gecko = "mozilla::ServoVisitedStyle", servo = "Option<::servo_arc::RawOffsetArc<::properties::ComputedValues>>" },
     { generic = false, gecko = "mozilla::ServoComputedValueFlags", servo = "::properties::computed_value_flags::ComputedValueFlags" },
     { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::servo_arc::RawOffsetArc" },
+    { generic = true, gecko = "mozilla::ServoManuallyDrop", servo = "::std::mem::ManuallyDrop" },
     { generic = false, gecko = "nsACString", servo = "nsstring::nsACString" },
     { generic = false, gecko = "nsAString", servo = "nsstring::nsAString" },
     { generic = false, gecko = "nsCString", servo = "nsstring::nsCString" },
-    { generic = false, gecko = "nsString", servo = "nsstring::nsStringRepr" },
+    { generic = false, gecko = "nsString", servo = "nsstring::nsString" },
 ]
 
 whitelist-functions = ["Servo_.*", "Gecko_.*"]
-
-fixups = [
-    { pat = "\\broot\\s*::\\s*nsTString\\s*<\\s*u16\\s*>", rep = "::nsstring::nsStringRepr" },
-]

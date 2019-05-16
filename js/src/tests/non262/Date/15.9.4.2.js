@@ -65,9 +65,9 @@ function test()
   check("2009T19:53:21+12:00",           dd(2009,1,1,7,53,21,0));
   check("2009T19:53+12:00",              dd(2009,1,1,7,53,0,0));
 
-  check("T19:53:21.001+12:00",           dd(1970,1,1,7,53,21,1));
-  check("T19:53:21+12:00",               dd(1970,1,1,7,53,21,0));
-  check("T19:53+12:00",                  dd(1970,1,1,7,53,0,0));
+  checkInvalid("T19:53:21.001+12:00");
+  checkInvalid("T19:53:21+12:00");
+  checkInvalid("T19:53+12:00");
 
   // formats without timezone uses the timezone as at that date
   check("2009-07-23T19:53:21.001",       dd(2009,7,23,19,53,21,1)+Jul2009TZ);
@@ -82,9 +82,9 @@ function test()
   check("2009T19:53:21",                 dd(2009,1,1,19,53,21,0)+Jan2009TZ);
   check("2009T19:53",                    dd(2009,1,1,19,53,0,0)+Jan2009TZ);
 
-  check("T19:53:21.001",                 dd(1970,1,1,19,53,21,1)+Jan1970TZ);
-  check("T19:53:21",                     dd(1970,1,1,19,53,21,0)+Jan1970TZ);
-  check("T19:53",                        dd(1970,1,1,19,53,0,0)+Jan1970TZ);
+  checkInvalid("T19:53:21.001");
+  checkInvalid("T19:53:21");
+  checkInvalid("T19:53");
 
   // with no time at all assume UTC
   check("2009-07-23",                    dd(2009,7,23,0,0,0,0));

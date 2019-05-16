@@ -33,7 +33,7 @@ An example signing task payload:
         "taskType": "build"
       }, {
         "paths": ["public/build/target.tar.gz"],
-        "formats": ["gpg"],
+        "formats": ["autograph_gpg"],
         "taskId": "12345",
         "taskType": "build"
       }]
@@ -46,7 +46,7 @@ task definitions via `chain of trust`_ verification. Then it will launch
 `signingscript`_, which requests a signing token from the signing server pool.
 
 Signingscript determines it wants to sign ``target.dmg`` with the ``macapp``
-format, and ``target.tar.gz`` with the ``gpg`` format. Each of the
+format, and ``target.tar.gz`` with the ``autograph_gpg`` format. Each of the
 `signing formats`_ has their own behavior. After performing any format-specific
 checks or optimizations, it calls `signtool`_ to submit the file to the signing
 servers and poll them for signed output. Once it downloads all of the signed
@@ -90,13 +90,8 @@ Signing formats
 The known signingscript formats are listed in the fourth column of the
 `signing password files`_.
 
-The formats are specified in the ``upstreamArtifacts`` list-of-dicts. The task
-must have a superset of scopes to match. For example, a Firefox signing task
-with an ``upstreamArtifacts`` that lists both ``gpg`` and ``macapp`` formats must
-have both ``project:releng:signing:format:gpg`` and
-``project:releng:signing:format:macapp`` in its scopes.
-
-``gpg`` signing results in a detached ``.asc`` signature file. Because of its
+The formats are specified in the ``upstreamArtifacts`` list-of-dicts.
+``autograph_gpg`` signing results in a detached ``.asc`` signature file. Because of its
 nature, we gpg-sign at the end if given multiple formats for a given set of
 files.
 

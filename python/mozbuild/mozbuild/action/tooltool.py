@@ -531,7 +531,7 @@ class Manifest(object):
             rv = json.dump(
                 self.file_records, output_file, indent=2, cls=FileRecordJSONEncoder,
                 separators=(',', ': '))
-            print >> output_file, ''
+            print('', file=output_file)
             return rv
 
     def dumps(self, fmt='json'):

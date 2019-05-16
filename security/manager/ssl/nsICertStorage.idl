@@ -55,6 +55,22 @@ interface nsISubjectAndPubKeyRevocationState : nsIRevocationState {
     readonly attribute ACString pubKey;
 };
 
+/**
+ * An interface representing a certificate to add to storage. Consists of the
+ * base64-encoded DER bytes of the certificate (cert), the base64-encoded DER
+ * bytes of the subject distinguished name of the certificate (subject), and the
+ * trust of the certificate (one of the nsICertStorage.TRUST_* constants).
+ * (Note that this implementation does not validate that the given subject DN
+ * actually matches the subject DN of the certificate, nor that the given cert
+ * is a valid DER X.509 certificate.)
+ */
+[scriptable, uuid(27b66f5e-0faf-403b-95b4-bc11691ac50d)]
+interface nsICertInfo : nsISupports {
+  readonly attribute ACString cert;
+  readonly attribute ACString subject;
+  readonly attribute short trust;
+};
+
 [scriptable, uuid(327100a7-3401-45ef-b160-bf880f1016fd)]
 interface nsICertStorage : nsISupports {
   const octet DATA_TYPE_REVOCATION = 1;
@@ -118,34 +134,27 @@ interface nsICertStorage : nsISupports {
   const short TRUST_ANCHOR = 1;
 
   /**
-   * Asynchronously add a certificate to the backing storage.
-   * cert is the bytes of the certificate as base64-encoded DER.
-   * subject is the subject distinguished name of the certificate as
-   * base64-encoded DER (although we don't actually validate that the given
-   * certificate has the indicated subject).
-   * trust is one of the TRUST_* constants in this interface.
+   * Asynchronously add a list of certificates to the backing storage.
+   * See the documentation for nsICertInfo.
    * The given callback is called with the result of the operation when it
    * completes.
    * Must only be called from the main thread.
    */
   [must_use]
-  void addCertBySubject(in ACString cert,
-                        in ACString subject,
-                        in short trust,
-                        in nsICertStorageCallback callback);
+  void addCerts(in Array<nsICertInfo> certs, in nsICertStorageCallback callback);
 
   /**
-   * Asynchronously remove the certificate with the given sha-256 hash from the
-   * backing storage.
-   * hash is the base64-encoded bytes of the sha-256 hash of the certificate's
-   * bytes (DER-encoded).
+   * Asynchronously remove the certificates with the given sha-256 hashes from
+   * the backing storage.
+   * hashes is an array of base64-encoded bytes of the sha-256 hashes of each
+   * certificate's bytes (DER-encoded).
    * The given callback is called with the result of the operation when it
    * completes.
    * Must only be called from the main thread.
    */
   [must_use]
-  void removeCertByHash(in ACString hash,
-                        in nsICertStorageCallback callback);
+  void removeCertsByHashes(in Array<ACString> hashes,
+                           in nsICertStorageCallback callback);
 
   /**
    * Find all certificates in the backing storage with the given subject

@@ -12,77 +12,71 @@ import type { SourceLocation, SourceId, SourceContent } from "../../types";
 import type { SourceScope } from "./getScopes/visitor";
 import type { SymbolDeclarations } from "./getSymbols";
 
-const dispatcher = new WorkerDispatcher();
-export const start = (url: string, win: any = window) =>
-  dispatcher.start(url, win);
-export const stop = () => dispatcher.stop();
+export class ParserDispatcher extends WorkerDispatcher {
+  async findOutOfScopeLocations(
+    sourceId: string,
+    position: AstPosition
+  ): Promise<AstLocation[]> {
+    return this.invoke("findOutOfScopeLocations", sourceId, position);
+  }
 
-export const findOutOfScopeLocations = async (
-  sourceId: string,
-  position: AstPosition
-): Promise<AstLocation[]> =>
-  dispatcher.invoke("findOutOfScopeLocations", sourceId, position);
+  async getNextStep(
+    sourceId: SourceId,
+    pausedPosition: AstPosition
+  ): Promise<?SourceLocation> {
+    return this.invoke("getNextStep", sourceId, pausedPosition);
+  }
 
-export const getNextStep = async (
-  sourceId: SourceId,
-  pausedPosition: AstPosition
-): Promise<?SourceLocation> =>
-  dispatcher.invoke("getNextStep", sourceId, pausedPosition);
+  async clearState(): Promise<void> {
+    return this.invoke("clearState");
+  }
 
-export const clearASTs = async (): Promise<void> =>
-  dispatcher.invoke("clearASTs");
+  async getScopes(location: SourceLocation): Promise<SourceScope[]> {
+    return this.invoke("getScopes", location);
+  }
 
-export const getScopes = async (
-  location: SourceLocation
-): Promise<SourceScope[]> => dispatcher.invoke("getScopes", location);
+  async getSymbols(sourceId: string): Promise<SymbolDeclarations> {
+    return this.invoke("getSymbols", sourceId);
+  }
 
-export const clearScopes = async (): Promise<void> =>
-  dispatcher.invoke("clearScopes");
+  async setSource(sourceId: SourceId, content: SourceContent): Promise<void> {
+    const astSource: AstSource = {
+      id: sourceId,
+      text: content.type === "wasm" ? "" : content.value,
+      contentType: content.contentType || null,
+      isWasm: content.type === "wasm"
+    };
 
-export const clearSymbols = async (): Promise<void> =>
-  dispatcher.invoke("clearSymbols");
+    return this.invoke("setSource", astSource);
+  }
 
-export const getSymbols = async (
-  sourceId: string
-): Promise<SymbolDeclarations> => dispatcher.invoke("getSymbols", sourceId);
+  async hasSyntaxError(input: string): Promise<string | false> {
+    return this.invoke("hasSyntaxError", input);
+  }
 
-export const setSource = async (
-  sourceId: SourceId,
-  content: SourceContent
-): Promise<void> => {
-  const astSource: AstSource = {
-    id: sourceId,
-    text: content.type === "wasm" ? "" : content.value,
-    contentType: content.contentType || null,
-    isWasm: content.type === "wasm"
-  };
+  async mapExpression(
+    expression: string,
+    mappings: {
+      [string]: string | null
+    } | null,
+    bindings: string[],
+    shouldMapBindings?: boolean,
+    shouldMapAwait?: boolean
+  ): Promise<{ expression: string }> {
+    return this.invoke(
+      "mapExpression",
+      expression,
+      mappings,
+      bindings,
+      shouldMapBindings,
+      shouldMapAwait
+    );
+  }
 
-  await dispatcher.invoke("setSource", astSource);
-};
-
-export const clearSources = async (): Promise<void> =>
-  dispatcher.invoke("clearSources");
-
-export const hasSyntaxError = async (input: string): Promise<string | false> =>
-  dispatcher.invoke("hasSyntaxError", input);
-
-export const mapExpression = async (
-  expression: string,
-  mappings: {
-    [string]: string | null
-  } | null,
-  bindings: string[],
-  shouldMapBindings?: boolean,
-  shouldMapAwait?: boolean
-): Promise<{ expression: string }> =>
-  dispatcher.invoke(
-    "mapExpression",
-    expression,
-    mappings,
-    bindings,
-    shouldMapBindings,
-    shouldMapAwait
-  );
+  async clear() {
+    await this.clearState();
+  }
+}
 
 export type {
   SourceScope,

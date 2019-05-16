@@ -377,6 +377,18 @@ normandy:
     release_channel_collection: opt-out
     expiry_version: never
 
+pwmgr:
+  open_management:
+    objects: ["autocomplete", "capturedoorhanger", "contextmenu", "pageinfo", "preferences", "mainmenu"]
+    methods: ["open_management"]
+    description: >
+      Sent when opening the password management UI.
+    bug_numbers: [1543499, 1454733, 1545172]
+    notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "sfoster@mozilla.com"]
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+
 fxa_avatar_menu:
   click:
     objects: [

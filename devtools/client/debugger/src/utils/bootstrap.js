@@ -16,7 +16,7 @@ import SourceMaps, {
 } from "devtools-source-map";
 import * as search from "../workers/search";
 import * as prettyPrint from "../workers/pretty-print";
-import * as parser from "../workers/parser";
+import { ParserDispatcher } from "../workers/parser";
 
 import configureStore from "../actions/utils/create-store";
 import reducers from "../reducers";
@@ -25,6 +25,8 @@ import App from "../components/App";
 import { asyncStore, prefs } from "./prefs";
 
 import type { Panel } from "../client/firefox/types";
+
+let parser;
 
 function renderPanel(component, store) {
   const root = document.createElement("div");
@@ -42,9 +44,14 @@ function renderPanel(component, store) {
   );
 }
 
+type Workers = {
+  sourceMaps: typeof SourceMaps,
+  evaluationsParser: typeof ParserDispatcher
+};
+
 export function bootstrapStore(
   client: any,
-  sourceMaps: typeof SourceMaps,
+  workers: Workers,
   panel: Panel,
   initialState: Object
 ) {
@@ -52,7 +59,7 @@ export function bootstrapStore(
     log: prefs.logging || isTesting(),
     timing: isDevelopment(),
     makeThunkArgs: (args, state) => {
-      return { ...args, client, sourceMaps, panel };
+      return { ...args, client, ...workers, panel };
     }
   });
 
@@ -67,7 +74,7 @@ export function bootstrapStore(
   return { store, actions, selectors };
 }
 
-export function bootstrapWorkers() {
+export function bootstrapWorkers(panelWorkers: Workers) {
   const workerPath = isDevelopment()
     ? "assets/build"
     : "resource://devtools/client/debugger/dist";
@@ -82,9 +89,11 @@ export function bootstrapWorkers() {
   }
 
   prettyPrint.start(`${workerPath}/pretty-print-worker.js`);
+  parser = new ParserDispatcher();
+
   parser.start(`${workerPath}/parser-worker.js`);
   search.start(`${workerPath}/search-worker.js`);
-  return { prettyPrint, parser, search };
+  return { ...panelWorkers, prettyPrint, parser, search };
 }
 
 export function teardownWorkers() {

@@ -126,6 +126,12 @@ extern nsresult NS_ConsumeStream(nsIInputStream* aSource, uint32_t aMaxCount,
                                  nsACString& aBuffer);
 
 /**
+ * Just like the above, but consumes into an nsTArray<uint8_t>.
+ */
+extern nsresult NS_ConsumeStream(nsIInputStream* aSource, uint32_t aMaxCount,
+                                 nsTArray<uint8_t>& aBuffer);
+
+/**
  * This function tests whether or not the input stream is buffered. A buffered
  * input stream is one that implements readSegments.  The test for this is to
  * 1/ check whether the input stream implements nsIBufferedInputStream;

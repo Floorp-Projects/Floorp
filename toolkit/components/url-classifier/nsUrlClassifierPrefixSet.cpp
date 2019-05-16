@@ -6,7 +6,6 @@
 
 #include "nsUrlClassifierPrefixSet.h"
 #include "nsIUrlClassifierPrefixSet.h"
-#include "crc32c.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsPrintfCString.h"
@@ -18,6 +17,7 @@
 #include "nsISeekableStream.h"
 #include "nsIBufferedStreams.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Unused.h"
@@ -35,22 +35,9 @@ static LazyLogModule gUrlClassifierPrefixSetLog("UrlClassifierPrefixSet");
 NS_IMPL_ISUPPORTS(nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet,
                   nsIMemoryReporter)
 
-template <typename T>
-static void CalculateTArrayChecksum(const nsTArray<T>& aArray,
-                                    uint32_t* outChecksum) {
-  *outChecksum = ~0;
-
-  for (size_t i = 0; i < aArray.Length(); i++) {
-    const T& element = aArray[i];
-    const void* pointer = &element;
-    *outChecksum = ComputeCrc32c(
-        *outChecksum, reinterpret_cast<const uint8_t*>(pointer), sizeof(void*));
-  }
-}
 
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
     : mLock("nsUrlClassifierPrefixSet.mLock"),
-      mIndexDeltasChecksum(~0),
       mTotalPrefixes(0) {}
 
 NS_IMETHODIMP
@@ -72,7 +59,6 @@ nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet() {
 void nsUrlClassifierPrefixSet::Clear() {
   LOG(("[%s] Clearing PrefixSet", mName.get()));
   mIndexDeltas.Clear();
-  mIndexDeltasChecksum = ~0;
   mIndexPrefixes.Clear();
   mTotalPrefixes = 0;
 }
@@ -92,7 +78,10 @@ nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray,
     }
   }
 
-  MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
+  MOZ_ASSERT_IF(mIndexDeltas.IsEmpty(),
+                mIndexPrefixes.Length() == mTotalPrefixes);
+  MOZ_ASSERT_IF(!mIndexDeltas.IsEmpty(),
+                mIndexPrefixes.Length() == mIndexDeltas.Length());
   return rv;
 }
 
@@ -109,52 +98,89 @@ nsresult nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes,
   }
 #endif
 
-  mIndexPrefixes.AppendElement(aPrefixes[0]);
-  mIndexDeltas.AppendElement();
-
-  uint32_t numOfDeltas = 0;
   uint32_t totalDeltas = 0;
-  uint32_t previousItem = aPrefixes[0];
-  for (uint32_t i = 1; i < aLength; i++) {
-    if ((numOfDeltas >= DELTAS_LIMIT) ||
-        (aPrefixes[i] - previousItem >= MAX_INDEX_DIFF)) {
-      // Compact the previous element.
-      // Note there is always at least one element when we get here,
-      // because we created the first element before the loop.
-      if (!mIndexDeltas.AppendElement(fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
 
-      if (!mIndexPrefixes.AppendElement(aPrefixes[i], fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      numOfDeltas = 0;
-    } else {
-      uint16_t delta = aPrefixes[i] - previousItem;
-      if (!mIndexDeltas.LastElement().AppendElement(delta, fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      numOfDeltas++;
-      totalDeltas++;
+  // Request one memory space to store all the prefixes may lead to
+  // memory allocation failure on certain platforms(See Bug 1046038).
+  // So if required size to store all the prefixes exceeds defined
+  // threshold(512k), we divide prefixes into delta chunks instead. Note that
+  // the potential overhead of this approach is that it may reuqire more memory
+  // compared to store all prefixes in one array because of jemalloc's
+  // implementation.
+  if (aLength * sizeof(uint32_t) <
+      StaticPrefs::browser_safebrowsing_prefixset_max_array_size()) {
+    // Not over the threshold, store all prefixes into mIndexPrefixes.
+    // mIndexDeltas is empty in this case.
+    mIndexPrefixes.SetCapacity(aLength);
+    for (uint32_t i = 0; i < aLength; i++) {
+      mIndexPrefixes.AppendElement(aPrefixes[i]);
     }
-    previousItem = aPrefixes[i];
+  } else {
+    // Apply delta algorithm to split prefixes into smaller delta chunk.
+
+    // We estimate the capacity of mIndexPrefixes & mIndexDeltas by assuming
+    // each element in mIndexDeltas stores DELTAS_LIMITS deltas, so the
+    // number of indexed prefixes is round up of
+    // TotalPrefixes / (DELTA_LIMIT + 1)
+    // The estimation only works when the number of prefixes are over a
+    // certain limit, which means, arrays in mIndexDeltas are always full.
+    uint32_t estimateCapacity =
+        (aLength + (DELTAS_LIMIT + 1) - 1) / (DELTAS_LIMIT + 1);
+    mIndexPrefixes.SetCapacity(estimateCapacity);
+    mIndexDeltas.SetCapacity(estimateCapacity);
+
+    mIndexPrefixes.AppendElement(aPrefixes[0]);
+    mIndexDeltas.AppendElement();
+    mIndexDeltas.LastElement().SetCapacity(DELTAS_LIMIT);
+
+    uint32_t numOfDeltas = 0;
+    uint32_t previousItem = aPrefixes[0];
+    for (uint32_t i = 1; i < aLength; i++) {
+      if ((numOfDeltas >= DELTAS_LIMIT) ||
+          (aPrefixes[i] - previousItem >= MAX_INDEX_DIFF)) {
+        // Compact the previous element.
+        // Note there is always at least one element when we get here,
+        // because we created the first element before the loop.
+        mIndexDeltas.LastElement().Compact();
+        if (!mIndexDeltas.AppendElement(fallible)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        mIndexDeltas.LastElement().SetCapacity(DELTAS_LIMIT);
+
+        if (!mIndexPrefixes.AppendElement(aPrefixes[i], fallible)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        numOfDeltas = 0;
+      } else {
+        uint16_t delta = aPrefixes[i] - previousItem;
+        if (!mIndexDeltas.LastElement().AppendElement(delta, fallible)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        numOfDeltas++;
+        totalDeltas++;
+      }
+      previousItem = aPrefixes[i];
+    }
+
+    mIndexDeltas.LastElement().Compact();
+    mIndexDeltas.Compact();
+    mIndexPrefixes.Compact();
+
+    MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
   }
 
+  if (totalDeltas == 0) {
+    // We have to clear mIndexDeltas here because it is still possible
+    // that the delta generation algorithm produces no deltas at all. When that
+    // happens, mIndexDeltas is not empty, which conflicts with the assumption
+    // that when there is no delta, mIndexDeltas is empty.
+    mIndexDeltas.Clear();
+  }
   mTotalPrefixes = aLength;
 
-  mIndexDeltas.LastElement().Compact();
-
-  // The hdr pointer of the last element of nsTArray may change after calling
-  // mIndexDeltas.LastElement().Compact(), so calculate checksum after the call.
-  CalculateTArrayChecksum(mIndexDeltas, &mIndexDeltasChecksum);
-
-  mIndexDeltas.Compact();
-  mIndexPrefixes.Compact();
-  MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
-
-  LOG(("Total number of indices: %d (crc=%u)", aLength, mIndexDeltasChecksum));
+  LOG(("Total number of indices: %d", aLength));
   LOG(("Total number of deltas: %d", totalDeltas));
   LOG(("Total number of delta chunks: %zu", mIndexDeltas.Length()));
 
@@ -179,6 +205,10 @@ nsresult nsUrlClassifierPrefixSet::GetPrefixesNative(
       return NS_ERROR_FAILURE;
     }
     outArray[prefixCnt++] = prefix;
+
+    if (mIndexDeltas.IsEmpty()) {
+      continue;
+    }
 
     for (uint32_t j = 0; j < mIndexDeltas[i].Length(); j++) {
       prefix += mIndexDeltas[i][j];
@@ -272,12 +302,15 @@ nsUrlClassifierPrefixSet::Contains(uint32_t aPrefix, bool* aFound) {
 
   // Now search through the deltas for the target.
   uint32_t diff = target - mIndexPrefixes[i];
-  uint32_t deltaSize = mIndexDeltas[i].Length();
-  uint32_t deltaIndex = 0;
 
-  while (diff > 0 && deltaIndex < deltaSize) {
-    diff -= mIndexDeltas[i][deltaIndex];
-    deltaIndex++;
+  if (!mIndexDeltas.IsEmpty()) {
+    uint32_t deltaSize = mIndexDeltas[i].Length();
+    uint32_t deltaIndex = 0;
+
+    while (diff > 0 && deltaIndex < deltaSize) {
+      diff -= mIndexDeltas[i][deltaIndex];
+      deltaIndex++;
+    }
   }
 
   if (diff == 0) {
@@ -354,13 +387,14 @@ nsresult nsUrlClassifierPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in) {
   NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FAILURE);
 
   if (magic == PREFIXSET_VERSION_MAGIC) {
+    // Read the number of indexed prefixes
     uint32_t indexSize;
-    uint32_t deltaSize;
-
     rv = in->Read(reinterpret_cast<char*>(&indexSize), sizeof(uint32_t), &read);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FAILURE);
 
+    // Read the number of delta prefixes
+    uint32_t deltaSize;
     rv = in->Read(reinterpret_cast<char*>(&deltaSize), sizeof(uint32_t), &read);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FAILURE);
@@ -370,58 +404,71 @@ nsresult nsUrlClassifierPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in) {
       return NS_OK;
     }
 
-    if (deltaSize > (indexSize * DELTAS_LIMIT)) {
-      return NS_ERROR_FILE_CORRUPTED;
-    }
-
-    nsTArray<uint32_t> indexStarts;
-    if (!indexStarts.SetLength(indexSize, fallible) ||
-        !mIndexPrefixes.SetLength(indexSize, fallible) ||
-        !mIndexDeltas.SetLength(indexSize, fallible)) {
+    if (!mIndexPrefixes.SetLength(indexSize, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
     mTotalPrefixes = indexSize;
+    if (deltaSize > (indexSize * DELTAS_LIMIT)) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
 
+    // Read index prefixes
     uint32_t toRead = indexSize * sizeof(uint32_t);
     rv = in->Read(reinterpret_cast<char*>(mIndexPrefixes.Elements()), toRead,
                   &read);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(read == toRead, NS_ERROR_FAILURE);
 
-    rv = in->Read(reinterpret_cast<char*>(indexStarts.Elements()), toRead,
-                  &read);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(read == toRead, NS_ERROR_FAILURE);
+    if (deltaSize) {
+      nsTArray<uint32_t> indexStarts;
 
-    if (indexSize != 0 && indexStarts[0] != 0) {
-      return NS_ERROR_FILE_CORRUPTED;
-    }
-    for (uint32_t i = 0; i < indexSize; i++) {
-      uint32_t numInDelta = i == indexSize - 1
-                                ? deltaSize - indexStarts[i]
-                                : indexStarts[i + 1] - indexStarts[i];
-      if (numInDelta > DELTAS_LIMIT) {
+      if (!indexStarts.SetLength(indexSize, fallible) ||
+          !mIndexDeltas.SetLength(indexSize, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      // Read index start array to construct mIndexDeltas
+      rv = in->Read(reinterpret_cast<char*>(indexStarts.Elements()), toRead,
+                    &read);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_TRUE(read == toRead, NS_ERROR_FAILURE);
+
+      if (indexStarts[0] != 0) {
         return NS_ERROR_FILE_CORRUPTED;
       }
-      if (numInDelta > 0) {
-        if (!mIndexDeltas[i].SetLength(numInDelta, fallible)) {
-          return NS_ERROR_OUT_OF_MEMORY;
+
+      for (uint32_t i = 0; i < indexSize; i++) {
+        uint32_t numInDelta = i == indexSize - 1
+                                  ? deltaSize - indexStarts[i]
+                                  : indexStarts[i + 1] - indexStarts[i];
+        if (numInDelta > DELTAS_LIMIT) {
+          return NS_ERROR_FILE_CORRUPTED;
         }
-        mTotalPrefixes += numInDelta;
-        toRead = numInDelta * sizeof(uint16_t);
-        rv = in->Read(reinterpret_cast<char*>(mIndexDeltas[i].Elements()),
-                      toRead, &read);
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_TRUE(read == toRead, NS_ERROR_FAILURE);
+        if (numInDelta > 0) {
+          if (!mIndexDeltas[i].SetLength(numInDelta, fallible)) {
+            return NS_ERROR_OUT_OF_MEMORY;
+          }
+          mTotalPrefixes += numInDelta;
+          toRead = numInDelta * sizeof(uint16_t);
+          rv = in->Read(reinterpret_cast<char*>(mIndexDeltas[i].Elements()),
+                        toRead, &read);
+          NS_ENSURE_SUCCESS(rv, rv);
+          NS_ENSURE_TRUE(read == toRead, NS_ERROR_FAILURE);
+        }
       }
+    } else {
+      mIndexDeltas.Clear();
     }
   } else {
     LOG(("[%s] Version magic mismatch, not loading", mName.get()));
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
+  MOZ_ASSERT_IF(mIndexDeltas.IsEmpty(),
+                mIndexPrefixes.Length() == mTotalPrefixes);
+  MOZ_ASSERT_IF(!mIndexDeltas.IsEmpty(),
+                mIndexPrefixes.Length() == mIndexDeltas.Length());
   LOG(("[%s] Loading PrefixSet successful (%u total prefixes)", mName.get(),
        mTotalPrefixes));
 
@@ -432,8 +479,14 @@ uint32_t nsUrlClassifierPrefixSet::CalculatePreallocateSize() const {
   uint32_t fileSize = 4 * sizeof(uint32_t);
   MOZ_RELEASE_ASSERT(mTotalPrefixes >= mIndexPrefixes.Length());
   uint32_t deltas = mTotalPrefixes - mIndexPrefixes.Length();
-  fileSize += 2 * mIndexPrefixes.Length() * sizeof(uint32_t);
-  fileSize += deltas * sizeof(uint16_t);
+  fileSize += mIndexPrefixes.Length() * sizeof(uint32_t);
+  if (deltas) {
+    MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
+
+    fileSize += mIndexPrefixes.Length() * sizeof(uint32_t);
+    fileSize += mIndexDeltas.Length() * sizeof(uint32_t);
+    fileSize += deltas * sizeof(uint16_t);
+  }
   return fileSize;
 }
 
@@ -441,20 +494,12 @@ nsresult nsUrlClassifierPrefixSet::WritePrefixes(
     nsCOMPtr<nsIOutputStream>& out) const {
   MutexAutoLock lock(mLock);
 
-  mCanary.Check();
+  MOZ_ASSERT_IF(mIndexDeltas.IsEmpty(),
+                mIndexPrefixes.Length() == mTotalPrefixes);
+  MOZ_ASSERT_IF(!mIndexDeltas.IsEmpty(),
+                mIndexPrefixes.Length() == mIndexDeltas.Length());
 
-  // In Bug 1362761, crashes happened while reading mIndexDeltas[i].
-  // We suspect that this is due to memory corruption so to test this
-  // hypothesis, we will crash the browser. Once we have established
-  // memory corruption as the root cause, we can attempt to gracefully
-  // handle this.
-  uint32_t checksum;
-  CalculateTArrayChecksum(mIndexDeltas, &checksum);
-  if (checksum != mIndexDeltasChecksum) {
-    LOG(("[%s] The contents of mIndexDeltas doesn't match the checksum!",
-         mName.get()));
-    MOZ_CRASH("Memory corruption detected in mIndexDeltas.");
-  }
+  mCanary.Check();
 
   uint32_t written;
   uint32_t writelen = sizeof(uint32_t);
@@ -465,10 +510,18 @@ nsresult nsUrlClassifierPrefixSet::WritePrefixes(
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
   const uint32_t indexSize = mIndexPrefixes.Length();
-  if (NS_WARN_IF(mIndexDeltas.Length() != indexSize)) {
-    LOG(("[%s] mIndexPrefixes doesn't have the same length as mIndexDeltas",
-         mName.get()));
-    return NS_ERROR_FAILURE;
+  if (mIndexDeltas.IsEmpty()) {
+    if (NS_WARN_IF(mTotalPrefixes != indexSize)) {
+      LOG(("[%s] mIndexPrefixes doesn't have the same length as mTotalPrefixes",
+           mName.get()));
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    if (NS_WARN_IF(mIndexDeltas.Length() != indexSize)) {
+      LOG(("[%s] mIndexPrefixes doesn't have the same length as mIndexDeltas",
+           mName.get()));
+      return NS_ERROR_FAILURE;
+    }
   }
   uint32_t totalDeltas = 0;
 
@@ -478,18 +531,20 @@ nsresult nsUrlClassifierPrefixSet::WritePrefixes(
   // If we ever update the format, we can gain space by storing the delta
   // subarray sizes, which fit in bytes.
   nsTArray<uint32_t> indexStarts;
-  if (!indexStarts.SetCapacity(indexSize + 1, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  indexStarts.AppendElement(0);
+  if (!mIndexDeltas.IsEmpty()) {
+    if (!indexStarts.SetCapacity(indexSize + 1, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    indexStarts.AppendElement(0);
 
-  for (uint32_t i = 0; i < indexSize; i++) {
-    uint32_t deltaLength = mIndexDeltas[i].Length();
-    totalDeltas += deltaLength;
-    indexStarts.AppendElement(totalDeltas);
+    for (uint32_t i = 0; i < indexSize; i++) {
+      uint32_t deltaLength = mIndexDeltas[i].Length();
+      totalDeltas += deltaLength;
+      indexStarts.AppendElement(totalDeltas);
+    }
+    indexStarts.RemoveElementAt(indexSize);  // we don't use the last element
+    MOZ_ASSERT(indexStarts.Length() == indexSize);
   }
-  indexStarts.RemoveElementAt(indexSize);  // we don't use the last element
-  MOZ_ASSERT(indexStarts.Length() == indexSize);
 
   rv =
       out->Write(reinterpret_cast<const char*>(&indexSize), writelen, &written);
@@ -507,12 +562,13 @@ nsresult nsUrlClassifierPrefixSet::WritePrefixes(
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
-  rv = out->Write(reinterpret_cast<const char*>(indexStarts.Elements()),
-                  writelen, &written);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
+  if (!mIndexDeltas.IsEmpty()) {
+    MOZ_ASSERT(!indexStarts.IsEmpty() && totalDeltas > 0);
+    rv = out->Write(reinterpret_cast<const char*>(indexStarts.Elements()),
+                    writelen, &written);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
-  if (totalDeltas > 0) {
     for (uint32_t i = 0; i < indexSize; i++) {
       writelen = mIndexDeltas[i].Length() * sizeof(uint16_t);
       rv = out->Write(reinterpret_cast<const char*>(mIndexDeltas[i].Elements()),

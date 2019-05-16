@@ -379,8 +379,7 @@ LoginManagerPrompter.prototype = {
       }
 
       // Look for existing logins.
-      var foundLogins = Services.logins.findLogins({}, hostname, null,
-                                                   realm);
+      var foundLogins = Services.logins.findLogins(hostname, null, realm);
 
       // XXX Like the original code, we can't deal with multiple
       // account selection. (bug 227632)
@@ -483,8 +482,7 @@ LoginManagerPrompter.prototype = {
 
       if (!aPassword.value) {
         // Look for existing logins.
-        var foundLogins = Services.logins.findLogins({}, hostname, null,
-                                                     realm);
+        var foundLogins = Services.logins.findLogins(hostname, null, realm);
 
         // XXX Like the original code, we can't deal with multiple
         // account selection (bug 227632). We can deal with finding the
@@ -1258,11 +1256,9 @@ LoginManagerPrompter.prototype = {
    * Note: The caller doesn't know the username for aNewLogin, so this
    *       function fills in .username and .usernameField with the values
    *       from the login selected by the user.
-   *
-   * Note; XPCOM stupidity: |count| is just |logins.length|.
    */
-  promptToChangePasswordWithUsernames(logins, count, aNewLogin) {
-    this.log("promptToChangePasswordWithUsernames with count:", count);
+  promptToChangePasswordWithUsernames(logins, aNewLogin) {
+    this.log("promptToChangePasswordWithUsernames with count:", logins.length);
 
     var usernames = logins.map(l => l.username || this._getLocalizedString("noUsername"));
     var dialogText  = this._getLocalizedString("userSelectText2");

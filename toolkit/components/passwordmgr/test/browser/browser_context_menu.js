@@ -263,6 +263,32 @@ add_task(async function test_context_menu_username_login_fill() {
 });
 
 /**
+ * Check event telemetry is correctly recorded when opening the saved logins / management UI
+ * from the context menu
+ */
+add_task(async function test_context_menu_open_management() {
+  Services.prefs.setBoolPref("signon.schemeUpgrades", false);
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: TEST_HOSTNAME + MULTIPLE_FORMS_PAGE_PATH,
+  }, async function(browser) {
+    await openPasswordContextMenu(browser, "#test-password-1");
+
+    gContextMenu.openPasswordManager();
+    // wait until the management UI opens
+    let dialogWindow = await waitForPasswordManagerDialog();
+    info("Management UI dialog was opened");
+
+    TelemetryTestUtils.assertEvents(
+      [["pwmgr", "open_management", "contextmenu"]],
+      {category: "pwmgr", method: "open_management"});
+
+    dialogWindow.close();
+    CONTEXT_MENU.hidePopup();
+  });
+});
+
+/**
  * Synthesize mouse clicks to open the password manager context menu popup
  * for a target password input element.
  *

@@ -42,12 +42,12 @@ export class ModalOverlay extends React.PureComponent {
   render() {
     const {title, button_label} = this.props;
     return (
-      <ModalOverlayWrapper onClose={this.props.onDoneButton}>
+      <ModalOverlayWrapper onClose={this.props.onDismissBundle}>
         <h2> {title} </h2>
         {this.props.children}
         <div className="footer">
           <button className="button primary modalButton"
-            onClick={this.props.onDoneButton}> {button_label} </button>
+            onClick={this.props.onDismissBundle}> {button_label} </button>
         </div>
       </ModalOverlayWrapper>);
   }

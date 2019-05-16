@@ -25,24 +25,18 @@ async function checkCookiePresent(browser) {
   });
 }
 
-async function checkCookie(sameSiteEnabled, browser) {
-  if (sameSiteEnabled) {
-    info("Check that the SameSite cookie was not sent.");
-    await ContentTask.spawn(browser, null, async function() {
-      let cookieSpan = content.document.getElementById("cookieSpan");
-      ok(cookieSpan, "cookieSpan element should be in document");
-      is(cookieSpan.textContent, "", "The SameSite cookie was blocked correctly.");
-    });
-  } else {
-    info("Check that the SameSite cookie was sent.");
-    await checkCookiePresent(browser);
-  }
+async function checkCookie(browser) {
+  info("Check that the SameSite cookie was not sent.");
+  await ContentTask.spawn(browser, null, async function() {
+    let cookieSpan = content.document.getElementById("cookieSpan");
+    ok(cookieSpan, "cookieSpan element should be in document");
+    is(cookieSpan.textContent, "", "The SameSite cookie was blocked correctly.");
+  });
 }
 
-async function runTest(sameSiteEnabled) {
+async function runTest() {
   await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.same-site.enabled", sameSiteEnabled],
-          ["reader.parse-on-load.enabled", true]],
+    set: [["reader.parse-on-load.enabled", true]],
   });
 
   info("Set a SameSite=strict cookie.");
@@ -69,7 +63,7 @@ async function runTest(sameSiteEnabled) {
     await pageLoaded;
 
     await clickLink(browser);
-    await checkCookie(sameSiteEnabled, browser);
+    await checkCookie(browser);
     await BrowserTestUtils.removeTab(tab);
   }
 
@@ -84,7 +78,7 @@ async function runTest(sameSiteEnabled) {
     await pageShown;
 
     await clickLink(browser);
-    await checkCookie(sameSiteEnabled, browser);
+    await checkCookie(browser);
   });
 }
 

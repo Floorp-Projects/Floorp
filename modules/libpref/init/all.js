@@ -777,7 +777,7 @@ pref("gfx.hidpi.enabled", 2);
 #endif
 
 // Default to containerless scrolling
-pref("layout.scroll.root-frame-containers", 0);
+pref("layout.scroll.root-frame-containers", false);
 
 pref("layout.scrollbars.always-layerize-track", false);
 
@@ -2350,7 +2350,6 @@ pref("network.proxy.failover_timeout",      1800); // 30 minutes
 pref("network.online",                      true); //online/offline
 pref("network.cookie.thirdparty.sessionOnly", false);
 pref("network.cookie.thirdparty.nonsecureSessionOnly", false);
-pref("network.cookie.same-site.enabled",    true); // Honor the SameSite cookie attribute
 
 // The interval in seconds to move the cookies in the child process.
 // Set to 0 to disable moving the cookies.
@@ -6038,8 +6037,9 @@ pref("dom.datatransfer.mozAtAPIs", true);
 // cycles.
 pref("dom.sidebar.enabled", true);
 
-// Turn on fission frameloader swapping
-pref("fission.rebuild_frameloaders_on_remoteness_change", true);
+// Turn off fission frameloader swapping while regressions are being fixed.
+// Should be turned back on to resolve bug 1551993.
+pref("fission.rebuild_frameloaders_on_remoteness_change", false);
 
 // If true, preserve browsing contexts between process swaps. Should be set to
 // true in bug 1550571.

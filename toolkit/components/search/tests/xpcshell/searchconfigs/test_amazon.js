@@ -29,6 +29,147 @@ const test = new SearchConfigTest({
       },
     }],
   },
+  domains: {
+    // Note: These should be based on region, but we don't currently enforce that.
+    // Note: the order here is important. A region/locale match higher up in the
+    // list will override a region/locale match lower down.
+    "amazon.com.au": {
+      included: [{
+        regions: ["au"],
+        locales: {
+          matches: [
+            "ach", "af", "ar", "as", "az", "bg", "bn-IN", "cak", "eo", "en-US",
+            "en-ZA", "es-AR", "fa", "gn", "hy-AM", "ia", "is", "ka", "km", "lt",
+            "mk", "ms", "my", "ro", "si", "th", "tl", "trs", "uz",
+          ],
+        },
+      }, {
+        regions: ["au"],
+        locales: {
+          matches: [
+            "cy", "da", "el", "en-GB", "eu", "ga-IE", "gd", "gl", "hr", "nb-NO",
+            "nn-NO", "pt-PT", "sq", "sr",
+          ],
+        },
+      }],
+      noSuggestionsURL: true,
+    },
+    "amazon.ca": {
+      included: [{
+        locales: {
+          matches: ["ca", "en-CA"],
+        },
+      }, {
+        regions: ["ca"],
+        locales: {
+          matches: [
+            "ach", "af", "ar", "as", "az", "bg", "bn-IN", "cak", "eo", "en-US",
+            "en-ZA", "es-AR", "fa", "gn", "hy-AM", "ia", "is", "ka", "km", "lt",
+            "mk", "ms", "my", "ro", "si", "th", "tl", "trs", "uz",
+          ],
+        },
+      }, {
+        regions: ["ca"],
+        locales: {
+          matches: [
+            "br", "fr", "ff", "son", "wo",
+          ],
+        },
+      }],
+      noSuggestionsURL: true,
+    },
+    "amazon.fr": {
+      included: [{
+        locales: {
+          matches: ["br", "fr", "ff", "son", "wo"],
+        },
+      }, {
+        regions: ["fr"],
+        locales: {
+          matches: [
+            "ach", "af", "ar", "as", "az", "bg", "bn-IN", "cak", "eo", "en-US",
+            "en-ZA", "es-AR", "fa", "gn", "hy-AM", "ia", "is", "ka", "km", "lt",
+            "mk", "ms", "my", "ro", "si", "th", "tl", "trs", "uz",
+          ],
+        },
+      }],
+      noSuggestionsURL: true,
+    },
+    "amazon.co.uk": {
+      included: [{
+        locales: {
+          matches: [
+            "cy", "da", "el", "en-GB", "eu", "ga-IE", "gd", "gl", "hr", "nb-NO",
+            "nn-NO", "pt-PT", "sq", "sr",
+          ],
+        },
+      }, {
+        regions: ["gb"],
+        locales: {
+          matches: [
+            "ach", "af", "ar", "as", "az", "bg", "bn-IN", "cak", "eo", "en-US",
+            "en-ZA", "es-AR", "fa", "gn", "hy-AM", "ia", "is", "ka", "km", "lt",
+            "mk", "ms", "my", "ro", "si", "th", "tl", "trs", "uz",
+          ],
+        },
+      }],
+      noSuggestionsURL: true,
+    },
+    "amazon.com": {
+      included: [{
+        locales: {
+          matches: [
+            "ach", "af", "ar", "as", "az", "bg", "bn-IN", "cak", "eo", "en-US",
+            "en-ZA", "es-AR", "fa", "gn", "hy-AM", "ia", "is", "ka", "km", "lt",
+            "mk", "ms", "my", "ro", "si", "th", "tl", "trs", "uz",
+          ],
+        },
+      }],
+    },
+    "amazon.cn": {
+      included: [{
+        locales: {
+          matches: ["zh-CN"],
+        },
+      }],
+      noSuggestionsURL: true,
+    },
+    "amazon.co.jp": {
+      included: [{
+        locales: {
+          startsWith: ["ja"],
+        },
+      }],
+      noSuggestionsURL: true,
+    },
+    "amazon.de": {
+      included: [{
+        locales: {
+          matches: ["de", "dsb", "hsb"],
+        },
+      }],
+      noSuggestionsURL: true,
+    },
+    "amazon.in": {
+      included: [{
+        locales: {
+          matches: [
+            "bn", "gu-IN", "kn", "mai", "ml", "mr", "or", "pa-IN", "ta",
+            "te", "ur",
+          ],
+        },
+      }],
+      noSuggestionsURL: true,
+    },
+    "amazon.it": {
+      included: [{
+        locales: {
+          matches: ["it", "lij"],
+        },
+      }],
+      noSuggestionsURL: true,
+    },
+  },
 });
 
 add_task(async function setup() {

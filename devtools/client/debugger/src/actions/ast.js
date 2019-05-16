@@ -8,13 +8,11 @@ import { getSourceWithContent, getSelectedLocation } from "../selectors";
 
 import { setInScopeLines } from "./ast/setInScopeLines";
 
-import * as parser from "../workers/parser";
-
 import type { Context } from "../types";
 import type { ThunkArgs, Action } from "./types";
 
 export function setOutOfScopeLocations(cx: Context) {
-  return async ({ dispatch, getState }: ThunkArgs) => {
+  return async ({ dispatch, getState, parser }: ThunkArgs) => {
     const location = getSelectedLocation(getState());
     if (!location) {
       return;
