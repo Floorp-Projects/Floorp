@@ -2415,8 +2415,8 @@ void nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  nsCSSShadowArray* shadows = StyleEffects()->mBoxShadow;
-  if (shadows && shadows->HasShadowWithInset(false)) {
+  const auto* effects = StyleEffects();
+  if (effects->HasBoxShadowWithInset(false)) {
     aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowOuter>(aBuilder,
                                                                        this);
   }
@@ -2424,7 +2424,7 @@ void nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
   bool bgIsThemed =
       DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
 
-  if (shadows && shadows->HasShadowWithInset(true)) {
+  if (effects->HasBoxShadowWithInset(true)) {
     aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowInner>(aBuilder,
                                                                        this);
   }

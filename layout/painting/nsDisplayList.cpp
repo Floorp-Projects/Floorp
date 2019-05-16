@@ -3745,8 +3745,7 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
 
   const nsStyleBorder* borderStyle = aFrame->StyleBorder();
   const nsStyleEffects* effectsStyle = aFrame->StyleEffects();
-  bool hasInsetShadow = effectsStyle->mBoxShadow &&
-                        effectsStyle->mBoxShadow->HasShadowWithInset(true);
+  bool hasInsetShadow = effectsStyle->HasBoxShadowWithInset(true);
   bool willPaintBorder = aAllowWillPaintBorderOptimization && !isThemed &&
                          !hasInsetShadow && borderStyle->HasBorder();
 
@@ -5384,8 +5383,8 @@ bool nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems() {
-  nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
-  if (!shadows) {
+  auto shadows = mFrame->StyleEffects()->mBoxShadow.AsSpan();
+  if (shadows.IsEmpty()) {
     return false;
   }
 
@@ -5440,24 +5439,26 @@ bool nsDisplayBoxShadowOuter::CreateWebRenderCommands(
   for (uint32_t i = 0; i < rects.Length(); ++i) {
     LayoutDeviceRect clipRect =
         LayoutDeviceRect::FromAppUnits(rects[i], appUnitsPerDevPixel);
-    nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
-    MOZ_ASSERT(shadows);
+    auto shadows = mFrame->StyleEffects()->mBoxShadow.AsSpan();
+    MOZ_ASSERT(!shadows.IsEmpty());
 
-    for (uint32_t j = shadows->Length(); j > 0; j--) {
-      nsCSSShadowItem* shadow = shadows->ShadowAt(j - 1);
-      if (shadow->mInset) {
+    for (auto& shadow : Reversed(shadows)) {
+      if (shadow.inset) {
         continue;
       }
 
-      float blurRadius = float(shadow->mRadius) / float(appUnitsPerDevPixel);
+      float blurRadius =
+          float(shadow.base.blur.ToAppUnits()) / float(appUnitsPerDevPixel);
       gfx::Color shadowColor =
-          nsCSSRendering::GetShadowColor(shadow, mFrame, mOpacity);
+          nsCSSRendering::GetShadowColor(shadow.base, mFrame, mOpacity);
 
       // We don't move the shadow rect here since WR does it for us
       // Now translate everything to device pixels.
       const nsRect& shadowRect = frameRect;
       LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
-          nsPoint(shadow->mXOffset, shadow->mYOffset), appUnitsPerDevPixel);
+          nsPoint(shadow.base.horizontal.ToAppUnits(),
+                  shadow.base.vertical.ToAppUnits()),
+          appUnitsPerDevPixel);
 
       LayoutDeviceRect deviceBox =
           LayoutDeviceRect::FromAppUnits(shadowRect, appUnitsPerDevPixel);
@@ -5475,7 +5476,8 @@ bool nsDisplayBoxShadowOuter::CreateWebRenderCommands(
             LayoutDeviceSize::FromUnknownSize(borderRadii.BottomRight()));
       }
 
-      float spreadRadius = float(shadow->mSpread) / float(appUnitsPerDevPixel);
+      float spreadRadius =
+          float(shadow.spread.ToAppUnits()) / float(appUnitsPerDevPixel);
 
       aBuilder.PushBoxShadow(deviceBoxRect, deviceClipRect, !BackfaceIsHidden(),
                              deviceBoxRect, wr::ToLayoutVector2D(shadowOffset),
@@ -5538,8 +5540,8 @@ void nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
 bool nsDisplayBoxShadowInner::CanCreateWebRenderCommands(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     const nsPoint& aReferenceOffset) {
-  nsCSSShadowArray* shadows = aFrame->StyleEffects()->mBoxShadow;
-  if (!shadows) {
+  auto shadows = aFrame->StyleEffects()->mBoxShadow.AsSpan();
+  if (shadows.IsEmpty()) {
     // Means we don't have to paint anything
     return true;
   }
@@ -5570,15 +5572,14 @@ void nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
   AutoTArray<nsRect, 10> rects;
   ComputeDisjointRectangles(aVisibleRegion, &rects);
 
-  nsCSSShadowArray* shadows = aFrame->StyleEffects()->mBoxShadow;
+  auto shadows = aFrame->StyleEffects()->mBoxShadow.AsSpan();
 
   for (uint32_t i = 0; i < rects.Length(); ++i) {
     LayoutDeviceRect clipRect =
         LayoutDeviceRect::FromAppUnits(rects[i], appUnitsPerDevPixel);
 
-    for (uint32_t i = shadows->Length(); i > 0; --i) {
-      nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
-      if (!shadowItem->mInset) {
+    for (auto& shadow : Reversed(shadows)) {
+      if (!shadow.inset) {
         continue;
       }
 
@@ -5592,14 +5593,15 @@ void nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
           LayoutDeviceRect::FromAppUnits(shadowRect, appUnitsPerDevPixel);
       wr::LayoutRect deviceClipRect = wr::ToRoundedLayoutRect(clipRect);
       Color shadowColor =
-          nsCSSRendering::GetShadowColor(shadowItem, aFrame, 1.0);
+          nsCSSRendering::GetShadowColor(shadow.base, aFrame, 1.0);
 
       LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
-          nsPoint(shadowItem->mXOffset, shadowItem->mYOffset),
+          nsPoint(shadow.base.horizontal.ToAppUnits(),
+                  shadow.base.vertical.ToAppUnits()),
           appUnitsPerDevPixel);
 
       float blurRadius =
-          float(shadowItem->mRadius) / float(appUnitsPerDevPixel);
+          float(shadow.base.blur.ToAppUnits()) / float(appUnitsPerDevPixel);
 
       wr::BorderRadius borderRadius = wr::ToBorderRadius(
           LayoutDeviceSize::FromUnknownSize(innerRadii.TopLeft()),
@@ -5608,7 +5610,7 @@ void nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
           LayoutDeviceSize::FromUnknownSize(innerRadii.BottomRight()));
       // NOTE: Any spread radius > 0 will render nothing. WR Bug.
       float spreadRadius =
-          float(shadowItem->mSpread) / float(appUnitsPerDevPixel);
+          float(shadow.spread.ToAppUnits()) / float(appUnitsPerDevPixel);
 
       aBuilder.PushBoxShadow(
           wr::ToLayoutRect(deviceBoxRect), deviceClipRect,
@@ -8969,7 +8971,7 @@ bool nsDisplayText::CanApplyOpacity() const {
 
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
   const nsStyleText* textStyle = f->StyleText();
-  if (textStyle->mTextShadow) {
+  if (textStyle->HasTextShadow()) {
     return false;
   }
 
@@ -9017,7 +9019,7 @@ bool nsDisplayText::CreateWebRenderCommands(
   // view. Also if we're selected we might have some shadows from the
   // ::selected and ::inctive-selected pseudo-selectors. So don't do this
   // optimization if we have shadows or a selection.
-  if (!(IsSelected() || f->StyleText()->GetTextShadow())) {
+  if (!(IsSelected() || f->StyleText()->HasTextShadow())) {
     nsRect visible = GetPaintRect();
     visible.Inflate(3 * appUnitsPerDevPixel);
     bounds = bounds.Intersect(visible);
@@ -9948,23 +9950,17 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(WrFiltersHolder& wrFilters) {
       case NS_STYLE_FILTER_DROP_SHADOW: {
         float appUnitsPerDevPixel =
             mFrame->PresContext()->AppUnitsPerDevPixel();
-        nsCSSShadowArray* shadows = filter.GetDropShadow();
-        if (!shadows || shadows->Length() != 1) {
-          MOZ_ASSERT_UNREACHABLE(
-              "Exactly one drop shadow should have been "
-              "parsed.");
-          return false;
-        }
-
-        nsCSSShadowItem* shadow = shadows->ShadowAt(0);
-        nscolor color = shadow->mColor.CalcColor(mFrame);
+        const StyleSimpleShadow& shadow = filter.GetDropShadow();
+        nscolor color = shadow.color.CalcColor(mFrame);
 
         wr::Shadow wrShadow;
         wrShadow.offset = {
-            NSAppUnitsToFloatPixels(shadow->mXOffset, appUnitsPerDevPixel),
-            NSAppUnitsToFloatPixels(shadow->mYOffset, appUnitsPerDevPixel)};
-        wrShadow.blur_radius =
-            NSAppUnitsToFloatPixels(shadow->mRadius, appUnitsPerDevPixel);
+            NSAppUnitsToFloatPixels(shadow.horizontal.ToAppUnits(),
+                                    appUnitsPerDevPixel),
+            NSAppUnitsToFloatPixels(shadow.vertical.ToAppUnits(),
+                                    appUnitsPerDevPixel)};
+        wrShadow.blur_radius = NSAppUnitsToFloatPixels(shadow.blur.ToAppUnits(),
+                                                       appUnitsPerDevPixel);
         wrShadow.color = {NS_GET_R(color) / 255.0f, NS_GET_G(color) / 255.0f,
                           NS_GET_B(color) / 255.0f, NS_GET_A(color) / 255.0f};
         auto filterOp = wr::FilterOp::DropShadow(wrShadow);
