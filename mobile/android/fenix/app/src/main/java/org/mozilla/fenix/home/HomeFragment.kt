@@ -57,6 +57,8 @@ import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
+import org.mozilla.fenix.onboarding.FenixOnboarding
+import org.mozilla.fenix.onboarding.Onboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import kotlin.coroutines.CoroutineContext
@@ -70,6 +72,7 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     var deleteSessionJob: (suspend () -> Unit)? = null
 
+    private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var sessionControlComponent: SessionControlComponent
 
     private lateinit var job: Job
@@ -86,7 +89,8 @@ class HomeFragment : Fragment(), CoroutineScope {
     ): View? {
         job = Job()
         val view = inflater.inflate(R.layout.fragment_home, container, false)
-        val mode = if ((activity as HomeActivity).browsingModeManager.isPrivate) Mode.Private else Mode.Normal
+
+        val mode = currentMode()
 
         sessionControlComponent = SessionControlComponent(
             view.homeLayout,
@@ -220,7 +224,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                 }
         }
 
-        val mode = if ((activity as HomeActivity).browsingModeManager.isPrivate) Mode.Private else Mode.Normal
+        val mode = currentMode()
         getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
 
         emitSessionChanges()
@@ -495,10 +499,15 @@ class HomeFragment : Fragment(), CoroutineScope {
         }
     }
 
+    private fun currentMode(): Mode = if (!onboarding.userHasBeenOnboarded()) {
+        Mode.Onboarding
+    } else if ((activity as HomeActivity).browsingModeManager.isPrivate) {
+        Mode.Private
+    } else { Mode.Normal }
+
     companion object {
         private const val toolbarPaddingDp = 12f
         private const val KEY_TABS = "tabs"
         private const val KEY_COLLECTIONS = "collections"
-        private const val KEY_MODE = "mode"
     }
 }
