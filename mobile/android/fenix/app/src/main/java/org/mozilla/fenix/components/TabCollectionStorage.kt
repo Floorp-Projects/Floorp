@@ -17,6 +17,8 @@ import org.mozilla.fenix.test.Mockable
 @Mockable
 class TabCollectionStorage(private val context: Context, private val sessionManager: SessionManager) {
 
+    var cachedTabCollections = listOf<TabCollection>()
+
     private val collectionStorage by lazy {
         TabCollectionStorage(context, sessionManager)
     }
@@ -27,6 +29,10 @@ class TabCollectionStorage(private val context: Context, private val sessionMana
 
     fun addTabsToCollection(tabCollection: TabCollection, sessions: List<Session>) {
         collectionStorage.addTabsToCollection(tabCollection, sessions)
+    }
+
+    fun getTabCollectionsCount(): Int {
+        return collectionStorage.getTabCollectionsCount()
     }
 
     fun getCollections(limit: Int = 20): LiveData<List<TabCollection>> {

@@ -21,7 +21,6 @@
         android:paddingBottom="12dp"
         android:textColor="?primaryText"
         android:textSize="16sp"
-        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/divider"
         app:layout_constraintTop_toTopOf="parent"
         tools:targetApi="m" />

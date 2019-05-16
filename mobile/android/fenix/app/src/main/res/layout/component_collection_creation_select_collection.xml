@@ -45,14 +45,19 @@
         android:id="@+id/collections_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:elevation="5dp"
         android:alpha="1"
+        android:background="?foundation"
         android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/add_collection_button" />
+        app:layout_constraintBottom_toTopOf="@id/add_collection_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <TextView
         android:id="@+id/add_collection_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:elevation="5dp"
         android:alpha="1"
         android:background="?foundation"
         android:drawableStart="@drawable/ic_new"
@@ -65,7 +70,7 @@
         android:textColor="?primaryText"
         android:textSize="16sp"
         android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/divider"
+        app:layout_constraintBottom_toTopOf="@id/divider"
         tools:targetApi="m" />
 
     <View
@@ -88,7 +93,7 @@
         android:focusedByDefault="true"
         android:imeOptions="actionDone"
         android:importantForAutofill="no"
-        android:inputType="text"
+        android:inputType="textCapSentences"
         android:paddingStart="20dp"
         android:paddingTop="12dp"
         android:paddingEnd="20dp"
@@ -102,6 +107,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/tab_list"
+        android:elevation="0dp"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="16dp"
@@ -109,7 +115,7 @@
         android:layout_marginEnd="16dp"
         android:fadingEdgeLength="30dp"
         android:requiresFadingEdge="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/collections_list"
+        app:layout_constraintBottom_toTopOf="@id/add_collection_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/back_button" />
@@ -121,7 +127,7 @@
         android:alpha="0.5"
         android:background="@drawable/scrim_background"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/tab_list"
+        app:layout_constraintBottom_toTopOf="@id/collections_list"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -165,7 +171,7 @@
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/save_button"
+            app:layout_constraintEnd_toStartOf="@id/save_button"
             app:layout_constraintStart_toEndOf="@id/close_icon"
             app:layout_constraintTop_toTopOf="parent" />
 

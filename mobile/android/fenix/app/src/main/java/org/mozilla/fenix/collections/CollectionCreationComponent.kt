@@ -27,7 +27,8 @@ sealed class SaveCollectionStep {
 data class CollectionCreationState(
     val tabs: List<Tab> = listOf(),
     val selectedTabs: Set<Tab> = setOf(),
-    val saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs
+    val saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs,
+    val tabCollections: List<TabCollection> = listOf()
 ) : ViewState
 
 sealed class CollectionCreationChange : Change {

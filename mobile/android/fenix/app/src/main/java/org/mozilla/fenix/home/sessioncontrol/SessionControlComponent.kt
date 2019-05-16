@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.os.Parcelable
 import android.view.ViewGroup
@@ -13,10 +12,8 @@ import io.reactivex.Observer
 import kotlinx.android.parcel.Parcelize
 import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.mvi.Change
-import mozilla.components.browser.session.Session
 import mozilla.components.feature.tab.collections.TabCollection as ACTabCollection
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.UIComponent
@@ -124,10 +121,6 @@ class SessionControlViewModel(
     initialState: SessionControlState
 ) : UIComponentViewModelBase<SessionControlState, SessionControlChange>(initialState, reducer) {
     companion object {
-        fun getSessionFromTab(context: Context, tab: Tab): Session? {
-            return context.components.core.sessionManager.findSessionById(tab.sessionId)
-        }
-
         val reducer: (SessionControlState, SessionControlChange) -> SessionControlState = { state, change ->
             when (change) {
                 is SessionControlChange.CollectionsChange -> state.copy(collections = change.collections)

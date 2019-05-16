@@ -395,6 +395,8 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
         val observer = Observer<List<TabCollection>> {
+            // TODO is it bad to be caching like this?
+            requireComponents.core.tabCollectionStorage.cachedTabCollections = it
             getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
         }
         requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
@@ -509,6 +511,7 @@ class HomeFragment : Fragment(), CoroutineScope {
         val selectedSet = if (selectedTabs == null) setOf() else setOf(selectedTabs)
         viewModel?.selectedTabs = selectedSet
         viewModel?.saveCollectionStep = SaveCollectionStep.SelectTabs
+        viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections
 
         view?.let {
             val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()

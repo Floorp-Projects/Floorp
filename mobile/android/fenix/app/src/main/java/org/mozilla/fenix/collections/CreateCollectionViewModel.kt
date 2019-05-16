@@ -6,9 +6,11 @@ package org.mozilla.fenix.collections
 
 import androidx.lifecycle.ViewModel
 import org.mozilla.fenix.home.sessioncontrol.Tab
+import org.mozilla.fenix.home.sessioncontrol.TabCollection
 
 class CreateCollectionViewModel : ViewModel() {
     var selectedTabs = setOf<Tab>()
     var tabs = listOf<Tab>()
     var saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs
+    var tabCollections = listOf<TabCollection>()
 }

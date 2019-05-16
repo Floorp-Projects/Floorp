@@ -76,7 +76,7 @@ class CollectionCreationUIView(
         }
 
         view.name_collection_edittext.setOnEditorActionListener { v, actionId, event ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
+            if (actionId == EditorInfo.IME_ACTION_DONE && !v.text.toString().isEmpty()) {
                 actionEmitter.onNext(
                     CollectionCreationAction.SaveCollectionName(
                         selectedTabs.toList(),
@@ -190,7 +190,7 @@ class CollectionCreationUIView(
                 name_collection_edittext.setText(
                     view.context.getString(
                         R.string.create_collection_default_name,
-                        1
+                        it.tabCollections.size + 1
                     )
                 )
                 name_collection_edittext.setSelection(0, name_collection_edittext.text.length)
@@ -198,6 +198,8 @@ class CollectionCreationUIView(
                     view.context.getString(R.string.create_collection_name_collection)
             }
         }
+
+        collectionSaveListAdapter.reloadData(it.tabCollections)
     }
 
     fun onResumed() {

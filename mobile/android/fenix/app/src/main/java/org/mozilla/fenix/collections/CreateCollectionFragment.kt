@@ -55,6 +55,7 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
         val tabs = viewModel!!.tabs
         val selectedTabs = viewModel.selectedTabs
         val step = viewModel.saveCollectionStep
+        val tabCollections = viewModel.tabCollections
 
         collectionCreationComponent = CollectionCreationComponent(
             view.create_collection_wrapper,
@@ -63,7 +64,7 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                 this,
                 CollectionCreationViewModel::class.java
             ) {
-                CollectionCreationViewModel(CollectionCreationState(tabs, selectedTabs, step))
+                CollectionCreationViewModel(CollectionCreationState(tabs, selectedTabs, step, tabCollections))
             }
         )
         return view

@@ -4,6 +4,7 @@ package org.mozilla.fenix.collections
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,8 +22,8 @@ class SaveCollectionListAdapter(
     val actionEmitter: Observer<CollectionCreationAction>
 ) : RecyclerView.Adapter<CollectionViewHolder>() {
 
-    private var collections: List<TabCollection> = listOf()
     private lateinit var job: Job
+    private var tabCollections = listOf<TabCollection>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CollectionViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -32,11 +33,11 @@ class SaveCollectionListAdapter(
     }
 
     override fun onBindViewHolder(holder: CollectionViewHolder, position: Int) {
-        val collection = collections[position]
+        val collection = tabCollections[position]
         holder.bind(collection)
     }
 
-    override fun getItemCount(): Int = collections.size
+    override fun getItemCount(): Int = tabCollections.size
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
@@ -46,6 +47,11 @@ class SaveCollectionListAdapter(
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
         job.cancel()
+    }
+
+    fun reloadData(tabCollections: List<TabCollection>) {
+        this.tabCollections = tabCollections
+        notifyDataSetChanged()
     }
 }
 
@@ -75,6 +81,7 @@ class CollectionViewHolder(
     fun bind(collection: TabCollection) {
         this.collection = collection
         view.collection_item.text = collection.title
+        Log.d("sawyer", "Binding collection: " + collection.title)
     }
 
     companion object {
