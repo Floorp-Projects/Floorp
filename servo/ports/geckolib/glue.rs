@@ -4716,7 +4716,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     use style::properties::longhands::_moz_script_min_size::SpecifiedValue as MozScriptMinSize;
     use style::properties::PropertyDeclaration;
     use style::values::generics::NonNegative;
-    use style::values::generics::length::Size;
+    use style::values::generics::length::{Size, LengthPercentageOrAuto};
     use style::values::specified::length::NoCalcLength;
     use style::values::specified::length::{AbsoluteLength, FontRelativeLength};
     use style::values::specified::length::LengthPercentage;
@@ -4745,6 +4745,14 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
 
     let prop = match_wrap_declared! { long,
         Width => Size::LengthPercentage(NonNegative(LengthPercentage::Length(nocalc))),
+        Height => Size::LengthPercentage(NonNegative(LengthPercentage::Length(nocalc))),
+        X =>  LengthPercentage::Length(nocalc),
+        Y =>  LengthPercentage::Length(nocalc),
+        Cx => LengthPercentage::Length(nocalc),
+        Cy => LengthPercentage::Length(nocalc),
+        R =>  NonNegative(LengthPercentage::Length(nocalc)),
+        Rx => LengthPercentageOrAuto::LengthPercentage(NonNegative(LengthPercentage::Length(nocalc))),
+        Ry => LengthPercentageOrAuto::LengthPercentage(NonNegative(LengthPercentage::Length(nocalc))),
         FontSize => LengthPercentage::from(nocalc).into(),
         MozScriptMinSize => MozScriptMinSize(nocalc),
     };
@@ -4795,6 +4803,13 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
     let prop = match_wrap_declared! { long,
         Height => Size::LengthPercentage(NonNegative(lp)),
         Width => Size::LengthPercentage(NonNegative(lp)),
+        X =>  lp,
+        Y =>  lp,
+        Cx => lp,
+        Cy => lp,
+        R =>  NonNegative(lp),
+        Rx => LengthPercentageOrAuto::LengthPercentage(NonNegative(lp)),
+        Ry => LengthPercentageOrAuto::LengthPercentage(NonNegative(lp)),
         MarginTop => lp_or_auto,
         MarginRight => lp_or_auto,
         MarginBottom => lp_or_auto,
