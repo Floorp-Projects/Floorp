@@ -244,6 +244,7 @@ fuzzy-if(Android,0-18,0-600) == foreignObject-fixedpos-01.html foreignObject-dyn
 == g-transform-01.svg pass.svg
 
 == getElementById-a-element-01.svg pass.svg
+== geometry-properties-in-css.html geometry-properties-in-css-ref.html
 
 fuzzy-if(Android,0-9,0-980) fuzzy-if(skiaContent,0-3,0-32000) == gradient-live-01a.svg gradient-live-01-ref.svg
 fuzzy-if(Android,0-9,0-980) fuzzy-if(skiaContent,0-3,0-32000) == gradient-live-01b.svg gradient-live-01-ref.svg

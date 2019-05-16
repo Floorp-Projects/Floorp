@@ -1,0 +1,75 @@
+<!doctype html>
+<style>
+  svg {
+    width: 800px;
+    height: 600px;
+    font-size: 10px;
+  }
+  svg svg {
+    width: 80px;
+    height: 80px;
+  }
+  rect:first-child {
+    x: 40px;
+    y: calc(5% + 10px);
+    width: calc(80px + 2em);
+    height: 10em;
+    rx: auto;
+    ry: 5%;
+    cx: 100px;
+    cy: 200px;
+  }
+  circle {
+    r: calc(70px);
+  }
+  g > #c2 {
+    cx: 80px;
+    cy: calc(20% + 10px);
+    x: 40px;
+    y: calc(5% + 10px);
+  }
+  svg > svg > ellipse {
+    cx: 30%;
+    cy: 100px;
+    rx: 20px;
+    ry: 40px;
+  }
+  svg > svg > ellipse:nth-child(2) {
+    transform: translate(50px, -50px);
+  }
+  svg ellipse {
+    cx: 10px;
+    cy: 10px;
+    rx: 10px;
+    ry: 10px;
+  }
+  foreignObject {
+    transform: translate(450px,0);
+    y: 200px;
+    width: 80px;
+    height: 130px;
+  }
+  #r2 {
+    width: 50px;
+    height:50px;
+  }
+</style>
+<svg>
+  <g>
+    <rect x="0" y="-10" width="30px" height="10px" rx="-5px" ry="auto" fill="purple" />
+    <rect x=" 40px /* some nonsense */ " y="150" width="30" height="20em" rx="20px" ry="20px" fill="magenta" />
+  </g>
+  <circle cx="/* more nonsense */ 170" cy="340" r="-5px" fill="pink" />
+  <g transform="translate(150,0)">
+    <circle id="c2" cx="20" cy="40" fill="skyblue" />
+  </g>
+  <svg x="300" width="200px" height="200px" viewBox="0 0 100 100">
+    <ellipse fill="cyan" />
+    <ellipse fill="navy" />
+  </svg>
+  <foreignObject>
+    <svg>
+      <rect id="r2" style="x:0;y:0" fill="brown" />
+    </svg>
+  </foreignObject>
+</svg>
