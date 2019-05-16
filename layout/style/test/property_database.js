@@ -5647,6 +5647,62 @@ var gCSSProperties = {
     other_values: [ "0", "0px", "-0em", "17px", "0.2em", "0.0002", "context-value" ],
     invalid_values: [ "-0.1px", "-3px" ]
   },
+  "x": {
+    domProp: "x",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "0px" ],
+    other_values: [ "-1em", "17px", "0.2em", "23.4%" ],
+    invalid_values: [ "auto", "context-value", "0.0002" ]
+  },
+  "y": {
+    domProp: "y",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "0px" ],
+    other_values: [ "-1em", "17px", "0.2em", "23.4%" ],
+    invalid_values: [ "auto", "context-value", "0.0002" ]
+  },
+  "cx": {
+    domProp: "cx",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "0px" ],
+    other_values: [ "-1em", "17px", "0.2em", "23.4%" ],
+    invalid_values: [ "auto", "context-value", "0.0002" ]
+  },
+  "cy": {
+    domProp: "cy",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "0px" ],
+    other_values: [ "-1em", "17px", "0.2em", "23.4%" ],
+    invalid_values: [ "auto", "context-value", "0.0002" ]
+  },
+  "r": {
+    domProp: "r",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "0px" ],
+    other_values: [ "17px", "0.2em", "23.4%" ],
+    invalid_values: [ "auto", "-1", "-1.5px", "0.0002" ]
+  },
+  "rx": {
+    domProp: "rx",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "17px", "0.2em", "23.4%" ],
+    invalid_values: [ "hello", "-12px", "0.0002" ]
+  },
+  "ry": {
+    domProp: "ry",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "17px", "0.2em", "23.4%" ],
+    invalid_values: [ "hello", "-1.3px", "0.0002" ]
+  },
   "text-anchor": {
     domProp: "textAnchor",
     inherited: true,

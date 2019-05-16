@@ -2703,6 +2703,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset {
     return mVectorEffect == NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE;
   }
 
+  // geometry properties
+  mozilla::LengthPercentage mX;
+  mozilla::LengthPercentage mY;
+  mozilla::LengthPercentage mCx;
+  mozilla::LengthPercentage mCy;
+  mozilla::NonNegativeLengthPercentageOrAuto mRx;
+  mozilla::NonNegativeLengthPercentageOrAuto mRy;
+  mozilla::NonNegativeLengthPercentage mR;
+
   nsStyleImageLayers mMask;
   mozilla::StyleShapeSource mClipPath;
   mozilla::StyleColor mStopColor;
