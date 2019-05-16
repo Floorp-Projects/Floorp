@@ -6,17 +6,17 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_header.view.*
+import kotlinx.android.synthetic.main.onboarding_theme_picker.view.*
 import org.mozilla.fenix.R
 
-class OnboardingHeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+class OnboardingPrivacyNoticeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
         val appName = view.context.getString(R.string.app_name)
-        view.header_text.text = view.context.getString(R.string.onboarding_header, appName)
+        view.description_text.text = view.context.getString(R.string.onboarding_privacy_notice_description, appName)
     }
 
     companion object {
-        const val LAYOUT_ID = R.layout.onboarding_header
+        const val LAYOUT_ID = R.layout.onboarding_privacy_notice
     }
 }

@@ -20,9 +20,13 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHol
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionMessageViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingFirefoxAccountViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingHeaderViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingPrivacyNoticeViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingPrivateBrowsingViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingSectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingThemePickerViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTrackingProtectionViewHolder
 import java.lang.IllegalStateException
 
 sealed class AdapterItem {
@@ -41,7 +45,11 @@ sealed class AdapterItem {
 
     object OnboardingHeader : AdapterItem()
     data class OnboardingSectionHeader(val labelBuilder: (Context) -> String) : AdapterItem()
+    object OnboardingFirefoxAccount : AdapterItem()
     object OnboardingThemePicker : AdapterItem()
+    object OnboardingTrackingProtection : AdapterItem()
+    object OnboardingPrivateBrowsing : AdapterItem()
+    object OnboardingPrivacyNotice : AdapterItem()
 
     val viewType: Int
         get() = when (this) {
@@ -57,7 +65,11 @@ sealed class AdapterItem {
             is TabInCollectionItem -> TabInCollectionViewHolder.LAYOUT_ID
             OnboardingHeader -> OnboardingHeaderViewHolder.LAYOUT_ID
             is OnboardingSectionHeader -> OnboardingSectionHeaderViewHolder.LAYOUT_ID
+            OnboardingFirefoxAccount -> OnboardingFirefoxAccountViewHolder.LAYOUT_ID
             OnboardingThemePicker -> OnboardingThemePickerViewHolder.LAYOUT_ID
+            OnboardingTrackingProtection -> OnboardingTrackingProtectionViewHolder.LAYOUT_ID
+            OnboardingPrivateBrowsing -> OnboardingPrivateBrowsingViewHolder.LAYOUT_ID
+            OnboardingPrivacyNotice -> OnboardingPrivacyNoticeViewHolder.LAYOUT_ID
         }
 }
 
@@ -90,7 +102,11 @@ class SessionControlAdapter(
             TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, actionEmitter, job)
             OnboardingHeaderViewHolder.LAYOUT_ID -> OnboardingHeaderViewHolder(view)
             OnboardingSectionHeaderViewHolder.LAYOUT_ID -> OnboardingSectionHeaderViewHolder(view)
+            OnboardingFirefoxAccountViewHolder.LAYOUT_ID -> OnboardingFirefoxAccountViewHolder(view)
             OnboardingThemePickerViewHolder.LAYOUT_ID -> OnboardingThemePickerViewHolder(view)
+            OnboardingTrackingProtectionViewHolder.LAYOUT_ID -> OnboardingTrackingProtectionViewHolder(view)
+            OnboardingPrivateBrowsingViewHolder.LAYOUT_ID -> OnboardingPrivateBrowsingViewHolder(view)
+            OnboardingPrivacyNoticeViewHolder.LAYOUT_ID -> OnboardingPrivacyNoticeViewHolder(view)
             else -> throw IllegalStateException()
         }
     }
