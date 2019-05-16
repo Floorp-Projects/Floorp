@@ -777,7 +777,7 @@ pref("gfx.hidpi.enabled", 2);
 #endif
 
 // Default to containerless scrolling
-pref("layout.scroll.root-frame-containers", 0);
+pref("layout.scroll.root-frame-containers", false);
 
 pref("layout.scrollbars.always-layerize-track", false);
 
