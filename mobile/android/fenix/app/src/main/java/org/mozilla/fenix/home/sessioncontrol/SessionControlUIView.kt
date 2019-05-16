@@ -66,7 +66,8 @@ private fun onboardingAdapterItems(): List<AdapterItem> = listOf(
     AdapterItem.OnboardingSectionHeader() {
         val appName = it.getString(R.string.app_name)
         it.getString(R.string.onboarding_feature_section_header, appName)
-    }
+    },
+    AdapterItem.OnboardingThemePicker
 )
 
 private fun SessionControlState.toAdapterList(): List<AdapterItem> = when (mode) {

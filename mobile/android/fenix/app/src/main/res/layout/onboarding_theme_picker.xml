@@ -2,15 +2,24 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<FrameLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/onboarding_header"
+    style="@style/OnboardingCardLight"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp">
+    android:orientation="vertical">
     <TextView
-        android:id="@+id/section_header_text"
+        android:id="@+id/theme_picker_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="14dp"
+        android:text="@string/onboarding_theme_picker_header"
         android:textAppearance="@style/HeaderTextStyle" />
-</FrameLayout>
+    <TextView
+        android:id="@+id/theme_picker_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/onboarding_theme_picker_description"
+        android:textAppearance="@style/Body14TextStyle" />
+</LinearLayout>

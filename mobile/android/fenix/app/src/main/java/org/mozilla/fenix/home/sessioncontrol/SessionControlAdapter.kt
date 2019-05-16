@@ -22,6 +22,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingSectionHeaderViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingThemePickerViewHolder
 import java.lang.IllegalStateException
 
 sealed class AdapterItem {
@@ -40,6 +41,7 @@ sealed class AdapterItem {
 
     object OnboardingHeader : AdapterItem()
     data class OnboardingSectionHeader(val labelBuilder: (Context) -> String) : AdapterItem()
+    object OnboardingThemePicker : AdapterItem()
 
     val viewType: Int
         get() = when (this) {
@@ -55,6 +57,7 @@ sealed class AdapterItem {
             is TabInCollectionItem -> TabInCollectionViewHolder.LAYOUT_ID
             OnboardingHeader -> OnboardingHeaderViewHolder.LAYOUT_ID
             is OnboardingSectionHeader -> OnboardingSectionHeaderViewHolder.LAYOUT_ID
+            OnboardingThemePicker -> OnboardingThemePickerViewHolder.LAYOUT_ID
         }
 }
 
@@ -87,6 +90,7 @@ class SessionControlAdapter(
             TabInCollectionViewHolder.LAYOUT_ID -> TabInCollectionViewHolder(view, actionEmitter, job)
             OnboardingHeaderViewHolder.LAYOUT_ID -> OnboardingHeaderViewHolder(view)
             OnboardingSectionHeaderViewHolder.LAYOUT_ID -> OnboardingSectionHeaderViewHolder(view)
+            OnboardingThemePickerViewHolder.LAYOUT_ID -> OnboardingThemePickerViewHolder(view)
             else -> throw IllegalStateException()
         }
     }

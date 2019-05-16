@@ -494,4 +494,8 @@
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
     <string name="onboarding_feature_section_header">Get to know %s</string>
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Choose your theme</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description">Save some battery and your eyesight by enabling dark mode.</string>
 </resources>
