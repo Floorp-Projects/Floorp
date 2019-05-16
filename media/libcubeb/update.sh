@@ -90,6 +90,3 @@ fi
 
 echo "Applying disable-assert.patch on top of $rev"
 patch -p3 < disable-assert.patch
-
-echo "Applying disable-device-switching.patch on top of $rev"
-patch -p3 < disable-device-switching.patch
