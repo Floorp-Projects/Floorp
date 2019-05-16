@@ -586,10 +586,6 @@ void Gecko_FillAllImageLayers(nsStyleImageLayers* layers, uint32_t max_len);
 
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
-nsCSSValueSharedList* Gecko_NewCSSValueSharedList(uint32_t len);
-nsCSSValueSharedList* Gecko_NewNoneTransform();
-void Gecko_StyleDisplay_GenerateCombinedTransform(nsStyleDisplay*);
-
 // Getter for nsCSSValue
 nsCSSValue* Gecko_CSSValue_GetArrayItem(nsCSSValue*, int32_t index);
 
@@ -636,11 +632,7 @@ void Gecko_CSSValue_SetPair(nsCSSValue* css_value, const nsCSSValue* xvalue,
 void Gecko_CSSValue_SetList(nsCSSValue* css_value, uint32_t len);
 void Gecko_CSSValue_SetPairList(nsCSSValue* css_value, uint32_t len);
 
-void Gecko_CSSValue_InitSharedList(nsCSSValue* css_value, uint32_t len);
-
 void Gecko_CSSValue_Drop(nsCSSValue* css_value);
-
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 
 float Gecko_FontStretch_ToFloat(mozilla::FontStretch aStretch);
 

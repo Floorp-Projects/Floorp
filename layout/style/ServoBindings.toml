@@ -52,6 +52,8 @@ hide-types = [
     ".*incompatible_char_type",
     # https://github.com/rust-lang/rust-bindgen/issues/1503
     "mozilla::StyleTimingFunction.*",
+    # https://github.com/rust-lang/rust-bindgen/issues/1559
+    "mozilla::StyleGenericTransformOperation_.*",
 ]
 bitfield-enums = [
     "nsChangeHint",
@@ -486,6 +488,12 @@ cbindgen-types = [
     { gecko = "StyleOwnedStr", servo = "style_traits::owned_str::OwnedStr" },
     { gecko = "StyleGenericBoxShadow", servo = "values::generics::effects::BoxShadow" },
     { gecko = "StyleGenericSimpleShadow", servo = "values::generics::effects::SimpleShadow" },
+    { gecko = "StyleGenericTransformOperation", servo = "values::generics::transform::TransformOperation" },
+    { gecko = "StyleGenericTransform", servo = "values::generics::transform::Transform" },
+    { gecko = "StyleGenericScale", servo = "values::generics::transform::Scale" },
+    { gecko = "StyleGenericRotate", servo = "values::generics::transform::Rotate" },
+    { gecko = "StyleGenericTranslate", servo = "values::generics::transform::Translate" },
+    { gecko = "StyleAngle", servo = "values::computed::Angle" }
 ]
 
 mapped-generic-types = [
