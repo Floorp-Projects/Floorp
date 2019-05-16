@@ -2966,6 +2966,7 @@ fn symbol_to_string(s: &counter_style::Symbol) -> nsString {
     }
 }
 
+// TODO(emilio): Cbindgen could be used to simplify a bunch of code here.
 #[no_mangle]
 pub unsafe extern "C" fn Servo_CounterStyleRule_GetPad(
     rule: &RawServoCounterStyleRule,
@@ -3077,6 +3078,43 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_IsInRange(
         } else {
             IsOrdinalInRange::NotInRange
         }
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetSymbols(
+    rule: &RawServoCounterStyleRule,
+    symbols: &mut style::OwnedSlice<nsString>,
+) {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        *symbols = match rule.symbols() {
+            Some(s) => s.0.iter().map(symbol_to_string).collect(),
+            None => style::OwnedSlice::default(),
+        };
+    })
+}
+
+#[repr(C)]
+pub struct AdditiveSymbol {
+    pub weight: i32,
+    pub symbol: nsString,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetAdditiveSymbols(
+    rule: &RawServoCounterStyleRule,
+    symbols: &mut style::OwnedSlice<AdditiveSymbol>,
+) {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        *symbols = match rule.additive_symbols() {
+            Some(s) => s.0.iter().map(|s| {
+                AdditiveSymbol {
+                    weight: s.weight.value(),
+                    symbol: symbol_to_string(&s.symbol),
+                }
+            }).collect(),
+            None => style::OwnedSlice::default(),
+        };
     })
 }
 

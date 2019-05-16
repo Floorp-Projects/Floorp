@@ -24,10 +24,7 @@
 
 namespace mozilla {
 
-struct AdditiveSymbol {
-  CounterValue weight;
-  nsString symbol;
-};
+using AdditiveSymbol = StyleAdditiveSymbol;
 
 struct NegativeType {
   nsString before, after;
@@ -49,7 +46,7 @@ struct PadType {
 #define LENGTH_LIMIT 150
 
 static bool GetCyclicCounterText(CounterValue aOrdinal, nsAString& aResult,
-                                 const nsTArray<nsString>& aSymbols) {
+                                 Span<const nsString> aSymbols) {
   MOZ_ASSERT(aSymbols.Length() >= 1, "No symbol available for cyclic counter.");
   auto n = aSymbols.Length();
   CounterValue index = (aOrdinal - 1) % n;
@@ -59,7 +56,7 @@ static bool GetCyclicCounterText(CounterValue aOrdinal, nsAString& aResult,
 
 static bool GetFixedCounterText(CounterValue aOrdinal, nsAString& aResult,
                                 CounterValue aStart,
-                                const nsTArray<nsString>& aSymbols) {
+                                Span<const nsString> aSymbols) {
   CounterValue index = aOrdinal - aStart;
   if (index >= 0 && index < CounterValue(aSymbols.Length())) {
     aResult = aSymbols[index];
@@ -70,7 +67,7 @@ static bool GetFixedCounterText(CounterValue aOrdinal, nsAString& aResult,
 }
 
 static bool GetSymbolicCounterText(CounterValue aOrdinal, nsAString& aResult,
-                                   const nsTArray<nsString>& aSymbols) {
+                                   Span<const nsString> aSymbols) {
   MOZ_ASSERT(aSymbols.Length() >= 1,
              "No symbol available for symbolic counter.");
   MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
@@ -96,7 +93,7 @@ static bool GetSymbolicCounterText(CounterValue aOrdinal, nsAString& aResult,
 }
 
 static bool GetAlphabeticCounterText(CounterValue aOrdinal, nsAString& aResult,
-                                     const nsTArray<nsString>& aSymbols) {
+                                     Span<const nsString> aSymbols) {
   MOZ_ASSERT(aSymbols.Length() >= 2, "Too few symbols for alphabetic counter.");
   MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
   if (aOrdinal == 0) {
@@ -122,7 +119,7 @@ static bool GetAlphabeticCounterText(CounterValue aOrdinal, nsAString& aResult,
 }
 
 static bool GetNumericCounterText(CounterValue aOrdinal, nsAString& aResult,
-                                  const nsTArray<nsString>& aSymbols) {
+                                  Span<const nsString> aSymbols) {
   MOZ_ASSERT(aSymbols.Length() >= 2, "Too few symbols for numeric counter.");
   MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
 
@@ -146,11 +143,11 @@ static bool GetNumericCounterText(CounterValue aOrdinal, nsAString& aResult,
 }
 
 static bool GetAdditiveCounterText(CounterValue aOrdinal, nsAString& aResult,
-                                   const nsTArray<AdditiveSymbol>& aSymbols) {
+                                   Span<const AdditiveSymbol> aSymbols) {
   MOZ_ASSERT(aOrdinal >= 0, "Invalid ordinal.");
 
   if (aOrdinal == 0) {
-    const AdditiveSymbol& last = aSymbols.LastElement();
+    const AdditiveSymbol& last = aSymbols[aSymbols.Length() - 1];
     if (last.weight == 0) {
       aResult = last.symbol;
       return true;
@@ -998,8 +995,8 @@ class CustomCounterStyle final : public CounterStyle {
     return value;
   }
 
-  const nsTArray<nsString>& GetSymbols();
-  const nsTArray<AdditiveSymbol>& GetAdditiveSymbols();
+  Span<const nsString> GetSymbols();
+  Span<const AdditiveSymbol> GetAdditiveSymbols();
 
   // The speak-as values of counter styles may form a loop, and the
   // loops may have complex interaction with the loop formed by
@@ -1045,8 +1042,8 @@ class CustomCounterStyle final : public CounterStyle {
   uint16_t mFlags;
 
   // Fields below will be initialized when necessary.
-  nsTArray<nsString> mSymbols;
-  nsTArray<AdditiveSymbol> mAdditiveSymbols;
+  StyleOwnedSlice<nsString> mSymbols;
+  StyleOwnedSlice<AdditiveSymbol> mAdditiveSymbols;
   NegativeType mNegative;
   nsString mPrefix, mSuffix;
   PadType mPad;
@@ -1308,31 +1305,18 @@ bool CustomCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
   }
 }
 
-const nsTArray<nsString>& CustomCounterStyle::GetSymbols() {
+Span<const nsString> CustomCounterStyle::GetSymbols() {
   if (mSymbols.IsEmpty()) {
-    nsCSSValue values = GetDesc(eCSSCounterDesc_Symbols);
-    for (const nsCSSValueList* item = values.GetListValue(); item;
-         item = item->mNext) {
-      nsString* symbol = mSymbols.AppendElement();
-      item->mValue.GetStringValue(*symbol);
-    }
-    mSymbols.Compact();
+    Servo_CounterStyleRule_GetSymbols(mRule, &mSymbols);
   }
-  return mSymbols;
+  return mSymbols.AsSpan();
 }
 
-const nsTArray<AdditiveSymbol>& CustomCounterStyle::GetAdditiveSymbols() {
+Span<const AdditiveSymbol> CustomCounterStyle::GetAdditiveSymbols() {
   if (mAdditiveSymbols.IsEmpty()) {
-    nsCSSValue values = GetDesc(eCSSCounterDesc_AdditiveSymbols);
-    for (const nsCSSValuePairList* item = values.GetPairListValue(); item;
-         item = item->mNext) {
-      AdditiveSymbol* symbol = mAdditiveSymbols.AppendElement();
-      symbol->weight = item->mXValue.GetIntValue();
-      item->mYValue.GetStringValue(symbol->symbol);
-    }
-    mAdditiveSymbols.Compact();
+    Servo_CounterStyleRule_GetAdditiveSymbols(mRule, &mAdditiveSymbols);
   }
-  return mAdditiveSymbols;
+  return mAdditiveSymbols.AsSpan();
 }
 
 // This method is used to provide the computed value for 'auto'.
