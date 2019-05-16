@@ -637,17 +637,12 @@ inline size_t Arena::finalize(FreeOp* fop, AllocKind thingKind,
 template <typename T>
 static inline bool FinalizeTypedArenas(FreeOp* fop, Arena** src,
                                        SortedArenaList& dest,
-                                       AllocKind thingKind, SliceBudget& budget,
-                                       ArenaLists::KeepArenasEnum keepArenas) {
+                                       AllocKind thingKind, SliceBudget& budget) {
   // When operating in the foreground, take the lock at the top.
   Maybe<AutoLockGC> maybeLock;
   if (fop->onMainThread()) {
     maybeLock.emplace(fop->runtime());
   }
-
-  // During background sweeping free arenas are released later on in
-  // sweepBackgroundThings().
-  MOZ_ASSERT_IF(!fop->onMainThread(), keepArenas == ArenaLists::KEEP_ARENAS);
 
   size_t thingSize = Arena::thingSize(thingKind);
   size_t thingsPerArena = Arena::thingsPerArena(thingKind);
@@ -659,10 +654,8 @@ static inline bool FinalizeTypedArenas(FreeOp* fop, Arena** src,
 
     if (nmarked) {
       dest.insertAt(arena, nfree);
-    } else if (keepArenas == ArenaLists::KEEP_ARENAS) {
-      arena->chunk()->recycleArena(arena, dest, thingsPerArena);
     } else {
-      fop->runtime()->gc.releaseArena(arena, maybeLock.ref());
+      arena->chunk()->recycleArena(arena, dest, thingsPerArena);
     }
 
     budget.step(thingsPerArena);
@@ -678,14 +671,12 @@ static inline bool FinalizeTypedArenas(FreeOp* fop, Arena** src,
  * Finalize the list of areans.
  */
 static bool FinalizeArenas(FreeOp* fop, Arena** src, SortedArenaList& dest,
-                           AllocKind thingKind, SliceBudget& budget,
-                           ArenaLists::KeepArenasEnum keepArenas) {
+                           AllocKind thingKind, SliceBudget& budget) {
   switch (thingKind) {
 #define EXPAND_CASE(allocKind, traceKind, type, sizedType, bgFinal, nursery, \
                     compact)                                                 \
   case AllocKind::allocKind:                                                 \
-    return FinalizeTypedArenas<type>(fop, src, dest, thingKind, budget,      \
-                                     keepArenas);
+    return FinalizeTypedArenas<type>(fop, src, dest, thingKind, budget);
     FOR_EACH_ALLOCKIND(EXPAND_CASE)
 #undef EXPAND_CASE
 
@@ -3152,8 +3143,7 @@ void ArenaLists::backgroundFinalize(FreeOp* fop, Arena* listHead,
   SortedArenaList finalizedSorted(thingsPerArena);
 
   auto unlimited = SliceBudget::unlimited();
-  FinalizeArenas(fop, &listHead, finalizedSorted, thingKind, unlimited,
-                 KEEP_ARENAS);
+  FinalizeArenas(fop, &listHead, finalizedSorted, thingKind, unlimited);
   MOZ_ASSERT(!listHead);
 
   finalizedSorted.extractEmpty(empty);
@@ -5875,13 +5865,12 @@ bool ArenaLists::foregroundFinalize(FreeOp* fop, AllocKind thingKind,
     return true;
   }
 
-  // Empty object arenas are not released until all foreground GC things have
-  // been swept.
-  KeepArenasEnum keepArenas =
-      IsObjectAllocKind(thingKind) ? KEEP_ARENAS : RELEASE_ARENAS;
-
+  // Empty arenas are not released until all foreground finalized GC things in
+  // the current sweep group have been finalized.  This allows finalizers for
+  // other cells in the same sweep group to call IsAboutToBeFinalized on cells
+  // in this arena.
   if (!FinalizeArenas(fop, &arenaListsToSweep(thingKind), sweepList, thingKind,
-                      sliceBudget, keepArenas)) {
+                      sliceBudget)) {
     incrementalSweptArenaKind = thingKind;
     incrementalSweptArenas = sweepList.toArenaList();
     return false;
@@ -5890,9 +5879,7 @@ bool ArenaLists::foregroundFinalize(FreeOp* fop, AllocKind thingKind,
   // Clear any previous incremental sweep state we may have saved.
   incrementalSweptArenas.ref().clear();
 
-  if (IsObjectAllocKind(thingKind)) {
-    sweepList.extractEmpty(&savedEmptyArenas.ref());
-  }
+  sweepList.extractEmpty(&savedEmptyArenas.ref());
 
   ArenaList finalized = sweepList.toArenaList();
   arenaLists(thingKind) =
@@ -5984,13 +5971,14 @@ IncrementalProgress GCRuntime::sweepTypeInformation(FreeOp* fop,
 }
 
 IncrementalProgress GCRuntime::releaseSweptEmptyArenas(FreeOp* fop,
-                                                       SliceBudget& budget,
-                                                       Zone* zone) {
-  // Foreground finalized objects have already been finalized, and now their
+                                                       SliceBudget& budget) {
+  // Foreground finalized GC things have already been finalized, and now their
   // arenas can be reclaimed by freeing empty ones and making non-empty ones
   // available for allocation.
 
-  zone->arenas.releaseForegroundSweptEmptyArenas();
+  for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
+    zone->arenas.releaseForegroundSweptEmptyArenas();
+  }
   return Finished;
 }
 
@@ -6559,8 +6547,8 @@ bool GCRuntime::initSweepActions() {
                   ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
                                    Call(&GCRuntime::finalizeAllocKind)),
                   MaybeYieldInZoneLoop(ZealMode::YieldBeforeSweepingShapeTrees),
-                  Call(&GCRuntime::sweepShapeTree),
-                  Call(&GCRuntime::releaseSweptEmptyArenas))),
+                  Call(&GCRuntime::sweepShapeTree))),
+          Call(&GCRuntime::releaseSweptEmptyArenas),
           Call(&GCRuntime::endSweepingSweepGroup)));
 
   return sweepActions != nullptr;
