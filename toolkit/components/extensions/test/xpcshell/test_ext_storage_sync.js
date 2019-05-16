@@ -465,28 +465,28 @@ async function withSignedInUser(user, f) {
 // Some assertions that make it easier to write tests about what was
 // posted and when.
 
-// Assert that the request was made with the correct access token.
+// Assert that a post in a batch was made with the correct access token.
 // This should be true of all requests, so this is usually called from
 // another assertion.
-function assertAuthenticatedRequest(post) {
+function assertAuthenticatedPost(post) {
   equal(post.headers.Authorization, "Bearer some-access-token");
 }
 
 // Assert that this post was made with the correct request headers to
 // create a new resource while protecting against someone else
 // creating it at the same time (in other words, "If-None-Match: *").
-// Also calls assertAuthenticatedRequest(post).
+// Also calls assertAuthenticatedPost(post).
 function assertPostedNewRecord(post) {
-  assertAuthenticatedRequest(post);
+  assertAuthenticatedPost(post);
   equal(post.headers["If-None-Match"], "*");
 }
 
 // Assert that this post was made with the correct request headers to
 // update an existing resource while protecting against concurrent
 // modification (in other words, `If-Match: "${etag}"`).
-// Also calls assertAuthenticatedRequest(post).
+// Also calls assertAuthenticatedPost(post).
 function assertPostedUpdatedRecord(post, since) {
-  assertAuthenticatedRequest(post);
+  assertAuthenticatedPost(post);
   equal(post.headers["If-Match"], `"${since}"`);
 }
 
