@@ -19,6 +19,7 @@
 #include "nsLayoutUtils.h"
 #include "nsRegion.h"
 #include "nsSVGContainerFrame.h"
+#include "SVGGeometryProperty.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGOuterSVGFrame.h"
@@ -27,6 +28,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::image;
+namespace SVGT = SVGGeometryProperty::Tags;
 
 //----------------------------------------------------------------------
 // Implementation
@@ -242,8 +244,9 @@ void nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 
   if (StyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
-    static_cast<SVGElement*>(GetContent())
-        ->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
+    SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width,
+                                    SVGT::Height>(
+        static_cast<SVGElement*>(GetContent()), &x, &y, &width, &height);
 
     gfxRect clipRect =
         nsSVGUtils::GetClipRectForFrame(this, 0.0f, 0.0f, width, height);
@@ -291,8 +294,8 @@ nsIFrame* nsSVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint) {
   }
 
   float x, y, width, height;
-  static_cast<SVGElement*>(GetContent())
-      ->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      static_cast<SVGElement*>(GetContent()), &x, &y, &width, &height);
 
   if (!gfxRect(x, y, width, height).Contains(aPoint) ||
       !nsSVGUtils::HitTestClip(this, aPoint)) {
@@ -323,8 +326,8 @@ void nsSVGForeignObjectFrame::ReflowSVG() {
   // correct dimensions:
 
   float x, y, w, h;
-  static_cast<SVGForeignObjectElement*>(GetContent())
-      ->GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      static_cast<SVGElement*>(GetContent()), &x, &y, &w, &h);
 
   // If mRect's width or height are negative, reflow blows up! We must clamp!
   if (w < 0.0f) w = 0.0f;
@@ -376,21 +379,17 @@ void nsSVGForeignObjectFrame::NotifySVGChanged(uint32_t aFlags) {
   bool needNewCanvasTM = false;
 
   if (aFlags & COORD_CONTEXT_CHANGED) {
-    SVGForeignObjectElement* fO =
-        static_cast<SVGForeignObjectElement*>(GetContent());
     // Coordinate context changes affect mCanvasTM if we have a
     // percentage 'x' or 'y'
-    if (fO->mLengthAttributes[SVGForeignObjectElement::ATTR_X].IsPercentage() ||
-        fO->mLengthAttributes[SVGForeignObjectElement::ATTR_Y].IsPercentage()) {
+    if (StyleSVGReset()->mX.HasPercent() || StyleSVGReset()->mY.HasPercent()) {
       needNewBounds = true;
       needNewCanvasTM = true;
     }
+
     // Our coordinate context's width/height has changed. If we have a
     // percentage width/height our dimensions will change so we must reflow.
-    if (fO->mLengthAttributes[SVGForeignObjectElement::ATTR_WIDTH]
-            .IsPercentage() ||
-        fO->mLengthAttributes[SVGForeignObjectElement::ATTR_HEIGHT]
-            .IsPercentage()) {
+    if (StylePosition()->mWidth.HasPercent() ||
+        StylePosition()->mHeight.HasPercent()) {
       needNewBounds = true;
       needReflow = true;
     }
@@ -443,7 +442,8 @@ SVGBBox nsSVGForeignObjectFrame::GetBBoxContribution(
       static_cast<SVGForeignObjectElement*>(GetContent());
 
   float x, y, w, h;
-  content->GetAnimatedLengthValues(&x, &y, &w, &h, nullptr);
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      content, &x, &y, &w, &h);
 
   if (w < 0.0f) w = 0.0f;
   if (h < 0.0f) h = 0.0f;
