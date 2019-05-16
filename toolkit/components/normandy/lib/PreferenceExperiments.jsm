@@ -268,10 +268,8 @@ var PreferenceExperiments = {
         {type: EXPERIMENT_TYPE_PREFIX + experiment.experimentType}
       );
 
-      for (const [prefName, prefInfo] of Object.entries(experiment.preferences)) {
-        // Watch for changes to the experiment's preference
-        this.startObserver(experiment.name, prefName, prefInfo.preferenceType, prefInfo.preferenceValue);
-      }
+      // Watch for changes to the experiment's preference
+      this.startObserver(experiment.name, experiment.preferences);
     }
   },
 
@@ -456,7 +454,7 @@ var PreferenceExperiments = {
     };
 
     setPref(preferences, preferenceName, preferenceType, preferenceValue);
-    PreferenceExperiments.startObserver(name, preferenceName, preferenceType, preferenceValue);
+    PreferenceExperiments.startObserver(name, {[preferenceName]: {preferenceType, preferenceValue}});
     store.data.experiments[name] = experiment;
     store.saveSoon();
 
@@ -474,7 +472,7 @@ var PreferenceExperiments = {
    * @throws {Error}
    *   If an observer for the named experiment is already active.
    */
-  startObserver(experimentName, preferenceName, preferenceType, preferenceValue) {
+  startObserver(experimentName, preferences) {
     log.debug(`PreferenceExperiments.startObserver(${experimentName})`);
 
     if (experimentObservers.has(experimentName)) {
@@ -484,8 +482,9 @@ var PreferenceExperiments = {
     }
 
     const observerInfo = {
-      preferenceName,
-      observer() {
+      preferences,
+      observe(aSubject, aTopic, preferenceName) {
+        const {preferenceValue, preferenceType} = preferences[preferenceName];
         const newValue = getPref(UserPreferences, preferenceName, preferenceType);
         if (newValue !== preferenceValue) {
           PreferenceExperiments.stop(experimentName, {
@@ -496,7 +495,9 @@ var PreferenceExperiments = {
       },
     };
     experimentObservers.set(experimentName, observerInfo);
-    Services.prefs.addObserver(preferenceName, observerInfo.observer);
+    for (const preferenceName of Object.keys(preferences)) {
+      Services.prefs.addObserver(preferenceName, observerInfo);
+    }
   },
 
   /**
@@ -522,8 +523,10 @@ var PreferenceExperiments = {
       throw new Error(`No observer for the preference experiment ${experimentName} found.`);
     }
 
-    const {preferenceName, observer} = experimentObservers.get(experimentName);
-    Services.prefs.removeObserver(preferenceName, observer);
+    const observer = experimentObservers.get(experimentName);
+    for (const preferenceName of Object.keys(observer.preferences)) {
+      Services.prefs.removeObserver(preferenceName, observer);
+    }
     experimentObservers.delete(experimentName);
   },
 
@@ -532,8 +535,10 @@ var PreferenceExperiments = {
    */
   stopAllObservers() {
     log.debug("PreferenceExperiments.stopAllObservers()");
-    for (const {preferenceName, observer} of experimentObservers.values()) {
-      Services.prefs.removeObserver(preferenceName, observer);
+    for (const observer of experimentObservers.values()) {
+      for (const preferenceName of Object.keys(observer.preferences)) {
+        Services.prefs.removeObserver(preferenceName, observer);
+      }
     }
     experimentObservers.clear();
   },
