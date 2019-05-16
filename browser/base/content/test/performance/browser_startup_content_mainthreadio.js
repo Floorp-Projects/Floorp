@@ -86,6 +86,7 @@ const processes = {
     { // bug 1357205
       path: "XREAppFeat:formautofill@mozilla.org.xpi",
       condition: !WIN,
+      ignoreIfUnused: true,
       stat: 1,
     },
   ],
@@ -344,6 +345,20 @@ add_task(async function() {
       }
     }
 
+    if (!whitelist.length) {
+      continue;
+    }
+    // The I/O interposer is disabled if !RELEASE_OR_BETA, so we expect to have
+    // no I/O marker in that case, but it's good to keep the test running to check
+    // that we are still able to produce startup profiles.
+    is(markers.length > 0, !AppConstants.RELEASE_OR_BETA,
+       procName + " startup profiles should have IO markers in builds that are not RELEASE_OR_BETA");
+    if (!markers.length) {
+      // If a profile unexpectedly contains no I/O marker, avoid generating
+      // plenty of confusing "unused whitelist entry" failures.
+      continue;
+    }
+
     for (let entry of whitelist) {
       for (let op in entry) {
         if (["path", "condition", "ignoreIfUnused", "_used"].includes(op)) {
@@ -361,6 +376,7 @@ add_task(async function() {
       }
       if (!("_used" in entry) && !entry.ignoreIfUnused) {
         ok(false, `unused whitelist entry ${procName}: ${entry.path}`);
+        shouldPass = false;
       }
     }
   }
@@ -377,7 +393,7 @@ add_task(async function() {
     await OS.File.writeAtomic(profilePath,
                               encoder.encode(JSON.stringify(startupRecorder.data.profile)));
     ok(false,
-       "Found some unexpected main thread I/O during child process startup; " +
+       "Unexpected main thread I/O behavior during child process startup; " +
        "profile uploaded in " + filename);
   }
 });
