@@ -67,6 +67,7 @@ describe("sources reducer", () => {
     state = update(state, {
       type: "ADD_SOURCE",
       cx: mockcx,
+      debuggee: { isWebExtension: false },
       source: makeMockSource()
     });
     expect(getResourceIds(state.sources)).toHaveLength(1);
@@ -81,6 +82,7 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         cx: mockcx,
+        debuggee: { isWebExtension: false },
         sources: ((mockedSources: any): Source[])
       }),
       sourceActors: undefined
@@ -90,6 +92,7 @@ describe("sources selectors", () => {
       items: mockSourceActors
     };
     state = {
+      debuggee: { isWebExtension: false },
       sources: update(state.sources, insertAction),
       sourceActors: updateSourceActors(state.sourceActors, insertAction)
     };
@@ -104,6 +107,7 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         cx: mockcx,
+        debuggee: { isWebExtension: false },
         sources: ((mockedSources: any): Source[])
       }),
       sourceActors: undefined
@@ -115,6 +119,7 @@ describe("sources selectors", () => {
     };
 
     state = {
+      debuggee: { isWebExtension: false },
       sources: update(state.sources, insertAction),
       sourceActors: updateSourceActors(state.sourceActors, insertAction)
     };
