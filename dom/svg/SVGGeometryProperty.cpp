@@ -69,6 +69,19 @@ nsCSSPropertyID AttrEnumToCSSPropId(const SVGElement* aElement,
   return eCSSProperty_UNKNOWN;
 }
 
+bool IsNonNegativeGeometryProperty(nsCSSPropertyID aProp) {
+  return aProp == eCSSProperty_r || aProp == eCSSProperty_rx ||
+         aProp == eCSSProperty_ry || aProp == eCSSProperty_width ||
+         aProp == eCSSProperty_height;
+}
+
+bool ElementMapsLengthsToStyle(SVGElement const* aElement) {
+  return aElement->IsSVGElement(nsGkAtoms::rect) ||
+         aElement->IsSVGElement(nsGkAtoms::circle) ||
+         aElement->IsSVGElement(nsGkAtoms::ellipse) ||
+         aElement->IsSVGElement(nsGkAtoms::foreignObject);
+}
+
 }  // namespace SVGGeometryProperty
 }  // namespace dom
 }  // namespace mozilla
