@@ -3118,6 +3118,36 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetAdditiveSymbols(
     })
 }
 
+#[repr(C, u8)]
+pub enum CounterSpeakAs {
+    None,
+    Auto,
+    Bullets,
+    Numbers,
+    Words,
+    Ident(*mut nsAtom),
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetSpeakAs(
+    rule: &RawServoCounterStyleRule,
+) -> CounterSpeakAs {
+    use style::counter_style::SpeakAs;
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        let speak_as = match rule.speak_as() {
+            Some(s) => s,
+            None => return CounterSpeakAs::None,
+        };
+        match *speak_as {
+            SpeakAs::Auto => CounterSpeakAs::Auto,
+            SpeakAs::Bullets => CounterSpeakAs::Bullets,
+            SpeakAs::Numbers => CounterSpeakAs::Numbers,
+            SpeakAs::Words => CounterSpeakAs::Words,
+            SpeakAs::Other(ref other) => CounterSpeakAs::Ident(other.0.as_ptr()),
+        }
+    })
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn Servo_CounterStyleRule_GetSystem(
     rule: &RawServoCounterStyleRule,

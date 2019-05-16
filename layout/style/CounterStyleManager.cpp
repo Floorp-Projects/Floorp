@@ -1344,19 +1344,25 @@ void CustomCounterStyle::ComputeRawSpeakAs(uint8_t& aSpeakAs,
   NS_ASSERTION(!(mFlags & FLAG_SPEAKAS_INITED),
                "ComputeRawSpeakAs is called with speak-as inited.");
 
-  nsCSSValue value = GetDesc(eCSSCounterDesc_SpeakAs);
-  switch (value.GetUnit()) {
-    case eCSSUnit_Auto:
+  auto speakAs = Servo_CounterStyleRule_GetSpeakAs(mRule);
+  switch (speakAs.tag) {
+    case StyleCounterSpeakAs::Tag::Auto:
       aSpeakAs = GetSpeakAsAutoValue();
       break;
-    case eCSSUnit_Enumerated:
-      aSpeakAs = value.GetIntValue();
+    case StyleCounterSpeakAs::Tag::Bullets:
+      aSpeakAs = NS_STYLE_COUNTER_SPEAKAS_BULLETS;
       break;
-    case eCSSUnit_AtomIdent:
+    case StyleCounterSpeakAs::Tag::Numbers:
+      aSpeakAs = NS_STYLE_COUNTER_SPEAKAS_NUMBERS;
+      break;
+    case StyleCounterSpeakAs::Tag::Words:
+      aSpeakAs = NS_STYLE_COUNTER_SPEAKAS_WORDS;
+      break;
+    case StyleCounterSpeakAs::Tag::Ident:
       aSpeakAs = NS_STYLE_COUNTER_SPEAKAS_OTHER;
-      aSpeakAsCounter = mManager->ResolveCounterStyle(value.GetAtomValue());
+      aSpeakAsCounter = mManager->ResolveCounterStyle(speakAs.AsIdent());
       break;
-    case eCSSUnit_Null: {
+    case StyleCounterSpeakAs::Tag::None: {
       if (!IsExtendsSystem()) {
         aSpeakAs = GetSpeakAsAutoValue();
       } else {
