@@ -30,6 +30,7 @@
 #include "nsAttrValueOrString.h"
 #include "nsCSSProps.h"
 #include "nsContentUtils.h"
+#include "nsDOMCSSAttrDeclaration.h"
 #include "nsICSSDeclaration.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
@@ -53,6 +54,7 @@
 #include "SVGAnimatedOrient.h"
 #include "SVGAnimatedString.h"
 #include "SVGAnimatedViewBox.h"
+#include "SVGGeometryProperty.h"
 #include "SVGMotionSMILAttr.h"
 #include <stdarg.h>
 
@@ -1020,6 +1022,41 @@ already_AddRefed<DOMSVGAnimatedString> SVGElement::ClassName() {
   return mClassAttribute.ToDOMAnimatedString(this);
 }
 
+/* static */
+bool SVGElement::UpdateDeclarationBlockFromLength(
+    DeclarationBlock& aBlock, nsCSSPropertyID aPropId,
+    const SVGAnimatedLength& aLength, ValToUse aValToUse) {
+  aBlock.AssertMutable();
+
+  float value;
+  if (aValToUse == ValToUse::Anim) {
+    value = aLength.GetAnimValInSpecifiedUnits();
+  } else {
+    MOZ_ASSERT(aValToUse == ValToUse::Base);
+    value = aLength.GetBaseValInSpecifiedUnits();
+  }
+
+  // SVG parser doesn't check non-negativity of some parsed value,
+  // we should not pass those to CSS side.
+  if (value < 0 &&
+      SVGGeometryProperty::IsNonNegativeGeometryProperty(aPropId)) {
+    return false;
+  }
+
+  nsCSSUnit cssUnit = SVGGeometryProperty::SpecifiedUnitTypeToCSSUnit(
+      aLength.GetSpecifiedUnitType());
+
+  if (cssUnit == eCSSUnit_Percent) {
+    Servo_DeclarationBlock_SetPercentValue(aBlock.Raw(), aPropId,
+                                           value / 100.f);
+  } else {
+    Servo_DeclarationBlock_SetLengthValue(aBlock.Raw(), aPropId, value,
+                                          cssUnit);
+  }
+
+  return true;
+}
+
 //------------------------------------------------------------------------
 // Helper class: MappedAttrParser, for parsing values of mapped attributes
 
@@ -1391,6 +1428,15 @@ void SVGElement::DidChangeLength(uint8_t aAttrEnum,
 }
 
 void SVGElement::DidAnimateLength(uint8_t aAttrEnum) {
+  if (SVGGeometryProperty::ElementMapsLengthsToStyle(this)) {
+    nsCSSPropertyID propId =
+        SVGGeometryProperty::AttrEnumToCSSPropId(this, aAttrEnum);
+
+    SMILOverrideStyle()->SetSMILValue(propId,
+                                      GetLengthInfo().mLengths[aAttrEnum]);
+    return;
+  }
+
   ClearAnyCachedPath();
 
   nsIFrame* frame = GetPrimaryFrame();

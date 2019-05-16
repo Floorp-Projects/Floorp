@@ -6,6 +6,7 @@
 
 #include "SMILCompositor.h"
 
+#include "mozilla/dom/SVGSVGElement.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCSSProps.h"
 #include "nsHashKeys.h"
@@ -147,19 +148,21 @@ nsCSSPropertyID SMILCompositor::GetCSSPropertyToAnimate() const {
 
   // If we are animating the 'width' or 'height' of an outer SVG
   // element we should animate it as a CSS property, but for other elements
-  // (e.g. <rect>) we should animate it as a length attribute.
-  // The easiest way to test for an outer SVG element, is to see if it is an
-  // SVG-namespace element mapping its width/height attribute to style.
-  //
-  // If we have animation of 'width' or 'height' on an SVG element that is
-  // NOT mapping that attributes to style then it must not be an outermost SVG
-  // element so we should return eCSSProperty_UNKNOWN to indicate that we
-  // should animate as an attribute instead.
+  // in SVG namespace (e.g. <rect>) we should animate it as a length attribute.
   if ((mKey.mAttributeName == nsGkAtoms::width ||
        mKey.mAttributeName == nsGkAtoms::height) &&
-      mKey.mElement->GetNameSpaceID() == kNameSpaceID_SVG &&
-      !mKey.mElement->IsAttributeMapped(mKey.mAttributeName)) {
-    return eCSSProperty_UNKNOWN;
+      mKey.mElement->GetNameSpaceID() == kNameSpaceID_SVG) {
+    // Not an <svg> element.
+    if (!mKey.mElement->IsSVGElement(nsGkAtoms::svg)) {
+      return eCSSProperty_UNKNOWN;
+    }
+
+    // An inner <svg> element
+    if (static_cast<dom::SVGSVGElement const&>(*mKey.mElement).IsInner()) {
+      return eCSSProperty_UNKNOWN;
+    }
+
+    // Indeed an outer <svg> element, fall through.
   }
 
   return propID;
