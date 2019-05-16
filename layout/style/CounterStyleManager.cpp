@@ -1242,16 +1242,13 @@ bool CustomCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal) {
 void CustomCounterStyle::GetPad(PadType& aResult) {
   if (!(mFlags & FLAG_PAD_INITED)) {
     mFlags |= FLAG_PAD_INITED;
-    nsCSSValue value = GetDesc(eCSSCounterDesc_Pad);
-    if (value.GetUnit() == eCSSUnit_Pair) {
-      const nsCSSValuePair& pair = value.GetPairValue();
-      mPad.width = pair.mXValue.GetIntValue();
-      pair.mYValue.GetStringValue(mPad.symbol);
-    } else if (IsExtendsSystem()) {
-      GetExtends()->GetPad(mPad);
-    } else {
-      mPad.width = 0;
-      mPad.symbol.Truncate();
+    if (!Servo_CounterStyleRule_GetPad(mRule, &mPad.width, &mPad.symbol)) {
+      if (IsExtendsSystem()) {
+        GetExtends()->GetPad(mPad);
+      } else {
+        mPad.width = 0;
+        mPad.symbol.Truncate();
+      }
     }
   }
   aResult = mPad;
