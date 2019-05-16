@@ -16,59 +16,59 @@ import org.mozilla.fenix.mvi.UIView
 import androidx.recyclerview.widget.ItemTouchHelper
 import org.mozilla.fenix.BuildConfig
 
-// Convert HomeState into a data structure HomeAdapter understands
-@SuppressWarnings("ComplexMethod", "NestedBlockDepth")
-private fun SessionControlState.toAdapterList(): List<AdapterItem> {
+private fun normalModeAdapterItems(tabs: List<Tab>, collections: List<TabCollection>): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
-    items.add(AdapterItem.TabHeader)
+    items.add(AdapterItem.TabHeader(false, tabs.isNotEmpty()))
 
-    // Populate tabs
     if (tabs.isNotEmpty()) {
-        tabs.reversed().map(AdapterItem::TabItem).forEach { items.add(it) }
-        if (mode == Mode.Private) {
-            items.add(AdapterItem.DeleteTabs)
-        } else if (BuildConfig.COLLECTIONS_ENABLED) {
+        items.addAll(tabs.reversed().map(AdapterItem::TabItem))
+        if (BuildConfig.COLLECTIONS_ENABLED) {
             items.add(AdapterItem.SaveTabGroup)
         }
     } else {
-        val item = if (mode == Mode.Private) AdapterItem.PrivateBrowsingDescription
-                    else AdapterItem.NoTabMessage
-
-        items.add(item)
+        items.add(AdapterItem.NoTabMessage)
     }
 
-    // Populate collections
-    if (mode == Mode.Normal) {
-        items.add(AdapterItem.CollectionHeader)
-        if (collections.isNotEmpty()) {
+    items.add(AdapterItem.CollectionHeader)
+    if (collections.isNotEmpty()) {
 
-            // If the collection is expanded, we want to add all of its tabs beneath it in the adapter
-            collections.reversed().map(AdapterItem::CollectionItem).forEach {
-                if (it.collection.expanded) {
-                    items.add(it)
-                    addCollectionTabItems(it.collection, it.collection.tabs, items)
-                } else {
-                    items.add(it)
-                }
+        // If the collection is expanded, we want to add all of its tabs beneath it in the adapter
+        collections.reversed().map(AdapterItem::CollectionItem).forEach {
+            items.add(it)
+            if (it.collection.expanded) {
+                items.addAll(collectionTabItems(it.collection))
             }
-        } else {
-            items.add(AdapterItem.NoCollectionMessage)
         }
+    } else {
+        items.add(AdapterItem.NoCollectionMessage)
     }
 
     return items
 }
 
-private fun addCollectionTabItems(
-    collection: TabCollection,
-    tabs: MutableList<Tab>,
-    itemList: MutableList<AdapterItem>
-) {
-    for (tabIndex in 0 until tabs.size) {
-        itemList.add(AdapterItem.TabInCollectionItem
-            (collection, collection.tabs[tabIndex], tabIndex == collection.tabs.size - 1))
+private fun privateModeAdapterItems(tabs: List<Tab>): List<AdapterItem> {
+    val items = mutableListOf<AdapterItem>()
+    items.add(AdapterItem.TabHeader(true, tabs.isNotEmpty()))
+
+    if (tabs.isNotEmpty()) {
+        items.addAll(tabs.reversed().map(AdapterItem::TabItem))
+        items.add(AdapterItem.DeleteTabs)
+    } else {
+        items.add(AdapterItem.PrivateBrowsingDescription)
     }
+
+    return items
 }
+
+private fun SessionControlState.toAdapterList(): List<AdapterItem> = when (mode) {
+    is Mode.Normal -> normalModeAdapterItems(tabs, collections)
+    is Mode.Private -> privateModeAdapterItems(tabs)
+    is Mode.Onboarding -> listOf()
+}
+
+private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapIndexed { index, tab ->
+        AdapterItem.TabInCollectionItem(collection, tab, index == collection.tabs.lastIndex)
+    }
 
 class SessionControlUIView(
     container: ViewGroup,

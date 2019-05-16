@@ -58,9 +58,16 @@ data class TabCollection(
     var expanded: Boolean = false
 ) : Parcelable
 
+sealed class FirefoxAcocuntsState {
+    object SignedOut : FirefoxAcocuntsState()
+    data class AutoSignedIn(val email: String) : FirefoxAcocuntsState()
+    data class SignedIn(val email: String) : FirefoxAcocuntsState()
+}
+
 sealed class Mode {
     object Normal : Mode()
     object Private : Mode()
+    data class Onboarding(val firefoxAccountsState: FirefoxAcocuntsState) : Mode()
 }
 
 data class SessionControlState(
@@ -110,12 +117,9 @@ sealed class SessionControlChange : Change {
     data class CollectionsChange(val collections: List<TabCollection>) : SessionControlChange()
 }
 
-class SessionControlViewModel(initialState: SessionControlState) :
-    UIComponentViewModelBase<SessionControlState, SessionControlChange>(
-        initialState,
-        reducer
-    ) {
-
+class SessionControlViewModel(
+    initialState: SessionControlState
+) : UIComponentViewModelBase<SessionControlState, SessionControlChange>(initialState, reducer) {
     companion object {
         val reducer: (SessionControlState, SessionControlChange) -> SessionControlState = { state, change ->
             when (change) {

@@ -47,7 +47,6 @@ class TabInCollectionViewHolder(
     var isLastTab = false
 
     init {
-
         collection_tab_icon.clipToOutline = true
         collection_tab_icon.outlineProvider = object : ViewOutlineProvider() {
             override fun getOutline(view: View?, outline: Outline?) {

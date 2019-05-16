@@ -19,14 +19,14 @@ import org.mozilla.fenix.home.sessioncontrol.TabAction
 import org.mozilla.fenix.home.sessioncontrol.onNext
 
 class TabHeaderViewHolder(
-    view: View,
+    private val view: View,
     private val actionEmitter: Observer<SessionControlAction>
 ) : RecyclerView.ViewHolder(view) {
     private var isPrivate = false
     private var tabsMenu: TabHeaderMenu
 
     init {
-        tabsMenu = TabHeaderMenu(view.context) {
+        tabsMenu = TabHeaderMenu(view.context, isPrivate) {
             when (it) {
                 is TabHeaderMenu.Item.Share -> actionEmitter.onNext(TabAction.ShareTabs)
                 is TabHeaderMenu.Item.CloseAll -> actionEmitter.onNext(TabAction.CloseAll(isPrivate))
@@ -37,11 +37,8 @@ class TabHeaderViewHolder(
                 )
             }
         }
-        view.apply {
-            val headerTextResourceId =
-                if (isPrivate) R.string.tabs_header_private_title else R.string.tab_header_label
-            header_text.text = context.getString(headerTextResourceId)
 
+        view.apply {
             add_tab_button.run {
                 setOnClickListener {
                     actionEmitter.onNext(TabAction.Add)
@@ -58,8 +55,19 @@ class TabHeaderViewHolder(
         }
     }
 
+    fun bind(isPrivate: Boolean, hasTabs: Boolean) {
+        this.isPrivate = isPrivate
+        tabsMenu.isPrivate = isPrivate
+
+        val headerTextResourceId =
+            if (isPrivate) R.string.tabs_header_private_title else R.string.tab_header_label
+        view.header_text.text = view.context.getString(headerTextResourceId)
+        view.tabs_overflow_button.visibility = if (hasTabs) View.VISIBLE else View.GONE
+    }
+
     class TabHeaderMenu(
         private val context: Context,
+        var isPrivate: Boolean,
         private val onItemTapped: (Item) -> Unit = {}
     ) {
         sealed class Item {
@@ -81,20 +89,13 @@ class TabHeaderViewHolder(
                     context.getString(R.string.tabs_menu_share_tabs)
                 ) {
                     onItemTapped.invoke(Item.Share)
-                }
-            ).let {
-                val list = it.toMutableList()
-                if (BuildConfig.COLLECTIONS_ENABLED) {
-                    list.add(
-                        SimpleBrowserMenuItem(
-                            context.getString(R.string.tabs_menu_save_to_collection)
-                        ) {
-                            onItemTapped.invoke(Item.SaveToCollection)
-                        }
-                    )
-                }
-                list
-            }
+                },
+                SimpleBrowserMenuItem(
+                    context.getString(R.string.tabs_menu_save_to_collection)
+                ) {
+                    onItemTapped.invoke(Item.SaveToCollection)
+                }.apply { visible = { !isPrivate && BuildConfig.COLLECTIONS_ENABLED } }
+            )
         }
     }
 
