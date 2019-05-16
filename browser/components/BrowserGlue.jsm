@@ -2316,11 +2316,20 @@ BrowserGlue.prototype = {
     }
   },
 
+  _migrateXULStoreForDocument(fromURL, toURL) {
+    Array.from(Services.xulStore.getIDsEnumerator(fromURL)).forEach((id) => {
+      Array.from(Services.xulStore.getAttributeEnumerator(fromURL, id)).forEach(attr => {
+        let value = Services.xulStore.getValue(fromURL, id, attr);
+        Services.xulStore.setValue(toURL, id, attr, value);
+      });
+    });
+  },
+
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 81;
+    const UI_VERSION = 82;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -2622,6 +2631,11 @@ BrowserGlue.prototype = {
           }
         }
       }
+    }
+
+    if (currentUIVersion < 82) {
+      this._migrateXULStoreForDocument("chrome://browser/content/browser.xul",
+                                       "chrome://browser/content/browser.xhtml");
     }
 
     // Update the migration version.
