@@ -11,6 +11,7 @@
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/dom/SVGForeignObjectElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "SVGGeometryProperty.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(ForeignObject)
 
@@ -39,6 +40,8 @@ SVGElement::LengthInfo SVGForeignObjectElement::sLengthInfo[4] = {
 SVGForeignObjectElement::SVGForeignObjectElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGGraphicsElement(std::move(aNodeInfo)) {}
+
+namespace SVGT = SVGGeometryProperty::Tags;
 
 //----------------------------------------------------------------------
 // nsINode methods
@@ -77,8 +80,16 @@ gfxMatrix SVGForeignObjectElement::PrependLocalTransformsTo(
   }
   // our 'x' and 'y' attributes:
   float x, y;
-  const_cast<SVGForeignObjectElement*>(this)->GetAnimatedLengthValues(&x, &y,
-                                                                      nullptr);
+
+  if (GetPrimaryFrame()) {
+    SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y>(this, &x, &y);
+  } else {
+    // This function might be called for element in display:none subtree
+    // (e.g. getScreenCTM), we fall back to use SVG attributes.
+    const_cast<SVGForeignObjectElement*>(this)->GetAnimatedLengthValues(
+        &x, &y, nullptr);
+  }
+
   gfxMatrix toUserSpace = gfxMatrix::Translation(x, y);
   if (aWhich == eChildToUserSpace) {
     return toUserSpace * aMatrix;
@@ -89,10 +100,12 @@ gfxMatrix SVGForeignObjectElement::PrependLocalTransformsTo(
 
 /* virtual */
 bool SVGForeignObjectElement::HasValidDimensions() const {
-  return mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() &&
-         mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
-         mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() &&
-         mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0;
+  float width, height;
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(
+      const_cast<SVGForeignObjectElement*>(this), &width, &height);
+  return width > 0 && height > 0;
 }
 
 //----------------------------------------------------------------------
