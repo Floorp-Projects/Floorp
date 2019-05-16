@@ -28,9 +28,13 @@ private object Versions {
     const val androidx_core = "1.2.0-alpha01"
     const val androidx_transition = "1.1.0-rc01"
 
-    const val appservices_gradle_plugin = "0.4.4"
     const val mozilla_android_components = "0.54.0-SNAPSHOT"
-    const val mozilla_appservices = "0.27.0"
+    // Note that android-components also depends on application-services,
+    // and in fact is our main source of appservices-related functionality.
+    // The version number below tracks the application-services version
+    // that we depend on directly for tests, and it's important that it
+    // be kept in sync with the version used by android-components above.
+    const val mozilla_appservices = "0.28.1"
 
     const val autodispose = "1.1.0"
     const val adjust = "4.11.4"
@@ -58,7 +62,6 @@ private object Versions {
 object Deps {
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
-    const val tools_appservicesgradle = "org.mozilla.appservices:gradle-plugin:${Versions.appservices_gradle_plugin}"
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}"
 
@@ -175,7 +178,6 @@ object Deps {
     const val uiautomator = "com.android.support.test.uiautomator:uiautomator-v18:${Versions.uiautomator}"
     const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val fragment_testing = "androidx.fragment:fragment-testing:${Versions.androidx_testing}"
-    const val megazord_forUnitTests = "org.mozilla.appservices:fenix-megazord-forUnitTests:${Versions.mozilla_appservices}"
     const val places_forUnitTests = "org.mozilla.appservices:places-forUnitTests:${Versions.mozilla_appservices}"
 
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"

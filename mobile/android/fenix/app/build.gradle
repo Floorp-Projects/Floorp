@@ -8,18 +8,7 @@ apply plugin: 'kotlin-android-extensions'
 apply from: "$project.rootDir/automation/gradle/versionCode.gradle"
 apply plugin: 'androidx.navigation.safeargs.kotlin'
 
-apply plugin: 'org.mozilla.appservices'
-
 import com.android.build.gradle.internal.tasks.AppPreBuildTask
-
-appservices {
-    defaultConfig {
-        megazord = 'fenix'
-        // Necessary to allow for local dependency substitutions.
-        // See https://github.com/mozilla-mobile/reference-browser/pull/356#issuecomment-449190236
-        unitTestingEnabled = false
-    }
-}
 
 android {
     compileSdkVersion 28
@@ -376,7 +365,6 @@ dependencies {
     testImplementation Deps.junit
     testImplementation Deps.robolectric
     implementation Deps.fragment_testing
-    testImplementation Deps.megazord_forUnitTests
     testImplementation Deps.places_forUnitTests
 
     testImplementation Deps.mockito_core
@@ -415,3 +403,43 @@ task printGeckoviewVersions {
 // Normally this should use the same version as the glean dependency. But since we are currently using AC snapshots we
 // can't reference a git tag with a specific version here. So we are just using "master" and hoping for the best.
 apply from: 'https://github.com/mozilla-mobile/android-components/raw/master/components/service/glean/scripts/sdk_generator.gradle'
+
+// For production builds, the native code for all `org.mozilla.appservices` dependencies gets compiled together
+// into a single "megazord" build, and different megazords are published for different subsets of features.
+// Ref https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html
+// Substitute all appservices dependencies with an appropriate megazord.
+afterEvaluate {
+    def megazord = "fenix-megazord"
+    def appServicesGroup = "org.mozilla.appservices"
+    def appServicesVersion = null
+    configurations.each { configuration ->
+        configuration.resolutionStrategy.eachDependency { DependencyResolveDetails dependency ->
+            if (dependency.requested.group == appServicesGroup) {
+                // Ensure that we only depend on a single, consistent version of appservices.
+                if (appServicesVersion == null) {
+                  appServicesVersion = dependency.requested.version
+                } else {
+                    if (dependency.requested.version != appServicesVersion) {
+                        logger.lifecycle("In ${configuration}: mismatched '${appServicesGroup}` dependency version:" +
+                                         " '${dependency.requested.group}:${dependency.requested.name}:${dependency.requested.version}'" +
+                                         " does not have expected version ${appServicesVersion}")
+                        throw new RuntimeException("mismatched '${appServicesGroup}` dependency version")
+                    }
+                }
+                // Check whether it was already megazorded.
+                if (! dependency.requested.name.endsWith("-withoutLib")) {
+                    // Use either the -forUnitTests megazord, or the default one.
+                    def substitution
+                    if (dependency.requested.name.endsWith("-forUnitTests")) {
+                      substitution = "org.mozilla.appservices:${megazord}-forUnitTests:${appServicesVersion}"
+                    } else {
+                      substitution = "org.mozilla.appservices:${megazord}:${appServicesVersion}"
+                    }
+                    logger.lifecycle("In ${configuration}: substituting megazord module '$substitution' for component module" +
+                                     " '${dependency.requested.group}:${dependency.requested.name}:${dependency.requested.version}'")
+                    dependency.useTarget(substitution)
+                }
+            }
+        }
+    }
+}
