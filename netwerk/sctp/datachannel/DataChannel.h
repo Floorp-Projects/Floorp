@@ -384,6 +384,7 @@ class DataChannel {
         mStream(stream),
         mPrPolicy(policy),
         mPrValue(value),
+        mNegotiated(negotiated),
         mOrdered(ordered),
         mFlags(0),
         mId(0),
@@ -439,6 +440,8 @@ class DataChannel {
 
   dom::Nullable<uint16_t> GetMaxRetransmits() const;
 
+  bool GetNegotiated() { return mNegotiated; }
+
   bool GetOrdered() { return mOrdered; }
 
   void IncrementBufferedAmount(uint32_t aSize, ErrorResult& aRv);
@@ -493,6 +496,7 @@ class DataChannel {
   uint16_t mStream;
   uint16_t mPrPolicy;
   uint32_t mPrValue;
+  const bool mNegotiated;
   const bool mOrdered;
   uint32_t mFlags;
   uint32_t mId;
