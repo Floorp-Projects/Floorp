@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ComputedStyle.h"
 #include "mozilla/dom/SVGEllipseElement.h"
 #include "mozilla/dom/SVGEllipseElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
@@ -149,6 +150,17 @@ already_AddRefed<Path> SVGEllipseElement::BuildPath(PathBuilder* aBuilder) {
   EllipseToBezier(aBuilder, Point(x, y), Size(rx, ry));
 
   return aBuilder->Finish();
+}
+
+bool SVGEllipseElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
+                                              const ComputedStyle& aOldStyle) {
+  auto *newSVGReset = aNewStyle.StyleSVGReset(),
+       *oldSVGReset = aOldStyle.StyleSVGReset();
+
+  return newSVGReset->mCx != oldSVGReset->mCx ||
+         newSVGReset->mCy != oldSVGReset->mCy ||
+         newSVGReset->mRx != oldSVGReset->mRx ||
+         newSVGReset->mRy != oldSVGReset->mRy;
 }
 
 }  // namespace dom

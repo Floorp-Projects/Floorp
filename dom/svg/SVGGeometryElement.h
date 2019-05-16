@@ -192,6 +192,13 @@ class SVGGeometryElement : public SVGGeometryElementBase {
   virtual already_AddRefed<Path> GetOrBuildPathForMeasuring();
 
   /**
+   * Return |true| if some geometry properties (|x|, |y|, etc) are changed
+   * because of CSS change.
+   */
+  bool IsGeometryChangedViaCSS(ComputedStyle const& aNewStyle,
+                               ComputedStyle const& aOldStyle) const;
+
+  /**
    * Returns the current computed value of the CSS property 'fill-rule' for
    * this element.
    */

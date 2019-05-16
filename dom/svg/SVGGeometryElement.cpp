@@ -10,8 +10,11 @@
 #include "gfxPlatform.h"
 #include "nsCOMPtr.h"
 #include "nsComputedDOMStyle.h"
-#include "SVGAnimatedLength.h"
 #include "nsSVGUtils.h"
+#include "SVGAnimatedLength.h"
+#include "SVGCircleElement.h"
+#include "SVGEllipseElement.h"
+#include "SVGRectElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
@@ -109,6 +112,22 @@ already_AddRefed<Path> SVGGeometryElement::GetOrBuildPathForMeasuring() {
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
   FillRule fillRule = mCachedPath ? mCachedPath->GetFillRule() : GetFillRule();
   return GetOrBuildPath(drawTarget, fillRule);
+}
+
+bool SVGGeometryElement::IsGeometryChangedViaCSS(
+    ComputedStyle const& aNewStyle, ComputedStyle const& aOldStyle) const {
+  if (IsSVGElement(nsGkAtoms::rect)) {
+    return SVGRectElement::IsLengthChangedViaCSS(aNewStyle, aOldStyle);
+  }
+
+  if (IsSVGElement(nsGkAtoms::circle)) {
+    return SVGCircleElement::IsLengthChangedViaCSS(aNewStyle, aOldStyle);
+  }
+
+  if (IsSVGElement(nsGkAtoms::ellipse)) {
+    return SVGEllipseElement::IsLengthChangedViaCSS(aNewStyle, aOldStyle);
+  }
+  return false;
 }
 
 FillRule SVGGeometryElement::GetFillRule() {
