@@ -13,7 +13,7 @@ function run_test() {
   var options = PlacesUtils.history.getNewQueryOptions();
   var query = PlacesUtils.history.getNewQuery();
 
-  query.setParents([PlacesUtils.bookmarks.tagsGuid], 1);
+  query.setParents([PlacesUtils.bookmarks.tagsGuid]);
   var result = PlacesUtils.history.executeQuery(query, options);
   var tagRoot = result.root;
   tagRoot.containerOpen = true;
