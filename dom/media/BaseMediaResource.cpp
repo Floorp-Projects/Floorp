@@ -114,7 +114,7 @@ void BaseMediaResource::SetLoadInBackground(bool aLoadInBackground) {
     NS_WARNING("Null owner in MediaResource::SetLoadInBackground()");
     return;
   }
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  RefPtr<dom::HTMLMediaElement> element = owner->GetMediaElement();
   if (!element) {
     NS_WARNING("Null element in MediaResource::SetLoadInBackground()");
     return;
