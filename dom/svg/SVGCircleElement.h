@@ -29,6 +29,8 @@ class SVGCircleElement final : public SVGCircleElementBase {
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
  public:
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
+
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const override;
 

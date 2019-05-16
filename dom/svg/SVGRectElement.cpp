@@ -49,6 +49,11 @@ SVGRectElement::SVGRectElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGRectElementBase(std::move(aNodeInfo)) {}
 
+bool SVGRectElement::IsAttributeMapped(const nsAtom* aAttribute) const {
+  return IsInLengthInfo(aAttribute, sLengthInfo) ||
+         SVGRectElementBase::IsAttributeMapped(aAttribute);
+}
+
 //----------------------------------------------------------------------
 // nsINode methods
 
