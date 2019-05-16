@@ -7,13 +7,11 @@
 # input IDL file(s). It's purpose is to directly support the build
 # system. The API will change to meet the needs of the build system.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import argparse
 import os
 import sys
-
-from io import BytesIO
 
 from xpidl import jsonxpt
 from buildconfig import topsrcdir
@@ -87,32 +85,33 @@ def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--cache-dir',
-        help='Directory in which to find or write cached lexer data.')
+                        help='Directory in which to find or write cached lexer data.')
     parser.add_argument('--depsdir',
-        help='Directory in which to write dependency files.')
+                        help='Directory in which to write dependency files.')
     parser.add_argument('--bindings-conf',
-        help='Path to the WebIDL binding configuration file.')
+                        help='Path to the WebIDL binding configuration file.')
     parser.add_argument('--input-dir', dest='input_dirs',
                         action='append', default=[],
                         help='Directory(ies) in which to find source .idl files.')
     parser.add_argument('headerdir',
-        help='Directory in which to write header files.')
+                        help='Directory in which to write header files.')
     parser.add_argument('xpcrsdir',
-        help='Directory in which to write rust xpcom binding files.')
+                        help='Directory in which to write rust xpcom binding files.')
     parser.add_argument('xptdir',
-        help='Directory in which to write xpt file.')
+                        help='Directory in which to write xpt file.')
     parser.add_argument('module',
-        help='Final module name to use for linked output xpt file.')
+                        help='Final module name to use for linked output xpt file.')
     parser.add_argument('idls', nargs='+',
-        help='Source .idl file(s).')
+                        help='Source .idl file(s).')
     parser.add_argument('-I', dest='incpath', action='append', default=[],
-        help='Extra directories where to look for included .idl files.')
+                        help='Extra directories where to look for included .idl files.')
 
     args = parser.parse_args(argv)
     incpath = [os.path.join(topsrcdir, p) for p in args.incpath]
     process(args.input_dirs, incpath, args.bindings_conf, args.cache_dir,
-        args.headerdir, args.xpcrsdir, args.xptdir, args.depsdir, args.module,
-        args.idls)
+            args.headerdir, args.xpcrsdir, args.xptdir, args.depsdir, args.module,
+            args.idls)
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])

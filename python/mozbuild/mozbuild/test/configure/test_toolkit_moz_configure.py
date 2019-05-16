@@ -82,7 +82,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
             self.assertEqual(get_value(environ={'MOZILLA_OFFICIAL': 1}), None)
 
             self.assertEqual(get_value(['--enable-release'],
-                             environ={'MOZILLA_OFFICIAL': 1}), None)
+                                       environ={'MOZILLA_OFFICIAL': 1}), None)
 
             with self.assertRaises(InvalidOptionError):
                 get_value(['--disable-release'],
@@ -120,7 +120,8 @@ class TestToolkitMozConfigure(BaseConfigureTest):
 
         self.assertEqual(
             out.getvalue(),
-            'ERROR: Yasm is required to build with vpx, but you do not appear to have Yasm installed.\n'
+            ('ERROR: Yasm is required to build with vpx, but you do not appear '
+             'to have Yasm installed.\n'),
         )
 
         out.truncate(0)
@@ -129,7 +130,8 @@ class TestToolkitMozConfigure(BaseConfigureTest):
 
         self.assertEqual(
             out.getvalue(),
-            'ERROR: Yasm is required to build with jpeg and vpx, but you do not appear to have Yasm installed.\n'
+            ('ERROR: Yasm is required to build with jpeg and vpx, but you do not appear '
+             'to have Yasm installed.\n'),
         )
 
         out.truncate(0)
@@ -138,7 +140,8 @@ class TestToolkitMozConfigure(BaseConfigureTest):
 
         self.assertEqual(
             out.getvalue(),
-            'ERROR: Yasm is required to build with jpeg, libav and vpx, but you do not appear to have Yasm installed.\n'
+            ('ERROR: Yasm is required to build with jpeg, libav and vpx, but you do not appear '
+             'to have Yasm installed.\n'),
         )
 
         out.truncate(0)

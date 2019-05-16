@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
@@ -52,13 +52,14 @@ VARIABLES = {
     'FUGA': (Fuga, unicode, None),
     'PIYO': (Piyo, unicode, None),
     'HOGERA': (ContextDerivedTypedList(Piyo, StrictOrderingOnAppendList),
-        list, None),
+               list, None),
     'HOGEHOGE': (ContextDerivedTypedListWithItems(
         Piyo,
         StrictOrderingOnAppendListWithFlagsFactory({
             'foo': bool,
         })), list, None),
 }
+
 
 class TestContext(unittest.TestCase):
     def test_key_rejection(self):
@@ -202,6 +203,7 @@ class TestContext(unittest.TestCase):
 
         with self.assertRaises(UnsortedError):
             ns['HOGEHOGE'] += ['f', 'e', 'd']
+
 
 if __name__ == '__main__':
     main()

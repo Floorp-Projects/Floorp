@@ -69,7 +69,7 @@ def main(argv):
         with FileAvoidWrite(args.output_file, mode='rb') as output:
             try:
                 ret = module.__dict__[method](output, *args.additional_arguments, **kwargs)
-            except:
+            except Exception:
                 # Ensure that we don't overwrite the file if the script failed.
                 output.avoid_writing_to_file()
                 raise
@@ -115,6 +115,7 @@ def main(argv):
         traceback.print_exc()
         return 1
     return ret
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

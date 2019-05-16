@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import re
 
 
@@ -21,6 +23,7 @@ def _tokens2re(**tokens):
     # The final pattern matches either the above pattern, or an escaped
     # backslash, captured in the "escape" match group.
     return re.compile('(?:%s|%s)' % (nonescaped, r'(?P<escape>\\\\)'))
+
 
 UNQUOTED_TOKENS_RE = _tokens2re(
   whitespace=r'[\t\r\n ]+',
@@ -54,6 +57,7 @@ class _ClineSplitter(object):
     Parses a given command line string and creates a list of command
     and arguments, with wildcard expansion.
     '''
+
     def __init__(self, cline):
         self.arg = None
         self.cline = cline

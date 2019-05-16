@@ -21,6 +21,7 @@ from test_toolchain_helpers import FakeCompiler
 class BaseCompileChecks(unittest.TestCase):
     def get_mock_compiler(self, expected_test_content=None, expected_flags=None):
         expected_flags = expected_flags or []
+
         def mock_compiler(stdin, args):
             args, test_file = args[:-1], args[-1]
             self.assertIn('-c', args)
@@ -220,7 +221,7 @@ class TestHeaderChecks(BaseCompileChecks):
         config, out, status = self.do_compile_test(cmd)
         self.assertEqual(status, 0)
         self.assertEqual(out, '')
-        self.assertEqual(config, {'DEFINES':{}})
+        self.assertEqual(config, {'DEFINES': {}})
 
     def test_check_header_include(self):
         expected_test_content = textwrap.dedent('''\

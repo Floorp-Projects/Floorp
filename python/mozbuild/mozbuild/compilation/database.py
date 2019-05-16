@@ -4,6 +4,8 @@
 
 # This modules provides functionality for dealing with code completion.
 
+from __future__ import absolute_import, print_function
+
 import os
 import types
 
@@ -13,11 +15,8 @@ from mozbuild.frontend.data import (
     Sources,
     GeneratedSources,
     DirectoryTraversal,
-    Linkable,
-    LocalInclude,
     PerSourceFlag,
     VariablePassthru,
-    SimpleProgram,
 )
 from mozbuild.shellutil import (
     quote as shell_quote,
@@ -176,8 +175,8 @@ class CompileDBBackend(CommonBackend):
         if canonical_suffix not in self.COMPILERS:
             return
         db = self._db.setdefault((objdir, filename, unified),
-            cenv.substs[self.COMPILERS[canonical_suffix]].split() +
-            ['-o', '/dev/null', '-c'])
+                                 cenv.substs[self.COMPILERS[canonical_suffix]].split() +
+                                 ['-o', '/dev/null', '-c'])
         reldir = reldir or mozpath.relpath(objdir, cenv.topobjdir)
 
         def append_var(name):

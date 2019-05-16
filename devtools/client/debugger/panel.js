@@ -165,6 +165,10 @@ DebuggerPanel.prototype = {
     return this._actions.selectSource(cx, sourceId, { line, column });
   },
 
+  canLoadSource(sourceId) {
+    return this._selectors.canLoadSource(this._getState(), sourceId);
+  },
+
   getSourceByActorId(sourceId) {
     return this._selectors.getSourceByActorId(this._getState(), sourceId);
   },
