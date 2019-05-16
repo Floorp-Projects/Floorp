@@ -128,6 +128,7 @@ include = [
   "ForgottenArcSlicePtr",
   "HeaderWithLength",
   "MozContextProperties",
+  "Quotes",
 ]
 item_types = ["enums", "structs", "typedefs", "functions"]
 renaming_overrides_prefixing = true
@@ -399,4 +400,8 @@ renaming_overrides_prefixing = true
 
   inline StyleAtom(const StyleAtom& aOther);
   inline ~StyleAtom();
+"""
+
+"OwnedStr" = """
+  inline nsDependentCSubstring AsString() const;
 """
