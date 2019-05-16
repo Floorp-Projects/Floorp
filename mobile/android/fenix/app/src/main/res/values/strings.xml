@@ -485,42 +485,4 @@
     <string name="full_screen_notification">Entering full screen mode</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL copied</string>
-
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
-    <string name="onboarding_header">Welcome to %s!</string>
-    <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Already have an account?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Get to know %s</string>
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Choose your theme</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">Save some battery and your eyesight by enabling dark mode.</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Get the most out of %s</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Protect yourself</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s helps stop websites from tracking you online, making it
-        harder for ads to follow you around the web
-    </string>
-    <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Browse Privately</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">Private Browsing is always just a tap or two away, just look
-        for the private browsing icon (%s)
-    </string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Your Privacy</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">We\'ve designed %s to give you control over what you share
-        online and what you share with us.
-    </string>
 </resources>

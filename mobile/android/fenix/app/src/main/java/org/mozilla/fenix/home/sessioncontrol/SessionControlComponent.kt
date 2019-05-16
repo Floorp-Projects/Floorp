@@ -92,9 +92,14 @@ sealed class CollectionAction : Action {
     data class RemoveTab(val collection: TabCollection, val tab: Tab) : CollectionAction()
 }
 
+sealed class OnboardingAction : Action {
+    object Finish : OnboardingAction()
+}
+
 sealed class SessionControlAction : Action {
     data class Tab(val action: TabAction) : SessionControlAction()
     data class Collection(val action: CollectionAction) : SessionControlAction()
+    data class Onboarding(val action: OnboardingAction) : SessionControlAction()
 }
 
 fun Observer<SessionControlAction>.onNext(tabAction: TabAction) {
@@ -103,6 +108,10 @@ fun Observer<SessionControlAction>.onNext(tabAction: TabAction) {
 
 fun Observer<SessionControlAction>.onNext(collectionAction: CollectionAction) {
     onNext(SessionControlAction.Collection(collectionAction))
+}
+
+fun Observer<SessionControlAction>.onNext(onboardingAction: OnboardingAction) {
+    onNext(SessionControlAction.Onboarding(onboardingAction))
 }
 
 sealed class SessionControlChange : Change {

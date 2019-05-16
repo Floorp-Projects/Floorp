@@ -20,6 +20,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHol
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionMessageViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingFinishViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingFirefoxAccountViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingPrivacyNoticeViewHolder
@@ -50,6 +51,7 @@ sealed class AdapterItem {
     object OnboardingTrackingProtection : AdapterItem()
     object OnboardingPrivateBrowsing : AdapterItem()
     object OnboardingPrivacyNotice : AdapterItem()
+    object OnboardingFinish : AdapterItem()
 
     val viewType: Int
         get() = when (this) {
@@ -70,6 +72,7 @@ sealed class AdapterItem {
             OnboardingTrackingProtection -> OnboardingTrackingProtectionViewHolder.LAYOUT_ID
             OnboardingPrivateBrowsing -> OnboardingPrivateBrowsingViewHolder.LAYOUT_ID
             OnboardingPrivacyNotice -> OnboardingPrivacyNoticeViewHolder.LAYOUT_ID
+            OnboardingFinish -> OnboardingFinishViewHolder.LAYOUT_ID
         }
 }
 
@@ -107,6 +110,7 @@ class SessionControlAdapter(
             OnboardingTrackingProtectionViewHolder.LAYOUT_ID -> OnboardingTrackingProtectionViewHolder(view)
             OnboardingPrivateBrowsingViewHolder.LAYOUT_ID -> OnboardingPrivateBrowsingViewHolder(view)
             OnboardingPrivacyNoticeViewHolder.LAYOUT_ID -> OnboardingPrivacyNoticeViewHolder(view)
+            OnboardingFinishViewHolder.LAYOUT_ID -> OnboardingFinishViewHolder(view, actionEmitter)
             else -> throw IllegalStateException()
         }
     }

@@ -71,7 +71,8 @@ private fun onboardingAdapterItems(): List<AdapterItem> = listOf(
     AdapterItem.OnboardingThemePicker,
     AdapterItem.OnboardingTrackingProtection,
     AdapterItem.OnboardingPrivateBrowsing,
-    AdapterItem.OnboardingPrivacyNotice
+    AdapterItem.OnboardingPrivacyNotice,
+    AdapterItem.OnboardingFinish
 )
 
 private fun SessionControlState.toAdapterList(): List<AdapterItem> = when (mode) {

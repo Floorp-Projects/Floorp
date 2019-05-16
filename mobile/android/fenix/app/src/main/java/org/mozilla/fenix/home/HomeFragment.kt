@@ -45,6 +45,7 @@ import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.Mode
+import org.mozilla.fenix.home.sessioncontrol.OnboardingAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.SessionControlComponent
@@ -219,6 +220,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                     when (it) {
                         is SessionControlAction.Tab -> handleTabAction(it.action)
                         is SessionControlAction.Collection -> handleCollectionAction(it.action)
+                        is SessionControlAction.Onboarding -> handleOnboardingAction(it.action)
                     }
                 }
         }
@@ -235,6 +237,17 @@ class HomeFragment : Fragment(), CoroutineScope {
             requireComponents.core.sessionManager.unregister(it)
         }
         super.onStop()
+    }
+
+    private fun handleOnboardingAction(action: OnboardingAction) {
+        Do exhaustive when (action) {
+            is OnboardingAction.Finish -> {
+                onboarding.finish()
+
+                val mode = currentMode()
+                getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
+            }
+        }
     }
 
     @SuppressWarnings("ComplexMethod")
