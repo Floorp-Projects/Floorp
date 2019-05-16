@@ -17,6 +17,7 @@
   MACRO(anonymous, anonymous, "anonymous")                                     \
   MACRO(Any, Any, "Any")                                                       \
   MACRO(apply, apply, "apply")                                                 \
+  MACRO(args, args, "args")                                                    \
   MACRO(arguments, arguments, "arguments")                                     \
   MACRO(ArrayBufferSpecies, ArrayBufferSpecies, "ArrayBufferSpecies")          \
   MACRO(ArrayIterator, ArrayIterator, "Array Iterator")                        \
