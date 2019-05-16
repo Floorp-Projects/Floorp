@@ -198,7 +198,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
 
     def checkPassword(self):
         loginInfo = self.marionette.execute_script("""
-          let ary = Services.logins.findLogins({},
+          let ary = Services.logins.findLogins(
             "test.marionette.mozilla.com",
             "http://test.marionette.mozilla.com/some/form/",
             null, {});

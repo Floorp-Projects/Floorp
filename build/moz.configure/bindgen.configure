@@ -167,9 +167,9 @@ def bindgen_config_paths(llvm_config, libclang_path, clang_path,
         for choice in libclang_choices:
             libclang = os.path.join(path, choice)
             if os.path.exists(libclang):
-                return (True, None)
+                return (libclang, None)
         else:
-            return (False, list(set(libclang_choices)))
+            return (None, list(set(libclang_choices)))
 
     # XXX: we want this code to be run for both Gecko and JS, but we don't
     # necessarily want to force a bindgen/Rust dependency on JS just yet.
@@ -219,8 +219,8 @@ def bindgen_config_paths(llvm_config, libclang_path, clang_path,
             necessary packages, or run `mach bootstrap`.
             '''.format(libclang_path, libclang_arg)))
 
-        (found, searched) = search_for_libclang(libclang_path)
-        if not found:
+        (libclang, searched) = search_for_libclang(libclang_path)
+        if not libclang:
             die(dedent('''\
             Could not find the clang shared library in the path {}
             returned by `llvm-config {}` (searched for files {}).
@@ -229,6 +229,7 @@ def bindgen_config_paths(llvm_config, libclang_path, clang_path,
             '''.format(libclang_path, libclang_arg, searched)))
 
         return namespace(
+            libclang=libclang,
             libclang_path=libclang_path,
             clang_path=clang_resolved,
         )
@@ -251,8 +252,8 @@ def bindgen_config_paths(llvm_config, libclang_path, clang_path,
         The argument to --with-libclang-path is not a directory: {}
         '''.format(libclang_path)))
 
-    (found, searched) = search_for_libclang(libclang_path)
-    if not found:
+    (libclang, searched) = search_for_libclang(libclang_path)
+    if not libclang:
         die(dedent('''\
         Could not find the clang shared library in the path {}
         specified by --with-libclang-path (searched for files {}).
@@ -265,9 +266,31 @@ def bindgen_config_paths(llvm_config, libclang_path, clang_path,
         '''.format(clang_path)))
 
     return namespace(
+        libclang=libclang,
         libclang_path=libclang_path,
         clang_path=clang_resolved,
     )
+
+@depends(bindgen_config_paths.libclang)
+@checking('that libclang is new enough', lambda s: 'yes' if s else 'no')
+@imports(_from='ctypes', _import='CDLL')
+@imports(_from='textwrap', _import='dedent')
+def min_libclang_version(libclang):
+    try:
+        lib = CDLL(libclang)
+        # We want at least 4.0. The API we test below is enough for that.
+        # Just accessing it should throw if not found.
+        fun = lib.clang_EvalResult_getAsLongLong
+        return True
+    except:
+        die(dedent('''\
+        The libclang located at {} is too old (need at least 4.0).
+
+        Please make sure to update it or point to a newer libclang using
+        --with-libclang-path.
+        '''.format(libclang)))
+        return False
+
 
 set_config('MOZ_LIBCLANG_PATH', bindgen_config_paths.libclang_path)
 set_config('MOZ_CLANG_PATH', bindgen_config_paths.clang_path)

@@ -67,18 +67,16 @@ RemoteController.prototype = {
 
   // This is intended to be called from the browser binding to update
   // the enabled and disabled commands.
-  enableDisableCommands(aAction,
-                                  aEnabledLength, aEnabledCommands,
-                                  aDisabledLength, aDisabledCommands) {
+  enableDisableCommands(aAction, aEnabledCommands, aDisabledCommands) {
     // Clear the list first
     this._supportedCommands = { };
 
-    for (let c = 0; c < aEnabledLength; c++) {
-      this._supportedCommands[aEnabledCommands[c]] = true;
+    for (let command of aEnabledCommands) {
+      this._supportedCommands[command] = true;
     }
 
-    for (let c = 0; c < aDisabledLength; c++) {
-      this._supportedCommands[aDisabledCommands[c]] = false;
+    for (let command of aDisabledCommands) {
+      this._supportedCommands[command] = false;
     }
 
     // Don't update anything if we're not the active element

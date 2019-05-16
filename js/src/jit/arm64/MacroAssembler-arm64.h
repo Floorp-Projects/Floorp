@@ -297,6 +297,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void loadValue(const BaseIndex& src, ValueOperand val) {
     doBaseIndex(ARMRegister(val.valueReg(), 64), src, vixl::LDR_x);
   }
+  void loadUnalignedValue(const Address& src, ValueOperand dest) {
+    loadValue(src, dest);
+  }
   void tagValue(JSValueType type, Register payload, ValueOperand dest) {
     // This could be cleverer, but the first attempt had bugs.
     Orr(ARMRegister(dest.valueReg(), 64), ARMRegister(payload, 64),

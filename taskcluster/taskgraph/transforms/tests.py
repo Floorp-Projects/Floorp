@@ -861,6 +861,7 @@ def handle_keyed_by(config, tests):
         'virtualization',
         'fetches.fetch',
         'fetches.toolchain',
+        'target',
     ]
     for test in tests:
         for field in fields:

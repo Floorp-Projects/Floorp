@@ -152,7 +152,7 @@ do
           err=$?
         fi
         if [ "$err" != "0" ]; then
-          echo "FAIL: [${release} ${locale} ${patch_type}] download_mars returned non-zero exit code: ${err}"
+          echo "TEST-UNEXPECTED-FAIL: [${release} ${locale} ${patch_type}] download_mars returned non-zero exit code: ${err}"
           continue
         fi
       else
@@ -244,7 +244,7 @@ do
         download_builds "${ftp_server_from}${from_path}" "${ftp_server_to}${to_path}"
         err=$?
         if [ "$err" != "0" ]; then
-          echo "FAIL: [$release $locale $patch_type] download_builds returned non-zero exit code: $err"
+          echo "TEST-UNEXPECTED-FAIL: [$release $locale $patch_type] download_builds returned non-zero exit code: $err"
           continue
         fi
         source_file=`basename "$from_path"`
@@ -258,11 +258,11 @@ do
         if [ "$err" == "0" ]; then
           continue
         elif [ "$err" == "1" ]; then
-          echo "FAIL: [$release $locale $patch_type] check_updates returned failure for $platform downloads/$source_file vs. downloads/$target_file: $err"
+          echo "TEST-UNEXPECTED-FAIL: [$release $locale $patch_type] check_updates returned failure for $platform downloads/$source_file vs. downloads/$target_file: $err"
         elif [ "$err" == "2" ]; then
           echo "WARN: [$release $locale $patch_type] check_updates returned warning for $platform downloads/$source_file vs. downloads/$target_file: $err"
         else
-          echo "FAIL: [$release $locale $patch_type] check_updates returned unknown error for $platform downloads/$source_file vs. downloads/$target_file: $err"
+          echo "TEST-UNEXPECTED-FAIL: [$release $locale $patch_type] check_updates returned unknown error for $platform downloads/$source_file vs. downloads/$target_file: $err"
         fi
 
         if [ -s ${diff_file} ]; then
@@ -276,7 +276,7 @@ do
         partial_size=`cat update/partial.size`
         complete_size=`cat update/complete.size`
         if [ $partial_size -gt $complete_size ]; then
-            echo "FAIL: [$release $locale $patch_type] partial updates are larger than complete updates"
+            echo "TEST-UNEXPECTED-FAIL: [$release $locale $patch_type] partial updates are larger than complete updates"
         elif [ $partial_size -eq $complete_size ]; then
             echo "WARN: [$release $locale $patch_type] partial updates are the same size as complete updates, this should only happen for major updates"
         else

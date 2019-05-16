@@ -3688,6 +3688,16 @@ Downloader.prototype = {
   _pendingRequest: null,
 
   /**
+   * When using BITS, cancel actions happen asynchronously. This variable
+   * keeps track of any cancel action that is in-progress.
+   * If the cancel action fails, this will be set back to null so that the
+   * action can be attempted again. But if the cancel action succeeds, the
+   * resolved promise will remain stored in this variable to prevent cancel
+   * from being called twice (which, for BITS, is an error).
+   */
+  _cancelPromise: null,
+
+  /**
    * BITS receives progress notifications slowly, unless a user is watching.
    * This tracks what frequency notifications are happening at.
    *
@@ -3725,6 +3735,13 @@ Downloader.prototype = {
       cancelError = Cr.NS_BINDING_ABORTED;
     }
     if (this.usingBits) {
+      // If a cancel action is already in progress, just return when that
+      // promise resolved. Trying to cancel the same request twice is an error.
+      if (this._cancelPromise) {
+        await this._cancelPromise;
+        return;
+      }
+
       if (this._pendingRequest) {
         await this._pendingRequest;
       }
@@ -3733,7 +3750,17 @@ Downloader.prototype = {
         // cancelled.
         this._patch.deleteProperty("bitsId");
       }
-      await this._request.cancelAsync(cancelError);
+      try {
+        this._cancelPromise = this._request.cancelAsync(cancelError);
+        await this._cancelPromise;
+      } catch (e) {
+        // On success, we will not set the cancel promise to null because
+        // we want to prevent two cancellations of the same request. But
+        // retrying after a failed cancel is not an error, so we will set the
+        // cancel promise to null in the failure case.
+        this._cancelPromise = null;
+        throw e;
+      }
     } else if (this._request && this._request instanceof Ci.nsIRequest) {
       this._request.cancel(cancelError);
     }
@@ -4007,6 +4034,8 @@ Downloader.prototype = {
       if (!Bits.initialized) {
         Bits.init(jobName, updatePath, monitorTimeout);
       }
+
+      this._cancelPromise = null;
 
       let bitsId = this._patch.getProperty("bitsId");
       if (bitsId) {
@@ -4327,7 +4356,7 @@ Downloader.prototype = {
         // BITS jobs that failed to complete should still have cancel called on
         // them to remove the job.
         try {
-          await request.cancelAsync();
+          await this.cancel();
         } catch (e) {
           // This will fail if the job stopped because it was cancelled.
           // Even if this is a "real" error, there isn't really anything to do

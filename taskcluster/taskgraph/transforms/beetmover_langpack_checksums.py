@@ -17,6 +17,7 @@ from taskgraph.util.scriptworker import (generate_beetmover_artifact_map,
                                          get_beetmover_bucket_scope,
                                          get_worker_type_for_scope,
                                          should_use_artifact_map)
+from taskgraph.util.treeherder import inherit_treeherder_from_dep
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
@@ -40,17 +41,11 @@ def make_beetmover_checksums_description(config, jobs):
         dep_job = job['primary-dependency']
         attributes = dep_job.attributes
 
-        treeherder = job.get('treeherder', {})
+        treeherder = inherit_treeherder_from_dep(job, dep_job)
         treeherder.setdefault(
             'symbol',
             'BMcslang(N{})'.format(attributes.get('l10n_chunk', ''))
             )
-        dep_th_platform = dep_job.task.get('extra', {}).get(
-            'treeherder', {}).get('machine', {}).get('platform', '')
-        treeherder.setdefault('platform',
-                              "{}/opt".format(dep_th_platform))
-        treeherder.setdefault('tier', 1)
-        treeherder.setdefault('kind', 'build')
 
         label = job['label']
         build_platform = attributes.get('build_platform')

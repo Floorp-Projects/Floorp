@@ -809,15 +809,12 @@ mozilla::ipc::IPCResult BrowserParent::RecvDropLinks(
     if (aLinks.Length() != mVerifyDropLinks.Length()) {
       loadUsingSystemPrincipal = false;
     }
-    UniquePtr<const char16_t*[]> links;
-    links = MakeUnique<const char16_t*[]>(aLinks.Length());
     for (uint32_t i = 0; i < aLinks.Length(); i++) {
       if (loadUsingSystemPrincipal) {
         if (!aLinks[i].Equals(mVerifyDropLinks[i])) {
           loadUsingSystemPrincipal = false;
         }
       }
-      links[i] = aLinks[i].get();
     }
     mVerifyDropLinks.Clear();
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
@@ -826,7 +823,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvDropLinks(
     } else {
       triggeringPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
     }
-    browser->DropLinks(aLinks.Length(), links.get(), triggeringPrincipal);
+    browser->DropLinks(aLinks, triggeringPrincipal);
   }
   return IPC_OK();
 }
@@ -1394,42 +1391,36 @@ bool BrowserParent::QueryDropLinksForVerification() {
   // verification array and store all links that are being dragged.
   mVerifyDropLinks.Clear();
 
-  uint32_t linksCount = 0;
-  nsIDroppedLinkItem** droppedLinkedItems = nullptr;
-  dropHandler->QueryLinks(initialDataTransfer, &linksCount,
-                          &droppedLinkedItems);
+  nsTArray<RefPtr<nsIDroppedLinkItem>> droppedLinkItems;
+  dropHandler->QueryLinks(initialDataTransfer, droppedLinkItems);
 
   // Since the entire event is cancelled if one of the links is invalid,
   // we can store all links on the parent side without any prior
   // validation checks.
   nsresult rv = NS_OK;
-  for (uint32_t i = 0; i < linksCount; i++) {
+  for (nsIDroppedLinkItem* item : droppedLinkItems) {
     nsString tmp;
-    rv = droppedLinkedItems[i]->GetUrl(tmp);
+    rv = item->GetUrl(tmp);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to query url for verification");
       break;
     }
     mVerifyDropLinks.AppendElement(tmp);
 
-    rv = droppedLinkedItems[i]->GetName(tmp);
+    rv = item->GetName(tmp);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to query name for verification");
       break;
     }
     mVerifyDropLinks.AppendElement(tmp);
 
-    rv = droppedLinkedItems[i]->GetType(tmp);
+    rv = item->GetType(tmp);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to query type for verification");
       break;
     }
     mVerifyDropLinks.AppendElement(tmp);
   }
-  for (uint32_t i = 0; i < linksCount; i++) {
-    NS_IF_RELEASE(droppedLinkedItems[i]);
-  }
-  free(droppedLinkedItems);
   if (NS_FAILED(rv)) {
     mVerifyDropLinks.Clear();
     return false;
@@ -2163,25 +2154,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvEnableDisableCommands(
     browser->GetIsRemoteBrowser(&isRemoteBrowser);
   }
   if (isRemoteBrowser) {
-    UniquePtr<const char*[]> enabledCommands, disabledCommands;
-
-    if (aEnabledCommands.Length()) {
-      enabledCommands = MakeUnique<const char*[]>(aEnabledCommands.Length());
-      for (uint32_t c = 0; c < aEnabledCommands.Length(); c++) {
-        enabledCommands[c] = aEnabledCommands[c].get();
-      }
-    }
-
-    if (aDisabledCommands.Length()) {
-      disabledCommands = MakeUnique<const char*[]>(aDisabledCommands.Length());
-      for (uint32_t c = 0; c < aDisabledCommands.Length(); c++) {
-        disabledCommands[c] = aDisabledCommands[c].get();
-      }
-    }
-
-    browser->EnableDisableCommandsRemoteOnly(
-        aAction, aEnabledCommands.Length(), enabledCommands.get(),
-        aDisabledCommands.Length(), disabledCommands.get());
+    browser->EnableDisableCommandsRemoteOnly(aAction, aEnabledCommands,
+                                             aDisabledCommands);
   }
 
   return IPC_OK();

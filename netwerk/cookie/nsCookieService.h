@@ -250,7 +250,6 @@ class nsCookieService final : public nsICookieService,
                                         const nsACString& aHost,
                                         nsCString& aBaseDomain);
   static bool DomainMatches(nsCookie* aCookie, const nsACString& aHost);
-  static bool IsSameSiteEnabled();
   static bool PathMatches(nsCookie* aCookie, const nsACString& aPath);
   static bool CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
                            nsCookieAttributes& aCookieAttributes,

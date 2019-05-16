@@ -22,11 +22,6 @@ body {
   color: var(--theme-body-color);
 }
 
-::-moz-selection {
-  background-color: var(--theme-selection-background);
-  color: var(--theme-selection-color);
-}
-
 .theme-selected,
 .CodeMirror-hint-active {
   background-color: var(--theme-selection-background);

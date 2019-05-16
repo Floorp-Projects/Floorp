@@ -105,7 +105,7 @@ add_task(async function test_password_engine() {
       "password", "", "");
     Services.logins.addLogin(login);
 
-    let logins = Services.logins.findLogins({}, "https://example.com", "", "");
+    let logins = Services.logins.findLogins("https://example.com", "", "");
     equal(logins.length, 1, "Should find new login in login manager");
     newLogin = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
 
@@ -135,7 +135,7 @@ add_task(async function test_password_engine() {
     props.setProperty("timePasswordChanged", localPasswordChangeTime);
     Services.logins.modifyLogin(login, props);
 
-    let logins = Services.logins.findLogins({}, "https://mozilla.com", "", "");
+    let logins = Services.logins.findLogins("https://mozilla.com", "", "");
     equal(logins.length, 1, "Should find old login in login manager");
     oldLogin = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
     equal(oldLogin.timePasswordChanged, localPasswordChangeTime);
@@ -164,7 +164,7 @@ add_task(async function test_password_engine() {
     equal(newRec.password, "password",
       "Should update remote password for newer login");
 
-    let logins = Services.logins.findLogins({}, "https://mozilla.com", "", "");
+    let logins = Services.logins.findLogins("https://mozilla.com", "", "");
     equal(logins[0].password, "n3wpa55",
       "Should update local password for older login");
   } finally {
@@ -207,7 +207,7 @@ add_task(async function test_password_dupe() {
     _("Perform sync");
     await sync_engine_and_validate_telem(engine, false);
 
-    let logins = Services.logins.findLogins({}, "https://www.example.com", "", "");
+    let logins = Services.logins.findLogins("https://www.example.com", "", "");
 
     equal(logins.length, 1);
     equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid2);

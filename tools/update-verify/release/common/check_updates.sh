@@ -64,7 +64,7 @@ check_updates () {
     set +x
     cd ../..
   else
-    echo "FAIL: no dir in source/$platform_dirname"
+    echo "TEST-UNEXPECTED-FAIL: no dir in source/$platform_dirname"
     return 1
   fi
 
@@ -73,7 +73,7 @@ check_updates () {
 
   if [ "$update_status" != "succeeded" ]
   then
-    echo "FAIL: update status was not successful: $update_status"
+    echo "TEST-UNEXPECTED-FAIL: update status was not successful: $update_status"
     return 1
   fi
 
@@ -104,11 +104,11 @@ check_updates () {
   cat "${diff_file}"
   if [ $diffErr == 2 ]
   then
-    echo "FAIL: differences found after update"
+    echo "TEST-UNEXPECTED-FAIL: differences found after update"
     return 1
   elif [ $diffErr != 0 ]
   then
-    echo "FAIL: unknown error from diff: $diffErr"
+    echo "TEST-UNEXPECTED-FAIL: unknown error from diff: $diffErr"
     return 3
   fi
 }

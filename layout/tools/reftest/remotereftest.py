@@ -432,7 +432,7 @@ def run_test_harness(parser, options):
     reftest.stopWebServer(options)
 
     if options.printDeviceInfo and not options.verify:
-        reftest.printDeviceInfo(printLogcat=True)
+        reftest.printDeviceInfo(printLogcat=(retVal != 0))
 
     return retVal
 

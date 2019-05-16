@@ -122,6 +122,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       heapState_(JS::HeapState::Idle),
       numRealms(0),
       numDebuggeeRealms_(0),
+      numDebuggeeRealmsObservingCoverage_(0),
       localeCallbacks(nullptr),
       defaultLocale(nullptr),
       profilingScripts(false),
@@ -190,6 +191,7 @@ JSRuntime::~JSRuntime() {
 
   MOZ_ASSERT(numRealms == 0);
   MOZ_ASSERT(numDebuggeeRealms_ == 0);
+  MOZ_ASSERT(numDebuggeeRealmsObservingCoverage_ == 0);
 }
 
 bool JSRuntime::init(JSContext* cx, uint32_t maxbytes,
@@ -784,6 +786,26 @@ void JSRuntime::decrementNumDebuggeeRealms() {
 
   if (numDebuggeeRealms_ == 0) {
     jitRuntime()->baselineInterpreter().toggleDebuggerInstrumentation(false);
+  }
+}
+
+void JSRuntime::incrementNumDebuggeeRealmsObservingCoverage() {
+  if (numDebuggeeRealmsObservingCoverage_ == 0) {
+    jit::BaselineInterpreter& interp = jitRuntime()->baselineInterpreter();
+    interp.toggleCodeCoverageInstrumentation(true);
+  }
+
+  numDebuggeeRealmsObservingCoverage_++;
+  MOZ_ASSERT(numDebuggeeRealmsObservingCoverage_ <= numRealms);
+}
+
+void JSRuntime::decrementNumDebuggeeRealmsObservingCoverage() {
+  MOZ_ASSERT(numDebuggeeRealmsObservingCoverage_ > 0);
+  numDebuggeeRealmsObservingCoverage_--;
+
+  if (numDebuggeeRealmsObservingCoverage_ == 0) {
+    jit::BaselineInterpreter& interp = jitRuntime()->baselineInterpreter();
+    interp.toggleCodeCoverageInstrumentation(false);
   }
 }
 

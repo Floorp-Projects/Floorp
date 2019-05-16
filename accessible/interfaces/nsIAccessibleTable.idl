@@ -162,29 +162,23 @@ interface nsIAccessibleTable : nsISupports
   /**
    * Return an array of cell indices currently selected.
    *
-   * @param  cellsArraySize  [in] length of array
-   * @param  cellsArray      [in] array of indexes of selected cells
+   * @return array of indexes of selected cells
    */
-  void getSelectedCellIndices(out unsigned long cellsArraySize,
-                              [retval, array, size_is(cellsArraySize)] out long cellsArray);
+  Array<uint32_t> getSelectedCellIndices();
 
   /**
    * Return an array of column indices currently selected.
    *
-   * @param  columnsArraySize  [in] length of array
-   * @param  columnsArray      [in] array of indices of selected columns
+   * @return array of indices of selected columns
    */
-  void getSelectedColumnIndices(out unsigned long columnsArraySize,
-                                [retval, array, size_is(columnsArraySize)] out long columnsArray);
+  Array<uint32_t> getSelectedColumnIndices();
 
   /**
    * Return an array of row indices currently selected.
    *
-   * @param  rowsArraySize  [in] Length of array
-   * @param  rowsArray      [in] array of indices of selected rows
+   * @return array of indices of selected rows
    */
-  void getSelectedRowIndices(out unsigned long rowsArraySize,
-                             [retval, array, size_is(rowsArraySize)] out long rowsArray);
+  Array<uint32_t> getSelectedRowIndices();
 
   /**
    * Select a row and unselects all previously selected rows.

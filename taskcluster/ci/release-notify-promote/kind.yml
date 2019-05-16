@@ -34,9 +34,7 @@ job-defaults:
         message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
         emails:
             by-project:
-                mozilla-beta: ["release-signoff@mozilla.org"]
-                mozilla-release: ["release-signoff@mozilla.org"]
-                mozilla-esr60: ["release-signoff@mozilla.org"]
+                mozilla-(beta|release|esr.*): ["release-signoff@mozilla.org"]
                 try: ["{config[params][owner]}"]
                 default: []
 

@@ -2182,6 +2182,13 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 0
 )
 
+// Stale threshold for cookies in seconds.
+VARCACHE_PREF(
+  "network.cookie.staleThreshold",
+   network_cookie_staleThreshold,
+  uint32_t, 60
+)
+
 // Cookie lifetime policy. Possible values:
 // 0 - accept all cookies
 // 1 - deprecated. don't use it.
@@ -2579,6 +2586,13 @@ VARCACHE_PREF(
   "browser.safebrowsing.blockedURIs.enabled",
    browser_safebrowsing_blockedURIs_enabled,
   bool, true
+)
+
+// Maximum size for an array to store the safebrowsing prefixset.
+VARCACHE_PREF(
+  "browser.safebrowsing.prefixset_max_array_size",
+   browser_safebrowsing_prefixset_max_array_size,
+  RelaxedAtomicUint32, 512*1024
 )
 
 // When this pref is enabled document loads with a mismatched

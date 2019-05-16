@@ -77,7 +77,7 @@ function getUnicodeUrlPath(urlPath) {
  * unreadable URI-encoded pathname, such as
  * http://xn--g6w.xn--8pv/%E8%A9%A6/%E6%B8%AC.js, then this function will return
  * the readable URL by decoding all its unreadable URL components to Unicode
- * characters.
+ * characters. The character `#` is not decoded from escape sequences.
  *
  * If the `url` is a malformed URL, then this function will return the original
  * `url`.
@@ -100,7 +100,7 @@ function getUnicodeUrl(url) {
       return url;
     }
     const readableHostname = getUnicodeHostname(hostname);
-    url = decodeURIComponent(url);
+    url = decodeURI(url);
     return url.replace(hostname, readableHostname);
   } catch (err) {
   }

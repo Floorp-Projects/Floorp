@@ -235,6 +235,20 @@ describe("ASRouter", () => {
       assert.calledOnce(ASRouterPreferences.uninit);
       assert.calledWith(ASRouterPreferences.removeListener, Router.onPrefChange);
     });
+    it("should send a AS_ROUTER_TARGETING_UPDATE message", async () => {
+      const messageTargeted = {id: "1", campaign: "foocampaign", targeting: "true"};
+      const messageNotTargeted = {id: "2", campaign: "foocampaign"};
+      await Router.setState({messages: [messageTargeted, messageNotTargeted]});
+      sandbox.stub(ASRouterTargeting, "isMatch").resolves(false);
+
+      await Router.onPrefChange("services.sync.username");
+
+      assert.calledOnce(channel.sendAsyncMessage);
+      const [, {type, data}] = channel.sendAsyncMessage.firstCall.args;
+      assert.equal(type, "AS_ROUTER_TARGETING_UPDATE");
+      assert.equal(data[0], messageTargeted.id);
+      assert.lengthOf(data, 1);
+    });
     it("should call loadMessagesFromAllProviders on pref change", () => {
       sandbox.spy(Router, "loadMessagesFromAllProviders");
 

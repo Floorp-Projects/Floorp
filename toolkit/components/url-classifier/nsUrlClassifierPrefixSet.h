@@ -76,8 +76,9 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet,
   // Index to the place that matches the closest lower
   // prefix from mIndexPrefix. Then every "delta" corresponds
   // to a prefix in the PrefixSet.
+  // This array could be empty when we decide to store all the prefixes
+  // in mIndexPrefixes.
   nsTArray<nsTArray<uint16_t> > mIndexDeltas;
-  uint32_t mIndexDeltasChecksum;
 
   // how many prefixes we have.
   uint32_t mTotalPrefixes;

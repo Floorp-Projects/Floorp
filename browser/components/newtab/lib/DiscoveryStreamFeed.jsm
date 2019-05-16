@@ -26,7 +26,6 @@ const DEFAULT_MAX_HISTORY_QUERY_RESULTS = 1000;
 const FETCH_TIMEOUT = 45 * 1000;
 const PREF_CONFIG = "discoverystream.config";
 const PREF_ENDPOINTS = "discoverystream.endpoints";
-const PREF_OPT_OUT = "discoverystream.optOut.0";
 const PREF_SHOW_SPONSORED = "showSponsored";
 const PREF_SPOC_IMPRESSIONS = "discoverystream.spoc.impressions";
 const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
@@ -90,10 +89,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         const apiKey = Services.prefs.getCharPref(apiKeyPref, "");
         this._prefCache.config.layout_endpoint = this.finalLayoutEndpoint(layoutUrl, apiKey);
       }
-
-      // Modify the cached config with the user set opt-out for other consumers
-      this._prefCache.config.enabled = this._prefCache.config.enabled &&
-        !this.store.getState().Prefs.values[PREF_OPT_OUT];
     } catch (e) {
       // istanbul ignore next
       this._prefCache.config = {};
@@ -916,11 +911,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         }
         break;
       case at.DISCOVERY_STREAM_CONFIG_SET_VALUE:
-        // Disable opt-out if we're explicitly trying to enable
-        if (action.data.name === "enabled" && action.data.value) {
-          this.store.dispatch(ac.SetPref(PREF_OPT_OUT, false));
-        }
-
         // Use the original string pref to then set a value instead of
         // this.config which has some modifications
         this.store.dispatch(ac.SetPref(PREF_CONFIG, JSON.stringify({
@@ -931,9 +921,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case at.DISCOVERY_STREAM_CONFIG_CHANGE:
         // When the config pref changes, load or unload data as needed.
         await this.onPrefChange();
-        break;
-      case at.DISCOVERY_STREAM_OPT_OUT:
-        this.store.dispatch(ac.SetPref(PREF_OPT_OUT, true));
         break;
       case at.DISCOVERY_STREAM_IMPRESSION_STATS:
         if (action.data.tiles && action.data.tiles[0] && action.data.tiles[0].id) {
@@ -981,7 +968,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case at.PREF_CHANGED:
         switch (action.data.name) {
           case PREF_CONFIG:
-          case PREF_OPT_OUT:
             // Clear the cached config and broadcast the newly computed value
             this._prefCache.config = null;
             this.store.dispatch(ac.BroadcastToContent({

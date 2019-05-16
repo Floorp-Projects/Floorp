@@ -527,6 +527,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   // Number of debuggee realms in the runtime.
   js::MainThreadData<size_t> numDebuggeeRealms_;
 
+  // Number of debuggee realms in the runtime observing code coverage.
+  js::MainThreadData<size_t> numDebuggeeRealmsObservingCoverage_;
+
  public:
   void incrementNumDebuggeeRealms();
   void decrementNumDebuggeeRealms();
@@ -534,6 +537,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   size_t numDebuggeeRealms() const {
     return numDebuggeeRealms_;
   }
+
+  void incrementNumDebuggeeRealmsObservingCoverage();
+  void decrementNumDebuggeeRealmsObservingCoverage();
 
   /* Locale-specific callbacks for string conversion. */
   js::MainThreadData<const JSLocaleCallbacks*> localeCallbacks;

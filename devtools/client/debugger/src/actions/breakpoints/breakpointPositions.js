@@ -44,6 +44,7 @@ async function mapLocations(
   }
 
   const { sourceId } = generatedLocations[0];
+
   const originalLocations = await sourceMaps.getOriginalLocations(
     sourceId,
     generatedLocations

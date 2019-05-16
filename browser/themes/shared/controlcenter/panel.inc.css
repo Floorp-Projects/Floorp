@@ -13,6 +13,10 @@
   --identity-popup-width: 33rem;
 }
 
+#protections-popup {
+  --protections-popup-width: 33rem;
+}
+
 /* This is used by screenshots tests to hide intermittently different
  * identity popup shadows (see bug 1425253). */
 #identity-popup.no-shadow {
@@ -59,11 +63,13 @@
 
 /* Make sure hidden elements don't accidentally become visible from one of the
    above selectors (see Bug 1194258) */
-#identity-popup [hidden] {
+#identity-popup [hidden],
+#protections-popup [hidden] {
   display: none !important;
 }
 
-#identity-popup > .panel-arrowcontainer > .panel-arrowcontent {
+#identity-popup > .panel-arrowcontainer > .panel-arrowcontent,
+#protections-popup > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
   /* Set default fill for icons in the identity popup.
      Individual icons can override this. */
@@ -74,6 +80,11 @@
 #identity-popup-mainView {
   min-width: var(--identity-popup-width);
   max-width: var(--identity-popup-width);
+}
+
+#protections-popup-mainView {
+  min-width: var(--protections-popup-width);
+  max-width: var(--protections-popup-width);
 }
 
 .identity-popup-section {
@@ -167,6 +178,7 @@
 .identity-popup-cookiesView-list-header,
 .identity-popup-content-blocking-list-item > label,
 #identity-popup-mainView-panel-header > label,
+#protections-popup-mainView-panel-header > label,
 #identity-popup-trackersView > .panel-header,
 #identity-popup-securityView > .panel-header,
 #identity-popup-breakageReportView > .panel-header,
@@ -184,14 +196,25 @@
   margin: 0;
 }
 
-#identity-popup-mainView-panel-header {
+#identity-popup-mainView-panel-header,
+#protections-popup-mainView-panel-header {
   padding: 4px 1em;
   min-height: 40px;
   -moz-box-pack: center;
   -moz-box-align: center;
 }
 
-#identity-popup-mainView-panel-header-span {
+#protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
+  fill: rgb(100, 70, 228);
+}
+
+#protections-popup-mainView-panel-header {
+  color: white;
+  background: linear-gradient(45deg, rgb(117, 67, 229), rgb(3, 96, 223));
+}
+
+#identity-popup-mainView-panel-header-span,
+#protections-popup-mainView-panel-header-span {
   display: inline-block;
   font-weight: 600;
   text-align: center;

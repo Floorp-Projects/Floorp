@@ -31,15 +31,7 @@ job-defaults:
         bump-files:
             by-project:
                 default: ["browser/config/version_display.txt"]
-                mozilla-release:
-                    - "browser/config/version.txt"
-                    - "browser/config/version_display.txt"
-                    - "config/milestone.txt"
-                mozilla-esr52:
-                    - "browser/config/version.txt"
-                    - "browser/config/version_display.txt"
-                    - "config/milestone.txt"
-                mozilla-esr60:
+                mozilla-(release|esr.*):
                     - "browser/config/version.txt"
                     - "browser/config/version_display.txt"
                     - "config/milestone.txt"
@@ -49,10 +41,7 @@ job-defaults:
                     - "config/milestone.txt"
         push:
             by-project:
-                mozilla-beta: true
-                mozilla-release: true
-                mozilla-esr52: true
-                mozilla-esr60: true
+                mozilla-(beta|release|esr.*): true
                 maple: true
                 birch: true
                 jamun: true

@@ -21,9 +21,7 @@ job-defaults:
         max-run-time: 600
     emails:
         by-project:
-            mozilla-beta: ["release-signoff@mozilla.org"]
-            mozilla-release: ["release-signoff@mozilla.org"]
-            mozilla-esr60: ["release-signoff@mozilla.org"]
+            mozilla-(beta|release|esr.*): ["release-signoff@mozilla.org"]
             try: ["{config[params][owner]}"]
             default: []
 

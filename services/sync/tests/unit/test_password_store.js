@@ -11,14 +11,13 @@ async function checkRecord(name, record, expectedCount, timeCreated,
   let engine = Service.engineManager.get("passwords");
   let store = engine._store;
 
-  let count = {};
-  let logins = Services.logins.findLogins(count, record.hostname,
+  let logins = Services.logins.findLogins(record.hostname,
                                           record.formSubmitURL, null);
 
   _("Record" + name + ":" + JSON.stringify(logins));
-  _("Count" + name + ":" + count.value);
+  _("Count" + name + ":" + logins.length);
 
-  Assert.equal(count.value, expectedCount);
+  Assert.equal(logins.length, expectedCount);
 
   if (expectedCount > 0) {
     Assert.ok(!!(await store.getAllIDs())[record.id]);
@@ -170,20 +169,18 @@ add_task(async function run_test() {
     Assert.equal((await store.applyIncomingBatch([recordA, recordB])).length, 0);
 
     // Only the good record makes it to Services.logins.
-    let badCount = {};
-    let goodCount = {};
-    let badLogins = Services.logins.findLogins(badCount, recordA.hostname,
+    let badLogins = Services.logins.findLogins(recordA.hostname,
                                                recordA.formSubmitURL,
                                                recordA.httpRealm);
-    let goodLogins = Services.logins.findLogins(goodCount, recordB.hostname,
+    let goodLogins = Services.logins.findLogins(recordB.hostname,
                                                 recordB.formSubmitURL, null);
 
     _("Bad: " + JSON.stringify(badLogins));
     _("Good: " + JSON.stringify(goodLogins));
-    _("Count: " + badCount.value + ", " + goodCount.value);
+    _("Count: " + badLogins.length + ", " + goodLogins.length);
 
-    Assert.equal(goodCount.value, 1);
-    Assert.equal(badCount.value, 0);
+    Assert.equal(goodLogins.length, 1);
+    Assert.equal(badLogins.length, 0);
 
     Assert.ok(!!(await store.getAllIDs())[BOGUS_GUID_B]);
     Assert.ok(!(await store.getAllIDs())[BOGUS_GUID_A]);

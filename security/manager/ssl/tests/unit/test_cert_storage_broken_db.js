@@ -54,10 +54,9 @@ add_task({
   check_has_prior_cert_data(certStorage, false);
 
   result = await new Promise((resolve) => {
-    certStorage.addCertBySubject(btoa("some cert"), btoa("some subject"),
-                                 Ci.nsICertStorage.TRUST_INHERIT, resolve);
+    certStorage.addCerts([], resolve);
   });
-  Assert.equal(result, Cr.NS_OK, "addCertBySubject should succeed");
+  Assert.equal(result, Cr.NS_OK, "addCerts should succeed");
 
   check_has_prior_revocation_data(certStorage, true);
   check_has_prior_cert_data(certStorage, true);

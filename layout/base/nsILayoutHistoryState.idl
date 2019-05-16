@@ -39,8 +39,7 @@ interface nsILayoutHistoryState : nsISupports
   * Get the keys of all PresStates held by this LayoutHistoryState.
   * Note: Check hasStates first.
   */
-  void getKeys([optional] out uint32_t aCount,
-               [array, size_is(aCount), retval] out string aKeys);
+  Array<ACString> getKeys();
 
   /*
   * Attempts to get the data of the PresState corresponding to

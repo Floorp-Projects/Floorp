@@ -114,10 +114,10 @@ registerCleanupFunction(async () => {
  * @throws If the file already exists.
  */
 async function continueFileHandler(leafName) {
-  // The total time to wait with 200 retries and the default interval of 100 is
-  // approximately 20 seconds.
+  // The total time to wait with 300 retries and the default interval of 100 is
+  // approximately 30 seconds.
   let interval = 100;
-  let retries = 200;
+  let retries = 300;
   let continueFile;
   if (leafName == CONTINUE_STAGING) {
     // The total time to wait with 600 retries and an interval of 200 is
@@ -979,7 +979,7 @@ function removeUpdateSettingsIni() {
 function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
   return (async function() {
     Services.telemetry.clearScalars();
-    gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
+    gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
@@ -995,12 +995,6 @@ function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
     let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + gDetailsURL +
                     updateParams + getVersionParams();
     setUpdateURL(updateURL);
-    if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
-      // Since MOZ_TEST_SKIP_UPDATE_STAGE is checked before
-      // MOZ_TEST_SLOW_SKIP_UPDATE_STAGE in updater.cpp this removes the need
-      // for the continue file to continue staging the update.
-      gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
-    }
     gAUS.checkForBackgroundUpdates();
     await waitForEvent(event);
   })();

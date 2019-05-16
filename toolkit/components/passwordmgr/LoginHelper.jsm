@@ -38,6 +38,7 @@ var LoginHelper = {
     // Watch for pref changes to update cached pref values.
     Services.prefs.addObserver("signon.", () => this.updateSignonPrefs());
     this.updateSignonPrefs();
+    Services.telemetry.setEventRecordingEnabled("pwmgr", true);
   },
 
   updateSignonPrefs() {
@@ -172,14 +173,14 @@ var LoginHelper = {
   },
 
   /**
-   * Helper to avoid the `count` argument and property bags when calling
+   * Helper to avoid the property bags when calling
    * Services.logins.searchLogins from JS.
    *
    * @param {Object} aSearchOptions - A regular JS object to copy to a property bag before searching
    * @return {nsILoginInfo[]} - The result of calling searchLogins.
    */
   searchLoginsWithObject(aSearchOptions) {
-    return Services.logins.searchLogins({}, this.newPropertyBag(aSearchOptions));
+    return Services.logins.searchLogins(this.newPropertyBag(aSearchOptions));
   },
 
   /**
@@ -593,11 +594,16 @@ var LoginHelper = {
    * @param {Window} window
    *                 the window from where we want to open the dialog
    *
-   * @param {string} [filterString=""]
+   * @param {object?} args
+   *                  params for opening the password manager
+   * @param {string} [args.filterString=""]
    *                 the domain (not origin) to pass to the login manager dialog
    *                 to pre-filter the results
+   * @param {string} args.entryPoint
+   *                 The name of the entry point, used for telemetry
    */
-  openPasswordManager(window, filterString = "") {
+  openPasswordManager(window, { filterString = "", entryPoint = "" } = {}) {
+    Services.telemetry.recordEvent("pwmgr", "open_management", entryPoint);
     if (this.managementURI && window.openTrustedLinkIn) {
       let managementURL = this.managementURI.replace("%DOMAIN%", window.encodeURIComponent(filterString));
       window.openTrustedLinkIn(managementURL, "tab");
@@ -727,7 +733,7 @@ var LoginHelper = {
 
       // While here we're passing formSubmitURL and httpRealm, they could be empty/null and get
       // ignored in that case, leading to multiple logins for the same username.
-      let existingLogins = Services.logins.findLogins({}, login.hostname,
+      let existingLogins = Services.logins.findLogins(login.hostname,
                                                       login.formSubmitURL,
                                                       login.httpRealm);
       // Check for an existing login that matches *including* the password.

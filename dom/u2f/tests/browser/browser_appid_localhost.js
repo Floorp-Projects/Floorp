@@ -25,6 +25,7 @@ add_task(async function () {
   Services.prefs.setBoolPref("security.webauth.u2f", true);
   Services.prefs.setBoolPref("security.webauth.webauthn_enable_softtoken", true);
   Services.prefs.setBoolPref("security.webauth.webauthn_enable_usbtoken", false);
+  Services.prefs.setBoolPref("security.webauth.webauthn_enable_android_fido2", false);
 
   // Open a new tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);

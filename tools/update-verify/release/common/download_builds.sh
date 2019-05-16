@@ -26,7 +26,7 @@ download_builds() {
     cached_download "${source_file}" "${url}"
     status=$?
     if [ $status != 0 ]; then
-      echo "FAIL: Could not download source $source_file from $url"
+      echo "TEST-UNEXPECTED-FAIL: Could not download source $source_file from $url"
       echo "skipping.."
       cd ../
       return $status

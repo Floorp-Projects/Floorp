@@ -10,8 +10,11 @@
 #include "nsAccUtils.h"
 #include "States.h"
 #include "xpcAccessibleDocument.h"
+#include "nsTArray.h"
+#include "mozilla/Maybe.h"
 
 using namespace mozilla::a11y;
+using mozilla::Maybe;
 
 /**
  * An object that stores a given traversal rule during the pivot movement.
@@ -19,20 +22,14 @@ using namespace mozilla::a11y;
 class RuleCache {
  public:
   explicit RuleCache(nsIAccessibleTraversalRule* aRule)
-      : mRule(aRule),
-        mAcceptRoles(nullptr),
-        mAcceptRolesLength{0},
-        mPreFilter{0} {}
-  ~RuleCache() {
-    if (mAcceptRoles) free(mAcceptRoles);
-  }
+      : mRule(aRule), mPreFilter{0} {}
+  ~RuleCache() {}
 
   nsresult ApplyFilter(Accessible* aAccessible, uint16_t* aResult);
 
  private:
   nsCOMPtr<nsIAccessibleTraversalRule> mRule;
-  uint32_t* mAcceptRoles;
-  uint32_t mAcceptRolesLength;
+  Maybe<nsTArray<uint32_t>> mAcceptRoles;
   uint32_t mPreFilter;
 };
 
@@ -822,7 +819,7 @@ bool nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,
     return false;
 
   nsCOMPtr<nsIAccessible> xpcOldPos = ToXPC(aOldPosition);  // death grip
-  nsTObserverArray<nsCOMPtr<nsIAccessiblePivotObserver> >::ForwardIterator iter(
+  nsTObserverArray<nsCOMPtr<nsIAccessiblePivotObserver>>::ForwardIterator iter(
       mObservers);
   while (iter.HasMore()) {
     nsIAccessiblePivotObserver* obs = iter.GetNext();
@@ -838,7 +835,8 @@ nsresult RuleCache::ApplyFilter(Accessible* aAccessible, uint16_t* aResult) {
   *aResult = nsIAccessibleTraversalRule::FILTER_IGNORE;
 
   if (!mAcceptRoles) {
-    nsresult rv = mRule->GetMatchRoles(&mAcceptRoles, &mAcceptRolesLength);
+    mAcceptRoles.emplace();
+    nsresult rv = mRule->GetMatchRoles(*mAcceptRoles);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mRule->GetPreFilter(&mPreFilter);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -874,11 +872,11 @@ nsresult RuleCache::ApplyFilter(Accessible* aAccessible, uint16_t* aResult) {
     }
   }
 
-  if (mAcceptRolesLength > 0) {
+  if (mAcceptRoles->Length() > 0) {
     uint32_t accessibleRole = aAccessible->Role();
     bool matchesRole = false;
-    for (uint32_t idx = 0; idx < mAcceptRolesLength; idx++) {
-      matchesRole = mAcceptRoles[idx] == accessibleRole;
+    for (uint32_t idx = 0; idx < mAcceptRoles->Length(); idx++) {
+      matchesRole = mAcceptRoles->ElementAt(idx) == accessibleRole;
       if (matchesRole) break;
     }
     if (!matchesRole) return NS_OK;

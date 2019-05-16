@@ -25,14 +25,12 @@ interface nsIBrowser : nsISupports
    * Called by the child to inform the parent that links are dropped into
    * content area.
    *
-   * @param linksCount length of links
    * @param links a flat array of url, name, and type for each link
    * @param triggeringPrincipal a principal that initiated loading
    *                            of the dropped links
    */
-  void dropLinks(in unsigned long linksCount,
-                 [array, size_is(linksCount)] in wstring links,
-                 in nsIPrincipal aTriggeringPrincipal);
+  void dropLinks(in Array<AString> links,
+                 in nsIPrincipal triggeringPrincipal);
 
   /**
    * Swapping of frameloaders are usually initiated from a frameloader owner
@@ -73,16 +71,12 @@ interface nsIBrowser : nsISupports
    * and the supplied set of commands are now enabled and disabled.
    *
    * @param action command updater action
-   * @param enabledLength length of enabledCommands array
    * @param enabledCommands commands to enable
-   * @param disabledLength length of disabledCommands array
    * @param disabledCommand commands to disable
    */
   void enableDisableCommandsRemoteOnly(in AString action,
-                                       in unsigned long enabledLength,
-                                       [array, size_is(enabledLength)] in string enabledCommands,
-                                       in unsigned long disabledLength,
-                                       [array, size_is(disabledLength)] in string disabledCommands);
+                                       in Array<ACString> enabledCommands,
+                                       in Array<ACString> disabledCommands);
 
   readonly attribute nsIPrincipal contentPrincipal;
   readonly attribute nsIContentSecurityPolicy csp;
