@@ -39,7 +39,6 @@ object KotlinCompiler {
         "support-test",
         "support-utils",
         "tooling-lint",
-        "ui-progress",
         "ui-tabcounter"
     )
 }

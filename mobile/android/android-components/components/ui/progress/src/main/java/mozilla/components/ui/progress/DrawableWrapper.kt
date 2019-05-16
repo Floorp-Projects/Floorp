@@ -36,7 +36,7 @@ internal open class DrawableWrapper(val wrappedDrawable: Drawable) : Drawable() 
         return wrappedDrawable.changingConfigurations
     }
 
-    override fun getConstantState(): Drawable.ConstantState? {
+    override fun getConstantState(): ConstantState? {
         return wrappedDrawable.constantState
     }
 
@@ -93,8 +93,7 @@ internal open class DrawableWrapper(val wrappedDrawable: Drawable) : Drawable() 
         return wrappedDrawable.mutate()
     }
 
-    @Suppress("MagicNumber")
-    override fun setAlpha(@IntRange(from = 0, to = 255) i: Int) {
+    override fun setAlpha(@IntRange(from = MIN_ALPHA_VALUE, to = MAX_ALPHA_VALUE) i: Int) {
         wrappedDrawable.alpha = i
     }
 
@@ -138,3 +137,6 @@ internal open class DrawableWrapper(val wrappedDrawable: Drawable) : Drawable() 
         return wrappedDrawable.setState(state)
     }
 }
+
+private const val MIN_ALPHA_VALUE = 0L
+private const val MAX_ALPHA_VALUE = 255L
