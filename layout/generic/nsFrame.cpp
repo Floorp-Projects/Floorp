@@ -7605,6 +7605,26 @@ void nsIFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
   fprintf_stderr(out, "%s\n", str.get());
 }
 
+void nsIFrame::ListMatchedRules(FILE* out, const char* aPrefix) const {
+  nsTArray<const RawServoStyleRule*> rawRuleList;
+  Servo_ComputedValues_GetStyleRuleList(mComputedStyle, &rawRuleList);
+  for (const RawServoStyleRule* rawRule : rawRuleList) {
+    nsString ruleText;
+    Servo_StyleRule_GetCssText(rawRule, &ruleText);
+    fprintf_stderr(out, "%s%s\n", aPrefix,
+                   NS_ConvertUTF16toUTF8(ruleText).get());
+  }
+}
+
+void nsIFrame::ListWithMatchedRules(FILE* out, const char* aPrefix) const {
+  fprintf_stderr(out, "%s%s\n", aPrefix, ListTag().get());
+
+  nsCString rulePrefix;
+  rulePrefix += aPrefix;
+  rulePrefix += "    ";
+  ListMatchedRules(out, rulePrefix.get());
+}
+
 nsresult nsFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("Frame"), aResult);
 }
