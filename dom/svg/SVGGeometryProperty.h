@@ -152,6 +152,9 @@ nsCSSUnit SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit);
 nsCSSPropertyID AttrEnumToCSSPropId(const SVGElement* aElement,
                                     uint8_t aAttrEnum);
 
+bool IsNonNegativeGeometryProperty(nsCSSPropertyID aProp);
+bool ElementMapsLengthsToStyle(SVGElement const* aElement);
+
 }  // namespace SVGGeometryProperty
 }  // namespace dom
 }  // namespace mozilla
