@@ -14,6 +14,8 @@ nsresult NS_NewSVGRectElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
+class ComputedStyle;
+
 namespace dom {
 
 typedef SVGGeometryElement SVGRectElementBase;
@@ -43,6 +45,9 @@ class SVGRectElement final : public SVGRectElementBase {
       PathBuilder* aBuilder = nullptr) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+
+  static bool IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
+                                    const ComputedStyle& aOldStyle);
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedLength> X();
