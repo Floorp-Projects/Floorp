@@ -26,7 +26,8 @@ export type DebuggeeState = {
 export function initialDebuggeeState(): DebuggeeState {
   return {
     workers: [],
-    mainThread: { actor: "", url: "", type: -1, name: "" }
+    mainThread: { actor: "", url: "", type: -1, name: "" },
+    isWebExtension: false
   };
 }
 
@@ -38,7 +39,8 @@ export default function debuggee(
     case "CONNECT":
       return {
         ...state,
-        mainThread: { ...action.mainThread, name: L10N.getStr("mainThread") }
+        mainThread: { ...action.mainThread, name: L10N.getStr("mainThread") },
+        isWebExtension: action.isWebExtension
       };
     case "INSERT_WORKERS":
       return insertWorkers(state, action.workers);
