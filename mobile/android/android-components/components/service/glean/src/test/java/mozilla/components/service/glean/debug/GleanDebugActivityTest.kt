@@ -94,6 +94,8 @@ class GleanDebugActivityTest {
         // Build the intent that will call our debug activity, with no extra.
         val intent = Intent(ApplicationProvider.getApplicationContext<Context>(),
             GleanDebugActivity::class.java)
+        // Add at least an option, otherwise the activity will be removed.
+        intent.putExtra(GleanDebugActivity.LOG_PINGS_EXTRA_KEY, true)
         // Start the activity through our intent.
         val activity = Robolectric.buildActivity(GleanDebugActivity::class.java, intent)
         activity.create().start().resume()
