@@ -232,22 +232,26 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     override fun onBackPressed(): Boolean = (historyComponent.uiView as HistoryUIView).onBackPressed()
 
     private suspend fun reloadData() {
-        val allowedVisitTypes = listOf(VisitType.LINK, VisitType.TYPED, VisitType.BOOKMARK)
+        val excludeTypes = listOf(
+            VisitType.NOT_A_VISIT,
+            VisitType.DOWNLOAD,
+            VisitType.REDIRECT_TEMPORARY,
+            VisitType.RELOAD,
+            VisitType.EMBED,
+            VisitType.FRAMED_LINK,
+            VisitType.REDIRECT_PERMANENT
+        )
         // Until we have proper pagination, only display a limited set of history to avoid blowing up the UI.
         // See https://github.com/mozilla-mobile/fenix/issues/1393
         @SuppressWarnings("MagicNumber")
         val historyCutoffMs = 1000L * 60 * 60 * 24 * 3 // past few days
         val items = requireComponents.core.historyStorage.getDetailedVisits(
-            System.currentTimeMillis() - historyCutoffMs
+            System.currentTimeMillis() - historyCutoffMs, excludeTypes = excludeTypes
         )
             // We potentially have a large amount of visits, and multiple processing steps.
             // Wrapping iterator in a sequence should make this a little more efficient.
             .asSequence()
             .sortedByDescending { it.visitTime }
-
-            // Temporary filtering until we can do it at the API level.
-            // See https://github.com/mozilla-mobile/android-components/issues/2643
-            .filter { allowedVisitTypes.contains(it.visitType) }
 
             .mapIndexed { id, item ->
                 HistoryItem(
