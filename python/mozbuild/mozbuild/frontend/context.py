@@ -1983,11 +1983,10 @@ VARIABLES = {
     'CRAMTEST_MANIFESTS': (ManifestparserManifestList, list,
                            """List of manifest files defining cram unit tests.
         """),
-    
+
     'TELEMETRY_TESTS_CLIENT_MANIFESTS': (ManifestparserManifestList, list,
-        """List of manifest files defining telemetry client tests.
+                                         """List of manifest files defining telemetry client tests.
         """),
-    
 
 
     # The following variables are used to control the target of installed files.
