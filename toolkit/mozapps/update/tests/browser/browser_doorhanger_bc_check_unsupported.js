@@ -6,8 +6,9 @@
 // Test for doorhanger background check for updates
 // with an unsupported update.
 add_task(async function doorhanger_bc_check_unsupported() {
-  let updateParams = "&unsupported=1";
-  await runDoorhangerUpdateTest(updateParams, 1, [
+  let params = {checkAttempts: 1,
+                queryString: "&unsupported=1"};
+  await runDoorhangerUpdateTest(params, [
     {
       notificationId: "update-unsupported",
       button: "button",
@@ -36,10 +37,11 @@ add_task(async function doorhanger_bc_check_unsupported() {
       is(PanelUI.menuButton.getAttribute("badge-status"), "update-unsupported",
          "The correct badge is showing for the background window.");
     },
- ]);
+  ]);
 
-  updateParams = "&invalidCompleteSize=1&promptWaitTime=0";
-  await runDoorhangerUpdateTest(updateParams, 1, [
+  params = {checkAttempts: 1,
+            queryString: "&invalidCompleteSize=1&promptWaitTime=0"};
+  await runDoorhangerUpdateTest(params, [
     {
       notificationId: "update-restart",
       button: "secondaryButton",

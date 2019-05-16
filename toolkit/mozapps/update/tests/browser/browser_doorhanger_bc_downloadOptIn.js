@@ -6,8 +6,9 @@
 add_task(async function doorhanger_bc_downloadOptIn() {
   await UpdateUtils.setAppUpdateAutoEnabled(false);
 
-  let updateParams = "&invalidCompleteSize=1&promptWaitTime=0";
-  await runDoorhangerUpdateTest(updateParams, 1, [
+  let params = {checkAttempts: 1,
+                queryString: "&invalidCompleteSize=1&promptWaitTime=0"};
+  await runDoorhangerUpdateTest(params, [
     {
       notificationId: "update-available",
       button: "button",
