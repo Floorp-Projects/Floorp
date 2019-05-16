@@ -294,7 +294,7 @@ raptor-tp6m-1-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -750,7 +750,7 @@ raptor-tp6m-1-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -772,7 +772,7 @@ raptor-tp6m-2-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -794,7 +794,7 @@ raptor-tp6m-3-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -816,7 +816,7 @@ raptor-tp6m-4-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -838,7 +838,7 @@ raptor-tp6m-5-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -860,7 +860,7 @@ raptor-tp6m-6-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -882,7 +882,7 @@ raptor-tp6m-7-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -904,7 +904,7 @@ raptor-tp6m-8-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -926,7 +926,7 @@ raptor-tp6m-9-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -948,7 +948,7 @@ raptor-tp6m-10-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -970,7 +970,7 @@ raptor-tp6m-11-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -992,7 +992,7 @@ raptor-tp6m-12-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -1014,7 +1014,7 @@ raptor-tp6m-13-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
@@ -1036,7 +1036,7 @@ raptor-tp6m-14-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.release-raptor.aarch64
+                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
                 name: target.apk
             default:
                 index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
