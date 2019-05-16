@@ -131,6 +131,8 @@
     <color name="dark_grey_90">#15141A</color>
     <color name="neutral_text">@color/white_color</color>
     <color name="disabled_text">#cccccc</color>
+    <color name="violet_05">#E7DFFF</color>
+    <color name="text_scale_example_text_color">#232749</color>
 
     <!-- Reader View colors -->
     <color name="mozac_feature_readerview_text_color">@color/primary_text_light_theme</color>

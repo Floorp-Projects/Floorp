@@ -5,16 +5,17 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <org.mozilla.fenix.settings.PercentageSeekBarPreference
-        android:layout="@layout/layout_percentage_seek_bar"
-        android:defaultValue="100"
+    <!-- Custom Preference that scales from 50-200% by steps of 5 represented by 0-30 in steps of 1-->
+    <org.mozilla.fenix.settings.TextPercentageSeekBarPreference
+        android:defaultValue="10"
         android:key="@string/pref_key_accessibility_font_scale"
-        android:max="200"
+        android:layout="@layout/layout_percentage_seek_bar"
+        android:max="30"
         android:summary="@string/preference_accessibility_text_size_summary"
         android:title="@string/preference_accessibility_font_size_title"
         app:adjustable="true"
         app:iconSpaceReserved="false"
-        app:min="50"
-        app:seekBarIncrement="5"
+        app:min="0"
+        app:seekBarIncrement="1"
         app:showSeekBarValue="true" />
 </PreferenceScreen>

@@ -50,8 +50,11 @@ import java.text.NumberFormat;
  * max})
  * can be set directly on the preference widget layout.
  */
-public class PercentageSeekBarPreference extends Preference {
+public class TextPercentageSeekBarPreference extends Preference {
     private static final String TAG = "SeekBarPreference";
+    private static final int STEP_SIZE = 5;
+    private static final int MIN_VALUE = 50;
+    private static final float DECIMAL_CONVERSION = 100f;
     @SuppressWarnings("WeakerAccess") /* synthetic access */
             int mSeekBarValue;
     @SuppressWarnings("WeakerAccess") /* synthetic access */
@@ -134,7 +137,7 @@ public class PercentageSeekBarPreference extends Preference {
         }
     };
 
-    public PercentageSeekBarPreference(
+    public TextPercentageSeekBarPreference(
             Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
 
@@ -154,15 +157,15 @@ public class PercentageSeekBarPreference extends Preference {
         a.recycle();
     }
 
-    public PercentageSeekBarPreference(Context context, AttributeSet attrs, int defStyleAttr) {
+    public TextPercentageSeekBarPreference(Context context, AttributeSet attrs, int defStyleAttr) {
         this(context, attrs, defStyleAttr, 0);
     }
 
-    public PercentageSeekBarPreference(Context context, AttributeSet attrs) {
+    public TextPercentageSeekBarPreference(Context context, AttributeSet attrs) {
         this(context, attrs, R.attr.seekBarPreferenceStyle);
     }
 
-    public PercentageSeekBarPreference(Context context) {
+    public TextPercentageSeekBarPreference(Context context) {
         this(context, null);
     }
 
@@ -415,23 +418,25 @@ public class PercentageSeekBarPreference extends Preference {
     @SuppressWarnings("WeakerAccess") /* synthetic access */
     void updateLabelValue(int value) {
         if (mSeekBarValueTextView != null) {
-            double m = value / 100d;
-            final String percentage = NumberFormat.getPercentInstance().format(m);
+            value = (value * STEP_SIZE) + MIN_VALUE;
+            final double decimalValue = value / DECIMAL_CONVERSION;
+            final String percentage = NumberFormat.getPercentInstance().format(decimalValue);
             mSeekBarValueTextView.setText(percentage);
         }
     }
 
     /**
-     * Attempts to update the example TextView text to given text scale size.
+     * Attempts to update the example TextView text with text scale size.
      *
      * @param value the value of text size
      */
     @SuppressWarnings("WeakerAccess") /* synthetic access */
     void updateExampleTextValue(int value) {
         if (mExampleTextTextView != null) {
-            float decimal = value / 100f;
-            final float textsize = 16f * decimal;
-            mExampleTextTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textsize);
+            value = (value * STEP_SIZE) + MIN_VALUE;
+            final float decimal = value / DECIMAL_CONVERSION;
+            final float textSize = 16f * decimal;
+            mExampleTextTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
         }
     }
 

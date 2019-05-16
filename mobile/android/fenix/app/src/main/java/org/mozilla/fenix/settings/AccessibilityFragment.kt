@@ -17,11 +17,12 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
         (activity as AppCompatActivity).title = getString(R.string.preferences_accessibility)
         (activity as AppCompatActivity).supportActionBar?.show()
         val textSizePreference =
-            findPreference<PercentageSeekBarPreference>(getString(R.string.pref_key_accessibility_font_scale))
+            findPreference<TextPercentageSeekBarPreference>(getString(R.string.pref_key_accessibility_font_scale))
         textSizePreference?.onPreferenceChangeListener =
             Preference.OnPreferenceChangeListener { _, newValue ->
                 (newValue as? Int).let {
-                    val newTextScale = (newValue as Int).toFloat() / PERCENT_TO_DECIMAL
+                    // Value is mapped from 0->30 in steps of 1 so let's convert to float in range 0.5->2.0
+                    val newTextScale = ((newValue as Int * STEP_SIZE) + MIN_SCALE_VALUE).toFloat() / PERCENT_TO_DECIMAL
                     Settings.getInstance(context!!).setFontSizeFactor(newTextScale)
                 }
                 true
@@ -33,6 +34,8 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
     }
 
     companion object {
+        const val MIN_SCALE_VALUE = 50
+        const val STEP_SIZE = 5
         const val PERCENT_TO_DECIMAL = 100f
     }
 }
