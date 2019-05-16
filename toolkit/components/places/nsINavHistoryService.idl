@@ -794,14 +794,12 @@ interface nsINavHistoryQuery : nsISupports
    *
    * Limit results to the specified list of transition types.
    */
-  void setTransitions([const,array, size_is(count)] in unsigned long transitions,
-                      in unsigned long count);
+  void setTransitions(in Array<unsigned long> transitions);
 
   /**
    * Get the transitions set for this query.
    */
-  void getTransitions([optional] out unsigned long count,
-                      [retval,array,size_is(count)] out unsigned long transitions);
+  Array<unsigned long> getTransitions();
 
   /**
    * Get the count of the set query transitions.
@@ -876,16 +874,14 @@ interface nsINavHistoryQuery : nsISupports
   /**
    * Limit results to items that are in all of the given folders.
    */
-  void getParents([optional] out unsigned long aGuidCount,
-                  [retval,array,size_is(aGuidCount)] out string aGuids);
+  Array<ACString> getParents();
   readonly attribute unsigned long parentCount;
 
   /**
    * This is not recursive so results will be returned from the first level of
    * that folder.
    */
-  void setParents([array, size_is(aGuidCount)] in string aGuids,
-                  in unsigned long aGuidCount);
+  void setParents(in Array<ACString> aGuids);
 
   /**
    * Creates a new query item with the same parameters of this one.
@@ -1265,8 +1261,7 @@ interface nsINavHistoryService : nsISupports
   /**
    * Gets an array of registered nsINavHistoryObserver objects.
    */
-  void getObservers([optional] out unsigned long count,
-                    [retval, array, size_is(count)] out nsINavHistoryObserver observers);
+  Array<nsINavHistoryObserver> getObservers();
 
   /**
    * True if history is disabled. currently,

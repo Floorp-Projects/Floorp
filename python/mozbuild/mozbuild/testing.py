@@ -49,6 +49,10 @@ TEST_MANIFESTS = dict(
     PUPPETEER_FIREFOX=('firefox-ui-functional', 'firefox-ui', '.', False),
     PYTHON_UNITTEST=('python', 'python', '.', False),
     CRAMTEST=('cram', 'cram', '.', False),
+    TELEMETRY_TESTS_CLIENT=(
+        'telemetry-tests-client',
+        'toolkit/components/telemetry/tests/marionette', '.', False
+    ),
 
     # marionette tests are run from the srcdir
     # TODO(ato): make packaging work as for other test suites

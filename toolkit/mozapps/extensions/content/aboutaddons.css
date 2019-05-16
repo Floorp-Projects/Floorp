@@ -361,3 +361,17 @@ panel-item-separator[hidden] {
   color: var(--in-content-link-color-active) !important;
   text-decoration: none;
 }
+
+addon-permissions-list > .addon-detail-row:first-of-type {
+  border-top: none;
+}
+
+.deck-tab-group {
+  border-bottom: 1px solid var(--grey-90-a20);
+  border-top: 1px solid var(--grey-90-a20);
+  margin-top: 8px;
+  /* Pull the buttons flush with the side of the card */
+  margin-inline: calc(var(--card-padding) * -1);
+  font-size: 0;
+  line-height: 0;
+}

@@ -131,10 +131,10 @@ add_task(async function test_same_size() {
   await PlacesTestUtils.addVisits(pageURI);
 
   let faviconURI = NetUtil.newURI("http://new_places.test/favicon.ico");
-  PlacesUtils.favicons.replaceFaviconData(faviconURI, data, data.length, "image/png");
+  PlacesUtils.favicons.replaceFaviconData(faviconURI, data, "image/png");
   await setFaviconForPage(pageURI, faviconURI);
   faviconURI = NetUtil.newURI("http://new_places.test/another_icon.ico");
-  PlacesUtils.favicons.replaceFaviconData(faviconURI, data, data.length, "image/png");
+  PlacesUtils.favicons.replaceFaviconData(faviconURI, data, "image/png");
   await setFaviconForPage(pageURI, faviconURI);
 
   Assert.equal(await getFaviconUrlForPage(pageURI, 20),

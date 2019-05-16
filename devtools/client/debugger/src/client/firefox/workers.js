@@ -28,22 +28,19 @@ export async function updateWorkerClients({
   for (const workerTargetFront of workers) {
     try {
       await workerTargetFront.attach();
-      const [, workerThread] = await workerTargetFront.attachThread(options);
-
-      const actor = workerThread.actor;
-      if (workerClients[actor]) {
-        if (workerClients[actor].thread != workerThread) {
-          console.error(`Multiple clients for actor ID: ${workerThread.actor}`);
-        }
-        newWorkerClients[actor] = workerClients[actor];
+      const threadActorID = workerTargetFront._threadActor;
+      if (workerClients[threadActorID]) {
+        newWorkerClients[threadActorID] = workerClients[threadActorID];
       } else {
-        addThreadEventListeners(workerThread);
+        const [, workerThread] = await workerTargetFront.attachThread(options);
         workerThread.resume();
+
+        addThreadEventListeners(workerThread);
 
         const consoleFront = await workerTargetFront.getFront("console");
         await consoleFront.startListeners([]);
 
-        newWorkerClients[actor] = {
+        newWorkerClients[workerThread.actor] = {
           url: workerTargetFront.url,
           thread: workerThread,
           console: consoleFront
