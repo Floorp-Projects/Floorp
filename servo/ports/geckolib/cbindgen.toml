@@ -110,7 +110,7 @@ include = [
   "Origin",
   "RestyleHint",
   "TouchAction",
-  "WillChangeBits",
+  "WillChange",
   "TextDecorationLine",
   "TextTransform",
   "MozListReversed",
@@ -385,12 +385,17 @@ renaming_overrides_prefixing = true
   inline bool operator!=(const StyleArcSlice& other) const;
 """
 
+"CustomIdent" = """
+  inline nsAtom* AsAtom() const;
+"""
+
 "Atom" = """
   StyleAtom(size_t) = delete;
   StyleAtom() = delete;
 
   // NOTE(emilio): For now we don't need to expose anything else, but it'd be trivial if we wanted to.
   inline bool IsStatic() const;
+  inline nsAtom* AsAtom() const;
 
   inline StyleAtom(const StyleAtom& aOther);
   inline ~StyleAtom();

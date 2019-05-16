@@ -133,9 +133,16 @@ inline StyleArcSlice<T>::~StyleArcSlice() {
 
 inline bool StyleAtom::IsStatic() const { return !!(_0 & 1); }
 
+inline nsAtom* StyleAtom::AsAtom() const {
+  if (IsStatic()) {
+    return const_cast<nsStaticAtom*>(&detail::gGkAtoms.mAtoms[(_0 & ~1) >> 1]);
+  }
+  return reinterpret_cast<nsAtom*>(_0);
+}
+
 inline StyleAtom::~StyleAtom() {
   if (!IsStatic()) {
-    reinterpret_cast<nsAtom*>(_0)->Release();
+    AsAtom()->Release();
   }
 }
 
@@ -144,6 +151,8 @@ inline StyleAtom::StyleAtom(const StyleAtom& aOther) : _0(aOther._0) {
     reinterpret_cast<nsAtom*>(_0)->AddRef();
   }
 }
+
+inline nsAtom* StyleCustomIdent::AsAtom() const { return _0.AsAtom(); }
 
 inline nsDependentCSubstring StyleOwnedStr::AsString() const {
   Span<const uint8_t> s = _0.AsSpan();

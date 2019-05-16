@@ -1730,11 +1730,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleOrient mOrient;
   uint8_t mIsolation;  // NS_STYLE_ISOLATION_*
   uint8_t mTopLayer;   // NS_STYLE_TOP_LAYER_*
-  // Stores a bitfield representation of the properties that are frequently
-  // queried. This should match mWillChange. Also tracks if any of the
-  // properties in the will-change list require a stacking context.
-  mozilla::StyleWillChangeBits mWillChangeBitField;
-  nsTArray<RefPtr<nsAtom>> mWillChange;
+  mozilla::StyleWillChange mWillChange;
 
   mozilla::StyleTouchAction mTouchAction;
   uint8_t mScrollBehavior;  // NS_STYLE_SCROLL_BEHAVIOR_*
@@ -2009,7 +2005,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return mSpecifiedTransform || mSpecifiedRotate || mSpecifiedTranslate ||
            mSpecifiedScale ||
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
-           (mWillChangeBitField & mozilla::StyleWillChangeBits_TRANSFORM) ||
+           (mWillChange.bits & mozilla::StyleWillChangeBits_TRANSFORM) ||
            (mMotion && mMotion->HasPath());
   }
 
