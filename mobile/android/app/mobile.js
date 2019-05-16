@@ -542,7 +542,7 @@ pref("layers.low-precision-opacity", "1.0");
 pref("layers.max-active", 20);
 
 // Use containerless scrolling on Fennec.
-pref("layout.scroll.root-frame-containers", 0);
+pref("layout.scroll.root-frame-containers", false);
 
 pref("notification.feature.enabled", true);
 pref("dom.webnotifications.enabled", true);
