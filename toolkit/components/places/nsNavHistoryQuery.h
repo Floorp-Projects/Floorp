@@ -64,11 +64,6 @@ class nsNavHistoryQuery final : public nsINavHistoryQuery {
   bool TagsAreNot() { return mTagsAreNot; }
 
   const nsTArray<uint32_t>& Transitions() const { return mTransitions; }
-  nsresult SetTransitions(const nsTArray<uint32_t>& aTransitions) {
-    if (!mTransitions.ReplaceElementsAt(0, mTransitions.Length(), aTransitions))
-      return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-  }
 
   nsresult Clone(nsNavHistoryQuery** _clone);
 
