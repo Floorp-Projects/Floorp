@@ -3032,6 +3032,54 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetNegative(
     })
 }
 
+#[repr(u8)]
+pub enum IsOrdinalInRange {
+    Auto,
+    InRange,
+    NotInRange,
+    NoOrdinalSpecified,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_IsInRange(
+    rule: &RawServoCounterStyleRule,
+    ordinal: i32,
+) -> IsOrdinalInRange {
+    use style::counter_style::CounterBound;
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        let range = match rule.range() {
+            Some(r) => r,
+            None => return IsOrdinalInRange::NoOrdinalSpecified,
+        };
+
+        if range.0.is_empty() {
+            return IsOrdinalInRange::Auto;
+        }
+
+        let in_range = range.0.iter().any(|r| {
+            if let CounterBound::Integer(start) = r.start {
+                if start.value() > ordinal {
+                    return false;
+                }
+            }
+
+            if let CounterBound::Integer(end) = r.end {
+                if end.value() < ordinal {
+                    return false;
+                }
+            }
+
+            true
+        });
+
+        if in_range {
+            IsOrdinalInRange::InRange
+        } else {
+            IsOrdinalInRange::NotInRange
+        }
+    })
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn Servo_CounterStyleRule_GetSystem(
     rule: &RawServoCounterStyleRule,

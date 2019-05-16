@@ -1183,23 +1183,21 @@ static inline bool IsRangeValueInfinite(const nsCSSValue& aValue) {
 
 /* virtual */
 bool CustomCounterStyle::IsOrdinalInRange(CounterValue aOrdinal) {
-  nsCSSValue value = GetDesc(eCSSCounterDesc_Range);
-  if (value.GetUnit() == eCSSUnit_PairList) {
-    for (const nsCSSValuePairList* item = value.GetPairListValue();
-         item != nullptr; item = item->mNext) {
-      const nsCSSValue& lowerBound = item->mXValue;
-      const nsCSSValue& upperBound = item->mYValue;
-      if ((IsRangeValueInfinite(lowerBound) ||
-           aOrdinal >= lowerBound.GetIntValue()) &&
-          (IsRangeValueInfinite(upperBound) ||
-           aOrdinal <= upperBound.GetIntValue())) {
-        return true;
+  auto inRange = Servo_CounterStyleRule_IsInRange(mRule, aOrdinal);
+  switch (inRange) {
+    case StyleIsOrdinalInRange::InRange:
+      return true;
+    case StyleIsOrdinalInRange::NotInRange:
+      return false;
+    case StyleIsOrdinalInRange::NoOrdinalSpecified:
+      if (IsExtendsSystem()) {
+        return GetExtends()->IsOrdinalInRange(aOrdinal);
       }
-    }
-    return false;
-  } else if (IsExtendsSystem() && value.GetUnit() == eCSSUnit_None) {
-    // Only use the range of extended style when 'range' is not specified.
-    return GetExtends()->IsOrdinalInRange(aOrdinal);
+      break;
+    case StyleIsOrdinalInRange::Auto:
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unkown result from IsInRange?");
   }
   return IsOrdinalInAutoRange(aOrdinal);
 }
