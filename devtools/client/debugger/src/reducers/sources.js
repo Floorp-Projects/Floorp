@@ -797,19 +797,21 @@ export function getProjectDirectoryRoot(state: OuterState): string {
 
 const queryAllDisplayedSources: ReduceQuery<
   SourceResource,
-  {| projectDirectoryRoot: string, chromeAndExtensionsEnabled: boolean |},
+  {| projectDirectoryRoot: string,
+     chromeAndExtensionsEnabled: boolean,
+     debuggeeIsWebExtension: boolean |},
   Array<SourceId>
 > = makeReduceQuery(
   makeMapWithArgs(
     (
       resource,
       ident,
-      { projectDirectoryRoot, chromeAndExtensionsEnabled }
+      { projectDirectoryRoot, chromeAndExtensionsEnabled, debuggeeIsWebExtension }
     ) => ({
       id: resource.id,
       displayed:
         underRoot(resource, projectDirectoryRoot) &&
-        (!resource.isExtension || chromeAndExtensionsEnabled)
+        (!resource.isExtension || chromeAndExtensionsEnabled || debuggeeIsWebExtension)
     })
   ),
   items =>
@@ -824,7 +826,8 @@ const queryAllDisplayedSources: ReduceQuery<
 function getAllDisplayedSources(state: OuterState): Array<SourceId> {
   return queryAllDisplayedSources(state.sources.sources, {
     projectDirectoryRoot: state.sources.projectDirectoryRoot,
-    chromeAndExtensionsEnabled: state.sources.chromeAndExtenstionsEnabled
+    chromeAndExtensionsEnabled: state.sources.chromeAndExtenstionsEnabled,
+    debuggeeIsWebExtension: state.debuggee.isWebExtension
   });
 }
 
