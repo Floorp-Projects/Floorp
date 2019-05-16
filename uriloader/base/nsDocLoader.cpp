@@ -30,6 +30,7 @@
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsGlobalWindow.h"
 
 #include "nsIStringBundle.h"
 #include "nsIScriptSecurityManager.h"

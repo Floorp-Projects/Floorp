@@ -179,11 +179,14 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
     {
       MutexAutoLock lock(mMutex);
-
-      // We only check the name of an executor runnable when we know there is
-      // something in the queue, so this should never fail.
       event = mEventQueue.PeekEvent(lock);
-      MOZ_ALWAYS_TRUE(event);
+      // It is possible that mEventQueue wasn't empty when the executor
+      // was added to the queue, but someone processed events from mEventQueue
+      // before the executor, this is why mEventQueue is empty here
+      if (!event) {
+        aName.AssignLiteral("no runnables left in the ThrottledEventQueue");
+        return NS_OK;
+      }
     }
 
     if (nsCOMPtr<nsINamed> named = do_QueryInterface(event)) {
@@ -270,6 +273,11 @@ class ThrottledEventQueue::Inner final : public nsISupports {
     // Any thread
     MutexAutoLock lock(mMutex);
     return mEventQueue.Count(lock);
+  }
+
+  already_AddRefed<nsIRunnable> GetEvent() {
+    MutexAutoLock lock(mMutex);
+    return mEventQueue.GetEvent(nullptr, lock);
   }
 
   void AwaitIdle() const {
@@ -378,6 +386,11 @@ already_AddRefed<ThrottledEventQueue> ThrottledEventQueue::Create(
 bool ThrottledEventQueue::IsEmpty() const { return mInner->IsEmpty(); }
 
 uint32_t ThrottledEventQueue::Length() const { return mInner->Length(); }
+
+// Get the next runnable from the queue
+already_AddRefed<nsIRunnable> ThrottledEventQueue::GetEvent() {
+  return mInner->GetEvent();
+}
 
 void ThrottledEventQueue::AwaitIdle() const { return mInner->AwaitIdle(); }
 
