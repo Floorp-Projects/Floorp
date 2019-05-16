@@ -134,4 +134,21 @@ class TabCollectionDaoTest {
         assertEquals("Collection Two", collections[0].collection.title)
         assertEquals("Collection One", collections[1].collection.title)
     }
+
+    @Test
+    fun testCountingTabCollections() {
+        assertEquals(0, tabCollectionDao.countTabCollections())
+
+        val collection1 = TabCollectionEntity(title = "Collection One", createdAt = 10)
+        val collection2 = TabCollectionEntity(title = "Collection Two", createdAt = 50)
+
+        collection1.id = tabCollectionDao.insertTabCollection(collection1)
+        collection2.id = tabCollectionDao.insertTabCollection(collection2)
+
+        assertEquals(2, tabCollectionDao.countTabCollections())
+
+        tabCollectionDao.deleteTabCollection(collection2)
+
+        assertEquals(1, tabCollectionDao.countTabCollections())
+    }
 }

@@ -144,4 +144,11 @@ class TabCollectionStorage(
             tab.getStateFile(context).delete()
         }
     }
+
+    /**
+     * Returns the number of tab collections.
+     */
+    fun getTabCollectionsCount(): Int {
+        return database.value.tabCollectionDao().countTabCollections()
+    }
 }

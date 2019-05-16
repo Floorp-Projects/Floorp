@@ -10,8 +10,6 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.DefaultSettings
@@ -236,10 +234,34 @@ class TabCollectionStorageTest {
         }
     }
 
-    private fun getAllCollections(): List<TabCollection> {
-        // Not sure exactly why; but without delaying here `getAllCollections` may not see the latest state.
-        runBlocking { delay(500) }
+    @Test
+    fun testGettingTabCollectionCount() {
+        assertEquals(0, storage.getTabCollectionsCount())
 
+        storage.createCollection(
+            "Articles", listOf(
+                Session("https://www.mozilla.org").apply { title = "Mozilla" }
+            )
+        )
+        storage.createCollection(
+            "Recipes", listOf(
+                Session("https://www.firefox.com").apply { title = "Firefox" }
+            )
+        )
+
+        assertEquals(2, storage.getTabCollectionsCount())
+
+        val collections = storage.getCollections(limit = 2)
+            .awaitValue()
+        assertNotNull(collections!!)
+        assertEquals(2, collections.size)
+
+        storage.removeCollection(collections[0])
+
+        assertEquals(1, storage.getTabCollectionsCount())
+    }
+
+    private fun getAllCollections(): List<TabCollection> {
         val dataSource = storage.getCollectionsPaged()
             .create()
 

@@ -41,4 +41,7 @@ internal interface TabCollectionDao {
         LIMIT :limit
     """)
     fun getTabCollections(limit: Int): LiveData<List<TabCollectionWithTabs>>
+
+    @Query("SELECT COUNT(*) FROM tab_collections")
+    fun countTabCollections(): Int
 }
