@@ -129,6 +129,8 @@ include = [
   "HeaderWithLength",
   "MozContextProperties",
   "Quotes",
+  "BoxShadow",
+  "SimpleShadow",
 ]
 item_types = ["enums", "structs", "typedefs", "functions"]
 renaming_overrides_prefixing = true
@@ -348,20 +350,9 @@ renaming_overrides_prefixing = true
     ptr((T*)alignof(T)),
     len(0) {}
 
-  // NOTE(emilio): Could be implemented with some effort, but for now no copy.
-  StyleOwnedSlice(const StyleOwnedSlice& aOther) = delete;
+  inline StyleOwnedSlice(const StyleOwnedSlice& aOther);
 
-  ~StyleOwnedSlice() {
-    if (!len) {
-      return;
-    }
-    for (size_t i : IntegerRange(len)) {
-      ptr[i].~T();
-    }
-    free(ptr);
-    ptr = (T*)alignof(T);
-    len = 0;
-  }
+  inline ~StyleOwnedSlice();
 
   Span<const T> AsSpan() const {
     return MakeSpan(ptr, len);
@@ -370,6 +361,8 @@ renaming_overrides_prefixing = true
   size_t Length() const {
     return AsSpan().Length();
   }
+
+  bool IsEmpty() const { return Length() == 0; }
 
   bool operator==(const StyleOwnedSlice& other) const {
     return AsSpan() == other.AsSpan();
@@ -387,6 +380,7 @@ renaming_overrides_prefixing = true
   inline ~StyleArcSlice();
   inline Span<const T> AsSpan() const;
   inline size_t Length() const;
+  inline bool IsEmpty() const;
   inline bool operator==(const StyleArcSlice& other) const;
   inline bool operator!=(const StyleArcSlice& other) const;
 """

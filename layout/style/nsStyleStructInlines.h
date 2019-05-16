@@ -35,10 +35,6 @@ inline imgIContainer* nsStyleImage::GetSubImage(uint8_t aIndex) const {
   return (mCachedBIData) ? mCachedBIData->GetSubImage(aIndex) : nullptr;
 }
 
-bool nsStyleText::HasTextShadow() const { return mTextShadow; }
-
-nsCSSShadowArray* nsStyleText::GetTextShadow() const { return mTextShadow; }
-
 bool nsStyleText::NewlineIsSignificant(const nsTextFrame* aContextFrame) const {
   NS_ASSERTION(aContextFrame->StyleText() == this, "unexpected aContextFrame");
   return NewlineIsSignificantStyle() &&

@@ -589,10 +589,6 @@ void Gecko_FillAllImageLayers(nsStyleImageLayers* layers, uint32_t max_len);
 
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
-nsCSSShadowArray* Gecko_NewCSSShadowArray(uint32_t len);
-
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSShadowArray, CSSShadowArray);
-
 nsCSSValueSharedList* Gecko_NewCSSValueSharedList(uint32_t len);
 nsCSSValueSharedList* Gecko_NewNoneTransform();
 void Gecko_StyleDisplay_GenerateCombinedTransform(nsStyleDisplay*);
