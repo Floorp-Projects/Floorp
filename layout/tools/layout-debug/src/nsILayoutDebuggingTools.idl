@@ -46,6 +46,7 @@ interface nsILayoutDebuggingTools : nsISupports
     void dumpViews();
 
     void dumpStyleSheets();
+    void dumpMatchedRules();
     void dumpComputedStyles();
 
     void dumpReflowStats();
