@@ -434,7 +434,6 @@ impl FrameBuilder {
             self.output_rect.size.to_f32(),
             self.root_pic_index,
             DeviceIntPoint::zero(),
-            Vec::new(),
             UvRectKind::Rect,
             root_spatial_node_index,
             global_device_pixel_scale,

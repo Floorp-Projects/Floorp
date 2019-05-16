@@ -752,7 +752,6 @@ impl RenderTask {
         unclipped_size: DeviceSize,
         pic_index: PictureIndex,
         content_origin: DeviceIntPoint,
-        children: Vec<RenderTaskId>,
         uv_rect_kind: UvRectKind,
         root_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
@@ -770,7 +769,7 @@ impl RenderTask {
 
         RenderTask {
             location,
-            children,
+            children: Vec::new(),
             kind: RenderTaskKind::Picture(PictureTask {
                 pic_index,
                 content_origin,
