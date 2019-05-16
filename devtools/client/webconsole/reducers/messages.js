@@ -847,13 +847,6 @@ function getMessageVisibility(message, {
     };
   }
 
-  if (!passSearchFilters(message, filtersState)) {
-    return {
-      visible: false,
-      cause: FILTERS.TEXT,
-    };
-  }
-
   // Let's check all level filters (error, warn, log, …) and return visible: false
   // and the message level as a cause if the function returns false.
   if (!passLevelFilters(message, filtersState)) {
@@ -881,6 +874,15 @@ function getMessageVisibility(message, {
     return {
       visible: false,
       cause: FILTERS.NETXHR,
+    };
+  }
+
+  // This should always be the last check, or we might report that a message was hidden
+  // because of text search, while it may be hidden because its category is disabled.
+  if (!passSearchFilters(message, filtersState)) {
+    return {
+      visible: false,
+      cause: FILTERS.TEXT,
     };
   }
 
