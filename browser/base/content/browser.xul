@@ -888,6 +888,8 @@
                          tooltiptext="&urlbar.flashPluginBlocked.tooltip;"/>
                   <image data-permission-id="midi" class="blocked-permission-icon midi-icon" role="button"
                          tooltiptext="&urlbar.midiBlocked.tooltip;"/>
+                  <image data-permission-id="install" class="blocked-permission-icon install-icon" role="button"
+                         tooltiptext="&urlbar.installBlocked.tooltip;"/>
                 </box>
                 <box id="notification-popup-box"
                      hidden="true"
