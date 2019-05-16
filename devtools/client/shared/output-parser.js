@@ -1340,8 +1340,15 @@ OutputParser.prototype = {
       // whitespace, and the ")" into |trailer|.  We considered adding
       // functionality for this to CSSLexer, in some way, but this
       // seemed simpler on the whole.
-      const [, leader, , body, trailer] =
-        /^(url\([ \t\r\n\f]*(["']?))(.*?)(\2[ \t\r\n\f]*\))$/i.exec(match);
+      const urlParts = /^(url\([ \t\r\n\f]*(["']?))(.*?)(\2[ \t\r\n\f]*\))$/i.exec(match);
+
+      // Bail out if that didn't match anything.
+      if (!urlParts) {
+        this._appendTextNode(match);
+        return;
+      }
+
+      const [, leader, , body, trailer] = urlParts;
 
       this._appendTextNode(leader);
 
