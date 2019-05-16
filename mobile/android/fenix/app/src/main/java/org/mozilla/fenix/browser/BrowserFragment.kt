@@ -41,6 +41,7 @@ import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.readerview.ReaderViewFeature
+import mozilla.components.feature.session.behavior.EngineViewBottomBehavior
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
@@ -212,6 +213,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             owner = this,
             view = view
         )
+
+        if (customTabSessionId == null) {
+            (engineView.asView().layoutParams as CoordinatorLayout.LayoutParams).apply {
+                behavior = EngineViewBottomBehavior(context, null)
+            }
+        }
 
         downloadsFeature.set(
             feature = DownloadsFeature(
