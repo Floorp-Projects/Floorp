@@ -128,11 +128,11 @@ public class WebAuthnTokenManager {
         }
     }
 
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "gecko")
     /* package */ static native void webAuthnMakeCredentialFinish(final byte[] clientDataJson,
                                                                   final byte[] keyHandle,
                                                                   final byte[] attestationObject);
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "gecko")
     /* package */ static native void webAuthnMakeCredentialReturnError(String errorCode);
 
     public interface WebAuthnGetAssertionResponse {
@@ -201,12 +201,12 @@ public class WebAuthnTokenManager {
         }
     }
 
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "gecko")
     /* package */ static native void webAuthnGetAssertionFinish(final byte[] clientDataJson,
                                                                 final byte[] keyHandle,
                                                                 final byte[] authData,
                                                                 final byte[] signature,
                                                                 final byte[] userHandle);
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "gecko")
     /* package */ static native void webAuthnGetAssertionReturnError(String errorCode);
 }
