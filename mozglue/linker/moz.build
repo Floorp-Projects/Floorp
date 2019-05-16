@@ -21,17 +21,7 @@ DEFINES['IMPL_MFBT'] = True
 
 DisableStlWrapping()
 
-# Avoid building the linker tests if building with icecc since it doesn't deal
-# well with .incbin.
-#
-# A better solution would be to set ICECC=no in the environment before building
-# these objects to force the local build, but moz.build lacks such a capability
-# at the moment.
-#
-# TODO: Remove this when https://github.com/icecc/icecream/pull/463 is merged
-# and in a release.
-if not CONFIG['CXX_IS_ICECREAM']:
-    TEST_DIRS += ['tests']
+TEST_DIRS += ['tests']
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
