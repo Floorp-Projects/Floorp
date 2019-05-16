@@ -249,6 +249,8 @@ mochitest-devtools-webreplay:
     max-run-time: 900
     mozharness:
         mochitest-flavor: chrome
+        extra-options:
+            - --mochitest-suite=mochitest-devtools-chrome-webreplay
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
