@@ -24,6 +24,19 @@
   flex: auto;
 }
 
+.delete-button {
+  background-image: url("chrome://browser/content/aboutlogins/icons/delete.svg");
+  background-repeat: no-repeat;
+  background-position: 8px;
+  padding-inline-start: 30px; /* 8px on each side, and 14px for icon width */
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.delete-button:dir(rtl) {
+  background-position: right 8px center;
+}
+
 .detail-row {
   display: flex;
   margin-bottom: 20px;
