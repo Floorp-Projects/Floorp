@@ -226,5 +226,20 @@ already_AddRefed<Path> SVGRectElement::BuildPath(PathBuilder* aBuilder) {
   return aBuilder->Finish();
 }
 
+bool SVGRectElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
+                                           const ComputedStyle& aOldStyle) {
+  auto *newSVGReset = aNewStyle.StyleSVGReset(),
+       *oldSVGReset = aOldStyle.StyleSVGReset();
+  auto *newPosition = aNewStyle.StylePosition(),
+       *oldPosition = aOldStyle.StylePosition();
+
+  return newSVGReset->mX != oldSVGReset->mX ||
+         newSVGReset->mY != oldSVGReset->mY ||
+         newPosition->mWidth != oldPosition->mWidth ||
+         newPosition->mHeight != oldPosition->mHeight ||
+         newSVGReset->mRx != oldSVGReset->mRx ||
+         newSVGReset->mRy != oldSVGReset->mRy;
+}
+
 }  // namespace dom
 }  // namespace mozilla
