@@ -5,10 +5,14 @@
 package mozilla.components.browser.icons.loader
 
 import android.content.Context
+import android.os.SystemClock
+import android.util.LruCache
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import mozilla.components.support.ktx.kotlin.toUri
@@ -23,8 +27,10 @@ private const val READ_TIMEOUT = 10L // Seconds
 class HttpIconLoader(
     private val httpClient: Client
 ) : IconLoader {
+    private val failureCache = FailureCache()
+
     override fun load(context: Context, request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
-        if (!resource.url.toUri().isHttpOrHttps) {
+        if (!shouldDownload(resource)) {
             return IconLoader.Result.NoResult
         }
 
@@ -42,13 +48,50 @@ class HttpIconLoader(
 
         val response = httpClient.fetch(downloadRequest)
 
-        if (!response.isSuccess) {
+        return if (response.isSuccess) {
+            response.toIconLoaderResult()
+        } else {
+            failureCache.rememberFailure(resource.url)
             return IconLoader.Result.NoResult
         }
-
-        return response.body.useStream {
-            IconLoader.Result.BytesResult(it.readBytes(),
-                Icon.Source.DOWNLOAD)
-        }
     }
+
+    private fun shouldDownload(resource: IconRequest.Resource): Boolean {
+        return resource.url.toUri().isHttpOrHttps && !failureCache.hasFailedRecently(resource.url)
+    }
+}
+
+private fun Response.toIconLoaderResult() = body.useStream {
+    IconLoader.Result.BytesResult(it.readBytes(), Icon.Source.DOWNLOAD)
+}
+
+private const val MAX_FAILURE_URLS = 25
+private const val FAILURE_RETRY_MILLISECONDS = 1000 * 60 * 30 // 30 Minutes
+
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal class FailureCache {
+    private val cache = LruCache<String, Long>(MAX_FAILURE_URLS)
+
+    /**
+     * Remembers this [url] after loading from it has failed.
+     */
+    fun rememberFailure(url: String) {
+        cache.put(url, now())
+    }
+
+    /**
+     * Has loading from this [url] failed previously and recently?
+     */
+    fun hasFailedRecently(url: String) =
+        cache.get(url)?.let { failedAt ->
+            if (failedAt + FAILURE_RETRY_MILLISECONDS < now()) {
+                cache.remove(url)
+                false
+            } else {
+                true
+            }
+        } ?: false
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun now() = SystemClock.elapsedRealtime()
 }

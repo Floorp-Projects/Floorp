@@ -23,7 +23,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -143,5 +145,36 @@ class HttpIconLoaderTest {
         )
 
         assertEquals(IconLoader.Result.NoResult, result)
+    }
+
+    @Test
+    fun `Loader will not try to load URL again that just recently failed`() {
+        val client: Client = mock()
+
+        val loader = HttpIconLoader(client)
+        doReturn(
+            Response(
+                url = "https://www.example.org",
+                headers = MutableHeaders(),
+                status = 404,
+                body = Response.Body.empty())
+        ).`when`(client).fetch(any())
+
+        val resource = IconRequest.Resource(
+            url = "https://www.example.org",
+            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+        )
+
+        assertEquals(IconLoader.Result.NoResult, loader.load(mock(), mock(), resource))
+
+        // First load tries to fetch, but load fails (404)
+        verify(client).fetch(any())
+        verifyNoMoreInteractions(client)
+        reset(client)
+
+        assertEquals(IconLoader.Result.NoResult, loader.load(mock(), mock(), resource))
+
+        // Second load does not try to fetch again.
+        verify(client, never()).fetch(any())
     }
 }
