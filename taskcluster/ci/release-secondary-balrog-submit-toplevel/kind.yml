@@ -36,7 +36,6 @@ jobs:
         worker:
             product: firefox
             channel-names: ["beta", "beta-localtest", "beta-cdntest"]
-            publish-rules: [32]
             rules-to-update: ["firefox-beta-cdntest", "firefox-beta-localtest"]
         treeherder:
             platform: firefox-release/opt

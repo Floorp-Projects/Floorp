@@ -41,20 +41,6 @@ jobs:
                     release(-rc)?: ["release", "release-localtest", "release-cdntest"]
                     esr60: ["esr", "esr-localtest", "esr-cdntest"]
                     default: []
-            publish-rules:
-                by-release-level:
-                    production:
-                        by-release-type:
-                            beta: [32]
-                            release(-rc)?: [145]
-                            esr60: [806]
-                            default: []
-                    staging:
-                        by-release-type:
-                            beta: [32]
-                            release(-rc)?: [145]
-                            esr60: [806]
-                            default: []
             rules-to-update:
                 by-release-type:
                     beta: ["firefox-beta-cdntest", "firefox-beta-localtest"]
@@ -76,10 +62,6 @@ jobs:
         worker:
             product: firefox
             channel-names: ["esr", "esr-localtest", "esr-cdntest"]
-            publish-rules:
-                by-release-level:
-                    production: [521]
-                    staging: [521]
             rules-to-update: ["esr52-cdntest", "esr52-localtest"]
             platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
             blob-suffix: -bz2
@@ -99,7 +81,6 @@ jobs:
         worker:
             product: devedition
             channel-names: ["aurora", "aurora-localtest", "aurora-cdntest"]
-            publish-rules: [10]
             rules-to-update: ["devedition-cdntest", "devedition-localtest"]
             platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
         treeherder:
