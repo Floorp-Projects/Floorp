@@ -2,10 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 import os
-import six
 import stat
 import sys
 
@@ -146,7 +145,7 @@ class FileRegistry(object):
             for path, file in registry:
                 (...)
         '''
-        return six.iteritems(self._files)
+        return self._files.iteritems()
 
     def required_directories(self):
         '''
@@ -296,7 +295,7 @@ class FileCopier(FileRegistry):
 
         Returns a FileCopyResult that details what changed.
         '''
-        assert isinstance(destination, six.string_types)
+        assert isinstance(destination, basestring)
         assert not os.path.exists(destination) or os.path.isdir(destination)
 
         result = FileCopyResult()
@@ -565,7 +564,7 @@ class Jarrer(FileRegistry, BaseFile):
             def exists(self):
                 return self.deflater is not None
 
-        if isinstance(dest, six.string_types):
+        if isinstance(dest, basestring):
             dest = Dest(dest)
         assert isinstance(dest, Dest)
 

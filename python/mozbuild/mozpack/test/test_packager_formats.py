@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 import mozunit
 import unittest
@@ -33,7 +33,6 @@ from mozpack.test.test_files import (
     bar_xpt,
 )
 import mozpack.path as mozpath
-import six
 from itertools import chain
 from test_errors import TestErrors
 
@@ -59,22 +58,22 @@ CONTENTS = {
         ManifestContent('app/chrome/addons/addon2/chrome', 'addon2', 'foo/bar/'),
     ],
     'files': {
-        'chrome/f/oo/bar/baz': GeneratedFile(b'foobarbaz'),
-        'chrome/f/oo/baz': GeneratedFile(b'foobaz'),
-        'chrome/f/oo/qux': GeneratedFile(b'fooqux'),
-        'components/foo.so': GeneratedFile(b'foo.so'),
+        'chrome/f/oo/bar/baz': GeneratedFile('foobarbaz'),
+        'chrome/f/oo/baz': GeneratedFile('foobaz'),
+        'chrome/f/oo/qux': GeneratedFile('fooqux'),
+        'components/foo.so': GeneratedFile('foo.so'),
         'components/foo.xpt': foo_xpt,
         'components/bar.xpt': bar_xpt,
-        'foo': GeneratedFile(b'foo'),
-        'app/chrome/foo/foo': GeneratedFile(b'appfoo'),
-        'app/components/foo.js': GeneratedFile(b'foo.js'),
-        'addon0/chrome/foo/bar/baz': GeneratedFile(b'foobarbaz'),
+        'foo': GeneratedFile('foo'),
+        'app/chrome/foo/foo': GeneratedFile('appfoo'),
+        'app/components/foo.js': GeneratedFile('foo.js'),
+        'addon0/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
         'addon0/components/foo.xpt': foo2_xpt,
         'addon0/components/bar.xpt': bar_xpt,
-        'addon1/chrome/foo/bar/baz': GeneratedFile(b'foobarbaz'),
+        'addon1/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
         'addon1/components/foo.xpt': foo2_xpt,
         'addon1/components/bar.xpt': bar_xpt,
-        'app/chrome/addons/addon2/chrome/foo/bar/baz': GeneratedFile(b'foobarbaz'),
+        'app/chrome/addons/addon2/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
         'app/chrome/addons/addon2/components/foo.xpt': foo2_xpt,
         'app/chrome/addons/addon2/components/bar.xpt': bar_xpt,
     },
@@ -124,7 +123,7 @@ RESULT_FLAT = {
 for addon in ('addon0', 'addon1', 'app/chrome/addons/addon2'):
     RESULT_FLAT.update({
         mozpath.join(addon, p): f
-        for p, f in six.iteritems({
+        for p, f in {
             'chrome.manifest': [
                 'manifest chrome/chrome.manifest',
                 'manifest components/components.manifest',
@@ -139,7 +138,7 @@ for addon in ('addon0', 'addon1', 'app/chrome/addons/addon2'):
             ],
             'components/bar.xpt': bar_xpt,
             'components/foo.xpt': foo2_xpt,
-        })
+        }.iteritems()
     })
 
 RESULT_JAR = {
@@ -187,12 +186,12 @@ RESULT_JAR.update({
     },
     'addon1.xpi': {
         mozpath.relpath(p, 'addon1'): f
-        for p, f in six.iteritems(RESULT_FLAT)
+        for p, f in RESULT_FLAT.iteritems()
         if p.startswith('addon1/')
     },
     'app/chrome/addons/addon2.xpi': {
         mozpath.relpath(p, 'app/chrome/addons/addon2'): f
-        for p, f in six.iteritems(RESULT_FLAT)
+        for p, f in RESULT_FLAT.iteritems()
         if p.startswith('app/chrome/addons/addon2/')
     },
 })
@@ -234,7 +233,7 @@ RESULT_OMNIJAR.update({
             'components/foo.js',
         ), (
             mozpath.relpath(p, 'app')
-            for p in six.iterkeys(RESULT_FLAT)
+            for p in RESULT_FLAT.iterkeys()
             if p.startswith('app/chrome/addons/addon2/')
         ))
     },
@@ -263,7 +262,7 @@ RESULT_OMNIJAR_WITH_SUBPATH = {
 CONTENTS_WITH_BASE = {
     'bases': {
         mozpath.join('base/root', b) if b else 'base/root': a
-        for b, a in six.iteritems(CONTENTS['bases'])
+        for b, a in CONTENTS['bases'].iteritems()
     },
     'manifests': [
         m.move(mozpath.join('base/root', m.base))
@@ -271,12 +270,12 @@ CONTENTS_WITH_BASE = {
     ],
     'files': {
         mozpath.join('base/root', p): f
-        for p, f in six.iteritems(CONTENTS['files'])
+        for p, f in CONTENTS['files'].iteritems()
     },
 }
 
 EXTRA_CONTENTS = {
-    'extra/file': GeneratedFile(b'extra file'),
+    'extra/file': GeneratedFile('extra file'),
 }
 
 CONTENTS_WITH_BASE['files'].update(EXTRA_CONTENTS)
@@ -285,7 +284,7 @@ CONTENTS_WITH_BASE['files'].update(EXTRA_CONTENTS)
 def result_with_base(results):
     result = {
         mozpath.join('base/root', p): v
-        for p, v in six.iteritems(results)
+        for p, v in results.iteritems()
     }
     result.update(EXTRA_CONTENTS)
     return result
@@ -303,7 +302,7 @@ def fill_formatter(formatter, contents):
     for manifest in contents['manifests']:
         formatter.add_manifest(manifest)
 
-    for k, v in sorted(six.iteritems(contents['files'])):
+    for k, v in sorted(contents['files'].iteritems()):
         if k.endswith('.xpt'):
             formatter.add_interfaces(k, v)
         else:
@@ -409,7 +408,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
             ])
             f.add_base('')
             f.add_base('app')
-            f.add(mozpath.join(base, path), GeneratedFile(b''))
+            f.add(mozpath.join(base, path), GeneratedFile(''))
             if f.copier.contains(mozpath.join(base, path)):
                 return False
             self.assertTrue(f.copier.contains(mozpath.join(base, 'omni.foo')))

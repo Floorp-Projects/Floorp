@@ -5,12 +5,11 @@
 from __future__ import absolute_import, print_function
 
 import os
-import six
 import sys
 import json
 
 from collections import Iterable, OrderedDict
-from types import ModuleType
+from types import StringTypes, ModuleType
 
 import mozpack.path as mozpath
 
@@ -20,6 +19,12 @@ from mozbuild.util import (
     ReadOnlyDict,
 )
 from mozbuild.shellutil import quote as shell_quote
+
+
+if sys.version_info.major == 2:
+    text_type = unicode
+else:
+    text_type = str
 
 
 class BuildConfig(object):
@@ -152,7 +157,7 @@ class ConfigEnvironment(object):
         )
 
         def serialize(name, obj):
-            if isinstance(obj, six.string_types):
+            if isinstance(obj, StringTypes):
                 return obj
             if isinstance(obj, Iterable):
                 return ' '.join(obj)
@@ -191,17 +196,17 @@ class ConfigEnvironment(object):
         self.substs_unicode = {}
 
         def decode(v):
-            if not isinstance(v, six.text_type):
+            if not isinstance(v, text_type):
                 try:
                     return v.decode('utf-8')
                 except UnicodeDecodeError:
                     return v.decode('utf-8', 'replace')
 
         for k, v in self.substs.items():
-            if not isinstance(v, six.string_types):
+            if not isinstance(v, StringTypes):
                 if isinstance(v, Iterable):
                     type(v)(decode(i) for i in v)
-            elif not isinstance(v, six.text_type):
+            elif not isinstance(v, text_type):
                 v = decode(v)
 
             self.substs_unicode[k] = v

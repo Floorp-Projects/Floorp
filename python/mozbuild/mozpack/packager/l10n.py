@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 '''
 Replace localized parts of a packaged directory with data from a langpack
@@ -11,7 +11,6 @@ directory.
 
 import json
 import os
-import six
 import mozpack.path as mozpath
 from mozpack.packager.formats import (
     FlatFormatter,
@@ -259,7 +258,7 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
             formatter.add(p, f)
 
     # Transplant jar preloading information.
-    for path, log in six.iteritems(app_finder.jarlogs):
+    for path, log in app_finder.jarlogs.iteritems():
         assert isinstance(copier[path], Jarrer)
         copier[path].preload([l.replace(locale, l10n_locale) for l in log])
 
@@ -290,7 +289,7 @@ def repack(source, l10n, extra_l10n={}, non_resources=[], non_chrome=set()):
         finders = {
             '': l10n_finder,
         }
-        for base, path in six.iteritems(extra_l10n):
+        for base, path in extra_l10n.iteritems():
             finders[base] = UnpackFinder(path)
         l10n_finder = ComposedFinder(finders)
     copier = FileCopier()

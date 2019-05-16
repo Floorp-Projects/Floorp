@@ -2,12 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
-from mozbuild.util import (
-    ensureParentDir,
-    ensure_bytes,
-)
+from mozbuild.util import ensureParentDir
 
 from mozpack.errors import (
     ErrorMessage,
@@ -60,12 +57,13 @@ import mozfile
 import mozunit
 import os
 import random
-import six
+import string
 import sys
 import tarfile
 import mozpack.path as mozpath
 from tempfile import mkdtemp
 from io import BytesIO
+from StringIO import StringIO
 
 
 class TestWithTmpDir(unittest.TestCase):
@@ -163,19 +161,18 @@ class TestDest(TestWithTmpDir):
         self.assertEqual(dest.read(), 'qux')
 
 
-rand = bytes(random.choice(b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-             for i in six.moves.xrange(131597))
+rand = ''.join(random.choice(string.letters) for i in xrange(131597))
 samples = [
-    b'',
-    b'test',
-    b'fooo',
-    b'same',
-    b'same',
-    b'Different and longer',
+    '',
+    'test',
+    'fooo',
+    'same',
+    'same',
+    'Different and longer',
     rand,
     rand,
-    rand[:-1] + b'_',
-    b'test',
+    rand[:-1] + '_',
+    'test'
 ]
 
 
@@ -632,7 +629,7 @@ class TestGeneratedFile(TestWithTmpDir):
         Test whether GeneratedFile.open returns an appropriately reset file
         object.
         '''
-        content = b''.join(samples)
+        content = ''.join(samples)
         f = GeneratedFile(content)
         self.assertEqual(content[:42], f.open().read(42))
         self.assertEqual(content, f.open().read())
@@ -645,21 +642,21 @@ class TestGeneratedFile(TestWithTmpDir):
         dest = self.tmppath('dest')
 
         # Initial copy
-        f = GeneratedFile(b'test')
+        f = GeneratedFile('test')
         f.copy(dest)
 
         # Ensure subsequent copies won't trigger writes
         f.copy(DestNoWrite(dest))
-        self.assertEqual(b'test', open(dest, 'rb').read())
+        self.assertEqual('test', open(dest, 'rb').read())
 
         # When using a new instance with the same content, no copy should occur
-        f = GeneratedFile(b'test')
+        f = GeneratedFile('test')
         f.copy(DestNoWrite(dest))
-        self.assertEqual(b'test', open(dest, 'rb').read())
+        self.assertEqual('test', open(dest, 'rb').read())
 
         # Double check that under conditions where a copy occurs, we would get
         # an exception.
-        f = GeneratedFile(b'fooo')
+        f = GeneratedFile('fooo')
         self.assertRaises(RuntimeError, f.copy, DestNoWrite(dest))
 
     def test_generated_file_function(self):
@@ -673,29 +670,29 @@ class TestGeneratedFile(TestWithTmpDir):
 
         def content():
             data['num_calls'] += 1
-            return b'content'
+            return 'content'
 
         f = GeneratedFile(content)
         self.assertEqual(data['num_calls'], 0)
         f.copy(dest)
         self.assertEqual(data['num_calls'], 1)
-        self.assertEqual(b'content', open(dest, 'rb').read())
-        self.assertEqual(b'content', f.open().read())
-        self.assertEqual(b'content', f.read())
-        self.assertEqual(len(b'content'), f.size())
+        self.assertEqual('content', open(dest, 'rb').read())
+        self.assertEqual('content', f.open().read())
+        self.assertEqual('content', f.read())
+        self.assertEqual(len('content'), f.size())
         self.assertEqual(data['num_calls'], 1)
 
-        f.content = b'modified'
+        f.content = 'modified'
         f.copy(dest)
         self.assertEqual(data['num_calls'], 1)
-        self.assertEqual(b'modified', open(dest, 'rb').read())
-        self.assertEqual(b'modified', f.open().read())
-        self.assertEqual(b'modified', f.read())
-        self.assertEqual(len(b'modified'), f.size())
+        self.assertEqual('modified', open(dest, 'rb').read())
+        self.assertEqual('modified', f.open().read())
+        self.assertEqual('modified', f.read())
+        self.assertEqual(len('modified'), f.size())
 
         f.content = content
         self.assertEqual(data['num_calls'], 1)
-        self.assertEqual(b'content', f.read())
+        self.assertEqual('content', f.read())
         self.assertEqual(data['num_calls'], 2)
 
 
@@ -712,9 +709,8 @@ class TestDeflatedFile(TestWithTmpDir):
         contents = {}
         with JarWriter(src) as jar:
             for content in samples:
-                name = b''.join(random.choice(
-                    b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-                    for i in range(8))
+                name = ''.join(random.choice(string.letters)
+                               for i in xrange(8))
                 jar.add(name, content, compress=True)
                 contents[name] = content
 
@@ -729,7 +725,7 @@ class TestDeflatedFile(TestWithTmpDir):
         object.
         '''
         src = self.tmppath('src.jar')
-        content = b''.join(samples)
+        content = ''.join(samples)
         with JarWriter(src) as jar:
             jar.add('content', content)
 
@@ -746,9 +742,9 @@ class TestDeflatedFile(TestWithTmpDir):
         dest = self.tmppath('dest')
 
         with JarWriter(src) as jar:
-            jar.add('test', b'test')
-            jar.add('test2', b'test')
-            jar.add('fooo', b'fooo')
+            jar.add('test', 'test')
+            jar.add('test2', 'test')
+            jar.add('fooo', 'fooo')
 
         jar = JarReader(src)
         # Initial copy
@@ -757,13 +753,13 @@ class TestDeflatedFile(TestWithTmpDir):
 
         # Ensure subsequent copies won't trigger writes
         f.copy(DestNoWrite(dest))
-        self.assertEqual(b'test', open(dest, 'rb').read())
+        self.assertEqual('test', open(dest, 'rb').read())
 
         # When using a different file with the same content, no copy should
         # occur
         f = DeflatedFile(jar['test2'])
         f.copy(DestNoWrite(dest))
-        self.assertEqual(b'test', open(dest, 'rb').read())
+        self.assertEqual('test', open(dest, 'rb').read())
 
         # Double check that under conditions where a copy occurs, we would get
         # an exception.
@@ -869,12 +865,12 @@ foo2_xpt = GeneratedFile(
 class TestMinifiedProperties(TestWithTmpDir):
     def test_minified_properties(self):
         propLines = [
-            b'# Comments are removed',
-            b'foo = bar',
-            b'',
-            b'# Another comment',
+            '# Comments are removed',
+            'foo = bar',
+            '',
+            '# Another comment',
         ]
-        prop = GeneratedFile(b'\n'.join(propLines))
+        prop = GeneratedFile('\n'.join(propLines))
         self.assertEqual(MinifiedProperties(prop).open().readlines(),
                          ['foo = bar\n', '\n'])
         open(self.tmppath('prop'), 'wb').write('\n'.join(propLines))
@@ -886,15 +882,15 @@ class TestMinifiedProperties(TestWithTmpDir):
 
 class TestMinifiedJavaScript(TestWithTmpDir):
     orig_lines = [
-        b'// Comment line',
-        b'let foo = "bar";',
-        b'var bar = true;',
-        b'',
-        b'// Another comment',
+        '// Comment line',
+        'let foo = "bar";',
+        'var bar = true;',
+        '',
+        '// Another comment',
     ]
 
     def test_minified_javascript(self):
-        orig_f = GeneratedFile(b'\n'.join(self.orig_lines))
+        orig_f = GeneratedFile('\n'.join(self.orig_lines))
         min_f = MinifiedJavaScript(orig_f)
 
         mini_lines = min_f.open().readlines()
@@ -910,7 +906,7 @@ class TestMinifiedJavaScript(TestWithTmpDir):
         ]
 
     def test_minified_verify_success(self):
-        orig_f = GeneratedFile(b'\n'.join(self.orig_lines))
+        orig_f = GeneratedFile('\n'.join(self.orig_lines))
         min_f = MinifiedJavaScript(orig_f,
                                    verify_command=self._verify_command('0'))
 
@@ -919,8 +915,8 @@ class TestMinifiedJavaScript(TestWithTmpDir):
         self.assertTrue(len(mini_lines) < len(self.orig_lines))
 
     def test_minified_verify_failure(self):
-        orig_f = GeneratedFile(b'\n'.join(self.orig_lines))
-        errors.out = six.StringIO()
+        orig_f = GeneratedFile('\n'.join(self.orig_lines))
+        errors.out = StringIO()
         min_f = MinifiedJavaScript(orig_f,
                                    verify_command=self._verify_command('1'))
 
@@ -1101,7 +1097,7 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
 
 class TestJarFinder(MatchTestTemplate, TestWithTmpDir):
     def add(self, path):
-        self.jar.add(path, ensure_bytes(path), compress=True)
+        self.jar.add(path, path, compress=True)
 
     def do_check(self, pattern, result):
         do_check(self, self.finder, pattern, result)
@@ -1194,11 +1190,10 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
 
     def _client(self):
         configs = (
-            # b'' because py2 needs !unicode
-            b'ui.username="Dummy User <dummy@example.com>"',
+            'ui.username="Dummy User <dummy@example.com>"',
         )
-        client = hglib.open(self.tmpdir,
-                            encoding=b'UTF-8',  # b'' because py2 needs !unicode
+
+        client = hglib.open(self.tmpdir, encoding='UTF-8',
                             configs=configs)
         self._clients.append(client)
         return client

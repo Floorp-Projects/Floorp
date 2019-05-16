@@ -14,7 +14,6 @@ import sys
 import os
 import errno
 import re
-import six
 import logging
 from time import localtime
 from MozZipFile import ZipFile
@@ -22,7 +21,6 @@ from cStringIO import StringIO
 
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.action.buildlist import addEntriesToListFile
-from mozbuild.util import ensure_bytes
 from mozpack.files import FileFinder
 import mozpack.path as mozpath
 if sys.platform == 'win32':
@@ -307,7 +305,7 @@ class JarMaker(object):
         '''
         myregister = dict.fromkeys(map(lambda s: s.replace('%',
                                                            chromebasepath), register))
-        addEntriesToListFile(manifestPath, six.iterkeys(myregister))
+        addEntriesToListFile(manifestPath, myregister.iterkeys())
 
     def makeJar(self, infile, jardir):
         '''makeJar is the main entry point to JarMaker.
@@ -562,7 +560,7 @@ class JarMaker(object):
                 os.symlink(src, out)
             else:
                 # On Win32, use ctypes to create a hardlink
-                rv = CreateHardLink(ensure_bytes(out), ensure_bytes(src), None)
+                rv = CreateHardLink(out, src, None)
                 if rv == 0:
                     raise WinError()
 
