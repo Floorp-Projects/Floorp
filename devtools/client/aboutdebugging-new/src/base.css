@@ -159,11 +159,6 @@ p, h1 {
   font-family: var(--monospace-font-family);
 }
 
-/* Text that is not selectable */
-.unselectable-text {
-  -moz-user-select: none;
-}
-
 /* Links that need to look like current text */
 .undecorated-link,
 .undecorated-link:hover {
@@ -375,13 +370,6 @@ Form controls
   border-radius: 2px;
   color: var(--text-color);
   background-color: var(--box-background);
-}
-
-/* Standard checkbox, from Photon */
-.default-checkbox {
-  height: calc(var(--base-unit) * 4);
-  margin-inline-end: var(--base-unit);
-  width: calc(var(--base-unit) * 4);
 }
 
 /*

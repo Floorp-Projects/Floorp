@@ -14,9 +14,6 @@ function _getSupportsFile(path) {
 }
 
 async function enableExtensionDebugging() {
-  // Force enabling of addons debugging
-  await pushPref("devtools.chrome.enabled", true);
-  await pushPref("devtools.debugger.remote-enabled", true);
   // Disable security prompt
   await pushPref("devtools.debugger.prompt-connection", false);
   // Enable Browser toolbox test script execution via env variable
