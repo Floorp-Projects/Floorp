@@ -2035,6 +2035,12 @@ MOZ_ALWAYS_INLINE T* MakeClone(nsDisplayListBuilder* aBuilder, const T* aItem) {
 void AssertUniqueItem(nsDisplayItem* aItem);
 #endif
 
+/**
+ * Returns true, if a display item of given |aType| needs to be built within
+ * opacity:0 container.
+ */
+bool ShouldBuildItemForEventsOrPlugins(const DisplayItemType aType);
+
 template <typename T, typename F, typename... Args>
 MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
                                      Args&&... aArgs) {
@@ -2043,23 +2049,20 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
   static_assert(std::is_base_of<nsIFrame, F>::value,
                 "Frame type should be derived from nsIFrame");
 
+  const DisplayItemType type = T::ItemType();
+  if (aBuilder->InEventsAndPluginsOnly() &&
+      !ShouldBuildItemForEventsOrPlugins(type)) {
+    // This item is not needed for events or plugins.
+    return nullptr;
+  }
+
   T* item = new (aBuilder) T(aBuilder, aFrame, std::forward<Args>(aArgs)...);
 
-  if (T::ItemType() != DisplayItemType::TYPE_GENERIC) {
-    item->SetType(T::ItemType());
+  if (type != DisplayItemType::TYPE_GENERIC) {
+    item->SetType(type);
   }
 
   item->SetPerFrameKey(item->CalculatePerFrameKey());
-
-  // TODO: Ideally we'd determine this before constructing the item,
-  // but we'd need a template specialization for every type that has
-  // children, or make all callers pass the type.
-  if (aBuilder->InEventsAndPluginsOnly() &&
-      item->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO &&
-      item->GetType() != DisplayItemType::TYPE_PLUGIN && !item->GetChildren()) {
-    item->Destroy(aBuilder);
-    return nullptr;
-  }
 
   const mozilla::SmallPointerArray<mozilla::DisplayItemData>& array =
       item->Frame()->DisplayItemData();
@@ -2091,6 +2094,12 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
     MOZ_DIAGNOSTIC_ASSERT(
         AnyContentAncestorModified(item->FrameForInvalidation()));
   }
+
+  mozilla::DebugOnly<bool> isContainerType =
+      (GetDisplayItemFlagsForType(type) & TYPE_IS_CONTAINER);
+
+  MOZ_ASSERT(item->HasChildren() == isContainerType,
+             "Container items must have container display item flag set.");
 #endif
 
   return item;
