@@ -41,6 +41,11 @@ SVGEllipseElement::SVGEllipseElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGEllipseElementBase(std::move(aNodeInfo)) {}
 
+bool SVGEllipseElement::IsAttributeMapped(const nsAtom* aAttribute) const {
+  return IsInLengthInfo(aAttribute, sLengthInfo) ||
+         SVGEllipseElementBase::IsAttributeMapped(aAttribute);
+}
+
 //----------------------------------------------------------------------
 // nsINode methods
 
