@@ -2217,10 +2217,12 @@ static void PrintUsageThenExit(int aExitCode) {
       "  Useful if you want profile code that runs very early.\n"
       "\n"
       "  MOZ_PROFILER_STARTUP_ENTRIES=<1..>\n"
-      "  If MOZ_PROFILER_STARTUP is set, specifies the number of entries in\n"
-      "  the profiler's circular buffer when the profiler is first started.\n"
+      "  If MOZ_PROFILER_STARTUP is set, specifies the number of entries per\n"
+      "  process in the profiler's circular buffer when the profiler is first\n"
+      "  started.\n"
       "  If unset, the platform default is used:\n"
-      "  %u, or %u when MOZ_PROFILER_STARTUP is set.\n"
+      "  %u entries per process, or %u when MOZ_PROFILER_STARTUP is set.\n"
+      "  (%zu bytes per entry -> %zu or %zu total bytes per process)\n"
       "\n"
       "  MOZ_PROFILER_STARTUP_DURATION=<1..>\n"
       "  If MOZ_PROFILER_STARTUP is set, specifies the maximum life time of\n"
@@ -2249,7 +2251,9 @@ static void PrintUsageThenExit(int aExitCode) {
       "    Features: (x=unavailable, D/d=default/unavailable,\n"
       "               S/s=MOZ_PROFILER_STARTUP extra default/unavailable)\n",
       unsigned(PROFILER_DEFAULT_ENTRIES),
-      unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES));
+      unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES), sizeof(ProfileBufferEntry),
+      sizeof(ProfileBufferEntry) * PROFILER_DEFAULT_ENTRIES,
+      sizeof(ProfileBufferEntry) * PROFILER_DEFAULT_STARTUP_ENTRIES);
 
 #define PRINT_FEATURE(n_, str_, Name_, desc_)                                  \
   printf("    %c %5u: \"%s\" (%s)\n", FeatureCategory(ProfilerFeature::Name_), \
@@ -2260,7 +2264,7 @@ static void PrintUsageThenExit(int aExitCode) {
 #undef PRINT_FEATURE
 
   printf(
-      "    -                \"default\" (All above D+S defaults)\n"
+      "    -        \"default\" (All above D+S defaults)\n"
       "\n"
       "  MOZ_PROFILER_STARTUP_FILTERS=<Filters>\n"
       "  If MOZ_PROFILER_STARTUP is set, specifies the thread filters, as a\n"
