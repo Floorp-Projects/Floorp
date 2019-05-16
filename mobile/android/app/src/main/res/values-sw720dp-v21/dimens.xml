@@ -7,5 +7,5 @@
 <resources>
     <dimen name="tab_panel_item_width_autofit">176dip</dimen>
     <dimen name="tab_thumbnail_width">137dip</dimen>
-    <dimen name="context_menu_item_horizontal_padding">10dp</dimen>
+    <dimen name="context_menu_item_horizontal_padding">25dp</dimen>
 </resources>
