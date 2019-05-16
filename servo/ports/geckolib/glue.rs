@@ -2959,6 +2959,30 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetGeneration(
     read_locked_arc(rule, |rule: &CounterStyleRule| rule.generation())
 }
 
+fn symbol_to_string(s: &counter_style::Symbol) -> nsString {
+    match *s {
+        counter_style::Symbol::String(ref s) => nsString::from(&**s),
+        counter_style::Symbol::Ident(ref i) => nsString::from(i.0.as_slice())
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetPad(
+    rule: &RawServoCounterStyleRule,
+    width: &mut i32,
+    symbol: &mut nsString,
+) -> bool {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        let pad = match rule.pad() {
+            Some(pad) => pad,
+            None => return false,
+        };
+        *width = pad.0.value();
+        *symbol = symbol_to_string(&pad.1);
+        true
+    })
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn Servo_CounterStyleRule_GetSystem(
     rule: &RawServoCounterStyleRule,
