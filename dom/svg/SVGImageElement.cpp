@@ -218,7 +218,8 @@ SVGImageElement::IsAttributeMapped(const nsAtom* name) const {
       sViewportsMap,
   };
 
-  return FindAttributeDependence(name, map) ||
+  return IsInLengthInfo(name, sLengthInfo) ||
+         FindAttributeDependence(name, map) ||
          SVGImageElementBase::IsAttributeMapped(name);
 }
 

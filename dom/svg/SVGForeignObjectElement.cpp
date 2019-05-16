@@ -109,7 +109,8 @@ SVGForeignObjectElement::IsAttributeMapped(const nsAtom* name) const {
                                                     sTextContentElementsMap,
                                                     sViewportsMap};
 
-  return FindAttributeDependence(name, map) ||
+  return IsInLengthInfo(name, sLengthInfo) ||
+         FindAttributeDependence(name, map) ||
          SVGGraphicsElement::IsAttributeMapped(name);
 }
 
