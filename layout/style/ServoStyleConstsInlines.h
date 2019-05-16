@@ -34,7 +34,15 @@ inline StyleOwnedSlice<T>::StyleOwnedSlice(const StyleOwnedSlice& aOther) {
 }
 
 template <typename T>
-inline StyleOwnedSlice<T>::~StyleOwnedSlice() {
+inline StyleOwnedSlice<T>::StyleOwnedSlice(StyleOwnedSlice&& aOther) {
+  len = aOther.len;
+  ptr = aOther.ptr;
+  aOther.ptr = (T*)alignof(T);
+  aOther.len = 0;
+}
+
+template <typename T>
+inline void StyleOwnedSlice<T>::Clear() {
   if (!len) {
     return;
   }
@@ -44,6 +52,11 @@ inline StyleOwnedSlice<T>::~StyleOwnedSlice() {
   free(ptr);
   ptr = (T*)alignof(T);
   len = 0;
+}
+
+template <typename T>
+inline StyleOwnedSlice<T>::~StyleOwnedSlice() {
+  Clear();
 }
 
 // This code is basically a C++ port of the Arc::clone() implementation in
