@@ -140,6 +140,11 @@ var gIdentityHandler = {
     return this._identityPopupContentVerif =
       document.getElementById("identity-popup-content-verifier");
   },
+  get _identityPopupCustomRootLearnMore() {
+    delete this._identityPopupCustomRootLearnMore;
+    return this._identityPopupCustomRootLearnMore =
+      document.getElementById("identity-popup-custom-root-learn-more");
+  },
   get _identityPopupMixedContentLearnMore() {
     delete this._identityPopupMixedContentLearnMore;
     return this._identityPopupMixedContentLearnMore =
@@ -510,6 +515,18 @@ var gIdentityHandler = {
   },
 
   /**
+   * Returns whether the issuer of the current certificate chain is
+   * built-in (returns false) or imported (returns true).
+   */
+  _hasCustomRoot() {
+    let issuerCert = null;
+    // Walk the whole chain to get the last cert.
+    for (issuerCert of this._secInfo.succeededCertChain.getEnumerator());
+
+    return !issuerCert.isBuiltInRoot;
+  },
+
+  /**
    * Updates the identity block user interface with the data from this object.
    */
   refreshIdentityBlock() {
@@ -695,9 +712,13 @@ var gIdentityHandler = {
       e => e.setAttribute("href", baseURL + "mixed-content"));
     this._identityPopupInsecureLoginFormsLearnMore
         .setAttribute("href", baseURL + "insecure-password");
+    this._identityPopupCustomRootLearnMore
+        .setAttribute("href", baseURL + "enterprise-roots");
 
     // This is in the properties file because the expander used to switch its tooltip.
     this._popupExpander.tooltipText = gNavigatorBundle.getString("identity.showDetails.tooltip");
+
+    let customRoot = false;
 
     // Determine connection security information.
     let connection = "not-secure";
@@ -713,6 +734,7 @@ var gIdentityHandler = {
       connection = "secure-cert-user-overridden";
     } else if (this._isSecure) {
       connection = "secure";
+      customRoot = this._hasCustomRoot();
     }
 
     // Determine if there are insecure login forms.
@@ -762,6 +784,7 @@ var gIdentityHandler = {
       updateAttribute(element, "ciphers", ciphers);
       updateAttribute(element, "mixedcontent", mixedcontent);
       updateAttribute(element, "isbroken", this._isBroken);
+      updateAttribute(element, "customroot", customRoot);
     }
 
     // Initialize the optional strings to empty values
