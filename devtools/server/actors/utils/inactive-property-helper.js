@@ -137,7 +137,7 @@ class InactivePropertyHelper {
 
   get unusedCssEnabled() {
     if (!this._unusedCssEnabled) {
-      this._unusedCssEnabled = Services.prefs.getBoolPref(PREF_UNUSED_CSS_ENABLED);
+      this._unusedCssEnabled = Services.prefs.getBoolPref(PREF_UNUSED_CSS_ENABLED, false);
     }
     return this._unusedCssEnabled;
   }
