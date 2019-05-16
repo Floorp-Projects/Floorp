@@ -3619,7 +3619,7 @@ Tab.prototype = {
     this.browser.setAttribute("type", "content");
     this.browser.setAttribute("messagemanagergroup", "browsers");
 
-    if (Preferences.get("browser.tabs.remote.autostart", false)) {
+    if (Preferences.get("browser.tabs.remote.force-enable", false)) {
       this.browser.setAttribute("remote", "true");
     }
 
