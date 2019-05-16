@@ -19,6 +19,7 @@ import type { PauseAction } from "./PauseAction";
 import type { ASTAction } from "./ASTAction";
 import { clientCommands } from "../../client/firefox";
 import type { Panel } from "../../client/firefox/types";
+import type { ParserDispatcher } from "../../workers/parser";
 
 /**
  * Flow types
@@ -38,6 +39,8 @@ export type ThunkArgs = {
   getState: () => State,
   client: typeof clientCommands,
   sourceMaps: SourceMaps,
+  parser: ParserDispatcher,
+  evaluationsParser: ParserDispatcher,
   panel: Panel
 };
 

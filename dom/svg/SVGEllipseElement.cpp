@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ComputedStyle.h"
 #include "mozilla/dom/SVGEllipseElement.h"
 #include "mozilla/dom/SVGEllipseElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/RefPtr.h"
+#include "SVGGeometryProperty.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Ellipse)
 
@@ -41,6 +43,13 @@ SVGEllipseElement::SVGEllipseElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGEllipseElementBase(std::move(aNodeInfo)) {}
 
+bool SVGEllipseElement::IsAttributeMapped(const nsAtom* aAttribute) const {
+  return IsInLengthInfo(aAttribute, sLengthInfo) ||
+         SVGEllipseElementBase::IsAttributeMapped(aAttribute);
+}
+
+namespace SVGT = SVGGeometryProperty::Tags;
+
 //----------------------------------------------------------------------
 // nsINode methods
 
@@ -70,10 +79,12 @@ already_AddRefed<DOMSVGAnimatedLength> SVGEllipseElement::Ry() {
 
 /* virtual */
 bool SVGEllipseElement::HasValidDimensions() const {
-  return mLengthAttributes[RX].IsExplicitlySet() &&
-         mLengthAttributes[RX].GetAnimValInSpecifiedUnits() > 0 &&
-         mLengthAttributes[RY].IsExplicitlySet() &&
-         mLengthAttributes[RY].GetAnimValInSpecifiedUnits() > 0;
+  float rx, ry;
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Rx, SVGT::Ry>(this, &rx, &ry);
+
+  return rx > 0 && ry > 0;
 }
 
 SVGElement::LengthAttributesInfo SVGEllipseElement::GetLengthInfo() {
@@ -88,7 +99,10 @@ bool SVGEllipseElement::GetGeometryBounds(
     Rect* aBounds, const StrokeOptions& aStrokeOptions,
     const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
   float x, y, rx, ry;
-  GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::Rx, SVGT::Ry>(
+      this, &x, &y, &rx, &ry);
 
   if (rx <= 0.f || ry <= 0.f) {
     // Rendering of the element is disabled
@@ -124,7 +138,10 @@ bool SVGEllipseElement::GetGeometryBounds(
 
 already_AddRefed<Path> SVGEllipseElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, rx, ry;
-  GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::Rx, SVGT::Ry>(
+      this, &x, &y, &rx, &ry);
 
   if (rx <= 0.0f || ry <= 0.0f) {
     return nullptr;
@@ -133,6 +150,34 @@ already_AddRefed<Path> SVGEllipseElement::BuildPath(PathBuilder* aBuilder) {
   EllipseToBezier(aBuilder, Point(x, y), Size(rx, ry));
 
   return aBuilder->Finish();
+}
+
+bool SVGEllipseElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
+                                              const ComputedStyle& aOldStyle) {
+  auto *newSVGReset = aNewStyle.StyleSVGReset(),
+       *oldSVGReset = aOldStyle.StyleSVGReset();
+
+  return newSVGReset->mCx != oldSVGReset->mCx ||
+         newSVGReset->mCy != oldSVGReset->mCy ||
+         newSVGReset->mRx != oldSVGReset->mRx ||
+         newSVGReset->mRy != oldSVGReset->mRy;
+}
+
+nsCSSPropertyID SVGEllipseElement::GetCSSPropertyIdForAttrEnum(
+    uint8_t aAttrEnum) {
+  switch (aAttrEnum) {
+    case CX:
+      return eCSSProperty_cx;
+    case CY:
+      return eCSSProperty_cy;
+    case RX:
+      return eCSSProperty_rx;
+    case RY:
+      return eCSSProperty_ry;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown attr enum");
+      return eCSSProperty_UNKNOWN;
+  }
 }
 
 }  // namespace dom

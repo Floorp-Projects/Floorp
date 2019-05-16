@@ -5,13 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGRectElement.h"
-#include "nsGkAtoms.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGRectElementBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "nsGkAtoms.h"
+#include "SVGGeometryProperty.h"
 #include <algorithm>
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Rect)
@@ -49,6 +50,13 @@ SVGRectElement::SVGRectElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGRectElementBase(std::move(aNodeInfo)) {}
 
+bool SVGRectElement::IsAttributeMapped(const nsAtom* aAttribute) const {
+  return IsInLengthInfo(aAttribute, sLengthInfo) ||
+         SVGRectElementBase::IsAttributeMapped(aAttribute);
+}
+
+namespace SVGT = SVGGeometryProperty::Tags;
+
 //----------------------------------------------------------------------
 // nsINode methods
 
@@ -85,10 +93,13 @@ already_AddRefed<DOMSVGAnimatedLength> SVGRectElement::Ry() {
 
 /* virtual */
 bool SVGRectElement::HasValidDimensions() const {
-  return mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() &&
-         mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
-         mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() &&
-         mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0;
+  float width, height;
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(this, &width,
+                                                             &height);
+
+  return width > 0 && height > 0;
 }
 
 SVGElement::LengthAttributesInfo SVGRectElement::GetLengthInfo() {
@@ -105,8 +116,11 @@ bool SVGRectElement::GetGeometryBounds(Rect* aBounds,
                                        const Matrix* aToNonScalingStrokeSpace) {
   Rect rect;
   Float rx, ry;
-  GetAnimatedLengthValues(&rect.x, &rect.y, &rect.width, &rect.height, &rx, &ry,
-                          nullptr);
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height,
+                                  SVGT::Rx, SVGT::Ry>(
+      this, &rect.x, &rect.y, &rect.width, &rect.height, &rx, &ry);
 
   if (rect.IsEmpty()) {
     // Rendering of the element disabled
@@ -155,7 +169,11 @@ bool SVGRectElement::GetGeometryBounds(Rect* aBounds,
 
 void SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath) {
   float x, y, width, height, rx, ry;
-  GetAnimatedLengthValues(&x, &y, &width, &height, &rx, &ry, nullptr);
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height,
+                                  SVGT::Rx, SVGT::Ry>(this, &x, &y, &width,
+                                                      &height, &rx, &ry);
 
   if (width <= 0 || height <= 0) {
     aSimplePath->Reset();
@@ -175,7 +193,11 @@ void SVGRectElement::GetAsSimplePath(SimplePath* aSimplePath) {
 
 already_AddRefed<Path> SVGRectElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, width, height, rx, ry;
-  GetAnimatedLengthValues(&x, &y, &width, &height, &rx, &ry, nullptr);
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height,
+                                  SVGT::Rx, SVGT::Ry>(this, &x, &y, &width,
+                                                      &height, &rx, &ry);
 
   if (width <= 0 || height <= 0) {
     return nullptr;
@@ -193,18 +215,6 @@ already_AddRefed<Path> SVGRectElement::BuildPath(PathBuilder* aBuilder) {
     aBuilder->LineTo(r.BottomLeft());
     aBuilder->Close();
   } else {
-    // If either the 'rx' or the 'ry' attribute isn't set, then we have to
-    // set it to the value of the other:
-    bool hasRx = mLengthAttributes[ATTR_RX].IsExplicitlySet();
-    bool hasRy = mLengthAttributes[ATTR_RY].IsExplicitlySet();
-    MOZ_ASSERT(hasRx || hasRy);
-
-    if (hasRx && !hasRy) {
-      ry = rx;
-    } else if (hasRy && !hasRx) {
-      rx = ry;
-    }
-
     // Clamp rx and ry to half the rect's width and height respectively:
     rx = std::min(rx, width / 2);
     ry = std::min(ry, height / 2);
@@ -214,6 +224,41 @@ already_AddRefed<Path> SVGRectElement::BuildPath(PathBuilder* aBuilder) {
   }
 
   return aBuilder->Finish();
+}
+
+bool SVGRectElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
+                                           const ComputedStyle& aOldStyle) {
+  auto *newSVGReset = aNewStyle.StyleSVGReset(),
+       *oldSVGReset = aOldStyle.StyleSVGReset();
+  auto *newPosition = aNewStyle.StylePosition(),
+       *oldPosition = aOldStyle.StylePosition();
+
+  return newSVGReset->mX != oldSVGReset->mX ||
+         newSVGReset->mY != oldSVGReset->mY ||
+         newPosition->mWidth != oldPosition->mWidth ||
+         newPosition->mHeight != oldPosition->mHeight ||
+         newSVGReset->mRx != oldSVGReset->mRx ||
+         newSVGReset->mRy != oldSVGReset->mRy;
+}
+
+nsCSSPropertyID SVGRectElement::GetCSSPropertyIdForAttrEnum(uint8_t aAttrEnum) {
+  switch (aAttrEnum) {
+    case ATTR_X:
+      return eCSSProperty_x;
+    case ATTR_Y:
+      return eCSSProperty_y;
+    case ATTR_WIDTH:
+      return eCSSProperty_width;
+    case ATTR_HEIGHT:
+      return eCSSProperty_height;
+    case ATTR_RX:
+      return eCSSProperty_rx;
+    case ATTR_RY:
+      return eCSSProperty_ry;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown attr enum");
+      return eCSSProperty_UNKNOWN;
+  }
 }
 
 }  // namespace dom

@@ -45,6 +45,7 @@
 #     taskGroupId, // targetted taskGroupId
 #     action: {name, title, description, taskGroupId, symbol, repo_scope, cb_name}
 #     ownTaskId:   // taskId of the task that will be created
+#     clientId:    // clientId that triggered this hook
 #   }
 
 version: 1
@@ -58,6 +59,11 @@ tasks:
         ownerEmail: {$if: '"@" in push.owner', then: '${push.owner}', else: '${push.owner}@noreply.mozilla.org'}
         # ensure there's no trailing `/` on the repo URL
         repoUrl: {$if: 'repository.url[-1] == "/"', then: {$eval: 'repository.url[:-1]'}, else: {$eval: 'repository.url'}}
+        # expire try earlier than other branches
+        expires:
+          $if: 'repository.project == "try"'
+          then: {$fromNow: '28 days'}
+          else: {$fromNow: '1 year'}
       in:
         taskId: {$if: 'tasks_for != "action"', then: '${ownTaskId}'}
         taskGroupId:
@@ -70,7 +76,7 @@ tasks:
 
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 day'}
-        expires: {$fromNow: '1 year 1 second'} # 1 second so artifacts expire first, despite rounding errors
+        expires: {$eval: 'expires'}
         metadata:
           $merge:
             - owner: "${ownerEmail}"
@@ -254,7 +260,7 @@ tasks:
             'public':
               type: 'directory'
               path: '/builds/worker/artifacts'
-              expires: {$fromNow: '1 year'}
+              expires: {$eval: expires}
 
         extra:
           $merge:

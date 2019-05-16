@@ -99,6 +99,7 @@ add_task(async function test_setup_usbtoken() {
       ["security.webauth.u2f", false],
       ["security.webauth.webauthn", true],
       ["security.webauth.webauthn_enable_softtoken", false],
+      ["security.webauth.webauthn_enable_android_fido2", false],
       ["security.webauth.webauthn_enable_usbtoken", true]
     ]
   });
