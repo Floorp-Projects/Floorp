@@ -7182,8 +7182,21 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     return null();
   }
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
-  funbox->function()->setArgCount(0);
   setFunctionStartAtCurrentToken(funbox);
+
+  if (hasHeritage == HasHeritage::Yes) {
+    // Synthesize the equivalent to `function f(...args)`
+    funbox->setHasRest();
+    if (!notePositionalFormalParameter(funNode, cx_->names().args,
+                                       synthesizedBodyPos.begin,
+                                       /* disallowDuplicateParams = */ false,
+                                       /* duplicatedParam = */ nullptr)) {
+      return null();
+    }
+    funbox->function()->setArgCount(1);
+  } else {
+    funbox->function()->setArgCount(0);
+  }
 
   pc_->functionScope().useAsVarScope(pc_);
 
@@ -7228,7 +7241,23 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
       return null();
     }
 
-    CallNodeType superCall = handler_.newSuperCall(superBase, arguments, false);
+    NameNodeType argsNameNode = newName(cx_->names().args, synthesizedBodyPos);
+    if (!argsNameNode) {
+      return null();
+    }
+    if (!noteUsedName(cx_->names().args)) {
+      return null();
+    }
+
+    UnaryNodeType spreadArgs =
+        handler_.newSpread(synthesizedBodyPos.begin, argsNameNode);
+    if (!spreadArgs) {
+      return null();
+    }
+    handler_.addList(arguments, spreadArgs);
+
+    CallNodeType superCall =
+        handler_.newSuperCall(superBase, arguments, /* isSpread = */ true);
     if (!superCall) {
       return null();
     }
