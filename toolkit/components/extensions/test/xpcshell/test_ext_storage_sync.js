@@ -92,7 +92,8 @@ class KintoServer {
   }
 
   checkAuth(request, response) {
-    // FIXME: assert auth is "Bearer ...token..."
+    equal(request.getHeader("Authorization"), "Bearer some-access-token");
+
     if (this.rejectNextAuthResponse) {
       response.setStatusLine(null, 401, "Unauthorized");
       response.write(this.rejectNextAuthResponse);
@@ -267,6 +268,10 @@ class KintoServer {
   }
 
   handleGetCollection(collectionId, request, response) {
+    if (this.checkAuth(request, response)) {
+      return;
+    }
+
     response.setStatusLine(null, 200, "OK");
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Date", (new Date()).toUTCString());
