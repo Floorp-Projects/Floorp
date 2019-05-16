@@ -4,8 +4,9 @@
 "use strict";
 
 add_task(async function doorhanger_bc_patch_partialBadSize_completeBadSize() {
-  let updateParams = "&invalidPartialSize=1&invalidCompleteSize=1";
-  await runDoorhangerUpdateTest(updateParams, 1, [
+  let params = {checkAttempts: 1,
+                queryString: "&invalidPartialSize=1&invalidCompleteSize=1"};
+  await runDoorhangerUpdateTest(params, [
     {
       // If the update download fails maxBackgroundErrors download attempts then
       // show the update available prompt.
