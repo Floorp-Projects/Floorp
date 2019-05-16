@@ -207,7 +207,9 @@ class TaskBuilder(object):
                 'symbol': 'dependencies',
                 'tier': 1,
             },
-            routes=['index.project.mobile.fenix.v2.branch.master.latest'],
+            routes=[
+                'index.project.mobile.fenix.v2.branch.master.revision.{}'.format(self.commit)
+            ],
             artifacts={
                 'public/dependencies.txt': {
                     "type": 'file',
