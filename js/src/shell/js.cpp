@@ -10164,7 +10164,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       }
 
       RootedValue rval(cx);
-      if (!JS::Evaluate(cx, opts, srcBuf, &rval)) {
+      if (!JS::EvaluateDontInflate(cx, opts, srcBuf, &rval)) {
         return false;
       }
 
