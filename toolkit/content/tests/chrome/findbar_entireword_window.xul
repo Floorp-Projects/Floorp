@@ -152,7 +152,7 @@
         let event = document.createEvent("KeyboardEvent");
         event.initKeyEvent("keypress", true, true, null, false, false,
                            false, false, 0, str.charCodeAt(i));
-        gFindBar._findField.dispatchEvent(event);
+        gFindBar._findField.inputField.dispatchEvent(event);
         if (waitForResult) {
           await promise;
         }
@@ -250,7 +250,7 @@
       });
 
       ok(!gFindBar.hidden, "testQuickfind: failed to open findbar");
-      ok(document.commandDispatcher.focusedElement == gFindBar._findField,
+      ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
         "testQuickfind: find field is not focused");
       ok(!gFindBar.getElement("entire-word-status").hidden,
         "testQuickfind: entire word mode status text should be visible");

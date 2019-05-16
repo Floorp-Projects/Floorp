@@ -29,7 +29,7 @@ class MozFindbar extends XULElement {
     this.content = MozXULElement.parseXULToFragment(`
       <hbox anonid="findbar-container" class="findbar-container" flex="1" align="center">
         <hbox anonid="findbar-textbox-wrapper" align="stretch">
-          <html:input anonid="findbar-textbox" class="findbar-textbox findbar-find-fast" />
+          <textbox anonid="findbar-textbox" class="findbar-textbox findbar-find-fast" />
           <toolbarbutton anonid="find-previous" class="findbar-find-previous tabbable" data-l10n-attrs="tooltiptext" data-l10n-id="findbar-previous" oncommand="onFindAgainCommand(true);" disabled="true" />
           <toolbarbutton anonid="find-next" class="findbar-find-next tabbable" data-l10n-id="findbar-next" oncommand="onFindAgainCommand(false);" disabled="true" />
         </hbox>
@@ -683,11 +683,7 @@ class MozFindbar extends XULElement {
 
   clear() {
     this.browser.finder.removeSelection();
-    // Clear value and undo/redo transactions
-    this._findField.value = "";
-    if (this._findField.editor) {
-      this._findField.editor.transactionManager.clear();
-    }
+    this._findField.reset();
     this.toggleHighlight(false);
     this._updateStatusUI();
     this._enableFindButtons(false);
@@ -753,15 +749,15 @@ class MozFindbar extends XULElement {
     const FAYT_LINKS_KEY = "'";
     const FAYT_TEXT_KEY = "/";
 
-    if (!this.hidden && this._findField == document.activeElement) {
-      this._dispatchKeypressEvent(this._findField, aFakeEvent);
+    if (!this.hidden && this._findField.inputField == document.activeElement) {
+      this._dispatchKeypressEvent(this._findField.inputField, aFakeEvent);
       return;
     }
 
     if (this._findMode != this.FIND_NORMAL && this._quickFindTimeout) {
       this._findField.select();
       this._findField.focus();
-      this._dispatchKeypressEvent(this._findField, aFakeEvent);
+      this._dispatchKeypressEvent(this._findField.inputField, aFakeEvent);
       return;
     }
 
@@ -785,7 +781,7 @@ class MozFindbar extends XULElement {
       this._findField.focus();
 
       if (autostartFAYT)
-        this._dispatchKeypressEvent(this._findField, aFakeEvent);
+        this._dispatchKeypressEvent(this._findField.inputField, aFakeEvent);
       else
         this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
     }
@@ -814,7 +810,7 @@ class MozFindbar extends XULElement {
     if (this._browser && this._browser.messageManager) {
       this._browser.messageManager.sendAsyncMessage("Findbar:UpdateState", {
         findMode: this._findMode,
-        isOpenAndFocused: !this.hidden && document.activeElement == this._findField,
+        isOpenAndFocused: !this.hidden && document.activeElement == this._findField.inputField,
         hasQuickFindTimeout: !!this._quickFindTimeout,
       });
     }
