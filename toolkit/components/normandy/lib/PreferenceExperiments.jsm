@@ -381,10 +381,7 @@ var PreferenceExperiments = {
   async start({
     name,
     branch,
-    preferenceName,
-    preferenceValue,
-    preferenceBranchType,
-    preferenceType,
+    preferences,
     experimentType = "exp",
   }) {
     log.debug(`PreferenceExperiments.start(${name}, ${branch})`);
@@ -396,20 +393,17 @@ var PreferenceExperiments = {
     }
 
     const activeExperiments = Object.values(store.data.experiments).filter(e => !e.expired);
-    const hasConflictingExperiment = activeExperiments.some(
-      e => e.preferences.hasOwnProperty(preferenceName)
-    );
-    if (hasConflictingExperiment) {
+    const preferencesWithConflicts = Object.keys(preferences).filter(preferenceName => {
+      return activeExperiments.some(
+        e => e.preferences.hasOwnProperty(preferenceName)
+      );
+    });
+
+    if (preferencesWithConflicts.length > 0) {
       TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "pref-conflict"});
       throw new Error(
-        `Another preference experiment for the pref "${preferenceName}" is currently active.`
+        `Another preference experiment for the pref "${preferencesWithConflicts[0]}" is currently active.`
       );
-    }
-
-    const preferences = PreferenceBranchType[preferenceBranchType];
-    if (!preferences) {
-      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "invalid-branch"});
-      throw new Error(`Invalid value for preferenceBranchType: ${preferenceBranchType}`);
     }
 
     if (experimentType.length > MAX_EXPERIMENT_SUBTYPE_LENGTH) {
@@ -420,21 +414,40 @@ var PreferenceExperiments = {
       );
     }
 
-    const prevPrefType = Services.prefs.getPrefType(preferenceName);
-    const givenPrefType = PREFERENCE_TYPE_MAP[preferenceType];
+    // Sanity check each preference
+    for (const [preferenceName, preferenceInfo] of Object.entries(preferences)) {
+      const { preferenceBranchType, preferenceType } = preferenceInfo;
+      const preferenceBranch = PreferenceBranchType[preferenceBranchType];
+      if (!preferenceBranch) {
+        TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "invalid-branch"});
+        throw new Error(`Invalid value for preferenceBranchType: ${preferenceBranchType}`);
+      }
 
-    if (!preferenceType || !givenPrefType) {
-      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "invalid-type"});
-      throw new Error(`Invalid preferenceType provided (given "${preferenceType}")`);
+      const prevPrefType = Services.prefs.getPrefType(preferenceName);
+      const givenPrefType = PREFERENCE_TYPE_MAP[preferenceType];
+
+      if (!preferenceType || !givenPrefType) {
+        TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "invalid-type"});
+        throw new Error(`Invalid preferenceType provided (given "${preferenceType}")`);
+      }
+
+      if (prevPrefType !== Services.prefs.PREF_INVALID && prevPrefType !== givenPrefType) {
+        TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "invalid-type"});
+        throw new Error(
+          `Previous preference value is of type "${prevPrefType}", but was given ` +
+            `"${givenPrefType}" (${preferenceType})`
+        );
+      }
+
+      preferenceInfo.previousPreferenceValue = getPref(preferenceBranch, preferenceName, preferenceType);
     }
 
-    if (prevPrefType !== Services.prefs.PREF_INVALID && prevPrefType !== givenPrefType) {
-      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "invalid-type"});
-      throw new Error(
-        `Previous preference value is of type "${prevPrefType}", but was given ` +
-        `"${givenPrefType}" (${preferenceType})`
-      );
+    for (const [preferenceName, preferenceInfo] of Object.entries(preferences)) {
+      const { preferenceType, preferenceValue, preferenceBranchType } = preferenceInfo;
+      const preferenceBranch = PreferenceBranchType[preferenceBranchType];
+      setPref(preferenceBranch, preferenceName, preferenceType, preferenceValue);
     }
+    PreferenceExperiments.startObserver(name, preferences);
 
     /** @type {Experiment} */
     const experiment = {
@@ -442,19 +455,10 @@ var PreferenceExperiments = {
       branch,
       expired: false,
       lastSeen: new Date().toJSON(),
-      preferences: {
-        [preferenceName]: {
-          preferenceBranchType,
-          preferenceValue,
-          preferenceType,
-          previousPreferenceValue: getPref(preferences, preferenceName, preferenceType),
-        },
-      },
+      preferences,
       experimentType,
     };
 
-    setPref(preferences, preferenceName, preferenceType, preferenceValue);
-    PreferenceExperiments.startObserver(name, {[preferenceName]: {preferenceType, preferenceValue}});
     store.data.experiments[name] = experiment;
     store.saveSoon();
 

@@ -77,10 +77,13 @@ class PreferenceExperimentAction extends BaseAction {
       await PreferenceExperiments.start({
         name: slug,
         branch: branch.slug,
-        preferenceName,
-        preferenceValue: branch.value,
-        preferenceBranchType,
-        preferenceType,
+        preferences: {
+          [preferenceName]: {
+            preferenceValue: branch.value,
+            preferenceBranchType,
+            preferenceType,
+          },
+        },
         experimentType,
       });
     } else {
