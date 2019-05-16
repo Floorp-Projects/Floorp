@@ -21,7 +21,7 @@ add_task(async function test() {
   let db = Services.storage.openDatabase(GetPermissionsFile(profile));
   db.schemaVersion = 9;
   db.executeSimpleSQL("DROP TABLE moz_perms");
-  db.executeSimpleSQL("DROP TABLE moz_hosts");
+  db.executeSimpleSQL("DROP TABLE IF EXISTS moz_hosts");
 
   db.executeSimpleSQL(
     "CREATE TABLE moz_perms (" +
@@ -199,7 +199,7 @@ add_task(async function test() {
     let mozHostsCount = db.createStatement("SELECT count(*) FROM moz_hosts");
     try {
       mozHostsCount.executeStep();
-      Assert.equal(mozHostsCount.getInt64(0), 1);
+      Assert.equal(mozHostsCount.getInt64(0), 3);
     } finally {
       mozHostsCount.finalize();
     }
