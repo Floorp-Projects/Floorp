@@ -77,8 +77,11 @@ struct AnimationValue {
   // Currently only background-color is supported.
   nscolor GetColor(nscolor aForegroundColor) const;
 
-  // Return the transform list as a RefPtr.
-  already_AddRefed<const nsCSSValueSharedList> GetTransformList() const;
+  // Return a transform list for the transform property.
+  const mozilla::StyleTransform& GetTransformProperty() const;
+  const mozilla::StyleScale& GetScaleProperty() const;
+  const mozilla::StyleTranslate& GetTranslateProperty() const;
+  const mozilla::StyleRotate& GetRotateProperty() const;
 
   // Return the scale for mServo, which is calculated with reference to aFrame.
   mozilla::gfx::Size GetScaleValue(const nsIFrame* aFrame) const;

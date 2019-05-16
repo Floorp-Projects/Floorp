@@ -6890,34 +6890,40 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
                                        float aAppUnitsPerPixel,
                                        Matrix4x4& aOutMatrix);
 
-  struct FrameTransformProperties {
+  struct MOZ_STACK_CLASS FrameTransformProperties {
     FrameTransformProperties(const nsIFrame* aFrame, float aAppUnitsPerPixel,
                              const nsRect* aBoundsOverride);
     // This constructor is used on the compositor (for animations).
     // FIXME: Bug 1186329: if we want to support compositor animations for
     // motion path, we need to update this. For now, let mMotion be Nothing().
-    FrameTransformProperties(
-        RefPtr<const nsCSSValueSharedList>&& aIndividualTransform,
-        RefPtr<const nsCSSValueSharedList>&& aTransformList,
-        const Point3D& aToTransformOrigin)
+    FrameTransformProperties(const mozilla::StyleTranslate& aTranslate,
+                             const mozilla::StyleRotate& aRotate,
+                             const mozilla::StyleScale& aScale,
+                             const mozilla::StyleTransform& aTransform,
+                             const Point3D& aToTransformOrigin)
         : mFrame(nullptr),
-          mIndividualTransformList(std::move(aIndividualTransform)),
-          mTransformList(std::move(aTransformList)),
+          mTranslate(aTranslate),
+          mRotate(aRotate),
+          mScale(aScale),
+          mTransform(aTransform),
           mToTransformOrigin(aToTransformOrigin) {}
 
     bool HasTransform() const {
-      return mIndividualTransformList || mTransformList || mMotion.isSome();
+      return !mTranslate.IsNone() || !mRotate.IsNone() || !mScale.IsNone() ||
+             !mTransform.IsNone() || mMotion.isSome();
     }
 
     const nsIFrame* mFrame;
-    const RefPtr<const nsCSSValueSharedList> mIndividualTransformList;
+    const mozilla::StyleTranslate& mTranslate;
+    const mozilla::StyleRotate& mRotate;
+    const mozilla::StyleScale& mScale;
+    const mozilla::StyleTransform& mTransform;
     const mozilla::Maybe<mozilla::MotionPathData> mMotion;
-    const RefPtr<const nsCSSValueSharedList> mTransformList;
     const Point3D mToTransformOrigin;
   };
 
   /**
-   * Given a frame with the -moz-transform property or an SVG transform,
+   * Given a frame with the transform property or an SVG transform,
    * returns the transformation matrix for that frame.
    *
    * @param aFrame The frame to get the matrix from.
