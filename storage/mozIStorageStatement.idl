@@ -15,7 +15,7 @@
  * A SQL statement that can be used for both synchronous and asynchronous
  * purposes.
  */
-[scriptable, uuid(5f567c35-6c32-4140-828c-683ea49cfd3a)]
+[scriptable, builtinclass, uuid(5f567c35-6c32-4140-828c-683ea49cfd3a)]
 interface mozIStorageStatement : mozIStorageBaseStatement {
   /**
    * Create a clone of this statement, by initializing a new statement
