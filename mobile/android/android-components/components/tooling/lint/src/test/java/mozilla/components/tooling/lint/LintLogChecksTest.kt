@@ -34,23 +34,23 @@ class LintLogChecksTest {
         `when`(context.evaluator).thenReturn(evaluator)
 
         val logCheck = LintLogChecks()
-        logCheck.visitMethod(context, node, method)
+        logCheck.visitMethodCall(context, node, method)
         verify(context, never()).report(ISSUE_LOG_USAGE, node, context.getLocation(node), ERROR_MESSAGE)
 
         `when`(node.methodIdentifier).thenReturn(methodIdentifier)
-        logCheck.visitMethod(context, node, method)
+        logCheck.visitMethodCall(context, node, method)
         verify(context, never()).report(ISSUE_LOG_USAGE, node, context.getLocation(node), ERROR_MESSAGE)
 
         `when`(methodIdentifier.getContainingUClass()).thenReturn(clazz)
-        logCheck.visitMethod(context, node, method)
+        logCheck.visitMethodCall(context, node, method)
         verify(context, never()).report(ISSUE_LOG_USAGE, node, context.getLocation(node), ERROR_MESSAGE)
 
         `when`(clazz.qualifiedName).thenReturn("com.some.app.Class")
-        logCheck.visitMethod(context, node, method)
+        logCheck.visitMethodCall(context, node, method)
         verify(context, never()).report(ISSUE_LOG_USAGE, node, context.getLocation(node), ERROR_MESSAGE)
 
         `when`(clazz.qualifiedName).thenReturn("mozilla.components.some.Class")
-        logCheck.visitMethod(context, node, method)
+        logCheck.visitMethodCall(context, node, method)
         verify(context, times(1)).report(ISSUE_LOG_USAGE, node, context.getLocation(node), ERROR_MESSAGE)
     }
 }

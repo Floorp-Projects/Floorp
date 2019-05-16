@@ -27,7 +27,7 @@ class LintLogChecks : Detector(), Detector.UastScanner {
 
     override fun getApplicableMethodNames() = listOf("v", "d", "i", "w", "e")
 
-    override fun visitMethod(context: JavaContext, node: UCallExpression, method: PsiMethod) {
+    override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         if (context.evaluator.isMemberInClass(method, ANDROID_LOG_CLASS)) {
             val inComponentPackage = componentPackages.any {
                 node.methodIdentifier?.getContainingUClass()?.qualifiedName?.startsWith(it) == true

@@ -29,7 +29,6 @@ object KotlinCompiler {
         "samples-toolbar",
         "service-glean",
         "support-test",
-        "tooling-lint",
         "ui-tabcounter"
     )
 }
