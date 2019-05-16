@@ -19,7 +19,6 @@
 
 /**
  * Experiments store info about an active or expired preference experiment.
- * They are single-depth objects to simplify cloning.
  * @typedef {Object} Experiment
  * @property {string} name
  *   Unique name of the experiment
@@ -30,8 +29,17 @@
  * @property {string} lastSeen
  *   ISO-formatted date string of when the experiment was last seen from the
  *   recipe server.
- * @property {string} preferenceName
- *   Name of the preference affected by this experiment.
+ * @property {Object} preferences
+ *   An object consisting of all the preferences that are set by this experiment.
+ *   Keys are the name of each preference affected by this experiment.
+ *   Values are Preference Objects, about which see below.
+ * @property {string} experimentType
+ *   The type to report to Telemetry's experiment marker API.
+ */
+
+/**
+ * Each Preference stores information about a preference that an
+ * experiment sets.
  * @property {string|integer|boolean} preferenceValue
  *   Value to change the preference to during the experiment.
  * @property {string} preferenceType
@@ -46,8 +54,6 @@
  *   preference is modified on startup of the add-on. If "user", the user value
  *   for the preference is modified when the experiment starts, and is reset to
  *   its original value when the experiment ends.
- * @property {string} experimentType
- *   The type to report to Telemetry's experiment marker API.
  */
 
 "use strict";
@@ -60,7 +66,7 @@ ChromeUtils.defineModuleGetter(this, "LogManager", "resource://normandy/lib/LogM
 ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment", "resource://gre/modules/TelemetryEnvironment.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryEvents", "resource://normandy/lib/TelemetryEvents.jsm");
 
-var EXPORTED_SYMBOLS = ["PreferenceExperiments"];
+var EXPORTED_SYMBOLS = ["PreferenceExperiments", "migrateStorage"];
 
 const EXPERIMENT_FILE = "shield-preference-experiments.json";
 const STARTUP_EXPERIMENT_PREFS_BRANCH = "app.normandy.startupExperimentPrefs.";
@@ -95,9 +101,64 @@ function ensureStorage() {
   if (gStorePromise === undefined) {
     const path = OS.Path.join(OS.Constants.Path.profileDir, EXPERIMENT_FILE);
     const storage = new JSONFile({path});
-    gStorePromise = storage.load().then(() => storage);
+    gStorePromise = storage.load().then(() => {
+      migrateStorage(storage);
+      return storage;
+    });
   }
   return gStorePromise;
+}
+
+/**
+ * Migrate storage of experiments from old format (one preference per
+ * experiment) to new format.
+ *
+ * This function is exported for testing purposes but should not be
+ * called otherwise.
+ */
+function migrateStorage(storage) {
+  if (storage.data.__version == 2) {
+    return;
+  }
+  const newData = {
+    __version: 2,
+    experiments: {},
+  };
+  for (let [expName, experiment] of Object.entries(storage.data)) {
+    if (expName == "__version") {
+      continue;
+    }
+
+    const {
+      name,
+      branch,
+      expired,
+      lastSeen,
+      preferenceName,
+      preferenceValue,
+      preferenceType,
+      previousPreferenceValue,
+      preferenceBranchType,
+      experimentType,
+    } = experiment;
+    const newExperiment = {
+      name,
+      branch,
+      expired,
+      lastSeen,
+      preferences: {
+        [preferenceName]: {
+          preferenceBranchType,
+          preferenceType,
+          preferenceValue,
+          previousPreferenceValue,
+        },
+      },
+      experimentType,
+    };
+    newData.experiments[expName] = newExperiment;
+  }
+  storage.data = newData;
 }
 
 const log = LogManager.getLogger("preference-experiments");
@@ -155,15 +216,17 @@ var PreferenceExperiments = {
   async recordOriginalValues(studyPrefsChanged) {
     const store = await ensureStorage();
 
-    for (const experiment of Object.values(store.data)) {
-      if (studyPrefsChanged.hasOwnProperty(experiment.preferenceName)) {
-        if (experiment.expired) {
-          log.warn("Expired preference experiment changed value during startup");
+    for (const experiment of Object.values(store.data.experiments)) {
+      for (const [prefName, prefInfo] of Object.entries(experiment.preferences)) {
+        if (studyPrefsChanged.hasOwnProperty(prefName)) {
+          if (experiment.expired) {
+            log.warn("Expired preference experiment changed value during startup");
+          }
+          if (prefInfo.preferenceBranch !== "default") {
+            log.warn("Non-default branch preference experiment changed value during startup");
+          }
+          prefInfo.previousPreferenceValue = studyPrefsChanged[prefName];
         }
-        if (experiment.branch !== "default") {
-          log.warn("Non-default branch preference experiment changed value during startup");
-        }
-        experiment.previousPreferenceValue = studyPrefsChanged[experiment.preferenceName];
       }
     }
 
@@ -181,13 +244,20 @@ var PreferenceExperiments = {
 
     for (const experiment of await this.getAllActive()) {
       // Check that the current value of the preference is still what we set it to
-      if (getPref(UserPreferences, experiment.preferenceName, experiment.preferenceType) !== experiment.preferenceValue) {
-        // if not, stop the experiment, and skip the remaining steps
-        log.info(`Stopping experiment "${experiment.name}" because its value changed`);
-        await this.stop(experiment.name, {
-          resetValue: false,
-          reason: "user-preference-changed-sideload",
-        });
+      let stopped = false;
+      for (const [prefName, prefInfo] of Object.entries(experiment.preferences)) {
+        if (getPref(UserPreferences, prefName, prefInfo.preferenceType) !== prefInfo.preferenceValue) {
+          // if not, stop the experiment, and skip the remaining steps
+          log.info(`Stopping experiment "${experiment.name}" because its value changed`);
+          await this.stop(experiment.name, {
+            resetValue: false,
+            reason: "user-preference-changed-sideload",
+          });
+          stopped = true;
+          break;
+        }
+      }
+      if (stopped) {
         continue;
       }
 
@@ -198,8 +268,10 @@ var PreferenceExperiments = {
         {type: EXPERIMENT_TYPE_PREFIX + experiment.experimentType}
       );
 
-      // Watch for changes to the experiment's preference
-      this.startObserver(experiment.name, experiment.preferenceName, experiment.preferenceType, experiment.preferenceValue);
+      for (const [prefName, prefInfo] of Object.entries(experiment.preferences)) {
+        // Watch for changes to the experiment's preference
+        this.startObserver(experiment.name, prefName, prefInfo.preferenceType, prefInfo.preferenceValue);
+      }
     }
   },
 
@@ -220,13 +292,15 @@ var PreferenceExperiments = {
       prefBranch.clearUserPref(pref);
     }
 
-    // Filter out non-default-branch experiments (user-branch), because they
-    // don't need to be set on the default branch during early startup. Doing so
-    // would make the user branch and the default branch the same, which would
-    // cause the user branch to not be saved, and the user branch preference
-    // would be erased.
-    const defaultBranchExperiments = (await this.getAllActive()).filter(exp => exp.preferenceBranchType === "default");
-    for (const {preferenceName, preferenceValue} of defaultBranchExperiments) {
+    // Only store prefs to set on the default branch.
+    // Be careful not to store user branch prefs here, because this
+    // would cause the default branch to match the user branch,
+    // causing the user branch pref to get cleared.
+    const allExperiments = await this.getAllActive();
+    const defaultBranchPrefs =
+          allExperiments.flatMap(exp => Object.entries(exp.preferences))
+          .filter(([preferenceName, preferenceInfo]) => preferenceInfo.preferenceBranchType === "default");
+    for (const [preferenceName, {preferenceValue}] of defaultBranchPrefs) {
       switch (typeof preferenceValue) {
         case "string":
           prefBranch.setCharPref(preferenceName, preferenceValue);
@@ -253,11 +327,15 @@ var PreferenceExperiments = {
   withMockExperiments(mockExperiments = []) {
     return function wrapper(testFunction) {
       return async function wrappedTestFunction(...args) {
-        const data = {};
+        const experiments = {};
 
         for (const exp of mockExperiments) {
-          data[exp.name] = exp;
+          experiments[exp.name] = exp;
         }
+        const data = {
+          __version: 2,
+          experiments,
+        };
 
         const oldPromise = gStorePromise;
         gStorePromise = Promise.resolve({
@@ -282,7 +360,10 @@ var PreferenceExperiments = {
    */
   async clearAllExperimentStorage() {
     const store = await ensureStorage();
-    store.data = {};
+    store.data = {
+      __version: 2,
+      experiments: {},
+    };
     store.saveSoon();
   },
 
@@ -311,14 +392,14 @@ var PreferenceExperiments = {
     log.debug(`PreferenceExperiments.start(${name}, ${branch})`);
 
     const store = await ensureStorage();
-    if (name in store.data) {
+    if (name in store.data.experiments) {
       TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "name-conflict"});
       throw new Error(`A preference experiment named "${name}" already exists.`);
     }
 
-    const activeExperiments = Object.values(store.data).filter(e => !e.expired);
+    const activeExperiments = Object.values(store.data.experiments).filter(e => !e.expired);
     const hasConflictingExperiment = activeExperiments.some(
-      e => e.preferenceName === preferenceName
+      e => e.preferences.hasOwnProperty(preferenceName)
     );
     if (hasConflictingExperiment) {
       TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "pref-conflict"});
@@ -363,17 +444,20 @@ var PreferenceExperiments = {
       branch,
       expired: false,
       lastSeen: new Date().toJSON(),
-      preferenceName,
-      preferenceValue,
-      preferenceType,
-      previousPreferenceValue: getPref(preferences, preferenceName, preferenceType),
-      preferenceBranchType,
+      preferences: {
+        [preferenceName]: {
+          preferenceBranchType,
+          preferenceValue,
+          preferenceType,
+          previousPreferenceValue: getPref(preferences, preferenceName, preferenceType),
+        },
+      },
       experimentType,
     };
 
     setPref(preferences, preferenceName, preferenceType, preferenceValue);
     PreferenceExperiments.startObserver(name, preferenceName, preferenceType, preferenceValue);
-    store.data[name] = experiment;
+    store.data.experiments[name] = experiment;
     store.saveSoon();
 
     TelemetryEnvironment.setExperimentActive(name, branch, {type: EXPERIMENT_TYPE_PREFIX + experimentType});
@@ -465,11 +549,11 @@ var PreferenceExperiments = {
     log.debug(`PreferenceExperiments.markLastSeen(${experimentName})`);
 
     const store = await ensureStorage();
-    if (!(experimentName in store.data)) {
+    if (!(experimentName in store.data.experiments)) {
       throw new Error(`Could not find a preference experiment named "${experimentName}"`);
     }
 
-    store.data[experimentName].lastSeen = new Date().toJSON();
+    store.data.experiments[experimentName].lastSeen = new Date().toJSON();
     store.saveSoon();
   },
 
@@ -495,12 +579,12 @@ var PreferenceExperiments = {
     }
 
     const store = await ensureStorage();
-    if (!(experimentName in store.data)) {
+    if (!(experimentName in store.data.experiments)) {
       TelemetryEvents.sendEvent("unenrollFailed", "preference_study", experimentName, {reason: "does-not-exist"});
       throw new Error(`Could not find a preference experiment named "${experimentName}"`);
     }
 
-    const experiment = store.data[experimentName];
+    const experiment = store.data.experiments[experimentName];
     if (experiment.expired) {
       TelemetryEvents.sendEvent("unenrollFailed", "preference_study", experimentName, {reason: "already-unenrolled"});
       throw new Error(
@@ -513,21 +597,24 @@ var PreferenceExperiments = {
     }
 
     if (resetValue) {
-      const {preferenceName, preferenceType, previousPreferenceValue, preferenceBranchType} = experiment;
-      const preferences = PreferenceBranchType[preferenceBranchType];
+      for (const [preferenceName, prefInfo] of Object.entries(experiment.preferences)) {
+        const {preferenceType, previousPreferenceValue, preferenceBranchType} = prefInfo;
+        const preferences = PreferenceBranchType[preferenceBranchType];
 
-      if (previousPreferenceValue !== null) {
-        setPref(preferences, preferenceName, preferenceType, previousPreferenceValue);
-      } else if (preferenceBranchType === "user") {
-        // Remove the "user set" value (which Shield set), but leave the default intact.
-        preferences.clearUserPref(preferenceName);
-      } else {
-        log.warn(
-          `Can't revert pref for experiment ${experimentName} because it had no default value. `
-          + `Preference will be reset at the next restart.`
-        );
-        // It would seem that Services.prefs.deleteBranch() could be used for
-        // this, but in Normandy's case it does not work. See bug 1502410.
+        if (previousPreferenceValue !== null) {
+          setPref(preferences, preferenceName, preferenceType, previousPreferenceValue);
+        } else if (preferenceBranchType === "user") {
+          // Remove the "user set" value (which Shield set), but leave the default intact.
+          preferences.clearUserPref(preferenceName);
+        } else {
+          log.warn(
+            `Can't revert pref ${preferenceName} for experiment ${experimentName} `
+              + `because it had no default value. `
+              + `Preference will be reset at the next restart.`
+          );
+          // It would seem that Services.prefs.deleteBranch() could be used for
+          // this, but in Normandy's case it does not work. See bug 1502410.
+        }
       }
     }
 
@@ -544,6 +631,22 @@ var PreferenceExperiments = {
   },
 
   /**
+   * Clone an experiment using knowledge of its structure to avoid
+   * having to serialize/deserialize it.
+   *
+   * We do this in places where return experiments so clients can't
+   * accidentally mutate our data underneath us.
+   */
+  _cloneExperiment(experiment) {
+    return {
+      ...experiment,
+      preferences: {
+        ...experiment.preferences,
+      },
+    };
+  },
+
+  /**
    * Get the experiment object for the named experiment.
    * @param {string} experimentName
    * @resolves {Experiment}
@@ -553,12 +656,11 @@ var PreferenceExperiments = {
   async get(experimentName) {
     log.debug(`PreferenceExperiments.get(${experimentName})`);
     const store = await ensureStorage();
-    if (!(experimentName in store.data)) {
+    if (!(experimentName in store.data.experiments)) {
       throw new Error(`Could not find a preference experiment named "${experimentName}"`);
     }
 
-    // Return a copy so mutating it doesn't affect the storage.
-    return Object.assign({}, store.data[experimentName]);
+    return this._cloneExperiment(store.data.experiments[experimentName]);
   },
 
   /**
@@ -568,9 +670,7 @@ var PreferenceExperiments = {
   async getAll() {
     const store = await ensureStorage();
 
-    // Return copies so that mutating returned experiments doesn't affect the
-    // stored values.
-    return Object.values(store.data).map(experiment => Object.assign({}, experiment));
+    return Object.values(store.data.experiments).map(experiment => this._cloneExperiment(experiment));
   },
 
   /**
@@ -579,8 +679,7 @@ var PreferenceExperiments = {
   */
   async getAllActive() {
     const store = await ensureStorage();
-    // Return copies so mutating them doesn't affect the storage.
-    return Object.values(store.data).filter(e => !e.expired).map(e => Object.assign({}, e));
+    return Object.values(store.data.experiments).filter(e => !e.expired).map(e => this._cloneExperiment(e));
   },
 
   /**
@@ -591,6 +690,6 @@ var PreferenceExperiments = {
   async has(experimentName) {
     log.debug(`PreferenceExperiments.has(${experimentName})`);
     const store = await ensureStorage();
-    return experimentName in store.data;
+    return experimentName in store.data.experiments;
   },
 };

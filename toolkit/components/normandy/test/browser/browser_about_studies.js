@@ -172,8 +172,9 @@ decorate_task(
       );
 
       const activePrefStudy = getStudyRow(doc, prefStudies[0].name);
+      const preferenceName = Object.keys(prefStudies[0].preferences)[0];
       ok(
-        activePrefStudy.querySelector(".study-description").textContent.includes(prefStudies[0].preferenceName),
+        activePrefStudy.querySelector(".study-description").textContent.includes(preferenceName),
         "Preference studies show the preference they are changing"
       );
       is(
