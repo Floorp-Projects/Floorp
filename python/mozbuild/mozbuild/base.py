@@ -9,9 +9,9 @@ import logging
 import mozpack.path as mozpath
 import multiprocessing
 import os
-import six
 import subprocess
 import sys
+import types
 import errno
 try:
     from shutil import which
@@ -19,6 +19,7 @@ except ImportError:
     # shutil.which is not available in Python 2.7
     import which
 
+from StringIO import StringIO
 from mach.mixin.process import ProcessExecutionMixin
 from mozversioncontrol import (
     get_repository_from_build_config,
@@ -272,7 +273,7 @@ class MozbuildObject(ProcessExecutionMixin):
         # the environment variable, which has an impact on autodetection (when
         # path is MozconfigLoader.AUTODETECT), and memoization wouldn't account
         # for it without the explicit (unused) argument.
-        out = six.StringIO()
+        out = StringIO()
         env = os.environ
         if path and path != MozconfigLoader.AUTODETECT:
             env = dict(env)
@@ -288,7 +289,7 @@ class MozbuildObject(ProcessExecutionMixin):
         class ReducedConfigureSandbox(ConfigureSandbox):
             def depends_impl(self, *args, **kwargs):
                 args = tuple(
-                    a if not isinstance(a, six.string_types) or a != '--help'
+                    a if not isinstance(a, types.StringTypes) or a != '--help'
                     else self._always.sandboxed
                     for a in args
                 )

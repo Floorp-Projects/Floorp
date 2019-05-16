@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function
 
 import os
 import re
-import six
+from types import StringTypes
 from collections import Iterable
 
 
@@ -105,19 +105,19 @@ class Rule(object):
 
     def add_targets(self, targets):
         '''Add additional targets to the rule.'''
-        assert isinstance(targets, Iterable) and not isinstance(targets, six.string_types)
+        assert isinstance(targets, Iterable) and not isinstance(targets, StringTypes)
         self._targets.update(targets)
         return self
 
     def add_dependencies(self, deps):
         '''Add dependencies to the rule.'''
-        assert isinstance(deps, Iterable) and not isinstance(deps, six.string_types)
+        assert isinstance(deps, Iterable) and not isinstance(deps, StringTypes)
         self._dependencies.update(deps)
         return self
 
     def add_commands(self, commands):
         '''Add commands to the rule.'''
-        assert isinstance(commands, Iterable) and not isinstance(commands, six.string_types)
+        assert isinstance(commands, Iterable) and not isinstance(commands, StringTypes)
         self._commands.extend(commands)
         return self
 
