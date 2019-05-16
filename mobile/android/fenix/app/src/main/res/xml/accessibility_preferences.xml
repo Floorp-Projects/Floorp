@@ -14,7 +14,7 @@
         android:title="@string/preference_accessibility_font_size_title"
         app:adjustable="true"
         app:iconSpaceReserved="false"
-        app:min="1"
-        app:seekBarIncrement="1"
+        app:min="50"
+        app:seekBarIncrement="5"
         app:showSeekBarValue="true" />
 </PreferenceScreen>
