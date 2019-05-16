@@ -5,10 +5,12 @@
 package mozilla.components.browser.menu
 
 import android.view.View
+import androidx.recyclerview.widget.RecyclerView
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
@@ -82,6 +84,28 @@ class BrowserMenuAdapterTest {
         verify(item2).bind(menu, view)
     }
 
+    @Test
+    fun `invalidate will be forwarded to item implementation`() {
+        val item1 = spy(createMenuItem())
+        val item2 = spy(createMenuItem())
+
+        val menu = mock(BrowserMenu::class.java)
+
+        val adapter = BrowserMenuAdapter(RuntimeEnvironment.application, listOf(item1, item2))
+        adapter.menu = menu
+        val recyclerView = mock(RecyclerView::class.java)
+
+        val view = mock(View::class.java)
+        val holder = BrowserMenuItemViewHolder(view)
+        `when`(recyclerView.findViewHolderForAdapterPosition(0)).thenReturn(holder)
+        `when`(recyclerView.findViewHolderForAdapterPosition(1)).thenReturn(null)
+
+        adapter.invalidate(recyclerView)
+
+        verify(item1).invalidate(view)
+        verify(item2, never()).invalidate(view)
+    }
+
     private fun List<BrowserMenuItem>.assertTrueForOne(predicate: (BrowserMenuItem) -> Boolean) {
         for (item in this) {
             if (predicate(item)) {
@@ -109,6 +133,8 @@ class BrowserMenuAdapterTest {
             override fun getLayoutResource() = layout
 
             override fun bind(menu: BrowserMenu, view: View) {}
+
+            override fun invalidate(view: View) {}
         }
     }
 }

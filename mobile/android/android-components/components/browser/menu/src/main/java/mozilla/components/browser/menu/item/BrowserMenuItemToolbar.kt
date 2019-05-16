@@ -11,12 +11,9 @@ import android.widget.LinearLayout
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageButton
-import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
-import mozilla.components.support.base.observer.Observable
-import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.ktx.android.content.res.pxToDp
 
 /**
@@ -34,11 +31,11 @@ class BrowserMenuItemToolbar(
         layout.removeAllViews()
 
         for (item in items) {
-            val button = AppCompatImageButton(view.context)
-            item.updateView(button)
+            val button = AppCompatImageButton(layout.context)
+            item.bind(button)
 
             val outValue = TypedValue()
-            view.context.theme.resolveAttribute(
+            layout.context.theme.resolveAttribute(
                 android.R.attr.selectableItemBackgroundBorderless,
                 outValue,
                 true
@@ -49,13 +46,19 @@ class BrowserMenuItemToolbar(
                 item.listener.invoke()
                 menu.dismiss()
             }
-            // Update the ImageButton when the Button data changes.
-            item.register({ item.updateView(button) }, button)
 
             layout.addView(
                 button,
                 LinearLayout.LayoutParams(0, view.resources.pxToDp(ICON_HEIGHT_DP), 1f)
             )
+        }
+    }
+
+    override fun invalidate(view: View) {
+        val layout = view as LinearLayout
+        items.withIndex().forEach {
+            val (index, item) = it
+            item.invalidate(layout.getChildAt(index) as AppCompatImageButton)
         }
     }
 
@@ -71,27 +74,19 @@ class BrowserMenuItemToolbar(
     open class Button(
         @DrawableRes val imageResource: Int,
         val contentDescription: String,
-        @ColorRes val iconTintColorResource: Int = 0,
+        @ColorRes val iconTintColorResource: Int = NO_ID,
         val isEnabled: () -> Boolean = { true },
-        delegate: Observable<() -> Unit> = ObserverRegistry(),
         val listener: () -> Unit
-    ) : Observable<() -> Unit> by delegate {
+    ) {
 
-        /**
-         * Re-draws the button in the toolbar. Call to notify the toolbar when the button state
-         * changes and should be enabled or disabled.
-         */
-        fun update() {
-            notifyObservers { invoke() }
-        }
-
-        internal open fun updateView(view: ImageView) {
+        internal open fun bind(view: ImageView) {
             view.setImageResource(imageResource)
             view.contentDescription = contentDescription
-            if (iconTintColorResource != 0) {
-                view.imageTintList =
-                    ContextCompat.getColorStateList(view.context, iconTintColorResource)
-            }
+            view.setTintResource(iconTintColorResource)
+            view.isEnabled = isEnabled()
+        }
+
+        internal open fun invalidate(view: ImageView) {
             view.isEnabled = isEnabled()
         }
     }
@@ -113,34 +108,38 @@ class BrowserMenuItemToolbar(
     open class TwoStateButton(
         @DrawableRes val primaryImageResource: Int,
         val primaryContentDescription: String,
-        @ColorRes val primaryImageTintResource: Int = 0,
+        @ColorRes val primaryImageTintResource: Int = NO_ID,
         @DrawableRes val secondaryImageResource: Int = primaryImageResource,
         val secondaryContentDescription: String = primaryContentDescription,
         @ColorRes val secondaryImageTintResource: Int = primaryImageTintResource,
         val isInPrimaryState: () -> Boolean = { true },
         val disableInSecondaryState: Boolean = false,
-        delegate: Observable<() -> Unit> = ObserverRegistry(),
         listener: () -> Unit
     ) : Button(
         primaryImageResource,
         primaryContentDescription,
         primaryImageTintResource,
         isInPrimaryState,
-        delegate,
         listener = listener
     ) {
 
-        override fun updateView(view: ImageView) {
+        private var wasInPrimaryState = false
+
+        override fun bind(view: ImageView) {
             if (isInPrimaryState()) {
-                super.updateView(view)
+                super.bind(view)
             } else {
                 view.setImageResource(secondaryImageResource)
                 view.contentDescription = secondaryContentDescription
-                if (secondaryImageTintResource != 0) {
-                    view.imageTintList =
-                        ContextCompat.getColorStateList(view.context, secondaryImageTintResource)
-                }
+                view.setTintResource(secondaryImageTintResource)
                 view.isEnabled = !disableInSecondaryState
+            }
+            wasInPrimaryState = isInPrimaryState()
+        }
+
+        override fun invalidate(view: ImageView) {
+            if (isInPrimaryState() != wasInPrimaryState) {
+                bind(view)
             }
         }
     }

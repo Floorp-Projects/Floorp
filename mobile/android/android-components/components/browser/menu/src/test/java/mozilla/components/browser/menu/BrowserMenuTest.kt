@@ -5,11 +5,11 @@
 package mozilla.components.browser.menu
 
 import android.content.Context
-import androidx.recyclerview.widget.RecyclerView
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.support.test.mock
@@ -19,6 +19,8 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
+import org.mockito.Mockito.spy
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -61,6 +63,35 @@ class BrowserMenuTest {
         val recyclerAdapter = recyclerView.adapter!!
         assertNotNull(recyclerAdapter)
         assertEquals(2, recyclerAdapter.itemCount)
+    }
+
+    @Test
+    fun `invalidate will be forwarded to recyclerview adapter`() {
+        val items = listOf(
+            SimpleBrowserMenuItem("Hello") {},
+            SimpleBrowserMenuItem("World") {})
+
+        val adapter = spy(BrowserMenuAdapter(context, items))
+
+        val menu = BrowserMenu(adapter)
+
+        val anchor = Button(context)
+        val popup = menu.show(anchor)
+
+        val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
+        assertNotNull(recyclerView)
+        assertNotNull(recyclerView.adapter)
+
+        menu.invalidate()
+        Mockito.verify(adapter).invalidate(recyclerView)
+    }
+
+    @Test
+    fun `invalidate is a no-op if the menu is closed`() {
+        val items = listOf(SimpleBrowserMenuItem("Hello") {})
+        val menu = BrowserMenu(BrowserMenuAdapter(context, items))
+
+        menu.invalidate()
     }
 
     @Test

@@ -134,7 +134,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
                 iconTintColorResource = R.color.photonBlue90,
                 contentDescription = "Forward",
-                isEnabled = { sessionManager.selectedSession?.canGoForward ?: false }
+                isEnabled = { sessionManager.selectedSession?.canGoForward == true }
         ) {
             sessionUseCases.goForward.invoke()
         }
@@ -142,7 +142,9 @@ open class DefaultComponents(private val applicationContext: Context) {
         val refresh = BrowserMenuItemToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
                 iconTintColorResource = R.color.photonBlue90,
-                contentDescription = "Refresh") {
+                contentDescription = "Refresh",
+                isEnabled = { sessionManager.selectedSession?.loading != true }
+        ) {
             sessionUseCases.reload.invoke()
         }
 

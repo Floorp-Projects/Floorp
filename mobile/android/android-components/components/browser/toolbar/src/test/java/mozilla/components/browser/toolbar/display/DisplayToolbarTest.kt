@@ -180,6 +180,11 @@ class DisplayToolbarTest {
 
         verify(menuBuilder).build(context)
         verify(menu).show(menuView)
+        verify(menu, never()).invalidate()
+
+        displayToolbar.invalidateActions()
+
+        verify(menu).invalidate()
     }
 
     @Test

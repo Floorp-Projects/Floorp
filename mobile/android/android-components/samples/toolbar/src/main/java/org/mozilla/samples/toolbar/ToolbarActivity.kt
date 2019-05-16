@@ -10,6 +10,8 @@ import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_toolbar.*
@@ -213,15 +215,17 @@ class ToolbarActivity : AppCompatActivity() {
             primaryContentDescription = "Reload",
             secondaryImageResource = R.drawable.mozac_ic_stop,
             secondaryContentDescription = "Stop",
-            isInPrimaryState = { !loading },
+            isInPrimaryState = { loading.value != true },
             disableInSecondaryState = false
         ) {
-            if (loading) {
+            if (loading.value == true) {
                 job?.cancel()
             } else {
                 simulateReload()
             }
         }
+        // Redraw the reload button when loading state changes
+        loading.observe(this, Observer { toolbar.invalidateActions() })
 
         val menuToolbar = BrowserMenuItemToolbar(listOf(forward, reload))
 
@@ -346,10 +350,10 @@ class ToolbarActivity : AppCompatActivity() {
             enabledContentDescription = "Reload",
             disabledImage = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_stop),
             disabledContentDescription = "Stop",
-            isEnabled = { loading },
+            isEnabled = { loading.value == true },
             background = R.drawable.pageaction_background
         ) {
-            if (loading) {
+            if (loading.value == true) {
                 job?.cancel()
             } else {
                 simulateReload(urlBoxProgress)
@@ -357,6 +361,8 @@ class ToolbarActivity : AppCompatActivity() {
         }
 
         toolbar.addPageAction(reload)
+        // Redraw the reload button when loading state changes
+        loading.observe(this, Observer { toolbar.invalidateActions() })
 
         val pin = BrowserToolbar.ToggleButton(
             image = resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_pin),
@@ -442,13 +448,13 @@ class ToolbarActivity : AppCompatActivity() {
 
     private var job: Job? = null
 
-    private var loading: Boolean = false
+    private var loading = MutableLiveData<Boolean>()
 
     @Suppress("TooGenericExceptionCaught", "LongMethod", "ComplexMethod")
     private fun simulateReload(view: UrlBoxProgressView? = null) {
         job?.cancel()
 
-        loading = true
+        loading.value = true
 
         job = CoroutineScope(Dispatchers.Main).launch {
             try {
@@ -474,7 +480,7 @@ class ToolbarActivity : AppCompatActivity() {
 
                 throw t
             } finally {
-                loading = false
+                loading.value = false
 
                 // Update toolbar buttons to reflect loading state
                 toolbar.invalidateActions()

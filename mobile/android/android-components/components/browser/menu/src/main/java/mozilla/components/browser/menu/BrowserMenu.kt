@@ -25,6 +25,7 @@ class BrowserMenu internal constructor(
     private val adapter: BrowserMenuAdapter
 ) {
     private var currentPopup: PopupWindow? = null
+    private var menuList: RecyclerView? = null
 
     @SuppressLint("InflateParams")
     fun show(anchor: View, orientation: Orientation = Orientation.DOWN): PopupWindow {
@@ -32,9 +33,10 @@ class BrowserMenu internal constructor(
 
         adapter.menu = this
 
-        val menuList: RecyclerView = view.findViewById(R.id.mozac_browser_menu_recyclerView)
-        menuList.layoutManager = LinearLayoutManager(anchor.context, RecyclerView.VERTICAL, false)
-        menuList.adapter = adapter
+        menuList = view.findViewById<RecyclerView>(R.id.mozac_browser_menu_recyclerView).apply {
+            layoutManager = LinearLayoutManager(anchor.context, RecyclerView.VERTICAL, false)
+            adapter = this@BrowserMenu.adapter
+        }
 
         return PopupWindow(
                 view,
@@ -60,6 +62,10 @@ class BrowserMenu internal constructor(
 
     fun dismiss() {
         currentPopup?.dismiss()
+    }
+
+    fun invalidate() {
+        menuList?.let { adapter.invalidate(it) }
     }
 
     companion object {

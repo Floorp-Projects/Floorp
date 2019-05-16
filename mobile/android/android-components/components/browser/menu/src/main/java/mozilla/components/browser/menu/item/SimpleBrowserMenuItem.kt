@@ -4,15 +4,12 @@
 
 package mozilla.components.browser.menu.item
 
-import androidx.core.content.ContextCompat
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
-
-private const val NO_ID = -1
 
 /**
  * A simple browser menu item displaying text.
@@ -34,24 +31,23 @@ class SimpleBrowserMenuItem(
     override fun getLayoutResource() = R.layout.mozac_browser_menu_item_simple
 
     override fun bind(menu: BrowserMenu, view: View) {
-        (view as TextView).text = label
+        val textView = view as TextView
+        textView.text = label
 
         if (textSize != NO_ID.toFloat()) {
-            view.textSize = textSize
+            textView.textSize = textSize
         }
 
-        if (textColorResource != NO_ID) {
-            view.setTextColor(ContextCompat.getColor(view.context, textColorResource))
-        }
+        textView.setColorResource(textColorResource)
 
         if (listener != null) {
-            view.setOnClickListener {
+            textView.setOnClickListener {
                 listener.invoke()
                 menu.dismiss()
             }
         } else {
             // Remove the ripple effect
-            view.background = null
+            textView.background = null
         }
     }
 }

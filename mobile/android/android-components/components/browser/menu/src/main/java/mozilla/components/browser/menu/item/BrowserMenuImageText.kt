@@ -5,6 +5,7 @@
 package mozilla.components.browser.menu.item
 
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -14,7 +15,19 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
 
-private const val NO_ID = -1
+internal const val NO_ID = -1
+
+internal fun ImageView.setTintResource(@ColorRes tintColorResource: Int) {
+    if (tintColorResource != NO_ID) {
+        imageTintList = ContextCompat.getColorStateList(context, tintColorResource)
+    }
+}
+
+internal fun TextView.setColorResource(@ColorRes textColorResource: Int) {
+    if (textColorResource != NO_ID) {
+        setTextColor(ContextCompat.getColor(context, textColorResource))
+    }
+}
 
 /**
  * A menu item for displaying text with an image icon.
@@ -54,20 +67,14 @@ class BrowserMenuImageText(
     private fun bindText(view: View) {
         val textView = view.findViewById<TextView>(R.id.text)
         textView.text = label
-        if (textColorResource != NO_ID) {
-            textView.setTextColor(ContextCompat.getColor(view.context, textColorResource))
-        }
+        textView.setColorResource(textColorResource)
     }
 
     private fun bindImage(view: View) {
         val imageView = view.findViewById<AppCompatImageView>(R.id.image)
-
         with(imageView) {
             setImageResource(imageResource)
-
-            if (iconTintColorResource != NO_ID) {
-                imageView.imageTintList = ContextCompat.getColorStateList(view.context, iconTintColorResource)
-            }
+            setTintResource(iconTintColorResource)
         }
     }
 }

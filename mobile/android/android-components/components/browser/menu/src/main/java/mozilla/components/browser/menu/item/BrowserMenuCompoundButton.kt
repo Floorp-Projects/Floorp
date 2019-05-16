@@ -29,11 +29,11 @@ abstract class BrowserMenuCompoundButton(
     override fun bind(menu: BrowserMenu, view: View) {
         (view as CompoundButton).apply {
             text = label
-            isChecked = initialState.invoke()
-        }
-        view.setOnCheckedChangeListener { _, checked ->
-            listener.invoke(checked)
-            menu.dismiss()
+            isChecked = initialState()
+            setOnCheckedChangeListener { _, checked ->
+                listener(checked)
+                menu.dismiss()
+            }
         }
     }
 }

@@ -32,6 +32,15 @@ internal class BrowserMenuAdapter(
     override fun onBindViewHolder(holder: BrowserMenuItemViewHolder, position: Int) {
         visibleItems[position].bind(menu!!, holder.itemView)
     }
+
+    fun invalidate(recyclerView: RecyclerView) {
+        visibleItems.withIndex().forEach {
+            val (index, item) = it
+            recyclerView.findViewHolderForAdapterPosition(index)?.apply {
+                item.invalidate(itemView)
+            }
+        }
+    }
 }
 
 class BrowserMenuItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)

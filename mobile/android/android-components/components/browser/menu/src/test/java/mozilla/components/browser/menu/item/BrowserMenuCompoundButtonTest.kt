@@ -1,6 +1,7 @@
 package mozilla.components.browser.menu.item
 
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.CheckBox
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
@@ -68,6 +69,12 @@ class BrowserMenuCompoundButtonTest {
         item.bind(menu, view)
 
         verify(view).isChecked = true
+    }
+
+    @Test
+    fun `hitting default methods`() {
+        val item = SimpleTestBrowserCompoundButton("") {}
+        item.invalidate(mock(View::class.java))
     }
 
     class SimpleTestBrowserCompoundButton(

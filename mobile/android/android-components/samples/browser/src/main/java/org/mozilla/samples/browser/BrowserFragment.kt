@@ -11,6 +11,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_browser.view.*
+import mozilla.components.browser.session.SelectionAwareSessionObserver
+import mozilla.components.browser.session.Session
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
@@ -71,6 +73,17 @@ class BrowserFragment : Fragment(), BackHandler {
                 sessionId),
             owner = this,
             view = layout)
+
+        val menuUpdater = object : SelectionAwareSessionObserver(components.sessionManager) {
+            override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+                layout.toolbar.invalidateActions()
+            }
+
+            override fun onNavigationStateChanged(session: Session, canGoBack: Boolean, canGoForward: Boolean) {
+                layout.toolbar.invalidateActions()
+            }
+        }
+        menuUpdater.observeIdOrSelected(sessionId)
 
         ToolbarAutocompleteFeature(layout.toolbar).apply {
             addHistoryStorageProvider(components.historyStorage)

@@ -10,6 +10,7 @@ import android.view.View
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.mock
 
@@ -24,6 +25,8 @@ class BrowserMenuDividerTest {
     @Test
     fun `hitting default methods`() {
         val item = BrowserMenuDivider()
+        assertTrue(item.visible())
         item.bind(mock(BrowserMenu::class.java), mock(View::class.java))
+        item.invalidate(mock(View::class.java))
     }
 }

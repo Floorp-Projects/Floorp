@@ -74,10 +74,12 @@ internal class DisplayToolbar(
     context: Context,
     val toolbar: BrowserToolbar
 ) : ViewGroup(context) {
+    private var menu: BrowserMenu? = null
     internal var menuBuilder: BrowserMenuBuilder? = null
         set(value) {
             field = value
             menuView.visibility = if (value == null) View.GONE else View.VISIBLE
+            if (value == null) menu = null
         }
 
     internal val siteSecurityIconView = AppCompatImageView(context).apply {
@@ -135,7 +137,8 @@ internal class DisplayToolbar(
         visibility = View.GONE
 
         setOnClickListener {
-            menuBuilder?.build(context)?.show(
+            menu = menuBuilder?.build(context)
+            menu?.show(
                 anchor = this,
                 orientation = BrowserMenu.determineMenuOrientation(toolbar))
 
@@ -311,6 +314,7 @@ internal class DisplayToolbar(
      * should be updated if needed.
      */
     fun invalidateActions() {
+        menu?.invalidate()
         invalidateActions(navigationActions + pageActions + browserActions)
     }
 

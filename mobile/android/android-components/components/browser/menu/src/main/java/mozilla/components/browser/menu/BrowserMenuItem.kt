@@ -26,4 +26,9 @@ interface BrowserMenuItem {
      * Called by the browser menu to display the data of this item using the passed view.
      */
     fun bind(menu: BrowserMenu, view: View)
+
+    /**
+     * Called by the browser menu to update the displayed data of this item using the passed view.
+     */
+    fun invalidate(view: View) = Unit
 }
