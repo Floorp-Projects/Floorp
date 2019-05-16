@@ -191,11 +191,11 @@ impl Renderer {
                                                     projection,
                                                     &mut self.renderer_errors);
 
-        self.device.bind_draw_target(DrawTarget::Texture {
-            texture: &current_page.texture,
-            layer: 0,
-            with_depth: false,
-        });
+        self.device.bind_draw_target(DrawTarget::from_texture(
+            &current_page.texture,
+            0,
+            false,
+        ));
         self.device.clear_target(Some([0.0, 0.0, 0.0, 0.0]), None, None);
 
         self.device.set_blend(true);
