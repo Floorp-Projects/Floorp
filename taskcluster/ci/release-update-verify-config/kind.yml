@@ -52,7 +52,7 @@ job-defaults:
             by-release-type:
                 beta: beta
                 release(-rc)?: nonbeta
-                esr60: esr
+                esr.*: esr
                 default: beta
         last-watershed:
             by-release-type:
@@ -77,7 +77,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: linux32/opt
+            platform: linux32-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -90,7 +90,7 @@ jobs:
                 by-release-type:
                     beta: "beta-localtest"
                     release(-rc)?: "release-localtest"
-                    esr60: "esr-localtest"
+                    esr.*: "esr-localtest"
                     default: "default"
             mar-channel-id-override:
                 by-release-type:
@@ -101,7 +101,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: linux64/opt
+            platform: linux64-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -114,7 +114,7 @@ jobs:
                 by-release-type:
                     beta: "beta-localtest"
                     release(-rc)?: "release-localtest"
-                    esr60: "esr-localtest"
+                    esr.*: "esr-localtest"
                     default: "default"
             mar-channel-id-override:
                 by-release-type:
@@ -125,7 +125,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: osx-cross/opt
+            platform: osx-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -138,7 +138,7 @@ jobs:
                 by-release-type:
                     beta: "beta-localtest"
                     release(-rc)?: "release-localtest"
-                    esr60: "esr-localtest"
+                    esr.*: "esr-localtest"
                     default: "default"
             mar-channel-id-override:
                 by-release-type:
@@ -149,7 +149,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: windows2012-32/opt
+            platform: windows2012-32-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -162,7 +162,7 @@ jobs:
                 by-release-type:
                     beta: "beta-localtest"
                     release(-rc)?: "release-localtest"
-                    esr60: "esr-localtest"
+                    esr.*: "esr-localtest"
                     default: "default"
             mar-channel-id-override:
                 by-release-type:
@@ -173,7 +173,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: windows2012-64/opt
+            platform: windows2012-64-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -186,7 +186,7 @@ jobs:
                 by-release-type:
                     beta: "beta-localtest"
                     release(-rc)?: "release-localtest"
-                    esr60: "esr-localtest"
+                    esr.*: "esr-localtest"
                     default: "default"
             mar-channel-id-override:
                 by-release-type:
@@ -197,7 +197,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             symbol: UVC
-            platform: windows2012-aarch64/opt
+            platform: windows2012-aarch64-shippable/opt
             kind: test
             tier: 1
         attributes:
@@ -210,7 +210,7 @@ jobs:
                 by-release-type:
                     beta: "beta-localtest"
                     release(-rc)?: "release-localtest"
-                    esr60: "esr-localtest"
+                    esr.*: "esr-localtest"
                     default: "default"
             mar-channel-id-override:
                 by-release-type:

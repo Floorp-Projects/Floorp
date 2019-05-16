@@ -78,6 +78,11 @@ add_task(async function test_autocomplete_footer_onclick() {
       return window.document.getElementById("filter").value == "example.com";
     }, "Waiting for the search string to filter logins");
 
+    // Check event telemetry recorded when opening management UI
+    TelemetryTestUtils.assertEvents(
+      [["pwmgr", "open_management", "autocomplete"]],
+      {category: "pwmgr", method: "open_management"});
+
     window.close();
     popup.hidePopup();
   });
@@ -112,6 +117,11 @@ add_task(async function test_autocomplete_footer_keydown() {
     await TestUtils.waitForCondition(() => {
       return window.document.getElementById("filter").value == "example.com";
     }, "Waiting for the search string to filter logins");
+
+    // Check event telemetry recorded when opening management UI
+    TelemetryTestUtils.assertEvents(
+      [["pwmgr", "open_management", "autocomplete"]],
+      {category: "pwmgr", method: "open_management"});
 
     window.close();
     popup.hidePopup();

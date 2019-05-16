@@ -99,11 +99,6 @@ function Startup() {
       window.arguments[0] &&
       window.arguments[0].filterString) {
     setFilter(window.arguments[0].filterString);
-    Services.telemetry.getHistogramById("PWMGR_MANAGE_OPENED").add(1);
-    Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_OPENED");
-  } else {
-    Services.telemetry.getHistogramById("PWMGR_MANAGE_OPENED").add(0);
-    Services.obs.notifyObservers(null, "weave:telemetry:histogram", "PWMGR_MANAGE_OPENED");
   }
 
   FocusFilterBox();

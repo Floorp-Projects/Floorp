@@ -29,8 +29,7 @@ interface nsIBrowserChild : nsISupports
   [noscript] void remoteSizeShellTo(in int32_t width, in int32_t height,
                                     in int32_t shellItemWidth, in int32_t shellItemHeight);
 
-  [noscript] void remoteDropLinks(in unsigned long linksCount,
-                                  [array, size_is(linksCount)] in nsIDroppedLinkItem links);
+  void remoteDropLinks(in Array<nsIDroppedLinkItem> links);
 
   readonly attribute uint64_t tabId;
 

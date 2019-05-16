@@ -26,7 +26,7 @@ use lmdb::EnvironmentFlags;
 use moz_task::{create_thread, is_main_thread, Task, TaskRunnable};
 use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
-    NS_ERROR_UNEXPECTED, NS_OK,
+    NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED, NS_OK,
 };
 use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsString};
 use rkv::error::StoreError;
@@ -47,9 +47,9 @@ use std::time::{Duration, SystemTime};
 use storage_variant::VariantType;
 use thin_vec::ThinVec;
 use xpcom::interfaces::{
-    nsICertStorage, nsICertStorageCallback, nsIFile, nsIIssuerAndSerialRevocationState,
-    nsIObserver, nsIPrefBranch, nsIRevocationState, nsISubjectAndPubKeyRevocationState,
-    nsISupports, nsIThread,
+    nsICertInfo, nsICertStorage, nsICertStorageCallback, nsIFile,
+    nsIIssuerAndSerialRevocationState, nsIObserver, nsIPrefBranch, nsIRevocationState,
+    nsISubjectAndPubKeyRevocationState, nsISupports, nsIThread,
 };
 use xpcom::{nsIID, GetterAddrefs, RefPtr, ThreadBoundRefPtr, XpCom};
 
@@ -395,21 +395,19 @@ impl SecurityState {
         self.int_prefs.insert(name.to_owned(), value);
     }
 
-    // To store a certificate by subject, we first create a Cert out of the given cert, subject, and
-    // trust. We hash the certificate with sha-256 to obtain a unique* key for that certificate, and
-    // we store the Cert in the database. We also look up or create a CertHashList for the given
-    // subject and add the new certificate's hash if it isn't present in the list. If it wasn't
-    // present, we write out the updated CertHashList.
+    // To store certificates, we create a Cert out of each given cert, subject, and trust tuple. We
+    // hash each certificate with sha-256 to obtain a unique* key for that certificate, and we store
+    // the Cert in the database. We also look up or create a CertHashList for the given subject and
+    // add the new certificate's hash if it isn't present in the list. If it wasn't present, we
+    // write out the updated CertHashList.
     // *By the pigeon-hole principle, there exist collisions for sha-256, so this key is not
     // actually unique. We rely on the assumption that sha-256 is a cryptographically strong hash.
     // If an adversary can find two different certificates with the same sha-256 hash, they can
     // probably forge a sha-256-based signature, so assuming the keys we create here are unique is
     // not a security issue.
-    pub fn add_cert_by_subject(
+    pub fn add_certs(
         &mut self,
-        cert_der: &[u8],
-        subject: &[u8],
-        trust: i16,
+        certs: &[(Vec<u8>, Vec<u8>, i16)],
     ) -> Result<(), SecurityStateError> {
         self.reopen_store_read_write()?;
         {
@@ -428,32 +426,30 @@ impl SecurityState {
                 &Value::Bool(true),
             )?;
 
-            let mut digest = Sha256::default();
-            digest.input(cert_der);
-            let cert_hash = digest.result();
-            let cert_key = make_key!(PREFIX_CERT, &cert_hash);
-            let cert = Cert::new(cert_der, subject, trust)?;
-            env_and_store
-                .store
-                .put(&mut writer, &cert_key, &Value::Blob(&cert.to_bytes()?))?;
-            let subject_key = make_key!(PREFIX_SUBJECT, subject);
-            // This reader will only be able to "see" data outside the current transaction. This is
-            // fine, though, because what we're reading has not yet been touched by this
-            // transaction.
-            let reader = env_and_store.env.read()?;
-            let empty_vec = Vec::new();
-            let old_cert_hash_list = match env_and_store.store.get(&reader, &subject_key)? {
-                Some(Value::Blob(hashes)) => hashes,
-                Some(_) => &empty_vec,
-                None => &empty_vec,
-            };
-            let new_cert_hash_list = CertHashList::add(old_cert_hash_list, &cert_hash)?;
-            if new_cert_hash_list.len() != old_cert_hash_list.len() {
-                env_and_store.store.put(
-                    &mut writer,
-                    &subject_key,
-                    &Value::Blob(&new_cert_hash_list),
-                )?;
+            for (cert_der, subject, trust) in certs {
+                let mut digest = Sha256::default();
+                digest.input(cert_der);
+                let cert_hash = digest.result();
+                let cert_key = make_key!(PREFIX_CERT, &cert_hash);
+                let cert = Cert::new(cert_der, subject, *trust)?;
+                env_and_store
+                    .store
+                    .put(&mut writer, &cert_key, &Value::Blob(&cert.to_bytes()?))?;
+                let subject_key = make_key!(PREFIX_SUBJECT, subject);
+                let empty_vec = Vec::new();
+                let old_cert_hash_list = match env_and_store.store.get(&writer, &subject_key)? {
+                    Some(Value::Blob(hashes)) => hashes.to_owned(),
+                    Some(_) => empty_vec,
+                    None => empty_vec,
+                };
+                let new_cert_hash_list = CertHashList::add(&old_cert_hash_list, &cert_hash)?;
+                if new_cert_hash_list.len() != old_cert_hash_list.len() {
+                    env_and_store.store.put(
+                        &mut writer,
+                        &subject_key,
+                        &Value::Blob(&new_cert_hash_list),
+                    )?;
+                }
             }
 
             writer.commit()?;
@@ -462,11 +458,11 @@ impl SecurityState {
         Ok(())
     }
 
-    // Given a certificate's sha-256 hash, we can look up its Cert entry in the database. We use
-    // this to find its subject so we can look up the CertHashList it should appear in. If that list
-    // contains the given hash, we remove it and update the CertHashList. Finally we delete the Cert
-    // entry.
-    pub fn remove_cert_by_hash(&mut self, hash: &[u8]) -> Result<(), SecurityStateError> {
+    // Given a list of certificate sha-256 hashes, we can look up each Cert entry in the database.
+    // We use this to find the corresponding subject so we can look up the CertHashList it should
+    // appear in. If that list contains the given hash, we remove it and update the CertHashList.
+    // Finally we delete the Cert entry.
+    pub fn remove_certs_by_hashes(&mut self, hashes: &[Vec<u8>]) -> Result<(), SecurityStateError> {
         self.reopen_store_read_write()?;
         {
             let env_and_store = match self.env_and_store.as_mut() {
@@ -474,33 +470,40 @@ impl SecurityState {
                 None => return Err(SecurityStateError::from("env and store not initialized?")),
             };
             let mut writer = env_and_store.env.write()?;
-
             let reader = env_and_store.env.read()?;
-            let cert_key = make_key!(PREFIX_CERT, hash);
-            if let Some(Value::Blob(cert_bytes)) = env_and_store.store.get(&reader, &cert_key)? {
-                if let Ok(cert) = Cert::from_bytes(cert_bytes) {
-                    let subject_key = make_key!(PREFIX_SUBJECT, &cert.subject);
-                    let empty_vec = Vec::new();
-                    let old_cert_hash_list = match env_and_store.store.get(&reader, &subject_key)? {
-                        Some(Value::Blob(hashes)) => hashes,
-                        Some(_) => &empty_vec,
-                        None => &empty_vec,
-                    };
-                    let new_cert_hash_list = CertHashList::remove(old_cert_hash_list, hash)?;
-                    if new_cert_hash_list.len() != old_cert_hash_list.len() {
-                        env_and_store.store.put(
-                            &mut writer,
-                            &subject_key,
-                            &Value::Blob(&new_cert_hash_list),
-                        )?;
+
+            for hash in hashes {
+                let cert_key = make_key!(PREFIX_CERT, hash);
+                if let Some(Value::Blob(cert_bytes)) =
+                    env_and_store.store.get(&reader, &cert_key)?
+                {
+                    if let Ok(cert) = Cert::from_bytes(cert_bytes) {
+                        let subject_key = make_key!(PREFIX_SUBJECT, &cert.subject);
+                        let empty_vec = Vec::new();
+                        // We have to use the writer here to make sure we have an up-to-date view of
+                        // the cert hash list.
+                        let old_cert_hash_list =
+                            match env_and_store.store.get(&writer, &subject_key)? {
+                                Some(Value::Blob(hashes)) => hashes.to_owned(),
+                                Some(_) => empty_vec,
+                                None => empty_vec,
+                            };
+                        let new_cert_hash_list = CertHashList::remove(&old_cert_hash_list, hash)?;
+                        if new_cert_hash_list.len() != old_cert_hash_list.len() {
+                            env_and_store.store.put(
+                                &mut writer,
+                                &subject_key,
+                                &Value::Blob(&new_cert_hash_list),
+                            )?;
+                        }
                     }
                 }
+                match env_and_store.store.delete(&mut writer, &cert_key) {
+                    Ok(()) => {}
+                    Err(StoreError::LmdbError(lmdb::Error::NotFound)) => {}
+                    Err(e) => return Err(SecurityStateError::from(e)),
+                };
             }
-            match env_and_store.store.delete(&mut writer, &cert_key) {
-                Ok(()) => {}
-                Err(StoreError::LmdbError(lmdb::Error::NotFound)) => {}
-                Err(e) => return Err(SecurityStateError::from(e)),
-            };
             writer.commit()?;
         }
         self.reopen_store_read_only()?;
@@ -1029,7 +1032,7 @@ impl CertStorage {
             return NS_ERROR_NOT_SAME_THREAD;
         }
         if callback.is_null() {
-            return NS_ERROR_FAILURE;
+            return NS_ERROR_NULL_POINTER;
         }
         let task = Box::new(SecurityStateTask::new(
             &*callback,
@@ -1051,7 +1054,7 @@ impl CertStorage {
             return NS_ERROR_NOT_SAME_THREAD;
         }
         if revocations.is_null() || callback.is_null() {
-            return NS_ERROR_FAILURE;
+            return NS_ERROR_NULL_POINTER;
         }
 
         let revocations = &*revocations;
@@ -1115,7 +1118,7 @@ impl CertStorage {
         // TODO (bug 1541212): We really want to restrict this to non-main-threads only, but we
         // can't do so until bug 1406854 and bug 1534600 are fixed.
         if issuer.is_null() || serial.is_null() || subject.is_null() || pub_key.is_null() {
-            return NS_ERROR_FAILURE;
+            return NS_ERROR_NULL_POINTER;
         }
         *state = nsICertStorage::STATE_UNSET as i16;
         let ss = get_security_state!(self);
@@ -1140,51 +1143,65 @@ impl CertStorage {
         NS_OK
     }
 
-    unsafe fn AddCertBySubject(
+    unsafe fn AddCerts(
         &self,
-        cert: *const nsACString,
-        subject: *const nsACString,
-        trust: i16,
+        certs: *const ThinVec<RefPtr<nsICertInfo>>,
         callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
         if !is_main_thread() {
             return NS_ERROR_NOT_SAME_THREAD;
         }
-        if cert.is_null() || subject.is_null() || callback.is_null() {
-            return NS_ERROR_FAILURE;
+        if certs.is_null() || callback.is_null() {
+            return NS_ERROR_NULL_POINTER;
         }
-        let cert_decoded = try_ns!(base64::decode(&*cert));
-        let subject_decoded = try_ns!(base64::decode(&*subject));
+        let certs = &*certs;
+        let mut cert_entries = Vec::with_capacity(certs.len());
+        for cert in certs {
+            let mut der = nsCString::new();
+            try_ns!((*cert).GetCert(&mut *der).to_result(), or continue);
+            let der = try_ns!(base64::decode(&der), or continue);
+            let mut subject = nsCString::new();
+            try_ns!((*cert).GetSubject(&mut *subject).to_result(), or continue);
+            let subject = try_ns!(base64::decode(&subject), or continue);
+            let mut trust: i16 = 0;
+            try_ns!((*cert).GetTrust(&mut trust).to_result(), or continue);
+            cert_entries.push((der, subject, trust));
+        }
         let task = Box::new(SecurityStateTask::new(
             &*callback,
             &self.security_state,
-            move |ss| ss.add_cert_by_subject(&cert_decoded, &subject_decoded, trust),
+            move |ss| ss.add_certs(&cert_entries),
         ));
         let thread = try_ns!(self.thread.lock());
-        let runnable = try_ns!(TaskRunnable::new("AddCertBySubject", task));
+        let runnable = try_ns!(TaskRunnable::new("AddCerts", task));
         try_ns!(runnable.dispatch(&*thread));
         NS_OK
     }
 
-    unsafe fn RemoveCertByHash(
+    unsafe fn RemoveCertsByHashes(
         &self,
-        hash: *const nsACString,
+        hashes: *const ThinVec<nsCString>,
         callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
         if !is_main_thread() {
             return NS_ERROR_NOT_SAME_THREAD;
         }
-        if hash.is_null() || callback.is_null() {
-            return NS_ERROR_FAILURE;
+        if hashes.is_null() || callback.is_null() {
+            return NS_ERROR_NULL_POINTER;
         }
-        let hash_decoded = try_ns!(base64::decode(&*hash));
+        let hashes = &*hashes;
+        let mut hash_entries = Vec::with_capacity(hashes.len());
+        for hash in hashes {
+            let hash_decoded = try_ns!(base64::decode(&*hash), or continue);
+            hash_entries.push(hash_decoded);
+        }
         let task = Box::new(SecurityStateTask::new(
             &*callback,
             &self.security_state,
-            move |ss| ss.remove_cert_by_hash(&hash_decoded),
+            move |ss| ss.remove_certs_by_hashes(&hash_entries),
         ));
         let thread = try_ns!(self.thread.lock());
-        let runnable = try_ns!(TaskRunnable::new("RemoveCertByHash", task));
+        let runnable = try_ns!(TaskRunnable::new("RemoveCertsByHashes", task));
         try_ns!(runnable.dispatch(&*thread));
         NS_OK
     }
@@ -1197,7 +1214,7 @@ impl CertStorage {
         // TODO (bug 1541212): We really want to restrict this to non-main-threads only, but we
         // can't do so until bug 1406854 and bug 1534600 are fixed.
         if subject.is_null() || certs.is_null() {
-            return NS_ERROR_FAILURE;
+            return NS_ERROR_NULL_POINTER;
         }
         let ss = get_security_state!(self);
         match ss.find_certs_by_subject(&*subject, &mut *certs) {

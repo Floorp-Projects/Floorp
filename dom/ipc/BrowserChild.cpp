@@ -735,25 +735,25 @@ BrowserChild::RemoteSizeShellTo(int32_t aWidth, int32_t aHeight,
 }
 
 NS_IMETHODIMP
-BrowserChild::RemoteDropLinks(uint32_t aLinksCount,
-                              nsIDroppedLinkItem** aLinks) {
+BrowserChild::RemoteDropLinks(
+    const nsTArray<RefPtr<nsIDroppedLinkItem>>& aLinks) {
   nsTArray<nsString> linksArray;
   nsresult rv = NS_OK;
-  for (uint32_t i = 0; i < aLinksCount; i++) {
+  for (nsIDroppedLinkItem* link : aLinks) {
     nsString tmp;
-    rv = aLinks[i]->GetUrl(tmp);
+    rv = link->GetUrl(tmp);
     if (NS_FAILED(rv)) {
       return rv;
     }
     linksArray.AppendElement(tmp);
 
-    rv = aLinks[i]->GetName(tmp);
+    rv = link->GetName(tmp);
     if (NS_FAILED(rv)) {
       return rv;
     }
     linksArray.AppendElement(tmp);
 
-    rv = aLinks[i]->GetType(tmp);
+    rv = link->GetType(tmp);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1816,7 +1816,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
     }
     UniquePtr<DisplayportSetListener> postLayerization =
         APZCCallbackHelper::SendSetTargetAPZCNotification(
-            mPuppetWidget, document, localEvent, aGuid.mLayersId, aInputBlockId);
+            mPuppetWidget, document, localEvent, aGuid.mLayersId,
+            aInputBlockId);
     if (postLayerization && postLayerization->Register()) {
       Unused << postLayerization.release();
     }

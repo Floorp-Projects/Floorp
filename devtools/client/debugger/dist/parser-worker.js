@@ -17945,18 +17945,22 @@ const { workerHandler } = _devtoolsUtils.workerUtils; /* This Source Code Form i
                                                        * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                        * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+function clearState() {
+  (0, _ast.clearASTs)();
+  (0, _getScopes.clearScopes)();
+  (0, _sources.clearSources)();
+  (0, _getSymbols.clearSymbols)();
+}
+
 self.onmessage = workerHandler({
   findOutOfScopeLocations: _findOutOfScopeLocations2.default,
   getSymbols: _getSymbols.getSymbols,
   getScopes: _getScopes2.default,
-  clearSymbols: _getSymbols.clearSymbols,
-  clearScopes: _getScopes.clearScopes,
-  clearASTs: _ast.clearASTs,
-  setSource: _sources.setSource,
-  clearSources: _sources.clearSources,
+  clearState,
   getNextStep: _steps.getNextStep,
   hasSyntaxError: _validate.hasSyntaxError,
-  mapExpression: _mapExpression2.default
+  mapExpression: _mapExpression2.default,
+  setSource: _sources.setSource
 });
 
 /***/ }),

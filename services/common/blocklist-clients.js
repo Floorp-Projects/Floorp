@@ -182,71 +182,6 @@ async function updatePinningList({ data: { current: records } }) {
   }
 }
 
-/**
- * This custom filter function is used to limit the entries returned
- * by `RemoteSettings("...").get()` depending on the target app information
- * defined on entries.
- *
- * Note that this is async because `jexlFilterFunc` is async.
- */
-async function targetAppFilter(entry, environment) {
-  // If the entry has a JEXL filter expression, it should prevail.
-  // The legacy target app mechanism will be kept in place for old entries.
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1463377
-  const { filter_expression } = entry;
-  if (filter_expression) {
-    return jexlFilterFunc(entry, environment);
-  }
-
-  // Keep entries without target information.
-  if (!("versionRange" in entry)) {
-    return entry;
-  }
-
-  const { appID, version: appVersion, toolkitVersion } = environment;
-  const { versionRange } = entry;
-
-  // Everywhere in this method, we avoid checking the minVersion, because
-  // we want to retain items whose minVersion is higher than the current
-  // app version, so that we have the items around for app updates.
-
-  // Gfx blocklist has a specific versionRange object, which is not a list.
-  if (!Array.isArray(versionRange)) {
-    const { maxVersion = "*" } = versionRange;
-    const matchesRange = (Services.vc.compare(appVersion, maxVersion) <= 0);
-    return matchesRange ? entry : null;
-  }
-
-  // Iterate the targeted applications, at least one of them must match.
-  // If no target application, keep the entry.
-  if (versionRange.length == 0) {
-    return entry;
-  }
-  for (const vr of versionRange) {
-    const { targetApplication = [] } = vr;
-    if (targetApplication.length == 0) {
-      return entry;
-    }
-    for (const ta of targetApplication) {
-      const { guid } = ta;
-      if (!guid) {
-        return entry;
-      }
-      const { maxVersion = "*" } = ta;
-      if (guid == appID &&
-          Services.vc.compare(appVersion, maxVersion) <= 0) {
-        return entry;
-      }
-      if (guid == "toolkit@mozilla.org" &&
-          Services.vc.compare(toolkitVersion, maxVersion) <= 0) {
-        return entry;
-      }
-    }
-  }
-  // Skip this entry.
-  return null;
-}
-
 var OneCRLBlocklistClient;
 var PinningBlocklistClient;
 var RemoteSecuritySettingsClient;
@@ -291,5 +226,5 @@ function initialize(options = {}) {
   };
 }
 
-let BlocklistClients = {initialize, targetAppFilter};
+let BlocklistClients = {initialize};
 
