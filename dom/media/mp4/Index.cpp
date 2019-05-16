@@ -142,7 +142,7 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
     } else if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cbcs")) {
       cryptoScheme = CryptoScheme::Cbcs;
       writer->mCrypto.mCryptoScheme = CryptoScheme::Cbcs;
-      writer->mCrypto.mInitDataType = NS_LITERAL_STRING("cbcs");
+      writer->mCrypto.mInitDataType = NS_LITERAL_STRING("cenc");
     } else {
       MOZ_ASSERT_UNREACHABLE(
           "Sample description entry reports sample is encrypted, but no "
