@@ -14,7 +14,6 @@
 #include "gfxPoint.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/EnumeratedArray.h"
-#include "nsCSSValue.h"
 #include "nsSize.h"
 
 #include <limits>
@@ -143,14 +142,6 @@ class MOZ_STACK_CLASS TransformReferenceBox final {
   nscoord mX, mY, mWidth, mHeight;
   bool mIsCached;
 };
-
-/**
- * Return the transform function, as an nsCSSKeyword, for the given
- * nsCSSValue::Array from a transform list.
- */
-nsCSSKeyword TransformFunctionOf(const nsCSSValue::Array* aData);
-
-void SetIdentityMatrix(nsCSSValue::Array* aMatrix);
 
 float ProcessTranslatePart(
     const mozilla::LengthPercentage& aValue, TransformReferenceBox* aRefBox,
