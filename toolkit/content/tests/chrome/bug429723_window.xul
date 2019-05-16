@@ -42,7 +42,7 @@
         var event = document.createEvent("KeyboardEvent");
         event.initKeyEvent("keypress", true, true, null, false, false,
                            false, false, 0, aString.charCodeAt(i));
-        gFindBar._findField.inputField.dispatchEvent(event);
+        gFindBar._findField.dispatchEvent(event);
       }
     }
 
@@ -68,9 +68,9 @@
       var event = document.createEvent("KeyboardEvent");
       event.initKeyEvent("keypress", true, true, null, false, false,
                          false, false, KeyEvent.DOM_VK_BACK_SPACE, 0);
-      gFindBar._findField.inputField.dispatchEvent(event);
+      gFindBar._findField.dispatchEvent(event);
 
-      var notRed = !findField.hasAttribute("status") || 
+      var notRed = !findField.hasAttribute("status") ||
                    (findField.getAttribute("status") != "notfound");
       ok(notRed, "Find Bar textbox is correct colour");
       finish();
