@@ -376,28 +376,30 @@ add_task(async function test_onLocationChange_cb() {
 add_task(async function test_matchPattern() {
   let count = 0;
   const triggerHandler = () => ++count;
-  ASRouterTriggerListeners.get("frequentVisits").init(triggerHandler, [], ["*://*.example.com/"]);
+  const frequentVisitsTrigger = ASRouterTriggerListeners.get("frequentVisits");
+  frequentVisitsTrigger.init(triggerHandler, [], ["*://*.example.com/"]);
 
   const browser = gBrowser.selectedBrowser;
   await BrowserTestUtils.loadURI(browser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
 
-  Assert.equal(count, 1, "Registered pattern matched the current location");
+  BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "Registered pattern matched the current location");
 
   await BrowserTestUtils.loadURI(browser, "about:config");
   await BrowserTestUtils.browserLoaded(browser, false, "about:config");
 
-  Assert.equal(count, 1, "Navigated to a new page but not a match");
+  BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "Navigated to a new page but not a match");
 
   await BrowserTestUtils.loadURI(browser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
 
-  Assert.equal(count, 1, "Navigated to a location that matches the pattern but within 15 mins");
+  BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "Navigated to a location that matches the pattern but within 15 mins");
 
   await BrowserTestUtils.loadURI(browser, "http://www.example.com/");
   await BrowserTestUtils.browserLoaded(browser, false, "http://www.example.com/");
 
-  Assert.equal(count, 2, "www.example.com is a different host that also matches the pattern.");
+  BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("www.example.com").length === 1, "www.example.com is a different host that also matches the pattern.");
+  BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "www.example.com is a different host that also matches the pattern.");
 });
 
 add_task(async function test_providerNames() {
