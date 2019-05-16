@@ -64,7 +64,7 @@ ${helpers.predefined_type(
     initial_value="computed::FontSize::medium()",
     initial_specified_value="specified::FontSize::medium()",
     animation_value_type="NonNegativeLength",
-    allow_quirks="Yes",
+    allow_quirks=True,
     flags="APPLIES_TO_FIRST_LETTER APPLIES_TO_FIRST_LINE APPLIES_TO_PLACEHOLDER",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-size",
     servo_restyle_damage="rebuild_and_reflow",
