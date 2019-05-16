@@ -11,7 +11,6 @@
 #include "mozilla/dom/SVGDocument.h"
 #include "mozilla/dom/SVGForeignObjectElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
-#include "SVGGeometryProperty.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(ForeignObject)
 
@@ -40,8 +39,6 @@ SVGElement::LengthInfo SVGForeignObjectElement::sLengthInfo[4] = {
 SVGForeignObjectElement::SVGForeignObjectElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGGraphicsElement(std::move(aNodeInfo)) {}
-
-namespace SVGT = SVGGeometryProperty::Tags;
 
 //----------------------------------------------------------------------
 // nsINode methods
@@ -80,16 +77,8 @@ gfxMatrix SVGForeignObjectElement::PrependLocalTransformsTo(
   }
   // our 'x' and 'y' attributes:
   float x, y;
-
-  if (GetPrimaryFrame()) {
-    SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y>(this, &x, &y);
-  } else {
-    // This function might be called for element in display:none subtree
-    // (e.g. getScreenCTM), we fall back to use SVG attributes.
-    const_cast<SVGForeignObjectElement*>(this)->GetAnimatedLengthValues(
-        &x, &y, nullptr);
-  }
-
+  const_cast<SVGForeignObjectElement*>(this)->GetAnimatedLengthValues(&x, &y,
+                                                                      nullptr);
   gfxMatrix toUserSpace = gfxMatrix::Translation(x, y);
   if (aWhich == eChildToUserSpace) {
     return toUserSpace * aMatrix;
@@ -100,12 +89,10 @@ gfxMatrix SVGForeignObjectElement::PrependLocalTransformsTo(
 
 /* virtual */
 bool SVGForeignObjectElement::HasValidDimensions() const {
-  float width, height;
-
-  MOZ_ASSERT(GetPrimaryFrame());
-  SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(
-      const_cast<SVGForeignObjectElement*>(this), &width, &height);
-  return width > 0 && height > 0;
+  return mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() &&
+         mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
+         mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() &&
+         mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0;
 }
 
 //----------------------------------------------------------------------
@@ -122,8 +109,7 @@ SVGForeignObjectElement::IsAttributeMapped(const nsAtom* name) const {
                                                     sTextContentElementsMap,
                                                     sViewportsMap};
 
-  return IsInLengthInfo(name, sLengthInfo) ||
-         FindAttributeDependence(name, map) ||
+  return FindAttributeDependence(name, map) ||
          SVGGraphicsElement::IsAttributeMapped(name);
 }
 
@@ -133,23 +119,6 @@ SVGForeignObjectElement::IsAttributeMapped(const nsAtom* name) const {
 SVGElement::LengthAttributesInfo SVGForeignObjectElement::GetLengthInfo() {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               ArrayLength(sLengthInfo));
-}
-
-nsCSSPropertyID SVGForeignObjectElement::GetCSSPropertyIdForAttrEnum(
-    uint8_t aAttrEnum) {
-  switch (aAttrEnum) {
-    case ATTR_X:
-      return eCSSProperty_x;
-    case ATTR_Y:
-      return eCSSProperty_y;
-    case ATTR_WIDTH:
-      return eCSSProperty_width;
-    case ATTR_HEIGHT:
-      return eCSSProperty_height;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown attr enum");
-      return eCSSProperty_UNKNOWN;
-  }
 }
 
 }  // namespace dom

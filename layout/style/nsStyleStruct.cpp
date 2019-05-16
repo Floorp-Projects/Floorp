@@ -1069,14 +1069,7 @@ void nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow) {
 // nsStyleSVGReset
 //
 nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
-    : mX(LengthPercentage::Zero()),
-      mY(LengthPercentage::Zero()),
-      mCx(LengthPercentage::Zero()),
-      mCy(LengthPercentage::Zero()),
-      mRx(NonNegativeLengthPercentageOrAuto::Auto()),
-      mRy(NonNegativeLengthPercentageOrAuto::Auto()),
-      mR(NonNegativeLengthPercentage::Zero()),
-      mMask(nsStyleImageLayers::LayerType::Mask),
+    : mMask(nsStyleImageLayers::LayerType::Mask),
       mStopColor(StyleColor::Black()),
       mFloodColor(StyleColor::Black()),
       mLightingColor(StyleColor::White()),
@@ -1091,14 +1084,7 @@ nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
 nsStyleSVGReset::~nsStyleSVGReset() { MOZ_COUNT_DTOR(nsStyleSVGReset); }
 
 nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
-    : mX(aSource.mX),
-      mY(aSource.mY),
-      mCx(aSource.mCx),
-      mCy(aSource.mCy),
-      mRx(aSource.mRx),
-      mRy(aSource.mRy),
-      mR(aSource.mR),
-      mMask(aSource.mMask),
+    : mMask(aSource.mMask),
       mClipPath(aSource.mClipPath),
       mStopColor(aSource.mStopColor),
       mFloodColor(aSource.mFloodColor),
@@ -1149,12 +1135,6 @@ void nsStyleSVGReset::TriggerImageLoads(Document& aDocument,
 nsChangeHint nsStyleSVGReset::CalcDifference(
     const nsStyleSVGReset& aNewData) const {
   nsChangeHint hint = nsChangeHint(0);
-
-  if (mX != aNewData.mX || mY != aNewData.mY || mCx != aNewData.mCx ||
-      mCy != aNewData.mCy || mR != aNewData.mR || mRx != aNewData.mRx ||
-      mRy != aNewData.mRy) {
-    hint |= nsChangeHint_InvalidateRenderingObservers | nsChangeHint_NeedReflow;
-  }
 
   if (mClipPath != aNewData.mClipPath) {
     hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
