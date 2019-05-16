@@ -145,12 +145,6 @@ void AssertUniqueItem(nsDisplayItem* aItem) {
 }
 #endif
 
-bool ShouldBuildItemForEventsOrPlugins(const DisplayItemType aType) {
-  return aType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO ||
-         aType == DisplayItemType::TYPE_PLUGIN ||
-         (GetDisplayItemFlagsForType(aType) & TYPE_IS_CONTAINER);
-}
-
 /* static */
 bool ActiveScrolledRoot::IsAncestor(const ActiveScrolledRoot* aAncestor,
                                     const ActiveScrolledRoot* aDescendant) {
@@ -1260,7 +1254,8 @@ void nsDisplayListBuilder::AddFrameMarkedForDisplayIfVisible(nsIFrame* aFrame) {
 void nsDisplayListBuilder::MarkFrameForDisplayIfVisible(
     nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
   AddFrameMarkedForDisplayIfVisible(aFrame);
-  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetDisplayListParent(f)) {
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetDisplayListParent(f)) {
     if (f->ForceDescendIntoIfVisible()) return;
     f->SetForceDescendIntoIfVisible(true);
     if (f == aStopAtFrame) {
@@ -1389,7 +1384,8 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
 }
 
 static void UnmarkFrameForDisplayIfVisible(nsIFrame* aFrame) {
-  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetDisplayListParent(f)) {
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetDisplayListParent(f)) {
     if (!f->ForceDescendIntoIfVisible()) return;
     f->SetForceDescendIntoIfVisible(false);
   }
@@ -9961,10 +9957,10 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(WrFiltersHolder& wrFilters) {
 
         wr::Shadow wrShadow;
         wrShadow.offset = {
-            NSAppUnitsToFloatPixels(shadow->mXOffset, appUnitsPerDevPixel),
-            NSAppUnitsToFloatPixels(shadow->mYOffset, appUnitsPerDevPixel)};
+          NSAppUnitsToFloatPixels(shadow->mXOffset, appUnitsPerDevPixel),
+          NSAppUnitsToFloatPixels(shadow->mYOffset, appUnitsPerDevPixel)};
         wrShadow.blur_radius =
-            NSAppUnitsToFloatPixels(shadow->mRadius, appUnitsPerDevPixel);
+          NSAppUnitsToFloatPixels(shadow->mRadius, appUnitsPerDevPixel);
         wrShadow.color = {NS_GET_R(color) / 255.0f, NS_GET_G(color) / 255.0f,
                           NS_GET_B(color) / 255.0f, NS_GET_A(color) / 255.0f};
         auto filterOp = wr::FilterOp::DropShadow(wrShadow);
