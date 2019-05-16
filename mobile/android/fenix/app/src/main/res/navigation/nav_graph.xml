@@ -300,7 +300,7 @@
     <fragment
         android:id="@+id/turnOnSyncFragment"
         android:name="org.mozilla.fenix.settings.TurnOnSyncFragment"
-        android:label="TurnOnSyncFragment">
+        android:label="@string/preferences_sync">
         <action
             android:id="@+id/action_turnOnSyncFragment_to_browserFragment"
             app:destination="@id/browserFragment"
@@ -311,14 +311,16 @@
             app:destination="@id/pairInstructionsFragment" />
     </fragment>
 
-    <fragment
+    <dialog
         android:id="@+id/pairInstructionsFragment"
         android:name="org.mozilla.fenix.settings.PairInstructionsFragment"
         android:label="PairInstructionsFragment">
         <action
             android:id="@+id/action_pairInstructionsFragment_to_pairFragment"
-            app:destination="@id/pairFragment" />
-    </fragment>
+            app:destination="@id/pairFragment"
+            app:popUpTo="@+id/pairInstructionsFragment"
+            app:popUpToInclusive="true" />
+    </dialog>
 
     <fragment
         android:id="@+id/pairFragment"
@@ -393,6 +395,8 @@
             app:argType="integer" />
         <action
             android:id="@+id/action_quickSettingsSheetDialogFragment_to_trackingProtectionFragment"
-            app:destination="@id/trackingProtectionFragment" />
+            app:destination="@id/trackingProtectionFragment"
+            app:popUpTo="@id/quickSettingsSheetDialogFragment"
+            app:popUpToInclusive="true" />
     </dialog>
 </navigation>
