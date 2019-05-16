@@ -58,8 +58,7 @@ export async function onConnect(connection: any, actions: Object) {
   await actions.connect(
     tabTarget.url,
     threadClient.actor,
-    traits && traits.canRewind,
-    tabTarget.isWebExtension
+    traits && traits.canRewind
   );
   await actions.newGeneratedSources(sourceInfo);
 
