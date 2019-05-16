@@ -419,6 +419,7 @@
 | [mozilla.components.browser.engine.gecko.integration.SettingUpdater](../mozilla.components.browser.engine.gecko.integration/-setting-updater/index.md) |  |
 | [mozilla.components.concept.engine.Settings](../mozilla.components.concept.engine/-settings/index.md) | Holds settings of an engine or session. Concrete engine implementations define how these settings are applied i.e. whether a setting is applied on an engine or session instance. |
 | [org.mozilla.telemetry.measurement.SettingsMeasurement](../org.mozilla.telemetry.measurement/-settings-measurement/index.md) |  |
+| [mozilla.components.feature.session.SettingsUseCases](../mozilla.components.feature.session/-settings-use-cases/index.md) | Contains use cases related to user settings. |
 | [mozilla.components.service.fxa.SharedPrefAccountStorage](../mozilla.components.service.fxa/-shared-pref-account-storage/index.md) |  |
 | [mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider](../mozilla.components.browser.domains.autocomplete/-shipped-domains-provider/index.md) | Provides autocomplete functionality for domains based on provided list of assets (see [Domains](../mozilla.components.browser.domains/-domains/index.md)). |
 | [mozilla.components.browser.menu.item.SimpleBrowserMenuItem](../mozilla.components.browser.menu.item/-simple-browser-menu-item/index.md) | A simple browser menu item displaying text. |

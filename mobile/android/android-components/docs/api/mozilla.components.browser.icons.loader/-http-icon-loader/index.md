@@ -2,7 +2,7 @@
 
 # HttpIconLoader
 
-`class HttpIconLoader : `[`IconLoader`](../-icon-loader/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/HttpIconLoader.kt#L18)
+`class HttpIconLoader : `[`IconLoader`](../-icon-loader/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/loader/HttpIconLoader.kt#L23)
 
 [IconLoader](../-icon-loader/index.md) implementation that will try to download the icon for resources that point to an http(s) URL.
 
