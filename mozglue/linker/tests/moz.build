@@ -11,9 +11,13 @@ UNIFIED_SOURCES += [
     'TestZip.cpp',
 ]
 
+SOURCES += [
+    'TestZipData.S',
+]
+
 LOCAL_INCLUDES += ['..']
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
-DEFINES['SRCDIR'] = '"%s"' % SRCDIR
+ASFLAGS += ['-I', SRCDIR]
