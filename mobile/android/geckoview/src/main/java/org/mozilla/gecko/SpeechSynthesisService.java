@@ -20,13 +20,20 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SpeechSynthesisService  {
     private static final String LOGTAG = "GeckoSpeechSynthesis";
-    private static TextToSpeech sTTS;
+    // Object type is used to make it easier to remove android.speech dependencies using Proguard.
+    private static Object sTTS;
 
     @WrapForJNI(calledFrom = "gecko")
     public static void initSynth() {
+        initSynthInternal();
+    }
+
+    // Extra internal method to make it easier to remove android.speech dependencies using Proguard.
+    private static void initSynthInternal() {
         if (sTTS != null) {
             return;
         }
@@ -47,15 +54,20 @@ public class SpeechSynthesisService  {
         });
     }
 
+    private static TextToSpeech getTTS() {
+        return (TextToSpeech) sTTS;
+    }
+
     private static void registerVoicesByLocale() {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
+                TextToSpeech tss = getTTS();
                 Locale defaultLocale = Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
-                        ? sTTS.getDefaultLanguage()
-                        : sTTS.getLanguage();
+                        ? tss.getDefaultLanguage()
+                        : tss.getLanguage();
                 for (Locale locale : getAvailableLanguages()) {
-                    final Set<String> features = sTTS.getFeatures(locale);
+                    final Set<String> features = tss.getFeatures(locale);
                     boolean isLocal = features != null && features.contains(TextToSpeech.Engine.KEY_FEATURE_EMBEDDED_SYNTHESIS);
                     String localeStr = locale.toString();
                     registerVoice("moz-tts:android:" + localeStr, locale.getDisplayName(), localeStr.replace("_", "-"), !isLocal, defaultLocale == locale);
@@ -69,11 +81,11 @@ public class SpeechSynthesisService  {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // While this method was introduced in 21, it seems that it
             // has not been implemented in the speech service side until 23.
-            return sTTS.getAvailableLanguages();
+            return getTTS().getAvailableLanguages();
         }
         Set<Locale> locales = new HashSet<Locale>();
         for (Locale locale : Locale.getAvailableLocales()) {
-            if (locale.getVariant().isEmpty() && sTTS.isLanguageAvailable(locale) > 0) {
+            if (locale.getVariant().isEmpty() && getTTS().isLanguageAvailable(locale) > 0) {
                 locales.add(locale);
             }
         }
@@ -90,24 +102,29 @@ public class SpeechSynthesisService  {
     @WrapForJNI(calledFrom = "gecko")
     public static String speak(final String uri, final String text, final float rate,
                                final float pitch, final float volume) {
+        AtomicBoolean result = new AtomicBoolean(false);
+        final String utteranceId = UUID.randomUUID().toString();
+        speakInternal(uri, text, rate, pitch, volume, utteranceId, result);
+        return result.get() ? utteranceId : null;
+    }
+
+    // Extra internal method to make it easier to remove android.speech dependencies using Proguard.
+    private static void speakInternal(final String uri, final String text, final float rate,
+                                      final float pitch, final float volume, final String utteranceId, final AtomicBoolean result) {
         if (sTTS == null) {
             Log.w(LOGTAG, "TextToSpeech is not initialized");
-            return null;
+            return;
         }
 
         HashMap<String, String> params = new HashMap<String, String>();
-        final String utteranceId = UUID.randomUUID().toString();
         params.put(TextToSpeech.Engine.KEY_PARAM_VOLUME, Float.toString(volume));
         params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
-        sTTS.setLanguage(new Locale(uri.substring("moz-tts:android:".length())));
-        sTTS.setSpeechRate(rate);
-        sTTS.setPitch(pitch);
-        int result = sTTS.speak(text, TextToSpeech.QUEUE_FLUSH, params);
-        if (result != TextToSpeech.SUCCESS) {
-            return null;
-        }
-
-        return utteranceId;
+        TextToSpeech tss = (TextToSpeech) sTTS;
+        tss.setLanguage(new Locale(uri.substring("moz-tts:android:".length())));
+        tss.setSpeechRate(rate);
+        tss.setPitch(pitch);
+        int speakRes = tss.speak(text, TextToSpeech.QUEUE_FLUSH, params);
+        result.set(speakRes == TextToSpeech.SUCCESS);
     }
 
     private static void setUtteranceListener() {
@@ -116,7 +133,7 @@ public class SpeechSynthesisService  {
             return;
         }
 
-        sTTS.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+        getTTS().setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override
             public void onDone(final String utteranceId) {
                 dispatchEnd(utteranceId);
@@ -163,12 +180,17 @@ public class SpeechSynthesisService  {
 
     @WrapForJNI(calledFrom = "gecko")
     public static void stop() {
+        stopInternal();
+    }
+
+    // Extra internal method to make it easier to remove android.speech dependencies using Proguard.
+    private static void stopInternal() {
         if (sTTS == null) {
             Log.w(LOGTAG, "TextToSpeech is not initialized");
             return;
         }
 
-        sTTS.stop();
+        getTTS().stop();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             // Android M has onStop method.  If Android L or above, dispatch
             // event
