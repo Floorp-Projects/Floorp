@@ -6084,6 +6084,12 @@ bool QuotaManager::IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo) {
         return false;
       }
 
+      if (NS_WARN_IF(info.originNoSuffix().FindChar('^', 0) != -1)) {
+        QM_WARNING("originNoSuffix (%s) contains the '^' character!",
+                   info.originNoSuffix().get());
+        return false;
+      }
+
       // Verify the principal baseDomain exists.
       if (NS_WARN_IF(info.baseDomain().IsVoid())) {
         return false;

@@ -9,6 +9,7 @@ import subprocess
 import sys
 import os
 
+
 def parse_outputs(crate_output, dep_outputs, pass_l_flag):
     env = {}
     args = []
@@ -59,6 +60,7 @@ def parse_outputs(crate_output, dep_outputs, pass_l_flag):
 
     return env, args
 
+
 def wrap_rustc(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--crate-out', nargs='?')
@@ -72,6 +74,7 @@ def wrap_rustc(args):
                                       args.pass_l_flag)
     os.environ.update(new_env)
     return subprocess.Popen(args.cmd + new_args, cwd=args.cwd).wait()
+
 
 if __name__ == '__main__':
     sys.exit(wrap_rustc(sys.argv[1:]))

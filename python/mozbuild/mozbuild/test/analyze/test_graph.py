@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import unittest
 import sqlite3 as lite
 import mozunit
@@ -20,40 +22,40 @@ CREATE_NORMAL_LINK = """CREATE TABLE normal_link
         (from_id integer,
         to_id integer, unique(from_id, to_id));"""
 
-NODE_DATA = [(1, 0 ,2, -1, '.'),
-        (2, 100, 0, 1, 'Base64.cpp'),
-        (3, 200, 0, 1, 'nsArray.cpp'),
-        (4, 100, 0, 1, 'nsWildCard.h'),
-        (5, -1, 1, 9426, 'CDD Unified_cpp_xpcom_io0.cpp'),
-        (6, -1, 1, 5921, 'CXX Unified_cpp_xpcom_ds0.cpp'),
-        (7, -1, 1, 11077, 'CXX /builds/worker/workspace/build/src/dom/\
+NODE_DATA = [(1, 0, 2, -1, '.'),
+             (2, 100, 0, 1, 'Base64.cpp'),
+             (3, 200, 0, 1, 'nsArray.cpp'),
+             (4, 100, 0, 1, 'nsWildCard.h'),
+             (5, -1, 1, 9426, 'CDD Unified_cpp_xpcom_io0.cpp'),
+             (6, -1, 1, 5921, 'CXX Unified_cpp_xpcom_ds0.cpp'),
+             (7, -1, 1, 11077, 'CXX /builds/worker/workspace/build/src/dom/\
             plugins/base/snNPAPIPlugin.cpp'),
-        (8, -1, 1, 7677, 'CXX Unified_cpp_xpcom_io1.cpp'),
-        (9, -1, 1, 8672, 'CXX Unified_cpp_modules_libjar0.cpp'),
-        (10, -1, 4, 1, 'Unified_cpp_xpcom_io0.o'),
-        (11, -1, 4, 1, 'Unified_cpp_xpcom_dso.o'),
-        (12, -1, 4, 1, 'nsNPAPIPlugin.o'),
-        (13, -1, 4, 1, 'Unified_cpp_xpcom_io1.o'),
-        (14, -1, 4, 1, 'Unified_cpp_modules_libjar0.o'),
-        (15, -1, 1, 52975, 'LINK libxul.so'),
-        (16, -1, 4, 1, 'libxul.so'),
-        (17, -1, 1, 180, 'LINK libtestcrasher.so'),
-        (18, -1, 1, 944, 'python /builds/worker/workspace/build/src/toolkit/\
+             (8, -1, 1, 7677, 'CXX Unified_cpp_xpcom_io1.cpp'),
+             (9, -1, 1, 8672, 'CXX Unified_cpp_modules_libjar0.cpp'),
+             (10, -1, 4, 1, 'Unified_cpp_xpcom_io0.o'),
+             (11, -1, 4, 1, 'Unified_cpp_xpcom_dso.o'),
+             (12, -1, 4, 1, 'nsNPAPIPlugin.o'),
+             (13, -1, 4, 1, 'Unified_cpp_xpcom_io1.o'),
+             (14, -1, 4, 1, 'Unified_cpp_modules_libjar0.o'),
+             (15, -1, 1, 52975, 'LINK libxul.so'),
+             (16, -1, 4, 1, 'libxul.so'),
+             (17, -1, 1, 180, 'LINK libtestcrasher.so'),
+             (18, -1, 1, 944, 'python /builds/worker/workspace/build/src/toolkit/\
             library/dependentlibs.py:gen_list -> [dependentlibs.list, \
             dependentlibs.list.gtest, dependentlibs.list.pp]'),
-        (19, -1, 1, 348, 'LINK ../../dist/bin/plugin-container'),
-        (20, -1, 1, 342, 'LINK ../../../dist/bin/xpcshell'),
-        (21, -1, 4, 1, 'libtestcrasher.so'),
-        (22, -1, 4, 1, 'dependentlibs.list'),
-        (23, -1, 4, 1, 'dependentlibs.list.gtest'),
-        (24, -1, 4, 1, 'dependentlibs.list.pp'),
-        (25, -1, 4, 1, 'plugin-container'),
-        (26, -1, 4, 1, 'xpcshell'),
-        (27, -1, 6, 1, '<shlibs>'),
-        (28, 1, 0, 1, 'dummy node'),
-        (100, 300, 2, -1, 'io'),
-        (200, 300, 2, -1, 'ds'),
-        (300, 1, 2, -1, 'xpcom')]
+             (19, -1, 1, 348, 'LINK ../../dist/bin/plugin-container'),
+             (20, -1, 1, 342, 'LINK ../../../dist/bin/xpcshell'),
+             (21, -1, 4, 1, 'libtestcrasher.so'),
+             (22, -1, 4, 1, 'dependentlibs.list'),
+             (23, -1, 4, 1, 'dependentlibs.list.gtest'),
+             (24, -1, 4, 1, 'dependentlibs.list.pp'),
+             (25, -1, 4, 1, 'plugin-container'),
+             (26, -1, 4, 1, 'xpcshell'),
+             (27, -1, 6, 1, '<shlibs>'),
+             (28, 1, 0, 1, 'dummy node'),
+             (100, 300, 2, -1, 'io'),
+             (200, 300, 2, -1, 'ds'),
+             (300, 1, 2, -1, 'xpcom')]
 
 NORMAL_LINK_DATA = [(2, 5), (3, 6), (4, 7), (4, 8), (4, 9), (5, 10), (6, 11),
                     (7, 12), (8, 13), (9, 14), (10, 15), (11, 15), (12, 15),
@@ -62,6 +64,7 @@ NORMAL_LINK_DATA = [(2, 5), (3, 6), (4, 7), (4, 8), (4, 9), (5, 10), (6, 11),
                     (18, 24), (19, 25), (20, 26), (21, 27)]
 
 PATH_TO_TEST_DB = ':memory:'
+
 
 class TestGraph(unittest.TestCase):
     @classmethod
@@ -93,10 +96,10 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(len(g.get_node(21).cmds), 0)
         self.assertEqual(len(g.get_node(28).cmds), 0)
         # one immediate command child
-        self.assertItemsEqual(g.get_node(2).get_cmd_ids(),[5] + libxul)
-        self.assertItemsEqual(g.get_node(3).get_cmd_ids(),[6] + libxul)
+        self.assertItemsEqual(g.get_node(2).get_cmd_ids(), [5] + libxul)
+        self.assertItemsEqual(g.get_node(3).get_cmd_ids(), [6] + libxul)
         # multiple immediate command children
-        self.assertItemsEqual(g.get_node(4).get_cmd_ids(),[7, 8, 9] + libxul)
+        self.assertItemsEqual(g.get_node(4).get_cmd_ids(), [7, 8, 9] + libxul)
         # node is not a file or command
         self.assertItemsEqual(g.get_node(16).get_cmd_ids(), libxul[1:])
         self.assertItemsEqual(g.get_node(11).get_cmd_ids(), libxul)
@@ -131,5 +134,6 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(g.get_node(4).path, 'xpcom/io/nsWildCard.h')
         self.assertEqual(g.get_node(28).path, 'dummy node')
 
+
 if __name__ == '__main__':
-  mozunit.main()
+    mozunit.main()

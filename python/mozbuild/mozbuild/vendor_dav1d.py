@@ -4,10 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from distutils.version import LooseVersion
 import logging
 from mozbuild.base import (
-    BuildEnvironmentNotFoundException,
     MozbuildObject,
 )
 import mozfile
@@ -18,6 +16,7 @@ import re
 import sys
 import tarfile
 from urlparse import urlparse
+
 
 class VendorDav1d(MozbuildObject):
     def upstream_snapshot(self, revision):
@@ -51,7 +50,7 @@ Please set a repository url with --repo on either googlesource or github.''' % h
 
     def upstream_gitlab_commit(self, revision):
         '''Query the github api for a git commit id and timestamp.'''
-        gitlab_api = 'https://code.videolan.org/api/v4/projects/videolan%2Fdav1d/repository/commits'
+        gitlab_api = 'https://code.videolan.org/api/v4/projects/videolan%2Fdav1d/repository/commits'  # noqa
         url = mozpath.join(gitlab_api, revision)
         self.log(logging.INFO, 'fetch', {'url': url},
                  'Fetching commit id from {url}')
@@ -96,8 +95,8 @@ Please set a repository url with --repo on either googlesource or github.''' % h
         prefix = '  release: commit'
         if prefix in yaml:
             new_yaml = re.sub(prefix + ' [v\.a-f0-9]+.*$',
-                                prefix + ' %s (%s).' % (revision, timestamp),
-                                yaml, flags=re.MULTILINE)
+                              prefix + ' %s (%s).' % (revision, timestamp),
+                              yaml, flags=re.MULTILINE)
         else:
             new_yaml = '%s\n\n%s %s.' % (yaml, prefix, revision)
 
@@ -114,13 +113,12 @@ Please set a repository url with --repo on either googlesource or github.''' % h
         with open(dst_filename, 'w') as f:
             f.write(vcs_version)
 
-
     def clean_upstream(self, target):
         '''Remove files we don't want to import.'''
         mozfile.remove(mozpath.join(target, '.gitattributes'))
         mozfile.remove(mozpath.join(target, '.gitignore'))
         mozfile.remove(mozpath.join(target, 'build', '.gitattributes'))
-        mozfile.remove(mozpath.join(target, 'build' ,'.gitignore'))
+        mozfile.remove(mozpath.join(target, 'build', '.gitignore'))
 
     def check_modified_files(self):
         '''

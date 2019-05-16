@@ -16,59 +16,55 @@
 // Safe wrappers to the low-level ABI.  This re-exports all types in
 // baldrapi but none of the functions.
 
-use baldrapi::CraneliftModuleEnvironment;
 use cranelift_codegen::cursor::FuncCursor;
 use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir::immediates::{Ieee32, Ieee64};
 use cranelift_codegen::ir::{self, InstBuilder};
-use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex};
+use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex, WasmResult};
+
 use std::mem;
 use std::slice;
 
 use baldrapi;
+use baldrapi::BD_ValType as ValType;
+use baldrapi::CraneliftModuleEnvironment;
+use baldrapi::TypeCode;
+
+use utils::BasicError;
 
 pub use baldrapi::BD_SymbolicAddress as SymbolicAddress;
-pub use baldrapi::BD_ValType as ValType;
 pub use baldrapi::CraneliftCompiledFunc as CompiledFunc;
 pub use baldrapi::CraneliftFuncCompileInput as FuncCompileInput;
 pub use baldrapi::CraneliftMetadataEntry as MetadataEntry;
 pub use baldrapi::CraneliftStaticEnvironment as StaticEnvironment;
 pub use baldrapi::FuncTypeIdDescKind;
 pub use baldrapi::Trap;
-pub use baldrapi::TypeCode;
 
-/// Convert a `TypeCode` into the equivalent Cranelift type.
-///
-/// We expect Cranelift's `VOID` type to go away in the future, so use `None` to represent a
-/// function without a return value.
-impl Into<Option<ir::Type>> for TypeCode {
-    fn into(self) -> Option<ir::Type> {
-        match self {
-            TypeCode::I32 => Some(ir::types::I32),
-            TypeCode::I64 => Some(ir::types::I64),
-            TypeCode::F32 => Some(ir::types::F32),
-            TypeCode::F64 => Some(ir::types::F64),
-            TypeCode::BlockVoid => None,
-            _ => panic!("unexpected type"),
-        }
+/// Converts a `TypeCode` into the equivalent Cranelift type, if it's a known type, or an error
+/// otherwise.
+#[inline]
+fn typecode_to_type(type_code: TypeCode) -> WasmResult<Option<ir::Type>> {
+    match type_code {
+        TypeCode::I32 => Ok(Some(ir::types::I32)),
+        TypeCode::I64 => Ok(Some(ir::types::I64)),
+        TypeCode::F32 => Ok(Some(ir::types::F32)),
+        TypeCode::F64 => Ok(Some(ir::types::F64)),
+        TypeCode::BlockVoid => Ok(None),
+        _ => Err(BasicError::new(format!("unknown type code: {:?}", type_code)).into()),
     }
 }
 
 /// Convert a non-void `TypeCode` into the equivalent Cranelift type.
-impl Into<ir::Type> for TypeCode {
-    fn into(self) -> ir::Type {
-        match self.into() {
-            Some(t) => t,
-            None => panic!("unexpected void type"),
-        }
-    }
+#[inline]
+fn typecode_to_nonvoid_type(type_code: TypeCode) -> WasmResult<ir::Type> {
+    Ok(typecode_to_type(type_code)?.expect("unexpected void type"))
 }
 
 /// Convert a `TypeCode` into the equivalent Cranelift type.
-impl Into<ir::Type> for ValType {
-    fn into(self) -> ir::Type {
-        unsafe { baldrapi::env_unpack(self) }.into()
-    }
+#[inline]
+fn valtype_to_type(val_type: ValType) -> WasmResult<ir::Type> {
+    let type_code = unsafe { baldrapi::env_unpack(val_type) };
+    typecode_to_nonvoid_type(type_code)
 }
 
 /// Convert a u32 into a `BD_SymbolicAddress`.
@@ -83,8 +79,9 @@ impl From<u32> for SymbolicAddress {
 pub struct GlobalDesc(*const baldrapi::GlobalDesc);
 
 impl GlobalDesc {
-    pub fn value_type(self) -> TypeCode {
-        unsafe { baldrapi::global_type(self.0) }
+    pub fn value_type(self) -> WasmResult<ir::Type> {
+        let type_code = unsafe { baldrapi::global_type(self.0) };
+        typecode_to_nonvoid_type(type_code)
     }
 
     pub fn is_constant(self) -> bool {
@@ -96,16 +93,15 @@ impl GlobalDesc {
     }
 
     /// Insert an instruction at `pos` that materialized the constant value.
-    pub fn emit_constant(self, pos: &mut FuncCursor) -> ir::Value {
+    pub fn emit_constant(self, pos: &mut FuncCursor) -> WasmResult<ir::Value> {
         unsafe {
             let v = baldrapi::global_constantValue(self.0);
-            // Note that the floating point constants below
             match v.t {
-                TypeCode::I32 => pos.ins().iconst(ir::types::I32, i64::from(v.u.i32)),
-                TypeCode::I64 => pos.ins().iconst(ir::types::I64, v.u.i64),
-                TypeCode::F32 => pos.ins().f32const(Ieee32::with_bits(v.u.i32 as u32)),
-                TypeCode::F64 => pos.ins().f64const(Ieee64::with_bits(v.u.i64 as u64)),
-                _ => panic!("unexpected type"),
+                TypeCode::I32 => Ok(pos.ins().iconst(ir::types::I32, i64::from(v.u.i32))),
+                TypeCode::I64 => Ok(pos.ins().iconst(ir::types::I64, v.u.i64)),
+                TypeCode::F32 => Ok(pos.ins().f32const(Ieee32::with_bits(v.u.i32 as u32))),
+                TypeCode::F64 => Ok(pos.ins().f64const(Ieee64::with_bits(v.u.i64 as u64))),
+                _ => Err(BasicError::new(format!("unexpected type: {}", v.t as u64)).into()),
             }
         }
     }
@@ -130,23 +126,27 @@ impl TableDesc {
 pub struct FuncTypeWithId(*const baldrapi::FuncTypeWithId);
 
 impl FuncTypeWithId {
-    pub fn args<'a>(self) -> &'a [ValType] {
-        unsafe {
-            let num_args = baldrapi::funcType_numArgs(self.0);
-            // The `funcType_args` callback crashes when there are no arguments. Also note that
-            // `slice::from_raw_parts()` requires a non-null pointer for empty slices.
-            // TODO: We should get all the parts of a signature in a single callback that returns a
-            // struct.
-            if num_args == 0 {
-                &[]
-            } else {
-                slice::from_raw_parts(baldrapi::funcType_args(self.0), num_args)
+    pub fn args<'a>(self) -> WasmResult<Vec<ir::Type>> {
+        let num_args = unsafe { baldrapi::funcType_numArgs(self.0) };
+        // The `funcType_args` callback crashes when there are no arguments. Also note that
+        // `slice::from_raw_parts()` requires a non-null pointer for empty slices.
+        // TODO: We should get all the parts of a signature in a single callback that returns a
+        // struct.
+        if num_args == 0 {
+            Ok(Vec::new())
+        } else {
+            let args = unsafe { slice::from_raw_parts(baldrapi::funcType_args(self.0), num_args) };
+            let mut ret = Vec::new();
+            for &arg in args {
+                ret.push(valtype_to_type(arg)?);
             }
+            Ok(ret)
         }
     }
 
-    pub fn ret_type(self) -> TypeCode {
-        unsafe { baldrapi::funcType_retType(self.0) }
+    pub fn ret_type(self) -> WasmResult<Option<ir::Type>> {
+        let type_code = unsafe { baldrapi::funcType_retType(self.0) };
+        typecode_to_type(type_code)
     }
 
     pub fn id_kind(self) -> FuncTypeIdDescKind {

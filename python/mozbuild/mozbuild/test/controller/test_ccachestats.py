@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import time
 import unittest
@@ -290,6 +290,7 @@ class TestCcacheStats(unittest.TestCase):
         # Test parsing 3.5 output.
         stat9 = CCacheStats(self.STAT9)
         self.assertTrue(stat9)
+
 
 if __name__ == '__main__':
     main()

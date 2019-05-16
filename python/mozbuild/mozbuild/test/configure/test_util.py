@@ -57,7 +57,7 @@ class TestConfigureOutputHandler(unittest.TestCase):
         name = '%s.test_format' % self.__class__.__name__
         logger = logging.getLogger(name)
         logger.setLevel(logging.DEBUG)
-        handler =  ConfigureOutputHandler(out, err)
+        handler = ConfigureOutputHandler(out, err)
         handler.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
         logger.addHandler(handler)
 
@@ -79,7 +79,7 @@ class TestConfigureOutputHandler(unittest.TestCase):
         name = '%s.test_continuation' % self.__class__.__name__
         logger = logging.getLogger(name)
         logger.setLevel(logging.DEBUG)
-        handler =  ConfigureOutputHandler(out, out)
+        handler = ConfigureOutputHandler(out, out)
         handler.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
         logger.addHandler(handler)
 
@@ -138,7 +138,7 @@ class TestConfigureOutputHandler(unittest.TestCase):
         err = StringIO()
 
         logger.removeHandler(handler)
-        handler =  ConfigureOutputHandler(out, err)
+        handler = ConfigureOutputHandler(out, err)
         handler.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
         logger.addHandler(handler)
 
@@ -167,7 +167,7 @@ class TestConfigureOutputHandler(unittest.TestCase):
         name = '%s.test_queue_debug' % self.__class__.__name__
         logger = logging.getLogger(name)
         logger.setLevel(logging.DEBUG)
-        handler =  ConfigureOutputHandler(out, out, maxlen=3)
+        handler = ConfigureOutputHandler(out, out, maxlen=3)
         handler.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
         logger.addHandler(handler)
 
@@ -268,7 +268,7 @@ class TestConfigureOutputHandler(unittest.TestCase):
         name = '%s.test_queue_debug_reentrant' % self.__class__.__name__
         logger = logging.getLogger(name)
         logger.setLevel(logging.DEBUG)
-        handler =  ConfigureOutputHandler(out, out, maxlen=10)
+        handler = ConfigureOutputHandler(out, out, maxlen=10)
         handler.setFormatter(logging.Formatter('%(levelname)s| %(message)s'))
         logger.addHandler(handler)
 
@@ -424,7 +424,7 @@ class TestLogSubprocessOutput(unittest.TestCase):
         sandbox = ConfigureSandbox({}, {}, ['configure'], out, out)
 
         sandbox.include_file(mozpath.join(topsrcdir, 'build',
-                             'moz.configure', 'util.configure'))
+                                          'moz.configure', 'util.configure'))
         sandbox.include_file(mozpath.join(topsrcdir, 'python', 'mozbuild',
                                           'mozbuild', 'test', 'configure',
                                           'data', 'subprocess.configure'))
@@ -474,6 +474,7 @@ class TestVersion(unittest.TestCase):
         self.assertEqual(v.minor, 0)
         self.assertEqual(v.patch, 0)
 
+
 class TestCheckCmdOutput(unittest.TestCase):
 
     def get_result(self, command='', paths=None):
@@ -483,7 +484,7 @@ class TestCheckCmdOutput(unittest.TestCase):
         sandbox = ConfigureTestSandbox(paths, config, {}, ['/bin/configure'],
                                        out, out)
         sandbox.include_file(mozpath.join(topsrcdir, 'build',
-                             'moz.configure', 'util.configure'))
+                                          'moz.configure', 'util.configure'))
         status = 0
         try:
             exec_(command, sandbox)

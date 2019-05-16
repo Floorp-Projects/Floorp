@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import mozunit
@@ -23,6 +23,7 @@ CONTENTS = {
     'http://server/hoge': b'hoge' * 300,
     'http://server/larger': b'larger' * 3000,
 }
+
 
 class FakeResponse(object):
     def __init__(self, content):

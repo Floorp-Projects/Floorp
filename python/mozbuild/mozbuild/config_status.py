@@ -10,7 +10,6 @@ from __future__ import absolute_import, print_function
 
 import logging
 import os
-import subprocess
 import sys
 import time
 
@@ -80,14 +79,14 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
 
     if 'CONFIG_FILES' in os.environ:
         raise Exception('Using the CONFIG_FILES environment variable is not '
-            'supported.')
+                        'supported.')
     if 'CONFIG_HEADERS' in os.environ:
         raise Exception('Using the CONFIG_HEADERS environment variable is not '
-            'supported.')
+                        'supported.')
 
     if not os.path.isabs(topsrcdir):
         raise Exception('topsrcdir must be defined as an absolute directory: '
-            '%s' % topsrcdir)
+                        '%s' % topsrcdir)
 
     default_backends = ['RecursiveMake']
     default_backends = (substs or {}).get('BUILD_BACKENDS', ['RecursiveMake'])
@@ -112,8 +111,8 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
         topobjdir = os.path.abspath('.')
 
     env = ConfigEnvironment(topsrcdir, topobjdir, defines=defines,
-            non_global_defines=non_global_defines, substs=substs,
-            source=source, mozconfig=mozconfig)
+                            non_global_defines=non_global_defines, substs=substs,
+                            source=source, mozconfig=mozconfig)
 
     with FileAvoidWrite(os.path.join(topobjdir, 'mozinfo.json')) as f:
         write_mozinfo(f, env, os.environ)

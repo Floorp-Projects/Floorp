@@ -38,13 +38,9 @@ import os
 from mozbuild.dotproperties import (
     DotProperties,
 )
-from mozbuild.util import (
-    FileAvoidWrite,
-)
 from mozpack.files import (
     FileFinder,
 )
-import mozpack.path as mozpath
 
 
 def merge_properties(paths):
@@ -92,7 +88,8 @@ def main(output, *args, **kwargs):
     properties = merge_properties(sources)
 
     # Keep these two in sync.
-    image_url_template = 'android.resource://%s/drawable/suggestedsites_{name}' % opts.android_package_name
+    image_url_template = \
+        'android.resource://%s/drawable/suggestedsites_{name}' % opts.android_package_name
     drawables_template = 'drawable*/suggestedsites_{name}.*'
 
     # Load properties corresponding to each site name and define their
@@ -102,7 +99,8 @@ def main(output, *args, **kwargs):
     def add_names(names, defaults={}):
         for name in names:
             site = copy.deepcopy(defaults)
-            site.update(properties.get_dict('browser.suggestedsites.{name}'.format(name=name), required_keys=('title', 'url', 'bgcolor')))
+            site.update(properties.get_dict('browser.suggestedsites.{name}'.format(
+                name=name), required_keys=('title', 'url', 'bgcolor')))
             site['imageurl'] = image_url_template.format(name=name)
             sites.append(site)
 
@@ -116,11 +114,13 @@ def main(output, *args, **kwargs):
             matches = [p for p, _ in finder.find(drawables_template.format(name=name))]
             if not matches:
                 raise Exception("Could not find drawable in '{resources}' for '{name}'"
-                    .format(resources=resources, name=name))
+                                .format(resources=resources, name=name))
             else:
                 if opts.verbose:
                     print("Found {len} drawables in '{resources}' for '{name}': {matches}"
-                          .format(len=len(matches), resources=resources, name=name, matches=matches))
+                          .format(len=len(matches), resources=resources,
+                                  name=name, matches=matches)
+                          )
 
     # We want the lists to be ordered for reproducibility.  Each list has a
     # "default" JSON list item which will be extended by the properties read.
@@ -129,12 +129,14 @@ def main(output, *args, **kwargs):
         ('browser.suggestedsites.restricted.list', {'restricted': True}),
     ]
     if opts.verbose:
-        print('Reading {len} suggested site lists: {lists}'.format(len=len(lists), lists=[list_name for list_name, _ in lists]))
+        print('Reading {len} suggested site lists: {lists}'.format(
+            len=len(lists), lists=[list_name for list_name, _ in lists]))
 
     for (list_name, list_item_defaults) in lists:
         names = properties.get_list(list_name)
         if opts.verbose:
-            print('Reading {len} suggested sites from {list}: {names}'.format(len=len(names), list=list_name, names=names))
+            print('Reading {len} suggested sites from {list}: {names}'.format(
+                len=len(names), list=list_name, names=names))
         add_names(names, list_item_defaults)
 
     # We must define at least one site -- that's what the fallback is for.

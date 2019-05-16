@@ -306,6 +306,7 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
 class License(object):
     """Voluptuous validator which verifies the license(s) are valid as per our
     whitelist."""
+
     def __call__(self, values):
         if isinstance(values, str):
             values = [values]
