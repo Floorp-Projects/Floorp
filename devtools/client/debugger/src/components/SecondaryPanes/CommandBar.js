@@ -87,8 +87,6 @@ type Props = {
   stepOver: typeof actions.stepOver,
   breakOnNext: typeof actions.breakOnNext,
   rewind: typeof actions.rewind,
-  reverseStepIn: typeof actions.reverseStepIn,
-  reverseStepOut: typeof actions.reverseStepOut,
   reverseStepOver: typeof actions.reverseStepOver,
   pauseOnExceptions: typeof actions.pauseOnExceptions,
   toggleSkipPausing: typeof actions.toggleSkipPausing
@@ -331,8 +329,6 @@ export default connect(
     stepOver: actions.stepOver,
     breakOnNext: actions.breakOnNext,
     rewind: actions.rewind,
-    reverseStepIn: actions.reverseStepIn,
-    reverseStepOut: actions.reverseStepOut,
     reverseStepOver: actions.reverseStepOver,
     pauseOnExceptions: actions.pauseOnExceptions,
     toggleSkipPausing: actions.toggleSkipPausing

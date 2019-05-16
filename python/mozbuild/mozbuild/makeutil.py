@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import re
@@ -62,6 +62,7 @@ class _SimpleOrderedSet(object):
     It doesn't expose a complete API, and normalizes path separators
     at insertion.
     '''
+
     def __init__(self):
         self._list = []
         self._set = set()
@@ -95,6 +96,7 @@ class Rule(object):
                    command2
                    ...
     '''
+
     def __init__(self, targets=[]):
         self._targets = _SimpleOrderedSet()
         self._dependencies = _SimpleOrderedSet()
@@ -127,7 +129,7 @@ class Rule(object):
 
     def dependencies(self):
         '''Return an iterator on the rule dependencies.'''
-        return iter(d for d in self._dependencies if not d in self._targets)
+        return iter(d for d in self._dependencies if d not in self._targets)
 
     def commands(self):
         '''Return an iterator on the rule commands.'''
@@ -174,6 +176,7 @@ def read_dep_makefile(fh):
 
     if rule:
         raise Exception('Makefile finishes with a backslash. Expected more input.')
+
 
 def write_dep_makefile(fh, target, deps):
     '''

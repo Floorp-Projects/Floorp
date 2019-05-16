@@ -38,7 +38,7 @@ use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
 use crate::prim_store::interned::*;
 use crate::profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use crate::record::ApiRecordingReceiver;
-use crate::render_task::RenderTaskTreeCounters;
+use crate::render_task::RenderTaskGraphCounters;
 use crate::renderer::{AsyncPropertySampler, PipelineInfo};
 use crate::resource_cache::ResourceCache;
 #[cfg(feature = "replay")]
@@ -351,9 +351,9 @@ struct Document {
     /// where we want to recycle the memory each new display list, to avoid constantly
     /// re-allocating and moving memory around.
     scratch: PrimitiveScratchBuffer,
-    /// Keep track of the size of render task tree to pre-allocate memory up-front
+    /// Keep track of the size of render task graph to pre-allocate memory up-front
     /// the next frame.
-    render_task_counters: RenderTaskTreeCounters,
+    render_task_counters: RenderTaskGraphCounters,
 }
 
 impl Document {
@@ -387,7 +387,7 @@ impl Document {
             has_built_scene: false,
             data_stores: DataStores::default(),
             scratch: PrimitiveScratchBuffer::new(),
-            render_task_counters: RenderTaskTreeCounters::new(),
+            render_task_counters: RenderTaskGraphCounters::new(),
         }
     }
 
@@ -1822,7 +1822,7 @@ impl RenderBackend {
                 has_built_scene: false,
                 data_stores,
                 scratch: PrimitiveScratchBuffer::new(),
-                render_task_counters: RenderTaskTreeCounters::new(),
+                render_task_counters: RenderTaskGraphCounters::new(),
             };
 
             let frame_name = format!("frame-{}-{}", id.namespace_id.0, id.id);

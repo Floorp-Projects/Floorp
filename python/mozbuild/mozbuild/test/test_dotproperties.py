@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import unittest
@@ -31,7 +31,6 @@ key=value
         self.assertEqual(p.get('missing', 'default'), 'default')
         self.assertEqual(p.get('key'), 'value')
 
-
     def test_update(self):
         contents = StringIO('''
 old=old value
@@ -48,7 +47,6 @@ key=new value
         self.assertEqual(p.get('old'), 'old value')
         self.assertEqual(p.get('key'), 'new value')
 
-
     def test_get_list(self):
         contents = StringIO('''
 list.0=A
@@ -63,7 +61,6 @@ order.2=C
         self.assertEqual(p.get_list('missing'), [])
         self.assertEqual(p.get_list('list'), ['A', 'B', 'C'])
         self.assertEqual(p.get_list('order'), ['A', 'B', 'C'])
-
 
     def test_get_list_with_shared_prefix(self):
         contents = StringIO('''
@@ -84,7 +81,6 @@ list.other.0=H
         self.assertEqual(p.get_list('list.sublist'), ['D', 'E', 'F'])
         self.assertEqual(p.get_list('list.sublist.second'), ['G'])
         self.assertEqual(p.get_list('list.other'), ['H'])
-
 
     def test_get_dict(self):
         contents = StringIO('''
@@ -108,7 +104,6 @@ C=value
         with self.assertRaises(ValueError):
             p.get_dict('C', required_keys=['missing_key'])
 
-
     def test_get_dict_with_shared_prefix(self):
         contents = StringIO('''
 A.title=title A
@@ -123,9 +118,9 @@ B.subdict.url=url B subdict
         self.assertEqual(p.get_dict('A'), {'title': 'title A'})
         self.assertEqual(p.get_dict('B'), {'title': 'title B', 'url': 'url B'})
         self.assertEqual(p.get_dict('A.subdict'),
-            {'title': 'title A subdict'})
+                         {'title': 'title A subdict'})
         self.assertEqual(p.get_dict('B.subdict'),
-            {'title': 'title B subdict', 'url': 'url B subdict'})
+                         {'title': 'title B subdict', 'url': 'url B subdict'})
 
     def test_get_dict_with_value_prefix(self):
         contents = StringIO('''
@@ -142,7 +137,6 @@ A.default.C.ignored=C ignored
         # They can still be fetched directly.
         self.assertEqual(p.get('A.default.B'), 'B')
         self.assertEqual(p.get('A.default.C'), 'C')
-
 
     def test_unicode(self):
         contents = StringIO('''

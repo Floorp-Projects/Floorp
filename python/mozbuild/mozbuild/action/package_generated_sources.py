@@ -5,8 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
-import json
-import os.path
 import sys
 
 import buildconfig
@@ -23,13 +21,15 @@ def main(argv):
     args = parser.parse_args(argv)
 
     objdir_abspath = mozpath.abspath(buildconfig.topobjdir)
+
     def is_valid_entry(entry):
         if isinstance(entry[1], BaseFile):
             entry_abspath = mozpath.abspath(entry[1].path)
         else:
             entry_abspath = mozpath.abspath(entry[1])
         if not entry_abspath.startswith(objdir_abspath):
-            print("Warning: omitting generated source [%s] from archive" % entry_abspath, file=sys.stderr)
+            print("Warning: omitting generated source [%s] from archive" % entry_abspath,
+                  file=sys.stderr)
             return False
         return True
 

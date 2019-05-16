@@ -2,12 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
-import cPickle as pickle
-import json
 import os
-import unittest
 
 from mozpack.copier import FileRegistry
 from mozpack.manifests import InstallManifest
@@ -25,15 +22,15 @@ class TestFasterMakeBackend(BackendTester):
         """Ensure the FasterMakeBackend works without error."""
         env = self._consume('stub0', FasterMakeBackend)
         self.assertTrue(os.path.exists(mozpath.join(env.topobjdir,
-            'backend.FasterMakeBackend')))
+                                                    'backend.FasterMakeBackend')))
         self.assertTrue(os.path.exists(mozpath.join(env.topobjdir,
-            'backend.FasterMakeBackend.in')))
+                                                    'backend.FasterMakeBackend.in')))
 
     def test_final_target_files_wildcard(self):
         """Ensure that wildcards in FINAL_TARGET_FILES work properly."""
         env = self._consume('final-target-files-wildcard', FasterMakeBackend)
         m = InstallManifest(path=mozpath.join(env.topobjdir,
-            'faster', 'install_dist_bin'))
+                                              'faster', 'install_dist_bin'))
         self.assertEqual(len(m), 1)
         reg = FileRegistry()
         m.populate_registry(reg)

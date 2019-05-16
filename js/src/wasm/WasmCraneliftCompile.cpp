@@ -409,24 +409,8 @@ BD_ConstantValue global_constantValue(const GlobalDesc* global) {
   return v;
 }
 
-#ifdef DEBUG
-static bool IsCraneliftCompatible(TypeCode type) {
-  switch (type) {
-    case TypeCode::I32:
-    case TypeCode::I64:
-    case TypeCode::F32:
-    case TypeCode::F64:
-      return true;
-    default:
-      return false;
-  }
-}
-#endif
-
 TypeCode global_type(const GlobalDesc* global) {
-  TypeCode type = TypeCode(global->type().code());
-  MOZ_ASSERT(IsCraneliftCompatible(type));
-  return type;
+  return TypeCode(global->type().code());
 }
 
 size_t global_tlsOffset(const GlobalDesc* global) {
@@ -449,11 +433,6 @@ size_t funcType_numArgs(const FuncTypeWithId* funcType) {
 }
 
 const BD_ValType* funcType_args(const FuncTypeWithId* funcType) {
-#ifdef DEBUG
-  for (ValType valType : funcType->args()) {
-    MOZ_ASSERT(IsCraneliftCompatible(TypeCode(valType.code())));
-  }
-#endif
   static_assert(sizeof(BD_ValType) == sizeof(ValType), "update BD_ValType");
   return (const BD_ValType*)&funcType->args()[0];
 }
