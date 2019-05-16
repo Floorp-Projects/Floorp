@@ -1919,7 +1919,7 @@ var fetchBookmarkItem = async function(db, bookmarkItem) {
   }
 
   item.tags = PlacesUtils.tagging.getTagsForURI(
-    PlacesUtils.toURI(bookmarkItem.url), {});
+    PlacesUtils.toURI(bookmarkItem.url));
 
   let keywordEntry = await PlacesUtils.keywords.fetch({
     url: bookmarkItem.url,

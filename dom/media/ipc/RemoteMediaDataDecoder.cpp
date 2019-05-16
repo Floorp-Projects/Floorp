@@ -32,6 +32,13 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {
       ->Then(
           mAbstractManagerThread, __func__,
           [self, this](TrackType aTrack) {
+            // If shutdown has started in the meantime shutdown promise may
+            // be resloved before this task. In this case mChild will be null
+            // and the init promise has to be canceled.
+            if (!mChild) {
+              return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
+                                                  __func__);
+            }
             mDescription =
                 mChild->GetDescriptionName() + NS_LITERAL_CSTRING(" (remote)");
             mIsHardwareAccelerated =
@@ -66,15 +73,23 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteMediaDataDecoder::Drain() {
 
 RefPtr<ShutdownPromise> RemoteMediaDataDecoder::Shutdown() {
   RefPtr<RemoteMediaDataDecoder> self = this;
-  return InvokeAsync(mAbstractManagerThread, __func__,
-                     [self]() { return self->mChild->Shutdown(); })
-      ->Then(mAbstractManagerThread, __func__,
-             [self](const ShutdownPromise::ResolveOrRejectValue& aValue) {
-               self->mChild->DestroyIPDL();
-               self->mChild = nullptr;
-               return ShutdownPromise::CreateAndResolveOrReject(aValue,
-                                                                __func__);
-             });
+  return InvokeAsync(mAbstractManagerThread, __func__, [self]() {
+    RefPtr<ShutdownPromise> p = self->mChild->Shutdown();
+
+    // We're about to be destroyed and drop our ref to
+    // *DecoderChild. Make sure we put a ref into the
+    // task queue for the *DecoderChild thread to keep
+    // it alive until we send the delete message.
+    p->Then(self->mManagerThread, __func__,
+            [child = RefPtr<IRemoteDecoderChild>(self->mChild.forget())](
+                const ShutdownPromise::ResolveOrRejectValue& aValue) {
+              MOZ_ASSERT(aValue.IsResolve());
+              child->DestroyIPDL();
+              return ShutdownPromise::CreateAndResolveOrReject(aValue,
+                                                               __func__);
+            });
+    return p;
+  });
 }
 
 bool RemoteMediaDataDecoder::IsHardwareAccelerated(

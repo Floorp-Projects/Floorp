@@ -166,14 +166,18 @@ static bool CollectJitStackScripts(JSContext* cx,
           break;
         }
 
-        // Baseline Interpreter frames don't need recompilation.
         BaselineFrame* baselineFrame = frame.baselineFrame();
-        if (baselineFrame->runningInInterpreter()) {
-          break;
-        }
 
-        if (BaselineDebugModeOSRInfo* info =
-                baselineFrame->getDebugModeOSRInfo()) {
+        if (baselineFrame->runningInInterpreter()) {
+          // Baseline Interpreter frames for scripts that have a BaselineScript
+          // or IonScript don't need to be patched but they do need to be
+          // invalidated and recompiled. See also CollectInterpreterStackScripts
+          // for C++ interpreter frames.
+          if (!entries.append(DebugModeOSREntry(script))) {
+            return false;
+          }
+        } else if (BaselineDebugModeOSRInfo* info =
+                       baselineFrame->getDebugModeOSRInfo()) {
           // If patching a previously patched yet unpopped frame, we can
           // use the BaselineDebugModeOSRInfo on the frame directly to
           // patch. Indeed, we cannot use frame.resumePCinCurrentFrame(), as
@@ -362,15 +366,17 @@ static void PatchBaselineFramesForDebugMode(
           break;
         }
 
-        // Baseline Interpreter frames don't need recompilation.
-        BaselineFrame* baselineFrame = frame.baselineFrame();
-        if (baselineFrame->runningInInterpreter()) {
-          break;
-        }
-
         DebugModeOSREntry& entry = entries[entryIndex];
 
         if (!entry.recompiled()) {
+          entryIndex++;
+          break;
+        }
+
+        BaselineFrame* baselineFrame = frame.baselineFrame();
+        if (baselineFrame->runningInInterpreter()) {
+          // We recompiled the script's BaselineScript but Baseline Interpreter
+          // frames don't need to be patched.
           entryIndex++;
           break;
         }

@@ -252,7 +252,7 @@ add_task(async function test_bookmarks() {
   try {
     let options = hs.getNewQueryOptions();
     let query = hs.getNewQuery();
-    query.setParents([testRootGuid], 1);
+    query.setParents([testRootGuid]);
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
     rootNode.containerOpen = true;
@@ -290,7 +290,7 @@ add_task(async function test_bookmarks() {
     // query
     let options = hs.getNewQueryOptions();
     let query = hs.getNewQuery();
-    query.setParents([testFolderGuid], 1);
+    query.setParents([testFolderGuid]);
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
     rootNode.containerOpen = true;
@@ -387,7 +387,7 @@ add_task(async function test_bookmarks() {
   try {
     let options = hs.getNewQueryOptions();
     let query = hs.getNewQuery();
-    query.setParents([testRootGuid], 1);
+    query.setParents([testRootGuid]);
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
     rootNode.containerOpen = true;
@@ -478,7 +478,7 @@ async function testSimpleFolderResult() {
 
   let options = hs.getNewQueryOptions();
   let query = hs.getNewQuery();
-  query.setParents([parentGuid], 1);
+  query.setParents([parentGuid]);
   let result = hs.executeQuery(query, options);
   let rootNode = result.root;
   rootNode.containerOpen = true;

@@ -86,8 +86,9 @@ mozilla::ipc::IPCResult VideoDecoderChild::RecvError(const nsresult& aError) {
   mDecodePromise.RejectIfExists(aError, __func__);
   mDrainPromise.RejectIfExists(aError, __func__);
   mFlushPromise.RejectIfExists(aError, __func__);
-  mShutdownSelfRef = nullptr;
   mShutdownPromise.ResolveIfExists(true, __func__);
+  RefPtr<VideoDecoderChild> kungFuDeathGrip = mShutdownSelfRef.forget();
+  Unused << kungFuDeathGrip;
   return IPC_OK();
 }
 
@@ -120,8 +121,9 @@ mozilla::ipc::IPCResult VideoDecoderChild::RecvFlushComplete() {
 mozilla::ipc::IPCResult VideoDecoderChild::RecvShutdownComplete() {
   AssertOnManagerThread();
   MOZ_ASSERT(mShutdownSelfRef);
-  mShutdownSelfRef = nullptr;
   mShutdownPromise.ResolveIfExists(true, __func__);
+  RefPtr<VideoDecoderChild> kungFuDeathGrip = mShutdownSelfRef.forget();
+  Unused << kungFuDeathGrip;
   return IPC_OK();
 }
 
@@ -133,6 +135,9 @@ void VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
     // Defer reporting an error until we've recreated the manager so that
     // it'll be safe for MediaFormatReader to recreate decoders
     RefPtr<VideoDecoderChild> ref = this;
+    // Make sure shutdown self reference is null. Since ref is captured by the
+    // lambda it is not necessary to keep it any longer.
+    mShutdownSelfRef = nullptr;
     GetManager()->RunWhenRecreated(
         NS_NewRunnableFunction("VideoDecoderChild::ActorDestroy", [=]() {
           MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
@@ -142,7 +147,6 @@ void VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
             mDecodePromise.RejectIfExists(error, __func__);
             mDrainPromise.RejectIfExists(error, __func__);
             mFlushPromise.RejectIfExists(error, __func__);
-            mShutdownSelfRef = nullptr;
             mShutdownPromise.ResolveIfExists(true, __func__);
             // Make sure the next request will be rejected accordingly if ever
             // called.
@@ -256,8 +260,7 @@ RefPtr<MediaDataDecoder::DecodePromise> VideoDecoderChild::Decode(
   MediaRawDataIPDL sample(
       MediaDataIPDL(aSample->mOffset, aSample->mTime, aSample->mTimecode,
                     aSample->mDuration, aSample->mKeyframe),
-      aSample->mEOS,
-      std::move(buffer));
+      aSample->mEOS, std::move(buffer));
   SendInput(sample);
   return mDecodePromise.Ensure(__func__);
 }

@@ -2244,6 +2244,12 @@ BigInt* BigInt::truncateAndSubFromPowerOfTwo(JSContext* cx, HandleBigInt x,
   MOZ_ASSERT(bits != 0);
   MOZ_ASSERT(!x->isZero());
 
+  if (bits > MaxBitLength) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BIGINT_TOO_LARGE);
+    return nullptr;
+  }
+
   size_t resultLength = CeilDiv(bits, DigitBits);
   RootedBigInt result(cx,
                       createUninitialized(cx, resultLength, resultNegative));

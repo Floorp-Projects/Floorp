@@ -31,16 +31,46 @@ describe("Filtering - Hidden messages", () => {
   });
 
   it("has the expected numbers when there is a text search", () => {
+    // "info" is disabled and the filter input only matches a warning message.
+    store.dispatch(actions.filtersClear());
+    store.dispatch(actions.filterToggle(FILTERS.INFO));
     store.dispatch(actions.filterTextSet("danger, will robinson!"));
+
     let counter = getFilteredMessagesCount(store.getState());
     expect(counter).toEqual({
       [FILTERS.ERROR]: 0,
-      // The warning message matches the text search.
-      [FILTERS.WARN]: 1,
+      [FILTERS.WARN]: 0,
       [FILTERS.LOG]: 0,
-      [FILTERS.INFO]: 0,
+      [FILTERS.INFO]: 1,
       [FILTERS.DEBUG]: 0,
-      [FILTERS.TEXT]: 10,
+      [FILTERS.TEXT]: 9,
+      global: 10,
+    });
+
+    // Numbers update if the text search is cleared.
+    store.dispatch(actions.filterTextSet(""));
+    counter = getFilteredMessagesCount(store.getState());
+    expect(counter).toEqual({
+      [FILTERS.ERROR]: 0,
+      [FILTERS.WARN]: 0,
+      [FILTERS.LOG]: 0,
+      [FILTERS.INFO]: 1,
+      [FILTERS.DEBUG]: 0,
+      [FILTERS.TEXT]: 0,
+      global: 1,
+    });
+  });
+
+  it("has the expected numbers when there's a text search on disabled categories", () => {
+    store.dispatch(actions.filterTextSet("danger, will robinson!"));
+    let counter = getFilteredMessagesCount(store.getState());
+    expect(counter).toEqual({
+      [FILTERS.ERROR]: 3,
+      [FILTERS.WARN]: 1,
+      [FILTERS.LOG]: 5,
+      [FILTERS.INFO]: 1,
+      [FILTERS.DEBUG]: 1,
+      [FILTERS.TEXT]: 0,
       global: 11,
     });
 
