@@ -219,8 +219,10 @@ class CollectionCreationUIView(
                     actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.NameCollection))
                 }
             }
+            return true
+        } else {
+            return false
         }
-        return true
     }
 
     companion object {
