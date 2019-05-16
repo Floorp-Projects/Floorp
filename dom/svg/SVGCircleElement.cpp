@@ -150,5 +150,20 @@ bool SVGCircleElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
          newSVGReset->mR != oldSVGReset->mR;
 }
 
+nsCSSPropertyID SVGCircleElement::GetCSSPropertyIdForAttrEnum(
+    uint8_t aAttrEnum) {
+  switch (aAttrEnum) {
+    case ATTR_CX:
+      return eCSSProperty_cx;
+    case ATTR_CY:
+      return eCSSProperty_cy;
+    case ATTR_R:
+      return eCSSProperty_r;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown attr enum");
+      return eCSSProperty_UNKNOWN;
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla

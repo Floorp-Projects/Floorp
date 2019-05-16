@@ -135,5 +135,22 @@ SVGElement::LengthAttributesInfo SVGForeignObjectElement::GetLengthInfo() {
                               ArrayLength(sLengthInfo));
 }
 
+nsCSSPropertyID SVGForeignObjectElement::GetCSSPropertyIdForAttrEnum(
+    uint8_t aAttrEnum) {
+  switch (aAttrEnum) {
+    case ATTR_X:
+      return eCSSProperty_x;
+    case ATTR_Y:
+      return eCSSProperty_y;
+    case ATTR_WIDTH:
+      return eCSSProperty_width;
+    case ATTR_HEIGHT:
+      return eCSSProperty_height;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown attr enum");
+      return eCSSProperty_UNKNOWN;
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_SVGRectElement_h
 #define mozilla_dom_SVGRectElement_h
 
+#include "nsCSSPropertyID.h"
 #include "SVGAnimatedLength.h"
 #include "SVGGeometryElement.h"
 
@@ -48,6 +49,7 @@ class SVGRectElement final : public SVGRectElementBase {
 
   static bool IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
                                     const ComputedStyle& aOldStyle);
+  static nsCSSPropertyID GetCSSPropertyIdForAttrEnum(uint8_t aAttrEnum);
 
   // WebIDL
   already_AddRefed<DOMSVGAnimatedLength> X();

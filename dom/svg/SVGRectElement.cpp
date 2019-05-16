@@ -241,5 +241,25 @@ bool SVGRectElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
          newSVGReset->mRy != oldSVGReset->mRy;
 }
 
+nsCSSPropertyID SVGRectElement::GetCSSPropertyIdForAttrEnum(uint8_t aAttrEnum) {
+  switch (aAttrEnum) {
+    case ATTR_X:
+      return eCSSProperty_x;
+    case ATTR_Y:
+      return eCSSProperty_y;
+    case ATTR_WIDTH:
+      return eCSSProperty_width;
+    case ATTR_HEIGHT:
+      return eCSSProperty_height;
+    case ATTR_RX:
+      return eCSSProperty_rx;
+    case ATTR_RY:
+      return eCSSProperty_ry;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown attr enum");
+      return eCSSProperty_UNKNOWN;
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla
