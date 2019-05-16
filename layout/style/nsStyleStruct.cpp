@@ -85,6 +85,8 @@ static bool DefinitelyEqualImages(const nsStyleImageRequest* aRequest1,
   return aRequest1->DefinitelyEquals(*aRequest2);
 }
 
+static bool AreShadowArraysEqual(nsCSSShadowArray* lhs, nsCSSShadowArray* rhs);
+
 // --------------------
 // nsStyleFont
 //
@@ -478,12 +480,12 @@ nsChangeHint nsStyleOutline::CalcDifference(
 //
 nsStyleList::nsStyleList(const Document& aDocument)
     : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE),
-      mQuotes{StyleArcSlice<StyleQuotePair>(Servo_Quotes_GetInitialValue())},
       mMozListReversed(StyleMozListReversed::False) {
   MOZ_COUNT_CTOR(nsStyleList);
   MOZ_ASSERT(NS_IsMainThread());
 
   mCounterStyle = nsGkAtoms::disc;
+  mQuotes = Servo_Quotes_GetInitialValue().Consume();
 }
 
 nsStyleList::~nsStyleList() { MOZ_COUNT_DTOR(nsStyleList); }
@@ -512,7 +514,8 @@ nsChangeHint nsStyleList::CalcDifference(
     const nsStyleList& aNewData, const nsStyleDisplay& aOldDisplay) const {
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
-  if (mQuotes != aNewData.mQuotes) {
+  if (mQuotes != aNewData.mQuotes &&
+      !Servo_Quotes_Equal(mQuotes.get(), aNewData.mQuotes.get())) {
     return nsChangeHint_ReconstructFrame;
   }
   nsChangeHint hint = nsChangeHint(0);
@@ -671,7 +674,6 @@ nsChangeHint nsStyleColumn::CalcDifference(
 nsStyleSVG::nsStyleSVG(const Document& aDocument)
     : mFill(eStyleSVGPaintType_Color),  // Will be initialized to NS_RGB(0,0,0)
       mStroke(eStyleSVGPaintType_None),
-      mMozContextProperties{{}, {0}},
       mStrokeDashoffset(LengthPercentage::Zero()),
       mStrokeWidth(LengthPercentage::FromPixels(1.0f)),
       mFillOpacity(1.0f),
@@ -686,6 +688,7 @@ nsStyleSVG::nsStyleSVG(const Document& aDocument)
       mStrokeLinecap(NS_STYLE_STROKE_LINECAP_BUTT),
       mStrokeLinejoin(NS_STYLE_STROKE_LINEJOIN_MITER),
       mTextAnchor(NS_STYLE_TEXT_ANCHOR_START),
+      mContextPropsBits(0),
       mContextFlags(
           (eStyleSVGOpacitySource_Normal << FILL_OPACITY_SOURCE_SHIFT) |
           (eStyleSVGOpacitySource_Normal << STROKE_OPACITY_SOURCE_SHIFT)) {
@@ -701,7 +704,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
       mMarkerMid(aSource.mMarkerMid),
       mMarkerStart(aSource.mMarkerStart),
       mStrokeDasharray(aSource.mStrokeDasharray),
-      mMozContextProperties(aSource.mMozContextProperties),
+      mContextProps(aSource.mContextProps),
       mStrokeDashoffset(aSource.mStrokeDashoffset),
       mStrokeWidth(aSource.mStrokeWidth),
       mFillOpacity(aSource.mFillOpacity),
@@ -716,6 +719,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
       mStrokeLinecap(aSource.mStrokeLinecap),
       mStrokeLinejoin(aSource.mStrokeLinejoin),
       mTextAnchor(aSource.mTextAnchor),
+      mContextPropsBits(aSource.mContextPropsBits),
       mContextFlags(aSource.mContextFlags) {
   MOZ_COUNT_CTOR(nsStyleSVG);
 }
@@ -793,12 +797,12 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const {
       mShapeRendering != aNewData.mShapeRendering ||
       mStrokeDasharray != aNewData.mStrokeDasharray ||
       mContextFlags != aNewData.mContextFlags ||
-      mMozContextProperties.bits != aNewData.mMozContextProperties.bits) {
+      mContextPropsBits != aNewData.mContextPropsBits) {
     return hint | nsChangeHint_RepaintFrame;
   }
 
   if (!hint) {
-    if (mMozContextProperties.idents != aNewData.mMozContextProperties.idents) {
+    if (mContextProps != aNewData.mContextProps) {
       hint = nsChangeHint_NeutralChange;
     }
   }
@@ -970,12 +974,13 @@ void StyleShapeSource::DoDestroy() {
 // --------------------
 // nsStyleFilter
 //
-nsStyleFilter::nsStyleFilter() : mType(NS_STYLE_FILTER_NONE), mURL(nullptr) {
+nsStyleFilter::nsStyleFilter()
+    : mType(NS_STYLE_FILTER_NONE), mDropShadow(nullptr) {
   MOZ_COUNT_CTOR(nsStyleFilter);
 }
 
 nsStyleFilter::nsStyleFilter(const nsStyleFilter& aSource)
-    : mType(NS_STYLE_FILTER_NONE), mURL(nullptr) {
+    : mType(NS_STYLE_FILTER_NONE), mDropShadow(nullptr) {
   MOZ_COUNT_CTOR(nsStyleFilter);
   if (aSource.mType == NS_STYLE_FILTER_URL) {
     SetURL(aSource.mURL);
@@ -1018,7 +1023,7 @@ bool nsStyleFilter::operator==(const nsStyleFilter& aOther) const {
   if (mType == NS_STYLE_FILTER_URL) {
     return DefinitelyEqualURIs(mURL, aOther.mURL);
   } else if (mType == NS_STYLE_FILTER_DROP_SHADOW) {
-    return mDropShadow == aOther.mDropShadow;
+    return *mDropShadow == *aOther.mDropShadow;
   } else if (mType != NS_STYLE_FILTER_NONE) {
     return mFilterParameter == aOther.mFilterParameter;
   }
@@ -1028,7 +1033,8 @@ bool nsStyleFilter::operator==(const nsStyleFilter& aOther) const {
 
 void nsStyleFilter::ReleaseRef() {
   if (mType == NS_STYLE_FILTER_DROP_SHADOW) {
-    mDropShadow.~StyleSimpleShadow();
+    NS_ASSERTION(mDropShadow, "expected pointer");
+    mDropShadow->Release();
   } else if (mType == NS_STYLE_FILTER_URL) {
     NS_ASSERTION(mURL, "expected pointer");
     mURL->Release();
@@ -1051,9 +1057,11 @@ bool nsStyleFilter::SetURL(css::URLValue* aURL) {
   return true;
 }
 
-void nsStyleFilter::SetDropShadow(const StyleSimpleShadow& aSrc) {
+void nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow) {
+  NS_ASSERTION(aDropShadow, "expected pointer");
   ReleaseRef();
-  new (&mDropShadow) StyleSimpleShadow(aSrc);
+  mDropShadow = aDropShadow;
+  mDropShadow->AddRef();
   mType = NS_STYLE_FILTER_DROP_SHADOW;
 }
 
@@ -2916,7 +2924,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOrient(StyleOrient::Inline),
       mIsolation(NS_STYLE_ISOLATION_AUTO),
       mTopLayer(NS_STYLE_TOP_LAYER_NONE),
-      mWillChange{{}, {0}},
+      mWillChangeBitField({0}),
       mTouchAction(StyleTouchAction_AUTO),
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
@@ -2983,6 +2991,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mOrient(aSource.mOrient),
       mIsolation(aSource.mIsolation),
       mTopLayer(aSource.mTopLayer),
+      mWillChangeBitField(aSource.mWillChangeBitField),
       mWillChange(aSource.mWillChange),
       mTouchAction(aSource.mTouchAction),
       mScrollBehavior(aSource.mScrollBehavior),
@@ -2997,10 +3006,10 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mBackfaceVisibility(aSource.mBackfaceVisibility),
       mTransformStyle(aSource.mTransformStyle),
       mTransformBox(aSource.mTransformBox),
-      mTransform(aSource.mTransform),
-      mRotate(aSource.mRotate),
-      mTranslate(aSource.mTranslate),
-      mScale(aSource.mScale),
+      mSpecifiedTransform(aSource.mSpecifiedTransform),
+      mSpecifiedRotate(aSource.mSpecifiedRotate),
+      mSpecifiedTranslate(aSource.mSpecifiedTranslate),
+      mSpecifiedScale(aSource.mSpecifiedScale),
       // We intentionally leave mIndividualTransform as null, is the caller's
       // responsibility to call GenerateCombinedIndividualTransform when
       // appropriate.
@@ -3030,7 +3039,40 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   MOZ_COUNT_CTOR(nsStyleDisplay);
 }
 
+static void ReleaseSharedListOnMainThread(const char* aName,
+                                          RefPtr<nsCSSValueSharedList>& aList) {
+  // We don't allow releasing nsCSSValues with refcounted data in the Servo
+  // traversal, since the refcounts aren't threadsafe. Since Servo may trigger
+  // the deallocation of style structs during styling, we need to handle it
+  // here.
+  if (aList && ServoStyleSet::IsInServoTraversal()) {
+    // The default behavior of NS_ReleaseOnMainThreadSystemGroup is to only
+    // proxy the release if we're not already on the main thread. This is a nice
+    // optimization for the cases we happen to be doing a sequential traversal
+    // (i.e. a single-core machine), but it trips our assertions which check
+    // whether we're in a Servo traversal, parallel or not. So we
+    // unconditionally proxy in debug builds.
+    bool alwaysProxy =
+#ifdef DEBUG
+        true;
+#else
+        false;
+#endif
+    NS_ReleaseOnMainThreadSystemGroup(aName, aList.forget(), alwaysProxy);
+  }
+}
+
 nsStyleDisplay::~nsStyleDisplay() {
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedTransform",
+                                mSpecifiedTransform);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedRotate",
+                                mSpecifiedRotate);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedTranslate",
+                                mSpecifiedTranslate);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedScale",
+                                mSpecifiedScale);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mIndividualTransform",
+                                mIndividualTransform);
   MOZ_COUNT_DTOR(nsStyleDisplay);
 }
 
@@ -3042,16 +3084,22 @@ void nsStyleDisplay::TriggerImageLoads(Document& aDocument,
       aDocument, aOldStyle ? &aOldStyle->mShapeOutside : nullptr);
 }
 
-template <typename TransformLike>
+static inline bool TransformListChanged(
+    const RefPtr<nsCSSValueSharedList>& aList,
+    const RefPtr<nsCSSValueSharedList>& aNewList) {
+  return !aList != !aNewList || (aList && *aList != *aNewList);
+}
+
 static inline nsChangeHint CompareTransformValues(
-    const TransformLike& aOldTransform, const TransformLike& aNewTransform) {
+    const RefPtr<nsCSSValueSharedList>& aList,
+    const RefPtr<nsCSSValueSharedList>& aNewList) {
   nsChangeHint result = nsChangeHint(0);
 
   // Note: If we add a new change hint for transform changes here, we have to
   // modify KeyframeEffect::CalculateCumulativeChangeHint too!
-  if (aOldTransform != aNewTransform) {
+  if (!aList != !aNewList || (aList && *aList != *aNewList)) {
     result |= nsChangeHint_UpdateTransformLayer;
-    if (!aOldTransform.IsNone() && !aNewTransform.IsNone()) {
+    if (aList && aNewList) {
       result |= nsChangeHint_UpdatePostTransformOverflow;
     } else {
       result |= nsChangeHint_UpdateOverflow;
@@ -3200,10 +3248,14 @@ nsChangeHint nsStyleDisplay::CalcDifference(
      */
     nsChangeHint transformHint = nsChangeHint(0);
 
-    transformHint |= CompareTransformValues(mTransform, aNewData.mTransform);
-    transformHint |= CompareTransformValues(mRotate, aNewData.mRotate);
-    transformHint |= CompareTransformValues(mTranslate, aNewData.mTranslate);
-    transformHint |= CompareTransformValues(mScale, aNewData.mScale);
+    transformHint |= CompareTransformValues(mSpecifiedTransform,
+                                            aNewData.mSpecifiedTransform);
+    transformHint |=
+        CompareTransformValues(mSpecifiedRotate, aNewData.mSpecifiedRotate);
+    transformHint |= CompareTransformValues(mSpecifiedTranslate,
+                                            aNewData.mSpecifiedTranslate);
+    transformHint |=
+        CompareTransformValues(mSpecifiedScale, aNewData.mSpecifiedScale);
     transformHint |= CompareMotionValues(mMotion.get(), aNewData.mMotion.get());
 
     if (mTransformOrigin != aNewData.mTransformOrigin) {
@@ -3246,7 +3298,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   // TODO(emilio): Should add xor to the generated cbindgen type.
   auto willChangeBitsChanged =
       StyleWillChangeBits{static_cast<decltype(StyleWillChangeBits::bits)>(
-          mWillChange.bits.bits ^ aNewData.mWillChange.bits.bits)};
+          mWillChangeBitField.bits ^ aNewData.mWillChangeBitField.bits)};
 
   if (willChangeBitsChanged &
       (StyleWillChangeBits_STACKING_CONTEXT | StyleWillChangeBits_SCROLL |
@@ -3314,6 +3366,68 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   }
 
   return hint;
+}
+
+bool nsStyleDisplay::TransformChanged(const nsStyleDisplay& aNewData) const {
+  return TransformListChanged(mSpecifiedTransform,
+                              aNewData.mSpecifiedTransform);
+}
+
+/* static */
+already_AddRefed<nsCSSValueSharedList>
+nsStyleDisplay::GenerateCombinedIndividualTransform(
+    nsCSSValueSharedList* aTranslate, nsCSSValueSharedList* aRotate,
+    nsCSSValueSharedList* aScale) {
+  // Follow the order defined in the spec to append transform functions.
+  // https://drafts.csswg.org/css-transforms-2/#ctm
+  AutoTArray<nsCSSValueSharedList*, 3> shareLists;
+  if (aTranslate) {
+    shareLists.AppendElement(aTranslate);
+  }
+
+  if (aRotate) {
+    shareLists.AppendElement(aRotate);
+  }
+
+  if (aScale) {
+    shareLists.AppendElement(aScale);
+  }
+
+  if (shareLists.IsEmpty()) {
+    return nullptr;
+  }
+
+  if (shareLists.Length() == 1) {
+    return RefPtr<nsCSSValueSharedList>(shareLists[0]).forget();
+  }
+
+  // In common, we may have 3 transform functions:
+  // 1. one rotate function in aRotate,
+  // 2. one translate function in aTranslate,
+  // 3. one scale function in aScale.
+  AutoTArray<nsCSSValueList*, 3> valueLists;
+  for (auto list : shareLists) {
+    if (list) {
+      valueLists.AppendElement(list->mHead->Clone());
+    }
+  }
+
+  // Check we have at least one list or else valueLists.Length() - 1 below will
+  // underflow.
+  MOZ_ASSERT(!valueLists.IsEmpty());
+
+  for (uint32_t i = 0; i < valueLists.Length() - 1; i++) {
+    valueLists[i]->mNext = valueLists[i + 1];
+  }
+
+  RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList(valueLists[0]);
+  return list.forget();
+}
+
+void nsStyleDisplay::GenerateCombinedIndividualTransform() {
+  MOZ_ASSERT(!mIndividualTransform);
+  mIndividualTransform = GenerateCombinedIndividualTransform(
+      mSpecifiedTranslate, mSpecifiedRotate, mSpecifiedScale);
 }
 
 // --------------------
@@ -3581,6 +3695,24 @@ nsChangeHint nsStyleTextReset::CalcDifference(
   return nsChangeHint(0);
 }
 
+// Returns true if the given shadow-arrays are equal.
+static bool AreShadowArraysEqual(nsCSSShadowArray* lhs, nsCSSShadowArray* rhs) {
+  if (lhs == rhs) {
+    return true;
+  }
+
+  if (!lhs || !rhs || lhs->Length() != rhs->Length()) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < lhs->Length(); ++i) {
+    if (*lhs->ShadowAt(i) != *rhs->ShadowAt(i)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // --------------------
 // nsStyleText
 //
@@ -3609,7 +3741,8 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mLetterSpacing({0.}),
       mLineHeight(StyleLineHeight::Normal()),
       mTextIndent(LengthPercentage::Zero()),
-      mWebkitTextStrokeWidth(0) {
+      mWebkitTextStrokeWidth(0),
+      mTextShadow(nullptr) {
   MOZ_COUNT_CTOR(nsStyleText);
   RefPtr<nsAtom> language = aDocument.GetContentLanguageAsAtomForStyle();
   mTextEmphasisPosition =
@@ -3698,7 +3831,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
             nsChangeHint_RepaintFrame;
   }
 
-  if (mTextShadow != aNewData.mTextShadow ||
+  if (!AreShadowArraysEqual(mTextShadow, aNewData.mTextShadow) ||
       mTextEmphasisStyle != aNewData.mTextEmphasisStyle ||
       mTextEmphasisStyleString != aNewData.mTextEmphasisStyleString ||
       mWebkitTextStrokeWidth != aNewData.mWebkitTextStrokeWidth) {
@@ -3880,6 +4013,7 @@ nsStyleUIReset::nsStyleUIReset(const Document& aDocument)
       mWindowDragging(StyleWindowDragging::Default),
       mWindowShadow(NS_STYLE_WINDOW_SHADOW_DEFAULT),
       mWindowOpacity(1.0),
+      mSpecifiedWindowTransform(nullptr),
       mWindowTransformOrigin{LengthPercentage::FromPercentage(0.5),
                              LengthPercentage::FromPercentage(0.5),
                              {0.}} {
@@ -3894,13 +4028,16 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
       mWindowDragging(aSource.mWindowDragging),
       mWindowShadow(aSource.mWindowShadow),
       mWindowOpacity(aSource.mWindowOpacity),
-      mMozWindowTransform(aSource.mMozWindowTransform),
+      mSpecifiedWindowTransform(aSource.mSpecifiedWindowTransform),
       mWindowTransformOrigin(aSource.mWindowTransformOrigin) {
   MOZ_COUNT_CTOR(nsStyleUIReset);
 }
 
 nsStyleUIReset::~nsStyleUIReset() {
   MOZ_COUNT_DTOR(nsStyleUIReset);
+
+  ReleaseSharedListOnMainThread("nsStyleUIReset::mSpecifiedWindowTransform",
+                                mSpecifiedWindowTransform);
 }
 
 nsChangeHint nsStyleUIReset::CalcDifference(
@@ -3931,7 +4068,10 @@ nsChangeHint nsStyleUIReset::CalcDifference(
   }
 
   if (mWindowOpacity != aNewData.mWindowOpacity ||
-      mMozWindowTransform != aNewData.mMozWindowTransform) {
+      !mSpecifiedWindowTransform != !aNewData.mSpecifiedWindowTransform ||
+      (mSpecifiedWindowTransform &&
+       *mSpecifiedWindowTransform != *aNewData.mSpecifiedWindowTransform) ||
+      mWindowTransformOrigin != aNewData.mWindowTransformOrigin) {
     hint |= nsChangeHint_UpdateWidgetProperties;
   }
 
@@ -3947,7 +4087,8 @@ nsChangeHint nsStyleUIReset::CalcDifference(
 //
 
 nsStyleEffects::nsStyleEffects(const Document&)
-    : mClip(0, 0, 0, 0),
+    : mBoxShadow(nullptr),
+      mClip(0, 0, 0, 0),
       mOpacity(1.0f),
       mClipFlags(NS_STYLE_CLIP_AUTO),
       mMixBlendMode(NS_STYLE_BLEND_NORMAL) {
@@ -3970,7 +4111,7 @@ nsChangeHint nsStyleEffects::CalcDifference(
     const nsStyleEffects& aNewData) const {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (mBoxShadow != aNewData.mBoxShadow) {
+  if (!AreShadowArraysEqual(mBoxShadow, aNewData.mBoxShadow)) {
     // Update overflow regions & trigger DLBI to be sure it's noticed.
     // Also request a repaint, since it's possible that only the color
     // of the shadow is changing (and UpdateOverflow/SchedulePaint won't
