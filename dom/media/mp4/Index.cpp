@@ -193,11 +193,16 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
           moofParser->mSinf.mDefaultConstantIV);
     }
 
-    MOZ_ASSERT((writer->mCrypto.mIVSize == 0 &&
-                !writer->mCrypto.mConstantIV.IsEmpty()) ||
-                   !s->mCencRange.IsEmpty(),
-               "Crypto information should contain either a constant IV, or "
-               "have auxiliary information that will contain an IV");
+    if ((writer->mCrypto.mIVSize == 0 &&
+         writer->mCrypto.mConstantIV.IsEmpty()) ||
+        (writer->mCrypto.mIVSize != 0 && s->mCencRange.IsEmpty())) {
+      // If mIVSize == 0, this indicates that a constant IV is in use, thus we
+      // should have a non empty constant IV. Alternatively if IV size is non
+      // zero, we should have an IV for this sample, which we need to look up
+      // in mCencRange (which must then be non empty). If neither of these are
+      // true we have bad crypto data, so bail.
+      return nullptr;
+    }
     // Parse auxiliary information if present
     if (!s->mCencRange.IsEmpty()) {
       // The size comes from an 8 bit field
