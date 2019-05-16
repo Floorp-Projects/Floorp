@@ -355,7 +355,14 @@ renaming_overrides_prefixing = true
     ptr((T*)alignof(T)),
     len(0) {}
 
-  inline StyleOwnedSlice(const StyleOwnedSlice& aOther);
+  // Should be easily implementable if wanted, but the default implementation would leak.
+  StyleOwnedSlice& operator=(const StyleOwnedSlice&) = delete;
+  StyleOwnedSlice& operator=(StyleOwnedSlice&&) = delete;
+
+  inline StyleOwnedSlice(const StyleOwnedSlice&);
+  inline StyleOwnedSlice(StyleOwnedSlice&&);
+
+  inline void Clear();
 
   inline ~StyleOwnedSlice();
 
@@ -381,6 +388,11 @@ renaming_overrides_prefixing = true
 "ArcSlice" = """
   inline StyleArcSlice();
   inline StyleArcSlice(const StyleArcSlice& aOther);
+
+  // Should be easily implementable if wanted, but the default implementation would leak.
+  StyleArcSlice& operator=(const StyleArcSlice&) = delete;
+  StyleArcSlice& operator=(StyleArcSlice&&) = delete;
+
   inline explicit StyleArcSlice(const StyleForgottenArcSlicePtr<T>& aPtr);
   inline ~StyleArcSlice();
   inline Span<const T> AsSpan() const;
