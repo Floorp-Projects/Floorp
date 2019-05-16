@@ -2983,6 +2983,55 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetPad(
     })
 }
 
+fn get_symbol(s: Option<&counter_style::Symbol>, out: &mut nsString) -> bool {
+    let s = match s {
+        Some(s) => s,
+        None => return false,
+    };
+    *out = symbol_to_string(s);
+    true
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetPrefix(
+    rule: &RawServoCounterStyleRule,
+    out: &mut nsString,
+) -> bool {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        get_symbol(rule.prefix(), out)
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetSuffix(
+    rule: &RawServoCounterStyleRule,
+    out: &mut nsString,
+) -> bool {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        get_symbol(rule.suffix(), out)
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetNegative(
+    rule: &RawServoCounterStyleRule,
+    prefix: &mut nsString,
+    suffix: &mut nsString,
+) -> bool {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        let negative = match rule.negative() {
+            Some(n) => n,
+            None => return false,
+        };
+        *prefix = symbol_to_string(&negative.0);
+        *suffix = match negative.1 {
+            Some(ref s) => symbol_to_string(s),
+            None => nsString::new(),
+        };
+        true
+    })
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn Servo_CounterStyleRule_GetSystem(
     rule: &RawServoCounterStyleRule,
