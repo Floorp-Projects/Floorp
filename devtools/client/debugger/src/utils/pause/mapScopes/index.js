@@ -7,7 +7,6 @@
 import typeof SourceMaps from "devtools-source-map";
 
 import {
-  getScopes,
   type SourceScope,
   type BindingData,
   type BindingLocation
@@ -37,6 +36,8 @@ import {
 } from "./getApplicableBindingsForOriginalPosition";
 
 import { log } from "../../log";
+import type { ThunkArgs } from "../../../actions/types";
+
 import type {
   PartialPosition,
   Frame,
@@ -54,16 +55,15 @@ export async function buildMappedScopes(
   content: SourceContent,
   frame: Frame,
   scopes: Scope,
-  sourceMaps: any,
-  client: any
+  { client, parser, sourceMaps }: ThunkArgs
 ): Promise<?{
   mappings: {
     [string]: string
   },
   scope: OriginalScope
 }> {
-  const originalAstScopes = await getScopes(frame.location);
-  const generatedAstScopes = await getScopes(frame.generatedLocation);
+  const originalAstScopes = await parser.getScopes(frame.location);
+  const generatedAstScopes = await parser.getScopes(frame.generatedLocation);
 
   if (!originalAstScopes || !generatedAstScopes) {
     return null;

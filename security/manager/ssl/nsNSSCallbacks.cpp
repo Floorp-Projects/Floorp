@@ -1271,10 +1271,12 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   bool renegotiationUnsafe = !siteSupportsSafeRenego &&
                              ioLayerHelpers.treatUnsafeNegotiationAsBroken();
 
+  bool deprecatedTlsVer =
+      (channelInfo.protocolVersion < SSL_LIBRARY_VERSION_TLS_1_2);
   RememberCertErrorsTable::GetInstance().LookupCertErrorBits(infoObject);
 
   uint32_t state;
-  if (renegotiationUnsafe) {
+  if (renegotiationUnsafe || deprecatedTlsVer) {
     state = nsIWebProgressListener::STATE_IS_BROKEN;
   } else {
     state = nsIWebProgressListener::STATE_IS_SECURE;

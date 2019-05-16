@@ -3726,10 +3726,8 @@ var browserDragAndDrop = {
     return Services.droppedLinkHandler.getCSP(aEvent);
   },
 
-  validateURIsForDrop(aEvent, aURIsCount, aURIs) {
-    return Services.droppedLinkHandler.validateURIsForDrop(aEvent,
-                                                           aURIsCount,
-                                                           aURIs);
+  validateURIsForDrop(aEvent, aURIs) {
+    return Services.droppedLinkHandler.validateURIsForDrop(aEvent, aURIs);
   },
 
   dropLinks(aEvent, aDisallowInherit) {
@@ -3752,7 +3750,7 @@ var homeButtonObserver = {
         }
 
         try {
-          browserDragAndDrop.validateURIsForDrop(aEvent, urls.length, urls);
+          browserDragAndDrop.validateURIsForDrop(aEvent, urls);
         } catch (e) {
           return;
         }

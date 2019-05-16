@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ComputedStyle.h"
 #include "mozilla/dom/SVGCircleElement.h"
 #include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGCircleElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "SVGGeometryProperty.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Circle)
 
@@ -37,6 +39,13 @@ SVGCircleElement::SVGCircleElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGCircleElementBase(std::move(aNodeInfo)) {}
 
+bool SVGCircleElement::IsAttributeMapped(const nsAtom* aAttribute) const {
+  return IsInLengthInfo(aAttribute, sLengthInfo) ||
+         SVGCircleElementBase::IsAttributeMapped(aAttribute);
+}
+
+namespace SVGT = SVGGeometryProperty::Tags;
+
 //----------------------------------------------------------------------
 // nsINode methods
 
@@ -61,8 +70,11 @@ already_AddRefed<DOMSVGAnimatedLength> SVGCircleElement::R() {
 
 /* virtual */
 bool SVGCircleElement::HasValidDimensions() const {
-  return mLengthAttributes[ATTR_R].IsExplicitlySet() &&
-         mLengthAttributes[ATTR_R].GetAnimValInSpecifiedUnits() > 0;
+  float r;
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::R>(this, &r);
+  return r > 0;
 }
 
 SVGElement::LengthAttributesInfo SVGCircleElement::GetLengthInfo() {
@@ -77,7 +89,10 @@ bool SVGCircleElement::GetGeometryBounds(
     Rect* aBounds, const StrokeOptions& aStrokeOptions,
     const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
   float x, y, r;
-  GetAnimatedLengthValues(&x, &y, &r, nullptr);
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::R>(this, &x, &y,
+                                                               &r);
 
   if (r <= 0.f) {
     // Rendering of the element is disabled
@@ -112,7 +127,9 @@ bool SVGCircleElement::GetGeometryBounds(
 
 already_AddRefed<Path> SVGCircleElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, r;
-  GetAnimatedLengthValues(&x, &y, &r, nullptr);
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::R>(this, &x, &y,
+                                                               &r);
 
   if (r <= 0.0f) {
     return nullptr;
@@ -121,6 +138,31 @@ already_AddRefed<Path> SVGCircleElement::BuildPath(PathBuilder* aBuilder) {
   aBuilder->Arc(Point(x, y), r, 0, Float(2 * M_PI));
 
   return aBuilder->Finish();
+}
+
+bool SVGCircleElement::IsLengthChangedViaCSS(const ComputedStyle& aNewStyle,
+                                             const ComputedStyle& aOldStyle) {
+  auto *newSVGReset = aNewStyle.StyleSVGReset(),
+       *oldSVGReset = aOldStyle.StyleSVGReset();
+
+  return newSVGReset->mCx != oldSVGReset->mCx ||
+         newSVGReset->mCy != oldSVGReset->mCy ||
+         newSVGReset->mR != oldSVGReset->mR;
+}
+
+nsCSSPropertyID SVGCircleElement::GetCSSPropertyIdForAttrEnum(
+    uint8_t aAttrEnum) {
+  switch (aAttrEnum) {
+    case ATTR_CX:
+      return eCSSProperty_cx;
+    case ATTR_CY:
+      return eCSSProperty_cy;
+    case ATTR_R:
+      return eCSSProperty_r;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown attr enum");
+      return eCSSProperty_UNKNOWN;
+  }
 }
 
 }  // namespace dom

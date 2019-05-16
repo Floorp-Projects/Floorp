@@ -45,7 +45,8 @@ function handleEventMessage(event) {
 window.addEventListener("message", handleEventMessage);
 SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
                                    ["security.webauth.webauthn_enable_softtoken", true],
-                                   ["security.webauth.webauthn_enable_usbtoken", false]]},
+                                   ["security.webauth.webauthn_enable_usbtoken", false],
+                                   ["security.webauth.webauthn_enable_android_fido2", false]]},
 function() {
   document.getElementById("frame_top").src = "https://example.com/tests/dom/credentialmanagement/tests/mochitest/frame_credman_iframes.html";
 

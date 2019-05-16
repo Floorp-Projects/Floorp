@@ -43,16 +43,20 @@ class ModuleLoadEvent {
  public:
   class ModuleInfo {
    public:
-    ModuleInfo() = default;
+    ModuleInfo() = delete;
     ModuleInfo(const ModuleInfo&) = default;
     ModuleInfo(ModuleInfo&&) = default;
     ModuleInfo& operator=(const ModuleInfo&) = default;
     ModuleInfo& operator=(ModuleInfo&&) = default;
 
+    explicit ModuleInfo(uintptr_t aBase);
+
     // Construct from the mozilla::glue version of this class.
     explicit ModuleInfo(const glue::ModuleLoadEvent::ModuleInfo&);
 
-    // The following members should be populated always.
+    bool PopulatePathInfo();
+    bool PrepForTelemetry();
+
     uintptr_t mBase;
     nsString mLdrName;
     nsCOMPtr<nsIFile> mFile;  // Path as reported by GetModuleFileName()
@@ -96,16 +100,22 @@ class ModuleLoadEvent {
 // This class performs trustworthiness evaluation for incoming DLLs.
 class ModuleEvaluator {
   Maybe<uint64_t> mExeVersion;  // Version number of the running EXE image
-  nsString mExeDirectory;
-  nsString mSysDirectory;
-  nsString mWinSxSDirectory;
+  nsCOMPtr<nsIFile> mExeDirectory;
+  nsCOMPtr<nsIFile> mSysDirectory;
+  nsCOMPtr<nsIFile> mWinSxSDirectory;
 #ifdef _M_IX86
-  nsString mSysWOW64Directory;
+  nsCOMPtr<nsIFile> mSysWOW64Directory;
 #endif  // _M_IX86
   Vector<nsString, 0, InfallibleAllocPolicy> mKeyboardLayoutDlls;
 
  public:
   ModuleEvaluator();
+
+  explicit operator bool() const {
+    // We exclude mSysWOW64Directory as it may not always be present
+    return mExeVersion.isSome() && mExeDirectory && mSysDirectory &&
+           mWinSxSDirectory;
+  }
 
   /**
    * Evaluates the trustworthiness of the given module and fills in remaining

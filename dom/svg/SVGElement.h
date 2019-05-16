@@ -165,6 +165,12 @@ class SVGElement : public SVGElementBase  // nsIContent
   virtual bool HasValidDimensions() const { return true; }
   void SetLength(nsAtom* aName, const SVGAnimatedLength& aLength);
 
+  enum class ValToUse { Base, Anim };
+  static bool UpdateDeclarationBlockFromLength(DeclarationBlock& aBlock,
+                                               nsCSSPropertyID aPropId,
+                                               const SVGAnimatedLength& aLength,
+                                               ValToUse aValToUse);
+
   nsAttrValue WillChangeLength(uint8_t aAttrEnum);
   nsAttrValue WillChangeNumberPair(uint8_t aAttrEnum);
   nsAttrValue WillChangeIntegerPair(uint8_t aAttrEnum);
