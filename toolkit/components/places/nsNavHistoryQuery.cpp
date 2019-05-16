@@ -878,19 +878,8 @@ NS_IMETHODIMP nsNavHistoryQuery::SetTagsAreNot(bool aTagsAreNot) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::GetParents(uint32_t* aGuidCount,
-                                            char*** aGuids) {
-  uint32_t count = mParents.Length();
-  char** guids = nullptr;
-  if (count > 0) {
-    guids = static_cast<char**>(moz_xmalloc(count * sizeof(char*)));
-
-    for (uint32_t i = 0; i < count; ++i) {
-      guids[i] = ToNewCString(mParents[i]);
-    }
-  }
-  *aGuidCount = count;
-  *aGuids = guids;
+NS_IMETHODIMP nsNavHistoryQuery::GetParents(nsTArray<nsCString>& aGuids) {
+  aGuids = mParents;
   return NS_OK;
 }
 
@@ -899,13 +888,10 @@ NS_IMETHODIMP nsNavHistoryQuery::GetParentCount(uint32_t* aGuidCount) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::SetParents(const char** aGuids,
-                                            uint32_t aGuidCount) {
+NS_IMETHODIMP nsNavHistoryQuery::SetParents(const nsTArray<nsCString>& aGuids) {
   mParents.Clear();
-  for (size_t i = 0; i < aGuidCount; i++) {
-    if (!mParents.AppendElement(aGuids[i])) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (!mParents.Assign(aGuids, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return NS_OK;

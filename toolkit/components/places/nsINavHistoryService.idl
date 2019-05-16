@@ -874,16 +874,14 @@ interface nsINavHistoryQuery : nsISupports
   /**
    * Limit results to items that are in all of the given folders.
    */
-  void getParents([optional] out unsigned long aGuidCount,
-                  [retval,array,size_is(aGuidCount)] out string aGuids);
+  Array<ACString> getParents();
   readonly attribute unsigned long parentCount;
 
   /**
    * This is not recursive so results will be returned from the first level of
    * that folder.
    */
-  void setParents([array, size_is(aGuidCount)] in string aGuids,
-                  in unsigned long aGuidCount);
+  void setParents(in Array<ACString> aGuids);
 
   /**
    * Creates a new query item with the same parameters of this one.

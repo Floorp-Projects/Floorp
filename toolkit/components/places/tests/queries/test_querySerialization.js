@@ -231,14 +231,14 @@ const querySwitches = [
     },
     runs: [
       function(aQuery, aQueryOptions) {
-        aQuery.setParents([], 0);
+        aQuery.setParents([]);
       },
       function(aQuery, aQueryOptions) {
-        aQuery.setParents([PlacesUtils.bookmarks.rootGuid], 1);
+        aQuery.setParents([PlacesUtils.bookmarks.rootGuid]);
       },
       function(aQuery, aQueryOptions) {
         aQuery.setParents([PlacesUtils.bookmarks.rootGuid,
-                           PlacesUtils.bookmarks.tagsGuid], 2);
+                           PlacesUtils.bookmarks.tagsGuid]);
       },
     ],
   },
