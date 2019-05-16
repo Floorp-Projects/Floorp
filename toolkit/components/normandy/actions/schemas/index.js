@@ -173,6 +173,8 @@ const ActionSchemas = {
     type: "object",
     required: [
       "slug",
+      "userFacingName",
+      "userFacingDescription",
       "branches",
     ],
     properties: {
@@ -180,6 +182,16 @@ const ActionSchemas = {
         description: "Unique identifier for this experiment",
         type: "string",
         pattern: "^[A-Za-z0-9\\-_]+$",
+      },
+      userFacingName: {
+        description: "User-facing name of the experiment",
+        type: "string",
+        minLength: 1,
+      },
+      userFacingDescription: {
+        description: "User-facing description of the experiment",
+        type: "string",
+        minLength: 1,
       },
       experimentDocumentUrl: {
         description: "URL of a document describing the experiment",
