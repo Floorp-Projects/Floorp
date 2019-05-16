@@ -1731,6 +1731,16 @@ nsDocumentViewer::Destroy() {
         if (rootView) {
           nsView* rootViewParent = rootView->GetParent();
           if (rootViewParent) {
+            nsView* subdocview = rootViewParent->GetParent();
+            if (subdocview) {
+              nsIFrame* f = subdocview->GetFrame();
+              if (f) {
+                nsSubDocumentFrame* s = do_QueryFrame(f);
+                if (s) {
+                  s->ClearDisplayItems();
+                }
+              }
+            }
             nsViewManager* parentVM = rootViewParent->GetViewManager();
             if (parentVM) {
               parentVM->RemoveChild(rootView);
