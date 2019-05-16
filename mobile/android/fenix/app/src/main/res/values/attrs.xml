@@ -32,4 +32,8 @@
         <attr name="listItemTitle" format="reference" />
         <attr name="listItemIcon" format="reference" />
     </declare-styleable>
+
+    <declare-styleable name="OnboardingRadioButton">
+        <attr name="onboardingKey" format="reference" />
+    </declare-styleable>
 </resources>

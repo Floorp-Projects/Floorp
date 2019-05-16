@@ -2,24 +2,168 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/onboarding_card"
-    style="@style/OnboardingCardLight"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:layout_marginBottom="16dp"
+    android:background="@drawable/onboarding_card_background_light"
+    android:paddingTop="16dp">
+
     <TextView
         android:id="@+id/header_text"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="14dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="14dp"
         android:text="@string/onboarding_theme_picker_header"
-        android:textAppearance="@style/HeaderTextStyle" />
+        android:textAppearance="@style/HeaderTextStyle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/description_text"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:text="@string/onboarding_theme_picker_description"
-        android:textAppearance="@style/Body14TextStyle" />
-</LinearLayout>
+        android:textAppearance="@style/Body14TextStyle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header_text" />
+
+    <TextView
+        android:id="@+id/light_theme_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/onboarding_theme_light_title"
+        android:textColor="?primaryText"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="@+id/theme_light_image"
+        app:layout_constraintStart_toStartOf="@id/theme_light_image"
+        app:layout_constraintTop_toBottomOf="@id/theme_light_image" />
+
+    <org.mozilla.fenix.onboarding.OnboardingRadioButton
+        android:id="@+id/theme_light_radio_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="1dp"
+        app:layout_constraintBottom_toBottomOf="@+id/theme_light_image"
+        app:layout_constraintCircle="@id/theme_light_image"
+        app:layout_constraintCircleAngle="298"
+        app:layout_constraintCircleRadius="66dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/description_text"
+        app:onboardingKey="@string/pref_key_light_theme" />
+
+
+    <ImageButton
+        android:id="@+id/theme_light_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/onboarding_light_theme"
+        android:foreground="@drawable/rounded_ripple"
+        app:layout_constraintEnd_toStartOf="@+id/theme_dark_image"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/description_text" />
+
+    <org.mozilla.fenix.onboarding.OnboardingRadioButton
+        android:id="@+id/theme_dark_radio_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="1dp"
+        app:layout_constraintBottom_toBottomOf="@+id/theme_dark_image"
+        app:layout_constraintCircle="@id/theme_dark_image"
+        app:layout_constraintCircleAngle="298"
+        app:layout_constraintCircleRadius="66dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/description_text"
+        app:onboardingKey="@string/pref_key_dark_theme" />
+
+    <ImageButton
+        android:id="@+id/theme_dark_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/onboarding_dark_theme"
+        android:foreground="@drawable/rounded_ripple"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/theme_light_image"
+        app:layout_constraintTop_toBottomOf="@+id/description_text" />
+
+    <TextView
+        android:id="@+id/dark_theme_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/onboarding_theme_dark_title"
+        android:textColor="?primaryText"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="@+id/theme_dark_image"
+        app:layout_constraintStart_toStartOf="@id/theme_dark_image"
+        app:layout_constraintTop_toBottomOf="@id/theme_dark_image" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="1dp"
+        android:layout_marginBottom="16dp"
+        android:background="?attr/neutralFaded"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dark_theme_title" />
+
+    <View
+        android:id="@+id/clickable_region_automatic"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@drawable/onboarding_rounded_bottom_corners_ripple"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/divider" />
+
+    <org.mozilla.fenix.onboarding.OnboardingRadioButton
+        android:id="@+id/theme_automatic_radio_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:paddingEnd="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider"
+        app:onboardingKey="@string/pref_key_follow_device_theme" />
+
+    <TextView
+        android:id="@+id/automatic_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="9dp"
+        android:text="@string/onboarding_theme_automatic_title"
+        android:textColor="?primaryText"
+        android:textSize="16sp"
+        app:layout_constraintStart_toEndOf="@+id/theme_automatic_radio_button"
+        app:layout_constraintTop_toBottomOf="@+id/divider" />
+
+    <TextView
+        android:id="@+id/automatic_theme_summary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/onboarding_theme_automatic_summary"
+        android:textColor="?secondaryText"
+        android:textSize="14sp"
+        app:layout_constraintStart_toEndOf="@+id/theme_automatic_radio_button"
+        app:layout_constraintTop_toBottomOf="@id/automatic_title" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,17 +4,17 @@
 
 package org.mozilla.fenix.settings
 
-import android.view.View
-import androidx.preference.PreferenceViewHolder
-import android.widget.TextView
 import android.content.Context
 import android.content.res.TypedArray
 import android.text.TextUtils
 import android.util.AttributeSet
+import android.view.View
 import android.widget.RadioButton
+import android.widget.TextView
 import androidx.core.content.res.TypedArrayUtils
 import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
+import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.Settings
 
@@ -69,13 +69,13 @@ class RadioButtonPreference : Preference {
     private fun updateRadioValue(isChecked: Boolean) {
         persistBoolean(isChecked)
         radioButton.isChecked = isChecked
-        Settings.getInstance(summaryView.context).preferences.edit().putBoolean(key, isChecked)
+        Settings.getInstance(context).preferences.edit().putBoolean(key, isChecked)
             .apply()
     }
 
     private fun bindRadioButton(holder: PreferenceViewHolder) {
         radioButton = holder.findViewById(R.id.radio_button) as RadioButton
-        radioButton.isChecked = getPersistedBoolean(defaultValue)
+        radioButton.isChecked = Settings.getInstance(context).preferences.getBoolean(key, false)
     }
 
     private fun initDefaultValue(typedArray: TypedArray) {

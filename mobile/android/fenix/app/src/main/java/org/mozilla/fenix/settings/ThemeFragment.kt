@@ -98,6 +98,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
     }
 
     private fun setNewTheme(mode: Int) {
+        if (AppCompatDelegate.getDefaultNightMode() == mode) return
         AppCompatDelegate.setDefaultNightMode(mode)
         activity?.recreate()
         with(requireComponents.core) {
