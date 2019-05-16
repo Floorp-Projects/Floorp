@@ -227,7 +227,7 @@ class SystemEngineSession(
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) = set(value)
     }
 
-    internal fun initSettings() {
+    private fun initSettings() {
         webView.settings?.let { webSettings ->
             // Explicitly set global defaults.
             webSettings.setAppCacheEnabled(false)
@@ -238,8 +238,10 @@ class SystemEngineSession(
             // We currently don't implement the callback to support turning this on.
             webSettings.setGeolocationEnabled(false)
 
-            // webViewSettings built-in zoom controls are the only supported ones, so they should be turned on.
+            // webViewSettings built-in zoom controls are the only supported ones,
+            // so they should be turned on but hidden.
             webSettings.builtInZoomControls = true
+            webSettings.displayZoomControls = false
 
             initSettings(webView, webSettings)
         }

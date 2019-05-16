@@ -21,7 +21,6 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.mock
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -352,10 +351,11 @@ class SystemEngineSessionTest {
         verify(webViewSettings).savePassword = false
         verify(webViewSettings).saveFormData = false
         verify(webViewSettings).builtInZoomControls = true
+        verify(webViewSettings).displayZoomControls = false
     }
 
     @Test
-    fun defaultSettings() {
+    fun withProvidedDefaultSettings() {
         val defaultSettings = DefaultSettings(
                 javascriptEnabled = false,
                 domStorageEnabled = false,
@@ -364,24 +364,25 @@ class SystemEngineSessionTest {
                 userAgentString = "userAgent",
                 mediaPlaybackRequiresUserGesture = false,
                 javaScriptCanOpenWindowsAutomatically = true,
-                displayZoomControls = false,
+                displayZoomControls = true,
                 loadWithOverviewMode = true,
                 supportMultipleWindows = true)
         val engineSession = spy(SystemEngineSession(getApplicationContext(), defaultSettings))
+
         val webView = mock(WebView::class.java)
         `when`(webView.context).thenReturn(getApplicationContext())
-        engineSession.webView = webView
 
         val webViewSettings = mock(WebSettings::class.java)
         `when`(webView.settings).thenReturn(webViewSettings)
 
-        engineSession.initSettings()
+        engineSession.webView = webView
+
         verify(webViewSettings).domStorageEnabled = false
         verify(webViewSettings).javaScriptEnabled = false
         verify(webViewSettings).userAgentString = "userAgent"
         verify(webViewSettings).mediaPlaybackRequiresUserGesture = false
         verify(webViewSettings).javaScriptCanOpenWindowsAutomatically = true
-        verify(webViewSettings).displayZoomControls = false
+        verify(webViewSettings).displayZoomControls = true
         verify(webViewSettings).loadWithOverviewMode = true
         verify(webViewSettings).setSupportMultipleWindows(true)
         verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
@@ -580,47 +581,47 @@ class SystemEngineSessionTest {
 
     @Test
     fun webViewErrorMappingToErrorType() {
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.ERROR_UNKNOWN_HOST,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_HOST_LOOKUP)
         )
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.ERROR_CONNECTION_REFUSED,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_CONNECT)
         )
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.ERROR_CONNECTION_REFUSED,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_IO)
         )
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.ERROR_NET_TIMEOUT,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_TIMEOUT)
         )
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.ERROR_REDIRECT_LOOP,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_REDIRECT_LOOP)
         )
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.ERROR_UNKNOWN_PROTOCOL,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_UNSUPPORTED_SCHEME)
         )
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.ERROR_SECURITY_SSL,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_FAILED_SSL_HANDSHAKE)
         )
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.ERROR_MALFORMED_URI,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_BAD_URL)
         )
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.UNKNOWN,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_TOO_MANY_REQUESTS)
         )
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.ERROR_FILE_NOT_FOUND,
             SystemEngineSession.webViewErrorToErrorType(WebViewClient.ERROR_FILE_NOT_FOUND)
         )
-        Assert.assertEquals(
+        assertEquals(
             ErrorType.UNKNOWN,
             SystemEngineSession.webViewErrorToErrorType(-500)
         )
