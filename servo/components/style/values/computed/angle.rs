@@ -26,7 +26,6 @@ use style_traits::{CssWriter, ToCss};
     ToAnimatedZero,
     ToResolvedValue,
 )]
-#[repr(C)]
 pub struct Angle(CSSFloat);
 
 impl ToCss for Angle {

@@ -178,83 +178,106 @@ nsCString ActiveScrolledRoot::ToString(
   return std::move(str);
 }
 
-static inline CSSAngle MakeCSSAngle(const StyleAngle& aValue) {
-  return CSSAngle(aValue.ToDegrees(), eCSSUnit_Degree);
+static inline CSSAngle MakeCSSAngle(const nsCSSValue& aValue) {
+  return CSSAngle(aValue.GetAngleValue(), aValue.GetUnit());
 }
 
-static Rotate GetRotate(const StyleRotate& aValue) {
+static Rotate GetRotate(const nsCSSValue& aValue) {
   Rotate result = null_t();
-  switch (aValue.tag) {
-    case StyleRotate::Tag::None:
+  if (aValue.GetUnit() == eCSSUnit_None) {
+    return result;
+  }
+
+  const nsCSSValue::Array* array = aValue.GetArrayValue();
+  switch (nsStyleTransformMatrix::TransformFunctionOf(array)) {
+    case eCSSKeyword_rotate:
+      result = Rotate(Rotation(MakeCSSAngle(array->Item(1))));
       break;
-    case StyleRotate::Tag::Rotate:
-      result = Rotate(Rotation(MakeCSSAngle(aValue.AsRotate())));
+    case eCSSKeyword_rotate3d:
+      result = Rotate(Rotation3D(
+          array->Item(1).GetFloatValue(), array->Item(2).GetFloatValue(),
+          array->Item(3).GetFloatValue(), MakeCSSAngle(array->Item(4))));
       break;
-    case StyleRotate::Tag::Rotate3D: {
-      const auto& rotate = aValue.AsRotate3D();
-      result = Rotate(
-          Rotation3D(rotate._0, rotate._1, rotate._2, MakeCSSAngle(rotate._3)));
-      break;
-    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported rotate");
   }
   return result;
 }
 
-static Scale GetScale(const StyleScale& aValue) {
+static Scale GetScale(const nsCSSValue& aValue) {
   Scale result(1., 1., 1.);
-  switch (aValue.tag) {
-    case StyleScale::Tag::None:
+  if (aValue.GetUnit() == eCSSUnit_None) {
+    // Use (1, 1, 1) to replace the none case.
+    return result;
+  }
+
+  const nsCSSValue::Array* array = aValue.GetArrayValue();
+  switch (nsStyleTransformMatrix::TransformFunctionOf(array)) {
+    case eCSSKeyword_scalex:
+      result.x() = array->Item(1).GetFloatValue();
       break;
-    case StyleScale::Tag::Scale: {
-      auto& scale = aValue.AsScale();
-      result.x() = scale._0;
-      result.y() = scale._1;
+    case eCSSKeyword_scaley:
+      result.y() = array->Item(1).GetFloatValue();
       break;
-    }
-    case StyleScale::Tag::Scale3D: {
-      auto& scale = aValue.AsScale3D();
-      result.x() = scale._0;
-      result.y() = scale._1;
-      result.z() = scale._2;
+    case eCSSKeyword_scalez:
+      result.z() = array->Item(1).GetFloatValue();
       break;
-    }
+    case eCSSKeyword_scale:
+      result.x() = array->Item(1).GetFloatValue();
+      // scale(x) is shorthand for scale(x, x);
+      result.y() =
+          array->Count() == 2 ? result.x() : array->Item(2).GetFloatValue();
+      break;
+    case eCSSKeyword_scale3d:
+      result.x() = array->Item(1).GetFloatValue();
+      result.y() = array->Item(2).GetFloatValue();
+      result.z() = array->Item(3).GetFloatValue();
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported scale");
   }
   return result;
 }
 
-static Translation GetTranslate(
-    TransformReferenceBox& aRefBox, const LengthPercentage& aX,
-    const LengthPercentage& aY = LengthPercentage::Zero(),
-    const Length& aZ = Length{0}) {
-  Translation result(0, 0, 0);
-  result.x() = nsStyleTransformMatrix::ProcessTranslatePart(
-      aX, &aRefBox, &TransformReferenceBox::Width);
-  result.y() = nsStyleTransformMatrix::ProcessTranslatePart(
-      aY, &aRefBox, &TransformReferenceBox::Height);
-  result.z() = aZ.ToCSSPixels();
-  return result;
-}
-
-static Translation GetTranslate(const StyleTranslate& aValue,
+static Translation GetTranslate(const nsCSSValue& aValue,
                                 TransformReferenceBox& aRefBox) {
   Translation result(0, 0, 0);
-  switch (aValue.tag) {
-    case StyleTranslate::Tag::None:
+  if (aValue.GetUnit() == eCSSUnit_None) {
+    // Use (0, 0, 0) to replace the none case.
+    return result;
+  }
+
+  const nsCSSValue::Array* array = aValue.GetArrayValue();
+  switch (nsStyleTransformMatrix::TransformFunctionOf(array)) {
+    case eCSSKeyword_translatex:
+      result.x() = nsStyleTransformMatrix::ProcessTranslatePart(
+          array->Item(1), &aRefBox, &TransformReferenceBox::Width);
       break;
-    case StyleTranslate::Tag::Translate: {
-      auto& translate = aValue.AsTranslate();
-      result = GetTranslate(aRefBox, translate._0, translate._1);
+    case eCSSKeyword_translatey:
+      result.y() = nsStyleTransformMatrix::ProcessTranslatePart(
+          array->Item(1), &aRefBox, &TransformReferenceBox::Height);
       break;
-    }
-    case StyleTranslate::Tag::Translate3D: {
-      auto& translate = aValue.AsTranslate3D();
-      result = GetTranslate(aRefBox, translate._0, translate._1, translate._2);
+    case eCSSKeyword_translatez:
+      result.z() =
+          nsStyleTransformMatrix::ProcessTranslatePart(array->Item(1), nullptr);
       break;
-    }
+    case eCSSKeyword_translate:
+      result.x() = nsStyleTransformMatrix::ProcessTranslatePart(
+          array->Item(1), &aRefBox, &TransformReferenceBox::Width);
+      // translate(x) is shorthand for translate(x, 0)
+      if (array->Count() == 3) {
+        result.y() = nsStyleTransformMatrix::ProcessTranslatePart(
+            array->Item(2), &aRefBox, &TransformReferenceBox::Height);
+      }
+      break;
+    case eCSSKeyword_translate3d:
+      result.x() = nsStyleTransformMatrix::ProcessTranslatePart(
+          array->Item(1), &aRefBox, &TransformReferenceBox::Width);
+      result.y() = nsStyleTransformMatrix::ProcessTranslatePart(
+          array->Item(2), &aRefBox, &TransformReferenceBox::Height);
+      result.z() =
+          nsStyleTransformMatrix::ProcessTranslatePart(array->Item(3), nullptr);
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported translate");
   }
@@ -262,168 +285,150 @@ static Translation GetTranslate(const StyleTranslate& aValue,
 }
 
 static void AddTransformFunctions(
-    const StyleTransform& aTransform, TransformReferenceBox& aRefBox,
+    const nsCSSValueList* aList, mozilla::ComputedStyle* aStyle,
+    nsPresContext* aPresContext, TransformReferenceBox& aRefBox,
     InfallibleTArray<TransformFunction>& aFunctions) {
-  for (const StyleTransformOperation& op : aTransform.Operations()) {
-    switch (op.tag) {
-      case StyleTransformOperation::Tag::RotateX: {
-        CSSAngle theta = MakeCSSAngle(op.AsRotateX());
+  if (aList->mValue.GetUnit() == eCSSUnit_None) {
+    return;
+  }
+
+  for (const nsCSSValueList* curr = aList; curr; curr = curr->mNext) {
+    const nsCSSValue& currElem = curr->mValue;
+    NS_ASSERTION(currElem.GetUnit() == eCSSUnit_Function,
+                 "Stream should consist solely of functions!");
+    nsCSSValue::Array* array = currElem.GetArrayValue();
+    switch (nsStyleTransformMatrix::TransformFunctionOf(array)) {
+      case eCSSKeyword_rotatex: {
+        CSSAngle theta = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(RotationX(theta));
         break;
       }
-      case StyleTransformOperation::Tag::RotateY: {
-        CSSAngle theta = MakeCSSAngle(op.AsRotateY());
+      case eCSSKeyword_rotatey: {
+        CSSAngle theta = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(RotationY(theta));
         break;
       }
-      case StyleTransformOperation::Tag::RotateZ: {
-        CSSAngle theta = MakeCSSAngle(op.AsRotateZ());
+      case eCSSKeyword_rotatez: {
+        CSSAngle theta = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(RotationZ(theta));
         break;
       }
-      case StyleTransformOperation::Tag::Rotate: {
-        CSSAngle theta = MakeCSSAngle(op.AsRotate());
-        aFunctions.AppendElement(Rotation(theta));
+      case eCSSKeyword_rotate:
+        aFunctions.AppendElement(GetRotate(currElem).get_Rotation());
         break;
-      }
-      case StyleTransformOperation::Tag::Rotate3D: {
-        const auto& rotate = op.AsRotate3D();
-        CSSAngle theta = MakeCSSAngle(rotate._3);
-        aFunctions.AppendElement(
-            Rotation3D(rotate._0, rotate._1, rotate._2, theta));
+      case eCSSKeyword_rotate3d:
+        aFunctions.AppendElement(GetRotate(currElem).get_Rotation3D());
         break;
-      }
-      case StyleTransformOperation::Tag::ScaleX: {
-        aFunctions.AppendElement(Scale(op.AsScaleX(), 1., 1.));
+      case eCSSKeyword_scalex:
+      case eCSSKeyword_scaley:
+      case eCSSKeyword_scalez:
+      case eCSSKeyword_scale:
+      case eCSSKeyword_scale3d:
+        aFunctions.AppendElement(GetScale(currElem));
         break;
-      }
-      case StyleTransformOperation::Tag::ScaleY: {
-        aFunctions.AppendElement(Scale(1., op.AsScaleY(), 1.));
+      case eCSSKeyword_translatex:
+      case eCSSKeyword_translatey:
+      case eCSSKeyword_translatez:
+      case eCSSKeyword_translate:
+      case eCSSKeyword_translate3d:
+        aFunctions.AppendElement(GetTranslate(currElem, aRefBox));
         break;
-      }
-      case StyleTransformOperation::Tag::ScaleZ: {
-        aFunctions.AppendElement(Scale(1., 1., op.AsScaleZ()));
-        break;
-      }
-      case StyleTransformOperation::Tag::Scale: {
-        const auto& scale = op.AsScale();
-        aFunctions.AppendElement(Scale(scale._0, scale._1, 1.));
-        break;
-      }
-      case StyleTransformOperation::Tag::Scale3D: {
-        const auto& scale = op.AsScale3D();
-        aFunctions.AppendElement(Scale(scale._0, scale._1, scale._2));
-        break;
-      }
-      case StyleTransformOperation::Tag::TranslateX: {
-        aFunctions.AppendElement(GetTranslate(aRefBox, op.AsTranslateX()));
-        break;
-      }
-      case StyleTransformOperation::Tag::TranslateY: {
-        aFunctions.AppendElement(
-            GetTranslate(aRefBox, LengthPercentage::Zero(), op.AsTranslateY()));
-        break;
-      }
-      case StyleTransformOperation::Tag::TranslateZ: {
-        aFunctions.AppendElement(GetTranslate(aRefBox, LengthPercentage::Zero(),
-                                              LengthPercentage::Zero(),
-                                              op.AsTranslateZ()));
-        break;
-      }
-      case StyleTransformOperation::Tag::Translate: {
-        const auto& translate = op.AsTranslate();
-        aFunctions.AppendElement(
-            GetTranslate(aRefBox, translate._0, translate._1));
-        break;
-      }
-      case StyleTransformOperation::Tag::Translate3D: {
-        const auto& translate = op.AsTranslate3D();
-        aFunctions.AppendElement(
-            GetTranslate(aRefBox, translate._0, translate._1, translate._2));
-        break;
-      }
-      case StyleTransformOperation::Tag::SkewX: {
-        CSSAngle x = MakeCSSAngle(op.AsSkewX());
+      case eCSSKeyword_skewx: {
+        CSSAngle x = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(SkewX(x));
         break;
       }
-      case StyleTransformOperation::Tag::SkewY: {
-        CSSAngle y = MakeCSSAngle(op.AsSkewY());
+      case eCSSKeyword_skewy: {
+        CSSAngle y = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(SkewY(y));
         break;
       }
-      case StyleTransformOperation::Tag::Skew: {
-        const auto& skew = op.AsSkew();
-        aFunctions.AppendElement(
-            Skew(MakeCSSAngle(skew._0), MakeCSSAngle(skew._1)));
+      case eCSSKeyword_skew: {
+        CSSAngle x = MakeCSSAngle(array->Item(1));
+        // skew(x) is shorthand for skew(x, 0)
+        CSSAngle y(0.0f, eCSSUnit_Degree);
+        if (array->Count() == 3) {
+          y = MakeCSSAngle(array->Item(2));
+        }
+        aFunctions.AppendElement(Skew(x, y));
         break;
       }
-      case StyleTransformOperation::Tag::Matrix: {
+      case eCSSKeyword_matrix: {
         gfx::Matrix4x4 matrix;
-        const auto& m = op.AsMatrix();
-        matrix._11 = m.a;
-        matrix._12 = m.b;
+        matrix._11 = array->Item(1).GetFloatValue();
+        matrix._12 = array->Item(2).GetFloatValue();
         matrix._13 = 0;
         matrix._14 = 0;
-        matrix._21 = m.c;
-        matrix._22 = m.d;
+        matrix._21 = array->Item(3).GetFloatValue();
+        matrix._22 = array->Item(4).GetFloatValue();
         matrix._23 = 0;
         matrix._24 = 0;
         matrix._31 = 0;
         matrix._32 = 0;
         matrix._33 = 1;
         matrix._34 = 0;
-        matrix._41 = m.e;
-        matrix._42 = m.f;
+        matrix._41 = ProcessTranslatePart(array->Item(5), &aRefBox,
+                                          &TransformReferenceBox::Width);
+        matrix._42 = ProcessTranslatePart(array->Item(6), &aRefBox,
+                                          &TransformReferenceBox::Height);
         matrix._43 = 0;
         matrix._44 = 1;
         aFunctions.AppendElement(TransformMatrix(matrix));
         break;
       }
-      case StyleTransformOperation::Tag::Matrix3D: {
-        const auto& m = op.AsMatrix3D();
+      case eCSSKeyword_matrix3d: {
         gfx::Matrix4x4 matrix;
-
-        matrix._11 = m.m11;
-        matrix._12 = m.m12;
-        matrix._13 = m.m13;
-        matrix._14 = m.m14;
-        matrix._21 = m.m21;
-        matrix._22 = m.m22;
-        matrix._23 = m.m23;
-        matrix._24 = m.m24;
-        matrix._31 = m.m31;
-        matrix._32 = m.m32;
-        matrix._33 = m.m33;
-        matrix._34 = m.m34;
-
-        matrix._41 = m.m41;
-        matrix._42 = m.m42;
-        matrix._43 = m.m43;
-        matrix._44 = m.m44;
+        matrix._11 = array->Item(1).GetFloatValue();
+        matrix._12 = array->Item(2).GetFloatValue();
+        matrix._13 = array->Item(3).GetFloatValue();
+        matrix._14 = array->Item(4).GetFloatValue();
+        matrix._21 = array->Item(5).GetFloatValue();
+        matrix._22 = array->Item(6).GetFloatValue();
+        matrix._23 = array->Item(7).GetFloatValue();
+        matrix._24 = array->Item(8).GetFloatValue();
+        matrix._31 = array->Item(9).GetFloatValue();
+        matrix._32 = array->Item(10).GetFloatValue();
+        matrix._33 = array->Item(11).GetFloatValue();
+        matrix._34 = array->Item(12).GetFloatValue();
+        matrix._41 = ProcessTranslatePart(array->Item(13), &aRefBox,
+                                          &TransformReferenceBox::Width);
+        matrix._42 = ProcessTranslatePart(array->Item(14), &aRefBox,
+                                          &TransformReferenceBox::Height);
+        matrix._43 = ProcessTranslatePart(array->Item(15), &aRefBox, nullptr);
+        matrix._44 = array->Item(16).GetFloatValue();
         aFunctions.AppendElement(TransformMatrix(matrix));
         break;
       }
-      case StyleTransformOperation::Tag::InterpolateMatrix: {
+      case eCSSKeyword_interpolatematrix: {
         Matrix4x4 matrix;
-        nsStyleTransformMatrix::ProcessInterpolateMatrix(matrix, op, aRefBox);
+        nsStyleTransformMatrix::ProcessInterpolateMatrix(matrix, array,
+                                                         aRefBox);
         aFunctions.AppendElement(TransformMatrix(matrix));
         break;
       }
-      case StyleTransformOperation::Tag::AccumulateMatrix: {
+      case eCSSKeyword_accumulatematrix: {
         Matrix4x4 matrix;
-        nsStyleTransformMatrix::ProcessAccumulateMatrix(matrix, op, aRefBox);
+        nsStyleTransformMatrix::ProcessAccumulateMatrix(matrix, array, aRefBox);
         aFunctions.AppendElement(TransformMatrix(matrix));
         break;
       }
-      case StyleTransformOperation::Tag::Perspective: {
-        aFunctions.AppendElement(Perspective(op.AsPerspective().ToCSSPixels()));
+      case eCSSKeyword_perspective: {
+        aFunctions.AppendElement(Perspective(array->Item(1).GetFloatValue()));
         break;
       }
       default:
-        MOZ_ASSERT_UNREACHABLE("Function not handled yet!");
+        NS_ERROR("Function not handled yet!");
     }
   }
+}
+
+static void AddTransformFunctions(const nsCSSValueSharedList* aList,
+                                  const nsIFrame* aFrame,
+                                  TransformReferenceBox& aRefBox,
+                                  layers::Animatable& aAnimatable) {
+  MOZ_ASSERT(aList->mHead);
+  AddTransformFunctions(aList->mHead, aFrame->Style(), aFrame->PresContext(),
+                        aRefBox, aAnimatable.get_ArrayOfTransformFunction());
 }
 
 static TimingFunction ToTimingFunction(
@@ -466,22 +471,34 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
       aAnimatable = aAnimationValue.GetOpacity();
       break;
     case eCSSProperty_rotate: {
-      aAnimatable = GetRotate(aAnimationValue.GetRotateProperty());
+      RefPtr<const nsCSSValueSharedList> list =
+          aAnimationValue.GetTransformList();
+      MOZ_ASSERT(list && list->mHead && !list->mHead->mNext,
+                 "should have only one nsCSSValueList for rotate");
+      aAnimatable = GetRotate(list->mHead->mValue);
       break;
     }
     case eCSSProperty_scale: {
-      aAnimatable = GetScale(aAnimationValue.GetScaleProperty());
+      RefPtr<const nsCSSValueSharedList> list =
+          aAnimationValue.GetTransformList();
+      MOZ_ASSERT(list && list->mHead && !list->mHead->mNext,
+                 "should have only one nsCSSValueList for scale");
+      aAnimatable = GetScale(list->mHead->mValue);
       break;
     }
     case eCSSProperty_translate: {
-      aAnimatable =
-          GetTranslate(aAnimationValue.GetTranslateProperty(), aRefBox);
+      RefPtr<const nsCSSValueSharedList> list =
+          aAnimationValue.GetTransformList();
+      MOZ_ASSERT(list && list->mHead && !list->mHead->mNext,
+                 "should have only one nsCSSValueList for translate");
+      aAnimatable = GetTranslate(list->mHead->mValue, aRefBox);
       break;
     }
     case eCSSProperty_transform: {
       aAnimatable = InfallibleTArray<TransformFunction>();
-      AddTransformFunctions(aAnimationValue.GetTransformProperty(), aRefBox,
-                            aAnimatable.get_ArrayOfTransformFunction());
+      RefPtr<const nsCSSValueSharedList> list =
+          aAnimationValue.GetTransformList();
+      AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
       break;
     }
     default:
@@ -3724,7 +3741,8 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
 
   const nsStyleBorder* borderStyle = aFrame->StyleBorder();
   const nsStyleEffects* effectsStyle = aFrame->StyleEffects();
-  bool hasInsetShadow = effectsStyle->HasBoxShadowWithInset(true);
+  bool hasInsetShadow = effectsStyle->mBoxShadow &&
+                        effectsStyle->mBoxShadow->HasShadowWithInset(true);
   bool willPaintBorder = aAllowWillPaintBorderOptimization && !isThemed &&
                          !hasInsetShadow && borderStyle->HasBorder();
 
@@ -5362,8 +5380,8 @@ bool nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems() {
-  auto shadows = mFrame->StyleEffects()->mBoxShadow.AsSpan();
-  if (shadows.IsEmpty()) {
+  nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+  if (!shadows) {
     return false;
   }
 
@@ -5418,26 +5436,24 @@ bool nsDisplayBoxShadowOuter::CreateWebRenderCommands(
   for (uint32_t i = 0; i < rects.Length(); ++i) {
     LayoutDeviceRect clipRect =
         LayoutDeviceRect::FromAppUnits(rects[i], appUnitsPerDevPixel);
-    auto shadows = mFrame->StyleEffects()->mBoxShadow.AsSpan();
-    MOZ_ASSERT(!shadows.IsEmpty());
+    nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+    MOZ_ASSERT(shadows);
 
-    for (auto& shadow : Reversed(shadows)) {
-      if (shadow.inset) {
+    for (uint32_t j = shadows->Length(); j > 0; j--) {
+      nsCSSShadowItem* shadow = shadows->ShadowAt(j - 1);
+      if (shadow->mInset) {
         continue;
       }
 
-      float blurRadius =
-          float(shadow.base.blur.ToAppUnits()) / float(appUnitsPerDevPixel);
+      float blurRadius = float(shadow->mRadius) / float(appUnitsPerDevPixel);
       gfx::Color shadowColor =
-          nsCSSRendering::GetShadowColor(shadow.base, mFrame, mOpacity);
+          nsCSSRendering::GetShadowColor(shadow, mFrame, mOpacity);
 
       // We don't move the shadow rect here since WR does it for us
       // Now translate everything to device pixels.
       const nsRect& shadowRect = frameRect;
       LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
-          nsPoint(shadow.base.horizontal.ToAppUnits(),
-                  shadow.base.vertical.ToAppUnits()),
-          appUnitsPerDevPixel);
+          nsPoint(shadow->mXOffset, shadow->mYOffset), appUnitsPerDevPixel);
 
       LayoutDeviceRect deviceBox =
           LayoutDeviceRect::FromAppUnits(shadowRect, appUnitsPerDevPixel);
@@ -5455,8 +5471,7 @@ bool nsDisplayBoxShadowOuter::CreateWebRenderCommands(
             LayoutDeviceSize::FromUnknownSize(borderRadii.BottomRight()));
       }
 
-      float spreadRadius =
-          float(shadow.spread.ToAppUnits()) / float(appUnitsPerDevPixel);
+      float spreadRadius = float(shadow->mSpread) / float(appUnitsPerDevPixel);
 
       aBuilder.PushBoxShadow(deviceBoxRect, deviceClipRect, !BackfaceIsHidden(),
                              deviceBoxRect, wr::ToLayoutVector2D(shadowOffset),
@@ -5519,8 +5534,8 @@ void nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
 bool nsDisplayBoxShadowInner::CanCreateWebRenderCommands(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     const nsPoint& aReferenceOffset) {
-  auto shadows = aFrame->StyleEffects()->mBoxShadow.AsSpan();
-  if (shadows.IsEmpty()) {
+  nsCSSShadowArray* shadows = aFrame->StyleEffects()->mBoxShadow;
+  if (!shadows) {
     // Means we don't have to paint anything
     return true;
   }
@@ -5551,14 +5566,15 @@ void nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
   AutoTArray<nsRect, 10> rects;
   ComputeDisjointRectangles(aVisibleRegion, &rects);
 
-  auto shadows = aFrame->StyleEffects()->mBoxShadow.AsSpan();
+  nsCSSShadowArray* shadows = aFrame->StyleEffects()->mBoxShadow;
 
   for (uint32_t i = 0; i < rects.Length(); ++i) {
     LayoutDeviceRect clipRect =
         LayoutDeviceRect::FromAppUnits(rects[i], appUnitsPerDevPixel);
 
-    for (auto& shadow : Reversed(shadows)) {
-      if (!shadow.inset) {
+    for (uint32_t i = shadows->Length(); i > 0; --i) {
+      nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
+      if (!shadowItem->mInset) {
         continue;
       }
 
@@ -5572,15 +5588,14 @@ void nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
           LayoutDeviceRect::FromAppUnits(shadowRect, appUnitsPerDevPixel);
       wr::LayoutRect deviceClipRect = wr::ToRoundedLayoutRect(clipRect);
       Color shadowColor =
-          nsCSSRendering::GetShadowColor(shadow.base, aFrame, 1.0);
+          nsCSSRendering::GetShadowColor(shadowItem, aFrame, 1.0);
 
       LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
-          nsPoint(shadow.base.horizontal.ToAppUnits(),
-                  shadow.base.vertical.ToAppUnits()),
+          nsPoint(shadowItem->mXOffset, shadowItem->mYOffset),
           appUnitsPerDevPixel);
 
       float blurRadius =
-          float(shadow.base.blur.ToAppUnits()) / float(appUnitsPerDevPixel);
+          float(shadowItem->mRadius) / float(appUnitsPerDevPixel);
 
       wr::BorderRadius borderRadius = wr::ToBorderRadius(
           LayoutDeviceSize::FromUnknownSize(innerRadii.TopLeft()),
@@ -5589,7 +5604,7 @@ void nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
           LayoutDeviceSize::FromUnknownSize(innerRadii.BottomRight()));
       // NOTE: Any spread radius > 0 will render nothing. WR Bug.
       float spreadRadius =
-          float(shadow.spread.ToAppUnits()) / float(appUnitsPerDevPixel);
+          float(shadowItem->mSpread) / float(appUnitsPerDevPixel);
 
       aBuilder.PushBoxShadow(
           wr::ToLayoutRect(deviceBoxRect), deviceClipRect,
@@ -7733,11 +7748,9 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(
     const nsIFrame* aFrame, float aAppUnitsPerPixel,
     const nsRect* aBoundsOverride)
     : mFrame(aFrame),
-      mTranslate(aFrame->StyleDisplay()->mTranslate),
-      mRotate(aFrame->StyleDisplay()->mRotate),
-      mScale(aFrame->StyleDisplay()->mScale),
-      mTransform(aFrame->StyleDisplay()->mTransform),
+      mIndividualTransformList(aFrame->StyleDisplay()->mIndividualTransform),
       mMotion(nsLayoutUtils::ResolveMotionPath(aFrame)),
+      mTransformList(aFrame->StyleDisplay()->mSpecifiedTransform),
       mToTransformOrigin(GetDeltaToTransformOrigin(aFrame, aAppUnitsPerPixel,
                                                    aBoundsOverride)) {}
 
@@ -7805,8 +7818,13 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
    * still have perspective!) */
   if (aProperties.HasTransform()) {
     result = nsStyleTransformMatrix::ReadTransforms(
-        aProperties.mTranslate, aProperties.mRotate, aProperties.mScale,
-        aProperties.mMotion, aProperties.mTransform, refBox, aAppUnitsPerPixel);
+        aProperties.mIndividualTransformList
+            ? aProperties.mIndividualTransformList->mHead
+            : nullptr,
+        aProperties.mMotion,
+        aProperties.mTransformList ? aProperties.mTransformList->mHead
+                                   : nullptr,
+        refBox, aAppUnitsPerPixel);
   } else if (hasSVGTransforms) {
     // Correct the translation components for zoom:
     float pixelsPerCSSPx = AppUnitsPerCSSPixel() / aAppUnitsPerPixel;
@@ -8943,7 +8961,7 @@ bool nsDisplayText::CanApplyOpacity() const {
 
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
   const nsStyleText* textStyle = f->StyleText();
-  if (textStyle->HasTextShadow()) {
+  if (textStyle->mTextShadow) {
     return false;
   }
 
@@ -8991,7 +9009,7 @@ bool nsDisplayText::CreateWebRenderCommands(
   // view. Also if we're selected we might have some shadows from the
   // ::selected and ::inctive-selected pseudo-selectors. So don't do this
   // optimization if we have shadows or a selection.
-  if (!(IsSelected() || f->StyleText()->HasTextShadow())) {
+  if (!(IsSelected() || f->StyleText()->GetTextShadow())) {
     nsRect visible = GetPaintRect();
     visible.Inflate(3 * appUnitsPerDevPixel);
     bounds = bounds.Intersect(visible);
@@ -9922,18 +9940,23 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(WrFiltersHolder& wrFilters) {
       case NS_STYLE_FILTER_DROP_SHADOW: {
         float appUnitsPerDevPixel =
             mFrame->PresContext()->AppUnitsPerDevPixel();
-        const StyleSimpleShadow& shadow = filter.GetDropShadow();
-        nscolor color = shadow.color.CalcColor(mFrame);
+        nsCSSShadowArray* shadows = filter.GetDropShadow();
+        if (!shadows || shadows->Length() != 1) {
+          MOZ_ASSERT_UNREACHABLE(
+              "Exactly one drop shadow should have been "
+              "parsed.");
+          return false;
+        }
+
+        nsCSSShadowItem* shadow = shadows->ShadowAt(0);
+        nscolor color = shadow->mColor.CalcColor(mFrame);
 
         wr::Shadow wrShadow;
         wrShadow.offset = {
-            NSAppUnitsToFloatPixels(shadow.horizontal.ToAppUnits(),
-                                    appUnitsPerDevPixel),
-            NSAppUnitsToFloatPixels(shadow.vertical.ToAppUnits(),
-                                    appUnitsPerDevPixel)};
+          NSAppUnitsToFloatPixels(shadow->mXOffset, appUnitsPerDevPixel),
+          NSAppUnitsToFloatPixels(shadow->mYOffset, appUnitsPerDevPixel)};
         wrShadow.blur_radius =
-            NSAppUnitsToFloatPixels(shadow.blur.ToAppUnits(),
-                                    appUnitsPerDevPixel);
+          NSAppUnitsToFloatPixels(shadow->mRadius, appUnitsPerDevPixel);
         wrShadow.color = {NS_GET_R(color) / 255.0f, NS_GET_G(color) / 255.0f,
                           NS_GET_B(color) / 255.0f, NS_GET_A(color) / 255.0f};
         auto filterOp = wr::FilterOp::DropShadow(wrShadow);

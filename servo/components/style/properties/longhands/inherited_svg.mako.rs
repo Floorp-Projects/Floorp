@@ -194,8 +194,11 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "-moz-context-properties",
     "MozContextProperties",
-    "computed::MozContextProperties::default()",
-    products="gecko",
+    initial_value=None,
+    vector=True,
+    need_index=True,
     animation_value_type="none",
+    products="gecko",
     spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-context-properties)",
+    allow_empty=True,
 )}

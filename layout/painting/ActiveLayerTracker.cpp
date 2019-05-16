@@ -264,7 +264,7 @@ void ActiveLayerTracker::TransferActivityToFrame(nsIContent* aContent,
 static void IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame,
                                                LayerActivity* aActivity) {
   const nsStyleDisplay* display = aFrame->StyleDisplay();
-  if (!display->HasTransformProperty() && !display->HasIndividualTransform() &&
+  if (!display->mSpecifiedTransform && !display->HasIndividualTransform() &&
       !(display->mMotion && display->mMotion->HasPath())) {
     // The transform was removed.
     aActivity->mPreviousTransformScale = Nothing();
@@ -276,9 +276,12 @@ static void IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame,
   // Compute the new scale due to the CSS transform property.
   nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
   Matrix4x4 transform = nsStyleTransformMatrix::ReadTransforms(
-      display->mTranslate, display->mRotate, display->mScale,
-      nsLayoutUtils::ResolveMotionPath(aFrame), display->mTransform, refBox,
-      AppUnitsPerCSSPixel());
+      display->mIndividualTransform ? display->mIndividualTransform->mHead
+                                    : nullptr,
+      nsLayoutUtils::ResolveMotionPath(aFrame),
+      display->mSpecifiedTransform ? display->mSpecifiedTransform->mHead
+                                   : nullptr,
+      refBox, AppUnitsPerCSSPixel());
   Matrix transform2D;
   if (!transform.Is2D(&transform2D)) {
     // We don't attempt to handle 3D transforms; just assume the scale changed.
@@ -480,14 +483,14 @@ bool ActiveLayerTracker::IsStyleAnimated(
   const nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aFrame);
   const nsCSSPropertyIDSet transformSet =
       nsCSSPropertyIDSet::TransformLikeProperties();
-  if ((styleFrame && (styleFrame->StyleDisplay()->mWillChange.bits &
+  if ((styleFrame && (styleFrame->StyleDisplay()->mWillChangeBitField &
                       StyleWillChangeBits_TRANSFORM)) &&
       aPropertySet.Intersects(transformSet) &&
       (!aBuilder ||
        aBuilder->IsInWillChangeBudget(aFrame, aFrame->GetSize()))) {
     return true;
   }
-  if ((aFrame->StyleDisplay()->mWillChange.bits &
+  if ((aFrame->StyleDisplay()->mWillChangeBitField &
        StyleWillChangeBits_OPACITY) &&
       aPropertySet.Intersects(nsCSSPropertyIDSet::OpacityProperties()) &&
       (!aBuilder ||
