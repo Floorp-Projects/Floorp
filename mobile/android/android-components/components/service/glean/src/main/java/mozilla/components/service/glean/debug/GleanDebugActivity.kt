@@ -46,6 +46,7 @@ class GleanDebugActivity : Activity() {
                 "Glean is not initialized. " +
                 "It may be disabled by the application."
             )
+            finish()
             return
         }
 
