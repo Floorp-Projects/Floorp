@@ -149,16 +149,17 @@ async function allTabTitlesDisplayed(browserWindow) {
 
   let tabTitlePromises = [];
   for (let tab of browserWindow.gBrowser.tabs) {
-    function tabTitleLoaded(spec) {
-      return () => {
-        return spec ? tab.label == specToTitleMap[spec] : false;
-      };
+    function getSpec() {
+      return tab.linkedBrowser &&
+             tab.linkedBrowser.documentURI &&
+             tab.linkedBrowser.documentURI.spec;
     }
-    let spec = tab.linkedBrowser &&
-               tab.linkedBrowser.documentURI &&
-               tab.linkedBrowser.documentURI.spec;
+    function tabTitleLoaded() {
+      let spec = getSpec();
+      return spec ? tab.label == specToTitleMap[spec] : false;
+    }
     let promise =
-      TestUtils.waitForCondition(tabTitleLoaded(spec), `Tab (${spec}) should be showing "${specToTitleMap[spec]}". Got "${tab.label}"`);
+      TestUtils.waitForCondition(tabTitleLoaded, `Tab (${getSpec()}) should be showing "${specToTitleMap[getSpec()]}". Got "${tab.label}"`);
     tabTitlePromises.push(promise);
   }
 
