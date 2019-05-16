@@ -460,7 +460,7 @@ cbindgen-types = [
     { gecko = "StyleContain", servo = "values::computed::Contain" },
     { gecko = "StyleRestyleHint", servo = "invalidation::element::restyle_hints::RestyleHint" },
     { gecko = "StyleTouchAction", servo = "values::computed::TouchAction" },
-    { gecko = "StyleWillChangeBits", servo = "values::specified::box_::WillChangeBits" },
+    { gecko = "StyleWillChange", servo = "values::specified::box_::WillChange" },
     { gecko = "StyleTextDecorationLine", servo = "values::computed::TextDecorationLine" },
     { gecko = "StyleTextTransform", servo = "values::computed::TextTransform" },
     { gecko = "StyleMozListReversed", servo = "values::computed::MozListReversed" },
