@@ -5658,10 +5658,8 @@ size_t BindingJSObjectMallocBytes(CanvasRenderingContext2D* aContext) {
   int32_t width = aContext->GetWidth();
   int32_t height = aContext->GetHeight();
 
-  int32_t max = gfxPrefs::MaxCanvasSize();
-  if (width > max || height > max) {
-    return 0;
-  }
+  // TODO: Bug 1552137: No memory will be allocated if either dimension is
+  // greater than gfxPrefs::MaxCanvasSize(). We should check this here too.
 
   CheckedInt<uint32_t> bytes = CheckedInt<uint32_t>(width) * height * 4;
   if (!bytes.isValid()) {
