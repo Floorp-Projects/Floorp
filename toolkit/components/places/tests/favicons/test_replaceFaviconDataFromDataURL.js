@@ -256,9 +256,8 @@ add_task(async function test_replaceFaviconDataFromDataURL_afterRegularAssign() 
   let firstFavicon = createFavicon("favicon11.png");
   let secondFavicon = createFavicon("favicon12.png");
 
-  iconsvc.replaceFaviconData(
-    firstFavicon.uri, firstFavicon.data, firstFavicon.data.length,
-    firstFavicon.mimetype);
+  iconsvc.replaceFaviconData(firstFavicon.uri, firstFavicon.data,
+                             firstFavicon.mimetype);
   iconsvc.replaceFaviconDataFromDataURL(firstFavicon.uri, createDataURLForFavicon(secondFavicon), 0,
                                         Services.scriptSecurityManager.getSystemPrincipal());
 
@@ -292,9 +291,8 @@ add_task(async function test_replaceFaviconDataFromDataURL_beforeRegularAssign()
 
   iconsvc.replaceFaviconDataFromDataURL(firstFavicon.uri, createDataURLForFavicon(firstFavicon), 0,
                                         Services.scriptSecurityManager.getSystemPrincipal());
-  iconsvc.replaceFaviconData(
-    firstFavicon.uri, secondFavicon.data, secondFavicon.data.length,
-    secondFavicon.mimetype);
+  iconsvc.replaceFaviconData(firstFavicon.uri, secondFavicon.data,
+                             secondFavicon.mimetype);
 
   await new Promise(resolve => {
     iconsvc.setAndFetchFaviconForPage(
