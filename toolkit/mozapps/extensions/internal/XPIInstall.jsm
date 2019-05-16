@@ -3311,10 +3311,13 @@ var XPIInstall = {
    *        The XPI file to install the add-on from.
    * @param {XPIStateLocation} location
    *        The install location to install the add-on to.
+   * @param {string?} [oldAppVersion]
+   *        The version of the application last run with this profile or null
+   *        if it is a new profile or the version is unknown
    * @returns {AddonInternal}
    *        The installed Addon object, upon success.
    */
-  async installDistributionAddon(id, file, location) {
+  async installDistributionAddon(id, file, location, oldAppVersion) {
     let addon = await loadManifestFromFile(file, location);
     addon.installTelemetryInfo = {source: "distribution"};
 
@@ -3335,6 +3338,10 @@ var XPIInstall = {
         logger.warn("Profile contains an add-on with a bad or missing install " +
                     `manifest at ${state.path}, overwriting`, e);
       }
+    } else if (addon.type === "locale" && oldAppVersion && Services.vc.compare(oldAppVersion, "67") < 0) {
+        /* Distribution language packs didn't get installed due to the signing
+           issues so we need to force them to be reinstalled. */
+      Services.prefs.clearUserPref(PREF_BRANCH_INSTALLED_ADDON + id);
     } else if (Services.prefs.getBoolPref(PREF_BRANCH_INSTALLED_ADDON + id, false)) {
       return null;
     }
