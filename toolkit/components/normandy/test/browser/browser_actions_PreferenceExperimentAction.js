@@ -98,10 +98,13 @@ decorate_task(
     Assert.deepEqual(startStub.args, [[{
       name: "test",
       branch: "branch1",
-      preferenceName: "fake.preference",
-      preferenceValue: "branch1",
-      preferenceBranchType: "user",
-      preferenceType: "string",
+      preferences: {
+        "fake.preference": {
+          preferenceValue: "branch1",
+          preferenceBranchType: "user",
+          preferenceType: "string",
+        },
+      },
       experimentType: "exp",
     }]]);
   }
