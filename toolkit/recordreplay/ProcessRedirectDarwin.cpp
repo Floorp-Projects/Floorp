@@ -404,7 +404,7 @@ static PreambleResult MiddlemanPreamble_sendmsg(CallArguments* aArguments) {
 
 static PreambleResult Preamble_mprotect(CallArguments* aArguments) {
   // Ignore any mprotect calls that occur after saving a checkpoint.
-  if (!HasSavedCheckpoint()) {
+  if (!HasSavedAnyCheckpoint()) {
     return PreambleResult::PassThrough;
   }
   aArguments->Rval<ssize_t>() = 0;
@@ -432,7 +432,7 @@ static PreambleResult Preamble_mmap(CallArguments* aArguments) {
     // Get an anonymous mapping for the result.
     if (flags & MAP_FIXED) {
       // For fixed allocations, make sure this memory region is mapped and zero.
-      if (!HasSavedCheckpoint()) {
+      if (!HasSavedAnyCheckpoint()) {
         // Make sure this memory region is writable.
         CallFunction<int>(gOriginal_mprotect, address, size,
                           PROT_READ | PROT_WRITE | PROT_EXEC);
@@ -448,7 +448,7 @@ static PreambleResult Preamble_mmap(CallArguments* aArguments) {
     // for memory that is already allocated. If we haven't saved a checkpoint
     // then this is no problem, but after saving a checkpoint we have to make
     // sure that protection flags are what we expect them to be.
-    int newProt = HasSavedCheckpoint() ? (PROT_READ | PROT_EXEC) : prot;
+    int newProt = HasSavedAnyCheckpoint() ? (PROT_READ | PROT_EXEC) : prot;
     memory = CallFunction<void*>(gOriginal_mmap, address, size, newProt, flags,
                                  fd, offset);
 
@@ -674,9 +674,11 @@ static ssize_t WaitForCvar(pthread_mutex_t* aMutex, pthread_cond_t* aCond,
 static PreambleResult Preamble_pthread_cond_wait(CallArguments* aArguments) {
   auto& cond = aArguments->Arg<0, pthread_cond_t*>();
   auto& mutex = aArguments->Arg<1, pthread_mutex_t*>();
+  js::BeginIdleTime();
   aArguments->Rval<ssize_t>() = WaitForCvar(mutex, cond, false, [=]() {
     return CallFunction<ssize_t>(gOriginal_pthread_cond_wait, cond, mutex);
   });
+  js::EndIdleTime();
   return PreambleResult::Veto;
 }
 
@@ -925,7 +927,7 @@ static PreambleResult Preamble_mach_vm_map(CallArguments* aArguments) {
   } else if (AreThreadEventsPassedThrough()) {
     // We should only reach this at startup, when initializing the graphics
     // shared memory block.
-    MOZ_RELEASE_ASSERT(!HasSavedCheckpoint());
+    MOZ_RELEASE_ASSERT(!HasSavedAnyCheckpoint());
     return PreambleResult::PassThrough;
   }
 
@@ -940,7 +942,7 @@ static PreambleResult Preamble_mach_vm_map(CallArguments* aArguments) {
 static PreambleResult Preamble_mach_vm_protect(CallArguments* aArguments) {
   // Ignore any mach_vm_protect calls that occur after saving a checkpoint, as
   // for mprotect.
-  if (!HasSavedCheckpoint()) {
+  if (!HasSavedAnyCheckpoint()) {
     return PreambleResult::PassThrough;
   }
   aArguments->Rval<size_t>() = KERN_SUCCESS;

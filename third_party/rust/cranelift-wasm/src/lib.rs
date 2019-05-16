@@ -38,9 +38,16 @@ extern crate alloc as std;
 extern crate std;
 
 #[cfg(not(feature = "std"))]
-use hashmap_core::{map as hash_map, HashMap};
+use hashmap_core::{
+    hash_map::Entry::{Occupied, Vacant},
+    map as hash_map, HashMap,
+};
 #[cfg(feature = "std")]
-use std::collections::{hash_map, HashMap};
+use std::collections::{
+    hash_map,
+    hash_map::Entry::{Occupied, Vacant},
+    HashMap,
+};
 
 mod code_translator;
 mod environ;
@@ -57,9 +64,9 @@ pub use crate::environ::{
 pub use crate::func_translator::FuncTranslator;
 pub use crate::module_translator::translate_module;
 pub use crate::translation_utils::{
-    DefinedFuncIndex, DefinedGlobalIndex, DefinedMemoryIndex, DefinedTableIndex, FuncIndex, Global,
-    GlobalIndex, GlobalInit, Memory, MemoryIndex, SignatureIndex, Table, TableElementType,
-    TableIndex,
+    get_vmctx_value_label, DefinedFuncIndex, DefinedGlobalIndex, DefinedMemoryIndex,
+    DefinedTableIndex, FuncIndex, Global, GlobalIndex, GlobalInit, Memory, MemoryIndex,
+    SignatureIndex, Table, TableElementType, TableIndex,
 };
 
 /// Version number of this crate.

@@ -37,9 +37,7 @@ export type Command =
   | "stepOut"
   | "resume"
   | "rewind"
-  | "reverseStepOver"
-  | "reverseStepIn"
-  | "reverseStepOut";
+  | "reverseStepOver";
 
 // Pause state associated with an individual thread.
 type ThreadPauseState = {

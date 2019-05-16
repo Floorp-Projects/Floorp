@@ -2529,62 +2529,6 @@ impl PicturePrimitive {
 
                         (blur_render_task_id, picture_task_id)
                     }
-                    PictureCompositeMode::Filter(Filter::DropShadow(shadow)) => {
-                        let blur_std_deviation = shadow.blur_radius * device_pixel_scale.0;
-                        let blur_range = (blur_std_deviation * BLUR_SAMPLE_SCALE).ceil() as i32;
-                        let rounded_std_dev = blur_std_deviation.round();
-                        let rounded_std_dev = DeviceSize::new(rounded_std_dev, rounded_std_dev);
-                        // The clipped field is the part of the picture that is visible
-                        // on screen. The unclipped field is the screen-space rect of
-                        // the complete picture, if no screen / clip-chain was applied
-                        // (this includes the extra space for blur region). To ensure
-                        // that we draw a large enough part of the picture to get correct
-                        // blur results, inflate that clipped area by the blur range, and
-                        // then intersect with the total screen rect, to minimize the
-                        // allocation size.
-                        let mut device_rect = clipped.inflate(blur_range, blur_range)
-                                .intersection(&unclipped.to_i32())
-                                .unwrap();
-                        device_rect.size = RenderTask::adjusted_blur_source_size(
-                            device_rect.size,
-                            rounded_std_dev,
-                        );
-
-                        let uv_rect_kind = calculate_uv_rect_kind(
-                            &pic_rect,
-                            &transform,
-                            &device_rect,
-                            device_pixel_scale,
-                            true,
-                        );
-
-                        let mut picture_task = RenderTask::new_picture(
-                            RenderTaskLocation::Dynamic(None, device_rect.size),
-                            unclipped.size,
-                            pic_index,
-                            device_rect.origin,
-                            Vec::new(),
-                            uv_rect_kind,
-                            raster_spatial_node_index,
-                            device_pixel_scale,
-                        );
-                        picture_task.mark_for_saving();
-
-                        let picture_task_id = frame_state.render_tasks.add(picture_task);
-
-                        let blur_render_task_id = RenderTask::new_blur(
-                            rounded_std_dev,
-                            picture_task_id,
-                            frame_state.render_tasks,
-                            RenderTargetKind::Color,
-                            ClearMode::Transparent,
-                            None,
-                        );
-
-                        self.secondary_render_task_id = Some(picture_task_id);
-
-                        (blur_render_task_id, picture_task_id)
-                    }
                     PictureCompositeMode::Filter(Filter::DropShadowStack(ref shadows)) => {
                         let mut max_std_deviation = 0.0;
                         for shadow in shadows {
@@ -2645,7 +2589,7 @@ impl PicturePrimitive {
                         }
         
                         // TODO(nical) the second one should to be the blur's task id but we have several blurs now
-                        (picture_task_id, blur_render_task_id)
+                        (blur_render_task_id, picture_task_id)
                     }
                     PictureCompositeMode::MixBlend(..) if !frame_context.fb_config.gpu_supports_advanced_blend => {
                         let uv_rect_kind = calculate_uv_rect_kind(
@@ -3194,9 +3138,6 @@ impl PicturePrimitive {
                 // blur sample scale. Should we do this here as well?
                 let inflation_size = match raster_config.composite_mode {
                     PictureCompositeMode::Filter(Filter::Blur(_)) => surface.inflation_factor,
-                    PictureCompositeMode::Filter(Filter::DropShadow(shadow)) => {
-                        (shadow.blur_radius * BLUR_SAMPLE_SCALE).ceil()
-                    }
                     PictureCompositeMode::Filter(Filter::DropShadowStack(ref shadows)) => {
                         let mut max = 0.0;
                         for shadow in shadows {
@@ -3232,11 +3173,6 @@ impl PicturePrimitive {
             // Drop shadows draw both a content and shadow rect, so need to expand the local
             // rect of any surfaces to be composited in parent surfaces correctly.
             match raster_config.composite_mode {
-                PictureCompositeMode::Filter(Filter::DropShadow(shadow)) => {
-                    let content_rect = surface_rect;
-                    let shadow_rect = surface_rect.translate(&shadow.offset);
-                    surface_rect = content_rect.union(&shadow_rect);
-                }
                 PictureCompositeMode::Filter(Filter::DropShadowStack(ref shadows)) => {
                     for shadow in shadows {
                         let content_rect = surface_rect;
@@ -3295,39 +3231,6 @@ impl PicturePrimitive {
         match raster_config.composite_mode {
             PictureCompositeMode::TileCache { .. } => {}
             PictureCompositeMode::Filter(Filter::Blur(..)) => {}
-            PictureCompositeMode::Filter(Filter::DropShadow(shadow)) => {
-                if self.extra_gpu_data_handles.is_empty() {
-                    self.extra_gpu_data_handles.push(GpuCacheHandle::new());
-                }
-
-                if let Some(mut request) = frame_state.gpu_cache.request(&mut self.extra_gpu_data_handles[0]) {
-                    // TODO(gw): This is very hacky code below! It stores an extra
-                    //           brush primitive below for the special case of a
-                    //           drop-shadow where we need a different local
-                    //           rect for the shadow. To tidy this up in future,
-                    //           we could consider abstracting the code in prim_store.rs
-                    //           that writes a brush primitive header.
-
-                    // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
-                    //  [brush specific data]
-                    //  [segment_rect, segment data]
-                    let shadow_rect = self.snapped_local_rect.translate(&shadow.offset);
-
-                    // ImageBrush colors
-                    request.push(shadow.color.premultiplied());
-                    request.push(PremultipliedColorF::WHITE);
-                    request.push([
-                        self.snapped_local_rect.size.width,
-                        self.snapped_local_rect.size.height,
-                        0.0,
-                        0.0,
-                    ]);
-
-                    // segment rect / extra data
-                    request.push(shadow_rect);
-                    request.push([0.0, 0.0, 0.0, 0.0]);
-                }
-            }
             PictureCompositeMode::Filter(Filter::DropShadowStack(ref shadows)) => {
                 self.extra_gpu_data_handles.resize(shadows.len(), GpuCacheHandle::new());
                 for (shadow, extra_handle) in shadows.iter().zip(self.extra_gpu_data_handles.iter_mut()) {
@@ -3355,7 +3258,7 @@ impl PicturePrimitive {
             }
             PictureCompositeMode::MixBlend(..) if !frame_context.fb_config.gpu_supports_advanced_blend => {}
             PictureCompositeMode::Filter(ref filter) => {
-                if let Filter::ColorMatrix(m) = *filter {
+                if let Filter::ColorMatrix(ref m) = *filter {
                     if self.extra_gpu_data_handles.is_empty() {
                         self.extra_gpu_data_handles.push(GpuCacheHandle::new());
                     }

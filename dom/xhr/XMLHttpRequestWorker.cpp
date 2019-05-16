@@ -668,6 +668,10 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable {
   XMLHttpRequestResponseType mResponseType;
   const nsString mMimeTypeOverride;
 
+  // Remember the worker thread's stack when the XHR was opened, so that it can
+  // be passed on to the net monitor.
+  UniquePtr<SerializedStackHolder> mOriginStack;
+
  public:
   OpenRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
                const nsACString& aMethod, const nsAString& aURL,
@@ -675,7 +679,8 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable {
                const Optional<nsAString>& aPassword, bool aBackgroundRequest,
                bool aWithCredentials, uint32_t aTimeout,
                XMLHttpRequestResponseType aResponseType,
-               const nsString& aMimeTypeOverride)
+               const nsString& aMimeTypeOverride,
+               UniquePtr<SerializedStackHolder> aOriginStack)
       : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy),
         mMethod(aMethod),
         mURL(aURL),
@@ -683,7 +688,8 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable {
         mWithCredentials(aWithCredentials),
         mTimeout(aTimeout),
         mResponseType(aResponseType),
-        mMimeTypeOverride(aMimeTypeOverride) {
+        mMimeTypeOverride(aMimeTypeOverride),
+        mOriginStack(std::move(aOriginStack)) {
     if (aUser.WasPassed()) {
       mUserStr = aUser.Value();
       mUser = &mUserStr;
@@ -1276,6 +1282,10 @@ nsresult OpenRunnable::MainThreadRunInternal() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  if (mOriginStack) {
+    mProxy->mXHR->SetOriginStack(std::move(mOriginStack));
+  }
+
   ErrorResult rv;
 
   if (mWithCredentials) {
@@ -1777,10 +1787,19 @@ void XMLHttpRequestWorker::Open(const nsACString& aMethod,
 
   mProxy->mOuterEventStreamId++;
 
+  UniquePtr<SerializedStackHolder> stack;
+  if (mWorkerPrivate->IsWatchedByDevtools()) {
+    if (JSContext* cx = nsContentUtils::GetCurrentJSContext()) {
+      stack = GetCurrentStackForNetMonitor(cx);
+    }
+  }
+
   RefPtr<OpenRunnable> runnable = new OpenRunnable(
       mWorkerPrivate, mProxy, aMethod, aUrl, aUser, aPassword,
       mBackgroundRequest, mWithCredentials, mTimeout, mResponseType,
-      alsoOverrideMimeType ? mMimeTypeOverride : VoidString());
+      alsoOverrideMimeType ? mMimeTypeOverride : VoidString(),
+      std::move(stack));
+
   ++mProxy->mOpenCount;
   runnable->Dispatch(Canceling, aRv);
   if (aRv.Failed()) {

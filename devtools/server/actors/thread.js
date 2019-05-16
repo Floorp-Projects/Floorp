@@ -557,17 +557,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._parentClosed ? null : undefined;
   },
 
-  _makeOnEnterFrame: function({ pauseAndRespond, rewinding }) {
+  _makeOnEnterFrame: function({ pauseAndRespond }) {
     return frame => {
       const { generatedSourceActor } = this.sources.getFrameLocation(frame);
 
       const url = generatedSourceActor.url;
-
-      // When rewinding into a frame, we end up at the point when it is being popped.
-      if (rewinding) {
-        frame.reportedPop = true;
-      }
-
       if (this.sources.isBlackBoxed(url)) {
         return undefined;
       }
@@ -843,11 +837,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (stepFrame) {
       switch (steppingType) {
         case "step":
-          if (rewinding) {
-            this.dbg.replayingOnPopFrame = onEnterFrame;
-          } else {
-            this.dbg.onEnterFrame = onEnterFrame;
-          }
+          assert(!rewinding, "'step' resume limit cannot be used while rewinding");
+          this.dbg.onEnterFrame = onEnterFrame;
           // Fall through.
         case "break":
         case "next":
@@ -868,7 +859,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
               olderFrame = olderFrame.older;
             }
             if (olderFrame) {
-              olderFrame.setReplayingOnStep(onStep, [olderFrame.offset]);
+              // Set an onStep handler in the older frame to stop at the call site.
+              // Make sure the offsets we use are valid breakpoint locations, as we
+              // cannot stop at other offsets when replaying.
+              const offsets = this._findReplayingStepOffsets({}, olderFrame, true);
+              olderFrame.setReplayingOnStep(onStep, offsets);
             }
           } else {
             stepFrame.onPop = onPop;
@@ -1194,7 +1189,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // Clear stepping hooks.
     this.dbg.onEnterFrame = undefined;
-    this.dbg.replayingOnPopFrame = undefined;
     this.dbg.onExceptionUnwind = undefined;
     this._clearSteppingHooks();
 
