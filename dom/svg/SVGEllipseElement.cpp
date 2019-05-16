@@ -10,6 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/RefPtr.h"
+#include "SVGGeometryProperty.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Ellipse)
 
@@ -46,6 +47,8 @@ bool SVGEllipseElement::IsAttributeMapped(const nsAtom* aAttribute) const {
          SVGEllipseElementBase::IsAttributeMapped(aAttribute);
 }
 
+namespace SVGT = SVGGeometryProperty::Tags;
+
 //----------------------------------------------------------------------
 // nsINode methods
 
@@ -75,10 +78,12 @@ already_AddRefed<DOMSVGAnimatedLength> SVGEllipseElement::Ry() {
 
 /* virtual */
 bool SVGEllipseElement::HasValidDimensions() const {
-  return mLengthAttributes[RX].IsExplicitlySet() &&
-         mLengthAttributes[RX].GetAnimValInSpecifiedUnits() > 0 &&
-         mLengthAttributes[RY].IsExplicitlySet() &&
-         mLengthAttributes[RY].GetAnimValInSpecifiedUnits() > 0;
+  float rx, ry;
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Rx, SVGT::Ry>(this, &rx, &ry);
+
+  return rx > 0 && ry > 0;
 }
 
 SVGElement::LengthAttributesInfo SVGEllipseElement::GetLengthInfo() {
@@ -93,7 +98,10 @@ bool SVGEllipseElement::GetGeometryBounds(
     Rect* aBounds, const StrokeOptions& aStrokeOptions,
     const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
   float x, y, rx, ry;
-  GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::Rx, SVGT::Ry>(
+      this, &x, &y, &rx, &ry);
 
   if (rx <= 0.f || ry <= 0.f) {
     // Rendering of the element is disabled
@@ -129,7 +137,10 @@ bool SVGEllipseElement::GetGeometryBounds(
 
 already_AddRefed<Path> SVGEllipseElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, rx, ry;
-  GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::Rx, SVGT::Ry>(
+      this, &x, &y, &rx, &ry);
 
   if (rx <= 0.0f || ry <= 0.0f) {
     return nullptr;

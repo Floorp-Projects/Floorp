@@ -9,6 +9,7 @@
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGCircleElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
+#include "SVGGeometryProperty.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Circle)
 
@@ -42,6 +43,8 @@ bool SVGCircleElement::IsAttributeMapped(const nsAtom* aAttribute) const {
          SVGCircleElementBase::IsAttributeMapped(aAttribute);
 }
 
+namespace SVGT = SVGGeometryProperty::Tags;
+
 //----------------------------------------------------------------------
 // nsINode methods
 
@@ -66,8 +69,11 @@ already_AddRefed<DOMSVGAnimatedLength> SVGCircleElement::R() {
 
 /* virtual */
 bool SVGCircleElement::HasValidDimensions() const {
-  return mLengthAttributes[ATTR_R].IsExplicitlySet() &&
-         mLengthAttributes[ATTR_R].GetAnimValInSpecifiedUnits() > 0;
+  float r;
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::R>(this, &r);
+  return r > 0;
 }
 
 SVGElement::LengthAttributesInfo SVGCircleElement::GetLengthInfo() {
@@ -82,7 +88,10 @@ bool SVGCircleElement::GetGeometryBounds(
     Rect* aBounds, const StrokeOptions& aStrokeOptions,
     const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
   float x, y, r;
-  GetAnimatedLengthValues(&x, &y, &r, nullptr);
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::R>(this, &x, &y,
+                                                               &r);
 
   if (r <= 0.f) {
     // Rendering of the element is disabled
@@ -117,7 +126,9 @@ bool SVGCircleElement::GetGeometryBounds(
 
 already_AddRefed<Path> SVGCircleElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, r;
-  GetAnimatedLengthValues(&x, &y, &r, nullptr);
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::R>(this, &x, &y,
+                                                               &r);
 
   if (r <= 0.0f) {
     return nullptr;
