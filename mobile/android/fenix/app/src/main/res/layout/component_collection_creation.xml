@@ -44,7 +44,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="5dp"
-        android:background="@color/photonGreen50"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/add_collection_button"
         app:layout_constraintEnd_toEndOf="parent"

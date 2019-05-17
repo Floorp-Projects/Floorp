@@ -87,7 +87,13 @@ class CollectionViewHolder(
     }
 
     private fun updateCollectionUI() {
-        view.collection_title.text = collection.title
+        val title = if (collection.title.length > maxTitleLength) {
+            collection.title.substring(0, maxTitleLength) + "..."
+        } else {
+            collection.title
+        }
+
+        view.collection_title.text = title
 
         var hostNameList = listOf<String>()
 
@@ -96,7 +102,7 @@ class CollectionViewHolder(
         }
 
         var tabsDisplayed = 0
-        val titleList = hostNameList.joinToString(", ") {
+        val tabTitlesList = hostNameList.joinToString(", ") {
             if (it.length > maxTitleLength) {
                 it.substring(0,
                     maxTitleLength
@@ -107,7 +113,7 @@ class CollectionViewHolder(
             }
         }
 
-        view.collection_description.text = titleList
+        view.collection_description.text = tabTitlesList
 
         if (expanded) {
             (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = 0
