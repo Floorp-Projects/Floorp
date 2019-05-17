@@ -139,7 +139,7 @@ describe("source maps", () => {
     });
   });
 
-  describe("hasMappedSource", async () => {
+  describe("hasMappedSource", () => {
     test("has original location", async () => {
       await setupBundleFixture("bundle");
       const location = {
@@ -160,7 +160,7 @@ describe("source maps", () => {
     });
   });
 
-  describe("Error handling", async () => {
+  describe("Error handling", () => {
     test("missing map", async () => {
       const source = {
         id: "missingmap.js",

@@ -120,7 +120,7 @@ describe("worker utils", () => {
     });
   });
 
-  it("test a task completing when the worker has shutdown", () => {
+  it("test a task completing when the worker has shutdown", async () => {
     const dispatcher = new WorkerDispatcher();
     const postMessageMock = jest.fn();
     const addEventListenerMock = jest.fn();
@@ -136,8 +136,12 @@ describe("worker utils", () => {
 
     dispatcher.start();
     const task = dispatcher.task("foo");
-    const resp = task("bar");
-    resp.catch(e => expect(e).toEqual("Oops, The worker has shutdown!"));
+
+    try {
+      await task("bar");
+    } catch (e) {
+      expect(e).toEqual("Oops, The worker has shutdown!");
+    }
 
     const listener = addEventListenerMock.mock.calls[0][1];
     dispatcher.stop();

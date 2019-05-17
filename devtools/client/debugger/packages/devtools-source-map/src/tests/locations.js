@@ -11,7 +11,7 @@ const {
 
 const { setupBundleFixture } = require("./helpers");
 
-describe("getOriginalLocation", async () => {
+describe("getOriginalLocation", () => {
   beforeEach(() => {
     clearSourceMaps();
   });
@@ -44,7 +44,7 @@ describe("getOriginalLocation", async () => {
   });
 });
 
-describe("getGeneratedLocation", async () => {
+describe("getGeneratedLocation", () => {
   beforeEach(() => {
     clearSourceMaps();
   });
