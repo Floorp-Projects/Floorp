@@ -3118,6 +3118,10 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetAdditiveSymbols(
     })
 }
 
+/// Don't derive destructors so that it's POD and we can pass it by value
+/// without issues.
+///
+/// cbindgen:derive-tagged-enum-destructor=false
 #[repr(C, u8)]
 pub enum CounterSpeakAs {
     None,
