@@ -1,9 +1,9 @@
 import os
 import subprocess
-import urlparse
+from six.moves.urllib.parse import urljoin
 from collections import defaultdict
 
-from wptmanifest.parser import atoms
+from .wptmanifest.parser import atoms
 
 atom_reset = atoms["Reset"]
 enabled_tests = set(["testharness", "reftest", "wdspec"])
@@ -474,12 +474,12 @@ class ReftestTest(Test):
             for key, data in value:
                 if isinstance(key, (tuple, list)):
                     key = list(key)
-                    key[0] = urlparse.urljoin(self.url, key[0])
-                    key[1] = urlparse.urljoin(self.url, key[1])
+                    key[0] = urljoin(self.url, key[0])
+                    key[1] = urljoin(self.url, key[1])
                     key = tuple(key)
                 elif key:
                     # Key is just a relative url to a ref
-                    key = urlparse.urljoin(self.url, key)
+                    key = urljoin(self.url, key)
                 values[key] = data
         return values
 
