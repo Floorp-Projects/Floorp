@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+  content/browser/aboutlogins/components/copy-to-clipboard-button.css (content/components/copy-to-clipboard-button.css)
+  content/browser/aboutlogins/components/copy-to-clipboard-button.js  (content/components/copy-to-clipboard-button.js)
   content/browser/aboutlogins/components/login-filter.css      (content/components/login-filter.css)
   content/browser/aboutlogins/components/login-filter.js       (content/components/login-filter.js)
   content/browser/aboutlogins/components/login-item.css        (content/components/login-item.css)
