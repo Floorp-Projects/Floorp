@@ -10,8 +10,8 @@ stubs.set("proto-properties-symbols", {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: 1
-    }
+      value: 1,
+    },
   },
   from: "server2.conn13.child19/propertyIterator160",
   prototype: {
@@ -28,8 +28,8 @@ stubs.set("proto-properties-symbols", {
       ownSymbols: [],
       ownPropertiesLength: 15,
       ownSymbolsLength: 0,
-      safeGetterValues: {}
-    }
+      safeGetterValues: {},
+    },
   },
   ownSymbols: [
     {
@@ -38,10 +38,10 @@ stubs.set("proto-properties-symbols", {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: "hello"
-      }
-    }
-  ]
+        value: "hello",
+      },
+    },
+  ],
 });
 
 stubs.set("longs-string-safe-getter", {
@@ -51,14 +51,14 @@ stubs.set("longs-string-safe-getter", {
         type: "longString",
         initial: "data:image/png;base64,initial",
         length: 95080,
-        actor: "server1.conn1.child1/longString28"
+        actor: "server1.conn1.child1/longString28",
       },
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
-    }
+      writable: true,
+    },
   },
-  from: "server1.conn1.child1/propertyIterator30"
+  from: "server1.conn1.child1/propertyIterator30",
 });
 
 module.exports = stubs;

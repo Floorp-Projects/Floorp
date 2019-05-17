@@ -9,5 +9,5 @@ const { objectInspector } = require("../../index");
 module.exports = {
   expressions,
   input,
-  objectInspector: objectInspector.reducer.default
+  objectInspector: objectInspector.reducer.default,
 };

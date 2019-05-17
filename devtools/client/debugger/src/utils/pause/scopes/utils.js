@@ -18,7 +18,7 @@ export function getFramePopVariables(why: Why, path: string): NamedValue[] {
       vars.push({
         name: "<exception>",
         path: `${path}/<exception>`,
-        contents: { value: frameFinished.throw }
+        contents: { value: frameFinished.throw },
       });
     }
 
@@ -31,7 +31,7 @@ export function getFramePopVariables(why: Why, path: string): NamedValue[] {
         vars.push({
           name: "<return>",
           path: `${path}/<return>`,
-          contents: { value: returned }
+          contents: { value: returned },
         });
       }
     }
@@ -48,6 +48,6 @@ export function getThisVariable(this_: any, path: string): ?NamedValue {
   return {
     name: "<this>",
     path: `${path}/<this>`,
-    contents: { value: this_ }
+    contents: { value: this_ },
   };
 }

@@ -12,11 +12,11 @@ export function getTokenLocation(
   const { left, top, width, height } = tokenEl.getBoundingClientRect();
   const { line, ch } = codeMirror.coordsChar({
     left: left + width / 2,
-    top: top + height / 2
+    top: top + height / 2,
   });
 
   return {
     line: line + 1,
-    column: ch
+    column: ch,
   };
 }

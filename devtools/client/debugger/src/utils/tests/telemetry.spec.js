@@ -9,7 +9,7 @@ jest.mock("devtools-modules", () => {
   MockTelemetry.prototype.recordEvent = jest.fn();
 
   return {
-    Telemetry: MockTelemetry
+    Telemetry: MockTelemetry,
   };
 });
 
@@ -29,7 +29,7 @@ describe("telemetry.recordEvent()", () => {
       {
         // eslint-disable-next-line camelcase
         session_id: -1,
-        bar: 1
+        bar: 1,
       }
     );
   });

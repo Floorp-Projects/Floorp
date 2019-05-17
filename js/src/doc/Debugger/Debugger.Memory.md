@@ -16,7 +16,7 @@ in various ways:
 If <i>dbg</i> is a [`Debugger`][debugger-object] instance, then the methods and
 accessor properties of <code><i>dbg</i>.memory</code> control how <i>dbg</i>
 observes its debuggees' memory use. The <code><i>dbg</i>.memory</code> object is
-an instance of `Debugger.Memory`; its inherited accesors and methods are
+an instance of `Debugger.Memory`; its inherited accessors and methods are
 described below.
 
 

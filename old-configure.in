@@ -1724,10 +1724,6 @@ case "$MOZ_BUILD_APP" in
 browser)
   AC_DEFINE(MOZ_PHOENIX)
   ;;
-
-xulrunner)
-  AC_DEFINE(MOZ_XULRUNNER)
-  ;;
 esac
 
 # Graphene is a desktop runtime for running applications with a HTML UI.
@@ -1736,7 +1732,6 @@ if test -n "$MOZ_GRAPHENE"; then
 fi
 
 AC_SUBST(MOZ_PHOENIX)
-AC_SUBST(MOZ_XULRUNNER)
 
 dnl ========================================================
 dnl Ensure Android SDK and build-tools versions depending on

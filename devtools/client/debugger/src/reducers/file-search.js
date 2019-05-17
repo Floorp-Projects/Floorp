@@ -18,32 +18,32 @@ import type { Record } from "../utils/makeRecord";
 export type Modifiers = Record<{
   caseSensitive: boolean,
   wholeWord: boolean,
-  regexMatch: boolean
+  regexMatch: boolean,
 }>;
 
 export type MatchedLocations = {
   line: number,
-  ch: number
+  ch: number,
 };
 
 export type SearchResults = {
   matches: Array<MatchedLocations>,
   matchIndex: number,
   index: number,
-  count: number
+  count: number,
 };
 
 export type FileSearchState = {
   searchResults: SearchResults,
   query: string,
-  modifiers: Modifiers
+  modifiers: Modifiers,
 };
 
 const emptySearchResults = Object.freeze({
   matches: Object.freeze([]),
   matchIndex: -1,
   index: -1,
-  count: 0
+  count: 0,
 });
 
 export const createFileSearchState: () => Record<FileSearchState> = makeRecord({
@@ -52,8 +52,8 @@ export const createFileSearchState: () => Record<FileSearchState> = makeRecord({
   modifiers: makeRecord({
     caseSensitive: prefs.fileSearchCaseSensitive,
     wholeWord: prefs.fileSearchWholeWord,
-    regexMatch: prefs.fileSearchRegexMatch
-  })()
+    regexMatch: prefs.fileSearchRegexMatch,
+  })(),
 });
 
 function update(

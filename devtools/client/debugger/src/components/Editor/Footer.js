@@ -11,7 +11,7 @@ import {
   getSelectedSourceWithContent,
   getPrettySource,
   getPaneCollapse,
-  getContext
+  getContext,
 } from "../../selectors";
 
 import { isFulfilled } from "../../utils/async-value";
@@ -19,7 +19,7 @@ import {
   isPretty,
   getFilename,
   isOriginal,
-  shouldBlackbox
+  shouldBlackbox,
 } from "../../utils/source";
 import { getGeneratedSource } from "../../reducers/sources";
 import { shouldShowPrettyPrint } from "../../utils/editor";
@@ -33,7 +33,7 @@ import "./Footer.css";
 
 type CursorPosition = {
   line: number,
-  column: number
+  column: number,
 };
 
 type Props = {
@@ -45,11 +45,11 @@ type Props = {
   togglePrettyPrint: typeof actions.togglePrettyPrint,
   toggleBlackBox: typeof actions.toggleBlackBox,
   jumpToMappedLocation: typeof actions.jumpToMappedLocation,
-  togglePaneCollapse: typeof actions.togglePaneCollapse
+  togglePaneCollapse: typeof actions.togglePaneCollapse,
 };
 
 type State = {
-  cursorPosition: CursorPosition
+  cursorPosition: CursorPosition,
 };
 
 class SourceFooter extends PureComponent<Props, State> {
@@ -126,7 +126,7 @@ class SourceFooter extends PureComponent<Props, State> {
         }
         className={classnames("action", type, {
           active: sourceLoaded,
-          pretty: isPretty(selectedSourceWithContent.source)
+          pretty: isPretty(selectedSourceWithContent.source),
         })}
         key={type}
         title={tooltip}
@@ -163,7 +163,7 @@ class SourceFooter extends PureComponent<Props, State> {
         onClick={() => toggleBlackBox(cx, selectedSourceWithContent.source)}
         className={classnames("action", type, {
           active: sourceLoaded,
-          blackboxed: blackboxed
+          blackboxed: blackboxed,
         })}
         key={type}
         title={tooltip}
@@ -203,7 +203,7 @@ class SourceFooter extends PureComponent<Props, State> {
       cx,
       mappedSource,
       jumpToMappedLocation,
-      selectedSourceWithContent
+      selectedSourceWithContent,
     } = this.props;
 
     if (
@@ -223,7 +223,7 @@ class SourceFooter extends PureComponent<Props, State> {
     const mappedSourceLocation = {
       sourceId: selectedSourceWithContent.source.id,
       line: 1,
-      column: 1
+      column: 1,
     };
     return (
       <button
@@ -293,7 +293,7 @@ const mapStateToProps = state => {
       state,
       selectedSourceWithContent ? selectedSourceWithContent.source.id : null
     ),
-    endPanelCollapsed: getPaneCollapse(state, "end")
+    endPanelCollapsed: getPaneCollapse(state, "end"),
   };
 };
 
@@ -303,6 +303,6 @@ export default connect(
     togglePrettyPrint: actions.togglePrettyPrint,
     toggleBlackBox: actions.toggleBlackBox,
     jumpToMappedLocation: actions.jumpToMappedLocation,
-    togglePaneCollapse: actions.togglePaneCollapse
+    togglePaneCollapse: actions.togglePaneCollapse,
   }
 )(SourceFooter);

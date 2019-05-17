@@ -12,7 +12,7 @@ export type NamedValue = {
   name: string,
   generatedName?: string,
   path: string,
-  contents: BindingContents | NamedValue[]
+  contents: BindingContents | NamedValue[],
 };
 
 export function getScopes(

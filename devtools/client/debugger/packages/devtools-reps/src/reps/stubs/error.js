@@ -15,8 +15,8 @@ stubs.set("SimpleError", {
     stack: "@debugger eval code:1:13\n",
     fileName: "debugger eval code",
     lineNumber: 1,
-    columnNumber: 13
-  }
+    columnNumber: 13,
+  },
 });
 
 stubs.set("MultilineStackError", {
@@ -34,8 +34,8 @@ stubs.set("MultilineStackError", {
       "@debugger eval code:8:1\n",
     fileName: "debugger eval code",
     lineNumber: 6,
-    columnNumber: 15
-  }
+    columnNumber: 15,
+  },
 });
 
 stubs.set("ErrorWithoutStacktrace", {
@@ -46,8 +46,8 @@ stubs.set("ErrorWithoutStacktrace", {
   preview: {
     kind: "Error",
     name: "Error",
-    message: "Error message"
-  }
+    message: "Error message",
+  },
 });
 
 stubs.set("EvalError", {
@@ -62,8 +62,8 @@ stubs.set("EvalError", {
     stack: "@debugger eval code:10:13\n",
     fileName: "debugger eval code",
     lineNumber: 10,
-    columnNumber: 13
-  }
+    columnNumber: 13,
+  },
 });
 
 stubs.set("InternalError", {
@@ -78,8 +78,8 @@ stubs.set("InternalError", {
     stack: "@debugger eval code:11:13\n",
     fileName: "debugger eval code",
     lineNumber: 11,
-    columnNumber: 13
-  }
+    columnNumber: 13,
+  },
 });
 
 stubs.set("RangeError", {
@@ -94,8 +94,8 @@ stubs.set("RangeError", {
     stack: "@debugger eval code:12:13\n",
     fileName: "debugger eval code",
     lineNumber: 12,
-    columnNumber: 13
-  }
+    columnNumber: 13,
+  },
 });
 
 stubs.set("ReferenceError", {
@@ -110,8 +110,8 @@ stubs.set("ReferenceError", {
     stack: "@debugger eval code:13:13\n",
     fileName: "debugger eval code",
     lineNumber: 13,
-    columnNumber: 13
-  }
+    columnNumber: 13,
+  },
 });
 
 stubs.set("SyntaxError", {
@@ -126,8 +126,8 @@ stubs.set("SyntaxError", {
     stack: "@debugger eval code:14:13\n",
     fileName: "debugger eval code",
     lineNumber: 14,
-    columnNumber: 13
-  }
+    columnNumber: 13,
+  },
 });
 
 stubs.set("TypeError", {
@@ -142,8 +142,8 @@ stubs.set("TypeError", {
     stack: "@debugger eval code:15:13\n",
     fileName: "debugger eval code",
     lineNumber: 15,
-    columnNumber: 13
-  }
+    columnNumber: 13,
+  },
 });
 
 stubs.set("URIError", {
@@ -158,8 +158,8 @@ stubs.set("URIError", {
     stack: "@debugger eval code:16:13\n",
     fileName: "debugger eval code",
     lineNumber: 16,
-    columnNumber: 13
-  }
+    columnNumber: 13,
+  },
 });
 
 /**
@@ -186,8 +186,8 @@ stubs.set("DOMException", {
     result: 2152923148,
     filename: "debugger eval code",
     lineNumber: 1,
-    columnNumber: 0
-  }
+    columnNumber: 0,
+  },
 });
 
 stubs.set("base-loader Error", {
@@ -206,8 +206,8 @@ stubs.set("base-loader Error", {
       "exports.makeInfallible/<@resource://devtools/shared/base-loader.js -> resource://devtools/shared/ThreadSafeDevToolsUtils.js:109:14\n",
     fileName: "debugger-client.js",
     lineNumber: 859,
-    columnNumber: 9
-  }
+    columnNumber: 9,
+  },
 });
 
 stubs.set("longString stack Error", {
@@ -227,12 +227,12 @@ stubs.set("longString stack Error", {
       initial:
         "NgForOf.prototype.ngOnChanges@webpack-internal:///./node_modules/@angular/common/esm5/common.js:2656:27\n checkAndUpdateDirectiveInline@webpack-internal:///./node_modules/@angular/core/esm5/core.js:12581:9\n checkAndUpdateNodeInline@webpack-internal:///./node_modules/@angular/core/esm5/core.js:14109:20\n checkAndUpdateNode@webpack-internal:///./node_modules/@angular/core/esm5/core.js:14052:16\n debugCheckAndUpdateNode@webpack-internal:///./node_modules/@angular/core/esm5/core.js:14945:55\n debugCheckDirectivesFn@webpack-internal:///./node_modules/@angular/core/esm5/core.js:14886:13\n View_MetaTableComponent_6/<@ng:///AppModule/MetaTableComponent.ngfactory.js:98:5\n debugUpdateDirectives@webpack-internal:///./node_modules/@angular/core/esm5/core.js:14871:12\n checkAndUpdateView@webpack-internal:///./node_modules/@angular/core/esm5/core.js:14018:5\n callViewAction@webpack-internal:///./node_modules/@angular/core/esm5/core.js:14369:21\n execEmbeddedViewsAction@webpack-internal:///./node_modules/@an",
       length: 11907,
-      actor: "server1.conn2.child1/longString31"
+      actor: "server1.conn2.child1/longString31",
     },
     fileName: "debugger eval code",
     lineNumber: 1,
-    columnNumber: 5
-  }
+    columnNumber: 5,
+  },
 });
 
 stubs.set("longString stack Error - cut-off location", {
@@ -252,13 +252,13 @@ stubs.set("longString stack Error - cut-off location", {
       initial:
         "execute/AppComponent</AppComponent.prototype.doStuff@https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:32:1\nexecute/AppComponent</AppComponent.prototype.doStuff@https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21\nexecute/AppComponent</AppComponent.prototype.doStuff@https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21\nexecute/AppComponent</AppComponent.prototype.doStuff@https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21\nexecute/AppComponent</AppComponent.prototype.doStuff@https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21\nexecute/AppComponent</AppComponent.prototype.doStuff@https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21\nexecute/AppComponent</AppComponent.prototype.doStuff@https://angular-3eqab4.stackblitz.io/tmp/appfiles/src/app/app.component.ts:33:21\nexecute/AppComponent</AppComponent.prototype.doStuff@https://an",
       length: 17151,
-      actor: "server1.conn1.child1/longString27"
+      actor: "server1.conn1.child1/longString27",
     },
     fileName:
       "https://c.staticblitz.com/assets/engineblock-bc7b07e99ec5c6739c766b4898e4cff5acfddc137ccb7218377069c32731f1d0.js line 1 > eval",
     lineNumber: 32,
-    columnNumber: 1
-  }
+    columnNumber: 1,
+  },
 });
 
 stubs.set("Error with V8-like stack", {
@@ -273,8 +273,8 @@ stubs.set("Error with V8-like stack", {
     stack: "Error: BOOM\ngetAccount@http://moz.com/script.js:1:2",
     fileName: "http://moz.com/script.js:1:2",
     lineNumber: 1,
-    columnNumber: 2
-  }
+    columnNumber: 2,
+  },
 });
 
 stubs.set("Error with invalid stack", {
@@ -289,8 +289,8 @@ stubs.set("Error with invalid stack", {
     stack: "bar\nbaz\nfoo\n\n\n\n\n\n\n",
     fileName: "http://moz.com/script.js:1:2",
     lineNumber: 1,
-    columnNumber: 2
-  }
+    columnNumber: 2,
+  },
 });
 
 module.exports = stubs;

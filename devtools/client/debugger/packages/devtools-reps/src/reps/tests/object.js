@@ -112,10 +112,10 @@ describe("Object - Nested", () => {
   const object = {
     objProp: {
       id: 1,
-      arr: [2]
+      arr: [2],
     },
     strProp: "test string",
-    arrProp: [1]
+    arrProp: [1],
   };
   const defaultOutput =
     'Object { strProp: "test string", objProp: {…},' + " arrProp: […] }";
@@ -141,7 +141,7 @@ describe("Object - More prop", () => {
     a: undefined,
     b: 1,
     more: 2,
-    d: 3
+    d: 3,
   };
   const defaultOutput = "Object { b: 1, more: 2, d: 3, … }";
 
@@ -320,7 +320,7 @@ describe("Object - noGrip prop", () => {
 
   it("Object with class property", () => {
     const object = {
-      class: "Array"
+      class: "Array",
     };
     expect(getRep(object, undefined, true)).toBe(Obj.rep);
 

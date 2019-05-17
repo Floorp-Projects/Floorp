@@ -11,7 +11,7 @@ import ColumnBreakpoint from "./ColumnBreakpoint";
 import {
   getSelectedSource,
   visibleColumnBreakpoints,
-  getContext
+  getContext,
 } from "../../selectors";
 import { connect } from "../../utils/connect";
 import { makeBreakpointId } from "../../utils/breakpoint";
@@ -27,7 +27,7 @@ type Props = {
   editor: Object,
   selectedSource: Source,
   columnBreakpoints: ColumnBreakpointType[],
-  breakpointActions: BreakpointItemActions
+  breakpointActions: BreakpointItemActions,
 };
 
 class ColumnBreakpoints extends Component<Props> {
@@ -39,7 +39,7 @@ class ColumnBreakpoints extends Component<Props> {
       editor,
       columnBreakpoints,
       selectedSource,
-      breakpointActions
+      breakpointActions,
     } = this.props;
 
     if (!selectedSource || selectedSource.isBlackBoxed) {
@@ -67,7 +67,7 @@ const mapStateToProps = state => {
   return {
     cx: getContext(state),
     selectedSource: getSelectedSource(state),
-    columnBreakpoints: visibleColumnBreakpoints(state)
+    columnBreakpoints: visibleColumnBreakpoints(state),
   };
 };
 

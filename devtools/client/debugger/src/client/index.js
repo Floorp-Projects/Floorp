@@ -13,7 +13,7 @@ import { setupHelper } from "../utils/dbg";
 import {
   bootstrapApp,
   bootstrapStore,
-  bootstrapWorkers
+  bootstrapWorkers,
 } from "../utils/bootstrap";
 import { initialBreakpointsState } from "../reducers/breakpoints";
 
@@ -52,7 +52,7 @@ async function loadInitialState() {
 
 function getClient(connection: any) {
   const {
-    tab: { clientType }
+    tab: { clientType },
   } = connection;
   return clientType == "firefox" ? firefox : chrome;
 }
@@ -92,7 +92,7 @@ export async function onConnect(
     selectors,
     workers,
     connection,
-    client: client.clientCommands
+    client: client.clientCommands,
   });
 
   bootstrapApp(store);

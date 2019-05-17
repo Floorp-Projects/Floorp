@@ -20,7 +20,7 @@ const ModePropType = PropTypes.oneOf(
  */
 ArrayRep.propTypes = {
   mode: ModePropType,
-  object: PropTypes.array.isRequired
+  object: PropTypes.array.isRequired,
 };
 
 function ArrayRep(props) {
@@ -41,10 +41,10 @@ function ArrayRep(props) {
         span(
           {
             className: "more-ellipsis",
-            title: "more…"
+            title: "more…",
           },
           "…"
-        )
+        ),
       ];
     }
     brackets = needSpace(false);
@@ -55,18 +55,18 @@ function ArrayRep(props) {
 
   return span(
     {
-      className: "objectBox objectBox-array"
+      className: "objectBox objectBox-array",
     },
     span(
       {
-        className: "arrayLeftBracket"
+        className: "arrayLeftBracket",
       },
       brackets.left
     ),
     ...items,
     span(
       {
-        className: "arrayRightBracket"
+        className: "arrayRightBracket",
       },
       brackets.right
     )
@@ -79,7 +79,7 @@ function arrayIterator(props, array, max) {
   for (let i = 0; i < array.length && i < max; i++) {
     const config = {
       mode: MODE.TINY,
-      delim: i == array.length - 1 ? "" : ", "
+      delim: i == array.length - 1 ? "" : ", ",
     };
     let item;
 
@@ -87,13 +87,13 @@ function arrayIterator(props, array, max) {
       item = ItemRep({
         ...props,
         ...config,
-        object: array[i]
+        object: array[i],
       });
     } catch (exc) {
       item = ItemRep({
         ...props,
         ...config,
-        object: exc
+        object: exc,
       });
     }
     items.push(item);
@@ -104,7 +104,7 @@ function arrayIterator(props, array, max) {
       span(
         {
           className: "more-ellipsis",
-          title: "more…"
+          title: "more…",
         },
         "…"
       )
@@ -120,7 +120,7 @@ function arrayIterator(props, array, max) {
 ItemRep.propTypes = {
   object: PropTypes.any.isRequired,
   delim: PropTypes.string.isRequired,
-  mode: ModePropType
+  mode: ModePropType,
 };
 
 function ItemRep(props) {
@@ -132,7 +132,7 @@ function ItemRep(props) {
     Rep({
       ...props,
       object: object,
-      mode: mode
+      mode: mode,
     }),
     delim
   );
@@ -160,5 +160,5 @@ module.exports = {
   supportsObject,
   maxLengthMap,
   getLength,
-  ModePropType
+  ModePropType,
 };

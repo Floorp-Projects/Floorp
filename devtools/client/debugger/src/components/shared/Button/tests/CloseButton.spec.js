@@ -21,6 +21,6 @@ describe("CloseButton", () => {
     const handleClickSpy = jest.fn();
     const wrapper = shallow(<CloseButton handleClick={handleClickSpy} />);
     wrapper.simulate("click");
-    expect(handleClickSpy).toBeCalled();
+    expect(handleClickSpy).toHaveBeenCalled();
   });
 });

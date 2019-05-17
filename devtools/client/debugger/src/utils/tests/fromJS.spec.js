@@ -11,32 +11,32 @@ const preview = {
   length: 201,
   items: [
     {
-      type: "null"
+      type: "null",
     },
     "a test",
     "a",
     {
-      type: "null"
+      type: "null",
     },
     {
-      type: "null"
+      type: "null",
     },
     {
-      type: "null"
+      type: "null",
     },
     {
-      type: "null"
+      type: "null",
     },
     {
-      type: "null"
+      type: "null",
     },
     {
-      type: "null"
+      type: "null",
     },
     {
-      type: "null"
-    }
-  ]
+      type: "null",
+    },
+  ],
 };
 
 describe("fromJS", () => {
@@ -60,17 +60,17 @@ describe("fromJS", () => {
     const value = {
       lookupIterator: {
         value: {},
-        writable: true
+        writable: true,
       },
 
       hasOwnProperty: {
         value: {},
-        writable: true
+        writable: true,
       },
       arguments: {
         value: {},
-        writable: false
-      }
+        writable: false,
+      },
     };
 
     const newMap = fromJS(value);

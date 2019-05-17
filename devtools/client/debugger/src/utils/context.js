@@ -30,7 +30,7 @@ import { getThreadContext } from "../selectors";
 export type NavigateContext = {|
   // Counter reflecting how many times the debugger has navigated to a new page
   // and reset most of its state.
-  +navigateCounter: number
+  +navigateCounter: number,
 |};
 
 // A ThreadContext is invalidated if the target navigates, or if the current
@@ -47,7 +47,7 @@ export type ThreadContext = {|
 
   // Whether the current thread is paused. This is determined from the other
   // Context properties and is here for convenient access.
-  +isPaused: boolean
+  +isPaused: boolean,
 |};
 
 export type Context = NavigateContext | ThreadContext;

@@ -61,7 +61,7 @@ function _getNextStep(
   if (nextStatement) {
     return {
       ...nextStatement.node.loc.start,
-      sourceId: sourceId
+      sourceId: sourceId,
     };
   }
 

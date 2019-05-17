@@ -19,22 +19,22 @@ export type ApplicableBinding = {
   binding: GeneratedBindingLocation,
   range: GeneratedRange,
   firstInRange: boolean,
-  firstOnLine: boolean
+  firstOnLine: boolean,
 };
 
 type GeneratedRange = {
   start: PartialPosition,
-  end: PartialPosition
+  end: PartialPosition,
 };
 
 export async function originalRangeStartsInside(
   source: Source,
   {
     start,
-    end
+    end,
   }: {
     start: SourceLocation,
-    end: SourceLocation
+    end: SourceLocation,
   },
   sourceMaps: SourceMaps
 ) {
@@ -53,10 +53,10 @@ export async function getApplicableBindingsForOriginalPosition(
   source: Source,
   {
     start,
-    end
+    end,
   }: {
     start: SourceLocation,
-    end: SourceLocation
+    end: SourceLocation,
   },
   bindingType: BindingType,
   locationType: BindingLocationType,
@@ -67,14 +67,14 @@ export async function getApplicableBindingsForOriginalPosition(
   const resultRanges: GeneratedRange[] = ranges.map(mapRange => ({
     start: {
       line: mapRange.line,
-      column: mapRange.columnStart
+      column: mapRange.columnStart,
     },
     end: {
       line: mapRange.line,
       // SourceMapConsumer's 'lastColumn' is inclusive, so we add 1 to make
       // it exclusive like all other locations.
-      column: mapRange.columnEnd + 1
-    }
+      column: mapRange.columnEnd + 1,
+    },
   }));
 
   // When searching for imports, we expand the range to up to the next available
@@ -95,7 +95,7 @@ export async function getApplicableBindingsForOriginalPosition(
       ) {
         range.end = {
           line: endPosition.line,
-          column: endPosition.column
+          column: endPosition.column,
         };
         break;
       }
@@ -139,7 +139,7 @@ function filterApplicableBindings(
         binding,
         range,
         firstOnLine,
-        firstInRange
+        firstInRange,
       });
 
       firstInRange = false;

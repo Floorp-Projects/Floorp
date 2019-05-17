@@ -19,5 +19,5 @@ function setSourceMap(generatedId, request) {
 module.exports = {
   clearSourceMaps,
   getSourceMap,
-  setSourceMap
+  setSourceMap,
 };

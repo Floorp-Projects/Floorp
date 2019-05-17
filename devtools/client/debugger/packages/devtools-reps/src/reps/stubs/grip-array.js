@@ -17,8 +17,8 @@ stubs.set("testBasic", {
   preview: {
     kind: "ArrayLike",
     length: 0,
-    items: []
-  }
+    items: [],
+  },
 });
 
 stubs.set("DOMTokenList", {
@@ -32,8 +32,8 @@ stubs.set("DOMTokenList", {
   preview: {
     kind: "ArrayLike",
     length: 0,
-    items: []
-  }
+    items: [],
+  },
 });
 
 stubs.set("testMaxProps", {
@@ -57,10 +57,10 @@ stubs.set("testMaxProps", {
         extensible: true,
         frozen: false,
         sealed: false,
-        ownPropertyLength: 0
-      }
-    ]
-  }
+        ownPropertyLength: 0,
+      },
+    ],
+  },
 });
 
 stubs.set("testMoreThanShortMaxProps", {
@@ -74,8 +74,8 @@ stubs.set("testMoreThanShortMaxProps", {
   preview: {
     kind: "ArrayLike",
     length: maxLengthMap.get(MODE.SHORT) + 1,
-    items: new Array(maxLengthMap.get(MODE.SHORT) + 1).fill("test string")
-  }
+    items: new Array(maxLengthMap.get(MODE.SHORT) + 1).fill("test string"),
+  },
 });
 
 stubs.set("testMoreThanLongMaxProps", {
@@ -89,8 +89,8 @@ stubs.set("testMoreThanLongMaxProps", {
   preview: {
     kind: "ArrayLike",
     length: maxLengthMap.get(MODE.LONG) + 1,
-    items: new Array(maxLengthMap.get(MODE.LONG) + 1).fill("test string")
-  }
+    items: new Array(maxLengthMap.get(MODE.LONG) + 1).fill("test string"),
+  },
 });
 
 stubs.set("testPreviewLimit", {
@@ -104,8 +104,8 @@ stubs.set("testPreviewLimit", {
   preview: {
     kind: "ArrayLike",
     length: 11,
-    items: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-  }
+    items: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  },
 });
 
 stubs.set("testRecursiveArray", {
@@ -130,11 +130,11 @@ stubs.set("testRecursiveArray", {
         ownPropertyLength: 2,
         preview: {
           kind: "ArrayLike",
-          length: 1
-        }
-      }
-    ]
-  }
+          length: 1,
+        },
+      },
+    ],
+  },
 });
 
 stubs.set("testNamedNodeMap", {
@@ -161,8 +161,8 @@ stubs.set("testNamedNodeMap", {
           kind: "DOMNode",
           nodeType: 2,
           nodeName: "class",
-          value: "myclass"
-        }
+          value: "myclass",
+        },
       },
       {
         type: "object",
@@ -176,8 +176,8 @@ stubs.set("testNamedNodeMap", {
           kind: "DOMNode",
           nodeType: 2,
           nodeName: "cellpadding",
-          value: "7"
-        }
+          value: "7",
+        },
       },
       {
         type: "object",
@@ -191,11 +191,11 @@ stubs.set("testNamedNodeMap", {
           kind: "DOMNode",
           nodeType: 2,
           nodeName: "border",
-          value: "3"
-        }
-      }
-    ]
-  }
+          value: "3",
+        },
+      },
+    ],
+  },
 });
 
 stubs.set("testNodeList", {
@@ -226,10 +226,10 @@ stubs.set("testNodeList", {
           attributes: {
             id: "btn-1",
             class: "btn btn-log",
-            type: "button"
+            type: "button",
           },
-          attributesLength: 3
-        }
+          attributesLength: 3,
+        },
       },
       {
         type: "object",
@@ -247,10 +247,10 @@ stubs.set("testNodeList", {
           attributes: {
             id: "btn-2",
             class: "btn btn-err",
-            type: "button"
+            type: "button",
           },
-          attributesLength: 3
-        }
+          attributesLength: 3,
+        },
       },
       {
         type: "object",
@@ -268,13 +268,13 @@ stubs.set("testNodeList", {
           attributes: {
             id: "btn-3",
             class: "btn btn-count",
-            type: "button"
+            type: "button",
           },
-          attributesLength: 3
-        }
-      }
-    ]
-  }
+          attributesLength: 3,
+        },
+      },
+    ],
+  },
 });
 
 stubs.set("testDisconnectedNodeList", {
@@ -305,10 +305,10 @@ stubs.set("testDisconnectedNodeList", {
           attributes: {
             id: "btn-1",
             class: "btn btn-log",
-            type: "button"
+            type: "button",
           },
-          attributesLength: 3
-        }
+          attributesLength: 3,
+        },
       },
       {
         type: "object",
@@ -326,10 +326,10 @@ stubs.set("testDisconnectedNodeList", {
           attributes: {
             id: "btn-2",
             class: "btn btn-err",
-            type: "button"
+            type: "button",
           },
-          attributesLength: 3
-        }
+          attributesLength: 3,
+        },
       },
       {
         type: "object",
@@ -347,13 +347,13 @@ stubs.set("testDisconnectedNodeList", {
           attributes: {
             id: "btn-3",
             class: "btn btn-count",
-            type: "button"
+            type: "button",
           },
-          attributesLength: 3
-        }
-      }
-    ]
-  }
+          attributesLength: 3,
+        },
+      },
+    ],
+  },
 });
 
 stubs.set("testDocumentFragment", {
@@ -384,10 +384,10 @@ stubs.set("testDocumentFragment", {
           nodeName: "li",
           attributes: {
             id: "li-0",
-            class: "list-element"
+            class: "list-element",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -403,10 +403,10 @@ stubs.set("testDocumentFragment", {
           nodeName: "li",
           attributes: {
             id: "li-1",
-            class: "list-element"
+            class: "list-element",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -422,10 +422,10 @@ stubs.set("testDocumentFragment", {
           nodeName: "li",
           attributes: {
             id: "li-2",
-            class: "list-element"
+            class: "list-element",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -441,10 +441,10 @@ stubs.set("testDocumentFragment", {
           nodeName: "li",
           attributes: {
             id: "li-3",
-            class: "list-element"
+            class: "list-element",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -460,13 +460,13 @@ stubs.set("testDocumentFragment", {
           nodeName: "li",
           attributes: {
             id: "li-4",
-            class: "list-element"
+            class: "list-element",
           },
-          attributesLength: 2
-        }
-      }
-    ]
-  }
+          attributesLength: 2,
+        },
+      },
+    ],
+  },
 });
 
 stubs.set("Array(5)", {
@@ -480,8 +480,8 @@ stubs.set("Array(5)", {
   preview: {
     kind: "ArrayLike",
     length: 5,
-    items: [null, null, null, null, null]
-  }
+    items: [null, null, null, null, null],
+  },
 });
 
 stubs.set("[,1,2,3]", {
@@ -495,8 +495,8 @@ stubs.set("[,1,2,3]", {
   preview: {
     kind: "ArrayLike",
     length: 4,
-    items: [null, 1, 2, 3]
-  }
+    items: [null, 1, 2, 3],
+  },
 });
 
 stubs.set("[,,,3,4,5]", {
@@ -510,8 +510,8 @@ stubs.set("[,,,3,4,5]", {
   preview: {
     kind: "ArrayLike",
     length: 6,
-    items: [null, null, null, 3, 4, 5]
-  }
+    items: [null, null, null, 3, 4, 5],
+  },
 });
 
 stubs.set("[0,1,,3,4,5]", {
@@ -525,8 +525,8 @@ stubs.set("[0,1,,3,4,5]", {
   preview: {
     kind: "ArrayLike",
     length: 6,
-    items: [0, 1, null, 3, 4, 5]
-  }
+    items: [0, 1, null, 3, 4, 5],
+  },
 });
 
 stubs.set("[0,1,,,,5]", {
@@ -540,8 +540,8 @@ stubs.set("[0,1,,,,5]", {
   preview: {
     kind: "ArrayLike",
     length: 6,
-    items: [0, 1, null, null, null, 5]
-  }
+    items: [0, 1, null, null, null, 5],
+  },
 });
 
 stubs.set("[0,,2,,4,5]", {
@@ -555,8 +555,8 @@ stubs.set("[0,,2,,4,5]", {
   preview: {
     kind: "ArrayLike",
     length: 6,
-    items: [0, null, 2, null, 4, 5]
-  }
+    items: [0, null, 2, null, 4, 5],
+  },
 });
 
 stubs.set("[0,,,3,,,,7,8]", {
@@ -570,8 +570,8 @@ stubs.set("[0,,,3,,,,7,8]", {
   preview: {
     kind: "ArrayLike",
     length: 9,
-    items: [0, null, null, 3, null, null, null, 7, 8]
-  }
+    items: [0, null, null, 3, null, null, null, 7, 8],
+  },
 });
 
 stubs.set("[0,1,2,3,4,,]", {
@@ -585,8 +585,8 @@ stubs.set("[0,1,2,3,4,,]", {
   preview: {
     kind: "ArrayLike",
     length: 6,
-    items: [0, 1, 2, 3, 4, null]
-  }
+    items: [0, 1, 2, 3, 4, null],
+  },
 });
 
 stubs.set("[0,1,2,,,,]", {
@@ -600,8 +600,8 @@ stubs.set("[0,1,2,,,,]", {
   preview: {
     kind: "ArrayLike",
     length: 6,
-    items: [0, 1, 2, null, null, null]
-  }
+    items: [0, 1, 2, null, null, null],
+  },
 });
 
 // We can have cases where we don't have the array items in the preview,
@@ -617,8 +617,8 @@ stubs.set("testItemsNotInPreview", {
   ownPropertyLength: 4,
   preview: {
     kind: "ArrayLike",
-    length: 3
-  }
+    length: 3,
+  },
 });
 
 stubs.set("new Set([1,2,3,4])", {
@@ -632,8 +632,8 @@ stubs.set("new Set([1,2,3,4])", {
   preview: {
     kind: "ArrayLike",
     length: 4,
-    items: [1, 2, 3, 4]
-  }
+    items: [1, 2, 3, 4],
+  },
 });
 
 stubs.set("new Set([0,1,2,…,19])", {
@@ -647,8 +647,8 @@ stubs.set("new Set([0,1,2,…,19])", {
   preview: {
     kind: "ArrayLike",
     length: 20,
-    items: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-  }
+    items: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  },
 });
 
 stubs.set("new WeakSet(document.querySelectorAll('button:nth-child(3n)'))", {
@@ -678,10 +678,10 @@ stubs.set("new WeakSet(document.querySelectorAll('button:nth-child(3n)'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "g"
+            "data-key": "g",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -698,10 +698,10 @@ stubs.set("new WeakSet(document.querySelectorAll('button:nth-child(3n)'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "E"
+            "data-key": "E",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -718,10 +718,10 @@ stubs.set("new WeakSet(document.querySelectorAll('button:nth-child(3n)'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "l"
+            "data-key": "l",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -738,13 +738,13 @@ stubs.set("new WeakSet(document.querySelectorAll('button:nth-child(3n)'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "r"
+            "data-key": "r",
           },
-          attributesLength: 2
-        }
-      }
-    ]
-  }
+          attributesLength: 2,
+        },
+      },
+    ],
+  },
 });
 
 stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
@@ -774,10 +774,10 @@ stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "L"
+            "data-key": "L",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -794,10 +794,10 @@ stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "E"
+            "data-key": "E",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -814,10 +814,10 @@ stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "t"
+            "data-key": "t",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -834,10 +834,10 @@ stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "G"
+            "data-key": "G",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -854,10 +854,10 @@ stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "g"
+            "data-key": "g",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -874,10 +874,10 @@ stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "e"
+            "data-key": "e",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -894,10 +894,10 @@ stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "T"
+            "data-key": "T",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -914,10 +914,10 @@ stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "l"
+            "data-key": "l",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -934,10 +934,10 @@ stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "C"
+            "data-key": "C",
           },
-          attributesLength: 2
-        }
+          attributesLength: 2,
+        },
       },
       {
         type: "object",
@@ -954,13 +954,13 @@ stubs.set("new WeakSet(document.querySelectorAll('div, button'))", {
           isConnected: true,
           attributes: {
             type: "button",
-            "data-key": "c"
+            "data-key": "c",
           },
-          attributesLength: 2
-        }
-      }
-    ]
-  }
+          attributesLength: 2,
+        },
+      },
+    ],
+  },
 });
 
 stubs.set('["http://example.com/abcdefghijabcdefghij some other text"]', {
@@ -974,8 +974,8 @@ stubs.set('["http://example.com/abcdefghijabcdefghij some other text"]', {
   preview: {
     kind: "ArrayLike",
     length: 1,
-    items: ["http://example.com/abcdefghijabcdefghij some other text"]
-  }
+    items: ["http://example.com/abcdefghijabcdefghij some other text"],
+  },
 });
 
 stubs.set("Array(234)", {
@@ -989,8 +989,8 @@ stubs.set("Array(234)", {
   preview: {
     kind: "ArrayLike",
     length: 234,
-    items: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-  }
+    items: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  },
 });
 
 stubs.set("Array(23456)", {
@@ -1004,8 +1004,8 @@ stubs.set("Array(23456)", {
   preview: {
     kind: "ArrayLike",
     length: 23456,
-    items: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-  }
+    items: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  },
 });
 
 module.exports = stubs;

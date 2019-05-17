@@ -19,7 +19,7 @@ import {
   getFileSearchModifiers,
   getFileSearchResults,
   getHighlightedLineRange,
-  getContext
+  getContext,
 } from "../../selectors";
 
 import { removeOverlay } from "../../utils/editor";
@@ -44,7 +44,7 @@ function getShortcuts() {
   return {
     shiftSearchAgainShortcut: searchAgainPrevKey,
     searchAgainShortcut: searchAgainKey,
-    searchShortcut: searchKey
+    searchShortcut: searchKey,
   };
 }
 
@@ -52,7 +52,7 @@ type State = {
   query: string,
   selectedResultIndex: number,
   count: number,
-  index: number
+  index: number,
 };
 
 type Props = {
@@ -71,7 +71,7 @@ type Props = {
   setActiveSearch: typeof actions.setActiveSearch,
   closeFileSearch: typeof actions.closeFileSearch,
   doSearch: typeof actions.doSearch,
-  traverseResults: typeof actions.traverseResults
+  traverseResults: typeof actions.traverseResults,
 };
 
 class SearchBar extends Component<Props, State> {
@@ -81,7 +81,7 @@ class SearchBar extends Component<Props, State> {
       query: props.query,
       selectedResultIndex: 0,
       count: 0,
-      index: -1
+      index: -1,
     };
   }
 
@@ -90,7 +90,7 @@ class SearchBar extends Component<Props, State> {
     const {
       searchShortcut,
       searchAgainShortcut,
-      shiftSearchAgainShortcut
+      shiftSearchAgainShortcut,
     } = getShortcuts();
 
     shortcuts.off(searchShortcut);
@@ -107,7 +107,7 @@ class SearchBar extends Component<Props, State> {
     const {
       searchShortcut,
       searchAgainShortcut,
-      shiftSearchAgainShortcut
+      shiftSearchAgainShortcut,
     } = getShortcuts();
 
     shortcuts.on(searchShortcut, (_, e) => this.toggleSearch(e));
@@ -217,7 +217,7 @@ class SearchBar extends Component<Props, State> {
   buildSummaryMsg() {
     const {
       searchResults: { matchIndex, count, index },
-      query
+      query,
     } = this.props;
 
     if (query.trim() == "") {
@@ -241,7 +241,7 @@ class SearchBar extends Component<Props, State> {
 
     function SearchModBtn({ modVal, className, svgName, tooltip }) {
       const preppedClass = classnames(className, {
-        active: modifiers && modifiers.get(modVal)
+        active: modifiers && modifiers.get(modVal),
       });
       return (
         <button
@@ -294,7 +294,7 @@ class SearchBar extends Component<Props, State> {
   shouldShowErrorEmoji() {
     const {
       query,
-      searchResults: { count }
+      searchResults: { count },
     } = this.props;
     return !!query && !count;
   }
@@ -304,7 +304,7 @@ class SearchBar extends Component<Props, State> {
       searchResults: { count },
       searchOn,
       showClose = true,
-      size = "big"
+      size = "big",
     } = this.props;
 
     if (!searchOn) {
@@ -342,7 +342,7 @@ class SearchBar extends Component<Props, State> {
 }
 
 SearchBar.contextTypes = {
-  shortcuts: PropTypes.object
+  shortcuts: PropTypes.object,
 };
 
 const mapStateToProps = state => {
@@ -359,7 +359,7 @@ const mapStateToProps = state => {
     query: getFileSearchQuery(state),
     modifiers: getFileSearchModifiers(state),
     highlightedLineRange: getHighlightedLineRange(state),
-    searchResults: getFileSearchResults(state)
+    searchResults: getFileSearchResults(state),
   };
 };
 
@@ -371,6 +371,6 @@ export default connect(
     setActiveSearch: actions.setActiveSearch,
     closeFileSearch: actions.closeFileSearch,
     doSearch: actions.doSearch,
-    traverseResults: actions.traverseResults
+    traverseResults: actions.traverseResults,
   }
 )(SearchBar);

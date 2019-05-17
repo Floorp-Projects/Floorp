@@ -13,7 +13,7 @@ import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
 
 jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
 jest.mock("../../../../utils/clipboard", () => ({
-  copyToTheClipboard: jest.fn()
+  copyToTheClipboard: jest.fn(),
 }));
 
 function generateMockId(labelString) {
@@ -33,12 +33,12 @@ describe("FrameMenu", () => {
     mockFrame = makeMockFrame(undefined, makeMockSource("isFake"));
     mockEvent = {
       stopPropagation: jest.fn(),
-      preventDefault: jest.fn()
+      preventDefault: jest.fn(),
     };
     callbacks = {
       toggleFrameworkGrouping,
       toggleBlackbox: jest.fn(),
-      copyToTheClipboard
+      copyToTheClipboard,
     };
     emptyFrame = {};
   });
@@ -62,7 +62,7 @@ describe("FrameMenu", () => {
       frameworkGroupingId,
       sourceId,
       blackBoxId,
-      stacktraceId
+      stacktraceId,
     ]);
   });
 

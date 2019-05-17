@@ -41,7 +41,7 @@ export function memoizeResourceShallow<
       } else {
         existingEntry = {
           input,
-          output
+          output,
         };
         cache.set(identity, existingEntry);
       }

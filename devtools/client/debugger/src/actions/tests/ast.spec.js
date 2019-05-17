@@ -12,7 +12,7 @@ import {
   makeSource,
   makeOriginalSource,
   makeFrame,
-  waitForState
+  waitForState,
 } from "../../utils/test-head";
 
 import readFixture from "./helpers/readFixture";
@@ -21,7 +21,7 @@ const {
   getOutOfScopeLocations,
   getInScopeLines,
   isSymbolsLoading,
-  getFramework
+  getFramework,
 } = selectors;
 
 import { prefs } from "../../utils/prefs";
@@ -29,24 +29,24 @@ import { prefs } from "../../utils/prefs";
 const threadClient = {
   sourceContents: async ({ source }) => ({
     source: sourceTexts[source],
-    contentType: "text/javascript"
+    contentType: "text/javascript",
   }),
   getFrameScopes: async () => {},
   evaluate: async expression => ({ result: evaluationResult[expression] }),
   evaluateExpressions: async expressions =>
     expressions.map(expression => ({ result: evaluationResult[expression] })),
   getBreakpointPositions: async () => ({}),
-  getBreakableLines: async () => []
+  getBreakableLines: async () => [],
 };
 
 const sourceMaps = {
   getOriginalSourceText: async ({ id }) => ({
     id,
     text: sourceTexts[id],
-    contentType: "text/javascript"
+    contentType: "text/javascript",
   }),
   getGeneratedRangesForOriginal: async () => [],
-  getOriginalLocations: async items => items
+  getOriginalLocations: async items => items,
 };
 
 const sourceTexts = {
@@ -54,12 +54,12 @@ const sourceTexts = {
   "foo.js": "function base(boo) { return this.bazz; } outOfScope",
   "scopes.js": readFixture("scopes.js"),
   "reactComponent.js/originalSource": readFixture("reactComponent.js"),
-  "reactFuncComponent.js/originalSource": readFixture("reactFuncComponent.js")
+  "reactFuncComponent.js/originalSource": readFixture("reactFuncComponent.js"),
 };
 
 const evaluationResult = {
   "this.bazz": { actor: "bazz", preview: {} },
-  this: { actor: "this", preview: {} }
+  this: { actor: "this", preview: {} },
 };
 
 describe("ast", () => {
@@ -164,7 +164,7 @@ describe("ast", () => {
           thread: "FakeThread",
           why: { type: "debuggerStatement" },
           frame,
-          frames: [frame]
+          frames: [frame],
         })
       );
 

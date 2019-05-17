@@ -25,7 +25,7 @@ const samples = {
     "document.createTextNode('foo')",
     `x = document.createAttribute('foo');
      x.value = "bar";
-     x;`
+     x;`,
   ],
 
   "map & sets": [
@@ -77,7 +77,7 @@ const samples = {
           ])
         ),
       })
-    `
+    `,
   ],
 
   number: ["1", "-1", "-3.14", "0", "-0", "Infinity", "-Infinity", "NaN"],
@@ -124,13 +124,13 @@ Object.create(null, Object.getOwnPropertyDescriptors({
   },
   set mySetterOnly(x) {}
 }))
-`
+`,
   ],
 
   promise: [
     "Promise.resolve([1, 2, 3])",
     "Promise.reject(new Error('This is wrong'))",
-    "new Promise(() => {})"
+    "new Promise(() => {})",
   ],
 
   proxy: [
@@ -143,7 +143,7 @@ Object.create(null, Object.getOwnPropertyDescriptors({
         }
     };
     new Proxy({a: 1}, handler);
-  `
+  `,
   ],
 
   regexp: ["new RegExp('^[-]?[0-9]+[.]?[0-9]+$')"],
@@ -153,7 +153,7 @@ Object.create(null, Object.getOwnPropertyDescriptors({
     "'bar\nbaz\nyup'",
     "'http://example.com'",
     "'blah'.repeat(10000)",
-    "'http://example.com '.repeat(1000)"
+    "'http://example.com '.repeat(1000)",
   ],
 
   symbol: ["Symbol('foo')", "Symbol()"],
@@ -185,8 +185,8 @@ Object.create(null, Object.getOwnPropertyDescriptors({
       "exports.makeInfallible/<@resource://devtools/shared/base-loader.js -> resource://devtools/shared/ThreadSafeDevToolsUtils.js:109:14\\n";
 
     error;
-    `
-  ]
+    `,
+  ],
 };
 
 samples.yolo = Object.keys(samples).reduce((res, key) => {
