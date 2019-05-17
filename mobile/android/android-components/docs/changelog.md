@@ -20,6 +20,7 @@ permalink: /changelog/
 
 * **feature-session**:
   * Added `EngineViewBottomBehavior`: A `CoordinatorLayout.Behavior` implementation to be used with [EngineView] when placing a toolbar at the bottom of the screen. This implementation will update the vertical clipping of the `EngineView` so that bottom-aligned web content will be drawn above the browser toolbar.
+  * New use case `SettingsUseCases.UpdateTrackingProtectionUseCase`: Updates Tracking Protection for the engine and all open sessions.
 
 * **feature-prompts** and **browser-engine-gecko-nightly**
   * Now input type file are working.
