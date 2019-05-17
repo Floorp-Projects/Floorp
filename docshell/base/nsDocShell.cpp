@@ -12916,7 +12916,7 @@ void nsDocShell::SetIsPrinting(bool aIsPrinting) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetPrintPreview(nsIWebBrowserPrint** aPrintPreview) {
+nsDocShell::InitOrReusePrintPreviewViewer(nsIWebBrowserPrint** aPrintPreview) {
   *aPrintPreview = nullptr;
 #if NS_PRINT_PREVIEW
   nsCOMPtr<nsIDocumentViewerPrint> print = do_QueryInterface(mContentViewer);
@@ -12944,6 +12944,19 @@ nsDocShell::GetPrintPreview(nsIWebBrowserPrint** aPrintPreview) {
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+NS_IMETHODIMP nsDocShell::ExitPrintPreview() {
+#if NS_PRINT_PREVIEW
+#  ifdef DEBUG
+  nsCOMPtr<nsIDocumentViewerPrint> vp = do_QueryInterface(mContentViewer);
+  MOZ_ASSERT(vp && vp->IsInitializedForPrintPreview());
+#  endif
+  nsCOMPtr<nsIWebBrowserPrint> viewer = do_QueryInterface(mContentViewer);
+  return viewer->ExitPrintPreview();
+#else
+  return NS_OK;
 #endif
 }
 
