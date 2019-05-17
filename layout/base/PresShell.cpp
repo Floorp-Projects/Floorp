@@ -3583,8 +3583,14 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
         targetRect = targetRect.Intersect(sf->GetScrolledRect());
       }
 
-      ScrollToShowRect(this, sf, targetRect, aVertical, aHorizontal,
-                       aScrollFlags);
+      {
+        AutoWeakFrame wf(container);
+        ScrollToShowRect(this, sf, targetRect, aVertical, aHorizontal,
+                         aScrollFlags);
+        if (!wf.IsAlive()) {
+          return didScroll;
+        }
+      }
 
       nsPoint newPosition = sf->LastScrollDestination();
       // If the scroll position increased, that means our content moved up,
