@@ -817,7 +817,7 @@ class UrlInputFragment :
         }
     }
 
-    private fun onTextChange(text: String, autocompleteText: String) {
+    private fun onTextChange(text: String, @Suppress("UNUSED_PARAMETER") autocompleteText: String) {
         searchSuggestionsViewModel.setSearchQuery(text)
 
         if (text.trim { it <= ' ' }.isEmpty()) {
