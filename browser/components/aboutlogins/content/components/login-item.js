@@ -23,6 +23,8 @@ class LoginItem extends ReflectedFluentElement {
     this.reflectFluentStrings();
 
     for (let selector of [
+      ".copy-password-button",
+      ".copy-username-button",
       ".delete-button",
       ".edit-button",
       ".open-site-button",
@@ -41,6 +43,10 @@ class LoginItem extends ReflectedFluentElement {
   static get reflectedFluentIDs() {
     return [
       "cancel-button",
+      "copied-password-button",
+      "copied-username-button",
+      "copy-password-button",
+      "copy-username-button",
       "delete-button",
       "edit-button",
       "hostname-label",
@@ -62,6 +68,20 @@ class LoginItem extends ReflectedFluentElement {
 
   handleSpecialCaseFluentString(attrName) {
     switch (attrName) {
+      case "copied-password-button":
+      case "copy-password-button": {
+        let copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
+        let newAttrName = attrName.substr(0, attrName.indexOf("-")) + "-button-text";
+        copyPasswordButton.setAttribute(newAttrName, this.getAttribute(attrName));
+        break;
+      }
+      case "copied-username-button":
+      case "copy-username-button": {
+        let copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
+        let newAttrName = attrName.substr(0, attrName.indexOf("-")) + "-button-text";
+        copyUsernameButton.setAttribute(newAttrName, this.getAttribute(attrName));
+        break;
+      }
       case "modal-input-reveal-checkbox-hide": {
         this.shadowRoot.querySelector("modal-input[name='password']")
                        .setAttribute("reveal-checkbox-hide", this.getAttribute(attrName));
@@ -102,6 +122,12 @@ class LoginItem extends ReflectedFluentElement {
         if (event.target.classList.contains("cancel-button")) {
           this.toggleEditing();
           this.render();
+          return;
+        }
+        if (event.target.classList.contains("copy-password-button")) {
+          return;
+        }
+        if (event.target.classList.contains("copy-username-button")) {
           return;
         }
         if (event.target.classList.contains("delete-button")) {

@@ -10,6 +10,7 @@
     <title data-l10n-id="about-logins-page-title"></title>
     <link rel="localization" href="browser/aboutLogins.ftl">
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/reflected-fluent-element.js"></script>
+    <script defer="defer" src="chrome://browser/content/aboutlogins/components/copy-to-clipboard-button.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
@@ -31,6 +32,10 @@
     <login-item data-l10n-id="login-item"
                 data-l10n-args='{"timeCreated": 0, "timeChanged": 0, "timeUsed": 0}'
                 data-l10n-attrs="cancel-button,
+                                 copy-password-button,
+                                 copy-username-button,
+                                 copied-password-button,
+                                 copied-username-button,
                                  delete-button,
                                  edit-button,
                                  hostname-label,
@@ -81,12 +86,14 @@
           <span class="username-label field-label"></span>
           <modal-input name="username"/>
         </label>
+        <copy-to-clipboard-button class="copy-username-button"></copy-to-clipboard-button>
       </div>
       <div class="detail-row">
         <label>
           <span class="password-label field-label"></span>
           <modal-input type="password" name="password"/>
         </label>
+        <copy-to-clipboard-button class="copy-password-button"></copy-to-clipboard-button>
       </div>
       <p class="time-created meta-info"></p>
       <p class="time-changed meta-info"></p>
@@ -107,6 +114,15 @@
       <span class="locked-value"></span>
       <input type="text" class="unlocked-value"/>
       <input type="checkbox" class="reveal-checkbox"/>
+    </template>
+
+    <template id="copy-to-clipboard-button-template">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/copy-to-clipboard-button.css">
+      <button class="copy-button">
+        <span class="copied-button-text"></span>
+        <span class="copy-button-text"></span>
+      </button>
     </template>
   </body>
 </html>
