@@ -42,6 +42,7 @@ describe("navigation", () => {
       actions.connect(
         "http://test.com/foo",
         "actor",
+        false,
         false
       )
     );

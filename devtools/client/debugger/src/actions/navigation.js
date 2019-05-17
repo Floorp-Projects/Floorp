@@ -48,14 +48,20 @@ export function willNavigate(event: Object) {
   };
 }
 
-export function connect(url: string, actor: string, canRewind: boolean) {
+export function connect(
+  url: string,
+  actor: string,
+  canRewind: boolean,
+  isWebExtension: boolean
+) {
   return async function({ dispatch }: ThunkArgs) {
     await dispatch(updateWorkers());
     dispatch(
       ({
         type: "CONNECT",
         mainThread: { url, actor, type: -1, name: "" },
-        canRewind
+        canRewind,
+        isWebExtension
       }: Action)
     );
   };
