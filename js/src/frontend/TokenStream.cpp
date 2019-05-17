@@ -639,14 +639,6 @@ TokenStreamAnyChars::internalUpdateLineInfoForEOL(uint32_t lineStartOffset) {
   return srcCoords.add(lineno, linebase);
 }
 
-void TokenStreamAnyChars::undoInternalUpdateLineInfoForEOL() {
-  MOZ_ASSERT(prevLinebase !=
-             size_t(-1));  // we should never get more than one EOL
-  linebase = prevLinebase;
-  prevLinebase = size_t(-1);
-  lineno--;
-}
-
 #ifdef DEBUG
 
 template <>
