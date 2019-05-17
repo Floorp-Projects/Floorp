@@ -318,6 +318,12 @@ class MOZ_STACK_CLASS TokenStreamPosition final {
   Token lookaheadTokens[TokenStreamShared::maxLookahead];
 } JS_HAZ_ROOTED;
 
+// Column numbers *ought* be in terms of counts of code points, but in the past
+// we counted code units.  Set this to 0 to keep returning counts of code units
+// (even for UTF-8, which is clearly wrong, but we don't ship UTF-8 yet so this
+// is fine until we can fix users that depend on code-unit counting).
+#define JS_COLUMN_DIMENSION_IS_CODE_POINTS() 0
+
 class TokenStreamAnyChars : public TokenStreamShared {
  public:
   TokenStreamAnyChars(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
@@ -1604,12 +1610,6 @@ class TokenStart {
 
   uint32_t offset() const { return startOffset_; }
 };
-
-// Column numbers *ought* be in terms of counts of code points, but in the past
-// we counted code units.  Set this to 0 to keep returning counts of code units
-// (even for UTF-8, which is clearly wrong, but we don't ship UTF-8 yet so this
-// is fine until we can fix users that depend on code-unit counting).
-#define JS_COLUMN_DIMENSION_IS_CODE_POINTS 0
 
 template <typename Unit, class AnyCharsAccess>
 class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
