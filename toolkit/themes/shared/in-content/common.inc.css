@@ -72,12 +72,23 @@
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
   --grey-90-a50: rgba(12, 12, 13, 0.5);
+  --green-50: #30e60b;
+  --green-60: #12bc00;
+  --green-70: #058b00;
+  --green-80: #006504;
+  --green-90: #003706;
   --purple-70: #6200a4;
   --purple-70-a40: rgba(98, 0, 164, 0.4);
   --red-50: #ff0039;
   --red-50-a30: rgba(255, 0, 57, 0.3);
   --red-60: #d70022;
+  --red-70: #a4000f;
+  --red-80: #5a0002;
+  --red-90: #3e0200;
   --yellow-50: #ffe900;
+  --yellow-60: #d7b600;
+  --yellow-70: #a47f00;
+  --yellow-80: #715100;
   --yellow-90: #3e2800;
 
   --shadow-10: 0 1px 4px var(--grey-90-a10);
