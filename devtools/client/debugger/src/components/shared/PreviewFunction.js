@@ -17,7 +17,7 @@ type FunctionType = {
   name: string,
   displayName?: string,
   userDisplayName?: string,
-  parameterNames?: string[]
+  parameterNames?: string[],
 };
 
 type Props = { func: FunctionType };
@@ -31,11 +31,13 @@ export default class PreviewFunction extends Component<Props> {
 
   renderParams(func: FunctionType) {
     const { parameterNames = [] } = func;
-    const params = parameterNames.filter(i => i).map(param => (
-      <span className="param" key={param}>
-        {param}
-      </span>
-    ));
+    const params = parameterNames
+      .filter(i => i)
+      .map(param => (
+        <span className="param" key={param}>
+          {param}
+        </span>
+      ));
 
     const commas = times(params.length - 1).map((_, i) => (
       <span className="delimiter" key={i}>

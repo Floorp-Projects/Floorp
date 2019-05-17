@@ -17,14 +17,14 @@ import {
   getBreakpointAtLocation,
   getConditionalPanelLocation,
   getBreakpointsForSource,
-  getBreakpointsAtLine
+  getBreakpointsAtLine,
 } from "../../selectors";
 import { createXHRBreakpoint } from "../../utils/breakpoint";
 import {
   addBreakpoint,
   removeBreakpoint,
   enableBreakpoint,
-  disableBreakpoint
+  disableBreakpoint,
 } from "./modify";
 import remapLocations from "./remapLocations";
 import { closeConditionalPanel } from "../ui";
@@ -37,7 +37,7 @@ import type {
   Source,
   SourceLocation,
   XHRBreakpoint,
-  Context
+  Context,
 } from "../../types";
 
 export * from "./breakpointPositions";
@@ -119,11 +119,10 @@ export function toggleBreakpoints(
   breakpoints: Breakpoint[]
 ) {
   return async ({ dispatch }: ThunkArgs) => {
-    const promises = breakpoints.map(
-      breakpoint =>
-        shouldDisableBreakpoints
-          ? dispatch(disableBreakpoint(cx, breakpoint))
-          : dispatch(enableBreakpoint(cx, breakpoint))
+    const promises = breakpoints.map(breakpoint =>
+      shouldDisableBreakpoints
+        ? dispatch(disableBreakpoint(cx, breakpoint))
+        : dispatch(enableBreakpoint(cx, breakpoint))
     );
 
     await Promise.all(promises);
@@ -231,7 +230,7 @@ export function toggleBreakpointAtLine(cx: Context, line: number) {
       addBreakpoint(cx, {
         sourceId: selectedSource.id,
         sourceUrl: selectedSource.url,
-        line: line
+        line: line,
       })
     );
   };
@@ -254,7 +253,7 @@ export function addBreakpointAtLine(
       sourceId: source.id,
       sourceUrl: source.url,
       column: undefined,
-      line
+      line,
     };
 
     const options = {};
@@ -326,14 +325,14 @@ export function enableXHRBreakpoint(index: number, bp?: XHRBreakpoint) {
     const breakpoint = bp || xhrBreakpoints[index];
     const enabledBreakpoint = {
       ...breakpoint,
-      disabled: false
+      disabled: false,
     };
 
     return dispatch({
       type: "ENABLE_XHR_BREAKPOINT",
       breakpoint: enabledBreakpoint,
       index,
-      [PROMISE]: client.setXHRBreakpoint(breakpoint.path, breakpoint.method)
+      [PROMISE]: client.setXHRBreakpoint(breakpoint.path, breakpoint.method),
     });
   };
 }
@@ -344,14 +343,14 @@ export function disableXHRBreakpoint(index: number, bp?: XHRBreakpoint) {
     const breakpoint = bp || xhrBreakpoints[index];
     const disabledBreakpoint = {
       ...breakpoint,
-      disabled: true
+      disabled: true,
     };
 
     return dispatch({
       type: "DISABLE_XHR_BREAKPOINT",
       breakpoint: disabledBreakpoint,
       index,
-      [PROMISE]: client.removeXHRBreakpoint(breakpoint.path, breakpoint.method)
+      [PROMISE]: client.removeXHRBreakpoint(breakpoint.path, breakpoint.method),
     });
   };
 }
@@ -369,7 +368,7 @@ export function updateXHRBreakpoint(
       ...breakpoint,
       path,
       method,
-      text: L10N.getFormatStr("xhrBreakpoints.item.label", path)
+      text: L10N.getFormatStr("xhrBreakpoints.item.label", path),
     };
 
     return dispatch({
@@ -378,8 +377,8 @@ export function updateXHRBreakpoint(
       index,
       [PROMISE]: Promise.all([
         client.removeXHRBreakpoint(breakpoint.path, breakpoint.method),
-        client.setXHRBreakpoint(path, method)
-      ])
+        client.setXHRBreakpoint(path, method),
+      ]),
     });
   };
 }
@@ -407,7 +406,7 @@ export function setXHRBreakpoint(path: string, method: string) {
     return dispatch({
       type: "SET_XHR_BREAKPOINT",
       breakpoint,
-      [PROMISE]: client.setXHRBreakpoint(path, method)
+      [PROMISE]: client.setXHRBreakpoint(path, method),
     });
   };
 }
@@ -420,7 +419,7 @@ export function removeXHRBreakpoint(index: number) {
       type: "REMOVE_XHR_BREAKPOINT",
       breakpoint,
       index,
-      [PROMISE]: client.removeXHRBreakpoint(breakpoint.path, breakpoint.method)
+      [PROMISE]: client.removeXHRBreakpoint(breakpoint.path, breakpoint.method),
     });
   };
 }

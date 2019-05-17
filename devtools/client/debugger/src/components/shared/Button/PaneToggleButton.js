@@ -15,13 +15,13 @@ type Props = {
   collapsed: boolean,
   handleClick: (Position, boolean) => void,
   horizontal: boolean,
-  position: Position
+  position: Position,
 };
 
 class PaneToggleButton extends PureComponent<Props> {
   static defaultProps = {
     horizontal: false,
-    position: "start"
+    position: "start",
   };
 
   label(position: Position, collapsed: boolean) {
@@ -42,7 +42,7 @@ class PaneToggleButton extends PureComponent<Props> {
       <CommandBarButton
         className={classnames("toggle-button", position, {
           collapsed,
-          vertical: !horizontal
+          vertical: !horizontal,
         })}
         onClick={() => handleClick(position, !collapsed)}
         title={this.label(position, collapsed)}

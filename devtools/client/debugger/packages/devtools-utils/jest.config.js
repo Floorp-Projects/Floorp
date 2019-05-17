@@ -12,5 +12,5 @@ module.exports = {
   testURL: "http://localhost/",
   transformIgnorePatterns: [],
   setupFiles: [],
-  moduleNameMapper: {}
+  moduleNameMapper: {},
 };

@@ -16,5 +16,5 @@ function getCurrentInputValue(state) {
 
 module.exports = {
   getCurrentInputValue,
-  getExpressions
+  getExpressions,
 };

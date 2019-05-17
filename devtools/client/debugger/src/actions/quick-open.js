@@ -9,7 +9,7 @@ import type { QuickOpenAction } from "./types";
 export function setQuickOpenQuery(query: string): QuickOpenAction {
   return {
     type: "SET_QUICK_OPEN_QUERY",
-    query
+    query,
   };
 }
 

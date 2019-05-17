@@ -11,13 +11,13 @@ import Reps from "devtools-reps";
 const {
   REPS: { Rep },
   MODE,
-  objectInspector
+  objectInspector,
 } = Reps;
 
 const { ObjectInspector, utils } = objectInspector;
 
 const {
-  node: { nodeIsPrimitive, nodeIsFunction, nodeIsObject }
+  node: { nodeIsPrimitive, nodeIsFunction, nodeIsObject },
 } = utils;
 
 import actions from "../../../actions";
@@ -31,11 +31,11 @@ import "./Popup.css";
 
 import type { Coords } from "../../shared/Popover";
 import type { ThreadContext } from "../../../types";
-import type { PreviewValue } from "../../../reducers/types";
+import type { Preview } from "../../../reducers/types";
 
 type Props = {
   cx: ThreadContext,
-  preview: PreviewValue,
+  preview: Preview,
   editor: any,
   editorRef: ?HTMLDivElement,
   addExpression: typeof actions.addExpression,
@@ -44,11 +44,11 @@ type Props = {
   openElementInInspector: typeof actions.openElementInInspectorCommand,
   highlightDomElement: typeof actions.highlightDomElement,
   unHighlightDomElement: typeof actions.unHighlightDomElement,
-  clearPreview: typeof actions.clearPreview
+  clearPreview: typeof actions.clearPreview,
 };
 
 type State = {
-  top: number
+  top: number,
 };
 
 export class Popup extends Component<Props, State> {
@@ -60,7 +60,7 @@ export class Popup extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      top: 0
+      top: 0,
     };
   }
 
@@ -109,7 +109,7 @@ export class Popup extends Component<Props, State> {
     const {
       cx,
       selectSourceURL,
-      preview: { result }
+      preview: { result },
     } = this.props;
 
     return (
@@ -118,7 +118,7 @@ export class Popup extends Component<Props, State> {
         ref={a => (this.popup = a)}
         onClick={() =>
           selectSourceURL(cx, result.location.url, {
-            line: result.location.line
+            line: result.location.line,
           })
         }
       >
@@ -133,7 +133,7 @@ export class Popup extends Component<Props, State> {
       openLink,
       openElementInInspector,
       highlightDomElement,
-      unHighlightDomElement
+      unHighlightDomElement,
     } = this.props;
 
     return (
@@ -161,14 +161,14 @@ export class Popup extends Component<Props, State> {
   renderSimplePreview() {
     const {
       openLink,
-      preview: { result }
+      preview: { result },
     } = this.props;
     return (
       <div className="preview-popup" ref={a => (this.popup = a)}>
         {Rep({
           object: result,
           mode: MODE.LONG,
-          openLink
+          openLink,
         })}
       </div>
     );
@@ -180,7 +180,7 @@ export class Popup extends Component<Props, State> {
     // these falsy simple typed value because we want to
     // do `renderSimplePreview` on these values below.
     const {
-      preview: { root }
+      preview: { root },
     } = this.props;
 
     if (nodeIsFunction(root)) {
@@ -196,7 +196,7 @@ export class Popup extends Component<Props, State> {
 
   getPreviewType() {
     const {
-      preview: { root }
+      preview: { root },
     } = this.props;
     if (nodeIsPrimitive(root) || nodeIsFunction(root)) {
       return "tooltip";
@@ -212,7 +212,7 @@ export class Popup extends Component<Props, State> {
   render() {
     const {
       preview: { cursorPos, result },
-      editorRef
+      editorRef,
     } = this.props;
     const type = this.getPreviewType();
 
@@ -235,7 +235,7 @@ export class Popup extends Component<Props, State> {
 
 const mapStateToProps = state => ({
   cx: getThreadContext(state),
-  preview: getPreview(state)
+  preview: getPreview(state),
 });
 
 const {
@@ -245,7 +245,7 @@ const {
   openElementInInspectorCommand,
   highlightDomElement,
   unHighlightDomElement,
-  clearPreview
+  clearPreview,
 } = actions;
 
 const mapDispatchToProps = {
@@ -255,7 +255,7 @@ const mapDispatchToProps = {
   openElementInInspector: openElementInInspectorCommand,
   highlightDomElement,
   unHighlightDomElement,
-  clearPreview
+  clearPreview,
 };
 
 export default connect(

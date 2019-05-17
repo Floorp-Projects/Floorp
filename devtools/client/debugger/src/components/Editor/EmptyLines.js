@@ -13,7 +13,7 @@ import { fromEditorLine } from "../../utils/editor";
 type Props = {
   selectedSource: Source,
   editor: Object,
-  breakableLines: Set<number>
+  breakableLines: Set<number>,
 };
 
 class EmptyLines extends Component<Props> {
@@ -68,7 +68,7 @@ const mapStateToProps = state => {
 
   return {
     selectedSource,
-    breakableLines
+    breakableLines,
   };
 };
 

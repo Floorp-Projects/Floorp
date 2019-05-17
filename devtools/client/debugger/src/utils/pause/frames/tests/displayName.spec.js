@@ -7,7 +7,7 @@
 import {
   formatCopyName,
   formatDisplayName,
-  simplifyDisplayName
+  simplifyDisplayName,
 } from "../displayName";
 
 import { makeMockFrame, makeMockSource } from "../../../test-mockup";
@@ -26,7 +26,7 @@ describe("formatting display names", () => {
     const source = makeMockSource("assets/backbone.js");
     const frame = {
       ...makeMockFrame(undefined, source, undefined, undefined, "extend/child"),
-      library: "Backbone"
+      library: "Backbone",
     };
 
     expect(formatDisplayName(frame, undefined, L10N)).toEqual("Create Class");
@@ -65,7 +65,7 @@ describe("formatting display names", () => {
     const frame = {
       ...makeMockFrame(undefined, source),
       originalDisplayName: "originalFn",
-      displayName: "fn"
+      displayName: "fn",
     };
 
     expect(formatDisplayName(frame, undefined, L10N)).toEqual("originalFn");
@@ -100,24 +100,24 @@ describe("simplifying display names", () => {
       ["fromYUI._attach", "_attach"],
       ["Y.ClassNameManager</getClassName", "getClassName"],
       ["orion.textview.TextView</addHandler", "addHandler"],
-      ["this.eventPool_.createObject", "createObject"]
+      ["this.eventPool_.createObject", "createObject"],
     ],
 
     arrayProperty: [
       ["this.eventPool_[createObject]", "createObject"],
       ["jQuery.each(^)/jQuery.fn[o]", "o"],
       ["viewport[get+D]", "get+D"],
-      ["arr[0]", "0"]
+      ["arr[0]", "0"],
     ],
 
     functionProperty: [
       ["fromYUI._attach/<.", "_attach"],
       ["Y.ClassNameManager<", "ClassNameManager"],
       ["fromExtJS.setVisible/cb<", "cb"],
-      ["fromDojo.registerWin/<", "registerWin"]
+      ["fromDojo.registerWin/<", "registerWin"],
     ],
 
-    annonymousProperty: [["jQuery.each(^)", "each"]]
+    annonymousProperty: [["jQuery.each(^)", "each"]],
   };
 
   Object.keys(cases).forEach(type => {

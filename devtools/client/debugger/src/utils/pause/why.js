@@ -24,7 +24,7 @@ const reasons = {
   promiseRejection: "whyPaused.promiseRejection",
   assert: "whyPaused.assert",
   debugCommand: "whyPaused.debugCommand",
-  other: "whyPaused.other"
+  other: "whyPaused.other",
 };
 
 export function getPauseReason(why?: Why): string | null {

@@ -26,7 +26,7 @@ export function getASTLocation(
     return {
       name: scope.name,
       offset: { line, column: undefined },
-      index: scope.index
+      index: scope.index,
     };
   }
   return { name: undefined, offset: location, index: 0 };

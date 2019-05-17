@@ -17,7 +17,7 @@ describe("handleError()", () => {
   it("logs error text with error value", () => {
     handleError(testErrorObject);
 
-    expect(console.log).toBeCalledWith(testErrorText, testErrorObject);
+    expect(console.log).toHaveBeenCalledWith(testErrorText, testErrorObject);
   });
 });
 
@@ -39,7 +39,7 @@ describe("promisify()", () => {
   it("applies promisified method", () => {
     testPromise = promisify(testContext, testMethod, testArgs);
 
-    expect(testMethod).toBeCalledWith(testArgs, expect.anything());
+    expect(testMethod).toHaveBeenCalledWith(testArgs, expect.anything());
   });
 });
 
@@ -81,6 +81,9 @@ describe("waitForMs()", () => {
   it("calls setTimeout() on the resolve of the Promise", () => {
     testPromise = waitForMs(testMilliseconds);
 
-    expect(setTimeout).toBeCalledWith(expect.anything(), testMilliseconds);
+    expect(setTimeout).toHaveBeenCalledWith(
+      expect.anything(),
+      testMilliseconds
+    );
   });
 });

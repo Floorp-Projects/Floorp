@@ -4,7 +4,7 @@
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const {
-  gDevToolsBrowser
+  gDevToolsBrowser,
 } = require("devtools/client/framework/devtools-browser");
 loader.lazyRequireGetter(
   this,
@@ -28,16 +28,16 @@ DebuggerPanel.prototype = {
       actions,
       store,
       selectors,
-      client
+      client,
     } = await this.panelWin.Debugger.bootstrap({
       threadClient: this.toolbox.threadClient,
       tabTarget: this.toolbox.target,
       debuggerClient: this.toolbox.target.client,
       workers: {
         sourceMaps: this.toolbox.sourceMapService,
-        evaluationsParser: this.toolbox.parserService
+        evaluationsParser: this.toolbox.parserService,
       },
-      panel: this
+      panel: this,
     });
 
     this._actions = actions;
@@ -63,7 +63,7 @@ DebuggerPanel.prototype = {
       store: this._store,
       selectors: this._selectors,
       actions: this._actions,
-      client: this._client
+      client: this._client,
     };
   },
 
@@ -91,12 +91,12 @@ DebuggerPanel.prototype = {
     const onGripNodeToFront = this.toolbox.walker.gripToNodeFront(grip);
     const [front, inspector] = await Promise.all([
       onGripNodeToFront,
-      onSelectInspector
+      onSelectInspector,
     ]);
 
     const onInspectorUpdated = inspector.once("inspector-updated");
     const onNodeFrontSet = this.toolbox.selection.setNodeFront(front, {
-      reason: "debugger"
+      reason: "debugger",
     });
 
     return Promise.all([onNodeFrontSet, onInspectorUpdated]);
@@ -125,7 +125,7 @@ DebuggerPanel.prototype = {
     if (!frames) {
       return {
         frames: [],
-        selected: -1
+        selected: -1,
       };
     }
 
@@ -180,7 +180,7 @@ DebuggerPanel.prototype = {
   destroy: function() {
     this.panelWin.Debugger.destroy();
     this.emit("destroyed");
-  }
+  },
 };
 
 exports.DebuggerPanel = DebuggerPanel;

@@ -20,7 +20,7 @@ describe("testInfinity", () => {
   it("Infinity rep has expected text content for Infinity", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
     expect(renderedComponent.text()).toEqual("Infinity");
@@ -37,7 +37,7 @@ describe("testNegativeInfinity", () => {
   it("Infinity rep has expected text content for negative Infinity", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
     expect(renderedComponent.text()).toEqual("-Infinity");
