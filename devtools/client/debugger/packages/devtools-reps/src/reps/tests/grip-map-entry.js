@@ -21,7 +21,7 @@ const renderRep = (object, mode, props) => {
     GripMapEntry.rep({
       object,
       mode,
-      ...props
+      ...props,
     })
   );
 };
@@ -131,7 +131,7 @@ describe("GripMapEntry - complex", () => {
     let renderedComponent = renderRep(entry, MODE.TINY, {
       onInspectIconClick,
       onDOMNodeMouseOut,
-      onDOMNodeMouseOver
+      onDOMNodeMouseOver,
     });
     expect(renderRep(entry, MODE.TINY).text()).toEqual(
       "A → input#newtab-customize-button.bar.baz"
@@ -156,7 +156,7 @@ describe("GripMapEntry - complex", () => {
     renderedComponent = renderRep(entry, MODE.TINY, {
       onInspectIconClick,
       onDOMNodeMouseOut,
-      onDOMNodeMouseOver
+      onDOMNodeMouseOver,
     });
     expect(renderRep(entry, MODE.TINY).text()).toEqual(
       'input#newtab-customize-button.bar.baz → "A"'

@@ -27,5 +27,5 @@ async function getOriginalStackFrames(
 }
 
 module.exports = {
-  getOriginalStackFrames
+  getOriginalStackFrames,
 };

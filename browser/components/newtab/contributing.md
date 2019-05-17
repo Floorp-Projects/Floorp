@@ -59,6 +59,22 @@ All code is added using a pull request against the `master` branch of our repo. 
 - if you can pick a module owner to be your reviewer by including `r? @username` in the comment (if not, don't worry, we will assign a reviewer)
 - make sure your PR will merge gracefully with `master` at the time you create the PR, and that your commit history is 'clean'
 
+### Setting up pre-push hooks
+
+If you contribute often and would like to set up a pre-push hook to always run `npm lint` before you push to Github,
+you can run the following from the root of the activity-stream directory:
+
+```
+cp hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+```
+
+Your hook should now run whenever you run `git push`. To skip it, use the `--no-verify` option:
+
+```
+git push --no-verify
+```
+
+
 ## Code Reviews ##
 
 You have created a PR and submitted it to the repo, and now are waiting patiently for you code review feedback.  One of the projects

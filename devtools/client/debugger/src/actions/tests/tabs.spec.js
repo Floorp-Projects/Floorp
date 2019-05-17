@@ -8,7 +8,7 @@ import {
   actions,
   selectors,
   createStore,
-  makeSource
+  makeSource,
 } from "../../utils/test-head";
 const { getSelectedSource, getSourceTabs } = selectors;
 
@@ -87,7 +87,7 @@ describe("closing tabs", () => {
 
     const tabs = [
       "http://localhost:8000/examples/foo.js",
-      "http://localhost:8000/examples/bar.js"
+      "http://localhost:8000/examples/bar.js",
     ];
     dispatch(actions.closeTabs(cx, tabs));
 
@@ -109,7 +109,7 @@ describe("closing tabs", () => {
     );
     const tabs = [
       "http://localhost:8000/examples/bar.js",
-      "http://localhost:8000/examples/bazz.js"
+      "http://localhost:8000/examples/bazz.js",
     ];
     await dispatch(actions.closeTabs(cx, tabs));
 
@@ -128,7 +128,7 @@ describe("closing tabs", () => {
     await dispatch(
       actions.closeTabs(cx, [
         "http://localhost:8000/examples/foo.js",
-        "http://localhost:8000/examples/bar.js"
+        "http://localhost:8000/examples/bar.js",
       ])
     );
 

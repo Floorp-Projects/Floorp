@@ -8,7 +8,7 @@ export {
   createInitial,
   insertResources,
   removeResources,
-  updateResources
+  updateResources,
 } from "./core";
 export type {
   Id,
@@ -20,14 +20,14 @@ export type {
   // Disabled pending eslint-plugin-import bug #1345
   // eslint-disable-next-line import/named
   ResourceIdentity,
-  ResourceValues
+  ResourceValues,
 } from "./core";
 
 export {
   hasResource,
   getResourceIds,
   getResource,
-  getMappedResource
+  getMappedResource,
 } from "./selector";
 export type { ResourceMap } from "./selector";
 
@@ -39,7 +39,7 @@ export type {
   QueryMapWithArgs,
   QueryFilter,
   QueryReduce,
-  QueryResultCompare
+  QueryResultCompare,
 } from "./base-query";
 
 export {
@@ -51,7 +51,7 @@ export {
   makeLoadQuery,
   makeFilterQuery,
   makeReduceQuery,
-  makeReduceAllQuery
+  makeReduceAllQuery,
 } from "./query";
 export type {
   WeakQuery,
@@ -61,13 +61,13 @@ export type {
   LoadQuery,
   FilterQuery,
   ReduceQuery,
-  ReduceAllQuery
+  ReduceAllQuery,
 } from "./query";
 
 export {
   queryCacheWeak,
   queryCacheShallow,
-  queryCacheStrict
+  queryCacheStrict,
 } from "./query-cache";
 export type { WeakArgsBound, ShallowArgsBound } from "./query-cache";
 

@@ -20,7 +20,7 @@ function createMockDocument(clear) {
     addLineClass: jest.fn(),
     removeLineClass: jest.fn(),
     markText: jest.fn(() => ({ clear })),
-    getLine: line => ""
+    getLine: line => "",
   };
 
   return doc;
@@ -30,14 +30,14 @@ function generateDefaults(editor, overrides) {
   return {
     editor,
     pauseInfo: {
-      why: { type: "breakpoint" }
+      why: { type: "breakpoint" },
     },
     frame: null,
     source: ({
       source: createSourceObject("foo"),
-      content: null
+      content: null,
     }: SourceWithContent),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -46,8 +46,8 @@ function createFrame(line) {
     location: {
       sourceId: "foo",
       line,
-      column: 2
-    }
+      column: 2,
+    },
   };
 }
 
@@ -61,7 +61,7 @@ function render(overrides = {}) {
 
   // $FlowIgnore
   const component = shallow(<DebugLine.WrappedComponent {...props} />, {
-    lifecycleExperimental: true
+    lifecycleExperimental: true,
   });
   return { component, props, clear, editor, doc };
 }
@@ -75,9 +75,9 @@ describe("DebugLine Component", () => {
           content: asyncValue.fulfilled({
             type: "text",
             value: "",
-            contentType: undefined
-          })
-        }
+            contentType: undefined,
+          }),
+        },
       });
       const line = 2;
       const frame = createFrame(line);
@@ -86,7 +86,7 @@ describe("DebugLine Component", () => {
 
       expect(doc.removeLineClass.mock.calls).toEqual([]);
       expect(doc.addLineClass.mock.calls).toEqual([
-        [toEditorLine("foo", line), "line", "new-debug-line"]
+        [toEditorLine("foo", line), "line", "new-debug-line"],
       ]);
     });
 
@@ -98,9 +98,9 @@ describe("DebugLine Component", () => {
             content: asyncValue.fulfilled({
               type: "text",
               value: "",
-              contentType: undefined
-            })
-          }
+              contentType: undefined,
+            }),
+          },
         });
 
         component.instance().debugExpression = { clear: jest.fn() };
@@ -110,29 +110,29 @@ describe("DebugLine Component", () => {
         component.setProps({ ...props, frame: createFrame(firstLine) });
         component.setProps({
           ...props,
-          frame: createFrame(secondLine)
+          frame: createFrame(secondLine),
         });
 
         expect(doc.removeLineClass.mock.calls).toEqual([
-          [toEditorLine("foo", firstLine), "line", "new-debug-line"]
+          [toEditorLine("foo", firstLine), "line", "new-debug-line"],
         ]);
 
         expect(doc.addLineClass.mock.calls).toEqual([
           [toEditorLine("foo", firstLine), "line", "new-debug-line"],
-          [toEditorLine("foo", secondLine), "line", "new-debug-line"]
+          [toEditorLine("foo", secondLine), "line", "new-debug-line"],
         ]);
 
         expect(doc.markText.mock.calls).toEqual([
           [
             { ch: 2, line: toEditorLine("foo", firstLine) },
             { ch: null, line: toEditorLine("foo", firstLine) },
-            { className: "debug-expression" }
+            { className: "debug-expression" },
           ],
           [
             { ch: 2, line: toEditorLine("foo", secondLine) },
             { ch: null, line: toEditorLine("foo", secondLine) },
-            { className: "debug-expression" }
-          ]
+            { className: "debug-expression" },
+          ],
         ]);
 
         expect(clear.mock.calls).toEqual([[]]);

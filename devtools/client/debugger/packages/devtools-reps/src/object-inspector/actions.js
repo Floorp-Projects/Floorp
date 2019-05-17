@@ -13,7 +13,7 @@ type Dispatch = ReduxAction => void;
 
 type ThunkArg = {
   getState: () => {},
-  dispatch: Dispatch
+  dispatch: Dispatch,
 };
 
 /**
@@ -30,7 +30,7 @@ function nodeExpand(node: Node, actor) {
 function nodeCollapse(node: Node) {
   return {
     type: "NODE_COLLAPSE",
-    data: { node }
+    data: { node },
   };
 }
 
@@ -69,7 +69,7 @@ function nodePropertiesLoaded(
 ) {
   return {
     type: "NODE_PROPERTIES_LOADED",
-    data: { node, actor, properties }
+    data: { node, actor, properties },
   };
 }
 
@@ -92,7 +92,7 @@ function rootsChanged(props: Props) {
     releaseActors(getState(), client);
     dispatch({
       type: "ROOTS_CHANGED",
-      data: props
+      data: props,
     });
   };
 }
@@ -121,8 +121,8 @@ function invokeGetter(
         type: "GETTER_INVOKED",
         data: {
           node,
-          result
-        }
+          result,
+        },
       });
     } catch (e) {
       console.error(e);
@@ -137,5 +137,5 @@ module.exports = {
   nodeCollapse,
   nodeLoadProperties,
   nodePropertiesLoaded,
-  rootsChanged
+  rootsChanged,
 };

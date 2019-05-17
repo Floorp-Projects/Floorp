@@ -446,19 +446,15 @@ def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     def filter(task):
-        platform = task.attributes.get('build_platform')
-        if not filter_for_project(task, parameters):
-            return False
-        if platform in ('android-aarch64-nightly',
-                        'android-api-16-nightly',
-                        'android-nightly',
-                        'android-x86-nightly',
-                        'android-x86_64-nightly',
-                        ):
-            if not task.attributes.get('nightly', False):
-                return False
-            return filter_for_project(task, parameters)
-    filter
+        # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview to be
+        # uploaded
+        return task.label in (
+            'beetmover-geckoview-android-aarch64-nightly/opt',
+            'beetmover-geckoview-android-api-16-nightly/opt',
+            'beetmover-geckoview-android-x86-nightly/opt',
+            'beetmover-geckoview-android-x86_64-nightly/opt',
+        )
+
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 

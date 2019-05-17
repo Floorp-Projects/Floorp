@@ -62,5 +62,5 @@ function waitUntilService({ dispatch, getState }) {
 
 module.exports = {
   WAIT_UNTIL_TYPE,
-  waitUntilService
+  waitUntilService,
 };

@@ -16,7 +16,7 @@ import {
   getCanRewind,
   getSkipPausing,
   getCurrentThread,
-  getThreadContext
+  getThreadContext,
 } from "../../selectors";
 import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions";
@@ -38,21 +38,21 @@ const KEYS = {
     resume: "F8",
     stepOver: "F10",
     stepIn: "F11",
-    stepOut: "Shift+F11"
+    stepOut: "Shift+F11",
   },
   Darwin: {
     resume: "Cmd+\\",
     stepOver: "Cmd+'",
     stepIn: "Cmd+;",
     stepOut: "Cmd+Shift+:",
-    stepOutDisplay: "Cmd+Shift+;"
+    stepOutDisplay: "Cmd+Shift+;",
   },
   Linux: {
     resume: "F8",
     stepOver: "F10",
     stepIn: "F11",
-    stepOut: "Shift+F11"
-  }
+    stepOut: "Shift+F11",
+  },
 };
 
 function getKey(action) {
@@ -89,7 +89,7 @@ type Props = {
   rewind: typeof actions.rewind,
   reverseStepOver: typeof actions.reverseStepOver,
   pauseOnExceptions: typeof actions.pauseOnExceptions,
-  toggleSkipPausing: typeof actions.toggleSkipPausing
+  toggleSkipPausing: typeof actions.toggleSkipPausing,
 };
 
 class CommandBar extends Component<Props> {
@@ -162,7 +162,7 @@ class CommandBar extends Component<Props> {
         className,
         L10N.getFormatStr("stepOutTooltip", formatKey("stepOut")),
         isDisabled
-      )
+      ),
     ];
   }
 
@@ -259,7 +259,7 @@ class CommandBar extends Component<Props> {
         "active",
         L10N.getFormatStr("stepInTooltip", formatKey("stepIn")),
         isDisabled
-      )
+      ),
     ];
   }
 
@@ -276,7 +276,7 @@ class CommandBar extends Component<Props> {
           "command-bar-button",
           "command-bar-skip-pausing",
           {
-            active: skipPausing
+            active: skipPausing,
           }
         )}
         title={
@@ -295,7 +295,7 @@ class CommandBar extends Component<Props> {
     return (
       <div
         className={classnames("command-bar", {
-          vertical: !this.props.horizontal
+          vertical: !this.props.horizontal,
         })}
       >
         {this.renderPauseButton()}
@@ -310,14 +310,14 @@ class CommandBar extends Component<Props> {
 }
 
 CommandBar.contextTypes = {
-  shortcuts: PropTypes.object
+  shortcuts: PropTypes.object,
 };
 
 const mapStateToProps = state => ({
   cx: getThreadContext(state),
   isWaitingOnBreak: getIsWaitingOnBreak(state, getCurrentThread(state)),
   canRewind: getCanRewind(state),
-  skipPausing: getSkipPausing(state)
+  skipPausing: getSkipPausing(state),
 });
 
 export default connect(
@@ -331,6 +331,6 @@ export default connect(
     rewind: actions.rewind,
     reverseStepOver: actions.reverseStepOver,
     pauseOnExceptions: actions.pauseOnExceptions,
-    toggleSkipPausing: actions.toggleSkipPausing
+    toggleSkipPausing: actions.toggleSkipPausing,
   }
 )(CommandBar);

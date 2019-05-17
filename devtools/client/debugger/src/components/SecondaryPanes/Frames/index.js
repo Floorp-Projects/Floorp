@@ -22,7 +22,7 @@ import {
   getSelectedFrame,
   getCallStackFrames,
   getCurrentThread,
-  getThreadContext
+  getThreadContext,
 } from "../../../selectors";
 
 import "./Frames.css";
@@ -41,11 +41,11 @@ type Props = {
   disableContextMenu: boolean,
   displayFullUrl: boolean,
   getFrameTitle?: string => string,
-  selectable?: boolean
+  selectable?: boolean,
 };
 
 type State = {
-  showAllFrames: boolean
+  showAllFrames: boolean,
 };
 
 class Frames extends Component<Props, State> {
@@ -60,7 +60,7 @@ class Frames extends Component<Props, State> {
     super(props);
 
     this.state = {
-      showAllFrames: !!props.disableFrameTruncate
+      showAllFrames: !!props.disableFrameTruncate,
     };
   }
 
@@ -77,7 +77,7 @@ class Frames extends Component<Props, State> {
 
   toggleFramesDisplay = (): void => {
     this.setState(prevState => ({
-      showAllFrames: !prevState.showAllFrames
+      showAllFrames: !prevState.showAllFrames,
     }));
   };
 
@@ -120,7 +120,7 @@ class Frames extends Component<Props, State> {
       displayFullUrl,
       getFrameTitle,
       disableContextMenu,
-      selectable = false
+      selectable = false,
     } = this.props;
 
     const framesOrGroups = this.truncateFrames(this.collapseFrames(frames));
@@ -131,41 +131,40 @@ class Frames extends Component<Props, State> {
     // places where we don't want to have those new lines.
     return (
       <div role="list">
-        {framesOrGroups.map(
-          (frameOrGroup: FrameOrGroup) =>
-            frameOrGroup.id ? (
-              <FrameComponent
-                cx={cx}
-                frame={(frameOrGroup: any)}
-                toggleFrameworkGrouping={this.toggleFrameworkGrouping}
-                copyStackTrace={this.copyStackTrace}
-                frameworkGroupingOn={frameworkGroupingOn}
-                selectFrame={selectFrame}
-                selectedFrame={selectedFrame}
-                toggleBlackBox={toggleBlackBox}
-                key={String(frameOrGroup.id)}
-                displayFullUrl={displayFullUrl}
-                getFrameTitle={getFrameTitle}
-                disableContextMenu={disableContextMenu}
-                selectable={selectable}
-              />
-            ) : (
-              <Group
-                cx={cx}
-                group={(frameOrGroup: any)}
-                toggleFrameworkGrouping={this.toggleFrameworkGrouping}
-                copyStackTrace={this.copyStackTrace}
-                frameworkGroupingOn={frameworkGroupingOn}
-                selectFrame={selectFrame}
-                selectedFrame={selectedFrame}
-                toggleBlackBox={toggleBlackBox}
-                key={frameOrGroup[0].id}
-                displayFullUrl={displayFullUrl}
-                getFrameTitle={getFrameTitle}
-                disableContextMenu={disableContextMenu}
-                selectable={selectable}
-              />
-            )
+        {framesOrGroups.map((frameOrGroup: FrameOrGroup) =>
+          frameOrGroup.id ? (
+            <FrameComponent
+              cx={cx}
+              frame={(frameOrGroup: any)}
+              toggleFrameworkGrouping={this.toggleFrameworkGrouping}
+              copyStackTrace={this.copyStackTrace}
+              frameworkGroupingOn={frameworkGroupingOn}
+              selectFrame={selectFrame}
+              selectedFrame={selectedFrame}
+              toggleBlackBox={toggleBlackBox}
+              key={String(frameOrGroup.id)}
+              displayFullUrl={displayFullUrl}
+              getFrameTitle={getFrameTitle}
+              disableContextMenu={disableContextMenu}
+              selectable={selectable}
+            />
+          ) : (
+            <Group
+              cx={cx}
+              group={(frameOrGroup: any)}
+              toggleFrameworkGrouping={this.toggleFrameworkGrouping}
+              copyStackTrace={this.copyStackTrace}
+              frameworkGroupingOn={frameworkGroupingOn}
+              selectFrame={selectFrame}
+              selectedFrame={selectedFrame}
+              toggleBlackBox={toggleBlackBox}
+              key={frameOrGroup[0].id}
+              displayFullUrl={displayFullUrl}
+              getFrameTitle={getFrameTitle}
+              disableContextMenu={disableContextMenu}
+              selectable={selectable}
+            />
+          )
         )}
       </div>
     );
@@ -219,7 +218,7 @@ const mapStateToProps = state => ({
   cx: getThreadContext(state),
   frames: getCallStackFrames(state),
   frameworkGroupingOn: getFrameworkGroupingState(state),
-  selectedFrame: getSelectedFrame(state, getCurrentThread(state))
+  selectedFrame: getSelectedFrame(state, getCurrentThread(state)),
 });
 
 export default connect(
@@ -230,7 +229,7 @@ export default connect(
     toggleFrameworkGrouping: actions.toggleFrameworkGrouping,
     disableFrameTruncate: false,
     disableContextMenu: false,
-    displayFullUrl: false
+    displayFullUrl: false,
   }
 )(Frames);
 

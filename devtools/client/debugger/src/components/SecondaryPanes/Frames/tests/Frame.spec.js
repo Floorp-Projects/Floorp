@@ -10,7 +10,7 @@ import Frame from "../Frame.js";
 import {
   makeMockFrame,
   makeMockSource,
-  mockthreadcx
+  mockthreadcx,
 } from "../../../../utils/test-mockup";
 
 import FrameMenu from "../FrameMenu";
@@ -29,7 +29,7 @@ function frameProperties(frame, selectedFrame: any, overrides = {}) {
     frameworkGroupingOn: false,
     selectable: true,
     toggleFrameworkGrouping: null,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -60,7 +60,7 @@ describe("Frame", () => {
     const source = makeMockSource("backbone.js");
     const backboneFrame = {
       ...makeMockFrame("3", source, undefined, 12, "updateEvents"),
-      library: "backbone"
+      library: "backbone",
     };
 
     const { component } = render({ id: "3" }, backboneFrame);
@@ -94,7 +94,7 @@ describe("Frame", () => {
     const frame = makeMockFrame("1", source, undefined, 10, "renderFoo");
 
     const props = frameProperties(frame, null, {
-      getFrameTitle: x => `Jump to ${x}`
+      getFrameTitle: x => `Jump to ${x}`,
     });
     const component = shallow(<Frame {...props} />);
     expect(component.prop("title")).toBe(`Jump to ${url}:10`);
@@ -104,7 +104,7 @@ describe("Frame", () => {
   describe("mouse events", () => {
     it("does not call FrameMenu when disableContextMenu is true", () => {
       const { component } = render(undefined, undefined, {
-        disableContextMenu: true
+        disableContextMenu: true,
       });
 
       const mockEvent = "mockEvent";
@@ -125,7 +125,7 @@ describe("Frame", () => {
         {
           copyStackTrace,
           toggleFrameworkGrouping,
-          toggleBlackBox
+          toggleBlackBox,
         },
         mockEvent
       );

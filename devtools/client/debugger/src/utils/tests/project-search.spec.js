@@ -16,7 +16,7 @@ describe("project search - highlightMatches", () => {
       matchIndex: 17,
       match: "sentence",
       sourceId: "source",
-      text: "text"
+      text: "text",
     };
 
     expect(highlightMatches(lineMatch)).toMatchSnapshot();

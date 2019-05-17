@@ -15,11 +15,11 @@ describe("CommandBar", () => {
       cx: mockthreadcx,
       breakOnNext: jest.fn(),
       resume: jest.fn(),
-      isPaused: false
+      isPaused: false,
     };
     const mockEvent = {
       preventDefault: jest.fn(),
-      stopPropagation: jest.fn()
+      stopPropagation: jest.fn(),
     };
 
     // The "on" spy will see all the keyboard listeners being registered by
@@ -35,12 +35,14 @@ describe("CommandBar", () => {
     const keyEventHandlers = context.shortcuts.on.mock.calls;
 
     // simulate pressing the F8 key by calling the F8 handlers
-    keyEventHandlers.filter(i => i[0] === "F8").forEach(([_, handler]) => {
-      handler(null, mockEvent);
-    });
+    keyEventHandlers
+      .filter(i => i[0] === "F8")
+      .forEach(([_, handler]) => {
+        handler(null, mockEvent);
+      });
 
-    expect(props.breakOnNext).toBeCalled();
-    expect(props.resume).not.toBeCalled();
+    expect(props.breakOnNext).toHaveBeenCalled();
+    expect(props.resume).not.toHaveBeenCalled();
   });
 
   it("f8 key command calls props.resume when in paused state", () => {
@@ -48,11 +50,11 @@ describe("CommandBar", () => {
       cx: { ...mockthreadcx, isPaused: true },
       breakOnNext: jest.fn(),
       resume: jest.fn(),
-      isPaused: true
+      isPaused: true,
     };
     const mockEvent = {
       preventDefault: jest.fn(),
-      stopPropagation: jest.fn()
+      stopPropagation: jest.fn(),
     };
 
     // The "on" spy will see all the keyboard listeners being registered by
@@ -68,10 +70,12 @@ describe("CommandBar", () => {
     const keyEventHandlers = context.shortcuts.on.mock.calls;
 
     // simulate pressing the F8 key by calling the F8 handlers
-    keyEventHandlers.filter(i => i[0] === "F8").forEach(([_, handler]) => {
-      handler(null, mockEvent);
-    });
-    expect(props.resume).toBeCalled();
-    expect(props.breakOnNext).not.toBeCalled();
+    keyEventHandlers
+      .filter(i => i[0] === "F8")
+      .forEach(([_, handler]) => {
+        handler(null, mockEvent);
+      });
+    expect(props.resume).toHaveBeenCalled();
+    expect(props.breakOnNext).not.toHaveBeenCalled();
   });
 });

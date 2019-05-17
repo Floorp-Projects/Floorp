@@ -25,7 +25,7 @@ type Props = {
   symbols: Symbols,
   // An additional validator for the icon returned
   shouldHide?: Function,
-  framework?: string
+  framework?: string,
 };
 
 class SourceIcon extends PureComponent<Props> {
@@ -46,6 +46,6 @@ class SourceIcon extends PureComponent<Props> {
 export default connect((state, props) => {
   return {
     symbols: getSymbols(state, props.source),
-    framework: getFramework(getTabs(state), props.source.url)
+    framework: getFramework(getTabs(state), props.source.url),
   };
 })(SourceIcon);

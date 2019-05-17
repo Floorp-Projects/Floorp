@@ -90,8 +90,8 @@ describe("Array", () => {
         p1: "s1",
         p2: ["a1", "a2", "a3"],
         p3: "s3",
-        p4: "s4"
-      }
+        p4: "s4",
+      },
     ];
     const renderRep = props => shallow(Rep({ object, noGrip: true, ...props }));
 

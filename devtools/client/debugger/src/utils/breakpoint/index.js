@@ -7,7 +7,7 @@
 import {
   getBreakpoint,
   getSource,
-  getSourceActorsForSource
+  getSourceActorsForSource,
 } from "../../selectors";
 import { isGenerated } from "../source";
 import { sortSelectedLocations } from "../location";
@@ -25,7 +25,7 @@ import type {
   PendingLocation,
   Breakpoint,
   BreakpointLocation,
-  PendingBreakpoint
+  PendingBreakpoint,
 } from "../../types";
 
 import type { State } from "../../reducers/types";
@@ -74,7 +74,7 @@ export function makeBreakpointLocation(
   }
   const breakpointLocation: any = {
     line: location.line,
-    column: location.column
+    column: location.column,
   };
   if (source.url) {
     breakpointLocation.sourceUrl = source.url;
@@ -94,7 +94,7 @@ export function makeSourceActorLocation(
   return {
     sourceActor,
     line: location.line,
-    column: location.column
+    column: location.column,
   };
 }
 
@@ -171,7 +171,7 @@ export function createXHRBreakpoint(
     method,
     disabled: false,
     loading: false,
-    text: L10N.getFormatStr("xhrBreakpoints.item.label", path)
+    text: L10N.getFormatStr("xhrBreakpoints.item.label", path),
   };
 
   return { ...properties, ...overrides };
@@ -193,7 +193,7 @@ export function createPendingBreakpoint(bp: Breakpoint) {
     disabled: bp.disabled,
     location: pendingLocation,
     astLocation: bp.astLocation,
-    generatedLocation: pendingGeneratedLocation
+    generatedLocation: pendingGeneratedLocation,
   };
 }
 

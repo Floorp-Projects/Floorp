@@ -17,8 +17,8 @@ BigInt.propTypes = {
   object: PropTypes.oneOfType([
     PropTypes.object,
     PropTypes.number,
-    PropTypes.bool
-  ]).isRequired
+    PropTypes.bool,
+  ]).isRequired,
 };
 
 function BigInt(props) {
@@ -35,5 +35,5 @@ function supportsObject(object, noGrip = false) {
 
 module.exports = {
   rep: wrapRender(BigInt),
-  supportsObject
+  supportsObject,
 };

@@ -16,7 +16,7 @@ describe("annotateFrames", () => {
       makeMockFrameWithURL("/node_modules/zone/zone.js"),
       makeMockFrameWithURL(
         "https://cdnjs.cloudflare.com/ajax/libs/angular/angular.js"
-      )
+      ),
     ];
     const frames = annotateFrames(callstack);
     expect(frames).toEqual(callstack.map(f => ({ ...f, library: "Angular" })));

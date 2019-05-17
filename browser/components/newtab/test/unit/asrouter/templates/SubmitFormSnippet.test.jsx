@@ -58,9 +58,13 @@ describe("SubmitFormSnippet", () => {
     const wrapper = mountAndCheckProps({scene1_title: "Foo"});
     assert.equal(wrapper.find(".title").text().trim(), "Foo");
   });
-  it("should render .icon", () => {
+  it("should render light-theme .icon", () => {
     const wrapper = mountAndCheckProps({scene1_icon: "data:image/gif;base64,R0lGODl"});
-    assert.equal(wrapper.find(".icon").prop("src"), "data:image/gif;base64,R0lGODl");
+    assert.equal(wrapper.find(".icon-light-theme").prop("src"), "data:image/gif;base64,R0lGODl");
+  });
+  it("should render dark-theme .icon", () => {
+    const wrapper = mountAndCheckProps({scene1_icon_dark_theme: "data:image/gif;base64,R0lGODl"});
+    assert.equal(wrapper.find(".icon-dark-theme").prop("src"), "data:image/gif;base64,R0lGODl");
   });
   it("should render .button_label and default className", () => {
     const wrapper = mountAndCheckProps({scene1_button_label: "Click here"});

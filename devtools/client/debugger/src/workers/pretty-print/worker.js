@@ -10,7 +10,7 @@ import { workerUtils } from "devtools-utils";
 const { workerHandler } = workerUtils;
 
 type Mappings = {
-  _array: Mapping[]
+  _array: Mapping[],
 };
 
 type Mapping = {
@@ -19,25 +19,25 @@ type Mapping = {
   source?: string,
   generatedLine?: number,
   generatedColumn?: number,
-  name?: string
+  name?: string,
 };
 
 type InvertedMapping = {
   generated: Object,
   source?: any,
   original?: any,
-  name?: string
+  name?: string,
 };
 
 function prettyPrint({ url, indent, sourceText }) {
   const prettified = prettyFast(sourceText, {
     url: url,
-    indent: " ".repeat(indent)
+    indent: " ".repeat(indent),
   });
 
   return {
     code: prettified.code,
-    mappings: invertMappings(prettified.map._mappings)
+    mappings: invertMappings(prettified.map._mappings),
   };
 }
 
@@ -46,14 +46,14 @@ function invertMappings(mappings: Mappings) {
     const mapping: InvertedMapping = {
       generated: {
         line: m.originalLine,
-        column: m.originalColumn
-      }
+        column: m.originalColumn,
+      },
     };
     if (m.source) {
       mapping.source = m.source;
       mapping.original = {
         line: m.generatedLine,
-        column: m.generatedColumn
+        column: m.generatedColumn,
       };
       mapping.name = m.name;
     }

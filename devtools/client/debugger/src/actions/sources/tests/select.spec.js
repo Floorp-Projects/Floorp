@@ -13,7 +13,7 @@ import {
   makeSource,
   makeSourceURL,
   waitForState,
-  makeOriginalSource
+  makeOriginalSource,
 } from "../../../utils/test-head";
 const {
   getSource,
@@ -21,7 +21,7 @@ const {
   getSelectedSource,
   getSourceTabs,
   getOutOfScopeLocations,
-  getSelectedLocation
+  getSelectedLocation,
 } = selectors;
 
 import { sourceThreadClient } from "../../tests/helpers/threadClient.js";
@@ -47,7 +47,7 @@ describe("sources", () => {
         thread: "FakeThread",
         why: { type: "debuggerStatement" },
         frame,
-        frames: [frame]
+        frames: [frame],
       })
     );
 
@@ -164,7 +164,7 @@ describe("sources", () => {
     await dispatch(
       actions.newGeneratedSource({
         ...makeSource("foo"),
-        url: ""
+        url: "",
       })
     );
 
@@ -184,7 +184,7 @@ describe("sources", () => {
     dispatch(actions.setSelectedLocation(cx, source, location));
     expect(getSelectedLocation(getState())).toEqual({
       sourceId: source.id,
-      ...location
+      ...location,
     });
 
     // clear value
@@ -202,7 +202,7 @@ describe("sources", () => {
     const setResult = getState().sources.pendingSelectedLocation;
     expect(setResult).toEqual({
       url,
-      line: options.location.line
+      line: options.location.line,
     });
 
     // clear value
@@ -236,7 +236,7 @@ describe("sources", () => {
         getOriginalLocations: async items => items,
         getGeneratedLocation: async location => ({ ...location, line: 12 }),
         getOriginalSourceText: async () => ({ text: "" }),
-        getGeneratedRangesForOriginal: async () => []
+        getGeneratedRangesForOriginal: async () => [],
       }
     );
 
@@ -269,7 +269,7 @@ describe("sources", () => {
         getOriginalLocation: async location => ({ ...location, line: 12 }),
         getOriginalLocations: async items => items,
         getGeneratedRangesForOriginal: async () => [],
-        getOriginalSourceText: async () => ({ text: "" })
+        getOriginalSourceText: async () => ({ text: "" }),
       }
     );
 
@@ -285,7 +285,7 @@ describe("sources", () => {
     await dispatch(
       actions.selectSpecificLocation(cx, {
         sourceId: baseSource.id,
-        line: 1
+        line: 1,
       })
     );
 

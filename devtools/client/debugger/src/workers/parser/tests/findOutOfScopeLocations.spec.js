@@ -23,7 +23,7 @@ describe("Parser.findOutOfScopeLocations", () => {
     const { source } = populateSource("outOfScope");
     const actual = findOutOfScopeLocations(source.id, {
       line: 5,
-      column: 5
+      column: 5,
     });
 
     expect(formatLines(actual)).toMatchSnapshot();
@@ -33,7 +33,7 @@ describe("Parser.findOutOfScopeLocations", () => {
     const { source } = populateSource("outOfScope");
     const actual = findOutOfScopeLocations(source.id, {
       line: 24,
-      column: 0
+      column: 0,
     });
 
     expect(formatLines(actual)).toMatchSnapshot();
@@ -43,7 +43,7 @@ describe("Parser.findOutOfScopeLocations", () => {
     const { source } = populateSource("outOfScope");
     const actual = findOutOfScopeLocations(source.id, {
       line: 3,
-      column: 12
+      column: 12,
     });
 
     expect(formatLines(actual)).toMatchSnapshot();
@@ -53,11 +53,11 @@ describe("Parser.findOutOfScopeLocations", () => {
     const { source } = populateSource("outOfScopeComment");
     const actual = findOutOfScopeLocations(source.id, {
       line: 3,
-      column: 2
+      column: 2,
     });
 
     expect(actual).toEqual([
-      { end: { column: 15, line: 1 }, start: { column: 0, line: 1 } }
+      { end: { column: 15, line: 1 }, start: { column: 0, line: 1 } },
     ]);
   });
 
@@ -65,7 +65,7 @@ describe("Parser.findOutOfScopeLocations", () => {
     const { source } = populateSource("outOfScope");
     const actual = findOutOfScopeLocations(source.id, {
       line: 61,
-      column: 0
+      column: 0,
     });
     expect(formatLines(actual)).toMatchSnapshot();
   });

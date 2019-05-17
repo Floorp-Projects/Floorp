@@ -24,11 +24,11 @@ function mapUrlDevelopment(url) {
 module.exports = ({ file, options, env }) => {
   if (env === "production") {
     return {
-      plugins: [mapUrl(mapUrlProduction)]
+      plugins: [mapUrl(mapUrlProduction)],
     };
   }
 
   return {
-    plugins: [mapUrl(mapUrlDevelopment)]
+    plugins: [mapUrl(mapUrlDevelopment)],
   };
 };

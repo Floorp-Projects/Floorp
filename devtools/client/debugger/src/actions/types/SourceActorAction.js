@@ -8,11 +8,11 @@ import type { SourceActor } from "../../reducers/source-actors.js";
 
 export type SourceActorsInsertAction = {|
   type: "INSERT_SOURCE_ACTORS",
-  items: Array<SourceActor>
+  items: Array<SourceActor>,
 |};
 export type SourceActorsRemoveAction = {|
   type: "REMOVE_SOURCE_ACTORS",
-  items: Array<SourceActor>
+  items: Array<SourceActor>,
 |};
 
 export type SourceActorAction =

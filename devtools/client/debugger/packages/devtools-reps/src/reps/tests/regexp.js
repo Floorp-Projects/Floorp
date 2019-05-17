@@ -18,7 +18,7 @@ describe("test RegExp", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 

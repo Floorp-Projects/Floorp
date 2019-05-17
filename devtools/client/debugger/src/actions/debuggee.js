@@ -29,7 +29,7 @@ export function updateWorkers() {
         ({
           type: "REMOVE_WORKERS",
           cx,
-          workers: removedWorkers.map(w => w.actor)
+          workers: removedWorkers.map(w => w.actor),
         }: Action)
       );
     }

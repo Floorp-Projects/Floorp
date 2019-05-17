@@ -21,14 +21,14 @@ import type { Action } from "../actions/types";
 export type DebuggeeState = {
   workers: WorkerList,
   mainThread: MainThread,
-  isWebExtension: boolean
+  isWebExtension: boolean,
 };
 
 export function initialDebuggeeState(): DebuggeeState {
   return {
     workers: [],
     mainThread: { actor: "", url: "", type: -1, name: "" },
-    isWebExtension: false
+    isWebExtension: false,
   };
 }
 
@@ -41,7 +41,7 @@ export default function debuggee(
       return {
         ...state,
         mainThread: { ...action.mainThread, name: L10N.getStr("mainThread") },
-        isWebExtension: action.isWebExtension
+        isWebExtension: action.isWebExtension,
       };
     case "INSERT_WORKERS":
       return insertWorkers(state, action.workers);
@@ -49,12 +49,12 @@ export default function debuggee(
       const { workers } = action;
       return {
         ...state,
-        workers: state.workers.filter(w => !workers.includes(w.actor))
+        workers: state.workers.filter(w => !workers.includes(w.actor)),
       };
     case "NAVIGATE":
       return {
         ...initialDebuggeeState(),
-        mainThread: action.mainThread
+        mainThread: action.mainThread,
       };
     default:
       return state;
@@ -64,12 +64,12 @@ export default function debuggee(
 function insertWorkers(state, workers) {
   const formatedWorkers = workers.map(worker => ({
     ...worker,
-    name: getDisplayName(worker)
+    name: getDisplayName(worker),
   }));
 
   return {
     ...state,
-    workers: [...state.workers, ...formatedWorkers]
+    workers: [...state.workers, ...formatedWorkers],
   };
 }
 

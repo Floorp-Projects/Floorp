@@ -80,7 +80,6 @@ Preferences.addAll([
   { id: "network.cookie.blockFutureCookies", type: "bool" },
   // Content blocking category
   { id: "browser.contentblocking.category", type: "string"},
-  { id: "browser.contentblocking.features.standard", type: "string"},
   { id: "browser.contentblocking.features.strict", type: "string"},
 
   // Clear Private Data
@@ -477,6 +476,9 @@ var gPrivacyPane = {
     // not be implemented until they refresh their tabs.
     for (let pref of CONTENT_BLOCKING_PREFS) {
       Preferences.get(pref).on("change", gPrivacyPane.maybeNotifyUserToReload);
+      // If the value changes, run populateCategoryContents, since that change might have been
+      // triggered by a default value changing in the standard category.
+      Preferences.get(pref).on("change", gPrivacyPane.populateCategoryContents);
     }
     Preferences.get("urlclassifier.trackingTable").on("change", gPrivacyPane.maybeNotifyUserToReload);
     for (let button of document.querySelectorAll(".reload-tabs-button")) {
@@ -491,8 +493,6 @@ var gPrivacyPane = {
     fingerprintersOption.hidden =
       !Services.prefs.getBoolPref("browser.contentblocking.fingerprinting.preferences.ui.enabled");
 
-    Preferences.get("browser.contentblocking.features.standard").on("change",
-      this.populateCategoryContents);
     Preferences.get("browser.contentblocking.features.strict").on("change",
       this.populateCategoryContents);
     this.populateCategoryContents();
@@ -513,14 +513,38 @@ var gPrivacyPane = {
 
   populateCategoryContents() {
     for (let type of ["strict", "standard"]) {
-      let rulesArray, selector;
+      let rulesArray = [];
+      let selector;
       if (type == "strict") {
         selector = "#contentBlockingOptionStrict";
         rulesArray = Services.prefs.getStringPref("browser.contentblocking.features.strict").split(",");
       } else {
         selector = "#contentBlockingOptionStandard";
-        let rulesString = Services.prefs.getStringPref("browser.contentblocking.features.standard");
-        rulesArray = rulesString.split(",");
+        // In standard show/hide UI items based on the default values of the relevant prefs.
+        let defaults = Services.prefs.getDefaultBranch("");
+
+        let cookieBehavior = defaults.getIntPref("network.cookie.cookieBehavior");
+        switch (cookieBehavior) {
+        case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+          rulesArray.push("cookieBehavior0");
+          break;
+        case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+          rulesArray.push("cookieBehavior1");
+          break;
+        case Ci.nsICookieService.BEHAVIOR_REJECT:
+          rulesArray.push("cookieBehavior2");
+          break;
+        case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+          rulesArray.push("cookieBehavior3");
+          break;
+        case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+          rulesArray.push("cookieBehavior4");
+          break;
+        }
+        rulesArray.push(defaults.getBoolPref("privacy.trackingprotection.cryptomining.enabled") ? "cm" : "-cm");
+        rulesArray.push(defaults.getBoolPref("privacy.trackingprotection.fingerprinting.enabled") ? "fp" : "-fp");
+        rulesArray.push(defaults.getBoolPref("privacy.trackingprotection.enabled") ? "tp" : "-tp");
+        rulesArray.push(defaults.getBoolPref("privacy.trackingprotection.pbmode.enabled") ? "tpPrivate" : "-tpPrivate");
       }
       // Hide all cookie options first, until we learn which one should be showing.
       document.querySelector(selector + " .all-cookies-option").hidden = true;

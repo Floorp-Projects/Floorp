@@ -11,12 +11,12 @@ import update, {
   createQuickOpenState,
   getQuickOpenEnabled,
   getQuickOpenQuery,
-  getQuickOpenType
+  getQuickOpenType,
 } from "../quick-open";
 import {
   setQuickOpenQuery,
   openQuickOpen,
-  closeQuickOpen
+  closeQuickOpen,
 } from "../../actions/quick-open";
 
 describe("quickOpen reducer", () => {

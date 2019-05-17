@@ -16,7 +16,7 @@ import {
   getIsPaused,
   getPauseReason,
   isMapScopesEnabled,
-  getCurrentThread
+  getCurrentThread,
 } from "../../selectors";
 import { getScopes } from "../../utils/pause/scopes";
 
@@ -42,13 +42,13 @@ type Props = {
   openElementInInspector: typeof actions.openElementInInspectorCommand,
   highlightDomElement: typeof actions.highlightDomElement,
   unHighlightDomElement: typeof actions.unHighlightDomElement,
-  toggleMapScopes: typeof actions.toggleMapScopes
+  toggleMapScopes: typeof actions.toggleMapScopes,
 };
 
 type State = {
   originalScopes: ?(NamedValue[]),
   generatedScopes: ?(NamedValue[]),
-  showOriginal: boolean
+  showOriginal: boolean,
 };
 
 class Scopes extends PureComponent<Props, State> {
@@ -57,7 +57,7 @@ class Scopes extends PureComponent<Props, State> {
       why,
       selectedFrame,
       originalFrameScopes,
-      generatedFrameScopes
+      generatedFrameScopes,
     } = props;
 
     super(props, ...args);
@@ -65,7 +65,7 @@ class Scopes extends PureComponent<Props, State> {
     this.state = {
       originalScopes: getScopes(why, selectedFrame, originalFrameScopes),
       generatedScopes: getScopes(why, selectedFrame, generatedFrameScopes),
-      showOriginal: true
+      showOriginal: true,
     };
   }
 
@@ -74,7 +74,7 @@ class Scopes extends PureComponent<Props, State> {
       isPaused,
       selectedFrame,
       originalFrameScopes,
-      generatedFrameScopes
+      generatedFrameScopes,
     } = this.props;
     const isPausedChanged = isPaused !== nextProps.isPaused;
     const selectedFrameChanged = selectedFrame !== nextProps.selectedFrame;
@@ -99,7 +99,7 @@ class Scopes extends PureComponent<Props, State> {
           nextProps.why,
           nextProps.selectedFrame,
           nextProps.generatedFrameScopes
-        )
+        ),
       });
     }
   }
@@ -116,7 +116,7 @@ class Scopes extends PureComponent<Props, State> {
       openElementInInspector,
       highlightDomElement,
       unHighlightDomElement,
-      mapScopesEnabled
+      mapScopesEnabled,
     } = this.props;
     const { originalScopes, generatedScopes, showOriginal } = this.state;
 
@@ -171,7 +171,7 @@ const mapStateToProps = state => {
 
   const {
     scope: originalFrameScopes,
-    pending: originalPending
+    pending: originalPending,
   } = getOriginalFrameScope(
     state,
     thread,
@@ -181,14 +181,14 @@ const mapStateToProps = state => {
 
   const {
     scope: generatedFrameScopes,
-    pending: generatedPending
+    pending: generatedPending,
   } = getGeneratedFrameScope(
     state,
     thread,
     selectedFrame && selectedFrame.id
   ) || {
     scope: null,
-    pending: false
+    pending: false,
   };
 
   return {
@@ -198,7 +198,7 @@ const mapStateToProps = state => {
     isLoading: generatedPending || originalPending,
     why: getPauseReason(state, thread),
     originalFrameScopes,
-    generatedFrameScopes
+    generatedFrameScopes,
   };
 };
 
@@ -209,6 +209,6 @@ export default connect(
     openElementInInspector: actions.openElementInInspectorCommand,
     highlightDomElement: actions.highlightDomElement,
     unHighlightDomElement: actions.unHighlightDomElement,
-    toggleMapScopes: actions.toggleMapScopes
+    toggleMapScopes: actions.toggleMapScopes,
   }
 )(Scopes);

@@ -17,7 +17,7 @@ import {
   type Resource,
   type ResourceState,
   type IdQuery,
-  type ReduceAllQuery
+  type ReduceAllQuery,
 } from "../utils/resource";
 
 export opaque type SourceActorId: string = string;
@@ -42,11 +42,11 @@ export type SourceActor = {|
 
   // The debugger's Debugger.Source API provides type information for the
   // cause of this source's creation.
-  +introductionType: string | null
+  +introductionType: string | null,
 |};
 
 type SourceActorResource = Resource<{
-  ...SourceActor
+  ...SourceActor,
 }>;
 export type SourceActorsState = ResourceState<SourceActorResource>;
 export type SourceActorOuterState = { sourceActors: SourceActorsState };

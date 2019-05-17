@@ -13,7 +13,7 @@ import {
   getPrettySource,
   getIsPaused,
   getCurrentThread,
-  getThreadContext
+  getThreadContext,
 } from "../../selectors";
 
 import { editorMenuItems, editorItemActions } from "./menus/editor";
@@ -30,7 +30,7 @@ type Props = {
   editor: SourceEditor,
   hasPrettySource: boolean,
   isPaused: boolean,
-  selectedSourceWithContent: SourceWithContent
+  selectedSourceWithContent: SourceWithContent,
 };
 
 class EditorMenu extends Component<Props> {
@@ -51,7 +51,7 @@ class EditorMenu extends Component<Props> {
       editorActions,
       hasPrettySource,
       isPaused,
-      contextMenu: event
+      contextMenu: event,
     } = props;
 
     const location = getSourceLocationFromMouseEvent(
@@ -71,7 +71,7 @@ class EditorMenu extends Component<Props> {
         location,
         isPaused,
         selectionText: editor.codeMirror.getSelection().trim(),
-        isTextSelected: editor.codeMirror.somethingSelected()
+        isTextSelected: editor.codeMirror.somethingSelected(),
       })
     );
   }
@@ -87,11 +87,11 @@ const mapStateToProps = (state, props) => ({
   hasPrettySource: !!getPrettySource(
     state,
     props.selectedSourceWithContent.source.id
-  )
+  ),
 });
 
 const mapDispatchToProps = dispatch => ({
-  editorActions: editorItemActions(dispatch)
+  editorActions: editorItemActions(dispatch),
 });
 
 export default connect(

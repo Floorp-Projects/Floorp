@@ -20,13 +20,13 @@ import { startSourceMapWorker, stopSourceMapWorker } from "devtools-source-map";
 
 import {
   start as startPrettyPrintWorker,
-  stop as stopPrettyPrintWorker
+  stop as stopPrettyPrintWorker,
 } from "../workers/pretty-print";
 
 import { ParserDispatcher } from "../workers/parser";
 import {
   start as startSearchWorker,
-  stop as stopSearchWorker
+  stop as stopSearchWorker,
 } from "../workers/search";
 import { clearDocuments } from "../utils/editor";
 import { clearHistory } from "./utils/history";
@@ -105,7 +105,7 @@ function mockIndexeddDB() {
     getItem: async key => store[key],
     setItem: async (key, value) => {
       store[key] = value;
-    }
+    },
   };
 }
 

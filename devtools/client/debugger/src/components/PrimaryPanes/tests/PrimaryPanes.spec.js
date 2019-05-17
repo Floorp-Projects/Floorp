@@ -13,7 +13,7 @@ import PrimaryPanes from "..";
 
 jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
 jest.mock("../../../utils/clipboard", () => ({
-  copyToTheClipboard: jest.fn()
+  copyToTheClipboard: jest.fn(),
 }));
 
 describe("PrimaryPanes", () => {
@@ -25,14 +25,14 @@ describe("PrimaryPanes", () => {
   describe("with custom root", () => {
     it("renders custom root source list", async () => {
       const { component } = render({
-        projectRoot: "mdn.com"
+        projectRoot: "mdn.com",
       });
       expect(component).toMatchSnapshot();
     });
 
     it("calls clearProjectDirectoryRoot on click", async () => {
       const { component, props } = render({
-        projectRoot: "mdn"
+        projectRoot: "mdn",
       });
       component.find(".sources-clear-root").simulate("click");
       expect(props.clearProjectDirectoryRoot).toHaveBeenCalled();
@@ -41,7 +41,7 @@ describe("PrimaryPanes", () => {
     it("renders empty custom root source list", async () => {
       const { component } = render({
         projectRoot: "custom",
-        sources: {}
+        sources: {},
       });
       expect(component).toMatchSnapshot();
     });
@@ -58,7 +58,7 @@ function generateDefaults(overrides) {
     closeActiveSearch: jest.fn(),
     clearProjectDirectoryRoot: jest.fn(),
     threads: [],
-    ...overrides
+    ...overrides,
   };
 }
 

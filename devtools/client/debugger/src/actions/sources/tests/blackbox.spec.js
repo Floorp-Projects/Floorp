@@ -8,14 +8,14 @@ import {
   actions,
   selectors,
   createStore,
-  makeSource
+  makeSource,
 } from "../../../utils/test-head";
 
 describe("blackbox", () => {
   it("should blackbox a source", async () => {
     const store = createStore({
       blackBox: async () => true,
-      getBreakableLines: async () => []
+      getBreakableLines: async () => [],
     });
     const { dispatch, getState, cx } = store;
 

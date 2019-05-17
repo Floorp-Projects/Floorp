@@ -15,7 +15,7 @@ const xhrMethods = [
   "HEAD",
   "DELETE",
   "PATCH",
-  "OPTIONS"
+  "OPTIONS",
 ];
 
 // default state includes xhrBreakpoints[0] which is the checkbox that
@@ -28,10 +28,10 @@ function generateDefaultState(propsOverride) {
         method: "ANY",
         disabled: false,
         loading: false,
-        text: 'URL contains ""'
-      }
+        text: 'URL contains ""',
+      },
     ],
-    ...propsOverride
+    ...propsOverride,
   };
 }
 
@@ -58,65 +58,65 @@ describe("XHR Breakpoints", function() {
           method: "ANY",
           disabled: false,
           loading: false,
-          text: 'URL contains ""'
+          text: 'URL contains ""',
         },
         {
           path: "this is any",
           method: "ANY",
           disabled: false,
           loading: false,
-          text: 'URL contains "this is any"'
+          text: 'URL contains "this is any"',
         },
         {
           path: "this is get",
           method: "GET",
           disabled: false,
           loading: false,
-          text: 'URL contains "this is get"'
+          text: 'URL contains "this is get"',
         },
         {
           path: "this is post",
           method: "POST",
           disabled: false,
           loading: false,
-          text: 'URL contains "this is post"'
+          text: 'URL contains "this is post"',
         },
         {
           path: "this is put",
           method: "PUT",
           disabled: false,
           loading: false,
-          text: 'URL contains "this is put"'
+          text: 'URL contains "this is put"',
         },
         {
           path: "this is head",
           method: "HEAD",
           disabled: false,
           loading: false,
-          text: 'URL contains "this is head"'
+          text: 'URL contains "this is head"',
         },
         {
           path: "this is delete",
           method: "DELETE",
           disabled: false,
           loading: false,
-          text: 'URL contains "this is delete"'
+          text: 'URL contains "this is delete"',
         },
         {
           path: "this is patch",
           method: "PATCH",
           disabled: false,
           loading: false,
-          text: 'URL contains "this is patch"'
+          text: 'URL contains "this is patch"',
         },
         {
           path: "this is options",
           method: "OPTIONS",
           disabled: false,
           loading: false,
-          text: 'URL contains "this is options"'
-        }
-      ]
+          text: 'URL contains "this is options"',
+        },
+      ],
     };
 
     const xhrBreakpointsComponent = renderXHRBreakpointsComponent(
@@ -153,7 +153,7 @@ describe("XHR Breakpoints", function() {
   it("shifting focus should unrender XHR methods", function() {
     const propsOverride = {
       onXHRAdded: jest.fn,
-      togglePauseOnAny: jest.fn
+      togglePauseOnAny: jest.fn,
     };
     const xhrBreakpointsComponent = renderXHRBreakpointsComponent(
       propsOverride
@@ -256,11 +256,11 @@ describe("XHR Breakpoints", function() {
     const setXHRBreakpointCallback = jest.fn();
     const propsOverride = {
       setXHRBreakpoint: setXHRBreakpointCallback,
-      onXHRAdded: jest.fn()
+      onXHRAdded: jest.fn(),
     };
     const mockEvent = {
       preventDefault: jest.fn(),
-      stopPropagation: jest.fn()
+      stopPropagation: jest.fn(),
     };
     const availableXHRMethods = xhrMethods;
     expect(availableXHRMethods.length > 0).toBeTruthy();
@@ -291,7 +291,7 @@ describe("XHR Breakpoints", function() {
     const setXHRBreakpointCallback = jest.fn();
     const mockEvent = {
       preventDefault: jest.fn(),
-      stopPropagation: jest.fn()
+      stopPropagation: jest.fn(),
     };
     const propsOverride = {
       updateXHRBreakpoint: setXHRBreakpointCallback,
@@ -302,16 +302,16 @@ describe("XHR Breakpoints", function() {
           method: "ANY",
           disabled: false,
           loading: false,
-          text: 'URL contains ""'
+          text: 'URL contains ""',
         },
         {
           path: "this is GET",
           method: "GET",
           disabled: false,
           loading: false,
-          text: 'URL contains "this is get"'
-        }
-      ]
+          text: 'URL contains "this is get"',
+        },
+      ],
     };
     const xhrBreakpointsComponent = renderXHRBreakpointsComponent(
       propsOverride

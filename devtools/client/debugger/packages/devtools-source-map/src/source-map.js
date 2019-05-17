@@ -17,19 +17,19 @@ const assert = require("./utils/assert");
 const {
   fetchSourceMap,
   hasOriginalURL,
-  clearOriginalURLs
+  clearOriginalURLs,
 } = require("./utils/fetchSourceMap");
 const {
   getSourceMap,
   setSourceMap,
-  clearSourceMaps: clearSourceMapsRequests
+  clearSourceMaps: clearSourceMapsRequests,
 } = require("./utils/sourceMapRequests");
 const {
   originalToGeneratedId,
   generatedToOriginalId,
   isGeneratedId,
   isOriginalId,
-  getContentType
+  getContentType,
 } = require("./utils");
 const { clearWasmXScopes } = require("./utils/wasmXScopes");
 
@@ -38,16 +38,16 @@ import type { SourceLocation, Source, SourceId } from "debugger-html";
 type Range = {
   start: {
     line: number,
-    column: number
+    column: number,
   },
   end: {
     line: number,
-    column: number
-  }
+    column: number,
+  },
 };
 
 export type LocationOptions = {
-  search?: "LEAST_UPPER_BOUND" | "GREATEST_LOWER_BOUND"
+  search?: "LEAST_UPPER_BOUND" | "GREATEST_LOWER_BOUND",
 };
 
 async function getOriginalURLs(
@@ -67,7 +67,7 @@ async function getOriginalRanges(
   Array<{
     line: number,
     columnStart: number,
-    columnEnd: number
+    columnEnd: number,
   }>
 > {
   if (!isOriginalId(sourceId)) {
@@ -112,7 +112,7 @@ async function getOriginalRanges(
         originalMappings.push({
           line: mapping.originalLine,
           columnStart: mapping.originalColumn,
-          columnEnd: Infinity
+          columnEnd: Infinity,
         });
       },
       null,
@@ -134,7 +134,7 @@ async function getGeneratedRanges(
   Array<{
     line: number,
     columnStart: number,
-    columnEnd: number
+    columnEnd: number,
   }>
 > {
   if (!isOriginalId(location.sourceId)) {
@@ -162,7 +162,7 @@ async function getGeneratedRanges(
     source: originalSource.url,
     line: location.line,
     column: location.column == null ? 0 : location.column,
-    bias: SourceMapConsumer.GREATEST_LOWER_BOUND
+    bias: SourceMapConsumer.GREATEST_LOWER_BOUND,
   });
   if (genPos.line === null) {
     return [];
@@ -171,7 +171,7 @@ async function getGeneratedRanges(
   const positions = map.allGeneratedPositionsFor(
     map.originalPositionFor({
       line: genPos.line,
-      column: genPos.column
+      column: genPos.column,
     })
   );
 
@@ -179,7 +179,7 @@ async function getGeneratedRanges(
     .map(mapping => ({
       line: mapping.line,
       columnStart: mapping.column,
-      columnEnd: mapping.lastColumn
+      columnEnd: mapping.lastColumn,
     }))
     .sort((a, b) => {
       const line = a.line - b.line;
@@ -204,7 +204,7 @@ async function getGeneratedLocation(
   const positions = map.allGeneratedPositionsFor({
     source: originalSource.url,
     line: location.line,
-    column: location.column == null ? 0 : location.column
+    column: location.column == null ? 0 : location.column,
   });
 
   // Prior to source-map 0.7, the source-map module returned the earliest
@@ -223,14 +223,14 @@ async function getGeneratedLocation(
       source: originalSource.url,
       line: location.line,
       column: location.column == null ? 0 : location.column,
-      bias: SourceMapConsumer.LEAST_UPPER_BOUND
+      bias: SourceMapConsumer.LEAST_UPPER_BOUND,
     });
   }
 
   return {
     sourceId: generatedSourceId,
     line: match.line,
-    column: match.column
+    column: match.column,
   };
 }
 
@@ -251,13 +251,13 @@ async function getAllGeneratedLocations(
   const positions = map.allGeneratedPositionsFor({
     source: originalSource.url,
     line: location.line,
-    column: location.column == null ? 0 : location.column
+    column: location.column == null ? 0 : location.column,
   });
 
   return positions.map(({ line, column }) => ({
     sourceId: generatedSourceId,
     line,
-    column
+    column,
   }));
 }
 
@@ -288,7 +288,7 @@ function getOriginalLocationSync(
   // First check for an exact match
   let match = map.originalPositionFor({
     line: location.line,
-    column: location.column == null ? 0 : location.column
+    column: location.column == null ? 0 : location.column,
   });
 
   // If there is not an exact match, look for a match with a bias at the
@@ -301,7 +301,7 @@ function getOriginalLocationSync(
       match = map.originalPositionFor({
         line,
         column,
-        bias: SourceMapConsumer[search]
+        bias: SourceMapConsumer[search],
       });
 
       line += search == "LEAST_UPPER_BOUND" ? 1 : -1;
@@ -319,7 +319,7 @@ function getOriginalLocationSync(
     sourceId: generatedToOriginalId(location.sourceId, sourceUrl),
     sourceUrl,
     line,
-    column
+    column,
   };
 }
 
@@ -343,7 +343,7 @@ async function getOriginalSourceText(
   originalSource: Source
 ): Promise<?{
   text: string,
-  contentType: string
+  contentType: string,
 }> {
   assert(isOriginalId(originalSource.id), "Source is not an original source");
 
@@ -361,7 +361,7 @@ async function getOriginalSourceText(
 
   return {
     text,
-    contentType: getContentType(originalSource.url || "")
+    contentType: getContentType(originalSource.url || ""),
   };
 }
 
@@ -421,14 +421,14 @@ async function getGeneratedRangesForOriginal(
         currentGroup.push({
           start: {
             line: mapping.generatedLine,
-            column: mapping.generatedColumn
+            column: mapping.generatedColumn,
           },
           end: {
             line: mapping.generatedLine,
             // The lastGeneratedColumn value is an inclusive value so we add
             // one to it to get the exclusive end position.
-            column: mapping.lastGeneratedColumn + 1
-          }
+            column: mapping.lastGeneratedColumn + 1,
+          },
         });
       } else if (
         typeof mapping.source === "string" &&
@@ -453,7 +453,7 @@ async function getGeneratedRangesForOriginal(
       if (group.length > 0) {
         generatedMappingsForOriginal.push({
           start: group[0].start,
-          end: group[group.length - 1].end
+          end: group[group.length - 1].end,
         });
       }
     }
@@ -490,10 +490,10 @@ async function getGeneratedRangesForOriginal(
 
 function wrappedMappingPosition(pos: {
   line: number,
-  column: number
+  column: number,
 }): {
   line: number,
-  column: number
+  column: number,
 } {
   if (pos.column !== Infinity) {
     return pos;
@@ -503,7 +503,7 @@ function wrappedMappingPosition(pos: {
   // the next line.
   return {
     line: pos.line + 1,
-    column: 0
+    column: 0,
   };
 }
 
@@ -521,19 +521,19 @@ async function getFileGeneratedRange(
     source: originalSource.url,
     line: 1,
     column: 0,
-    bias: SourceMapConsumer.LEAST_UPPER_BOUND
+    bias: SourceMapConsumer.LEAST_UPPER_BOUND,
   });
 
   const end = map.generatedPositionFor({
     source: originalSource.url,
     line: Number.MAX_SAFE_INTEGER,
     column: Number.MAX_SAFE_INTEGER,
-    bias: SourceMapConsumer.GREATEST_LOWER_BOUND
+    bias: SourceMapConsumer.GREATEST_LOWER_BOUND,
   });
 
   return {
     start,
-    end
+    end,
   };
 }
 
@@ -580,5 +580,5 @@ module.exports = {
   getFileGeneratedRange,
   applySourceMap,
   clearSourceMaps,
-  hasMappedSource
+  hasMappedSource,
 };

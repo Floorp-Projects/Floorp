@@ -57,55 +57,55 @@ export function getTabMenuItems() {
       id: "node-menu-close-tab",
       label: L10N.getStr("sourceTabs.closeTab"),
       accesskey: L10N.getStr("sourceTabs.closeTab.accesskey"),
-      disabled: false
+      disabled: false,
     },
     closeOtherTabs: {
       id: "node-menu-close-other-tabs",
       label: L10N.getStr("sourceTabs.closeOtherTabs"),
       accesskey: L10N.getStr("sourceTabs.closeOtherTabs.accesskey"),
-      disabled: false
+      disabled: false,
     },
     closeTabsToEnd: {
       id: "node-menu-close-tabs-to-end",
       label: L10N.getStr("sourceTabs.closeTabsToEnd"),
       accesskey: L10N.getStr("sourceTabs.closeTabsToEnd.accesskey"),
-      disabled: false
+      disabled: false,
     },
     closeAllTabs: {
       id: "node-menu-close-all-tabs",
       label: L10N.getStr("sourceTabs.closeAllTabs"),
       accesskey: L10N.getStr("sourceTabs.closeAllTabs.accesskey"),
-      disabled: false
+      disabled: false,
     },
     showSource: {
       id: "node-menu-show-source",
       label: L10N.getStr("sourceTabs.revealInTree"),
       accesskey: L10N.getStr("sourceTabs.revealInTree.accesskey"),
-      disabled: false
+      disabled: false,
     },
     copyToClipboard: {
       id: "node-menu-copy-to-clipboard",
       label: L10N.getStr("copyToClipboard.label"),
       accesskey: L10N.getStr("copyToClipboard.accesskey"),
-      disabled: false
+      disabled: false,
     },
     copySourceUri2: {
       id: "node-menu-copy-source-url",
       label: L10N.getStr("copySourceUri2"),
       accesskey: L10N.getStr("copySourceUri2.accesskey"),
-      disabled: false
+      disabled: false,
     },
     toggleBlackBox: {
       id: "node-menu-blackbox",
       label: L10N.getStr("sourceFooter.blackbox"),
       accesskey: L10N.getStr("sourceFooter.blackbox.accesskey"),
-      disabled: false
+      disabled: false,
     },
     prettyPrint: {
       id: "node-menu-pretty-print",
       label: L10N.getStr("sourceTabs.prettyPrint"),
       accesskey: L10N.getStr("sourceTabs.prettyPrint.accesskey"),
-      disabled: false
-    }
+      disabled: false,
+    },
   };
 }

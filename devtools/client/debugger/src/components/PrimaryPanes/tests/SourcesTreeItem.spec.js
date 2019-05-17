@@ -14,7 +14,7 @@ import { copyToTheClipboard } from "../../../utils/clipboard";
 
 jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
 jest.mock("../../../utils/clipboard", () => ({
-  copyToTheClipboard: jest.fn()
+  copyToTheClipboard: jest.fn(),
 }));
 
 describe("SourceTreeItem", () => {
@@ -40,28 +40,28 @@ describe("SourceTreeItem", () => {
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-collapse-all",
-          label: "Collapse all"
+          label: "Collapse all",
         },
         {
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-expand-all",
-          label: "Expand all"
+          label: "Expand all",
         },
         {
           accesskey: "r",
           click: expect.any(Function),
           disabled: false,
           id: "node-set-directory-root",
-          label: "Set directory root"
-        }
+          label: "Set directory root",
+        },
       ];
       const mockEvent = {
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       const { props, instance } = render({
-        projectRoot: "root/"
+        projectRoot: "root/",
       });
       await instance.onContextMenu(mockEvent, createMockDirectory());
       expect(showMenu).toHaveBeenCalledWith(mockEvent, menuOptions);
@@ -82,22 +82,22 @@ describe("SourceTreeItem", () => {
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-copy-source",
-          label: "Copy source URI"
+          label: "Copy source URI",
         },
         {
           accesskey: "B",
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-blackbox",
-          label: "Blackbox source"
-        }
+          label: "Blackbox source",
+        },
       ];
       const mockEvent = {
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       const { props, instance } = render({
-        projectRoot: "root/"
+        projectRoot: "root/",
       });
       const { item, source } = instance.props;
 
@@ -121,22 +121,22 @@ describe("SourceTreeItem", () => {
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-copy-source",
-          label: "Copy source URI"
+          label: "Copy source URI",
         },
         {
           accesskey: "B",
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-blackbox",
-          label: "Blackbox source"
-        }
+          label: "Blackbox source",
+        },
       ];
       const mockEvent = {
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       const { props, instance } = render({
-        projectRoot: "root/"
+        projectRoot: "root/",
       });
       const { item, source } = instance.props;
 
@@ -159,28 +159,28 @@ describe("SourceTreeItem", () => {
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-collapse-all",
-          label: "Collapse all"
+          label: "Collapse all",
         },
         {
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-expand-all",
-          label: "Expand all"
+          label: "Expand all",
         },
         {
           click: expect.any(Function),
           disabled: false,
           id: "node-remove-directory-root",
-          label: "Remove directory root"
-        }
+          label: "Remove directory root",
+        },
       ];
       const { props, instance } = render({
-        projectRoot: "root/"
+        projectRoot: "root/",
       });
 
       const mockEvent = {
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
 
       await instance.onContextMenu(
@@ -234,7 +234,7 @@ describe("SourceTreeItem", () => {
         source: null,
         depth: 1,
         focused: false,
-        expanded: true
+        expanded: true,
       });
       expect(node).toMatchSnapshot();
     });
@@ -245,7 +245,7 @@ describe("SourceTreeItem", () => {
         source: null,
         depth: 1,
         focused: true,
-        expanded: true
+        expanded: true,
       });
       expect(node).toMatchSnapshot();
     });
@@ -258,7 +258,7 @@ describe("SourceTreeItem", () => {
     it("should show (mapped) for duplicate source items", async () => {
       const node = render({
         item: createMockItem(),
-        hasMatchingGeneratedSource: true
+        hasMatchingGeneratedSource: true,
       });
       expect(node).toMatchSnapshot();
     });
@@ -267,7 +267,7 @@ describe("SourceTreeItem", () => {
       const node = render({
         depth: 1,
         focused: true,
-        expanded: false
+        expanded: false,
       });
       expect(node).toMatchSnapshot();
     });
@@ -275,7 +275,7 @@ describe("SourceTreeItem", () => {
     it("should show domain item", async () => {
       const node = render({
         item: createMockItem({ name: "root", path: "root" }),
-        depth: 0
+        depth: 0,
       });
       expect(node).toMatchSnapshot();
     });
@@ -283,7 +283,7 @@ describe("SourceTreeItem", () => {
     it("should show domain item as debuggee", async () => {
       const node = render({
         item: createMockDirectory("root", "http://mdn.com"),
-        depth: 0
+        depth: 0,
       });
 
       expect(node).toMatchSnapshot();
@@ -293,7 +293,7 @@ describe("SourceTreeItem", () => {
       const node = render({
         item: createMockDirectory("root", "http://mdn.com"),
         depth: 0,
-        focused: true
+        focused: true,
       });
 
       expect(node).toMatchSnapshot();
@@ -301,7 +301,7 @@ describe("SourceTreeItem", () => {
 
     it("should not show domain item when the projectRoot exists", async () => {
       const node = render({
-        projectRoot: "root/"
+        projectRoot: "root/",
       });
       expect(node).toMatchSnapshot();
     });
@@ -313,7 +313,7 @@ describe("SourceTreeItem", () => {
         depth: 1,
         focused: true,
         expanded: false,
-        selectItem
+        selectItem,
       });
 
       const { item } = instance.props;
@@ -331,7 +331,7 @@ describe("SourceTreeItem", () => {
         depth: 1,
         focused: true,
         expanded: false,
-        selectItem
+        selectItem,
       });
 
       component.simulate("click", { event: "click" });
@@ -341,7 +341,7 @@ describe("SourceTreeItem", () => {
     it("should unescape escaped source URLs", async () => {
       const item = createMockItem({
         path: "mdn.com/external%20file",
-        name: "external%20file"
+        name: "external%20file",
       });
 
       const node = render({ item });
@@ -360,7 +360,7 @@ function generateDefaults(overrides) {
   const item = {
     name: "one.js",
     path: "mdn.com/one.js",
-    contents: source
+    contents: source,
   };
 
   return {
@@ -376,7 +376,7 @@ function generateDefaults(overrides) {
     focusItem: jest.fn(),
     setExpanded: jest.fn(),
     threads: [{ name: "Main Thread" }],
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -399,7 +399,7 @@ function createMockDirectory(
     type: "directory",
     name,
     path,
-    contents
+    contents,
   };
 }
 
@@ -408,14 +408,14 @@ function createMockItem(overrides = {}) {
     ...overrides,
     contents: {
       ...makeMockSource(undefined, "server1.conn13.child1/39"),
-      ...(overrides.contents || {})
-    }
+      ...(overrides.contents || {}),
+    },
   };
 
   return {
     type: "source",
     name: "one.js",
     path: "http://mdn.com/one.js",
-    ...overrides
+    ...overrides,
   };
 }

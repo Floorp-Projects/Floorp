@@ -8,13 +8,13 @@ import type {
   Source,
   PartialRange,
   SourceLocation,
-  Context
+  Context,
 } from "../../types";
 
 import type {
   ActiveSearchType,
   OrientationType,
-  SelectedPrimaryPaneTabType
+  SelectedPrimaryPaneTabType,
 } from "../../reducers/ui";
 
 export type panelPositionType = "start" | "end";
@@ -22,64 +22,64 @@ export type panelPositionType = "start" | "end";
 export type UIAction =
   | {|
       +type: "TOGGLE_ACTIVE_SEARCH",
-      +value: ?ActiveSearchType
+      +value: ?ActiveSearchType,
     |}
   | {|
       +type: "OPEN_QUICK_OPEN",
-      +query?: string
+      +query?: string,
     |}
   | {|
-      +type: "CLOSE_QUICK_OPEN"
+      +type: "CLOSE_QUICK_OPEN",
     |}
   | {|
       +type: "TOGGLE_FRAMEWORK_GROUPING",
-      +value: boolean
+      +value: boolean,
     |}
   | {|
       +type: "SHOW_SOURCE",
-      +source: Source
+      +source: Source,
     |}
   | {|
       +type: "TOGGLE_PANE",
       +position: panelPositionType,
-      +paneCollapsed: boolean
+      +paneCollapsed: boolean,
     |}
   | {|
       +type: "SET_ORIENTATION",
-      +orientation: OrientationType
+      +orientation: OrientationType,
     |}
   | {|
       +type: "HIGHLIGHT_LINES",
       +location: {
         start: number,
         end: number,
-        sourceId: number
-      }
+        sourceId: number,
+      },
     |}
   | {|
-      +type: "CLEAR_HIGHLIGHT_LINES"
+      +type: "CLEAR_HIGHLIGHT_LINES",
     |}
   | {|
       +type: "OPEN_CONDITIONAL_PANEL",
       +location: SourceLocation,
-      +log: boolean
+      +log: boolean,
     |}
   | {|
-      +type: "CLOSE_CONDITIONAL_PANEL"
+      +type: "CLOSE_CONDITIONAL_PANEL",
     |}
   | {|
       +type: "SET_PROJECT_DIRECTORY_ROOT",
       +cx: Context,
-      +url: string
+      +url: string,
     |}
   | {|
       +type: "SET_PRIMARY_PANE_TAB",
-      +tabName: SelectedPrimaryPaneTabType
+      +tabName: SelectedPrimaryPaneTabType,
     |}
   | {|
-      +type: "CLOSE_PROJECT_SEARCH"
+      +type: "CLOSE_PROJECT_SEARCH",
     |}
   | {|
       +type: "SET_VIEWPORT",
-      +viewport: PartialRange
+      +viewport: PartialRange,
     |};

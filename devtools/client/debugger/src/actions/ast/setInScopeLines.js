@@ -6,7 +6,7 @@
 
 import {
   getOutOfScopeLocations,
-  getSelectedSourceWithContent
+  getSelectedSourceWithContent,
 } from "../../selectors";
 import { getSourceLineCount } from "../../utils/source";
 
@@ -53,7 +53,7 @@ export function setInScopeLines(cx: Context) {
     dispatch({
       type: "IN_SCOPE_LINES",
       cx,
-      lines: inScopeLines
+      lines: inScopeLines,
     });
   };
 }

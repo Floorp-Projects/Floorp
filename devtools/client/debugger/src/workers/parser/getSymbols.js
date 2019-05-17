@@ -18,7 +18,7 @@ import {
   getSpecifiers,
   getCode,
   nodeLocationKey,
-  getFunctionParameterNames
+  getFunctionParameterNames,
 } from "./utils/helpers";
 
 import { inferClassName } from "./utils/inferClassName";
@@ -32,41 +32,41 @@ import type { AstPosition, AstLocation } from "./types";
 export type SymbolDeclaration = {
   name: string,
   location: AstLocation,
-  generatedLocation?: AstPosition
+  generatedLocation?: AstPosition,
 };
 
 export type ClassDeclaration = SymbolDeclaration & {
   parent: ?{|
     name: string,
-    location: AstLocation
-  |}
+    location: AstLocation,
+  |},
 };
 
 export type FunctionDeclaration = SymbolDeclaration & {
   parameterNames: string[],
   klass: string | null,
   identifier: Object,
-  index: number
+  index: number,
 };
 
 export type CallDeclaration = SymbolDeclaration & {
-  values: string[]
+  values: string[],
 };
 
 export type MemberDeclaration = SymbolDeclaration & {
   computed: Boolean,
-  expression: string
+  expression: string,
 };
 
 export type IdentifierDeclaration = {
   name: string,
   location: AstLocation,
-  expression: string
+  expression: string,
 };
 export type ImportDeclaration = {
   source: string,
   location: AstLocation,
-  specifiers: string[]
+  specifiers: string[],
 };
 
 export type SymbolDeclarations = {|
@@ -82,7 +82,7 @@ export type SymbolDeclarations = {|
   hasJsx: boolean,
   hasTypes: boolean,
   framework: ?string,
-  loading: false
+  loading: false,
 |};
 
 let symbolDeclarations: Map<string, SymbolDeclarations> = new Map();
@@ -120,7 +120,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
       // indicates the occurence of the function in a file
       // e.g { name: foo, ... index: 4 } is the 4th foo function
       // in the file
-      index
+      index,
     });
   }
 
@@ -141,10 +141,10 @@ function extractSymbol(path: SimplePath, symbols, state) {
             name: t.isMemberExpression(superClass)
               ? getCode(superClass)
               : superClass.name,
-            location: superClass.loc
+            location: superClass.loc,
           }
         : null,
-      location: loc
+      location: loc,
     });
   }
 
@@ -152,7 +152,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
     symbols.imports.push({
       source: path.node.source.value,
       location: path.node.loc,
-      specifiers: getSpecifiers(path.node.specifiers)
+      specifiers: getSpecifiers(path.node.specifiers),
     });
   }
 
@@ -161,7 +161,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
     symbols.objectProperties.push({
       name: identifierName,
       location: { start, end },
-      expression: getSnippet(path)
+      expression: getSnippet(path),
     });
   }
 
@@ -171,7 +171,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
       name: path.node.property.name,
       location: { start, end },
       expression: getSnippet(path),
-      computed: path.node.computed
+      computed: path.node.computed,
     });
   }
 
@@ -184,7 +184,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
     symbols.literals.push({
       name: path.node.value,
       location: { start, end },
-      expression: getSnippet(path.parentPath)
+      expression: getSnippet(path.parentPath),
     });
   }
 
@@ -193,19 +193,19 @@ function extractSymbol(path: SimplePath, symbols, state) {
     const args = path.node.arguments;
     if (t.isMemberExpression(callee)) {
       const {
-        property: { name, loc }
+        property: { name, loc },
       } = callee;
       symbols.callExpressions.push({
         name: name,
         values: args.filter(arg => arg.value).map(arg => arg.value),
-        location: loc
+        location: loc,
       });
     } else {
       const { start, end, identifierName } = callee.loc;
       symbols.callExpressions.push({
         name: identifierName,
         values: args.filter(arg => arg.value).map(arg => arg.value),
-        location: { start, end }
+        location: { start, end },
       });
     }
   }
@@ -215,7 +215,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
     return symbols.identifiers.push({
       name: path.node.value,
       expression: getObjectExpressionValue(path.parent),
-      location: { start, end }
+      location: { start, end },
     });
   }
 
@@ -231,7 +231,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
       return symbols.identifiers.push({
         name: path.node.name,
         expression: getObjectExpressionValue(path.parent),
-        location: { start, end }
+        location: { start, end },
       });
     }
 
@@ -243,7 +243,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
     symbols.identifiers.push({
       name: path.node.name,
       expression: path.node.name,
-      location: { start, end }
+      location: { start, end },
     });
   }
 
@@ -252,7 +252,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
     symbols.identifiers.push({
       name: "this",
       location: { start, end },
-      expression: "this"
+      expression: "this",
     });
   }
 
@@ -279,11 +279,11 @@ function extractSymbols(sourceId): SymbolDeclarations {
     hasJsx: false,
     hasTypes: false,
     loading: false,
-    framework: undefined
+    framework: undefined,
   };
 
   const state = {
-    fnCounts: Object.create(null)
+    fnCounts: Object.create(null),
   };
 
   const ast = traverseAst(sourceId, {
@@ -296,7 +296,7 @@ function extractSymbols(sourceId): SymbolDeclarations {
       } catch (e) {
         console.error(e);
       }
-    }
+    },
   });
 
   // comments are extracted separately from the AST

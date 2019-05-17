@@ -8,7 +8,7 @@ import {
   actions,
   selectors,
   createStore,
-  makeSource
+  makeSource,
 } from "../../utils/test-head";
 
 import { makeMockFrame } from "../../utils/test-mockup";
@@ -44,10 +44,10 @@ const mockThreadClient = {
       resolve({
         from: "foo",
         matches: ["toLocaleString", "toSource", "toString", "toolbar", "top"],
-        matchProp: "to"
+        matchProp: "to",
       });
     });
-  }
+  },
 };
 
 describe("expressions", () => {
@@ -153,7 +153,7 @@ async function createFrames(getState, dispatch) {
       thread: "FakeThread",
       frame,
       frames: [frame],
-      why: { type: "just because" }
+      why: { type: "just because" },
     })
   );
 

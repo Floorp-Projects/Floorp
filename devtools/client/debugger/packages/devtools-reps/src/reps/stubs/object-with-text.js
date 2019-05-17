@@ -13,8 +13,8 @@ stubs.set("ShadowRule", {
   ownPropertyLength: 0,
   preview: {
     kind: "ObjectWithText",
-    text: ".Shadow"
-  }
+    text: ".Shadow",
+  },
 });
 
 stubs.set("CSSMediaRule", {
@@ -27,8 +27,8 @@ stubs.set("CSSMediaRule", {
   ownPropertyLength: 0,
   preview: {
     kind: "ObjectWithText",
-    text: "(min-height: 680px), screen and (orientation: portrait)"
-  }
+    text: "(min-height: 680px), screen and (orientation: portrait)",
+  },
 });
 
 module.exports = stubs;

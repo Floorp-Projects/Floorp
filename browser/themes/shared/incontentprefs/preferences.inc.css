@@ -748,6 +748,10 @@ image.update-throbber {
   border-radius: 2px;
 }
 
+.policies-label {
+  margin-left: 2px;
+}
+
 .info-icon {
   list-style-image: url("chrome://browser/skin/identity-icon.svg");
   width: 16px;

@@ -9,8 +9,8 @@ stubs.set("Document", {
   preview: {
     name: "New Tab",
     role: "document",
-    isConnected: true
-  }
+    isConnected: true,
+  },
 });
 
 stubs.set("ButtonMenu", {
@@ -19,8 +19,8 @@ stubs.set("ButtonMenu", {
   preview: {
     name: "New to Nightly? Let’s get started.",
     role: "buttonmenu",
-    isConnected: true
-  }
+    isConnected: true,
+  },
 });
 
 stubs.set("NoName", {
@@ -29,13 +29,13 @@ stubs.set("NoName", {
   preview: {
     name: null,
     role: "text container",
-    isConnected: true
-  }
+    isConnected: true,
+  },
 });
 
 stubs.set("NoPreview", {
   actor: "server1.conn1.child1/accessible93",
-  typeName: "accessible"
+  typeName: "accessible",
 });
 
 stubs.set("DisconnectedAccessible", {
@@ -44,8 +44,8 @@ stubs.set("DisconnectedAccessible", {
   preview: {
     name: null,
     role: "section",
-    isConnected: false
-  }
+    isConnected: false,
+  },
 });
 
 const name = "a".repeat(1000);
@@ -55,8 +55,8 @@ stubs.set("AccessibleWithLongName", {
   preview: {
     name,
     role: "text leaf",
-    isConnected: true
-  }
+    isConnected: true,
+  },
 });
 
 stubs.set("PushButton", {
@@ -65,8 +65,8 @@ stubs.set("PushButton", {
   preview: {
     name: "Search",
     role: "pushbutton",
-    isConnected: true
-  }
+    isConnected: true,
+  },
 });
 
 module.exports = stubs;

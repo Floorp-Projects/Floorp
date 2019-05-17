@@ -20,17 +20,17 @@ export type RenderableScope = {
   parent: ?RenderableScope,
   object?: ?Object,
   function?: ?{
-    displayName: string
+    displayName: string,
   },
   block?: ?{
-    displayName: string
-  }
+    displayName: string,
+  },
 };
 
 const {
   utils: {
-    node: { NODE_TYPES }
-  }
+    node: { NODE_TYPES },
+  },
 } = objectInspector;
 
 function getScopeTitle(type, scope: RenderableScope) {
@@ -90,7 +90,7 @@ export function getScope(
         name: title,
         path: key,
         contents: vars,
-        type: NODE_TYPES.BLOCK
+        type: NODE_TYPES.BLOCK,
       };
     }
   } else if (type === "object" && scope.object) {
@@ -103,7 +103,7 @@ export function getScope(
     return {
       name: scope.object.class,
       path: key,
-      contents: { value }
+      contents: { value },
     };
   }
 
