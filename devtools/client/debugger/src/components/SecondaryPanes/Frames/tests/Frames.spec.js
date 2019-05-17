@@ -21,13 +21,13 @@ function render(overrides = {}) {
     toggleFrameworkGrouping: jest.fn(),
     contextTypes: {},
     selectFrame: jest.fn(),
-    toggleBlackBox: jest.fn()
+    toggleBlackBox: jest.fn(),
   };
 
   const props = { ...defaultProps, ...overrides };
   // $FlowIgnore
   const component = shallow(<Frames.WrappedComponent {...props} />, {
-    context: { l10n: L10N }
+    context: { l10n: L10N },
   });
 
   return component;
@@ -61,7 +61,7 @@ describe("Frames", () => {
         { id: 7 },
         { id: 8 },
         { id: 9 },
-        { id: 10 }
+        { id: 10 },
       ];
 
       const selectedFrame = frames[0];
@@ -82,12 +82,12 @@ describe("Frames", () => {
     it("disable frame truncation", () => {
       const framesNumber = 20;
       const frames = Array.from({ length: framesNumber }, (_, i) => ({
-        id: i + 1
+        id: i + 1,
       }));
 
       const component = render({
         frames,
-        disableFrameTruncate: true
+        disableFrameTruncate: true,
       });
 
       const getToggleBtn = () => component.find(".show-more");
@@ -105,12 +105,12 @@ describe("Frames", () => {
           id: 1,
           displayName: "renderFoo",
           location: {
-            line: 55
+            line: 55,
           },
           source: {
-            url: "http://myfile.com/mahscripts.js"
-          }
-        }
+            url: "http://myfile.com/mahscripts.js",
+          },
+        },
       ];
 
       const component = mount(
@@ -132,12 +132,12 @@ describe("Frames", () => {
           id: 1,
           displayName: "renderFoo",
           location: {
-            line: 55
+            line: 55,
           },
           source: {
-            url: "http://myfile.com/mahscripts.js"
-          }
-        }
+            url: "http://myfile.com/mahscripts.js",
+          },
+        },
       ];
       const getFrameTitle = () => {};
       const component = render({ frames, getFrameTitle });
@@ -152,40 +152,40 @@ describe("Frames", () => {
           id: 1,
           displayName: "renderFoo",
           location: {
-            line: 55
+            line: 55,
           },
           source: {
-            url: "http://myfile.com/mahscripts.js"
-          }
+            url: "http://myfile.com/mahscripts.js",
+          },
         },
         {
           id: 2,
           library: "back",
           displayName: "a",
           location: {
-            line: 55
+            line: 55,
           },
           source: {
-            url: "http://myfile.com/back.js"
-          }
+            url: "http://myfile.com/back.js",
+          },
         },
         {
           id: 3,
           library: "back",
           displayName: "b",
           location: {
-            line: 55
+            line: 55,
           },
           source: {
-            url: "http://myfile.com/back.js"
-          }
-        }
+            url: "http://myfile.com/back.js",
+          },
+        },
       ];
       const getFrameTitle = () => {};
       const component = render({
         frames,
         getFrameTitle,
-        frameworkGroupingOn: true
+        frameworkGroupingOn: true,
       });
 
       expect(component.find("Group").prop("getFrameTitle")).toBe(getFrameTitle);
@@ -202,12 +202,12 @@ describe("Frames", () => {
         makeMockFrame("1", source1),
         makeMockFrame("2", source2),
         makeMockFrame("3", source1),
-        makeMockFrame("8", source2)
+        makeMockFrame("8", source2),
       ];
 
       const sources: SourceResourceState = insertResources(createInitial(), [
         source1,
-        source2
+        source2,
       ]);
 
       const processedFrames = formatCallStackFrames(frames, sources, source1);
@@ -216,7 +216,7 @@ describe("Frames", () => {
       const component = render({
         frames: processedFrames,
         frameworkGroupingOn: false,
-        selectedFrame
+        selectedFrame,
       });
 
       expect(component.find("Frame")).toHaveLength(2);
@@ -230,7 +230,7 @@ describe("Frames", () => {
         { id: 1 },
         { id: 2, library: "back" },
         { id: 3, library: "back" },
-        { id: 8 }
+        { id: 8 },
       ];
 
       const selectedFrame = frames[0];
@@ -251,20 +251,20 @@ describe("Frames", () => {
         { id: "1-appFrame" },
         {
           id: "2-webpackBootstrapFrame",
-          source: { url: "webpack:///webpack/bootstrap 01d88449ca6e9335a66f" }
+          source: { url: "webpack:///webpack/bootstrap 01d88449ca6e9335a66f" },
         },
         {
           id: "3-webpackBundleFrame",
-          source: { url: "https://foo.com/bundle.js" }
+          source: { url: "https://foo.com/bundle.js" },
         },
         {
           id: "4-webpackBootstrapFrame",
-          source: { url: "webpack:///webpack/bootstrap 01d88449ca6e9335a66f" }
+          source: { url: "webpack:///webpack/bootstrap 01d88449ca6e9335a66f" },
         },
         {
           id: "5-webpackBundleFrame",
-          source: { url: "https://foo.com/bundle.js" }
-        }
+          source: { url: "https://foo.com/bundle.js" },
+        },
       ];
       const selectedFrame = frames[0];
       const frameworkGroupingOn = true;
@@ -278,7 +278,7 @@ describe("Frames", () => {
         { id: 1 },
         { id: 2, library: "back" },
         { id: 3, library: "back" },
-        { id: 8 }
+        { id: 8 },
       ];
 
       const selectedFrame = frames[0];
@@ -287,7 +287,7 @@ describe("Frames", () => {
         frames,
         frameworkGroupingOn: false,
         selectedFrame,
-        selectable: true
+        selectable: true,
       });
       expect(component).toMatchSnapshot();
 

@@ -9,7 +9,7 @@ import { createStore, selectors, actions } from "../../utils/test-head";
 const {
   getFileSearchQuery,
   getFileSearchModifiers,
-  getFileSearchResults
+  getFileSearchResults,
 } = selectors;
 
 describe("file text search", () => {
@@ -19,7 +19,7 @@ describe("file text search", () => {
       matches: [],
       matchIndex: -1,
       index: -1,
-      count: 0
+      count: 0,
     });
 
     const matches = [{ line: 1, ch: 3 }, { line: 3, ch: 2 }];
@@ -29,7 +29,7 @@ describe("file text search", () => {
       count: 2,
       index: 2,
       matchIndex: 1,
-      matches: matches
+      matches: matches,
     });
   });
 

@@ -11,7 +11,7 @@ const stubs = require("../stubs/promise");
 const {
   expectActorAttribute,
   getSelectableInInspectorGrips,
-  getGripLengthBubbleText
+  getGripLengthBubbleText,
 } = require("./test-helpers");
 
 const renderRep = (object, props) => {
@@ -84,7 +84,7 @@ describe("Promise - fulfilled with object", () => {
 describe("Promise - fulfilled with array", () => {
   const object = stubs.get("FulfilledWithArray");
   const length = getGripLengthBubbleText(object.promiseState.value, {
-    mode: MODE.TINY
+    mode: MODE.TINY,
   });
   const out = `Promise { <state>: "fulfilled", <value>: ${length} […] }`;
 
@@ -118,7 +118,7 @@ describe("Promise - fulfilled with node", () => {
     node.simulate("mouseover");
 
     expect(onDOMNodeMouseOver.mock.calls).toHaveLength(1);
-    expect(onDOMNodeMouseOver).toBeCalledWith(grips[0]);
+    expect(onDOMNodeMouseOver).toHaveBeenCalledWith(grips[0]);
   });
 
   it("calls the expected function on mouseout", () => {

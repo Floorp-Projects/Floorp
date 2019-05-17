@@ -11,7 +11,7 @@ const ObjectClient = require("../__mocks__/object-client");
 function generateDefaults(overrides) {
   return {
     autoExpandDepth: 0,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -20,7 +20,7 @@ function mount(props) {
 
   return mountObjectInspector({
     client,
-    props: generateDefaults(props)
+    props: generateDefaults(props),
   });
 }
 
@@ -34,11 +34,11 @@ describe("ObjectInspector - properties", () => {
         {
           path: "root",
           contents: {
-            value: stub
-          }
-        }
+            value: stub,
+          },
+        },
       ],
-      onFocus
+      onFocus,
     });
 
     const node = wrapper.find(".node").first();
@@ -57,11 +57,11 @@ describe("ObjectInspector - properties", () => {
         {
           path: "root",
           contents: {
-            value: stub
-          }
-        }
+            value: stub,
+          },
+        },
       ],
-      onFocus
+      onFocus,
     });
 
     const node = wrapper.find(".node").first();
@@ -79,11 +79,11 @@ describe("ObjectInspector - properties", () => {
         {
           path: "root",
           contents: {
-            value: stub
-          }
-        }
+            value: stub,
+          },
+        },
       ],
-      onDoubleClick
+      onDoubleClick,
     });
 
     const node = wrapper.find(".node").first();
@@ -101,11 +101,11 @@ describe("ObjectInspector - properties", () => {
         {
           path: "root",
           contents: {
-            value: stub
-          }
-        }
+            value: stub,
+          },
+        },
       ],
-      onCmdCtrlClick
+      onCmdCtrlClick,
     });
 
     const node = wrapper.find(".node").first();
@@ -124,11 +124,11 @@ describe("ObjectInspector - properties", () => {
           path: "root",
           name: "Label",
           contents: {
-            value: stub
-          }
-        }
+            value: stub,
+          },
+        },
       ],
-      onLabelClick
+      onLabelClick,
     });
 
     const label = wrapper.find(".object-label").first();
@@ -147,11 +147,11 @@ describe("ObjectInspector - properties", () => {
           path: "root",
           name: "Label",
           contents: {
-            value: stub
-          }
-        }
+            value: stub,
+          },
+        },
       ],
-      onLabelClick
+      onLabelClick,
     });
 
     const label = wrapper.find(".object-label").first();

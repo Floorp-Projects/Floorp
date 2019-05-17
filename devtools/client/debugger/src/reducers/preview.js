@@ -17,16 +17,16 @@ export type Preview = {|
   location: AstLocation,
   cursorPos: any,
   tokenPos: AstLocation,
-  target: HTMLDivElement
+  target: HTMLDivElement,
 |};
 
 export type PreviewState = {
-  +preview: ?Preview
+  +preview: ?Preview,
 };
 
 export function initialPreviewState(): PreviewState {
   return {
-    preview: null
+    preview: null,
   };
 }
 

@@ -10,7 +10,7 @@ import {
   collapseTree,
   formatTree,
   addToTree,
-  createDirectoryNode
+  createDirectoryNode,
 } from "../index";
 
 const abcSource = makeMockSource("http://example.com/a/b/c.js", "actor1");

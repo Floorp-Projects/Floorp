@@ -16,7 +16,7 @@ describe("ui reducer", () => {
     const value = false;
     const updatedState = update(state, {
       type: "TOGGLE_FRAMEWORK_GROUPING",
-      value
+      value,
     });
     expect(updatedState.frameworkGroupingOn).toBe(value);
     expect(prefs.frameworkGroupingOn).toBe(value);
@@ -27,7 +27,7 @@ describe("ui reducer", () => {
     const value = true;
     const updatedState = update(state, {
       type: "TOGGLE_FRAMEWORK_GROUPING",
-      value
+      value,
     });
     expect(updatedState.frameworkGroupingOn).toBe(value);
     expect(prefs.frameworkGroupingOn).toBe(value);

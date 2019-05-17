@@ -17,7 +17,7 @@ import {
   getSelectedSource,
   getSelectedFrame,
   getSymbols,
-  getCurrentThread
+  getCurrentThread,
 } from "../selectors";
 
 import { getMappedExpression } from "./expressions";
@@ -108,7 +108,7 @@ export function setPreview(
 
     const { result } = await client.evaluateInFrame(expression, {
       frameId: selectedFrame.id,
-      thread
+      thread,
     });
 
     // Error case occurs for a token that follows an errored evaluation
@@ -128,7 +128,7 @@ export function setPreview(
     const root = {
       name: expression,
       path: expression,
-      contents: { value: result }
+      contents: { value: result },
     };
     const properties = await client.loadObjectProperties(root);
 
@@ -150,8 +150,8 @@ export function setPreview(
         location,
         tokenPos,
         cursorPos,
-        target
-      }
+        target,
+      },
     });
   };
 }
@@ -166,7 +166,7 @@ export function clearPreview(cx: Context) {
     return dispatch(
       ({
         type: "CLEAR_PREVIEW",
-        cx
+        cx,
       }: Action)
     );
   };

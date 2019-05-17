@@ -15,7 +15,7 @@ let ASTs = new Map();
 function _parse(code, opts) {
   return babelParser.parse(code, {
     ...opts,
-    tokens: true
+    tokens: true,
   });
 }
 
@@ -23,7 +23,7 @@ const sourceOptions = {
   generated: {
     sourceType: "unambiguous",
     tokens: true,
-    plugins: ["objectRestSpread"]
+    plugins: ["objectRestSpread"],
   },
   original: {
     sourceType: "unambiguous",
@@ -41,9 +41,9 @@ const sourceOptions = {
       "functionBind",
       "functionSent",
       "dynamicImport",
-      "react-jsx"
-    ]
-  }
+      "react-jsx",
+    ],
+  },
 };
 
 export function parse(text: ?string, opts?: Object): any {
@@ -72,7 +72,7 @@ const VUE_COMPONENT_START = /^\s*</;
 function vueParser({ source, line }) {
   return parse(source, {
     startLine: line,
-    ...sourceOptions.original
+    ...sourceOptions.original,
   });
 }
 function parseVueScript(code) {
@@ -103,7 +103,7 @@ export function parseConsoleScript(text: string, opts?: Object): Object | null {
     return _parse(text, {
       plugins: ["objectRestSpread", "dynamicImport"],
       ...opts,
-      allowAwaitOutsideFunction: true
+      allowAwaitOutsideFunction: true,
     });
   } catch (e) {
     return null;
@@ -151,8 +151,8 @@ export function getAst(sourceId: string) {
             (p !== "jsx" || contentType.match(/typescript-jsx/))
         ),
         "decorators-legacy",
-        "typescript"
-      ]
+        "typescript",
+      ],
     };
     ast = parse(source.text, options);
   }
@@ -183,7 +183,7 @@ export function hasNode(rootNode: Node, predicate: Function) {
         if (predicate(node, ancestors)) {
           throw new Error("MATCH");
         }
-      }
+      },
     });
   } catch (e) {
     if (e.message === "MATCH") {

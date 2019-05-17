@@ -17,7 +17,7 @@ const { span } = dom;
  * Renders a grip object with textual data.
  */
 ObjectWithText.propTypes = {
-  object: PropTypes.object.isRequired
+  object: PropTypes.object.isRequired,
 };
 
 function ObjectWithText(props) {
@@ -25,7 +25,7 @@ function ObjectWithText(props) {
   return span(
     {
       "data-link-actor-id": grip.actor,
-      className: `objectTitle objectBox objectBox-${getType(grip)}`
+      className: `objectTitle objectBox objectBox-${getType(grip)}`,
     },
     `${getType(grip)} `,
     getDescription(grip)
@@ -38,7 +38,7 @@ function getType(grip) {
 
 function getDescription(grip) {
   return String({
-    object: grip.preview.text
+    object: grip.preview.text,
   });
 }
 
@@ -54,5 +54,5 @@ function supportsObject(grip, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(ObjectWithText),
-  supportsObject
+  supportsObject,
 };

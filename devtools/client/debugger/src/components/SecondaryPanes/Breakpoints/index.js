@@ -20,13 +20,13 @@ import { createHeadlessEditor } from "../../../utils/editor/create-editor";
 
 import {
   makeBreakpointId,
-  sortSelectedBreakpoints
+  sortSelectedBreakpoints,
 } from "../../../utils/breakpoint";
 
 import {
   getSelectedSource,
   getBreakpointSources,
-  getSkipPausing
+  getSkipPausing,
 } from "../../../selectors";
 
 import type { Source } from "../../../types";
@@ -41,7 +41,7 @@ type Props = {
   skipPausing: boolean,
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
-  pauseOnExceptions: Function
+  pauseOnExceptions: Function,
 };
 
 class Breakpoints extends Component<Props> {
@@ -71,7 +71,7 @@ class Breakpoints extends Component<Props> {
       breakpointSources,
       shouldPauseOnExceptions,
       shouldPauseOnCaughtExceptions,
-      pauseOnExceptions
+      pauseOnExceptions,
     } = this.props;
 
     const isEmpty = breakpointSources.length == 0;
@@ -79,7 +79,7 @@ class Breakpoints extends Component<Props> {
     return (
       <div
         className={classnames("breakpoints-exceptions-options", {
-          empty: isEmpty
+          empty: isEmpty,
         })}
       >
         <ExceptionOption
@@ -110,7 +110,7 @@ class Breakpoints extends Component<Props> {
     }
 
     const sources = [
-      ...breakpointSources.map(({ source, breakpoints }) => source)
+      ...breakpointSources.map(({ source, breakpoints }) => source),
     ];
 
     return (
@@ -139,7 +139,7 @@ class Breakpoints extends Component<Props> {
                   getSelectedLocation(breakpoint, selectedSource)
                 )}
               />
-            ))
+            )),
           ];
         })}
       </div>
@@ -160,12 +160,12 @@ class Breakpoints extends Component<Props> {
 const mapStateToProps = state => ({
   breakpointSources: getBreakpointSources(state),
   selectedSource: getSelectedSource(state),
-  skipPausing: getSkipPausing(state)
+  skipPausing: getSkipPausing(state),
 });
 
 export default connect(
   mapStateToProps,
   {
-    pauseOnExceptions: actions.pauseOnExceptions
+    pauseOnExceptions: actions.pauseOnExceptions,
   }
 )(Breakpoints);

@@ -17,7 +17,7 @@ describe("worker utils", () => {
     const terminateMock = jest.fn();
 
     global.Worker = jest.fn(() => ({
-      terminate: terminateMock
+      terminate: terminateMock,
     }));
 
     dispatcher.start();
@@ -35,7 +35,7 @@ describe("worker utils", () => {
     global.Worker = jest.fn(() => {
       return {
         postMessage: postMessageMock,
-        addEventListener: addEventListenerMock
+        addEventListener: addEventListenerMock,
       };
     });
 
@@ -48,7 +48,7 @@ describe("worker utils", () => {
     expect(postMessageMockCall).toEqual({
       calls: [["bar"]],
       id: 1,
-      method: "foo"
+      method: "foo",
     });
 
     expect(addEventListenerMock.mock.calls).toHaveLength(1);
@@ -66,7 +66,7 @@ describe("worker utils", () => {
     global.Worker = jest.fn(() => {
       return {
         postMessage: postMessageMock,
-        addEventListener: addEventListenerMock
+        addEventListener: addEventListenerMock,
       };
     });
 
@@ -84,7 +84,7 @@ describe("worker utils", () => {
     expect(postMessageMockCall).toEqual({
       calls: [["bar"], ["baz"]],
       id: 1,
-      method: "foo"
+      method: "foo",
     });
 
     expect(addEventListenerMock.mock.calls).toHaveLength(1);
@@ -101,7 +101,7 @@ describe("worker utils", () => {
     const callee = {
       doSomething: () => {
         throw new Error("failed");
-      }
+      },
     };
 
     const handler = workerHandler(callee);
@@ -114,9 +114,9 @@ describe("worker utils", () => {
       id: 53,
       results: [
         {
-          error: "Error: failed"
-        }
-      ]
+          error: "Error: failed",
+        },
+      ],
     });
   });
 
@@ -130,7 +130,7 @@ describe("worker utils", () => {
       return {
         postMessage: postMessageMock,
         addEventListener: addEventListenerMock,
-        terminate: terminateMock
+        terminate: terminateMock,
       };
     });
 

@@ -24,7 +24,7 @@ describe("Error - Simple error", () => {
   it("renders with expected text for simple error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -36,7 +36,7 @@ describe("Error - Simple error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -64,7 +64,7 @@ describe("Error - Multi line stack error", () => {
   it("renders with expected text for Error object", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -75,7 +75,7 @@ describe("Error - Multi line stack error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -93,7 +93,7 @@ describe("Error - Error without stacktrace", () => {
   it("renders with expected text for Error object", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -104,7 +104,7 @@ describe("Error - Error without stacktrace", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -123,7 +123,7 @@ describe("Error - Eval error", () => {
   it("renders with expected text for an EvalError", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -134,7 +134,7 @@ describe("Error - Eval error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -153,7 +153,7 @@ describe("Error - Internal error", () => {
   it("renders with expected text for an InternalError", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -164,7 +164,7 @@ describe("Error - Internal error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -183,7 +183,7 @@ describe("Error - Range error", () => {
   it("renders with expected text for RangeError", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -194,7 +194,7 @@ describe("Error - Range error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -213,7 +213,7 @@ describe("Error - Reference error", () => {
   it("renders with expected text for ReferenceError", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -224,7 +224,7 @@ describe("Error - Reference error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -243,7 +243,7 @@ describe("Error - Syntax error", () => {
   it("renders with expected text for SyntaxError", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -254,7 +254,7 @@ describe("Error - Syntax error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -273,7 +273,7 @@ describe("Error - Type error", () => {
   it("renders with expected text for TypeError", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -284,7 +284,7 @@ describe("Error - Type error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -303,7 +303,7 @@ describe("Error - URI error", () => {
   it("renders with expected text for URIError", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -314,7 +314,7 @@ describe("Error - URI error", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -332,7 +332,7 @@ describe("Error - DOMException", () => {
   it("renders with expected text for DOMException", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -345,7 +345,7 @@ describe("Error - DOMException", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -359,7 +359,7 @@ describe("Error - base-loader.js", () => {
   it("renders as expected without mode", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -370,7 +370,7 @@ describe("Error - base-loader.js", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -384,7 +384,7 @@ describe("Error - longString stacktrace", () => {
   it("renders as expected", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -398,7 +398,7 @@ describe("Error - longString stacktrace - cut-off location", () => {
   it("renders as expected", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -414,7 +414,7 @@ describe("Error - stacktrace location click", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object,
-        onViewSourceInDebugger
+        onViewSourceInDebugger,
       })
     );
 
@@ -427,7 +427,7 @@ describe("Error - stacktrace location click", () => {
     );
     locations.first().simulate("click", {
       type: "click",
-      stopPropagation: () => {}
+      stopPropagation: () => {},
     });
 
     expect(onViewSourceInDebugger.mock.calls).toHaveLength(1);
@@ -444,7 +444,7 @@ describe("Error - stacktrace location click", () => {
     );
     locations.last().simulate("click", {
       type: "click",
-      stopPropagation: () => {}
+      stopPropagation: () => {},
     });
 
     expect(onViewSourceInDebugger.mock.calls).toHaveLength(2);
@@ -463,7 +463,7 @@ describe("Error - stacktrace location click", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
         object,
-        onViewSourceInDebugger
+        onViewSourceInDebugger,
       })
     );
 
@@ -473,7 +473,7 @@ describe("Error - stacktrace location click", () => {
 
     locations.first().simulate("click", {
       type: "click",
-      stopPropagation: () => {}
+      stopPropagation: () => {},
     });
 
     expect(onViewSourceInDebugger.mock.calls).toHaveLength(0);
@@ -484,7 +484,7 @@ describe("Error - stacktrace location click", () => {
 
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object
+        object,
       })
     );
 
@@ -494,7 +494,7 @@ describe("Error - stacktrace location click", () => {
 
     locations.first().simulate("click", {
       type: "click",
-      stopPropagation: () => {}
+      stopPropagation: () => {},
     });
   });
 });
@@ -515,7 +515,7 @@ describe("Error - renderStacktrace prop", () => {
               }:${frame.columnNumber}\n`
             )
           );
-        }
+        },
       })
     );
     expect(renderedComponent).toMatchSnapshot();
@@ -535,7 +535,7 @@ describe("Error - renderStacktrace prop", () => {
               }:${frame.columnNumber}\n`
             )
           );
-        }
+        },
       })
     );
     expect(renderedComponent).toMatchSnapshot();
@@ -555,7 +555,7 @@ describe("Error - Error with V8-like stack", () => {
   it("renders with expected text", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -577,7 +577,7 @@ describe("Error - Error with invalid stack", () => {
   it("renders with expected text", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
-        object: stub
+        object: stub,
       })
     );
 

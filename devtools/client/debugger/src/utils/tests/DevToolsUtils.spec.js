@@ -14,7 +14,7 @@ describe("DevToolsUtils", () => {
 
     it("calls console.error", () => {
       reportException("caller", ["you broke it"]);
-      expect(console.error).toBeCalled();
+      expect(console.error).toHaveBeenCalled();
     });
 
     it("returns a description of caller and exception text", () => {
@@ -24,7 +24,9 @@ describe("DevToolsUtils", () => {
 
       reportException(who, [exception]);
 
-      expect(console.error).toBeCalledWith(`${who}${msgTxt}`, [exception]);
+      expect(console.error).toHaveBeenCalledWith(`${who}${msgTxt}`, [
+        exception,
+      ]);
     });
   });
 
@@ -35,7 +37,7 @@ describe("DevToolsUtils", () => {
 
       executeSoon(fnc);
 
-      expect(setTimeout).toBeCalledWith(fnc, 0);
+      expect(setTimeout).toHaveBeenCalledWith(fnc, 0);
     });
   });
 });

@@ -24,7 +24,7 @@ import {
   getSourceQueryString,
   getTruncatedFileName,
   isPretty,
-  shouldBlackbox
+  shouldBlackbox,
 } from "../../utils/source";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { getTabMenuItems } from "../../utils/tabs";
@@ -34,7 +34,7 @@ import {
   getActiveSearch,
   getSourcesForTabs,
   getHasSiblingOfSameName,
-  getContext
+  getContext,
 } from "../../selectors";
 import type { ActiveSearchType } from "../../selectors";
 
@@ -54,7 +54,7 @@ type Props = {
   closeTabs: typeof actions.closeTabs,
   togglePrettyPrint: typeof actions.togglePrettyPrint,
   showSource: typeof actions.showSource,
-  toggleBlackBox: typeof actions.toggleBlackBox
+  toggleBlackBox: typeof actions.toggleBlackBox,
 };
 
 class Tab extends PureComponent<Props> {
@@ -73,7 +73,7 @@ class Tab extends PureComponent<Props> {
       toggleBlackBox,
       togglePrettyPrint,
       selectedSource,
-      source
+      source,
     } = this.props;
 
     const tabCount = tabSources.length;
@@ -91,15 +91,15 @@ class Tab extends PureComponent<Props> {
       {
         item: {
           ...tabMenuItems.closeTab,
-          click: () => closeTab(cx, sourceTab)
-        }
+          click: () => closeTab(cx, sourceTab),
+        },
       },
       {
         item: {
           ...tabMenuItems.closeOtherTabs,
           click: () => closeTabs(cx, otherTabURLs),
-          disabled: otherTabURLs.length === 0
-        }
+          disabled: otherTabURLs.length === 0,
+        },
       },
       {
         item: {
@@ -110,36 +110,36 @@ class Tab extends PureComponent<Props> {
           },
           disabled:
             tabCount === 1 ||
-            tabSources.some((t, i) => t === tab && tabCount - 1 === i)
-        }
+            tabSources.some((t, i) => t === tab && tabCount - 1 === i),
+        },
       },
       {
         item: {
           ...tabMenuItems.closeAllTabs,
-          click: () => closeTabs(cx, tabURLs)
-        }
+          click: () => closeTabs(cx, tabURLs),
+        },
       },
       { item: { type: "separator" } },
       {
         item: {
           ...tabMenuItems.copyToClipboard,
           disabled: selectedSource.id !== tab,
-          click: () => copyToTheClipboard(sourceTab.text)
-        }
+          click: () => copyToTheClipboard(sourceTab.text),
+        },
       },
       {
         item: {
           ...tabMenuItems.copySourceUri2,
           disabled: !selectedSource.url,
-          click: () => copyToTheClipboard(getRawSourceURL(sourceTab.url))
-        }
+          click: () => copyToTheClipboard(getRawSourceURL(sourceTab.url)),
+        },
       },
       {
         item: {
           ...tabMenuItems.showSource,
           disabled: !selectedSource.url,
-          click: () => showSource(cx, tab)
-        }
+          click: () => showSource(cx, tab),
+        },
       },
       {
         item: {
@@ -148,16 +148,16 @@ class Tab extends PureComponent<Props> {
             ? L10N.getStr("sourceFooter.unblackbox")
             : L10N.getStr("sourceFooter.blackbox"),
           disabled: !shouldBlackbox(source),
-          click: () => toggleBlackBox(cx, source)
-        }
+          click: () => toggleBlackBox(cx, source),
+        },
       },
       {
         item: {
           ...tabMenuItems.prettyPrint,
           click: () => togglePrettyPrint(cx, tab),
-          disabled: isPretty(sourceTab)
-        }
-      }
+          disabled: isPretty(sourceTab),
+        },
+      },
     ];
 
     showMenu(e, buildMenu(items));
@@ -179,7 +179,7 @@ class Tab extends PureComponent<Props> {
       closeTab,
       source,
       tabSources,
-      hasSiblingOfSameName
+      hasSiblingOfSameName,
     } = this.props;
     const sourceId = source.id;
     const active =
@@ -201,7 +201,7 @@ class Tab extends PureComponent<Props> {
 
     const className = classnames("source-tab", {
       active,
-      pretty: isPrettyCode
+      pretty: isPrettyCode,
     });
 
     const path = getDisplayPath(source, tabSources);
@@ -242,7 +242,7 @@ const mapStateToProps = (state, { source }) => {
     tabSources: getSourcesForTabs(state),
     selectedSource: selectedSource,
     activeSearch: getActiveSearch(state),
-    hasSiblingOfSameName: getHasSiblingOfSameName(state, source)
+    hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
   };
 };
 
@@ -254,6 +254,6 @@ export default connect(
     closeTabs: actions.closeTabs,
     togglePrettyPrint: actions.togglePrettyPrint,
     showSource: actions.showSource,
-    toggleBlackBox: actions.toggleBlackBox
+    toggleBlackBox: actions.toggleBlackBox,
   }
 )(Tab);

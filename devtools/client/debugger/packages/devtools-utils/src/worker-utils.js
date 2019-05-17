@@ -8,8 +8,8 @@ export type Message = {
   data: {
     id: string,
     method: string,
-    args: Array<any>
-  }
+    args: Array<any>,
+  },
 };
 
 function WorkerDispatcher() {
@@ -65,7 +65,7 @@ WorkerDispatcher.prototype = {
       this.worker.postMessage({
         id,
         method,
-        calls: items.map(item => item[0])
+        calls: items.map(item => item[0]),
       });
 
       const listener = ({ data: result }) => {
@@ -98,7 +98,7 @@ WorkerDispatcher.prototype = {
 
   invoke(method: string, ...args: any[]): Promise<any> {
     return this.task(method)(...args);
-  }
+  },
 };
 
 function workerHandler(publicInterface: Object) {
@@ -132,5 +132,5 @@ function workerHandler(publicInterface: Object) {
 
 module.exports = {
   WorkerDispatcher,
-  workerHandler
+  workerHandler,
 };

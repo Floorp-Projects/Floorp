@@ -21,7 +21,7 @@ function networkRequest(url: string, opts: any): Promise<*> {
         if (res.headers.get("Content-Type") === "application/wasm") {
           return res.arrayBuffer().then(buffer => ({
             content: buffer,
-            isDwarf: true
+            isDwarf: true,
           }));
         }
         return res.text().then(text => ({ content: text }));
@@ -30,7 +30,7 @@ function networkRequest(url: string, opts: any): Promise<*> {
     }),
     new Promise((resolve, reject) => {
       setTimeout(() => reject(new Error("Connect timeout error")), 6000);
-    })
+    }),
   ]);
 }
 

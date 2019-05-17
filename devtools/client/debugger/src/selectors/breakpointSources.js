@@ -10,7 +10,7 @@ import {
   getSources,
   getSourceInSources,
   getBreakpointsList,
-  getSelectedSource
+  getSelectedSource,
 } from "../selectors";
 import { getFilename } from "../utils/source";
 import { getSelectedLocation } from "../utils/selected-location";
@@ -21,7 +21,7 @@ import type { Selector, SourceResourceState } from "../reducers/types";
 
 export type BreakpointSources = Array<{
   source: Source,
-  breakpoints: Breakpoint[]
+  breakpoints: Breakpoint[],
 }>;
 
 function getBreakpointsForSource(
@@ -76,7 +76,7 @@ export const getBreakpointSources: Selector<BreakpointSources> = createSelector(
           source,
           selectedSource,
           breakpoints
-        )
+        ),
       }))
       .filter(({ breakpoints: bpSources }) => bpSources.length > 0)
 );
