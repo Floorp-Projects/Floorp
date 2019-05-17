@@ -1,14 +1,10 @@
-import os
-import sys
 from io import BytesIO
 
 from mock import Mock
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-
 from manifest import manifest as wptmanifest
 from manifest.item import TestharnessTest
-from wptrunner import manifestexpected, wpttest
+from .. import manifestexpected, wpttest
 
 dir_ini_0 = """\
 prefs: [a:b]
