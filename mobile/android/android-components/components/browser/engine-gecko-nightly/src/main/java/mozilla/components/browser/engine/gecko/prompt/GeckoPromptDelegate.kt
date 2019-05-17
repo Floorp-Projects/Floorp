@@ -413,15 +413,19 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     private fun Uri.toFileUri(context: Context): Uri {
         val uri = this
-        val temporalFile = java.io.File(context.cacheDir, uri.getFileName(context))
+        val cacheUploadDirectory = java.io.File(context.cacheDir, "/uploads")
+
+        if (!cacheUploadDirectory.exists()) {
+            cacheUploadDirectory.mkdir()
+        }
+
+        val temporalFile = java.io.File(cacheUploadDirectory, uri.getFileName(context))
         try {
-            val inStream = context.contentResolver.openInputStream(uri) as FileInputStream
-            val outStream = FileOutputStream(temporalFile)
-            val inChannel = inStream.channel
-            val outChannel = outStream.channel
-            inChannel.transferTo(0, inChannel.size(), outChannel)
-            inStream.close()
-            outStream.close()
+            (context.contentResolver.openInputStream(uri) as FileInputStream).use { inStream ->
+                FileOutputStream(temporalFile).use { outStream ->
+                    inStream.copyTo(outStream)
+                }
+            }
         } catch (e: IOException) {
             val logger = Logger("GeckoPromptDelegate")
             logger.warn("Could not convert uri to file uri", e)
