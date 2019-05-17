@@ -1354,7 +1354,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
          __FUNCTION__, static_cast<uint32_t>(init.mReason), init.mCollapsed,
          static_cast<uint32_t>(init.mCaretVisible));
 
-  (new AsyncEventDispatcher(doc, event))->RunDOMEventWhenSafe();
+  (new AsyncEventDispatcher(doc, event))->PostDOMEvent();
 }
 
 }  // namespace mozilla
