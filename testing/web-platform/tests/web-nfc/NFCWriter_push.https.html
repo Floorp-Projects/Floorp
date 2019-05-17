@@ -84,6 +84,15 @@ const invalid_signals = [
   self
 ]
 
+const non_strings = [
+  123,
+  {},
+  true,
+  Symbol(),
+  () => {},
+  self
+]
+
 promise_test(t => {
   const writer = new NFCWriter();
   const promises = [];
@@ -210,5 +219,33 @@ promise_test(() => {
     }
   });
 }, 'Test that WebNFC API is not accessible from iframe context.');
+
+promise_test(t => {
+  const writer = new NFCWriter();
+  const promises = [];
+  non_strings.forEach(invalid_url => {
+    promises.push(
+      promise_rejects(t, new TypeError(), writer.push({
+        url: invalid_url,
+        records: [{ recordType: "text", data: 'Hello World' }]
+      }));
+    );
+  });
+  return Promise.all(promises);
+}, "Test that promise is rejected with TypeError if NDEFMessageSource contains non-string url.");
+
+promise_test(t => {
+  const writer = new NFCWriter();
+  const promises = [];
+  non_strings.forEach(invalid_serialNumber => {
+    promises.push(
+      promise_rejects(t, new TypeError(), writer.push({
+        serialNumber: invalid_serialNumber,
+        records: [{ recordType: "text", data: 'Hello World' }]
+      }));
+    );
+  });
+  return Promise.all(promises);
+}, "Test that promise is rejected with TypeError if NDEFMessageSource contains non-string serialNumber.");
 
 </script>
