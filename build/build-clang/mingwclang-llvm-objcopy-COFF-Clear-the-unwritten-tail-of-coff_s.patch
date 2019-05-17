@@ -1,0 +1,28 @@
+From 1284ee3c47bab17ec081b5169633aea4f8abfd30 Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Wed, 23 Jan 2019 09:12:53 +0000
+Subject: [PATCH] [llvm-objcopy] [COFF] Clear the unwritten tail of
+ coff_section::Header::Name
+
+This should fix the add-gnu-debuglink test on all buildbots.
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@351934 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ tools/llvm-objcopy/COFF/Writer.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/llvm/tools/llvm-objcopy/COFF/Writer.cpp b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+index 05e46291c39..db897e2ff33 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Writer.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+@@ -121,6 +121,7 @@ size_t COFFWriter::finalizeStringTable() {
+ 
+   for (auto &S : Obj.getMutableSections()) {
+     if (S.Name.size() > COFF::NameSize) {
++      memset(S.Header.Name, 0, sizeof(S.Header.Name));
+       snprintf(S.Header.Name, sizeof(S.Header.Name), "/%d",
+                (int)StrTabBuilder.getOffset(S.Name));
+     } else {
+-- 
+2.17.1
+

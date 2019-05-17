@@ -1,0 +1,222 @@
+From 526aa2e94355b7feb3bf7774a6e1899f68e94ad8 Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Sat, 19 Jan 2019 19:42:48 +0000
+Subject: [PATCH] [llvm-objcopy] [COFF] Implement --only-keep-debug
+
+Differential Revision: https://reviews.llvm.org/D56840
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@351662 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ .../COFF/Inputs/only-keep-sections.yaml       | 77 +++++++++++++++++++
+ .../llvm-objcopy/COFF/only-keep-debug.test    | 58 ++++++++++++++
+ tools/llvm-objcopy/COFF/COFFObjcopy.cpp       | 10 +++
+ tools/llvm-objcopy/COFF/Object.cpp            | 10 +++
+ tools/llvm-objcopy/COFF/Object.h              |  1 +
+ 5 files changed, 156 insertions(+)
+ create mode 100644 test/tools/llvm-objcopy/COFF/Inputs/only-keep-sections.yaml
+ create mode 100644 test/tools/llvm-objcopy/COFF/only-keep-debug.test
+
+diff --git a/llvm/test/tools/llvm-objcopy/COFF/Inputs/only-keep-sections.yaml b/llvm/test/tools/llvm-objcopy/COFF/Inputs/only-keep-sections.yaml
+new file mode 100644
+index 00000000000..b5437e10763
+--- /dev/null
++++ b/llvm/test/tools/llvm-objcopy/COFF/Inputs/only-keep-sections.yaml
+@@ -0,0 +1,77 @@
++--- !COFF
++OptionalHeader:  
++  AddressOfEntryPoint: 4144
++  ImageBase:       1073741824
++  SectionAlignment: 4096
++  FileAlignment:   512
++  MajorOperatingSystemVersion: 6
++  MinorOperatingSystemVersion: 0
++  MajorImageVersion: 0
++  MinorImageVersion: 0
++  MajorSubsystemVersion: 6
++  MinorSubsystemVersion: 0
++  Subsystem:       IMAGE_SUBSYSTEM_WINDOWS_CUI
++  DLLCharacteristics: [  ]
++  SizeOfStackReserve: 1048576
++  SizeOfStackCommit: 4096
++  SizeOfHeapReserve: 1048576
++  SizeOfHeapCommit: 4096
++header:          
++  Machine:         IMAGE_FILE_MACHINE_AMD64
++  Characteristics: [  ]
++sections:        
++  - Name:            .text
++    Characteristics: [ IMAGE_SCN_CNT_CODE ]
++    VirtualAddress:  4096
++    VirtualSize:     4
++    SectionData:     C3C3C3C3
++  - Name:            .rdata
++    Characteristics: [ IMAGE_SCN_CNT_INITIALIZED_DATA ]
++    VirtualAddress:  8192
++    VirtualSize:     4
++    SectionData:     2A000000
++  - Name:            .buildid
++    Characteristics: [ IMAGE_SCN_CNT_INITIALIZED_DATA ]
++    VirtualAddress:  12288
++    VirtualSize:     4
++    SectionData:     2B000000
++  - Name:            .reloc
++    Characteristics: [ IMAGE_SCN_CNT_INITIALIZED_DATA, IMAGE_SCN_MEM_DISCARDABLE ]
++    VirtualAddress:  16384
++    VirtualSize:     4
++    SectionData:     2C000000
++  - Name:            .debug_discardable
++    Characteristics: [ IMAGE_SCN_CNT_INITIALIZED_DATA, IMAGE_SCN_MEM_DISCARDABLE ]
++    VirtualAddress:  20480
++    VirtualSize:     4
++    SectionData:     2D000000
++  - Name:            .debug_undiscardable
++    Characteristics: [ IMAGE_SCN_CNT_INITIALIZED_DATA ]
++    VirtualAddress:  24576
++    VirtualSize:     4
++    SectionData:     2E000000
++  - Name:            .unflagged
++    Characteristics: [  ]
++    VirtualAddress:  28672
++    VirtualSize:     4
++    SectionData:     2F000000
++symbols:         
++  - Name:            main
++    Value:           2
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_FUNCTION
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++  - Name:            debug_discardable_sym
++    Value:           0
++    SectionNumber:   5
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_FUNCTION
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++  - Name:            debug_undiscardable_sym
++    Value:           0
++    SectionNumber:   6
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_FUNCTION
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++...
+diff --git a/llvm/test/tools/llvm-objcopy/COFF/only-keep-debug.test b/llvm/test/tools/llvm-objcopy/COFF/only-keep-debug.test
+new file mode 100644
+index 00000000000..5518d4000fc
+--- /dev/null
++++ b/llvm/test/tools/llvm-objcopy/COFF/only-keep-debug.test
+@@ -0,0 +1,58 @@
++RUN: yaml2obj %p/Inputs/only-keep-sections.yaml > %t.in.exe
++
++RUN: llvm-objcopy --only-keep-debug %t.in.exe %t.out.exe
++RUN: llvm-readobj --sections %t.out.exe | FileCheck %s --check-prefix=SECTIONS
++RUN: llvm-objdump -t %t.out.exe | FileCheck %s --check-prefix=SYMBOLS
++
++Check that all non-debug/buildid sections with IMAGE_SCN_CNT_CODE
++or IMAGE_SCN_CNT_INITIALIZED_DATA are truncated, and no others.
++
++SECTIONS:      Sections [
++SECTIONS-NEXT:  Section {
++SECTIONS-NEXT:   Number: 1
++SECTIONS-NEXT:   Name: .text
++SECTIONS-NEXT:   VirtualSize: 0x4
++SECTIONS-NEXT:   VirtualAddress:
++SECTIONS-NEXT:   RawDataSize: 0
++SECTIONS:       Section {
++SECTIONS-NEXT:   Number: 2
++SECTIONS-NEXT:   Name: .rdata
++SECTIONS-NEXT:   VirtualSize: 0x4
++SECTIONS-NEXT:   VirtualAddress:
++SECTIONS-NEXT:   RawDataSize: 0
++SECTIONS:       Section {
++SECTIONS-NEXT:   Number: 3
++SECTIONS-NEXT:   Name: .buildid
++SECTIONS-NEXT:   VirtualSize: 0x4
++SECTIONS-NEXT:   VirtualAddress:
++SECTIONS-NEXT:   RawDataSize: 512
++SECTIONS:       Section {
++SECTIONS-NEXT:   Number: 4
++SECTIONS-NEXT:   Name: .reloc
++SECTIONS-NEXT:   VirtualSize: 0x4
++SECTIONS-NEXT:   VirtualAddress:
++SECTIONS-NEXT:   RawDataSize: 0
++SECTIONS:       Section {
++SECTIONS-NEXT:   Number: 5
++SECTIONS-NEXT:   Name: .debug_discardable
++SECTIONS-NEXT:   VirtualSize: 0x4
++SECTIONS-NEXT:   VirtualAddress:
++SECTIONS-NEXT:   RawDataSize: 512
++SECTIONS:       Section {
++SECTIONS-NEXT:   Number: 6
++SECTIONS-NEXT:   Name: .debug_undiscardable
++SECTIONS-NEXT:   VirtualSize: 0x4
++SECTIONS-NEXT:   VirtualAddress:
++SECTIONS-NEXT:   RawDataSize: 512
++SECTIONS:       Section {
++SECTIONS-NEXT:   Number: 7
++SECTIONS-NEXT:   Name: .unflagged
++SECTIONS-NEXT:   VirtualSize: 0x4
++SECTIONS-NEXT:   VirtualAddress:
++SECTIONS-NEXT:   RawDataSize: 512
++
++SYMBOLS:      SYMBOL TABLE:
++SYMBOLS-NEXT: main
++SYMBOLS-NEXT: debug_discardable_sym
++SYMBOLS-NEXT: debug_undiscardable_sym
++SYMBOLS-EMPTY:
+diff --git a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+index 13d8efde37c..60afbf7bb54 100644
+--- a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+@@ -46,6 +46,16 @@ static Error handleArgs(const CopyConfig &Config, Object &Obj) {
+     return false;
+   });
+ 
++  if (Config.OnlyKeepDebug) {
++    // For --only-keep-debug, we keep all other sections, but remove their
++    // content. The VirtualSize field in the section header is kept intact.
++    Obj.truncateSections([](const Section &Sec) {
++      return !isDebugSection(Sec) && Sec.Name != ".buildid" &&
++             ((Sec.Header.Characteristics &
++               (IMAGE_SCN_CNT_CODE | IMAGE_SCN_CNT_INITIALIZED_DATA)) != 0);
++    });
++  }
++
+   // StripAll removes all symbols and thus also removes all relocations.
+   if (Config.StripAll || Config.StripAllGNU)
+     for (Section &Sec : Obj.getMutableSections())
+diff --git a/llvm/tools/llvm-objcopy/COFF/Object.cpp b/llvm/tools/llvm-objcopy/COFF/Object.cpp
+index e19cea6aa9d..fc87d9e574d 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Object.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Object.cpp
+@@ -127,6 +127,16 @@ void Object::removeSections(function_ref<bool(const Section &)> ToRemove) {
+   updateSymbols();
+ }
+ 
++void Object::truncateSections(function_ref<bool(const Section &)> ToTruncate) {
++  for (Section &Sec : Sections) {
++    if (ToTruncate(Sec)) {
++      Sec.Contents = ArrayRef<uint8_t>();
++      Sec.Relocs.clear();
++      Sec.Header.SizeOfRawData = 0;
++    }
++  }
++}
++
+ } // end namespace coff
+ } // end namespace objcopy
+ } // end namespace llvm
+diff --git a/llvm/tools/llvm-objcopy/COFF/Object.h b/llvm/tools/llvm-objcopy/COFF/Object.h
+index a73e93620d3..8e200369f0b 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Object.h
++++ b/llvm/tools/llvm-objcopy/COFF/Object.h
+@@ -93,6 +93,7 @@ struct Object {
+ 
+   void addSections(ArrayRef<Section> NewSections);
+   void removeSections(function_ref<bool(const Section &)> ToRemove);
++  void truncateSections(function_ref<bool(const Section &)> ToTruncate);
+ 
+ private:
+   std::vector<Symbol> Symbols;
+-- 
+2.17.1
+

@@ -1,0 +1,27 @@
+From a495c9ae6fb3367e6b59d8d245273ed3669754f0 Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Sat, 19 Jan 2019 19:42:23 +0000
+Subject: [PATCH] [llvm-objcopy] [COFF] Remove a superfluous namespace
+ qualification. NFC.
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@351658 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ tools/llvm-objcopy/COFF/COFFObjcopy.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+index ceebf600b3a..437dccbd3d5 100644
+--- a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+@@ -78,7 +78,7 @@ static Error handleArgs(const CopyConfig &Config, Object &Obj) {
+ }
+ 
+ void executeObjcopyOnBinary(const CopyConfig &Config,
+-                            object::COFFObjectFile &In, Buffer &Out) {
++                            COFFObjectFile &In, Buffer &Out) {
+   COFFReader Reader(In);
+   Expected<std::unique_ptr<Object>> ObjOrErr = Reader.create();
+   if (!ObjOrErr)
+-- 
+2.17.1
+

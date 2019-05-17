@@ -1,0 +1,665 @@
+From 2ccafacb7ddd740054dbee06655749ebc55a4d86 Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Sat, 19 Jan 2019 19:42:35 +0000
+Subject: [PATCH] [llvm-objcopy] [COFF] Add support for removing sections
+
+Differential Revision: https://reviews.llvm.org/D56683
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@351660 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ .../llvm-objcopy/COFF/remove-section.test     | 210 ++++++++++++++++++
+ tools/llvm-objcopy/COFF/COFFObjcopy.cpp       |  10 +-
+ tools/llvm-objcopy/COFF/Object.cpp            |  63 ++++++
+ tools/llvm-objcopy/COFF/Object.h              |  27 ++-
+ tools/llvm-objcopy/COFF/Reader.cpp            |  31 ++-
+ tools/llvm-objcopy/COFF/Writer.cpp            |  68 ++++--
+ tools/llvm-objcopy/COFF/Writer.h              |   1 +
+ 7 files changed, 391 insertions(+), 19 deletions(-)
+ create mode 100644 test/tools/llvm-objcopy/COFF/remove-section.test
+
+diff --git a/llvm/test/tools/llvm-objcopy/COFF/remove-section.test b/llvm/test/tools/llvm-objcopy/COFF/remove-section.test
+new file mode 100644
+index 00000000000..b3dfb0b98cb
+--- /dev/null
++++ b/llvm/test/tools/llvm-objcopy/COFF/remove-section.test
+@@ -0,0 +1,210 @@
++# RUN: yaml2obj %s > %t.in.o
++#
++# RUN: llvm-objdump -section-headers %t.in.o | FileCheck %s --check-prefixes=SECTIONS-PRE
++# RUN: llvm-objdump -t %t.in.o | FileCheck %s --check-prefixes=SYMBOLS-PRE
++#
++# RUN: llvm-objcopy -R .bss %t.in.o %t.remove-bss.o
++# RUN: llvm-objdump -section-headers %t.remove-bss.o | FileCheck %s --check-prefix=SECTIONS-REMOVE-BSS
++# RUN: llvm-objdump -t %t.remove-bss.o | FileCheck %s --check-prefix=SYMBOLS-REMOVE-BSS
++#
++# RUN: llvm-objcopy --remove-section .bss %t.in.o %t.cmp.o
++# RUN: cmp %t.remove-bss.o %t.cmp.o
++#
++# RUN: llvm-objcopy -R .text %t.in.o %t.remove-text.o
++# RUN: llvm-objdump -section-headers %t.remove-text.o | FileCheck %s --check-prefix=SECTIONS-REMOVE-TEXT
++# RUN: llvm-objdump -t %t.remove-text.o | FileCheck %s --check-prefix=SYMBOLS-REMOVE-TEXT
++#
++# RUN: not llvm-objcopy -R .comdat %t.in.o %t.remove-comdat.o 2>&1 | FileCheck %s --check-prefix=ERROR-RELOC
++#
++# RUN: llvm-objcopy -R .text -R .comdat %t.in.o %t.remove-text-comdat.o
++# RUN: llvm-objdump -section-headers %t.remove-text-comdat.o | FileCheck %s --check-prefix=SECTIONS-REMOVE-TEXT-COMDAT
++# RUN: llvm-objdump -t %t.remove-text-comdat.o | FileCheck %s --check-prefix=SYMBOLS-REMOVE-TEXT-COMDAT
++#
++#
++# SECTIONS-PRE: Sections:
++# SECTIONS-PRE-NEXT: Idx Name
++# SECTIONS-PRE-NEXT: 0 .text
++# SECTIONS-PRE-NEXT: 1 .bss
++# SECTIONS-PRE-NEXT: 2 .comdat
++# SECTIONS-PRE-NEXT: 3 .associative
++# SECTIONS-PRE-EMPTY:
++#
++# SYMBOLS-PRE: SYMBOL TABLE:
++# SYMBOLS-PRE-NEXT: {{.*}}(sec -1){{.*}} @feat.00
++# SYMBOLS-PRE-NEXT: {{.*}}(sec 1){{.*}} .text
++# SYMBOLS-PRE-NEXT: AUX scnlen {{.*}} assoc 1 comdat 0
++# SYMBOLS-PRE-NEXT: {{.*}}(sec 2){{.*}} .bss
++# SYMBOLS-PRE-NEXT: AUX scnlen {{.*}} assoc 2 comdat 0
++# SYMBOLS-PRE-NEXT: {{.*}}(sec 4){{.*}} .associative
++# SYMBOLS-PRE-NEXT: AUX scnlen {{.*}} assoc 3 comdat 5
++# SYMBOLS-PRE-NEXT: {{.*}}(sec 3){{.*}} .comdat
++# SYMBOLS-PRE-NEXT: AUX scnlen {{.*}} assoc 3 comdat 2
++# SYMBOLS-PRE-NEXT: {{.*}}(sec 3){{.*}} foo
++# SYMBOLS-PRE-NEXT: {{.*}}(sec 1){{.*}} main
++# SYMBOLS-PRE-EMPTY:
++#
++#
++# Removing the .bss section removes one symbol and its aux symbol,
++# and updates the section indices in symbols pointing to later
++# symbols, including the aux section defintitions.
++#
++# Testing that the absolute symbol @feat.00 survives the section number
++# mangling.
++#
++# SECTIONS-REMOVE-BSS: Sections:
++# SECTIONS-REMOVE-BSS-NEXT: Idx Name
++# SECTIONS-REMOVE-BSS-NEXT: 0 .text
++# SECTIONS-REMOVE-BSS-NEXT: 1 .comdat
++# SECTIONS-REMOVE-BSS-NEXT: 2 .associative
++# SECTIONS-REMOVE-BSS-EMPTY:
++#
++# SYMBOLS-REMOVE-BSS: SYMBOL TABLE:
++# SYMBOLS-REMOVE-BSS-NEXT: {{.*}}(sec -1){{.*}} @feat.00
++# SYMBOLS-REMOVE-BSS-NEXT: {{.*}}(sec 1){{.*}} .text
++# SYMBOLS-REMOVE-BSS-NEXT: AUX scnlen {{.*}} assoc 1 comdat 0
++# SYMBOLS-REMOVE-BSS-NEXT: {{.*}}(sec 3){{.*}} .associative
++# SYMBOLS-REMOVE-BSS-NEXT: AUX scnlen {{.*}} assoc 2 comdat 5
++# SYMBOLS-REMOVE-BSS-NEXT: {{.*}}(sec 2){{.*}} .comdat
++# SYMBOLS-REMOVE-BSS-NEXT: AUX scnlen {{.*}} assoc 2 comdat 2
++# SYMBOLS-REMOVE-BSS-NEXT: {{.*}}(sec 2){{.*}} foo
++# SYMBOLS-REMOVE-BSS-NEXT: {{.*}}(sec 1){{.*}} main
++# SYMBOLS-REMOVE-BSS-EMPTY:
++#
++#
++# Removing the .text section is ok and just removes the external symbol
++# referring to it.
++#
++# SECTIONS-REMOVE-TEXT: Sections:
++# SECTIONS-REMOVE-TEXT-NEXT: Idx Name
++# SECTIONS-REMOVE-TEXT-NEXT: 0 .bss
++# SECTIONS-REMOVE-TEXT-NEXT: 1 .comdat
++# SECTIONS-REMOVE-TEXT-NEXT: 2 .associative
++# SECTIONS-REMOVE-TEXT-EMPTY:
++#
++# SYMBOLS-REMOVE-TEXT: SYMBOL TABLE:
++# SYMBOLS-REMOVE-TEXT-NEXT: {{.*}}(sec -1){{.*}} @feat.00
++# SYMBOLS-REMOVE-TEXT-NEXT: {{.*}}(sec 1){{.*}} .bss
++# SYMBOLS-REMOVE-TEXT-NEXT: AUX scnlen {{.*}} assoc 1 comdat 0
++# SYMBOLS-REMOVE-TEXT-NEXT: {{.*}}(sec 3){{.*}} .associative
++# SYMBOLS-REMOVE-TEXT-NEXT: AUX scnlen {{.*}} assoc 2 comdat 5
++# SYMBOLS-REMOVE-TEXT-NEXT: {{.*}}(sec 2){{.*}} .comdat
++# SYMBOLS-REMOVE-TEXT-NEXT: AUX scnlen {{.*}} assoc 2 comdat 2
++# SYMBOLS-REMOVE-TEXT-NEXT: {{.*}}(sec 2){{.*}} foo
++# SYMBOLS-REMOVE-TEXT-EMPTY:
++#
++#
++# Removing the .comdat section fails, since the .text section has relocations
++# against it.
++#
++# ERROR-RELOC: Relocation target foo ({{.*}}) not found
++#
++#
++# Removing the .comdat section and .text (with a relocation against .comdat)
++# works, as it also removes the .associative section transitively.
++#
++# SECTIONS-REMOVE-TEXT-COMDAT: Sections:
++# SECTIONS-REMOVE-TEXT-COMDAT-NEXT: Idx Name
++# SECTIONS-REMOVE-TEXT-COMDAT-NEXT: 0 .bss
++# SECTIONS-REMOVE-TEXT-COMDAT-EMPTY:
++#
++# SYMBOLS-REMOVE-TEXT-COMDAT: SYMBOL TABLE:
++# SYMBOLS-REMOVE-TEXT-COMDAT-NEXT: {{.*}}(sec -1){{.*}} @feat.00
++# SYMBOLS-REMOVE-TEXT-COMDAT-NEXT: {{.*}}(sec 1){{.*}} .bss
++# SYMBOLS-REMOVE-TEXT-COMDAT-NEXT: AUX scnlen {{.*}} assoc 1 comdat 0
++# SYMBOLS-REMOVE-TEXT-COMDAT-EMPTY:
++
++--- !COFF
++header:          
++  Machine:         IMAGE_FILE_MACHINE_AMD64
++  Characteristics: [  ]
++sections:        
++  - Name:            .text
++    Characteristics: [  ]
++    Alignment:       4
++    SectionData:     488B0500000000C3
++    Relocations:     
++      - VirtualAddress:  3
++        SymbolName:      foo
++        Type:            IMAGE_REL_AMD64_REL32
++  - Name:            .bss
++    Characteristics: [  ]
++    Alignment:       4
++    SectionData:     ''
++  - Name:            .comdat
++    Characteristics: [ IMAGE_SCN_LNK_COMDAT ]
++    Alignment:       1
++    SectionData:     '2A000000'
++  - Name:            .associative
++    Characteristics: [ IMAGE_SCN_LNK_COMDAT ]
++    Alignment:       1
++    SectionData:     '0000000000000000'
++symbols:         
++  - Name:            '@feat.00'
++    Value:           0
++    SectionNumber:   -1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_STATIC
++  - Name:            .text
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_STATIC
++    SectionDefinition: 
++      Length:          8
++      NumberOfRelocations: 1
++      NumberOfLinenumbers: 0
++      CheckSum:        583624169
++      Number:          1
++  - Name:            .bss
++    Value:           0
++    SectionNumber:   2
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_STATIC
++    SectionDefinition: 
++      Length:          0
++      NumberOfRelocations: 0
++      NumberOfLinenumbers: 0
++      CheckSum:        0
++      Number:          2
++  - Name:            .associative
++    Value:           0
++    SectionNumber:   4
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_STATIC
++    SectionDefinition: 
++      Length:          8
++      NumberOfRelocations: 0
++      NumberOfLinenumbers: 0
++      CheckSum:        0
++      Number:          3
++      Selection:       IMAGE_COMDAT_SELECT_ASSOCIATIVE
++  - Name:            .comdat
++    Value:           0
++    SectionNumber:   3
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_STATIC
++    SectionDefinition: 
++      Length:          4
++      NumberOfRelocations: 0
++      NumberOfLinenumbers: 0
++      CheckSum:        3482275674
++      Number:          3
++      Selection:       IMAGE_COMDAT_SELECT_ANY
++  - Name:            foo
++    Value:           0
++    SectionNumber:   3
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++  - Name:            main
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++...
+diff --git a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+index 437dccbd3d5..dd2e4829218 100644
+--- a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+@@ -27,9 +27,17 @@ using namespace object;
+ using namespace COFF;
+ 
+ static Error handleArgs(const CopyConfig &Config, Object &Obj) {
++  // Perform the actual section removals.
++  Obj.removeSections([&Config](const Section &Sec) {
++    if (is_contained(Config.ToRemove, Sec.Name))
++      return true;
++
++    return false;
++  });
++
+   // StripAll removes all symbols and thus also removes all relocations.
+   if (Config.StripAll || Config.StripAllGNU)
+-    for (Section &Sec : Obj.Sections)
++    for (Section &Sec : Obj.getMutableSections())
+       Sec.Relocs.clear();
+ 
+   // If we need to do per-symbol removals, initialize the Referenced field.
+diff --git a/llvm/tools/llvm-objcopy/COFF/Object.cpp b/llvm/tools/llvm-objcopy/COFF/Object.cpp
+index e58e161e7d2..e19cea6aa9d 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Object.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Object.cpp
+@@ -7,6 +7,7 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "Object.h"
++#include "llvm/ADT/DenseSet.h"
+ #include <algorithm>
+ 
+ namespace llvm {
+@@ -64,6 +65,68 @@ Error Object::markSymbols() {
+   return Error::success();
+ }
+ 
++void Object::addSections(ArrayRef<Section> NewSections) {
++  for (Section S : NewSections) {
++    S.UniqueId = NextSectionUniqueId++;
++    Sections.emplace_back(S);
++  }
++  updateSections();
++}
++
++void Object::updateSections() {
++  SectionMap = DenseMap<ssize_t, Section *>(Sections.size());
++  size_t Index = 1;
++  for (Section &S : Sections) {
++    SectionMap[S.UniqueId] = &S;
++    S.Index = Index++;
++  }
++}
++
++const Section *Object::findSection(ssize_t UniqueId) const {
++  auto It = SectionMap.find(UniqueId);
++  if (It == SectionMap.end())
++    return nullptr;
++  return It->second;
++}
++
++void Object::removeSections(function_ref<bool(const Section &)> ToRemove) {
++  DenseSet<ssize_t> AssociatedSections;
++  auto RemoveAssociated = [&AssociatedSections](const Section &Sec) {
++    return AssociatedSections.count(Sec.UniqueId) == 1;
++  };
++  do {
++    DenseSet<ssize_t> RemovedSections;
++    Sections.erase(
++        std::remove_if(std::begin(Sections), std::end(Sections),
++                       [ToRemove, &RemovedSections](const Section &Sec) {
++                         bool Remove = ToRemove(Sec);
++                         if (Remove)
++                           RemovedSections.insert(Sec.UniqueId);
++                         return Remove;
++                       }),
++        std::end(Sections));
++    // Remove all symbols referring to the removed sections.
++    AssociatedSections.clear();
++    Symbols.erase(
++        std::remove_if(
++            std::begin(Symbols), std::end(Symbols),
++            [&RemovedSections, &AssociatedSections](const Symbol &Sym) {
++              // If there are sections that are associative to a removed
++              // section,
++              // remove those as well as nothing will include them (and we can't
++              // leave them dangling).
++              if (RemovedSections.count(Sym.AssociativeComdatTargetSectionId) ==
++                  1)
++                AssociatedSections.insert(Sym.TargetSectionId);
++              return RemovedSections.count(Sym.TargetSectionId) == 1;
++            }),
++        std::end(Symbols));
++    ToRemove = RemoveAssociated;
++  } while (!AssociatedSections.empty());
++  updateSections();
++  updateSymbols();
++}
++
+ } // end namespace coff
+ } // end namespace objcopy
+ } // end namespace llvm
+diff --git a/llvm/tools/llvm-objcopy/COFF/Object.h b/llvm/tools/llvm-objcopy/COFF/Object.h
+index e6147c40b7c..a73e93620d3 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Object.h
++++ b/llvm/tools/llvm-objcopy/COFF/Object.h
+@@ -37,12 +37,16 @@ struct Section {
+   ArrayRef<uint8_t> Contents;
+   std::vector<Relocation> Relocs;
+   StringRef Name;
++  ssize_t UniqueId;
++  size_t Index;
+ };
+ 
+ struct Symbol {
+   object::coff_symbol32 Sym;
+   StringRef Name;
+-  ArrayRef<uint8_t> AuxData;
++  std::vector<uint8_t> AuxData;
++  ssize_t TargetSectionId;
++  ssize_t AssociativeComdatTargetSectionId = 0;
+   size_t UniqueId;
+   size_t RawIndex;
+   bool Referenced;
+@@ -61,7 +65,6 @@ struct Object {
+   uint32_t BaseOfData = 0; // pe32plus_header lacks this field.
+ 
+   std::vector<object::data_directory> DataDirectories;
+-  std::vector<Section> Sections;
+ 
+   ArrayRef<Symbol> getSymbols() const { return Symbols; }
+   // This allows mutating individual Symbols, but not mutating the list
+@@ -79,14 +82,34 @@ struct Object {
+   // all sections.
+   Error markSymbols();
+ 
++  ArrayRef<Section> getSections() const { return Sections; }
++  // This allows mutating individual Sections, but not mutating the list
++  // of symbols itself.
++  iterator_range<std::vector<Section>::iterator> getMutableSections() {
++    return make_range(Sections.begin(), Sections.end());
++  }
++
++  const Section *findSection(ssize_t UniqueId) const;
++
++  void addSections(ArrayRef<Section> NewSections);
++  void removeSections(function_ref<bool(const Section &)> ToRemove);
++
+ private:
+   std::vector<Symbol> Symbols;
+   DenseMap<size_t, Symbol *> SymbolMap;
+ 
+   size_t NextSymbolUniqueId = 0;
+ 
++  std::vector<Section> Sections;
++  DenseMap<ssize_t, Section *> SectionMap;
++
++  ssize_t NextSectionUniqueId = 1; // Allow a UniqueId 0 to mean undefined.
++
+   // Update SymbolMap and RawIndex in each Symbol.
+   void updateSymbols();
++
++  // Update SectionMap and Index in each Section.
++  void updateSections();
+ };
+ 
+ // Copy between coff_symbol16 and coff_symbol32.
+diff --git a/llvm/tools/llvm-objcopy/COFF/Reader.cpp b/llvm/tools/llvm-objcopy/COFF/Reader.cpp
+index d794042ae24..c8abe2913a2 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Reader.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Reader.cpp
+@@ -11,6 +11,7 @@
+ #include "llvm-objcopy.h"
+ #include "llvm/ADT/ArrayRef.h"
+ #include "llvm/ADT/StringRef.h"
++#include "llvm/BinaryFormat/COFF.h"
+ #include "llvm/Object/COFF.h"
+ #include "llvm/Support/ErrorHandling.h"
+ #include <cstddef>
+@@ -21,6 +22,7 @@ namespace objcopy {
+ namespace coff {
+ 
+ using namespace object;
++using namespace COFF;
+ 
+ Error COFFReader::readExecutableHeaders(Object &Obj) const {
+   const dos_header *DH = COFFObj.getDOSHeader();
+@@ -58,13 +60,14 @@ Error COFFReader::readExecutableHeaders(Object &Obj) const {
+ }
+ 
+ Error COFFReader::readSections(Object &Obj) const {
++  std::vector<Section> Sections;
+   // Section indexing starts from 1.
+   for (size_t I = 1, E = COFFObj.getNumberOfSections(); I <= E; I++) {
+     const coff_section *Sec;
+     if (auto EC = COFFObj.getSection(I, Sec))
+       return errorCodeToError(EC);
+-    Obj.Sections.push_back(Section());
+-    Section &S = Obj.Sections.back();
++    Sections.push_back(Section());
++    Section &S = Sections.back();
+     S.Header = *Sec;
+     if (auto EC = COFFObj.getSectionContents(Sec, S.Contents))
+       return errorCodeToError(EC);
+@@ -77,12 +80,14 @@ Error COFFReader::readSections(Object &Obj) const {
+       return make_error<StringError>("Extended relocations not supported yet",
+                                      object_error::parse_failed);
+   }
++  Obj.addSections(Sections);
+   return Error::success();
+ }
+ 
+ Error COFFReader::readSymbols(Object &Obj, bool IsBigObj) const {
+   std::vector<Symbol> Symbols;
+   Symbols.reserve(COFFObj.getRawNumberOfSymbols());
++  ArrayRef<Section> Sections = Obj.getSections();
+   for (uint32_t I = 0, E = COFFObj.getRawNumberOfSymbols(); I < E;) {
+     Expected<COFFSymbolRef> SymOrErr = COFFObj.getSymbol(I);
+     if (!SymOrErr)
+@@ -103,6 +108,26 @@ Error COFFReader::readSymbols(Object &Obj, bool IsBigObj) const {
+     Sym.AuxData = COFFObj.getSymbolAuxData(SymRef);
+     assert((Sym.AuxData.size() %
+             (IsBigObj ? sizeof(coff_symbol32) : sizeof(coff_symbol16))) == 0);
++    // Find the unique id of the section
++    if (SymRef.getSectionNumber() <=
++        0) // Special symbol (undefined/absolute/debug)
++      Sym.TargetSectionId = SymRef.getSectionNumber();
++    else if (static_cast<uint32_t>(SymRef.getSectionNumber() - 1) <
++             Sections.size())
++      Sym.TargetSectionId = Sections[SymRef.getSectionNumber() - 1].UniqueId;
++    else
++      return make_error<StringError>("Section number out of range",
++                                     object_error::parse_failed);
++    // For section definitions, check if it is comdat associative, and if
++    // it is, find the target section unique id.
++    const coff_aux_section_definition *SD = SymRef.getSectionDefinition();
++    if (SD && SD->Selection == IMAGE_COMDAT_SELECT_ASSOCIATIVE) {
++      int32_t Index = SD->getNumber(IsBigObj);
++      if (Index <= 0 || static_cast<uint32_t>(Index - 1) >= Sections.size())
++        return make_error<StringError>("Unexpected associative section index",
++                                       object_error::parse_failed);
++      Sym.AssociativeComdatTargetSectionId = Sections[Index - 1].UniqueId;
++    }
+     I += 1 + SymRef.getNumberOfAuxSymbols();
+   }
+   Obj.addSymbols(Symbols);
+@@ -116,7 +141,7 @@ Error COFFReader::setRelocTargets(Object &Obj) const {
+     for (size_t I = 0; I < Sym.Sym.NumberOfAuxSymbols; I++)
+       RawSymbolTable.push_back(nullptr);
+   }
+-  for (Section &Sec : Obj.Sections) {
++  for (Section &Sec : Obj.getMutableSections()) {
+     for (Relocation &R : Sec.Relocs) {
+       if (R.Reloc.SymbolTableIndex >= RawSymbolTable.size())
+         return make_error<StringError>("SymbolTableIndex out of range",
+diff --git a/llvm/tools/llvm-objcopy/COFF/Writer.cpp b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+index c347810dd24..9fb7812672b 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Writer.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+@@ -25,7 +25,7 @@ using namespace object;
+ using namespace COFF;
+ 
+ Error COFFWriter::finalizeRelocTargets() {
+-  for (Section &Sec : Obj.Sections) {
++  for (Section &Sec : Obj.getMutableSections()) {
+     for (Relocation &R : Sec.Relocs) {
+       const Symbol *Sym = Obj.findSymbol(R.Target);
+       if (Sym == nullptr)
+@@ -39,8 +39,48 @@ Error COFFWriter::finalizeRelocTargets() {
+   return Error::success();
+ }
+ 
++Error COFFWriter::finalizeSectionNumbers() {
++  for (Symbol &Sym : Obj.getMutableSymbols()) {
++    if (Sym.TargetSectionId <= 0) {
++      // Undefined, or a special kind of symbol. These negative values
++      // are stored in the SectionNumber field which is unsigned.
++      Sym.Sym.SectionNumber = static_cast<uint32_t>(Sym.TargetSectionId);
++    } else {
++      const Section *Sec = Obj.findSection(Sym.TargetSectionId);
++      if (Sec == nullptr)
++        return make_error<StringError>("Symbol " + Sym.Name +
++                                           " points to a removed section",
++                                       object_error::invalid_symbol_index);
++      Sym.Sym.SectionNumber = Sec->Index;
++
++      if (Sym.Sym.NumberOfAuxSymbols == 1 &&
++          Sym.Sym.StorageClass == IMAGE_SYM_CLASS_STATIC) {
++        coff_aux_section_definition *SD =
++            reinterpret_cast<coff_aux_section_definition *>(Sym.AuxData.data());
++        uint32_t SDSectionNumber;
++        if (Sym.AssociativeComdatTargetSectionId == 0) {
++          // Not a comdat associative section; just set the Number field to
++          // the number of the section itself.
++          SDSectionNumber = Sec->Index;
++        } else {
++          Sec = Obj.findSection(Sym.AssociativeComdatTargetSectionId);
++          if (Sec == nullptr)
++            return make_error<StringError>(
++                "Symbol " + Sym.Name + " is associative to a removed section",
++                object_error::invalid_symbol_index);
++          SDSectionNumber = Sec->Index;
++        }
++        // Update the section definition with the new section number.
++        SD->NumberLowPart = static_cast<uint16_t>(SDSectionNumber);
++        SD->NumberHighPart = static_cast<uint16_t>(SDSectionNumber >> 16);
++      }
++    }
++  }
++  return Error::success();
++}
++
+ void COFFWriter::layoutSections() {
+-  for (auto &S : Obj.Sections) {
++  for (auto &S : Obj.getMutableSections()) {
+     if (S.Header.SizeOfRawData > 0)
+       S.Header.PointerToRawData = FileSize;
+     FileSize += S.Header.SizeOfRawData; // For executables, this is already
+@@ -57,7 +97,7 @@ void COFFWriter::layoutSections() {
+ }
+ 
+ size_t COFFWriter::finalizeStringTable() {
+-  for (auto &S : Obj.Sections)
++  for (const auto &S : Obj.getSections())
+     if (S.Name.size() > COFF::NameSize)
+       StrTabBuilder.add(S.Name);
+ 
+@@ -67,7 +107,7 @@ size_t COFFWriter::finalizeStringTable() {
+ 
+   StrTabBuilder.finalize();
+ 
+-  for (auto &S : Obj.Sections) {
++  for (auto &S : Obj.getMutableSections()) {
+     if (S.Name.size() > COFF::NameSize) {
+       snprintf(S.Header.Name, sizeof(S.Header.Name), "/%d",
+                (int)StrTabBuilder.getOffset(S.Name));
+@@ -97,6 +137,8 @@ std::pair<size_t, size_t> COFFWriter::finalizeSymbolTable() {
+ Error COFFWriter::finalize(bool IsBigObj) {
+   if (Error E = finalizeRelocTargets())
+     return E;
++  if (Error E = finalizeSectionNumbers())
++    return E;
+ 
+   size_t SizeOfHeaders = 0;
+   FileAlignment = 1;
+@@ -113,10 +155,10 @@ Error COFFWriter::finalize(bool IsBigObj) {
+     SizeOfHeaders +=
+         PeHeaderSize + sizeof(data_directory) * Obj.DataDirectories.size();
+   }
+-  Obj.CoffFileHeader.NumberOfSections = Obj.Sections.size();
++  Obj.CoffFileHeader.NumberOfSections = Obj.getSections().size();
+   SizeOfHeaders +=
+       IsBigObj ? sizeof(coff_bigobj_file_header) : sizeof(coff_file_header);
+-  SizeOfHeaders += sizeof(coff_section) * Obj.Sections.size();
++  SizeOfHeaders += sizeof(coff_section) * Obj.getSections().size();
+   SizeOfHeaders = alignTo(SizeOfHeaders, FileAlignment);
+ 
+   Obj.CoffFileHeader.SizeOfOptionalHeader =
+@@ -131,8 +173,8 @@ Error COFFWriter::finalize(bool IsBigObj) {
+     Obj.PeHeader.SizeOfHeaders = SizeOfHeaders;
+     Obj.PeHeader.SizeOfInitializedData = SizeOfInitializedData;
+ 
+-    if (!Obj.Sections.empty()) {
+-      const Section &S = Obj.Sections.back();
++    if (!Obj.getSections().empty()) {
++      const Section &S = Obj.getSections().back();
+       Obj.PeHeader.SizeOfImage =
+           alignTo(S.Header.VirtualAddress + S.Header.VirtualSize,
+                   Obj.PeHeader.SectionAlignment);
+@@ -198,7 +240,7 @@ void COFFWriter::writeHeaders(bool IsBigObj) {
+     BigObjHeader.unused4 = 0;
+     // The value in Obj.CoffFileHeader.NumberOfSections is truncated, thus
+     // get the original one instead.
+-    BigObjHeader.NumberOfSections = Obj.Sections.size();
++    BigObjHeader.NumberOfSections = Obj.getSections().size();
+     BigObjHeader.PointerToSymbolTable = Obj.CoffFileHeader.PointerToSymbolTable;
+     BigObjHeader.NumberOfSymbols = Obj.CoffFileHeader.NumberOfSymbols;
+ 
+@@ -223,14 +265,14 @@ void COFFWriter::writeHeaders(bool IsBigObj) {
+       Ptr += sizeof(DD);
+     }
+   }
+-  for (const auto &S : Obj.Sections) {
++  for (const auto &S : Obj.getSections()) {
+     memcpy(Ptr, &S.Header, sizeof(S.Header));
+     Ptr += sizeof(S.Header);
+   }
+ }
+ 
+ void COFFWriter::writeSections() {
+-  for (const auto &S : Obj.Sections) {
++  for (const auto &S : Obj.getSections()) {
+     uint8_t *Ptr = Buf.getBufferStart() + S.Header.PointerToRawData;
+     std::copy(S.Contents.begin(), S.Contents.end(), Ptr);
+ 
+@@ -295,7 +337,7 @@ Error COFFWriter::patchDebugDirectory() {
+   const data_directory *Dir = &Obj.DataDirectories[DEBUG_DIRECTORY];
+   if (Dir->Size <= 0)
+     return Error::success();
+-  for (const auto &S : Obj.Sections) {
++  for (const auto &S : Obj.getSections()) {
+     if (Dir->RelativeVirtualAddress >= S.Header.VirtualAddress &&
+         Dir->RelativeVirtualAddress <
+             S.Header.VirtualAddress + S.Header.SizeOfRawData) {
+@@ -324,7 +366,7 @@ Error COFFWriter::patchDebugDirectory() {
+ }
+ 
+ Error COFFWriter::write() {
+-  bool IsBigObj = Obj.Sections.size() > MaxNumberOfSections16;
++  bool IsBigObj = Obj.getSections().size() > MaxNumberOfSections16;
+   if (IsBigObj && Obj.IsPE)
+     return make_error<StringError>("Too many sections for executable",
+                                    object_error::parse_failed);
+diff --git a/llvm/tools/llvm-objcopy/COFF/Writer.h b/llvm/tools/llvm-objcopy/COFF/Writer.h
+index 52fef385926..a967a103df9 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Writer.h
++++ b/llvm/tools/llvm-objcopy/COFF/Writer.h
+@@ -31,6 +31,7 @@ class COFFWriter {
+   StringTableBuilder StrTabBuilder;
+ 
+   Error finalizeRelocTargets();
++  Error finalizeSectionNumbers();
+   void layoutSections();
+   size_t finalizeStringTable();
+   template <class SymbolTy> std::pair<size_t, size_t> finalizeSymbolTable();
+-- 
+2.17.1
+
