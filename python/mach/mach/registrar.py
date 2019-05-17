@@ -47,6 +47,30 @@ class MachRegistrar(object):
         self.categories[name] = (title, description, priority)
         self.commands_by_category[name] = set()
 
+    def register_conditional_names(self, context):
+        """For every handler with a conditional name, use that name if
+        the handler's conditions are met."""
+
+        # Avoid updating while iterating.
+        names = list(self.command_handlers.keys())
+
+        for name in names:
+            handler = self.command_handlers[name]
+            if handler.conditional_name:
+                instance = MachRegistrar._instance(handler, context)
+                fail_conditions = MachRegistrar._fail_conditions(handler, instance)
+
+                if fail_conditions:
+                    continue
+
+                # We passed our conditions.  Unregister the existing name.
+                del self.command_handlers[name]
+                self.commands_by_category[handler.category].remove(name)
+
+                # Register with the new name.
+                handler.name = handler.conditional_name
+                self.register_command_handler(handler)
+
     @classmethod
     def _condition_failed_message(cls, name, conditions):
         msg = ['\n']
@@ -57,7 +81,8 @@ class MachRegistrar(object):
             msg.append(' - '.join(part))
         return INVALID_COMMAND_CONTEXT % (name, '\n'.join(msg))
 
-    def _run_command_handler(self, handler, context=None, debug_command=False, **kwargs):
+    @classmethod
+    def _instance(_, handler, context, **kwargs):
         cls = handler.cls
 
         if handler.pass_context and not context:
@@ -74,15 +99,24 @@ class MachRegistrar(object):
         else:
             instance = cls()
 
+        return instance
+
+    @classmethod
+    def _fail_conditions(_, handler, instance):
+        fail_conditions = []
         if handler.conditions:
-            fail_conditions = []
             for c in handler.conditions:
                 if not c(instance):
                     fail_conditions.append(c)
 
-            if fail_conditions:
-                print(self._condition_failed_message(handler.name, fail_conditions))
-                return 1
+        return fail_conditions
+
+    def _run_command_handler(self, handler, context=None, debug_command=False, **kwargs):
+        instance = MachRegistrar._instance(handler, context, **kwargs)
+        fail_conditions = MachRegistrar._fail_conditions(handler, instance)
+        if fail_conditions:
+            print(MachRegistrar._condition_failed_message(handler.name, fail_conditions))
+            return 1
 
         self.command_depth += 1
         fn = getattr(instance, handler.method)
