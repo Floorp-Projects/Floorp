@@ -78,12 +78,12 @@ function run_test() {
   pm.addFromPrincipal(uri0_cnn, "test/matches", pm.ALLOW_ACTION);
   let perm_cnn = pm.getPermissionObject(uri0_n, "test/matches", true);
 
-  matches_always(perm_n, [uri0_n, uri0_1]);
-  matches_weak(perm_n, [uri1_n, uri1_1]);
+  matches_always(perm_n, [uri0_n, uri0_1, uri0_cnn]);
+  matches_weak(perm_n, [uri1_n, uri1_1, uri1_cnn]);
   matches_never(perm_n, [uri2_n, uri3_n, uri4_n, uri5_n,
                            uri0_y_, uri1_y_, uri2_y_, uri3_y_, uri4_y_, uri5_y_,
                            uri2_1, uri3_1, uri4_1, uri5_1,
-                           uri0_cnn, uri1_cnn, uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
+                           uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
 
   matches_always(perm_y_, [uri0_y_]);
   matches_weak(perm_y_, [uri1_y_]);
@@ -92,19 +92,19 @@ function run_test() {
                               uri0_1, uri1_1, uri2_1, uri3_1, uri4_1, uri5_1,
                               uri0_cnn, uri1_cnn, uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
 
-  matches_always(perm_1, [uri0_n, uri0_1]);
-  matches_weak(perm_1, [uri1_n, uri1_1]);
+  matches_always(perm_1, [uri0_n, uri0_1, uri0_cnn]);
+  matches_weak(perm_1, [uri1_n, uri1_1, uri1_cnn]);
   matches_never(perm_1, [uri2_n, uri3_n, uri4_n, uri5_n,
                          uri0_y_, uri1_y_, uri2_y_, uri3_y_, uri4_y_, uri5_y_,
                          uri2_1, uri3_1, uri4_1, uri5_1,
-                         uri0_cnn, uri1_cnn, uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
+                         uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
 
-  matches_always(perm_cnn, [uri0_n, uri0_1]);
-  matches_weak(perm_cnn, [uri1_n, uri1_1]);
+  matches_always(perm_cnn, [uri0_n, uri0_1, uri0_cnn]);
+  matches_weak(perm_cnn, [uri1_n, uri1_1, uri1_cnn]);
   matches_never(perm_cnn, [uri2_n, uri3_n, uri4_n, uri5_n,
                            uri0_y_, uri1_y_, uri2_y_, uri3_y_, uri4_y_, uri5_y_,
                            uri2_1, uri3_1, uri4_1, uri5_1,
-                           uri0_cnn, uri1_cnn, uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
+                           uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
 
   // Clean up!
   pm.removeAll();

@@ -312,11 +312,11 @@ class MozTranslationNotification extends MozElements.Notification {
     item.disabled = neverForLangs.split(",").includes(lang);
 
     // Check if translation is disabled for the domain:
-    let principal = this.translation.browser.contentPrincipal;
+    let uri = this.translation.browser.currentURI;
     let perms = Services.perms;
     item = this._getAnonElt("neverForSite");
     item.disabled =
-      perms.testExactPermissionFromPrincipal(principal, "translate") == perms.DENY_ACTION;
+      perms.testExactPermission(uri, "translate") == perms.DENY_ACTION;
   }
 
   neverForLanguage() {
@@ -333,9 +333,9 @@ class MozTranslationNotification extends MozElements.Notification {
   }
 
   neverForSite() {
-    let principal = this.translation.browser.contentPrincipal;
+    let uri = this.translation.browser.currentURI;
     let perms = Services.perms;
-    perms.addFromPrincipal(principal, "translate", perms.DENY_ACTION);
+    perms.add(uri, "translate", perms.DENY_ACTION);
 
     this.closeCommand();
   }
