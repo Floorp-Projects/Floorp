@@ -13,7 +13,10 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
 * **feature-findinpage**
-   * Find in Page Bar now displays 0/0 for no matches found with new attr findInPageNoMatchesTextColor
+  * Find in Page Bar now displays 0/0 for no matches found with new attr findInPageNoMatchesTextColor
+
+* **support-test**
+  * Added `testContext` property for retrieving application context from tests.
 
 # 0.53.0
 
