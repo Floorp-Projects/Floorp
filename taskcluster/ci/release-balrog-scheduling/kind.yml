@@ -34,12 +34,14 @@ jobs:
                             beta: [32]
                             release: [145]
                             esr60: [806]
+                            esr68: [882]
                             default: []
                     staging:
                         by-release-type:
                             beta: [32]
                             release: [145]
                             esr60: [806]
+                            esr68: [875]
                             default: []
         treeherder:
             platform: firefox-release/opt
@@ -50,10 +52,13 @@ jobs:
         description: Schedule Firefox publishing in balrog (bz2)
         name: release-firefox_schedule_publishing_in_balrog-bz2
         shipping-product: firefox
-        run-on-releases: [esr60]
+        run-on-releases: [esr60, esr68]
         worker:
             product: firefox
-            publish-rules: [521]
+            publish-rules:
+                by-release-type:
+                    esr60: [521]
+                    default: []
             blob-suffix: -bz2
         treeherder:
             platform: firefox-release/opt
