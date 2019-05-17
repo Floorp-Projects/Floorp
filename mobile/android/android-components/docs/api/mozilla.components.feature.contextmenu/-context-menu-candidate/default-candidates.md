@@ -2,7 +2,7 @@
 
 # defaultCandidates
 
-`fun defaultCandidates(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, snackBarParentView: `[`View`](https://developer.android.com/reference/android/view/View.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ContextMenuCandidate`](index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L44)
+`fun defaultCandidates(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, snackBarParentView: `[`View`](https://developer.android.com/reference/android/view/View.html)`, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ContextMenuCandidate`](index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L41)
 
 Returns the default list of context menu candidates.
 
