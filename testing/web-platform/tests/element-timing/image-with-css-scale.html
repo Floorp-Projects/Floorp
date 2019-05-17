@@ -28,7 +28,7 @@ body {
         const index = window.location.href.lastIndexOf('/');
         const pathname = window.location.href.substring(0, index - 14) +
             'images/black-rectangle.png';
-        checkElement(entry, pathname, 'rectangle', beforeRender);
+        checkElement(entry, pathname, 'rectangle', 'rect_id', beforeRender);
         checkRect(entry, [0, 200, 25, 125]);
         checkNaturalSize(entry, 100, 50);
       })
@@ -36,7 +36,7 @@ body {
     observer.observe({entryTypes: ['element']});
   }, 'Image intersectionRect is affected by scaling, but not its intrinsic size.');
 </script>
-<div class="my_div">
-  <img src="/images/black-rectangle.png" elementtiming="rectangle"/>
+<div class="my_div" id='div_id'>
+  <img src="/images/black-rectangle.png" elementtiming="rectangle" id='rect_id'/>
 </div>
 </body>

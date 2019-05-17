@@ -14,10 +14,11 @@ body {
       'rect' : entryList.getEntries()[0].intersectionRect,
       'naturalWidth' : entryList.getEntries()[0].naturalWidth,
       'naturalHeight' : entryList.getEntries()[0].naturalHeight,
+      'id': entryList.getEntries()[0].id,
     }, '*');
   });
   observer.observe({entryTypes: ['element']});
 </script>
-<img src=square100.png elementtiming=my_image/>
+<img src=square100.png id=iframe_img_id elementtiming=my_image/>
 </body>
 </html>

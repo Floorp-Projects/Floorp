@@ -28,7 +28,7 @@ body {
         const index = window.location.href.lastIndexOf('/');
         const pathname = window.location.href.substring(0, index - 14) +
             'images/black-rectangle.png';
-        checkElement(entry, pathname, 'rectangle', beforeRender);
+        checkElement(entry, pathname, 'rectangle', 'rect_id', beforeRender);
         checkNaturalSize(entry, 100, 50);
         const rect = entry.intersectionRect;
         // The div rotates with respect to the origin, so part of it will be invisible.
@@ -44,7 +44,7 @@ body {
     observer.observe({entryTypes: ['element']});
   }, 'Image intersectionRect is affected by rotation, but not its intrinsic size.');
 </script>
-<div class="my_div">
-  <img src="/images/black-rectangle.png" elementtiming="rectangle"/>
+<div class="my_div" id="div_id">
+  <img src="/images/black-rectangle.png" elementtiming="rectangle" id="rect_id"/>
 </div>
 </body>
