@@ -640,6 +640,79 @@ add_task(async function testPrivateBrowsingExtension() {
   await closeView(win);
 });
 
+add_task(async function testExternalUninstall() {
+  let id = "remove@mochi.test";
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "Remove me",
+      applications: {gecko: {id}},
+    },
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+  let addon = await AddonManager.getAddonByID(id);
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  // Load the detail view.
+  let card = doc.querySelector(`addon-card[addon-id="${id}"]`);
+  let detailsLoaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await detailsLoaded;
+
+  // Uninstall the add-on with undo. Should go to extension list.
+  let listLoaded = waitForViewLoad(win);
+  await addon.uninstall(true);
+  await listLoaded;
+
+  // Verify the list view was loaded and the card is gone.
+  let list = doc.querySelector("addon-list");
+  is(list.type, "extension", "We're on the extension list page");
+  card = list.querySelector(`addon-card[addon-id="${id}"]`);
+  ok(!card, "The card has been removed");
+
+  await extension.unload();
+  closeView(win);
+});
+
+add_task(async function testExternalThemeUninstall() {
+  let id = "remove-theme@mochi.test";
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {gecko: {id}},
+      name: "Remove theme",
+      theme: {},
+    },
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+  let addon = await AddonManager.getAddonByID(id);
+
+  let win = await loadInitialView("theme");
+  let doc = win.document;
+
+  // Load the detail view.
+  let card = doc.querySelector(`addon-card[addon-id="${id}"]`);
+  let detailsLoaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await detailsLoaded;
+
+  // Uninstall the add-on without undo. Should go to theme list.
+  let listLoaded = waitForViewLoad(win);
+  await addon.uninstall();
+  await listLoaded;
+
+  // Verify the list view was loaded and the card is gone.
+  let list = doc.querySelector("addon-list");
+  is(list.type, "theme", "We're on the theme list page");
+  card = list.querySelector(`addon-card[addon-id="${id}"]`);
+  ok(!card, "The card has been removed");
+
+  await extension.unload();
+  closeView(win);
+});
+
 add_task(async function testPrivateBrowsingAllowedListView() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
