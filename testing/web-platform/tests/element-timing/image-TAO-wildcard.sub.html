@@ -22,6 +22,7 @@ body {
         checkElement(entry, img_src, 'my_image', beforeRender);
         // Assume viewport has size at least 20, so the element is fully visible.
         checkRect(entry, [0, 20, 0, 20]);
+        checkNaturalSize(entry, 20, 20);
       })
     );
     observer.observe({entryTypes: ['element']});

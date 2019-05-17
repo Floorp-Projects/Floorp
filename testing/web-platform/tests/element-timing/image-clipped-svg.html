@@ -17,6 +17,7 @@ async_test(function (t) {
       checkElement(entry, pathname, 'my_svg', beforeRender);
       // Image size is 200x200 but SVG size is 100x100 so it is clipped.
       checkRect(entry, [0, 100, 0, 100]);
+      checkNaturalSize(entry, 200, 200);
     })
   );
   observer.observe({entryTypes: ['element']});

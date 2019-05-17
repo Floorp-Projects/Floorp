@@ -22,6 +22,7 @@ body {
         assert_equals(entry.startTime, 0,
           'The startTime of a cross-origin image should be 0.');
         checkRect(entry, [0, 100, 0, 100]);
+        checkNaturalSize(entry, 100, 100);
       })
     );
     observer.observe({entryTypes: ['element']});

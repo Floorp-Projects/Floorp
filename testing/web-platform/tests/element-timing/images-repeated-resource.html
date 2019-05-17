@@ -23,6 +23,7 @@ body {
       t.step_func(function(entryList) {
         entryList.getEntries().forEach(entry => {
           checkElement(entry, pathname, entry.identifier, beforeRender);
+          checkNaturalSize(entry, 100, 100);
           if (entry.identifier === 'my_image') {
             ++numEntries;
             responseEnd1 = entry.responseEnd;

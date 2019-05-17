@@ -12,7 +12,7 @@ function checkElement(entry, expectedName, expectedIdentifier, beforeRender) {
   assert_equals(rt_entries[0].responseEnd, entry.responseEnd);
 }
 
-// Checks that the rect matches the desired values [left right top bottom]
+// Checks that the rect matches the desired values [left right top bottom].
 function checkRect(entry, expected, description="") {
   assert_equals(entry.intersectionRect.left, expected[0],
     'left of rect ' + description);
@@ -22,4 +22,10 @@ function checkRect(entry, expected, description="") {
     'top of rect ' + description);
   assert_equals(entry.intersectionRect.bottom, expected[3],
     'bottom of rect ' + description);
+}
+
+// Checks that the intrinsic size matches the desired values.
+function checkNaturalSize(entry, width, height) {
+  assert_equals(entry.naturalWidth, width);
+  assert_equals(entry.naturalHeight, height);
 }
