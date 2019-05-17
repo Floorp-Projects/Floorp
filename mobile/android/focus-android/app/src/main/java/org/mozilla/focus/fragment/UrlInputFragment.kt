@@ -299,6 +299,7 @@ class UrlInputFragment :
         listOf(dismissView, clearView).forEach { it.setOnClickListener(this) }
 
         urlView?.setOnFilterListener(::onFilter)
+        urlView?.setOnTextChangeListener(::onTextChange)
         urlView?.imeOptions = urlView.imeOptions or ViewUtils.IME_FLAG_NO_PERSONALIZED_LEARNING
         urlView?.inputType = urlView.inputType or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
 
@@ -814,10 +815,12 @@ class UrlInputFragment :
                 view.noAutocompleteResult()
             }
         }
+    }
 
-        searchSuggestionsViewModel.setSearchQuery(searchText)
+    private fun onTextChange(text: String, autocompleteText: String) {
+        searchSuggestionsViewModel.setSearchQuery(text)
 
-        if (searchText.trim { it <= ' ' }.isEmpty()) {
+        if (text.trim { it <= ' ' }.isEmpty()) {
             clearView?.visibility = View.GONE
             searchViewContainer?.visibility = View.GONE
             addToAutoComplete?.visibility = View.GONE
