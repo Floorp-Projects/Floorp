@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsPrintPreviewListener.h"
+#include "PrintPreviewUserEventSuppressor.h"
 
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
@@ -17,28 +17,19 @@
 #include "nsFocusManager.h"
 #include "nsLiteralString.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS(nsPrintPreviewListener, nsIDOMEventListener)
+namespace mozilla {
 
-//
-// nsPrintPreviewListener ctor
-//
-nsPrintPreviewListener::nsPrintPreviewListener(EventTarget* aTarget)
+PrintPreviewUserEventSuppressor::PrintPreviewUserEventSuppressor(
+    EventTarget* aTarget)
     : mEventTarget(aTarget) {
-  NS_ADDREF_THIS();
-}  // ctor
+  AddListeners();
+}
 
-nsPrintPreviewListener::~nsPrintPreviewListener() {}
+NS_IMPL_ISUPPORTS(PrintPreviewUserEventSuppressor, nsIDOMEventListener)
 
-//-------------------------------------------------------
-//
-// AddListeners
-//
-// Subscribe to the events that will allow us to track various events.
-//
-nsresult nsPrintPreviewListener::AddListeners() {
+void PrintPreviewUserEventSuppressor::AddListeners() {
   if (mEventTarget) {
     mEventTarget->AddEventListener(NS_LITERAL_STRING("click"), this, true);
     mEventTarget->AddEventListener(NS_LITERAL_STRING("contextmenu"), this,
@@ -55,17 +46,9 @@ nsresult nsPrintPreviewListener::AddListeners() {
     mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("keydown"), this,
                                          true);
   }
-
-  return NS_OK;
 }
 
-//-------------------------------------------------------
-//
-// RemoveListeners
-//
-// Unsubscribe from all the various events that we were listening to.
-//
-nsresult nsPrintPreviewListener::RemoveListeners() {
+void PrintPreviewUserEventSuppressor::RemoveListeners() {
   if (mEventTarget) {
     mEventTarget->RemoveEventListener(NS_LITERAL_STRING("click"), this, true);
     mEventTarget->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), this,
@@ -87,16 +70,8 @@ nsresult nsPrintPreviewListener::RemoveListeners() {
     mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"), this,
                                             true);
   }
-
-  return NS_OK;
 }
 
-//-------------------------------------------------------
-//
-// GetActionForEvent
-//
-// Helper function to let certain key events through
-//
 enum eEventAction {
   eEventAction_Tab,
   eEventAction_ShiftTab,
@@ -105,6 +80,7 @@ enum eEventAction {
   eEventAction_StopPropagation
 };
 
+// Helper function to let certain key events through
 static eEventAction GetActionForEvent(Event* aEvent) {
   WidgetKeyboardEvent* keyEvent = aEvent->WidgetEventPtr()->AsKeyboardEvent();
   if (!keyEvent) {
@@ -150,11 +126,11 @@ static eEventAction GetActionForEvent(Event* aEvent) {
 }
 
 NS_IMETHODIMP
-nsPrintPreviewListener::HandleEvent(Event* aEvent) {
+PrintPreviewUserEventSuppressor::HandleEvent(Event* aEvent) {
   nsCOMPtr<nsIContent> content =
       do_QueryInterface(aEvent ? aEvent->GetOriginalTarget() : nullptr);
   if (content && !content->IsXULElement()) {
-    eEventAction action = ::GetActionForEvent(aEvent);
+    eEventAction action = GetActionForEvent(aEvent);
     switch (action) {
       case eEventAction_Tab:
       case eEventAction_ShiftTab: {
@@ -173,10 +149,9 @@ nsPrintPreviewListener::HandleEvent(Event* aEvent) {
 
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm && win) {
-            dom::Element* fromElement =
-                parentDoc->FindContentForSubDocument(doc);
+            Element* fromElement = parentDoc->FindContentForSubDocument(doc);
             bool forward = (action == eEventAction_Tab);
-            RefPtr<dom::Element> result;
+            RefPtr<Element> result;
             fm->MoveFocus(win, fromElement,
                           forward ? nsIFocusManager::MOVEFOCUS_FORWARD
                                   : nsIFocusManager::MOVEFOCUS_BACKWARD,
@@ -199,3 +174,5 @@ nsPrintPreviewListener::HandleEvent(Event* aEvent) {
   }
   return NS_OK;
 }
+
+}  // namespace mozilla

@@ -109,7 +109,13 @@ class nsPrintJob final : public nsIObserver,
 
   void TurnScriptingOn(bool aDoTurnOn);
   bool CheckDocumentForPPCaching();
-  void InstallPrintPreviewListener();
+
+  /**
+   * Filters out certain user events while Print Preview is open to prevent
+   * the user from interacting with the Print Preview document and breaking
+   * printing invariants.
+   */
+  void SuppressPrintPreviewUserEvents();
 
   // nsIDocumentViewerPrint Printing Methods
   bool HasPrintCallbackCanvas();
