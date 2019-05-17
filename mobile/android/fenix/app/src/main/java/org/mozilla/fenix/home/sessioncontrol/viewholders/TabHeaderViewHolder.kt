@@ -12,7 +12,6 @@ import kotlinx.android.synthetic.main.tab_header.view.*
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabAction
@@ -94,7 +93,7 @@ class TabHeaderViewHolder(
                     context.getString(R.string.tabs_menu_save_to_collection)
                 ) {
                     onItemTapped.invoke(Item.SaveToCollection)
-                }.apply { visible = { !isPrivate && BuildConfig.COLLECTIONS_ENABLED } }
+                }.apply { visible = { !isPrivate } }
             )
         }
     }
