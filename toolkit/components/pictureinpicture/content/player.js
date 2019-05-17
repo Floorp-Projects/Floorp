@@ -41,7 +41,7 @@ async function setupPlayer(originatingBrowser, videoData) {
     window.close();
   });
 
-  browser.addEventListener("unload", () => {
+  window.addEventListener("unload", () => {
     PictureInPicture.unload();
   });
 
