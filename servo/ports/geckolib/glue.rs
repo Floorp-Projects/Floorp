@@ -3118,10 +3118,6 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetAdditiveSymbols(
     })
 }
 
-/// Don't derive destructors so that it's POD and we can pass it by value
-/// without issues.
-///
-/// cbindgen:derive-tagged-enum-destructor=false
 #[repr(C, u8)]
 pub enum CounterSpeakAs {
     None,
@@ -3135,9 +3131,10 @@ pub enum CounterSpeakAs {
 #[no_mangle]
 pub unsafe extern "C" fn Servo_CounterStyleRule_GetSpeakAs(
     rule: &RawServoCounterStyleRule,
-) -> CounterSpeakAs {
+    out: &mut CounterSpeakAs,
+) {
     use style::counter_style::SpeakAs;
-    read_locked_arc(rule, |rule: &CounterStyleRule| {
+    *out = read_locked_arc(rule, |rule: &CounterStyleRule| {
         let speak_as = match rule.speak_as() {
             Some(s) => s,
             None => return CounterSpeakAs::None,
@@ -3149,7 +3146,7 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetSpeakAs(
             SpeakAs::Words => CounterSpeakAs::Words,
             SpeakAs::Other(ref other) => CounterSpeakAs::Ident(other.0.as_ptr()),
         }
-    })
+    });
 }
 
 #[no_mangle]
