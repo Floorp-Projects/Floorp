@@ -1,0 +1,224 @@
+From d37f67c7311cd371d9ff1afd398bc92f309e6baf Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Tue, 22 Jan 2019 10:58:09 +0000
+Subject: [PATCH] [llvm-objcopy] [COFF] Update symbol indices in weak externals
+
+Differential Revision: https://reviews.llvm.org/D57006
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@351800 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ .../llvm-objcopy/COFF/weak-external.test      | 49 +++++++++++++++++++
+ tools/llvm-objcopy/COFF/Object.h              |  2 +
+ tools/llvm-objcopy/COFF/Reader.cpp            | 24 ++++++++-
+ tools/llvm-objcopy/COFF/Reader.h              |  2 +-
+ tools/llvm-objcopy/COFF/Writer.cpp            | 16 +++++-
+ tools/llvm-objcopy/COFF/Writer.h              |  2 +-
+ 6 files changed, 89 insertions(+), 6 deletions(-)
+ create mode 100644 test/tools/llvm-objcopy/COFF/weak-external.test
+
+diff --git a/llvm/test/tools/llvm-objcopy/COFF/weak-external.test b/llvm/test/tools/llvm-objcopy/COFF/weak-external.test
+new file mode 100644
+index 00000000000..d36a53b4eb1
+--- /dev/null
++++ b/llvm/test/tools/llvm-objcopy/COFF/weak-external.test
+@@ -0,0 +1,49 @@
++# RUN: yaml2obj %s > %t.in.o
++
++# RUN: llvm-objdump -t %t.in.o | FileCheck %s --check-prefixes=SYMBOLS,SYMBOLS-PRE
++
++# RUN: llvm-objcopy -N func %t.in.o %t.out.o
++# RUN: llvm-objdump -t %t.out.o | FileCheck %s --check-prefixes=SYMBOLS,SYMBOLS-POST
++
++# RUN: not llvm-objcopy -N .weak.foobar.file1 %t.in.o %t.err.o 2>&1 | FileCheck %s --check-prefix=ERROR
++
++# SYMBOLS: SYMBOL TABLE:
++# SYMBOLS-PRE-NEXT: func
++# SYMBOLS-NEXT: .weak.foobar.file1
++# SYMBOLS-NEXT: foobar
++# SYMBOLS-PRE-NEXT: AUX indx 1
++# SYMBOLS-POST-NEXT: AUX indx 0
++# SYMBOLS-EMPTY:
++
++# ERROR: Symbol 'foobar' is missing its weak target
++
++--- !COFF
++header:          
++  Machine:         IMAGE_FILE_MACHINE_AMD64
++  Characteristics: [  ]
++sections:        
++  - Name:            .text
++    Characteristics: [  ]
++symbols:         
++  - Name:            func
++    Value:           0
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++  - Name:            .weak.foobar.file1
++    Value:           1
++    SectionNumber:   1
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_NULL
++    StorageClass:    IMAGE_SYM_CLASS_EXTERNAL
++  - Name:            foobar
++    Value:           0
++    SectionNumber:   0
++    SimpleType:      IMAGE_SYM_TYPE_NULL
++    ComplexType:     IMAGE_SYM_DTYPE_FUNCTION
++    StorageClass:    IMAGE_SYM_CLASS_WEAK_EXTERNAL
++    WeakExternal:    
++      TagIndex:        1
++      Characteristics: IMAGE_WEAK_EXTERN_SEARCH_NOLIBRARY
++...
+diff --git a/llvm/tools/llvm-objcopy/COFF/Object.h b/llvm/tools/llvm-objcopy/COFF/Object.h
+index 8e200369f0b..0630f9c5ff8 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Object.h
++++ b/llvm/tools/llvm-objcopy/COFF/Object.h
+@@ -11,6 +11,7 @@
+ 
+ #include "llvm/ADT/ArrayRef.h"
+ #include "llvm/ADT/DenseMap.h"
++#include "llvm/ADT/Optional.h"
+ #include "llvm/ADT/StringRef.h"
+ #include "llvm/ADT/iterator_range.h"
+ #include "llvm/BinaryFormat/COFF.h"
+@@ -47,6 +48,7 @@ struct Symbol {
+   std::vector<uint8_t> AuxData;
+   ssize_t TargetSectionId;
+   ssize_t AssociativeComdatTargetSectionId = 0;
++  Optional<size_t> WeakTargetSymbolId;
+   size_t UniqueId;
+   size_t RawIndex;
+   bool Referenced;
+diff --git a/llvm/tools/llvm-objcopy/COFF/Reader.cpp b/llvm/tools/llvm-objcopy/COFF/Reader.cpp
+index 20ff32a59dc..2446277cc2b 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Reader.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Reader.cpp
+@@ -121,12 +121,18 @@ Error COFFReader::readSymbols(Object &Obj, bool IsBigObj) const {
+     // For section definitions, check if it is comdat associative, and if
+     // it is, find the target section unique id.
+     const coff_aux_section_definition *SD = SymRef.getSectionDefinition();
++    const coff_aux_weak_external *WE = SymRef.getWeakExternal();
+     if (SD && SD->Selection == IMAGE_COMDAT_SELECT_ASSOCIATIVE) {
+       int32_t Index = SD->getNumber(IsBigObj);
+       if (Index <= 0 || static_cast<uint32_t>(Index - 1) >= Sections.size())
+         return createStringError(object_error::parse_failed,
+                                  "Unexpected associative section index");
+       Sym.AssociativeComdatTargetSectionId = Sections[Index - 1].UniqueId;
++    } else if (WE) {
++      // This is a raw symbol index for now, but store it in the Symbol
++      // until we've added them to the Object, which assigns the final
++      // unique ids.
++      Sym.WeakTargetSymbolId = WE->TagIndex;
+     }
+     I += 1 + SymRef.getNumberOfAuxSymbols();
+   }
+@@ -134,13 +140,27 @@ Error COFFReader::readSymbols(Object &Obj, bool IsBigObj) const {
+   return Error::success();
+ }
+ 
+-Error COFFReader::setRelocTargets(Object &Obj) const {
++Error COFFReader::setSymbolTargets(Object &Obj) const {
+   std::vector<const Symbol *> RawSymbolTable;
+   for (const Symbol &Sym : Obj.getSymbols()) {
+     RawSymbolTable.push_back(&Sym);
+     for (size_t I = 0; I < Sym.Sym.NumberOfAuxSymbols; I++)
+       RawSymbolTable.push_back(nullptr);
+   }
++  for (Symbol &Sym : Obj.getMutableSymbols()) {
++    // Convert WeakTargetSymbolId from the original raw symbol index to
++    // a proper unique id.
++    if (Sym.WeakTargetSymbolId) {
++      if (*Sym.WeakTargetSymbolId >= RawSymbolTable.size())
++        return createStringError(object_error::parse_failed,
++                                 "Weak external reference out of range");
++      const Symbol *Target = RawSymbolTable[*Sym.WeakTargetSymbolId];
++      if (Target == nullptr)
++        return createStringError(object_error::parse_failed,
++                                 "Invalid SymbolTableIndex");
++      Sym.WeakTargetSymbolId = Target->UniqueId;
++    }
++  }
+   for (Section &Sec : Obj.getMutableSections()) {
+     for (Relocation &R : Sec.Relocs) {
+       if (R.Reloc.SymbolTableIndex >= RawSymbolTable.size())
+@@ -184,7 +204,7 @@ Expected<std::unique_ptr<Object>> COFFReader::create() const {
+     return std::move(E);
+   if (Error E = readSymbols(*Obj, IsBigObj))
+     return std::move(E);
+-  if (Error E = setRelocTargets(*Obj))
++  if (Error E = setSymbolTargets(*Obj))
+     return std::move(E);
+ 
+   return std::move(Obj);
+diff --git a/llvm/tools/llvm-objcopy/COFF/Reader.h b/llvm/tools/llvm-objcopy/COFF/Reader.h
+index 4493705e73c..ec15369db0b 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Reader.h
++++ b/llvm/tools/llvm-objcopy/COFF/Reader.h
+@@ -28,7 +28,7 @@ class COFFReader {
+   Error readExecutableHeaders(Object &Obj) const;
+   Error readSections(Object &Obj) const;
+   Error readSymbols(Object &Obj, bool IsBigObj) const;
+-  Error setRelocTargets(Object &Obj) const;
++  Error setSymbolTargets(Object &Obj) const;
+ 
+ public:
+   explicit COFFReader(const COFFObjectFile &O) : COFFObj(O) {}
+diff --git a/llvm/tools/llvm-objcopy/COFF/Writer.cpp b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+index 0321f94a896..4f57131d5ab 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Writer.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+@@ -38,7 +38,7 @@ Error COFFWriter::finalizeRelocTargets() {
+   return Error::success();
+ }
+ 
+-Error COFFWriter::finalizeSectionNumbers() {
++Error COFFWriter::finalizeSymbolContents() {
+   for (Symbol &Sym : Obj.getMutableSymbols()) {
+     if (Sym.TargetSectionId <= 0) {
+       // Undefined, or a special kind of symbol. These negative values
+@@ -75,6 +75,18 @@ Error COFFWriter::finalizeSectionNumbers() {
+         SD->NumberHighPart = static_cast<uint16_t>(SDSectionNumber >> 16);
+       }
+     }
++    // Check that we actually have got AuxData to match the weak symbol target
++    // we want to set. Only >= 1 would be required, but only == 1 makes sense.
++    if (Sym.WeakTargetSymbolId && Sym.Sym.NumberOfAuxSymbols == 1) {
++      coff_aux_weak_external *WE =
++          reinterpret_cast<coff_aux_weak_external *>(Sym.AuxData.data());
++      const Symbol *Target = Obj.findSymbol(*Sym.WeakTargetSymbolId);
++      if (Target == nullptr)
++        return createStringError(object_error::invalid_symbol_index,
++                                 "Symbol '%s' is missing its weak target",
++                                 Sym.Name.str().c_str());
++      WE->TagIndex = Target->RawIndex;
++    }
+   }
+   return Error::success();
+ }
+@@ -137,7 +149,7 @@ std::pair<size_t, size_t> COFFWriter::finalizeSymbolTable() {
+ Error COFFWriter::finalize(bool IsBigObj) {
+   if (Error E = finalizeRelocTargets())
+     return E;
+-  if (Error E = finalizeSectionNumbers())
++  if (Error E = finalizeSymbolContents())
+     return E;
+ 
+   size_t SizeOfHeaders = 0;
+diff --git a/llvm/tools/llvm-objcopy/COFF/Writer.h b/llvm/tools/llvm-objcopy/COFF/Writer.h
+index a967a103df9..9b1cfa91d00 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Writer.h
++++ b/llvm/tools/llvm-objcopy/COFF/Writer.h
+@@ -31,7 +31,7 @@ class COFFWriter {
+   StringTableBuilder StrTabBuilder;
+ 
+   Error finalizeRelocTargets();
+-  Error finalizeSectionNumbers();
++  Error finalizeSymbolContents();
+   void layoutSections();
+   size_t finalizeStringTable();
+   template <class SymbolTy> std::pair<size_t, size_t> finalizeSymbolTable();
+-- 
+2.17.1
+

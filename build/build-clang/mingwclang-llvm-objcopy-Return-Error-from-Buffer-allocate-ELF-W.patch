@@ -1,0 +1,330 @@
+From 8cf7aa39d7c9461e2d765f6d4fa7e0925571695f Mon Sep 17 00:00:00 2001
+From: Jordan Rupprecht <rupprecht@google.com>
+Date: Tue, 22 Jan 2019 23:49:16 +0000
+Subject: [PATCH] [llvm-objcopy] Return Error from Buffer::allocate(),
+ [ELF]Writer::finalize(), and [ELF]Writer::commit()
+
+Summary:
+This patch changes a few methods to return Error instead of manually calling error/reportError to abort. This will make it easier to extract into a library.
+
+Note that error() takes just a string (this patch also adds an overload that takes an Error), while reportError() takes string + [error/code]. To help unify things, use FileError to associate a given filename with an error. Note that this takes some special care (for now), e.g. calling reportError(FileName, <something that could be FileError>) will duplicate the filename. The goal is to eventually remove reportError() and have every error associated with a file to be a FileError, and just one error handling block at the tool level.
+
+This change was suggested in D56806. I took it a little further than suggested, but completely fixing llvm-objcopy will take a couple more patches. If this approach looks good, I'll commit this and apply similar patche(s) for the rest.
+
+This change is NFC in terms of non-error related code, although the error message changes in one context.
+
+Reviewers: alexshap, jhenderson, jakehehrlich, mstorsjo, espindola
+
+Reviewed By: alexshap, jhenderson
+
+Subscribers: llvm-commits, emaste, arichardson
+
+Differential Revision: https://reviews.llvm.org/D56930
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@351896 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ .../ELF/fail-no-output-directory.test         |  2 +-
+ tools/llvm-objcopy/Buffer.cpp                 | 20 ++++++++++++-----
+ tools/llvm-objcopy/Buffer.h                   |  6 ++---
+ tools/llvm-objcopy/COFF/Writer.cpp            |  3 ++-
+ tools/llvm-objcopy/ELF/ELFObjcopy.cpp         | 18 ++++++++++-----
+ tools/llvm-objcopy/ELF/Object.cpp             | 22 ++++++++++---------
+ tools/llvm-objcopy/ELF/Object.h               | 12 +++++-----
+ tools/llvm-objcopy/llvm-objcopy.cpp           | 15 +++++++++++--
+ tools/llvm-objcopy/llvm-objcopy.h             |  1 +
+ 9 files changed, 64 insertions(+), 35 deletions(-)
+
+diff --git a/llvm/test/tools/llvm-objcopy/ELF/fail-no-output-directory.test b/llvm/test/tools/llvm-objcopy/ELF/fail-no-output-directory.test
+index f66b2e09fce..732046fa925 100644
+--- a/llvm/test/tools/llvm-objcopy/ELF/fail-no-output-directory.test
++++ b/llvm/test/tools/llvm-objcopy/ELF/fail-no-output-directory.test
+@@ -1,6 +1,6 @@
+ # RUN: yaml2obj %s > %t
+ # RUN: not llvm-objcopy %t no/such/dir 2>&1 | FileCheck %s
+-# CHECK: failed to open no/such/dir:
++# CHECK: error: 'no/such/dir': No such file or directory
+ 
+ !ELF
+ FileHeader:
+diff --git a/llvm/tools/llvm-objcopy/Buffer.cpp b/llvm/tools/llvm-objcopy/Buffer.cpp
+index 2da03dee1af..1789097f276 100644
+--- a/llvm/tools/llvm-objcopy/Buffer.cpp
++++ b/llvm/tools/llvm-objcopy/Buffer.cpp
+@@ -17,23 +17,31 @@ namespace objcopy {
+ 
+ Buffer::~Buffer() {}
+ 
+-void FileBuffer::allocate(size_t Size) {
++Error FileBuffer::allocate(size_t Size) {
+   Expected<std::unique_ptr<FileOutputBuffer>> BufferOrErr =
+       FileOutputBuffer::create(getName(), Size, FileOutputBuffer::F_executable);
+-  handleAllErrors(BufferOrErr.takeError(), [this](const ErrorInfoBase &E) {
+-    error("failed to open " + getName() + ": " + E.message());
+-  });
++  // FileOutputBuffer::create() returns an Error that is just a wrapper around
++  // std::error_code. Wrap it in FileError to include the actual filename.
++  if (!BufferOrErr)
++    return createFileError(getName(), BufferOrErr.takeError());
+   Buf = std::move(*BufferOrErr);
++  return Error::success();
+ }
+ 
+-Error FileBuffer::commit() { return Buf->commit(); }
++Error FileBuffer::commit() {
++  Error Err = Buf->commit();
++  // FileOutputBuffer::commit() returns an Error that is just a wrapper around
++  // std::error_code. Wrap it in FileError to include the actual filename.
++  return Err ? createFileError(getName(), std::move(Err)) : std::move(Err);
++}
+ 
+ uint8_t *FileBuffer::getBufferStart() {
+   return reinterpret_cast<uint8_t *>(Buf->getBufferStart());
+ }
+ 
+-void MemBuffer::allocate(size_t Size) {
++Error MemBuffer::allocate(size_t Size) {
+   Buf = WritableMemoryBuffer::getNewMemBuffer(Size, getName());
++  return Error::success();
+ }
+ 
+ Error MemBuffer::commit() { return Error::success(); }
+diff --git a/llvm/tools/llvm-objcopy/Buffer.h b/llvm/tools/llvm-objcopy/Buffer.h
+index 482777fe05c..40670accac2 100644
+--- a/llvm/tools/llvm-objcopy/Buffer.h
++++ b/llvm/tools/llvm-objcopy/Buffer.h
+@@ -27,7 +27,7 @@ class Buffer {
+ 
+ public:
+   virtual ~Buffer();
+-  virtual void allocate(size_t Size) = 0;
++  virtual Error allocate(size_t Size) = 0;
+   virtual uint8_t *getBufferStart() = 0;
+   virtual Error commit() = 0;
+ 
+@@ -39,7 +39,7 @@ class FileBuffer : public Buffer {
+   std::unique_ptr<FileOutputBuffer> Buf;
+ 
+ public:
+-  void allocate(size_t Size) override;
++  Error allocate(size_t Size) override;
+   uint8_t *getBufferStart() override;
+   Error commit() override;
+ 
+@@ -50,7 +50,7 @@ class MemBuffer : public Buffer {
+   std::unique_ptr<WritableMemoryBuffer> Buf;
+ 
+ public:
+-  void allocate(size_t Size) override;
++  Error allocate(size_t Size) override;
+   uint8_t *getBufferStart() override;
+   Error commit() override;
+ 
+diff --git a/llvm/tools/llvm-objcopy/COFF/Writer.cpp b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+index 4f57131d5ab..db3589bb119 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Writer.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+@@ -324,7 +324,8 @@ Error COFFWriter::write(bool IsBigObj) {
+   if (Error E = finalize(IsBigObj))
+     return E;
+ 
+-  Buf.allocate(FileSize);
++  if (Error E = Buf.allocate(FileSize))
++    return E;
+ 
+   writeHeaders(IsBigObj);
+   writeSections();
+diff --git a/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp b/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp
+index a2996395c1f..2a52f1f9951 100644
+--- a/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp
++++ b/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp
+@@ -176,8 +176,10 @@ static void splitDWOToFile(const CopyConfig &Config, const Reader &Reader,
+     DWOFile->Machine = Config.OutputArch.getValue().EMachine;
+   FileBuffer FB(File);
+   auto Writer = createWriter(Config, *DWOFile, FB, OutputElfType);
+-  Writer->finalize();
+-  Writer->write();
++  if (Error E = Writer->finalize())
++    error(std::move(E));
++  if (Error E = Writer->write())
++    error(std::move(E));
+ }
+ 
+ static Error dumpSectionToFile(StringRef SecName, StringRef Filename,
+@@ -542,8 +544,10 @@ void executeObjcopyOnRawBinary(const CopyConfig &Config, MemoryBuffer &In,
+   handleArgs(Config, *Obj, Reader, OutputElfType);
+   std::unique_ptr<Writer> Writer =
+       createWriter(Config, *Obj, Out, OutputElfType);
+-  Writer->finalize();
+-  Writer->write();
++  if (Error E = Writer->finalize())
++    error(std::move(E));
++  if (Error E = Writer->write())
++    error(std::move(E));
+ }
+ 
+ void executeObjcopyOnBinary(const CopyConfig &Config,
+@@ -570,8 +574,10 @@ void executeObjcopyOnBinary(const CopyConfig &Config,
+   handleArgs(Config, *Obj, Reader, OutputElfType);
+   std::unique_ptr<Writer> Writer =
+       createWriter(Config, *Obj, Out, OutputElfType);
+-  Writer->finalize();
+-  Writer->write();
++  if (Error E = Writer->finalize())
++    error(std::move(E));
++  if (Error E = Writer->write())
++    error(std::move(E));
+   if (!Config.BuildIdLinkDir.empty() && Config.BuildIdLinkOutput) {
+     linkToBuildIdDir(Config, Config.OutputFilename,
+                      Config.BuildIdLinkOutput.getValue(), BuildIdBytes);
+diff --git a/llvm/tools/llvm-objcopy/ELF/Object.cpp b/llvm/tools/llvm-objcopy/ELF/Object.cpp
+index fecb752a39f..ef5dc5d7951 100644
+--- a/llvm/tools/llvm-objcopy/ELF/Object.cpp
++++ b/llvm/tools/llvm-objcopy/ELF/Object.cpp
+@@ -1488,17 +1488,16 @@ template <class ELFT> size_t ELFWriter<ELFT>::totalSize() const {
+          NullSectionSize;
+ }
+ 
+-template <class ELFT> void ELFWriter<ELFT>::write() {
++template <class ELFT> Error ELFWriter<ELFT>::write() {
+   writeEhdr();
+   writePhdrs();
+   writeSectionData();
+   if (WriteSectionHeaders)
+     writeShdrs();
+-  if (auto E = Buf.commit())
+-    reportError(Buf.getName(), errorToErrorCode(std::move(E)));
++  return Buf.commit();
+ }
+ 
+-template <class ELFT> void ELFWriter<ELFT>::finalize() {
++template <class ELFT> Error ELFWriter<ELFT>::finalize() {
+   // It could happen that SectionNames has been removed and yet the user wants
+   // a section header table output. We need to throw an error if a user tries
+   // to do that.
+@@ -1582,21 +1581,22 @@ template <class ELFT> void ELFWriter<ELFT>::finalize() {
+     Section.finalize();
+   }
+ 
+-  Buf.allocate(totalSize());
++  if (Error E = Buf.allocate(totalSize()))
++    return E;
+   SecWriter = llvm::make_unique<ELFSectionWriter<ELFT>>(Buf);
++  return Error::success();
+ }
+ 
+-void BinaryWriter::write() {
++Error BinaryWriter::write() {
+   for (auto &Section : Obj.sections()) {
+     if ((Section.Flags & SHF_ALLOC) == 0)
+       continue;
+     Section.accept(*SecWriter);
+   }
+-  if (auto E = Buf.commit())
+-    reportError(Buf.getName(), errorToErrorCode(std::move(E)));
++  return Buf.commit();
+ }
+ 
+-void BinaryWriter::finalize() {
++Error BinaryWriter::finalize() {
+   // TODO: Create a filter range to construct OrderedSegments from so that this
+   // code can be deduped with assignOffsets above. This should also solve the
+   // todo below for LayoutSections.
+@@ -1675,8 +1675,10 @@ void BinaryWriter::finalize() {
+       TotalSize = std::max(TotalSize, Section->Offset + Section->Size);
+   }
+ 
+-  Buf.allocate(TotalSize);
++  if (Error E = Buf.allocate(TotalSize))
++    return E;
+   SecWriter = llvm::make_unique<BinarySectionWriter>(Buf);
++  return Error::success();
+ }
+ 
+ template class ELFBuilder<ELF64LE>;
+diff --git a/llvm/tools/llvm-objcopy/ELF/Object.h b/llvm/tools/llvm-objcopy/ELF/Object.h
+index 0dcb0d888bc..9e2b64be9dc 100644
+--- a/llvm/tools/llvm-objcopy/ELF/Object.h
++++ b/llvm/tools/llvm-objcopy/ELF/Object.h
+@@ -193,8 +193,8 @@ protected:
+ 
+ public:
+   virtual ~Writer();
+-  virtual void finalize() = 0;
+-  virtual void write() = 0;
++  virtual Error finalize() = 0;
++  virtual Error write() = 0;
+ 
+   Writer(Object &O, Buffer &B) : Obj(O), Buf(B) {}
+ };
+@@ -226,8 +226,8 @@ public:
+   virtual ~ELFWriter() {}
+   bool WriteSectionHeaders = true;
+ 
+-  void finalize() override;
+-  void write() override;
++  Error finalize() override;
++  Error write() override;
+   ELFWriter(Object &Obj, Buffer &Buf, bool WSH)
+       : Writer(Obj, Buf), WriteSectionHeaders(WSH) {}
+ };
+@@ -240,8 +240,8 @@ private:
+ 
+ public:
+   ~BinaryWriter() {}
+-  void finalize() override;
+-  void write() override;
++  Error finalize() override;
++  Error write() override;
+   BinaryWriter(Object &Obj, Buffer &Buf) : Writer(Obj, Buf) {}
+ };
+ 
+diff --git a/llvm/tools/llvm-objcopy/llvm-objcopy.cpp b/llvm/tools/llvm-objcopy/llvm-objcopy.cpp
+index d27395f2ae0..75d513546b7 100644
+--- a/llvm/tools/llvm-objcopy/llvm-objcopy.cpp
++++ b/llvm/tools/llvm-objcopy/llvm-objcopy.cpp
+@@ -56,6 +56,16 @@ LLVM_ATTRIBUTE_NORETURN void error(Twine Message) {
+   exit(1);
+ }
+ 
++LLVM_ATTRIBUTE_NORETURN void error(Error E) {
++  assert(E);
++  std::string Buf;
++  raw_string_ostream OS(Buf);
++  logAllUnhandledErrors(std::move(E), OS);
++  OS.flush();
++  WithColor::error(errs(), ToolName) << Buf;
++  exit(1);
++}
++
+ LLVM_ATTRIBUTE_NORETURN void reportError(StringRef File, std::error_code EC) {
+   assert(EC);
+   WithColor::error(errs(), ToolName)
+@@ -100,10 +110,11 @@ static Error deepWriteArchive(StringRef ArcName,
+     // NewArchiveMember still requires them even though writeArchive does not
+     // write them on disk.
+     FileBuffer FB(Member.MemberName);
+-    FB.allocate(Member.Buf->getBufferSize());
++    if (Error E = FB.allocate(Member.Buf->getBufferSize()))
++      return E;
+     std::copy(Member.Buf->getBufferStart(), Member.Buf->getBufferEnd(),
+               FB.getBufferStart());
+-    if (auto E = FB.commit())
++    if (Error E = FB.commit())
+       return E;
+   }
+   return Error::success();
+diff --git a/llvm/tools/llvm-objcopy/llvm-objcopy.h b/llvm/tools/llvm-objcopy/llvm-objcopy.h
+index 46d8339576c..18a789ca1f8 100644
+--- a/llvm/tools/llvm-objcopy/llvm-objcopy.h
++++ b/llvm/tools/llvm-objcopy/llvm-objcopy.h
+@@ -19,6 +19,7 @@ namespace llvm {
+ namespace objcopy {
+ 
+ LLVM_ATTRIBUTE_NORETURN extern void error(Twine Message);
++LLVM_ATTRIBUTE_NORETURN extern void error(Error E);
+ LLVM_ATTRIBUTE_NORETURN extern void reportError(StringRef File, Error E);
+ LLVM_ATTRIBUTE_NORETURN extern void reportError(StringRef File,
+                                                 std::error_code EC);
+-- 
+2.17.1
+

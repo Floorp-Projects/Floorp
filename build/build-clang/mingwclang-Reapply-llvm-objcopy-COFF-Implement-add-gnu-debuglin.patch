@@ -1,0 +1,260 @@
+From 840d70f854a1d550924ced1d00160efcc7b8549a Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Wed, 23 Jan 2019 08:25:28 +0000
+Subject: [PATCH] Reapply: [llvm-objcopy] [COFF] Implement --add-gnu-debuglink
+
+This was reverted since it broke a couple buildbots. The reason
+for the breakage is not yet known, but this time, the test has
+got more diagnostics added, to hopefully allow figuring out
+what goes wrong.
+
+Differential Revision: https://reviews.llvm.org/D57007
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@351931 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ .../llvm-objcopy/COFF/add-gnu-debuglink.test  | 48 +++++++++++++++
+ tools/llvm-objcopy/COFF/COFFObjcopy.cpp       | 61 +++++++++++++++++++
+ tools/llvm-objcopy/COFF/Object.cpp            |  2 +-
+ tools/llvm-objcopy/COFF/Object.h              | 26 +++++++-
+ tools/llvm-objcopy/COFF/Reader.cpp            |  4 +-
+ tools/llvm-objcopy/COFF/Writer.cpp            |  9 +--
+ 6 files changed, 143 insertions(+), 7 deletions(-)
+ create mode 100644 test/tools/llvm-objcopy/COFF/add-gnu-debuglink.test
+
+diff --git a/llvm/test/tools/llvm-objcopy/COFF/add-gnu-debuglink.test b/llvm/test/tools/llvm-objcopy/COFF/add-gnu-debuglink.test
+new file mode 100644
+index 00000000000..cf3a9bba920
+--- /dev/null
++++ b/llvm/test/tools/llvm-objcopy/COFF/add-gnu-debuglink.test
+@@ -0,0 +1,48 @@
++RUN: yaml2obj %p/Inputs/x86_64-exe.yaml > %t.in123.exe
++
++# Using a debuglink filename with a length that is a multiple of 4, to
++# showcase padding in CONTENTS below.
++
++RUN: llvm-objcopy --add-gnu-debuglink=%t.in123.exe %t.in123.exe %t.out.exe
++
++# Temporary debugging of issues with this test:
++RUN: ls -l %t.out.exe || true
++RUN: od -Ax -t x1 %t.out.exe || true
++RUN: llvm-readobj -sections %t.out.exe || true
++
++RUN: llvm-readobj -sections %t.out.exe | FileCheck %s --check-prefix=SECTIONS
++RUN: llvm-objdump -s %t.out.exe | FileCheck %s --check-prefix=CONTENTS
++
++# Show the last of the preexisting sections, which is used for choosing
++# a virtual address for the generated one.
++
++SECTIONS:        Section {
++SECTIONS:          Number: 4
++SECTIONS-NEXT:     Name: .pdata
++SECTIONS-NEXT:     VirtualSize: 0x18
++SECTIONS-NEXT:     VirtualAddress: 0x4000
++SECTIONS-NEXT:     RawDataSize: 512
++SECTIONS:        Section {
++SECTIONS-NEXT:     Number: 5
++SECTIONS-NEXT:     Name: .gnu_debuglink
++SECTIONS-NEXT:     VirtualSize: 0x2C
++SECTIONS-NEXT:     VirtualAddress: 0x5000
++SECTIONS-NEXT:     RawDataSize: 512
++SECTIONS-NEXT:     PointerToRawData:
++SECTIONS-NEXT:     PointerToRelocations:
++SECTIONS-NEXT:     PointerToLineNumbers:
++SECTIONS-NEXT:     RelocationCount:
++SECTIONS-NEXT:     LineNumberCount:
++SECTIONS-NEXT:     Characteristics [ (0x42000040)
++SECTIONS-NEXT:       IMAGE_SCN_CNT_INITIALIZED_DATA (0x40)
++SECTIONS-NEXT:       IMAGE_SCN_MEM_DISCARDABLE (0x2000000)
++SECTIONS-NEXT:       IMAGE_SCN_MEM_READ (0x40000000)
++SECTIONS-NEXT:     ]
++
++# Note: The last 4 bytes here are the crc of the referenced file - if the
++# yaml2obj generated file changes, this crc changes.
++
++CONTENTS: Contents of section .gnu_debuglink:
++CONTENTS:  40005000 6164642d 676e752d 64656275 676c696e  add-gnu-debuglin
++CONTENTS:  40005010 6b2e7465 73742e74 6d702e69 6e313233  k.test.tmp.in123
++CONTENTS:  40005020 2e657865 00000000 7929adc3           .exe
+diff --git a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+index 8d8f53d13d8..20adbe11e7a 100644
+--- a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+@@ -17,6 +17,8 @@
+ #include "llvm/Object/Binary.h"
+ #include "llvm/Object/COFF.h"
+ #include "llvm/Support/Errc.h"
++#include "llvm/Support/JamCRC.h"
++#include "llvm/Support/Path.h"
+ #include <cassert>
+ 
+ namespace llvm {
+@@ -30,6 +32,61 @@ static bool isDebugSection(const Section &Sec) {
+   return Sec.Name.startswith(".debug");
+ }
+ 
++static uint64_t getNextRVA(const Object &Obj) {
++  if (Obj.getSections().empty())
++    return 0;
++  const Section &Last = Obj.getSections().back();
++  return alignTo(Last.Header.VirtualAddress + Last.Header.VirtualSize,
++                 Obj.PeHeader.SectionAlignment);
++}
++
++static uint32_t getCRC32(StringRef Data) {
++  JamCRC CRC;
++  CRC.update(ArrayRef<char>(Data.data(), Data.size()));
++  // The CRC32 value needs to be complemented because the JamCRC dosn't
++  // finalize the CRC32 value. It also dosn't negate the initial CRC32 value
++  // but it starts by default at 0xFFFFFFFF which is the complement of zero.
++  return ~CRC.getCRC();
++}
++
++static std::vector<uint8_t> createGnuDebugLinkSectionContents(StringRef File) {
++  ErrorOr<std::unique_ptr<MemoryBuffer>> LinkTargetOrErr =
++      MemoryBuffer::getFile(File);
++  if (!LinkTargetOrErr)
++    error("'" + File + "': " + LinkTargetOrErr.getError().message());
++  auto LinkTarget = std::move(*LinkTargetOrErr);
++  uint32_t CRC32 = getCRC32(LinkTarget->getBuffer());
++
++  StringRef FileName = sys::path::filename(File);
++  size_t CRCPos = alignTo(FileName.size() + 1, 4);
++  std::vector<uint8_t> Data(CRCPos + 4);
++  memcpy(Data.data(), FileName.data(), FileName.size());
++  support::endian::write32le(Data.data() + CRCPos, CRC32);
++  return Data;
++}
++
++static void addGnuDebugLink(Object &Obj, StringRef DebugLinkFile) {
++  uint32_t StartRVA = getNextRVA(Obj);
++
++  std::vector<Section> Sections;
++  Section Sec;
++  Sec.setOwnedContents(createGnuDebugLinkSectionContents(DebugLinkFile));
++  Sec.Name = ".gnu_debuglink";
++  Sec.Header.VirtualSize = Sec.getContents().size();
++  Sec.Header.VirtualAddress = StartRVA;
++  Sec.Header.SizeOfRawData =
++      alignTo(Sec.Header.VirtualSize, Obj.PeHeader.FileAlignment);
++  // Sec.Header.PointerToRawData is filled in by the writer.
++  Sec.Header.PointerToRelocations = 0;
++  Sec.Header.PointerToLinenumbers = 0;
++  // Sec.Header.NumberOfRelocations is filled in by the writer.
++  Sec.Header.NumberOfLinenumbers = 0;
++  Sec.Header.Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA |
++                               IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_DISCARDABLE;
++  Sections.push_back(Sec);
++  Obj.addSections(Sections);
++}
++
+ static Error handleArgs(const CopyConfig &Config, Object &Obj) {
+   // Perform the actual section removals.
+   Obj.removeSections([&Config](const Section &Sec) {
+@@ -109,6 +166,10 @@ static Error handleArgs(const CopyConfig &Config, Object &Obj) {
+ 
+     return false;
+   });
++
++  if (!Config.AddGnuDebugLink.empty())
++    addGnuDebugLink(Obj, Config.AddGnuDebugLink);
++
+   return Error::success();
+ }
+ 
+diff --git a/llvm/tools/llvm-objcopy/COFF/Object.cpp b/llvm/tools/llvm-objcopy/COFF/Object.cpp
+index 83435dffa98..8c382c1faef 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Object.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Object.cpp
+@@ -129,7 +129,7 @@ void Object::removeSections(function_ref<bool(const Section &)> ToRemove) {
+ void Object::truncateSections(function_ref<bool(const Section &)> ToTruncate) {
+   for (Section &Sec : Sections) {
+     if (ToTruncate(Sec)) {
+-      Sec.Contents = ArrayRef<uint8_t>();
++      Sec.clearContents();
+       Sec.Relocs.clear();
+       Sec.Header.SizeOfRawData = 0;
+     }
+diff --git a/llvm/tools/llvm-objcopy/COFF/Object.h b/llvm/tools/llvm-objcopy/COFF/Object.h
+index 0630f9c5ff8..afa272286ef 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Object.h
++++ b/llvm/tools/llvm-objcopy/COFF/Object.h
+@@ -35,11 +35,35 @@ struct Relocation {
+ 
+ struct Section {
+   object::coff_section Header;
+-  ArrayRef<uint8_t> Contents;
+   std::vector<Relocation> Relocs;
+   StringRef Name;
+   ssize_t UniqueId;
+   size_t Index;
++
++  ArrayRef<uint8_t> getContents() const {
++    if (!OwnedContents.empty())
++      return OwnedContents;
++    return ContentsRef;
++  }
++
++  void setContentsRef(ArrayRef<uint8_t> Data) {
++    OwnedContents.clear();
++    ContentsRef = Data;
++  }
++
++  void setOwnedContents(std::vector<uint8_t> &&Data) {
++    ContentsRef = ArrayRef<uint8_t>();
++    OwnedContents = std::move(Data);
++  }
++
++  void clearContents() {
++    ContentsRef = ArrayRef<uint8_t>();
++    OwnedContents.clear();
++  }
++
++private:
++  ArrayRef<uint8_t> ContentsRef;
++  std::vector<uint8_t> OwnedContents;
+ };
+ 
+ struct Symbol {
+diff --git a/llvm/tools/llvm-objcopy/COFF/Reader.cpp b/llvm/tools/llvm-objcopy/COFF/Reader.cpp
+index 2446277cc2b..87dd60a43cf 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Reader.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Reader.cpp
+@@ -69,8 +69,10 @@ Error COFFReader::readSections(Object &Obj) const {
+     Sections.push_back(Section());
+     Section &S = Sections.back();
+     S.Header = *Sec;
+-    if (auto EC = COFFObj.getSectionContents(Sec, S.Contents))
++    ArrayRef<uint8_t> Contents;
++    if (auto EC = COFFObj.getSectionContents(Sec, Contents))
+       return errorCodeToError(EC);
++    S.setContentsRef(Contents);
+     ArrayRef<coff_relocation> Relocs = COFFObj.getRelocations(Sec);
+     for (const coff_relocation &R : Relocs)
+       S.Relocs.push_back(R);
+diff --git a/llvm/tools/llvm-objcopy/COFF/Writer.cpp b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+index db3589bb119..05e46291c39 100644
+--- a/llvm/tools/llvm-objcopy/COFF/Writer.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+@@ -286,14 +286,15 @@ void COFFWriter::writeHeaders(bool IsBigObj) {
+ void COFFWriter::writeSections() {
+   for (const auto &S : Obj.getSections()) {
+     uint8_t *Ptr = Buf.getBufferStart() + S.Header.PointerToRawData;
+-    std::copy(S.Contents.begin(), S.Contents.end(), Ptr);
++    ArrayRef<uint8_t> Contents = S.getContents();
++    std::copy(Contents.begin(), Contents.end(), Ptr);
+ 
+     // For executable sections, pad the remainder of the raw data size with
+     // 0xcc, which is int3 on x86.
+     if ((S.Header.Characteristics & IMAGE_SCN_CNT_CODE) &&
+-        S.Header.SizeOfRawData > S.Contents.size())
+-      memset(Ptr + S.Contents.size(), 0xcc,
+-             S.Header.SizeOfRawData - S.Contents.size());
++        S.Header.SizeOfRawData > Contents.size())
++      memset(Ptr + Contents.size(), 0xcc,
++             S.Header.SizeOfRawData - Contents.size());
+ 
+     Ptr += S.Header.SizeOfRawData;
+     for (const auto &R : S.Relocs) {
+-- 
+2.17.1
+
