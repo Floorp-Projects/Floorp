@@ -2424,44 +2424,80 @@ nsStyleImageLayers::nsStyleImageLayers(const nsStyleImageLayers& aSource)
   }
 }
 
-nsChangeHint nsStyleImageLayers::CalcDifference(
-    const nsStyleImageLayers& aNewLayers,
-    nsStyleImageLayers::LayerType aType) const {
-  nsChangeHint hint = nsChangeHint(0);
+static bool IsElementImage(const nsStyleImageLayers::Layer& aLayer) {
+  return aLayer.mImage.GetType() == eStyleImageType_Element;
+}
 
-  const nsStyleImageLayers& moreLayers =
-      mImageCount > aNewLayers.mImageCount ? *this : aNewLayers;
-  const nsStyleImageLayers& lessLayers =
-      mImageCount > aNewLayers.mImageCount ? aNewLayers : *this;
-
-  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, moreLayers) {
-    if (i < lessLayers.mImageCount) {
-      nsChangeHint layerDifference =
-          moreLayers.mLayers[i].CalcDifference(lessLayers.mLayers[i]);
-      hint |= layerDifference;
-      if (layerDifference && ((moreLayers.mLayers[i].mImage.GetType() ==
-                               eStyleImageType_Element) ||
-                              (lessLayers.mLayers[i].mImage.GetType() ==
-                               eStyleImageType_Element))) {
-        hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
-      }
-    } else {
-      hint |= nsChangeHint_RepaintFrame;
-      if (moreLayers.mLayers[i].mImage.GetType() == eStyleImageType_Element) {
-        hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
-      }
+static bool AnyLayerIsElementImage(const nsStyleImageLayers& aLayers) {
+  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, aLayers) {
+    if (IsElementImage(aLayers.mLayers[i])) {
+      return true;
     }
   }
+  return false;
+}
 
-  if (aType == nsStyleImageLayers::LayerType::Mask &&
-      mImageCount != aNewLayers.mImageCount) {
-    hint |= nsChangeHint_UpdateEffects;
-  }
+nsChangeHint nsStyleImageLayers::CalcDifference(
+    const nsStyleImageLayers& aNewLayers, LayerType aType) const {
 
-  if (hint) {
+  nsChangeHint hint = nsChangeHint(0);
+
+  // If the number of visible images changes, then it's easy-peasy.
+  if (mImageCount != aNewLayers.mImageCount) {
+    hint |= nsChangeHint_RepaintFrame;
+    if (aType == nsStyleImageLayers::LayerType::Mask ||
+        AnyLayerIsElementImage(*this) || AnyLayerIsElementImage(aNewLayers)) {
+      hint |= nsChangeHint_UpdateEffects;
+    }
     return hint;
   }
 
+  const nsStyleImageLayers& moreLayers =
+      mLayers.Length() > aNewLayers.mLayers.Length() ? *this : aNewLayers;
+  const nsStyleImageLayers& lessLayers =
+      mLayers.Length() > aNewLayers.mLayers.Length() ? aNewLayers : *this;
+
+  for (size_t i = 0; i < moreLayers.mLayers.Length(); ++i) {
+    const Layer& moreLayersLayer = moreLayers.mLayers[i];
+    if (i < moreLayers.mImageCount) {
+      // This is a visible image we're diffing, we may need to repaint.
+      const Layer& lessLayersLayer = lessLayers.mLayers[i];
+      nsChangeHint layerDifference =
+          moreLayersLayer.CalcDifference(lessLayersLayer);
+      if (layerDifference && (IsElementImage(moreLayersLayer) ||
+                              IsElementImage(lessLayersLayer))) {
+        layerDifference |= nsChangeHint_UpdateEffects |
+                           nsChangeHint_RepaintFrame;
+      }
+      hint |= layerDifference;
+      continue;
+    }
+    if (hint) {
+      // If they're different by now, we're done.
+      return hint;
+    }
+    if (i >= lessLayers.mLayers.Length()) {
+      // The layer count differs, we know some property has changed, but if we
+      // got here we know it won't affect rendering.
+      return nsChangeHint_NeutralChange;
+    }
+
+    const Layer& lessLayersLayer = lessLayers.mLayers[i];
+    MOZ_ASSERT(moreLayersLayer.mImage.GetType() == eStyleImageType_Null);
+    MOZ_ASSERT(lessLayersLayer.mImage.GetType() == eStyleImageType_Null);
+    if (moreLayersLayer.CalcDifference(lessLayersLayer)) {
+      // We don't care about the difference returned, we know it's not visible,
+      // but if something changed, then we need to return the neutral change.
+      return nsChangeHint_NeutralChange;
+    }
+  }
+
+  if (hint) {
+    // If they're different by now, we're done.
+    return hint;
+  }
+
+  // We could have same layers and values, but different count still.
   if (mAttachmentCount != aNewLayers.mAttachmentCount ||
       mBlendModeCount != aNewLayers.mBlendModeCount ||
       mClipCount != aNewLayers.mClipCount ||
@@ -3309,7 +3345,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
                 mAnimationIterationCountCount !=
                     aNewData.mAnimationIterationCountCount ||
                 mScrollSnapCoordinate != aNewData.mScrollSnapCoordinate ||
-                mWillChange != aNewData.mWillChange)) {
+                mWillChange != aNewData.mWillChange ||
+                mOverflowAnchor != aNewData.mOverflowAnchor)) {
     hint |= nsChangeHint_NeutralChange;
   }
 
