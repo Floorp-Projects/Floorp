@@ -11,7 +11,7 @@ import type {
   AstPosition,
   AstLocation,
   FunctionDeclaration,
-  ClassDeclaration
+  ClassDeclaration,
 } from "../workers/parser";
 
 export function findBestMatchExpression(symbols: Symbols, tokenPos: Position) {
@@ -59,7 +59,7 @@ function findClosestofSymbol(declarations: any[], location: SourceLocation) {
       currNode.name === "anonymous" ||
       !containsPosition(currNode.location, {
         line: location.line,
-        column: location.column || 0
+        column: location.column || 0,
       })
     ) {
       return found;

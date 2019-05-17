@@ -9,7 +9,7 @@ import {
   getSymbols,
   getSource,
   getSourceFromId,
-  getSelectedFrame
+  getSelectedFrame,
 } from "../../selectors";
 
 import assert from "../../utils/assert";
@@ -47,7 +47,7 @@ export function updateFrameLocation(
   return sourceMaps.getOriginalLocation(frame.location).then(loc => ({
     ...frame,
     location: loc,
-    generatedLocation: frame.generatedLocation || frame.location
+    generatedLocation: frame.generatedLocation || frame.location,
   }));
 }
 
@@ -120,9 +120,9 @@ async function expandFrames(
       result.push(frame);
       continue;
     }
-    const originalFrames: ?Array<
-      OriginalFrame
-    > = await sourceMaps.getOriginalStackFrames(frame.generatedLocation);
+    const originalFrames: ?Array<OriginalFrame> = await sourceMaps.getOriginalStackFrames(
+      frame.generatedLocation
+    );
     if (!originalFrames) {
       result.push(frame);
       continue;
@@ -132,7 +132,7 @@ async function expandFrames(
     // First entry has not specific location -- use one from original frame.
     originalFrames[0] = {
       ...originalFrames[0],
-      location: frame.location
+      location: frame.location,
     };
 
     originalFrames.forEach((originalFrame, j) => {
@@ -155,7 +155,7 @@ async function expandFrames(
         // More fields that will be added by the mapDisplayNames and
         // updateFrameLocation.
         generatedLocation: frame.generatedLocation,
-        originalDisplayName: originalFrame.displayName
+        originalDisplayName: originalFrame.displayName,
       });
     });
   }
@@ -204,7 +204,7 @@ export function mapFrames(cx: ThreadContext) {
       cx,
       thread: cx.thread,
       frames: mappedFrames,
-      selectedFrameId
+      selectedFrameId,
     });
   };
 }

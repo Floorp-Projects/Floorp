@@ -18,7 +18,7 @@ export default function getMatches(
     return [];
   }
   const regexQuery = buildQuery(query, modifiers, {
-    isGlobal: true
+    isGlobal: true,
   });
   const matchedLocations = [];
   const lines = text.split("\n");

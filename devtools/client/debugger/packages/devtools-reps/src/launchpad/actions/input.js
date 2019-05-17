@@ -13,7 +13,7 @@ function addInput(input) {
     dispatch({
       key: generateKey(),
       type: constants.ADD_INPUT,
-      value: input
+      value: input,
     });
   };
 }
@@ -21,19 +21,19 @@ function addInput(input) {
 function changeCurrentInput(input) {
   return {
     type: constants.CHANGE_CURRENT_INPUT,
-    value: input
+    value: input,
   };
 }
 
 function navigateInputHistory(dir) {
   return {
     type: constants.NAVIGATE_INPUT_HISTORY,
-    value: dir
+    value: dir,
   };
 }
 
 module.exports = {
   addInput,
   changeCurrentInput,
-  navigateInputHistory
+  navigateInputHistory,
 };

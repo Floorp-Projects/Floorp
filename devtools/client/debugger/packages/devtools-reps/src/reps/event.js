@@ -20,7 +20,7 @@ Event.propTypes = {
   mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func
+  onInspectIconClick: PropTypes.func,
 };
 
 function Event(props) {
@@ -31,14 +31,14 @@ function Event(props) {
       ...props.object,
       preview: {
         ...props.object.preview,
-        ownProperties: {}
-      }
-    }
+        ownProperties: {},
+      },
+    },
   };
 
   if (gripProps.object.preview.target) {
     Object.assign(gripProps.object.preview.ownProperties, {
-      target: gripProps.object.preview.target
+      target: gripProps.object.preview.target,
     });
   }
   Object.assign(
@@ -107,5 +107,5 @@ function supportsObject(grip, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(Event),
-  supportsObject
+  supportsObject,
 };

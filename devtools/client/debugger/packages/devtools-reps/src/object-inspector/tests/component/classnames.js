@@ -12,10 +12,10 @@ function generateDefaults(overrides) {
       {
         path: "root",
         name: "root",
-        contents: { value: 42 }
-      }
+        contents: { value: 42 },
+      },
     ],
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -24,7 +24,7 @@ function mount(props) {
 
   return mountObjectInspector({
     client,
-    props: generateDefaults(props)
+    props: generateDefaults(props),
   });
 }
 

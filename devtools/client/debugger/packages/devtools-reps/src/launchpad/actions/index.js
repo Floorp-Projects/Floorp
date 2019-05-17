@@ -7,5 +7,5 @@ const input = require("./input");
 
 module.exports = {
   ...expressions,
-  ...input
+  ...input,
 };

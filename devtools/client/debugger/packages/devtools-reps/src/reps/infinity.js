@@ -14,7 +14,7 @@ const { span } = dom;
  * Renders a Infinity object
  */
 InfinityRep.propTypes = {
-  object: PropTypes.object.isRequired
+  object: PropTypes.object.isRequired,
 };
 
 function InfinityRep(props) {
@@ -31,5 +31,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(InfinityRep),
-  supportsObject
+  supportsObject,
 };

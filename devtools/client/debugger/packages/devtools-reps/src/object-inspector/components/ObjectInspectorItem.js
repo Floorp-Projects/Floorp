@@ -38,7 +38,7 @@ const {
   nodeHasFullText,
   nodeHasGetter,
   getNonPrototypeParentGripValue,
-  getParentGripValue
+  getParentGripValue,
 } = Utils.node;
 
 type Props = {
@@ -56,7 +56,7 @@ type Props = {
     options: {
       depth: number,
       focused: boolean,
-      expanded: boolean
+      expanded: boolean,
     }
   ) => any,
   onCmdCtrlClick: ?(
@@ -65,7 +65,7 @@ type Props = {
       depth: number,
       event: SyntheticEvent,
       focused: boolean,
-      expanded: boolean
+      expanded: boolean,
     }
   ) => any,
   onLabelClick: ?(
@@ -74,16 +74,16 @@ type Props = {
       depth: number,
       focused: boolean,
       expanded: boolean,
-      setExpanded: (Node, boolean) => any
+      setExpanded: (Node, boolean) => any,
     }
-  ) => any
+  ) => any,
 };
 
 class ObjectInspectorItem extends Component<Props> {
   // eslint-disable-next-line complexity
   getLabelAndValue(): {
     value?: string | Element,
-    label?: string
+    label?: string,
   } {
     const { item, depth, expanded, mode } = this.props;
 
@@ -93,28 +93,28 @@ class ObjectInspectorItem extends Component<Props> {
     if (nodeIsOptimizedOut(item)) {
       return {
         label,
-        value: dom.span({ className: "unavailable" }, "(optimized away)")
+        value: dom.span({ className: "unavailable" }, "(optimized away)"),
       };
     }
 
     if (nodeIsUninitializedBinding(item)) {
       return {
         label,
-        value: dom.span({ className: "unavailable" }, "(uninitialized)")
+        value: dom.span({ className: "unavailable" }, "(uninitialized)"),
       };
     }
 
     if (nodeIsUnmappedBinding(item)) {
       return {
         label,
-        value: dom.span({ className: "unavailable" }, "(unmapped)")
+        value: dom.span({ className: "unavailable" }, "(unmapped)"),
       };
     }
 
     if (nodeIsUnscopedBinding(item)) {
       return {
         label,
-        value: dom.span({ className: "unavailable" }, "(unscoped)")
+        value: dom.span({ className: "unavailable" }, "(unscoped)"),
       };
     }
 
@@ -128,7 +128,7 @@ class ObjectInspectorItem extends Component<Props> {
     if (nodeIsMissingArguments(item) || unavailable) {
       return {
         label,
-        value: dom.span({ className: "unavailable" }, "(unavailable)")
+        value: dom.span({ className: "unavailable" }, "(unavailable)"),
       };
     }
 
@@ -141,8 +141,8 @@ class ObjectInspectorItem extends Component<Props> {
       return {
         label: Utils.renderRep(item, {
           ...this.props,
-          functionName: label
-        })
+          functionName: label,
+        }),
       };
     }
 
@@ -163,7 +163,7 @@ class ObjectInspectorItem extends Component<Props> {
 
       if (nodeIsLongString(item)) {
         repProps.member = {
-          open: nodeHasFullText(item) && expanded
+          open: nodeHasFullText(item) && expanded,
         };
       }
 
@@ -178,19 +178,19 @@ class ObjectInspectorItem extends Component<Props> {
                 targetGrip,
                 receiverGrip.actor,
                 item.name
-              )
+              ),
           });
         }
       }
 
       return {
         label,
-        value: Utils.renderRep(item, repProps)
+        value: Utils.renderRep(item, repProps),
       };
     }
 
     return {
-      label
+      label,
     };
   }
 
@@ -202,7 +202,7 @@ class ObjectInspectorItem extends Component<Props> {
       expanded,
       onCmdCtrlClick,
       onDoubleClick,
-      dimTopLevelWindow
+      dimTopLevelWindow,
     } = this.props;
 
     const parentElementProps: Object = {
@@ -215,7 +215,7 @@ class ObjectInspectorItem extends Component<Props> {
             nodeIsGetter(item) ||
             nodeIsSetter(item) ||
             (dimTopLevelWindow === true && nodeIsWindow(item) && depth === 0)),
-        block: nodeIsBlock(item)
+        block: nodeIsBlock(item),
       }),
       onClick: e => {
         if (
@@ -226,7 +226,7 @@ class ObjectInspectorItem extends Component<Props> {
             depth,
             event: e,
             focused,
-            expanded
+            expanded,
           });
           e.stopPropagation();
           return;
@@ -244,7 +244,7 @@ class ObjectInspectorItem extends Component<Props> {
         ) {
           e.stopPropagation();
         }
-      }
+      },
     };
 
     if (onDoubleClick) {
@@ -253,7 +253,7 @@ class ObjectInspectorItem extends Component<Props> {
         onDoubleClick(item, {
           depth,
           focused,
-          expanded
+          expanded,
         });
       };
     }
@@ -283,10 +283,10 @@ class ObjectInspectorItem extends Component<Props> {
                 depth,
                 focused,
                 expanded,
-                setExpanded: this.props.setExpanded
+                setExpanded: this.props.setExpanded,
               });
             }
-          : undefined
+          : undefined,
       },
       label
     );

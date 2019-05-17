@@ -9,6 +9,6 @@ module.exports = {
   reporters: ["default"],
   projects: [
     "<rootDir>/jest-test.config.js",
-    "<rootDir>/packages/*/jest.config.js"
-  ]
+    "<rootDir>/packages/*/jest.config.js",
+  ],
 };

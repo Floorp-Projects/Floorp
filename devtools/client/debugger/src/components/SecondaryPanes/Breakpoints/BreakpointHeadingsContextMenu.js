@@ -16,7 +16,7 @@ type Props = {
   disableBreakpointsInSource: typeof actions.disableBreakpointsInSource,
   enableBreakpointsInSource: typeof actions.enableBreakpointsInSource,
   removeBreakpointsInSource: typeof actions.removeBreakpointsInSource,
-  contextMenuEvent: SyntheticEvent<HTMLElement>
+  contextMenuEvent: SyntheticEvent<HTMLElement>,
 };
 
 export default function showContextMenu(props: Props) {
@@ -27,7 +27,7 @@ export default function showContextMenu(props: Props) {
     disableBreakpointsInSource,
     enableBreakpointsInSource,
     removeBreakpointsInSource,
-    contextMenuEvent
+    contextMenuEvent,
   } = props;
 
   contextMenuEvent.preventDefault();
@@ -56,7 +56,7 @@ export default function showContextMenu(props: Props) {
     label: disableInSourceLabel,
     accesskey: disableInSourceKey,
     disabled: false,
-    click: () => disableBreakpointsInSource(cx, source)
+    click: () => disableBreakpointsInSource(cx, source),
   };
 
   const enableInSourceItem = {
@@ -64,7 +64,7 @@ export default function showContextMenu(props: Props) {
     label: enableInSourceLabel,
     accesskey: enableInSourceKey,
     disabled: false,
-    click: () => enableBreakpointsInSource(cx, source)
+    click: () => enableBreakpointsInSource(cx, source),
   };
 
   const removeInSourceItem = {
@@ -72,7 +72,7 @@ export default function showContextMenu(props: Props) {
     label: removeInSourceLabel,
     accesskey: removeInSourceKey,
     disabled: false,
-    click: () => removeBreakpointsInSource(cx, source)
+    click: () => removeBreakpointsInSource(cx, source),
   };
 
   const hideDisableInSourceItem = breakpointsForSource.every(
@@ -85,7 +85,7 @@ export default function showContextMenu(props: Props) {
   const items = [
     { item: disableInSourceItem, hidden: () => hideDisableInSourceItem },
     { item: enableInSourceItem, hidden: () => hideEnableInSourceItem },
-    { item: removeInSourceItem, hidden: () => false }
+    { item: removeInSourceItem, hidden: () => false },
   ];
 
   showMenu(contextMenuEvent, buildMenu(items));

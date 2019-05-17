@@ -33,8 +33,8 @@ export function createEditor() {
       "Cmd-F": false,
       "Ctrl-F": false,
       "Cmd-G": false,
-      "Ctrl-G": false
-    }
+      "Ctrl-G": false,
+    },
   });
 }
 

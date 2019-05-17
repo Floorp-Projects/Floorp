@@ -11,11 +11,11 @@ import "./OutlineFilter.css";
 
 type Props = {
   filter: string,
-  updateFilter: (filter: string) => void
+  updateFilter: (filter: string) => void,
 };
 
 type State = {
-  focused: boolean
+  focused: boolean,
 };
 
 export default class OutlineFilter extends Component<Props, State> {

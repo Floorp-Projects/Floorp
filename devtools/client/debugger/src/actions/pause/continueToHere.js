@@ -7,7 +7,7 @@
 import {
   getSelectedSource,
   getSelectedFrame,
-  getCanRewind
+  getCanRewind,
 } from "../../selectors";
 import { addHiddenBreakpoint } from "../breakpoints";
 import { resume, rewind } from "./commands";
@@ -40,7 +40,7 @@ export function continueToHere(
       addHiddenBreakpoint(cx, {
         line,
         column: column,
-        sourceId: selectedSource.id
+        sourceId: selectedSource.id,
       })
     );
 

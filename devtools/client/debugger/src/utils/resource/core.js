@@ -7,13 +7,13 @@
 export type Resource<R: ResourceBound> = $ReadOnly<$Exact<R>>;
 
 export type ResourceBound = {
-  +id: string
+  +id: string,
 };
 export type Id<R: ResourceBound> = $ElementType<R, "id">;
 
 type ResourceSubset<R: ResourceBound> = $ReadOnly<{
   +id: Id<R>,
-  ...$Shape<$Rest<R, { +id: Id<R> }>>
+  ...$Shape<$Rest<R, { +id: Id<R> }>>,
 }>;
 
 export opaque type ResourceIdentity: { [string]: mixed } = {||};
@@ -21,13 +21,13 @@ export type ResourceValues<R: ResourceBound> = { [Id<R>]: R };
 
 export opaque type ResourceState<R: ResourceBound> = {
   identity: { [Id<R>]: ResourceIdentity },
-  values: ResourceValues<R>
+  values: ResourceValues<R>,
 };
 
 export function createInitial<R: ResourceBound>(): ResourceState<R> {
   return {
     identity: {},
-    values: {}
+    values: {},
   };
 }
 
@@ -41,7 +41,7 @@ export function insertResources<R: ResourceBound>(
 
   state = {
     identity: { ...state.identity },
-    values: { ...state.values }
+    values: { ...state.values },
   };
 
   for (const resource of resources) {
@@ -71,7 +71,7 @@ export function removeResources<R: ResourceBound>(
 
   state = {
     identity: { ...state.identity },
-    values: { ...state.values }
+    values: { ...state.values },
   };
 
   for (let id of resources) {
@@ -134,7 +134,7 @@ export function updateResources<R: ResourceBound>(
         didCopyValues = true;
         state = {
           identity: state.identity,
-          values: { ...state.values }
+          values: { ...state.values },
         };
       }
 
@@ -154,7 +154,7 @@ export function getResourcePair<R: ResourceBound>(
   id: Id<R>
 ): {
   value: R,
-  identity: ResourceIdentity
+  identity: ResourceIdentity,
 } | null {
   const value = state.values[id];
   const identity = state.identity[id];

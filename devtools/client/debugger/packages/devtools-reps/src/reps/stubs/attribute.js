@@ -15,8 +15,8 @@ stubs.set("Attribute", {
     kind: "DOMNode",
     nodeType: 2,
     nodeName: "class",
-    value: "autocomplete-suggestions"
-  }
+    value: "autocomplete-suggestions",
+  },
 });
 
 module.exports = stubs;

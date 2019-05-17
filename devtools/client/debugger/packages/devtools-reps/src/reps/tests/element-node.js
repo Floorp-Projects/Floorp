@@ -11,7 +11,7 @@ const { MAX_ATTRIBUTE_LENGTH } = require("../element-node");
 const { ElementNode } = REPS;
 const {
   expectActorAttribute,
-  getSelectableInInspectorGrips
+  getSelectableInInspectorGrips,
 } = require("./test-helpers");
 const { ELLIPSIS } = require("../rep-utils");
 const stubs = require("../stubs/element-node");
@@ -26,7 +26,7 @@ describe("ElementNode - BodyNode", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -40,7 +40,7 @@ describe("ElementNode - BodyNode", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -59,7 +59,7 @@ describe("ElementNode - DocumentElement", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -70,7 +70,7 @@ describe("ElementNode - DocumentElement", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -93,7 +93,7 @@ describe("ElementNode - Node", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -107,7 +107,7 @@ describe("ElementNode - Node", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -121,7 +121,7 @@ describe("ElementNode - Node", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stubs.get("Node"),
-        onInspectIconClick
+        onInspectIconClick,
       })
     );
 
@@ -139,7 +139,7 @@ describe("ElementNode - Node", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        onDOMNodeClick
+        onDOMNodeClick,
       })
     );
 
@@ -153,7 +153,7 @@ describe("ElementNode - Node", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        onDOMNodeMouseOut
+        onDOMNodeMouseOut,
       })
     );
 
@@ -167,7 +167,7 @@ describe("ElementNode - Node", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        onDOMNodeMouseOver
+        onDOMNodeMouseOver,
       })
     );
 
@@ -188,7 +188,7 @@ describe("ElementNode - Leading and trailing spaces class name", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -201,7 +201,7 @@ describe("ElementNode - Leading and trailing spaces class name", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -219,7 +219,7 @@ describe("ElementNode - Node with spaces in the class name", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -230,7 +230,7 @@ describe("ElementNode - Node with spaces in the class name", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -248,7 +248,7 @@ describe("ElementNode - Node without attributes", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -259,7 +259,7 @@ describe("ElementNode - Node without attributes", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -277,7 +277,7 @@ describe("ElementNode - Node with many attributes", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -291,7 +291,7 @@ describe("ElementNode - Node with many attributes", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -309,7 +309,7 @@ describe("ElementNode - SVG Node", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -322,7 +322,7 @@ describe("ElementNode - SVG Node", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -340,7 +340,7 @@ describe("ElementNode - SVG Node in XHTML", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -353,7 +353,7 @@ describe("ElementNode - SVG Node in XHTML", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -369,7 +369,7 @@ describe("ElementNode - Disconnected node", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        onInspectIconClick
+        onInspectIconClick,
       })
     );
 
@@ -387,7 +387,7 @@ describe("ElementNode - Element with longString attribute", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -400,7 +400,7 @@ describe("ElementNode - Element with longString attribute", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -413,7 +413,7 @@ describe("ElementNode - Element attribute cropping", () => {
     const stub = stubs.get("NodeWithSpacesInClassName");
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
     expect(
@@ -429,7 +429,7 @@ describe("ElementNode - Element attribute cropping", () => {
 
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -449,7 +449,7 @@ describe("ElementNode - Element attribute cropping", () => {
 
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -475,7 +475,7 @@ describe("ElementNode - : Marker pseudo element", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -486,7 +486,7 @@ describe("ElementNode - : Marker pseudo element", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -504,7 +504,7 @@ describe("ElementNode - : Before pseudo element", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -515,7 +515,7 @@ describe("ElementNode - : Before pseudo element", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -533,7 +533,7 @@ describe("ElementNode - After pseudo element", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -544,7 +544,7 @@ describe("ElementNode - After pseudo element", () => {
     const renderedComponent = shallow(
       ElementNode.rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -562,7 +562,7 @@ describe("ElementNode - Inspect icon title", () => {
       ElementNode.rep({
         inspectIconTitle,
         object: stub,
-        onInspectIconClick: jest.fn()
+        onInspectIconClick: jest.fn(),
       })
     );
 
@@ -581,10 +581,10 @@ describe("ElementNode - Cursor style", () => {
       ElementNode.rep({
         object: stub,
         onDOMNodeClick: jest.fn(),
-        onInspectIconClick: jest.fn()
+        onInspectIconClick: jest.fn(),
       }),
       {
-        attachTo
+        attachTo,
       }
     );
 
@@ -600,10 +600,10 @@ describe("ElementNode - Cursor style", () => {
     const attachTo = window.document.querySelector("#attach-to");
     const renderedComponent = mount(
       ElementNode.rep({
-        object: stub
+        object: stub,
       }),
       {
-        attachTo
+        attachTo,
       }
     );
 
