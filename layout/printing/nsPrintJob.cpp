@@ -1438,7 +1438,10 @@ void nsPrintJob::GetDisplayTitleAndURL(const UniquePtr<nsPrintObject>& aPO,
 
 //---------------------------------------------------------------------
 nsresult nsPrintJob::DocumentReadyForPrinting() {
-  if (mPrt->mPrintFrameType == nsIPrintSettings::kEachFrameSep) {
+  int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
+  mPrt->mPrintSettings->GetPrintRange(&printRangeType);
+  if (mPrt->mPrintFrameType == nsIPrintSettings::kEachFrameSep &&
+      printRangeType != nsIPrintSettings::kRangeSelection) {
     // Guarantee that mPrt->mPrintObject won't be deleted during a call of
     // CheckForChildFrameSets().
     RefPtr<nsPrintData> printData = mPrt;
@@ -1995,9 +1998,13 @@ void nsPrintJob::UpdateZoomRatio(nsPrintObject* aPO, bool aSetPixelScale) {
   // Here is where we set the shrinkage value into the DC
   // and this is what actually makes it shrink
   if (aSetPixelScale && aPO->mFrameType != eIFrame) {
+    int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
+    mPrt->mPrintSettings->GetPrintRange(&printRangeType);
+
     float ratio;
-    if (mPrt->mPrintFrameType == nsIPrintSettings::kFramesAsIs ||
-        mPrt->mPrintFrameType == nsIPrintSettings::kNoFrames) {
+    if ((mPrt->mPrintFrameType == nsIPrintSettings::kFramesAsIs ||
+         mPrt->mPrintFrameType == nsIPrintSettings::kNoFrames) &&
+        printRangeType != nsIPrintSettings::kRangeSelection) {
       ratio = mPrt->mShrinkRatio - 0.005f;  // round down
     } else {
       ratio = aPO->mShrinkRatio - 0.005f;  // round down
@@ -2679,7 +2686,10 @@ bool nsPrintJob::PrintPage(nsPrintObject* aPO, bool& aInRange) {
 
   // XXX This is wrong, but the actual behavior in the presence of a print
   // range sucks.
-  if (printData->mPrintFrameType == nsIPrintSettings::kEachFrameSep) {
+  int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
+  printData->mPrintSettings->GetPrintRange(&printRangeType);
+  if (printData->mPrintFrameType == nsIPrintSettings::kEachFrameSep &&
+      printRangeType != nsIPrintSettings::kRangeSelection) {
     endPage = printData->mNumPrintablePages;
   }
 
@@ -2905,7 +2915,6 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   // if we are printing the selection (either an IFrame or selection range)
   // then set the mPrintFrameType as if it were the selected frame
   if (printRangeType == nsIPrintSettings::kRangeSelection) {
-    printData->mPrintFrameType = nsIPrintSettings::kSelectedFrame;
     printHowEnable = nsIPrintSettings::kFrameEnableNone;
   }
 
@@ -3029,7 +3038,8 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   }
 
   // If we are printing "AsIs" then sets all the POs to be printed as is
-  if (printData->mPrintFrameType == nsIPrintSettings::kFramesAsIs) {
+  if (printData->mPrintFrameType == nsIPrintSettings::kFramesAsIs &&
+      printRangeType != nsIPrintSettings::kRangeSelection) {
     SetPrintAsIs(printData->mPrintObject.get());
     SetPrintPO(printData->mPrintObject.get(), true);
     return NS_OK;
@@ -3038,7 +3048,8 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   // If we are printing the selected Frame then
   // find that PO for that selected DOMWin and set it all of its
   // children to be printed
-  if (printData->mPrintFrameType == nsIPrintSettings::kSelectedFrame) {
+  if (printData->mPrintFrameType == nsIPrintSettings::kSelectedFrame ||
+      printRangeType == nsIPrintSettings::kRangeSelection) {
     if ((printData->mIsParentAFrameSet && printData->mCurrentFocusWin) ||
         printData->mIsIFrameSelected) {
       nsPrintObject* po = FindPrintObjectByDOMWin(printData->mPrintObject.get(),
@@ -3061,7 +3072,8 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
 
   // If we are print each subdoc separately,
   // then don't print any of the FraneSet Docs
-  if (printData->mPrintFrameType == nsIPrintSettings::kEachFrameSep) {
+  if (printData->mPrintFrameType == nsIPrintSettings::kEachFrameSep &&
+      printRangeType != nsIPrintSettings::kRangeSelection) {
     SetPrintPO(printData->mPrintObject.get(), true);
     int32_t cnt = printData->mPrintDocList.Length();
     for (int32_t i = 0; i < cnt; i++) {
