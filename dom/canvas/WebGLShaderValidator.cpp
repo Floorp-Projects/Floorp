@@ -141,8 +141,6 @@ static ShShaderOutput ShaderOutput(gl::GLContext* gl) {
 
 webgl::ShaderValidator* WebGLContext::CreateShaderValidator(
     GLenum shaderType) const {
-  if (mBypassShaderValidation) return nullptr;
-
   const auto spec = (IsWebGL2() ? SH_WEBGL2_SPEC : SH_WEBGL_SPEC);
   const auto outputLanguage = ShaderOutput(gl);
 
@@ -230,20 +228,6 @@ bool ShaderValidator::ValidateAndTranslate(const char* source) {
 
   const char* const parts[] = {source};
   return sh::Compile(mHandle, parts, ArrayLength(parts), mCompileOptions);
-}
-
-void ShaderValidator::GetInfoLog(nsACString* out) const {
-  MOZ_ASSERT(mHasRun);
-
-  const std::string& log = sh::GetInfoLog(mHandle);
-  out->Assign(log.data(), log.length());
-}
-
-void ShaderValidator::GetOutput(nsACString* out) const {
-  MOZ_ASSERT(mHasRun);
-
-  const std::string& output = sh::GetObjectCode(mHandle);
-  out->Assign(output.data(), output.length());
 }
 
 template <size_t N>
@@ -438,83 +422,6 @@ bool ShaderValidator::CanLinkTo(const ShaderValidator* prev,
   return true;
 }
 
-size_t ShaderValidator::CalcNumSamplerUniforms() const {
-  size_t accum = 0;
-
-  const std::vector<sh::Uniform>& uniforms = *sh::GetUniforms(mHandle);
-
-  for (auto itr = uniforms.begin(); itr != uniforms.end(); ++itr) {
-    GLenum type = itr->type;
-    if (type == LOCAL_GL_SAMPLER_2D || type == LOCAL_GL_SAMPLER_CUBE) {
-      accum += itr->getArraySizeProduct();
-    }
-  }
-
-  return accum;
-}
-
-size_t ShaderValidator::NumAttributes() const {
-  return sh::GetAttributes(mHandle)->size();
-}
-
-// Attribs cannot be structs or arrays, and neither can vertex inputs in ES3.
-// Therefore, attrib names are always simple.
-bool ShaderValidator::FindAttribUserNameByMappedName(
-    const std::string& mappedName,
-    const std::string** const out_userName) const {
-  const std::vector<sh::Attribute>& attribs = *sh::GetAttributes(mHandle);
-  for (auto itr = attribs.begin(); itr != attribs.end(); ++itr) {
-    if (itr->mappedName == mappedName) {
-      *out_userName = &(itr->name);
-      return true;
-    }
-  }
-
-  return false;
-}
-
-bool ShaderValidator::FindAttribMappedNameByUserName(
-    const std::string& userName,
-    const std::string** const out_mappedName) const {
-  const std::vector<sh::Attribute>& attribs = *sh::GetAttributes(mHandle);
-  for (auto itr = attribs.begin(); itr != attribs.end(); ++itr) {
-    if (itr->name == userName) {
-      *out_mappedName = &(itr->mappedName);
-      return true;
-    }
-  }
-
-  return false;
-}
-
-bool ShaderValidator::FindVaryingByMappedName(const std::string& mappedName,
-                                              std::string* const out_userName,
-                                              bool* const out_isArray) const {
-  const std::vector<sh::Varying>& varyings = *sh::GetVaryings(mHandle);
-  for (auto itr = varyings.begin(); itr != varyings.end(); ++itr) {
-    const sh::ShaderVariable* found;
-    if (!itr->findInfoByMappedName(mappedName, &found, out_userName)) continue;
-
-    *out_isArray = found->isArray();
-    return true;
-  }
-
-  return false;
-}
-
-bool ShaderValidator::FindVaryingMappedNameByUserName(
-    const std::string& userName,
-    const std::string** const out_mappedName) const {
-  const std::vector<sh::Varying>& attribs = *sh::GetVaryings(mHandle);
-  for (auto itr = attribs.begin(); itr != attribs.end(); ++itr) {
-    if (itr->name == userName) {
-      *out_mappedName = &(itr->mappedName);
-      return true;
-    }
-  }
-
-  return false;
-}
 // This must handle names like "foo.bar[0]".
 bool ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
                                               std::string* const out_userName,
@@ -564,22 +471,6 @@ bool ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
       }
 
       *out_isArray = found->isArray();
-      return true;
-    }
-  }
-
-  return false;
-}
-
-bool ShaderValidator::UnmapUniformBlockName(
-    const nsACString& baseMappedName, nsCString* const out_baseUserName) const {
-  const std::vector<sh::InterfaceBlock>& interfaces =
-      *sh::GetInterfaceBlocks(mHandle);
-  for (const auto& interface : interfaces) {
-    const nsDependentCString interfaceMappedName(interface.mappedName.data(),
-                                                 interface.mappedName.size());
-    if (baseMappedName == interfaceMappedName) {
-      *out_baseUserName = interface.name.data();
       return true;
     }
   }

@@ -121,7 +121,6 @@ WebGLContext::WebGLContext()
       mMaxAcceptableFBStatusInvals(
           gfxPrefs::WebGLMaxAcceptableFBStatusInvals()),
       mDataAllocGLCallCount(0),
-      mBypassShaderValidation(false),
       mEmptyTFO(0),
       mContextLossHandler(this),
       mNeedsFakeNoAlpha(false),
