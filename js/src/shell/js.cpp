@@ -983,7 +983,7 @@ static bool InitModuleLoader(JSContext* cx) {
   }
 
   RootedValue rv(cx);
-  return JS::Evaluate(cx, options, srcBuf, &rv);
+  return JS::EvaluateDontInflate(cx, options, srcBuf, &rv);
 }
 
 static bool GetModuleImportHook(JSContext* cx,
