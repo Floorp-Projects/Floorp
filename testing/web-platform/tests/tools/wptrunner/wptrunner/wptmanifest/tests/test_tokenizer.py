@@ -1,3 +1,5 @@
+import sys
+import pytest
 import unittest
 
 from six.moves import cStringIO as StringIO
@@ -6,6 +8,8 @@ from .. import parser
 from ..parser import token_types
 
 
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="Tokenizer doesn't support py3")
 class TokenizerTest(unittest.TestCase):
     def setUp(self):
         self.tokenizer = parser.Tokenizer()
