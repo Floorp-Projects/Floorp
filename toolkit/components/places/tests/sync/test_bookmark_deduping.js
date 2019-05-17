@@ -28,14 +28,6 @@ add_task(async function test_duping_local_newer() {
   }], { needsMerge: false });
   await PlacesTestUtils.markBookmarksAsSynced();
 
-  // The mirror is out of sync because `bookmarkAAA5` is marked as merged,
-  // even though it's not in Places, but we should still recover.
-  deepEqual(await buf.fetchSyncStatusMismatches(), {
-    missingLocal: ["bookmarkAAA5"],
-    missingRemote: [],
-    wrongSyncStatus: [],
-  }, "Mirror should be out of sync with Places before deduping");
-
   info("Add newer local dupes");
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,

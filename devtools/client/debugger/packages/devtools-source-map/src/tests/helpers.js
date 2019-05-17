@@ -27,7 +27,7 @@ async function setupBundleFixture(name) {
   const source = {
     id: `${name}.js`,
     sourceMapURL: `${name}.js.map`,
-    url: `http://example.com/${name}.js`
+    url: `http://example.com/${name}.js`,
   };
 
   require("devtools-utils/src/network-request").mockImplementationOnce(() => {
@@ -42,5 +42,5 @@ module.exports = {
   formatLocations,
   formatLocation,
   setupBundleFixture,
-  getMap
+  getMap,
 };

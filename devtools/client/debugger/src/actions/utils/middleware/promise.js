@@ -10,24 +10,24 @@ import { executeSoon } from "../../../utils/DevToolsUtils";
 import type { ThunkArgs } from "../../types";
 
 type BasePromiseAction = {|
-  +"@@dispatch/promise": Promise<mixed>
+  +"@@dispatch/promise": Promise<mixed>,
 |};
 
 export type StartPromiseAction = {|
   ...BasePromiseAction,
-  +status: "start"
+  +status: "start",
 |};
 
 export type DonePromiseAction = {|
   ...BasePromiseAction,
   +status: "done",
-  +value: any
+  +value: any,
 |};
 
 export type ErrorPromiseAction = {|
   ...BasePromiseAction,
   +status: "error",
-  +error: any
+  +error: any,
 |};
 
 export type PromiseAction<Action, Value = any> =
@@ -36,20 +36,20 @@ export type PromiseAction<Action, Value = any> =
       ...BasePromiseAction,
       ...Action,
       +status: "start",
-      value: void
+      value: void,
     |}
   | {|
       ...BasePromiseAction,
       ...Action,
       +status: "done",
-      +value: Value
+      +value: Value,
     |}
   | {|
       ...BasePromiseAction,
       ...Action,
       +status: "error",
       +error?: any,
-      value: void
+      value: void,
     |};
 
 let seqIdVal = 1;
@@ -64,7 +64,7 @@ function filterAction(action: Object): Object {
 
 function promiseMiddleware({
   dispatch,
-  getState
+  getState,
 }: ThunkArgs): Function | Promise<mixed> {
   return (next: Function) => (action: Object) => {
     if (!(PROMISE in action)) {
@@ -93,7 +93,7 @@ function promiseMiddleware({
           dispatch({
             ...action,
             status: "error",
-            error: error.message || error
+            error: error.message || error,
           });
           return Promise.reject(error);
         }

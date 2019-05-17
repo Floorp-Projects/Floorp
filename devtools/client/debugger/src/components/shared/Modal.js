@@ -17,7 +17,7 @@ type ModalProps = {
   status: TransitionStatus,
   children?: ReactNode,
   additionalClass?: string,
-  handleClose: () => any
+  handleClose: () => any,
 };
 
 export const transitionTimeout = 175;
@@ -44,21 +44,21 @@ export class Modal extends React.Component<ModalProps> {
 }
 
 Modal.contextTypes = {
-  shortcuts: PropTypes.object
+  shortcuts: PropTypes.object,
 };
 
 type SlideProps = {
   in: boolean,
   children?: ReactNode,
   additionalClass?: string,
-  handleClose: () => any
+  handleClose: () => any,
 };
 
 export default function Slide({
   in: inProp,
   children,
   additionalClass,
-  handleClose
+  handleClose,
 }: SlideProps) {
   return (
     <Transition in={inProp} timeout={transitionTimeout} appear>

@@ -19,7 +19,7 @@ describe("get-expression", () => {
       // https://discuss.codemirror.net/t/working-in-jsdom-or-node-js-natively/138/5
       (document.body: any).createTextRange = () => ({
         getBoundingClientRect: jest.fn(),
-        getClientRects: () => ({})
+        getClientRects: () => ({}),
       });
     }
   });
@@ -34,12 +34,12 @@ describe("get-expression", () => {
     it("returns null when location.line is greater than the lineCount", () => {
       const cm = CodeMirror(document.body, {
         value: "let Line1;\n" + "let Line2;\n",
-        mode: "javascript"
+        mode: "javascript",
       });
 
       const result = getExpressionFromCoords(cm, {
         line: 3,
-        column: 1
+        column: 1,
       });
       expect(result).toBeNull();
     });
@@ -49,8 +49,8 @@ describe("get-expression", () => {
         lineCount: () => 100,
         getTokenAt: jest.fn(() => ({ start: 0, end: 0 })),
         doc: {
-          getLine: () => ""
-        }
+          getLine: () => "",
+        },
       };
       getExpressionFromCoords(codemirrorMock, { line: 1, column: 1 });
       expect(codemirrorMock.getTokenAt).toHaveBeenCalled();
@@ -61,15 +61,15 @@ describe("get-expression", () => {
         lineCount: () => 100,
         getTokenAt: jest.fn(() => ({ start: 0, end: 1 })),
         doc: {
-          getLine: jest.fn(() => "")
-        }
+          getLine: jest.fn(() => ""),
+        },
       };
       getExpressionFromCoords(codemirrorMock, { line: 20, column: 5 });
       // getExpressionsFromCoords uses one based line indexing
       // CodeMirror uses zero based line indexing
       expect(codemirrorMock.getTokenAt).toHaveBeenCalledWith({
         line: 19,
-        ch: 5
+        ch: 5,
       });
       expect(codemirrorMock.doc.getLine).toHaveBeenCalledWith(19);
     });
@@ -77,12 +77,12 @@ describe("get-expression", () => {
     it("when called with column 0 returns null", () => {
       const cm = CodeMirror(document.body, {
         value: "foo bar;\n",
-        mode: "javascript"
+        mode: "javascript",
       });
 
       const result = getExpressionFromCoords(cm, {
         line: 1,
-        column: 0
+        column: 0,
       });
       expect(result).toBeNull();
     });
@@ -90,12 +90,12 @@ describe("get-expression", () => {
     it("gets the expression when first token on the line", () => {
       const cm = CodeMirror(document.body, {
         value: "foo bar;\n",
-        mode: "javascript"
+        mode: "javascript",
       });
 
       const result = getExpressionFromCoords(cm, {
         line: 1,
-        column: 1
+        column: 1,
       });
       if (!result) {
         throw new Error("no result");
@@ -108,12 +108,12 @@ describe("get-expression", () => {
     it("includes previous tokens in the expression", () => {
       const cm = CodeMirror(document.body, {
         value: "foo.bar;\n",
-        mode: "javascript"
+        mode: "javascript",
       });
 
       const result = getExpressionFromCoords(cm, {
         line: 1,
-        column: 5
+        column: 5,
       });
       if (!result) {
         throw new Error("no result");
@@ -126,12 +126,12 @@ describe("get-expression", () => {
     it("includes multiple previous tokens in the expression", () => {
       const cm = CodeMirror(document.body, {
         value: "foo.bar.baz;\n",
-        mode: "javascript"
+        mode: "javascript",
       });
 
       const result = getExpressionFromCoords(cm, {
         line: 1,
-        column: 10
+        column: 10,
       });
       if (!result) {
         throw new Error("no result");
@@ -144,12 +144,12 @@ describe("get-expression", () => {
     it("does not include tokens not part of the expression", () => {
       const cm = CodeMirror(document.body, {
         value: "foo bar.baz;\n",
-        mode: "javascript"
+        mode: "javascript",
       });
 
       const result = getExpressionFromCoords(cm, {
         line: 1,
-        column: 10
+        column: 10,
       });
       if (!result) {
         throw new Error("no result");

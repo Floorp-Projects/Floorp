@@ -29,6 +29,7 @@ config = {
         # "LIBGL_DEBUG": "verbose"
     },
     "marionette_extra": "--emulator",
+    "bogomips_minimum": 4000,
     # in support of test-verify
     "android_version": 24,
     "is_fennec": False,

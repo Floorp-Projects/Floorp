@@ -10,7 +10,7 @@ import { WasmDisassembler, NameSectionReader } from "wasmparser/dist/WasmDis";
 import type { SourceId, WasmSourceContent } from "../types";
 type WasmState = {
   lines: Array<number>,
-  offsets: Array<number>
+  offsets: Array<number>,
 };
 
 var wasmStates: { [string]: WasmState } = (Object.create(null): any);
@@ -73,7 +73,7 @@ export function getWasmLineNumberFormatter(sourceId: string) {
     codeOf0,
     codeOf0,
     codeOf0,
-    codeOf0
+    codeOf0,
   ];
   let last0 = 7;
   return function(number: number) {

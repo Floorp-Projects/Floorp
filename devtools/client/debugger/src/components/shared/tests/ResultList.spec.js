@@ -16,17 +16,17 @@ const payload = {
       id: 0,
       subtitle: "subtitle",
       title: "title",
-      value: "value"
+      value: "value",
     },
     {
       id: 1,
       subtitle: "subtitle 1",
       title: "title 1",
-      value: "value 1"
-    }
+      value: "value 1",
+    },
   ],
   selected: selectedIndex,
-  selectItem
+  selectItem,
 };
 
 describe("Result list", () => {
@@ -34,7 +34,7 @@ describe("Result list", () => {
     const wrapper = shallow(<ResultList {...payload} />);
 
     wrapper.childAt(selectedIndex).simulate("click");
-    expect(selectItem).toBeCalled();
+    expect(selectItem).toHaveBeenCalled();
   });
 
   it("should render the component", () => {

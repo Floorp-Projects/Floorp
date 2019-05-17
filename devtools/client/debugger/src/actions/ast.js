@@ -39,7 +39,7 @@ export function setOutOfScopeLocations(cx: Context) {
       ({
         type: "OUT_OF_SCOPE_LOCATIONS",
         cx,
-        locations
+        locations,
       }: Action)
     );
     dispatch(setInScopeLines(cx));

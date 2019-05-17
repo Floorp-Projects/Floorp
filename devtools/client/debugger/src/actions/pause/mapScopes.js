@@ -11,7 +11,7 @@ import {
   getSelectedFrame,
   getSelectedGeneratedScope,
   getSelectedOriginalScope,
-  getThreadContext
+  getThreadContext,
 } from "../../selectors";
 import { loadSourceText } from "../sources/loadSourceText";
 import { PROMISE } from "../utils/middleware/promise";
@@ -106,7 +106,7 @@ export function mapScopes(
           log(e);
           return null;
         }
-      })()
+      })(),
     });
   };
 }

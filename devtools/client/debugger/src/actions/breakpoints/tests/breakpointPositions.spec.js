@@ -9,7 +9,7 @@ import {
   selectors,
   createStore,
   makeSource,
-  waitForState
+  waitForState,
 } from "../../../utils/test-head";
 import { createSource } from "../../tests/helpers/threadClient";
 
@@ -20,7 +20,7 @@ describe("breakpointPositions", () => {
     const store = createStore({
       getBreakpointPositions: async () => ({ "9": [1] }),
       getBreakableLines: async () => [],
-      sourceContents: async () => fooContent
+      sourceContents: async () => fooContent,
     });
 
     const { dispatch, getState, cx } = store;
@@ -44,16 +44,16 @@ describe("breakpointPositions", () => {
             line: 9,
             column: 1,
             sourceId: "foo",
-            sourceUrl: "http://localhost:8000/examples/foo"
+            sourceUrl: "http://localhost:8000/examples/foo",
           },
           generatedLocation: {
             line: 9,
             column: 1,
             sourceId: "foo",
-            sourceUrl: "http://localhost:8000/examples/foo"
-          }
-        }
-      ]
+            sourceUrl: "http://localhost:8000/examples/foo",
+          },
+        },
+      ],
     });
   });
 
@@ -69,7 +69,7 @@ describe("breakpointPositions", () => {
           resolve = r;
         }),
       getBreakableLines: async () => [],
-      sourceContents: async () => fooContent
+      sourceContents: async () => fooContent,
     });
 
     const { dispatch, getState, cx } = store;
@@ -95,16 +95,16 @@ describe("breakpointPositions", () => {
             line: 9,
             column: 1,
             sourceId: "foo",
-            sourceUrl: "http://localhost:8000/examples/foo"
+            sourceUrl: "http://localhost:8000/examples/foo",
           },
           generatedLocation: {
             line: 9,
             column: 1,
             sourceId: "foo",
-            sourceUrl: "http://localhost:8000/examples/foo"
-          }
-        }
-      ]
+            sourceUrl: "http://localhost:8000/examples/foo",
+          },
+        },
+      ],
     });
 
     expect(count).toEqual(1);

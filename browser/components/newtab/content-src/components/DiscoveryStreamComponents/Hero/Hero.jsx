@@ -37,7 +37,9 @@ export class Hero extends React.PureComponent {
     const cards = [];
     for (let index = 0; index < this.props.items - 1; index++) {
       const rec = otherRecs[index];
-      cards.push(rec ? (
+      cards.push(!rec || rec.placeholder ? (
+        <PlaceholderDSCard key={`dscard-${index}`} />
+      ) : (
         <DSCard
         campaignId={rec.campaign_id}
         key={`dscard-${index}`}
@@ -53,23 +55,17 @@ export class Hero extends React.PureComponent {
         source={rec.domain}
         pocket_id={rec.pocket_id}
         bookmarkGuid={rec.bookmarkGuid} />
-      ) : (
-        <PlaceholderDSCard key={`dscard-${index}`} />
       ));
     }
 
-    let list = (
-      <List
-        recStartingPoint={1}
-        data={this.props.data}
-        hasImages={true}
-        hasBorders={this.props.border === `border`}
-        items={this.props.items - 1}
-        type={`Hero`} />
-    );
+    let heroCard = null;
 
-    return (
-      <div className={`ds-hero ds-hero-${this.props.border}`}>
+    if (!heroRec || heroRec.placeholder) {
+      heroCard = (
+        <PlaceholderDSCard />
+      );
+    } else {
+      heroCard = (
         <div className="ds-hero-item">
           <SafeAnchor
             className="wrapper"
@@ -108,6 +104,22 @@ export class Hero extends React.PureComponent {
             pocket_id={heroRec.pocket_id}
             bookmarkGuid={heroRec.bookmarkGuid} />
         </div>
+      );
+    }
+
+    let list = (
+      <List
+        recStartingPoint={1}
+        data={this.props.data}
+        hasImages={true}
+        hasBorders={this.props.border === `border`}
+        items={this.props.items - 1}
+        type={`Hero`} />
+    );
+
+    return (
+      <div className={`ds-hero ds-hero-${this.props.border}`}>
+        {heroCard}
         <div className={`${this.props.subComponentType}`}>
           { this.props.subComponentType === `cards` ? cards : list }
         </div>

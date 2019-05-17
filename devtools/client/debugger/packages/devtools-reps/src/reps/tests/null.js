@@ -24,7 +24,7 @@ describe("testNull", () => {
   it("Null rep has expected text content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
     expect(renderedComponent.text()).toEqual("null");

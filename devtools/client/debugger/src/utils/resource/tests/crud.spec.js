@@ -17,28 +17,28 @@ import {
   getResource,
   getMappedResource,
   type Resource,
-  type ResourceIdentity
+  type ResourceIdentity,
 } from "..";
 
 type TestResource = Resource<{
   id: string,
   name: string,
   data: number,
-  obj: {}
+  obj: {},
 }>;
 
 const makeResource = (id: string): TestResource => ({
   id,
   name: `name-${id}`,
   data: 42,
-  obj: {}
+  obj: {},
 });
 
 const mapName = (resource: TestResource) => resource.name;
 const mapWithIdent = (resource: TestResource, identity: ResourceIdentity) => ({
   resource,
   identity,
-  obj: {}
+  obj: {},
 });
 
 const clone = <T>(v: T): T => (JSON.parse((JSON.stringify(v): any)): any);
@@ -154,12 +154,12 @@ describe("resource CRUD operations", () => {
       const state = updateResources(initialState, [
         {
           id: r1.id,
-          data: 21
+          data: 21,
         },
         {
           id: r2.id,
-          name: "newName"
-        }
+          name: "newName",
+        },
       ]);
 
       expect(initialState).toEqual(originalInitial);
@@ -175,14 +175,14 @@ describe("resource CRUD operations", () => {
       expect(r1NewIdent.resource).not.toBe(r1Ident.resource);
       expect(r1NewIdent.resource).toEqual({
         ...r1Ident.resource,
-        data: 21
+        data: 21,
       });
       expect(r1NewIdent.identity).toBe(r1Ident.identity);
 
       // The update changed the resource object, but not the identity.
       expect(r2NewIdent.resource).toEqual({
         ...r2Ident.resource,
-        name: "newName"
+        name: "newName",
       });
       expect(r2NewIdent.identity).toBe(r2Ident.identity);
 
@@ -196,8 +196,8 @@ describe("resource CRUD operations", () => {
         updateResources(initialState, [
           {
             ...r1,
-            id: "unknownId"
-          }
+            id: "unknownId",
+          },
         ]);
       }).toThrow(/does not exists/);
     });

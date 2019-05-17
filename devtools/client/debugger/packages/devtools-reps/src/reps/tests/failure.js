@@ -25,7 +25,7 @@ describe("test Failure", () => {
   it("Fallback rendering has expected text content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
     expect(renderedComponent.text()).toEqual("Invalid object");
@@ -45,9 +45,9 @@ describe("test Failure", () => {
           preview: {
             kind: "ArrayLike",
             length: 3,
-            items: [1, stub, 2]
-          }
-        }
+            items: [1, stub, 2],
+          },
+        },
       })
     );
     expect(renderedComponent.text()).toEqual(

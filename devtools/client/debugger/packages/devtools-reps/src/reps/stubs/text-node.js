@@ -11,8 +11,8 @@ stubs.set("testRendering", {
     nodeType: 3,
     nodeName: "#text",
     textContent: "hello world",
-    isConnected: true
-  }
+    isConnected: true,
+  },
 });
 stubs.set("testRenderingDisconnected", {
   class: "Text",
@@ -22,8 +22,8 @@ stubs.set("testRenderingDisconnected", {
     nodeType: 3,
     nodeName: "#text",
     textContent: "hello world",
-    isConnected: false
-  }
+    isConnected: false,
+  },
 });
 stubs.set("testRenderingWithEOL", {
   class: "Text",
@@ -32,8 +32,8 @@ stubs.set("testRenderingWithEOL", {
     kind: "DOMNode",
     nodeType: 3,
     nodeName: "#text",
-    textContent: "hello\nworld"
-  }
+    textContent: "hello\nworld",
+  },
 });
 
 module.exports = stubs;

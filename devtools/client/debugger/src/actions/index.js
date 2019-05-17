@@ -39,5 +39,5 @@ export default {
   ...sourceTree,
   ...debuggee,
   ...toolbox,
-  ...preview
+  ...preview,
 };

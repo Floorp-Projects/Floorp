@@ -8,7 +8,7 @@ stubs.set("True", true);
 stubs.set("False", false);
 stubs.set("NegZeroValue", -0);
 stubs.set("NegZeroGrip", {
-  type: "-0"
+  type: "-0",
 });
 stubs.set("UnsafeInt", 900719925474099122);
 

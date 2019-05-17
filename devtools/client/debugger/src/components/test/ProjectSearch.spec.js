@@ -25,7 +25,7 @@ const shortcuts = {
     });
   },
   on: jest.fn((event, cb) => hooks.on.push({ event, cb })),
-  off: jest.fn((event, cb) => hooks.off.push({ event, cb }))
+  off: jest.fn((event, cb) => hooks.off.push({ event, cb })),
 };
 
 const context = { shortcuts };
@@ -39,16 +39,21 @@ const testResults = [
         match: "match1",
         value: "some thing match1",
         column: 30,
-        type: "MATCH"
+        type: "MATCH",
       },
       {
         match: "match2",
         value: "some thing match2",
         column: 60,
-        type: "MATCH"
+        type: "MATCH",
       },
-      { match: "match3", value: "some thing match3", column: 90, type: "MATCH" }
-    ]
+      {
+        match: "match3",
+        value: "some thing match3",
+        column: 90,
+        type: "MATCH",
+      },
+    ],
   },
   {
     filepath: "testFilePath2",
@@ -58,11 +63,16 @@ const testResults = [
         match: "match4",
         value: "some thing match4",
         column: 80,
-        type: "MATCH"
+        type: "MATCH",
       },
-      { match: "match5", value: "some thing match5", column: 40, type: "MATCH" }
-    ]
-  }
+      {
+        match: "match5",
+        value: "some thing match5",
+        column: 40,
+        type: "MATCH",
+      },
+    ],
+  },
 ];
 
 const testMatch = {
@@ -71,7 +81,7 @@ const testMatch = {
   value: "some thing match1",
   sourceId: "some-target/source42",
   line: 3,
-  column: 30
+  column: 30,
 };
 
 function render(overrides = {}, mounted = false) {
@@ -89,7 +99,7 @@ function render(overrides = {}, mounted = false) {
     selectSpecificLocation: jest.fn(),
     doSearchForHighlight: jest.fn(),
     setActiveSearch: jest.fn(),
-    ...overrides
+    ...overrides,
   };
 
   return mounted
@@ -121,7 +131,7 @@ describe("ProjectSearch", () => {
   it("should display loading message while search is in progress", () => {
     const component = render({
       query: "match",
-      status: statusType.fetching
+      status: statusType.fetching,
     });
     expect(component).toMatchSnapshot();
   });
@@ -130,7 +140,7 @@ describe("ProjectSearch", () => {
     const component = render(
       {
         query: "match",
-        results: testResults
+        results: testResults,
       },
       true
     );
@@ -139,7 +149,7 @@ describe("ProjectSearch", () => {
 
   it("turns off shortcuts on unmount", () => {
     const component = render({
-      query: ""
+      query: "",
     });
     expect(component).toMatchSnapshot();
     component.unmount();
@@ -149,7 +159,7 @@ describe("ProjectSearch", () => {
   it("calls inputOnChange", () => {
     const component = render(
       {
-        results: testResults
+        results: testResults,
       },
       true
     );
@@ -164,7 +174,7 @@ describe("ProjectSearch", () => {
     const component = render(
       {
         results: testResults,
-        searchSources
+        searchSources,
       },
       true
     );
@@ -182,7 +192,7 @@ describe("ProjectSearch", () => {
     const component = render(
       {
         results: testResults,
-        searchSources
+        searchSources,
       },
       true
     );
@@ -197,7 +207,7 @@ describe("ProjectSearch", () => {
     const component = render(
       {
         results: testResults,
-        selectSpecificLocation
+        selectSpecificLocation,
       },
       true
     );
@@ -211,7 +221,7 @@ describe("ProjectSearch", () => {
     const component = render(
       {
         results: testResults,
-        selectSpecificLocation
+        selectSpecificLocation,
       },
       true
     );
@@ -220,7 +230,7 @@ describe("ProjectSearch", () => {
     expect(selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
       sourceId: "some-target/source42",
       line: 3,
-      column: 30
+      column: 30,
     });
   });
 
@@ -235,14 +245,14 @@ describe("ProjectSearch", () => {
     it("false if not done & results", () => {
       const component = render({
         status: statusType.fetching,
-        results: testResults
+        results: testResults,
       });
       expect(component).toMatchSnapshot();
     });
 
     it("false if not done & no results", () => {
       const component = render({
-        status: statusType.fetching
+        status: statusType.fetching,
       });
       expect(component).toMatchSnapshot();
     });

@@ -13,7 +13,7 @@ const {
   createNode,
   getChildren,
   getValue,
-  makeNodesForProperties
+  makeNodesForProperties,
 } = require("../../utils/node");
 
 function createRootNodeWithAccessorProperty(accessorStub) {
@@ -21,8 +21,8 @@ function createRootNodeWithAccessorProperty(accessorStub) {
   const nodes = makeNodesForProperties(
     {
       ownProperties: {
-        x: accessorStub
-      }
+        x: accessorStub,
+      },
     },
     node
   );
@@ -34,7 +34,7 @@ function createRootNodeWithAccessorProperty(accessorStub) {
 describe("getChildren", () => {
   it("accessors - getter", () => {
     const children = getChildren({
-      item: createRootNodeWithAccessorProperty(accessorStubs.get("getter"))
+      item: createRootNodeWithAccessorProperty(accessorStubs.get("getter")),
     });
 
     const names = children.map(n => n.name);
@@ -46,7 +46,7 @@ describe("getChildren", () => {
 
   it("accessors - setter", () => {
     const children = getChildren({
-      item: createRootNodeWithAccessorProperty(accessorStubs.get("setter"))
+      item: createRootNodeWithAccessorProperty(accessorStubs.get("setter")),
     });
 
     const names = children.map(n => n.name);
@@ -60,7 +60,7 @@ describe("getChildren", () => {
     const children = getChildren({
       item: createRootNodeWithAccessorProperty(
         accessorStubs.get("getter setter")
-      )
+      ),
     });
 
     const names = children.map(n => n.name);
@@ -70,7 +70,7 @@ describe("getChildren", () => {
     expect(paths).toEqual([
       "Symbol(rootpath/x)",
       "Symbol(rootpath/<get x()>)",
-      "Symbol(rootpath/<set x()>)"
+      "Symbol(rootpath/<set x()>)",
     ]);
   });
 
@@ -78,10 +78,10 @@ describe("getChildren", () => {
     const proxyNode = createNode({
       name: "root",
       path: "rootpath",
-      contents: { value: gripStubs.get("testProxy") }
+      contents: { value: gripStubs.get("testProxy") },
     });
     const loadedProperties = new Map([
-      [proxyNode.path, gripStubs.get("testProxySlots")]
+      [proxyNode.path, gripStubs.get("testProxySlots")],
     ]);
     const nodes = getChildren({ item: proxyNode, loadedProperties });
     const names = nodes.map(n => n.name);
@@ -90,7 +90,7 @@ describe("getChildren", () => {
     expect(names).toEqual(["<target>", "<handler>"]);
     expect(paths).toEqual([
       "Symbol(rootpath/<target>)",
-      "Symbol(rootpath/<handler>)"
+      "Symbol(rootpath/<handler>)",
     ]);
   });
 
@@ -102,13 +102,13 @@ describe("getChildren", () => {
       contents: {
         value: {
           actor: "rootactor",
-          type: "object"
-        }
-      }
+          type: "object",
+        },
+      },
     });
     const nodes = getChildren({
       item: root,
-      loadedProperties: new Map([[root.path, stub]])
+      loadedProperties: new Map([[root.path, stub]]),
     });
 
     const nodeEntries = nodes.map(n => [n.name, getValue(n)]);
@@ -136,7 +136,7 @@ describe("getChildren", () => {
       ["secureConnectionStart", 1500967716401],
       ["unloadEventEnd", 0],
       ["unloadEventStart", 0],
-      ["<prototype>", stub.prototype]
+      ["<prototype>", stub.prototype],
     ];
     const childrenPaths = childrenEntries.map(
       ([name]) => `Symbol(rootpath/${name})`
@@ -150,13 +150,13 @@ describe("getChildren", () => {
     const mapNode = createNode({
       name: "map",
       contents: {
-        value: gripMapStubs.get("testSymbolKeyedMap")
-      }
+        value: gripMapStubs.get("testSymbolKeyedMap"),
+      },
     });
     const cachedData = Symbol();
     const children = getChildren({
       cachedNodes: new Map([[mapNode.path, cachedData]]),
-      item: mapNode
+      item: mapNode,
     });
     expect(children).toBe(cachedData);
   });
@@ -165,7 +165,7 @@ describe("getChildren", () => {
     const node = createNode({ name: "root", contents: { value: 42 } });
     expect(
       getChildren({
-        item: node
+        item: node,
       })
     ).toEqual([]);
   });
@@ -173,11 +173,11 @@ describe("getChildren", () => {
   it("returns an empty array if a grip node has no loaded properties", () => {
     const node = createNode({
       name: "root",
-      contents: { value: gripMapStubs.get("testMaxProps") }
+      contents: { value: gripMapStubs.get("testMaxProps") },
     });
     expect(
       getChildren({
-        item: node
+        item: node,
       })
     ).toEqual([]);
   });
@@ -191,14 +191,14 @@ describe("getChildren", () => {
       contents: {
         value: {
           actor: "rootactor",
-          type: "object"
-        }
-      }
+          type: "object",
+        },
+      },
     });
     const children = getChildren({
       cachedNodes,
       item: rootNode,
-      loadedProperties: new Map([[rootNode.path, stub]])
+      loadedProperties: new Map([[rootNode.path, stub]]),
     });
     expect(cachedNodes.get(rootNode.path)).toBe(children);
   });
@@ -209,7 +209,7 @@ describe("getChildren", () => {
     const rootNode = createNode({ name: "root", contents: children });
     getChildren({
       cachedNodes,
-      item: rootNode
+      item: rootNode,
     });
     expect(cachedNodes.get(rootNode.path)).toBe(children);
   });
@@ -222,7 +222,7 @@ describe("getChildren", () => {
 
     const children = getChildren({
       cachedNodes,
-      item: node
+      item: node,
     });
     expect(cachedNodes.get(node.path)).toBe(children);
   });
@@ -231,11 +231,11 @@ describe("getChildren", () => {
     const cachedNodes = new Map();
     const node = createNode({
       name: "root",
-      contents: { value: gripMapEntryStubs.get("A → 0") }
+      contents: { value: gripMapEntryStubs.get("A → 0") },
     });
     const children = getChildren({
       cachedNodes,
-      item: node
+      item: node,
     });
     expect(cachedNodes.get(node.path)).toBe(children);
   });
@@ -244,12 +244,12 @@ describe("getChildren", () => {
     const cachedNodes = new Map();
     const node = createNode({
       name: "root",
-      contents: { value: gripStubs.get("testProxy") }
+      contents: { value: gripStubs.get("testProxy") },
     });
     const children = getChildren({
       cachedNodes,
       item: node,
-      loadedProperties: new Map([[node.path, gripStubs.get("testProxySlots")]])
+      loadedProperties: new Map([[node.path, gripStubs.get("testProxySlots")]]),
     });
     expect(cachedNodes.get(node.path)).toBe(children);
   });
@@ -258,11 +258,11 @@ describe("getChildren", () => {
     const cachedNodes = new Map();
     const node = createNode({
       name: "root",
-      contents: { value: gripArrayStubs.get("Array(234)") }
+      contents: { value: gripArrayStubs.get("Array(234)") },
     });
     getChildren({
       cachedNodes,
-      item: node
+      item: node,
     });
     expect(cachedNodes.has(node.path)).toBeFalsy();
   });
@@ -271,12 +271,12 @@ describe("getChildren", () => {
     const cachedNodes = new Map();
     const node = createNode({
       name: "root",
-      contents: { value: gripArrayStubs.get("Array(234)") }
+      contents: { value: gripArrayStubs.get("Array(234)") },
     });
     const children = getChildren({
       cachedNodes,
       item: node,
-      loadedProperties: new Map([[node.path, { prototype: {} }]])
+      loadedProperties: new Map([[node.path, { prototype: {} }]]),
     });
     expect(cachedNodes.get(node.path)).toBe(children);
   });

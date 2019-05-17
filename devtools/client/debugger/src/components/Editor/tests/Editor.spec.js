@@ -16,7 +16,7 @@ function generateDefaults(overrides) {
     toggleBreakpoint: jest.fn(),
     updateViewport: jest.fn(),
     toggleDisabledBreakpoint: jest.fn(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -33,11 +33,11 @@ function createMockEditor() {
         top: 0,
         left: 0,
         clientWidth: 0,
-        clientHeight: 0
+        clientHeight: 0,
       }),
       defaultCharWidth: () => 0,
       defaultTextHeight: () => 0,
-      display: { gutters: { querySelector: jest.fn() } }
+      display: { gutters: { querySelector: jest.fn() } },
     },
     setText: jest.fn(),
     on: jest.fn(),
@@ -47,11 +47,11 @@ function createMockEditor() {
       return {
         getLine: line => "",
         getValue: () => val,
-        setValue: newVal => (val = newVal)
+        setValue: newVal => (val = newVal),
       };
     },
     replaceDocument: jest.fn(),
-    setMode: jest.fn()
+    setMode: jest.fn(),
   };
 }
 
@@ -62,7 +62,7 @@ function createMockSourceWithContent(
       text: string,
       contentType: ?string,
       error: string,
-      isWasm: boolean
+      isWasm: boolean,
     }
   >
 ): SourceWithContent {
@@ -77,7 +77,7 @@ function createMockSourceWithContent(
   const source: Source = ({
     id: "foo",
     url: "foo",
-    ...otherOverrides
+    ...otherOverrides,
   }: any);
   let content = null;
   if (loadedState === "loaded") {
@@ -90,13 +90,13 @@ function createMockSourceWithContent(
       : asyncValue.fulfilled({
           type: "text",
           value: text,
-          contentType: contentType || undefined
+          contentType: contentType || undefined,
         });
   }
 
   return {
     source,
-    content
+    content,
   };
 }
 
@@ -107,9 +107,9 @@ function render(overrides = {}) {
   // $FlowIgnore
   const component = shallow(<Editor.WrappedComponent {...props} />, {
     context: {
-      shortcuts: { on: jest.fn() }
+      shortcuts: { on: jest.fn() },
     },
-    disableLifecycleMethods: true
+    disableLifecycleMethods: true,
   });
 
   return { component, props, mockEditor };
@@ -130,8 +130,8 @@ describe("Editor", () => {
       component.setProps({
         selectedSourceWithContent: {
           source: { loadedState: "loading" },
-          content: null
-        }
+          content: null,
+        },
       });
 
       expect(mockEditor.replaceDocument.mock.calls[0][0].getValue()).toBe(
@@ -149,9 +149,9 @@ describe("Editor", () => {
       await component.setProps({
         ...props,
         selectedSourceWithContent: createMockSourceWithContent({
-          loadedState: "loaded"
+          loadedState: "loaded",
         }),
-        selectedLocation: { sourceId: "foo", line: 3, column: 1 }
+        selectedLocation: { sourceId: "foo", line: 3, column: 1 },
       });
 
       expect(mockEditor.setText.mock.calls).toEqual([["the text"]]);
@@ -169,13 +169,13 @@ describe("Editor", () => {
         selectedSourceWithContent: createMockSourceWithContent({
           loadedState: "loaded",
           text: undefined,
-          error: "error text"
+          error: "error text",
         }),
-        selectedLocation: { sourceId: "bad-foo", line: 3, column: 1 }
+        selectedLocation: { sourceId: "bad-foo", line: 3, column: 1 },
       });
 
       expect(mockEditor.setText.mock.calls).toEqual([
-        ["Error loading this URI: error text"]
+        ["Error loading this URI: error text"],
       ]);
     });
 
@@ -189,13 +189,13 @@ describe("Editor", () => {
           loadedState: "loaded",
           isWasm: true,
           text: undefined,
-          error: "blah WebAssembly binary source is not available blah"
+          error: "blah WebAssembly binary source is not available blah",
         }),
-        selectedLocation: { sourceId: "bad-foo", line: 3, column: 1 }
+        selectedLocation: { sourceId: "bad-foo", line: 3, column: 1 },
       });
 
       expect(mockEditor.setText.mock.calls).toEqual([
-        ["Please refresh to debug this module"]
+        ["Please refresh to debug this module"],
       ]);
     });
   });
@@ -208,9 +208,9 @@ describe("Editor", () => {
       await component.setProps({
         ...props,
         selectedSourceWithContent: createMockSourceWithContent({
-          loadedState: "loaded"
+          loadedState: "loaded",
         }),
-        selectedLocation: { sourceId: "foo", line: 3, column: 1 }
+        selectedLocation: { sourceId: "foo", line: 3, column: 1 },
       });
 
       // navigate to a new source that is still loading
@@ -218,9 +218,9 @@ describe("Editor", () => {
         ...props,
         selectedSourceWithContent: createMockSourceWithContent({
           id: "bar",
-          loadedState: "loading"
+          loadedState: "loading",
         }),
-        selectedLocation: { sourceId: "bar", line: 1, column: 1 }
+        selectedLocation: { sourceId: "bar", line: 1, column: 1 },
       });
 
       expect(mockEditor.replaceDocument.mock.calls[1][0].getValue()).toBe(
@@ -239,7 +239,7 @@ describe("Editor", () => {
 
       const selectedSourceWithContent = createMockSourceWithContent({
         loadedState: "loaded",
-        contentType: "javascript"
+        contentType: "javascript",
       });
 
       await component.setProps({ ...props, selectedSourceWithContent });
@@ -248,12 +248,12 @@ describe("Editor", () => {
       await component.setProps({
         ...props,
         selectedSourceWithContent,
-        symbols
+        symbols,
       });
 
       expect(mockEditor.setMode.mock.calls).toEqual([
         [{ name: "javascript" }],
-        [{ name: "jsx" }]
+        [{ name: "jsx" }],
       ]);
     });
 
@@ -264,7 +264,7 @@ describe("Editor", () => {
 
       const selectedSourceWithContent = createMockSourceWithContent({
         loadedState: "loaded",
-        contentType: "javascript"
+        contentType: "javascript",
       });
 
       await component.setProps({ ...props, selectedSourceWithContent });
@@ -274,7 +274,7 @@ describe("Editor", () => {
       await component.setProps({
         ...props,
         selectedSourceWithContent,
-        symbols
+        symbols,
       });
 
       // selectedLocation changes e.g. pausing/stepping
@@ -288,12 +288,12 @@ describe("Editor", () => {
         ...props,
         selectedSourceWithContent,
         symbols,
-        selectedLocation
+        selectedLocation,
       });
 
       expect(mockEditor.setMode.mock.calls).toEqual([
         [{ name: "javascript" }],
-        [{ name: "jsx" }]
+        [{ name: "jsx" }],
       ]);
     });
   });
@@ -306,18 +306,18 @@ describe("Editor", () => {
       await component.setProps({
         ...props,
         selectedSourceWithContent: createMockSourceWithContent({
-          loadedState: "loading"
+          loadedState: "loading",
         }),
-        selectedLocation: { sourceId: "foo", line: 1, column: 1 }
+        selectedLocation: { sourceId: "foo", line: 1, column: 1 },
       });
 
       // navigate to a new source that is still loading
       await component.setProps({
         ...props,
         selectedSourceWithContent: createMockSourceWithContent({
-          loadedState: "loaded"
+          loadedState: "loaded",
         }),
-        selectedLocation: { sourceId: "foo", line: 1, column: 1 }
+        selectedLocation: { sourceId: "foo", line: 1, column: 1 },
       });
 
       expect(mockEditor.replaceDocument.mock.calls[0][0].getValue()).toBe(

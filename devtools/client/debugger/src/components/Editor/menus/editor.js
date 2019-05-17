@@ -12,7 +12,7 @@ import {
   isPretty,
   getRawSourceURL,
   getFilename,
-  shouldBlackbox
+  shouldBlackbox,
 } from "../../../utils/source";
 
 import { downloadFile } from "../../../utils/utils";
@@ -26,7 +26,7 @@ import type {
   SourceContent,
   SourceWithContent,
   Context,
-  ThreadContext
+  ThreadContext,
 } from "../../../types";
 
 function isMapped(selectedSource) {
@@ -43,7 +43,7 @@ export const continueToHereItem = (
   disabled: !isPaused,
   click: () => editorActions.continueToHere(cx, location.line, location.column),
   id: "node-menu-continue-to-here",
-  label: L10N.getStr("editor.continueToHere.label")
+  label: L10N.getStr("editor.continueToHere.label"),
 });
 
 // menu items
@@ -59,7 +59,7 @@ const copyToClipboardItem = (
     disabled: false,
     click: () =>
       selectedContent.type === "text" &&
-      copyToTheClipboard(selectedContent.value)
+      copyToTheClipboard(selectedContent.value),
   };
 };
 
@@ -77,7 +77,7 @@ const copySourceItem = (
     label: L10N.getStr("copySource.label"),
     accesskey: L10N.getStr("copySource.accesskey"),
     disabled: selectionText.length === 0,
-    click: () => copyToTheClipboard(selectionText)
+    click: () => copyToTheClipboard(selectionText),
   };
 };
 
@@ -89,7 +89,7 @@ const copySourceUri2Item = (
   label: L10N.getStr("copySourceUri2"),
   accesskey: L10N.getStr("copySourceUri2.accesskey"),
   disabled: !selectedSource.url,
-  click: () => copyToTheClipboard(getRawSourceURL(selectedSource.url))
+  click: () => copyToTheClipboard(getRawSourceURL(selectedSource.url)),
 });
 
 const jumpToMappedLocationItem = (
@@ -109,7 +109,7 @@ const jumpToMappedLocationItem = (
   accesskey: L10N.getStr("editor.jumpToMappedLocation1.accesskey"),
   disabled:
     (!isMapped(selectedSource) && !isPretty(selectedSource)) || hasPrettySource,
-  click: () => editorActions.jumpToMappedLocation(cx, location)
+  click: () => editorActions.jumpToMappedLocation(cx, location),
 });
 
 const showSourceMenuItem = (
@@ -121,7 +121,7 @@ const showSourceMenuItem = (
   label: L10N.getStr("sourceTabs.revealInTree"),
   accesskey: L10N.getStr("sourceTabs.revealInTree.accesskey"),
   disabled: !selectedSource.url,
-  click: () => editorActions.showSource(cx, selectedSource.id)
+  click: () => editorActions.showSource(cx, selectedSource.id),
 });
 
 const blackBoxMenuItem = (
@@ -135,7 +135,7 @@ const blackBoxMenuItem = (
     : L10N.getStr("sourceFooter.blackbox"),
   accesskey: L10N.getStr("sourceFooter.blackbox.accesskey"),
   disabled: !shouldBlackbox(selectedSource),
-  click: () => editorActions.toggleBlackBox(cx, selectedSource)
+  click: () => editorActions.toggleBlackBox(cx, selectedSource),
 });
 
 const watchExpressionItem = (
@@ -147,7 +147,7 @@ const watchExpressionItem = (
   id: "node-menu-add-watch-expression",
   label: L10N.getStr("expressions.label"),
   accesskey: L10N.getStr("expressions.accesskey"),
-  click: () => editorActions.addExpression(cx, selectionText)
+  click: () => editorActions.addExpression(cx, selectionText),
 });
 
 const evaluateInConsoleItem = (
@@ -157,7 +157,7 @@ const evaluateInConsoleItem = (
 ) => ({
   id: "node-menu-evaluate-in-console",
   label: L10N.getStr("evaluateInConsole.label"),
-  click: () => editorActions.evaluateInConsole(selectionText)
+  click: () => editorActions.evaluateInConsole(selectionText),
 });
 
 const downloadFileItem = (
@@ -169,7 +169,7 @@ const downloadFileItem = (
     id: "node-menu-download-file",
     label: L10N.getStr("downloadFile.label"),
     accesskey: L10N.getStr("downloadFile.accesskey"),
-    click: () => downloadFile(selectedContent, getFilename(selectedSource))
+    click: () => downloadFile(selectedContent, getFilename(selectedSource)),
   };
 };
 
@@ -181,7 +181,7 @@ export function editorMenuItems({
   selectionText,
   hasPrettySource,
   isTextSelected,
-  isPaused
+  isPaused,
 }: {
   cx: ThreadContext,
   editorActions: EditorItemActions,
@@ -190,7 +190,7 @@ export function editorMenuItems({
   selectionText: string,
   hasPrettySource: boolean,
   isTextSelected: boolean,
-  isPaused: boolean
+  isPaused: boolean,
 }) {
   const items = [];
   const { source: selectedSource, content } = selectedSourceWithContent;
@@ -236,7 +236,7 @@ export type EditorItemActions = {
   flashLineRange: typeof actions.flashLineRange,
   jumpToMappedLocation: typeof actions.jumpToMappedLocation,
   showSource: typeof actions.showSource,
-  toggleBlackBox: typeof actions.toggleBlackBox
+  toggleBlackBox: typeof actions.toggleBlackBox,
 };
 
 export function editorItemActions(dispatch: Function) {
@@ -248,7 +248,7 @@ export function editorItemActions(dispatch: Function) {
       flashLineRange: actions.flashLineRange,
       jumpToMappedLocation: actions.jumpToMappedLocation,
       showSource: actions.showSource,
-      toggleBlackBox: actions.toggleBlackBox
+      toggleBlackBox: actions.toggleBlackBox,
     },
     dispatch
   );

@@ -30,7 +30,7 @@ const NODE_TYPES = {
   PROXY_TARGET: Symbol("<target>"),
   SET: Symbol("<set>"),
   PROTOTYPE: Symbol("<prototype>"),
-  BLOCK: Symbol("☲")
+  BLOCK: Symbol("☲"),
 };
 
 import type {
@@ -39,7 +39,7 @@ import type {
   LoadedProperties,
   Node,
   ObjectInspectorItemContentsValue,
-  RdpGrip
+  RdpGrip,
 } from "../types";
 
 let WINDOW_PROPERTIES = {};
@@ -305,7 +305,7 @@ function nodeNeedsNumericalBuckets(item: Node): boolean {
 
 function makeNodesForPromiseProperties(item: Node): Array<Node> {
   const {
-    promiseState: { reason, value, state }
+    promiseState: { reason, value, state },
   } = getValue(item);
 
   const properties = [];
@@ -316,7 +316,7 @@ function makeNodesForPromiseProperties(item: Node): Array<Node> {
         parent: item,
         name: "<state>",
         contents: { value: state },
-        type: NODE_TYPES.PROMISE_STATE
+        type: NODE_TYPES.PROMISE_STATE,
       })
     );
   }
@@ -327,7 +327,7 @@ function makeNodesForPromiseProperties(item: Node): Array<Node> {
         parent: item,
         name: "<reason>",
         contents: { value: reason },
-        type: NODE_TYPES.PROMISE_REASON
+        type: NODE_TYPES.PROMISE_REASON,
       })
     );
   }
@@ -338,7 +338,7 @@ function makeNodesForPromiseProperties(item: Node): Array<Node> {
         parent: item,
         name: "<value>",
         contents: { value: value },
-        type: NODE_TYPES.PROMISE_VALUE
+        type: NODE_TYPES.PROMISE_VALUE,
       })
     );
   }
@@ -357,14 +357,14 @@ function makeNodesForProxyProperties(
       parent: item,
       name: "<target>",
       contents: { value: proxyTarget },
-      type: NODE_TYPES.PROXY_TARGET
+      type: NODE_TYPES.PROXY_TARGET,
     }),
     createNode({
       parent: item,
       name: "<handler>",
       contents: { value: proxyHandler },
-      type: NODE_TYPES.PROXY_HANDLER
-    })
+      type: NODE_TYPES.PROXY_HANDLER,
+    }),
   ];
 }
 
@@ -381,7 +381,7 @@ function makeNodesForEntries(item: Node): Node {
           parent: item,
           name: index,
           path: `${entriesPath}/${index}`,
-          contents: { value: GripMapEntryRep.createGripMapEntry(key, value) }
+          contents: { value: GripMapEntryRep.createGripMapEntry(key, value) },
         });
       });
     } else if (preview.items) {
@@ -390,7 +390,7 @@ function makeNodesForEntries(item: Node): Node {
           parent: item,
           name: index,
           path: `${entriesPath}/${index}`,
-          contents: { value }
+          contents: { value },
         });
       });
     }
@@ -398,14 +398,14 @@ function makeNodesForEntries(item: Node): Node {
       parent: item,
       name: nodeName,
       contents: entriesNodes,
-      type: NODE_TYPES.ENTRIES
+      type: NODE_TYPES.ENTRIES,
     });
   }
   return createNode({
     parent: item,
     name: nodeName,
     contents: null,
-    type: NODE_TYPES.ENTRIES
+    type: NODE_TYPES.ENTRIES,
   });
 }
 
@@ -422,14 +422,14 @@ function makeNodesForMapEntry(item: Node): Array<Node> {
       parent: item,
       name: "<key>",
       contents: { value: key },
-      type: NODE_TYPES.MAP_ENTRY_KEY
+      type: NODE_TYPES.MAP_ENTRY_KEY,
     }),
     createNode({
       parent: item,
       name: "<value>",
       contents: { value },
-      type: NODE_TYPES.MAP_ENTRY_VALUE
-    })
+      type: NODE_TYPES.MAP_ENTRY_VALUE,
+    }),
   ];
 }
 
@@ -480,8 +480,8 @@ function makeNumericalBuckets(parent: Node): Array<Node> {
         type: NODE_TYPES.BUCKET,
         meta: {
           startIndex: minIndex,
-          endIndex: maxIndex
-        }
+          endIndex: maxIndex,
+        },
       })
     );
   }
@@ -515,7 +515,7 @@ function makeDefaultPropsBucket(
       parent,
       name: "<default properties>",
       contents: null,
-      type: NODE_TYPES.DEFAULT_PROPERTIES
+      type: NODE_TYPES.DEFAULT_PROPERTIES,
     });
 
     const defaultNodes = defaultProperties.map((name, index) =>
@@ -523,7 +523,7 @@ function makeDefaultPropsBucket(
         parent: defaultPropertiesNode,
         name: maybeEscapePropertyName(name),
         path: `${index}/${name}`,
-        contents: ownProperties[name]
+        contents: ownProperties[name],
       })
     );
     nodes.push(setNodeChildren(defaultPropertiesNode, defaultNodes));
@@ -540,7 +540,7 @@ function makeNodesForOwnProps(
     createNode({
       parent,
       name: maybeEscapePropertyName(name),
-      contents: ownProperties[name]
+      contents: ownProperties[name],
     })
   );
 }
@@ -553,7 +553,7 @@ function makeNodesForProperties(
     ownProperties = {},
     ownSymbols,
     prototype,
-    safeGetterValues
+    safeGetterValues,
   } = objProps;
 
   const parentValue = getValue(parent);
@@ -588,7 +588,7 @@ function makeNodesForProperties(
           parent,
           name: ownSymbol.name,
           path: `symbol-${index}`,
-          contents: ownSymbol.descriptor || null
+          contents: ownSymbol.descriptor || null,
         })
       );
     }, this);
@@ -646,7 +646,7 @@ function makeNodeForPrototype(objProps: GripProperties, parent: Node): ?Node {
       parent,
       name: "<prototype>",
       contents: { value: prototype },
-      type: NODE_TYPES.PROTOTYPE
+      type: NODE_TYPES.PROTOTYPE,
     });
   }
 
@@ -659,7 +659,7 @@ function createNode(options: {
   contents: any,
   path?: string,
   type?: Symbol,
-  meta?: Object
+  meta?: Object,
 }): ?Node {
   const {
     parent,
@@ -667,7 +667,7 @@ function createNode(options: {
     path,
     contents,
     type = NODE_TYPES.GRIP,
-    meta
+    meta,
   } = options;
 
   if (contents === undefined) {
@@ -688,7 +688,7 @@ function createNode(options: {
       : Symbol(path || name),
     contents,
     type,
-    meta
+    meta,
   };
 }
 
@@ -697,7 +697,7 @@ function createGetterNode({ parent, property, name }) {
     parent,
     name: `<get ${name}()>`,
     contents: { value: property.get },
-    type: NODE_TYPES.GET
+    type: NODE_TYPES.GET,
   });
 }
 
@@ -706,7 +706,7 @@ function createSetterNode({ parent, property, name }) {
     parent,
     name: `<set ${name}()>`,
     contents: { value: property.set },
-    type: NODE_TYPES.SET
+    type: NODE_TYPES.SET,
   });
 }
 
@@ -726,7 +726,7 @@ function getEvaluatedItem(item: Node, evaluations: Evaluations): Node {
 
   return {
     ...item,
-    contents: evaluations.get(item.path)
+    contents: evaluations.get(item.path),
   };
 }
 
@@ -734,14 +734,14 @@ function getChildrenWithEvaluations(options: {
   cachedNodes: CachedNodes,
   loadedProperties: LoadedProperties,
   item: Node,
-  evaluations: Evaluations
+  evaluations: Evaluations,
 }): Array<Node> {
   const { item, loadedProperties, cachedNodes, evaluations } = options;
 
   const children = getChildren({
     loadedProperties,
     cachedNodes,
-    item
+    item,
   });
 
   if (Array.isArray(children)) {
@@ -758,7 +758,7 @@ function getChildrenWithEvaluations(options: {
 function getChildren(options: {
   cachedNodes: CachedNodes,
   loadedProperties: LoadedProperties,
-  item: Node
+  item: Node,
 }): Array<Node> {
   const { cachedNodes, item, loadedProperties = new Map() } = options;
 
@@ -968,5 +968,5 @@ module.exports = {
   nodeSupportsNumericalBucketing,
   setNodeChildren,
   sortProperties,
-  NODE_TYPES
+  NODE_TYPES,
 };

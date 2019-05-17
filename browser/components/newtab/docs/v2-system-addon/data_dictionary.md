@@ -211,7 +211,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 | `search_vendor` | [Optional] the vendor of the search shortcut, one of ("google", "amazon", "wikipedia", "duckduckgo", "bing", etc.). This field only exists when `card_type = "search"` | :one:
 | `date` | [Auto populated by Onyx] The date in YYYY-MM-DD format. | :three:
 | `experiment_id` | [Optional] The unique identifier for a specific experiment. | :one:
-| `event_id` | [Required] An identifier shared by multiple performance pings that describe ane entire request flow. | :one:
+| `event_id` | [Required] An identifier shared by multiple performance pings that describe an entire request flow. | :one:
 | `event` | [Required] The type of event. Any user defined string ("click", "share", "delete", "more_items") | :one:
 | `highlight_type` | [Optional] Either ["bookmarks", "recommendation", "history"]. | :one:
 | `impression_id` | [Optional] The unique impression identifier for a specific client. | :one:

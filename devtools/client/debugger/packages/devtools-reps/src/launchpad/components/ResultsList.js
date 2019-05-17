@@ -15,7 +15,7 @@ class ResultsList extends Component {
     return {
       expressions: ImPropTypes.map.isRequired,
       showResultPacket: PropTypes.func.isRequired,
-      hideResultPacket: PropTypes.func.isRequired
+      hideResultPacket: PropTypes.func.isRequired,
     };
   }
 
@@ -32,7 +32,7 @@ class ResultsList extends Component {
             key,
             expression: expression.toJS(),
             showResultPacket: () => showResultPacket(key),
-            hideResultPacket: () => hideResultPacket(key)
+            hideResultPacket: () => hideResultPacket(key),
           })
         )
     );

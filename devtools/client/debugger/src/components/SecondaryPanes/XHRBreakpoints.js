@@ -27,7 +27,7 @@ type Props = {
   enableXHRBreakpoint: typeof actions.enableXHRBreakpoint,
   disableXHRBreakpoint: typeof actions.disableXHRBreakpoint,
   togglePauseOnAny: typeof actions.togglePauseOnAny,
-  updateXHRBreakpoint: typeof actions.updateXHRBreakpoint
+  updateXHRBreakpoint: typeof actions.updateXHRBreakpoint,
 };
 
 type State = {
@@ -36,7 +36,7 @@ type State = {
   inputMethod: string,
   editIndex: number,
   focused: boolean,
-  clickedOnFormElement: boolean
+  clickedOnFormElement: boolean,
 };
 
 // At present, the "Pause on any URL" checkbox creates an xhrBreakpoint
@@ -53,7 +53,7 @@ const xhrMethods = [
   "HEAD",
   "DELETE",
   "PATCH",
-  "OPTIONS"
+  "OPTIONS",
 ];
 
 class XHRBreakpoints extends Component<Props, State> {
@@ -68,7 +68,7 @@ class XHRBreakpoints extends Component<Props, State> {
       inputMethod: "ANY",
       focused: false,
       editIndex: -1,
-      clickedOnFormElement: false
+      clickedOnFormElement: false,
     };
   }
 
@@ -143,7 +143,7 @@ class XHRBreakpoints extends Component<Props, State> {
     this.setState({
       focused: true,
       editing: true,
-      inputMethod: target.value
+      inputMethod: target.value,
     });
   };
 
@@ -151,7 +151,7 @@ class XHRBreakpoints extends Component<Props, State> {
     if (this.state.clickedOnFormElement) {
       this.setState({
         focused: true,
-        clickedOnFormElement: false
+        clickedOnFormElement: false,
       });
     } else {
       this.setState({
@@ -159,7 +159,7 @@ class XHRBreakpoints extends Component<Props, State> {
         editing: false,
         editIndex: -1,
         inputValue: "",
-        inputMethod: "ANY"
+        inputMethod: "ANY",
       });
       this.props.onXHRAdded();
     }
@@ -181,7 +181,7 @@ class XHRBreakpoints extends Component<Props, State> {
     if (e.target.nodeName === "INPUT") {
       this.setState({
         clickedOnFormElement: true,
-        editing: false
+        editing: false,
       });
     } else if (e.target.nodeName === "SELECT" && !e.shiftKey) {
       // The user has tabbed off the select and we should
@@ -197,7 +197,7 @@ class XHRBreakpoints extends Component<Props, State> {
       inputValue: path,
       inputMethod: method,
       editing: true,
-      editIndex: index
+      editIndex: index,
     });
   };
 
@@ -233,7 +233,7 @@ class XHRBreakpoints extends Component<Props, State> {
     const {
       xhrBreakpoints,
       enableXHRBreakpoint,
-      disableXHRBreakpoint
+      disableXHRBreakpoint,
     } = this.props;
     const breakpoint = xhrBreakpoints[index];
     if (breakpoint.disabled) {
@@ -307,7 +307,7 @@ class XHRBreakpoints extends Component<Props, State> {
     return (
       <div
         className={classnames("breakpoints-exceptions-options", {
-          empty: explicitXhrBreakpoints.length === 0
+          empty: explicitXhrBreakpoints.length === 0,
         })}
       >
         <ExceptionOption
@@ -361,7 +361,7 @@ class XHRBreakpoints extends Component<Props, State> {
 const mapStateToProps = state => {
   return {
     xhrBreakpoints: getXHRBreakpoints(state),
-    shouldPauseOnAny: shouldPauseOnAnyXHR(state)
+    shouldPauseOnAny: shouldPauseOnAnyXHR(state),
   };
 };
 
@@ -373,6 +373,6 @@ export default connect(
     enableXHRBreakpoint: actions.enableXHRBreakpoint,
     disableXHRBreakpoint: actions.disableXHRBreakpoint,
     updateXHRBreakpoint: actions.updateXHRBreakpoint,
-    togglePauseOnAny: actions.togglePauseOnAny
+    togglePauseOnAny: actions.togglePauseOnAny,
   }
 )(XHRBreakpoints);

@@ -2384,8 +2384,10 @@ main {
     line-height: 20px;
     max-height: 2.85714em;
     overflow: hidden;
-    color: rgba(249, 249, 250, 0.8);
+    color: #737373;
     margin: 4px 0 8px; }
+    [lwt-newtab-brighttext] .ds-list-item .ds-list-item-excerpt {
+      color: rgba(249, 249, 250, 0.8); }
   .ds-list-item p {
     font-size: 14px;
     line-height: 20px;
@@ -2886,6 +2888,16 @@ main {
   width: 100%; }
   .snippets-preview-banner span {
     vertical-align: middle; }
+
+body:not([lwt-newtab-brighttext]) .icon-dark-theme,
+body:not([lwt-newtab-brighttext]) .icon.icon-dark-theme,
+body:not([lwt-newtab-brighttext]) .scene2Icon .icon-dark-theme {
+  display: none; }
+
+body[lwt-newtab-brighttext] .icon-light-theme,
+body[lwt-newtab-brighttext] .icon.icon-light-theme,
+body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
+  display: none; }
 
 .activity-stream.modal-open {
   overflow: hidden; }
@@ -3990,9 +4002,10 @@ a.firstrun-link {
     color: var(--newtab-text-conditional-color);
     background: var(--trailhead-card-button-background-color);
     border: 0;
-    height: 30px;
+    margin: 14px;
     min-width: 70%;
-    padding: 0 14px; }
+    padding: 6px 14px;
+    white-space: pre-wrap; }
     .trailheadCard .onboardingButton:focus, .trailheadCard .onboardingButton:hover {
       box-shadow: none;
       background: var(--trailhead-card-button-background-hover-color); }
@@ -4001,9 +4014,8 @@ a.firstrun-link {
     .trailheadCard .onboardingButton:active {
       background: var(--trailhead-card-button-background-active-color); }
   .trailheadCard .onboardingButtonContainer {
-    height: 60px;
     position: absolute;
-    bottom: 0;
+    bottom: 16px;
     left: 0;
     width: 100%;
     text-align: center; }

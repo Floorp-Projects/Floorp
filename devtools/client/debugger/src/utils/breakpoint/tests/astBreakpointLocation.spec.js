@@ -7,7 +7,7 @@
 import { getASTLocation } from "../astBreakpointLocation.js";
 import {
   populateSource,
-  populateOriginalSource
+  populateOriginalSource,
 } from "../../../workers/parser/tests/helpers";
 import { getSymbols } from "../../../workers/parser/getSymbols";
 import cases from "jest-in-case";
@@ -30,26 +30,26 @@ describe("ast", () => {
       name: "returns the scope and offset",
       file: "math",
       location: { line: 6, column: 0 },
-      functionName: "math"
+      functionName: "math",
     },
     {
       name: "returns name for a nested anon fn as the parent func",
       file: "outOfScope",
       location: { line: 25, column: 0 },
-      functionName: "outer"
+      functionName: "outer",
     },
     {
       name: "returns name for a nested named fn",
       file: "outOfScope",
       location: { line: 5, column: 0 },
-      functionName: "inner"
+      functionName: "inner",
     },
     {
       name: "returns name for an anon fn with a named variable",
       file: "outOfScope",
       location: { line: 40, column: 0 },
-      functionName: "globalDeclaration"
-    }
+      functionName: "globalDeclaration",
+    },
   ]);
 
   cases("invalid location", setup, [
@@ -58,13 +58,13 @@ describe("ast", () => {
       file: "class",
       original: true,
       location: { line: 10, column: 0 },
-      functionName: undefined
+      functionName: undefined,
     },
     {
       name: "returns name for an anon fn in global scope as undefined",
       file: "outOfScope",
       location: { line: 44, column: 0 },
-      functionName: undefined
-    }
+      functionName: undefined,
+    },
   ]);
 });

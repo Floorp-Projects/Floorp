@@ -17,7 +17,7 @@ describe("worker utils", () => {
     const terminateMock = jest.fn();
 
     global.Worker = jest.fn(() => ({
-      terminate: terminateMock
+      terminate: terminateMock,
     }));
 
     dispatcher.start();
@@ -35,7 +35,7 @@ describe("worker utils", () => {
     global.Worker = jest.fn(() => {
       return {
         postMessage: postMessageMock,
-        addEventListener: addEventListenerMock
+        addEventListener: addEventListenerMock,
       };
     });
 
@@ -48,7 +48,7 @@ describe("worker utils", () => {
     expect(postMessageMockCall).toEqual({
       calls: [["bar"]],
       id: 1,
-      method: "foo"
+      method: "foo",
     });
 
     expect(addEventListenerMock.mock.calls).toHaveLength(1);
@@ -66,7 +66,7 @@ describe("worker utils", () => {
     global.Worker = jest.fn(() => {
       return {
         postMessage: postMessageMock,
-        addEventListener: addEventListenerMock
+        addEventListener: addEventListenerMock,
       };
     });
 
@@ -84,7 +84,7 @@ describe("worker utils", () => {
     expect(postMessageMockCall).toEqual({
       calls: [["bar"], ["baz"]],
       id: 1,
-      method: "foo"
+      method: "foo",
     });
 
     expect(addEventListenerMock.mock.calls).toHaveLength(1);
@@ -101,7 +101,7 @@ describe("worker utils", () => {
     const callee = {
       doSomething: () => {
         throw new Error("failed");
-      }
+      },
     };
 
     const handler = workerHandler(callee);
@@ -114,13 +114,13 @@ describe("worker utils", () => {
       id: 53,
       results: [
         {
-          error: "Error: failed"
-        }
-      ]
+          error: "Error: failed",
+        },
+      ],
     });
   });
 
-  it("test a task completing when the worker has shutdown", () => {
+  it("test a task completing when the worker has shutdown", async () => {
     const dispatcher = new WorkerDispatcher();
     const postMessageMock = jest.fn();
     const addEventListenerMock = jest.fn();
@@ -130,14 +130,18 @@ describe("worker utils", () => {
       return {
         postMessage: postMessageMock,
         addEventListener: addEventListenerMock,
-        terminate: terminateMock
+        terminate: terminateMock,
       };
     });
 
     dispatcher.start();
     const task = dispatcher.task("foo");
-    const resp = task("bar");
-    resp.catch(e => expect(e).toEqual("Oops, The worker has shutdown!"));
+
+    try {
+      await task("bar");
+    } catch (e) {
+      expect(e).toEqual("Oops, The worker has shutdown!");
+    }
 
     const listener = addEventListenerMock.mock.calls[0][1];
     dispatcher.stop();

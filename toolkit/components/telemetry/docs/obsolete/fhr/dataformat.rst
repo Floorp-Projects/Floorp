@@ -1956,7 +1956,7 @@ numSavedPasswords
     number of passwords saved in the Password Manager
 
 enabled
-    Whether or not the user has disabled the Password Manager in prefernces
+    Whether or not the user has disabled the Password Manager in preferences
 
 Example
 ^^^^^^^

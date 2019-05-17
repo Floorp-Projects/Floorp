@@ -14,7 +14,7 @@ import { flatten } from "lodash";
 
 import {
   stringToSourceActorId,
-  type SourceActor
+  type SourceActor,
 } from "../../reducers/source-actors";
 import { insertSourceActors } from "../../actions/source-actors";
 import { makeSourceId } from "../../client/firefox/create";
@@ -28,7 +28,7 @@ import {
   isPrettyURL,
   isOriginal,
   isUrlExtension,
-  isInlineScript
+  isInlineScript,
 } from "../../utils/source";
 import {
   getBlackBoxList,
@@ -38,7 +38,7 @@ import {
   getPendingSelectedLocation,
   getPendingBreakpointsForSource,
   getContext,
-  isSourceLoadingOrLoaded
+  isSourceLoadingOrLoaded,
 } from "../../selectors";
 
 import { prefs } from "../../utils/prefs";
@@ -51,14 +51,14 @@ import type {
   Context,
   OriginalSourceData,
   GeneratedSourceData,
-  QueuedSourceData
+  QueuedSourceData,
 } from "../../types";
 import type { Action, ThunkArgs } from "../types";
 
 function loadSourceMaps(cx: Context, sources: Source[]) {
   return async function({
     dispatch,
-    sourceMaps
+    sourceMaps,
   }: ThunkArgs): Promise<?(Promise<Source>[])> {
     try {
       const sourceList = await Promise.all(
@@ -67,7 +67,7 @@ function loadSourceMaps(cx: Context, sources: Source[]) {
           sourceQueue.queueSources(
             originalSources.map(data => ({
               type: "original",
-              data
+              data,
             }))
           );
           return originalSources;
@@ -100,7 +100,7 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
   return async function({
     dispatch,
     getState,
-    sourceMaps
+    sourceMaps,
   }: ThunkArgs): Promise<Source[]> {
     const source = getSource(getState(), sourceId);
 
@@ -137,7 +137,7 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
         ({
           type: "CLEAR_SOURCE_MAP_URL",
           cx,
-          sourceId
+          sourceId,
         }: Action)
       );
       return [];
@@ -146,7 +146,7 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
     validateNavigateContext(getState(), cx);
     return urls.map(url => ({
       id: generatedToOriginalId(source.id, url),
-      url
+      url,
     }));
   };
 }
@@ -176,7 +176,7 @@ function checkSelectedSource(cx: Context, sourceId: string) {
           sourceId: source.id,
           line:
             typeof pendingLocation.line === "number" ? pendingLocation.line : 0,
-          column: pendingLocation.column
+          column: pendingLocation.column,
         })
       );
     }
@@ -263,7 +263,7 @@ export function newOriginalSources(sourceInfo: Array<OriginalSourceData>) {
       isBlackBoxed: false,
       introductionUrl: null,
       introductionType: undefined,
-      isExtension: false
+      isExtension: false,
     }));
 
     const cx = getContext(getState());
@@ -285,7 +285,7 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
   return async ({
     dispatch,
     getState,
-    client
+    client,
   }: ThunkArgs): Promise<Array<Source>> => {
     const supportsWasm = client.hasWasmSupport();
 
@@ -307,7 +307,7 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
           introductionType: source.introductionType,
           isBlackBoxed: false,
           isWasm: !!supportsWasm && source.introductionType === "wasm",
-          isExtension: (source.url && isUrlExtension(source.url)) || false
+          isExtension: (source.url && isUrlExtension(source.url)) || false,
         }: any);
       }
 
@@ -325,16 +325,16 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
           sourceMapURL: source.sourceMapURL,
           url: source.url,
           introductionUrl: source.introductionUrl,
-          introductionType: source.introductionType
+          introductionType: source.introductionType,
         });
       }
 
       resultIds.push(newId);
     }
 
-    const newSources: Array<Source> = (Object.values(newSourcesObj): Array<
-      any
-    >);
+    const newSources: Array<Source> = (Object.values(
+      newSourcesObj
+    ): Array<any>);
 
     const cx = getContext(getState());
     dispatch(addSources(cx, newSources));

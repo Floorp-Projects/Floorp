@@ -140,7 +140,7 @@ function translateDeclarationsIntoAssignment(
 
   return {
     newAst: ast,
-    declarations
+    declarations,
   };
 }
 

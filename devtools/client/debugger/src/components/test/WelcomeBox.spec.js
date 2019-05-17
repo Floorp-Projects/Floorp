@@ -17,7 +17,7 @@ function render(overrides = {}) {
     setActiveSearch: jest.fn(),
     openQuickOpen: jest.fn(),
     toggleShortcutsModal: jest.fn(),
-    ...overrides
+    ...overrides,
   };
   const component = shallow(<WelcomeBox {...props} />);
 
@@ -32,7 +32,7 @@ describe("WelomeBox", () => {
 
   it("doesn't render toggle button in horizontal mode", () => {
     const { component } = render({
-      horizontal: true
+      horizontal: true,
     });
     expect(component.find("PaneToggleButton")).toHaveLength(0);
   });
@@ -41,20 +41,20 @@ describe("WelomeBox", () => {
     const { component, props } = render();
 
     component.find(".welcomebox__searchSources").simulate("click");
-    expect(props.openQuickOpen).toBeCalled();
+    expect(props.openQuickOpen).toHaveBeenCalled();
   });
 
   it("calls correct function on searchProject click", () => {
     const { component, props } = render();
 
     component.find(".welcomebox__searchProject").simulate("click");
-    expect(props.setActiveSearch).toBeCalled();
+    expect(props.setActiveSearch).toHaveBeenCalled();
   });
 
   it("calls correct function on allShotcuts click", () => {
     const { component, props } = render();
 
     component.find(".welcomebox__allShortcuts").simulate("click");
-    expect(props.toggleShortcutsModal).toBeCalled();
+    expect(props.toggleShortcutsModal).toHaveBeenCalled();
   });
 });

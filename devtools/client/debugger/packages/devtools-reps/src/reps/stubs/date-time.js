@@ -12,8 +12,8 @@ stubs.set("DateTime", {
   sealed: false,
   ownPropertyLength: 0,
   preview: {
-    timestamp: 1459372644859
-  }
+    timestamp: 1459372644859,
+  },
 });
 
 stubs.set("InvalidDateTime", {
@@ -26,9 +26,9 @@ stubs.set("InvalidDateTime", {
   ownPropertyLength: 0,
   preview: {
     timestamp: {
-      type: "NaN"
-    }
-  }
+      type: "NaN",
+    },
+  },
 });
 
 module.exports = stubs;

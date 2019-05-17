@@ -13,7 +13,7 @@ import { buildMenu } from "devtools-contextmenu";
 import {
   makeMockBreakpoint,
   makeMockSource,
-  mockcx
+  mockcx,
 } from "../../../../utils/test-mockup";
 
 jest.mock("devtools-contextmenu");
@@ -37,22 +37,22 @@ function generateDefaults(disabled) {
       options: {
         condition: "",
         logValue: "",
-        hidden: false
-      }
+        hidden: false,
+      },
     },
     {
       ...makeMockBreakpoint(source, 2),
       id: "https://example.com/main.js:2:",
       disabled: disabled,
       options: {
-        hidden: false
-      }
+        hidden: false,
+      },
     },
     {
       ...makeMockBreakpoint(source, 3),
       id: "https://example.com/main.js:3:",
-      disabled: disabled
-    }
+      disabled: disabled,
+    },
   ];
 
   const props = {
@@ -70,7 +70,7 @@ function generateDefaults(disabled) {
     openConditionalPanel: jest.fn(),
     contextMenuEvent: ({ preventDefault: jest.fn() }: any),
     selectedSource: makeMockSource(),
-    setBreakpointOptions: jest.fn()
+    setBreakpointOptions: jest.fn(),
   };
   return props;
 }

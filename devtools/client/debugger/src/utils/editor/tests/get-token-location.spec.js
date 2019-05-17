@@ -10,8 +10,8 @@ describe("getTokenLocation", () => {
   const codemirror = {
     coordsChar: jest.fn(() => ({
       line: 1,
-      ch: "C"
-    }))
+      ch: "C",
+    })),
   };
   const token: any = {
     getBoundingClientRect() {
@@ -19,15 +19,15 @@ describe("getTokenLocation", () => {
         left: 10,
         top: 20,
         width: 10,
-        height: 10
+        height: 10,
       };
-    }
+    },
   };
   it("calls into codeMirror", () => {
     getTokenLocation(codemirror, token);
     expect(codemirror.coordsChar).toHaveBeenCalledWith({
       left: 15,
-      top: 25
+      top: 25,
     });
   });
 });

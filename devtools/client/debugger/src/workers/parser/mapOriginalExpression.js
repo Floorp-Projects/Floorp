@@ -38,7 +38,7 @@ export default function mapOriginalExpression(
   expression: string,
   ast: ?Object,
   mappings: {
-    [string]: string | null
+    [string]: string | null,
   }
 ): string {
   const scopes = buildScopeList(ast, "");

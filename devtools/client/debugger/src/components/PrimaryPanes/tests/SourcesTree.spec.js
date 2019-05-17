@@ -14,7 +14,7 @@ import { copyToTheClipboard } from "../../../utils/clipboard";
 
 jest.mock("devtools-contextmenu", () => ({ showMenu: jest.fn() }));
 jest.mock("../../../utils/clipboard", () => ({
-  copyToTheClipboard: jest.fn()
+  copyToTheClipboard: jest.fn(),
 }));
 
 describe("SourcesTree", () => {
@@ -41,7 +41,7 @@ describe("SourcesTree", () => {
       const { component, props } = render();
       await component.setProps({
         ...props,
-        expanded: ["one.js", "two.js", "three.js"]
+        expanded: ["one.js", "two.js", "three.js"],
       });
 
       expect(component).toMatchSnapshot();
@@ -53,7 +53,7 @@ describe("SourcesTree", () => {
       const { component, props } = render();
       await component.setProps({
         ...props,
-        expanded: ["four.js", "five.js", "six.js"]
+        expanded: ["four.js", "five.js", "six.js"],
       });
 
       expect(component).toMatchSnapshot();
@@ -68,7 +68,7 @@ describe("SourcesTree", () => {
           "server1.conn13.child1/41": createMockSource(
             "server1.conn13.child1/41",
             "http://mdn.com/three.js"
-          )
+          ),
         };
 
         await component.setProps({ ...props, sources });
@@ -89,12 +89,12 @@ describe("SourcesTree", () => {
 
         const newThreadSources = {
           ...props.sources.FakeThread,
-          "server1.conn13.child1/43": newSource
+          "server1.conn13.child1/43": newSource,
         };
 
         await component.setProps({
           ...props,
-          sources: newThreadSources
+          sources: newThreadSources,
         });
 
         expect(
@@ -110,7 +110,7 @@ describe("SourcesTree", () => {
         await component.setProps({
           ...props,
           sources: {},
-          sourceCount: 0
+          sourceCount: 0,
         });
 
         expect(component.state("uncollapsedTree").contents).toHaveLength(0);
@@ -123,8 +123,8 @@ describe("SourcesTree", () => {
             "server1.conn13.child1/41": createMockSource(
               "server1.conn13.child1/41",
               "http://mozilla.com/three.js"
-            )
-          }
+            ),
+          },
         };
 
         expect(
@@ -134,7 +134,7 @@ describe("SourcesTree", () => {
         await component.setProps({
           ...props,
           sources,
-          projectRoot: "mozilla"
+          projectRoot: "mozilla",
         });
 
         expect(
@@ -151,8 +151,8 @@ describe("SourcesTree", () => {
               "http://mdn.com/three.js",
               true,
               ""
-            )
-          }
+            ),
+          },
         };
 
         expect(
@@ -162,7 +162,7 @@ describe("SourcesTree", () => {
         await component.setProps({
           ...props,
           debuggeeUrl: "mozilla",
-          sources
+          sources,
         });
 
         expect(
@@ -183,8 +183,8 @@ describe("SourcesTree", () => {
 
         const newThreadSources = {
           FakeThread1: {
-            "server1.conn13.child1/43": newSource
-          }
+            "server1.conn13.child1/43": newSource,
+          },
         };
 
         expect(component.state("uncollapsedTree").contents[0].name).toEqual(
@@ -201,8 +201,8 @@ describe("SourcesTree", () => {
           ...props,
           sources: {
             ...props.sources,
-            ...newThreadSources
-          }
+            ...newThreadSources,
+          },
         });
 
         expect(component.state("uncollapsedTree").contents[0].name).toEqual(
@@ -232,7 +232,7 @@ describe("SourcesTree", () => {
         );
         await component.setProps({
           ...props,
-          selectedSource: mockSource
+          selectedSource: mockSource,
         });
         expect(component).toMatchSnapshot();
       });
@@ -276,7 +276,7 @@ describe("SourcesTree", () => {
       const { component } = render();
       const item = createMockDirectory("http://mdn.com/views", "views", [
         "a",
-        "b"
+        "b",
       ]);
       const children = component
         .find("ManagedTree")
@@ -338,7 +338,7 @@ describe("SourcesTree", () => {
       const { instance } = render();
       const pathOriginal = instance.getPath(
         createMockItem("http://mdn.com/four.js", "four.js", {
-          id: "server1.conn13.child1/42/originalSource-sha"
+          id: "server1.conn13.child1/42/originalSource-sha",
         })
       );
       expect(pathOriginal).toEqual(
@@ -347,7 +347,7 @@ describe("SourcesTree", () => {
 
       const pathGenerated = instance.getPath(
         createMockItem("http://mdn.com/four.js", "four.js", {
-          id: "server1.conn13.child1/42"
+          id: "server1.conn13.child1/42",
         })
       );
       expect(pathGenerated).toEqual(
@@ -389,8 +389,8 @@ function generateDefaults(overrides: Object) {
         "http://mdn.com/four.js",
         false,
         "data:application/json?charset=utf?dsffewrsf"
-      )
-    }
+      ),
+    },
   };
 
   return {
@@ -407,14 +407,14 @@ function generateDefaults(overrides: Object) {
     threads: [
       {
         name: "FakeThread",
-        actor: "FakeThread"
+        actor: "FakeThread",
       },
       {
         name: "FakeThread1",
-        actor: "FakeThread1"
-      }
+        actor: "FakeThread1",
+      },
     ],
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -434,7 +434,7 @@ function createMockSource(id, url, isBlackBoxed = false, sourceMapURL = null) {
   return {
     ...makeMockSource(url, id),
     isBlackBoxed,
-    sourceMapURL
+    sourceMapURL,
   };
 }
 
@@ -443,7 +443,7 @@ function createMockDirectory(path = "folder/", name = "folder", contents = []) {
     type: "directory",
     name,
     path,
-    contents
+    contents,
   };
 }
 
@@ -456,6 +456,6 @@ function createMockItem(
     type: "source",
     name,
     path,
-    contents
+    contents,
   };
 }
