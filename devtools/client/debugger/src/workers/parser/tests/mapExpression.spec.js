@@ -15,14 +15,14 @@ function test({
   mappings,
   shouldMapBindings,
   expectedMapped,
-  parseExpression = true
+  parseExpression = true,
 }) {
   const res = mapExpression(expression, mappings, bindings, shouldMapBindings);
 
   if (parseExpression) {
     expect(
       format(res.expression, {
-        parser: "babylon"
+        parser: "babylon",
       })
     ).toEqual(format(newExpression, { parser: "babylon" }));
   } else {
@@ -48,8 +48,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (multiple statements)",
@@ -61,8 +61,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (inner)",
@@ -74,8 +74,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (multiple awaits)",
@@ -87,8 +87,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (assignment)",
@@ -100,8 +100,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (destructuring)",
@@ -115,8 +115,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (array destructuring)",
@@ -128,8 +128,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (mixed destructuring)",
@@ -141,8 +141,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (destructuring, multiple statements)",
@@ -157,8 +157,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (destructuring, bindings)",
@@ -170,8 +170,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (array destructuring, bindings)",
@@ -183,8 +183,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (mixed destructuring, bindings)",
@@ -196,8 +196,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (destructuring with defaults, bindings)",
@@ -209,8 +209,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (array destructuring with defaults, bindings)",
@@ -222,8 +222,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (mixed destructuring with defaults, bindings)",
@@ -237,8 +237,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (nested destructuring, bindings)",
@@ -255,8 +255,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (nested destructuring with defaults)",
@@ -272,8 +272,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (very nested destructuring with defaults)",
@@ -295,8 +295,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (with SyntaxError)",
@@ -309,8 +309,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, let assignment)",
@@ -324,8 +324,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, var assignment)",
@@ -339,8 +339,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, const assignment)",
@@ -354,8 +354,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, multiple assignments)",
@@ -372,8 +372,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, object destructuring)",
@@ -387,8 +387,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, object destructuring with rest)",
@@ -402,8 +402,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name:
@@ -418,8 +418,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name:
@@ -437,8 +437,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, array destructuring)",
@@ -453,8 +453,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, array destructuring with default)",
@@ -469,8 +469,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, array destructuring with default and rest)",
@@ -485,8 +485,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, nested array destructuring with default)",
@@ -501,8 +501,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "await (no bindings, dynamic import)",
@@ -519,8 +519,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: true,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "simple",
@@ -532,8 +532,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "mappings",
@@ -541,14 +541,14 @@ describe("mapExpression", () => {
       newExpression: "_a",
       bindings: [],
       mappings: {
-        a: "_a"
+        a: "_a",
       },
       shouldMapBindings: true,
       expectedMapped: {
         await: false,
         bindings: false,
-        originalExpression: true
-      }
+        originalExpression: true,
+      },
     },
     {
       name: "declaration",
@@ -560,8 +560,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "declaration + destructuring",
@@ -573,8 +573,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "bindings",
@@ -586,8 +586,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "bindings + destructuring",
@@ -599,8 +599,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "bindings + destructuring + rest",
@@ -612,8 +612,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "bindings + array destructuring + rest",
@@ -625,8 +625,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "bindings + mappings",
@@ -638,8 +638,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "bindings + mappings + destructuring",
@@ -651,8 +651,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: true,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "bindings without mappings",
@@ -664,8 +664,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: false,
-        originalExpression: false
-      }
+        originalExpression: false,
+      },
     },
     {
       name: "object destructuring + bindings without mappings",
@@ -677,8 +677,8 @@ describe("mapExpression", () => {
       expectedMapped: {
         await: false,
         bindings: false,
-        originalExpression: true
-      }
-    }
+        originalExpression: true,
+      },
+    },
   ]);
 });

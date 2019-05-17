@@ -33,13 +33,13 @@ describe("Function - Named", () => {
     );
     expect(
       renderRep(object, {
-        mode: MODE.TINY
+        mode: MODE.TINY,
       }).text()
     ).toBe("testName()");
     expect(
       renderRep(object, {
         mode: MODE.TINY,
-        parameterNames: ["a", "b", "c"]
+        parameterNames: ["a", "b", "c"],
       }).text()
     ).toBe("testName(a, b, c)");
 
@@ -66,13 +66,13 @@ describe("Function - User named", () => {
     );
     expect(
       renderRep(object, {
-        mode: MODE.TINY
+        mode: MODE.TINY,
       }).text()
     ).toBe("testUserName()");
     expect(
       renderRep(object, {
         mode: MODE.TINY,
-        parameterNames: ["a", "b", "c"]
+        parameterNames: ["a", "b", "c"],
       }).text()
     ).toBe("testUserName(a, b, c)");
   });
@@ -97,13 +97,13 @@ describe("Function - Var named", () => {
     );
     expect(
       renderRep(object, {
-        mode: MODE.TINY
+        mode: MODE.TINY,
       }).text()
     ).toBe("testVarName()");
     expect(
       renderRep(object, {
         mode: MODE.TINY,
-        parameterNames: ["a", "b", "c"]
+        parameterNames: ["a", "b", "c"],
       }).text()
     ).toBe("testVarName(a, b, c)");
   });
@@ -126,13 +126,13 @@ describe("Function - Anonymous", () => {
     );
     expect(
       renderRep(object, {
-        mode: MODE.TINY
+        mode: MODE.TINY,
       }).text()
     ).toBe("()");
     expect(
       renderRep(object, {
         mode: MODE.TINY,
-        parameterNames: ["a", "b", "c"]
+        parameterNames: ["a", "b", "c"],
       }).text()
     ).toBe("(a, b, c)");
   });
@@ -161,13 +161,13 @@ describe("Function - Long name", () => {
     );
     expect(
       renderRep(object, {
-        mode: MODE.TINY
+        mode: MODE.TINY,
       }).text()
     ).toBe(`${functionName}()`);
     expect(
       renderRep(object, {
         mode: MODE.TINY,
-        parameterNames: ["a", "b", "c"]
+        parameterNames: ["a", "b", "c"],
       }).text()
     ).toBe(`${functionName}(a, b, c)`);
   });
@@ -201,7 +201,7 @@ describe("Function - Async function", () => {
     expect(
       renderRep(object, {
         mode: MODE.TINY,
-        parameterNames: ["a", "b", "c"]
+        parameterNames: ["a", "b", "c"],
       }).text()
     ).toBe("async waitUntil2017(a, b, c)");
   });
@@ -233,7 +233,7 @@ describe("Function - Anonymous async function", () => {
     expect(
       renderRep(object, {
         mode: MODE.TINY,
-        parameterNames: ["a", "b", "c"]
+        parameterNames: ["a", "b", "c"],
       }).text()
     ).toBe("async (a, b, c)");
   });
@@ -265,7 +265,7 @@ describe("Function - Generator function", () => {
     expect(
       renderRep(object, {
         mode: MODE.TINY,
-        parameterNames: ["a", "b", "c"]
+        parameterNames: ["a", "b", "c"],
       }).text()
     ).toBe("* fib(a, b, c)");
   });
@@ -291,7 +291,7 @@ describe("Function - Anonymous generator function", () => {
     expect(
       renderRep(object, {
         mode: MODE.TINY,
-        parameterNames: ["a", "b", "c"]
+        parameterNames: ["a", "b", "c"],
       }).text()
     ).toBe("* (a, b, c)");
   });
@@ -302,13 +302,13 @@ describe("Function - Jump to definition", () => {
     const onViewSourceInDebugger = jest.fn();
     const object = stubs.get("getRandom");
     const renderedComponent = renderRep(object, {
-      onViewSourceInDebugger
+      onViewSourceInDebugger,
     });
 
     const node = renderedComponent.find(".jump-definition");
     node.simulate("click", {
       type: "click",
-      stopPropagation: () => {}
+      stopPropagation: () => {},
     });
 
     expect(node.exists()).toBeTruthy();
@@ -322,13 +322,13 @@ describe("Function - Jump to definition", () => {
     const object = stubs.get("getRandom");
     const renderedComponent = renderRep(object, {
       onViewSourceInDebugger,
-      recordTelemetryEvent
+      recordTelemetryEvent,
     });
 
     const node = renderedComponent.find(".jump-definition");
     node.simulate("click", {
       type: "click",
-      stopPropagation: () => {}
+      stopPropagation: () => {},
     });
 
     expect(node.exists()).toBeTruthy();
@@ -347,11 +347,11 @@ describe("Function - Jump to definition", () => {
   it("does not render an icon when the object has no location", () => {
     const object = {
       ...stubs.get("getRandom"),
-      location: null
+      location: null,
     };
 
     const renderedComponent = renderRep(object, {
-      onViewSourceInDebugger: () => {}
+      onViewSourceInDebugger: () => {},
     });
 
     const node = renderedComponent.find(".jump-definition");
@@ -360,11 +360,11 @@ describe("Function - Jump to definition", () => {
 
   it("does not render an icon when the object has no url location", () => {
     const object = {
-      ...stubs.get("getRandom")
+      ...stubs.get("getRandom"),
     };
     object.location.url = null;
     const renderedComponent = renderRep(object, {
-      onViewSourceInDebugger: () => {}
+      onViewSourceInDebugger: () => {},
     });
 
     const node = renderedComponent.find(".jump-definition");
@@ -374,7 +374,7 @@ describe("Function - Jump to definition", () => {
   it("no icon when function was declared in console input", () => {
     const object = stubs.get("EvaledInDebuggerFunction");
     const renderedComponent = renderRep(object, {
-      onViewSourceInDebugger: () => {}
+      onViewSourceInDebugger: () => {},
     });
 
     const node = renderedComponent.find(".jump-definition");
@@ -395,24 +395,24 @@ describe("Function - Simplify name", () => {
       ["fromYUI._attach", "_attach"],
       ["Y.ClassNameManager</getClassName", "getClassName"],
       ["orion.textview.TextView</addHandler", "addHandler"],
-      ["this.eventPool_.createObject", "createObject"]
+      ["this.eventPool_.createObject", "createObject"],
     ],
 
     arrayProperty: [
       ["this.eventPool_[createObject]", "createObject"],
       ["jQuery.each(^)/jQuery.fn[o]", "o"],
       ["viewport[get+D]", "get+D"],
-      ["arr[0]", "0"]
+      ["arr[0]", "0"],
     ],
 
     functionProperty: [
       ["fromYUI._attach/<.", "_attach"],
       ["Y.ClassNameManager<", "ClassNameManager"],
       ["fromExtJS.setVisible/cb<", "cb"],
-      ["fromDojo.registerWin/<", "registerWin"]
+      ["fromDojo.registerWin/<", "registerWin"],
     ],
 
-    annonymousProperty: [["jQuery.each(^)", "each"]]
+    annonymousProperty: [["jQuery.each(^)", "each"]],
   };
 
   Object.keys(cases).forEach(type => {
@@ -438,14 +438,14 @@ describe("Function - Two properties with same displayName", () => {
     expect(
       renderRep(object, {
         parameterNames: ["a", "b", "c"],
-        functionName: "$"
+        functionName: "$",
       }).text()
     ).toBe("function $:jQuery(a, b, c)");
     expect(
       renderRep(object, {
         mode: MODE.TINY,
         parameterNames: ["a", "b", "c"],
-        functionName: "$"
+        functionName: "$",
       }).text()
     ).toBe("$:jQuery(a, b, c)");
   });

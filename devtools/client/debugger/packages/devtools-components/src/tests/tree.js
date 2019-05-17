@@ -21,7 +21,7 @@ function mountTree(overrides = {}) {
           const state = {
             expanded: overrides.expanded || new Set(),
             focused: overrides.focused,
-            active: overrides.active
+            active: overrides.active,
           };
           delete overrides.focused;
           delete overrides.active;
@@ -72,7 +72,7 @@ function mountTree(overrides = {}) {
                 },
                 isExpanded: x => this.state && this.state.expanded.has(x),
                 focused: this.state.focused,
-                active: this.state.active
+                active: this.state.active,
               },
               overrides
             )
@@ -103,7 +103,7 @@ describe("Tree", () => {
         }
 
         return TEST_TREE.children[item] || [];
-      }
+      },
     });
     const ids = getTreeNodes(wrapper).map(node => node.prop("id"));
     expect(ids).toMatchSnapshot();
@@ -111,7 +111,7 @@ describe("Tree", () => {
 
   it("is accessible", () => {
     const wrapper = mountTree({
-      expanded: new Set("ABCDEFGHIJMN".split(""))
+      expanded: new Set("ABCDEFGHIJMN".split("")),
     });
     expect(wrapper.getDOMNode().getAttribute("role")).toBe("tree");
     expect(wrapper.getDOMNode().getAttribute("tabIndex")).toBe("0");
@@ -131,7 +131,7 @@ describe("Tree", () => {
       L: { id: "key-L", level: 4, expanded: undefined },
       M: { id: "key-M", level: 1, expanded: true },
       N: { id: "key-N", level: 2, expanded: true },
-      O: { id: "key-O", level: 3, expanded: undefined }
+      O: { id: "key-O", level: 3, expanded: undefined },
     };
 
     getTreeNodes(wrapper).forEach(node => {
@@ -147,7 +147,7 @@ describe("Tree", () => {
 
   it("renders as expected", () => {
     const wrapper = mountTree({
-      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
+      expanded: new Set("ABCDEFGHIJKLMNO".split("")),
     });
 
     expect(formatTree(wrapper)).toMatchSnapshot();
@@ -155,7 +155,7 @@ describe("Tree", () => {
 
   it("renders as expected when passed a className", () => {
     const wrapper = mountTree({
-      className: "testClassName"
+      className: "testClassName",
     });
 
     expect(wrapper.find(".tree").hasClass("testClassName")).toBe(true);
@@ -164,8 +164,8 @@ describe("Tree", () => {
   it("renders as expected when passed a style", () => {
     const wrapper = mountTree({
       style: {
-        color: "red"
-      }
+        color: "red",
+      },
     });
 
     expect(wrapper.getDOMNode().style.color).toBe("red");
@@ -173,7 +173,7 @@ describe("Tree", () => {
 
   it("renders as expected when passed a label", () => {
     const wrapper = mountTree({
-      label: "testAriaLabel"
+      label: "testAriaLabel",
     });
     expect(wrapper.getDOMNode().getAttribute("aria-label")).toBe(
       "testAriaLabel"
@@ -182,7 +182,7 @@ describe("Tree", () => {
 
   it("renders as expected when passed an aria-labelledby", () => {
     const wrapper = mountTree({
-      labelledby: "testAriaLabelBy"
+      labelledby: "testAriaLabelBy",
     });
     expect(wrapper.getDOMNode().getAttribute("aria-labelledby")).toBe(
       "testAriaLabelBy"
@@ -191,14 +191,14 @@ describe("Tree", () => {
 
   it("renders as expected with collapsed nodes", () => {
     const wrapper = mountTree({
-      expanded: new Set("MNO".split(""))
+      expanded: new Set("MNO".split("")),
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
   });
 
   it("renders as expected when passed autoDepth:1", () => {
     const wrapper = mountTree({
-      autoExpandDepth: 1
+      autoExpandDepth: 1,
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
   });
@@ -206,7 +206,7 @@ describe("Tree", () => {
   it("calls shouldItemUpdate when provided", () => {
     const shouldItemUpdate = jest.fn((prev, next) => true);
     const wrapper = mountTree({
-      shouldItemUpdate
+      shouldItemUpdate,
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(shouldItemUpdate.mock.calls).toHaveLength(0);
@@ -231,7 +231,7 @@ describe("Tree", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
       focused: "G",
-      active: "G"
+      active: "G",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.find(".active").prop("id")).toBe("key-G");
@@ -248,7 +248,7 @@ describe("Tree", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
       focused: "G",
-      active: "G"
+      active: "G",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.find(".active").prop("id")).toBe("key-G");
@@ -262,7 +262,7 @@ describe("Tree", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
       focused: "L",
-      active: "L"
+      active: "L",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.find(".active").prop("id")).toBe("key-L");
@@ -274,7 +274,7 @@ describe("Tree", () => {
   it("active item - renders as expected when using keyboard and Enter", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      focused: "L"
+      focused: "L",
     });
     wrapper.getDOMNode().focus();
     expect(formatTree(wrapper)).toMatchSnapshot();
@@ -297,7 +297,7 @@ describe("Tree", () => {
   it("active item - renders as expected when using keyboard and Space", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      focused: "L"
+      focused: "L",
     });
     wrapper.getDOMNode().focus();
     expect(formatTree(wrapper)).toMatchSnapshot();
@@ -314,7 +314,7 @@ describe("Tree", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
       focused: "L",
-      renderItem: renderItemWithFocusableContent
+      renderItem: renderItemWithFocusableContent,
     });
     wrapper.getDOMNode().focus();
     expect(formatTree(wrapper)).toMatchSnapshot();
@@ -335,7 +335,7 @@ describe("Tree", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
       focused: "L",
-      renderItem: renderItemWithFocusableContent
+      renderItem: renderItemWithFocusableContent,
     });
     wrapper.getDOMNode().focus();
     simulateKeyDown(wrapper, "Enter");
@@ -364,7 +364,7 @@ describe("Tree", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
       focused: "L",
-      renderItem: renderItemWithFocusableContent
+      renderItem: renderItemWithFocusableContent,
     });
     wrapper.getDOMNode().focus();
     simulateKeyDown(wrapper, "Enter");
@@ -384,7 +384,7 @@ describe("Tree", () => {
   it("renders as expected when given a focused item", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      focused: "G"
+      focused: "G",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
@@ -421,7 +421,7 @@ describe("Tree", () => {
   it("renders as expected when navigating up with the keyboard", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      focused: "L"
+      focused: "L",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
@@ -447,7 +447,7 @@ describe("Tree", () => {
   it("renders as expected navigating up with the keyboard on a root", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      focused: "A"
+      focused: "A",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
@@ -466,7 +466,7 @@ describe("Tree", () => {
   it("renders as expected when navigating down with the keyboard", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      focused: "K"
+      focused: "K",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
@@ -492,7 +492,7 @@ describe("Tree", () => {
   it("renders as expected navigating down with keyboard on last node", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      focused: "O"
+      focused: "O",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
@@ -511,7 +511,7 @@ describe("Tree", () => {
   it("renders as expected when navigating with right/left arrows", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      focused: "L"
+      focused: "L",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
@@ -550,7 +550,7 @@ describe("Tree", () => {
 
   it("renders as expected when navigating with left arrows on roots", () => {
     const wrapper = mountTree({
-      focused: "M"
+      focused: "M",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
@@ -575,7 +575,7 @@ describe("Tree", () => {
 
   it("renders as expected when navigating with home/end", () => {
     const wrapper = mountTree({
-      focused: "M"
+      focused: "M",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
@@ -643,7 +643,7 @@ describe("Tree", () => {
   it("renders as expected navigating with arrows on unexpandable roots", () => {
     const wrapper = mountTree({
       focused: "A",
-      isExpandable: item => false
+      isExpandable: item => false,
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
 
@@ -671,7 +671,7 @@ describe("Tree", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
       focused: "I",
-      onFocus
+      onFocus,
     });
 
     simulateKeyDown(wrapper, "ArrowUp");
@@ -693,7 +693,7 @@ describe("Tree", () => {
 
   it("focus treeRef when a node is clicked", () => {
     const wrapper = mountTree({
-      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
+      expanded: new Set("ABCDEFGHIJKLMNO".split("")),
     });
     const treeRef = wrapper
       .find("Tree")
@@ -710,7 +710,7 @@ describe("Tree", () => {
   it("doesn't focus treeRef when focused is null", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      focused: "A"
+      focused: "A",
     });
     const treeRef = wrapper
       .find("Tree")
@@ -724,7 +724,7 @@ describe("Tree", () => {
   it("ignores key strokes when pressing modifiers", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      focused: "L"
+      focused: "L",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
     expect(wrapper.getDOMNode().getAttribute("aria-activedescendant")).toBe(
@@ -736,13 +736,13 @@ describe("Tree", () => {
       { key: "ArrowDown" },
       { key: "ArrowUp" },
       { key: "ArrowLeft" },
-      { key: "ArrowRight" }
+      { key: "ArrowRight" },
     ];
     const modifiers = [
       { altKey: true },
       { ctrlKey: true },
       { metaKey: true },
-      { shiftKey: true }
+      { shiftKey: true },
     ];
 
     for (const key of testKeys) {
@@ -758,7 +758,7 @@ describe("Tree", () => {
 
   it("renders arrows as expected when nodes are expanded", () => {
     const wrapper = mountTree({
-      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
+      expanded: new Set("ABCDEFGHIJKLMNO".split("")),
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
 
@@ -784,14 +784,14 @@ describe("Tree", () => {
 
   it("uses isExpandable prop if it exists to render tree nodes", () => {
     const wrapper = mountTree({
-      isExpandable: item => item === "A"
+      isExpandable: item => item === "A",
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
   });
 
   it("adds the expected data-expandable attribute", () => {
     const wrapper = mountTree({
-      isExpandable: item => item === "A"
+      isExpandable: item => item === "A",
     });
     const nodes = getTreeNodes(wrapper);
     expect(nodes.at(0).prop("data-expandable")).toBe(true);
@@ -808,7 +808,7 @@ function simulateKeyDown(wrapper, key, options) {
     key,
     preventDefault: () => {},
     stopPropagation: () => {},
-    ...options
+    ...options,
   });
 }
 
@@ -904,7 +904,7 @@ var TEST_TREE = {
     L: [],
     M: ["N"],
     N: ["O"],
-    O: []
+    O: [],
   },
   parent: {
     A: null,
@@ -921,6 +921,6 @@ var TEST_TREE = {
     L: "E",
     M: null,
     N: "M",
-    O: "N"
-  }
+    O: "N",
+  },
 };

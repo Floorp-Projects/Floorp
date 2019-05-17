@@ -15,7 +15,7 @@ module.exports = {
     "src/test/mochitest/examples/",
     "<rootDir>/firefox",
     "package.json",
-    "<rootDir>/packages"
+    "<rootDir>/packages",
   ],
   modulePathIgnorePatterns: ["test/mochitest", "firefox"],
   collectCoverageFrom: [
@@ -24,17 +24,17 @@ module.exports = {
     "!src/test/**/*.js",
     "!src/components/stories/**/*.js",
     "!**/*.mock.js",
-    "!**/*.spec.js"
+    "!**/*.spec.js",
   ],
   transformIgnorePatterns: ["node_modules/(?!(devtools-|react-aria-))"],
   setupTestFrameworkScriptFile: "<rootDir>/src/test/tests-setup.js",
   setupFiles: ["<rootDir>/src/test/shim.js", "jest-localstorage-mock"],
   snapshotSerializers: [
     "jest-serializer-babel-ast",
-    "enzyme-to-json/serializer"
+    "enzyme-to-json/serializer",
   ],
   moduleNameMapper: {
     "\\.css$": "<rootDir>/src/test/__mocks__/styleMock.js",
-    "\\.svg$": "<rootDir>/src/test/__mocks__/svgMock.js"
-  }
+    "\\.svg$": "<rootDir>/src/test/__mocks__/svgMock.js",
+  },
 };

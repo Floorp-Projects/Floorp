@@ -48,5 +48,5 @@ export default {
   debuggee,
   objectInspector: objectInspector.reducer.default,
   eventListenerBreakpoints,
-  preview
+  preview,
 };

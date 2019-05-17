@@ -18,7 +18,7 @@ const arrowBtn = (onClick, type, className, tooltip) => {
     key: type,
     onClick,
     title: tooltip,
-    type
+    type,
   };
 
   return (
@@ -46,11 +46,11 @@ type Props = {
   size: string,
   summaryMsg: string,
   showClose: boolean,
-  isLoading: boolean
+  isLoading: boolean,
 };
 
 type State = {
-  history: Array<string>
+  history: Array<string>,
 };
 
 class SearchInput extends Component<Props, State> {
@@ -62,14 +62,14 @@ class SearchInput extends Component<Props, State> {
     hasPrefix: false,
     selectedItemId: "",
     size: "",
-    showClose: true
+    showClose: true,
   };
 
   constructor(props: Props) {
     super(props);
 
     this.state = {
-      history: []
+      history: [],
     };
   }
 
@@ -111,7 +111,7 @@ class SearchInput extends Component<Props, State> {
         "arrow-down",
         classnames("nav-btn", "next"),
         L10N.getFormatStr("editor.searchResults.nextResult")
-      )
+      ),
     ];
   }
 
@@ -199,12 +199,12 @@ class SearchInput extends Component<Props, State> {
       selectedItemId,
       showErrorEmoji,
       size,
-      showClose
+      showClose,
     } = this.props;
 
     const inputProps = {
       className: classnames({
-        empty: showErrorEmoji
+        empty: showErrorEmoji,
       }),
       onChange,
       onKeyDown: e => this.onKeyDown(e),
@@ -216,7 +216,7 @@ class SearchInput extends Component<Props, State> {
       placeholder,
       value: query,
       spellCheck: false,
-      ref: c => (this.$input = c)
+      ref: c => (this.$input = c),
     };
 
     return (

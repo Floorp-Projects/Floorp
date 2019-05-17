@@ -59,7 +59,7 @@ describe("PreviewFunction", () => {
       const item = {
         name: "",
         userDisplayName: "chuck",
-        displayName: "norris"
+        displayName: "norris",
       };
       const returnedSpan = render({ func: item });
       expect(
@@ -74,7 +74,7 @@ describe("PreviewFunction", () => {
     it('should use displayName if defined & no "userDisplayName" exist', () => {
       const item = {
         displayName: "norris",
-        name: "last"
+        name: "last",
       };
       const returnedSpan = render({ func: item });
       expect(
@@ -88,7 +88,7 @@ describe("PreviewFunction", () => {
 
     it('should use to name if no "userDisplayName"/"displayName" exist', () => {
       const item = {
-        name: "last"
+        name: "last",
       };
       const returnedSpan = render({ func: item });
       expect(
@@ -134,7 +134,7 @@ describe("PreviewFunction", () => {
     beforeAll(() => {
       const item = {
         name: "",
-        parameterNames: ["one", "two", "three"]
+        parameterNames: ["one", "two", "three"],
       };
       returnedSpan = render({ func: item });
       children = returnedSpan.children();

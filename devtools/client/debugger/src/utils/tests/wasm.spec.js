@@ -9,7 +9,7 @@ import {
   lineToWasmOffset,
   wasmOffsetToLine,
   clearWasmStates,
-  renderWasmText
+  renderWasmText,
 } from "../wasm.js";
 
 import { makeMockWasmSourceWithContent } from "../test-mockup";
@@ -20,7 +20,7 @@ describe("wasm", () => {
     binary:
       "\x00asm\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01`\x00\x00" +
       "\x03\x82\x80\x80\x80\x00\x01\x00\x06\x81\x80\x80\x80\x00\x00" +
-      "\n\x89\x80\x80\x80\x00\x01\x83\x80\x80\x80\x00\x00\x01\v"
+      "\n\x89\x80\x80\x80\x00\x01\x83\x80\x80\x80\x00\x00\x01\v",
   };
   const SIMPLE_WASM_TEXT = `(module
   (type $type0 (func))

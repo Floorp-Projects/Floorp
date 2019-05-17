@@ -10,7 +10,7 @@ const {
   interleave,
   isGrip,
   wrapRender,
-  ellipsisElement
+  ellipsisElement,
 } = require("./rep-utils");
 const PropRep = require("./prop-rep");
 const { MODE } = require("./constants");
@@ -30,7 +30,7 @@ GripMap.propTypes = {
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
   onInspectIconClick: PropTypes.func,
-  title: PropTypes.string
+  title: PropTypes.string,
 };
 
 function GripMap(props) {
@@ -38,7 +38,7 @@ function GripMap(props) {
 
   const config = {
     "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-object"
+    className: "objectBox objectBox-object",
   };
 
   const title = getTitle(props, object);
@@ -55,14 +55,14 @@ function GripMap(props) {
     title,
     span(
       {
-        className: "objectLeftBrace"
+        className: "objectLeftBrace",
       },
       " { "
     ),
     ...interleave(propsArray, ", "),
     span(
       {
-        className: "objectRightBrace"
+        className: "objectRightBrace",
       },
       " }"
     )
@@ -73,7 +73,7 @@ function getTitle(props, object) {
   const title = props.title || (object && object.class ? object.class : "Map");
   return span(
     {
-      className: "objectTitle"
+      className: "objectTitle",
     },
     title,
     lengthBubble({
@@ -81,7 +81,7 @@ function getTitle(props, object) {
       mode: props.mode,
       maxLengthMap,
       getLength,
-      showZeroLength: true
+      showZeroLength: true,
     })
   );
 }
@@ -158,7 +158,7 @@ function getEntries(props, entries, indexes) {
       mode: MODE.TINY,
       onDOMNodeMouseOver,
       onDOMNodeMouseOut,
-      onInspectIconClick
+      onInspectIconClick,
     });
   });
 }
@@ -211,5 +211,5 @@ module.exports = {
   rep: wrapRender(GripMap),
   supportsObject,
   maxLengthMap,
-  getLength
+  getLength,
 };

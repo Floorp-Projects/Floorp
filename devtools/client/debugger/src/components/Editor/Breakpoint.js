@@ -18,7 +18,7 @@ import type { EditorItemActions } from "./menus/editor";
 import type {
   Source,
   Breakpoint as BreakpointType,
-  ThreadContext
+  ThreadContext,
 } from "../../types";
 
 const breakpointSvg = document.createElement("div");
@@ -31,7 +31,7 @@ type Props = {
   selectedSource: Source,
   editor: Object,
   breakpointActions: BreakpointItemActions,
-  editorActions: EditorItemActions
+  editorActions: EditorItemActions,
 };
 
 class Breakpoint extends PureComponent<Props> {
@@ -54,7 +54,7 @@ class Breakpoint extends PureComponent<Props> {
 
     bp.className = classnames("editor new-breakpoint", {
       "breakpoint-disabled": breakpoint.disabled,
-      "folding-enabled": features.codeFolding
+      "folding-enabled": features.codeFolding,
     });
 
     bp.onmousedown = this.onClick;
@@ -70,7 +70,7 @@ class Breakpoint extends PureComponent<Props> {
       breakpointActions,
       editorActions,
       breakpoint,
-      selectedSource
+      selectedSource,
     } = this.props;
 
     // ignore right clicks

@@ -13,13 +13,13 @@ export const stop = dispatcher.stop.bind(dispatcher);
 
 type PrettyPrintOpts = {
   text: string,
-  url: string
+  url: string,
 };
 
 export async function prettyPrint({ text, url }: PrettyPrintOpts) {
   return dispatcher.invoke("prettyPrint", {
     url,
     indent: 2,
-    sourceText: text
+    sourceText: text,
   });
 }

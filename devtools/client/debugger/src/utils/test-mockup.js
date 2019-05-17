@@ -24,7 +24,7 @@ import type {
   SourceWithContent,
   TextSourceContent,
   WasmSourceContent,
-  Why
+  Why,
 } from "../types";
 import * as asyncValue from "./async-value";
 
@@ -38,7 +38,7 @@ function makeMockSource(url: string = "url", id: SourceId = "source"): Source {
     introductionUrl: null,
     introductionType: undefined,
     isWasm: false,
-    isExtension: false
+    isExtension: false,
   };
 }
 
@@ -56,9 +56,9 @@ function makeMockSourceWithContent(
       ? asyncValue.fulfilled({
           type: "text",
           value: text,
-          contentType
+          contentType,
         })
-      : null
+      : null,
   };
 }
 
@@ -75,8 +75,8 @@ function makeMockSourceAndContent(
     content: {
       type: "text",
       value: text,
-      contentType
-    }
+      contentType,
+    },
   };
 }
 
@@ -90,12 +90,12 @@ function makeMockWasmSource(): Source {
     introductionUrl: null,
     introductionType: undefined,
     isWasm: true,
-    isExtension: false
+    isExtension: false,
   };
 }
 
 function makeMockWasmSourceWithContent(text: {|
-  binary: Object
+  binary: Object,
 |}): SourceWithContentAndType<WasmSourceContent> {
   const source = makeMockWasmSource();
 
@@ -103,8 +103,8 @@ function makeMockWasmSourceWithContent(text: {|
     source,
     content: asyncValue.fulfilled({
       type: "wasm",
-      value: text
-    })
+      value: text,
+    }),
   };
 }
 
@@ -118,11 +118,11 @@ function makeMockScope(
     parent,
     bindings: {
       arguments: [],
-      variables: {}
+      variables: {},
     },
     object: null,
     function: null,
-    type
+    type,
   };
 }
 
@@ -149,7 +149,7 @@ function makeMockBreakpoint(
     disabled: false,
     text: "text",
     originalText: "text",
-    options: {}
+    options: {},
   };
 }
 
@@ -169,7 +169,7 @@ function makeMockFrame(
     generatedLocation: location,
     source,
     scope,
-    this: {}
+    this: {},
   };
 }
 
@@ -193,7 +193,7 @@ function makeMockExpression(value: Object): Expression {
     input: "input",
     value,
     from: "from",
-    updating: false
+    updating: false,
   };
 }
 
@@ -203,7 +203,7 @@ const mockthreadcx = {
   navigateCounter: 0,
   thread: "FakeThread",
   pauseCounter: 0,
-  isPaused: false
+  isPaused: false,
 };
 
 export {
@@ -221,5 +221,5 @@ export {
   makeWhyThrow,
   makeMockExpression,
   mockcx,
-  mockthreadcx
+  mockthreadcx,
 };

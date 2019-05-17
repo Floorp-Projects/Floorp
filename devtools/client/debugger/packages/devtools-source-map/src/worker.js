@@ -17,14 +17,14 @@ const {
   getFileGeneratedRange,
   hasMappedSource,
   clearSourceMaps,
-  applySourceMap
+  applySourceMap,
 } = require("./source-map");
 
 const { getOriginalStackFrames } = require("./utils/getOriginalStackFrames");
 const { setAssetRootURL } = require("./utils/wasmAsset");
 
 const {
-  workerUtils: { workerHandler }
+  workerUtils: { workerHandler },
 } = require("devtools-utils");
 
 // The interface is implemented in source-map to be
@@ -45,5 +45,5 @@ self.onmessage = workerHandler({
   getFileGeneratedRange,
   hasMappedSource,
   applySourceMap,
-  clearSourceMaps
+  clearSourceMaps,
 });

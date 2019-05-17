@@ -25,7 +25,7 @@ export function getClosestPath(
           closestPath = path;
         }
       }
-    }
+    },
   });
 
   if (!closestPath) {

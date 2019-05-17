@@ -10,7 +10,7 @@ import path from "path";
 import type {
   Source,
   TextSourceContent,
-  SourceWithContent
+  SourceWithContent,
 } from "../../../../types";
 import { makeMockSourceAndContent } from "../../../../utils/test-mockup";
 import { setSource } from "../../sources";
@@ -42,7 +42,7 @@ function getSourceContent(
   return {
     type: "text",
     value: text,
-    contentType
+    contentType,
   };
 }
 
@@ -65,11 +65,11 @@ export function populateSource(name: string, type?: string): SourceWithContent {
     id: source.id,
     text: content.value,
     contentType: content.contentType,
-    isWasm: false
+    isWasm: false,
   });
   return {
     source,
-    content: asyncValue.fulfilled(content)
+    content: asyncValue.fulfilled(content),
   };
 }
 
@@ -100,10 +100,10 @@ export function populateOriginalSource(
     id: source.id,
     text: content.value,
     contentType: content.contentType,
-    isWasm: false
+    isWasm: false,
   });
   return {
     source,
-    content: asyncValue.fulfilled(content)
+    content: asyncValue.fulfilled(content),
   };
 }

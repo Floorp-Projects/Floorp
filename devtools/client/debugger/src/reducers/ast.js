@@ -23,7 +23,7 @@ export type EmptyLinesMap = { [k: string]: EmptyLinesType };
 export type SymbolsMap = { [k: string]: Symbols };
 
 export type SourceMetaDataType = {
-  framework: ?string
+  framework: ?string,
 };
 
 export type SourceMetaDataMap = { [k: string]: SourceMetaDataType };
@@ -31,14 +31,14 @@ export type SourceMetaDataMap = { [k: string]: SourceMetaDataType };
 export type ASTState = {
   +symbols: SymbolsMap,
   +outOfScopeLocations: ?Array<AstLocation>,
-  +inScopeLines: ?Array<number>
+  +inScopeLines: ?Array<number>,
 };
 
 export function initialASTState(): ASTState {
   return {
     symbols: {},
     outOfScopeLocations: null,
-    inScopeLines: null
+    inScopeLines: null,
   };
 }
 
@@ -49,14 +49,14 @@ function update(state: ASTState = initialASTState(), action: Action): ASTState {
       if (action.status === "start") {
         return {
           ...state,
-          symbols: { ...state.symbols, [sourceId]: { loading: true } }
+          symbols: { ...state.symbols, [sourceId]: { loading: true } },
         };
       }
 
       const value = ((action: any): DonePromiseAction).value;
       return {
         ...state,
-        symbols: { ...state.symbols, [sourceId]: value }
+        symbols: { ...state.symbols, [sourceId]: value },
       };
     }
 

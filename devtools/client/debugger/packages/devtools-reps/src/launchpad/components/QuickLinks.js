@@ -12,7 +12,7 @@ const samples = require("../samples.js");
 class QuickLinks extends Component {
   static get propTypes() {
     return {
-      evaluate: PropTypes.func.isRequired
+      evaluate: PropTypes.func.isRequired,
     };
   }
 
@@ -39,7 +39,7 @@ class QuickLinks extends Component {
               : `Add ${length} ${label} sample expression${
                   length > 1 ? "s" : ""
                 }`,
-          onClick: () => this.evaluateExpressions(expressions)
+          onClick: () => this.evaluateExpressions(expressions),
         },
         label
       );

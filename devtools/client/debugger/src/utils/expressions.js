@@ -36,7 +36,7 @@ export function getValue(expression: Expression) {
   if (!value) {
     return {
       path: expression.from,
-      value: { unavailable: true }
+      value: { unavailable: true },
     };
   }
 
@@ -46,14 +46,14 @@ export function getValue(expression: Expression) {
     }
     return {
       path: value.from,
-      value: value.exception
+      value: value.exception,
     };
   }
 
   if (value.error) {
     return {
       path: value.from,
-      value: value.error
+      value: value.error,
     };
   }
 
@@ -70,12 +70,12 @@ export function getValue(expression: Expression) {
   if (typeof value.result == "object") {
     return {
       path: value.result.actor,
-      value: value.result
+      value: value.result,
     };
   }
 
   return {
     path: value.input,
-    value: value.result
+    value: value.result,
   };
 }

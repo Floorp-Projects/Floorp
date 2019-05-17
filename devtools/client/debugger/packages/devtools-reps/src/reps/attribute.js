@@ -15,7 +15,7 @@ const { rep: StringRep } = require("./string");
  * Renders DOM attribute
  */
 Attribute.propTypes = {
-  object: PropTypes.object.isRequired
+  object: PropTypes.object.isRequired,
 };
 
 function Attribute(props) {
@@ -25,7 +25,7 @@ function Attribute(props) {
   return span(
     {
       "data-link-actor-id": object.actor,
-      className: "objectBox-Attr"
+      className: "objectBox-Attr",
     },
     span({ className: "attrName" }, getTitle(object)),
     span({ className: "attrEqual" }, "="),
@@ -48,5 +48,5 @@ function supportsObject(grip, noGrip = false) {
 
 module.exports = {
   rep: wrapRender(Attribute),
-  supportsObject
+  supportsObject,
 };

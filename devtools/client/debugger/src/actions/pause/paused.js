@@ -7,7 +7,7 @@ import {
   getHiddenBreakpoint,
   isEvaluatingExpression,
   getSelectedFrame,
-  getThreadContext
+  getThreadContext,
 } from "../../selectors";
 
 import { mapFrames } from ".";
@@ -38,7 +38,7 @@ export function paused(pauseInfo: Pause) {
       thread,
       why,
       frames,
-      selectedFrameId: topFrame ? topFrame.id : undefined
+      selectedFrameId: topFrame ? topFrame.id : undefined,
     });
 
     // Get a context capturing the newly paused and selected thread.

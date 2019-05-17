@@ -22,7 +22,7 @@ describe("test DateTime", () => {
   it("renders DateTime as expected", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -40,7 +40,7 @@ describe("test invalid DateTime", () => {
   it("renders expected text for invalid date", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 

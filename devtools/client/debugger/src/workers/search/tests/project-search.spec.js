@@ -20,7 +20,7 @@ describe("project search", () => {
     const content = {
       type: "text",
       value: text,
-      contentType: undefined
+      contentType: undefined,
     };
 
     const matches = findSourceMatches("bar.js", content, needle);
@@ -32,7 +32,7 @@ describe("project search", () => {
     const content = {
       type: "text",
       value: text,
-      contentType: undefined
+      contentType: undefined,
     };
     const matches = findSourceMatches("bar.js", content, needle);
     expect(matches).toEqual(emptyResults);

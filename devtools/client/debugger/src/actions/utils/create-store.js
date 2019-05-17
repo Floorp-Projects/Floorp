@@ -29,7 +29,7 @@ type ReduxStoreOptions = {
   history?: Array<Object>,
   middleware?: Function[],
   log?: boolean,
-  timing?: boolean
+  timing?: boolean,
 };
 
 /**
@@ -55,7 +55,7 @@ const configureStore = (opts: ReduxStoreOptions = {}) => {
     // operate on "already transformed" actions. Actions going through
     // them shouldn't have any special fields like promises, they
     // should just be normal JSON objects.
-    waitUntilService
+    waitUntilService,
   ];
 
   if (opts.history) {

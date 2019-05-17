@@ -39,7 +39,7 @@ export type State = {
   sourceActors: SourceActorsState,
   tabs: TabList,
   ui: Record<UIState>,
-  quickOpen: Record<QuickOpenState>
+  quickOpen: Record<QuickOpenState>,
 };
 
 export type Selector<T> = State => T;
@@ -47,13 +47,13 @@ export type Selector<T> = State => T;
 export type PendingSelectedLocation = {
   url: string,
   line?: number,
-  column?: number
+  column?: number,
 };
 
 export type {
   SourcesMap,
   SourcesMapByThread,
-  SourceResourceState
+  SourceResourceState,
 } from "./sources";
 export type { ActiveSearchType, OrientationType } from "./ui";
 export type { BreakpointsMap, XHRBreakpointsList } from "./breakpoints";

@@ -26,7 +26,7 @@ export function simplifyDisplayName(displayName: string | void): string | void {
     objectProperty,
     arrayProperty,
     functionProperty,
-    annonymousProperty
+    annonymousProperty,
   ];
 
   for (const reg of scenarios) {
@@ -41,28 +41,28 @@ export function simplifyDisplayName(displayName: string | void): string | void {
 
 const displayNameMap = {
   Babel: {
-    tryCatch: "Async"
+    tryCatch: "Async",
   },
   Backbone: {
     "extend/child": "Create Class",
-    ".create": "Create Model"
+    ".create": "Create Model",
   },
   jQuery: {
-    "jQuery.event.dispatch": "Dispatch Event"
+    "jQuery.event.dispatch": "Dispatch Event",
   },
   React: {
     // eslint-disable-next-line max-len
     "ReactCompositeComponent._renderValidatedComponentWithoutOwnerOrContext/renderedElement<":
       "Render",
-    _renderValidatedComponentWithoutOwnerOrContext: "Render"
+    _renderValidatedComponentWithoutOwnerOrContext: "Render",
   },
   VueJS: {
-    "renderMixin/Vue.prototype._render": "Render"
+    "renderMixin/Vue.prototype._render": "Render",
   },
   Webpack: {
     // eslint-disable-next-line camelcase
-    __webpack_require__: "Bootstrap"
-  }
+    __webpack_require__: "Bootstrap",
+  },
 };
 
 function mapDisplayNames(frame, library) {
@@ -78,13 +78,13 @@ function getFrameDisplayName(frame: Frame): string {
     displayName,
     originalDisplayName,
     userDisplayName,
-    name
+    name,
   } = (frame: any);
   return originalDisplayName || userDisplayName || displayName || name;
 }
 
 type formatDisplayNameParams = {
-  shouldMapDisplayName: boolean
+  shouldMapDisplayName: boolean,
 };
 export function formatDisplayName(
   frame: Frame,

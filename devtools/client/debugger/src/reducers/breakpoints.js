@@ -21,7 +21,7 @@ import type {
   XHRBreakpoint,
   Breakpoint,
   BreakpointId,
-  SourceLocation
+  SourceLocation,
 } from "../types";
 import type { Action } from "../actions/types";
 
@@ -31,7 +31,7 @@ export type XHRBreakpointsList = $ReadOnlyArray<XHRBreakpoint>;
 export type BreakpointsState = {
   breakpoints: BreakpointsMap,
   xhrBreakpoints: XHRBreakpointsList,
-  breakpointsDisabled: boolean
+  breakpointsDisabled: boolean,
 };
 
 export function initialBreakpointsState(
@@ -40,7 +40,7 @@ export function initialBreakpointsState(
   return {
     breakpoints: {},
     xhrBreakpoints: xhrBreakpoints,
-    breakpointsDisabled: false
+    breakpointsDisabled: false,
   };
 }
 
@@ -97,14 +97,14 @@ function addXHRBreakpoint(state, action) {
   if (existingBreakpointIndex === -1) {
     return {
       ...state,
-      xhrBreakpoints: [...xhrBreakpoints, breakpoint]
+      xhrBreakpoints: [...xhrBreakpoints, breakpoint],
     };
   } else if (xhrBreakpoints[existingBreakpointIndex] !== breakpoint) {
     const newXhrBreakpoints = [...xhrBreakpoints];
     newXhrBreakpoints[existingBreakpointIndex] = breakpoint;
     return {
       ...state,
-      xhrBreakpoints: newXhrBreakpoints
+      xhrBreakpoints: newXhrBreakpoints,
     };
   }
 
@@ -121,7 +121,7 @@ function removeXHRBreakpoint(state, action) {
 
   return {
     ...state,
-    xhrBreakpoints: xhrBreakpoints.filter(bp => !isEqual(bp, breakpoint))
+    xhrBreakpoints: xhrBreakpoints.filter(bp => !isEqual(bp, breakpoint)),
   };
 }
 
@@ -132,7 +132,7 @@ function updateXHRBreakpoint(state, action) {
   newXhrBreakpoints[index] = breakpoint;
   return {
     ...state,
-    xhrBreakpoints: newXhrBreakpoints
+    xhrBreakpoints: newXhrBreakpoints,
   };
 }
 

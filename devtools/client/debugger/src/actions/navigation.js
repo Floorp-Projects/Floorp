@@ -31,7 +31,7 @@ export function willNavigate(event: Object) {
     getState,
     client,
     sourceMaps,
-    parser
+    parser,
   }: ThunkArgs) {
     sourceQueue.clear();
     sourceMaps.clearSourceMaps();
@@ -43,7 +43,7 @@ export function willNavigate(event: Object) {
 
     dispatch({
       type: "NAVIGATE",
-      mainThread: { ...thread, url: event.url }
+      mainThread: { ...thread, url: event.url },
     });
   };
 }
@@ -61,7 +61,7 @@ export function connect(
         type: "CONNECT",
         mainThread: { url, actor, type: -1, name: "" },
         canRewind,
-        isWebExtension
+        isWebExtension,
       }: Action)
     );
   };

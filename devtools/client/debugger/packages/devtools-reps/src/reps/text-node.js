@@ -21,7 +21,7 @@ TextNode.propTypes = {
   mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func
+  onInspectIconClick: PropTypes.func,
 };
 
 function TextNode(props) {
@@ -30,12 +30,12 @@ function TextNode(props) {
     mode = MODE.SHORT,
     onDOMNodeMouseOver,
     onDOMNodeMouseOut,
-    onInspectIconClick
+    onInspectIconClick,
   } = props;
 
   const baseConfig = {
     "data-link-actor-id": grip.actor,
-    className: "objectBox objectBox-textNode"
+    className: "objectBox objectBox-textNode",
   };
   let inspectIcon;
   const isInTree = grip.preview && grip.preview.isConnected === true;
@@ -43,13 +43,13 @@ function TextNode(props) {
   if (isInTree) {
     if (onDOMNodeMouseOver) {
       Object.assign(baseConfig, {
-        onMouseOver: _ => onDOMNodeMouseOver(grip)
+        onMouseOver: _ => onDOMNodeMouseOver(grip),
       });
     }
 
     if (onDOMNodeMouseOut) {
       Object.assign(baseConfig, {
-        onMouseOut: onDOMNodeMouseOut
+        onMouseOut: onDOMNodeMouseOut,
       });
     }
 
@@ -59,7 +59,7 @@ function TextNode(props) {
         draggable: false,
         // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
         title: "Click to select the node in the inspector",
-        onClick: e => onInspectIconClick(grip, e)
+        onClick: e => onInspectIconClick(grip, e),
       });
     }
   }
@@ -97,5 +97,5 @@ function supportsObject(grip, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(TextNode),
-  supportsObject
+  supportsObject,
 };
