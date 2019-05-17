@@ -10,7 +10,7 @@ class TestComponents(private val context: Context) : Components(context) {
     override val services by lazy { Services(backgroundServices.accountManager, useCases.tabsUseCases) }
     override val core by lazy { TestCore(context) }
     override val search by lazy { Search(context) }
-    override val useCases by lazy { UseCases(context, core.sessionManager, search.searchEngineManager) }
+    override val useCases by lazy { UseCases(context, core.sessionManager, core.engine.settings, search.searchEngineManager) }
     override val utils by lazy {
         Utilities(
             context,

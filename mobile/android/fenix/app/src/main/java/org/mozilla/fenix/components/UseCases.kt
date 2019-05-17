@@ -7,8 +7,10 @@ package org.mozilla.fenix.components
 import android.content.Context
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.Settings
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.test.Mockable
 
@@ -20,6 +22,7 @@ import org.mozilla.fenix.test.Mockable
 class UseCases(
     private val context: Context,
     private val sessionManager: SessionManager,
+    private val engineSettings: Settings,
     private val searchEngineManager: SearchEngineManager
 ) {
     /**
@@ -36,4 +39,9 @@ class UseCases(
      * Use cases that provide search engine integration.
      */
     val searchUseCases by lazy { SearchUseCases(context, searchEngineManager, sessionManager) }
+
+    /**
+     * Use cases that provide settings management.
+     */
+    val settingsUseCases by lazy { SettingsUseCases(engineSettings, sessionManager) }
 }

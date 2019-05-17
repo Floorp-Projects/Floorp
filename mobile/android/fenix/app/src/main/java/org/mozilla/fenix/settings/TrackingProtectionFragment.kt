@@ -12,7 +12,6 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
 import org.mozilla.fenix.exceptions.ExceptionDomains
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.utils.Settings
@@ -33,20 +32,12 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         val preferenceTP = findPreference<SwitchPreference>(trackingProtectionKey)
         preferenceTP?.onPreferenceChangeListener =
             Preference.OnPreferenceChangeListener { _, newValue ->
-                Settings.getInstance(context!!).setTrackingProtection(newValue = newValue as Boolean)
-                with(requireComponents.core) {
-                    val policy =
-                        createTrackingProtectionPolicy(newValue)
-                    engine.settings.trackingProtectionPolicy = policy
-                    with(sessionManager) {
-                        sessions.forEach {
-                            if (newValue)
-                                getEngineSession(it)?.enableTrackingProtection(policy) else
-                                getEngineSession(it)?.disableTrackingProtection()
-                        }
-                    }
+                Settings.getInstance(requireContext()).setTrackingProtection(newValue = newValue as Boolean)
+                with(requireComponents) {
+                    val policy = core.createTrackingProtectionPolicy(newValue)
+                    useCases.settingsUseCases.updateTrackingProtection.invoke(policy)
+                    useCases.sessionUseCases.reload.invoke()
                 }
-                requireContext().components.useCases.sessionUseCases.reload.invoke()
                 true
             }
 
