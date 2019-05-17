@@ -562,6 +562,11 @@ def generate_beetmover_upstream_artifacts(config, job, platform, locale=None, de
                 filename,
             ))
 
+        if getattr(job['dependencies'][dep], 'release_artifacts', None):
+            paths = [
+                path for path in paths
+                if path in job['dependencies'][dep].release_artifacts]
+
         if not paths:
             continue
 
