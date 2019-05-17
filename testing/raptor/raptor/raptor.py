@@ -1018,6 +1018,9 @@ class RaptorAndroid(Raptor):
 
             self.run_test_setup(test)
 
+            # clear the android app data before the next app startup
+            self.clear_app_data()
+
             if test['browser_cycle'] == 1:
                 if test.get('playback') is not None:
                     self.start_playback(test)
@@ -1034,9 +1037,6 @@ class RaptorAndroid(Raptor):
             else:
                 # double-check to ensure app has been shutdown
                 self.device.stop_application(self.config['binary'])
-
-                # clear the android app data before the next app startup
-                self.clear_app_data()
 
                 # initial browser profile was already created before run_test was called;
                 # now additional browser cycles we want to create a new one each time
