@@ -216,25 +216,14 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
 
   // This method is called by NetworkMonitor instance when a new request is fired
   onNetworkEvent(event) {
-    const { channelId, cause, url } = event;
+    const { channelId } = event;
 
     const actor = this.getNetworkEventActor(channelId);
     this._netEvents.set(channelId, actor);
 
-    // Find the ID which the stack trace collector will use to save this
-    // channel's stack trace.
-    let id;
-    if (cause.type == "websocket") {
-      // Use the URL, but convert from the http URL which this channel uses to
-      // the original websocket URL which triggered this channel's construction.
-      id = url.replace(/^http/, "ws");
-    } else {
-      id = channelId;
-    }
-
-    event.cause.stacktrace = this.stackTraces.has(id);
+    event.cause.stacktrace = this.stackTraces.has(channelId);
     if (event.cause.stacktrace) {
-      this.stackTraces.delete(id);
+      this.stackTraces.delete(channelId);
     }
     actor.init(event);
 
