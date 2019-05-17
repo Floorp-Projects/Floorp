@@ -31,11 +31,11 @@ import "./Popup.css";
 
 import type { Coords } from "../../shared/Popover";
 import type { ThreadContext } from "../../../types";
-import type { PreviewValue } from "../../../reducers/types";
+import type { Preview } from "../../../reducers/types";
 
 type Props = {
   cx: ThreadContext,
-  preview: PreviewValue,
+  preview: Preview,
   editor: any,
   editorRef: ?HTMLDivElement,
   addExpression: typeof actions.addExpression,

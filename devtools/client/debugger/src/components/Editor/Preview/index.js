@@ -14,13 +14,13 @@ import actions from "../../../actions";
 
 import type { ThreadContext } from "../../../types";
 
-import type { Preview as PreviewType } from "../../../reducers/ast";
+import type { Preview as PreviewType } from "../../../reducers/types";
 
 type Props = {
   cx: ThreadContext,
   editor: any,
   editorRef: ?HTMLDivElement,
-  preview: PreviewType,
+  preview: ?PreviewType,
   clearPreview: typeof actions.clearPreview,
   addExpression: typeof actions.addExpression,
   updatePreview: typeof actions.updatePreview
@@ -78,16 +78,12 @@ class Preview extends PureComponent<Props, State> {
   updateHighlight(prevProps) {
     const { preview } = this.props;
 
-    if (preview && !preview.updating && preview.target.matches(":hover")) {
+    if (preview && preview.target.matches(":hover")) {
       const target = getElementFromPos(preview.cursorPos);
       target && target.classList.add("preview-selection");
     }
 
-    if (
-      prevProps.preview &&
-      !prevProps.preview.updating &&
-      prevProps.preview !== preview
-    ) {
+    if (prevProps.preview && prevProps.preview !== preview) {
       const target = getElementFromPos(prevProps.preview.cursorPos);
       target && target.classList.remove("preview-selection");
     }
@@ -123,7 +119,7 @@ class Preview extends PureComponent<Props, State> {
 
   render() {
     const { preview } = this.props;
-    if (!preview || preview.updating || this.state.selecting) {
+    if (!preview || this.state.selecting) {
       return null;
     }
 

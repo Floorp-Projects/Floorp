@@ -7,7 +7,6 @@
 import type { SymbolDeclarations, AstLocation } from "../../workers/parser";
 import type { PromiseAction } from "../utils/middleware/promise";
 import type { Context } from "../../types";
-import type { PreviewValue } from "../../reducers/types";
 
 export type ASTAction =
   | PromiseAction<
@@ -27,15 +26,4 @@ export type ASTAction =
       +type: "IN_SCOPE_LINES",
       +cx: Context,
       +lines: number[]
-    |}
-  | PromiseAction<
-      {|
-        +type: "SET_PREVIEW",
-        +cx: Context
-      |},
-      PreviewValue
-    >
-  | {|
-      +type: "CLEAR_SELECTION",
-      +cx: Context
     |};
