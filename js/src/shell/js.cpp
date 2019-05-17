@@ -1768,9 +1768,10 @@ static bool LoadScript(JSContext* cx, unsigned argc, Value* vp,
         .setNoScriptRval(true);
 
     RootedValue unused(cx);
-    if (!(compileOnly
-              ? JS::CompileUtf8Path(cx, opts, filename.get()) != nullptr
-              : JS::EvaluateUtf8Path(cx, opts, filename.get(), &unused))) {
+    if (!(compileOnly ? JS::CompileUtf8PathDontInflate(
+                            cx, opts, filename.get()) != nullptr
+                      : JS::EvaluateUtf8PathDontInflate(
+                            cx, opts, filename.get(), &unused))) {
       return false;
     }
   }
