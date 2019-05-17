@@ -123,12 +123,10 @@ var PrintUtils = {
    *        The <xul:browser> that the nsIDOMWindow for aWindowID belongs to.
    */
   printWindow(aWindowID, aBrowser) {
-    let mm = aBrowser.messageManager;
-    let defaultPrinterName = this._getDefaultPrinterName();
-    mm.sendAsyncMessage("Printing:Print", {
+    aBrowser.messageManager.sendAsyncMessage("Printing:Print", {
       windowID: aWindowID,
       simplifiedMode: this._shouldSimplify,
-      defaultPrinterName,
+      defaultPrinterName: this._getDefaultPrinterName(),
     });
   },
 
