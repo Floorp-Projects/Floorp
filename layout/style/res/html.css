@@ -709,7 +709,7 @@ spacer {
 }
 
 canvas {
-  -moz-user-select: none;
+  user-select: none;
 }
 
 /* focusable content: anything w/ tabindex >=0 is focusable, but we

@@ -103,7 +103,7 @@ input {
   letter-spacing: normal;
   cursor: text;
   text-indent: 0;
-  -moz-user-select: text;
+  user-select: text;
   text-shadow: none;
   overflow-clip-box: padding-box content-box;
 }
@@ -130,7 +130,7 @@ textarea {
   vertical-align: text-bottom;
   cursor: text;
   resize: both;
-  -moz-user-select: text;
+  user-select: text;
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-clip-box: content-box;
@@ -231,7 +231,7 @@ select {
   text-align: start;
   cursor: default;
   box-sizing: border-box;
-  -moz-user-select: none;
+  user-select: none;
   -moz-appearance: menulist;
   border-width: 2px;
   border-style: inset;
@@ -323,7 +323,7 @@ select > button[orientation="right"]:active {
   color: unset;
   white-space: nowrap;
   text-align: unset;
-  -moz-user-select: none;
+  user-select: none;
   /* Make sure to size correctly if the combobox has a non-auto block-size. */
   block-size: 100% ! important;
   box-sizing: border-box ! important;
@@ -342,7 +342,7 @@ option {
    * different one there.
    */
   line-height: normal !important;
-  -moz-user-select: none;
+  user-select: none;
   text-indent: 0;
   white-space: nowrap !important;
   word-wrap: normal !important;
@@ -376,7 +376,7 @@ optgroup {
   font-style: italic;
   font-weight: bold;
   font-size: unset;
-  -moz-user-select: none;
+  user-select: none;
   text-indent: 0;
   white-space: nowrap !important;
   word-wrap: normal !important;
@@ -396,7 +396,7 @@ optgroup:before {
 *|*::-moz-dropdown-list {
   z-index: 2147483647;
   background-color: inherit;
-  -moz-user-select: none;
+  user-select: none;
   position: static !important;
   float: none !important;
 
@@ -490,7 +490,7 @@ input[type="file"] > label {
   font-size: unset;
   letter-spacing: unset;
 
-  -moz-user-select: none;
+  user-select: none;
   unicode-bidi: plaintext;
 }
 
@@ -597,7 +597,7 @@ input[type="submit"] {
   background-color: ButtonFace;
   cursor: default;
   box-sizing: border-box;
-  -moz-user-select: none;
+  user-select: none;
 }
 
 /* Text-related properties for buttons: these ones are not shared with
@@ -876,7 +876,7 @@ input[type=range] {
   padding: unset;
   border: unset;
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
-  -moz-user-select: none ! important;
+  user-select: none !important;
 }
 
 /**
@@ -907,7 +907,7 @@ input[type=range]::-moz-range-track {
   direction: unset !important;
   block-size: 0.2em;
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
-  -moz-user-select: none ! important;
+  user-select: none !important;
 }
 
 /**
@@ -931,7 +931,7 @@ input[type=range]::-moz-range-progress {
   width: 0.2em;
   height: 0.2em;
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
-  -moz-user-select: none ! important;
+  user-select: none !important;
 }
 
 /**
@@ -957,7 +957,7 @@ input[type=range]::-moz-range-thumb {
   border-radius: 0.5em;
   background-color: #F0F0F0;
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
-  -moz-user-select: none ! important;
+  user-select: none !important;
 }
 
 input[type="number"] {
