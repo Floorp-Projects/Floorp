@@ -10,7 +10,7 @@ import {
   type ResourceState,
   type Id,
   type ResourceBound,
-  type ResourceIdentity
+  type ResourceIdentity,
 } from "./core";
 
 export type ResourceMap<R: ResourceBound, Mapped> = (

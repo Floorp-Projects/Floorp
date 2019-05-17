@@ -101,12 +101,41 @@ devtools/shared/tests/mochitest/*.html
 devtools/shared/webconsole/test/test_*.html
 devtools/client/webreplay/mochitest/examples/*.html
 
-# Soon to be removed, the new/ directory is explicitly excluded below due to
-# also being an imported repository.
-devtools/client/debugger/**
+# Ignore devtools debugger files
+# Keep in sync with devtools/client/debugger/.eslintignore
+devtools/client/debugger/assets/*
+devtools/client/debugger/src/test/examples/**
+devtools/client/debugger/src/test/integration/**
+devtools/client/debugger/src/test/unit-sources/**
+devtools/client/debugger/src/**/fixtures/**
+devtools/client/debugger/src/test/mochitest/**
+devtools/client/debugger/bin/
+devtools/client/debugger/packages/**/fixtures/**
+devtools/client/debugger/node_modules
+devtools/client/debugger/out
+
+# Ignore devtools debugger files
+# Keep in sync with devtools/client/debugger/.prettierignore
+devtools/client/debugger/src/workers/parser/tests/fixtures/functionNames.js
+devtools/client/debugger/src/workers/parser/tests/fixtures/scopes/*.js
+devtools/client/debugger/src/workers/parser/tests/fixtures/pause/*.js
+devtools/client/debugger/src/test/mochitest/examples/babel/polyfill-bundle.js
+devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/input.js
+devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/output.js
+devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/output.js.map
+devtools/client/debugger/src/test/mochitest/examples/ember/quickstart
+
+# Ignore devtools debugger files which aren't intended for linting, and also
+# aren't included in any .eslintignore or .prettierignore file.
+# See https://github.com/firefox-devtools/debugger/blob/master/package.json#L24
+devtools/client/debugger/configs/**
+devtools/client/debugger/dist/**
+devtools/client/debugger/flow-typed/**
+devtools/client/debugger/images/**
+devtools/client/debugger/test/**
+devtools/client/debugger/index.html
 
 # Ignore devtools imported repositories
-devtools/client/debugger/**
 devtools/client/shared/components/reps/**
 
 # Ignore devtools preferences files

@@ -6,12 +6,12 @@ jest.mock("devtools-utils/src/network-request");
 const {
   getOriginalLocation,
   getGeneratedLocation,
-  clearSourceMaps
+  clearSourceMaps,
 } = require("../source-map");
 
 const { setupBundleFixture } = require("./helpers");
 
-describe("getOriginalLocation", async () => {
+describe("getOriginalLocation", () => {
   beforeEach(() => {
     clearSourceMaps();
   });
@@ -20,7 +20,7 @@ describe("getOriginalLocation", async () => {
     await setupBundleFixture("bundle");
     const location = {
       sourceId: "bundle.js",
-      line: 49
+      line: 49,
     };
 
     const originalLocation = await getOriginalLocation(location);
@@ -28,7 +28,7 @@ describe("getOriginalLocation", async () => {
       column: 0,
       line: 3,
       sourceId: "bundle.js/originalSource-fe2c41d3535b76c158e39ba4f3ff826a",
-      sourceUrl: "webpack:///entry.js"
+      sourceUrl: "webpack:///entry.js",
     });
   });
 
@@ -37,14 +37,14 @@ describe("getOriginalLocation", async () => {
       column: 0,
       line: 3,
       sourceId: "bundle.js/originalSource-fe2c41d3535b76c158e39ba4f3ff826a",
-      sourceUrl: "webpack:///entry.js"
+      sourceUrl: "webpack:///entry.js",
     };
     const originalLocation = await getOriginalLocation(location);
     expect(originalLocation).toEqual(originalLocation);
   });
 });
 
-describe("getGeneratedLocation", async () => {
+describe("getGeneratedLocation", () => {
   beforeEach(() => {
     clearSourceMaps();
   });
@@ -54,19 +54,19 @@ describe("getGeneratedLocation", async () => {
     const location = {
       column: 0,
       line: 3,
-      sourceId: "bundle.js/originalSource-fe2c41d3535b76c158e39ba4f3ff826a"
+      sourceId: "bundle.js/originalSource-fe2c41d3535b76c158e39ba4f3ff826a",
     };
 
     const source = {
       url: "webpack:///entry.js",
-      id: "bundle.js/originalSource-fe2c41d3535b76c158e39ba4f3ff826a"
+      id: "bundle.js/originalSource-fe2c41d3535b76c158e39ba4f3ff826a",
     };
 
     const generatedLocation = await getGeneratedLocation(location, source);
     expect(generatedLocation).toEqual({
       sourceId: "bundle.js",
       line: 49,
-      column: 0
+      column: 0,
     });
   });
 
@@ -81,12 +81,12 @@ describe("getGeneratedLocation", async () => {
     const genLoc1 = {
       sourceId: "if.out.js",
       column: 0,
-      line: 8
+      line: 8,
     };
 
     const ifSource = {
       url: "if.js",
-      id: "if.out.js/originalSource-5ad3141023dae912c5f8833c7e03beeb"
+      id: "if.out.js/originalSource-5ad3141023dae912c5f8833c7e03beeb",
     };
 
     const oLoc = await getOriginalLocation(genLoc1);
@@ -95,7 +95,7 @@ describe("getGeneratedLocation", async () => {
     expect(genLoc2).toEqual({
       sourceId: "if.out.js",
       column: 0,
-      line: 8
+      line: 8,
     });
   });
 
@@ -108,12 +108,12 @@ describe("getGeneratedLocation", async () => {
     const genLoc1 = {
       sourceId: "if.out.js",
       column: undefined,
-      line: 8
+      line: 8,
     };
 
     const ifSource = {
       url: "if.js",
-      id: "if.out.js/originalSource-5ad3141023dae912c5f8833c7e03beeb"
+      id: "if.out.js/originalSource-5ad3141023dae912c5f8833c7e03beeb",
     };
 
     const oLoc = await getOriginalLocation(genLoc1);
@@ -123,7 +123,7 @@ describe("getGeneratedLocation", async () => {
     expect(genLoc2).toEqual({
       sourceId: "if.out.js",
       column: 0,
-      line: 8
+      line: 8,
     });
   });
 
@@ -132,12 +132,12 @@ describe("getGeneratedLocation", async () => {
       column: 0,
       line: 3,
       sourceId: "bundle.js/originalSource-fe2c41d3535b76c158e39ba4f3ff826a",
-      sourceUrl: "webpack:///entry.js"
+      sourceUrl: "webpack:///entry.js",
     };
 
     const source = {
       url: "webpack:///entry.js",
-      id: "bundle.js/originalSource-fe2c41d3535b76c158e39ba4f3ff826a"
+      id: "bundle.js/originalSource-fe2c41d3535b76c158e39ba4f3ff826a",
     };
 
     const generatedLocation = await getGeneratedLocation(location, source);

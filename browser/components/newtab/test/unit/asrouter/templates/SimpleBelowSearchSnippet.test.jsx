@@ -40,8 +40,13 @@ describe("SimpleBelowSearchSnippet", () => {
     assert.equal(wrapper.find(".body").text(), "bar");
   });
 
-  it("should render .icon", () => {
+  it("should render .icon (light theme)", () => {
     const wrapper = mountAndCheckProps({icon: "data:image/gif;base64,R0lGODl"});
-    assert.equal(wrapper.find(".icon").prop("src"), "data:image/gif;base64,R0lGODl");
+    assert.equal(wrapper.find(".icon-light-theme").prop("src"), "data:image/gif;base64,R0lGODl");
+  });
+
+  it("should render .icon (dark theme)", () => {
+    const wrapper = mountAndCheckProps({icon_dark_theme: "data:image/gif;base64,R0lGODl"});
+    assert.equal(wrapper.find(".icon-dark-theme").prop("src"), "data:image/gif;base64,R0lGODl");
   });
 });

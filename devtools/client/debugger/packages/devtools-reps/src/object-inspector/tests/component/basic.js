@@ -11,7 +11,7 @@ const { Rep } = require(`${repsPath}/rep`);
 const {
   formatObjectInspector,
   waitForDispatch,
-  waitForLoadedProperties
+  waitForLoadedProperties,
 } = require("../test-utils");
 const ObjectClient = require("../__mocks__/object-client");
 const gripRepStubs = require(`${repsPath}/stubs/grip`);
@@ -19,13 +19,13 @@ const gripRepStubs = require(`${repsPath}/stubs/grip`);
 function generateDefaults(overrides) {
   return {
     autoExpandDepth: 0,
-    ...overrides
+    ...overrides,
   };
 }
 
 function mountOI(props, { initialState } = {}) {
   const client = {
-    createObjectClient: grip => ObjectClient(grip)
+    createObjectClient: grip => ObjectClient(grip),
   };
 
   const obj = mountObjectInspector({
@@ -34,9 +34,9 @@ function mountOI(props, { initialState } = {}) {
     initialState: {
       objectInspector: {
         ...initialState,
-        evaluations: new Map()
-      }
-    }
+        evaluations: new Map(),
+      },
+    },
   });
 
   return obj;
@@ -56,11 +56,11 @@ describe("ObjectInspector - renders", () => {
           {
             path: "root",
             contents: {
-              value: stub
-            }
-          }
+              value: stub,
+            },
+          },
         ],
-        mode
+        mode,
       });
 
     const renderRep = mode => Rep({ object: stub, mode });
@@ -96,11 +96,11 @@ describe("ObjectInspector - renders", () => {
           {
             path: "root",
             contents: {
-              value: object
-            }
-          }
+              value: object,
+            },
+          },
         ],
-        mode
+        mode,
       });
 
     const renderRep = mode => mount(Rep({ object, mode }));
@@ -133,11 +133,11 @@ describe("ObjectInspector - renders", () => {
           path: "root",
           name,
           contents: {
-            value: object
-          }
-        }
+            value: object,
+          },
+        },
       ],
-      mode: MODE.SHORT
+      mode: MODE.SHORT,
     });
 
     expect(oi.find(".object-label").text()).toEqual(name);
@@ -153,10 +153,10 @@ describe("ObjectInspector - renders", () => {
         {
           path: "root",
           name,
-          contents: { value }
-        }
+          contents: { value },
+        },
       ],
-      mode: MODE.SHORT
+      mode: MODE.SHORT,
     });
 
     expect(oi.find(".object-label").text()).toEqual(name);
@@ -171,11 +171,11 @@ describe("ObjectInspector - renders", () => {
         {
           path: "root",
           contents: {
-            value: object
-          }
-        }
+            value: object,
+          },
+        },
       ],
-      mode: MODE.SHORT
+      mode: MODE.SHORT,
     });
 
     expect(oi.find(".object-label").exists()).toBeFalsy();
@@ -193,11 +193,11 @@ describe("ObjectInspector - renders", () => {
             {
               path: "root",
               contents: {
-                value: stub
-              }
-            }
+                value: stub,
+              },
+            },
           ],
-          mode
+          mode,
         },
         {
           initialState: {
@@ -208,16 +208,16 @@ describe("ObjectInspector - renders", () => {
                   ownProperties: Object.keys(stub.preview.ownProperties).reduce(
                     (res, key) => ({
                       [key]: {
-                        value: stub
+                        value: stub,
                       },
-                      ...res
+                      ...res,
                     }),
                     {}
-                  )
-                }
-              ]
-            ])
-          }
+                  ),
+                },
+              ],
+            ]),
+          },
         }
       );
 
@@ -262,13 +262,13 @@ describe("ObjectInspector - renders", () => {
     const defaultPropertiesNode = createNode({
       name: "<default>",
       contents: [],
-      type: NODE_TYPES.DEFAULT_PROPERTIES
+      type: NODE_TYPES.DEFAULT_PROPERTIES,
     });
 
     // The <default properties> node should have the "lessen" class only when
     // collapsed.
     let { store, wrapper } = mountOI({
-      roots: [defaultPropertiesNode]
+      roots: [defaultPropertiesNode],
     });
 
     let defaultPropertiesElementNode = wrapper.find(".node");
@@ -289,13 +289,13 @@ describe("ObjectInspector - renders", () => {
     const prototypeNode = createNode({
       name: "<prototype>",
       contents: [],
-      type: NODE_TYPES.PROTOTYPE
+      type: NODE_TYPES.PROTOTYPE,
     });
 
     // The <prototype> node should have the "lessen" class only when collapsed.
     ({ wrapper, store } = mountOI({
       roots: [prototypeNode],
-      injectWaitService: true
+      injectWaitService: true,
     }));
 
     let protoElementNode = wrapper.find(".node");
@@ -317,22 +317,22 @@ describe("ObjectInspector - renders", () => {
         {
           name: "a",
           contents: {
-            value: 30
-          }
+            value: 30,
+          },
         },
         {
           name: "b",
           contents: {
-            value: 32
-          }
-        }
+            value: 32,
+          },
+        },
       ],
-      type: NODE_TYPES.BLOCK
+      type: NODE_TYPES.BLOCK,
     });
 
     const { wrapper, store } = mountOI({
       roots: [blockNode],
-      autoExpandDepth: 1
+      autoExpandDepth: 1,
     });
 
     await waitForLoadedProperties(store, ["Symbol(Block)"]);
@@ -347,13 +347,13 @@ describe("ObjectInspector - renders", () => {
     let root = {
       path: "root",
       contents: {
-        value: gripRepStubs.get("testMoreThanMaxProps")
-      }
+        value: gripRepStubs.get("testMoreThanMaxProps"),
+      },
     };
     const { wrapper } = mountOI({
       roots: [root],
       mode: MODE.LONG,
-      focusedItem: root
+      focusedItem: root,
     });
 
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
@@ -361,13 +361,13 @@ describe("ObjectInspector - renders", () => {
     root = {
       path: "root-2",
       contents: {
-        value: gripRepStubs.get("testMaxProps")
-      }
+        value: gripRepStubs.get("testMaxProps"),
+      },
     };
 
     wrapper.setProps({
       roots: [root],
-      focusedItem: root
+      focusedItem: root,
     });
     wrapper.update();
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
@@ -384,19 +384,19 @@ describe("ObjectInspector - renders", () => {
             {
               name: "a",
               contents: {
-                value: 30
-              }
+                value: 30,
+              },
             },
             {
               name: "b",
               contents: {
-                value: 32
-              }
-            }
-          ]
-        }
+                value: 32,
+              },
+            },
+          ],
+        },
       ],
-      mode: MODE.LONG
+      mode: MODE.LONG,
     });
 
     wrapper
@@ -417,12 +417,12 @@ describe("ObjectInspector - renders", () => {
             {
               name: "c",
               contents: {
-                value: "i'm the new node"
-              }
-            }
-          ]
-        }
-      ]
+                value: "i'm the new node",
+              },
+            },
+          ],
+        },
+      ],
     });
 
     await onRootsChanged;

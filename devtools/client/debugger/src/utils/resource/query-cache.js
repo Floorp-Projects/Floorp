@@ -9,7 +9,7 @@ import type {
   ResourceQuery,
   QueryCacheHandler,
   QueryContext,
-  QueryResult
+  QueryResult,
 } from "./base-query";
 import { strictEqual, shallowEqual } from "./compare";
 
@@ -42,7 +42,7 @@ export function queryCacheWeak<
     getEntry: args => cache.get(args) || null,
     setEntry: (args, entry) => {
       cache.set(args, entry);
-    }
+    },
   });
 }
 
@@ -67,7 +67,7 @@ export function queryCacheShallow<
     getEntry: () => latestEntry,
     setEntry: (args, entry) => {
       latestEntry = entry;
-    }
+    },
   });
 }
 
@@ -85,14 +85,14 @@ export function queryCacheStrict<R: ResourceBound, Args, Mapped, Reduced>(
     getEntry: () => latestEntry,
     setEntry: (args, entry) => {
       latestEntry = entry;
-    }
+    },
   });
 }
 
 type CacheEntry<R: ResourceBound, Args, Mapped, Reduced> = {
   context: QueryContext<Args>,
   state: ResourceState<R>,
-  result: QueryResult<Mapped, Reduced>
+  result: QueryResult<Mapped, Reduced>,
 };
 
 type CacheFunctionInfo<R: ResourceBound, Args, Mapped, Reduced> = {|
@@ -105,7 +105,7 @@ type CacheFunctionInfo<R: ResourceBound, Args, Mapped, Reduced> = {|
   compareArgs: (a: Args, b: Args) => boolean,
 
   getEntry: (args: Args) => CacheEntry<R, Args, Mapped, Reduced> | null,
-  setEntry: (args: Args, entry: CacheEntry<R, Args, Mapped, Reduced>) => void
+  setEntry: (args: Args, entry: CacheEntry<R, Args, Mapped, Reduced>) => void,
 |};
 function makeCacheFunction<R: ResourceBound, Args, Mapped, Reduced>(
   info: CacheFunctionInfo<R, Args, Mapped, Reduced>
@@ -123,7 +123,7 @@ function makeCacheFunction<R: ResourceBound, Args, Mapped, Reduced>(
         !entry || !sameArgs
           ? {
               args,
-              identMap: new WeakMap()
+              identMap: new WeakMap(),
             }
           : entry.context;
 
@@ -137,7 +137,7 @@ function makeCacheFunction<R: ResourceBound, Args, Mapped, Reduced>(
         entry = {
           context,
           state,
-          result
+          result,
         };
         setEntry(args, entry);
       }

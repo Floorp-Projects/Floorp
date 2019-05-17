@@ -16,7 +16,7 @@ export async function updateWorkerClients({
   debuggerClient,
   threadClient,
   workerClients,
-  options
+  options,
 }: Object) {
   if (!supportsWorkers(tabTarget)) {
     return {};
@@ -43,7 +43,7 @@ export async function updateWorkerClients({
         newWorkerClients[workerThread.actor] = {
           url: workerTargetFront.url,
           thread: workerThread,
-          console: consoleFront
+          console: consoleFront,
         };
       }
     } catch (e) {

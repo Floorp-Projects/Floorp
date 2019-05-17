@@ -95,13 +95,27 @@ class ProviderOpenTabs extends UrlbarProvider {
   }
 
   /**
-   * Returns the sources returned by this provider.
-   * @returns {array} one or multiple types from UrlbarUtils.RESULT_SOURCE.*
+   * Whether this provider should be invoked for the given context.
+   * If this method returns false, the providers manager won't start a query
+   * with this provider, to save on resources.
+   * @param {UrlbarQueryContext} queryContext The query context object
+   * @returns {boolean} Whether this provider should be invoked for the search.
    */
-  get sources() {
-    return [
-      UrlbarUtils.RESULT_SOURCE.TABS,
-    ];
+  isActive(queryContext) {
+    // For now we don't actually use this provider to query open tabs, instead
+    // we join the temp table in UnifiedComplete.
+    return false;
+  }
+
+  /**
+   * Whether this provider wants to restrict results to just itself.
+   * Other providers won't be invoked, unless this provider doesn't
+   * support the current query.
+   * @param {UrlbarQueryContext} queryContext The query context object
+   * @returns {boolean} Whether this provider wants to restrict results.
+   */
+  isRestricting(queryContext) {
+    return false;
   }
 
   /**

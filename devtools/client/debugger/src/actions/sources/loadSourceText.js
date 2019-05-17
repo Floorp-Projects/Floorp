@@ -13,7 +13,7 @@ import {
   getGeneratedSource,
   getSourcesEpoch,
   getBreakpointsForSource,
-  getSourceActorsForSource
+  getSourceActorsForSource,
 } from "../../selectors";
 import { addBreakpoint } from "../breakpoints";
 
@@ -24,7 +24,7 @@ import { isFulfilled } from "../../utils/async-value";
 import { isOriginal, isPretty } from "../../utils/source";
 import {
   memoizeableAction,
-  type MemoizedAction
+  type MemoizedAction,
 } from "../../utils/memoizableAction";
 
 import { Telemetry } from "devtools-modules";
@@ -42,7 +42,7 @@ async function loadSource(
   { sourceMaps, client, getState }
 ): Promise<?{
   text: string,
-  contentType: string
+  contentType: string,
 }> {
   if (isPretty(source) && isOriginal(source)) {
     const generatedSource = getGeneratedSource(state, source);
@@ -85,7 +85,7 @@ async function loadSource(
 
   return {
     text: response.source,
-    contentType: response.contentType || "text/javascript"
+    contentType: response.contentType || "text/javascript",
   };
 }
 
@@ -99,7 +99,7 @@ async function loadSourceTextPromise(
     type: "LOAD_SOURCE_TEXT",
     sourceId: source.id,
     epoch,
-    [PROMISE]: loadSource(getState(), source, { sourceMaps, client, getState })
+    [PROMISE]: loadSource(getState(), source, { sourceMaps, client, getState }),
   });
 
   const newSource = getSource(getState(), source.id);
@@ -152,5 +152,5 @@ export const loadSourceText: MemoizedAction<
     return `${epoch}:${source.id}`;
   },
   action: ({ cx, source }, thunkArgs) =>
-    loadSourceTextPromise(cx, source, thunkArgs)
+    loadSourceTextPromise(cx, source, thunkArgs),
 });

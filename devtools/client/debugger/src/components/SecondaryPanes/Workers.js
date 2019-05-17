@@ -20,7 +20,7 @@ import "./Workers.css";
 
 type Props = {
   threads: Thread[],
-  openWorkerToolbox: typeof actions.openWorkerToolbox
+  openWorkerToolbox: typeof actions.openWorkerToolbox,
 };
 
 export class Workers extends Component<Props> {
@@ -55,12 +55,12 @@ export class Workers extends Component<Props> {
 }
 
 const mapStateToProps = state => ({
-  threads: getThreads(state)
+  threads: getThreads(state),
 });
 
 export default connect(
   mapStateToProps,
   {
-    openWorkerToolbox: actions.openWorkerToolbox
+    openWorkerToolbox: actions.openWorkerToolbox,
   }
 )(Workers);

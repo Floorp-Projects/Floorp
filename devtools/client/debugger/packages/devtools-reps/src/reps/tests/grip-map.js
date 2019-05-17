@@ -12,7 +12,7 @@ const stubs = require("../stubs/grip-map");
 const {
   expectActorAttribute,
   getSelectableInInspectorGrips,
-  getMapLengthBubbleText
+  getMapLengthBubbleText,
 } = require("./test-helpers");
 const { maxLengthMap } = GripMap;
 
@@ -20,7 +20,7 @@ function shallowRenderRep(object, props = {}) {
   return shallow(
     GripMap.rep({
       object,
-      ...props
+      ...props,
     })
   );
 }
@@ -103,7 +103,7 @@ describe("GripMap - WeakMap", () => {
     expect(
       renderRep({
         mode: MODE.LONG,
-        title: "CustomTitle"
+        title: "CustomTitle",
       }).text()
     ).toBe(`CustomTitle${length} { {…} → "value-a" }`);
   });

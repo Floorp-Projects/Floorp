@@ -18,7 +18,7 @@ cases(
     { name: "goto line", type: "goto", query: ":30" },
     { name: "goto line:column", type: "goto", query: ":30:60" },
     { name: "goto source line", type: "gotoSource", query: "test:30:60" },
-    { name: "shortcuts", type: "shortcuts", query: "?" }
+    { name: "shortcuts", type: "shortcuts", query: "?" },
   ]
 );
 
@@ -31,7 +31,7 @@ cases(
     {
       name: "line and column",
       query: ":30:90",
-      location: { column: 90, line: 30 }
-    }
+      location: { column: 90, line: 30 },
+    },
   ]
 );

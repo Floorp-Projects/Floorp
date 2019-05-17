@@ -10,7 +10,7 @@ const {
   getGripType,
   isGrip,
   getURLDisplayString,
-  wrapRender
+  wrapRender,
 } = require("./rep-utils");
 
 const dom = require("react-dom-factories");
@@ -20,7 +20,7 @@ const { span } = dom;
  * Renders DOM document object.
  */
 Document.propTypes = {
-  object: PropTypes.object.isRequired
+  object: PropTypes.object.isRequired,
 };
 
 function Document(props) {
@@ -29,7 +29,7 @@ function Document(props) {
   return span(
     {
       "data-link-actor-id": grip.actor,
-      className: "objectBox objectBox-document"
+      className: "objectBox objectBox-document",
     },
     getTitle(grip),
     location ? span({ className: "location" }, ` ${location}`) : null
@@ -44,7 +44,7 @@ function getLocation(grip) {
 function getTitle(grip) {
   return span(
     {
-      className: "objectTitle"
+      className: "objectTitle",
     },
     grip.class
   );
@@ -63,5 +63,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(Document),
-  supportsObject
+  supportsObject,
 };

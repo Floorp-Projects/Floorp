@@ -8,7 +8,7 @@ const { REPS, getRep } = require("../rep");
 const { Event } = REPS;
 const {
   expectActorAttribute,
-  getSelectableInInspectorGrips
+  getSelectableInInspectorGrips,
 } = require("./test-helpers");
 
 const { MODE } = require("../constants");

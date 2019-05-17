@@ -9,7 +9,7 @@ const {
   createSetterNode,
   getChildren,
   makeNodesForEntries,
-  nodeIsDefaultProperties
+  nodeIsDefaultProperties,
 } = Utils.node;
 
 const { shouldLoadItemSymbols } = Utils.loadProperties;
@@ -26,8 +26,8 @@ describe("shouldLoadItemSymbols", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripArrayStubs.get("testMaxProps")
-      }
+        value: gripArrayStubs.get("testMaxProps"),
+      },
     });
     expect(shouldLoadItemSymbols(node)).toBeTruthy();
   });
@@ -36,8 +36,8 @@ describe("shouldLoadItemSymbols", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripArrayStubs.get("testMaxProps")
-      }
+        value: gripArrayStubs.get("testMaxProps"),
+      },
     });
     const loadedProperties = new Map([[node.path, true]]);
     expect(shouldLoadItemSymbols(node, loadedProperties)).toBeFalsy();
@@ -47,8 +47,8 @@ describe("shouldLoadItemSymbols", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripArrayStubs.get("Array(234)")
-      }
+        value: gripArrayStubs.get("Array(234)"),
+      },
     });
     expect(shouldLoadItemSymbols(node)).toBeTruthy();
   });
@@ -57,12 +57,12 @@ describe("shouldLoadItemSymbols", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripArrayStubs.get("Array(234)")
-      }
+        value: gripArrayStubs.get("Array(234)"),
+      },
     });
     const bucketNodes = getChildren({
       item: node,
-      loadedProperties: new Map([[node.path, true]])
+      loadedProperties: new Map([[node.path, true]]),
     });
 
     // Make sure we do have a bucket.
@@ -74,8 +74,8 @@ describe("shouldLoadItemSymbols", () => {
     const mapStubNode = createNode({
       name: "map",
       contents: {
-        value: gripMapStubs.get("20-entries Map")
-      }
+        value: gripMapStubs.get("20-entries Map"),
+      },
     });
     const entriesNode = makeNodesForEntries(mapStubNode);
     expect(shouldLoadItemSymbols(entriesNode)).toBeFalsy();
@@ -85,8 +85,8 @@ describe("shouldLoadItemSymbols", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripStubs.get("testMaxProps")
-      }
+        value: gripStubs.get("testMaxProps"),
+      },
     });
     expect(shouldLoadItemSymbols(node)).toBeTruthy();
   });
@@ -95,8 +95,8 @@ describe("shouldLoadItemSymbols", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripMapStubs.get("20-entries Map")
-      }
+        value: gripMapStubs.get("20-entries Map"),
+      },
     });
     expect(shouldLoadItemSymbols(node)).toBeTruthy();
   });
@@ -105,8 +105,8 @@ describe("shouldLoadItemSymbols", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripArrayStubs.get("new Set([1,2,3,4])")
-      }
+        value: gripArrayStubs.get("new Set([1,2,3,4])"),
+      },
     });
     expect(shouldLoadItemSymbols(node)).toBeTruthy();
   });
@@ -115,8 +115,8 @@ describe("shouldLoadItemSymbols", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: windowStubs.get("Window")
-      }
+        value: windowStubs.get("Window"),
+      },
     });
     expect(shouldLoadItemSymbols(node)).toBeTruthy();
   });
@@ -125,8 +125,8 @@ describe("shouldLoadItemSymbols", () => {
     const windowNode = createNode({
       name: "root",
       contents: {
-        value: windowStubs.get("Window")
-      }
+        value: windowStubs.get("Window"),
+      },
     });
     const loadedProperties = new Map([
       [
@@ -134,14 +134,14 @@ describe("shouldLoadItemSymbols", () => {
         {
           ownProperties: {
             foo: { value: "bar" },
-            location: { value: "a" }
-          }
-        }
-      ]
+            location: { value: "a" },
+          },
+        },
+      ],
     ]);
     const [, defaultPropertiesNode] = getChildren({
       item: windowNode,
-      loadedProperties
+      loadedProperties,
     });
     expect(nodeIsDefaultProperties(defaultPropertiesNode)).toBe(true);
     expect(shouldLoadItemSymbols(defaultPropertiesNode)).toBeFalsy();
@@ -156,8 +156,8 @@ describe("shouldLoadItemSymbols", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripStubs.get("testProxy")
-      }
+        value: gripStubs.get("testProxy"),
+      },
     });
     expect(shouldLoadItemSymbols(node)).toBeFalsy();
   });
@@ -166,11 +166,11 @@ describe("shouldLoadItemSymbols", () => {
     const proxyNode = createNode({
       name: "root",
       contents: {
-        value: gripStubs.get("testProxy")
-      }
+        value: gripStubs.get("testProxy"),
+      },
     });
     const loadedProperties = new Map([
-      [proxyNode.path, gripStubs.get("testProxySlots")]
+      [proxyNode.path, gripStubs.get("testProxySlots")],
     ]);
     const [targetNode] = getChildren({ item: proxyNode, loadedProperties });
     // Make sure we have the target node.
@@ -182,8 +182,8 @@ describe("shouldLoadItemSymbols", () => {
     const accessorNode = createNode({
       name: "root",
       contents: {
-        value: accessorStubs.get("getter")
-      }
+        value: accessorStubs.get("getter"),
+      },
     });
     expect(shouldLoadItemSymbols(accessorNode)).toBeFalsy();
   });
@@ -191,7 +191,7 @@ describe("shouldLoadItemSymbols", () => {
   it("returns true for an accessor <get> node", () => {
     const getNode = createGetterNode({
       name: "root",
-      property: accessorStubs.get("getter")
+      property: accessorStubs.get("getter"),
     });
     expect(getNode.name).toBe("<get root()>");
     expect(shouldLoadItemSymbols(getNode)).toBeTruthy();
@@ -200,7 +200,7 @@ describe("shouldLoadItemSymbols", () => {
   it("returns true for an accessor <set> node", () => {
     const setNode = createSetterNode({
       name: "root",
-      property: accessorStubs.get("setter")
+      property: accessorStubs.get("setter"),
     });
     expect(setNode.name).toBe("<set root()>");
     expect(shouldLoadItemSymbols(setNode)).toBeTruthy();
@@ -209,7 +209,7 @@ describe("shouldLoadItemSymbols", () => {
   it("returns false for a primitive node", () => {
     const node = createNode({
       name: "root",
-      contents: { value: 42 }
+      contents: { value: 42 },
     });
     expect(shouldLoadItemSymbols(node)).toBeFalsy();
   });
