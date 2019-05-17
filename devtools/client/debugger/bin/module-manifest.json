@@ -15,7 +15,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -36,7 +36,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -57,7 +57,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -78,7 +78,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -99,7 +99,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -120,7 +120,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -141,7 +141,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -637,7 +637,9 @@
       "../../extract-text-webpack-plugin/dist/loader.js??ref--3-0!../../css-loader/index.js??ref--3-1!../../postcss-loader/lib/index.js!../../../packages/devtools-reps/src/object-inspector/components/ObjectInspector.css": 486,
       "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-reps/src/object-inspector/components/ObjectInspectorItem.js": 487,
       "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-reps/src/object-inspector/utils/selection.js": 488,
-      "../../css-loader/lib/css-base.js": 489
+      "../../css-loader/lib/css-base.js": 489,
+      "external \"devtools/client/framework/menu\"": 490,
+      "external \"devtools/client/framework/menu-item\"": 491
     },
     "usedIds": {
       "0": 0,
@@ -1129,7 +1131,9 @@
       "486": 486,
       "487": 487,
       "488": 488,
-      "489": 489
+      "489": 489,
+      "490": 490,
+      "491": 491
     }
   },
   "chunks": {
