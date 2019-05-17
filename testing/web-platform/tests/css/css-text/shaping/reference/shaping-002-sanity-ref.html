@@ -12,12 +12,11 @@
 /* the CSS above is not part of the test */
 .fontweight { font-weight: bold; }
 </style>
-<link rel=mismatch href="shaping-002-sanity-ref.html">
 </head>
 <body>
 <p class="instructions">Test passes if the three Arabic characters in each box join, making the two boxes identical.</p>
 
-<div class="ref" lang="ar" dir="rtl">ع&zwj;<span class="fontweight">&zwj;ع&zwj;</span>&zwj;ع</div>
-<div class="ref" lang="ar" dir="rtl">ع&zwj;<span class="fontweight">&zwj;ع&zwj;</span>&zwj;ع</div>
+<div class="ref" lang="ar" dir="rtl">ع&zwnj;<span class="fontweight">&zwnj;ع&zwnj;</span>&zwnj;ع</div>
+<div class="ref" lang="ar" dir="rtl">ع&zwnj;<span class="fontweight">&zwnj;ع&zwnj;</span>&zwnj;ع</div>
 </body>
 </html>
