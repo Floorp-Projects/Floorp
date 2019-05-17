@@ -3583,14 +3583,8 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
         targetRect = targetRect.Intersect(sf->GetScrolledRect());
       }
 
-      {
-        AutoWeakFrame wf(container);
-        ScrollToShowRect(this, sf, targetRect, aVertical, aHorizontal,
-                         aScrollFlags);
-        if (!wf.IsAlive()) {
-          return didScroll;
-        }
-      }
+      ScrollToShowRect(this, sf, targetRect, aVertical, aHorizontal,
+                       aScrollFlags);
 
       nsPoint newPosition = sf->LastScrollDestination();
       // If the scroll position increased, that means our content moved up,
@@ -9057,8 +9051,8 @@ void PresShell::WillDoReflow() {
 void PresShell::DidDoReflow(bool aInterruptible) {
   HandlePostedReflowCallbacks(aInterruptible);
 
-  AutoAssertNoFlush noReentrantFlush(*this);
-  if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
+  nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
+  if (docShell) {
     DOMHighResTimeStamp now = GetPerformanceNowUnclamped();
     docShell->NotifyReflowObservers(aInterruptible, mLastReflowStart, now);
   }
