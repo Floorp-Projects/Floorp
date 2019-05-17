@@ -299,7 +299,8 @@ for (const id of [0, 1, 65534]) {
   test(t => {
     const pc = new RTCPeerConnection();
     t.add_cleanup(() => pc.close());
-    const dc = pc.createDataChannel('', { negotiated: true, id });
+
+    const dc = pc.createDataChannel('', { 'negotiated': true, 'id': id });
     assert_equals(dc.id, id);
   }, `createDataChannel with id ${id} and negotiated true should succeed, and set the channel's id`);
 }
@@ -314,8 +315,10 @@ for (const id of [-1, 65535, 65536]) {
   test(t => {
     const pc = new RTCPeerConnection();
     t.add_cleanup(() => pc.close());
-    assert_throws(new TypeError(), () => pc.createDataChannel('', { negotiated: true, id }));
-  }, `createDataChannel with id ${id} and negotiated true should throw TypeError`);
+
+    assert_throws(new TypeError(), () => pc.createDataChannel('',
+        { 'negotiated': true, 'id': id }));
+  }, `createDataChannel with id ${id} should throw TypeError`);
 }
 /*
   6.2.  RTCDataChannel
