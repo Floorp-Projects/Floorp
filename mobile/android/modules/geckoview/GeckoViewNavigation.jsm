@@ -10,7 +10,7 @@ const {GeckoViewModule} = ChromeUtils.import("resource://gre/modules/GeckoViewMo
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  E10SUtils: "resource://gre/modules/sessionstore/Utils.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
