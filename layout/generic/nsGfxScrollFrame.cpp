@@ -6922,12 +6922,7 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
 
   Maybe<nsRect> snapportOnDestination;
   if (aDestination) {
-    if (IsPhysicalLTR()) {
-      snapport.MoveTo(aDestination.value());
-    } else {
-      snapport.MoveTo(
-          nsPoint(aDestination->x - snapport.Size().width, aDestination->y));
-    }
+    snapport.MoveTo(aDestination.value());
     snapport.Deflate(scrollPadding);
     snapportOnDestination.emplace(snapport);
   } else {
