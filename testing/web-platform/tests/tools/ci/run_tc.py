@@ -260,6 +260,8 @@ def main():
 
     job = args.job
 
+    print("Job %s" % job)
+
     run_if = [(lambda: job == "all", "job set to 'all'"),
               (lambda:"all" in extra_jobs, "Manually specified jobs includes 'all'"),
               (lambda:job in extra_jobs, "Manually specified jobs includes '%s'" % job),
