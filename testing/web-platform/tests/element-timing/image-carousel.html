@@ -39,11 +39,13 @@ body {
         if (entry_count % 2 == 0) {
           checkElement(entry, pathname0, 'image0', beforeRenderTimes[entry_count]);
           checkRect(entry, [0, 200, 0, 200]);
+          checkNaturalSize(entry, 200, 200);
           entry_count_per_element[0]++;
         }
         else {
           checkElement(entry, pathname1, 'image1', beforeRenderTimes[entry_count]);
           checkRect(entry, [0, 100, 0, 100]);
+          checkNaturalSize(entry, 100, 100);
           entry_count_per_element[1]++;
         }
         entry_count++;

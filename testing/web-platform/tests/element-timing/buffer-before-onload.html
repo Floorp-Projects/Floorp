@@ -28,6 +28,7 @@
       const pathname = window.location.href.substring(0, index) +
           '/resources/square20.jpg';
       checkElement(entry, pathname, 'my_image', beforeRender);
+      checkNaturalSize(entry, 20, 20);
     });
   }, "Element Timing: image loads before onload.");
 

@@ -17,6 +17,7 @@ async_test(function (t) {
       checkElement(entry, pathname, 'my_poster', beforeRender);
       // Assume viewport has size at least 200, so the element is fully visible.
       checkRect(entry, [0, 200, 0, 200]);
+      checkNaturalSize(entry, 200, 200);
     })
   );
   observer.observe({entryTypes: ['element']});
