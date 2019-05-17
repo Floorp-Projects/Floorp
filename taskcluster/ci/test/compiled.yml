@@ -103,6 +103,7 @@ jittest:
     chunks:
         by-test-platform:
             windows.*: 1
+            windows10-64-ccov/debug: 6
             macosx.*/opt: 1
             macosx.*/debug: 3
             android-em-4.3-arm7-api-15/debug: 20
