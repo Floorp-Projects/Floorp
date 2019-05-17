@@ -100,6 +100,7 @@ raptor-firefox:
     - raptor-webaudio-firefox
     - raptor-sunspider-firefox
     - raptor-wasm-godot-firefox
+    - raptor-youtube-playback-firefox
     - raptor-tp6-1-firefox-cold
     - raptor-tp6-2-firefox-cold
     - raptor-tp6-3-firefox-cold
