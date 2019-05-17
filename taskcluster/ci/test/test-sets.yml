@@ -265,8 +265,6 @@ windows-aarch64-tests:
     - cppunit
     - crashtest
     - gtest
-    - jittest
-    - jsreftest
     - marionette
     - mochitest
     - mochitest-a11y
