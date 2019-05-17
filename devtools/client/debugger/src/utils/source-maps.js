@@ -33,7 +33,7 @@ export async function getGeneratedLocation(
     line,
     sourceId,
     column: column === 0 ? undefined : column,
-    sourceUrl: generatedSource.url
+    sourceUrl: generatedSource.url,
   };
 }
 

@@ -12,7 +12,7 @@ function generateDefaults(overrides) {
   return {
     filter: "",
     updateFilter: jest.fn(),
-    ...overrides
+    ...overrides,
   };
 }
 

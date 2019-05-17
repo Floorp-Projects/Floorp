@@ -6,7 +6,7 @@ const {
   createNode,
   getClosestGripNode,
   makeNodesForEntries,
-  makeNumericalBuckets
+  makeNumericalBuckets,
 } = require("../../utils/node");
 
 const repsPath = "../../../reps";

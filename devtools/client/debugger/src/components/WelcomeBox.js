@@ -21,7 +21,7 @@ type Props = {
   togglePaneCollapse: Function,
   setActiveSearch: (?ActiveSearchType) => any,
   openQuickOpen: typeof actions.openQuickOpen,
-  toggleShortcutsModal: () => void
+  toggleShortcutsModal: () => void,
 };
 
 export class WelcomeBox extends Component<Props> {
@@ -82,7 +82,7 @@ export class WelcomeBox extends Component<Props> {
 }
 
 const mapStateToProps = state => ({
-  endPanelCollapsed: getPaneCollapse(state, "end")
+  endPanelCollapsed: getPaneCollapse(state, "end"),
 });
 
 export default connect(
@@ -90,6 +90,6 @@ export default connect(
   {
     togglePaneCollapse: actions.togglePaneCollapse,
     setActiveSearch: actions.setActiveSearch,
-    openQuickOpen: actions.openQuickOpen
+    openQuickOpen: actions.openQuickOpen,
   }
 )(WelcomeBox);

@@ -11,9 +11,9 @@ export type PreviewAction =
   | {|
       +type: "SET_PREVIEW",
       +cx: Context,
-      value: Preview
+      value: Preview,
     |}
   | {|
       +type: "CLEAR_PREVIEW",
-      +cx: Context
+      +cx: Context,
     |};

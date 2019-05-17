@@ -24,16 +24,16 @@ const errorGrip = {
       "onclick@http://localhost:8000/examples/doc-return-values.html:1:18\n",
     fileName: "http://localhost:8000/examples/doc-return-values.html",
     lineNumber: 1,
-    columnNumber: 18
-  }
+    columnNumber: 18,
+  },
 };
 
 function returnWhy(grip) {
   return {
     type: "resumeLimit",
     frameFinished: {
-      return: grip
-    }
+      return: grip,
+    },
   };
 }
 
@@ -41,8 +41,8 @@ function throwWhy(grip) {
   return {
     type: "resumeLimit",
     frameFinished: {
-      throw: grip
-    }
+      throw: grip,
+    },
   };
 }
 

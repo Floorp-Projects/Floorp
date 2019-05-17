@@ -13,17 +13,17 @@ export type ASTAction =
       {|
         +type: "SET_SYMBOLS",
         +cx: Context,
-        +sourceId: string
+        +sourceId: string,
       |},
       SymbolDeclarations
     >
   | {|
       +type: "OUT_OF_SCOPE_LOCATIONS",
       +cx: Context,
-      +locations: ?(AstLocation[])
+      +locations: ?(AstLocation[]),
     |}
   | {|
       +type: "IN_SCOPE_LINES",
       +cx: Context,
-      +lines: number[]
+      +lines: number[],
     |};

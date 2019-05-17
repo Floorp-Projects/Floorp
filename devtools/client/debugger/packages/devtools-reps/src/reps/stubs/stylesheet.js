@@ -13,8 +13,8 @@ stubs.set("StyleSheet", {
   ownPropertyLength: 0,
   preview: {
     kind: "ObjectWithURL",
-    url: "https://example.com/styles.css"
-  }
+    url: "https://example.com/styles.css",
+  },
 });
 
 module.exports = stubs;

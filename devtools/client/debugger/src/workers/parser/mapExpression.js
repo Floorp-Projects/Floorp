@@ -12,7 +12,7 @@ import mapTopLevelAwait from "./mapAwaitExpression";
 export default function mapExpression(
   expression: string,
   mappings: {
-    [string]: string | null
+    [string]: string | null,
   } | null,
   bindings: string[],
   shouldMapBindings: boolean = true,
@@ -22,13 +22,13 @@ export default function mapExpression(
   mapped: {
     await: boolean,
     bindings: boolean,
-    originalExpression: boolean
-  }
+    originalExpression: boolean,
+  },
 } {
   const mapped = {
     await: false,
     bindings: false,
-    originalExpression: false
+    originalExpression: false,
   };
 
   const ast = parseConsoleScript(expression);
@@ -56,6 +56,6 @@ export default function mapExpression(
 
   return {
     expression,
-    mapped
+    mapped,
   };
 }

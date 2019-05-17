@@ -58,5 +58,5 @@ async function loadConverterModule() {
 }
 
 module.exports = {
-  convertToJSON
+  convertToJSON,
 };

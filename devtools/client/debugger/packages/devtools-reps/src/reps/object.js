@@ -21,7 +21,7 @@ ObjectRep.propTypes = {
   object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values when supported in Node's version of V8
   mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  title: PropTypes.string
+  title: PropTypes.string,
 };
 
 function ObjectRep(props) {
@@ -36,14 +36,14 @@ function ObjectRep(props) {
       tinyModeItems.push(
         span(
           {
-            className: "objectLeftBrace"
+            className: "objectLeftBrace",
           },
           "{"
         ),
         propsArray.length > 0 ? ellipsisElement : null,
         span(
           {
-            className: "objectRightBrace"
+            className: "objectRightBrace",
           },
           "}"
         )
@@ -58,14 +58,14 @@ function ObjectRep(props) {
     getTitleElement(props, object),
     span(
       {
-        className: "objectLeftBrace"
+        className: "objectLeftBrace",
       },
       " { "
     ),
     ...propsArray,
     span(
       {
-        className: "objectRightBrace"
+        className: "objectRightBrace",
       },
       " }"
     )
@@ -109,7 +109,7 @@ function propIterator(props, object, max) {
         mode: MODE.TINY,
         name,
         object: value,
-        equal: ": "
+        equal: ": ",
       })
     );
     propertiesNumber++;
@@ -182,5 +182,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(ObjectRep),
-  supportsObject
+  supportsObject,
 };

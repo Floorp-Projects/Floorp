@@ -18,10 +18,10 @@ function createMockSource(props): Source {
         sourceMapURL: "",
         isBlackBoxed: false,
         isPrettyPrinted: false,
-        isWasm: false
+        isWasm: false,
       },
       props
-    )
+    ),
   };
   return (rv: any);
 }
@@ -40,7 +40,7 @@ describe("getUrl", () => {
   it("handles url with querystring for filename", function() {
     const urlObject = getURL(
       createMockSource({
-        url: "https://a/b.js?key=randomKey"
+        url: "https://a/b.js?key=randomKey",
       })
     );
     expect(urlObject.filename).toBe("b.js");
@@ -49,7 +49,7 @@ describe("getUrl", () => {
   it("handles url with '#' for filename", function() {
     const urlObject = getURL(
       createMockSource({
-        url: "https://a/b.js#specialSection"
+        url: "https://a/b.js#specialSection",
       })
     );
     expect(urlObject.filename).toBe("b.js");
@@ -59,7 +59,7 @@ describe("getUrl", () => {
     const urlObject = getURL(
       createMockSource({
         url: "https://a/c",
-        id: "c"
+        id: "c",
       })
     );
     expect(urlObject.filename).toBe("c");
@@ -69,7 +69,7 @@ describe("getUrl", () => {
     const urlObject = getURL(
       createMockSource({
         url: "https://a/",
-        id: "c"
+        id: "c",
       })
     );
     expect(urlObject.filename).toBe("(index)");
@@ -79,7 +79,7 @@ describe("getUrl", () => {
     const urlObject = getURL(
       createMockSource({
         url: "moz-extension://xyz/123",
-        id: "c2"
+        id: "c2",
       })
     );
     expect(urlObject.group).toBe("moz-extension://xyz");
@@ -89,7 +89,7 @@ describe("getUrl", () => {
     const urlObject = getURL(
       createMockSource({
         url: "webpack://src/component.jsx",
-        id: "c3"
+        id: "c3",
       })
     );
     expect(urlObject.group).toBe("webpack://");

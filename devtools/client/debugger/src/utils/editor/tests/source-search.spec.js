@@ -8,20 +8,20 @@ import {
   find,
   searchSourceForHighlight,
   getMatchIndex,
-  removeOverlay
+  removeOverlay,
 } from "../source-search";
 
 const getCursor = jest.fn(() => ({ line: 90, ch: 54 }));
 const cursor = {
   find: jest.fn(),
   from: jest.fn(),
-  to: jest.fn()
+  to: jest.fn(),
 };
 const getSearchCursor = jest.fn(() => cursor);
 const modifiers = {
   caseSensitive: false,
   regexMatch: false,
-  wholeWord: false
+  wholeWord: false,
 };
 
 const getCM = () => ({
@@ -31,7 +31,7 @@ const getCM = () => ({
   getCursor,
   getSearchCursor,
   firstLine: jest.fn(),
-  state: {}
+  state: {},
 });
 
 describe("source-search", () => {
@@ -56,7 +56,7 @@ describe("source-search", () => {
         posTo: { line: 0, ch: 0 },
         posFrom: { line: 0, ch: 0 },
         overlay: { token: expect.any(Function) },
-        results: []
+        results: [],
       };
       expect(ctx.cm.state).toEqual({ search });
     });
@@ -68,11 +68,11 @@ describe("source-search", () => {
         posTo: null,
         posFrom: null,
         overlay: { token: expect.any(Function) },
-        results: []
+        results: [],
       };
       find(ctx, "test", true, modifiers);
       expect(ctx.cm.removeOverlay).toHaveBeenCalledWith({
-        token: expect.any(Function)
+        token: expect.any(Function),
       });
     });
 
@@ -83,7 +83,7 @@ describe("source-search", () => {
         posTo: null,
         posFrom: null,
         overlay: null,
-        results: []
+        results: [],
       };
       find(ctx, "", true, modifiers);
       expect(ctx.cm.removeOverlay).toHaveBeenCalledWith(null);
@@ -105,8 +105,8 @@ describe("source-search", () => {
         getSearchCursor: () => ({
           find: () => true,
           from: () => from,
-          to: () => to
-        })
+          to: () => to,
+        }),
       };
       const ed = { alignLine: jest.fn() };
       const ctx = { cm, ed };
@@ -167,9 +167,9 @@ describe("source-search", () => {
           getCursor,
           state: {},
           doc: {
-            setSelection: jest.fn()
-          }
-        }
+            setSelection: jest.fn(),
+          },
+        },
       };
       removeOverlay(ctx, "test");
       expect(ctx.cm.removeOverlay).toHaveBeenCalled();
