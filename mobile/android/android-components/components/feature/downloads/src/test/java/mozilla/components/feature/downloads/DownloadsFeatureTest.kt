@@ -6,8 +6,10 @@ package mozilla.components.feature.downloads
 
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.content.Context
 import androidx.core.content.PermissionChecker
 import androidx.fragment.app.FragmentManager
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertTrue
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
@@ -24,15 +26,15 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.never
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
+import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.never
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class DownloadsFeatureTest {
@@ -40,11 +42,11 @@ class DownloadsFeatureTest {
     private lateinit var feature: DownloadsFeature
     private lateinit var mockDownloadManager: DownloadManager
     private lateinit var mockSessionManager: SessionManager
+    private val context = ApplicationProvider.getApplicationContext<Context>()
 
     @Before
     fun setup() {
         val engine = mock(Engine::class.java)
-        val context = RuntimeEnvironment.application
         mockSessionManager = spy(SessionManager(engine))
         mockDownloadManager = mock()
         feature = DownloadsFeature(context, downloadManager = mockDownloadManager, sessionManager = mockSessionManager)
@@ -53,7 +55,7 @@ class DownloadsFeatureTest {
     @Test
     fun `when valid sessionId is provided, observe it's session`() {
         feature = spy(DownloadsFeature(
-            RuntimeEnvironment.application,
+            context,
             downloadManager = mockDownloadManager,
             sessionManager = mockSessionManager,
             sessionId = "123"
@@ -69,7 +71,7 @@ class DownloadsFeatureTest {
     @Test
     fun `when sessionId is NOT provided, observe selected session`() {
         feature = spy(DownloadsFeature(
-            RuntimeEnvironment.application,
+            context,
             downloadManager = mockDownloadManager,
             sessionManager = mockSessionManager
         ))
@@ -184,7 +186,6 @@ class DownloadsFeatureTest {
 
     @Test
     fun `when fragmentManager is not null a confirmation dialog must be show before starting a download`() {
-        val context = RuntimeEnvironment.application
         val mockDialog = spy(DownloadDialogFragment::class.java)
         val mockFragmentManager = mock(FragmentManager::class.java)
 
@@ -208,8 +209,62 @@ class DownloadsFeatureTest {
     }
 
     @Test
+    fun `feature with a sessionId will re-attach to already existing fragment`() {
+        val mockDialog = spy(DownloadDialogFragment::class.java)
+        val mockFragmentManager = mock(FragmentManager::class.java)
+        val mockDownload: Consumable<Download> = mock()
+        val mockSession: Session = mock()
+
+        doReturn(mockDownload).`when`(mockSession).download
+        doReturn("sessionId").`when`(mockSession).id
+        doReturn(mockDialog).`when`(mockFragmentManager).findFragmentByTag(any())
+
+        mockSessionManager.add(mockSession)
+
+        val feature =
+            DownloadsFeature(
+                context,
+                downloadManager = mockDownloadManager,
+                sessionId = "sessionId",
+                sessionManager = mockSessionManager,
+                fragmentManager = mockFragmentManager
+            )
+
+        feature.start()
+        assertTrue(feature.dialog !is SimpleDownloadDialogFragment)
+        verify(mockSession).download
+    }
+
+    @Test
+    fun `feature with a selected session will re-attach to already existing fragment`() {
+        val mockDialog = spy(DownloadDialogFragment::class.java)
+        val mockFragmentManager = mock(FragmentManager::class.java)
+        val mockDownload: Consumable<Download> = mock()
+        val mockSession: Session = mock()
+
+        doReturn(mockDownload).`when`(mockSession).download
+        doReturn("sessionId").`when`(mockSession).id
+        doReturn(mockDialog).`when`(mockFragmentManager).findFragmentByTag(any())
+
+        mockSessionManager.add(mockSession)
+        mockSessionManager.select(mockSession)
+
+        val feature =
+            DownloadsFeature(
+                context,
+                downloadManager = mockDownloadManager,
+                sessionId = "sessionId",
+                sessionManager = mockSessionManager,
+                fragmentManager = mockFragmentManager
+            )
+
+        feature.start()
+        assertTrue(feature.dialog !is SimpleDownloadDialogFragment)
+        verify(mockSession).download
+    }
+
+    @Test
     fun `shouldn't show twice a dialog if is already created`() {
-        val context = RuntimeEnvironment.application
         val mockDialog = spy(DownloadDialogFragment::class.java)
         val mockFragmentManager = mock(FragmentManager::class.java)
 
