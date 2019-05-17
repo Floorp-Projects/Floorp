@@ -155,6 +155,10 @@ class TextTrackManager final : public nsIDOMEventListener {
   // report the usage of cue to Telemetry.
   bool mCueTelemetryReported;
 
+  // This function will check media element's show poster flag to decide whether
+  // we need to run `TimeMarchesOn`.
+  void MaybeRunTimeMarchesOn();
+
   class ShutdownObserverProxy final : public nsIObserver {
     NS_DECL_ISUPPORTS
 
