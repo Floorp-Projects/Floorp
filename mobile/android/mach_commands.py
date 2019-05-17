@@ -592,6 +592,31 @@ class MachCommands(MachCommandBase):
     def gradle_install(self):
         pass
 
+    @Command('install-android', category='post-build',
+             conditional_name='install',
+             conditions=[conditions.is_android],
+             description='Install an Android package on a device or an emulator.')
+    @CommandArgument('--verbose', '-v', action='store_true',
+                     help='Print verbose output when installing.')
+    def install(self, verbose=False):
+        from mozrunner.devices.android_device import verify_android_device
+        verify_android_device(self, verbose=verbose)
+
+        ret = self._run_make(directory='.', target='install', ensure_exit_code=False)
+        if ret == 0:
+            self.notify('Install complete')
+        return ret
+
+    @Command('run-android', category='post-build',
+             conditional_name='run',
+             conditions=[conditions.is_android],
+             description='Run Fennec on an Android device or an emulator.')
+    def run(self):
+        from mozrunner.devices.android_device import verify_android_device, run_firefox_for_android
+
+        verify_android_device(self, install=True)
+        return run_firefox_for_android(self, [])
+
 
 def _get_maven_archive_abs_and_relative_paths(maven_folder):
     for subdir, _, files in os.walk(maven_folder):
