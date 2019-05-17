@@ -2911,19 +2911,13 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
   PR_PL(("----\n"));
 
-  // ***** This is the ultimate override *****
-  // if we are printing the selection (either an IFrame or selection range)
-  // then set the mPrintFrameType as if it were the selected frame
-  if (printRangeType == nsIPrintSettings::kRangeSelection) {
-    printHowEnable = nsIPrintSettings::kFrameEnableNone;
-  }
-
   // This tells us that the "Frame" UI has turned off,
   // so therefore there are no FrameSets/Frames/IFrames to be printed
   //
   // This means there are not FrameSets,
   // but the document could contain an IFrame
-  if (printHowEnable == nsIPrintSettings::kFrameEnableNone) {
+  if (!printData->mIsParentAFrameSet ||
+      printRangeType == nsIPrintSettings::kRangeSelection) {
     // Print all the pages or a sub range of pages
     if (printRangeType == nsIPrintSettings::kRangeAllPages ||
         printRangeType == nsIPrintSettings::kRangeSpecifiedPageRange) {
