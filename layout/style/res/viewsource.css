@@ -36,7 +36,7 @@ pre[id]:before,
 span[id]:before {
   content: counter(line) " ";
   counter-increment: line;
-  -moz-user-select: none;
+  user-select: none;
   display: inline-block;
   width: 5ch;
   margin: 0 0 0 -5ch;
