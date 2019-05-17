@@ -11,9 +11,11 @@ const {
 const {
   ADD_REQUEST,
   CLEAR_REQUESTS,
+  CLONE_REQUEST,
   CLONE_SELECTED_REQUEST,
   OPEN_NETWORK_DETAILS,
   REMOVE_SELECTED_CUSTOM_REQUEST,
+  RIGHT_CLICK_REQUEST,
   SELECT_REQUEST,
   SEND_CUSTOM_REQUEST,
   TOGGLE_RECORDING,
@@ -111,42 +113,31 @@ function requestsReducer(state = Requests(), action) {
 
     // Select specific request.
     case SELECT_REQUEST: {
+      // Selected request represents the last request that was clicked
+      // before the context menu is shown
+      const clickedRequest = state.requests.get(action.id);
       return {
         ...state,
+        clickedRequest,
         selectedId: action.id,
       };
     }
 
     // Clone selected request for re-send.
+    case CLONE_REQUEST: {
+      return cloneRequest(state, action.id);
+    }
+
     case CLONE_SELECTED_REQUEST: {
-      const { requests, selectedId } = state;
+      return cloneRequest(state, state.selectedId);
+    }
 
-      if (!selectedId) {
-        return state;
-      }
-
-      const clonedRequest = requests.get(selectedId);
-      if (!clonedRequest) {
-        return state;
-      }
-
-      const newRequest = {
-        id: clonedRequest.id + "-clone",
-        cause: clonedRequest.cause,
-        method: clonedRequest.method,
-        url: clonedRequest.url,
-        urlDetails: clonedRequest.urlDetails,
-        requestHeaders: clonedRequest.requestHeaders,
-        requestPostData: clonedRequest.requestPostData,
-        requestPostDataAvailable: clonedRequest.requestPostDataAvailable,
-        isCustom: true,
-      };
-
+    case RIGHT_CLICK_REQUEST: {
+      const { requests } = state;
+      const clickedRequest = requests.get(action.id);
       return {
         ...state,
-        requests: mapSet(requests, newRequest.id, newRequest),
-        selectedId: newRequest.id,
-        preselectedId: selectedId,
+        clickedRequest,
       };
     }
 
@@ -193,6 +184,38 @@ function requestsReducer(state = Requests(), action) {
 }
 
 // Helpers
+
+function cloneRequest(state, id) {
+  const { requests } = state;
+
+  if (!id) {
+    return state;
+  }
+
+  const clonedRequest = requests.get(id);
+  if (!clonedRequest) {
+    return state;
+  }
+
+  const newRequest = {
+    id: clonedRequest.id + "-clone",
+    method: clonedRequest.method,
+    cause: clonedRequest.cause,
+    url: clonedRequest.url,
+    urlDetails: clonedRequest.urlDetails,
+    requestHeaders: clonedRequest.requestHeaders,
+    requestPostData: clonedRequest.requestPostData,
+    requestPostDataAvailable: clonedRequest.requestPostDataAvailable,
+    isCustom: true,
+  };
+
+  return {
+    ...state,
+    requests: mapSet(requests, newRequest.id, newRequest),
+    selectedId: newRequest.id,
+    preselectedId: id,
+  };
+}
 
 /**
  * Remove the currently selected custom request.
