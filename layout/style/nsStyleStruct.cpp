@@ -3345,7 +3345,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
                 mAnimationIterationCountCount !=
                     aNewData.mAnimationIterationCountCount ||
                 mScrollSnapCoordinate != aNewData.mScrollSnapCoordinate ||
-                mWillChange != aNewData.mWillChange)) {
+                mWillChange != aNewData.mWillChange ||
+                mOverflowAnchor != aNewData.mOverflowAnchor)) {
     hint |= nsChangeHint_NeutralChange;
   }
 
