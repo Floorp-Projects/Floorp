@@ -5,6 +5,16 @@
 /* globals ReflectedFluentElement */
 
 class CopyToClipboardButton extends ReflectedFluentElement {
+  static get BUTTON_RESET_TIMEOUT() {
+    return 5000;
+  }
+
+  constructor() {
+    super();
+
+    this._relatedInput = null;
+  }
+
   connectedCallback() {
     if (this.children.length) {
       return;
@@ -37,11 +47,23 @@ class CopyToClipboardButton extends ReflectedFluentElement {
   }
 
   handleEvent(event) {
-    if (event.type != "click") {
+    let copyButton = this.shadowRoot.querySelector(".copy-button");
+    if (event.type != "click" || event.currentTarget != copyButton) {
       return;
     }
 
-    this.setAttribute("copied", "");
+    copyButton.disabled = true;
+    navigator.clipboard.writeText(this._relatedInput.value).then(() => {
+      this.setAttribute("copied", "");
+      setTimeout(() => {
+        copyButton.disabled = false;
+        this.removeAttribute("copied");
+      }, CopyToClipboardButton.BUTTON_RESET_TIMEOUT);
+    }, () => copyButton.disabled = false);
+  }
+
+  set relatedInput(val) {
+    this._relatedInput = val;
   }
 }
 customElements.define("copy-to-clipboard-button", CopyToClipboardButton);
