@@ -13,7 +13,6 @@ const {
   DISCONNECT_RUNTIME_SUCCESS,
   RUNTIMES,
   UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
-  UPDATE_EXTENSION_DEBUG_SETTING_SUCCESS,
   UPDATE_RUNTIME_MULTIE10S_SUCCESS,
   REMOTE_RUNTIMES_UPDATED,
   SELECTED_RUNTIME_ID_UPDATED,
@@ -149,15 +148,6 @@ function runtimesReducer(state = RuntimesState(), action) {
       const runtime = findRuntimeById(runtimeId, state);
       const runtimeDetails =
         Object.assign({}, runtime.runtimeDetails, { connectionPromptEnabled });
-      return _updateRuntimeById(runtimeId, { runtimeDetails }, state);
-    }
-
-    case UPDATE_EXTENSION_DEBUG_SETTING_SUCCESS: {
-      const { extensionDebugEnabled } = action;
-      const { id: runtimeId } = action.runtime;
-      const runtime = findRuntimeById(runtimeId, state);
-      const runtimeDetails =
-        Object.assign({}, runtime.runtimeDetails, { extensionDebugEnabled });
       return _updateRuntimeById(runtimeId, { runtimeDetails }, state);
     }
 

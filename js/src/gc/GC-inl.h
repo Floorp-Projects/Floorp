@@ -77,19 +77,13 @@ class ArenaIter {
   }
 };
 
-enum CellIterNeedsBarrier : uint8_t {
-  CellIterDoesntNeedBarrier = 0,
-  CellIterMayNeedBarrier = 1
-};
-
-class ArenaCellIterImpl {
+class ArenaCellIter {
   size_t firstThingOffset;
   size_t thingSize;
   Arena* arenaAddr;
   FreeSpan span;
   uint_fast16_t thing;
   JS::TraceKind traceKind;
-  bool needsBarrier;
   mozilla::DebugOnly<bool> initialized;
 
   // Upon entry, |thing| points to any thing (free or used) and finds the
@@ -108,21 +102,20 @@ class ArenaCellIterImpl {
   }
 
  public:
-  ArenaCellIterImpl()
+  ArenaCellIter()
       : firstThingOffset(0),
         thingSize(0),
         arenaAddr(nullptr),
         thing(0),
         traceKind(JS::TraceKind::Null),
-        needsBarrier(false),
         initialized(false) {}
 
-  explicit ArenaCellIterImpl(Arena* arena, CellIterNeedsBarrier mayNeedBarrier)
+  explicit ArenaCellIter(Arena* arena)
       : initialized(false) {
-    init(arena, mayNeedBarrier);
+    init(arena);
   }
 
-  void init(Arena* arena, CellIterNeedsBarrier mayNeedBarrier) {
+  void init(Arena* arena) {
     MOZ_ASSERT(!initialized);
     MOZ_ASSERT(arena);
     initialized = true;
@@ -130,7 +123,6 @@ class ArenaCellIterImpl {
     firstThingOffset = Arena::firstThingOffset(kind);
     thingSize = Arena::thingSize(kind);
     traceKind = MapAllocToTraceKind(kind);
-    needsBarrier = mayNeedBarrier && !JS::RuntimeHeapIsCollecting();
     reset(arena);
   }
 
@@ -153,17 +145,7 @@ class ArenaCellIterImpl {
 
   TenuredCell* getCell() const {
     MOZ_ASSERT(!done());
-    TenuredCell* cell =
-        reinterpret_cast<TenuredCell*>(uintptr_t(arenaAddr) + thing);
-
-    // This can result in a a new reference being created to an object that
-    // an ongoing incremental GC may find to be unreachable, so we may need
-    // a barrier here.
-    if (needsBarrier) {
-      ExposeGCThingToActiveJS(JS::GCCellPtr(cell, traceKind));
-    }
-
-    return cell;
+    return reinterpret_cast<TenuredCell*>(uintptr_t(arenaAddr) + thing);
   }
 
   template <typename T>
@@ -183,15 +165,10 @@ class ArenaCellIterImpl {
 };
 
 template <>
-JSObject* ArenaCellIterImpl::get<JSObject>() const;
-
-class ArenaCellIter : public ArenaCellIterImpl {
- public:
-  explicit ArenaCellIter(Arena* arena)
-      : ArenaCellIterImpl(arena, CellIterMayNeedBarrier) {
-    MOZ_ASSERT(JS::RuntimeHeapIsTracing());
-  }
-};
+inline JSObject* ArenaCellIter::get<JSObject>() const {
+  MOZ_ASSERT(!done());
+  return reinterpret_cast<JSObject*>(getCell());
+}
 
 template <typename T>
 class ZoneAllCellIter;
@@ -199,7 +176,7 @@ class ZoneAllCellIter;
 template <>
 class ZoneAllCellIter<TenuredCell> {
   ArenaIter arenaIter;
-  ArenaCellIterImpl cellIter;
+  ArenaCellIter cellIter;
   mozilla::Maybe<JS::AutoAssertNoGC> nogc;
 
  protected:
@@ -233,7 +210,7 @@ class ZoneAllCellIter<TenuredCell> {
     }
     arenaIter.init(zone, kind);
     if (!arenaIter.done()) {
-      cellIter.init(arenaIter.get(), CellIterMayNeedBarrier);
+      cellIter.init(arenaIter.get());
       settle();
     }
   }
@@ -325,6 +302,10 @@ class ZoneAllCellIter<TenuredCell> {
 //       You must not keep pointers to such items across GCs.  Use
 //       ZoneCellIter below to filter these out.
 //
+// NOTE: This class also does not read barrier returned items, so may return
+//       gray cells. You must not store such items anywhere on the heap without
+//       gray-unmarking them. Use ZoneCellIter to automatically unmark them.
+//
 /* clang-format on */
 template <typename GCType>
 class ZoneAllCellIter : public ZoneAllCellIter<TenuredCell> {
@@ -365,8 +346,12 @@ class ZoneAllCellIter : public ZoneAllCellIter<TenuredCell> {
 };
 
 // Like the above class but filter out cells that are about to be finalized.
+// Also, read barrier all cells returned (unless the Unbarriered variants are
+// used) to prevent gray cells from escaping.
 template <typename T>
-class ZoneCellIter : public ZoneAllCellIter<T> {
+class ZoneCellIter : protected ZoneAllCellIter<T> {
+  using Base = ZoneAllCellIter<T>;
+
  public:
   /*
    * The same constructors as above.
@@ -388,10 +373,36 @@ class ZoneCellIter : public ZoneAllCellIter<T> {
     skipDying();
   }
 
+  using Base::done;
+
   void next() {
     ZoneAllCellIter<T>::next();
     skipDying();
   }
+
+  TenuredCell* getCell() const {
+    TenuredCell* cell = Base::getCell();
+
+    // This can result in a new reference being created to an object that an
+    // ongoing incremental GC may find to be unreachable, so we may need a
+    // barrier here.
+    JSRuntime* rt = cell->runtimeFromAnyThread();
+    if (!JS::RuntimeHeapIsCollecting(rt->heapState())) {
+      JS::TraceKind traceKind = JS::MapTypeToTraceKind<T>::kind;
+      ExposeGCThingToActiveJS(JS::GCCellPtr(cell, traceKind));
+    }
+
+    return cell;
+  }
+
+  T* get() const {
+    return reinterpret_cast<T*>(getCell());
+  }
+
+  TenuredCell* unbarrieredGetCell() const { return Base::getCell(); }
+  T* unbarrieredGet() const { return Base::get(); }
+  operator T*() const { return get(); }
+  T* operator->() const { return get(); }
 
  private:
   void skipDying() {

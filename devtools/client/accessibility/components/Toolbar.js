@@ -5,7 +5,7 @@
 
 // React
 const { createFactory, Component } = require("devtools/client/shared/vendor/react");
-const { div } = require("devtools/client/shared/vendor/react-dom-factories");
+const { div, span } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { L10N } = require("../utils/l10n");
 const Button = createFactory(require("./Button").Button);
@@ -71,6 +71,7 @@ class Toolbar extends Component {
     const { disabling } = this.state;
     const disableButtonStr = disabling ?
       "accessibility.disabling" : "accessibility.disable";
+    const betaID = "beta";
     let title;
     let isDisabled = false;
 
@@ -97,7 +98,14 @@ class Toolbar extends Component {
           role: "separator",
           className: "devtools-separator",
         }),
-        AccessibilityTreeFilter({ walker }),
+        // @remove after release 68 (See Bug 1551574)
+        span({
+          className: "beta",
+          role: "presentation",
+          id: betaID,
+        },
+          L10N.getStr("accessibility.beta")),
+        AccessibilityTreeFilter({ walker, describedby: betaID }),
         Button({
           className: "help",
           title: L10N.getStr("accessibility.learnMore"),

@@ -169,13 +169,13 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
   }
 
   const auto& willChange = aItem->Frame()->StyleDisplay()->mWillChange;
-  if (!willChange.IsEmpty()) {
+  if (!willChange.features.IsEmpty()) {
     aStream << " (will-change=";
-    for (size_t i = 0; i < willChange.Length(); i++) {
+    for (size_t i = 0; i < willChange.features.Length(); i++) {
       if (i > 0) {
         aStream << ",";
       }
-      nsDependentAtomString buffer(willChange[i]);
+      nsDependentAtomString buffer(willChange.features.AsSpan()[i].AsAtom());
       aStream << NS_LossyConvertUTF16toASCII(buffer).get();
     }
     aStream << ")";

@@ -32,6 +32,7 @@ toolkit.jar:
   skin/classic/global/icons/check.svg                      (../../shared/icons/check.svg)
   skin/classic/global/icons/check-partial.svg              (../../shared/icons/check-partial.svg)
   skin/classic/global/icons/close.svg                      (../../shared/icons/close.svg)
+  skin/classic/global/icons/searchfield-cancel.svg         (../../shared/icons/searchfield-cancel.svg)
   skin/classic/global/pictureinpicture/close-pip.svg       (../../shared/pictureinpicture/close-pip.svg)
   skin/classic/global/icons/columnpicker.svg               (../../shared/icons/columnpicker.svg)
   skin/classic/global/icons/delete.svg                     (../../shared/icons/delete.svg)
@@ -114,4 +115,3 @@ toolkit.jar:
   skin/classic/global/plugins/contentPluginStripe.png       (../../shared/plugins/contentPluginStripe.png)
   skin/classic/global/pictureinpicture/player.css           (../../shared/pictureinpicture/player.css)
   skin/classic/global/media/pictureinpicture.svg            (../../shared/media/pictureinpicture.svg)
-

@@ -7,7 +7,7 @@
 
 // React
 const { createFactory, Component } = require("devtools/client/shared/vendor/react");
-const { div } = require("devtools/client/shared/vendor/react-dom-factories");
+const { div, span } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { L10N } = require("../utils/l10n");
 const ToggleButton = createFactory(require("./Button").ToggleButton);
@@ -29,6 +29,7 @@ class AccessibilityTreeFilter extends Component {
       filters: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
       walker: PropTypes.object.isRequired,
+      describedby: PropTypes.string,
     };
   }
 
@@ -72,7 +73,8 @@ class AccessibilityTreeFilter extends Component {
   }
 
   render() {
-    const { auditing, filters } = this.props;
+    const { auditing, filters, describedby } = this.props;
+    const toolbarLabelID = "accessibility-tree-filters-label";
     const filterButtons = Object.entries(filters).map(([filterKey, active]) =>
       ToggleButton({
         className: "badge",
@@ -87,8 +89,11 @@ class AccessibilityTreeFilter extends Component {
     return div({
       role: "toolbar",
       className: "accessibility-tree-filters",
+      "aria-labelledby": toolbarLabelID,
+      "aria-describedby": describedby,
     },
-      L10N.getStr("accessibility.tree.filters"),
+      span({ id: toolbarLabelID, role: "presentation" },
+        L10N.getStr("accessibility.tree.filters")),
       ...filterButtons);
   }
 }

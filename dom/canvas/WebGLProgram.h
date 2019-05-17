@@ -229,7 +229,7 @@ class WebGLProgram final : public nsWrapperCache,
   WebGLRefPtr<WebGLShader> mFragShader;
   size_t mNumActiveTFOs;
 
-  std::map<nsCString, GLuint> mNextLink_BoundAttribLocs;
+  std::map<std::string, GLuint> mNextLink_BoundAttribLocs;
 
   std::vector<nsString> mNextLink_TransformFeedbackVaryings;
   GLenum mNextLink_TransformFeedbackBufferMode;

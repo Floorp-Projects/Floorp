@@ -67,6 +67,12 @@ if (!global.URLSearchParams) {
   global.URLSearchParams = require("url").URLSearchParams;
 }
 
+// Mock ChromeUtils.
+global.ChromeUtils = {
+  import: () => {},
+  defineModuleGetter: () => {},
+};
+
 // Point to vendored-in files and mocks when needed.
 const requireHacker = require("require-hacker");
 requireHacker.global_hook("default", (path, module) => {
@@ -86,8 +92,6 @@ requireHacker.global_hook("default", (path, module) => {
       return getModule("devtools/client/shared/vendor/react-dev");
     case "chrome":
       return `module.exports = { Cc: {}, Ci: {}, Cu: {} }`;
-    case "ChromeUtils":
-      return `module.exports = { import: () => {} }`;
   }
 
   // Some modules depend on Chrome APIs which don't work in mocha. When such a module

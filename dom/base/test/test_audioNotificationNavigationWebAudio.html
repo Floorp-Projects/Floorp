@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for audio controller in windows, when using the Web Audio API</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+</pre>
+<iframe></iframe>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// playback starts, stops when the page is reloaded, and starts again.
+var expectedNotification = ["active", "inactive-pause", "active"];
+var iframe = null;
+
+var observer = {
+  observe: function(subject, topic, data) {
+    is(topic, "audio-playback", "audio-playback received");
+    var expected = expectedNotification.shift();
+    is(data, expected, "This is the right notification");
+    if (expected != "inactive-pause") {
+      runTest();
+    }
+  }
+};
+
+var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                                   .getService(SpecialPowers.Ci.nsIObserverService);
+
+var tests = [
+  function() {
+    iframe = document.querySelector("iframe");
+    observerService.addObserver(observer, "audio-playback");
+    ok(true, "Observer set");
+    runTest();
+  },
+
+  function() {
+    iframe.src = "file_webAudioAudible.html";
+  },
+
+  function() {
+    // Reload
+    iframe.src = "file_webAudioAudible.html";
+  },
+  function() {
+    // Wait for the "active" notification, that is expected after the previous
+    // load of "file_webAudioAudible.html".
+    runTest();
+  }
+];
+
+function runTest() {
+  if (!tests.length) {
+    observerService.removeObserver(observer, "audio-playback");
+    ok(true, "Observer removed");
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+onload = runTest;
+
+</script>
+</body>
+</html>
+

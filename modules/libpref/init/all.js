@@ -2671,7 +2671,7 @@ pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);
 // assertion flag will be set to false after fixing Bug 1473549
 pref("security.allow_eval_with_system_principal", false);
-pref("security.uris_using_eval_with_system_principal", "autocomplete.xml,redux.js,react-redux.js,content-task.js,preferencesbindings.js,lodash.js,jszip.js,sinon-7.2.7.js,ajv-4.1.1.js,jsol.js,simpletest/simpletest.js");
+pref("security.uris_using_eval_with_system_principal", "autocomplete.xml,redux.js,react-redux.js,content-task.js,preferencesbindings.js,lodash.js,jszip.js,sinon-7.2.7.js,ajv-4.1.1.js,jsol.js");
 #endif
 
 #if defined(DEBUG) || defined(FUZZING)
@@ -4925,7 +4925,6 @@ pref("webgl.max-contexts-per-principal", 16);
 pref("webgl.max-warnings-per-context", 32);
 pref("webgl.enable-draft-extensions", false);
 pref("webgl.enable-privileged-extensions", false);
-pref("webgl.bypass-shader-validation", false);
 pref("webgl.disable-fail-if-major-performance-caveat", false);
 pref("webgl.disable-DOM-blit-uploads", false);
 pref("webgl.allow-fb-invalidation", false);

@@ -31,8 +31,6 @@ job-defaults:
         max-run-time: 7200
         retry-exit-status:
             - 255
-        env:
-            CHANNEL: "beta-localtest"
     treeherder:
         symbol: UV(UVS)
         kind: test

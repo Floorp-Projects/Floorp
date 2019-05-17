@@ -1178,7 +1178,9 @@ window._gBrowser = {
     // if the tab is a blank one.
     if (newBrowser._urlbarFocused && gURLBar) {
       // Explicitly close the popup if the URL bar retains focus
-      gURLBar.closePopup();
+      if (!gURLBar.openViewOnFocus) {
+        gURLBar.closePopup();
+      }
 
       // If the user happened to type into the URL bar for this browser
       // by the time we got here, focusing will cause the text to be

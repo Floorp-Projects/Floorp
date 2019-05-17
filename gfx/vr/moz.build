@@ -69,6 +69,13 @@ else:
         'service',
     ]
 
+# Only target x64 for vrhost since WebVR is only supported on 64bit.
+# Also, only use MSVC compiler for Windows-specific linking
+if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['HAVE_64BIT_BUILD'] and CONFIG['CC_TYPE'] not in ('clang', 'gcc'):
+    DIRS += [
+        'vrhost'
+    ]
+
 IPDL_SOURCES = [
     'ipc/PVR.ipdl',
     'ipc/PVRGPU.ipdl',

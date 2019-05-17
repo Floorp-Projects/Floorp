@@ -1410,7 +1410,7 @@ void nsTableFrame::DisplayGenericTablePart(
     // when we're not the whole table?
 
     // Paint the outset box-shadows for the table frames
-    if (aFrame->StyleEffects()->mBoxShadow) {
+    if (!aFrame->StyleEffects()->mBoxShadow.IsEmpty()) {
       aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowOuter>(
           aBuilder, aFrame);
     }
@@ -1483,7 +1483,7 @@ void nsTableFrame::DisplayGenericTablePart(
     // when we're not the whole table?
 
     // Paint the inset box-shadows for the table frames
-    if (aFrame->StyleEffects()->mBoxShadow) {
+    if (!aFrame->StyleEffects()->mBoxShadow.IsEmpty()) {
       aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowInner>(
           aBuilder, aFrame);
     }

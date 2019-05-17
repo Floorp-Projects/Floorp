@@ -71,7 +71,12 @@ type UpdateTabAction = {|
 |};
 
 type NavigateAction =
-  | {| +type: "CONNECT", +mainThread: MainThread, +canRewind: boolean |}
+  | {|
+      +type: "CONNECT",
+      +mainThread: MainThread,
+      +canRewind: boolean,
+      +isWebExtension: boolean
+    |}
   | {| +type: "NAVIGATE", +mainThread: MainThread |};
 
 export type FocusItem = TreeNode;

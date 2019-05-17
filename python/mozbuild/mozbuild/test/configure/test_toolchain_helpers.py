@@ -42,7 +42,6 @@ class CompilerPreprocessor(Preprocessor):
         # different handling than what our Preprocessor does out of the box.
         # Hack around it enough that the configure tests work properly.
         context = self.context
-
         def normalize_numbers(value):
             if isinstance(value, types.StringTypes):
                 if value[-1:] == 'L' and value[:-1].isdigit():
@@ -50,7 +49,6 @@ class CompilerPreprocessor(Preprocessor):
             return value
         # Our Preprocessor doesn't handle macros with parameters, so we hack
         # around that for __has_feature()-like things.
-
         def normalize_has_feature_or_builtin(expr):
             return self.HAS_FEATURE_OR_BUILTIN.sub(r'\1\2', expr)
         self.context = self.Context(
@@ -164,7 +162,6 @@ class FakeCompiler(dict):
 
     For convenience, FakeCompiler instances can be added (+) to one another.
     '''
-
     def __init__(self, *definitions):
         for definition in definitions:
             if all(not isinstance(d, dict) for d in definition.itervalues()):

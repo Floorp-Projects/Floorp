@@ -582,9 +582,6 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
     gl->fEnable(LOCAL_GL_TEXTURE_CUBE_MAP_SEAMLESS);
   }
 
-  // Check the shader validator pref
-  mBypassShaderValidation = gfxPrefs::WebGLBypassShaderValidator();
-
   // initialize shader translator
   if (!sh::Initialize()) {
     *out_failReason = {"FEATURE_FAILURE_WEBGL_GLSL",
