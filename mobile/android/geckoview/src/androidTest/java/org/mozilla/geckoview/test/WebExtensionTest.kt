@@ -9,6 +9,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
+import org.hamcrest.core.StringEndsWith.endsWith
 import org.hamcrest.core.IsEqual.equalTo
 import org.json.JSONObject
 import org.junit.Assert
@@ -17,7 +18,9 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
+import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.HttpBin
 import java.net.URI
 
@@ -458,6 +461,50 @@ class WebExtensionTest : BaseSessionTest() {
         } finally {
             httpBin.stop()
         }
+    }
+
+    @Test
+    fun loadWebExtensionPage() {
+        val extension = WebExtension("resource://android/assets/web_extensions/extension-page-update/")
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(extension))
+
+        mainSession.loadUri("http://example.com");
+
+        mainSession.waitUntilCalled(object : Callbacks.NavigationDelegate, Callbacks.ProgressDelegate {
+            @GeckoSessionTestRule.AssertCalled(count = 1)
+            override fun onLocationChange(session: GeckoSession, url: String?) {
+                assertThat("Url should load example.com first",
+                        url, equalTo("http://example.com/"))
+            }
+
+            @GeckoSessionTestRule.AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Page should load successfully.",
+                        success, equalTo(true))
+            }
+        })
+
+
+        var page: String? = null
+        var pageStop = GeckoResult<Boolean>()
+
+        mainSession.delegateUntilTestEnd(object : Callbacks.NavigationDelegate, Callbacks.ProgressDelegate {
+            override fun onLocationChange(session: GeckoSession, url: String?) {
+                page = url
+            }
+
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                if (success && page != null && page!!.endsWith("/tab.html")) {
+                    pageStop.complete(true)
+                }
+            }
+        })
+
+        // Make sure the page loaded successfully
+        sessionRule.waitForResult(pageStop)
+
+        assertThat("Url should load WebExtension page", page, endsWith("/tab.html"))
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(extension))
     }
 
     @Test
