@@ -636,8 +636,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   MOZ_MUST_USE MOZ_ALWAYS_INLINE bool internalUpdateLineInfoForEOL(
       uint32_t lineStartOffset);
 
-  void undoInternalUpdateLineInfoForEOL();
-
  public:
   const Token& nextToken() const {
     MOZ_ASSERT(hasLookahead());
