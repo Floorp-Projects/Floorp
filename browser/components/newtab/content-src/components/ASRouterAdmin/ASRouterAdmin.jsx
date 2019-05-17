@@ -472,7 +472,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     if (!this.state.providers) {
       return null;
     }
-    return (<p>Show messages from <select value={this.state.messageFilter} onChange={this.onChangeMessageFilter}>
+    return (<p>Show messages from <select value={this.state.messageFilter} onBlur={this.onChangeMessageFilter}>
       <option value="all">all providers</option>
       {this.state.providers.map(provider => (<option key={provider.id} value={provider.id}>{provider.id}</option>))}
     </select></p>);
@@ -541,7 +541,7 @@ export class ASRouterAdminInner extends React.PureComponent {
       <ModalOverlay title="New targeting parameters" button_label={errors ? "Cancel" : "Done"} onDoneButton={this.onPasteTargetingParams}>
         <div className="onboardingMessage">
           <p>
-            <textarea onChange={this.onNewTargetingParams} value={this.state.newStringTargetingParameters} autoFocus={true} rows="20" cols="60" />
+            <textarea onChange={this.onNewTargetingParams} value={this.state.newStringTargetingParameters} rows="20" cols="60" />
           </p>
           <p ref="targetingParamsEval" />
         </div>

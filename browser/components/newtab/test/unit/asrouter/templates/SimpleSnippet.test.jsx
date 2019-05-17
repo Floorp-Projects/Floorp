@@ -50,9 +50,17 @@ describe("SimpleSnippet", () => {
     const wrapper = mountAndCheckProps({title: "Foo"});
     assert.equal(wrapper.find(".title").text().trim(), "Foo");
   });
-  it("should render .icon", () => {
+  it("should render a light theme variant .icon", () => {
     const wrapper = mountAndCheckProps({icon: "data:image/gif;base64,R0lGODl"});
-    assert.equal(wrapper.find(".icon").prop("src"), "data:image/gif;base64,R0lGODl");
+    assert.equal(wrapper.find(".icon-light-theme").prop("src"), "data:image/gif;base64,R0lGODl");
+  });
+  it("should render a dark theme variant .icon", () => {
+    const wrapper = mountAndCheckProps({icon_dark_theme: "data:image/gif;base64,R0lGODl"});
+    assert.equal(wrapper.find(".icon-dark-theme").prop("src"), "data:image/gif;base64,R0lGODl");
+  });
+  it("should render a light theme variant .icon as fallback", () => {
+    const wrapper = mountAndCheckProps({icon_dark_theme: "", icon: "data:image/gif;base64,R0lGODp"});
+    assert.equal(wrapper.find(".icon-dark-theme").prop("src"), "data:image/gif;base64,R0lGODp");
   });
   it("should render .button_label and default className", () => {
     const wrapper = mountAndCheckProps({
@@ -81,13 +89,25 @@ describe("SimpleSnippet", () => {
 
     assert.lengthOf(wrapper.find(".innerContentWrapper"), 1);
   });
-  it("should render a section header if text and icon are specified", () => {
+  it("should render a section header if text and icon (light-theme) are specified", () => {
     const wrapper = mountAndCheckProps({
       section_title_icon: "data:image/gif;base64,R0lGODl",
       section_title_text: "Messages from Mozilla",
     });
 
-    assert.equal(wrapper.find(".section-title .icon").prop("style").backgroundImage, 'url("data:image/gif;base64,R0lGODl")');
+    assert.equal(wrapper.find(".section-title .icon-light-theme").prop("style").backgroundImage, 'url("data:image/gif;base64,R0lGODl")');
+    assert.equal(wrapper.find(".section-title-text").text().trim(), "Messages from Mozilla");
+    // ensure there is no <a> when a section_title_url is not specified
+    assert.lengthOf(wrapper.find(".section-title a"), 0);
+  });
+  it("should render a section header if text and icon (light-theme) are specified", () => {
+    const wrapper = mountAndCheckProps({
+      section_title_icon: "data:image/gif;base64,R0lGODl",
+      section_title_icon_dark_theme: "data:image/gif;base64,R0lGODl",
+      section_title_text: "Messages from Mozilla",
+    });
+
+    assert.equal(wrapper.find(".section-title .icon-dark-theme").prop("style").backgroundImage, 'url("data:image/gif;base64,R0lGODl")');
     assert.equal(wrapper.find(".section-title-text").text().trim(), "Messages from Mozilla");
     // ensure there is no <a> when a section_title_url is not specified
     assert.lengthOf(wrapper.find(".section-title a"), 0);
