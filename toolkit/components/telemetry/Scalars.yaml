@@ -1449,6 +1449,21 @@ devtools.inspector:
     record_in_processes:
       - 'main'
 
+  node_selection_count:
+    bug_numbers:
+      - 1550794
+    description: >
+      Number of times a different node is marked as selected in the Inspector regardless
+      of the cause: context menu, manual selection in markup view, etc.
+    expires: "never"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools.shadowdom:
   shadow_root_displayed:
     bug_numbers:
