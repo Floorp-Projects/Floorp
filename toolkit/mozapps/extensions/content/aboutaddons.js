@@ -60,7 +60,7 @@ const PRIVATE_BROWSING_PERMS =
 const AddonCardListenerHandler = {
   ADDON_EVENTS: new Set([
     "onDisabled", "onEnabled", "onInstalled", "onPropertyChanged",
-    "onUninstalled",
+    "onUninstalling",
   ]),
   MANAGER_EVENTS: new Set(["onUpdateModeChanged"]),
   INSTALL_EVENTS: new Set(["onNewInstall", "onInstallEnded"]),
@@ -1231,6 +1231,12 @@ class AddonCard extends HTMLElement {
   onEnabled(addon) {
     this.reloading = false;
     this.update();
+  }
+
+  onUninstalling() {
+    // Dispatch a remove event, the DetailView is listening for this to get us
+    // back to the list view when the current add-on is removed.
+    this.sendEvent("remove");
   }
 
   onUpdateModeChanged() {
