@@ -18,7 +18,6 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -125,8 +124,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
 
   nsresult AsyncOpen(nsIPrincipal* aPrincipal, uint64_t aInnerWindowID,
                      nsITransportProvider* aTransportProvider,
-                     const nsACString& aNegotiatedExtensions,
-                     UniquePtr<SerializedStackHolder> aOriginStack);
+                     const nsACString& aNegotiatedExtensions);
 
   nsresult ParseURL(const nsAString& aURL);
   nsresult InitializeConnection(nsIPrincipal* aPrincipal,
@@ -1121,13 +1119,11 @@ class ConnectRunnable final : public WebSocketMainThreadRunnable {
 
 class AsyncOpenRunnable final : public WebSocketMainThreadRunnable {
  public:
-  explicit AsyncOpenRunnable(WebSocketImpl* aImpl,
-                             UniquePtr<SerializedStackHolder> aOriginStack)
+  explicit AsyncOpenRunnable(WebSocketImpl* aImpl)
       : WebSocketMainThreadRunnable(
             aImpl->mWorkerRef->Private(),
             NS_LITERAL_CSTRING("WebSocket :: AsyncOpen")),
         mImpl(aImpl),
-        mOriginStack(std::move(aOriginStack)),
         mErrorCode(NS_OK) {
     MOZ_ASSERT(mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
@@ -1163,8 +1159,7 @@ class AsyncOpenRunnable final : public WebSocketMainThreadRunnable {
       windowID = topInner->WindowID();
     }
 
-    mErrorCode = mImpl->AsyncOpen(principal, windowID, nullptr, EmptyCString(),
-                                  std::move(mOriginStack));
+    mErrorCode = mImpl->AsyncOpen(principal, windowID, nullptr, EmptyCString());
     return true;
   }
 
@@ -1173,15 +1168,13 @@ class AsyncOpenRunnable final : public WebSocketMainThreadRunnable {
     MOZ_ASSERT(aTopLevelWorkerPrivate && !aTopLevelWorkerPrivate->GetWindow());
 
     mErrorCode = mImpl->AsyncOpen(aTopLevelWorkerPrivate->GetPrincipal(), 0,
-                                  nullptr, EmptyCString(), nullptr);
+                                  nullptr, EmptyCString());
     return true;
   }
 
  private:
   // Raw pointer. This worker runs synchronously.
   WebSocketImpl* mImpl;
-
-  UniquePtr<SerializedStackHolder> mOriginStack;
 
   nsresult mErrorCode;
 };
@@ -1368,12 +1361,6 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(global);
     nsPIDOMWindowOuter* outerWindow = ownerWindow->GetOuterWindow();
 
-    UniquePtr<SerializedStackHolder> stack;
-    nsIDocShell* docShell = outerWindow->GetDocShell();
-    if (docShell && docShell->GetWatchedByDevtools()) {
-      stack = GetCurrentStackForNetMonitor(aGlobal.Context());
-    }
-
     uint64_t windowID = 0;
     nsCOMPtr<nsPIDOMWindowOuter> topWindow = outerWindow->GetScriptableTop();
     nsCOMPtr<nsPIDOMWindowInner> topInner;
@@ -1386,19 +1373,12 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     }
 
     aRv = webSocket->mImpl->AsyncOpen(principal, windowID, aTransportProvider,
-                                      aNegotiatedExtensions, std::move(stack));
+                                      aNegotiatedExtensions);
   } else {
     MOZ_ASSERT(!aTransportProvider && aNegotiatedExtensions.IsEmpty(),
                "not yet implemented");
-
-    UniquePtr<SerializedStackHolder> stack;
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    if (workerPrivate->IsWatchedByDevtools()) {
-      stack = GetCurrentStackForNetMonitor(aGlobal.Context());
-    }
-
     RefPtr<AsyncOpenRunnable> runnable =
-        new AsyncOpenRunnable(webSocket->mImpl, std::move(stack));
+        new AsyncOpenRunnable(webSocket->mImpl);
     runnable->Dispatch(Canceling, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -1652,8 +1632,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
 nsresult WebSocketImpl::AsyncOpen(nsIPrincipal* aPrincipal,
                                   uint64_t aInnerWindowID,
                                   nsITransportProvider* aTransportProvider,
-                                  const nsACString& aNegotiatedExtensions,
-                                  UniquePtr<SerializedStackHolder> aOriginStack) {
+                                  const nsACString& aNegotiatedExtensions) {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
   MOZ_ASSERT_IF(!aTransportProvider, aNegotiatedExtensions.IsEmpty());
 
@@ -1679,8 +1658,6 @@ nsresult WebSocketImpl::AsyncOpen(nsIPrincipal* aPrincipal,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_CONTENT_BLOCKED;
   }
-
-  NotifyNetworkMonitorAlternateStack(mChannel, std::move(aOriginStack));
 
   mInnerWindowID = aInnerWindowID;
 
