@@ -16,10 +16,10 @@ Each filter is a simple function, but it also have attached a special
 `prepare` method that create a tuple with one instance of a
 :class:`Filter`; this allow to write stuff like::
 
-  from raptor import filters
-  filter_list = filters.ignore_first.prepare(1) + filters.median.prepare()
+  from raptor import filter
+  filters = filter.ignore_first.prepare(1) + filter.median.prepare()
 
-  for filter in filter_list:
+  for filter in filters:
       data = filter(data)
   # data is filtered
 """
