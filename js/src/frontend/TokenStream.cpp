@@ -760,7 +760,8 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
   // Compute and return the final column number from a partial offset/column,
   // using the last-cached offset/column if they're more optimal.
   auto ColumnFromPartial = [this, offset, &sourceUnits](uint32_t partialOffset,
-                                                        uint32_t partialCols) {
+                                                        uint32_t partialCols,
+                                                        UnitsType unitsType) {
     MOZ_ASSERT(partialOffset <= offset);
 
     // If the last lookup on this line was closer to |offset|, use it.
@@ -773,8 +774,18 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
     const Unit* begin = sourceUnits.codeUnitPtrAt(partialOffset);
     const Unit* end = sourceUnits.codeUnitPtrAt(offset);
 
-    partialOffset += PointerRangeSize(begin, end);
-    partialCols += AssertedCast<uint32_t>(unicode::CountCodePoints(begin, end));
+    size_t offsetDelta = AssertedCast<uint32_t>(PointerRangeSize(begin, end));
+    partialOffset += offsetDelta;
+
+    if (unitsType == UnitsType::GuaranteedSingleUnit) {
+      MOZ_ASSERT(unicode::CountCodePoints(begin, end) == offsetDelta,
+                 "guaranteed-single-units also guarantee pointer distance "
+                 "equals code point count");
+      partialCols += offsetDelta;
+    } else {
+      partialCols +=
+          AssertedCast<uint32_t>(unicode::CountCodePoints(begin, end));
+    }
 
     this->lastOffsetOfComputedColumn_ = partialOffset;
     this->lastComputedColumn_ = partialCols;
@@ -783,15 +794,24 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
 
   const uint32_t offsetInLine = offset - start;
 
-  // The index within a relevant |Vector<uint32_t>| of the nearest chunk
-  // info...if it's been computed at all.
+  // The index within any associated |Vector<ChunkInfo>| of |offset|'s chunk.
   const uint32_t chunkIndex = offsetInLine / ColumnChunkLength;
-
-  // Compute the column from the start of the line if chunk information would
-  // direct us to the start of the line -- including if the line's too short to
-  // be chunked.
   if (chunkIndex == 0) {
-    return ColumnFromPartial(start, 0);
+    // We don't know from an |offset| in the zeroth chunk that this line is even
+    // long.  First-chunk info is mostly useless, anyway -- we have |start|
+    // already.  So if we have *easy* access to that zeroth chunk, use it --
+    // otherwise just count pessimally.  (This will still benefit from caching
+    // the last column/offset for computations for successive offsets, so it's
+    // not *always* worst-case.)
+    UnitsType unitsType;
+    if (lastChunkVectorForLine_ && lastChunkVectorForLine_->length() > 0) {
+      MOZ_ASSERT((*lastChunkVectorForLine_)[0].column() == 0);
+      unitsType = (*lastChunkVectorForLine_)[0].unitsType();
+    } else {
+      unitsType = UnitsType::PossiblyMultiUnit;
+    }
+
+    return ColumnFromPartial(start, 0, unitsType);
   }
 
   // If this line has no chunk vector yet, insert one in the hash map.  (The
@@ -801,10 +821,10 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
     if (!ptr) {
       // This could rehash and invalidate a cached vector pointer, but the outer
       // condition means we don't have a cached pointer.
-      if (!longLineColumnInfo_.add(ptr, line, Vector<uint32_t>(cx))) {
+      if (!longLineColumnInfo_.add(ptr, line, Vector<ChunkInfo>(cx))) {
         // In case of OOM, just count columns from the start of the line.
         cx->recoverFromOutOfMemory();
-        return ColumnFromPartial(start, 0);
+        return ColumnFromPartial(start, 0, UnitsType::PossiblyMultiUnit);
       }
     }
 
@@ -828,19 +848,43 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
     const Unit* actualPtr = naivePtr;
     RetractPointerToCodePointBoundary(&actualPtr, limit);
 
+#  ifdef DEBUG
+    if ((*this->lastChunkVectorForLine_)[index].unitsType() ==
+        UnitsType::GuaranteedSingleUnit) {
+      MOZ_ASSERT(naivePtr == actualPtr, "miscomputed unitsType value");
+    }
+#  endif
+
     return naiveOffset - PointerRangeSize(actualPtr, naivePtr);
   };
 
   uint32_t partialOffset;
   uint32_t partialColumn;
+  UnitsType unitsType;
 
   auto entriesLen = AssertedCast<uint32_t>(lastChunkVectorForLine_->length());
-  if (entriesLen <= chunkIndex) {
+  if (chunkIndex < entriesLen) {
+    // We've computed the chunk |offset| resides in.  Compute the column number
+    // from the chunk.
+    partialOffset = RetractedOffsetOfChunk(chunkIndex);
+    partialColumn = (*lastChunkVectorForLine_)[chunkIndex].column();
+
+    // This is exact if |chunkIndex| isn't the last chunk.
+    unitsType = (*lastChunkVectorForLine_)[chunkIndex].unitsType();
+
+    // Otherwise the last chunk is pessimistically assumed to contain multi-unit
+    // code points because we haven't fully examined its contents yet -- they
+    // may not have been tokenized yet, they could contain encoding errors, or
+    // they might not even exist.
+    MOZ_ASSERT_IF(chunkIndex == entriesLen - 1,
+                  (*lastChunkVectorForLine_)[chunkIndex].unitsType() ==
+                      UnitsType::PossiblyMultiUnit);
+  } else {
     // Extend the vector from its last entry or the start of the line.  (This is
     // also a suitable partial start point if we must recover from OOM.)
     if (entriesLen > 0) {
       partialOffset = RetractedOffsetOfChunk(entriesLen - 1);
-      partialColumn = (*lastChunkVectorForLine_)[entriesLen - 1];
+      partialColumn = (*lastChunkVectorForLine_)[entriesLen - 1].column();
     } else {
       partialOffset = start;
       partialColumn = 0;
@@ -849,21 +893,24 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
     if (!lastChunkVectorForLine_->reserve(chunkIndex + 1)) {
       // As earlier, just start from the greatest offset/column in case of OOM.
       cx->recoverFromOutOfMemory();
-      return ColumnFromPartial(partialOffset, partialColumn);
+      return ColumnFromPartial(partialOffset, partialColumn,
+                               UnitsType::PossiblyMultiUnit);
     }
 
     // OOM is no longer possible now.  \o/
 
-    // The vector always begins with the column of the line start, i.e. zero.
+    // The vector always begins with the column of the line start, i.e. zero,
+    // with chunk units pessimally assumed not single-unit.
     if (entriesLen == 0) {
-      lastChunkVectorForLine_->infallibleAppend(0);
+      lastChunkVectorForLine_->infallibleAppend(
+          ChunkInfo(0, UnitsType::PossiblyMultiUnit));
       entriesLen++;
     }
 
     do {
       const Unit* const begin = sourceUnits.codeUnitPtrAt(partialOffset);
       const Unit* chunkLimit = sourceUnits.codeUnitPtrAt(
-          start + std::min(entriesLen * ColumnChunkLength, offsetInLine));
+          start + std::min(entriesLen++ * ColumnChunkLength, offsetInLine));
 
       MOZ_ASSERT(begin < chunkLimit);
       MOZ_ASSERT(chunkLimit <= limit);
@@ -880,18 +927,28 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
       MOZ_ASSERT(begin < chunkLimit);
       MOZ_ASSERT(chunkLimit <= limit);
 
-      partialOffset += PointerRangeSize(begin, chunkLimit);
-      partialColumn += unicode::CountCodePoints(begin, chunkLimit);
+      size_t numUnits = PointerRangeSize(begin, chunkLimit);
+      size_t numCodePoints = unicode::CountCodePoints(begin, chunkLimit);
 
-      lastChunkVectorForLine_->infallibleAppend(partialColumn);
-      entriesLen++;
+      // If this chunk (which will become non-final at the end of the loop) is
+      // all single-unit code points, annotate the chunk accordingly.
+      if (numUnits == numCodePoints) {
+        lastChunkVectorForLine_->back().guaranteeSingleUnits();
+      }
+
+      partialOffset += numUnits;
+      partialColumn += numCodePoints;
+
+      lastChunkVectorForLine_->infallibleEmplaceBack(
+          partialColumn, UnitsType::PossiblyMultiUnit);
     } while (entriesLen < chunkIndex + 1);
-  } else {
-    partialOffset = RetractedOffsetOfChunk(chunkIndex);
-    partialColumn = (*lastChunkVectorForLine_)[chunkIndex];
+
+    // We're at a spot in the current final chunk, and final chunks never have
+    // complete units information, so be pessimistic.
+    unitsType = UnitsType::PossiblyMultiUnit;
   }
 
-  return ColumnFromPartial(partialOffset, partialColumn);
+  return ColumnFromPartial(partialOffset, partialColumn, unitsType);
 }
 
 #endif  // JS_COLUMN_DIMENSION_IS_CODE_POINTS()
