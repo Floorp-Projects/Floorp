@@ -73,9 +73,8 @@ public class WebAuthnUtils
         return result;
     }
 
-    public static void makeCredential(final String rpId, final GeckoBundle identifiers,
+    public static void makeCredential(final GeckoBundle credentialBundle,
                                       final byte[] userId, final byte[] challenge,
-                                      final long timeoutMs, final String originStr,
                                       final WebAuthnTokenManager.WebAuthnPublicCredential[] excludeList,
                                       final GeckoBundle authenticatorSelection,
                                       final GeckoBundle extensions,
@@ -85,6 +84,12 @@ public class WebAuthnUtils
 
         if (currentActivity == null) {
             handler.onFailure("UNKNOWN_ERR");
+            return;
+        }
+
+        if (!credentialBundle.containsKey("isWebAuthn")) {
+            // FIDO U2F not supported by Android (for us anyway) at this time
+            handler.onFailure("NOT_SUPPORTED_ERR");
             return;
         }
 
@@ -111,9 +116,9 @@ public class WebAuthnUtils
 
         PublicKeyCredentialUserEntity user =
             new PublicKeyCredentialUserEntity(userId,
-                    identifiers.getString("userName", ""),
-                    identifiers.getString("userIcon", ""),
-                    identifiers.getString("userDisplayName", ""));
+                    credentialBundle.getString("userName", ""),
+                    credentialBundle.getString("userIcon", ""),
+                    credentialBundle.getString("userDisplayName", ""));
 
         AttestationConveyancePreference pref =
             AttestationConveyancePreference.NONE;
@@ -158,9 +163,10 @@ public class WebAuthnUtils
         }
 
         PublicKeyCredentialRpEntity rp =
-            new PublicKeyCredentialRpEntity(rpId,
-                    identifiers.getString("rpName", ""),
-                    identifiers.getString("rpIcon", ""));
+            new PublicKeyCredentialRpEntity(
+                    credentialBundle.getString("rpId"),
+                    credentialBundle.getString("rpName", ""),
+                    credentialBundle.getString("rpIcon", ""));
 
         PublicKeyCredentialCreationOptions requestOptions =
             requestBuilder
@@ -171,11 +177,11 @@ public class WebAuthnUtils
                 .setChallenge(challenge)
                 .setRp(rp)
                 .setParameters(params)
-                .setTimeoutSeconds(timeoutMs / 1000.0)
+                .setTimeoutSeconds(credentialBundle.getLong("timeoutMS") / 1000.0)
                 .setExcludeList(excludedList)
                 .build();
 
-        Uri origin = Uri.parse(originStr);
+        Uri origin = Uri.parse(credentialBundle.getString("origin"));
 
         BrowserPublicKeyCredentialCreationOptions browserOptions =
             new BrowserPublicKeyCredentialCreationOptions.Builder()
@@ -260,9 +266,9 @@ public class WebAuthnUtils
         }
     }
 
-    public static void getAssertion(final String rpId, final byte[] challenge,
-                                    final long timeoutMs, final String originStr,
+    public static void getAssertion(final byte[] challenge,
                                     final WebAuthnTokenManager.WebAuthnPublicCredential[] allowList,
+                                    final GeckoBundle assertionBundle,
                                     final GeckoBundle extensions,
                                     WebAuthnTokenManager.WebAuthnGetAssertionResponse handler) {
         final Activity currentActivity =
@@ -270,6 +276,12 @@ public class WebAuthnUtils
 
         if (currentActivity == null) {
             handler.onFailure("UNKNOWN_ERR");
+            return;
+        }
+
+        if (!assertionBundle.containsKey("isWebAuthn")) {
+            // FIDO U2F not supported by Android (for us anyway) at this time
+            handler.onFailure("NOT_SUPPORTED_ERR");
             return;
         }
 
@@ -298,12 +310,12 @@ public class WebAuthnUtils
             new PublicKeyCredentialRequestOptions.Builder()
                 .setChallenge(challenge)
                 .setAllowList(allowedList)
-                .setTimeoutSeconds(timeoutMs / 1000.0)
-                .setRpId(rpId)
+                .setTimeoutSeconds(assertionBundle.getLong("timeoutMS") / 1000.0)
+                .setRpId(assertionBundle.getString("rpId"))
                 .setAuthenticationExtensions(ext)
                 .build();
 
-        Uri origin = Uri.parse(originStr);
+        Uri origin = Uri.parse(assertionBundle.getString("origin"));
         BrowserPublicKeyCredentialRequestOptions browserOptions =
             new BrowserPublicKeyCredentialRequestOptions.Builder()
                 .setPublicKeyCredentialRequestOptions(requestOptions)
