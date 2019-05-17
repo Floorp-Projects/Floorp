@@ -1,6 +1,9 @@
 import React from "react";
 import {RichText} from "../../components/RichText/RichText";
 
+// Alt text if available; in the future this should come from the server. See bug 1551711
+const ICON_ALT_TEXT = "";
+
 export class ReturnToAMO extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -34,7 +37,7 @@ export class ReturnToAMO extends React.PureComponent {
   }
 
   renderText() {
-    const customElement = <img src={this.props.content.addon_icon} width="20px" height="20px" />;
+    const customElement = <img src={this.props.content.addon_icon} width="20px" height="20px" alt={ICON_ALT_TEXT} />;
     return (<RichText
       customElements={{icon: customElement}}
       amo_html={this.props.content.text}
