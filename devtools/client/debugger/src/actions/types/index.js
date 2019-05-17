@@ -16,6 +16,7 @@ import type { SourceAction } from "./SourceAction";
 import type { SourceActorAction } from "./SourceActorAction";
 import type { UIAction } from "./UIAction";
 import type { PauseAction } from "./PauseAction";
+import type { PreviewAction } from "./PreviewAction";
 import type { ASTAction } from "./ASTAction";
 import { clientCommands } from "../../client/firefox";
 import type { Panel } from "../../client/firefox/types";
@@ -158,8 +159,6 @@ export type {
 
 export type { panelPositionType } from "./UIAction";
 
-export type { ASTAction } from "./ASTAction";
-
 /**
  * Actions: Source, Breakpoint, and Navigation
  *
@@ -176,6 +175,7 @@ export type Action =
   | NavigateAction
   | UIAction
   | ASTAction
+  | PreviewAction
   | QuickOpenAction
   | FileTextSearchAction
   | ProjectTextSearchAction

@@ -13,7 +13,6 @@ import type { AstLocation, SymbolDeclarations } from "../workers/parser";
 
 import type { Source } from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
-import type { Node, Grip, GripProperties } from "devtools-reps";
 
 type EmptyLinesType = number[];
 
@@ -29,33 +28,17 @@ export type SourceMetaDataType = {
 
 export type SourceMetaDataMap = { [k: string]: SourceMetaDataType };
 
-export type Preview = {| updating: true |} | null | PreviewValue;
-
-export type PreviewValue = {|
-  expression: string,
-  result: Grip,
-  root: Node,
-  properties: GripProperties,
-  location: AstLocation,
-  cursorPos: any,
-  tokenPos: AstLocation,
-  updating: false,
-  target: HTMLDivElement
-|};
-
 export type ASTState = {
   +symbols: SymbolsMap,
   +outOfScopeLocations: ?Array<AstLocation>,
-  +inScopeLines: ?Array<number>,
-  +preview: Preview
+  +inScopeLines: ?Array<number>
 };
 
 export function initialASTState(): ASTState {
   return {
     symbols: {},
     outOfScopeLocations: null,
-    inScopeLines: null,
-    preview: null
+    inScopeLines: null
   };
 }
 
@@ -83,27 +66,6 @@ function update(state: ASTState = initialASTState(), action: Action): ASTState {
 
     case "IN_SCOPE_LINES": {
       return { ...state, inScopeLines: action.lines };
-    }
-
-    case "CLEAR_SELECTION": {
-      return { ...state, preview: null };
-    }
-
-    case "SET_PREVIEW": {
-      if (action.status == "start") {
-        return { ...state, preview: { updating: true } };
-      }
-
-      if (!action.value) {
-        return { ...state, preview: null };
-      }
-
-      // NOTE: if the preview does not exist, it has been cleared
-      if (state.preview) {
-        return { ...state, preview: { ...action.value, updating: false } };
-      }
-
-      return state;
     }
 
     case "RESUME": {
@@ -160,10 +122,6 @@ export function isSymbolsLoading(state: OuterState, source: ?Source): boolean {
 
 export function getOutOfScopeLocations(state: OuterState) {
   return state.ast.outOfScopeLocations;
-}
-
-export function getPreview(state: OuterState) {
-  return state.ast.preview;
 }
 
 export function getInScopeLines(state: OuterState) {
