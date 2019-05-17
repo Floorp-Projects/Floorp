@@ -3,26 +3,10 @@ from __future__ import print_function
 import os, sys, json, re
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
-generic_directory = os.path.abspath(os.path.join(script_directory, '..'))
-
 template_directory = os.path.abspath(os.path.join(script_directory,
-                                                  '..',
                                                   'template'))
-spec_directory = os.path.abspath(os.path.join(script_directory, '..', '..'))
 test_root_directory = os.path.abspath(os.path.join(script_directory,
                                                    '..', '..', '..'))
-
-spec_filename = os.path.join(spec_directory, "spec.src.json")
-generated_spec_json_filename = os.path.join(spec_directory, "spec_json.js")
-
-selection_pattern = '%(delivery_method)s/' + \
-                    '%(origin)s/' + \
-                    '%(source_protocol)s-%(target_protocol)s/' + \
-                    '%(subresource)s/' + \
-                    '%(redirection)s/'
-
-test_file_path_pattern = '%(spec_name)s/' + selection_pattern + \
-                         '%(name)s.%(source_protocol)s.html'
 
 
 def get_template(basename):
@@ -42,10 +26,7 @@ def read_nth_line(fp, line_number):
       return line
 
 
-def load_spec_json(path_to_spec = None):
-    if path_to_spec is None:
-      path_to_spec = spec_filename
-
+def load_spec_json(path_to_spec):
     re_error_location = re.compile('line ([0-9]+) column ([0-9]+)')
     with open(path_to_spec, "r") as f:
         try:
