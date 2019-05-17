@@ -163,8 +163,9 @@ nsresult GetOriginFromPrincipal(nsIPrincipal* aPrincipal, nsACString& aOrigin) {
   // changes the suffix being hashed.
   attrs.mPrivateBrowsingId = 0;
 
-  // Disable userContext for permissions.
-  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
+  // Disable userContext and firstParty isolation for permissions.
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
   attrs.CreateSuffix(suffix);
   aOrigin.Append(suffix);
@@ -184,8 +185,9 @@ nsresult GetPrincipalFromOrigin(const nsACString& aOrigin,
   // changes the suffix being hashed.
   attrs.mPrivateBrowsingId = 0;
 
-  // Disable userContext for permissions.
-  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
+  // Disable userContext and firstParty isolation for permissions.
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
@@ -276,8 +278,9 @@ already_AddRefed<nsIPrincipal> GetNextSubDomainPrincipal(
   // Copy the attributes over
   mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
 
-  // Disable userContext for permissions.
-  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
+  // Disable userContext and firstParty isolation for permissions.
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
   nsCOMPtr<nsIPrincipal> principal =
       mozilla::BasePrincipal::CreateCodebasePrincipal(newURI, attrs);
@@ -3278,8 +3281,9 @@ void nsPermissionManager::GetKeyForOrigin(const nsACString& aOrigin,
   // changes the suffix being hashed.
   attrs.mPrivateBrowsingId = 0;
 
-  // Disable userContext for permissions.
-  attrs.StripAttributes(OriginAttributes::STRIP_USER_CONTEXT_ID);
+  // Disable userContext and firstParty isolation for permissions.
+  attrs.StripAttributes(OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
 #ifdef DEBUG
   // Parse the origin string into a principal, and extract some useful
