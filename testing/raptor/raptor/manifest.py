@@ -34,6 +34,10 @@ playback_settings = [
     'playback_recordings',
 ]
 
+whitelist_live_site_tests = [
+    "raptor-youtube-playback",
+]
+
 
 def filter_app(tests, values):
     for test in tests:
@@ -51,6 +55,10 @@ def filter_live_sites(tests, values):
                 yield test
             # can run with live sites if running on try
             elif "hg.mozilla.org/try" in os.environ.get('GECKO_HEAD_REPOSITORY', 'n/a'):
+                yield test
+
+            # can run with live sites when white-listed
+            elif filter(lambda name: test['name'].startswith(name), whitelist_live_site_tests):
                 yield test
 
             else:
