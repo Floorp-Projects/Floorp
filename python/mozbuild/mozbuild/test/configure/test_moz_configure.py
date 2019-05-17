@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import sys
+
 from mozunit import main
 from mozbuild.util import (
     exec_,
@@ -154,10 +156,10 @@ class TestMozConfigure(BaseConfigureTest):
                 {'PATH': '/usr/bin', 'MAKENSISU': '/usr/bin/makensis'})
             return sandbox._value_for(sandbox['nsis_version'])
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as e:
             check_nsis_version('v2.5')
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as e:
             check_nsis_version('v3.0a2')
 
         self.assertEquals(check_nsis_version('v3.0b1'), '3.0b1')

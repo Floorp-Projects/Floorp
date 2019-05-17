@@ -237,6 +237,7 @@ class LintSandbox(ConfigureSandbox):
                                        name, default))
                 self._raise_from(e, frame.f_back if frame else None)
 
+
     def _check_help_for_option_with_func_default(self, option, *args, **kwargs):
         default = kwargs['default']
 
@@ -284,7 +285,6 @@ class LintSandbox(ConfigureSandbox):
 
     def imports_impl(self, _import, _from=None, _as=None):
         wrapper = super(LintSandbox, self).imports_impl(_import, _from=_from, _as=_as)
-
         def decorator(func):
             self._has_imports.add(func)
             return wrapper(func)
