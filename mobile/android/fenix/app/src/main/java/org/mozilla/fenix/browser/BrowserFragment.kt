@@ -542,6 +542,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             findInPageIntegration.onBackPressed() -> true
             fullScreenFeature.onBackPressed() -> true
             readerViewFeature.onBackPressed() -> true
+            customTabsIntegration.onBackPressed() -> true
             sessionFeature.onBackPressed() -> true
             else -> false
         }
