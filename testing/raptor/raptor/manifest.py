@@ -50,8 +50,11 @@ def filter_live_sites(tests, values):
             if values["run_local"] is True:
                 yield test
             # can run with live sites if running on try
-            if "hg.mozilla.org/try" in os.environ.get('GECKO_HEAD_REPOSITORY', 'n/a'):
+            elif "hg.mozilla.org/try" in os.environ.get('GECKO_HEAD_REPOSITORY', 'n/a'):
                 yield test
+
+            else:
+                LOG.warning('%s is not allowed to run with use_live_sites' % test['name'])
         else:
             # not using live-sites so go ahead
             yield test
