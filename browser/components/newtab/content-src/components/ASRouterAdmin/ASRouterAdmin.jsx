@@ -472,7 +472,8 @@ export class ASRouterAdminInner extends React.PureComponent {
     if (!this.state.providers) {
       return null;
     }
-    return (<p>Show messages from <select value={this.state.messageFilter} onBlur={this.onChangeMessageFilter}>
+    // eslint-disable-next-line jsx-a11y/no-onchange
+    return (<p>Show messages from <select value={this.state.messageFilter} onChange={this.onChangeMessageFilter}>
       <option value="all">all providers</option>
       {this.state.providers.map(provider => (<option key={provider.id} value={provider.id}>{provider.id}</option>))}
     </select></p>);
