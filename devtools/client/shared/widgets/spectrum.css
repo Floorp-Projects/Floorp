@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #eyedropper-button {
-  margin-inline-start: 5px;
+  margin-inline-end: 5px;
   display: block;
 }
 
@@ -25,8 +25,8 @@
   cursor: pointer;
   box-shadow: 0 0 2px rgba(0,0,0,.6);
   background: #fff;
-  border-radius: 10px;
-  opacity: .8;
+  border-radius: 50%;
+  opacity: .9;
 }
 
 .spectrum-box {
@@ -38,37 +38,63 @@
 /* Elements */
 
 #spectrum-tooltip {
-  padding: 4px;
-}
-
-.spectrum-container {
-  position: relative;
-  display: none;
-  top: 0;
-  left: 0;
-  border-radius: 0;
-  width: 200px;
   padding: 5px;
 }
 
-.spectrum-show {
-  display: inline-block;
+/**
+ * Spectrum controls set the layout for the controls section of the color picker.
+ */
+.spectrum-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  margin-right: 5px;
+  width: 200px;
+}
+
+.spectrum-container {
+  display: flex;
+  flex-direction: column;
+  margin: -1px;
+}
+
+/**
+ * This styles the color preview and adds a checkered background overlay inside of it. The overlay
+ * can be manipulated using the --overlay-color variable.
+ */
+.spectrum-color-preview {
+  --overlay-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: 27px;
+  height: 27px;
+  background-color: #fff;
+  background-image: linear-gradient(var(--overlay-color), var(--overlay-color)),
+    linear-gradient(45deg,#ccc 25%,transparent 25%, transparent 75%, #ccc 75%),
+    linear-gradient(45deg,#ccc 25%, transparent 25%,transparent 75%,#ccc 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 6px 6px;
+}
+
+.spectrum-color-preview.high-luminance {
+  border-color: #ccc;
+}
+
+.spectrum-slider-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 130px;
+  margin-left: 10px;
+  height: 30px;
 }
 
 /* Keep aspect ratio:
 http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
-.spectrum-top {
+.spectrum-color-picker {
   position: relative;
-  width: 100%;
-  display: inline-block;
-}
-
-.spectrum-top-inner {
-  position: absolute;
-  top:0;
-  left:0;
-  bottom:0;
-  right:0;
+  width: 205px;
+  height: 120px;
 }
 
 .spectrum-color {
@@ -76,20 +102,7 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   top: 0;
   left: 0;
   bottom: 0;
-  right: 20%;
-}
-
-.spectrum-hue {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 83%;
-}
-
-.spectrum-fill {
-  /* Same as spectrum-color width */
-  margin-top: 85%;
+  width: 100%;
 }
 
 .spectrum-sat, .spectrum-val {
@@ -100,26 +113,25 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   bottom: 0;
 }
 
-.spectrum-dragger, .spectrum-slider {
-  -moz-user-select: none;
-}
-
-.spectrum-alpha {
+.spectrum-alpha,
+.spectrum-hue {
   position: relative;
   height: 8px;
   margin-top: 3px;
 }
 
-.spectrum-alpha-inner {
+.spectrum-alpha-inner,
+.spectrum-hue-inner {
   height: 100%;
 }
 
-.spectrum-alpha-handle {
+.spectrum-alpha-handle,
+.spectrum-hue-handle {
   position: absolute;
-  top: -3px;
-  bottom: -3px;
-  width: 5px;
-  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  height: 12px;
+  width: 12px;
 }
 
 .spectrum-sat {
@@ -131,10 +143,11 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 }
 
 .spectrum-hue {
-  background: linear-gradient(to bottom, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
 }
 
 .spectrum-dragger {
+  -moz-user-select: none;
   position: absolute;
   top: 0px;
   left: 0px;
