@@ -135,8 +135,14 @@ export class BaseContent extends React.PureComponent {
     const prefs = props.Prefs.values;
 
     const shouldBeFixedToTop = PrerenderData.arePrefsValid(name => prefs[name]);
-    const noSectionsEnabled = !prefs["feeds.topsites"] && props.Sections.filter(section => section.enabled).length === 0;
     const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
+    let filteredSections = props.Sections;
+
+    // Filter out highlights for DS
+    if (isDiscoveryStream) {
+      filteredSections = filteredSections.filter(section => section.id !== "highlights");
+    }
+    const noSectionsEnabled = !prefs["feeds.topsites"] && filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
 
     const outerClassName = [

@@ -172,7 +172,7 @@ describe("ASRouterAdmin", () => {
 
         assert.lengthOf(wrapper.find(".message-id"), 1);
 
-        wrapper.find("select").simulate("blur", {target: {value: "bar"}});
+        wrapper.find("select").simulate("change", {target: {value: "bar"}});
 
         assert.lengthOf(wrapper.find(".message-id"), 0);
       });
