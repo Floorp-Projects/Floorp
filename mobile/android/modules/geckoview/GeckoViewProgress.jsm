@@ -169,7 +169,6 @@ class GeckoViewProgress extends GeckoViewModule {
     }
 
     Services.obs.removeObserver(this, "oop-frameloader-crashed");
-    this.unregisterListener("GeckoView:FlushSessionState");
   }
 
   onEvent(aEvent, aData, aCallback) {
