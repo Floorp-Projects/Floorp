@@ -3182,9 +3182,11 @@ void nsDisplayItemBase::SetDeletedFrame() {
 }
 
 bool nsDisplayItemBase::HasDeletedFrame() const {
-  return mItemFlags.contains(ItemBaseFlag::DeletedFrame) ||
-         (GetType() == DisplayItemType::TYPE_REMOTE &&
-          !static_cast<const nsDisplayRemote*>(this)->GetFrameLoader());
+  bool retval = mItemFlags.contains(ItemBaseFlag::DeletedFrame) ||
+                (GetType() == DisplayItemType::TYPE_REMOTE &&
+                 !static_cast<const nsDisplayRemote*>(this)->GetFrameLoader());
+  MOZ_ASSERT(retval || mFrame);
+  return retval;
 }
 
 #if !defined(DEBUG) && !defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
@@ -6731,11 +6733,11 @@ void nsDisplaySubDocument::RemoveFrame(nsIFrame* aFrame) {
 void nsDisplaySubDocument::Disown() {
   if (mFrame) {
     mFrame->RemoveDisplayItem(this);
-    mFrame = nullptr;
+    RemoveFrame(mFrame);
   }
   if (mSubDocFrame) {
     mSubDocFrame->RemoveDisplayItem(this);
-    mSubDocFrame = nullptr;
+    RemoveFrame(mSubDocFrame);
   }
 }
 
