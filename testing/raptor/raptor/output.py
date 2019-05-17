@@ -60,6 +60,10 @@ class Output(object):
                 'alertThreshold': float(test.alert_threshold)
             }
 
+            # Check if optional properties have been set by the test
+            if hasattr(test, "alert_change_type"):
+                suite['alertChangeType'] = test.alert_change_type
+
             # if cold load add that info to the suite result dict; this will be used later
             # when combining the results from multiple browser cycles into one overall result
             if test.cold is True:
