@@ -691,11 +691,11 @@ inline void SourceUnits<Utf8Unit>::assertNextCodePoint(
 
 template <typename Unit>
 static size_t ComputeColumn(const Unit* begin, const Unit* end) {
-#if JS_COLUMN_DIMENSION_IS_CODE_POINTS
+#if JS_COLUMN_DIMENSION_IS_CODE_POINTS()
   return unicode::CountCodePoints(begin, end);
 #else
   return PointerRangeSize(begin, end);
-#endif
+#endif  // JS_COLUMN_DIMENSION_IS_CODE_POINTS()
 }
 
 template <typename Unit, class AnyCharsAccess>
