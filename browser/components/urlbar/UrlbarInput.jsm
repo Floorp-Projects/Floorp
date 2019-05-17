@@ -643,7 +643,6 @@ class UrlbarInput {
       isPrivate: this.isPrivate,
       maxResults: UrlbarPrefs.get("maxRichResults"),
       muxer: "UnifiedComplete",
-      providers: ["UnifiedComplete"],
       searchString,
       userContextId: this.window.gBrowser.selectedBrowser.getAttribute("usercontextid"),
     }));
