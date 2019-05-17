@@ -28,7 +28,7 @@ UNIFIED_SOURCES += [
     'nsPrintData.cpp',
     'nsPrintJob.cpp',
     'nsPrintObject.cpp',
-    'nsPrintPreviewListener.cpp',
+    'PrintPreviewUserEventSuppressor.cpp',
     'PrintTranslator.cpp',
 ]
 

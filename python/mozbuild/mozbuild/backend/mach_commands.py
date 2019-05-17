@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import os
+import sys
 import subprocess
 import which
 
@@ -19,11 +20,10 @@ from mach.decorators import (
     Command,
 )
 
-
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('ide', category='devenv',
-             description='Generate a project and launch an IDE.')
+        description='Generate a project and launch an IDE.')
     @CommandArgument('ide', choices=['eclipse', 'visualstudio'])
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def eclipse(self, ide, args):
@@ -57,12 +57,10 @@ class MachCommands(MachCommandBase):
 
         if ide == 'eclipse':
             eclipse_workspace_dir = self.get_eclipse_workspace_path()
-            subprocess.check_call(['eclipse', '-data', eclipse_workspace_dir])
+            process = subprocess.check_call(['eclipse', '-data', eclipse_workspace_dir])
         elif ide == 'visualstudio':
             visual_studio_workspace_dir = self.get_visualstudio_workspace_path()
-            subprocess.check_call(
-                ['explorer.exe', visual_studio_workspace_dir]
-            )
+            process = subprocess.check_call(['explorer.exe', visual_studio_workspace_dir])
 
     def get_eclipse_workspace_path(self):
         from mozbuild.backend.cpp_eclipse import CppEclipseBackend

@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
-
 import buildconfig
 import os
 import unittest
@@ -63,7 +61,7 @@ class TestPartial(unittest.TestCase):
         myconfig = config.copy()
         env.write_vars(myconfig)
         with self.assertRaises(KeyError):
-            _ = env.substs['MYSUBST']
+            x = env.substs['MYSUBST']
         self.assertFalse(os.path.exists(path))
 
         myconfig['substs']['MYSUBST'] = 'new'
@@ -75,7 +73,7 @@ class TestPartial(unittest.TestCase):
         del myconfig['substs']['MYSUBST']
         env.write_vars(myconfig)
         with self.assertRaises(KeyError):
-            _ = env.substs['MYSUBST']
+            x = env.substs['MYSUBST']
         # Now that the subst is gone, the file still needs to be present so that
         # make can update dependencies correctly. Overwriting the file with
         # 'None' is the same as deleting it as far as the
@@ -84,8 +82,7 @@ class TestPartial(unittest.TestCase):
         self.assertTrue(os.path.exists(path))
 
     def _assert_deps(self, env, deps):
-        deps = sorted(['$(wildcard %s)' %
-                       (mozpath.join(env.topobjdir, 'config.statusd', d)) for d in deps])
+        deps = sorted(['$(wildcard %s)' % (mozpath.join(env.topobjdir, 'config.statusd', d)) for d in deps])
         self.assertEqual(sorted(env.get_dependencies()), deps)
 
     def test_dependencies(self):
@@ -109,9 +106,8 @@ class TestPartial(unittest.TestCase):
         self._assert_deps(env, ['defines/MOZ_FOO', 'defines/MOZ_BAR', 'substs/MOZ_SUBST_1'])
 
         with self.assertRaises(KeyError):
-            _ = env.substs['NON_EXISTENT']
-        self._assert_deps(env, ['defines/MOZ_FOO', 'defines/MOZ_BAR',
-                                'substs/MOZ_SUBST_1', 'substs/NON_EXISTENT'])
+            x = env.substs['NON_EXISTENT']
+        self._assert_deps(env, ['defines/MOZ_FOO', 'defines/MOZ_BAR', 'substs/MOZ_SUBST_1', 'substs/NON_EXISTENT'])
         self.assertEqual(env.substs.get('NON_EXISTENT'), None)
 
     def test_set_subst(self):
@@ -162,7 +158,6 @@ class TestPartial(unittest.TestCase):
         mydefines.update(env.defines.iteritems())
         self.assertEqual(mydefines['DEBUG'], '1')
         self.assertEqual(mydefines['MOZ_FOO'], '1')
-
 
 if __name__ == "__main__":
     main()

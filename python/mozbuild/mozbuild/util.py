@@ -23,6 +23,7 @@ import time
 import types
 
 from collections import (
+    defaultdict,
     Iterable,
     OrderedDict,
 )
@@ -84,14 +85,12 @@ class EmptyValue(unicode):
     :py:class:`mozbuild.frontend.reader.EmptyConfig`. It should likely not be
     used elsewhere.
     """
-
     def __init__(self):
         super(EmptyValue, self).__init__()
 
 
 class ReadOnlyNamespace(object):
     """A class for objects with immutable attributes set at initialization."""
-
     def __init__(self, **kwargs):
         for k, v in kwargs.iteritems():
             super(ReadOnlyNamespace, self).__setattr__(k, v)
@@ -115,7 +114,6 @@ class ReadOnlyNamespace(object):
 
 class ReadOnlyDict(dict):
     """A read-only dictionary."""
-
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
 
@@ -138,7 +136,6 @@ undefined = undefined_default()
 
 class ReadOnlyDefaultDict(ReadOnlyDict):
     """A read-only dictionary that supports default values on retrieval."""
-
     def __init__(self, default_factory, *args, **kwargs):
         ReadOnlyDict.__init__(self, *args, **kwargs)
         self._default_factory = default_factory
@@ -218,7 +215,6 @@ class FileAvoidWrite(BytesIO):
     out, but reports whether the file was existing and would have been updated
     still occur, as well as diff capture if requested.
     """
-
     def __init__(self, filename, capture_diff=False, dry_run=False, mode='rU'):
         BytesIO.__init__(self)
         self.name = filename
@@ -296,7 +292,6 @@ class FileAvoidWrite(BytesIO):
 
     def __enter__(self):
         return self
-
     def __exit__(self, type, value, traceback):
         if not self.closed:
             self.close()
@@ -433,7 +428,7 @@ class UnsortedError(Exception):
 
         s.write('An attempt was made to add an unsorted sequence to a list. ')
         s.write('The incoming list is unsorted starting at element %d. ' %
-                self.i)
+            self.i)
         s.write('We expected "%s" but got "%s"' % (
             self.sorted[self.i], self.original[self.i]))
 
@@ -472,7 +467,7 @@ class StrictOrderingOnAppendListMixin(object):
         StrictOrderingOnAppendListMixin.ensure_sorted(sequence)
 
         return super(StrictOrderingOnAppendListMixin, self).__setslice__(i, j,
-                                                                         sequence)
+            sequence)
 
     def __add__(self, other):
         StrictOrderingOnAppendListMixin.ensure_sorted(other)
@@ -486,18 +481,16 @@ class StrictOrderingOnAppendListMixin(object):
 
 
 class StrictOrderingOnAppendList(ListMixin, StrictOrderingOnAppendListMixin,
-                                 list):
+        list):
     """A list specialized for moz.build environments.
 
     We overload the assignment and append operations to require that incoming
     elements be ordered. This enforces cleaner style in moz.build files.
     """
 
-
 class ImmutableStrictOrderingOnAppendList(StrictOrderingOnAppendList):
     """Like StrictOrderingOnAppendList, but not allowing mutations of the value.
     """
-
     def append(self, elt):
         raise Exception("cannot use append on this type")
 
@@ -516,7 +509,6 @@ class ImmutableStrictOrderingOnAppendList(StrictOrderingOnAppendList):
 
 class ListWithActionMixin(object):
     """Mixin to create lists with pre-processing. See ListWithAction."""
-
     def __init__(self, iterable=None, action=None):
         if iterable is None:
             iterable = []
@@ -540,9 +532,8 @@ class ListWithActionMixin(object):
         other = [self._action(i) for i in other]
         return super(ListWithActionMixin, self).__iadd__(other)
 
-
 class StrictOrderingOnAppendListWithAction(StrictOrderingOnAppendListMixin,
-                                           ListMixin, ListWithActionMixin, list):
+    ListMixin, ListWithActionMixin, list):
     """An ordered list that accepts a callable to be applied to each item.
 
     A callable (action) passed to the constructor is run on each item of input.
@@ -551,7 +542,6 @@ class StrictOrderingOnAppendListWithAction(StrictOrderingOnAppendListMixin,
     Note that the order of superclasses is therefore significant.
     """
 
-
 class ListWithAction(ListMixin, ListWithActionMixin, list):
     """A list that accepts a callable to be applied to each item.
 
@@ -559,7 +549,6 @@ class ListWithAction(ListMixin, ListWithActionMixin, list):
     each item of input. The result of calling the callable on each item will be
     stored in place of the original input.
     """
-
 
 class MozbuildDeletionError(Exception):
     pass
@@ -660,10 +649,8 @@ def StrictOrderingOnAppendListWithFlagsFactory(flags):
                                  (self._flags_type._flags, other._flags_type._flags))
             intersection = set(self._flags.keys()) & set(other._flags.keys())
             if intersection:
-                raise ValueError(
-                    'Cannot update flags: both lists of strings with flags configure %s' %
-                    intersection
-                    )
+                raise ValueError('Cannot update flags: both lists of strings with flags configure %s' %
+                                 intersection)
             self._flags.update(other._flags)
 
         def extend(self, l):
@@ -852,7 +839,7 @@ class LockFile(object):
                     raise
 
 
-def lock_file(lockfile, max_wait=600):
+def lock_file(lockfile, max_wait = 600):
     """Create and hold a lockfile of the given name, with the given timeout.
 
     To release the lock, delete the returned object.
@@ -880,8 +867,8 @@ def lock_file(lockfile, max_wait=600):
             s = os.stat(lockfile)
         except EnvironmentError as e:
             if e.errno == errno.ENOENT or e.errno == errno.EACCES:
-                # We didn't create the lockfile, so it did exist, but it's
-                # gone now. Just try again
+            # We didn't create the lockfile, so it did exist, but it's
+            # gone now. Just try again
                 continue
 
             raise Exception('{0} exists but stat() failed: {1}'.format(
@@ -893,7 +880,7 @@ def lock_file(lockfile, max_wait=600):
         if now - s[stat.ST_MTIME] > max_wait:
             pid = f.readline().rstrip()
             raise Exception('{0} has been locked for more than '
-                            '{1} seconds (PID {2})'.format(lockfile, max_wait, pid))
+                '{1} seconds (PID {2})'.format(lockfile, max_wait, pid))
 
         # It's not been locked too long, wait a while and retry
         f.close()
@@ -910,7 +897,6 @@ def lock_file(lockfile, max_wait=600):
 
 class OrderedDefaultDict(OrderedDict):
     '''A combination of OrderedDict and defaultdict.'''
-
     def __init__(self, default_factory, *args, **kwargs):
         OrderedDict.__init__(self, *args, **kwargs)
         self._default_factory = default_factory
@@ -923,7 +909,6 @@ class OrderedDefaultDict(OrderedDict):
 class KeyedDefaultDict(dict):
     '''Like a defaultdict, but the default_factory function takes the key as
     argument'''
-
     def __init__(self, default_factory, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
         self._default_factory = default_factory
@@ -944,7 +929,6 @@ class memoize(dict):
     Both functions and instance methods are handled, although in the
     instance method case, the results are cache in the instance itself.
     '''
-
     def __init__(self, func):
         self.func = func
         functools.update_wrapper(self, func)
@@ -972,7 +956,6 @@ class memoized_property(object):
     '''A specialized version of the memoize decorator that works for
     class instance properties.
     '''
-
     def __init__(self, func):
         self.func = func
 
@@ -1024,7 +1007,7 @@ def TypedNamedTuple(name, fields):
                 if not isinstance(value, ftype):
                     raise TypeError('field in tuple not of proper type: %s; '
                                     'got %s, expected %s' % (fname,
-                                                             type(value), ftype))
+                                    type(value), ftype))
 
             super(TypedTuple, self).__init__(*args, **kwargs)
 
@@ -1058,7 +1041,7 @@ class TypedListMixin(object):
         sequence = self._ensure_type(sequence)
 
         return super(TypedListMixin, self).__setslice__(i, j,
-                                                        sequence)
+            sequence)
 
     def __add__(self, other):
         other = self._ensure_type(other)
@@ -1095,7 +1078,6 @@ def TypedList(type, base_class=List):
 
     return _TypedList
 
-
 def group_unified_files(files, unified_prefix, unified_suffix,
                         files_per_unified_file):
     """Return an iterator of (unified_filename, source_filenames) tuples.
@@ -1119,7 +1101,6 @@ def group_unified_files(files, unified_prefix, unified_suffix,
     # don't want the fill value inserted by izip_longest to be an
     # issue.  So we do a little dance to filter it out ourselves.
     dummy_fill_value = ("dummy",)
-
     def filter_out_dummy(iterable):
         return itertools.ifilter(lambda x: x != dummy_fill_value,
                                  iterable)
@@ -1171,7 +1152,6 @@ def expand_variables(s, variables):
 
 class DefinesAction(argparse.Action):
     '''An ArgumentParser action to handle -Dvar[=value] type of arguments.'''
-
     def __call__(self, parser, namespace, values, option_string):
         defines = getattr(namespace, self.dest)
         if defines is None:
@@ -1200,7 +1180,6 @@ class EnumString(unicode):
     subclasses.
     '''
     POSSIBLE_VALUES = ()
-
     def __init__(self, value):
         if value not in self.POSSIBLE_VALUES:
             raise ValueError("'%s' is not a valid value for %s"
@@ -1230,7 +1209,6 @@ def _escape_char(c):
         return "\\'"
     return unicode(c.encode('unicode_escape'))
 
-
 # Mapping table between raw characters below \x80 and their escaped
 # counterpart, when they differ
 _INDENTED_REPR_TABLE = {
@@ -1251,7 +1229,6 @@ def indented_repr(o, indent=4):
     assumes `from __future__ import unicode_literals`.
     '''
     one_indent = ' ' * indent
-
     def recurse_indented_repr(o, level):
         if isinstance(o, dict):
             yield '{\n'
@@ -1352,7 +1329,6 @@ def patch_main():
             import os
             import sys
             orig_find_module = imp.find_module
-
             def my_find_module(name, dirs):
                 if name == main_module_name:
                     path = os.path.join(dirs[0], main_file_name)
@@ -1362,7 +1338,6 @@ def patch_main():
 
             # Don't allow writing bytecode file for the main module.
             orig_load_module = imp.load_module
-
             def my_load_module(name, file, path, description):
                 # multiprocess.forking invokes imp.load_module manually and
                 # hard-codes the name __parents_main__ as the module name.
@@ -1378,8 +1353,7 @@ def patch_main():
 
             imp.find_module = my_find_module
             imp.load_module = my_load_module
-            from multiprocessing.forking import main
-            main()
+            from multiprocessing.forking import main; main()
 
         def my_get_command_line():
             fork_code, lineno = inspect.getsourcelines(fork_interpose)
