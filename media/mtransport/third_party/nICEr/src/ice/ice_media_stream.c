@@ -137,6 +137,8 @@ int nr_ice_media_stream_initialize(nr_ice_ctx *ctx, nr_ice_media_stream *stream)
     int r,_status;
     nr_ice_component *comp;
 
+    assert(!stream->obsolete);
+
     comp=STAILQ_FIRST(&stream->components);
     while(comp){
       if(r=nr_ice_component_initialize(ctx,comp))
