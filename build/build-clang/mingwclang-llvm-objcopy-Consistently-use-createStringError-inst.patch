@@ -1,0 +1,242 @@
+From d3b89a1637cddee1c61e59257cfe92227ead29e5 Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Tue, 22 Jan 2019 10:57:59 +0000
+Subject: [PATCH] [llvm-objcopy] Consistently use createStringError instead of
+ make_error<StringError>
+
+This was requested in the review of D57006.
+
+Also add missing quotes around symbol names in error messages.
+
+Differential Revision: https://reviews.llvm.org/D57014
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@351799 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ .../llvm-objcopy/COFF/remove-section.test     |  2 +-
+ tools/llvm-objcopy/COFF/COFFObjcopy.cpp       |  8 ++---
+ tools/llvm-objcopy/COFF/Object.cpp            |  5 ++-
+ tools/llvm-objcopy/COFF/Reader.cpp            | 24 +++++++-------
+ tools/llvm-objcopy/COFF/Writer.cpp            | 33 +++++++++----------
+ tools/llvm-objcopy/ELF/ELFObjcopy.cpp         | 10 +++---
+ 6 files changed, 40 insertions(+), 42 deletions(-)
+
+diff --git a/llvm/test/tools/llvm-objcopy/COFF/remove-section.test b/llvm/test/tools/llvm-objcopy/COFF/remove-section.test
+index b3dfb0b98cb..6dc8f6a6c2e 100644
+--- a/test/tools/llvm-objcopy/COFF/remove-section.test
++++ b/llvm/test/tools/llvm-objcopy/COFF/remove-section.test
+@@ -96,7 +96,7 @@
+ # Removing the .comdat section fails, since the .text section has relocations
+ # against it.
+ #
+-# ERROR-RELOC: Relocation target foo ({{.*}}) not found
++# ERROR-RELOC: Relocation target 'foo' ({{.*}}) not found
+ #
+ #
+ # Removing the .comdat section and .text (with a relocation against .comdat)
+diff --git a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+index 99929d10a1f..8d8f53d13d8 100644
+--- a/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+@@ -84,10 +84,10 @@ static Error handleArgs(const CopyConfig &Config, Object &Obj) {
+       // Explicitly removing a referenced symbol is an error.
+       if (Sym.Referenced)
+         reportError(Config.OutputFilename,
+-                    make_error<StringError>(
+-                        "not stripping symbol '" + Sym.Name +
+-                            "' because it is named in a relocation.",
+-                        llvm::errc::invalid_argument));
++                    createStringError(llvm::errc::invalid_argument,
++                                      "not stripping symbol '%s' because it is "
++                                      "named in a relocation.",
++                                      Sym.Name.str().c_str()));
+       return true;
+     }
+ 
+diff --git a/llvm/tools/llvm-objcopy/COFF/Object.cpp b/llvm/tools/llvm-objcopy/COFF/Object.cpp
+index fc87d9e574d..83435dffa98 100644
+--- a/tools/llvm-objcopy/COFF/Object.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Object.cpp
+@@ -56,9 +56,8 @@ Error Object::markSymbols() {
+     for (const Relocation &R : Sec.Relocs) {
+       auto It = SymbolMap.find(R.Target);
+       if (It == SymbolMap.end())
+-        return make_error<StringError>("Relocation target " + Twine(R.Target) +
+-                                           " not found",
+-                                       object_error::invalid_symbol_index);
++        return createStringError(object_error::invalid_symbol_index,
++                                 "Relocation target %zu not found", R.Target);
+       It->second->Referenced = true;
+     }
+   }
+diff --git a/llvm/tools/llvm-objcopy/COFF/Reader.cpp b/llvm/tools/llvm-objcopy/COFF/Reader.cpp
+index c8abe2913a2..20ff32a59dc 100644
+--- a/tools/llvm-objcopy/COFF/Reader.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Reader.cpp
+@@ -77,8 +77,8 @@ Error COFFReader::readSections(Object &Obj) const {
+     if (auto EC = COFFObj.getSectionName(Sec, S.Name))
+       return errorCodeToError(EC);
+     if (Sec->hasExtendedRelocations())
+-      return make_error<StringError>("Extended relocations not supported yet",
+-                                     object_error::parse_failed);
++      return createStringError(object_error::parse_failed,
++                               "Extended relocations not supported yet");
+   }
+   Obj.addSections(Sections);
+   return Error::success();
+@@ -116,16 +116,16 @@ Error COFFReader::readSymbols(Object &Obj, bool IsBigObj) const {
+              Sections.size())
+       Sym.TargetSectionId = Sections[SymRef.getSectionNumber() - 1].UniqueId;
+     else
+-      return make_error<StringError>("Section number out of range",
+-                                     object_error::parse_failed);
++      return createStringError(object_error::parse_failed,
++                               "Section number out of range");
+     // For section definitions, check if it is comdat associative, and if
+     // it is, find the target section unique id.
+     const coff_aux_section_definition *SD = SymRef.getSectionDefinition();
+     if (SD && SD->Selection == IMAGE_COMDAT_SELECT_ASSOCIATIVE) {
+       int32_t Index = SD->getNumber(IsBigObj);
+       if (Index <= 0 || static_cast<uint32_t>(Index - 1) >= Sections.size())
+-        return make_error<StringError>("Unexpected associative section index",
+-                                       object_error::parse_failed);
++        return createStringError(object_error::parse_failed,
++                                 "Unexpected associative section index");
+       Sym.AssociativeComdatTargetSectionId = Sections[Index - 1].UniqueId;
+     }
+     I += 1 + SymRef.getNumberOfAuxSymbols();
+@@ -144,12 +144,12 @@ Error COFFReader::setRelocTargets(Object &Obj) const {
+   for (Section &Sec : Obj.getMutableSections()) {
+     for (Relocation &R : Sec.Relocs) {
+       if (R.Reloc.SymbolTableIndex >= RawSymbolTable.size())
+-        return make_error<StringError>("SymbolTableIndex out of range",
+-                                       object_error::parse_failed);
++        return createStringError(object_error::parse_failed,
++                                 "SymbolTableIndex out of range");
+       const Symbol *Sym = RawSymbolTable[R.Reloc.SymbolTableIndex];
+       if (Sym == nullptr)
+-        return make_error<StringError>("Invalid SymbolTableIndex",
+-                                       object_error::parse_failed);
++        return createStringError(object_error::parse_failed,
++                                 "Invalid SymbolTableIndex");
+       R.Target = Sym->UniqueId;
+       R.TargetName = Sym->Name;
+     }
+@@ -169,8 +169,8 @@ Expected<std::unique_ptr<Object>> COFFReader::create() const {
+     Obj->CoffFileHeader = *CFH;
+   } else {
+     if (!CBFH)
+-      return make_error<StringError>("No COFF file header returned",
+-                                     object_error::parse_failed);
++      return createStringError(object_error::parse_failed,
++                               "No COFF file header returned");
+     // Only copying the few fields from the bigobj header that we need
+     // and won't recreate in the end.
+     Obj->CoffFileHeader.Machine = CBFH->Machine;
+diff --git a/llvm/tools/llvm-objcopy/COFF/Writer.cpp b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+index 9fb7812672b..0321f94a896 100644
+--- a/tools/llvm-objcopy/COFF/Writer.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/Writer.cpp
+@@ -29,10 +29,9 @@ Error COFFWriter::finalizeRelocTargets() {
+     for (Relocation &R : Sec.Relocs) {
+       const Symbol *Sym = Obj.findSymbol(R.Target);
+       if (Sym == nullptr)
+-        return make_error<StringError>("Relocation target " + R.TargetName +
+-                                           " (" + Twine(R.Target) +
+-                                           ") not found",
+-                                       object_error::invalid_symbol_index);
++        return createStringError(object_error::invalid_symbol_index,
++                                 "Relocation target '%s' (%zu) not found",
++                                 R.TargetName.str().c_str(), R.Target);
+       R.Reloc.SymbolTableIndex = Sym->RawIndex;
+     }
+   }
+@@ -48,9 +47,9 @@ Error COFFWriter::finalizeSectionNumbers() {
+     } else {
+       const Section *Sec = Obj.findSection(Sym.TargetSectionId);
+       if (Sec == nullptr)
+-        return make_error<StringError>("Symbol " + Sym.Name +
+-                                           " points to a removed section",
+-                                       object_error::invalid_symbol_index);
++        return createStringError(object_error::invalid_symbol_index,
++                                 "Symbol '%s' points to a removed section",
++                                 Sym.Name.str().c_str());
+       Sym.Sym.SectionNumber = Sec->Index;
+ 
+       if (Sym.Sym.NumberOfAuxSymbols == 1 &&
+@@ -65,9 +64,10 @@ Error COFFWriter::finalizeSectionNumbers() {
+         } else {
+           Sec = Obj.findSection(Sym.AssociativeComdatTargetSectionId);
+           if (Sec == nullptr)
+-            return make_error<StringError>(
+-                "Symbol " + Sym.Name + " is associative to a removed section",
+-                object_error::invalid_symbol_index);
++            return createStringError(
++                object_error::invalid_symbol_index,
++                "Symbol '%s' is associative to a removed section",
++                Sym.Name.str().c_str());
+           SDSectionNumber = Sec->Index;
+         }
+         // Update the section definition with the new section number.
+@@ -343,9 +343,8 @@ Error COFFWriter::patchDebugDirectory() {
+             S.Header.VirtualAddress + S.Header.SizeOfRawData) {
+       if (Dir->RelativeVirtualAddress + Dir->Size >
+           S.Header.VirtualAddress + S.Header.SizeOfRawData)
+-        return make_error<StringError>(
+-            "Debug directory extends past end of section",
+-            object_error::parse_failed);
++        return createStringError(object_error::parse_failed,
++                                 "Debug directory extends past end of section");
+ 
+       size_t Offset = Dir->RelativeVirtualAddress - S.Header.VirtualAddress;
+       uint8_t *Ptr = Buf.getBufferStart() + S.Header.PointerToRawData + Offset;
+@@ -361,15 +360,15 @@ Error COFFWriter::patchDebugDirectory() {
+       return Error::success();
+     }
+   }
+-  return make_error<StringError>("Debug directory not found",
+-                                 object_error::parse_failed);
++  return createStringError(object_error::parse_failed,
++                           "Debug directory not found");
+ }
+ 
+ Error COFFWriter::write() {
+   bool IsBigObj = Obj.getSections().size() > MaxNumberOfSections16;
+   if (IsBigObj && Obj.IsPE)
+-    return make_error<StringError>("Too many sections for executable",
+-                                   object_error::parse_failed);
++    return createStringError(object_error::parse_failed,
++                             "Too many sections for executable");
+   return write(IsBigObj);
+ }
+ 
+diff --git a/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp b/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp
+index db0cd76ced4..a2996395c1f 100644
+--- a/tools/llvm-objcopy/ELF/ELFObjcopy.cpp
++++ b/llvm/tools/llvm-objcopy/ELF/ELFObjcopy.cpp
+@@ -185,9 +185,10 @@ static Error dumpSectionToFile(StringRef SecName, StringRef Filename,
+   for (auto &Sec : Obj.sections()) {
+     if (Sec.Name == SecName) {
+       if (Sec.OriginalData.empty())
+-        return make_error<StringError>("Can't dump section \"" + SecName +
+-                                           "\": it has no contents",
+-                                       object_error::parse_failed);
++        return createStringError(
++            object_error::parse_failed,
++            "Can't dump section \"%s\": it has no contents",
++            SecName.str().c_str());
+       Expected<std::unique_ptr<FileOutputBuffer>> BufferOrErr =
+           FileOutputBuffer::create(Filename, Sec.OriginalData.size());
+       if (!BufferOrErr)
+@@ -200,8 +201,7 @@ static Error dumpSectionToFile(StringRef SecName, StringRef Filename,
+       return Error::success();
+     }
+   }
+-  return make_error<StringError>("Section not found",
+-                                 object_error::parse_failed);
++  return createStringError(object_error::parse_failed, "Section not found");
+ }
+ 
+ static bool isCompressed(const SectionBase &Section) {
+-- 
+2.17.1
+

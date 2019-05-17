@@ -1,0 +1,43 @@
+From abacd83232acf69d7cbacd53fc2f9aae66c1a32e Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Wed, 23 Jan 2019 11:54:55 +0000
+Subject: [PATCH] [llvm-objcopy] [COFF] Error out on use of unhandled options
+
+Prefer erroring out than silently not doing what was requested.
+
+Differential Revision: https://reviews.llvm.org/D57045
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@351948 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ tools/llvm-objcopy/COFF/COFFObjcopy.cpp | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+index 64b4e79a4e0..b7b3d3cb629 100644
+--- a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+@@ -170,6 +170,21 @@ static Error handleArgs(const CopyConfig &Config, Object &Obj) {
+   if (!Config.AddGnuDebugLink.empty())
+     addGnuDebugLink(Obj, Config.AddGnuDebugLink);
+ 
++  if (!Config.BuildIdLinkDir.empty() || Config.BuildIdLinkInput ||
++      Config.BuildIdLinkOutput || !Config.SplitDWO.empty() ||
++      !Config.SymbolsPrefix.empty() || !Config.AddSection.empty() ||
++      !Config.DumpSection.empty() || !Config.KeepSection.empty() ||
++      !Config.SymbolsToGlobalize.empty() || !Config.SymbolsToKeep.empty() ||
++      !Config.SymbolsToLocalize.empty() || !Config.SymbolsToWeaken.empty() ||
++      !Config.SymbolsToKeepGlobal.empty() || !Config.SectionsToRename.empty() ||
++      !Config.SymbolsToRename.empty() || Config.ExtractDWO ||
++      Config.KeepFileSymbols || Config.LocalizeHidden || Config.PreserveDates ||
++      Config.StripDWO || Config.StripNonAlloc || Config.StripSections ||
++      Config.Weaken || Config.DecompressDebugSections) {
++    return createStringError(llvm::errc::invalid_argument,
++                             "Option not supported by llvm-objcopy for COFF");
++  }
++
+   return Error::success();
+ }
+ 
+-- 
+2.17.1
+
