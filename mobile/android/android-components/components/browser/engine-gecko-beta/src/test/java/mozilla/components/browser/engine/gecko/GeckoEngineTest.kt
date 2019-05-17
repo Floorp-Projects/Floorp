@@ -103,7 +103,11 @@ class GeckoEngineTest {
                 TrackingProtectionPolicy.SOCIAL,
                 TrackingProtectionPolicy.ANALYTICS,
                 TrackingProtectionPolicy.CONTENT,
-                TrackingProtectionPolicy.TEST
+                TrackingProtectionPolicy.TEST,
+                TrackingProtectionPolicy.SAFE_BROWSING_HARMFUL,
+                TrackingProtectionPolicy.SAFE_BROWSING_UNWANTED,
+                TrackingProtectionPolicy.SAFE_BROWSING_MALWARE,
+                TrackingProtectionPolicy.SAFE_BROWSING_PHISHING
         ).categories, contentBlockingSettings.categories)
         assertEquals(defaultSettings.trackingProtectionPolicy, TrackingProtectionPolicy.all())
 
@@ -146,7 +150,11 @@ class GeckoEngineTest {
             TrackingProtectionPolicy.SOCIAL,
             TrackingProtectionPolicy.ANALYTICS,
             TrackingProtectionPolicy.CONTENT,
-            TrackingProtectionPolicy.TEST
+            TrackingProtectionPolicy.TEST,
+            TrackingProtectionPolicy.SAFE_BROWSING_HARMFUL,
+            TrackingProtectionPolicy.SAFE_BROWSING_UNWANTED,
+            TrackingProtectionPolicy.SAFE_BROWSING_MALWARE,
+            TrackingProtectionPolicy.SAFE_BROWSING_PHISHING
         ).categories, contentBlockingSettings.categories)
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)

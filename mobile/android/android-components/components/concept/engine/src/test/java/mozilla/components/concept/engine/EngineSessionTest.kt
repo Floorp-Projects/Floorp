@@ -532,6 +532,7 @@ class EngineSessionTest {
 
     @Test
     fun `tracking protection policies have correct categories`() {
+        assertEquals(TrackingProtectionPolicy.RECOMMENDED, TrackingProtectionPolicy.recommended().categories)
         assertEquals(TrackingProtectionPolicy.ALL, TrackingProtectionPolicy.all().categories)
         assertEquals(TrackingProtectionPolicy.NONE, TrackingProtectionPolicy.none().categories)
         assertTrue(TrackingProtectionPolicy.all().contains(
@@ -545,12 +546,20 @@ class EngineSessionTest {
         assertTrue(TrackingProtectionPolicy.all().contains(
             TrackingProtectionPolicy.select(TrackingProtectionPolicy.SOCIAL).categories))
 
+        assertTrue(TrackingProtectionPolicy.all().contains(
+            TrackingProtectionPolicy.select(TrackingProtectionPolicy.SAFE_BROWSING_ALL).categories))
+
         val policy = TrackingProtectionPolicy.select(TrackingProtectionPolicy.AD, TrackingProtectionPolicy.ANALYTICS)
         assertTrue(policy.contains(TrackingProtectionPolicy.AD))
         assertTrue(policy.contains(TrackingProtectionPolicy.ANALYTICS))
         assertFalse(policy.contains(TrackingProtectionPolicy.SOCIAL))
         assertFalse(policy.contains(TrackingProtectionPolicy.CONTENT))
         assertFalse(policy.contains(TrackingProtectionPolicy.TEST))
+        assertFalse(policy.contains(TrackingProtectionPolicy.SAFE_BROWSING_ALL))
+        assertFalse(policy.contains(TrackingProtectionPolicy.SAFE_BROWSING_HARMFUL))
+        assertFalse(policy.contains(TrackingProtectionPolicy.SAFE_BROWSING_MALWARE))
+        assertFalse(policy.contains(TrackingProtectionPolicy.SAFE_BROWSING_PHISHING))
+        assertFalse(policy.contains(TrackingProtectionPolicy.SAFE_BROWSING_UNWANTED))
     }
 
     @Test

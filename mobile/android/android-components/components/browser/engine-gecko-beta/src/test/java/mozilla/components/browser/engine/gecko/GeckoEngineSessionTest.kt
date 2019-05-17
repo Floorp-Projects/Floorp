@@ -879,7 +879,8 @@ class GeckoEngineSessionTest {
         assertEquals(
             TrackingProtectionPolicy.all().categories and
             TrackingProtectionPolicy.CRYPTOMINING.inv() and
-            TrackingProtectionPolicy.FINGERPRINTING.inv(),
+            TrackingProtectionPolicy.FINGERPRINTING.inv() and
+            TrackingProtectionPolicy.SAFE_BROWSING_ALL.inv(),
             ContentBlocking.AT_ALL)
     }
 
