@@ -11,6 +11,7 @@ from .sourcefile import SourceFile
 
 MYPY = False
 if MYPY:
+    # MYPY is set to True when run under Mypy.
     from typing import Dict, Optional
 
 
