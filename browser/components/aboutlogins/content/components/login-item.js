@@ -37,6 +37,11 @@ class LoginItem extends ReflectedFluentElement {
 
     window.addEventListener("AboutLoginsLoginSelected", this);
 
+    let copyUsernameButton = this.shadowRoot.querySelector(".copy-username-button");
+    let copyPasswordButton = this.shadowRoot.querySelector(".copy-password-button");
+    copyUsernameButton.relatedInput = this.shadowRoot.querySelector("modal-input[name='username']");
+    copyPasswordButton.relatedInput = this.shadowRoot.querySelector("modal-input[name='password']");
+
     this.render();
   }
 
