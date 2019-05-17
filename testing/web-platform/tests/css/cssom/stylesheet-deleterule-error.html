@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSSStyleSheet.prototype.deleteRule error message</title>
+<link rel="author" title="Mason Freed" href="mailto:masonfreed@chromium.org">
+<link rel="help" href="https://heycam.github.io/webidl/#indexsizeerror">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function () {
+    const styleEl = document.createElement('style');
+    document.head.appendChild(styleEl);
+    try {
+        styleEl.sheet.deleteRule(0);
+        assert_fail("deleteRule on an empty style sheet should throw a RangeError");
+    } catch (e) {
+        assert_equals(e.name,"RangeError");
+        assert_true(e instanceof RangeError);
+    }
+}, 'deleteRule should throw RangeError');
+</script>
