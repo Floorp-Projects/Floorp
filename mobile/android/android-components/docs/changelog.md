@@ -12,6 +12,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-prompts**
+  * Improved file picker prompt by displaying the option to use the camera to capture images,
+    microphone to record audio, or video camera to capture a video.
+
 * **feature-pwa**
   * Added preliminary support for pinning websites to the home screen.
 

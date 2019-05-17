@@ -518,6 +518,12 @@ class SystemEngineView @JvmOverloads constructor(
 
             val isMultipleFilesSelection = fileChooserParams?.mode == MODE_OPEN_MULTIPLE
 
+            val captureMode = if (fileChooserParams?.isCaptureEnabled == true) {
+                PromptRequest.File.FacingMode.ANY
+            } else {
+                PromptRequest.File.FacingMode.NONE
+            }
+
             val onSelectMultiple: (Context, Array<Uri>) -> Unit = { _, uris ->
                 filePathCallback?.onReceiveValue(uris)
             }
@@ -535,6 +541,7 @@ class SystemEngineView @JvmOverloads constructor(
                     PromptRequest.File(
                         mimeTypes,
                         isMultipleFilesSelection,
+                        captureMode,
                         onSelectSingle,
                         onSelectMultiple,
                         onDismiss

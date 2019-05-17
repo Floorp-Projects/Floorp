@@ -4,39 +4,29 @@
 
 package mozilla.components.browser.engine.gecko.prompt
 
-import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.prompt.Choice
-import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
+import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
+import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.kotlin.toDate
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AlertCallback
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthCallback
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.ButtonCallback
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MENU
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MULTIPLE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_SINGLE
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.ChoiceCallback
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.FileCallback
-import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import mozilla.components.concept.engine.prompt.PromptRequest
-import mozilla.components.support.ktx.kotlin.toDate
-import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level
-import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method
-import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_HOST
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_FLAG_ONLY_PASSWORD
@@ -47,15 +37,24 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions.AUTH_LEVEL_
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEGATIVE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEUTRAL
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_POSITIVE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.ButtonCallback
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MENU
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MULTIPLE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_SINGLE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.ChoiceCallback
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_MONTH
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_TIME
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_WEEK
-import java.io.FileInputStream
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.FileCallback
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
 import java.io.FileOutputStream
 import java.io.IOException
 import java.security.InvalidParameterException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 typealias GeckoChoice = GeckoSession.PromptDelegate.Choice
 
@@ -412,29 +411,30 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     }
 
     private fun Uri.toFileUri(context: Context): Uri {
-        val uri = this
-        val temporalFile = java.io.File(context.cacheDir, uri.getFileName(context))
-        try {
-            val inStream = context.contentResolver.openInputStream(uri) as FileInputStream
-            val outStream = FileOutputStream(temporalFile)
-            val inChannel = inStream.channel
-            val outChannel = outStream.channel
-            inChannel.transferTo(0, inChannel.size(), outChannel)
-            inStream.close()
-            outStream.close()
-        } catch (e: IOException) {
-            val logger = Logger("GeckoPromptDelegate")
-            logger.warn("Could not convert uri to file uri", e)
+        val contentResolver = context.contentResolver
+        val cacheUploadDirectory = java.io.File(context.cacheDir, "/uploads")
+
+        if (!cacheUploadDirectory.exists()) {
+            cacheUploadDirectory.mkdir()
         }
-        return Uri.parse("file:///" + temporalFile.absolutePath)
+
+        val temporalFile = java.io.File(cacheUploadDirectory, getFileName(contentResolver))
+        try {
+            contentResolver.openInputStream(this)!!.use { inStream ->
+                FileOutputStream(temporalFile).use { outStream ->
+                    inStream.copyTo(outStream)
+                }
+            }
+        } catch (e: IOException) {
+            Logger("GeckoPromptDelegate").warn("Could not convert uri to file uri", e)
+        }
+        return Uri.parse("file:///${temporalFile.absolutePath}")
     }
 
-    @SuppressLint("Recycle")
-    private fun Uri.getFileName(context: Context): String {
+    private fun Uri.getFileName(contentResolver: ContentResolver): String {
+        val returnUri = this
         var fileName = ""
-        this.let { returnUri ->
-            context.contentResolver.query(returnUri, null, null, null, null)
-        }?.use { cursor ->
+        contentResolver.query(returnUri, null, null, null, null)?.use { cursor ->
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
             cursor.moveToFirst()
             fileName = cursor.getString(nameIndex)

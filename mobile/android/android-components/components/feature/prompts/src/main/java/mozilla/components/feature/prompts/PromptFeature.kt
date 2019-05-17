@@ -4,13 +4,8 @@
 
 package mozilla.components.feature.prompts
 
-import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.app.Activity
-import android.app.Activity.RESULT_OK
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.webkit.MimeTypeMap
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.Fragment
@@ -36,7 +31,6 @@ import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
-import mozilla.components.support.ktx.android.content.isPermissionGranted
 import java.security.InvalidParameterException
 import java.util.Date
 
@@ -74,16 +68,33 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
  */
-
-@Suppress("TooManyFunctions")
 class PromptFeature(
     private val activity: Activity? = null,
     private val fragment: Fragment? = null,
     private val sessionManager: SessionManager,
     private var sessionId: String? = null,
     private val fragmentManager: FragmentManager,
-    override val onNeedToRequestPermissions: OnNeedToRequestPermissions
+    onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature {
+
+    constructor(
+        activity: Activity,
+        sessionManager: SessionManager,
+        sessionId: String? = null,
+        fragmentManager: FragmentManager,
+        onNeedToRequestPermissions: OnNeedToRequestPermissions
+    ) : this(
+        activity, null, sessionManager, sessionId, fragmentManager, onNeedToRequestPermissions
+    )
+    constructor(
+        fragment: Fragment,
+        sessionManager: SessionManager,
+        sessionId: String? = null,
+        fragmentManager: FragmentManager,
+        onNeedToRequestPermissions: OnNeedToRequestPermissions
+    ) : this(
+        null, fragment, sessionManager, sessionId, fragmentManager, onNeedToRequestPermissions
+    )
 
     init {
         if (activity == null && fragment == null) {
@@ -97,6 +108,15 @@ class PromptFeature(
     private val observer = PromptRequestObserver(sessionManager, feature = this)
 
     private val context get() = activity ?: requireNotNull(fragment).requireContext()
+
+    private val filePicker = if (activity != null) {
+        FilePicker(activity, sessionManager, sessionId, onNeedToRequestPermissions)
+    } else {
+        FilePicker(requireNotNull(fragment), sessionManager, sessionId, onNeedToRequestPermissions)
+    }
+
+    override val onNeedToRequestPermissions
+        get() = filePicker.onNeedToRequestPermissions
 
     /**
      * Starts observing the selected session to listen for prompt requests
@@ -128,21 +148,7 @@ class PromptFeature(
      * @param intent The result of the request.
      */
     fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        if (requestCode == FILE_PICKER_ACTIVITY_REQUEST_CODE) {
-            sessionManager.runWithSessionIdOrSelected(sessionId) { session ->
-                session.promptRequest.consume {
-
-                    val request = it as File
-
-                    if (resultCode != RESULT_OK || intent == null) {
-                        request.onDismiss()
-                    } else {
-                        handleFilePickerIntentResult(intent, request)
-                    }
-                    true
-                }
-            }
-        }
+        filePicker.onActivityResult(requestCode, resultCode, intent)
     }
 
     /**
@@ -153,83 +159,8 @@ class PromptFeature(
      * @param grantResults The grant results for the corresponding permissions
      * @see [onNeedToRequestPermissions].
      */
-    @Suppress("UNUSED_PARAMETER")
     override fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
-        if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-            onPermissionsGranted()
-        } else {
-            onPermissionsDenied()
-        }
-    }
-
-    /**
-     * Used in conjunction with [onNeedToRequestPermissions], to notify the feature
-     * that all the required permissions have been granted, and the pending [PromptRequest]
-     * can be performed.
-     *
-     * If the required permission has not been granted
-     * [onNeedToRequestPermissions] will be called.
-     */
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun onPermissionsGranted() {
-        sessionManager.runWithSessionIdOrSelected(sessionId) { session ->
-            session.promptRequest.consume { promptRequest ->
-                onPromptRequested(session, promptRequest)
-                false
-            }
-        }
-    }
-
-    /**
-     * Used in conjunction with [onNeedToRequestPermissions] to notify the feature that one
-     * or more required permissions have been denied.
-     */
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun onPermissionsDenied() {
-        sessionManager.runWithSessionIdOrSelected(sessionId) { session ->
-            session.promptRequest.consume { request ->
-                if (request is File) {
-                    request.onDismiss()
-                }
-                true
-            }
-        }
-    }
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun handleFilePickerIntentResult(
-        intent: Intent,
-        request: File
-    ) {
-        intent.apply {
-
-            if (intent.clipData != null && request.isMultipleFilesSelection) {
-                handleMultipleFileSelections(request, this)
-            } else {
-                handleSingleFileSelection(request, this)
-            }
-        }
-    }
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun handleSingleFileSelection(
-        request: File,
-        intent: Intent
-    ) {
-        intent.data?.apply {
-            request.onSingleFileSelected(context, this)
-        }
-    }
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun handleMultipleFileSelections(
-        request: File,
-        intent: Intent
-    ) {
-        intent.clipData?.run {
-            val uris = Array<Uri>(itemCount) { index -> getItemAt(index).uri }
-            request.onMultipleFilesSelected(context, uris)
-        }
+        filePicker.onPermissionsResult(permissions, grantResults)
     }
 
     /**
@@ -241,15 +172,11 @@ class PromptFeature(
      */
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun onPromptRequested(session: Session, promptRequest: PromptRequest) {
-
-        // Requests that are handle with intents
+        // Some requests are handle with intents
         when (promptRequest) {
-            is File -> {
-                handleFilePickerRequest(promptRequest)
-                return
-            }
+            is File -> filePicker.handleFileRequest(promptRequest)
+            else -> handleDialogsRequest(promptRequest, session)
         }
-        handleDialogsRequest(promptRequest, session)
     }
 
     /**
@@ -259,15 +186,10 @@ class PromptFeature(
      * @param sessionId this is the id of the session which requested the prompt.
      */
     internal fun onCancel(sessionId: String) {
-        val session = sessionManager.findSessionById(sessionId) ?: return
-        session.promptRequest.consume {
+        sessionManager.consumePromptFrom(sessionId) {
             when (it) {
-                is Alert -> it.onDismiss()
-                is Authentication -> it.onDismiss()
-                is Color -> it.onDismiss()
-                is TextPrompt -> it.onDismiss()
+                is PromptRequest.Dismissible -> it.onDismiss()
                 is PromptRequest.Popup -> it.onDeny()
-                is PromptRequest.Confirm -> it.onDismiss()
             }
             true
         }
@@ -282,8 +204,7 @@ class PromptFeature(
      */
     @Suppress("UNCHECKED_CAST", "ComplexMethod")
     internal fun onConfirm(sessionId: String, value: Any? = null) {
-        val session = sessionManager.findSessionById(sessionId) ?: return
-        session.promptRequest.consume {
+        sessionManager.consumePromptFrom(sessionId) {
             when (it) {
                 is TimeSelection -> it.onConfirm(value as Date)
                 is Color -> it.onConfirm(value as String)
@@ -291,10 +212,7 @@ class PromptFeature(
                 is SingleChoice -> it.onConfirm(value as Choice)
                 is MenuChoice -> it.onConfirm(value as Choice)
                 is PromptRequest.Popup -> it.onAllow()
-
-                is MultipleChoice -> {
-                    it.onConfirm(value as Array<Choice>)
-                }
+                is MultipleChoice -> it.onConfirm(value as Array<Choice>)
 
                 is Authentication -> {
                     val pair = value as Pair<String, String>
@@ -309,16 +227,12 @@ class PromptFeature(
                 is PromptRequest.Confirm -> {
                     val pair = value as Pair<Boolean, MultiButtonDialogFragment.ButtonType>
                     when (pair.second) {
-
-                        MultiButtonDialogFragment.ButtonType.POSITIVE -> {
+                        MultiButtonDialogFragment.ButtonType.POSITIVE ->
                             it.onConfirmPositiveButton(pair.first)
-                        }
-                        MultiButtonDialogFragment.ButtonType.NEGATIVE -> {
+                        MultiButtonDialogFragment.ButtonType.NEGATIVE ->
                             it.onConfirmNegativeButton(pair.first)
-                        }
-                        MultiButtonDialogFragment.ButtonType.NEUTRAL -> {
+                        MultiButtonDialogFragment.ButtonType.NEUTRAL ->
                             it.onConfirmNeutralButton(pair.first)
-                        }
                     }
                 }
             }
@@ -333,8 +247,7 @@ class PromptFeature(
      * @param sessionId that requested to show the dialog.
      */
     internal fun onClear(sessionId: String) {
-        val session = sessionManager.findSessionById(sessionId) ?: return
-        session.promptRequest.consume {
+        sessionManager.consumePromptFrom(sessionId) {
             when (it) {
                 is TimeSelection -> it.onClear()
             }
@@ -358,49 +271,6 @@ class PromptFeature(
         fragment.feature = this
     }
 
-    internal fun handleFilePickerRequest(promptRequest: File) {
-        if (context.isPermissionGranted(READ_EXTERNAL_STORAGE)) {
-            val intent = buildFileChooserIntent(
-                promptRequest.isMultipleFilesSelection,
-                promptRequest.mimeTypes
-            )
-            startActivityForResult(intent, FILE_PICKER_ACTIVITY_REQUEST_CODE)
-        } else {
-            onNeedToRequestPermissions(arrayOf(READ_EXTERNAL_STORAGE))
-        }
-    }
-
-    internal fun startActivityForResult(intent: Intent, code: Int) {
-        if (activity != null) {
-            activity.startActivityForResult(intent, code)
-        } else {
-            requireNotNull(fragment).startActivityForResult(intent, code)
-        }
-    }
-
-    internal fun buildFileChooserIntent(allowMultipleSelection: Boolean, types: Array<out String>): Intent {
-        return with(Intent(Intent.ACTION_GET_CONTENT)) {
-            type = "*/*"
-            addCategory(Intent.CATEGORY_OPENABLE)
-            putExtra(Intent.EXTRA_LOCAL_ONLY, true)
-            if (types.isNotEmpty()) {
-                putExtra(Intent.EXTRA_MIME_TYPES, convertFileExtensionsToMimeTypesIfNeeded(types))
-            }
-            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultipleSelection)
-        }
-    }
-
-    private fun convertFileExtensionsToMimeTypesIfNeeded(types: Array<out String>): Array<out String> {
-        val mimeTypeMap = MimeTypeMap.getSingleton()
-        return types.map { type ->
-            if (type.contains("/")) {
-                type
-            } else {
-                mimeTypeMap.getMimeTypeFromExtension(type) ?: "*/*"
-            }
-        }.toTypedArray()
-    }
-
     @Suppress("ComplexMethod")
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun handleDialogsRequest(
@@ -410,12 +280,10 @@ class PromptFeature(
         // Requests that are handled with dialogs
         val dialog = when (promptRequest) {
 
-            is SingleChoice -> {
-                ChoiceDialogFragment.newInstance(
-                    promptRequest.choices,
-                    session.id, SINGLE_CHOICE_DIALOG_TYPE
-                )
-            }
+            is SingleChoice -> ChoiceDialogFragment.newInstance(
+                promptRequest.choices,
+                session.id, SINGLE_CHOICE_DIALOG_TYPE
+            )
 
             is MultipleChoice -> ChoiceDialogFragment.newInstance(
                 promptRequest.choices, session.id, MULTIPLE_CHOICE_DIALOG_TYPE
@@ -469,30 +337,27 @@ class PromptFeature(
                 }
             }
 
-            is Color -> {
-                with(promptRequest) {
-                    ColorPickerDialogFragment.newInstance(session.id, defaultColor)
-                }
-            }
+            is Color -> ColorPickerDialogFragment.newInstance(
+                session.id,
+                promptRequest.defaultColor
+            )
 
             is PromptRequest.Popup -> {
+
                 val title = context.getString(R.string.mozac_feature_prompts_popup_dialog_title)
                 val positiveLabel = context.getString(R.string.mozac_feature_prompts_allow)
                 val negativeLabel = context.getString(R.string.mozac_feature_prompts_deny)
 
-                with(promptRequest) {
-                    ConfirmDialogFragment.newInstance(
-                        sessionId = session.id,
-                        title = title,
-                        message = targetUri,
-                        positiveButtonText = positiveLabel,
-                        negativeButtonText = negativeLabel
-                    )
-                }
+                ConfirmDialogFragment.newInstance(
+                    sessionId = session.id,
+                    title = title,
+                    message = promptRequest.targetUri,
+                    positiveButtonText = positiveLabel,
+                    negativeButtonText = negativeLabel
+                )
             }
 
             is PromptRequest.Confirm -> {
-
                 with(promptRequest) {
                     MultiButtonDialogFragment.newInstance(
                         session.id,
@@ -506,9 +371,7 @@ class PromptFeature(
                 }
             }
 
-            else -> {
-                throw InvalidParameterException("Not valid prompt request type")
-            }
+            else -> throw InvalidParameterException("Not valid prompt request type")
         }
 
         dialog.feature = this
@@ -532,5 +395,14 @@ class PromptFeature(
 
     companion object {
         const val FILE_PICKER_ACTIVITY_REQUEST_CODE = 1234
+    }
+}
+
+internal fun SessionManager.consumePromptFrom(
+    sessionId: String?,
+    consumer: (PromptRequest) -> Boolean
+) {
+    runWithSessionIdOrSelected(sessionId) {
+        it.promptRequest.consume(consumer)
     }
 }

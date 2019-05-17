@@ -4,20 +4,13 @@
 
 package mozilla.components.feature.prompts
 
-import android.Manifest
 import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
-import android.content.Intent.ACTION_GET_CONTENT
-import android.content.Intent.EXTRA_ALLOW_MULTIPLE
-import android.content.Intent.EXTRA_MIME_TYPES
-import android.content.pm.PackageManager.PERMISSION_DENIED
-import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.net.Uri
-import android.webkit.MimeTypeMap
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
@@ -39,22 +32,18 @@ import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.Shadows.shadowOf
 import java.security.InvalidParameterException
 import java.util.Date
 import java.util.UUID
@@ -72,7 +61,7 @@ class PromptFeatureTest {
         mockFragmentManager = mockFragmentManager()
 
         mockSessionManager = spy(SessionManager(engine))
-        promptFeature = PromptFeature(null, mock(), mockSessionManager, null, mockFragmentManager) { }
+        promptFeature = PromptFeature(mock<Fragment>(), mockSessionManager, null, mockFragmentManager) { }
     }
 
     @Test
@@ -80,7 +69,7 @@ class PromptFeatureTest {
         val session = Session("custom-tab")
         `when`(mockSessionManager.findSessionById(session.id)).thenReturn(session)
 
-        promptFeature = PromptFeature(null, mock(), mockSessionManager, session.id, mockFragmentManager) { }
+        promptFeature = PromptFeature(mock<Fragment>(), mockSessionManager, session.id, mockFragmentManager) { }
         promptFeature.start()
 
         verify(mockSessionManager).findSessionById(session.id)
@@ -88,7 +77,7 @@ class PromptFeatureTest {
         val selected = Session("browser-tab")
         `when`(mockSessionManager.selectedSession).thenReturn(selected)
 
-        promptFeature = PromptFeature(null, mock(), mockSessionManager, null, mockFragmentManager) { }
+        promptFeature = PromptFeature(mock<Fragment>(), mockSessionManager, null, mockFragmentManager) { }
         promptFeature.start()
 
         verify(mockSessionManager).selectedSession
@@ -134,7 +123,7 @@ class PromptFeatureTest {
         mockFragmentManager = mock()
         doReturn(fragment).`when`(mockFragmentManager).findFragmentByTag(any())
 
-        promptFeature = PromptFeature(mock(), null, mockSessionManager, null, mockFragmentManager) { }
+        promptFeature = PromptFeature(mock<Activity>(), mockSessionManager, null, mockFragmentManager) { }
 
         promptFeature.start()
         verify(fragment).feature = promptFeature
@@ -155,7 +144,7 @@ class PromptFeatureTest {
         doReturn(transaction).`when`(fragmentManager).beginTransaction()
         doReturn(transaction).`when`(transaction).remove(fragment)
 
-        val feature = PromptFeature(null, mock(), mockSessionManager, null, fragmentManager) { }
+        val feature = PromptFeature(mock<Fragment>(), mockSessionManager, null, fragmentManager) { }
 
         feature.start()
         verify(fragmentManager).beginTransaction()
@@ -174,7 +163,7 @@ class PromptFeatureTest {
         doReturn(transaction).`when`(fragmentManager).beginTransaction()
         doReturn(transaction).`when`(transaction).remove(fragment)
 
-        val feature = PromptFeature(mock(), mock(), mockSessionManager, null, fragmentManager) { }
+        val feature = PromptFeature(mock<Activity>(), mockSessionManager, null, fragmentManager) { }
 
         feature.start()
         verify(fragmentManager).beginTransaction()
@@ -204,28 +193,6 @@ class PromptFeatureTest {
         promptFeature.onConfirm(session.id, mock<Choice>())
 
         assertTrue(session.promptRequest.isConsumed())
-    }
-
-    @Test
-    fun `Unknown session will no consume pending promptRequest`() {
-        val session = getSelectedSession()
-        val singleChoiceRequest = SingleChoice(arrayOf()) {}
-
-        promptFeature.start()
-
-        session.promptRequest = Consumable.from(singleChoiceRequest)
-
-        promptFeature.onConfirm("unknown_session", mock())
-
-        assertFalse(session.promptRequest.isConsumed())
-
-        promptFeature.onConfirm("unknown_session", arrayOf<Choice>())
-
-        assertFalse(session.promptRequest.isConsumed())
-
-        promptFeature.onCancel("unknown_session")
-
-        assertFalse(session.promptRequest.isConsumed())
     }
 
     @Test
@@ -283,32 +250,6 @@ class PromptFeatureTest {
     }
 
     @Test
-    fun `Calling onNoMoreDialogsChecked or onCancel with unknown sessionId will not consume promptRequest`() {
-        val session = getSelectedSession()
-
-        var onShowNoMoreAlertsWasCalled = false
-        var onDismissWasCalled = false
-
-        val promptRequest = Alert("title", "message", false, { onDismissWasCalled = true }) {
-            onShowNoMoreAlertsWasCalled = true
-        }
-
-        promptFeature.start()
-
-        session.promptRequest = Consumable.from(promptRequest)
-
-        promptFeature.onConfirm("unknown_session_id", false)
-
-        assertFalse(session.promptRequest.isConsumed())
-        assertFalse(onShowNoMoreAlertsWasCalled)
-
-        session.promptRequest = Consumable.from(promptRequest)
-
-        promptFeature.onCancel("unknown_session_id")
-        assertFalse(onDismissWasCalled)
-    }
-
-    @Test
     fun `Calling onCancel with an alert request will consume promptRequest and call onDismiss`() {
         val session = getSelectedSession()
 
@@ -324,36 +265,6 @@ class PromptFeatureTest {
 
         assertTrue(session.promptRequest.isConsumed())
         assertTrue(onDismissWasCalled)
-    }
-
-    @Test
-    fun `Calling onConfirmTextPrompt with unknown sessionId will not consume promptRequest`() {
-        val session = getSelectedSession()
-
-        var onConfirmWasCalled = false
-        var onDismissWasCalled = false
-
-        val promptRequest = TextPrompt(
-            "title",
-            "message",
-            "input",
-            false,
-            { onDismissWasCalled = true }) { _, _ ->
-            onConfirmWasCalled = true
-        }
-        promptFeature.start()
-
-        session.promptRequest = Consumable.from(promptRequest)
-
-        promptFeature.onConfirm("unknown_session_id", false to "")
-
-        assertFalse(session.promptRequest.isConsumed())
-        assertFalse(onConfirmWasCalled)
-
-        session.promptRequest = Consumable.from(promptRequest)
-
-        promptFeature.onCancel("unknown_session_id")
-        assertFalse(onDismissWasCalled)
     }
 
     @Test
@@ -411,45 +322,6 @@ class PromptFeatureTest {
     }
 
     @Test
-    fun `Selecting a time or calling onClear with unknown sessionId will not consume promptRequest`() {
-
-        val timeSelectionTypes = listOf(
-            PromptRequest.TimeSelection.Type.DATE,
-            PromptRequest.TimeSelection.Type.DATE_AND_TIME,
-            PromptRequest.TimeSelection.Type.TIME
-        )
-
-        timeSelectionTypes.forEach { timeType ->
-            val session = getSelectedSession()
-            var onClearWasCalled = false
-            var selectedDate: Date? = null
-
-            val promptRequest = PromptRequest.TimeSelection(
-                "title", Date(0),
-                null,
-                null,
-                timeType,
-                { date -> selectedDate = date }) {
-                onClearWasCalled = true
-            }
-
-            promptFeature.start()
-
-            session.promptRequest = Consumable.from(promptRequest)
-
-            val now = Date()
-            promptFeature.onConfirm("unknown_sessionId", now)
-
-            assertFalse(session.promptRequest.isConsumed())
-            assertNull(selectedDate)
-            session.promptRequest = Consumable.from(promptRequest)
-
-            promptFeature.onClear("unknown_sessionId")
-            assertFalse(onClearWasCalled)
-        }
-    }
-
-    @Test
     fun `selecting a time will consume promptRequest`() {
         val timeSelectionTypes = listOf(
             PromptRequest.TimeSelection.Type.DATE,
@@ -493,165 +365,6 @@ class PromptFeatureTest {
     @Test(expected = IllegalStateException::class)
     fun `Initializing a PromptFeature without giving an activity or fragment reference will throw an exception`() {
         promptFeature = PromptFeature(null, null, mockSessionManager, null, mockFragmentManager) { }
-    }
-
-    @Test
-    fun `startActivityForResult must delegate its calls either to an activity or a fragment`() {
-        val mockActivity: Activity = mock()
-        val mockFragment: Fragment = mock()
-        val intent = Intent()
-        val code = 1
-
-        promptFeature = PromptFeature(mockActivity, null, mockSessionManager, null, mockFragmentManager) { }
-
-        promptFeature.startActivityForResult(intent, code)
-        verify(mockActivity).startActivityForResult(intent, code)
-
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) { }
-
-        promptFeature.startActivityForResult(intent, code)
-        verify(mockFragment).startActivityForResult(intent, code)
-    }
-
-    @Test
-    fun `handleFilePickerRequest without the required permission will call onNeedToRequestPermissions`() {
-        val mockFragment: Fragment = mock()
-        val intent = Intent()
-        val code = 1
-        var onRequestPermissionWasCalled = false
-        val filePickerRequest = PromptRequest.File(emptyArray(), false, { _, _ -> }, { _, _ -> }) {}
-
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) {
-            onRequestPermissionWasCalled = true
-        }
-
-        doReturn(testContext).`when`(mockFragment).requireContext()
-
-        promptFeature.handleFilePickerRequest(filePickerRequest)
-
-        assertTrue(onRequestPermissionWasCalled)
-        verify(mockFragment, never()).startActivityForResult(intent, code)
-    }
-
-    @Test
-    fun `handleFilePickerRequest with the required permission will call startActivityForResult`() {
-        val mockFragment: Fragment = mock()
-        var onRequestPermissionWasCalled = false
-        val filePickerRequest = PromptRequest.File(emptyArray(), false, { _, _ -> }, { _, _ -> }) {}
-
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) {
-            onRequestPermissionWasCalled = true
-        }
-
-        doReturn(testContext).`when`(mockFragment).requireContext()
-
-        grantPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-
-        promptFeature.handleFilePickerRequest(filePickerRequest)
-
-        assertFalse(onRequestPermissionWasCalled)
-        verify(mockFragment).startActivityForResult(any<Intent>(), anyInt())
-    }
-
-    @Test
-    fun `buildFileChooserIntent with allowMultipleFiles false and empty mimeTypes will create an intent without EXTRA_ALLOW_MULTIPLE and EXTRA_MIME_TYPES`() {
-
-        val intent = promptFeature.buildFileChooserIntent(false, emptyArray())
-
-        with(intent) {
-
-            assertEquals(action, ACTION_GET_CONTENT)
-
-            val mimeType = extras!!.get(EXTRA_MIME_TYPES)
-            assertNull(mimeType)
-
-            val allowMultipleFiles = extras!!.getBoolean(EXTRA_ALLOW_MULTIPLE)
-            assertFalse(allowMultipleFiles)
-        }
-    }
-
-    @Test
-    fun `buildFileChooserIntent with allowMultipleFiles true and not empty mimeTypes will create an intent with EXTRA_ALLOW_MULTIPLE and EXTRA_MIME_TYPES`() {
-
-        promptFeature = PromptFeature(null, mock(), mockSessionManager, null, mockFragmentManager) { }
-
-        val intent = promptFeature.buildFileChooserIntent(true, arrayOf("image/jpeg"))
-
-        with(intent) {
-
-            assertEquals(action, ACTION_GET_CONTENT)
-
-            val mimeTypes = extras!!.get(EXTRA_MIME_TYPES) as Array<*>
-            assertEquals(mimeTypes.first(), "image/jpeg")
-
-            val allowMultipleFiles = extras!!.getBoolean(EXTRA_ALLOW_MULTIPLE)
-            assertTrue(allowMultipleFiles)
-        }
-    }
-
-    @Test
-    fun `buildFileChooserIntent with files extension types must produce an intent with the correct mime types`() {
-        val shadowMimeTypeMap = shadowOf(MimeTypeMap.getSingleton())
-        shadowMimeTypeMap.addExtensionMimeTypMapping(".gif", "image/gif")
-        shadowMimeTypeMap.addExtensionMimeTypMapping(
-            "docx",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
-
-        promptFeature = PromptFeature(null, mock(), mockSessionManager, null, mockFragmentManager) { }
-
-        val intent = promptFeature.buildFileChooserIntent(true, arrayOf(".gif", "image/jpeg", "docx", ".fun"))
-
-        with(intent) {
-
-            assertEquals(action, ACTION_GET_CONTENT)
-
-            val mimeTypes = extras!!.get(EXTRA_MIME_TYPES) as Array<*>
-            assertEquals(mimeTypes[0], "image/gif")
-            assertEquals(mimeTypes[1], "image/jpeg")
-            assertEquals(mimeTypes[2], "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-            assertEquals(mimeTypes[3], "*/*")
-        }
-    }
-
-    @Test
-    fun `onPermissionsGranted will forward its call to onPromptRequested`() {
-        val filePickerRequest = PromptRequest.File(emptyArray(), false, { _, _ -> }, { _, _ -> }) {}
-
-        val session = getSelectedSession()
-
-        session.promptRequest = Consumable.from(filePickerRequest)
-
-        stubContext()
-
-        promptFeature = spy(promptFeature)
-
-        promptFeature.onPermissionsGranted()
-
-        verify(mockSessionManager).selectedSession
-        verify(promptFeature).onPromptRequested(any(), any<PromptRequest.File>())
-        assertFalse(session.promptRequest.isConsumed())
-    }
-
-    @Test
-    fun `onPermissionsDeny will call onDismiss and consume the file PromptRequest of the actual session`() {
-
-        var onDismissWasCalled = false
-        val filePickerRequest = PromptRequest.File(emptyArray(), false, { _, _ -> }, { _, _ -> }) {
-            onDismissWasCalled = true
-        }
-
-        val session = getSelectedSession()
-
-        stubContext()
-
-        session.promptRequest = Consumable.from(filePickerRequest)
-
-        promptFeature.onPermissionsDenied()
-
-        verify(mockSessionManager).selectedSession
-        assertTrue(onDismissWasCalled)
-        assertTrue(session.promptRequest.isConsumed())
     }
 
     @Test
@@ -741,26 +454,6 @@ class PromptFeatureTest {
     }
 
     @Test
-    fun `onRequestPermissionsResult with FILE_PICKER_REQUEST and PERMISSION_GRANTED will call onPermissionsGranted`() {
-
-        promptFeature = spy(promptFeature)
-
-        promptFeature.onPermissionsResult(emptyArray(), IntArray(1) { PERMISSION_GRANTED })
-
-        verify(promptFeature).onPermissionsGranted()
-    }
-
-    @Test
-    fun `onRequestPermissionsResult with FILE_PICKER_REQUEST and PERMISSION_DENIED will call onPermissionsDeny`() {
-
-        promptFeature = spy(promptFeature)
-
-        promptFeature.onPermissionsResult(emptyArray(), IntArray(1) { PERMISSION_DENIED })
-
-        verify(promptFeature).onPermissionsDenied()
-    }
-
-    @Test
     fun `Calling onConfirmAuthentication will consume promptRequest`() {
         val session = getSelectedSession()
 
@@ -794,42 +487,6 @@ class PromptFeatureTest {
 
         promptFeature.onCancel(session.id)
         assertTrue(onDismissWasCalled)
-    }
-
-    @Test
-    fun `Calling onConfirmAuthentication with unknown sessionId will not consume promptRequest`() {
-        val session = getSelectedSession()
-
-        var onConfirmWasCalled = false
-        var onDismissWasCalled = false
-
-        val promptRequest = Authentication(
-            "title",
-            "message",
-            "username",
-            "password",
-            HOST,
-            NONE,
-            false,
-            false,
-            false,
-            { _, _ -> onConfirmWasCalled = true }) {
-            onDismissWasCalled = true
-        }
-
-        promptFeature.start()
-
-        session.promptRequest = Consumable.from(promptRequest)
-
-        promptFeature.onConfirm("unknown_session_id", "" to "")
-
-        assertFalse(session.promptRequest.isConsumed())
-        assertFalse(onConfirmWasCalled)
-
-        session.promptRequest = Consumable.from(promptRequest)
-
-        promptFeature.onCancel("unknown_session_id")
-        assertFalse(onDismissWasCalled)
     }
 
     @Test
@@ -1048,6 +705,6 @@ class PromptFeatureTest {
 
         doReturn(testContext).`when`(mockFragment).requireContext()
 
-        promptFeature = PromptFeature(null, mockFragment, mockSessionManager, null, mockFragmentManager) {}
+        promptFeature = PromptFeature(mockFragment, mockSessionManager, null, mockFragmentManager) {}
     }
 }

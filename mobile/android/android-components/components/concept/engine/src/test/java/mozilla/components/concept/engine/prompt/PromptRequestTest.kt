@@ -4,15 +4,15 @@
 
 package mozilla.components.concept.engine.prompt
 
-import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
-import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
-import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
-import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
+import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
+import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
+import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
+import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
 import mozilla.components.support.test.mock
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Date
@@ -76,9 +76,16 @@ class PromptRequestTest {
         dateRequest.onConfirm(Date())
         dateRequest.onClear()
 
-        val filePickerRequest = PromptRequest.File(emptyArray(), true, { _, _ -> }, { _, _ -> }) {}
+        val filePickerRequest = PromptRequest.File(
+            emptyArray(),
+            true,
+            PromptRequest.File.FacingMode.NONE,
+            { _, _ -> },
+            { _, _ -> }
+        ) {}
         assertTrue(filePickerRequest.mimeTypes.isEmpty())
         assertTrue(filePickerRequest.isMultipleFilesSelection)
+        assertEquals(filePickerRequest.captureMode, PromptRequest.File.FacingMode.NONE)
         filePickerRequest.onSingleFileSelected(mock(), mock())
         filePickerRequest.onMultipleFilesSelected(mock(), emptyArray())
         filePickerRequest.onDismiss()
