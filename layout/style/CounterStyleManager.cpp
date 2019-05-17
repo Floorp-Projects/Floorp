@@ -1338,7 +1338,8 @@ void CustomCounterStyle::ComputeRawSpeakAs(uint8_t& aSpeakAs,
   NS_ASSERTION(!(mFlags & FLAG_SPEAKAS_INITED),
                "ComputeRawSpeakAs is called with speak-as inited.");
 
-  auto speakAs = Servo_CounterStyleRule_GetSpeakAs(mRule);
+  auto speakAs = StyleCounterSpeakAs::None();
+  Servo_CounterStyleRule_GetSpeakAs(mRule, &speakAs);
   switch (speakAs.tag) {
     case StyleCounterSpeakAs::Tag::Auto:
       aSpeakAs = GetSpeakAsAutoValue();
