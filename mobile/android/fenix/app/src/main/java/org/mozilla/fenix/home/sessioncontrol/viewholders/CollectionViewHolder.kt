@@ -26,7 +26,6 @@ import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.home.sessioncontrol.onNext
-import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
 
 class CollectionViewHolder(
@@ -42,7 +41,6 @@ class CollectionViewHolder(
 
     private lateinit var collection: TabCollection
     private var expanded = false
-    private var state = CollectionState.Collapsed
     private var collectionMenu: CollectionItemMenu
 
     init {
@@ -70,20 +68,17 @@ class CollectionViewHolder(
         }
 
         view.setOnClickListener {
-            updateState()
+            handleExpansion(expanded)
         }
-
-        view.collection_icon.setColorFilter(ContextCompat.getColor(
-            view.context,
-            getNextIconColor()),
-            android.graphics.PorterDuff.Mode.SRC_IN
-        )
     }
 
     fun bindSession(collection: TabCollection, expanded: Boolean) {
         this.collection = collection
         this.expanded = expanded
         updateCollectionUI()
+
+        // See #2625 for why we're invalidating
+        view.invalidate()
     }
 
     private fun updateCollectionUI() {
@@ -104,7 +99,8 @@ class CollectionViewHolder(
         var tabsDisplayed = 0
         val tabTitlesList = hostNameList.joinToString(", ") {
             if (it.length > maxTitleLength) {
-                it.substring(0,
+                it.substring(
+                    0,
                     maxTitleLength
                 ) + "..."
             } else {
@@ -127,55 +123,42 @@ class CollectionViewHolder(
             view.collection_description.visibility = View.VISIBLE
             view.expand_button.setImageDrawable(ContextCompat.getDrawable(view.context, R.drawable.ic_chevron_down))
         }
+
+        view.collection_icon.setColorFilter(
+            ContextCompat.getColor(
+                view.context,
+                getIconColor(collection.id)
+            ),
+            android.graphics.PorterDuff.Mode.SRC_IN
+        )
     }
 
-    private fun updateState() {
-        state = when (state) {
-            CollectionState.Expanded -> {
-                actionEmitter.onNext(CollectionAction.Collapse(collection))
-                CollectionState.Collapsed
-            }
-            CollectionState.Collapsed -> {
-                actionEmitter.onNext(CollectionAction.Expand(collection))
-                CollectionState.Expanded
-            }
+    private fun handleExpansion(isExpanded: Boolean) {
+        if (isExpanded) {
+            actionEmitter.onNext(CollectionAction.Collapse(collection))
+        } else {
+            actionEmitter.onNext(CollectionAction.Expand(collection))
         }
     }
 
     @Suppress("ComplexMethod", "MagicNumber")
-    private fun getNextIconColor(): Int {
-        with(view.context) {
-            var sessionColorIndex = Settings.getInstance(this).preferences
-                .getInt(getString(R.string.pref_key_collection_color), 0)
-
-            val iconResource = when (sessionColorIndex) {
-                0 -> R.color.collection_icon_color_violet
-                1 -> R.color.collection_icon_color_blue
-                2 -> R.color.collection_icon_color_pink
-                3 -> R.color.collection_icon_color_green
-                4 -> R.color.collection_icon_color_yellow
-                else -> R.color.white_color
-            }
-
-            if (sessionColorIndex >= MAX_COLOR_INDEX) { sessionColorIndex = 0 } else { sessionColorIndex += 1 }
-
-            Settings.getInstance(this).preferences.edit()
-                .putInt(getString(R.string.pref_key_collection_color), sessionColorIndex).apply()
-
-            return iconResource
+    private fun getIconColor(id: Long): Int {
+        val sessionColorIndex = (id % 4).toInt()
+        return when (sessionColorIndex) {
+            0 -> R.color.collection_icon_color_violet
+            1 -> R.color.collection_icon_color_blue
+            2 -> R.color.collection_icon_color_pink
+            3 -> R.color.collection_icon_color_green
+            4 -> R.color.collection_icon_color_yellow
+            else -> R.color.white_color
         }
     }
 
     companion object {
-        const val MAX_COLOR_INDEX = 4
         const val EXPANDED_PADDING = 60
         const val COLLAPSED_MARGIN = 12
         const val LAYOUT_ID = R.layout.collection_home_list_row
         const val maxTitleLength = 20
-    }
-
-    enum class CollectionState {
-        Expanded, Collapsed
     }
 }
 

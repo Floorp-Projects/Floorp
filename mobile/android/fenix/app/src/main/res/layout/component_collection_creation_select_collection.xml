@@ -45,7 +45,6 @@
         android:id="@+id/collections_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:elevation="5dp"
         android:alpha="1"
         android:background="?foundation"
         android:visibility="visible"
@@ -57,7 +56,6 @@
         android:id="@+id/add_collection_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:elevation="5dp"
         android:alpha="1"
         android:background="?foundation"
         android:drawableStart="@drawable/ic_new"
@@ -107,7 +105,6 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/tab_list"
-        android:elevation="0dp"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="16dp"
@@ -115,7 +112,7 @@
         android:layout_marginEnd="16dp"
         android:fadingEdgeLength="30dp"
         android:requiresFadingEdge="vertical"
-        app:layout_constraintBottom_toTopOf="@id/add_collection_button"
+        app:layout_constraintBottom_toTopOf="@id/collections_list"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/back_button" />

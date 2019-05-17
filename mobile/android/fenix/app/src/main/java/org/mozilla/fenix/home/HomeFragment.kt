@@ -395,7 +395,6 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
         val observer = Observer<List<TabCollection>> {
-            // TODO is it bad to be caching like this?
             requireComponents.core.tabCollectionStorage.cachedTabCollections = it
             getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
         }

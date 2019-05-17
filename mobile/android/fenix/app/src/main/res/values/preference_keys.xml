@@ -67,6 +67,4 @@
     <string name="pref_key_tracking_protection_settings" translatable="false">pref_key_tracking_protection_settings</string>
     <string name="pref_key_tracking_protection" translatable="false">pref_key_tracking_protection</string>
     <string name="pref_key_tracking_protection_exceptions" translatable="false">pref_key_tracking_protection_exceptions</string>
-
-    <string name="pref_key_collection_color" translatable="false">pref_key_collection_color</string>
 </resources>
