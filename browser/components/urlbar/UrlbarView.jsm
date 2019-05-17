@@ -286,16 +286,6 @@ class UrlbarView {
   }
 
   /**
-   * Notified when the view context changes, for example when switching tabs.
-   * It can be used to reset internal state tracking.
-   */
-  onViewContextChanged() {
-    // Clear rows, so that when reusing results we don't visually leak them
-    // across different contexts.
-    this._rows.textContent = "";
-  }
-
-  /**
    * Passes DOM events for the view to the _on_<event type> methods.
    * @param {Event} event
    *   DOM event from the <view>.
