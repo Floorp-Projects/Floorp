@@ -166,6 +166,9 @@ def write_test_settings_json(args, test_details, oskey):
         test_settings['raptor-options']['subtest_lower_is_better'] = bool_from_str(
             subtest_lower_is_better)
 
+    if test_details.get("alert_change_type", None) is not None:
+        test_settings['raptor-options']['alert_change_type'] = test_details['alert_change_type']
+
     if test_details.get("alert_threshold", None) is not None:
         test_settings['raptor-options']['alert_threshold'] = float(test_details['alert_threshold'])
 
