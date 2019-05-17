@@ -2805,6 +2805,13 @@ var gCSSProperties = {
   "-moz-user-select": {
     domProp: "MozUserSelect",
     inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "user-select",
+    subproperties: [ "user-select" ],
+  },
+  "user-select": {
+    domProp: "userSelect",
+    inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
     other_values: [ "none", "text", "all", "-moz-none" ],
@@ -8383,8 +8390,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     domProp: "webkitUserSelect",
     inherited: false,
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "-moz-user-select",
-    subproperties: [ "-moz-user-select" ],
+    alias_for: "user-select",
+    subproperties: [ "user-select" ],
   };
   gCSSProperties["-webkit-mask"] = {
     domProp: "webkitMask",
