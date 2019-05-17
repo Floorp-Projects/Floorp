@@ -21,7 +21,7 @@ body {
         // Subtracting 14 to remove 'element-timing'.
         const pathname = window.location.href.substring(0, index - 14) +
             'images/black-rectangle.png';
-        checkElement(entry, pathname, 'my_image', beforeRender);
+        checkElement(entry, pathname, 'my_image', 'rectangle', beforeRender);
         // Assume viewport has size at least 100, so the element is fully visible.
         checkRect(entry, [20, 120, 20, 70]);
         checkNaturalSize(entry, 100, 50);
@@ -34,6 +34,7 @@ body {
       // Add image of width equal to 100 and height equal to 50.
       const img = document.createElement('img');
       img.src = '/images/black-rectangle.png';
+      img.id = 'rectangle';
       img.setAttribute('elementtiming', 'my_image');
       document.body.appendChild(img);
       beforeRender = performance.now();
