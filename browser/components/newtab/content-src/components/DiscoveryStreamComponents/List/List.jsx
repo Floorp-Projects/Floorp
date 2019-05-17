@@ -92,7 +92,9 @@ export function _List(props) {
 
     for (let index = 0; index < props.items; index++) {
       const rec = recs[index];
-      recMarkup.push(rec ? (
+      recMarkup.push(!rec || rec.placeholder ? (
+        <PlaceholderListItem key={`ds-list-item-${index}`} />
+      ) : (
         <ListItem key={`ds-list-item-${index}`}
         dispatch={props.dispatch}
         campaignId={rec.campaign_id}
@@ -108,8 +110,6 @@ export function _List(props) {
         url={rec.url}
         pocket_id={rec.pocket_id}
         bookmarkGuid={rec.bookmarkGuid} />
-      ) : (
-        <PlaceholderListItem key={`ds-list-item-${index}`} />
       ));
     }
 

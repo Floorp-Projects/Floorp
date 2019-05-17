@@ -206,7 +206,10 @@ $item-line-height: 20;
 
   .ds-list-item-excerpt {
     @include limit-visibile-lines(2, $item-line-height, $item-font-size);
-    color: $grey-10-80;
+    @include dark-theme-only {
+      color: $grey-10-80;
+    }
+    color: $grey-50;
     margin: 4px 0 8px;
   }
 

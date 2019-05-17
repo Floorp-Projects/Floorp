@@ -1,7 +1,7 @@
 {
   "title": "NewsletterSnippet",
   "description": "A snippet template for send to device mobile download",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "object",
   "definitions": {
     "plainText": {
@@ -52,9 +52,17 @@
       "type": "string",
       "description": "Snippet icon. 64x64px. SVG or PNG preferred."
     },
+    "scene1_icon_dark_theme": {
+      "type": "string",
+      "description": "Snippet icon. Dark theme variant. 64x64px. SVG or PNG preferred."
+    },
     "scene1_title_icon": {
       "type": "string",
       "description": "Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."
+    },
+    "scene1_title_icon_dark_theme": {
+      "type": "string",
+      "description": "Small icon that shows up before the title / text. Dark theme variant. 16x16px. SVG or PNG preferred. Grayscale."
     },
     "scene2_email_placeholder_text": {
       "type": "string",
