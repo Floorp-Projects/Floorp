@@ -21,7 +21,6 @@ test_data_path = mozpath.join(test_data_path, 'data', 'node')
 def data(name):
     return os.path.join(test_data_path, name)
 
-
 TEST_SCRIPT = data("node-test-script.js")
 NONEXISTENT_TEST_SCRIPT = data("non-existent-test-script.js")
 
@@ -37,7 +36,7 @@ class TestNode(unittest.TestCase):
     def tearDown(self):
         try:
             SCRIPT_ALLOWLIST.remove(TEST_SCRIPT)
-        except Exception:
+        except:
             pass
 
     def test_generate_no_returned_deps(self):
