@@ -145,12 +145,12 @@ def test_metadata_lsan_stack_depth():
 
 def test_metadata_fuzzy():
     manifest_data = {
-        "items": {"reftest": {"a/fuzzy.html": [["/a/fuzzy.html",
+        "items": {"reftest": {"a/fuzzy.html": [["a/fuzzy.html",
                                                 [["/a/fuzzy-ref.html", "=="]],
                                                 {"fuzzy": [[["/a/fuzzy.html", '/a/fuzzy-ref.html', '=='],
                                                             [[2, 3], [10, 15]]]]}]]}},
         "paths": {"a/fuzzy.html": ["0"*40, "reftest"]},
-        "version": wptmanifest.CURRENT_VERSION,
+        "version": 6,
         "url_base": "/"}
     manifest = wptmanifest.Manifest.from_json(".", manifest_data)
     test_metadata = manifestexpected.static.compile(BytesIO(test_fuzzy),

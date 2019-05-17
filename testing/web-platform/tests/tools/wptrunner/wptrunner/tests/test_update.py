@@ -13,18 +13,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
 from manifest import manifest, item as manifest_item
 
 
-def rel_path_to_url(rel_path, url_base="/"):
+def rel_path_to_test_url(rel_path):
     assert not os.path.isabs(rel_path)
-    if url_base[0] != "/":
-        url_base = "/" + url_base
-    if url_base[-1] != "/":
-        url_base += "/"
-    return url_base + rel_path.replace(os.sep, "/")
+    return rel_path.replace(os.sep, "/")
 
 
 def SourceFileWithTest(path, hash, cls, *args):
     s = mock.Mock(rel_path=path, hash=hash)
-    test = cls("/foobar", path, "/", rel_path_to_url(path), *args)
+    test = cls("/foobar", path, "/", rel_path_to_test_url(path), *args)
     s.manifest_items = mock.Mock(return_value=(cls.item_type, [test]))
     return s
 
