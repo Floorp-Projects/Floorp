@@ -3,7 +3,7 @@ import subprocess
 
 import mock
 
-from .. import vcs
+from .. import utils
 
 
 def test_git_for_path_no_git():
@@ -11,4 +11,4 @@ def test_git_for_path_no_git():
     with mock.patch(
             "subprocess.check_output",
             side_effect=subprocess.CalledProcessError(1, "foo")):
-        assert vcs.Git.for_path(this_dir, "/", this_dir) is None
+        assert utils.git(this_dir) is None
