@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
-<title>Web NFC Test: write and read opaque records</title>
+<title>Web NFC Test: write and read empty records</title>
 <link rel="author" title="Intel" href="http://www.intel.com"/>
 <link rel="help" href="https://w3c.github.io/web-nfc/"/>
 <meta name="timeout" content="long">
@@ -21,14 +21,11 @@
 
 setup({ explicit_timeout: true });
 
-const desc = "Test that write and read data succeed when recordType is set to 'opaque'."
-const readOptions = {
-  recordType : "opaque",
-  mediaType : "application/octet-stream",
-  url : ""
-}
-const message = createMessage([createOpaqueRecord(test_buffer_data)]);
+const desc = "Test that write and read data succeed when NFCReaderOptions's recordType is set to 'empty'.";
+const readOptions = {recordType: "empty"};
+const unacceptableReadOptions = {recordType: "json"};
+const message = createMessage([createRecord('empty', '')]);
 
-testNDEFMessage(message, readOptions, desc);
+testNFCReaderOptions(message, readOptions, unacceptableReadOptions, desc);
 
 </script>
