@@ -439,7 +439,7 @@ let PDFViewerApplication = {
 
   async _parseHashParameters() {
     if (!_app_options.AppOptions.get('pdfBugEnabled')) {
-      return;
+      return undefined;
     }
 
     const waitOn = [];
@@ -780,7 +780,7 @@ let PDFViewerApplication = {
     errorWrapper.setAttribute('hidden', 'true');
 
     if (!this.pdfLoadingTask) {
-      return;
+      return undefined;
     }
 
     let promise = this.pdfLoadingTask.destroy();
@@ -875,7 +875,7 @@ let PDFViewerApplication = {
       this.load(pdfDocument);
     }, exception => {
       if (loadingTask !== this.pdfLoadingTask) {
-        return;
+        return undefined;
       }
 
       let message = exception && exception.message;
@@ -3688,6 +3688,8 @@ function isLeftMouseReleased(event) {
   if (isChrome15OrOpera15plus || isSafari6plus) {
     return event.which === 0;
   }
+
+  return false;
 }
 
 /***/ }),
@@ -4377,7 +4379,7 @@ class PasswordPrompt {
 
     if (password && password.length > 0) {
       this.close();
-      return this.updateCallback(password);
+      this.updateCallback(password);
     }
   }
 
@@ -4733,11 +4735,11 @@ class PDFDocumentProperties {
     }
   }
 
-  _parseFileSize(fileSize = 0) {
+  async _parseFileSize(fileSize = 0) {
     let kb = fileSize / 1024;
 
     if (!kb) {
-      return Promise.resolve(undefined);
+      return undefined;
     } else if (kb < 1024) {
       return this.l10n.get('document_properties_kb', {
         size_kb: (+kb.toPrecision(3)).toLocaleString(),
@@ -4751,9 +4753,9 @@ class PDFDocumentProperties {
     }, '{{size_mb}} MB ({{size_b}} bytes)');
   }
 
-  _parsePageSize(pageSizeInches, pagesRotation) {
+  async _parsePageSize(pageSizeInches, pagesRotation) {
     if (!pageSizeInches) {
-      return Promise.resolve(undefined);
+      return undefined;
     }
 
     if (pagesRotation % 180 !== 0) {
@@ -4816,17 +4818,17 @@ class PDFDocumentProperties {
     });
   }
 
-  _parseDate(inputDate) {
+  async _parseDate(inputDate) {
     const dateObject = _pdfjsLib.PDFDateString.toDateObject(inputDate);
 
-    if (dateObject) {
-      const dateString = dateObject.toLocaleDateString();
-      const timeString = dateObject.toLocaleTimeString();
-      return this.l10n.get('document_properties_date_string', {
-        date: dateString,
-        time: timeString
-      }, '{{date}}, {{time}}');
+    if (!dateObject) {
+      return undefined;
     }
+
+    return this.l10n.get('document_properties_date_string', {
+      date: dateObject.toLocaleDateString(),
+      time: dateObject.toLocaleTimeString()
+    }, '{{date}}, {{time}}');
   }
 
   _parseLinearization(isLinearized) {
