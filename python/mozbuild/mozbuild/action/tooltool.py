@@ -17,8 +17,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from __future__ import absolute_import, print_function
-
 # A manifest file specifies files in that directory that are stored
 # elsewhere. This file should only list files in the same directory
 # in which the manifest file resides and it should be called
@@ -750,7 +748,7 @@ def _cache_checksum_matches(base_file, checksum):
                 log.info("Cache matches, avoiding extracting in '%s'" % base_file)
                 return True
             return False
-    except IOError:
+    except IOError as e:
         return False
 
 
@@ -1024,7 +1022,7 @@ def _authorize(req, auth_file):
         try:
             auth_file_content = json.loads(auth_file_content)
             is_taskcluster_auth = True
-        except Exception:
+        except:
             pass
 
     if is_taskcluster_auth:
@@ -1301,7 +1299,6 @@ def main(argv, _skip_logging=False):
         parser.error('You must specify a command')
 
     return 0 if process_command(options, args) else 1
-
 
 if __name__ == "__main__":  # pragma: no cover
     sys.exit(main(sys.argv))
