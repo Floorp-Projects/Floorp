@@ -15,8 +15,7 @@ function setE10sPrefs() {
   return new Promise(resolve =>
     SpecialPowers.pushPrefEnv({
       set: [
-        ["browser.tabs.remote.autostart", true],
-        ["browser.tabs.remote.force-enable", true]
+        ["browser.tabs.remote.autostart", true]
       ]
     }, resolve));
 }

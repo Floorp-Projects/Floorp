@@ -27,15 +27,25 @@ class ModalInput extends ReflectedFluentElement {
       unlockedValue.setAttribute("type", "password");
     }
 
-    this.shadowRoot.querySelector(".reveal-button").addEventListener("click", this);
+    this.shadowRoot.querySelector(".reveal-checkbox").addEventListener("click", this);
   }
 
   static get reflectedFluentIDs() {
-    return ["reveal-button"];
+    return ["reveal-checkbox-hide", "reveal-checkbox-show"];
   }
 
   static get observedAttributes() {
     return ["editing", "type", "value"].concat(ModalInput.reflectedFluentIDs);
+  }
+
+  handleSpecialCaseFluentString(attrName) {
+    if (attrName != "reveal-checkbox-hide" &&
+        attrName != "reveal-checkbox-show") {
+      return false;
+    }
+
+    this.updateRevealCheckboxTitle();
+    return true;
   }
 
   attributeChangedCallback(attr, oldValue, newValue) {
@@ -74,24 +84,22 @@ class ModalInput extends ReflectedFluentElement {
   }
 
   handleEvent(event) {
-    switch (event.type) {
-      case "click": {
-        if (event.target.classList.contains("reveal-button")) {
-          let lockedValue = this.shadowRoot.querySelector(".locked-value");
-          let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
-          let editing = this.hasAttribute("editing");
-          if ((editing && unlockedValue.getAttribute("type") == "password") ||
-              (!editing && lockedValue.textContent == this.constructor.LOCKED_PASSWORD_DISPLAY)) {
-            lockedValue.textContent = this.value;
-            unlockedValue.setAttribute("type", "text");
-          } else {
-            lockedValue.textContent = this.constructor.LOCKED_PASSWORD_DISPLAY;
-            unlockedValue.setAttribute("type", "password");
-          }
-        }
-        break;
-      }
+    if (event.type != "click" ||
+        !event.target.classList.contains("reveal-checkbox")) {
+      return;
     }
+
+    let revealCheckbox = event.target;
+    let lockedValue = this.shadowRoot.querySelector(".locked-value");
+    let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
+    if (revealCheckbox.checked) {
+      lockedValue.textContent = this.value;
+      unlockedValue.setAttribute("type", "text");
+    } else {
+      lockedValue.textContent = this.constructor.LOCKED_PASSWORD_DISPLAY;
+      unlockedValue.setAttribute("type", "password");
+    }
+    this.updateRevealCheckboxTitle();
   }
 
   get value() {
@@ -111,6 +119,14 @@ class ModalInput extends ReflectedFluentElement {
     } else {
       lockedValue.textContent = val;
     }
+  }
+
+  updateRevealCheckboxTitle() {
+    let revealCheckbox = this.shadowRoot.querySelector(".reveal-checkbox");
+    let labelAttr = revealCheckbox.checked ? "reveal-checkbox-hide"
+                                           : "reveal-checkbox-show";
+    revealCheckbox.setAttribute("aria-label", this.getAttribute(labelAttr));
+    revealCheckbox.setAttribute("title", this.getAttribute(labelAttr));
   }
 }
 customElements.define("modal-input", ModalInput);

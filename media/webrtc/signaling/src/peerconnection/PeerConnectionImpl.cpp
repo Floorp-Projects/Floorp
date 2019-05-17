@@ -854,15 +854,16 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aLocalPort,
 
   nsCOMPtr<nsIEventTarget> target =
       mWindow ? mWindow->EventTargetFor(TaskCategory::Other) : nullptr;
-  mDataConnection = new DataChannelConnection(this, target, mTransportHandler);
-  if (!mDataConnection->Init(aLocalPort, aNumstreams, aMMSSet,
-                             aMaxMessageSize)) {
-    CSFLogError(LOGTAG, "%s DataConnection Init Failed", __FUNCTION__);
-    return NS_ERROR_FAILURE;
+  Maybe<uint64_t> mms = aMMSSet ? Some(aMaxMessageSize) : Nothing();
+  if (auto res = DataChannelConnection::Create(this, target, mTransportHandler,
+                                               aLocalPort, aNumstreams, mms)) {
+    mDataConnection = res.value();
+    CSFLogDebug(LOGTAG, "%s DataChannelConnection %p attached to %s",
+                __FUNCTION__, (void*)mDataConnection.get(), mHandle.c_str());
+    return NS_OK;
   }
-  CSFLogDebug(LOGTAG, "%s DataChannelConnection %p attached to %s",
-              __FUNCTION__, (void*)mDataConnection.get(), mHandle.c_str());
-  return NS_OK;
+  CSFLogError(LOGTAG, "%s DataConnection Create Failed", __FUNCTION__);
+  return NS_ERROR_FAILURE;
 }
 
 nsresult PeerConnectionImpl::GetDatachannelParameters(

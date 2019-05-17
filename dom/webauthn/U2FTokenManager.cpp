@@ -312,6 +312,10 @@ void U2FTokenManager::Register(
 
   // Determine whether direct attestation was requested.
   bool directAttestationRequested = false;
+
+// On Android, let's always reject direct attestations until we have a
+// mechanism to solicit user consent, from Bug 1550164
+#ifndef MOZ_WIDGET_ANDROID
   if (aTransactionInfo.Extra().isSome()) {
     const auto& extra = aTransactionInfo.Extra().ref();
 
@@ -321,6 +325,7 @@ void U2FTokenManager::Register(
     directAttestationRequested =
         attestation == AttestationConveyancePreference::Direct;
   }
+#endif  // not MOZ_WIDGET_ANDROID
 
   // Start a register request immediately if direct attestation
   // wasn't requested or the test pref is set.

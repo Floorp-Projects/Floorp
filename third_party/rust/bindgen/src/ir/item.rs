@@ -1262,8 +1262,6 @@ impl ClangItemParser for Item {
         parent_id: Option<ItemId>,
         ctx: &mut BindgenContext,
     ) -> Result<ItemId, ParseError> {
-        use ir::function::Function;
-        use ir::module::Module;
         use ir::var::Var;
         use clang_sys::*;
 

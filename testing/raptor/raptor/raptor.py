@@ -686,17 +686,19 @@ class RaptorAndroid(Raptor):
         For more information, see https://bugzilla.mozilla.org/show_bug.cgi?id=1547135.
         """
         self.log.info("tuning android device performance")
-        self.set_scheduler()
         self.set_svc_power_stayon()
-        device_name = self.device.shell_output('getprop ro.product.model')
         if (self.device._have_su or self.device._have_android_su):
+            self.log.info("executing additional tuning commands requiring root")
+            device_name = self.device.shell_output('getprop ro.product.model')
             # all commands require root shell from here on
+            self.set_scheduler()
             self.set_virtual_memory_parameters()
             self.turn_off_services()
             self.set_cpu_performance_parameters(device_name)
             self.set_gpu_performance_parameters(device_name)
             self.set_kernel_performance_parameters()
         self.device.clear_logcat()
+        self.log.info("android device performance tuning complete")
 
     def _set_value_and_check_exitcode(self, file_name, value, root=False):
         self.log.info('setting {} to {}'.format(file_name, value))

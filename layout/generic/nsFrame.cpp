@@ -1214,8 +1214,10 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
         needAnchorSuppression = true;
       }
 
+      // TODO(emilio): Should this do something about other transform-like
+      // properties?
       if (oldDisp->mPosition != StyleDisplay()->mPosition ||
-          oldDisp->TransformChanged(*StyleDisplay())) {
+          oldDisp->mTransform != StyleDisplay()->mTransform) {
         needAnchorSuppression = true;
       }
     }
@@ -1640,7 +1642,7 @@ bool nsIFrame::HasOpacityInternal(float aThreshold,
                                   EffectSet* aEffectSet) const {
   MOZ_ASSERT(0.0 <= aThreshold && aThreshold <= 1.0, "Invalid argument");
   if (aStyleEffects->mOpacity < aThreshold ||
-      (aStyleDisplay->mWillChangeBitField & StyleWillChangeBits_OPACITY)) {
+      (aStyleDisplay->mWillChange.bits & StyleWillChangeBits_OPACITY)) {
     return true;
   }
 
@@ -2415,8 +2417,8 @@ void nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  nsCSSShadowArray* shadows = StyleEffects()->mBoxShadow;
-  if (shadows && shadows->HasShadowWithInset(false)) {
+  const auto* effects = StyleEffects();
+  if (effects->HasBoxShadowWithInset(false)) {
     aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowOuter>(aBuilder,
                                                                        this);
   }
@@ -2424,7 +2426,7 @@ void nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
   bool bgIsThemed =
       DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
 
-  if (shadows && shadows->HasShadowWithInset(true)) {
+  if (effects->HasBoxShadowWithInset(true)) {
     aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowInner>(aBuilder,
                                                                        this);
   }
@@ -2870,7 +2872,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
                              NS_STYLE_POINTER_EVENTS_NONE;
   bool opacityItemForEventsAndPluginsOnly = false;
   if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
-      !(disp->mWillChangeBitField & StyleWillChangeBits_OPACITY) &&
+      !(disp->mWillChange.bits & StyleWillChangeBits_OPACITY) &&
       !nsLayoutUtils::HasAnimationOfPropertySet(
           this, nsCSSPropertyIDSet::OpacityProperties(), effectSetForOpacity)) {
     if (needHitTestInfo || aBuilder->WillComputePluginGeometry()) {
@@ -2880,7 +2882,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
   }
 
-  if (disp->mWillChangeBitField) {
+  if (disp->mWillChange.bits) {
     aBuilder->AddToWillChangeBudget(this, GetSize());
   }
 
@@ -7603,6 +7605,26 @@ void nsIFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
   fprintf_stderr(out, "%s\n", str.get());
 }
 
+void nsIFrame::ListMatchedRules(FILE* out, const char* aPrefix) const {
+  nsTArray<const RawServoStyleRule*> rawRuleList;
+  Servo_ComputedValues_GetStyleRuleList(mComputedStyle, &rawRuleList);
+  for (const RawServoStyleRule* rawRule : rawRuleList) {
+    nsString ruleText;
+    Servo_StyleRule_GetCssText(rawRule, &ruleText);
+    fprintf_stderr(out, "%s%s\n", aPrefix,
+                   NS_ConvertUTF16toUTF8(ruleText).get());
+  }
+}
+
+void nsIFrame::ListWithMatchedRules(FILE* out, const char* aPrefix) const {
+  fprintf_stderr(out, "%s%s\n", aPrefix, ListTag().get());
+
+  nsCString rulePrefix;
+  rulePrefix += aPrefix;
+  rulePrefix += "    ";
+  ListMatchedRules(out, rulePrefix.get());
+}
+
 nsresult nsFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(NS_LITERAL_STRING("Frame"), aResult);
 }
@@ -10604,7 +10626,7 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
          nsSVGIntegrationUtils::UsingEffectsForFrame(this) ||
          (aIsPositioned && (aStyleDisplay->IsPositionForcingStackingContext() ||
                             aStylePosition->mZIndex.IsInteger())) ||
-         (aStyleDisplay->mWillChangeBitField &
+         (aStyleDisplay->mWillChange.bits &
           StyleWillChangeBits_STACKING_CONTEXT) ||
          aStyleDisplay->mIsolation != NS_STYLE_ISOLATION_AUTO;
 }
@@ -10667,7 +10689,7 @@ bool nsIFrame::IsScrolledOutOfView() const {
 
 gfx::Matrix nsIFrame::ComputeWidgetTransform() {
   const nsStyleUIReset* uiReset = StyleUIReset();
-  if (!uiReset->mSpecifiedWindowTransform) {
+  if (uiReset->mMozWindowTransform.IsNone()) {
     return gfx::Matrix();
   }
 
@@ -10677,8 +10699,7 @@ gfx::Matrix nsIFrame::ComputeWidgetTransform() {
   nsPresContext* presContext = PresContext();
   int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   gfx::Matrix4x4 matrix = nsStyleTransformMatrix::ReadTransforms(
-      uiReset->mSpecifiedWindowTransform->mHead, refBox,
-      float(appUnitsPerDevPixel));
+      uiReset->mMozWindowTransform, refBox, float(appUnitsPerDevPixel));
 
   // Apply the -moz-window-transform-origin translation to the matrix.
   const StyleTransformOrigin& origin = uiReset->mWindowTransformOrigin;

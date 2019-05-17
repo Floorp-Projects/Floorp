@@ -469,11 +469,6 @@
   line-height: 24px;
 }
 
-.request-list-item.selected {
-  background-color: var(--theme-selection-background);
-  color: var(--theme-selection-color);
-}
-
 .request-list-item:not(.selected).odd {
   background-color: var(--table-zebra-background);
 }
@@ -488,6 +483,15 @@
 
 .request-list-item.blocked {
   color: var(--timing-blocked-color);
+}
+
+/*
+ * Put ahead of .request-list-item.blocked to avoid specificity conflict.
+ * Bug 1530914 - Highlighted Security Value is difficult to read.
+ */
+.request-list-item.selected {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
 }
 
 /* Responsive web design support */

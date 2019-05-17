@@ -53,7 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616841
     }
 
     function finish() {
-      opener.setTimeout("done()", 0);
+      opener.setTimeout(function() { this.done(); }, 0);
       window.close();
     }
 

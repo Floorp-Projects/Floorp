@@ -16,11 +16,12 @@
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/modal-input.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
-    <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
-    <link rel="stylesheet" type="text/css" href="chrome://browser/content/aboutlogins/aboutLogins.css">
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" href="chrome://browser/content/aboutlogins/aboutLogins.css">
   </head>
   <body>
     <header>
+      <img id="branding-logo" src="chrome://branding/content/aboutlogins.svg" alt=""/>
       <login-filter data-l10n-id="login-filter"
                     data-l10n-attrs="placeholder"></login-filter>
     </header>
@@ -33,7 +34,8 @@
                                  delete-button,
                                  edit-button,
                                  hostname-label,
-                                 modal-input-reveal-button,
+                                 modal-input-reveal-checkbox-hide,
+                                 modal-input-reveal-checkbox-show,
                                  open-site-button,
                                  password-label,
                                  save-changes-button,
@@ -43,7 +45,7 @@
                                  username-label"></login-item>
 
     <template id="login-list-template">
-      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list.css">
       <div class="meta">
         <span class="count"></span>
@@ -53,14 +55,14 @@
     </template>
 
     <template id="login-list-item-template">
-      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list-item.css">
       <span class="hostname"></span>
       <span class="username"></span>
     </template>
 
     <template id="login-item-template">
-      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-item.css">
       <div class="header">
         <h2 class="title"></h2>
@@ -94,17 +96,17 @@
     </template>
 
     <template id="login-filter-template">
-      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-filter.css">
       <input type="text"/>
     </template>
 
     <template id="modal-input-template">
-      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/modal-input.css">
       <span class="locked-value"></span>
       <input type="text" class="unlocked-value"/>
-      <button class="reveal-button"/>
+      <input type="checkbox" class="reveal-checkbox"/>
     </template>
   </body>
 </html>

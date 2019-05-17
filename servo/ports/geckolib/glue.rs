@@ -47,11 +47,10 @@ use style::gecko_bindings::bindings::Gecko_GetOrCreateFinalKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
 use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
-use style::gecko_bindings::bindings::Gecko_NewNoneTransform;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::{Element as RawGeckoElement, nsINode as RawGeckoNode};
 use style::gecko_bindings::structs::{
-    RawServoQuotes, RawServoStyleSet, RawServoAuthorStyles,
+    RawServoStyleSet, RawServoAuthorStyles,
     RawServoCssUrlData, RawServoDeclarationBlock, RawServoMediaList,
     RawServoCounterStyleRule, RawServoAnimationValue, RawServoSupportsRule,
     RawServoKeyframesRule, ServoCssRules, RawServoStyleSheetContents,
@@ -65,7 +64,6 @@ use style::gecko_bindings::structs::nsAtom;
 use style::gecko_bindings::structs::nsCSSCounterDesc;
 use style::gecko_bindings::structs::nsCSSFontDesc;
 use style::gecko_bindings::structs::nsCSSPropertyID;
-use style::gecko_bindings::structs::nsCSSValueSharedList;
 use style::gecko_bindings::structs::nsChangeHint;
 use style::gecko_bindings::structs::nsCompatibility;
 use style::gecko_bindings::structs::nsStyleTransformMatrix::MatrixTransformOperator;
@@ -93,14 +91,12 @@ use style::gecko_bindings::structs::ServoTraversalFlags;
 use style::gecko_bindings::structs::SheetLoadData;
 use style::gecko_bindings::structs::SheetLoadDataHolder;
 use style::gecko_bindings::structs::SheetParsingMode;
-use style::gecko_bindings::structs::StyleContentType as ContentType;
 use style::gecko_bindings::structs::StyleRuleInclusion;
 use style::gecko_bindings::structs::StyleSheet as DomStyleSheet;
 use style::gecko_bindings::structs::URLExtraData;
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, HasFFI};
 use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, HasBoxFFI, Strong, Owned, OwnedOrNull};
 use style::gecko_bindings::sugar::refptr::RefPtr;
-use style::gecko_properties;
 use style::global_style_data::{GlobalStyleData, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL};
 use style::invalidation::element::restyle_hints::RestyleHint;
 use style::media_queries::MediaList;
@@ -133,7 +129,7 @@ use style::traversal::DomTraversal;
 use style::traversal_flags::{self, TraversalFlags};
 use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
-use style::values::computed::{self, Context, QuotePair, ToComputedValue};
+use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
 use style::values::specified;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
@@ -792,87 +788,75 @@ pub extern "C" fn Servo_AnimationValue_Color(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
+pub unsafe extern "C" fn Servo_AnimationValue_GetScale(
     value: &RawServoAnimationValue,
-    list: *mut structs::RefPtr<nsCSSValueSharedList>,
-) -> nsCSSPropertyID {
-    let list = &mut *list;
+) -> *const computed::Scale {
     let value = AnimationValue::as_arc(&value);
     match **value {
-        AnimationValue::Transform(ref servo_list) => {
-            if servo_list.0.is_empty() {
-                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
-            } else {
-                gecko_properties::convert_transform(&servo_list.0, list);
-            }
-            nsCSSPropertyID::eCSSProperty_transform
-        },
-        AnimationValue::Translate(ref v) => {
-            if let Some(v) = v.to_transform_operation() {
-                gecko_properties::convert_transform(&[v], list);
-            } else {
-                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
-            }
-            nsCSSPropertyID::eCSSProperty_translate
-        },
-        AnimationValue::Rotate(ref v) => {
-            if let Some(v) = v.to_transform_operation() {
-                gecko_properties::convert_transform(&[v], list);
-            } else {
-                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
-            }
-            nsCSSPropertyID::eCSSProperty_rotate
-        },
-        AnimationValue::Scale(ref v) => {
-            if let Some(v) = v.to_transform_operation() {
-                gecko_properties::convert_transform(&[v], list);
-            } else {
-                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
-            }
-            nsCSSPropertyID::eCSSProperty_scale
-        },
-        _ => unreachable!("Unsupported transform-like animation value"),
+        AnimationValue::Scale(ref value) => value,
+        _ => unreachable!("Expected scale"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_Transform(
-    property: nsCSSPropertyID,
-    list: *const nsCSSValueSharedList,
-) -> Strong<RawServoAnimationValue> {
-    use style::values::computed::transform::{Rotate, Scale, Translate};
-
-    let list = (&*list).mHead.as_ref();
-
-    let property = LonghandId::from_nscsspropertyid(property)
-        .expect("We don't have shorthand property animation value");
-    let transform = gecko_properties::clone_transform_from_list(list);
-    match property {
-        LonghandId::Rotate => {
-            let rotate = if transform.0.is_empty() {
-                style::values::generics::transform::Rotate::None
-            } else {
-                debug_assert_eq!(transform.0.len(), 1);
-                Rotate::from_transform_operation(&(transform.0)[0])
-            };
-            Arc::new(AnimationValue::Rotate(rotate)).into_strong()
-        },
-        LonghandId::Scale => {
-            debug_assert_eq!(transform.0.len(), 1);
-            Arc::new(AnimationValue::Scale(Scale::from_transform_operation(&(transform.0)[0])))
-                .into_strong()
-        },
-        LonghandId::Translate => {
-            debug_assert_eq!(transform.0.len(), 1);
-            Arc::new(AnimationValue::Translate(
-                Translate::from_transform_operation(&(transform.0)[0])
-            )).into_strong()
-        },
-        LonghandId::Transform => {
-            Arc::new(AnimationValue::Transform(transform)).into_strong()
-        },
-        _ => unreachable!("Unsupported transform-like animation value"),
+pub unsafe extern "C" fn Servo_AnimationValue_GetTranslate(
+    value: &RawServoAnimationValue,
+) -> *const computed::Translate {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::Translate(ref value) => value,
+        _ => unreachable!("Expected translate"),
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_GetRotate(
+    value: &RawServoAnimationValue,
+) -> *const computed::Rotate {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::Rotate(ref value) => value,
+        _ => unreachable!("Expected rotate"),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
+    value: &RawServoAnimationValue,
+) -> *const computed::Transform {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::Transform(ref value) => value,
+        _ => unreachable!("Unsupported transform animation value"),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_Rotate(r: &computed::Rotate) -> Strong<RawServoAnimationValue> {
+    Arc::new(AnimationValue::Rotate(r.clone())).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_Translate(t: &computed::Translate) -> Strong<RawServoAnimationValue> {
+    Arc::new(AnimationValue::Translate(t.clone())).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_Scale(s: &computed::Scale) -> Strong<RawServoAnimationValue> {
+    Arc::new(AnimationValue::Scale(s.clone())).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_Transform(
+    list: *const computed::TransformOperation,
+    len: usize,
+) -> Strong<RawServoAnimationValue> {
+    use style::values::generics::transform::Transform;
+
+    let slice = std::slice::from_raw_parts(list, len);
+    Arc::new(AnimationValue::Transform(
+        Transform(slice.iter().cloned().collect())
+    )).into_strong()
 }
 
 #[no_mangle]
@@ -2975,6 +2959,196 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetGeneration(
     read_locked_arc(rule, |rule: &CounterStyleRule| rule.generation())
 }
 
+fn symbol_to_string(s: &counter_style::Symbol) -> nsString {
+    match *s {
+        counter_style::Symbol::String(ref s) => nsString::from(&**s),
+        counter_style::Symbol::Ident(ref i) => nsString::from(i.0.as_slice())
+    }
+}
+
+// TODO(emilio): Cbindgen could be used to simplify a bunch of code here.
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetPad(
+    rule: &RawServoCounterStyleRule,
+    width: &mut i32,
+    symbol: &mut nsString,
+) -> bool {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        let pad = match rule.pad() {
+            Some(pad) => pad,
+            None => return false,
+        };
+        *width = pad.0.value();
+        *symbol = symbol_to_string(&pad.1);
+        true
+    })
+}
+
+fn get_symbol(s: Option<&counter_style::Symbol>, out: &mut nsString) -> bool {
+    let s = match s {
+        Some(s) => s,
+        None => return false,
+    };
+    *out = symbol_to_string(s);
+    true
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetPrefix(
+    rule: &RawServoCounterStyleRule,
+    out: &mut nsString,
+) -> bool {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        get_symbol(rule.prefix(), out)
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetSuffix(
+    rule: &RawServoCounterStyleRule,
+    out: &mut nsString,
+) -> bool {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        get_symbol(rule.suffix(), out)
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetNegative(
+    rule: &RawServoCounterStyleRule,
+    prefix: &mut nsString,
+    suffix: &mut nsString,
+) -> bool {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        let negative = match rule.negative() {
+            Some(n) => n,
+            None => return false,
+        };
+        *prefix = symbol_to_string(&negative.0);
+        *suffix = match negative.1 {
+            Some(ref s) => symbol_to_string(s),
+            None => nsString::new(),
+        };
+        true
+    })
+}
+
+#[repr(u8)]
+pub enum IsOrdinalInRange {
+    Auto,
+    InRange,
+    NotInRange,
+    NoOrdinalSpecified,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_IsInRange(
+    rule: &RawServoCounterStyleRule,
+    ordinal: i32,
+) -> IsOrdinalInRange {
+    use style::counter_style::CounterBound;
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        let range = match rule.range() {
+            Some(r) => r,
+            None => return IsOrdinalInRange::NoOrdinalSpecified,
+        };
+
+        if range.0.is_empty() {
+            return IsOrdinalInRange::Auto;
+        }
+
+        let in_range = range.0.iter().any(|r| {
+            if let CounterBound::Integer(start) = r.start {
+                if start.value() > ordinal {
+                    return false;
+                }
+            }
+
+            if let CounterBound::Integer(end) = r.end {
+                if end.value() < ordinal {
+                    return false;
+                }
+            }
+
+            true
+        });
+
+        if in_range {
+            IsOrdinalInRange::InRange
+        } else {
+            IsOrdinalInRange::NotInRange
+        }
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetSymbols(
+    rule: &RawServoCounterStyleRule,
+    symbols: &mut style::OwnedSlice<nsString>,
+) {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        *symbols = match rule.symbols() {
+            Some(s) => s.0.iter().map(symbol_to_string).collect(),
+            None => style::OwnedSlice::default(),
+        };
+    })
+}
+
+#[repr(C)]
+pub struct AdditiveSymbol {
+    pub weight: i32,
+    pub symbol: nsString,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetAdditiveSymbols(
+    rule: &RawServoCounterStyleRule,
+    symbols: &mut style::OwnedSlice<AdditiveSymbol>,
+) {
+    read_locked_arc(rule, |rule: &CounterStyleRule| {
+        *symbols = match rule.additive_symbols() {
+            Some(s) => s.0.iter().map(|s| {
+                AdditiveSymbol {
+                    weight: s.weight.value(),
+                    symbol: symbol_to_string(&s.symbol),
+                }
+            }).collect(),
+            None => style::OwnedSlice::default(),
+        };
+    })
+}
+
+#[repr(C, u8)]
+pub enum CounterSpeakAs {
+    None,
+    Auto,
+    Bullets,
+    Numbers,
+    Words,
+    Ident(*mut nsAtom),
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetSpeakAs(
+    rule: &RawServoCounterStyleRule,
+    out: &mut CounterSpeakAs,
+) {
+    use style::counter_style::SpeakAs;
+    *out = read_locked_arc(rule, |rule: &CounterStyleRule| {
+        let speak_as = match rule.speak_as() {
+            Some(s) => s,
+            None => return CounterSpeakAs::None,
+        };
+        match *speak_as {
+            SpeakAs::Auto => CounterSpeakAs::Auto,
+            SpeakAs::Bullets => CounterSpeakAs::Bullets,
+            SpeakAs::Numbers => CounterSpeakAs::Numbers,
+            SpeakAs::Words => CounterSpeakAs::Words,
+            SpeakAs::Other(ref other) => CounterSpeakAs::Ident(other.0.as_ptr()),
+        }
+    });
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn Servo_CounterStyleRule_GetSystem(
     rule: &RawServoCounterStyleRule,
@@ -3043,24 +3217,6 @@ macro_rules! counter_style_descriptors {
             $($i_desc:ident,)+
         ]
     } => {
-        #[no_mangle]
-        pub unsafe extern "C" fn Servo_CounterStyleRule_GetDescriptor(
-            rule: &RawServoCounterStyleRule,
-            desc: nsCSSCounterDesc,
-            result: &mut structs::nsCSSValue,
-        ) {
-            read_locked_arc(rule, |rule: &CounterStyleRule| {
-                match desc {
-                    $(nsCSSCounterDesc::$desc => {
-                        if let Some(value) = rule.$getter() {
-                            result.set_from(value);
-                        }
-                    })+
-                    $(nsCSSCounterDesc::$i_desc => unreachable!(),)+
-                }
-            });
-        }
-
         #[no_mangle]
         pub unsafe extern "C" fn Servo_CounterStyleRule_GetDescriptorCssText(
             rule: &RawServoCounterStyleRule,
@@ -4725,7 +4881,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
     let url = SpecifiedImageUrl::parse_from_string(string.into(), &context);
     let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(vec![Either::Second(
         Image::Url(url),
-    )]));
+    )].into()));
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(decl, Importance::Normal);
     });
@@ -5207,6 +5363,12 @@ pub extern "C" fn Servo_GetAnimationValues(
         unsafe { animation_values.set_len((index + 1) as u32) };
         animation_values[index].set_arc_leaky(Arc::new(anim));
     }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_AnimationValue_GetPropertyId(value: &RawServoAnimationValue) -> nsCSSPropertyID {
+    let value = AnimationValue::as_arc(&value);
+    value.id().to_nscsspropertyid()
 }
 
 #[no_mangle]
@@ -6303,52 +6465,8 @@ pub unsafe extern "C" fn Servo_IsCssPropertyRecordedInUseCounter(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Quotes_GetInitialValue() -> Strong<RawServoQuotes> {
-    computed::Quotes::get_initial_value()
-        .0
-        .clone()
-        .into_strong()
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_Quotes_Equal(a: &RawServoQuotes, b: &RawServoQuotes) -> bool {
-    let a = Box::<[QuotePair]>::as_arc(&a);
-    let b = Box::<[QuotePair]>::as_arc(&b);
-
-    a == b
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn Servo_Quotes_GetQuote(
-    quotes: &RawServoQuotes,
-    mut depth: i32,
-    quote_type: ContentType,
-    result: *mut nsAString,
-) {
-    debug_assert!(depth >= -1);
-
-    let quotes = Box::<[QuotePair]>::as_arc(&quotes);
-
-    // Reuse the last pair when the depth is greater than the number of
-    // pairs of quotes.  (Also make 'quotes: none' and close-quote from
-    // a depth of 0 equivalent for the next test.)
-    if depth >= quotes.len() as i32 {
-        depth = quotes.len() as i32 - 1;
-    }
-
-    if depth == -1 {
-        // close-quote from a depth of 0 or 'quotes: none'
-        return;
-    }
-
-    let quote_pair = &quotes[depth as usize];
-    let quote = if quote_type == ContentType::OpenQuote {
-        &quote_pair.opening
-    } else {
-        debug_assert!(quote_type == ContentType::CloseQuote);
-        &quote_pair.closing
-    };
-    (*result).write_str(quote).unwrap();
+pub extern "C" fn Servo_Quotes_GetInitialValue() -> style_traits::arc_slice::ForgottenArcSlicePtr<specified::list::QuotePair> {
+    computed::Quotes::get_initial_value().0.forget()
 }
 
 #[no_mangle]
@@ -6410,4 +6528,9 @@ pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Drop(
 #[must_use]
 pub unsafe extern "C" fn Servo_CloneBasicShape(v: &computed::basic_shape::BasicShape) -> *mut computed::basic_shape::BasicShape {
     Box::into_raw(Box::new(v.clone()))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_StyleArcSlice_EmptyPtr() -> *mut c_void {
+    style_traits::arc_slice::ArcSlice::<u64>::leaked_empty_ptr()
 }

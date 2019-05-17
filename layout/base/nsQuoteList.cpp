@@ -37,10 +37,29 @@ nsString nsQuoteNode::Text() {
   NS_ASSERTION(mType == StyleContentType::OpenQuote ||
                    mType == StyleContentType::CloseQuote,
                "should only be called when mText should be non-null");
-
   nsString result;
-  Servo_Quotes_GetQuote(mPseudoFrame->StyleList()->mQuotes.get(), Depth(),
-                        mType, &result);
+  int32_t depth = Depth();
+  MOZ_ASSERT(depth >= -1);
+
+  Span<const StyleQuotePair> quotes =
+    mPseudoFrame->StyleList()->mQuotes._0.AsSpan();
+
+  // Reuse the last pair when the depth is greater than the number of
+  // pairs of quotes.  (Also make 'quotes: none' and close-quote from
+  // a depth of 0 equivalent for the next test.)
+  if (depth >= static_cast<int32_t>(quotes.Length())) {
+      depth = static_cast<int32_t>(quotes.Length()) - 1;
+  }
+
+  if (depth == -1) {
+    // close-quote from a depth of 0 or 'quotes: none'
+    return result;
+  }
+
+  const StyleQuotePair& pair = quotes[depth];
+  const StyleOwnedStr& quote =
+    mType == StyleContentType::OpenQuote ? pair.opening : pair.closing;
+  result.Assign(NS_ConvertUTF8toUTF16(quote.AsString()));
   return result;
 }
 

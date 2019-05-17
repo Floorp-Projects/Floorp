@@ -11,8 +11,9 @@ add_task(async function doorhanger_bc_downloadAutoFailures() {
     ],
   });
 
-  let updateParams = "&badURL=1";
-  await runDoorhangerUpdateTest(updateParams, 1, [
+  let params = {checkAttempts: 1,
+                queryString: "&badURL=1"};
+  await runDoorhangerUpdateTest(params, [
     {
       // If the update download fails maxBackgroundErrors download attempts then
       // show the update available prompt.

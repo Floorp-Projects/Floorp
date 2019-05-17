@@ -289,34 +289,6 @@ static void debug_printf(const char* format, ...) {
   }
 }
 
-DataChannelConnection::DataChannelConnection(DataConnectionListener* listener,
-                                             nsIEventTarget* aTarget,
-                                             MediaTransportHandler* aHandler)
-    : NeckoTargetHolder(aTarget),
-      mLock("netwerk::sctp::DataChannelConnection"),
-      mSendInterleaved(false),
-      mPpidFragmentation(false),
-      mMaxMessageSizeSet(false),
-      mMaxMessageSize(0),
-      mAllocateEven(false),
-      mTransportHandler(aHandler),
-      mDeferSend(false) {
-  mCurrentStream = 0;
-  mState = CLOSED;
-  mSocket = nullptr;
-  mMasterSocket = nullptr;
-  mListener = listener;
-  mLocalPort = 0;
-  mRemotePort = 0;
-  mPendingType = PENDING_NONE;
-  LOG(("Constructor DataChannelConnection=%p, listener=%p", this,
-       mListener.get()));
-  mInternalIOThread = nullptr;
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  mShutdown = false;
-#endif
-}
-
 DataChannelConnection::~DataChannelConnection() {
   LOG(("Deleting DataChannelConnection %p", (void*)this));
   // This may die on the MainThread, or on the STS thread
@@ -405,9 +377,39 @@ void DataChannelConnection::DestroyOnSTSFinal() {
   sDataChannelShutdown->CreateConnectionShutdown(this);
 }
 
-bool DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams,
-                                 bool aMaxMessageSizeSet,
-                                 uint64_t aMaxMessageSize) {
+Maybe<RefPtr<DataChannelConnection>> DataChannelConnection::Create(
+    DataChannelConnection::DataConnectionListener* aListener,
+    nsIEventTarget* aTarget, MediaTransportHandler* aHandler,
+    const uint16_t aLocalPort, const uint16_t aNumStreams,
+    const Maybe<uint64_t>& aMaxMessageSize) {
+  ASSERT_WEBRTC(NS_IsMainThread());
+
+  RefPtr<DataChannelConnection> connection = new DataChannelConnection(
+      aListener, aTarget, aHandler);  // Walks into a bar
+  return connection->Init(aLocalPort, aNumStreams, aMaxMessageSize)
+             ? Some(connection)
+             : Nothing();
+}
+
+DataChannelConnection::DataChannelConnection(
+    DataChannelConnection::DataConnectionListener* aListener,
+    nsIEventTarget* aTarget, MediaTransportHandler* aHandler)
+    : NeckoTargetHolder(aTarget),
+      mLock("netwerk::sctp::DataChannelConnection"),
+      mListener(aListener),
+      mTransportHandler(aHandler) {
+  LOG(("Constructor DataChannelConnection=%p, listener=%p", this,
+       mListener.get()));
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  mShutdown = false;
+#endif
+}
+
+bool DataChannelConnection::Init(const uint16_t aLocalPort,
+                                 const uint16_t aNumStreams,
+                                 const Maybe<uint64_t>& aMaxMessageSize) {
+  ASSERT_WEBRTC(NS_IsMainThread());
+
   struct sctp_initmsg initmsg;
   struct sctp_assoc_value av;
   struct sctp_event event;
@@ -420,13 +422,9 @@ bool DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams,
       SCTP_SEND_FAILED_EVENT,     SCTP_STREAM_RESET_EVENT,
       SCTP_STREAM_CHANGE_EVENT};
   {
-    ASSERT_WEBRTC(NS_IsMainThread());
     // MutexAutoLock lock(mLock); Not needed since we're on mainthread always
-
-    mSendInterleaved = false;
-    mPpidFragmentation = false;
-    mMaxMessageSizeSet = false;
-    SetMaxMessageSize(aMaxMessageSizeSet, aMaxMessageSize);
+    mLocalPort = aLocalPort;
+    SetMaxMessageSize(aMaxMessageSize.isSome(), aMaxMessageSize.valueOr(0));
 
     if (!sctp_initialized) {
       LOG(("sctp_init"));

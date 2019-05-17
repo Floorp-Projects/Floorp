@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
-
 import unittest
 
 from mozunit import main
@@ -32,7 +30,7 @@ class TestReadOnlyNamespace(unittest.TestCase):
             ['bar', 'foo'])
 
         with self.assertRaises(AttributeError):
-            test.missing
+            value = test.missing
 
         with self.assertRaises(Exception):
             test.foo = 2
@@ -58,7 +56,7 @@ class TestReadOnlyDict(unittest.TestCase):
         self.assertEqual(test['foo'], 1)
 
         with self.assertRaises(KeyError):
-            test['missing']
+            value = test['missing']
 
         with self.assertRaises(Exception):
             test['baz'] = True
@@ -144,7 +142,6 @@ class TestList(unittest.TestCase):
         with self.assertRaises(ValueError):
             test = test + False
 
-
 class TestOrderedDefaultDict(unittest.TestCase):
     def test_simple(self):
         original = OrderedDict(foo=1, bar=2)
@@ -155,21 +152,21 @@ class TestOrderedDefaultDict(unittest.TestCase):
 
         self.assertEqual(test['foo'], 1)
 
-        self.assertEqual(test.keys(), ['foo', 'bar'])
+        self.assertEqual(test.keys(), ['foo', 'bar' ])
 
     def test_defaults(self):
-        test = OrderedDefaultDict(bool, {'foo': 1})
+        test = OrderedDefaultDict(bool, {'foo': 1 })
 
         self.assertEqual(test['foo'], 1)
 
         self.assertEqual(test['qux'], False)
 
-        self.assertEqual(test.keys(), ['foo', 'qux'])
+        self.assertEqual(test.keys(), ['foo', 'qux' ])
 
 
 class TestKeyedDefaultDict(unittest.TestCase):
     def test_simple(self):
-        original = {'foo': 1, 'bar': 2}
+        original = {'foo': 1, 'bar': 2 }
 
         test = KeyedDefaultDict(lambda x: x, original)
 
@@ -178,7 +175,7 @@ class TestKeyedDefaultDict(unittest.TestCase):
         self.assertEqual(test['foo'], 1)
 
     def test_defaults(self):
-        test = KeyedDefaultDict(lambda x: x, {'foo': 1})
+        test = KeyedDefaultDict(lambda x: x, {'foo': 1 })
 
         self.assertEqual(test['foo'], 1)
 
@@ -199,7 +196,7 @@ class TestKeyedDefaultDict(unittest.TestCase):
 
 class TestReadOnlyKeyedDefaultDict(unittest.TestCase):
     def test_defaults(self):
-        test = ReadOnlyKeyedDefaultDict(lambda x: x, {'foo': 1})
+        test = ReadOnlyKeyedDefaultDict(lambda x: x, {'foo': 1 })
 
         self.assertEqual(test['foo'], 1)
 

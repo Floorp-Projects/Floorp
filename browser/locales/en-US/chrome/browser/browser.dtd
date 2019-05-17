@@ -248,6 +248,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY urlbar.canvasBlocked.tooltip            "You have blocked canvas data extraction for this website.">
 <!ENTITY urlbar.flashPluginBlocked.tooltip       "You have blocked this website from using the Adobe Flash plugin.">
 <!ENTITY urlbar.midiBlocked.tooltip              "You have blocked MIDI access for this website.">
+<!ENTITY urlbar.installBlocked.tooltip           "You have blocked add-on installation for this website.">
 
 <!ENTITY urlbar.openHistoryPopup.tooltip                "Show history">
 

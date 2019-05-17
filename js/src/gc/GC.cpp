@@ -524,12 +524,6 @@ static constexpr FinalizePhase BackgroundFinalizePhases[] = {
      {AllocKind::SHAPE, AllocKind::ACCESSOR_SHAPE, AllocKind::BASE_SHAPE,
       AllocKind::OBJECT_GROUP}}};
 
-template <>
-JSObject* ArenaCellIterImpl::get<JSObject>() const {
-  MOZ_ASSERT(!done());
-  return reinterpret_cast<JSObject*>(getCell());
-}
-
 void Arena::unmarkAll() {
   uintptr_t* word = chunk()->bitmap.arenaBits(this);
   memset(word, 0, ArenaBitmapWords * sizeof(uintptr_t));
@@ -8156,7 +8150,7 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
         // If we are currently collecting the target zone then we must
         // treat all merged things as if they were allocated during the
         // collection.
-        for (ArenaCellIterUnbarriered iter(arena); !iter.done(); iter.next()) {
+        for (ArenaCellIter iter(arena); !iter.done(); iter.next()) {
           TenuredCell* cell = iter.getCell();
           MOZ_ASSERT(!cell->isMarkedAny());
           cell->markBlack();
@@ -8521,7 +8515,7 @@ void js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt) {
     zone->checkBaseShapeTableAfterMovingGC();
 
     JS::AutoCheckCannotGC nogc;
-    for (auto baseShape = zone->cellIter<BaseShape>(); !baseShape.done();
+    for (auto baseShape = zone->cellIterUnsafe<BaseShape>(); !baseShape.done();
          baseShape.next()) {
       ShapeCachePtr p = baseShape->getCache(nogc);
       p.checkAfterMovingGC();

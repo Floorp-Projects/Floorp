@@ -44,6 +44,9 @@ const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400;
 // Gecko's scrollTop is int32_t, so the maximum value is 2^31 - 1 = 2147483647
 const MAX_SCROLL_HEIGHT = 2147483647;
 
+const LEFT_MOUSE_BUTTON = 0;
+const RIGHT_MOUSE_BUTTON = 2;
+
 /**
  * Renders the actual contents of the request list.
  */
@@ -56,18 +59,22 @@ class RequestListContent extends Component {
       networkDetailsOpen: PropTypes.bool.isRequired,
       networkDetailsWidth: PropTypes.number,
       networkDetailsHeight: PropTypes.number,
-      cloneSelectedRequest: PropTypes.func.isRequired,
+      cloneRequest: PropTypes.func.isRequired,
+      clickedRequest: PropTypes.object,
+      openDetailsPanelTab: PropTypes.func.isRequired,
       sendCustomRequest: PropTypes.func.isRequired,
       displayedRequests: PropTypes.array.isRequired,
       firstRequestStartedMillis: PropTypes.number.isRequired,
       fromCache: PropTypes.bool,
       onCauseBadgeMouseDown: PropTypes.func.isRequired,
+      onItemRightMouseButtonDown: PropTypes.func.isRequired,
       onItemMouseDown: PropTypes.func.isRequired,
       onSecurityIconMouseDown: PropTypes.func.isRequired,
       onSelectDelta: PropTypes.func.isRequired,
       onWaterfallMouseDown: PropTypes.func.isRequired,
       openStatistics: PropTypes.func.isRequired,
       scale: PropTypes.number,
+      selectRequest: PropTypes.func.isRequired,
       selectedRequest: PropTypes.object,
       unblockSelectedRequestURL: PropTypes.func.isRequired,
       requestFilterTypes: PropTypes.object.isRequired,
@@ -85,6 +92,7 @@ class RequestListContent extends Component {
     this.onDoubleClick = this.onDoubleClick.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.onFocusedNodeChange = this.onFocusedNodeChange.bind(this);
+    this.onMouseDown = this.onMouseDown.bind(this);
   }
 
   componentWillMount() {
@@ -216,6 +224,14 @@ class RequestListContent extends Component {
     this.tooltip.hide();
   }
 
+  onMouseDown(evt, id) {
+    if (evt.button === LEFT_MOUSE_BUTTON) {
+      this.props.selectRequest(id);
+    } else if (evt.button === RIGHT_MOUSE_BUTTON) {
+      this.props.onItemRightMouseButtonDown(id);
+    }
+  }
+
   /**
    * Handler for keyboard events. For arrow up/down, page up/down, home/end,
    * move the selection up or down.
@@ -273,13 +289,14 @@ class RequestListContent extends Component {
 
   onContextMenu(evt) {
     evt.preventDefault();
-    const { selectedRequest, displayedRequests } = this.props;
+    const { clickedRequest, displayedRequests } = this.props;
 
     if (!this.contextMenu) {
       const {
         blockSelectedRequestURL,
         connector,
-        cloneSelectedRequest,
+        cloneRequest,
+        openDetailsPanelTab,
         sendCustomRequest,
         openStatistics,
         unblockSelectedRequestURL,
@@ -287,7 +304,8 @@ class RequestListContent extends Component {
       this.contextMenu = new RequestListContextMenu({
         blockSelectedRequestURL,
         connector,
-        cloneSelectedRequest,
+        cloneRequest,
+        openDetailsPanelTab,
         sendCustomRequest,
         openStatistics,
         openRequestInTab: this.openRequestInTab,
@@ -295,7 +313,7 @@ class RequestListContent extends Component {
       });
     }
 
-    this.contextMenu.open(evt, selectedRequest, displayedRequests);
+    this.contextMenu.open(evt, clickedRequest, displayedRequests);
   }
 
   /**
@@ -313,7 +331,6 @@ class RequestListContent extends Component {
       displayedRequests,
       firstRequestStartedMillis,
       onCauseBadgeMouseDown,
-      onItemMouseDown,
       onSecurityIconMouseDown,
       onWaterfallMouseDown,
       requestFilterTypes,
@@ -350,7 +367,7 @@ class RequestListContent extends Component {
               onContextMenu: this.onContextMenu,
               onFocusedNodeChange: this.onFocusedNodeChange,
               onDoubleClick: () => this.onDoubleClick(item),
-              onMouseDown: () => onItemMouseDown(item.id),
+              onMouseDown: (evt) => this.onMouseDown(evt, item.id),
               onCauseBadgeMouseDown: () => onCauseBadgeMouseDown(item.cause),
               onSecurityIconMouseDown: () => onSecurityIconMouseDown(item.securityState),
               onWaterfallMouseDown: () => onWaterfallMouseDown(),
@@ -369,6 +386,7 @@ module.exports = connect(
     networkDetailsOpen: state.ui.networkDetailsOpen,
     networkDetailsWidth: state.ui.networkDetailsWidth,
     networkDetailsHeight: state.ui.networkDetailsHeight,
+    clickedRequest: state.requests.clickedRequest,
     displayedRequests: getDisplayedRequests(state),
     firstRequestStartedMillis: state.requests.firstStartedMillis,
     selectedRequest: getSelectedRequest(state),
@@ -379,7 +397,8 @@ module.exports = connect(
     blockSelectedRequestURL: () => {
       dispatch(Actions.blockSelectedRequestURL(props.connector));
     },
-    cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
+    cloneRequest: (id) => dispatch(Actions.cloneRequest(id)),
+    openDetailsPanelTab: () => dispatch(Actions.openNetworkDetails(true)),
     sendCustomRequest: () => dispatch(Actions.sendCustomRequest(props.connector)),
     openStatistics: (open) => dispatch(Actions.openStatistics(props.connector, open)),
     unblockSelectedRequestURL: () => {
@@ -393,6 +412,8 @@ module.exports = connect(
         dispatch(Actions.selectDetailsPanelTab("stack-trace"));
       }
     },
+    selectRequest: (id) => dispatch(Actions.selectRequest(id)),
+    onItemRightMouseButtonDown: (id) => dispatch(Actions.rightClickRequest(id)),
     onItemMouseDown: (id) => dispatch(Actions.selectRequest(id)),
     /**
      * A handler that opens the security tab in the details view if secure or
