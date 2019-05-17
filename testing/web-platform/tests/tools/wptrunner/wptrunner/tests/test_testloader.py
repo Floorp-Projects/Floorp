@@ -1,15 +1,12 @@
 from __future__ import unicode_literals
 
-import os
 import sys
 import tempfile
 
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-
 from mozlog import structured
-from wptrunner.testloader import TestFilter as Filter
+from ..testloader import TestFilter as Filter
 from .test_wpttest import make_mock_manifest
 
 structured.set_default_logger(structured.structuredlog.StructuredLogger("TestLoader"))

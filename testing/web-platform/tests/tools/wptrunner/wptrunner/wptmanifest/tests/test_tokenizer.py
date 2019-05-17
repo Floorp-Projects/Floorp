@@ -1,9 +1,6 @@
-import sys
-import os
 import unittest
 
-sys.path.insert(0, os.path.abspath(".."))
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 
 from .. import parser
 from ..parser import token_types
