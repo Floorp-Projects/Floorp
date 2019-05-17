@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<iframe srcdoc="<iframe></iframe>"></iframe>
+<script>
+  onload = function() {
+      parent = frames[0];
+      child = parent[0];
+      child.onunload = function() {
+          parent.document.open();
+          parent.document.write("Nested");
+      }
+      parent.document.open();
+      parent.document.write("Hello");
+  }
+</script>

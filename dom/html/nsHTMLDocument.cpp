@@ -1098,7 +1098,15 @@ Document* nsHTMLDocument::Open(const Optional<nsAString>& /* unused */,
   }
 
   // Step 10 -- remove all our DOM kids without firing any mutation events.
-  DisconnectNodeTree();
+  {
+    // We want to ignore any recursive calls to Open() that happen while
+    // disconnecting the node tree.  The spec doesn't say to do this, but the
+    // spec also doesn't envision unload events on subframes firing while we do
+    // this, while all browsers fire them in practice.  See
+    // <https://github.com/whatwg/html/issues/4611>.
+    IgnoreOpensDuringUnload ignoreOpenGuard(this);
+    DisconnectNodeTree();
+  }
 
   // Step 11 -- if we're the current document in our docshell, do the
   // equivalent of pushState() with the new URL we should have.
