@@ -4,8 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from distutils.version import LooseVersion
 import logging
 from mozbuild.base import (
+    BuildEnvironmentNotFoundException,
     MozbuildObject,
 )
 import mozfile
@@ -16,7 +18,6 @@ import re
 import sys
 import tarfile
 from urlparse import urlparse
-
 
 class VendorAOM(MozbuildObject):
     def upstream_snapshot(self, revision):
@@ -61,7 +62,7 @@ Please set a repository url with --repo on either googlesource or github.''' % h
         req.raise_for_status()
         try:
             info = req.json()
-        except ValueError:
+        except ValueError as e:
             # As of 2017 May, googlesource sends 4 garbage characters
             # at the beginning of the json response. Work around this.
             # https://bugs.chromium.org/p/chromium/issues/detail?id=718550
@@ -136,7 +137,7 @@ Please set a repository url with --repo on either googlesource or github.''' % h
         mozfile.remove(mozpath.join(target, '.gitattributes'))
         mozfile.remove(mozpath.join(target, '.gitignore'))
         mozfile.remove(mozpath.join(target, 'build', '.gitattributes'))
-        mozfile.remove(mozpath.join(target, 'build', '.gitignore'))
+        mozfile.remove(mozpath.join(target, 'build' ,'.gitignore'))
 
     def generate_sources(self, target):
         '''
