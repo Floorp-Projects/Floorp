@@ -25,6 +25,7 @@ body {
         // of the document, excluding the margin, and then overflow.
         checkRect(entry,
           [100, document.documentElement.clientWidth, 200, document.documentElement.clientHeight]);
+        checkNaturalSize(entry, 20, 20);
       })
     );
     observer.observe({entryTypes: ['element']});
