@@ -293,8 +293,8 @@ def test_iterpath():
                SourceFileWithTest("test3", "0"*40, item.TestharnessTest)]
     m.update([(s, True) for s in sources])
 
-    assert set(item.url for item in m.iterpath("test2")) == set(["/test2-1.html",
-                                                                 "/test2-2.html"])
+    assert {item.url for item in m.iterpath("test2")} == {"/test2-1.html",
+                                                          "/test2-2.html"}
     assert set(m.iterpath("missing")) == set()
 
 

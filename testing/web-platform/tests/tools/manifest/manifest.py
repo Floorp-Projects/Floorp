@@ -185,7 +185,7 @@ class TypeData(object):
         without actually constructing all the items"""
         rv = set(iterkeys(self.data))
         if self.json_data:
-            rv |= set(to_os_path(item) for item in iterkeys(self.json_data))
+            rv |= {to_os_path(item) for item in iterkeys(self.json_data)}
         return rv
 
 
