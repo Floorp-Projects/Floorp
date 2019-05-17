@@ -110,6 +110,21 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceMixed) {
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclickHash);
 
+  // Properly prepare the prio prefs
+  // (Sourced from PrioEncoder.cpp from when it was being prototyped)
+  const nsLiteralCString prioKeyA(
+      "35AC1C7576C7C6EDD7FED6BCFC337B34D48CB4EE45C86BEEFB40BD8875707733");
+  const nsLiteralCString prioKeyB(
+      "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35DD135AF50");
+  Preferences::SetCString("prio.publicKeyA", prioKeyA);
+  Preferences::SetCString("prio.publicKeyB", prioKeyB);
+
+  nsTArray<Tuple<nsCString, nsCString>> encodedStrings;
+  GetEncodedOriginStrings(aCx, telemetryTest1 + NS_LITERAL_CSTRING("-%u"),
+                          encodedStrings);
+  ASSERT_EQ(2 * TelemetryOrigin::SizeOfPrioDatasPerMetric(),
+            encodedStrings.Length());
+
   JS::RootedValue originSnapshot(aCx);
   GetOriginSnapshot(aCx, &originSnapshot, true /* aClear */);
 
