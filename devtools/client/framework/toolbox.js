@@ -2452,7 +2452,7 @@ Toolbox.prototype = {
    * Toggles the options panel.
    * If the option panel is already selected then select the last selected panel.
    */
-  toggleOptions: function() {
+  toggleOptions: function(event) {
     // Flip back to the last used panel if we are already
     // on the options panel.
     if (this.currentToolId === "options" &&
@@ -2461,6 +2461,10 @@ Toolbox.prototype = {
     } else {
       this.selectTool("options", "toggle_settings_on");
     }
+
+    // preventDefault will avoid a Linux only bug when the focus is on a text input
+    // See Bug 1519087.
+    event.preventDefault();
   },
 
   /**
