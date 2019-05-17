@@ -458,7 +458,6 @@ def test_option_e10s_sets_prefs(mach_parsed_kwargs, e10s):
     runner = MarionetteTestRunner(**mach_parsed_kwargs)
     e10s_prefs = {
         'browser.tabs.remote.autostart': True,
-        'browser.tabs.remote.force-enable': True,
     }
     for k,v in e10s_prefs.iteritems():
         assert runner.prefs.get(k, False) == (v and e10s)

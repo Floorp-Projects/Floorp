@@ -5,7 +5,7 @@
 # This file contains utility functions for reading .properties files, like
 # region.properties.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import codecs
 import re
@@ -15,7 +15,6 @@ if sys.version_info[0] == 3:
     str_type = str
 else:
     str_type = basestring
-
 
 class DotProperties:
     r'''A thin representation of a key=value .properties file.'''
@@ -78,7 +77,7 @@ class DotProperties:
                  if k.startswith(prefix) and '.' not in k[len(prefix):])
 
         for required_key in required_keys:
-            if required_key not in D:
+            if not required_key in D:
                 raise ValueError('Required key %s not present' % required_key)
 
         return D

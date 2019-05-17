@@ -1427,21 +1427,6 @@ void Gecko_EnsureStyleTransitionArrayLength(void* aArray, size_t aLen) {
   EnsureStyleAutoArrayLength(base, aLen);
 }
 
-void Gecko_ClearWillChange(nsStyleDisplay* aDisplay, size_t aLength) {
-  aDisplay->mWillChange.Clear();
-  aDisplay->mWillChange.SetCapacity(aLength);
-}
-
-void Gecko_AppendWillChange(nsStyleDisplay* aDisplay, nsAtom* aAtom) {
-  aDisplay->mWillChange.AppendElement(aAtom);
-}
-
-void Gecko_CopyWillChangeFrom(nsStyleDisplay* aDest,
-                              const nsStyleDisplay* aSrc) {
-  aDest->mWillChange.Clear();
-  aDest->mWillChange.AppendElements(aSrc->mWillChange);
-}
-
 enum class KeyframeSearchDirection {
   Forwards,
   Backwards,
@@ -1619,18 +1604,6 @@ void Gecko_nsStyleSVG_CopyDashArray(nsStyleSVG* aDst, const nsStyleSVG* aSrc) {
   aDst->mStrokeDasharray = aSrc->mStrokeDasharray;
 }
 
-void Gecko_nsStyleSVG_SetContextPropertiesLength(nsStyleSVG* aSvg,
-                                                 uint32_t aLen) {
-  aSvg->mContextProps.Clear();
-  aSvg->mContextProps.SetLength(aLen);
-}
-
-void Gecko_nsStyleSVG_CopyContextProperties(nsStyleSVG* aDst,
-                                            const nsStyleSVG* aSrc) {
-  aDst->mContextProps = aSrc->mContextProps;
-  aDst->mContextPropsBits = aSrc->mContextPropsBits;
-}
-
 URLValue* Gecko_URLValue_Create(StyleStrong<RawServoCssUrlData> aCssUrl,
                                 CORSMode aCORSMode) {
   RefPtr<URLValue> url = new URLValue(aCssUrl.Consume(), aCORSMode);
@@ -1716,166 +1689,6 @@ NS_IMPL_THREADSAFE_FFI_REFCOUNTING(URLValue, CSSURLValue);
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(URLExtraData, URLExtraData);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
-
-nsCSSShadowArray* Gecko_NewCSSShadowArray(uint32_t aLen) {
-  RefPtr<nsCSSShadowArray> arr = new (aLen) nsCSSShadowArray(aLen);
-  return arr.forget().take();
-}
-
-NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSShadowArray, CSSShadowArray);
-
-nsCSSValueSharedList* Gecko_NewCSSValueSharedList(uint32_t aLen) {
-  RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
-  if (aLen == 0) {
-    return list.forget().take();
-  }
-
-  list->mHead = new nsCSSValueList;
-  nsCSSValueList* cur = list->mHead;
-  for (uint32_t i = 0; i < aLen - 1; i++) {
-    cur->mNext = new nsCSSValueList;
-    cur = cur->mNext;
-  }
-
-  return list.forget().take();
-}
-
-nsCSSValueSharedList* Gecko_NewNoneTransform() {
-  RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
-  list->mHead = new nsCSSValueList;
-  list->mHead->mValue.SetNoneValue();
-  return list.forget().take();
-}
-
-void Gecko_StyleDisplay_GenerateCombinedTransform(nsStyleDisplay* aDisplay) {
-  aDisplay->GenerateCombinedIndividualTransform();
-}
-
-void Gecko_CSSValue_SetNumber(nsCSSValue* aCSSValue, float aNumber) {
-  aCSSValue->SetFloatValue(aNumber, eCSSUnit_Number);
-}
-
-float Gecko_CSSValue_GetNumber(const nsCSSValue* aCSSValue) {
-  return aCSSValue->GetFloatValue();
-}
-
-void Gecko_CSSValue_SetKeyword(nsCSSValue* aCSSValue, nsCSSKeyword aKeyword) {
-  aCSSValue->SetEnumValue(aKeyword);
-}
-
-nsCSSKeyword Gecko_CSSValue_GetKeyword(const nsCSSValue* aCSSValue) {
-  return aCSSValue->GetKeywordValue();
-}
-
-void Gecko_CSSValue_SetPercentage(nsCSSValue* aCSSValue, float aPercent) {
-  aCSSValue->SetPercentValue(aPercent);
-}
-
-float Gecko_CSSValue_GetPercentage(const nsCSSValue* aCSSValue) {
-  return aCSSValue->GetPercentValue();
-}
-
-void Gecko_CSSValue_SetPixelLength(nsCSSValue* aCSSValue, float aLen) {
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null ||
-             aCSSValue->GetUnit() == eCSSUnit_Pixel);
-  aCSSValue->SetFloatValue(aLen, eCSSUnit_Pixel);
-}
-
-void Gecko_CSSValue_SetCalc(nsCSSValue* aCSSValue,
-                            nsStyleCoord::CalcValue aCalc) {
-  aCSSValue->SetCalcValue(aCalc);
-}
-
-nsStyleCoord::CalcValue Gecko_CSSValue_GetCalc(const nsCSSValue* aCSSValue) {
-  return aCSSValue->GetCalcValue();
-}
-
-void Gecko_CSSValue_SetFunction(nsCSSValue* aCSSValue, int32_t aLen) {
-  nsCSSValue::Array* arr = nsCSSValue::Array::Create(aLen);
-  aCSSValue->SetArrayValue(arr, eCSSUnit_Function);
-}
-
-void Gecko_CSSValue_SetString(nsCSSValue* aCSSValue, const uint8_t* aString,
-                              uint32_t aLength, nsCSSUnit aUnit) {
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
-  nsString string;
-  nsDependentCSubstring slice(reinterpret_cast<const char*>(aString), aLength);
-  AppendUTF8toUTF16(slice, string);
-  aCSSValue->SetStringValue(string, aUnit);
-}
-
-void Gecko_CSSValue_SetStringFromAtom(nsCSSValue* aCSSValue, nsAtom* aAtom,
-                                      nsCSSUnit aUnit) {
-  aCSSValue->SetStringValue(nsDependentAtomString(aAtom), aUnit);
-}
-
-void Gecko_CSSValue_SetAtomIdent(nsCSSValue* aCSSValue, nsAtom* aAtom) {
-  aCSSValue->SetAtomIdentValue(already_AddRefed<nsAtom>(aAtom));
-}
-
-void Gecko_CSSValue_SetArray(nsCSSValue* aCSSValue, int32_t aLength) {
-  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
-  RefPtr<nsCSSValue::Array> array = nsCSSValue::Array::Create(aLength);
-  aCSSValue->SetArrayValue(array, eCSSUnit_Array);
-}
-
-void Gecko_CSSValue_SetInt(nsCSSValue* aCSSValue, int32_t aInteger,
-                           nsCSSUnit aUnit) {
-  aCSSValue->SetIntValue(aInteger, aUnit);
-}
-
-void Gecko_CSSValue_SetFloat(nsCSSValue* aCSSValue, float aValue,
-                             nsCSSUnit aUnit) {
-  aCSSValue->SetFloatValue(aValue, aUnit);
-}
-
-nsCSSValue* Gecko_CSSValue_GetArrayItem(nsCSSValue* aCSSValue, int32_t aIndex) {
-  return &aCSSValue->GetArrayValue()->Item(aIndex);
-}
-
-const nsCSSValue* Gecko_CSSValue_GetArrayItemConst(const nsCSSValue* aCSSValue,
-                                                   int32_t aIndex) {
-  return &aCSSValue->GetArrayValue()->Item(aIndex);
-}
-
-void Gecko_CSSValue_SetPair(nsCSSValue* aCSSValue, const nsCSSValue* aXValue,
-                            const nsCSSValue* aYValue) {
-  MOZ_ASSERT(NS_IsMainThread());
-  aCSSValue->SetPairValue(*aXValue, *aYValue);
-}
-
-void Gecko_CSSValue_SetList(nsCSSValue* aCSSValue, uint32_t aLen) {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCSSValueList* item = aCSSValue->SetListValue();
-  for (uint32_t i = 1; i < aLen; ++i) {
-    item->mNext = new nsCSSValueList;
-    item = item->mNext;
-  }
-}
-
-void Gecko_CSSValue_SetPairList(nsCSSValue* aCSSValue, uint32_t aLen) {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCSSValuePairList* item = aCSSValue->SetPairListValue();
-  for (uint32_t i = 1; i < aLen; ++i) {
-    item->mNext = new nsCSSValuePairList;
-    item = item->mNext;
-  }
-}
-
-void Gecko_CSSValue_InitSharedList(nsCSSValue* aCSSValue, uint32_t aLen) {
-  MOZ_ASSERT(aLen > 0, "Must create at least one nsCSSValueList (mHead)");
-
-  nsCSSValueSharedList* list = new nsCSSValueSharedList;
-  aCSSValue->SetSharedListValue(list);
-  list->mHead = new nsCSSValueList;
-  nsCSSValueList* cur = list->mHead;
-  for (uint32_t i = 1; i < aLen; ++i) {
-    cur->mNext = new nsCSSValueList;
-    cur = cur->mNext;
-  }
-}
-
-void Gecko_CSSValue_Drop(nsCSSValue* aCSSValue) { aCSSValue->~nsCSSValue(); }
 
 void Gecko_nsStyleFont_SetLang(nsStyleFont* aFont, nsAtom* aAtom) {
   aFont->mLanguage = dont_AddRef(aAtom);
@@ -2145,8 +1958,6 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSet* aPropertySet,
                             nsCSSPropertyID aProperty) {
   aPropertySet->AddProperty(aProperty);
 }
-
-NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 
 #define STYLE_STRUCT(name)                                             \
                                                                        \

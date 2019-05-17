@@ -6,8 +6,9 @@
 add_task(async function doorhanger_bc_check_cantApply() {
   lockWriteTestFile();
 
-  let updateParams = "&promptWaitTime=0";
-  await runDoorhangerUpdateTest(updateParams, 1, [
+  let params = {checkAttempts: 1,
+                queryString: "&promptWaitTime=0"};
+  await runDoorhangerUpdateTest(params, [
     {
       notificationId: "update-manual",
       button: "button",

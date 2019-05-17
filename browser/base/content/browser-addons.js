@@ -480,10 +480,22 @@ var gXPInstallObserver = {
           installInfo.install();
         },
       };
-      let secondaryAction = {
+      let dontAllowAction = {
         label: gNavigatorBundle.getString("xpinstallPromptMessage.dontAllow"),
         accessKey: gNavigatorBundle.getString("xpinstallPromptMessage.dontAllow.accesskey"),
         callback: () => {
+          for (let install of installInfo.installs) {
+            if (install.state != AddonManager.STATE_CANCELLED) {
+              install.cancel();
+            }
+          }
+        },
+      };
+      let neverAllowAction = {
+        label: gNavigatorBundle.getString("xpinstallPromptMessage.neverAllow"),
+        accessKey: gNavigatorBundle.getString("xpinstallPromptMessage.neverAllow.accesskey"),
+        callback: () => {
+          SitePermissions.set(browser.currentURI, "install", SitePermissions.BLOCK);
           for (let install of installInfo.installs) {
             if (install.state != AddonManager.STATE_CANCELLED) {
               install.cancel();
@@ -495,7 +507,7 @@ var gXPInstallObserver = {
       secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED);
       let popup = PopupNotifications.show(browser, notificationID,
                                           messageString, anchorID,
-                                          action, [secondaryAction], options);
+                                          action, [dontAllowAction, neverAllowAction], options);
       removeNotificationOnEnd(popup, installInfo.installs);
       break; }
     case "addon-install-started": {

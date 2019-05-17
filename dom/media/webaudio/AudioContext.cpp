@@ -1117,10 +1117,6 @@ already_AddRefed<Promise> AudioContext::Close(ErrorResult& aRv) {
     return promise.forget();
   }
 
-  if (Destination()) {
-    Destination()->DestroyAudioChannelAgent();
-  }
-
   mPromiseGripArray.AppendElement(promise);
 
   CloseInternal(promise, AudioContextOperationFlags::SendStateChange);
@@ -1134,6 +1130,8 @@ void AudioContext::CloseInternal(void* aPromise,
   // this point, so we need extra null-checks.
   AudioNodeStream* ds = DestinationStream();
   if (ds) {
+    Destination()->DestroyAudioChannelAgent();
+
     nsTArray<MediaStream*> streams;
     // If mSuspendCalled or mCloseCalled are true then we already suspended
     // all our streams, so don't suspend them again. But we still need to do

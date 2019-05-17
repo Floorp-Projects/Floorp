@@ -44,7 +44,8 @@ class LoginItem extends ReflectedFluentElement {
       "delete-button",
       "edit-button",
       "hostname-label",
-      "modal-input-reveal-button",
+      "modal-input-reveal-checkbox-hide",
+      "modal-input-reveal-checkbox-show",
       "open-site-button",
       "password-label",
       "save-changes-button",
@@ -60,12 +61,20 @@ class LoginItem extends ReflectedFluentElement {
   }
 
   handleSpecialCaseFluentString(attrName) {
-    if (attrName != "modal-input-reveal-button") {
-      return false;
+    switch (attrName) {
+      case "modal-input-reveal-checkbox-hide": {
+        this.shadowRoot.querySelector("modal-input[name='password']")
+                       .setAttribute("reveal-checkbox-hide", this.getAttribute(attrName));
+        break;
+      }
+      case "modal-input-reveal-checkbox-show": {
+        this.shadowRoot.querySelector("modal-input[name='password']")
+                       .setAttribute("reveal-checkbox-show", this.getAttribute(attrName));
+        break;
+      }
+      default:
+        return false;
     }
-
-    this.shadowRoot.querySelector("modal-input[name='password']")
-                   .setAttribute("reveal-button", this.getAttribute(attrName));
     return true;
   }
 

@@ -62,6 +62,7 @@ import type {
 import type { PendingSelectedLocation, Selector } from "./types";
 import type { Action, DonePromiseAction, FocusItem } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
+import type { DebuggeeState } from "./debuggee";
 import { uniq } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
@@ -494,6 +495,7 @@ export function getBlackBoxList() {
 // pick off the piece of state we're interested in. It's impossible
 // (right now) to type those wrapped functions.
 type OuterState = { sources: SourcesState };
+type DebuggeeOuterState = { debuggee: DebuggeeState };
 
 const getSourcesState = (state: OuterState) => state.sources;
 
@@ -688,7 +690,7 @@ export function getSourceList(state: OuterState): Source[] {
 }
 
 export function getDisplayedSourcesList(
-  state: OuterState & SourceActorOuterState
+  state: OuterState & SourceActorOuterState & DebuggeeOuterState
 ): Source[] {
   return ((Object.values(getDisplayedSources(state)): any).flatMap(
     Object.values
@@ -797,19 +799,29 @@ export function getProjectDirectoryRoot(state: OuterState): string {
 
 const queryAllDisplayedSources: ReduceQuery<
   SourceResource,
-  {| projectDirectoryRoot: string, chromeAndExtensionsEnabled: boolean |},
+  {|
+    projectDirectoryRoot: string,
+    chromeAndExtensionsEnabled: boolean,
+    debuggeeIsWebExtension: boolean
+  |},
   Array<SourceId>
 > = makeReduceQuery(
   makeMapWithArgs(
     (
       resource,
       ident,
-      { projectDirectoryRoot, chromeAndExtensionsEnabled }
+      {
+        projectDirectoryRoot,
+        chromeAndExtensionsEnabled,
+        debuggeeIsWebExtension
+      }
     ) => ({
       id: resource.id,
       displayed:
         underRoot(resource, projectDirectoryRoot) &&
-        (!resource.isExtension || chromeAndExtensionsEnabled)
+        (!resource.isExtension ||
+          chromeAndExtensionsEnabled ||
+          debuggeeIsWebExtension)
     })
   ),
   items =>
@@ -821,15 +833,18 @@ const queryAllDisplayedSources: ReduceQuery<
     }, [])
 );
 
-function getAllDisplayedSources(state: OuterState): Array<SourceId> {
+function getAllDisplayedSources(
+  state: OuterState & DebuggeeOuterState
+): Array<SourceId> {
   return queryAllDisplayedSources(state.sources.sources, {
     projectDirectoryRoot: state.sources.projectDirectoryRoot,
-    chromeAndExtensionsEnabled: state.sources.chromeAndExtenstionsEnabled
+    chromeAndExtensionsEnabled: state.sources.chromeAndExtenstionsEnabled,
+    debuggeeIsWebExtension: state.debuggee.isWebExtension
   });
 }
 
 type GetDisplayedSourceIDsSelector = (
-  OuterState & SourceActorOuterState
+  OuterState & SourceActorOuterState & DebuggeeOuterState
 ) => { [ThreadId]: Set<SourceId> };
 const getDisplayedSourceIDs: GetDisplayedSourceIDsSelector = createSelector(
   getThreadsBySource,
@@ -855,7 +870,7 @@ const getDisplayedSourceIDs: GetDisplayedSourceIDsSelector = createSelector(
 );
 
 type GetDisplayedSourcesSelector = (
-  OuterState & SourceActorOuterState
+  OuterState & SourceActorOuterState & DebuggeeOuterState
 ) => SourcesMapByThread;
 export const getDisplayedSources: GetDisplayedSourcesSelector = createSelector(
   state => state.sources.sources,

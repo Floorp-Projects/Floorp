@@ -10,10 +10,9 @@ add_task(async function doorhanger_sp_patch_partialApplyFailure() {
   let updateProps = {isCompleteUpdate: "false",
                      checkInterval: "1"};
   let updates = getLocalUpdateString(updateProps, patches);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 
-  let updateParams = "";
-  await runDoorhangerUpdateTest(updateParams, 0, [
+  let params = {updates};
+  await runDoorhangerUpdateTest(params, [
     {
       // If there is only an invalid patch show the manual update doorhanger.
       notificationId: "update-manual",

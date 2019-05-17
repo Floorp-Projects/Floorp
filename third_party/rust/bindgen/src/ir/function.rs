@@ -247,8 +247,6 @@ pub fn cursor_mangling(
     ctx: &BindgenContext,
     cursor: &clang::Cursor,
 ) -> Option<String> {
-    use clang_sys;
-
     if !ctx.options().enable_mangling {
         return None;
     }

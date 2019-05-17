@@ -4365,19 +4365,23 @@ nsRect nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame,
 nsRect nsLayoutUtils::GetTextShadowRectsUnion(
     const nsRect& aTextAndDecorationsRect, nsIFrame* aFrame, uint32_t aFlags) {
   const nsStyleText* textStyle = aFrame->StyleText();
-  if (!textStyle->HasTextShadow()) return aTextAndDecorationsRect;
+  auto shadows = textStyle->mTextShadow.AsSpan();
+  if (shadows.IsEmpty()) {
+    return aTextAndDecorationsRect;
+  }
 
   nsRect resultRect = aTextAndDecorationsRect;
   int32_t A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
-  for (uint32_t i = 0; i < textStyle->mTextShadow->Length(); ++i) {
-    nsCSSShadowItem* shadow = textStyle->mTextShadow->ShadowAt(i);
-    nsMargin blur = nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D);
+  for (auto& shadow : shadows) {
+    nsMargin blur =
+        nsContextBoxBlur::GetBlurRadiusMargin(shadow.blur.ToAppUnits(), A2D);
     if ((aFlags & EXCLUDE_BLUR_SHADOWS) && blur != nsMargin(0, 0, 0, 0))
       continue;
 
     nsRect tmpRect(aTextAndDecorationsRect);
 
-    tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
+    tmpRect.MoveBy(
+        nsPoint(shadow.horizontal.ToAppUnits(), shadow.vertical.ToAppUnits()));
     tmpRect.Inflate(blur);
 
     resultRect.UnionRect(resultRect, tmpRect);
@@ -6099,15 +6103,18 @@ void nsLayoutUtils::PaintTextShadow(
     const nsRect& aDirtyRect, const nscolor& aForegroundColor,
     TextShadowCallback aCallback, void* aCallbackData) {
   const nsStyleText* textStyle = aFrame->StyleText();
-  if (!textStyle->HasTextShadow()) return;
+  auto shadows = textStyle->mTextShadow.AsSpan();
+  if (shadows.IsEmpty()) {
+    return;
+  }
 
   // Text shadow happens with the last value being painted at the back,
   // ie. it is painted first.
   gfxContext* aDestCtx = aContext;
-  for (uint32_t i = textStyle->mTextShadow->Length(); i > 0; --i) {
-    nsCSSShadowItem* shadowDetails = textStyle->mTextShadow->ShadowAt(i - 1);
-    nsPoint shadowOffset(shadowDetails->mXOffset, shadowDetails->mYOffset);
-    nscoord blurRadius = std::max(shadowDetails->mRadius, 0);
+  for (auto& shadow : Reversed(shadows)) {
+    nsPoint shadowOffset(shadow.horizontal.ToAppUnits(),
+                         shadow.vertical.ToAppUnits());
+    nscoord blurRadius = std::max(shadow.blur.ToAppUnits(), 0);
 
     nsRect shadowRect(aTextRect);
     shadowRect.MoveBy(shadowOffset);
@@ -6115,18 +6122,17 @@ void nsLayoutUtils::PaintTextShadow(
     nsPresContext* presCtx = aFrame->PresContext();
     nsContextBoxBlur contextBoxBlur;
 
-    nscolor shadowColor = shadowDetails->mColor.CalcColor(aForegroundColor);
+    nscolor shadowColor = shadow.color.CalcColor(aForegroundColor);
 
     // Webrender just needs the shadow details
     if (auto* textDrawer = aContext->GetTextDrawer()) {
       wr::Shadow wrShadow;
 
       wrShadow.offset = {
-          presCtx->AppUnitsToFloatDevPixels(shadowDetails->mXOffset),
-          presCtx->AppUnitsToFloatDevPixels(shadowDetails->mYOffset)};
+          presCtx->AppUnitsToFloatDevPixels(shadow.horizontal.ToAppUnits()),
+          presCtx->AppUnitsToFloatDevPixels(shadow.vertical.ToAppUnits())};
 
-      wrShadow.blur_radius =
-          presCtx->AppUnitsToFloatDevPixels(shadowDetails->mRadius);
+      wrShadow.blur_radius = presCtx->AppUnitsToFloatDevPixels(blurRadius);
       wrShadow.color = wr::ToColorF(ToDeviceColor(shadowColor));
 
       // Gecko already inflates the bounding rect of text shadows,
@@ -8291,8 +8297,8 @@ bool nsLayoutUtils::FontSizeInflationEnabled(nsPresContext* aPresContext) {
 /* static */
 nsRect nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame,
                                                const nsSize& aFrameSize) {
-  nsCSSShadowArray* boxShadows = aFrame->StyleEffects()->mBoxShadow;
-  if (!boxShadows) {
+  auto boxShadows = aFrame->StyleEffects()->mBoxShadow.AsSpan();
+  if (boxShadows.IsEmpty()) {
     return nsRect();
   }
 
@@ -8317,17 +8323,19 @@ nsRect nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame,
 
   nsRect shadows;
   int32_t A2D = aFrame->PresContext()->AppUnitsPerDevPixel();
-  for (uint32_t i = 0; i < boxShadows->Length(); ++i) {
+  for (auto& shadow : boxShadows) {
     nsRect tmpRect = inputRect;
-    nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
 
     // inset shadows are never painted outside the frame
-    if (shadow->mInset) continue;
+    if (shadow.inset) {
+      continue;
+    }
 
-    tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
-    tmpRect.Inflate(shadow->mSpread);
-    tmpRect.Inflate(
-        nsContextBoxBlur::GetBlurRadiusMargin(shadow->mRadius, A2D));
+    tmpRect.MoveBy(nsPoint(shadow.base.horizontal.ToAppUnits(),
+                           shadow.base.vertical.ToAppUnits()));
+    tmpRect.Inflate(shadow.spread.ToAppUnits());
+    tmpRect.Inflate(nsContextBoxBlur::GetBlurRadiusMargin(
+        shadow.base.blur.ToAppUnits(), A2D));
     shadows.UnionRect(shadows, tmpRect);
   }
   return shadows;
