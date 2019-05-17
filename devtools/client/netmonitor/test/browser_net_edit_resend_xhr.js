@@ -31,8 +31,12 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "contextmenu" }, xhrRequest);
   getContextMenuItem(monitor, "request-list-context-resend").click();
 
-  // Waits for "Edit & Resend" panel to appear > New request "Send"
+  // 1) Wait for "Edit & Resend" panel to appear
+  // 2) Click the "Send" button
+  // 3) Wait till the new request appears in the list
+  await waitUntil(() => document.querySelector(".custom-request-panel"));
   document.querySelector("#custom-request-send-button").click();
+  await waitForNetworkEvents(monitor, 1);
 
   // Selects cloned request
   const clonedRequest = document.querySelectorAll(".request-list-item")[1];
