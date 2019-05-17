@@ -125,10 +125,10 @@ function CreateKeyframeEffect(element) {
     otherDoc.body.appendChild(otherElement);
     let otherEffect = CreateKeyframeEffect(otherElement);
 
-    let constructorFunc = function() { new WorkletAnimation(
-        'test-animator', [ effect, otherEffect ]); };
-    assert_throws('NotSupportedError', constructorFunc);
-  }, 'If the effects are from different documents, object construction should fail');
+    let workletAnimation = new WorkletAnimation(
+        'test-animator', [ effect, otherEffect ]);
+    assert_equals(workletAnimation.playState, 'idle');
+  }, 'Creating animation with effects from different documents is allowed');
 
   promise_test(async t => {
     await runInAnimationWorklet(document.getElementById('simple_animate').textContent);
