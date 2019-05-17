@@ -1,0 +1,61 @@
+From 17dcf25b3ade15605ca27150e4440bcc75caed65 Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Sat, 19 Jan 2019 19:42:54 +0000
+Subject: [PATCH] [llvm-objcopy] [COFF] Implement --only-section
+
+Differential Revision: https://reviews.llvm.org/D56873
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@351663 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ .../tools/llvm-objcopy/COFF/only-section.test | 21 +++++++++++++++++++
+ tools/llvm-objcopy/COFF/COFFObjcopy.cpp       |  6 ++++++
+ 2 files changed, 27 insertions(+)
+ create mode 100644 test/tools/llvm-objcopy/COFF/only-section.test
+
+diff --git a/llvm/test/tools/llvm-objcopy/COFF/only-section.test b/llvm/test/tools/llvm-objcopy/COFF/only-section.test
+new file mode 100644
+index 00000000000..42492ed80ff
+--- /dev/null
++++ b/llvm/test/tools/llvm-objcopy/COFF/only-section.test
+@@ -0,0 +1,21 @@
++RUN: yaml2obj %p/Inputs/only-keep-sections.yaml > %t.in.exe
++
++RUN: llvm-objcopy --only-section .debug_discardable %t.in.exe %t.out.exe
++RUN: llvm-objdump --section-headers -t %t.out.exe | FileCheck %s --check-prefixes=SECTIONS,SECTIONS-DEBUG,SYMBOLS,SYMBOLS-DEBUG
++
++Adding another section stripping option makes it return the intersection of
++kept sections - in this case keeping only .text.
++
++RUN: llvm-objcopy --only-section .debug_discardable --only-section .text --strip-debug %t.in.exe %t.combination.exe
++RUN: llvm-objdump --section-headers -t %t.combination.exe | FileCheck %s --check-prefixes=SECTIONS,SECTIONS-TEXT,SYMBOLS,SYMBOLS-TEXT
++
++SECTIONS:            Sections:
++SECTIONS-NEXT:       Idx Name
++SECTIONS-DEBUG-NEXT: .debug_discardable
++SECTIONS-TEXT-NEXT:  .text
++SECTIONS-EMPTY:
++
++SYMBOLS:            SYMBOL TABLE:
++SYMBOLS-DEBUG-NEXT: debug_discardable_sym
++SYMBOLS-TEXT-NEXT:  main
++SYMBOLS-EMPTY:
+diff --git a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+index 60afbf7bb54..99929d10a1f 100644
+--- a/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
++++ b/llvm/tools/llvm-objcopy/COFF/COFFObjcopy.cpp
+@@ -33,6 +33,12 @@ static bool isDebugSection(const Section &Sec) {
+ static Error handleArgs(const CopyConfig &Config, Object &Obj) {
+   // Perform the actual section removals.
+   Obj.removeSections([&Config](const Section &Sec) {
++    // Contrary to --only-keep-debug, --only-section fully removes sections that
++    // aren't mentioned.
++    if (!Config.OnlySection.empty() &&
++        !is_contained(Config.OnlySection, Sec.Name))
++      return true;
++
+     if (Config.StripDebug || Config.StripAll || Config.StripAllGNU ||
+         Config.DiscardAll || Config.StripUnneeded) {
+       if (isDebugSection(Sec) &&
+-- 
+2.17.1
+
