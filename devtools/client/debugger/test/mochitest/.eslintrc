@@ -77,6 +77,7 @@
     "assertEmptyLines": false,
     "assertPaused": false,
     "assertPausedLocation": false,
+    "assertPreviewTextValue": false,
     "assertHighlightLocation": false,
     "assertScopes": false,
     "createDebuggerContext": false,
