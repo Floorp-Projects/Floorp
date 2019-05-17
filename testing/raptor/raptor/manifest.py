@@ -15,8 +15,6 @@ raptor_ini = os.path.join(here, 'raptor.ini')
 tests_dir = os.path.join(here, 'tests')
 LOG = get_proxy_logger(component="raptor-manifest")
 
-LIVE_SITE_TIMEOUT_MULTIPLIER = 1.2
-
 required_settings = [
     'alert_threshold',
     'apps',
@@ -165,9 +163,6 @@ def write_test_settings_json(args, test_details, oskey):
     else:
         test_settings['raptor-options']['subtest_lower_is_better'] = bool_from_str(
             subtest_lower_is_better)
-
-    if test_details.get("alert_change_type", None) is not None:
-        test_settings['raptor-options']['alert_change_type'] = test_details['alert_change_type']
 
     if test_details.get("alert_threshold", None) is not None:
         test_settings['raptor-options']['alert_threshold'] = float(test_details['alert_threshold'])
@@ -332,10 +327,8 @@ def get_raptor_test_list(args, oskey):
             next_test['playback'] = None
             LOG.info("using live sites so appending '-live' to the test name")
             next_test['name'] = next_test['name'] + "-live"
-            # allow a slightly higher page timeout due to remote page loads
-            next_test['page_timeout'] = int(
-                next_test['page_timeout']) * LIVE_SITE_TIMEOUT_MULTIPLIER
-            LOG.info("using live sites so using page timeout of %dms" % next_test['page_timeout'])
+            # we also want to increase the page timeout since may be longer live
+            next_test['page_timeout'] = 180000
 
         # convert 'measure =' test INI line to list
         if next_test.get('measure') is not None:
