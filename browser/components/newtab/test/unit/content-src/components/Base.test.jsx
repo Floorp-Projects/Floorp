@@ -48,4 +48,20 @@ describe("<BaseContent>", () => {
 
     assert.isTrue(wrapper.find(Search).parent().is(ErrorBoundary));
   });
+
+  it("should render only search if no Sections are enabled", () => {
+    const onlySearchProps =
+      Object.assign({}, DEFAULT_PROPS, {Sections: [{id: "highlights", enabled: false}], Prefs: {values: {showSearch: true}}});
+
+    const wrapper = shallow(<BaseContent {...onlySearchProps} />);
+    assert.lengthOf(wrapper.find(".only-search"), 1);
+  });
+
+  it("should render only search if only highlights is available in DS", () => {
+    const onlySearchProps =
+      Object.assign({}, DEFAULT_PROPS, {Sections: [{id: "highlights", enabled: true}], DiscoveryStream: {config: {enabled: true}}, Prefs: {values: {showSearch: true}}});
+
+    const wrapper = shallow(<BaseContent {...onlySearchProps} />);
+    assert.lengthOf(wrapper.find(".only-search"), 1);
+  });
 });

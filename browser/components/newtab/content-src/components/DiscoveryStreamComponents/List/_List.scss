@@ -228,7 +228,7 @@ $item-line-height: 20;
 
     color: $grey-50;
     font-size: 13px;
-    text-overflow: ellipsis;
+    -webkit-line-clamp: 1;
   }
 
   .ds-list-item-title {

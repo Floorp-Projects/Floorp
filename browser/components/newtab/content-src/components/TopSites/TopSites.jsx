@@ -139,7 +139,7 @@ export class _TopSites extends React.PureComponent {
         <div className="edit-topsites-wrapper">
           {editForm &&
             <div className="edit-topsites">
-              <div className="modal-overlay" onClick={this.onEditFormClose} />
+              <div className="modal-overlay" onClick={this.onEditFormClose} role="presentation" />
               <div className="modal">
                 <TopSiteForm
                   site={props.TopSites.rows[editForm.index]}
@@ -152,7 +152,7 @@ export class _TopSites extends React.PureComponent {
           }
           {showSearchShortcutsForm &&
             <div className="edit-search-shortcuts">
-              <div className="modal-overlay" onClick={this.onSearchShortcutsFormClose} />
+              <div className="modal-overlay" onClick={this.onSearchShortcutsFormClose} role="presentation" />
               <div className="modal">
                 <SearchShortcutsForm
                   TopSites={props.TopSites}
