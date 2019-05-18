@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.ActivityHandlerHelper;
+import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.WebAuthnTokenManager;
 import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.util.ActivityResultHandler;
@@ -75,6 +76,7 @@ public class WebAuthnUtils
         return result;
     }
 
+    @ReflectionTarget
     public static void makeCredential(final GeckoBundle credentialBundle,
                                       final byte[] userId, final byte[] challenge,
                                       final WebAuthnTokenManager.WebAuthnPublicCredential[] excludeList,
@@ -286,6 +288,7 @@ public class WebAuthnUtils
         }
     }
 
+    @ReflectionTarget
     public static void getAssertion(final byte[] challenge,
                                     final WebAuthnTokenManager.WebAuthnPublicCredential[] allowList,
                                     final GeckoBundle assertionBundle,
