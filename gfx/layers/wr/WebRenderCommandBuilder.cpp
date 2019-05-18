@@ -1913,7 +1913,8 @@ bool BuildLayer(nsDisplayItem* aItem, BlobItemData* aData,
   bool isInvalidated = false;
 
   ContainerLayerParameters param(aScale.width, aScale.height);
-  RefPtr<Layer> root = aItem->BuildLayer(aDisplayListBuilder, blm, param);
+  RefPtr<Layer> root = aItem->AsPaintedDisplayItem()->BuildLayer(
+      aDisplayListBuilder, blm, param);
 
   if (root) {
     blm->SetRoot(root);
@@ -1954,7 +1955,8 @@ static bool PaintByLayer(nsDisplayItem* aItem,
   bool isInvalidated = false;
 
   ContainerLayerParameters param(aScale.width, aScale.height);
-  RefPtr<Layer> root = aItem->BuildLayer(aDisplayListBuilder, aManager, param);
+  RefPtr<Layer> root = aItem->AsPaintedDisplayItem()->BuildLayer(
+      aDisplayListBuilder, aManager, param);
 
   if (root) {
     aManager->SetRoot(root);

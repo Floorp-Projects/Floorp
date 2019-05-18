@@ -57,10 +57,10 @@ static AspectRatio IntrinsicRatioFromCanvasSize(
   return AspectRatio::FromSize(aCanvasSizeInPx.width, aCanvasSizeInPx.height);
 }
 
-class nsDisplayCanvas final : public nsDisplayItem {
+class nsDisplayCanvas final : public nsPaintedDisplayItem {
  public:
   nsDisplayCanvas(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayCanvas);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
