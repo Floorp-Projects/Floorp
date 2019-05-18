@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.library.bookmarks
 
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
@@ -132,8 +134,16 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         @Suppress("ComplexMethod")
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
 
+            val shiftThreeDp = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, TWO_DIGIT_PADDING, containerView!!.context.resources.displayMetrics
+            ).toInt()
+            val params = bookmark_title.getLayoutParams() as ViewGroup.MarginLayoutParams
+            params.topMargin = shiftThreeDp
+            bookmark_title.setLayoutParams(params)
+
             bookmark_favicon.visibility = View.VISIBLE
             bookmark_title.visibility = View.VISIBLE
+            bookmark_url.visibility = View.VISIBLE
             bookmark_overflow.visibility = View.VISIBLE
             bookmark_separator.visibility = View.GONE
             bookmark_layout.isClickable = true
@@ -172,6 +182,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
                 )
             }
             bookmark_title.text = if (item.title.isNullOrBlank()) item.url else item.title
+            bookmark_url.text = item.url
             updateUrl(item, mode, selected)
         }
 
@@ -230,6 +241,8 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         }
 
         companion object {
+            internal const val TWO_DIGIT_PADDING = 2F
+
             val viewType = ViewType.ITEM
         }
     }
@@ -244,9 +257,15 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
 
+            val constraintSet = ConstraintSet()
+            constraintSet.clone(bookmark_layout)
+            constraintSet.connect(bookmark_title.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+            constraintSet.applyTo(bookmark_layout);
+
             bookmark_favicon.setImageResource(R.drawable.ic_folder_icon)
             bookmark_favicon.visibility = View.VISIBLE
             bookmark_title.visibility = View.VISIBLE
+            bookmark_url.visibility = View.GONE
             bookmark_overflow.visibility = View.VISIBLE
             bookmark_separator.visibility = View.GONE
             bookmark_layout.isClickable = true
@@ -342,6 +361,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
             bookmark_favicon.visibility = View.GONE
             bookmark_title.visibility = View.GONE
+            bookmark_url.visibility = View.GONE
             bookmark_overflow.increaseTapArea(bookmarkOverflowExtraDips)
             bookmark_overflow.visibility = View.VISIBLE
             bookmark_separator.visibility = View.VISIBLE
