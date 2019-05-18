@@ -447,22 +447,22 @@ class LayerManagerData : public LayerUserData {
 
       const char* layerState;
       switch (data->mLayerState) {
-        case LAYER_NONE:
+        case LayerState::LAYER_NONE:
           layerState = "LAYER_NONE";
           break;
-        case LAYER_INACTIVE:
+        case LayerState::LAYER_INACTIVE:
           layerState = "LAYER_INACTIVE";
           break;
-        case LAYER_ACTIVE:
+        case LayerState::LAYER_ACTIVE:
           layerState = "LAYER_ACTIVE";
           break;
-        case LAYER_ACTIVE_FORCE:
+        case LayerState::LAYER_ACTIVE_FORCE:
           layerState = "LAYER_ACTIVE_FORCE";
           break;
-        case LAYER_ACTIVE_EMPTY:
+        case LayerState::LAYER_ACTIVE_EMPTY:
           layerState = "LAYER_ACTIVE_EMPTY";
           break;
-        case LAYER_SVG_EFFECTS:
+        case LayerState::LAYER_SVG_EFFECTS:
           layerState = "LAYER_SVG_EFFECTS";
           break;
       }
@@ -822,7 +822,7 @@ struct NewLayerEntry {
         mClipChain(nullptr),
         mScrollMetadataASR(nullptr),
         mLayerContentsVisibleRect(0, 0, -1, -1),
-        mLayerState(LAYER_INACTIVE),
+        mLayerState(LayerState::LAYER_INACTIVE),
         mHideAllLayersBelow(false),
         mOpaqueForAnimatedGeometryRootParent(false),
         mPropagateComponentAlphaFlattening(true),
@@ -2067,8 +2067,7 @@ DisplayItemData* FrameLayerBuilder::GetDisplayItemData(nsIFrame* aFrame,
   for (uint32_t i = 0; i < array.Length(); i++) {
     DisplayItemData* item =
         DisplayItemData::AssertDisplayItemData(array.ElementAt(i));
-    if (item->mDisplayItemKey == aKey &&
-        item->FirstFrame() == aFrame &&
+    if (item->mDisplayItemKey == aKey && item->FirstFrame() == aFrame &&
         item->mLayer->Manager() == mRetainingManager) {
       return item;
     }
@@ -4441,12 +4440,13 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       aList->SetNeedsTransparentSurface();
     }
 
-    LayerState layerState = LAYER_NONE;
+    LayerState layerState = LayerState::LAYER_NONE;
     if (marker == DisplayItemEntryType::Item) {
       layerState = item->GetLayerState(mBuilder, mManager, mParameters);
 
-      if (layerState == LAYER_INACTIVE && nsDisplayItem::ForceActiveLayers()) {
-        layerState = LAYER_ACTIVE;
+      if (layerState == LayerState::LAYER_INACTIVE &&
+          nsDisplayItem::ForceActiveLayers()) {
+        layerState = LayerState::LAYER_ACTIVE;
       }
     }
 
@@ -4616,11 +4616,12 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
 
     // Assign the item to a layer
     bool treatInactiveItemAsActive =
-        (layerState == LAYER_INACTIVE &&
+        (layerState == LayerState::LAYER_INACTIVE &&
          mLayerBuilder->GetContainingPaintedLayerData());
-    if (layerState == LAYER_ACTIVE_FORCE || treatInactiveItemAsActive ||
-        (!forceInactive &&
-         (layerState == LAYER_ACTIVE_EMPTY || layerState == LAYER_ACTIVE))) {
+    if (layerState == LayerState::LAYER_ACTIVE_FORCE ||
+        treatInactiveItemAsActive ||
+        (!forceInactive && (layerState == LayerState::LAYER_ACTIVE_EMPTY ||
+                            layerState == LayerState::LAYER_ACTIVE))) {
       layerCount++;
 
       // Currently we do not support flattening effects within nested inactive
@@ -4628,11 +4629,12 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       MOZ_ASSERT(selectedLayer == nullptr);
       MOZ_ASSERT(marker == DisplayItemEntryType::Item);
 
-      // LAYER_ACTIVE_EMPTY means the layer is created just for its metadata.
-      // We should never see an empty layer with any visible content!
+      // LayerState::LAYER_ACTIVE_EMPTY means the layer is created just for its
+      // metadata. We should never see an empty layer with any visible content!
       NS_ASSERTION(
-          layerState != LAYER_ACTIVE_EMPTY || itemVisibleRect.IsEmpty(),
-          "State is LAYER_ACTIVE_EMPTY but visible rect is not.");
+          layerState != LayerState::LAYER_ACTIVE_EMPTY ||
+              itemVisibleRect.IsEmpty(),
+          "State is LayerState::LAYER_ACTIVE_EMPTY but visible rect is not.");
 
       // As long as the new layer isn't going to be a PaintedLayer,
       // InvalidateForLayerChange doesn't need the new layer pointer.
@@ -4910,7 +4912,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       // Don't attempt to flatten compnent alpha layers that are within
       // a forced active layer, or an active transform;
       if (itemType == DisplayItemType::TYPE_TRANSFORM ||
-          layerState == LAYER_ACTIVE_FORCE) {
+          layerState == LayerState::LAYER_ACTIVE_FORCE) {
         newLayerEntry->mPropagateComponentAlphaFlattening = false;
       }
 
@@ -5230,7 +5232,8 @@ void FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData) {
     // inactive layers, since these types don't implement
     // ComputeInvalidateRegion (and rely on the ComputeDifferences call in
     // AddPaintedDisplayItem instead).
-    if (!combined.IsEmpty() || aData->mLayerState == LAYER_INACTIVE ||
+    if (!combined.IsEmpty() ||
+        aData->mLayerState == LayerState::LAYER_INACTIVE ||
         item->NeedsGeometryUpdates()) {
       geometry = item->AllocateGeometry(mDisplayListBuilder);
     }
@@ -5288,7 +5291,7 @@ void FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
           layer->GetUserData(&gPaintedDisplayItemLayerUserData));
   RefPtr<BasicLayerManager> tempManager;
   nsIntRect intClip;
-  if (aItem.mLayerState != LAYER_NONE) {
+  if (aItem.mLayerState != LayerState::LAYER_NONE) {
     if (aItem.mDisplayItemData) {
       tempManager = aItem.mDisplayItemData->mInactiveManager;
 
@@ -5391,7 +5394,7 @@ void FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       data =
           layerBuilder->GetDisplayItemDataForManager(aItem.mItem, tempManager);
       data = layerBuilder->StoreDataForFrame(aItem.mItem, tmpLayer,
-                                             LAYER_ACTIVE, data);
+                                             LayerState::LAYER_ACTIVE, data);
       data->mOldTransform = data->mTransform;
       data->mTransform = aItem.mTransform;
     }
@@ -5422,7 +5425,7 @@ void FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       nsRect visible = aItem.mItem->Frame()->GetVisualOverflowRect();
       invalid = visible.ToOutsidePixels(paintedData->mAppUnitsPerDevPixel);
     }
-    if (aItem.mLayerState == LAYER_SVG_EFFECTS) {
+    if (aItem.mLayerState == LayerState::LAYER_SVG_EFFECTS) {
       invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(
           aItem.mItem->Frame(), aItem.mItem->ToReferenceFrame(), invalid);
     }
@@ -6250,10 +6253,11 @@ already_AddRefed<ContainerLayer> FrameLayerBuilder::BuildContainerLayerFor(
     if (aContainerItem) {
       DisplayItemData* data =
           GetDisplayItemDataForManager(aContainerItem, mRetainingManager);
-      StoreDataForFrame(aContainerItem, containerLayer, LAYER_ACTIVE, data);
+      StoreDataForFrame(aContainerItem, containerLayer,
+                        LayerState::LAYER_ACTIVE, data);
     } else {
       StoreDataForFrame(aContainerFrame, containerDisplayItemKey,
-                        containerLayer, LAYER_ACTIVE);
+                        containerLayer, LayerState::LAYER_ACTIVE);
     }
   }
 
