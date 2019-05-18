@@ -134,11 +134,11 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         @Suppress("ComplexMethod")
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
 
-            val shiftThreeDp = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, TWO_DIGIT_PADDING, containerView!!.context.resources.displayMetrics
+            val shiftTwoDp = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, TWO_DIGIT_MARGIN, containerView!!.context.resources.displayMetrics
             ).toInt()
             val params = bookmark_title.getLayoutParams() as ViewGroup.MarginLayoutParams
-            params.topMargin = shiftThreeDp
+            params.topMargin = shiftTwoDp
             bookmark_title.setLayoutParams(params)
 
             bookmark_favicon.visibility = View.VISIBLE
@@ -241,7 +241,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         }
 
         companion object {
-            internal const val TWO_DIGIT_PADDING = 2F
+            internal const val TWO_DIGIT_MARGIN = 2F
 
             val viewType = ViewType.ITEM
         }
