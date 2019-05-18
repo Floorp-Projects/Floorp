@@ -48,8 +48,13 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.data_choices_preferences, rootKey)
 
-        findPreference<SwitchPreference>(getString(R.string.pref_key_telemetry))?.apply {
+        val telemetryPreference = findPreference<SwitchPreference>(getString(R.string.pref_key_telemetry))?.apply {
             isChecked = Settings.getInstance(context).isTelemetryEnabled
+        }
+        telemetryPreference?.setOnPreferenceChangeListener { preference, newValue ->
+            Settings.getInstance(preference.context).preferences.edit().putBoolean(preference.key, newValue as Boolean)
+                .apply()
+            true
         }
     }
 }
