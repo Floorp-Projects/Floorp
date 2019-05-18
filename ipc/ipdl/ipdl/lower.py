@@ -4133,20 +4133,38 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         replyvar = self.replyvar
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
+
+        failIf = StmtIf(ExprNot(sendok))
+        failIf.addifstmt(_printWarningMessage('Error sending constructor'))
+        failIf.addifstmts(self.destroyActor(md, actor.var(),
+                                            why=_DestroyReason.FailedConstructor))
+        failIf.addifstmt(StmtReturn(ExprLiteral.NULL))
+
         method.addstmts(
+            # Build our constructor message & verify it.
             stmts
             + [Whitespace.NL,
                 StmtDecl(Decl(Type('Message'), replyvar.name))]
             + self.genVerifyMessage(md.decl.type.verify, md.params,
                                     errfnSendCtor, ExprVar('msg__'))
-            + sendstmts
-            + self.failCtorIf(md, ExprNot(sendok)))
 
-        def errfnCleanupCtor(msg):
-            return self.failCtorIf(md, ExprLiteral.TRUE)
+            # Synchronously send the constructor message to the other side.
+            #
+            # If the MessageChannel is closing, and we haven't been told yet,
+            # this send may fail. This error is ignored to treat it like a
+            # message being lost due to the other side shutting down before
+            # processing it.
+            #
+            # NOTE: We also free the actor here.
+            + sendstmts
+
+            # Warn, destroy the actor and return null if the message failed to
+            # send.
+            + [failIf])
+
         stmts = self.deserializeReply(
             md, ExprAddrOf(replyvar), self.side,
-            errfnCleanupCtor, errfnSentinel(ExprLiteral.NULL))
+            errfnSendCtor, errfnSentinel(ExprLiteral.NULL))
         method.addstmts(stmts + [StmtReturn(actor.var())])
 
         return method
@@ -4176,20 +4194,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtExpr(ExprAssn(_actorState(actorvar),
                               _startState(actorproto.hasReentrantDelete))),
         ]
-
-    def failCtorIf(self, md, cond):
-        actorvar = md.actorDecl().var()
-        failif = StmtIf(cond)
-
-        if self.side == 'child':
-            # in the child process this should not fail
-            failif.addifstmt(_fatalError('constructor for actor failed'))
-        else:
-            failif.addifstmts(self.destroyActor(md, actorvar,
-                                                why=_DestroyReason.FailedConstructor))
-
-        failif.addifstmt(StmtReturn(ExprLiteral.NULL))
-        return [failif]
 
     def genHelperCtor(self, md):
         helperdecl = self.makeSendMethodDecl(md)
@@ -4943,7 +4947,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             md.sendMethod(),
             params=md.makeCxxParams(paramsems, returnsems=returnsems,
                                     side=self.side, implicit=implicit),
-            warn_unused=(self.side == 'parent' and returnsems != 'callback'),
+            warn_unused=((self.side == 'parent' and returnsems != 'callback') or
+                         (md.decl.type.isCtor() and not md.decl.type.isAsync())),
             ret=rettype)
         if md.decl.type.isCtor():
             decl.ret = md.actorDecl().bareType(self.side)
