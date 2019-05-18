@@ -2359,6 +2359,15 @@ void nsDisplayListBuilder::ExitSVGEffectsContents() {
   }
 }
 
+bool nsDisplayListBuilder::ShouldBuildScrollInfoItemsForHoisting() const {
+  /*
+   * Note: if changing the conditions under which scroll info layers
+   * are created, make a corresponding change to
+   * ScrollFrameWillBuildScrollInfoLayer() in nsSliderFrame.cpp.
+   */
+  return !gfxVars::UseWebRender() && mSVGEffectsBuildingDepth > 0;
+}
+
 void nsDisplayListBuilder::AppendNewScrollInfoItemForHoisting(
     nsDisplayScrollInfoLayer* aScrollInfoItem) {
   MOZ_ASSERT(ShouldBuildScrollInfoItemsForHoisting());
