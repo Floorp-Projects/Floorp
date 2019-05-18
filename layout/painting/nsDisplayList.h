@@ -2720,7 +2720,7 @@ class nsDisplayItem : public nsDisplayItemBase {
   virtual LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aParameters) {
-    return mozilla::LAYER_NONE;
+    return mozilla::LayerState::LAYER_NONE;
   }
 
 #ifdef MOZ_DUMP_PAINTING
@@ -4943,7 +4943,7 @@ class nsDisplayClearBackground : public nsPaintedDisplayItem {
   LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aParameters) override {
-    return mozilla::LAYER_ACTIVE_FORCE;
+    return mozilla::LayerState::LAYER_ACTIVE_FORCE;
   }
 
   already_AddRefed<Layer> BuildLayer(
@@ -6037,7 +6037,7 @@ class nsDisplaySubDocument : public nsDisplayOwnLayer {
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aParameters) override {
     if (mShouldFlatten) {
-      return mozilla::LAYER_NONE;
+      return mozilla::LayerState::LAYER_NONE;
     }
     return nsDisplayOwnLayer::GetLayerState(aBuilder, aManager, aParameters);
   }
@@ -6118,7 +6118,7 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
   LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aParameters) override {
-    return mozilla::LAYER_ACTIVE;
+    return mozilla::LayerState::LAYER_ACTIVE;
   }
 
   bool CreateWebRenderCommands(
@@ -6173,7 +6173,7 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
   LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aParameters) override {
-    return mozilla::LAYER_ACTIVE_FORCE;
+    return mozilla::LayerState::LAYER_ACTIVE_FORCE;
   }
 
   bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) const override {
@@ -6345,7 +6345,7 @@ class nsDisplayZoom : public nsDisplaySubDocument {
   LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aParameters) override {
-    return mozilla::LAYER_ACTIVE;
+    return mozilla::LayerState::LAYER_ACTIVE;
   }
 
   // Get the app units per dev pixel ratio of the child document.
@@ -6388,7 +6388,7 @@ class nsDisplayAsyncZoom : public nsDisplayOwnLayer {
   virtual LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aParameters) override {
-    return mozilla::LAYER_ACTIVE_FORCE;
+    return mozilla::LayerState::LAYER_ACTIVE_FORCE;
   }
 
  protected:
