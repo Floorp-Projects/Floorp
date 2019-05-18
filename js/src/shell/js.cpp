@@ -3498,7 +3498,7 @@ static bool DisassFile(JSContext* cx, unsigned argc, Value* vp) {
         .setIsRunOnce(true)
         .setNoScriptRval(true);
 
-    script = JS::CompileUtf8Path(cx, options, filename.get());
+    script = JS::CompileUtf8PathDontInflate(cx, options, filename.get());
     if (!script) {
       return false;
     }
