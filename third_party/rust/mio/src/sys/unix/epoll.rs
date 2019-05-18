@@ -145,6 +145,11 @@ fn ioevent_to_epoll(interest: Ready, opts: PollOpt) -> u32 {
         kind |= EPOLLRDHUP;
     }
 
+
+    if UnixReady::from(interest).is_priority() {
+        kind |= EPOLLPRI;
+    }
+
     if opts.is_edge() {
         kind |= EPOLLET;
     }
@@ -206,8 +211,12 @@ impl Events {
             let epoll = event.events as c_int;
             let mut kind = Ready::empty();
 
-            if (epoll & EPOLLIN) != 0 || (epoll & EPOLLPRI) != 0 {
+            if (epoll & EPOLLIN) != 0 {
                 kind = kind | Ready::readable();
+            }
+
+            if (epoll & EPOLLPRI) != 0 {
+                kind = kind | Ready::readable() | UnixReady::priority();
             }
 
             if (epoll & EPOLLOUT) != 0 {
