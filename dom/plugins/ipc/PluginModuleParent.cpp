@@ -1293,6 +1293,7 @@ void PluginModuleChromeParent::ProcessFirstMinidump() {
     return;
   }
 
+  AnnotationTable annotations;
   uint32_t sequence = UINT32_MAX;
   nsAutoCString flashProcessType;
   RefPtr<nsIFile> dumpFile =
@@ -1304,9 +1305,9 @@ void PluginModuleChromeParent::ProcessFirstMinidump() {
 
   if (mFlashProcess1 &&
       TakeMinidumpForChild(mFlashProcess1, getter_AddRefs(childDumpFile),
-                           &childSequence)) {
+                           annotations, &childSequence)) {
     if (childSequence < sequence &&
-        mCrashReporter->AdoptMinidump(childDumpFile)) {
+        mCrashReporter->AdoptMinidump(childDumpFile, annotations)) {
       RemoveMinidump(dumpFile);
       dumpFile = childDumpFile;
       sequence = childSequence;
@@ -1317,9 +1318,9 @@ void PluginModuleChromeParent::ProcessFirstMinidump() {
   }
   if (mFlashProcess2 &&
       TakeMinidumpForChild(mFlashProcess2, getter_AddRefs(childDumpFile),
-                           &childSequence)) {
+                           annotations, &childSequence)) {
     if (childSequence < sequence &&
-        mCrashReporter->AdoptMinidump(childDumpFile)) {
+        mCrashReporter->AdoptMinidump(childDumpFile, annotations)) {
       RemoveMinidump(dumpFile);
       dumpFile = childDumpFile;
       sequence = childSequence;
