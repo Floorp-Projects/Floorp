@@ -678,40 +678,35 @@ static void OpenAPIData(PlatformWriter& aWriter, const XP_CHAR* dump_path,
 }
 
 #ifdef XP_WIN
-static void WriteGlobalMemoryStatus(PlatformWriter* apiData,
-                                    PlatformWriter* eventFile) {
+static void WriteMemoryAnnotation(PlatformWriter& aWriter,
+                                  Annotation aAnnotation, uint64_t aValue) {
   char buffer[128];
+  if (!_ui64toa_s(aValue, buffer, sizeof(buffer), 10)) {
+    WriteAnnotation(aWriter, aAnnotation, buffer);
+  }
+}
 
-  // Try to get some information about memory.
+static void WriteGlobalMemoryStatus(PlatformWriter& aWriter) {
   MEMORYSTATUSEX statex;
   statex.dwLength = sizeof(statex);
   if (GlobalMemoryStatusEx(&statex)) {
-#  define WRITE_STATEX_FIELD(field, name, conversionFunc) \
-    conversionFunc(statex.field, buffer, 10);             \
-    if (apiData) {                                        \
-      WriteAnnotation(*apiData, name, buffer);            \
-    }                                                     \
-    if (eventFile) {                                      \
-      WriteAnnotation(*eventFile, name, buffer);          \
-    }
-
-    WRITE_STATEX_FIELD(dwMemoryLoad, Annotation::SystemMemoryUsePercentage,
-                       ltoa);
-    WRITE_STATEX_FIELD(ullTotalVirtual, Annotation::TotalVirtualMemory,
-                       _ui64toa);
-    WRITE_STATEX_FIELD(ullAvailVirtual, Annotation::AvailableVirtualMemory,
-                       _ui64toa);
-    WRITE_STATEX_FIELD(ullTotalPageFile, Annotation::TotalPageFile, _ui64toa);
-    WRITE_STATEX_FIELD(ullAvailPageFile, Annotation::AvailablePageFile,
-                       _ui64toa);
-    WRITE_STATEX_FIELD(ullTotalPhys, Annotation::TotalPhysicalMemory, _ui64toa);
-    WRITE_STATEX_FIELD(ullAvailPhys, Annotation::AvailablePhysicalMemory,
-                       _ui64toa);
-
-#  undef WRITE_STATEX_FIELD
+    WriteMemoryAnnotation(aWriter, Annotation::SystemMemoryUsePercentage,
+                          statex.dwMemoryLoad);
+    WriteMemoryAnnotation(aWriter, Annotation::TotalVirtualMemory,
+                          statex.ullTotalVirtual);
+    WriteMemoryAnnotation(aWriter, Annotation::AvailableVirtualMemory,
+                          statex.ullAvailVirtual);
+    WriteMemoryAnnotation(aWriter, Annotation::TotalPageFile,
+                          statex.ullTotalPageFile);
+    WriteMemoryAnnotation(aWriter, Annotation::AvailablePageFile,
+                          statex.ullAvailPageFile);
+    WriteMemoryAnnotation(aWriter, Annotation::TotalPhysicalMemory,
+                          statex.ullTotalPhys);
+    WriteMemoryAnnotation(aWriter, Annotation::AvailablePhysicalMemory,
+                          statex.ullAvailPhys);
   }
 }
-#endif
+#endif  // XP_WIN
 
 #if !defined(MOZ_WIDGET_ANDROID)
 
@@ -864,6 +859,134 @@ static void WriteEscapedMozCrashReason(PlatformWriter& aWriter) {
   WriteLiteral(aWriter, "\n");
 }
 
+static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
+                                                time_t crashTime) {
+  pw.WriteBuffer(crashEventAPIData->get(), crashEventAPIData->Length());
+
+  if (currentSessionId) {
+    WriteAnnotation(pw, Annotation::TelemetrySessionId, currentSessionId);
+  }
+
+  char crashTimeString[32];
+  XP_TTOA(crashTime, crashTimeString, 10);
+  WriteAnnotation(pw, Annotation::CrashTime, crashTimeString);
+
+  double uptimeTS = (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation())
+                        .ToSecondsSigDigits();
+  char uptimeTSString[64];
+  SimpleNoCLibDtoA(uptimeTS, uptimeTSString, sizeof(uptimeTSString));
+  WriteAnnotation(pw, Annotation::UptimeTS, uptimeTSString);
+
+  // calculate time since last crash (if possible).
+  if (lastCrashTime != 0) {
+    time_t timeSinceLastCrash = crashTime - lastCrashTime;
+
+    if (timeSinceLastCrash != 0) {
+      char timeSinceLastCrashString[32];
+      XP_TTOA(timeSinceLastCrash, timeSinceLastCrashString, 10);
+      WriteAnnotation(pw, Annotation::SecondsSinceLastCrash,
+                      timeSinceLastCrashString);
+    }
+  }
+
+  if (isGarbageCollecting) {
+    WriteAnnotation(pw, Annotation::IsGarbageCollecting, "1");
+  }
+
+  char buffer[128];
+  if (eventloopNestingLevel > 0) {
+    XP_STOA(eventloopNestingLevel, buffer, 10);
+    WriteAnnotation(pw, Annotation::EventLoopNestingLevel, buffer);
+  }
+
+#ifdef XP_WIN
+  if (gBreakpadReservedVM) {
+    _ui64toa(uintptr_t(gBreakpadReservedVM), buffer, 10);
+    WriteAnnotation(pw, Annotation::BreakpadReserveAddress, buffer);
+    _ui64toa(kReserveSize, buffer, 10);
+    WriteAnnotation(pw, Annotation::BreakpadReserveSize, buffer);
+  }
+
+#  ifdef HAS_DLL_BLOCKLIST
+  DllBlocklist_WriteNotes(pw.Handle());
+#  endif
+  WriteGlobalMemoryStatus(pw);
+#endif  // XP_WIN
+
+  WriteEscapedMozCrashReason(pw);
+
+  char oomAllocationSizeBuffer[32] = "";
+  if (gOOMAllocationSize) {
+    XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer, 10);
+    WriteAnnotation(pw, Annotation::OOMAllocationSize, oomAllocationSizeBuffer);
+  }
+
+  char texturesSizeBuffer[32] = "";
+  if (gTexturesSize) {
+    XP_STOA(gTexturesSize, texturesSizeBuffer, 10);
+    WriteAnnotation(pw, Annotation::TextureUsage, texturesSizeBuffer);
+  }
+
+  if (memoryReportPath) {
+    WriteAnnotation(pw, Annotation::ContainsMemoryReport, "1");
+  }
+
+  std::function<void(const char*)> getThreadAnnotationCB =
+      [&](const char* aValue) -> void {
+    if (aValue) {
+      WriteAnnotation(pw, Annotation::ThreadIdNameMapping, aValue);
+    }
+  };
+  GetFlatThreadAnnotation(getThreadAnnotationCB, false);
+}
+
+static void WriteCrashEventFile(time_t crashTime, const char* crashTimeString,
+#ifdef XP_LINUX
+                                const MinidumpDescriptor& descriptor
+#else
+                                const XP_CHAR* minidump_id
+#endif
+) {
+  // Minidump IDs are UUIDs (36) + NULL.
+  static char id_ascii[37] = {};
+#ifdef XP_LINUX
+  const char* index = strrchr(descriptor.path(), '/');
+  MOZ_ASSERT(index);
+  MOZ_ASSERT(strlen(index) == 1 + 36 + 4);  // "/" + UUID + ".dmp"
+  for (uint32_t i = 0; i < 36; i++) {
+    id_ascii[i] = *(index + 1 + i);
+  }
+#else
+  MOZ_ASSERT(XP_STRLEN(minidump_id) == 36);
+  for (uint32_t i = 0; i < 36; i++) {
+    id_ascii[i] = *((char*)(minidump_id + i));
+  }
+#endif
+
+  PlatformWriter eventFile;
+
+  if (eventsDirectory) {
+    static XP_CHAR crashEventPath[XP_PATH_MAX];
+    size_t size = XP_PATH_MAX;
+    XP_CHAR* p;
+    p = Concat(crashEventPath, eventsDirectory, &size);
+    p = Concat(p, XP_PATH_SEPARATOR, &size);
+#ifdef XP_LINUX
+    Concat(p, id_ascii, &size);
+#else
+    Concat(p, minidump_id, &size);
+#endif
+
+    eventFile.Open(crashEventPath);
+    WriteLiteral(eventFile, kCrashMainID);
+    WriteString(eventFile, crashTimeString);
+    WriteLiteral(eventFile, "\n");
+    WriteString(eventFile, id_ascii);
+    WriteLiteral(eventFile, "\n");
+    WriteAnnotationsForMainProcessCrash(eventFile, crashTime);
+  }
+}
+
 // Callback invoked from breakpad's exception handler, this writes out the
 // last annotations after a crash occurs and launches the crash reporter client.
 //
@@ -916,18 +1039,6 @@ bool MinidumpCallback(
 #endif
   }
 
-  char oomAllocationSizeBuffer[32] = "";
-  if (gOOMAllocationSize) {
-    XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer, 10);
-  }
-
-  char texturesSizeBuffer[32] = "";
-  if (gTexturesSize) {
-    XP_STOA(gTexturesSize, texturesSizeBuffer, 10);
-  }
-
-  // calculate time since last crash (if possible), and store
-  // the time of this crash.
   time_t crashTime;
 #ifdef XP_LINUX
   struct kernel_timeval tv;
@@ -936,162 +1047,30 @@ bool MinidumpCallback(
 #else
   crashTime = time(nullptr);
 #endif
-  time_t timeSinceLastCrash = 0;
-  // stringified versions of the above
   char crashTimeString[32];
-  char timeSinceLastCrashString[32];
-
   XP_TTOA(crashTime, crashTimeString, 10);
-  if (lastCrashTime != 0) {
-    timeSinceLastCrash = crashTime - lastCrashTime;
-    XP_TTOA(timeSinceLastCrash, timeSinceLastCrashString, 10);
-  }
+
   // write crash time to file
   if (lastCrashTimeFilename[0] != 0) {
     PlatformWriter lastCrashFile(lastCrashTimeFilename);
     WriteString(lastCrashFile, crashTimeString);
   }
 
-  double uptimeTS = (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation())
-                        .ToSecondsSigDigits();
-  char uptimeTSString[64];
-  SimpleNoCLibDtoA(uptimeTS, uptimeTSString, sizeof(uptimeTSString));
-
-  // Write crash event file.
-
-  // Minidump IDs are UUIDs (36) + NULL.
-  static char id_ascii[37];
+  WriteCrashEventFile(crashTime, crashTimeString,
 #ifdef XP_LINUX
-  const char* index = strrchr(descriptor.path(), '/');
-  MOZ_ASSERT(index);
-  MOZ_ASSERT(strlen(index) == 1 + 36 + 4);  // "/" + UUID + ".dmp"
-  for (uint32_t i = 0; i < 36; i++) {
-    id_ascii[i] = *(index + 1 + i);
-  }
+                      descriptor
 #else
-  MOZ_ASSERT(XP_STRLEN(minidump_id) == 36);
-  for (uint32_t i = 0; i < 36; i++) {
-    id_ascii[i] = *((char*)(minidump_id + i));
-  }
+                      minidump_id
 #endif
+  );
 
-  {
-    PlatformWriter apiData;
-    PlatformWriter eventFile;
-
-    if (eventsDirectory) {
-      static XP_CHAR crashEventPath[XP_PATH_MAX];
-      size_t size = XP_PATH_MAX;
-      XP_CHAR* p;
-      p = Concat(crashEventPath, eventsDirectory, &size);
-      p = Concat(p, XP_PATH_SEPARATOR, &size);
+  PlatformWriter apiData;
 #ifdef XP_LINUX
-      p = Concat(p, id_ascii, &size);
+  OpenAPIData(apiData, descriptor.path());
 #else
-      p = Concat(p, minidump_id, &size);
+  OpenAPIData(apiData, dump_path, minidump_id);
 #endif
-
-      eventFile.Open(crashEventPath);
-      WriteLiteral(eventFile, kCrashMainID);
-      WriteString(eventFile, crashTimeString);
-      WriteLiteral(eventFile, "\n");
-      WriteString(eventFile, id_ascii);
-      WriteLiteral(eventFile, "\n");
-      if (crashEventAPIData) {
-        eventFile.WriteBuffer(crashEventAPIData->get(),
-                              crashEventAPIData->Length());
-      }
-    }
-
-    if (!crashReporterAPIData->IsEmpty()) {
-      // write out API data
-#ifdef XP_LINUX
-      OpenAPIData(apiData, descriptor.path());
-#else
-      OpenAPIData(apiData, dump_path, minidump_id);
-#endif
-      apiData.WriteBuffer(crashReporterAPIData->get(),
-                          crashReporterAPIData->Length());
-    }
-
-    if (currentSessionId) {
-      WriteAnnotation(apiData, Annotation::TelemetrySessionId,
-                      currentSessionId);
-      WriteAnnotation(eventFile, Annotation::TelemetrySessionId,
-                      currentSessionId);
-    }
-
-    WriteAnnotation(apiData, Annotation::CrashTime, crashTimeString);
-    WriteAnnotation(eventFile, Annotation::CrashTime, crashTimeString);
-
-    WriteAnnotation(apiData, Annotation::UptimeTS, uptimeTSString);
-    WriteAnnotation(eventFile, Annotation::UptimeTS, uptimeTSString);
-
-    if (timeSinceLastCrash != 0) {
-      WriteAnnotation(apiData, Annotation::SecondsSinceLastCrash,
-                      timeSinceLastCrashString);
-      WriteAnnotation(eventFile, Annotation::SecondsSinceLastCrash,
-                      timeSinceLastCrashString);
-    }
-    if (isGarbageCollecting) {
-      WriteAnnotation(apiData, Annotation::IsGarbageCollecting, "1");
-      WriteAnnotation(eventFile, Annotation::IsGarbageCollecting, "1");
-    }
-
-    char buffer[128];
-
-    if (eventloopNestingLevel > 0) {
-      XP_STOA(eventloopNestingLevel, buffer, 10);
-      WriteAnnotation(apiData, Annotation::EventLoopNestingLevel, buffer);
-      WriteAnnotation(eventFile, Annotation::EventLoopNestingLevel, buffer);
-    }
-
-#ifdef XP_WIN
-    if (gBreakpadReservedVM) {
-      _ui64toa(uintptr_t(gBreakpadReservedVM), buffer, 10);
-      WriteAnnotation(apiData, Annotation::BreakpadReserveAddress, buffer);
-      _ui64toa(kReserveSize, buffer, 10);
-      WriteAnnotation(apiData, Annotation::BreakpadReserveSize, buffer);
-    }
-
-#  ifdef HAS_DLL_BLOCKLIST
-    if (apiData.Valid()) {
-      DllBlocklist_WriteNotes(apiData.Handle());
-      DllBlocklist_WriteNotes(eventFile.Handle());
-    }
-#  endif
-    WriteGlobalMemoryStatus(&apiData, &eventFile);
-#endif  // XP_WIN
-
-    WriteEscapedMozCrashReason(apiData);
-    WriteEscapedMozCrashReason(eventFile);
-
-    if (oomAllocationSizeBuffer[0]) {
-      WriteAnnotation(apiData, Annotation::OOMAllocationSize,
-                      oomAllocationSizeBuffer);
-      WriteAnnotation(eventFile, Annotation::OOMAllocationSize,
-                      oomAllocationSizeBuffer);
-    }
-
-    if (texturesSizeBuffer[0]) {
-      WriteAnnotation(apiData, Annotation::TextureUsage, texturesSizeBuffer);
-      WriteAnnotation(eventFile, Annotation::TextureUsage, texturesSizeBuffer);
-    }
-
-    if (memoryReportPath) {
-      WriteAnnotation(apiData, Annotation::ContainsMemoryReport, "1");
-      WriteAnnotation(eventFile, Annotation::ContainsMemoryReport, "1");
-    }
-
-    std::function<void(const char*)> getThreadAnnotationCB =
-        [&](const char* aValue) -> void {
-      if (aValue) {
-        WriteAnnotation(apiData, Annotation::ThreadIdNameMapping, aValue);
-        WriteAnnotation(eventFile, Annotation::ThreadIdNameMapping, aValue);
-      }
-    };
-    GetFlatThreadAnnotation(getThreadAnnotationCB, false);
-  }
+  WriteAnnotationsForMainProcessCrash(apiData, crashTime);
 
   if (!doReport) {
 #ifdef XP_WIN
@@ -1226,7 +1205,7 @@ static void PrepareChildExceptionTimeAnnotations(void* context) {
   // ...and write out any annotations. These must be escaped if necessary
   // (but don't call EscapeAnnotation here, because it touches the heap).
 #ifdef XP_WIN
-  WriteGlobalMemoryStatus(&apiData, nullptr);
+  WriteGlobalMemoryStatus(apiData);
 #endif
 
   char oomAllocationSizeBuffer[32] = "";
