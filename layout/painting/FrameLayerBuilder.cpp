@@ -4796,7 +4796,8 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
         }
       }
 
-      RefPtr<Layer> ownLayer = item->BuildLayer(mBuilder, mManager, params);
+      RefPtr<Layer> ownLayer =
+          item->AsPaintedDisplayItem()->BuildLayer(mBuilder, mManager, params);
 
       // If above we combined a nested clip into mInactiveLayerClip, restore
       // the original inactive layer clip here.
