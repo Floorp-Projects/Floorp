@@ -3262,7 +3262,9 @@ static void ClipItemsExceptCaret(
       continue;
     }
 
-    if (i->GetType() != DisplayItemType::TYPE_CARET) {
+    const DisplayItemType type = i->GetType();
+    if (type != DisplayItemType::TYPE_CARET &&
+        type != DisplayItemType::TYPE_CONTAINER) {
       const DisplayItemClipChain* clip = i->GetClipChain();
       const DisplayItemClipChain* intersection = nullptr;
       if (aCache.Get(clip, &intersection)) {
