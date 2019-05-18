@@ -259,8 +259,10 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
             val constraintSet = ConstraintSet()
             constraintSet.clone(bookmark_layout)
-            constraintSet.connect(bookmark_title.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
-            constraintSet.applyTo(bookmark_layout);
+            constraintSet.connect(
+                bookmark_title.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM
+            )
+            constraintSet.applyTo(bookmark_layout)
 
             bookmark_favicon.setImageResource(R.drawable.ic_folder_icon)
             bookmark_favicon.visibility = View.VISIBLE
