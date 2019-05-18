@@ -36,6 +36,7 @@
 #include "mozpkix/Result.h"
 #include "mozpkix/pkix.h"
 #include "mozpkix/pkixnss.h"
+#include "mozpkix/pkixutil.h"
 #include "prerror.h"
 #include "secerr.h"
 
@@ -97,7 +98,52 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
 #endif
       mOCSPStaplingStatus(CertVerifier::OCSP_STAPLING_NEVER_CHECKED),
       mSCTListFromCertificate(),
-      mSCTListFromOCSPStapling() {}
+      mSCTListFromOCSPStapling() {
+}
+
+// A self-signed issuer certificate should never be necessary in order to build
+// a trusted certificate chain unless it is a trust anchor. This is because if
+// it were necessary, there would exist another certificate with the same
+// subject and public key that is also a valid issing certificate. Given this
+// certificate, it is possible to build another chain using just it instead of
+// it and the self-signed certificate. This is only true as long as the
+// certificate extensions we support are restrictive rather than additive in
+// terms of the rest of the chain (for example, we don't support policy mapping
+// and we ignore any SCT information in intermediates).
+bool NSSCertDBTrustDomain::ShouldSkipSelfSignedNonTrustAnchor(Input certDER) {
+  BackCert cert(certDER, EndEntityOrCA::MustBeCA, nullptr);
+  if (cert.Init() != Success) {
+    return false;  // turn any failures into "don't skip trying this cert"
+  }
+  // If subject != issuer, this isn't a self-signed cert.
+  if (!InputsAreEqual(cert.GetSubject(), cert.GetIssuer())) {
+    return false;
+  }
+  TrustLevel trust;
+  if (GetCertTrust(EndEntityOrCA::MustBeCA, CertPolicyId::anyPolicy, certDER,
+                   trust) != Success) {
+    return false;
+  }
+  // If the trust for this certificate is anything other than "inherit", we want
+  // to process it like normal.
+  if (trust != TrustLevel::InheritsTrust) {
+    return false;
+  }
+  uint8_t digestBuf[MAX_DIGEST_SIZE_IN_BYTES];
+  pkix::der::PublicKeyAlgorithm publicKeyAlg;
+  SignedDigest signature;
+  if (DigestSignedData(*this, cert.GetSignedData(), digestBuf, publicKeyAlg,
+                       signature) != Success) {
+    return false;
+  }
+  if (VerifySignedDigest(*this, publicKeyAlg, signature,
+                         cert.GetSubjectPublicKeyInfo()) != Success) {
+    return false;
+  }
+  // This is a self-signed, non-trust-anchor certificate, so we shouldn't use it
+  // for path building. See bug 1056341.
+  return true;
+}
 
 Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
                                         IssuerChecker& checker, Time) {
@@ -193,6 +239,9 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
   }
 
   for (Input candidate : rootCandidates) {
+    if (ShouldSkipSelfSignedNonTrustAnchor(candidate)) {
+      continue;
+    }
     bool keepGoing;
     Result rv = checker.Check(candidate, nameConstraintsInputPtr, keepGoing);
     if (rv != Success) {
