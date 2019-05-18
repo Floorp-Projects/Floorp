@@ -2433,7 +2433,7 @@ static void MoveListTo(nsDisplayList* aList,
   }
 }
 
-nsRect nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
+nsRect nsDisplayList::GetClippedBounds(nsDisplayListBuilder* aBuilder) const {
   nsRect bounds;
   for (nsDisplayItem* i : *this) {
     bounds.UnionRect(bounds, i->GetClippedBounds(aBuilder));
@@ -2518,7 +2518,7 @@ bool nsDisplayList::ComputeVisibilityForSublist(
     const nsRect& aListVisibleBounds) {
 #ifdef DEBUG
   nsRegion r;
-  r.And(*aVisibleRegion, GetBounds(aBuilder));
+  r.And(*aVisibleRegion, GetClippedBounds(aBuilder));
   // XXX this fails sometimes:
   NS_WARNING_ASSERTION(r.GetBounds().IsEqualInterior(aListVisibleBounds),
                        "bad aListVisibleBounds");
@@ -3401,6 +3401,115 @@ nsRect nsDisplayItem::GetClippedBounds(nsDisplayListBuilder* aBuilder) const {
   bool snap;
   nsRect r = GetBounds(aBuilder, &snap);
   return GetClip().ApplyNonRoundedIntersection(r);
+}
+
+nsDisplayContainer::nsDisplayContainer(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+    const ActiveScrolledRoot* aActiveScrolledRoot, nsDisplayList* aList)
+    : nsDisplayItem(aBuilder, aFrame, aActiveScrolledRoot) {
+  MOZ_COUNT_CTOR(nsDisplayContainer);
+  mChildren.AppendToTop(aList);
+  UpdateBounds(aBuilder);
+
+  // Clear and store the clip chain set by nsDisplayItem constructor.
+  nsDisplayItem::SetClipChain(nullptr, true);
+}
+
+bool nsDisplayContainer::CreateWebRenderCommands(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    mozilla::wr::IpcResourceUpdateQueue& aResources,
+    const StackingContextHelper& aSc,
+    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder) {
+  aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
+      GetChildren(), this, aDisplayListBuilder, aSc, aBuilder, aResources);
+  return true;
+}
+
+/**
+ * Like |nsDisplayList::ComputeVisibilityForSublist()|, but restricts
+ * |aVisibleRegion| to given |aBounds| of the list.
+ */
+static bool ComputeClippedVisibilityForSubList(nsDisplayListBuilder* aBuilder,
+                                               nsRegion* aVisibleRegion,
+                                               nsDisplayList* aList,
+                                               const nsRect& aBounds) {
+  nsRegion visibleRegion;
+  visibleRegion.And(*aVisibleRegion, aBounds);
+  nsRegion originalVisibleRegion = visibleRegion;
+
+  const bool anyItemVisible =
+      aList->ComputeVisibilityForSublist(aBuilder, &visibleRegion, aBounds);
+  nsRegion removed;
+  // removed = originalVisibleRegion - visibleRegion
+  removed.Sub(originalVisibleRegion, visibleRegion);
+  // aVisibleRegion = aVisibleRegion - removed (modulo any simplifications
+  // SubtractFromVisibleRegion does)
+  aBuilder->SubtractFromVisibleRegion(aVisibleRegion, removed);
+
+  return anyItemVisible;
+}
+
+bool nsDisplayContainer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                           nsRegion* aVisibleRegion) {
+  return ::ComputeClippedVisibilityForSubList(aBuilder, aVisibleRegion,
+                                              GetChildren(), GetPaintRect());
+}
+
+nsRect nsDisplayContainer::GetBounds(nsDisplayListBuilder* aBuilder,
+                                     bool* aSnap) const {
+  *aSnap = false;
+  return mBounds;
+}
+
+nsRect nsDisplayContainer::GetComponentAlphaBounds(
+    nsDisplayListBuilder* aBuilder) const {
+  return mChildren.GetComponentAlphaBounds(aBuilder);
+}
+
+static nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                nsDisplayList* aList,
+                                const nsRect& aListBounds) {
+  if (aList->IsOpaque()) {
+    // Everything within list bounds that's visible is opaque. This is an
+    // optimization to avoid calculating the opaque region.
+    return aListBounds;
+  }
+
+  if (aBuilder->HitTestIsForVisibility()) {
+    // If we care about an accurate opaque region, iterate the display list
+    // and build up a region of opaque bounds.
+    return aList->GetOpaqueRegion(aBuilder);
+  }
+
+  return nsRegion();
+}
+
+nsRegion nsDisplayContainer::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                             bool* aSnap) const {
+  return ::GetOpaqueRegion(aBuilder, GetChildren(), GetBounds(aBuilder, aSnap));
+}
+
+Maybe<nsRect> nsDisplayContainer::GetClipWithRespectToASR(
+    nsDisplayListBuilder* aBuilder, const ActiveScrolledRoot* aASR) const {
+  // Our children should have finite bounds with respect to |aASR|.
+  if (aASR == mActiveScrolledRoot) {
+    return Some(mBounds);
+  }
+
+  return Some(mChildren.GetClippedBoundsWithRespectToASR(aBuilder, aASR));
+}
+
+void nsDisplayContainer::HitTest(nsDisplayListBuilder* aBuilder,
+                                 const nsRect& aRect, HitTestState* aState,
+                                 nsTArray<nsIFrame*>* aOutFrames) {
+  mChildren.HitTest(aBuilder, aRect, aState, aOutFrames);
+}
+
+void nsDisplayContainer::UpdateBounds(nsDisplayListBuilder* aBuilder) {
+  // Container item bounds are expected to be clipped.
+  mBounds =
+      mChildren.GetClippedBoundsWithRespectToASR(aBuilder, mActiveScrolledRoot);
 }
 
 nsRect nsDisplaySolidColor::GetBounds(nsDisplayListBuilder* aBuilder,
@@ -5775,40 +5884,8 @@ nsRect nsDisplayWrapList::GetBounds(nsDisplayListBuilder* aBuilder,
 
 bool nsDisplayWrapList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                           nsRegion* aVisibleRegion) {
-  // Convert the passed in visible region to our appunits.
-  nsRegion visibleRegion;
-  // mVisibleRect has been clipped to GetClippedBounds
-  visibleRegion.And(*aVisibleRegion, GetPaintRect());
-  nsRegion originalVisibleRegion = visibleRegion;
-
-  bool retval = mListPtr->ComputeVisibilityForSublist(aBuilder, &visibleRegion,
-                                                      GetPaintRect());
-  nsRegion removed;
-  // removed = originalVisibleRegion - visibleRegion
-  removed.Sub(originalVisibleRegion, visibleRegion);
-  // aVisibleRegion = aVisibleRegion - removed (modulo any simplifications
-  // SubtractFromVisibleRegion does)
-  aBuilder->SubtractFromVisibleRegion(aVisibleRegion, removed);
-
-  return retval;
-}
-
-static nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                nsDisplayList* aList,
-                                const nsRect& aListBounds) {
-  if (aList->IsOpaque()) {
-    // Everything within list bounds that's visible is opaque. This is an
-    // optimization to avoid calculating the opaque region.
-    return aListBounds;
-  }
-
-  if (aBuilder->HitTestIsForVisibility()) {
-    // If we care about an accurate opaque region, iterate the display list
-    // and build up a region of opaque bounds.
-    return aList->GetOpaqueRegion(aBuilder);
-  }
-
-  return nsRegion();
+  return ::ComputeClippedVisibilityForSubList(aBuilder, aVisibleRegion,
+                                              GetChildren(), GetPaintRect());
 }
 
 nsRegion nsDisplayWrapList::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
@@ -6089,7 +6166,8 @@ static bool CollectItemsWithOpacity(nsDisplayList* aList,
     }
 
     // Descend only into wraplists.
-    if (type == DisplayItemType::TYPE_WRAP_LIST) {
+    if (type == DisplayItemType::TYPE_WRAP_LIST ||
+        type == DisplayItemType::TYPE_CONTAINER) {
       // The current display item has children, process them first.
       if (!CollectItemsWithOpacity(i->GetChildren(), aArray)) {
         return false;
@@ -9498,7 +9576,7 @@ bool nsDisplayMasksAndClipPaths::ComputeVisibility(
   // Our children may be made translucent or arbitrarily deformed so we should
   // not allow them to subtract area from aVisibleRegion.
   nsRegion childrenVisible(GetPaintRect());
-  nsRect r = GetPaintRect().Intersect(mList.GetBounds(aBuilder));
+  nsRect r = GetPaintRect().Intersect(mList.GetClippedBounds(aBuilder));
   mList.ComputeVisibilityForSublist(aBuilder, &childrenVisible, r);
   return true;
 }
