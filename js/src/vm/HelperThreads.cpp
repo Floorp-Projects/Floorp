@@ -901,13 +901,45 @@ static bool StartOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task,
   return true;
 }
 
+template <typename Unit>
+static bool StartOffThreadParseScriptInternal(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Unit>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData) {
+  auto task = cx->make_unique<ScriptParseTask<Unit>>(cx, srcBuf, callback,
+                                                     callbackData);
+  if (!task) {
+    return false;
+  }
+
+  return StartOffThreadParseTask(cx, std::move(task), options);
+}
+
 bool js::StartOffThreadParseScript(JSContext* cx,
                                    const ReadOnlyCompileOptions& options,
                                    JS::SourceText<char16_t>& srcBuf,
                                    JS::OffThreadCompileCallback callback,
                                    void* callbackData) {
-  auto task = cx->make_unique<ScriptParseTask<char16_t>>(cx, srcBuf, callback,
-                                                         callbackData);
+  return StartOffThreadParseScriptInternal(cx, options, srcBuf, callback,
+                                           callbackData);
+}
+
+bool js::StartOffThreadParseScript(JSContext* cx,
+                                   const ReadOnlyCompileOptions& options,
+                                   JS::SourceText<Utf8Unit>& srcBuf,
+                                   JS::OffThreadCompileCallback callback,
+                                   void* callbackData) {
+  return StartOffThreadParseScriptInternal(cx, options, srcBuf, callback,
+                                           callbackData);
+}
+
+template <typename Unit>
+static bool StartOffThreadParseModuleInternal(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Unit>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData) {
+  auto task = cx->make_unique<ModuleParseTask<Unit>>(cx, srcBuf, callback,
+                                                     callbackData);
   if (!task) {
     return false;
   }
@@ -920,13 +952,17 @@ bool js::StartOffThreadParseModule(JSContext* cx,
                                    JS::SourceText<char16_t>& srcBuf,
                                    JS::OffThreadCompileCallback callback,
                                    void* callbackData) {
-  auto task = cx->make_unique<ModuleParseTask<char16_t>>(cx, srcBuf, callback,
-                                                         callbackData);
-  if (!task) {
-    return false;
-  }
+  return StartOffThreadParseModuleInternal(cx, options, srcBuf, callback,
+                                           callbackData);
+}
 
-  return StartOffThreadParseTask(cx, std::move(task), options);
+bool js::StartOffThreadParseModule(JSContext* cx,
+                                   const ReadOnlyCompileOptions& options,
+                                   JS::SourceText<Utf8Unit>& srcBuf,
+                                   JS::OffThreadCompileCallback callback,
+                                   void* callbackData) {
+  return StartOffThreadParseModuleInternal(cx, options, srcBuf, callback,
+                                           callbackData);
 }
 
 bool js::StartOffThreadDecodeScript(JSContext* cx,
