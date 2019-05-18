@@ -597,11 +597,15 @@ android-hw-aarch64-raptor:
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
+    - raptor-scn-power-idle-fenix
+    - raptor-scn-power-idle-fennec
     - raptor-scn-power-idle-geckoview
     - raptor-scn-power-idle-refbrow
 
 android-hw-aarch64-raptor-power:
     - raptor-speedometer-geckoview-power
+    - raptor-scn-power-idle-fenix
+    - raptor-scn-power-idle-fennec
     - raptor-scn-power-idle-geckoview
     - raptor-scn-power-idle-refbrow
 
