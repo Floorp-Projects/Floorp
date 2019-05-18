@@ -24,6 +24,28 @@ linux64-sccache:
         - linux64-rust-1.34
         - linux64-binutils
 
+macosx64-sccache:
+    treeherder:
+        symbol: TM(sccache)
+    worker-type: b-linux
+    worker:
+        max-run-time: 1800
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run-on-projects:
+        - trunk
+        - try
+    run:
+        arguments: ['x86_64-apple-darwin']
+        tooltool-downloads: internal
+        toolchain-artifact: public/build/sccache2.tar.xz
+    toolchains:
+        - linux64-rust-macos-1.34
+        - linux64-clang-8
+        - linux64-cctools-port
+        - linux64-llvm-dsymutil
+        - linux64-binutils
+
 win64-sccache:
     treeherder:
         symbol: TW64(sccache)

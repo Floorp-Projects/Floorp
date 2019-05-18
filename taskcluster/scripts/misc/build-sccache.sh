@@ -3,6 +3,7 @@ set -x -e -v
 
 # 0.2.8 + a number of changes
 SCCACHE_REVISION=5cbd30684e03cab9c2d1272fdc530fd83b8c903b
+TARGET="$1"
 
 # This script is for building sccache
 
@@ -39,42 +40,65 @@ cd sccache
 
 git checkout $SCCACHE_REVISION
 
-# Link openssl statically so we don't have to bother with different sonames
-# across Linux distributions.  We can't use the system openssl; see the sad
-# story in https://bugzilla.mozilla.org/show_bug.cgi?id=1163171#c26.
 case "$(uname -s)" in
 Linux)
-    OPENSSL_TARBALL=openssl-1.1.0g.tar.gz
+    if [ "$TARGET" == "x86_64-apple-darwin" ]; then
+        export PATH="$WORKSPACE/build/src/llvm-dsymutil/bin:$PATH"
+        export PATH="$WORKSPACE/build/src/cctools/bin:$PATH"
+        cat >$WORKSPACE/build/src/cross-linker <<EOF
+exec $WORKSPACE/build/src/clang/bin/clang -v \
+  -fuse-ld=$WORKSPACE/build/src/cctools/bin/x86_64-darwin11-ld \
+  -mmacosx-version-min=10.11 \
+  -target $TARGET \
+  -B $WORKSPACE/build/src/cctools/bin \
+  -isysroot $WORKSPACE/build/src/MacOSX10.11.sdk \
+  "\$@"
+EOF
+        chmod +x $WORKSPACE/build/src/cross-linker
+        export RUSTFLAGS="-C linker=$WORKSPACE/build/src/cross-linker"
+        export CC="$WORKSPACE/build/src/clang/bin/clang"
+        cargo build --features "all" --verbose --release --target $TARGET
+    else
+        # Link openssl statically so we don't have to bother with different sonames
+        # across Linux distributions.  We can't use the system openssl; see the sad
+        # story in https://bugzilla.mozilla.org/show_bug.cgi?id=1163171#c26.
+        OPENSSL_TARBALL=openssl-1.1.0g.tar.gz
 
-    curl -L -O https://www.openssl.org/source/$OPENSSL_TARBALL
-cat >$OPENSSL_TARBALL.sha256sum <<EOF
+        curl -L -O https://www.openssl.org/source/$OPENSSL_TARBALL
+        cat >$OPENSSL_TARBALL.sha256sum <<EOF
 de4d501267da39310905cb6dc8c6121f7a2cad45a7707f76df828fe1b85073af  openssl-1.1.0g.tar.gz
 EOF
-    cat $OPENSSL_TARBALL.sha256sum
-    sha256sum -c $OPENSSL_TARBALL.sha256sum
+        cat $OPENSSL_TARBALL.sha256sum
+        sha256sum -c $OPENSSL_TARBALL.sha256sum
 
-    tar zxf $OPENSSL_TARBALL
+        tar zxf $OPENSSL_TARBALL
 
-    OPENSSL_BUILD_DIRECTORY=$PWD/ourssl
-    pushd $(basename $OPENSSL_TARBALL .tar.gz)
-    ./Configure --prefix=$OPENSSL_BUILD_DIRECTORY no-shared linux-x86_64
-    make -j `nproc --all`
-    # `make install` installs a *ton* of docs that we don't care about.
-    # Just the software, please.
-    make install_sw
-    popd
+        OPENSSL_BUILD_DIRECTORY=$PWD/ourssl
+        pushd $(basename $OPENSSL_TARBALL .tar.gz)
+        ./Configure --prefix=$OPENSSL_BUILD_DIRECTORY no-shared linux-x86_64
+        make -j `nproc --all`
+        # `make install` installs a *ton* of docs that we don't care about.
+        # Just the software, please.
+        make install_sw
+        popd
+        # We don't need to set OPENSSL_STATIC here, because we only have static
+        # libraries in the directory we are passing.
+        env "OPENSSL_DIR=$OPENSSL_BUILD_DIRECTORY" cargo build --features "all dist-server" --verbose --release
+    fi
 
-    # We don't need to set OPENSSL_STATIC here, because we only have static
-    # libraries in the directory we are passing.
-    env "OPENSSL_DIR=$OPENSSL_BUILD_DIRECTORY" cargo build --features "all dist-server" --verbose --release
     ;;
 MINGW*)
     cargo build --verbose --release --features="dist-client s3 gcs"
     ;;
 esac
 
+SCCACHE_OUT=target/release/sccache*
+if [ -n "$TARGET" ]; then
+    SCCACHE_OUT=target/$TARGET/release/sccache*
+fi
+
 mkdir sccache2
-cp target/release/sccache* sccache2/
+cp $SCCACHE_OUT sccache2/
 tar -acf sccache2.tar.$COMPRESS_EXT sccache2
 mkdir -p $UPLOAD_DIR
 cp sccache2.tar.$COMPRESS_EXT $UPLOAD_DIR
