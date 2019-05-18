@@ -8,7 +8,7 @@
 }
 
 /* MessageBar colors by message type */
-
+/* Colors from: https://design.firefox.com/photon/components/message-bars.html#type-specific-style */
 :host([type=warning]) {
   background-color: var(--yellow-50);
   color: var(--yellow-90);
@@ -27,8 +27,8 @@
 :host {
   border-radius: 4px;
   /* Colors used by default, and for [type=generic] message bars.*/
-  background-color: var(--grey-20);
-  color: var(--grey-90);
+  background-color: var(--in-content-box-info-background);
+  color: var(--in-content-text-color);
 }
 
 /* Make the host to behave as a block by default, but allow hidden to hide it. */
