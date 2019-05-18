@@ -1989,6 +1989,7 @@ class nsDisplayListBuilder {
 
 class nsDisplayItem;
 class nsDisplayItemBase;
+class nsPaintedDisplayItem;
 class nsDisplayList;
 class RetainedDisplayList;
 
@@ -2034,6 +2035,8 @@ void AssertUniqueItem(nsDisplayItem* aItem);
  */
 bool ShouldBuildItemForEventsOrPlugins(const DisplayItemType aType);
 
+void UpdateDisplayItemData(nsPaintedDisplayItem* aItem);
+
 template <typename T, typename F, typename... Args>
 MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
                                      Args&&... aArgs) {
@@ -2057,18 +2060,9 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder, F* aFrame,
 
   item->SetPerFrameKey(item->CalculatePerFrameKey());
 
-  const mozilla::SmallPointerArray<mozilla::DisplayItemData>& array =
-      item->Frame()->DisplayItemData();
-  for (uint32_t i = 0; i < array.Length(); i++) {
-    mozilla::DisplayItemData* did = array.ElementAt(i);
-    if (did->GetDisplayItemKey() == item->GetPerFrameKey()) {
-      if (did->GetLayer()->AsPaintedLayer()) {
-        if (!did->HasMergedFrames()) {
-          item->SetDisplayItemData(did, did->GetLayer()->Manager());
-        }
-        break;
-      }
-    }
+  nsPaintedDisplayItem* paintedItem = item->AsPaintedDisplayItem();
+  if (paintedItem) {
+    UpdateDisplayItemData(paintedItem);
   }
 
   if (aBuilder->InInvalidSubtree() ||
@@ -2428,10 +2422,7 @@ class nsDisplayItem : public nsDisplayItemBase {
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 const ActiveScrolledRoot* aActiveScrolledRoot);
 
-  virtual ~nsDisplayItem() {
-    MOZ_COUNT_DTOR(nsDisplayItem);
-    SetDisplayItemData(nullptr, nullptr);
-  }
+  virtual ~nsDisplayItem() { MOZ_COUNT_DTOR(nsDisplayItem); }
 
   /**
    * The custom copy-constructor is implemented to prevent copying the saved
@@ -3004,28 +2995,6 @@ class nsDisplayItem : public nsDisplayItemBase {
   virtual mozilla::Maybe<nsRect> GetClipWithRespectToASR(
       nsDisplayListBuilder* aBuilder, const ActiveScrolledRoot* aASR) const;
 
-  void SetDisplayItemData(mozilla::DisplayItemData* aDID,
-                          mozilla::layers::LayerManager* aLayerManager) {
-    if (mDisplayItemData) {
-      MOZ_ASSERT(!mDisplayItemData->GetItem() ||
-                 mDisplayItemData->GetItem() == this);
-      mDisplayItemData->SetItem(nullptr);
-    }
-    if (aDID) {
-      if (aDID->GetItem()) {
-        aDID->GetItem()->SetDisplayItemData(nullptr, nullptr);
-      }
-      aDID->SetItem(this);
-    }
-    mDisplayItemData = aDID;
-    mDisplayItemDataLayerManager = aLayerManager;
-  }
-
-  mozilla::DisplayItemData* GetDisplayItemData() { return mDisplayItemData; }
-  mozilla::layers::LayerManager* GetDisplayItemDataLayerManager() {
-    return mDisplayItemDataLayerManager;
-  }
-
   const nsRect& GetPaintRect() const { return mPaintRect; }
 
   virtual const nsRect& GetUntransformedPaintRect() const {
@@ -3049,8 +3018,6 @@ class nsDisplayItem : public nsDisplayItemBase {
   // Result of FindReferenceFrameFor(mFrame), if mFrame is non-null
   const nsIFrame* mReferenceFrame;
   RefPtr<struct AnimatedGeometryRoot> mAnimatedGeometryRoot;
-  mozilla::DisplayItemData* mDisplayItemData = nullptr;
-  mozilla::layers::LayerManager* mDisplayItemDataLayerManager = nullptr;
 
   struct {
     RefPtr<const DisplayItemClipChain> mClipChain;
@@ -3091,6 +3058,30 @@ class nsPaintedDisplayItem : public nsDisplayItem {
   nsPaintedDisplayItem* AsPaintedDisplayItem() final { return this; }
   const nsPaintedDisplayItem* AsPaintedDisplayItem() const final {
     return this;
+  }
+
+  ~nsPaintedDisplayItem() override { SetDisplayItemData(nullptr, nullptr); }
+
+  void SetDisplayItemData(mozilla::DisplayItemData* aDID,
+                          mozilla::layers::LayerManager* aLayerManager) {
+    if (mDisplayItemData) {
+      MOZ_ASSERT(!mDisplayItemData->GetItem() ||
+                 mDisplayItemData->GetItem() == this);
+      mDisplayItemData->SetItem(nullptr);
+    }
+    if (aDID) {
+      if (aDID->GetItem()) {
+        aDID->GetItem()->SetDisplayItemData(nullptr, nullptr);
+      }
+      aDID->SetItem(this);
+    }
+    mDisplayItemData = aDID;
+    mDisplayItemDataLayerManager = aLayerManager;
+  }
+
+  mozilla::DisplayItemData* GetDisplayItemData() { return mDisplayItemData; }
+  mozilla::layers::LayerManager* GetDisplayItemDataLayerManager() {
+    return mDisplayItemDataLayerManager;
   }
 
   /**
@@ -3163,6 +3154,10 @@ class nsPaintedDisplayItem : public nsDisplayItem {
   nsPaintedDisplayItem(nsDisplayListBuilder* aBuilder,
                        const nsPaintedDisplayItem& aOther)
       : nsDisplayItem(aBuilder, aOther) {}
+
+ private:
+  mozilla::DisplayItemData* mDisplayItemData = nullptr;
+  mozilla::layers::LayerManager* mDisplayItemDataLayerManager = nullptr;
 };
 
 /**

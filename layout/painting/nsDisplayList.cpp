@@ -151,6 +151,19 @@ bool ShouldBuildItemForEventsOrPlugins(const DisplayItemType aType) {
          (GetDisplayItemFlagsForType(aType) & TYPE_IS_CONTAINER);
 }
 
+void UpdateDisplayItemData(nsPaintedDisplayItem* aItem) {
+  for (mozilla::DisplayItemData* did : aItem->Frame()->DisplayItemData()) {
+    if (did->GetDisplayItemKey() == aItem->GetPerFrameKey() &&
+        did->GetLayer()->AsPaintedLayer()) {
+      if (!did->HasMergedFrames()) {
+        aItem->SetDisplayItemData(did, did->GetLayer()->Manager());
+      }
+
+      return;
+    }
+  }
+}
+
 /* static */
 bool ActiveScrolledRoot::IsAncestor(const ActiveScrolledRoot* aAncestor,
                                     const ActiveScrolledRoot* aDescendant) {
