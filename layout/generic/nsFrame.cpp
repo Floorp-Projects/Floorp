@@ -7399,6 +7399,9 @@ bool nsIFrame::UpdateOverflow() {
   nsOverflowAreas overflowAreas(rect, rect);
 
   if (!ComputeCustomOverflow(overflowAreas)) {
+    // If updating overflow wasn't supported by this frame, then it should
+    // have scheduled any necessary reflows. We can return false to say nothing
+    // changed, and wait for reflow to correct it.
     return false;
   }
 
@@ -7419,7 +7422,12 @@ bool nsIFrame::UpdateOverflow() {
     return true;
   }
 
-  return false;
+  // Frames that combine their 3d transform with their ancestors
+  // only compute a pre-transform overflow rect, and then contribute
+  // to the normal overflow rect of the preserve-3d root. Always return
+  // true here so that we propagate changes up to the root for final
+  // calculation.
+  return Combines3DTransformWithAncestors();
 }
 
 /* virtual */
