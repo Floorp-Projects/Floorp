@@ -332,7 +332,7 @@ CycleCollectedJSContext::saveJobQueue(JSContext* cx) {
 
 /* static */
 void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
-    JSContext* aCx, JS::HandleObject aPromise,
+    JSContext* aCx, bool aMutedErrors, JS::HandleObject aPromise,
     JS::PromiseRejectionHandlingState state, void* aData) {
   CycleCollectedJSContext* self = static_cast<CycleCollectedJSContext*>(aData);
 
@@ -348,7 +348,8 @@ void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
 
   if (state == JS::PromiseRejectionHandlingState::Unhandled) {
     PromiseDebugging::AddUncaughtRejection(aPromise);
-    if (mozilla::StaticPrefs::dom_promise_rejection_events_enabled()) {
+    if (mozilla::StaticPrefs::dom_promise_rejection_events_enabled() &&
+        !aMutedErrors) {
       RefPtr<Promise> promise =
           Promise::CreateFromExisting(xpc::NativeGlobal(aPromise), aPromise);
       aboutToBeNotified.AppendElement(promise);
@@ -356,7 +357,8 @@ void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
     }
   } else {
     PromiseDebugging::AddConsumedRejection(aPromise);
-    if (mozilla::StaticPrefs::dom_promise_rejection_events_enabled()) {
+    if (mozilla::StaticPrefs::dom_promise_rejection_events_enabled() &&
+        !aMutedErrors) {
       for (size_t i = 0; i < aboutToBeNotified.Length(); i++) {
         if (aboutToBeNotified[i] &&
             aboutToBeNotified[i]->PromiseObj() == aPromise) {
