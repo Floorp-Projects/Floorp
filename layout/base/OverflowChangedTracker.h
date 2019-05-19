@@ -139,16 +139,6 @@ class OverflowChangedTracker {
       // children.
       if (overflowChanged) {
         nsIFrame* parent = frame->GetParent();
-        while (parent && parent != mSubtreeRoot &&
-               parent->FrameMaintainsOverflow() &&
-               parent->Combines3DTransformWithAncestors()) {
-          // Passing frames in between the frame and the establisher of
-          // 3D rendering context.
-          parent = parent->GetParent();
-          MOZ_ASSERT(parent,
-                     "Root frame should never return true for "
-                     "Combines3DTransformWithAncestors");
-        }
 
         // It's possible that the parent is already in a nondisplay context,
         // should not add it to the list if that's true.
