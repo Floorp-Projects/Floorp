@@ -19,4 +19,5 @@ load 1504033.html
 load 1514544-1.html
 load 1547420-1.html
 load 1549909.html
+asserts(6) load 1551389-1.html # bug 847368
 
