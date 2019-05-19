@@ -59,7 +59,7 @@ jobs:
     firefox:
         shipping-product: firefox
         attributes:
-            build_platform: linux64-snap-shippable
+            build_platform: linux64-shippable
             build_type: opt
         treeherder:
             symbol: Snap(r)
