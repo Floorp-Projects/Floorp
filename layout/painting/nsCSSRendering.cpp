@@ -389,7 +389,7 @@ struct InlineBackgroundData {
              // blockFrame.
              it1.GetContainer() == it2.GetContainer() &&
              // And on the same line in it
-             it1.GetLine() == it2.GetLine();
+             it1.GetLine().get() == it2.GetLine().get();
     }
     if (nsRubyTextContainerFrame* rtcFrame = do_QueryFrame(mLineContainer)) {
       nsBlockFrame* block = nsLayoutUtils::FindNearestBlockAncestor(rtcFrame);
