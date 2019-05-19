@@ -743,22 +743,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   void runTask() override;
 };
 
-struct ScriptParseTask : public ParseTask {
-  JS::SourceText<char16_t> data;
-
-  ScriptParseTask(JSContext* cx, JS::SourceText<char16_t>& srcBuf,
-                  JS::OffThreadCompileCallback callback, void* callbackData);
-  void parse(JSContext* cx) override;
-};
-
-struct ModuleParseTask : public ParseTask {
-  JS::SourceText<char16_t> data;
-
-  ModuleParseTask(JSContext* cx, JS::SourceText<char16_t>& srcBuf,
-                  JS::OffThreadCompileCallback callback, void* callbackData);
-  void parse(JSContext* cx) override;
-};
-
 struct ScriptDecodeTask : public ParseTask {
   const JS::TranscodeRange range;
 

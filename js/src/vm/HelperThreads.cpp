@@ -9,6 +9,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "builtin/Promise.h"
 #include "frontend/BytecodeCompilation.h"
@@ -41,6 +42,7 @@ using mozilla::Maybe;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 using mozilla::Unused;
+using mozilla::Utf8Unit;
 
 using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
@@ -508,14 +510,25 @@ void ParseTask::runTask() {
   cx->atomsZoneFreeLists().clear();
 }
 
-ScriptParseTask::ScriptParseTask(JSContext* cx,
-                                 JS::SourceText<char16_t>& srcBuf,
-                                 JS::OffThreadCompileCallback callback,
-                                 void* callbackData)
+template <typename Unit>
+struct ScriptParseTask : public ParseTask {
+  JS::SourceText<Unit> data;
+
+  ScriptParseTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
+                  JS::OffThreadCompileCallback callback, void* callbackData);
+  void parse(JSContext* cx) override;
+};
+
+template <typename Unit>
+ScriptParseTask<Unit>::ScriptParseTask(JSContext* cx,
+                                       JS::SourceText<Unit>& srcBuf,
+                                       JS::OffThreadCompileCallback callback,
+                                       void* callbackData)
     : ParseTask(ParseTaskKind::Script, cx, callback, callbackData),
       data(std::move(srcBuf)) {}
 
-void ScriptParseTask::parse(JSContext* cx) {
+template <typename Unit>
+void ScriptParseTask<Unit>::parse(JSContext* cx) {
   MOZ_ASSERT(cx->helperThread());
 
   JSScript* script;
@@ -543,14 +556,25 @@ void ScriptParseTask::parse(JSContext* cx) {
   }
 }
 
-ModuleParseTask::ModuleParseTask(JSContext* cx,
-                                 JS::SourceText<char16_t>& srcBuf,
-                                 JS::OffThreadCompileCallback callback,
-                                 void* callbackData)
+template <typename Unit>
+struct ModuleParseTask : public ParseTask {
+  JS::SourceText<Unit> data;
+
+  ModuleParseTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
+                  JS::OffThreadCompileCallback callback, void* callbackData);
+  void parse(JSContext* cx) override;
+};
+
+template <typename Unit>
+ModuleParseTask<Unit>::ModuleParseTask(JSContext* cx,
+                                       JS::SourceText<Unit>& srcBuf,
+                                       JS::OffThreadCompileCallback callback,
+                                       void* callbackData)
     : ParseTask(ParseTaskKind::Module, cx, callback, callbackData),
       data(std::move(srcBuf)) {}
 
-void ModuleParseTask::parse(JSContext* cx) {
+template <typename Unit>
+void ModuleParseTask<Unit>::parse(JSContext* cx) {
   MOZ_ASSERT(cx->helperThread());
 
   Rooted<ScriptSourceObject*> sourceObject(cx);
@@ -877,8 +901,8 @@ bool js::StartOffThreadParseScript(JSContext* cx,
                                    JS::SourceText<char16_t>& srcBuf,
                                    JS::OffThreadCompileCallback callback,
                                    void* callbackData) {
-  auto task =
-      cx->make_unique<ScriptParseTask>(cx, srcBuf, callback, callbackData);
+  auto task = cx->make_unique<ScriptParseTask<char16_t>>(cx, srcBuf, callback,
+                                                         callbackData);
   if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
     return false;
   }
@@ -892,8 +916,8 @@ bool js::StartOffThreadParseModule(JSContext* cx,
                                    JS::SourceText<char16_t>& srcBuf,
                                    JS::OffThreadCompileCallback callback,
                                    void* callbackData) {
-  auto task =
-      cx->make_unique<ModuleParseTask>(cx, srcBuf, callback, callbackData);
+  auto task = cx->make_unique<ModuleParseTask<char16_t>>(cx, srcBuf, callback,
+                                                         callbackData);
   if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
     return false;
   }
