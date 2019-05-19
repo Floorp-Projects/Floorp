@@ -16,8 +16,6 @@
 
 #include "mozilla/Attributes.h"
 
-#include "nsCSSValue.h"
-
 class nsPresContext;
 
 namespace mozilla {
@@ -96,7 +94,6 @@ class AnonymousCounterStyle final : public CounterStyle {
  public:
   explicit AnonymousCounterStyle(const nsAString& aContent);
   AnonymousCounterStyle(uint8_t aSystem, nsTArray<nsString> aSymbols);
-  explicit AnonymousCounterStyle(const nsCSSValue::Array* aValue);
 
   virtual void GetPrefix(nsAString& aResult) override;
   virtual void GetSuffix(nsAString& aResult) override;
