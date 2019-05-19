@@ -80,6 +80,10 @@ if __name__ == '__main__':
         env = os.environ.copy()
         env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
         env["XPCOM_DEBUG_BREAK"] = "warn"
+        # TODO should use e10s and gather data from all processes (bug 1196094).
+        # Note that unittest-required/user.js sets the autostart pref, but it
+        # is ignored by the code in nsAppRunner.
+        env["MOZ_FORCE_DISABLE_E10S"] = "1"
 
         # For VC12+, make sure we can find the right bitness of pgort1x0.dll
         if not substs.get('HAVE_64BIT_BUILD'):
