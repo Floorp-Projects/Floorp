@@ -52,11 +52,11 @@ jobs:
     firefox:
         bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
         bouncer-products:
-            by-project:
+            by-release-type:
                 default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi']
+                esr68: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar', 'msi']
                 # No stub installer in esr60
-                mozilla-esr60: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar']
-                jamun: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar']
+                esr60: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar']
         shipping-product: firefox
         treeherder:
             platform: firefox-release/opt

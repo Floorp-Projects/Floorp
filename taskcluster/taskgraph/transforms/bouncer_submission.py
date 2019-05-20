@@ -131,7 +131,8 @@ def make_task_worker(config, jobs):
             **{'release-level': config.params.release_level()}
         )
         resolve_keyed_by(
-            job, 'bouncer-products', item_name=job['name'], project=config.params['project']
+            job, 'bouncer-products', item_name=job['name'],
+            **{'release-type': config.params['release_type']}
         )
 
         # No need to filter out ja-JP-mac, we need to upload both; but we do
