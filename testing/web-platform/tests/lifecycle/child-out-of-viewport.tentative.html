@@ -4,6 +4,7 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <body>
+<div style="width: 200px; height: 4000px"></div>
 <script>
 async_test((t) => {
 
@@ -18,7 +19,7 @@ async_test((t) => {
     } else if (e.data == "freeze") {
       assert_true(loaded);
       frozen = true;
-      child.style = "display: block";
+      child.scrollIntoView();
     } else if (e.data == "resume") {
       assert_true(loaded);
       assert_true(frozen);
@@ -26,10 +27,9 @@ async_test((t) => {
     }
   }));
 
-  child.allow = "execution-while-not-rendered 'none'";
+  child.allow = "execution-while-out-of-viewport 'none'";
   child.src = "resources/subframe.html";
   document.body.appendChild(child);
-  child.style = "display: none";
 }, "Child frame frozen");
 
 </script>
