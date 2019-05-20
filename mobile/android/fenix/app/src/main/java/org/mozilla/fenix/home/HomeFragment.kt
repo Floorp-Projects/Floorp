@@ -180,19 +180,6 @@ class HomeFragment : Fragment(), CoroutineScope {
         homeDividerShadow.bringToFront()
     }
 
-    override fun onViewStateRestored(savedInstanceState: Bundle?) {
-        super.onViewStateRestored(savedInstanceState)
-        if (savedInstanceState != null) {
-            getManagedEmitter<SessionControlChange>().onNext(
-                SessionControlChange.TabsChange(
-                    (savedInstanceState.getParcelableArrayList<Tab>(
-                        KEY_TABS
-                    ) ?: arrayListOf()).toList()
-                )
-            )
-        }
-    }
-
     override fun onDestroyView() {
         homeMenu = null
         job.cancel()
@@ -526,6 +513,5 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     companion object {
         private const val toolbarPaddingDp = 12f
-        private const val KEY_TABS = "tabs"
     }
 }
