@@ -1,16 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel="help" href="https://xhr.spec.whatwg.org/#the-abort()-method" data-tested-assertations="following-sibling::ol/li[4]/ol/li[5]" />
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <title>XMLHttpRequest: The abort() method: do not fire abort event in OPENED state when send() flag is unset.</title>
-</head>
+// META: title=XMLHttpRequest: The abort() method: do not fire abort event in OPENED state when send() flag is unset.
 
-<body>
-    <div id="log"></div>
-
-    <script type="text/javascript">
         var test = async_test()
 
         test.step(function()
@@ -41,6 +30,3 @@
             xhr.send() // should not throw since abort() was a no-op
             test.done()
         });
-    </script>
-</body>
-</html>

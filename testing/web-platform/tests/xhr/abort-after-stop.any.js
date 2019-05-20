@@ -1,14 +1,5 @@
-<!doctype html>
-<html>
-  <head>
-    <title>XMLHttpRequest: abort event should fire when stop() method is used</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <link rel="help" href="https://xhr.spec.whatwg.org/#infrastructure-for-the-send()-method" data-tested-assertations="following::dt[3] following::dt[3]/following::dd[1]/p"/>
-  </head>
-  <body>
-    <div id="log"></div>
-    <script>
+// META: title=XMLHttpRequest: abort event should fire when stop() method is used
+
       var test = async_test();
       window.onload = test.step_func(function() {
         var client = new XMLHttpRequest();
@@ -29,6 +20,3 @@
         window.stop();
         sync = false;
       });
-    </script>
-  </body>
-</html>

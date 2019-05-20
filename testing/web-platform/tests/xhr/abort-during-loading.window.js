@@ -1,21 +1,12 @@
-<!doctype html>
-<html>
-  <head>
-    <title>XMLHttpRequest: abort() during HEADERS_RECEIVED</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <link rel="help" href="https://xhr.spec.whatwg.org/#the-abort()-method" data-tested-assertations="following-sibling::ol/li[4] following-sibling::ol/li[5]" />
-  </head>
-  <body>
-    <div id="log"></div>
-    <script>
+// META: title=XMLHttpRequest: abort() during LOADING
+
       async_test(test => {
         var client = new XMLHttpRequest(),
             result = [],
-            expected = [1, 2, 4]
+            expected = [1, 2, 3, 4]
         client.onreadystatechange = test.step_func(function() {
           result.push(client.readyState);
-          if (client.readyState === 2) {
+          if (client.readyState === 3) {
             assert_equals(client.status, 200)
             assert_equals(client.statusText, "OK")
             assert_equals(client.responseXML, null)
@@ -48,6 +39,3 @@
         client.open("GET", "resources/well-formed.xml")
         client.send(null)
       })
-    </script>
-  </body>
-</html>
