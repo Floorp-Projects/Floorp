@@ -395,25 +395,20 @@ void HttpChannelChild::AssociateApplicationCache(const nsCString& groupID,
 
 class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
  public:
-  StartRequestEvent(HttpChannelChild* aChild, const nsresult& aChannelStatus,
-                    const nsHttpResponseHead& aResponseHead,
-                    const bool& aUseResponseHead,
-                    const nsHttpHeaderArray& aRequestHeaders,
-                    const ParentLoadInfoForwarderArgs& loadInfoForwarder,
-                    const bool& aIsFromCache, const bool& aIsRacing,
-                    const bool& aCacheEntryAvailable,
-                    const uint64_t& aCacheEntryId,
-                    const int32_t& aCacheFetchCount,
-                    const uint32_t& aCacheExpirationTime,
-                    const nsCString& aCachedCharset,
-                    const nsCString& aSecurityInfoSerialization,
-                    const NetAddr& aSelfAddr, const NetAddr& aPeerAddr,
-                    const uint32_t& aCacheKey, const nsCString& altDataType,
-                    const int64_t& altDataLen, const bool& deliveringAltData,
-                    already_AddRefed<nsIInputStream> originalCacheInputStream,
-                    already_AddRefed<nsIInputStream> altDataInputStream,
-                    const bool& aApplyConversion, const bool& aIsResolvedByTRR,
-                    const ResourceTimingStruct& aTiming)
+  StartRequestEvent(
+      HttpChannelChild* aChild, const nsresult& aChannelStatus,
+      const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
+      const nsHttpHeaderArray& aRequestHeaders,
+      const ParentLoadInfoForwarderArgs& loadInfoForwarder,
+      const bool& aIsFromCache, const bool& aIsRacing,
+      const bool& aCacheEntryAvailable, const uint64_t& aCacheEntryId,
+      const int32_t& aCacheFetchCount, const uint32_t& aCacheExpirationTime,
+      const nsCString& aCachedCharset,
+      const nsCString& aSecurityInfoSerialization, const NetAddr& aSelfAddr,
+      const NetAddr& aPeerAddr, const uint32_t& aCacheKey,
+      const nsCString& altDataType, const int64_t& altDataLen,
+      const bool& deliveringAltData, const bool& aApplyConversion,
+      const bool& aIsResolvedByTRR, const ResourceTimingStruct& aTiming)
       : NeckoTargetChannelEvent<HttpChannelChild>(aChild),
         mChannelStatus(aChannelStatus),
         mResponseHead(aResponseHead),
@@ -434,8 +429,6 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
         mAltDataType(altDataType),
         mAltDataLen(altDataLen),
         mDeliveringAltData(deliveringAltData),
-        mOriginalCacheInputStream(originalCacheInputStream),
-        mAltDataInputStream(altDataInputStream),
         mLoadInfoForwarder(loadInfoForwarder),
         mIsResolvedByTRR(aIsResolvedByTRR),
         mTiming(aTiming) {}
@@ -447,9 +440,8 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
         mLoadInfoForwarder, mIsFromCache, mIsRacing, mCacheEntryAvailable,
         mCacheEntryId, mCacheFetchCount, mCacheExpirationTime, mCachedCharset,
         mSecurityInfoSerialization, mSelfAddr, mPeerAddr, mCacheKey,
-        mAltDataType, mAltDataLen, mDeliveringAltData,
-        mOriginalCacheInputStream.forget(), mAltDataInputStream.forget(),
-        mApplyConversion, mIsResolvedByTRR, mTiming);
+        mAltDataType, mAltDataLen, mDeliveringAltData, mApplyConversion,
+        mIsResolvedByTRR, mTiming);
   }
 
  private:
@@ -472,8 +464,6 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
   nsCString mAltDataType;
   int64_t mAltDataLen;
   bool mDeliveringAltData;
-  nsCOMPtr<nsIInputStream> mOriginalCacheInputStream;
-  nsCOMPtr<nsIInputStream> mAltDataInputStream;
   ParentLoadInfoForwarderArgs mLoadInfoForwarder;
   bool mIsResolvedByTRR;
   ResourceTimingStruct mTiming;
@@ -490,9 +480,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
     const NetAddr& selfAddr, const NetAddr& peerAddr,
     const int16_t& redirectCount, const uint32_t& cacheKey,
     const nsCString& altDataType, const int64_t& altDataLen,
-    const bool& deliveringAltData,
-    const Maybe<IPCStream>& aOriginalCacheInputStream,
-    const Maybe<IPCStream>& aAltDataInputStream, const bool& aApplyConversion,
+    const bool& deliveringAltData, const bool& aApplyConversion,
     const bool& aIsResolvedByTRR, const ResourceTimingStruct& aTiming) {
   AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStartRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
@@ -507,19 +495,12 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
 
   mRedirectCount = redirectCount;
 
-  nsCOMPtr<nsIInputStream> originalCacheInputStream =
-      DeserializeIPCStream(aOriginalCacheInputStream);
-
-  nsCOMPtr<nsIInputStream> altDataInputStream =
-      DeserializeIPCStream(aAltDataInputStream);
-
   mEventQ->RunOrEnqueue(new StartRequestEvent(
       this, channelStatus, responseHead, useResponseHead, requestHeaders,
       loadInfoForwarder, isFromCache, isRacing, cacheEntryAvailable,
       cacheEntryId, cacheFetchCount, cacheExpirationTime, cachedCharset,
       securityInfoSerialization, selfAddr, peerAddr, cacheKey, altDataType,
-      altDataLen, deliveringAltData, originalCacheInputStream.forget(),
-      altDataInputStream.forget(), aApplyConversion, aIsResolvedByTRR,
+      altDataLen, deliveringAltData, aApplyConversion, aIsResolvedByTRR,
       aTiming));
 
   {
@@ -553,11 +534,8 @@ void HttpChannelChild::OnStartRequest(
     const nsCString& cachedCharset, const nsCString& securityInfoSerialization,
     const NetAddr& selfAddr, const NetAddr& peerAddr, const uint32_t& cacheKey,
     const nsCString& altDataType, const int64_t& altDataLen,
-    const bool& deliveringAltData,
-    already_AddRefed<nsIInputStream> originalCacheInputStream,
-    already_AddRefed<nsIInputStream> altDataInputStream,
-    const bool& aApplyConversion, const bool& aIsResolvedByTRR,
-    const ResourceTimingStruct& aTiming) {
+    const bool& deliveringAltData, const bool& aApplyConversion,
+    const bool& aIsResolvedByTRR, const ResourceTimingStruct& aTiming) {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -568,9 +546,6 @@ void HttpChannelChild::OnStartRequest(
   MOZ_RELEASE_ASSERT(
       !mDivertingToParent,
       "mDivertingToParent should be unset before OnStartRequest!");
-
-  mOriginalCacheInputStream = originalCacheInputStream;
-  mAltDataInputStream = altDataInputStream;
 
   // If this channel was aborted by ActorDestroy, then there may be other
   // OnStartRequest/OnStopRequest/OnDataAvailable IPC messages that need to
@@ -3261,27 +3236,60 @@ HttpChannelChild::OpenAlternativeOutputStream(const nsACString& aType,
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetOriginalInputStream(nsIInputStream** aInputStream) {
-  NS_ENSURE_ARG_POINTER(aInputStream);
+HttpChannelChild::GetOriginalInputStream(nsIInputStreamReceiver* aReceiver) {
+  if (aReceiver == nullptr) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   if (!mIPCOpen) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsIInputStream> is = mOriginalCacheInputStream;
-  is.forget(aInputStream);
+  mOriginalInputStreamReceiver = aReceiver;
+  Unused << SendOpenOriginalCacheInputStream();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpChannelChild::GetAlternativeDataInputStream(nsIInputStream** aInputStream) {
-  NS_ENSURE_ARG_POINTER(aInputStream);
+HttpChannelChild::GetAltDataInputStream(const nsACString& aType,
+                                        nsIInputStreamReceiver* aReceiver) {
+  if (aReceiver == nullptr) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  nsCOMPtr<nsIInputStream> is = mAltDataInputStream;
-  is.forget(aInputStream);
+  if (!mIPCOpen) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mAltDataInputStreamReceiver = aReceiver;
+  Unused << SendOpenAltDataCacheInputStream(nsCString(aType));
 
   return NS_OK;
+}
+
+mozilla::ipc::IPCResult HttpChannelChild::RecvOriginalCacheInputStreamAvailable(
+    const Maybe<IPCStream>& aStream) {
+  nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aStream);
+  nsCOMPtr<nsIInputStreamReceiver> receiver;
+  receiver.swap(mOriginalInputStreamReceiver);
+  if (receiver) {
+    receiver->OnInputStreamReady(stream);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult HttpChannelChild::RecvAltDataCacheInputStreamAvailable(
+    const Maybe<IPCStream>& aStream) {
+  nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aStream);
+  nsCOMPtr<nsIInputStreamReceiver> receiver;
+  receiver.swap(mAltDataInputStreamReceiver);
+  if (receiver) {
+    receiver->OnInputStreamReady(stream);
+  }
+
+  return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
