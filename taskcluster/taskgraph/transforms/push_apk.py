@@ -56,7 +56,7 @@ def make_task_description(config, jobs):
         resolve_keyed_by(job, 'worker.commit', item_name=job['name'], **params_kwargs)
         resolve_keyed_by(job, 'worker-type', item_name=job['name'], **params_kwargs)
 
-        job['scopes'] = [get_push_apk_scope(config)]
+        job['scopes'] = [get_push_apk_scope(config, job['attributes'].get('release-type'))]
 
         yield job
 
