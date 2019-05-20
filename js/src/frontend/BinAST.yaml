@@ -39,6 +39,7 @@ cpp:
     #include "mozilla/Vector.h"
 
     #include "frontend/BinAST-macros.h"
+    #include "frontend/BinASTTokenReaderContext.h"
     #include "frontend/BinASTTokenReaderMultipart.h"
     #include "frontend/FullParseHandler.h"
     #include "frontend/ParseNode.h"
@@ -67,6 +68,7 @@ cpp:
     // Force class instantiation.
     // This ensures that the symbols are built, without having to export all our
     // code (and its baggage of #include and macros) in the header.
+    template class BinASTParser<BinASTTokenReaderContext>;
     template class BinASTParser<BinASTTokenReaderMultipart>;
 
     } // namespace frontend
@@ -93,6 +95,7 @@ hpp:
       #include "frontend/BCEParserHandle.h"
       #include "frontend/BinASTParserPerTokenizer.h"
       #include "frontend/BinASTToken.h"
+      #include "frontend/BinASTTokenReaderContext.h"
       #include "frontend/BinASTTokenReaderMultipart.h"
       #include "frontend/FullParseHandler.h"
       #include "frontend/ParseContext.h"
@@ -197,6 +200,7 @@ hpp:
     footer: |
       };
 
+      extern template class BinASTParser<BinASTTokenReaderContext>;
       extern template class BinASTParser<BinASTTokenReaderMultipart>;
 
       } // namespace frontend

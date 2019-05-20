@@ -16,6 +16,7 @@
 
 #include "frontend/BinAST-macros.h"
 #include "frontend/BinASTParser.h"
+#include "frontend/BinASTTokenReaderContext.h"
 #include "frontend/BinASTTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseNode.h"
@@ -813,6 +814,7 @@ BinASTParserPerTokenizer<Tok>::asFinalParser() const {
 // Force class instantiation.
 // This ensures that the symbols are built, without having to export all our
 // code (and its baggage of #include and macros) in the header.
+template class BinASTParserPerTokenizer<BinASTTokenReaderContext>;
 template class BinASTParserPerTokenizer<BinASTTokenReaderMultipart>;
 
 }  // namespace frontend
