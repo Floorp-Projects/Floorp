@@ -56,7 +56,7 @@
 
         // Inject touch inputs.
         pointerDragInTarget("touch", target, 'right').then(function() {
-          return touchTapInTarget(button);
+          return clickInTarget("touch", button);
         }).then(function() {
           test_pointer_event.step(function () {
             assert_true(clickIsReceived, "click should be received before the test finishes");
