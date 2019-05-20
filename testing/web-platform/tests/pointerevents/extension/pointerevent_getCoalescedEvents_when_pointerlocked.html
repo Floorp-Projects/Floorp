@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="../pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script type="text/javascript" src="../pointerevent_support.js"></script>
         <style>
           #testContainer {
@@ -18,6 +21,7 @@
             var lock_change_count = 0;
             var mouseeventMovements = []
             var pointereventMovements = []
+            var has_coalesced_Events = false;
 
             function resetTestState() {
             }
@@ -34,9 +38,17 @@
                         test_pointerEvent.step(function() {
                             assert_greater_than(event.getCoalescedEvents().length, 0, "document.pointerLockElement should have coalesced events.");
                             document.exitPointerLock();
-                            test_pointerEvent.done();
+                            has_coalesced_Events = true;;
                         });
                     }
+                });
+
+                // Inject mouse inputs.
+                pointerDragInTarget('mouse', div1, 'right').then(function() {
+                    test_pointerEvent.step(function () {
+                        assert_true(has_coalesced_Events, "document.pointerLockElement should have coalesced events.");
+                    }, "document.pointerLockElement should have coalesced events.");
+                    test_pointerEvent.done();
                 });
             }
         </script>
