@@ -41,6 +41,7 @@
 #include "nsComponentManagerUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsIXULRuntime.h"
 #include "jsapi.h"
 #include "nsContentUtils.h"
@@ -1747,6 +1748,16 @@ void nsRefreshDriver::CancelIdleRunnable(nsIRunnable* aRunnable) {
   }
 }
 
+static bool ReduceAnimations(Document* aDocument, void* aData) {
+  if (aDocument->GetPresContext() &&
+      aDocument->GetPresContext()->EffectCompositor()->NeedsReducing()) {
+    aDocument->GetPresContext()->EffectCompositor()->ReduceAnimations();
+  }
+  aDocument->EnumerateSubDocuments(ReduceAnimations, nullptr);
+
+  return true;
+}
+
 void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   MOZ_ASSERT(!nsContentUtils::GetCurrentJSContext(),
              "Shouldn't have a JSContext on the stack");
@@ -1901,13 +1912,15 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // Promise resolution microtasks. We shouldn't run these, however, until we
     // have fully updated the animation state.
     //
-    // However, we need to be sure to run these before dispatching the
-    // corresponding animation events as required by the spec[1].
+    // As per the "update animations and send events" procedure[1], we should
+    // remove replaced animations and then run these microtasks before
+    // dispatching the corresponding animation events.
     //
     // [1]
     // https://drafts.csswg.org/web-animations-1/#update-animations-and-send-events
     if (i == 1) {
       nsAutoMicroTask mt;
+      ReduceAnimations(mPresContext->Document(), nullptr);
     }
 
     // Check if running the microtask checkpoint caused the pres context to

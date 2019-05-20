@@ -112,12 +112,14 @@ class Animation : public DOMEventTargetHelper,
 
   bool Pending() const { return mPendingState != PendingState::NotPending; }
   virtual bool PendingFromJS() const { return Pending(); }
+  AnimationReplaceState ReplaceState() const { return mReplaceState; }
 
   virtual Promise* GetReady(ErrorResult& aRv);
   Promise* GetFinished(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(finish);
   IMPL_EVENT_HANDLER(cancel);
+  IMPL_EVENT_HANDLER(remove);
 
   void Cancel(PostRestyleMode aPostRestyle = PostRestyleMode::IfNeeded);
 
@@ -321,6 +323,25 @@ class Animation : public DOMEventTargetHelper,
   bool IsRelevant() const { return mIsRelevant; }
   void UpdateRelevance();
 
+  // https://drafts.csswg.org/web-animations-1/#replaceable-animation
+  bool IsReplaceable() const;
+
+  /**
+   * Returns true if this Animation satisfies the requirements for being
+   * removed when it is replaced.
+   *
+   * Returning true does not imply this animation _should_ be removed.
+   * Determining that depends on the other effects in the same EffectSet to
+   * which this animation's effect, if any, contributes.
+   */
+  bool IsRemovable() const;
+
+  /**
+   * Make this animation's target effect no-longer part of the effect stack
+   * while preserving its timing information.
+   */
+  void Remove();
+
   /**
    * Returns true if this Animation has a lower composite order than aOther.
    */
@@ -358,6 +379,8 @@ class Animation : public DOMEventTargetHelper,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
   void NotifyEffectTimingUpdated();
+  void NotifyEffectPropertiesUpdated();
+  void NotifyEffectTargetUpdated();
   void NotifyGeometricAnimationsStartingThisFrame();
 
   /**
@@ -473,6 +496,9 @@ class Animation : public DOMEventTargetHelper,
     return GetCurrentTimeForHoldTime(Nullable<TimeDuration>());
   }
 
+  void ScheduleReplacementCheck();
+  void MaybeScheduleReplacementCheck();
+
   // Earlier side of the elapsed time range reported in CSS Animations and CSS
   // Transitions events.
   //
@@ -557,7 +583,12 @@ class Animation : public DOMEventTargetHelper,
   enum class PendingState : uint8_t { NotPending, PlayPending, PausePending };
   PendingState mPendingState = PendingState::NotPending;
 
+  // Handling of this animation's target effect when filling while finished.
+  AnimationReplaceState mReplaceState = AnimationReplaceState::Active;
+
   bool mFinishedAtLastComposeStyle = false;
+  bool mWasReplaceableAtLastTick = false;
+
   // Indicates that the animation should be exposed in an element's
   // getAnimations() list.
   bool mIsRelevant = false;

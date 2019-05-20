@@ -418,6 +418,10 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
 
   MarkCascadeNeedsUpdate();
 
+  if (mAnimation) {
+    mAnimation->NotifyEffectPropertiesUpdated();
+  }
+
   RequestRestyle(EffectCompositor::RestyleType::Layer);
 }
 
@@ -998,6 +1002,10 @@ void KeyframeEffect::SetTarget(
       nsNodeUtils::AnimationAdded(mAnimation);
       mAnimation->ReschedulePendingTasks();
     }
+  }
+
+  if (mAnimation) {
+    mAnimation->NotifyEffectTargetUpdated();
   }
 }
 

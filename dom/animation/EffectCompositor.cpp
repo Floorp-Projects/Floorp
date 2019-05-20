@@ -862,4 +862,53 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
   return foundElementsNeedingRestyle;
 }
 
+void EffectCompositor::NoteElementForReducing(
+    const NonOwningAnimationTarget& aTarget) {
+  if (!StaticPrefs::dom_animations_api_autoremove_enabled()) {
+    return;
+  }
+
+  Unused << mElementsToReduce.put(
+      OwningAnimationTarget{aTarget.mElement, aTarget.mPseudoType});
+}
+
+static void ReduceEffectSet(EffectSet& aEffectSet) {
+  // Get a list of effects sorted by composite order.
+  nsTArray<KeyframeEffect*> sortedEffectList(aEffectSet.Count());
+  for (KeyframeEffect* effect : aEffectSet) {
+    sortedEffectList.AppendElement(effect);
+  }
+  sortedEffectList.Sort(EffectCompositeOrderComparator());
+
+  nsCSSPropertyIDSet setProperties;
+
+  // Iterate in reverse
+  for (auto iter = sortedEffectList.rbegin(); iter != sortedEffectList.rend();
+       ++iter) {
+    MOZ_ASSERT(*iter && (*iter)->GetAnimation(),
+               "Effect in an EffectSet should have an animation");
+    KeyframeEffect& effect = **iter;
+    Animation& animation = *effect.GetAnimation();
+    if (animation.IsRemovable() &&
+        effect.GetPropertySet().IsSubsetOf(setProperties)) {
+      animation.Remove();
+    } else if (animation.IsReplaceable()) {
+      setProperties |= effect.GetPropertySet();
+    }
+  }
+}
+
+void EffectCompositor::ReduceAnimations() {
+  for (auto iter = mElementsToReduce.iter(); !iter.done(); iter.next()) {
+    const OwningAnimationTarget& target = iter.get();
+    EffectSet* effectSet =
+        EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
+    if (effectSet) {
+      ReduceEffectSet(*effectSet);
+    }
+  }
+
+  mElementsToReduce.clear();
+}
+
 }  // namespace mozilla
