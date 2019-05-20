@@ -262,14 +262,16 @@ void nsTableRowGroupFrame::PaintCellBackgroundsForColumns(
         continue;
       }
 
-      auto cellPos = cell->GetNormalPosition() + rowPos;
+      auto cellPos = cell->GetNormalPosition() + rowPos +
+                     aBuilder->ToReferenceFrame(aFrame);
       auto cellRect = nsRect(cellPos, cell->GetSize());
       if (!aBuilder->GetDirtyRect().Intersects(cellRect)) {
         continue;
       }
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
           aBuilder, aFrame, cellRect, aList, false, nullptr,
-          aFrame->GetRectRelativeToSelf(), cell);
+          aFrame->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(aFrame),
+          cell);
     }
   }
 }
