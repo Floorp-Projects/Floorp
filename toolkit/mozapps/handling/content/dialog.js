@@ -104,7 +104,7 @@ var dialog = {
                      (window.opener && PrivateBrowsingUtils.isWindowPrivate(window.opener));
 
     this._itemChoose  = document.getElementById("item-choose");
-    this._okButton    = document.documentElement.getButton("accept");
+    this._okButton    = document.documentElement.getButton("extra1");
 
     var description = {
       image: document.getElementById("description-image"),
@@ -131,7 +131,9 @@ var dialog = {
 
     // UI is ready, lets populate our list
     this.populateList();
-    document.addEventListener("dialogaccept", () => { this.onAccept(); });
+    // Explicitly not an 'accept' button to avoid having `enter` accept the dialog.
+    document.addEventListener("dialogextra1", () => { this.onOK(); });
+    document.addEventListener("dialogaccept", e => { e.preventDefault(); });
 
     this._delayHelper = new EnableDelayHelper({
       disableDialog: () => {
@@ -289,7 +291,10 @@ var dialog = {
  /**
   * Function called when the OK button is pressed.
   */
-  onAccept: function onAccept() {
+  onOK: function onOK() {
+    if (this._buttonDisabled) {
+      return;
+    }
     var checkbox = document.getElementById("remember");
     if (!checkbox.hidden) {
       // We need to make sure that the default is properly set now
@@ -308,6 +313,7 @@ var dialog = {
     hs.store(this._handlerInfo);
 
     this._handlerInfo.launchWithURI(this._URI, this._windowCtxt);
+    window.close();
   },
 
  /**
@@ -335,7 +341,7 @@ var dialog = {
     if (this.selectedItem == this._itemChoose)
       this.chooseApplication();
     else
-      document.documentElement.acceptDialog();
+      this.onOK();
   },
 
   // Getters / Setters

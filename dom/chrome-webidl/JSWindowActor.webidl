@@ -35,6 +35,9 @@ interface JSWindowActorChild {
   [Throws]
   readonly attribute BrowsingContext? browsingContext;
 
+  [Throws]
+  readonly attribute nsIDocShell? docShell;
+
   // NOTE: As this returns a window proxy, it may not be currently referencing
   // the document associated with this JSWindowActor. Generally prefer using
   // `document`.

@@ -21,16 +21,12 @@ job-template:
     attributes:
         artifact_prefix: public
         artifact_map:
-            by-project:
+            by-release-type:
+                beta|release.*|esr.*:
+                    by-platform:
+                        android.*: taskcluster/taskgraph/manifests/fennec_candidates_checksums.yml
+                        default: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml
                 default:
                     by-platform:
                         android.*: taskcluster/taskgraph/manifests/fennec_nightly_checksums.yml
                         default: taskcluster/taskgraph/manifests/firefox_nightly_checksums.yml
-                mozilla-beta:
-                    by-platform:
-                        android.*: taskcluster/taskgraph/manifests/fennec_candidates_checksums.yml
-                        default: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml
-                mozilla-release:
-                    by-platform:
-                        android.*: taskcluster/taskgraph/manifests/fennec_candidates_checksums.yml
-                        default: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml

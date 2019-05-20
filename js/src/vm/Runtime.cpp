@@ -637,9 +637,15 @@ void JSRuntime::addUnhandledRejectedPromise(JSContext* cx,
     return;
   }
 
+  bool mutedErrors = false;
+  if (JSScript* script = cx->currentScript()) {
+    mutedErrors = script->mutedErrors();
+  }
+
   void* data = cx->promiseRejectionTrackerCallbackData;
   cx->promiseRejectionTrackerCallback(
-      cx, promise, JS::PromiseRejectionHandlingState::Unhandled, data);
+      cx, mutedErrors, promise, JS::PromiseRejectionHandlingState::Unhandled,
+      data);
 }
 
 void JSRuntime::removeUnhandledRejectedPromise(JSContext* cx,
@@ -649,9 +655,15 @@ void JSRuntime::removeUnhandledRejectedPromise(JSContext* cx,
     return;
   }
 
+  bool mutedErrors = false;
+  if (JSScript* script = cx->currentScript()) {
+    mutedErrors = script->mutedErrors();
+  }
+
   void* data = cx->promiseRejectionTrackerCallbackData;
   cx->promiseRejectionTrackerCallback(
-      cx, promise, JS::PromiseRejectionHandlingState::Handled, data);
+      cx, mutedErrors, promise, JS::PromiseRejectionHandlingState::Handled,
+      data);
 }
 
 mozilla::non_crypto::XorShift128PlusRNG& JSRuntime::randomKeyGenerator() {

@@ -8,7 +8,9 @@
 #define mozilla_EffectCompositor_h
 
 #include "mozilla/AnimationPerformanceWarning.h"
+#include "mozilla/AnimationTarget.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/PseudoElementHashEntry.h"
@@ -38,6 +40,7 @@ struct NonOwningAnimationTarget;
 namespace dom {
 class Animation;
 class Element;
+class KeyframeEffect;
 }  // namespace dom
 
 class EffectCompositor {
@@ -116,8 +119,9 @@ class EffectCompositor {
                               dom::Element* aElement,
                               PseudoStyleType aPseudoType);
 
-  // Get animation rule for stylo. This is an equivalent of GetAnimationRule
-  // and will be called from servo side.
+  // Get the animation rule for the appropriate level of the cascade for
+  // a (pseudo-)element. Called from the Servo side.
+  //
   // The animation rule is stored in |RawServoAnimationValueMap|.
   // We need to be careful while doing any modification because it may cause
   // some thread-safe issues.
@@ -125,6 +129,15 @@ class EffectCompositor {
                              PseudoStyleType aPseudoType,
                              CascadeLevel aCascadeLevel,
                              RawServoAnimationValueMap* aAnimationValues);
+
+  // A variant on GetServoAnimationRule that composes all the effects for an
+  // element up to and including |aEffect|.
+  //
+  // Note that |aEffect| might not be in the EffectSet since we can use this for
+  // committing the computed style of a removed Animation.
+  bool ComposeServoAnimationRuleForEffect(
+      dom::KeyframeEffect& aEffect, CascadeLevel aCascadeLevel,
+      RawServoAnimationValueMap* aAnimationValues);
 
   bool HasPendingStyleUpdates() const;
 
@@ -199,6 +212,12 @@ class EffectCompositor {
   // at aElement.
   bool PreTraverseInSubtree(ServoTraversalFlags aFlags, dom::Element* aRoot);
 
+  // Record a (pseudo-)element that may have animations that can be removed.
+  void NoteElementForReducing(const NonOwningAnimationTarget& aTarget);
+
+  bool NeedsReducing() const { return !mElementsToReduce.empty(); }
+  void ReduceAnimations();
+
   // Returns the target element for restyling.
   //
   // If |aPseudoType| is ::after, ::before or ::marker, returns the generated
@@ -239,6 +258,8 @@ class EffectCompositor {
       mElementsToRestyle;
 
   bool mIsInPreTraverse = false;
+
+  HashSet<OwningAnimationTarget> mElementsToReduce;
 };
 
 }  // namespace mozilla

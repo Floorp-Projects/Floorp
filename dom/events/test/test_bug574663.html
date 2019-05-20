@@ -63,7 +63,6 @@ function forceScrollAndWait(scrollbox, callback) {
   }
 }
 
-var kExtraEvents = 5;
 var kDelta = 3;
 
 function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum, callback) {
@@ -91,11 +90,9 @@ function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum, callback
   scrollbox.addEventListener("wheel", onwheel);
 
   synthesizeWheel(scrollbox, 10, 10, event, win);
-  // then 5 additional pixel scrolls
+  // then additional pixel scroll
   event.lineOrPageDeltaY = 0;
-  for (let i = 1; i <= kExtraEvents; ++i) {
-    synthesizeWheel(scrollbox, 10, 10, event, win);
-  }
+  synthesizeWheel(scrollbox, 10, 10, event, win);
 }
 
 function runTest() {
@@ -147,7 +144,7 @@ function runTest() {
           let postfix = isMomentum ? ", even after releasing the touchpad" : "";
           // Normal scroll: scroll
           is(winUtils.fullZoom, zoomFactorBefore, "Normal scrolling shouldn't change zoom" + postfix);
-          is(scrollbox.scrollTop, scrollTopBefore + kDelta * (kExtraEvents + 1),
+          is(scrollbox.scrollTop, scrollTopBefore + kDelta * 2,
              "Normal scrolling should scroll" + postfix);
         } else {
           if (!isMomentum) {
@@ -155,7 +152,7 @@ function runTest() {
             is(scrollbox.scrollTop, scrollTopBefore, "Ctrl-scrolling shouldn't scroll while the user is touching the touchpad");
           } else {
             is(winUtils.fullZoom, zoomFactorBefore, "Momentum scrolling shouldn't zoom, even when pressing Ctrl");
-            is(scrollbox.scrollTop, scrollTopBefore + kDelta * (kExtraEvents + 1),
+            is(scrollbox.scrollTop, scrollTopBefore + kDelta * 2,
                "Momentum scrolling should scroll, even when pressing Ctrl");
           }
         }
