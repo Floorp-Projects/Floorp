@@ -57,7 +57,6 @@ job-template:
     shipping-phase: promote
     attributes:
         artifact_map:
-            by-project:
+            by-release-type:
+                beta|release.*|esr.*: taskcluster/taskgraph/manifests/firefox_candidates.yml
                 default: taskcluster/taskgraph/manifests/firefox_nightly.yml
-                mozilla-beta: taskcluster/taskgraph/manifests/firefox_candidates.yml
-                mozilla-release: taskcluster/taskgraph/manifests/firefox_candidates.yml
