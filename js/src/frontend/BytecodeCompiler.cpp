@@ -804,10 +804,9 @@ JSScript* frontend::CompileGlobalBinASTScript(
 #endif  // JS_BUILD_BINAST
 
 template <typename Unit>
-static ModuleObject* CreateModule(JSContext* cx,
-                                  const ReadOnlyCompileOptions& optionsInput,
-                                  SourceText<Unit>& srcBuf,
-                                  ScriptSourceObject** sourceObjectOut) {
+static ModuleObject* InternalParseModule(
+    JSContext* cx, const ReadOnlyCompileOptions& optionsInput,
+    SourceText<Unit>& srcBuf, ScriptSourceObject** sourceObjectOut) {
   MOZ_ASSERT(srcBuf.get());
   MOZ_ASSERT_IF(sourceObjectOut, *sourceObjectOut == nullptr);
 
@@ -832,10 +831,11 @@ static ModuleObject* CreateModule(JSContext* cx,
   return module;
 }
 
-ModuleObject* frontend::CompileModule(
-    JSContext* cx, const ReadOnlyCompileOptions& optionsInput,
-    SourceText<char16_t>& srcBuf, ScriptSourceObject** sourceObjectOut) {
-  return CreateModule(cx, optionsInput, srcBuf, sourceObjectOut);
+ModuleObject* frontend::ParseModule(JSContext* cx,
+                                    const ReadOnlyCompileOptions& optionsInput,
+                                    SourceText<char16_t>& srcBuf,
+                                    ScriptSourceObject** sourceObjectOut) {
+  return InternalParseModule(cx, optionsInput, srcBuf, sourceObjectOut);
 }
 
 template <typename Unit>
@@ -848,7 +848,7 @@ static ModuleObject* CreateModule(JSContext* cx,
     return nullptr;
   }
 
-  RootedModuleObject module(cx, CompileModule(cx, options, srcBuf, nullptr));
+  RootedModuleObject module(cx, ParseModule(cx, options, srcBuf, nullptr));
   if (!module) {
     return nullptr;
   }
