@@ -1818,11 +1818,14 @@ nsresult Database::MigrateV32Up() {
       getter_AddRefs(dropTableStmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mozIStorageBaseStatement* stmts[] = {expireOrphansStmt, deleteHostsStmt,
-                                       updateHostsStmt, dropTableStmt};
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      expireOrphansStmt.forget(),
+      deleteHostsStmt.forget(),
+      updateHostsStmt.forget(),
+      dropTableStmt.forget(),
+  };
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  rv = mMainConn->ExecuteAsync(stmts, ArrayLength(stmts), nullptr,
-                               getter_AddRefs(ps));
+  rv = mMainConn->ExecuteAsync(stmts, nullptr, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2966,7 +2969,7 @@ void Database::Shutdown() {
   mMainThreadStatements.FinalizeStatements();
   mMainThreadAsyncStatements.FinalizeStatements();
 
-  RefPtr<FinalizeStatementCacheProxy<mozIStorageStatement> > event =
+  RefPtr<FinalizeStatementCacheProxy<mozIStorageStatement>> event =
       new FinalizeStatementCacheProxy<mozIStorageStatement>(
           mAsyncThreadStatements, NS_ISUPPORTS_CAST(nsIObserver*, this));
   DispatchToAsyncThread(event);

@@ -1854,12 +1854,12 @@ Connection::ExecuteSimpleSQL(const nsACString& aSQLStatement) {
 }
 
 NS_IMETHODIMP
-Connection::ExecuteAsync(mozIStorageBaseStatement** aStatements,
-                         uint32_t aNumStatements,
-                         mozIStorageStatementCallback* aCallback,
-                         mozIStoragePendingStatement** _handle) {
-  nsTArray<StatementData> stmts(aNumStatements);
-  for (uint32_t i = 0; i < aNumStatements; i++) {
+Connection::ExecuteAsync(
+    const nsTArray<RefPtr<mozIStorageBaseStatement>>& aStatements,
+    mozIStorageStatementCallback* aCallback,
+    mozIStoragePendingStatement** _handle) {
+  nsTArray<StatementData> stmts(aStatements.Length());
+  for (uint32_t i = 0; i < aStatements.Length(); i++) {
     nsCOMPtr<StorageBaseStatementInternal> stmt =
         do_QueryInterface(aStatements[i]);
 

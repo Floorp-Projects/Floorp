@@ -82,7 +82,7 @@ Connection::CreateAsyncStatement(const nsACString&,
 }
 
 NS_IMETHODIMP
-Connection::ExecuteAsync(mozIStorageBaseStatement**, uint32_t,
+Connection::ExecuteAsync(const nsTArray<RefPtr<mozIStorageBaseStatement>>&,
                          mozIStorageStatementCallback*,
                          mozIStoragePendingStatement**) {
   // async methods are not supported
