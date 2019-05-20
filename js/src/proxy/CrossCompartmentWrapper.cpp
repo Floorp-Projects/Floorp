@@ -609,18 +609,15 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
 // Remap all cross-compartment wrappers pointing to |oldTarget| to point to
 // |newTarget|. All wrappers are recomputed.
 JS_FRIEND_API bool js::RemapAllWrappersForObject(JSContext* cx,
-                                                 JSObject* oldTargetArg,
-                                                 JSObject* newTargetArg) {
-  MOZ_ASSERT(!IsInsideNursery(oldTargetArg));
-  MOZ_ASSERT(!IsInsideNursery(newTargetArg));
-
-  RootedValue origv(cx, ObjectValue(*oldTargetArg));
-  RootedObject newTarget(cx, newTargetArg);
+                                                 HandleObject oldTarget,
+                                                 HandleObject newTarget) {
+  MOZ_ASSERT(!IsInsideNursery(oldTarget));
+  MOZ_ASSERT(!IsInsideNursery(newTarget));
 
   AutoWrapperVector toTransplant(cx);
 
   for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
-    if (WrapperMap::Ptr wp = c->lookupWrapper(origv)) {
+    if (WrapperMap::Ptr wp = c->lookupWrapper(oldTarget)) {
       // We found a wrapper. Remember and root it.
       if (!toTransplant.append(WrapperValue(wp))) {
         return false;
