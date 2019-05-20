@@ -14,8 +14,8 @@ enum AnimationPlayState { "idle", "running", "paused", "finished" };
 
 enum AnimationReplaceState { "active", "removed", "persisted" };
 
-[Constructor (optional AnimationEffect? effect = null,
-              optional AnimationTimeline? timeline)]
+[Constructor(optional AnimationEffect? effect = null,
+             optional AnimationTimeline? timeline)]
 interface Animation : EventTarget {
   attribute DOMString id;
   [Func="Document::IsWebAnimationsEnabled", Pure]
@@ -42,20 +42,20 @@ interface Animation : EventTarget {
            attribute EventHandler       oncancel;
   [Pref="dom.animations-api.autoremove.enabled"]
            attribute EventHandler       onremove;
-  void cancel ();
+  void cancel();
   [Throws]
-  void finish ();
+  void finish();
   [Throws, BinaryName="playFromJS"]
-  void play ();
+  void play();
   [Throws, BinaryName="pauseFromJS"]
-  void pause ();
+  void pause();
   void updatePlaybackRate (double playbackRate);
   [Throws]
-  void reverse ();
+  void reverse();
   [Pref="dom.animations-api.autoremove.enabled"]
-  void persist ();
+  void persist();
   [Pref="dom.animations-api.autoremove.enabled", Throws]
-  void commitStyles ();
+  void commitStyles();
 };
 
 // Non-standard extensions
