@@ -39,7 +39,7 @@ jobs:
                 by-release-type:
                     beta: ["beta", "beta-localtest", "beta-cdntest"]
                     release(-rc)?: ["release", "release-localtest", "release-cdntest"]
-                    esr.*: ["esr", "esr-localtest", "esr-cdntest"]
+                    esr.*: ["esr", "esr-localtest", "esr-cdntest", "esr-localtest-next", "esr-cdntest-next"]
                     default: []
             rules-to-update:
                 by-release-type:
@@ -62,8 +62,11 @@ jobs:
         run-on-releases: [esr60, esr68]
         worker:
             product: firefox
-            channel-names: ["esr", "esr-localtest", "esr-cdntest"]
-            rules-to-update: ["esr52-cdntest", "esr52-localtest"]
+            channel-names: ["esr", "esr-localtest", "esr-cdntest", "esr-localtest-next", "esr-cdntest-next"]
+            rules-to-update:
+                by-release-type:
+                    esr68: ["esr52-cdntest-next", "esr52-localtest-next"]
+                    esr60: ["esr52-cdntest", "esr52-localtest"]
             platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
             blob-suffix: -bz2
             complete-mar-filename-pattern: '%s-%s.bz2.complete.mar'
