@@ -19,9 +19,10 @@ requestLongerTimeout(5);
 
 /* These reflows happen only the first time the awesomebar panel opens. */
 const EXPECTED_REFLOWS_FIRST_OPEN = [];
-if (AppConstants.platform != "macosx" &&
-    (AppConstants.DEBUG ||
-     AppConstants.platform == "win")) {
+if (AppConstants.platform == "linux" ||
+    AppConstants.platform == "win" ||
+    // macOS 10.14 Mojave (Darwin version 18)
+    AppConstants.isPlatformAndVersionAtLeast("macosx", "18")) {
   EXPECTED_REFLOWS_FIRST_OPEN.push({
     stack: [
       "__rebuild@chrome://browser/content/search/search-one-offs.js",
