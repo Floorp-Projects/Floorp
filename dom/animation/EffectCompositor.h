@@ -8,7 +8,9 @@
 #define mozilla_EffectCompositor_h
 
 #include "mozilla/AnimationPerformanceWarning.h"
+#include "mozilla/AnimationTarget.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/PseudoElementHashEntry.h"
@@ -199,6 +201,12 @@ class EffectCompositor {
   // at aElement.
   bool PreTraverseInSubtree(ServoTraversalFlags aFlags, dom::Element* aRoot);
 
+  // Record a (pseudo-)element that may have animations that can be removed.
+  void NoteElementForReducing(const NonOwningAnimationTarget& aTarget);
+
+  bool NeedsReducing() const { return !mElementsToReduce.empty(); }
+  void ReduceAnimations();
+
   // Returns the target element for restyling.
   //
   // If |aPseudoType| is ::after, ::before or ::marker, returns the generated
@@ -239,6 +247,8 @@ class EffectCompositor {
       mElementsToRestyle;
 
   bool mIsInPreTraverse = false;
+
+  HashSet<OwningAnimationTarget> mElementsToReduce;
 };
 
 }  // namespace mozilla

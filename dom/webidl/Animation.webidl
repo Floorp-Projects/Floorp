@@ -12,6 +12,8 @@
 
 enum AnimationPlayState { "idle", "running", "paused", "finished" };
 
+enum AnimationReplaceState { "active", "removed", "persisted" };
+
 [Constructor (optional AnimationEffect? effect = null,
               optional AnimationTimeline? timeline)]
 interface Animation : EventTarget {
@@ -30,12 +32,16 @@ interface Animation : EventTarget {
   readonly attribute AnimationPlayState playState;
   [BinaryName="pendingFromJS"]
   readonly attribute boolean            pending;
+  [Pref="dom.animations-api.autoremove.enabled"]
+  readonly attribute AnimationReplaceState replaceState;
   [Func="Document::IsWebAnimationsEnabled", Throws]
   readonly attribute Promise<Animation> ready;
   [Func="Document::IsWebAnimationsEnabled", Throws]
   readonly attribute Promise<Animation> finished;
            attribute EventHandler       onfinish;
            attribute EventHandler       oncancel;
+  [Pref="dom.animations-api.autoremove.enabled"]
+           attribute EventHandler       onremove;
   void cancel ();
   [Throws]
   void finish ();
