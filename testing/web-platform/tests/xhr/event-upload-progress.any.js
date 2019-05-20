@@ -1,14 +1,8 @@
-<!doctype html>
-<html lang=en>
-<meta charset=utf-8>
-<title>XMLHttpRequest: upload progress event</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script src="/common/get-host-info.sub.js"></script>
-<div id="log"></div>
-<script>
+// META: title=XMLHttpRequest: upload progress event
+// META: script=/common/get-host-info.sub.js
+
 const remote = get_host_info().HTTP_REMOTE_ORIGIN + "/xhr/resources/corsenabled.py",
-      redirect = "resources/redirect.py?code=307&location=" + remote;
+  redirect = "resources/redirect.py?code=307&location=" + remote;
 
 [remote, redirect].forEach(url => {
   async_test(test => {
@@ -30,4 +24,3 @@ const remote = get_host_info().HTTP_REMOTE_ORIGIN + "/xhr/resources/corsenabled.
     client.upload.onprogress = test.unreached_func(); // registered too late
   }, "Upload events registered too late (" + url + ")");
 });
-</script>
