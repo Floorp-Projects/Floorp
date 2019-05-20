@@ -2381,6 +2381,42 @@ void nsFrame::DisplayOutline(nsDisplayListBuilder* aBuilder,
   DisplayOutlineUnconditional(aBuilder, aLists);
 }
 
+void nsFrame::DisplayInsetBoxShadowUnconditional(nsDisplayListBuilder* aBuilder,
+                                                 nsDisplayList* aList) {
+  // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
+  // just because we're visible?  Or should it depend on the cell visibility
+  // when we're not the whole table?
+  const auto* effects = StyleEffects();
+  if (effects->HasBoxShadowWithInset(true)) {
+    aList->AppendNewToTop<nsDisplayBoxShadowInner>(aBuilder, this);
+  }
+}
+
+void nsFrame::DisplayInsetBoxShadow(nsDisplayListBuilder* aBuilder,
+                                    nsDisplayList* aList) {
+  if (!IsVisibleForPainting()) return;
+
+  DisplayInsetBoxShadowUnconditional(aBuilder, aList);
+}
+
+void nsFrame::DisplayOutsetBoxShadowUnconditional(
+    nsDisplayListBuilder* aBuilder, nsDisplayList* aList) {
+  // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
+  // just because we're visible?  Or should it depend on the cell visibility
+  // when we're not the whole table?
+  const auto* effects = StyleEffects();
+  if (effects->HasBoxShadowWithInset(false)) {
+    aList->AppendNewToTop<nsDisplayBoxShadowOuter>(aBuilder, this);
+  }
+}
+
+void nsFrame::DisplayOutsetBoxShadow(nsDisplayListBuilder* aBuilder,
+                                     nsDisplayList* aList) {
+  if (!IsVisibleForPainting()) return;
+
+  DisplayOutsetBoxShadowUnconditional(aBuilder, aList);
+}
+
 void nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
                             nsDisplayList* aList) {
   if (!IsVisibleForPainting()) return;
@@ -2417,19 +2453,12 @@ void nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  const auto* effects = StyleEffects();
-  if (effects->HasBoxShadowWithInset(false)) {
-    aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowOuter>(aBuilder,
-                                                                       this);
-  }
+  DisplayOutsetBoxShadowUnconditional(aBuilder, aLists.BorderBackground());
 
   bool bgIsThemed =
       DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
 
-  if (effects->HasBoxShadowWithInset(true)) {
-    aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowInner>(aBuilder,
-                                                                       this);
-  }
+  DisplayInsetBoxShadowUnconditional(aBuilder, aLists.BorderBackground());
 
   // If there's a themed background, we should not create a border item.
   // It won't be rendered.
