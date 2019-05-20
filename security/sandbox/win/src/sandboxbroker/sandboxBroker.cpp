@@ -508,6 +508,13 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       sandbox::MITIGATION_DEP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
+#if defined(_M_ARM64)
+  // Disable CFG on older versions of ARM64 Windows to avoid a crash in COM.
+  if (!IsWin10Sep2018UpdateOrLater()) {
+    mitigations |= sandbox::MITIGATION_CONTROL_FLOW_GUARD_DISABLE;
+  }
+#endif
+
   if (aSandboxLevel > 4) {
     result = mPolicy->SetAlternateDesktop(false);
     if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
