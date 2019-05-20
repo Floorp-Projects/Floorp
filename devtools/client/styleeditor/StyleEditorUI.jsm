@@ -38,6 +38,8 @@ const PREF_SIDEBAR_WIDTH = "devtools.styleeditor.mediaSidebarWidth";
 const PREF_NAV_WIDTH = "devtools.styleeditor.navSidebarWidth";
 const PREF_ORIG_SOURCES = "devtools.source-map.client-service.enabled";
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
+
 /**
  * StyleEditorUI is controls and builds the UI of the Style Editor, including
  * maintaining a list of editors for each stylesheet on a debuggee.
@@ -897,12 +899,12 @@ StyleEditorUI.prototype = {
         }
         inSource = true;
 
-        const div = this._panelDoc.createElement("div");
+        const div = this._panelDoc.createElementNS(HTML_NS, "div");
         div.className = "media-rule-label";
         div.addEventListener("click",
                              this._jumpToLocation.bind(this, location));
 
-        const cond = this._panelDoc.createElement("div");
+        const cond = this._panelDoc.createElementNS(HTML_NS, "div");
         cond.className = "media-rule-condition";
         if (!rule.matches) {
           cond.classList.add("media-condition-unmatched");
@@ -914,7 +916,7 @@ StyleEditorUI.prototype = {
         }
         div.appendChild(cond);
 
-        const link = this._panelDoc.createElement("div");
+        const link = this._panelDoc.createElementNS(HTML_NS, "div");
         link.className = "media-rule-line theme-link";
         if (location.line != -1) {
           link.textContent = ":" + location.line;
@@ -950,7 +952,7 @@ StyleEditorUI.prototype = {
       );
       element.appendChild(node);
 
-      const link = this._panelDoc.createElement("a");
+      const link = this._panelDoc.createElementNS(HTML_NS, "a");
       link.href = "#";
       link.className = "media-responsive-mode-toggle";
       link.textContent = rawText.substring(match.index, matchEnd);
