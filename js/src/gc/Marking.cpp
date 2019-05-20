@@ -738,6 +738,30 @@ void DoMarking(GCMarker* gcmarker, const T& thing) {
   ApplyGCThingTyped(thing, [gcmarker](auto t) { DoMarking(gcmarker, t); });
 }
 
+JS_PUBLIC_API void js::gc::PerformIncrementalReadBarrier(JS::GCCellPtr thing) {
+  // Optimized marking for read barriers. This is called from
+  // ExposeGCThingToActiveJS which has already checked the prerequisites for
+  // performing a read barrier. This means we can skip a bunch of checks and
+  // call info the tracer directly.
+
+  MOZ_ASSERT(thing);
+  MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
+
+  TenuredCell* cell = &thing.asCell()->asTenured();
+  Zone* zone = cell->zone();
+  MOZ_ASSERT(zone->needsIncrementalBarrier());
+
+  // Skip disptaching on known tracer type.
+  GCMarker* gcmarker = GCMarker::fromTracer(zone->barrierTracer());
+
+  // Mark the argument, as DoMarking above.
+  ApplyGCThingTyped(thing, [gcmarker](auto thing) {
+                             MOZ_ASSERT(ShouldMark(gcmarker, thing));
+                             CheckTracedThing(gcmarker, thing);
+                             gcmarker->traverse(thing);
+                           });
+}
+
 template <typename T>
 void NoteWeakEdge(GCMarker* gcmarker, T** thingp) {
   // Do per-type marking precondition checks.

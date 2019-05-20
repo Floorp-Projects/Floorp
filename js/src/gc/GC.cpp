@@ -8747,15 +8747,6 @@ JS_PUBLIC_API void JS::IncrementalPreWriteBarrier(GCCellPtr thing) {
   TenuredCell::writeBarrierPre(&thing.asCell()->asTenured());
 }
 
-JS_PUBLIC_API void JS::IncrementalReadBarrier(GCCellPtr thing) {
-  if (!thing) {
-    return;
-  }
-
-  MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
-  ApplyGCThingTyped(thing, [](auto t) { t->readBarrier(t); });
-}
-
 JS_PUBLIC_API bool JS::WasIncrementalGC(JSRuntime* rt) {
   return rt->gc.isIncrementalGc();
 }
