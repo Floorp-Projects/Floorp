@@ -25,7 +25,7 @@ def main(request, response):
       if count > 1:
         filename = "green-256x256.png"
 
-      path = os.path.join(os.path.dirname(__file__), "../../images", filename)
+      path = os.path.join(os.path.dirname(__file__), "../../../images", filename)
       body = open(path, "rb").read()
 
       response.add_required_headers = False

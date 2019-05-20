@@ -1,8 +1,4 @@
 <!DOCTYPE html>
-<!---
-Tentative test against:
-https://github.com/whatwg/fetch/pull/853
--->
 <html>
 <head>
   <meta charset="utf-8">
@@ -39,9 +35,9 @@ https://github.com/whatwg/fetch/pull/853
 
   promise_test(async (test) => {
     var request_token = token();
-    const uri = 'stale-script.py?token=' + request_token;
+    const uri = 'resources/stale-script.py?token=' + request_token;
 
-    await setupRegistrationAndWaitToBeControlled(test, 'stale-script.py');
+    await setupRegistrationAndWaitToBeControlled(test, 'resources/stale-script.py');
 
     var service_worker_count = 0;
     navigator.serviceWorker.addEventListener('message', function once(event) {
@@ -54,7 +50,7 @@ https://github.com/whatwg/fetch/pull/853
     const response2 = await fetch(uri);
     assert_equals(response.headers.get('Unique-Id'), response2.headers.get('Unique-Id'));
     while(true) {
-      const revalidation_check = await fetch(`stale-script.py?query&token=` + request_token);
+      const revalidation_check = await fetch(`resources/stale-script.py?query&token=` + request_token);
       if (revalidation_check.headers.get('Count') == '2') {
         // The service worker should not see the revalidation request.
         assert_equals(service_worker_count, 2);
