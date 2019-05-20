@@ -40,6 +40,8 @@ fun String?.urlToTrimmedHost(): String {
             else -> url.host
         }
     } catch (e: MalformedURLException) {
-        ""
+        this.urlToHost()
+    } catch (e: StringIndexOutOfBoundsException) {
+        this.urlToHost()
     }
 }
