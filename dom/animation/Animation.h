@@ -51,15 +51,7 @@ class Animation : public DOMEventTargetHelper,
 
  public:
   explicit Animation(nsIGlobalObject* aGlobal)
-      : DOMEventTargetHelper(aGlobal),
-        mPlaybackRate(1.0),
-        mAnimationIndex(sNextAnimationIndex++),
-        mCachedChildIndex(-1),
-        mPendingState(PendingState::NotPending),
-        mFinishedAtLastComposeStyle(false),
-        mIsRelevant(false),
-        mFinishedIsResolved(false),
-        mSyncWithGeometricAnimations(false) {}
+      : DOMEventTargetHelper(aGlobal), mAnimationIndex(sNextAnimationIndex++) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Animation, DOMEventTargetHelper)
@@ -527,7 +519,7 @@ class Animation : public DOMEventTargetHelper,
   Nullable<TimeDuration> mHoldTime;             // Animation timescale
   Nullable<TimeDuration> mPendingReadyTime;     // Timeline timescale
   Nullable<TimeDuration> mPreviousCurrentTime;  // Animation timescale
-  double mPlaybackRate;
+  double mPlaybackRate = 1.0;
   Maybe<double> mPendingPlaybackRate;
 
   // A Promise that is replaced on each call to Play()
@@ -554,7 +546,7 @@ class Animation : public DOMEventTargetHelper,
 
   // While ordering Animation objects for event dispatch, the index of the
   // target node in its parent may be cached in mCachedChildIndex.
-  int32_t mCachedChildIndex;
+  int32_t mCachedChildIndex = -1;
 
   // Indicates if the animation is in the pending state (and what state it is
   // waiting to enter when it finished pending). We use this rather than
@@ -563,23 +555,23 @@ class Animation : public DOMEventTargetHelper,
   // from the PendingAnimationTracker while it is waiting for the next tick
   // (see TriggerOnNextTick for details).
   enum class PendingState : uint8_t { NotPending, PlayPending, PausePending };
-  PendingState mPendingState;
+  PendingState mPendingState = PendingState::NotPending;
 
-  bool mFinishedAtLastComposeStyle;
+  bool mFinishedAtLastComposeStyle = false;
   // Indicates that the animation should be exposed in an element's
   // getAnimations() list.
-  bool mIsRelevant;
+  bool mIsRelevant = false;
 
   // True if mFinished is resolved or would be resolved if mFinished has
   // yet to be created. This is not set when mFinished is rejected since
   // in that case mFinished is immediately reset to represent a new current
   // finished promise.
-  bool mFinishedIsResolved;
+  bool mFinishedIsResolved = false;
 
   // True if this animation was triggered at the same time as one or more
   // geometric animations and hence we should run any transform animations on
   // the main thread.
-  bool mSyncWithGeometricAnimations;
+  bool mSyncWithGeometricAnimations = false;
 
   RefPtr<MicroTaskRunnable> mFinishNotificationTask;
 
