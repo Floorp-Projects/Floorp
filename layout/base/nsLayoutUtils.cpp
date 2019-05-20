@@ -9959,12 +9959,11 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
     return Nothing();
   }
 
-  // Bug 1429299 - Implement offset-distance for motion path. For now, we use
-  // the default value, i.e. 0%.
-  float distance = 0.0;
-  float angle = 0.0;
+  gfx::Float angle = 0.0;
   Point point;
   if (display->mOffsetPath.IsPath()) {
+    const Span<const StylePathCommand>& path =
+        display->mOffsetPath.AsPath()._0.AsSpan();
     // Build the path and compute the point and angle for creating the
     // equivalent translate and rotate.
     // Here we only need to build a valid path for motion path, so
@@ -9978,16 +9977,36 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
         gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
     RefPtr<PathBuilder> builder =
         drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
-    RefPtr<gfx::Path> gfxPath =
-        SVGPathData::BuildPath(display->mOffsetPath.AsPath()._0.AsSpan(),
-                               builder, NS_STYLE_STROKE_LINECAP_BUTT, 0.0);
+    RefPtr<gfx::Path> gfxPath = SVGPathData::BuildPath(
+        path, builder, NS_STYLE_STROKE_LINECAP_BUTT, 0.0);
     if (!gfxPath) {
       return Nothing();
     }
-    float pathLength = gfxPath->ComputeLength();
-    float computedDistance = distance * pathLength;
+
+    // Per the spec, we have to convert offset distance to pixels, with 100%
+    // being converted to total length. So here |gfxPath| is built with CSS
+    // pixel, and we calculate |pathLength| and |computedDistance| with CSS
+    // pixel as well.
+    gfx::Float pathLength = gfxPath->ComputeLength();
+    gfx::Float usedDistance =
+      display->mOffsetDistance.ResolveToCSSPixels(CSSCoord(pathLength));
+    if (!path.empty() && path.rbegin()->IsClosePath()) {
+      // Per the spec, let used offset distance be equal to offset distance
+      // modulus the total length of the path. If the total length of the path
+      // is 0, used offset distance is also 0.
+      usedDistance = pathLength > 0.0 ? fmod(usedDistance, pathLength) : 0.0;
+      // We make sure |usedDistance| is 0.0 or a positive value.
+      // https://github.com/w3c/fxtf-drafts/issues/339
+      if (usedDistance < 0.0) {
+        usedDistance += pathLength;
+      }
+    } else {
+      // Per the spec, for unclosed interval, let used offset distance be equal
+      // to offset distance clamped by 0 and the total length of the path.
+      usedDistance = clamped(usedDistance, 0.0f, pathLength);
+    }
     Point tangent;
-    point = gfxPath->ComputePointAtLength(computedDistance, &tangent);
+    point = gfxPath->ComputePointAtLength(usedDistance, &tangent);
     // Bug 1429301 - Implement offset-rotate for motion path.
     // After implement offset-rotate, |angle| will be adjusted more.
     // For now, the default value of offset-rotate is "auto", so we use the
