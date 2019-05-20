@@ -282,6 +282,7 @@ class RemoteSettingsClient extends EventEmitter {
   async maybeSync(expectedTimestamp, options = {}) {
     const { loadDump = true, trigger = "manual" } = options;
 
+    let importedFromDump = [];
     const startedAt = new Date();
     let reportStatus = null;
     try {
@@ -295,7 +296,11 @@ class RemoteSettingsClient extends EventEmitter {
       // cold start.
       if (!collectionLastModified && loadDump) {
         try {
-          await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
+          const imported = await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
+          // The worker only returns an integer. List the imported records to build the sync event.
+          if (imported > 0) {
+            ({ data: importedFromDump } = await kintoCollection.list());
+          }
           collectionLastModified = await kintoCollection.db.getLastModified();
         } catch (e) {
           // Report but go-on.
@@ -337,6 +342,9 @@ class RemoteSettingsClient extends EventEmitter {
           // With SERVER_WINS, there cannot be any conflicts, but don't silent it anyway.
           throw new Error("Synced failed");
         }
+        // The records imported from the dump should be considered as "created" for the
+        // listeners.
+        syncResult.created = importedFromDump.concat(syncResult.created);
       } catch (e) {
         if (e instanceof RemoteSettingsClient.InvalidSignatureError) {
           // Signature verification failed during synchronization.
