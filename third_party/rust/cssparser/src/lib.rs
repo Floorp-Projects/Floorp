@@ -4,7 +4,6 @@
 
 #![crate_name = "cssparser"]
 #![crate_type = "rlib"]
-
 #![cfg_attr(feature = "bench", feature(test))]
 #![deny(missing_docs)]
 
@@ -32,7 +31,7 @@ As a consequence, when calling another parsing function, either:
 
 * Any `Err(())` return value must be propagated.
   This happens by definition for tail calls,
-  and can otherwise be done with the `try!` macro.
+  and can otherwise be done with the `?` operator.
 * Or the call must be wrapped in a `Parser::try` call.
   `try` takes a closure that takes a `Parser` and returns a `Result`,
   calls it once,
@@ -46,7 +45,7 @@ Examples:
 // 'none' | <image>
 fn parse_background_image(context: &ParserContext, input: &mut Parser)
                                     -> Result<Option<Image>, ()> {
-    if input.try(|input| input.expect_ident_matching("none")).is_ok() {
+    if input.try_parse(|input| input.expect_ident_matching("none")).is_ok() {
         Ok(None)
     } else {
         Image::parse(context, input).map(Some)  // tail call
@@ -58,50 +57,68 @@ fn parse_background_image(context: &ParserContext, input: &mut Parser)
 // [ <length> | <percentage> ] [ <length> | <percentage> ]?
 fn parse_border_spacing(_context: &ParserContext, input: &mut Parser)
                           -> Result<(LengthOrPercentage, LengthOrPercentage), ()> {
-    let first = try!(LengthOrPercentage::parse);
-    let second = input.try(LengthOrPercentage::parse).unwrap_or(first);
+    let first = LengthOrPercentage::parse?;
+    let second = input.try_parse(LengthOrPercentage::parse).unwrap_or(first);
     (first, second)
 }
 ```
 
 */
 
-#![recursion_limit="200"]  // For color::parse_color_keyword
+#![recursion_limit = "200"] // For color::parse_color_keyword
 
 extern crate dtoa_short;
 extern crate itoa;
-#[macro_use] extern crate cssparser_macros;
-#[macro_use] extern crate matches;
-#[macro_use] extern crate procedural_masquerade;
-#[doc(hidden)] pub extern crate phf as _internal__phf;
-#[cfg(test)] extern crate encoding_rs;
-#[cfg(test)] extern crate difference;
-#[cfg(test)] extern crate rustc_serialize;
-#[cfg(feature = "serde")] extern crate serde;
-#[cfg(feature = "heapsize")] #[macro_use] extern crate heapsize;
+#[macro_use]
+extern crate cssparser_macros;
+#[macro_use]
+extern crate matches;
+#[macro_use]
+extern crate procedural_masquerade;
+#[cfg(test)]
+extern crate difference;
+#[cfg(test)]
+extern crate encoding_rs;
+#[doc(hidden)]
+pub extern crate phf as _internal__phf;
+#[cfg(test)]
+extern crate rustc_serialize;
+#[cfg(feature = "serde")]
+extern crate serde;
+#[cfg(feature = "heapsize")]
+#[macro_use]
+extern crate heapsize;
 extern crate smallvec;
 
 pub use cssparser_macros::*;
 
-pub use tokenizer::{Token, SourcePosition, SourceLocation};
-pub use rules_and_declarations::{parse_important};
-pub use rules_and_declarations::{DeclarationParser, DeclarationListParser, parse_one_declaration};
-pub use rules_and_declarations::{RuleListParser, parse_one_rule};
-pub use rules_and_declarations::{AtRuleType, QualifiedRuleParser, AtRuleParser};
-pub use from_bytes::{stylesheet_encoding, EncodingSupport};
-pub use color::{RGBA, Color, parse_color_keyword, AngleOrNumber, NumberOrPercentage, ColorComponentParser};
-pub use nth::parse_nth;
-pub use serializer::{ToCss, CssStringWriter, serialize_identifier, serialize_name, serialize_string, TokenSerializationType};
-pub use parser::{Parser, Delimiter, Delimiters, ParserState, ParserInput};
-pub use parser::{ParseError, ParseErrorKind, BasicParseError, BasicParseErrorKind};
-pub use unicode_range::UnicodeRange;
+pub use color::{
+    parse_color_keyword, AngleOrNumber, Color, ColorComponentParser, NumberOrPercentage, RGBA,
+};
 pub use cow_rc_str::CowRcStr;
+pub use from_bytes::{stylesheet_encoding, EncodingSupport};
+pub use nth::parse_nth;
+pub use parser::{BasicParseError, BasicParseErrorKind, ParseError, ParseErrorKind};
+pub use parser::{Delimiter, Delimiters, Parser, ParserInput, ParserState};
+pub use rules_and_declarations::parse_important;
+pub use rules_and_declarations::{parse_one_declaration, DeclarationListParser, DeclarationParser};
+pub use rules_and_declarations::{parse_one_rule, RuleListParser};
+pub use rules_and_declarations::{AtRuleParser, AtRuleType, QualifiedRuleParser};
+pub use serializer::{
+    serialize_identifier, serialize_name, serialize_string, CssStringWriter, ToCss,
+    TokenSerializationType,
+};
+pub use tokenizer::{SourceLocation, SourcePosition, Token};
+pub use unicode_range::UnicodeRange;
 
 // For macros
-#[doc(hidden)] pub use macros::_internal__to_lowercase;
+#[doc(hidden)]
+pub use macros::_internal__to_lowercase;
 
 // For macros when used in this crate. Unsure how $crate works with procedural-masquerade.
-mod cssparser { pub use _internal__phf; }
+mod cssparser {
+    pub use _internal__phf;
+}
 
 #[macro_use]
 mod macros;
@@ -115,13 +132,15 @@ mod tokenizer;
 mod tokenizer {
     include!(concat!(env!("OUT_DIR"), "/tokenizer.rs"));
 }
-mod parser;
-mod from_bytes;
 mod color;
+mod cow_rc_str;
+mod from_bytes;
 mod nth;
+mod parser;
 mod serializer;
 mod unicode_range;
-mod cow_rc_str;
 
-#[cfg(test)] mod tests;
-#[cfg(test)] mod size_of_tests;
+#[cfg(test)]
+mod size_of_tests;
+#[cfg(test)]
+mod tests;

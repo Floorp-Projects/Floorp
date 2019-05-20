@@ -12,7 +12,7 @@
 
 [package]
 name = "cssparser"
-version = "0.25.3"
+version = "0.25.5"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 build = "build.rs"
 exclude = ["src/css-parsing-tests/**", "src/big-data-url.css"]
