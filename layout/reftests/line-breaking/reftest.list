@@ -33,7 +33,7 @@ skip-if(gtkWidget) == quotationmarks-cjk-1.html quotationmarks-cjk-1-ref.html
 == smileys-1.html smileys-1-ref.html
 == smileys-2.html smileys-2-ref.html
 == space-cluster-1.html space-cluster-1-ref.html
-== space-cluster-2.html space-cluster-2-ref.html
+random-if(cocoaWidget) == space-cluster-2.html space-cluster-2-ref.html # harfbuzz vs coretext, different positioning of stray diacritics
 == surrogates-1.html surrogates-1-ref.html
 == surrogates-2.html surrogates-2-ref.html
 == surrogates-3.html surrogates-3-ref.html
