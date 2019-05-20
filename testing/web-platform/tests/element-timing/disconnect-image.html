@@ -1,12 +1,7 @@
 <!DOCTYPE HTML>
 <meta charset=utf-8>
-<title>Element Timing: observe large elements</title>
+<title>Element Timing: element attribute returns null when element is disconnected</title>
 <body>
-<style>
-body {
-  margin: 0;
-}
-</style>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="resources/element-timing-helpers.js"></script>
@@ -20,28 +15,28 @@ body {
         const entry = entryList.getEntries()[0];
         const index = window.location.href.lastIndexOf('/');
         const pathname = window.location.href.substring(0, index) +
-            '/resources/square20.jpg';
-        checkElement(entry, pathname, '', 'large_one', beforeRender, img);
-        // Assume viewport hasn't changed, so the element occupies all of it.
-        checkRect(entry,
-          [0, document.documentElement.clientWidth, 0, document.documentElement.clientHeight]);
-        checkNaturalSize(entry, 20, 20);
+            '/resources/square100.png';
+        // This method will check that entry.element is |img|.
+        checkElement(entry, pathname, 'my_image', 'my_id', beforeRender, img);
+
+        img.parentNode.removeChild(img);
+        // After removing image, entry.element should return null.
+        assert_equals(entry.element, null);
       })
     );
     observer.observe({entryTypes: ['element']});
     // We add the image during onload to be sure that the observer is registered
     // in time for it to observe the element timing.
     window.onload = () => {
-      // Add an image setting width and height equal to viewport.
+      // Add image of width equal to 100 and height equal to 100.
       img = document.createElement('img');
-      img.src = 'resources/square20.jpg';
-      img.width = document.documentElement.clientWidth;
-      img.height = document.documentElement.clientHeight;
-      img.setAttribute('id', 'large_one');
+      img.src = 'resources/square100.png';
+      img.setAttribute('elementtiming', 'my_image');
+      img.setAttribute('id', 'my_id');
       document.body.appendChild(img);
       beforeRender = performance.now();
     };
-  }, 'Large img element is observable.');
+  }, 'Disconnected elements have null as their |element| attribute.');
 </script>
 
 </body>
