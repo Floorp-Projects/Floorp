@@ -26,8 +26,10 @@ static LoadInfo ADRPDecode(const uintptr_t aPC, const uint32_t aInst) {
   const uint32_t kMaskDataProcImmPcRelativeImmHi = 0x00FFFFE0;
 
   uintptr_t base = aPC;
-  uintptr_t offset = ((aInst & kMaskDataProcImmPcRelativeImmHi) >> 3) |
-                     ((aInst & kMaskDataProcImmPcRelativeImmLo) >> 29);
+  intptr_t offset = SignExtend<intptr_t>(
+      ((aInst & kMaskDataProcImmPcRelativeImmHi) >> 3) |
+          ((aInst & kMaskDataProcImmPcRelativeImmLo) >> 29),
+      21);
   base &= ~0xFFFULL;
   offset <<= 12;
 
