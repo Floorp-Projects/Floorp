@@ -8,6 +8,9 @@
     <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
+    <script src="/resources/testdriver.js"></script>
+    <script src="/resources/testdriver-actions.js"></script>
+    <script src="/resources/testdriver-vendor.js"></script>
     <script type="text/javascript" src="pointerevent_support.js"></script>
     <script type="text/javascript">
       var detected_pointertypes = {};
@@ -23,12 +26,14 @@
       function run() {
         var test_pointer_event = setup_pointerevent_test("Event sequence at implicit release on drag", ["touch"]);
 
+        var button = document.getElementById("done");
+        var clickIsReceived = false;
         on_event(document.getElementById("done"), "click", function() {
           test_pointer_event.step(function () {
             var expected_events = "pointercancel, lostpointercapture, pointerout, pointerleave";
             assert_equals(event_log.join(", "), expected_events);
           });
-          test_pointer_event.done();
+          clickIsReceived = true;
         });
 
         var target = document.getElementById("target");
@@ -47,6 +52,16 @@
               event_log.push(event.type);
             }
           });
+        });
+
+        // Inject touch inputs.
+        pointerDragInTarget("touch", target, 'right').then(function() {
+          return touchTapInTarget(button);
+        }).then(function() {
+          test_pointer_event.step(function () {
+            assert_true(clickIsReceived, "click should be received before the test finishes");
+          }, "click should be received before the test finishes");
+          test_pointer_event.done();
         });
       }
     </script>
