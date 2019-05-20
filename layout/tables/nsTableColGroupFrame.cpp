@@ -357,36 +357,7 @@ void nsTableColGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // ignored, except when explicitly specified by this specification."
   // CSS outlines and box-shadows fall into this category, so we skip them
   // on these boxes.
-
-  // Collecting column index.
-  AutoTArray<uint32_t, 1> colIdx;
-  for (nsTableColFrame* col = GetFirstColumn(); col; col = col->GetNextCol()) {
-    MOZ_ASSERT(colIdx.IsEmpty() || static_cast<uint32_t>(col->GetColIndex()) >
-                                       colIdx.LastElement());
-    colIdx.AppendElement(col->GetColIndex());
-  }
-
-  if (!colIdx.IsEmpty()) {
-    // We have some actual cells that live inside this rowgroup.
-    nsTableFrame* table = GetTableFrame();
-    nsTableFrame::RowGroupArray rowGroups;
-    table->OrderRowGroups(rowGroups);
-    for (nsTableRowGroupFrame* rowGroup : rowGroups) {
-      auto offset = rowGroup->GetNormalPosition() - GetNormalPosition();
-      if (!aBuilder->GetDirtyRect().Intersects(
-              nsRect(offset, rowGroup->GetSize()))) {
-        continue;
-      }
-      rowGroup->PaintCellBackgroundsForColumns(
-          this, aBuilder,
-          aBuilder->GetTableBackgroundSet()->ColGroupBackgrounds(), colIdx,
-          offset);
-    }
-  }
-
-  for (nsIFrame* kid : PrincipalChildList()) {
-    BuildDisplayListForChild(aBuilder, kid, aLists);
-  }
+  MOZ_ASSERT_UNREACHABLE("Colgroups don't paint themselves");
 }
 
 nsTableColFrame* nsTableColGroupFrame::GetFirstColumn() {

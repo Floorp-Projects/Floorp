@@ -119,29 +119,7 @@ void nsTableColFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // ignored, except when explicitly specified by this specification."
   // CSS outlines and box-shadows fall into this category, so we skip them
   // on these boxes.
-
-  // Compute background rect by iterating all cell frame.
-  AutoTArray<uint32_t, 1> colIdx;
-  colIdx.AppendElement(GetColIndex());
-
-  nsTableFrame* table = GetTableFrame();
-  nsTableFrame::RowGroupArray rowGroups;
-  table->OrderRowGroups(rowGroups);
-  for (nsTableRowGroupFrame* rowGroup : rowGroups) {
-    auto offset = rowGroup->GetNormalPosition() - GetNormalPosition() -
-                  GetTableColGroupFrame()->GetNormalPosition();
-    if (!aBuilder->GetDirtyRect().Intersects(
-            nsRect(offset, rowGroup->GetSize()))) {
-      continue;
-    }
-    rowGroup->PaintCellBackgroundsForColumns(
-        this, aBuilder, aBuilder->GetTableBackgroundSet()->ColBackgrounds(),
-        colIdx, offset);
-  }
-
-  for (nsIFrame* kid : PrincipalChildList()) {
-    BuildDisplayListForChild(aBuilder, kid, aLists);
-  }
+  MOZ_ASSERT_UNREACHABLE("Cols don't paint themselves");
 }
 
 int32_t nsTableColFrame::GetSpan() { return StyleTable()->mSpan; }
