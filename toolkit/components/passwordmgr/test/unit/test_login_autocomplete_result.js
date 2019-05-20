@@ -36,26 +36,32 @@ let expectedResults = [
       value: "",
       label: LABEL_NO_USERNAME,
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "tempuser1",
       label: "tempuser1",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testuser2",
       label: "testuser2",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testuser3",
       label: "testuser3",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -71,6 +77,7 @@ let expectedResults = [
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -86,26 +93,32 @@ let expectedResults = [
       value: "",
       label: LABEL_NO_USERNAME,
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "tempuser1",
       label: "tempuser1",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testuser2",
       label: "testuser2",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testuser3",
       label: "testuser3",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -117,282 +130,32 @@ let expectedResults = [
       value: "emptypass1",
       label: LABEL_NO_USERNAME,
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "temppass1",
       label: "tempuser1",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testpass2",
       label: "testuser2",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testpass3",
       label: "testuser3",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
-    }],
-  },
-  {
-    insecureFieldWarningEnabled: true,
-    isSecure: false,
-    isPasswordField: true,
-    matchingLogins,
-    items: [{
-      value: "",
-      label: "This connection is not secure. Logins entered here could be compromised. Learn More",
-      style: "insecureWarning",
-    }, {
-      value: "emptypass1",
-      label: LABEL_NO_USERNAME,
-      style: "loginWithOrigin",
-    }, {
-      value: "temppass1",
-      label: "tempuser1",
-      style: "loginWithOrigin",
-    }, {
-      value: "testpass2",
-      label: "testuser2",
-      style: "loginWithOrigin",
-    }, {
-      value: "testpass3",
-      label: "testuser3",
-      style: "loginWithOrigin",
-    }, {
-      value: "zzzpass4",
-      label: "zzzuser4",
-      style: "loginWithOrigin",
-    }, {
-      value: "",
-      label: "View Saved Logins",
-      style: "loginsFooter",
-    }],
-  },
-  {
-    insecureFieldWarningEnabled: false,
-    isSecure: true,
-    isPasswordField: false,
-    matchingLogins,
-    items: [{
-      value: "",
-      label: LABEL_NO_USERNAME,
-      style: "loginWithOrigin",
-    }, {
-      value: "tempuser1",
-      label: "tempuser1",
-      style: "loginWithOrigin",
-    }, {
-      value: "testuser2",
-      label: "testuser2",
-      style: "loginWithOrigin",
-    }, {
-      value: "testuser3",
-      label: "testuser3",
-      style: "loginWithOrigin",
-    }, {
-      value: "zzzuser4",
-      label: "zzzuser4",
-      style: "loginWithOrigin",
-    }, {
-      value: "",
-      label: "View Saved Logins",
-      style: "loginsFooter",
-    }],
-  },
-  {
-    insecureFieldWarningEnabled: false,
-    isSecure: false,
-    isPasswordField: false,
-    matchingLogins,
-    items: [{
-      value: "",
-      label: LABEL_NO_USERNAME,
-      style: "loginWithOrigin",
-    }, {
-      value: "tempuser1",
-      label: "tempuser1",
-      style: "loginWithOrigin",
-    }, {
-      value: "testuser2",
-      label: "testuser2",
-      style: "loginWithOrigin",
-    }, {
-      value: "testuser3",
-      label: "testuser3",
-      style: "loginWithOrigin",
-    }, {
-      value: "zzzuser4",
-      label: "zzzuser4",
-      style: "loginWithOrigin",
-    }, {
-      value: "",
-      label: "View Saved Logins",
-      style: "loginsFooter",
-    }],
-  },
-  {
-    insecureFieldWarningEnabled: false,
-    isSecure: true,
-    isPasswordField: true,
-    matchingLogins,
-    items: [{
-      value: "emptypass1",
-      label: LABEL_NO_USERNAME,
-      style: "loginWithOrigin",
-    }, {
-      value: "temppass1",
-      label: "tempuser1",
-      style: "loginWithOrigin",
-    }, {
-      value: "testpass2",
-      label: "testuser2",
-      style: "loginWithOrigin",
-    }, {
-      value: "testpass3",
-      label: "testuser3",
-      style: "loginWithOrigin",
-    }, {
-      value: "zzzpass4",
-      label: "zzzuser4",
-      style: "loginWithOrigin",
-    }, {
-      value: "",
-      label: "View Saved Logins",
-      style: "loginsFooter",
-    }],
-  },
-  {
-    insecureFieldWarningEnabled: false,
-    isSecure: false,
-    isPasswordField: true,
-    matchingLogins,
-    items: [{
-      value: "emptypass1",
-      label: LABEL_NO_USERNAME,
-      style: "loginWithOrigin",
-    }, {
-      value: "temppass1",
-      label: "tempuser1",
-      style: "loginWithOrigin",
-    }, {
-      value: "testpass2",
-      label: "testuser2",
-      style: "loginWithOrigin",
-    }, {
-      value: "testpass3",
-      label: "testuser3",
-      style: "loginWithOrigin",
-    }, {
-      value: "zzzpass4",
-      label: "zzzuser4",
-      style: "loginWithOrigin",
-    }, {
-      value: "",
-      label: "View Saved Logins",
-      style: "loginsFooter",
-    }],
-  },
-  {
-    insecureFieldWarningEnabled: true,
-    isSecure: true,
-    isPasswordField: false,
-    matchingLogins,
-    items: [{
-      value: "",
-      label: LABEL_NO_USERNAME,
-      style: "loginWithOrigin",
-    }, {
-      value: "tempuser1",
-      label: "tempuser1",
-      style: "loginWithOrigin",
-    }, {
-      value: "testuser2",
-      label: "testuser2",
-      style: "loginWithOrigin",
-    }, {
-      value: "testuser3",
-      label: "testuser3",
-      style: "loginWithOrigin",
-    }, {
-      value: "zzzuser4",
-      label: "zzzuser4",
-      style: "loginWithOrigin",
-    }, {
-      value: "",
-      label: "View Saved Logins",
-      style: "loginsFooter",
-    }],
-  },
-  {
-    insecureFieldWarningEnabled: true,
-    isSecure: false,
-    isPasswordField: false,
-    matchingLogins,
-    items: [{
-      value: "",
-      label: "This connection is not secure. Logins entered here could be compromised. Learn More",
-      style: "insecureWarning",
-    }, {
-      value: "",
-      label: LABEL_NO_USERNAME,
-      style: "loginWithOrigin",
-    }, {
-      value: "tempuser1",
-      label: "tempuser1",
-      style: "loginWithOrigin",
-    }, {
-      value: "testuser2",
-      label: "testuser2",
-      style: "loginWithOrigin",
-    }, {
-      value: "testuser3",
-      label: "testuser3",
-      style: "loginWithOrigin",
-    }, {
-      value: "zzzuser4",
-      label: "zzzuser4",
-      style: "loginWithOrigin",
-    }, {
-      value: "",
-      label: "View Saved Logins",
-      style: "loginsFooter",
-    }],
-  },
-  {
-    insecureFieldWarningEnabled: true,
-    isSecure: true,
-    isPasswordField: true,
-    matchingLogins,
-    items: [{
-      value: "emptypass1",
-      label: LABEL_NO_USERNAME,
-      style: "loginWithOrigin",
-    }, {
-      value: "temppass1",
-      label: "tempuser1",
-      style: "loginWithOrigin",
-    }, {
-      value: "testpass2",
-      label: "testuser2",
-      style: "loginWithOrigin",
-    }, {
-      value: "testpass3",
-      label: "testuser3",
-      style: "loginWithOrigin",
-    }, {
-      value: "zzzpass4",
-      label: "zzzuser4",
-      style: "loginWithOrigin",
-    }, {
-      value: "",
-      label: "View Saved Logins",
-      style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -408,26 +171,32 @@ let expectedResults = [
       value: "emptypass1",
       label: LABEL_NO_USERNAME,
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "temppass1",
       label: "tempuser1",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testpass2",
       label: "testuser2",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testpass3",
       label: "testuser3",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -439,26 +208,336 @@ let expectedResults = [
       value: "",
       label: LABEL_NO_USERNAME,
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "tempuser1",
       label: "tempuser1",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testuser2",
       label: "testuser2",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testuser3",
       label: "testuser3",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: false,
+    isSecure: false,
+    isPasswordField: false,
+    matchingLogins,
+    items: [{
+      value: "",
+      label: LABEL_NO_USERNAME,
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "tempuser1",
+      label: "tempuser1",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testuser2",
+      label: "testuser2",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testuser3",
+      label: "testuser3",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "zzzuser4",
+      label: "zzzuser4",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+      comment: "mochi.test",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: false,
+    isSecure: true,
+    isPasswordField: true,
+    matchingLogins,
+    items: [{
+      value: "emptypass1",
+      label: LABEL_NO_USERNAME,
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "temppass1",
+      label: "tempuser1",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testpass2",
+      label: "testuser2",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testpass3",
+      label: "testuser3",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "zzzpass4",
+      label: "zzzuser4",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+      comment: "mochi.test",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: false,
+    isSecure: false,
+    isPasswordField: true,
+    matchingLogins,
+    items: [{
+      value: "emptypass1",
+      label: LABEL_NO_USERNAME,
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "temppass1",
+      label: "tempuser1",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testpass2",
+      label: "testuser2",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testpass3",
+      label: "testuser3",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "zzzpass4",
+      label: "zzzuser4",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+      comment: "mochi.test",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: true,
+    isSecure: true,
+    isPasswordField: false,
+    matchingLogins,
+    items: [{
+      value: "",
+      label: LABEL_NO_USERNAME,
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "tempuser1",
+      label: "tempuser1",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testuser2",
+      label: "testuser2",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testuser3",
+      label: "testuser3",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "zzzuser4",
+      label: "zzzuser4",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+      comment: "mochi.test",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: true,
+    isSecure: false,
+    isPasswordField: false,
+    matchingLogins,
+    items: [{
+      value: "",
+      label: "This connection is not secure. Logins entered here could be compromised. Learn More",
+      style: "insecureWarning",
+    }, {
+      value: "",
+      label: LABEL_NO_USERNAME,
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "tempuser1",
+      label: "tempuser1",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testuser2",
+      label: "testuser2",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testuser3",
+      label: "testuser3",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "zzzuser4",
+      label: "zzzuser4",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+      comment: "mochi.test",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: true,
+    isSecure: true,
+    isPasswordField: true,
+    matchingLogins,
+    items: [{
+      value: "emptypass1",
+      label: LABEL_NO_USERNAME,
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "temppass1",
+      label: "tempuser1",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testpass2",
+      label: "testuser2",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testpass3",
+      label: "testuser3",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "zzzpass4",
+      label: "zzzuser4",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+      comment: "mochi.test",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: true,
+    isSecure: false,
+    isPasswordField: true,
+    matchingLogins,
+    items: [{
+      value: "",
+      label: "This connection is not secure. Logins entered here could be compromised. Learn More",
+      style: "insecureWarning",
+    }, {
+      value: "emptypass1",
+      label: LABEL_NO_USERNAME,
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "temppass1",
+      label: "tempuser1",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testpass2",
+      label: "testuser2",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testpass3",
+      label: "testuser3",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "zzzpass4",
+      label: "zzzuser4",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+      comment: "mochi.test",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: false,
+    isSecure: true,
+    isPasswordField: false,
+    matchingLogins,
+    items: [{
+      value: "",
+      label: LABEL_NO_USERNAME,
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "tempuser1",
+      label: "tempuser1",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testuser2",
+      label: "testuser2",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "testuser3",
+      label: "testuser3",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "zzzuser4",
+      label: "zzzuser4",
+      style: "loginWithOrigin",
+      comment: "mochi.test:8888",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -470,6 +549,7 @@ let expectedResults = [
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -482,6 +562,7 @@ let expectedResults = [
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -493,26 +574,32 @@ let expectedResults = [
       value: "",
       label: LABEL_NO_USERNAME,
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "tempuser1",
       label: "tempuser1",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testuser2",
       label: "testuser2",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testuser3",
       label: "testuser3",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -524,26 +611,32 @@ let expectedResults = [
       value: "emptypass1",
       label: LABEL_NO_USERNAME,
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "temppass1",
       label: "tempuser1",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testpass2",
       label: "testuser2",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testpass3",
       label: "testuser3",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -555,26 +648,32 @@ let expectedResults = [
       value: "emptypass1",
       label: LABEL_NO_USERNAME,
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "temppass1",
       label: "tempuser1",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testpass2",
       label: "testuser2",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "testpass3",
       label: "testuser3",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+      comment: "mochi.test:8888",
     }, {
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -586,6 +685,7 @@ let expectedResults = [
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -610,6 +710,7 @@ let expectedResults = [
       value: "",
       label: "View Saved Logins",
       style: "loginsFooter",
+      comment: "mochi.test",
     }],
   },
   {
@@ -633,6 +734,7 @@ add_task(async function test_all_patterns() {
     Services.prefs.setBoolPref(PREF_INSECURE_FIELD_WARNING_ENABLED,
                                pattern.insecureFieldWarningEnabled);
     let actual = new LoginAutoCompleteResult(pattern.searchString || "", pattern.matchingLogins, {
+      hostname: "mochi.test",
       generatedPassword: pattern.generatedPassword,
       isSecure: pattern.isSecure,
       isPasswordField: pattern.isPasswordField,
@@ -642,6 +744,7 @@ add_task(async function test_all_patterns() {
       equal(actual.getValueAt(index), item.value, `Value ${index}`);
       equal(actual.getLabelAt(index), item.label, `Label ${index}`);
       equal(actual.getStyleAt(index), item.style, `Style ${index}`);
+      equal(actual.getCommentAt(index), item.comment || "", `Comment ${index}`);
     });
 
     if (pattern.items.length != 0) {
