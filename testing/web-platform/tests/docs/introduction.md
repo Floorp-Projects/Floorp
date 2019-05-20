@@ -79,7 +79,7 @@ expectations:
   expected. They get their name from the JavaScript harness that's used to
   execute them.
 
-* WebDriver tests are written in Python and test [the WebDriver browser
+* [wdspec]() tests are written in Python and test [the WebDriver browser
   automation protocol](https://w3c.github.io/webdriver/)
 
 * [Manual tests][manual] rely on a human to run them and determine their
@@ -114,3 +114,4 @@ free to add yourself to the META.yml file!
 [manual]: {{ site.baseurl }}{% link _writing-tests/manual.md %}
 [github-intro]: {{ site.baseurl }}{% link _appendix/github-intro.md %}
 [running-from-local-system]: {{ site.baseurl}}{% link _running-tests/from-local-system.md %}
+[wdspec]: {{ site.baseurl }}{% link _writing-tests/wdspec.md %}
