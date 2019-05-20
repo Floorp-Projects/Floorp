@@ -38,10 +38,7 @@ class _BookmarkPanelHub {
     this._handleMessageRequest = handleMessageRequest;
     this._addImpression = addImpression;
     this._dispatch = dispatch;
-    this._l10n = new DOMLocalization([
-      "browser/branding/sync-brand.ftl",
-      "browser/newtab/asrouter.ftl",
-    ]);
+    this._l10n = new DOMLocalization();
     this._initialized = true;
   }
 
@@ -92,6 +89,9 @@ class _BookmarkPanelHub {
     };
 
     if (response && response.content) {
+      // Only insert localization files if we need to show a message
+      win.MozXULElement.insertFTLIfNeeded("browser/newtab/asrouter.ftl");
+      win.MozXULElement.insertFTLIfNeeded("browser/branding/sync-brand.ftl");
       this.showMessage(response.content, target, win);
       this.sendImpression();
       this.sendUserEventTelemetry("IMPRESSION", win);
@@ -149,7 +149,6 @@ class _BookmarkPanelHub {
       recommendation.appendChild(title);
       recommendation.appendChild(content);
       recommendation.appendChild(cta);
-      this._l10n.translateElements([...recommendation.children]);
       target.container.appendChild(recommendation);
     }
 
