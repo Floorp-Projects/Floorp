@@ -1,8 +1,4 @@
 <!DOCTYPE html>
-<!---
-Tentative test against:
-https://github.com/whatwg/fetch/pull/853
--->
 <meta charset="utf-8">
 <title>Tests Stale While Revalidate works for images</title>
 <script src="/resources/testharness.js"></script>
@@ -28,10 +24,10 @@ async_test(t => {
         assert_equals(img2.width, 16, "image dimension");
         var checkResult = () => {
           // We poll because we don't know when the revalidation will occur.
-          fetch("stale-image.py?query&token=" + request_token).then(t.step_func((response) => {
+          fetch("resources/stale-image.py?query&token=" + request_token).then(t.step_func((response) => {
             var count = response.headers.get("Count");
             if (count == '2') {
-                t.done();
+              t.done();
             } else {
               t.step_timeout(checkResult, 25);
             }
@@ -39,14 +35,14 @@ async_test(t => {
         };
         t.step_timeout(checkResult, 25);
       });
-      img2.src = "stale-image.py?token=" + request_token;
+      img2.src = "resources/stale-image.py?token=" + request_token;
       childDocument.body.appendChild(img2);
     }, 0);
   });
 }, 'Cache returns stale resource');
 
 var img = document.createElement("img");
-img.src = "stale-image.py?token=" + request_token;
+img.src = "resources/stale-image.py?token=" + request_token;
 img.id = "firstimage";
 document.body.appendChild(img);
 </script>
