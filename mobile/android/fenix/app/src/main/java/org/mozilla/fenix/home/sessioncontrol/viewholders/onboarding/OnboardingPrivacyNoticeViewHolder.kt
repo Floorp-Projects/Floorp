@@ -17,7 +17,7 @@ class OnboardingPrivacyNoticeViewHolder(view: View) : RecyclerView.ViewHolder(vi
 
     init {
         val icon = view.context.getDrawable(R.drawable.ic_onboarding_privacy_notice)
-        val size = view.context.dimen(R.dimen.onboarding_privacy_notice_icon_height_width)
+        val size = view.context.dimen(R.dimen.onboarding_header_icon_height_width)
         icon?.setBounds(0, 0, size, size)
 
         view.header_text.setCompoundDrawables(icon, null, null, null)

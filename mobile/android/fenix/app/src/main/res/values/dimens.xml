@@ -33,6 +33,6 @@
     <!--Quick Settings-->
     <dimen name="quicksettings_item_height">46dp</dimen>
 
-    <dimen name="onboarding_privacy_notice_icon_height_width">32dp</dimen>
+    <dimen name="onboarding_header_icon_height_width">32dp</dimen>
 
 </resources>
