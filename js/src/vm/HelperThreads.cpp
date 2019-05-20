@@ -580,7 +580,7 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
   Rooted<ScriptSourceObject*> sourceObject(cx);
 
   ModuleObject* module =
-      frontend::CompileModule(cx, options, data, &sourceObject.get());
+      frontend::ParseModule(cx, options, data, &sourceObject.get());
   if (module) {
     scripts.infallibleAppend(module->script());
     if (sourceObject) {
