@@ -3,9 +3,7 @@
   <script>
     var portal = document.createElement("portal");
     portal.src = "simple-portal.html";
-    var bc = new BroadcastChannel("simple-portal");
-    bc.onmessage = () => {
-      bc.close();
+    portal.onmessage = () => {
       portal.activate().catch(e => {
         var bc2 = new BroadcastChannel("portals-activate-inside-portal");
         bc2.postMessage(e.name);
