@@ -11,13 +11,16 @@
 #include "nsHyphenator.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/intl/LineBreaker.h"
+#include "mozilla/intl/MozLocale.h"
 
 using mozilla::intl::LineBreaker;
+using mozilla::intl::Locale;
 
 nsLineBreaker::nsLineBreaker()
     : mCurrentWordLanguage(nullptr),
       mCurrentWordContainsMixedLang(false),
       mCurrentWordContainsComplexChar(false),
+      mScriptIsChineseOrJapanese(false),
       mAfterBreakableSpace(false),
       mBreakHere(false),
       mWordBreak(LineBreaker::WordBreak::Normal),
@@ -79,7 +82,7 @@ nsresult nsLineBreaker::FlushCurrentWord() {
   } else {
     nsContentUtils::LineBreaker()->GetJISx4051Breaks(
         mCurrentWord.Elements(), length, mWordBreak, mStrictness,
-        breakState.Elements());
+        mScriptIsChineseOrJapanese, breakState.Elements());
   }
 
   bool autoHyphenate = mCurrentWordLanguage && !mCurrentWordContainsMixedLang;
@@ -250,7 +253,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
             uint8_t currentStart = breakState[wordStart];
             nsContentUtils::LineBreaker()->GetJISx4051Breaks(
                 aText + wordStart, offset - wordStart, mWordBreak, mStrictness,
-                breakState.Elements() + wordStart);
+                mScriptIsChineseOrJapanese, breakState.Elements() + wordStart);
             breakState[wordStart] = currentStart;
           }
           if (hyphenator) {
@@ -408,7 +411,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
           uint8_t currentStart = breakState[wordStart];
           nsContentUtils::LineBreaker()->GetJISx4051Breaks(
               aText + wordStart, offset - wordStart, mWordBreak, mStrictness,
-              breakState.Elements() + wordStart);
+              mScriptIsChineseOrJapanese, breakState.Elements() + wordStart);
           breakState[wordStart] = currentStart;
         }
         wordHasComplexChar = false;
@@ -449,7 +452,18 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
 void nsLineBreaker::UpdateCurrentWordLanguage(nsAtom* aHyphenationLanguage) {
   if (mCurrentWordLanguage && mCurrentWordLanguage != aHyphenationLanguage) {
     mCurrentWordContainsMixedLang = true;
+    mScriptIsChineseOrJapanese = false;
   } else {
+    if (aHyphenationLanguage && !mCurrentWordLanguage) {
+      Locale loc = Locale(nsAtomCString(aHyphenationLanguage));
+      if (loc.GetScript().IsEmpty()) {
+        loc.AddLikelySubtags();
+      }
+      const nsCString& script = loc.GetScript();
+      mScriptIsChineseOrJapanese =
+          script.EqualsLiteral("Hans") || script.EqualsLiteral("Hant") ||
+          script.EqualsLiteral("Jpan") || script.EqualsLiteral("Hrkt");
+    }
     mCurrentWordLanguage = aHyphenationLanguage;
   }
 }
