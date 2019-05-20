@@ -1135,8 +1135,8 @@ Accessible* DocAccessible::GetAccessibleByUniqueIDInSubtree(void* aUniqueID) {
   return nullptr;
 }
 
-Accessible* DocAccessible::GetAccessibleOrContainer(nsINode* aNode,
-                                                    int aARIAHiddenFlag) const {
+Accessible* DocAccessible::GetAccessibleOrContainer(
+    nsINode* aNode, bool aNoContainerIfPruned) const {
   if (!aNode || !aNode->GetComposedDoc()) {
     return nullptr;
   }
@@ -1160,9 +1160,24 @@ Accessible* DocAccessible::GetAccessibleOrContainer(nsINode* aNode,
   MOZ_ASSERT(currNode);
   for (; currNode; currNode = currNode->GetFlattenedTreeParentNode()) {
     // No container if is inside of aria-hidden subtree.
-    if (aARIAHiddenFlag == eNoContainerIfARIAHidden && currNode->IsElement() &&
+    if (aNoContainerIfPruned && currNode->IsElement() &&
         aria::HasDefinedARIAHidden(currNode->AsElement())) {
       return nullptr;
+    }
+
+    // Check if node is in an unselected deck panel
+    if (aNoContainerIfPruned && currNode->IsXULElement()) {
+      if (nsIFrame* frame = currNode->AsContent()->GetPrimaryFrame()) {
+        nsDeckFrame* deckFrame = do_QueryFrame(frame->GetParent());
+        if (deckFrame && deckFrame->GetSelectedBox() != frame) {
+          // If deck is not a <tabpanels>, return null
+          nsIContent* parentFrameContent = deckFrame->GetContent();
+          if (!parentFrameContent ||
+              !parentFrameContent->IsXULElement(nsGkAtoms::tabpanels)) {
+            return nullptr;
+          }
+        }
+      }
     }
 
     if (Accessible* accessible = GetAccessible(currNode)) {
@@ -1669,8 +1684,7 @@ bool InsertIterator::Next() {
     // what means there's no container. Ignore the insertion too.
     nsIContent* prevNode = mNodes->SafeElementAt(mNodesIdx - 1);
     nsIContent* node = mNodes->ElementAt(mNodesIdx++);
-    Accessible* container = Document()->AccessibleOrTrueContainer(
-        node, DocAccessible::eNoContainerIfARIAHidden);
+    Accessible* container = Document()->AccessibleOrTrueContainer(node, true);
     if (container != Context()) {
       continue;
     }

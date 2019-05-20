@@ -64,10 +64,55 @@
       }
     }
 
+    function showDeckPanel(aContainerID, aPanelID)
+    {
+      this.container = getAccessible(aContainerID);
+      this.deckNode = getNode(aPanelID);
+      var tree =
+        { GROUPING: [ // role="group"
+          { GROUPING: [ // grouping of panel 2
+            { PUSHBUTTON: []  } // push button in panel 2
+          ] }
+        ] };
+
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_REORDER, this.container)
+      ];
+
+      this.invoke = function showDeckPanel_invoke()
+      {
+        // This stops the refreh driver from doing its regular ticks, and leaves
+        // us in control. 100 is an arbitrary positive number to advance the clock
+        // it is not checked or used anywhere.
+        window.windowUtils.advanceTimeAndRefresh(100);
+
+        testAccessibleTree(this.container, tree);
+        this.deckNode.style.display = "-moz-box";
+
+        // This flushes our DOM mutations and forces any pending mutation events.
+        window.windowUtils.advanceTimeAndRefresh(100);
+      }
+
+      this.finalCheck = function showDeckPanel_finalCheck()
+      {
+        testAccessibleTree(this.container, tree);
+
+        // Return to regular refresh driver ticks.
+        window.windowUtils.restoreNormalRefresh();
+      }
+
+      this.getID = function showDeckPanel_getID()
+      {
+        return "show deck panel";
+      }
+    }
+
     var gQueue = null;
     function doTest()
     {
       gQueue = new eventQueue();
+      gQueue.push(new showDeckPanel("container", "hidden"));
       gQueue.push(new switchDeckPanel("container", "deck"));
       gQueue.invoke(); // will call SimpleTest.finish();
     }
@@ -99,6 +144,7 @@
         <groupbox>
           <button label="This is the second page"/>
         </groupbox>
+        <hbox id="hidden" style="display: none;"><label>This is the third page</label></hbox>
       </deck>
 
     </vbox>
