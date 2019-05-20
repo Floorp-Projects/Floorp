@@ -1,17 +1,4 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-    <link rel="help" href="https://xhr.spec.whatwg.org/#the-abort()-method" data-tested-assertations="following-sibling::ol/li[4]/ol/li[7]/ol/li[3]" />
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <title>XMLHttpRequest: The abort() method: Fire a progress event named abort on the XMLHttpRequestUpload object</title>
-</head>
-
-<body>
-    <div id="log"></div>
-
-    <script type="text/javascript">
-        var test = async_test();
+﻿        var test = async_test("XMLHttpRequest: The abort() method: Fire a progress event named abort on the XMLHttpRequestUpload object");
 
         test.step(function()
         {
@@ -42,6 +29,3 @@
             xhr.open("POST", "./resources/content.py", true);
             xhr.send("Test Message");
         });
-    </script>
-</body>
-</html>
