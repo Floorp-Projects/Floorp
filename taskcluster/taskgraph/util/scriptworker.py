@@ -427,8 +427,10 @@ def generate_beetmover_upstream_artifacts(config, job, platform, locale=None, de
     resolve_keyed_by(
         job, 'attributes.artifact_map',
         'artifact map',
-        project=config.params['project'],
-        platform=platform
+        **{
+            'release-type': config.params['release_type'],
+            'platform': platform,
+        }
     )
     map_config = deepcopy(cached_load_yaml(job['attributes']['artifact_map']))
     upstream_artifacts = list()
@@ -468,6 +470,11 @@ def generate_beetmover_upstream_artifacts(config, job, platform, locale=None, de
                 jsone.render(file_config['source_path_modifier'], {'locale': locale}),
                 filename,
             ))
+
+        if getattr(job['dependencies'][dep], 'release_artifacts', None):
+            paths = [
+                path for path in paths
+                if path in job['dependencies'][dep].release_artifacts]
 
         if not paths:
             continue
@@ -556,8 +563,10 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
     resolve_keyed_by(
         job, 'attributes.artifact_map',
         'artifact map',
-        project=config.params['project'],
-        platform=platform
+        **{
+            'release-type': config.params['release_type'],
+            'platform': platform,
+        }
     )
     map_config = deepcopy(cached_load_yaml(job['attributes']['artifact_map']))
     base_artifact_prefix = map_config.get('base_artifact_prefix', get_artifact_prefix(job))
@@ -697,8 +706,10 @@ def generate_beetmover_partials_artifact_map(config, job, partials_info, **kwarg
     resolve_keyed_by(
         job, 'attributes.artifact_map',
         'artifact map',
-        project=config.params['project'],
-        platform=platform
+        **{
+            'release-type': config.params['release_type'],
+            'platform': platform,
+        }
     )
     map_config = deepcopy(cached_load_yaml(job['attributes']['artifact_map']))
     base_artifact_prefix = map_config.get('base_artifact_prefix', get_artifact_prefix(job))
@@ -811,48 +822,10 @@ def generate_beetmover_partials_artifact_map(config, job, partials_info, **kwarg
     return artifacts
 
 
-# should_use_artifact_map {{{
-def should_use_artifact_map(platform, project):
+def should_use_artifact_map(platform):
     """Return True if this task uses the beetmover artifact map.
 
     This function exists solely for the beetmover artifact map
     migration.
     """
-    if 'linux64-snap-shippable' in platform:
-        # Snap has never been implemented outside of declarative artifacts. We need to use
-        # declarative artifacts no matter the branch we're on
-        return True
-
-    # FIXME: once we're ready to switch fully to declarative artifacts on other
-    # branches, we can expand this; for now, Fennec is rolled-out to all
-    # release branches, while Firefox only to mozilla-central
-    platforms = [
-        'android',
-        'fennec'
-    ]
-    projects = ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-    if any([pl in platform for pl in platforms]) and any([pj == project for pj in projects]):
-        return True
-
-    platforms = [
-        'linux',    # needed for beetmover-langpacks-checksums
-        'linux64',  # which inherit amended platform from their beetmover counterpart
-        'win32',
-        'win64',
-        'macosx64',
-        'linux-shippable',
-        'linux64-shippable',
-        'macosx64-shippable',
-        'win32-shippable',
-        'win64-shippable',
-        'win64-aarch64-shippable',
-        'win64-asan-reporter-nightly',
-        'linux64-asan-reporter-nightly',
-        'firefox-source',
-        'firefox-release',
-    ]
-    projects = ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-    if any([pl == platform for pl in platforms]) and any([pj == project for pj in projects]):
-        return True
-
-    return False
+    return 'devedition' not in platform

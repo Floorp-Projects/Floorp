@@ -317,7 +317,7 @@ nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
 
   nsCSSPropertyIDSet properties;
 
-  if (!IsInEffect() && !IsCurrent()) {
+  if (!mAnimation || !mAnimation->IsRelevant()) {
     return properties;
   }
 
@@ -342,14 +342,14 @@ nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
   return properties;
 }
 
-bool KeyframeEffect::HasAnimationOfPropertySet(
-    const nsCSSPropertyIDSet& aPropertySet) const {
+nsCSSPropertyIDSet KeyframeEffect::GetPropertySet() const {
+  nsCSSPropertyIDSet result;
+
   for (const AnimationProperty& property : mProperties) {
-    if (aPropertySet.HasProperty(property.mProperty)) {
-      return true;
-    }
+    result.AddProperty(property.mProperty);
   }
-  return false;
+
+  return result;
 }
 
 #ifdef DEBUG
@@ -417,6 +417,10 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
   CalculateCumulativeChangeHint(aStyle);
 
   MarkCascadeNeedsUpdate();
+
+  if (mAnimation) {
+    mAnimation->NotifyEffectPropertiesUpdated();
+  }
 
   RequestRestyle(EffectCompositor::RestyleType::Layer);
 }
@@ -575,13 +579,10 @@ void KeyframeEffect::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
   if (HasPropertiesThatMightAffectOverflow()) {
     nsPresContext* presContext =
         nsContentUtils::GetContextForContent(mTarget->mElement);
-    if (presContext) {
+    EffectSet* effectSet =
+        EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+    if (presContext && effectSet) {
       TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
-      EffectSet* effectSet =
-          EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
-      MOZ_ASSERT(effectSet,
-                 "ComposeStyle should only be called on an effect "
-                 "that is part of an effect set");
       effectSet->UpdateLastOverflowAnimationSyncTime(now);
     }
   }
@@ -792,7 +793,9 @@ void KeyframeEffect::UpdateTargetRegistration() {
   // something calls Animation::UpdateRelevance. Whenever our timing changes,
   // we should be notifying our Animation before calling this, so
   // Animation::IsRelevant() should be up-to-date by the time we get here.
-  MOZ_ASSERT(isRelevant == IsCurrent() || IsInEffect(),
+  MOZ_ASSERT(isRelevant ==
+                 ((IsCurrent() || IsInEffect()) && mAnimation &&
+                  mAnimation->ReplaceState() != AnimationReplaceState::Removed),
              "Out of date Animation::IsRelevant value");
 
   if (isRelevant && !mInEffectSet) {
@@ -998,6 +1001,10 @@ void KeyframeEffect::SetTarget(
       nsNodeUtils::AnimationAdded(mAnimation);
       mAnimation->ReschedulePendingTasks();
     }
+  }
+
+  if (mAnimation) {
+    mAnimation->NotifyEffectTargetUpdated();
   }
 }
 
@@ -1725,6 +1732,11 @@ bool KeyframeEffect::ContainsAnimatedScale(const nsIFrame* aFrame) const {
              "We should be passed a frame that supports transforms");
 
   if (!IsCurrent()) {
+    return false;
+  }
+
+  if (!mAnimation ||
+      mAnimation->ReplaceState() == AnimationReplaceState::Removed) {
     return false;
   }
 

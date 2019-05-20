@@ -211,6 +211,28 @@ test(t => {
 
 promise_test(async t => {
   const div = createDiv(t);
+
+  const animA = div.animate({ opacity: 1 }, { duration: 1, fill: 'forwards' });
+  const animB = div.animate({ opacity: 1 }, { duration: 1, fill: 'forwards' });
+  await animA.finished;
+
+  assert_array_equals(div.getAnimations(), [animB]);
+}, 'Does not return an animation that has been removed');
+
+promise_test(async t => {
+  const div = createDiv(t);
+
+  const animA = div.animate({ opacity: 1 }, { duration: 1, fill: 'forwards' });
+  const animB = div.animate({ opacity: 1 }, { duration: 1, fill: 'forwards' });
+  await animA.finished;
+
+  animA.persist();
+
+  assert_array_equals(div.getAnimations(), [animA, animB]);
+}, 'Returns an animation that has been persisted');
+
+promise_test(async t => {
+  const div = createDiv(t);
   const watcher = EventWatcher(t, div, 'transitionrun');
 
   // Create a covering animation to prevent transitions from firing after
