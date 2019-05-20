@@ -223,14 +223,13 @@ already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
   if (!layer) {
     layer = aManager->CreateRefLayer();
   }
-
-  if (!layer) {
+  if (!layer || !layer->AsRefLayer()) {
     // Probably a temporary layer manager that doesn't know how to
     // use ref layers.
     return nullptr;
   }
+  RefLayer* refLayer = layer->AsRefLayer();
 
-  static_cast<RefLayer*>(layer.get())->SetReferentId(mLayersId);
   LayoutDeviceIntPoint offset = GetContentRectLayerOffset(Frame(), aBuilder);
   // We can only have an offset if we're a child of an inactive
   // container, but our display item is LAYER_ACTIVE_FORCE which
@@ -240,11 +239,9 @@ already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
   // Remote content can't be repainted by us, so we multiply down
   // the resolution that our container expects onto our container.
   m.PreScale(aContainerParameters.mXScale, aContainerParameters.mYScale, 1.0);
-  layer->SetBaseTransform(m);
-
-  if (layer->AsRefLayer()) {
-    layer->AsRefLayer()->SetEventRegionsOverride(mEventRegionsOverride);
-  }
+  refLayer->SetBaseTransform(m);
+  refLayer->SetEventRegionsOverride(mEventRegionsOverride);
+  refLayer->SetReferentId(mLayersId);
 
   return layer.forget();
 }
