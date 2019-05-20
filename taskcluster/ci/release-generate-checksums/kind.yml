@@ -68,11 +68,12 @@ jobs:
         treeherder:
             platform: firefox-release/opt
 
-    fennec:
+    fennec-beta:
         shipping-product: fennec
         attributes:
             build_platform: fennec-release
             build_type: opt
+            release-type: beta
         run:
             extra-config:
                 by-release-level:

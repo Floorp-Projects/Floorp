@@ -24,14 +24,6 @@ def add_dependencies(config, jobs):
         if product is None:
             continue
 
-        release_type = config.params['release_type']
-        build_platform = job.get('attributes', {}).get('build_platform', '')
-        if product == 'fennec' and (
-            (release_type == 'beta' and '-nightly' in build_platform) or
-            (release_type == 'nightly' and '-beta' in build_platform)
-        ):
-            continue
-
         required_signoffs = set(job.setdefault('attributes', {}).get('required_signoffs', []))
         for dep_task in config.kind_dependencies_tasks:
             # Weed out unwanted tasks.
@@ -51,6 +43,11 @@ def add_dependencies(config, jobs):
             dep_phase = dep_task.attributes.get('shipping_phase')
             if dep_phase and PHASES.index(dep_phase) > PHASES.index(phase):
                 continue
+
+            if dep_task.attributes.get("release-type") and \
+               job.get("attributes", {}).get("release-type"):
+                if dep_task.attributes["release-type"] != job["attributes"]["release-type"]:
+                    continue
 
             if dep_task.attributes.get("build_platform") and \
                job.get("attributes", {}).get("build_platform"):

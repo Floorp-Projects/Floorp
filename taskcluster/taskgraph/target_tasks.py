@@ -388,7 +388,7 @@ def target_tasks_promote_fennec(full_task_graph, parameters, graph_config):
 
         if task.attributes.get('shipping_product') == 'fennec' and \
                 task.attributes.get('shipping_phase') == 'promote' and \
-                '-nightly' not in task.label:
+                task.attributes.get('release-type') != 'nightly':
             return True
         return False
 
@@ -409,10 +409,8 @@ def target_tasks_ship_fennec(full_task_graph, parameters, graph_config):
         if task.label in filtered_for_candidates:
             return True
         if task.attributes.get('shipping_product') != 'fennec' or \
-                task.attributes.get('shipping_phase') not in ('ship', 'push'):
-            return False
-
-        if task.attributes.get('build_platform', '').endswith('-nightly'):
+                task.attributes.get('shipping_phase') not in ('ship', 'push') or \
+                task.attributes.get('release-type') == 'nightly':
             return False
 
         # secondary-notify-ship is only for RC
@@ -460,18 +458,13 @@ def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
         ):
             return False
 
-        platform = task.attributes.get('build_platform')
         if not filter_for_project(task, parameters):
             return False
-        if platform in ('android-aarch64-nightly',
-                        'android-api-16-nightly',
-                        'android-nightly',
-                        'android-x86-nightly',
-                        'android-x86_64-nightly',
-                        ):
-            if not task.attributes.get('nightly', False):
-                return False
-            return filter_for_project(task, parameters)
+        if task.attributes.get('shipping_product') == 'fennec':
+            if task.attributes.get('release-type') == 'nightly':
+                if not task.attributes.get('nightly', False):
+                    return False
+                return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 

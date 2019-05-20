@@ -305,3 +305,7 @@ Phabricator revision.
 retrigger
 =========
 Whether the task can be retriggered, or if it needs to be re-run.
+
+release-type
+============
+Because we now ship Fennec Nightly off mozilla-beta, `release-type` defines whether the task is a Nightly or a Beta build.

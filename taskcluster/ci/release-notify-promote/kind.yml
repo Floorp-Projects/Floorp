@@ -39,8 +39,10 @@ job-defaults:
                 default: []
 
 jobs:
-    fennec:
+    fennec-beta:
         shipping-product: fennec
+        attributes:
+            release-type: beta
     firefox:
         shipping-product: firefox
     devedition:

@@ -20,6 +20,8 @@ job-defaults:
     shipping-phase: promote
     treeherder:
         symbol: Src
+    attributes:
+        shippable: true
     worker-type: b-linux
     worker:
         max-run-time: 3600
@@ -48,11 +50,13 @@ jobs:
             platform: firefox-release/opt
         shipping-product: firefox
 
-    fennec-source/opt:
+    fennec-beta-source/opt:
         description: "Fennec source builder"
         treeherder:
             platform: fennec-release/opt
         shipping-product: fennec
+        attributes:
+            release-type: beta
 
     devedition-source/opt:
         description: "Devedition source builder"
