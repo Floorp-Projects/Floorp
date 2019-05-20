@@ -866,11 +866,7 @@ const PanelUI = {
   _getBadgeStatus(notification) { return notification.id; },
 
   _getPanelAnchor(candidate) {
-    let iconAnchor =
-      document.getAnonymousElementByAttribute(candidate, "class",
-                                              "toolbarbutton-badge-stack") ||
-      document.getAnonymousElementByAttribute(candidate, "class",
-                                              "toolbarbutton-icon");
+    let iconAnchor = candidate.badgeStack || candidate.icon;
     return iconAnchor || candidate;
   },
 
