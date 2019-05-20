@@ -380,7 +380,10 @@ void nsTableColGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   DisplayInsetBoxShadow(aBuilder, aLists.BorderBackground());
 
-  DisplayOutline(aBuilder, aLists);
+  // Per https://drafts.csswg.org/css-tables-3/#global-style-overrides:
+  // "All css properties of table-column and table-column-group boxes are
+  // ignored, except when explicitly specified by this specification."
+  // CSS outlines fall into this category, so we skip them on these boxes.
 
   for (nsIFrame* kid : PrincipalChildList()) {
     BuildDisplayListForChild(aBuilder, kid, aLists);

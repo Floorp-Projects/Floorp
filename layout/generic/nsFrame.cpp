@@ -2351,15 +2351,13 @@ void nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
 
 void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
                                           const nsDisplayListSet& aLists) {
-  if (!StyleOutline()->ShouldPaintOutline()) {
-    return;
-  }
+  // Per https://drafts.csswg.org/css-tables-3/#global-style-overrides:
+  // "All css properties of table-column and table-column-group boxes are
+  // ignored, except when explicitly specified by this specification."
+  // CSS outlines fall into this category, so we skip them on these boxes.
+  MOZ_ASSERT(!IsTableColGroupFrame() && !IsTableColFrame());
 
-  if (IsTableColGroupFrame() || IsTableColFrame()) {
-    // Per https://drafts.csswg.org/css-tables-3/#global-style-overrides:
-    // "All css properties of table-column and table-column-group boxes are
-    // ignored, except when explicitly specified by this specification."
-    // CSS outlines fall into this category, so we skip them on these boxes.
+  if (!StyleOutline()->ShouldPaintOutline()) {
     return;
   }
 
