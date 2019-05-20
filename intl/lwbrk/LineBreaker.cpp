@@ -824,8 +824,8 @@ int32_t LineBreaker::WordMove(const char16_t* aText, uint32_t aLen,
       ret = end;
     }
   } else {
-    GetJISx4051Breaks(aText + begin, end - begin,
-                      LineBreaker::kWordBreak_Normal, breakState.Elements());
+    GetJISx4051Breaks(aText + begin, end - begin, WordBreak::Normal,
+                      Strictness::Auto, breakState.Elements());
 
     ret = aPos;
     do {
@@ -855,7 +855,8 @@ int32_t LineBreaker::Prev(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
 }
 
 void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
-                                    uint8_t aWordBreak, uint8_t* aBreakBefore) {
+                                    WordBreak aWordBreak, Strictness aLevel,
+                                    uint8_t* aBreakBefore) {
   uint32_t cur;
   int8_t lastClass = CLASS_NONE;
   ContextState state(aChars, aLength);
@@ -896,7 +897,7 @@ void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
     // CLASS_CLOSE by GetClass(), but those classes also include others that
     // we don't want to touch here, so we re-check the Unicode line-break class
     // to determine which ones to modify.
-    if (aWordBreak == LineBreaker::kWordBreak_BreakAll &&
+    if (aWordBreak == WordBreak::BreakAll &&
         (cl == CLASS_CHARACTER || cl == CLASS_CLOSE)) {
       auto cls = GetLineBreakClass(ch);
       if (cls == U_LB_ALPHABETIC || cls == U_LB_NUMERIC ||
@@ -914,8 +915,8 @@ void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
     if (cur > 0) {
       NS_ASSERTION(CLASS_COMPLEX != lastClass || CLASS_COMPLEX != cl,
                    "Loop should have prevented adjacent complex chars here");
-      if (aWordBreak == LineBreaker::kWordBreak_Normal ||
-          aWordBreak == LineBreaker::kWordBreak_BreakAll) {
+      if (aWordBreak == WordBreak::Normal ||
+          aWordBreak == WordBreak::BreakAll) {
         allowBreak = (state.UseConservativeBreaking())
                          ? GetPairConservative(lastClass, cl)
                          : GetPair(lastClass, cl);
@@ -938,7 +939,7 @@ void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
         }
       }
 
-      if (aWordBreak == LineBreaker::kWordBreak_BreakAll) {
+      if (aWordBreak == WordBreak::BreakAll) {
         // For break-all, we don't need to run a dictionary-based breaking
         // algorithm, we just allow breaks between all grapheme clusters.
         ClusterIterator ci(aChars + cur, end - cur);
@@ -967,7 +968,8 @@ void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
 }
 
 void LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
-                                    uint8_t aWordBreak, uint8_t* aBreakBefore) {
+                                    WordBreak aWordBreak, Strictness aLevel,
+                                    uint8_t* aBreakBefore) {
   uint32_t cur;
   int8_t lastClass = CLASS_NONE;
   ContextState state(aChars, aLength);
@@ -985,7 +987,7 @@ void LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
       state.NotifyNonHyphenCharacter(ch);
       cl = GetClass(ch);
     }
-    if (aWordBreak == LineBreaker::kWordBreak_BreakAll &&
+    if (aWordBreak == WordBreak::BreakAll &&
         (cl == CLASS_CHARACTER || cl == CLASS_CLOSE)) {
       auto cls = GetLineBreakClass(ch);
       // Don't need to check additional Japanese/Korean classes in 8-bit
@@ -997,8 +999,8 @@ void LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
 
     bool allowBreak = false;
     if (cur > 0) {
-      if (aWordBreak == LineBreaker::kWordBreak_Normal ||
-          aWordBreak == LineBreaker::kWordBreak_BreakAll) {
+      if (aWordBreak == WordBreak::Normal ||
+          aWordBreak == WordBreak::BreakAll) {
         allowBreak = (state.UseConservativeBreaking())
                          ? GetPairConservative(lastClass, cl)
                          : GetPair(lastClass, cl);
