@@ -342,14 +342,14 @@ nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
   return properties;
 }
 
-bool KeyframeEffect::HasAnimationOfPropertySet(
-    const nsCSSPropertyIDSet& aPropertySet) const {
+nsCSSPropertyIDSet KeyframeEffect::GetPropertySet() const {
+  nsCSSPropertyIDSet result;
+
   for (const AnimationProperty& property : mProperties) {
-    if (aPropertySet.HasProperty(property.mProperty)) {
-      return true;
-    }
+    result.AddProperty(property.mProperty);
   }
-  return false;
+
+  return result;
 }
 
 #ifdef DEBUG
