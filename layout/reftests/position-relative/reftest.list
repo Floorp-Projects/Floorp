@@ -7,3 +7,6 @@
 == table-separate-3.html table-separate-3-ref.html
 == table-separate-4.html table-separate-4-ref.html
 == 1115999-1.html 1115999-1-ref.html
+== 1409114-1.html 1409114-1-ref.html
+!= 1409114-2.html about:blank
+!= 1409114-3.html about:blank
