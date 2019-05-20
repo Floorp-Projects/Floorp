@@ -466,7 +466,7 @@ class nsINode : public mozilla::dom::EventTarget {
   MOZ_CAN_RUN_SCRIPT mozilla::dom::Element* GetParentFlexElement();
 
   /**
-   * Return whether the node is an Element node
+   * Return whether the node is an Element node. Faster than using `NodeType()`.
    */
   bool IsElement() const { return GetBoolFlag(NodeIsElement); }
 
