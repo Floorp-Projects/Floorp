@@ -6,14 +6,12 @@ class Base {
 class C extends Base {
   field;
 }
-let c = new C();
-assertEq(true, "field" in c);
+new C();
 
 var D = class extends Base {
   field;
 };
-let d = new D();
-assertEq(true, "field" in d);
+new D();
 
 class E extends Base {
   field;
@@ -21,8 +19,7 @@ class E extends Base {
     super();
   }
 };
-let e = new E();
-assertEq(true, "field" in e);
+new E();
 
 class F extends Base {
   constructor() {
@@ -30,8 +27,7 @@ class F extends Base {
   }
   field;
 };
-let f = new F();
-assertEq(true, "field" in f);
+new F();
 
 class G extends Base {
   field2 = 2;
@@ -40,9 +36,7 @@ class G extends Base {
   }
   field3 = 3;
 };
-let g = new G();
-assertEq(2, g.field2);
-assertEq(3, g.field3);
+new G();
 
 class H extends Base {
   field = 2;
@@ -50,29 +44,14 @@ class H extends Base {
     eval("super()");
   }
 };
-let h = new H();
-assertEq(2, h.field);
+new H();
 
 class I extends Base {
   field = 2;
   constructor() {
       class Tmp {
-          field = 10;
           [super()];
       }
   }
 };
-let i = new I();
-assertEq(2, i.field);
-
-class J extends Base {
-  field = 2;
-  constructor() {
-      class Tmp {
-          field = 10;
-          [super()](){}
-      }
-  }
-};
-let j = new J();
-assertEq(2, j.field);
+new I();
