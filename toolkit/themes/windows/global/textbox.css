@@ -102,14 +102,6 @@ textbox:not([searchbutton]) > .textbox-search-sign {
   cursor: default;
 }
 
-.textbox-search-clear:not([disabled]):hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.textbox-search-clear:not([disabled]):hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
 /* ::::: textboxes inside toolbarpaletteitems ::::: */
 
 toolbarpaletteitem > toolbaritem > textbox > moz-input-box > html|*.textbox-input {
