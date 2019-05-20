@@ -516,8 +516,8 @@ bool SMILCSSValueType::SetPropertyValues(const SMILValue& aValue,
 
   bool changed = false;
   for (const auto& value : wrapper->mServoValues) {
-    changed |=
-        Servo_DeclarationBlock_SetPropertyToAnimationValue(aDecl.Raw(), value);
+    changed |= Servo_DeclarationBlock_SetPropertyToAnimationValue(aDecl.Raw(),
+                                                                  value, {});
   }
 
   return changed;

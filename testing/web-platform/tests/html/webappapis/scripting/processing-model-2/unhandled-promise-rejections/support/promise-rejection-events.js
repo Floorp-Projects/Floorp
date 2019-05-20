@@ -162,6 +162,24 @@ async_test(function(t) {
   p = Promise.all([Promise.reject(e)]);
 }, 'unhandledrejection: from Promise.reject, indirected through Promise.all');
 
+async_test(function(t) {
+  var p;
+
+  var unhandled = function(ev) {
+    if (ev.promise === p) {
+      t.step(function() {
+        assert_equals(ev.reason.name, 'InvalidStateError');
+        assert_equals(ev.promise, p);
+      });
+      t.done();
+    }
+  };
+  addEventListener('unhandledrejection', unhandled);
+  ensureCleanup(t, unhandled);
+
+  p = createImageBitmap(new Blob());
+}, 'unhandledrejection: from createImageBitmap which is UA triggered');
+
 //
 // Negative unhandledrejection/rejectionhandled tests with immediate attachment
 //
@@ -269,6 +287,16 @@ async_test(function(t) {
   });
 }, 'no unhandledrejection/rejectionhandled: all inside a queued task, a rejection handler attached synchronously to ' +
    'a promise created from returning a Promise.reject-created promise in a fulfillment handler');
+
+async_test(function(t) {
+  var p;
+
+  onUnhandledFail(t, function() { return p; });
+
+  var unreached = t.unreached_func('promise should not be fulfilled');
+  p = createImageBitmap(new Blob()).then(unreached, function() {});
+}, 'no unhandledrejection/rejectionhandled: rejection handler attached synchronously to a promise created from ' +
+   'createImageBitmap');
 
 //
 // Negative unhandledrejection/rejectionhandled tests with microtask-delayed attachment
@@ -658,6 +686,43 @@ async_test(function(t) {
     });
   }, 10);
 }, 'delayed handling: delaying handling by setTimeout(,10) will cause both events to fire');
+
+async_test(function(t) {
+  var unhandledPromises = [];
+  var unhandledReasons = [];
+  var p;
+
+  var unhandled = function(ev) {
+    if (ev.promise === p) {
+      t.step(function() {
+        unhandledPromises.push(ev.promise);
+        unhandledReasons.push(ev.reason.name);
+      });
+    }
+  };
+  var handled = function(ev) {
+    if (ev.promise === p) {
+      t.step(function() {
+        assert_array_equals(unhandledPromises, [p]);
+        assert_array_equals(unhandledReasons, ['InvalidStateError']);
+        assert_equals(ev.promise, p);
+        assert_equals(ev.reason.name, 'InvalidStateError');
+      });
+    }
+  };
+  addEventListener('unhandledrejection', unhandled);
+  addEventListener('rejectionhandled', handled);
+  ensureCleanup(t, unhandled, handled);
+
+  p = createImageBitmap(new Blob());
+  setTimeout(function() {
+    var unreached = t.unreached_func('promise should not be fulfilled');
+    p.then(unreached, function(reason) {
+      assert_equals(reason.name, 'InvalidStateError');
+      setTimeout(function() { t.done(); }, 10);
+    });
+  }, 10);
+}, 'delayed handling: delaying handling rejected promise created from createImageBitmap will cause both events to fire');
 
 //
 // Miscellaneous tests about integration with the rest of the platform

@@ -358,7 +358,7 @@ def make_task_worker(config, jobs):
         locale = job["attributes"].get("locale")
         platform = job["attributes"]["build_platform"]
 
-        if should_use_artifact_map(platform, config.params['project']):
+        if should_use_artifact_map(platform):
             upstream_artifacts = generate_beetmover_upstream_artifacts(
                 config, job, platform, locale)
         else:
@@ -373,7 +373,7 @@ def make_task_worker(config, jobs):
             'upstream-artifacts': upstream_artifacts,
         }
 
-        if should_use_artifact_map(platform, config.params['project']):
+        if should_use_artifact_map(platform):
             worker['artifact-map'] = generate_beetmover_artifact_map(
                 config, job, platform=platform, locale=locale)
 
@@ -412,7 +412,7 @@ def make_partials_artifacts(config, jobs):
         partials_info = get_partials_info_from_params(
             config.params.get('release_history'), balrog_platform, locale)
 
-        if should_use_artifact_map(platform, config.params['project']):
+        if should_use_artifact_map(platform):
             job['worker']['artifact-map'].extend(
                 generate_beetmover_partials_artifact_map(
                     config, job, partials_info, platform=platform, locale=locale))

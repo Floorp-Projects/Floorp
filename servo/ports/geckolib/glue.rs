@@ -101,7 +101,7 @@ use style::global_style_data::{GlobalStyleData, GLOBAL_STYLE_DATA, STYLE_THREAD_
 use style::invalidation::element::restyle_hints::RestyleHint;
 use style::media_queries::MediaList;
 use style::parser::{self, Parse, ParserContext};
-use style::properties::animated_properties::AnimationValue;
+use style::properties::animated_properties::{AnimationValue, AnimationValueMap};
 use style::properties::{parse_one_declaration_into, parse_style_attribute};
 use style::properties::{ComputedValues, Importance, NonCustomPropertyId};
 use style::properties::{LonghandId, LonghandIdSet, PropertyDeclarationBlock, PropertyId};
@@ -911,6 +911,36 @@ fn resolve_rules_for_element_with_context<'a>(
     resolver
         .cascade_style_and_visited_with_default_parents(inputs)
         .0
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_AnimationValueMap_Create() -> Owned<structs::RawServoAnimationValueMap> {
+    Box::<AnimationValueMap>::default().into_ffi()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValueMap_Drop(value_map: *mut structs::RawServoAnimationValueMap) {
+    AnimationValueMap::drop_ffi(value_map)
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_AnimationValueMap_GetValue(
+    raw_value_map: &mut structs::RawServoAnimationValueMap,
+    property_id: nsCSSPropertyID,
+) -> Strong<RawServoAnimationValue> {
+    use style::properties::animated_properties::AnimationValueMap;
+
+    let property = match LonghandId::from_nscsspropertyid(property_id) {
+        Ok(longhand) => longhand,
+        Err(()) => return Strong::null(),
+    };
+    let value_map = AnimationValueMap::from_ffi_mut(raw_value_map);
+
+    value_map
+        .get(&property)
+        .map_or(Strong::null(), |value| {
+            Arc::new(value.clone()).into_strong()
+        })
 }
 
 #[no_mangle]
@@ -4091,6 +4121,28 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyIsImportant(
     })
 }
 
+#[inline(always)]
+fn set_property_to_declarations(
+    block: &RawServoDeclarationBlock,
+    parsed_declarations: &mut SourcePropertyDeclaration,
+    before_change_closure: DeclarationBlockMutationClosure,
+    importance: Importance,
+) -> bool {
+    let mut updates = Default::default();
+    let will_change = read_locked_arc(block, |decls: &PropertyDeclarationBlock| {
+        decls.prepare_for_update(&parsed_declarations, importance, &mut updates)
+    });
+    if !will_change {
+        return false;
+    }
+
+    before_change_closure.invoke();
+    write_locked_arc(block, |decls: &mut PropertyDeclarationBlock| {
+        decls.update(parsed_declarations.drain(), importance, &mut updates)
+    });
+    true
+}
+
 fn set_property(
     declarations: &RawServoDeclarationBlock,
     property_id: PropertyId,
@@ -4123,19 +4175,13 @@ fn set_property(
     } else {
         Importance::Normal
     };
-    let mut updates = Default::default();
-    let will_change = read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
-        decls.prepare_for_update(&source_declarations, importance, &mut updates)
-    });
-    if !will_change {
-        return false;
-    }
 
-    before_change_closure.invoke();
-    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
-        decls.update(source_declarations.drain(), importance, &mut updates)
-    });
-    true
+    set_property_to_declarations(
+        declarations,
+        &mut source_declarations,
+        before_change_closure,
+        importance,
+    )
 }
 
 #[no_mangle]
@@ -4167,13 +4213,17 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
 pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyToAnimationValue(
     declarations: &RawServoDeclarationBlock,
     animation_value: &RawServoAnimationValue,
+    before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
-    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
-        decls.push(
-            AnimationValue::as_arc(&animation_value).uncompute(),
-            Importance::Normal,
-        )
-    })
+    let mut source_declarations =
+        SourcePropertyDeclaration::with_one(AnimationValue::as_arc(&animation_value).uncompute());
+
+    set_property_to_declarations(
+        declarations,
+        &mut source_declarations,
+        before_change_closure,
+        Importance::Normal,
+    )
 }
 
 #[no_mangle]

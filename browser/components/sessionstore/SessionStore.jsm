@@ -4310,8 +4310,7 @@ var SessionStoreInternal = {
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent",
       {loadArguments, isRemotenessUpdate,
        reason: aOptions.restoreContentReason ||
-               RESTORE_TAB_CONTENT_REASON.SET_STATE,
-       requestTime: Services.telemetry.msSystemNow()});
+               RESTORE_TAB_CONTENT_REASON.SET_STATE});
 
     // Focus the tab's content area.
     if (aTab.selected && !window.isBlankPageURL(uri)) {
