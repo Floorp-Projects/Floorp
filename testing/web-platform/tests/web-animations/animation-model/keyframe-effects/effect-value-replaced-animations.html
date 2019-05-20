@@ -74,5 +74,88 @@ promise_test(async t => {
   );
 }, 'Removed animations do not contribute to the effect stack');
 
+promise_test(async t => {
+  const div = createDiv(t);
+  div.style.opacity = '0.1';
+
+  const animA = div.animate(
+    { opacity: 0.2 },
+    { duration: 1, fill: 'forwards' }
+  );
+  const animB = div.animate(
+    { opacity: 0.3 },
+    { duration: 1, fill: 'forwards' }
+  );
+
+  await animA.finished;
+
+  animA.persist();
+
+  animB.cancel();
+  assert_opacity_value(
+    getComputedStyle(div).opacity,
+    0.2,
+    "Opacity should be the persisted animation's value"
+  );
+}, 'Persisted animations contribute to animated style');
+
+promise_test(async t => {
+  const div = createDiv(t);
+  div.style.opacity = '0.1';
+
+  const animA = div.animate(
+    { opacity: 0.2 },
+    { duration: 1, fill: 'forwards' }
+  );
+  const animB = div.animate(
+    { opacity: 0.3, composite: 'add' },
+    { duration: 1, fill: 'forwards' }
+  );
+
+  await animA.finished;
+
+  assert_opacity_value(
+    getComputedStyle(div).opacity,
+    0.4,
+    'Opacity value should NOT include the contribution of the removed animation'
+  );
+
+  animA.persist();
+
+  assert_opacity_value(
+    getComputedStyle(div).opacity,
+    0.5,
+    'Opacity value should include the contribution of the persisted animation'
+  );
+}, 'Persisted animations contribute to the effect stack');
+
+promise_test(async t => {
+  const div = createDiv(t);
+  div.style.opacity = '0.1';
+
+  const animA = div.animate(
+    { opacity: 0.2 },
+    { duration: 1, fill: 'forwards' }
+  );
+
+  // Persist the animation before it finishes (and before it would otherwise be
+  // removed).
+  animA.persist();
+
+  const animB = div.animate(
+    { opacity: 0.3, composite: 'add' },
+    { duration: 1, fill: 'forwards' }
+  );
+
+  await animA.finished;
+
+  assert_opacity_value(
+    getComputedStyle(div).opacity,
+    0.5,
+    'Opacity value should include the contribution of the persisted animation'
+  );
+}, 'Animations persisted before they would be removed contribute to the'
+   + ' effect stack');
+
 </script>
 </body>

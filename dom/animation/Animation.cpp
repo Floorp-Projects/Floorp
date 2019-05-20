@@ -596,6 +596,23 @@ void Animation::Reverse(ErrorResult& aRv) {
   // it here.
 }
 
+void Animation::Persist() {
+  if (mReplaceState == AnimationReplaceState::Persisted) {
+    return;
+  }
+
+  bool wasRemoved = mReplaceState == AnimationReplaceState::Removed;
+
+  mReplaceState = AnimationReplaceState::Persisted;
+
+  // If the animation is not (yet) removed, there should be no side effects of
+  // persisting it.
+  if (wasRemoved) {
+    UpdateEffect(PostRestyleMode::IfNeeded);
+    PostUpdate();
+  }
+}
+
 // ---------------------------------------------------------------------------
 //
 // JS wrappers for Animation interface:
