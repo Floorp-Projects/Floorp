@@ -237,7 +237,7 @@ bool nsDisplayButtonBorder::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   // This is really a combination of paint box shadow inner +
   // paint border.
-  nsRect buttonRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  const nsRect buttonRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
   bool snap;
   nsRegion visible = GetBounds(aDisplayListBuilder, &snap);
   nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(
@@ -394,7 +394,8 @@ nsresult nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
                                                                GetFrame());
   }
 
-  nsRect buttonRect = mFrame->GetRectRelativeToSelf();
+  nsRect buttonRect =
+      mFrame->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(mFrame);
 
   nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, mFrame,
                                                        buttonRect, aBackground);

@@ -536,6 +536,7 @@ void nsTableRowFrame::PaintCellBackgroundsForFrame(
     nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
     const nsDisplayListSet& aLists, const nsPoint& aOffset) {
   // Compute background rect by iterating all cell frame.
+  const nsPoint toReferenceFrame = aBuilder->ToReferenceFrame(aFrame);
   for (nsTableCellFrame* cell = GetFirstCell(); cell;
        cell = cell->GetNextCell()) {
     if (!cell->ShouldPaintBackground(aBuilder)) {
@@ -547,9 +548,10 @@ void nsTableRowFrame::PaintCellBackgroundsForFrame(
     if (!aBuilder->GetDirtyRect().Intersects(cellRect)) {
       continue;
     }
+    cellRect += toReferenceFrame;
     nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
         aBuilder, aFrame, cellRect, aLists.BorderBackground(), true, nullptr,
-        aFrame->GetRectRelativeToSelf(), cell);
+        aFrame->GetRectRelativeToSelf() + toReferenceFrame, cell);
   }
 }
 
