@@ -27,19 +27,18 @@
           "name": "client",
           "condition": "purpose",
           "purpose": "keyword",
-          "value": "__MSG_param_keyword"
+          "value": "__MSG_param_keyword__"
         },
         {
           "name": "client",
           "condition": "purpose",
           "purpose": "searchbar",
-          "value": "__MSG_param_searchbar"
+          "value": "__MSG_param_searchbar__"
         },
         {
           "name": "channel",
           "condition": "pref",
-          "pref": "google_channel_us",
-          "value": "__MSG_param_undefined"
+          "pref": "google_channel_us"
         }
       ],
       "search_url_get_params": "__MSG_searchUrlGetParams__"
