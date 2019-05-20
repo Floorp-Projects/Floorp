@@ -37,36 +37,40 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("LoginAutoCompleteResult");
 });
 
+function loginSort(a, b) {
+  let userA = a.username.toLowerCase();
+  let userB = b.username.toLowerCase();
+
+  if (userA < userB) {
+    return -1;
+  }
+
+  if (userA > userB) {
+    return 1;
+  }
+
+  return 0;
+}
+
+function findDuplicates(loginList) {
+  let seen = new Set();
+  let duplicates = new Set();
+  for (let login of loginList) {
+    if (seen.has(login.username)) {
+      duplicates.add(login.username);
+    }
+    seen.add(login.username);
+  }
+  return duplicates;
+}
 
 // nsIAutoCompleteResult implementation
-function LoginAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messageManager, isPasswordField, hostname}) {
-  function loginSort(a, b) {
-    let userA = a.username.toLowerCase();
-    let userB = b.username.toLowerCase();
-
-    if (userA < userB) {
-      return -1;
-    }
-
-    if (userA > userB) {
-      return 1;
-    }
-
-    return 0;
-  }
-
-  function findDuplicates(loginList) {
-    let seen = new Set();
-    let duplicates = new Set();
-    for (let login of loginList) {
-      if (seen.has(login.username)) {
-        duplicates.add(login.username);
-      }
-      seen.add(login.username);
-    }
-    return duplicates;
-  }
-
+function LoginAutoCompleteResult(aSearchString, matchingLogins, {
+  isSecure,
+  messageManager,
+  isPasswordField,
+  hostname,
+}) {
   let hidingFooterOnPWFieldAutoOpened = false;
   function isFooterEnabled() {
     // We need to check LoginHelper.enabled here since the insecure warning should
