@@ -186,28 +186,6 @@ class nsTableFrame : public nsContainerFrame {
                                                    nsIFrame* aSourceFrame,
                                                    bool* aDidPassThrough);
 
-  typedef void (*DisplayGenericTablePartTraversal)(
-      nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
-      const nsDisplayListSet& aLists);
-  static void GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
-                               const nsDisplayListSet& aLists);
-
-  /**
-   * Helper method to handle display common to table frames, rowgroup frames
-   * and row frames. It creates a background display item for handling events
-   * if necessary, an outline display item if necessary, and displays
-   * all the the frame's children.
-   * @param aDisplayItem the display item created for this part, or null
-   * if this part's border/background painting is delegated to an ancestor
-   * @param aTraversal a function that gets called to traverse the table
-   * part's child frames and add their display list items to a
-   * display list set.
-   */
-  static void DisplayGenericTablePart(
-      nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
-      const nsDisplayListSet& aLists,
-      DisplayGenericTablePartTraversal aTraversal = GenericTraversal);
-
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
   static nsIFrame* GetFrameAtOrBefore(nsIFrame* aParentFrame,

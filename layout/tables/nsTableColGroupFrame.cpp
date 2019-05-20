@@ -352,7 +352,59 @@ void nsTableColGroupFrame::Reflow(nsPresContext* aPresContext,
 
 void nsTableColGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                             const nsDisplayListSet& aLists) {
-  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aLists);
+  if (IsVisibleForPainting()) {
+    // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
+    // just because we're visible?  Or should it depend on the cell visibility
+    // when we're not the whole table?
+
+    // Paint the outset box-shadows for the table frames
+    if (StyleEffects()->mBoxShadow) {
+      aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowOuter>(
+          aBuilder, this);
+    }
+  }
+
+  // Collecting column index.
+  AutoTArray<uint32_t, 1> colIdx;
+  for (nsTableColFrame* col = GetFirstColumn(); col; col = col->GetNextCol()) {
+    MOZ_ASSERT(colIdx.IsEmpty() || static_cast<uint32_t>(col->GetColIndex()) >
+                                       colIdx.LastElement());
+    colIdx.AppendElement(col->GetColIndex());
+  }
+
+  if (!colIdx.IsEmpty()) {
+    // We have some actual cells that live inside this rowgroup.
+    nsTableFrame* table = GetTableFrame();
+    nsTableFrame::RowGroupArray rowGroups;
+    table->OrderRowGroups(rowGroups);
+    for (nsTableRowGroupFrame* rowGroup : rowGroups) {
+      auto offset = rowGroup->GetNormalPosition() - GetNormalPosition();
+      if (!aBuilder->GetDirtyRect().Intersects(
+              nsRect(offset, rowGroup->GetSize()))) {
+        continue;
+      }
+      rowGroup->PaintCellBackgroundsForColumns(this, aBuilder, aLists, colIdx,
+                                               offset);
+    }
+  }
+
+  if (IsVisibleForPainting()) {
+    // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
+    // just because we're visible?  Or should it depend on the cell visibility
+    // when we're not the whole table?
+
+    // Paint the inset box-shadows for the table frames
+    if (StyleEffects()->mBoxShadow) {
+      aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowInner>(
+          aBuilder, this);
+    }
+  }
+
+  DisplayOutline(aBuilder, aLists);
+
+  for (nsIFrame* kid : PrincipalChildList()) {
+    BuildDisplayListForChild(aBuilder, kid, aLists);
+  }
 }
 
 nsTableColFrame* nsTableColGroupFrame::GetFirstColumn() {
