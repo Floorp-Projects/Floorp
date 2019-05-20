@@ -3,7 +3,6 @@ var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1
                                          Ci.nsILoginInfo, "init");
 
 const PREF_INSECURE_FIELD_WARNING_ENABLED = "security.insecure_field_warning.contextual.enabled";
-const PREF_INSECURE_AUTOFILLFORMS_ENABLED = "signon.autofillForms.http";
 
 let matchingLogins = [];
 matchingLogins.push(new nsLoginInfo("http://mochi.test:8888", "http://autocomplete:8888", null,
@@ -30,7 +29,6 @@ const LABEL_NO_USERNAME = "No username (" + time + ")";
 let expectedResults = [
   {
     insecureFieldWarningEnabled: true,
-    insecureAutoFillFormsEnabled: true,
     isSecure: true,
     isPasswordField: false,
     matchingLogins,
@@ -62,7 +60,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: true,
-    insecureAutoFillFormsEnabled: true,
     isSecure: false,
     isPasswordField: false,
     matchingLogins: [],
@@ -78,7 +75,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: true,
-    insecureAutoFillFormsEnabled: true,
     isSecure: false,
     isPasswordField: false,
     matchingLogins,
@@ -114,7 +110,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: true,
-    insecureAutoFillFormsEnabled: true,
     isSecure: true,
     isPasswordField: true,
     matchingLogins,
@@ -146,7 +141,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: true,
-    insecureAutoFillFormsEnabled: true,
     isSecure: false,
     isPasswordField: true,
     matchingLogins,
@@ -182,7 +176,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: false,
-    insecureAutoFillFormsEnabled: true,
     isSecure: true,
     isPasswordField: false,
     matchingLogins,
@@ -214,7 +207,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: false,
-    insecureAutoFillFormsEnabled: true,
     isSecure: false,
     isPasswordField: false,
     matchingLogins,
@@ -246,7 +238,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: false,
-    insecureAutoFillFormsEnabled: true,
     isSecure: true,
     isPasswordField: true,
     matchingLogins,
@@ -278,7 +269,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: false,
-    insecureAutoFillFormsEnabled: true,
     isSecure: false,
     isPasswordField: true,
     matchingLogins,
@@ -310,7 +300,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: true,
-    insecureAutoFillFormsEnabled: false,
     isSecure: true,
     isPasswordField: false,
     matchingLogins,
@@ -342,7 +331,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: true,
-    insecureAutoFillFormsEnabled: false,
     isSecure: false,
     isPasswordField: false,
     matchingLogins,
@@ -378,7 +366,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: true,
-    insecureAutoFillFormsEnabled: false,
     isSecure: true,
     isPasswordField: true,
     matchingLogins,
@@ -410,7 +397,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: true,
-    insecureAutoFillFormsEnabled: false,
     isSecure: false,
     isPasswordField: true,
     matchingLogins,
@@ -446,7 +432,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: false,
-    insecureAutoFillFormsEnabled: false,
     isSecure: true,
     isPasswordField: false,
     matchingLogins,
@@ -478,7 +463,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: false,
-    insecureAutoFillFormsEnabled: false,
     isSecure: false,
     isPasswordField: false,
     matchingLogins: [],
@@ -490,7 +474,18 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: false,
-    insecureAutoFillFormsEnabled: false,
+    isSecure: false,
+    isPasswordField: false,
+    matchingLogins: [],
+    searchString: "foo",
+    items: [{
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: false,
     isSecure: false,
     isPasswordField: false,
     matchingLogins,
@@ -522,7 +517,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: false,
-    insecureAutoFillFormsEnabled: false,
     isSecure: true,
     isPasswordField: true,
     matchingLogins,
@@ -554,7 +548,6 @@ let expectedResults = [
   },
   {
     insecureFieldWarningEnabled: false,
-    insecureAutoFillFormsEnabled: false,
     isSecure: false,
     isPasswordField: true,
     matchingLogins,
@@ -583,6 +576,50 @@ let expectedResults = [
       label: "View Saved Logins",
       style: "loginsFooter",
     }],
+  },
+  {
+    insecureFieldWarningEnabled: true,
+    isSecure: true,
+    isPasswordField: true,
+    matchingLogins: [],
+    items: [{
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: true,
+    isSecure: true,
+    isPasswordField: true,
+    matchingLogins: [],
+    searchString: "foo",
+    items: [],
+  },
+  {
+    generatedPassword: "9ljgfd4shyktb45",
+    insecureFieldWarningEnabled: true,
+    isSecure: true,
+    isPasswordField: true,
+    matchingLogins: [],
+    items: [{
+      value: "9ljgfd4shyktb45",
+      label: "Use Generated Password",
+      style: "generatedPassword",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+    }],
+  },
+  {
+    generatedPassword: "9ljgfd4shyktb45",
+    insecureFieldWarningEnabled: true,
+    isSecure: true,
+    isPasswordField: true,
+    matchingLogins: [],
+    searchString: "9ljgfd4shyktb45",
+    items: [],
   },
 ];
 
@@ -595,9 +632,8 @@ add_task(async function test_all_patterns() {
     info(JSON.stringify(pattern, null, 2));
     Services.prefs.setBoolPref(PREF_INSECURE_FIELD_WARNING_ENABLED,
                                pattern.insecureFieldWarningEnabled);
-    Services.prefs.setBoolPref(PREF_INSECURE_AUTOFILLFORMS_ENABLED,
-                               pattern.insecureAutoFillFormsEnabled);
-    let actual = new LoginAutoCompleteResult("", pattern.matchingLogins, {
+    let actual = new LoginAutoCompleteResult(pattern.searchString || "", pattern.matchingLogins, {
+      generatedPassword: pattern.generatedPassword,
       isSecure: pattern.isSecure,
       isPasswordField: pattern.isPasswordField,
     });
