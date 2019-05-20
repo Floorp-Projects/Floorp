@@ -61,11 +61,12 @@ nsresult nsLineBreaker::FlushCurrentWord() {
 
   nsTArray<bool> capitalizationState;
 
-  if (!mCurrentWordContainsComplexChar) {
+  if (!mCurrentWordContainsComplexChar ||
+      mWordBreak == LineBreaker::kWordBreak_Anywhere) {
     // For break-strict set everything internal to "break", otherwise
     // to "no break"!
     memset(breakState.Elements(),
-           mWordBreak == LineBreaker::kWordBreak_BreakAll
+           mWordBreak >= LineBreaker::kWordBreak_BreakAll
                ? gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL
                : gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE,
            length * sizeof(uint8_t));
@@ -225,7 +226,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     if (aSink && !noBreaksNeeded) {
       breakState[offset] =
           mBreakHere || (mAfterBreakableSpace && !isBreakableSpace) ||
-                  (mWordBreak == LineBreaker::kWordBreak_BreakAll)
+                  (mWordBreak >= LineBreaker::kWordBreak_BreakAll)
               ? gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL
               : gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE;
     }
@@ -383,7 +384,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       // will be set by nsILineBreaker, we don't consider CJK at this point.
       breakState[offset] =
           mBreakHere || (mAfterBreakableSpace && !isBreakableSpace) ||
-                  (mWordBreak == LineBreaker::kWordBreak_BreakAll)
+                  (mWordBreak >= LineBreaker::kWordBreak_BreakAll)
               ? gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL
               : gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE;
     }

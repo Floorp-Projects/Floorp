@@ -18,9 +18,11 @@ class LineBreaker {
   NS_INLINE_DECL_REFCOUNTING(LineBreaker)
 
   enum {
+    // Order is important here, because of tests for value >= BreakAll
     kWordBreak_Normal = 0,    // default
-    kWordBreak_BreakAll = 1,  // break all
-    kWordBreak_KeepAll = 2    // always keep
+    kWordBreak_KeepAll = 1,   // always keep
+    kWordBreak_BreakAll = 2,  // break all
+    kWordBreak_Anywhere = 3   // line-break:anywhere
   };
 
   static already_AddRefed<LineBreaker> Create();
