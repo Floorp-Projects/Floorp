@@ -7335,7 +7335,10 @@ exports.CSS_PROPERTIES = {
       "auto",
       "inherit",
       "initial",
+      "loose",
+      "normal",
       "revert",
+      "strict",
       "unset"
     ]
   },
