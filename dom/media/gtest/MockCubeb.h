@@ -424,14 +424,16 @@ void cubeb_mock_stream_destroy(cubeb_stream* stream) {
 }
 
 static char const* cubeb_mock_get_backend_id(cubeb* context) {
-#if defined(XP_LINUX)
-  return "pulse";
-#elif defined(XP_MACOSX)
+#if defined(XP_MACOSX)
   return "audiounit";
 #elif defined(XP_WIN)
   return "wasapi";
 #elif defined(ANDROID)
   return "opensl";
+#elif defined(__OpenBSD__)
+  return "sndio";
+#else
+  return "pulse";
 #endif
 }
 
