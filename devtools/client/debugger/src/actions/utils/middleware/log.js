@@ -97,13 +97,15 @@ export function log({ dispatch, getState }: ThunkArgs) {
   return (next: any) => (action: any) => {
     const asyncMsg = !action.status ? "" : `[${action.status}]`;
 
-    if (isTesting() && prefs.logActions) {
-      // $FlowIgnore
-      dump(
-        `[ACTION] ${action.type} ${asyncMsg} - ${serializeAction(action)}\n`
-      );
-    } else {
-      console.log(action, asyncMsg);
+    if (prefs.logActions) {
+      if (isTesting()) {
+        // $FlowIgnore
+        dump(
+          `[ACTION] ${action.type} ${asyncMsg} - ${serializeAction(action)}\n`
+        );
+      } else {
+        console.log(action, asyncMsg);
+      }
     }
 
     next(action);

@@ -2253,28 +2253,6 @@ nsresult CreateDirectoryMetadata2(nsIFile* aDirectory, int64_t aTimestamp,
   return NS_OK;
 }
 
-nsresult CreateDirectoryMetadataFiles(nsIFile* aDirectory, bool aPersisted,
-                                      const nsACString& aSuffix,
-                                      const nsACString& aGroup,
-                                      const nsACString& aOrigin,
-                                      int64_t aTimestamp) {
-  AssertIsOnIOThread();
-
-  nsresult rv =
-      CreateDirectoryMetadata(aDirectory, aTimestamp, aSuffix, aGroup, aOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = CreateDirectoryMetadata2(aDirectory, aTimestamp, aPersisted, aSuffix,
-                                aGroup, aOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 nsresult GetBinaryInputStream(nsIFile* aDirectory, const nsAString& aFilename,
                               nsIBinaryInputStream** aStream) {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -3986,12 +3964,7 @@ nsresult QuotaManager::GetDirectoryMetadata2(
     if (group != upToDateGroup) {
       group = upToDateGroup;
 
-      rv =
-          CreateDirectoryMetadata(aDirectory, timestamp, suffix, group, origin);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
+      // Only creating .metadata-v2 to reduce IO.
       rv = CreateDirectoryMetadata2(aDirectory, timestamp, persisted, suffix,
                                     group, origin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5773,9 +5746,10 @@ nsresult QuotaManager::EnsureOriginIsInitializedInternal(
     if (created) {
       timestamp = PR_Now();
 
-      rv = CreateDirectoryMetadataFiles(directory,
-                                        /* aPersisted */ true, aSuffix, aGroup,
-                                        aOrigin, timestamp);
+      // Only creating .metadata-v2 to reduce IO.
+      rv = CreateDirectoryMetadata2(directory, timestamp,
+                                    /* aPersisted */ true, aSuffix, aGroup,
+                                    aOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -5799,9 +5773,10 @@ nsresult QuotaManager::EnsureOriginIsInitializedInternal(
     NoteOriginDirectoryCreated(aPersistenceType, aGroup, aOrigin,
                                /* aPersisted */ false, timestamp);
 
-    rv = CreateDirectoryMetadataFiles(directory,
-                                      /* aPersisted */ false, aSuffix, aGroup,
-                                      aOrigin, timestamp);
+    // Only creating .metadata-v2 to reduce IO.
+    rv = CreateDirectoryMetadata2(directory, timestamp,
+                                  /* aPersisted */ false, aSuffix, aGroup,
+                                  aOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8593,9 +8568,8 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
       timestamp = PR_Now();
     }
 
-    rv = CreateDirectoryMetadataFiles(directory,
-                                      /* aPersisted */ true, mSuffix, mGroup,
-                                      mOriginScope.GetOrigin(), timestamp);
+    rv = CreateDirectoryMetadata2(directory, timestamp, /* aPersisted */ true,
+                                  mSuffix, mGroup, mOriginScope.GetOrigin());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

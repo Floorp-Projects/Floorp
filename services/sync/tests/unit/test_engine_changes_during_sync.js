@@ -6,6 +6,12 @@ const {FormRec} = ChromeUtils.import("resource://services-sync/engines/forms.js"
 const {LoginRec} = ChromeUtils.import("resource://services-sync/engines/passwords.js");
 const {PrefRec} = ChromeUtils.import("resource://services-sync/engines/prefs.js");
 
+// Allow eval to avoid triggering the eval()-assertion through ajv-4.1.1.js
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
 

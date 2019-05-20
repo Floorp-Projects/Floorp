@@ -1,0 +1,33 @@
+changeset:   537472:0f57b714b8cc
+tag:         tip
+user:        Gabriele Svelto <gsvelto@mozilla.com>
+date:        Mon May 20 12:41:12 2019 +0200
+summary:     Bug 1544881 - Ignore empty ranges when parsing DW_TAG_inlined_subroutine tags as they break the assumptions required during line assignment
+
+diff --git a/src/common/dwarf_cu_to_module.cc b/src/common/dwarf_cu_to_module.cc
+--- a/src/common/dwarf_cu_to_module.cc
++++ b/src/common/dwarf_cu_to_module.cc
+@@ -555,18 +555,20 @@ bool DwarfCUToModule::InlinedSubroutineH
+         cu_context_->reporter->MalformedRangeList(ranges_);
+       }
+     } else {
+       cu_context_->reporter->MissingRanges();
+     }
+   }
+ 
+   for (const auto& range : ranges) {
+-    FilePrivate::InlinedSubroutineRange inline_range(range, call_file_, call_line_);
+-    cu_context_->file_context->file_private_->inlined_ranges.push_back(inline_range);
++    if (range.size > 0) {
++      FilePrivate::InlinedSubroutineRange inline_range(range, call_file_, call_line_);
++      cu_context_->file_context->file_private_->inlined_ranges.push_back(inline_range);
++    }
+   }
+ 
+   return ignore_children;
+ }
+ 
+ // A handler class for DW_TAG_lexical_block DIEs.
+ class DwarfCUToModule::LexicalBlockHandler: public GenericDIEHandler {
+  public:
+

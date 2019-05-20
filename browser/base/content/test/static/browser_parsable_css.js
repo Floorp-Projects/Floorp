@@ -13,14 +13,8 @@ let whitelist = [
   // CodeMirror is imported as-is, see bug 1004423.
   {sourceName: /codemirror\.css$/i,
    isFromDevTools: true},
-  // The debugger uses cross-browser CSS.
-  {sourceName: /devtools\/client\/debugger\/dist\/vendors.css/i,
-   isFromDevTools: true},
   {sourceName: /devtools\/client\/debugger\/src\/components\/([A-z\/]+).css/i,
   isFromDevTools: true},
-   // Reps uses cross-browser CSS.
-   {sourceName: /devtools-client-shared\/components\/reps\/reps.css/i,
-   isFromDevTools: true},
   // PDFjs rules needed for compat with other UAs.
   {sourceName: /web\/viewer\.css$/i,
    errorMessage: /Unknown property.*(appearance|user-select)/i,

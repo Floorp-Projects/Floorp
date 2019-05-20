@@ -12,22 +12,22 @@ function* testSteps()
   const metadataFiles = [
     {
       path: "storage/permanent/chrome/.metadata",
-      tmp: false
+      shouldExistAfterInit: false
     },
 
     {
       path: "storage/permanent/chrome/.metadata-tmp",
-      tmp: true
+      shouldExistAfterInit: false
     },
 
     {
       path: "storage/permanent/chrome/.metadata-v2",
-      tmp: false
+      shouldExistAfterInit: true
     },
 
     {
       path: "storage/permanent/chrome/.metadata-v2-tmp",
-      tmp: true
+      shouldExistAfterInit: false
     }
   ]
 
@@ -94,10 +94,10 @@ function* testSteps()
 
     exists = file.exists();
 
-    if (metadataFile.tmp) {
-      ok(!exists, "Metadata file doesn't exist");
-    } else {
+    if (metadataFile.shouldExistAfterInit) {
       ok(exists, "Metadata file does exist");
+    } else {
+      ok(!exists, "Metadata file doesn't exist");
     }
   }
 

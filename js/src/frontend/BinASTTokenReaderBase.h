@@ -7,6 +7,8 @@
 #ifndef frontend_BinASTTokenReaderBase_h
 #define frontend_BinASTTokenReaderBase_h
 
+#include <string.h>
+
 #include "frontend/BinASTToken.h"
 #include "frontend/ErrorReporter.h"
 #include "frontend/TokenStream.h"
@@ -182,9 +184,8 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
 
 #ifndef FUZZING
     // Perform lookup, without side-effects.
-    if (!std::equal(current_,
-                    current_ + N + (expectNul ? 0 : -1) /*implicit NUL*/,
-                    value)) {
+    if (memcmp(current_, value, N + (expectNul ? 0 : -1) /*implicit NUL*/) !=
+        0) {
       return false;
     }
 #endif
