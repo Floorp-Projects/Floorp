@@ -131,22 +131,24 @@ class Output(object):
                     subtests.append(new_subtest)
 
             elif test.type == "benchmark":
-                if 'speedometer' in test.measurements:
-                    subtests, vals = self.parseSpeedometerOutput(test)
+                if 'assorted-dom' in test.measurements:
+                    subtests, vals = self.parseAssortedDomOutput(test)
                 elif 'motionmark' in test.measurements:
                     subtests, vals = self.parseMotionmarkOutput(test)
+                elif 'speedometer' in test.measurements:
+                    subtests, vals = self.parseSpeedometerOutput(test)
                 elif 'sunspider' in test.measurements:
                     subtests, vals = self.parseSunspiderOutput(test)
-                elif 'webaudio' in test.measurements:
-                    subtests, vals = self.parseWebaudioOutput(test)
                 elif 'unity-webgl' in test.measurements:
                     subtests, vals = self.parseUnityWebGLOutput(test)
-                elif 'assorted-dom' in test.measurements:
-                    subtests, vals = self.parseAssortedDomOutput(test)
-                elif 'wasm-misc' in test.measurements:
-                    subtests, vals = self.parseWASMMiscOutput(test)
                 elif 'wasm-godot' in test.measurements:
                     subtests, vals = self.parseWASMGodotOutput(test)
+                elif 'wasm-misc' in test.measurements:
+                    subtests, vals = self.parseWASMMiscOutput(test)
+                elif 'webaudio' in test.measurements:
+                    subtests, vals = self.parseWebaudioOutput(test)
+                elif 'youtube-playbackperf-test' in test.measurements:
+                    subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
                 suite['subtests'] = subtests
 
             else:
@@ -701,6 +703,72 @@ class Output(object):
 
         return subtests, vals
 
+    def parseYoutubePlaybackPerformanceOutput(self, test):
+        """Parse the metrics for the Youtube playback performance test.
+
+        For each video measured values for dropped and decoded frames will be
+        available from the benchmark site.
+
+        {u'PlaybackPerf.VP9.2160p60@2X': {u'droppedFrames': 1, u'decodedFrames': 796}
+
+        With each page cycle / iteration of the test multiple values can be present.
+
+        Raptor will calculate the percentage of dropped frames to decoded frames.
+        All those three values will then be emitted as separate sub tests.
+        """
+        _subtests = {}
+        data = test.measurements['youtube-playbackperf-test']
+
+        def create_subtest_entry(name, value,
+                                 unit=test.subtest_unit,
+                                 lower_is_better=test.subtest_lower_is_better):
+            # build a list of subtests and append all related replicates
+            if name not in _subtests.keys():
+                # subtest not added yet, first pagecycle, so add new one
+                _subtests[name] = {
+                    'name': name,
+                    'unit': unit,
+                    'lowerIsBetter': lower_is_better,
+                    'replicates': [],
+                }
+
+            _subtests[name]['replicates'].append(value)
+
+        for pagecycle in data:
+            for _sub, _value in pagecycle[0].iteritems():
+                try:
+                    percent_dropped = float(_value['droppedFrames']) / _value['decodedFrames']
+                except ZeroDivisionError:
+                    # if no frames have been decoded the playback failed completely
+                    percent_dropped = 1
+
+                # Remove the not needed "PlaybackPerf." prefix from each test
+                _sub = _sub.split('PlaybackPerf.', 1)[-1]
+
+                # build a list of subtests and append all related replicates
+                create_subtest_entry("{}_decoded_frames".format(_sub),
+                                     _value['decodedFrames'],
+                                     lower_is_better=False,
+                                     )
+                create_subtest_entry("{}_dropped_frames".format(_sub),
+                                     _value['droppedFrames'],
+                                     )
+                create_subtest_entry("{}_%_dropped_frames".format(_sub),
+                                     percent_dropped,
+                                     )
+
+        vals = []
+        subtests = []
+        names = _subtests.keys()
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]['value'] = round(filters.median(_subtests[name]['replicates']), 2)
+            subtests.append(_subtests[name])
+            if name.endswith("dropped_frames"):
+                vals.append([_subtests[name]['value'], name])
+
+        return subtests, vals
+
     def summarize_screenshots(self, screenshots):
         if len(screenshots) == 0:
             return
@@ -954,6 +1022,12 @@ class Output(object):
         return round(filters.geometric_mean(results), 2)
 
     @classmethod
+    def youtube_playback_performance_score(cls, val_list):
+        """Calculate percentage of failed tests."""
+        results = [i for i, j in val_list]
+        return round(filters.mean(results), 2)
+
+    @classmethod
     def supporting_data_total(cls, val_list):
         results = [i for i, j in val_list]
         return sum(results)
@@ -981,6 +1055,8 @@ class Output(object):
             return self.wasm_misc_score(vals)
         elif testname.startswith('raptor-wasm-godot'):
             return self.wasm_godot_score(vals)
+        elif testname.startswith('raptor-youtube-playback'):
+            return self.youtube_playback_performance_score(vals)
         elif testname.startswith('supporting_data'):
             return self.supporting_data_total(vals)
         elif len(vals) > 1:
