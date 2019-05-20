@@ -846,7 +846,8 @@ bool Animation::ShouldBeSynchronizedWithMainThread(
 
 void Animation::UpdateRelevance() {
   bool wasRelevant = mIsRelevant;
-  mIsRelevant = HasCurrentEffect() || IsInEffect();
+  mIsRelevant = mReplaceState != AnimationReplaceState::Removed &&
+                (HasCurrentEffect() || IsInEffect());
 
   // Notify animation observers.
   if (wasRelevant && !mIsRelevant) {
@@ -960,6 +961,9 @@ void Animation::Remove() {
              "Should not be trying to remove an effect that is not removable");
 
   mReplaceState = AnimationReplaceState::Removed;
+
+  UpdateEffect(PostRestyleMode::IfNeeded);
+  PostUpdate();
 
   QueuePlaybackEvent(NS_LITERAL_STRING("remove"),
                      GetTimelineCurrentTimeAsTimeStamp());
