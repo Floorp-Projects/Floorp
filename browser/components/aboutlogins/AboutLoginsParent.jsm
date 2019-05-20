@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 });
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
+const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
 
 const PRIVILEGED_PROCESS_PREF =
   "browser.tabs.remote.separatePrivilegedContentProcess";
@@ -74,6 +75,7 @@ var AboutLoginsParent = {
       }
       case "AboutLogins:Subscribe": {
         if (!ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers).length) {
+          Services.obs.addObserver(this, "passwordmgr-crypto-loginCanceled");
           Services.obs.addObserver(this, "passwordmgr-storage-changed");
         }
         this._subscribers.add(message.target);
@@ -106,7 +108,13 @@ var AboutLoginsParent = {
 
   observe(subject, topic, type) {
     if (!ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers).length) {
+      Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
       Services.obs.removeObserver(this, "passwordmgr-storage-changed");
+      return;
+    }
+
+    if (topic == "passwordmgr-crypto-loginCanceled") {
+      this.showMasterPasswordLoginNotifications();
       return;
     }
 
@@ -138,6 +146,36 @@ var AboutLoginsParent = {
       default: {
         break;
       }
+    }
+  },
+
+  showMasterPasswordLoginNotifications() {
+    let messageString = "You must enter your Master Password to view saved logins"; // TODO
+    for (let subscriber of this._subscriberIterator()) {
+      // If there's already an existing notification bar, don't do anything.
+      let {gBrowser} = subscriber.ownerGlobal;
+      let browser = subscriber;
+      let notificationBox = gBrowser.getNotificationBox(browser);
+      let notification = notificationBox.getNotificationWithValue(MASTER_PASSWORD_NOTIFICATION_ID);
+      if (notification) {
+        continue;
+      }
+
+      // Configure the notification bar
+      let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+      let iconURL = "chrome://browser/skin/login.svg";
+      let reloadLabel = "Log in"; // TODO
+      let reloadKey   = "L"; // TODO
+
+      let buttons = [{
+        label: reloadLabel,
+        accessKey: reloadKey,
+        popup: null,
+        callback() { browser.reload(); },
+      }];
+
+      notification = notificationBox.appendNotification(messageString, MASTER_PASSWORD_NOTIFICATION_ID,
+                                                        iconURL, priority, buttons);
     }
   },
 
