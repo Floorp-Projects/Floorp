@@ -77,6 +77,7 @@ function getLocalizedString(key, formatArgs = null) {
 
 class AutocompleteItem {
   constructor(style) {
+    this.comment = "";
     this.style = style;
     this.value = "";
   }
@@ -114,6 +115,12 @@ class LoginAutocompleteItem extends AutocompleteItem {
 
     XPCOMUtils.defineLazyGetter(this, "value", () => {
       return isPasswordField ? login.password : login.username;
+    });
+
+    XPCOMUtils.defineLazyGetter(this, "comment", () => {
+      return JSON.stringify({
+        loginOrigin: login.hostname,
+      });
     });
   }
 }
@@ -236,18 +243,10 @@ LoginAutoCompleteResult.prototype = {
   },
 
   getCommentAt(index) {
-    if (this._showInsecureFieldWarning && index === 0) {
-      return "";
+    if (index < 0 || index >= this.matchCount) {
+      throw new Error("Index out of range.");
     }
-
-    if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
-      return "";
-    }
-
-    let login = this.logins[index - this._showInsecureFieldWarning];
-    return JSON.stringify({
-      loginOrigin: login.hostname,
-    });
+    return this.results[index].comment;
   },
 
   getStyleAt(index) {
