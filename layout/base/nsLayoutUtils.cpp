@@ -225,6 +225,10 @@ static ContentMap& GetContentMap() {
 template <typename TestType>
 static bool HasMatchingAnimations(EffectSet& aEffects, TestType&& aTest) {
   for (KeyframeEffect* effect : aEffects) {
+    if (!effect->GetAnimation() || !effect->GetAnimation()->IsRelevant()) {
+      continue;
+    }
+
     if (aTest(*effect, aEffects)) {
       return true;
     }
@@ -263,8 +267,7 @@ bool nsLayoutUtils::HasAnimationOfPropertySet(
   return HasMatchingAnimations(
       aFrame, aPropertySet,
       [&aPropertySet](KeyframeEffect& aEffect, const EffectSet&) {
-        return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
-               aEffect.HasAnimationOfPropertySet(aPropertySet);
+        return aEffect.HasAnimationOfPropertySet(aPropertySet);
       });
 }
 
@@ -294,8 +297,7 @@ bool nsLayoutUtils::HasAnimationOfPropertySet(
   return HasMatchingAnimations(
       *aEffectSet,
       [&aPropertySet](KeyframeEffect& aEffect, const EffectSet& aEffectSet) {
-        return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
-               aEffect.HasAnimationOfPropertySet(aPropertySet);
+        return aEffect.HasAnimationOfPropertySet(aPropertySet);
       });
 }
 
@@ -305,8 +307,7 @@ bool nsLayoutUtils::HasEffectiveAnimation(
   return HasMatchingAnimations(
       aFrame, aPropertySet,
       [&aPropertySet](KeyframeEffect& aEffect, const EffectSet& aEffectSet) {
-        return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
-               aEffect.HasEffectiveAnimationOfPropertySet(aPropertySet,
+        return aEffect.HasEffectiveAnimationOfPropertySet(aPropertySet,
                                                           aEffectSet);
       });
 }

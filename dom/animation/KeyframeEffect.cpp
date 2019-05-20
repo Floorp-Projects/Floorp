@@ -317,7 +317,7 @@ nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
 
   nsCSSPropertyIDSet properties;
 
-  if (!IsInEffect() && !IsCurrent()) {
+  if (!mAnimation || !mAnimation->IsRelevant()) {
     return properties;
   }
 
@@ -796,7 +796,9 @@ void KeyframeEffect::UpdateTargetRegistration() {
   // something calls Animation::UpdateRelevance. Whenever our timing changes,
   // we should be notifying our Animation before calling this, so
   // Animation::IsRelevant() should be up-to-date by the time we get here.
-  MOZ_ASSERT(isRelevant == IsCurrent() || IsInEffect(),
+  MOZ_ASSERT(isRelevant ==
+                 ((IsCurrent() || IsInEffect()) && mAnimation &&
+                  mAnimation->ReplaceState() != AnimationReplaceState::Removed),
              "Out of date Animation::IsRelevant value");
 
   if (isRelevant && !mInEffectSet) {
@@ -1733,6 +1735,11 @@ bool KeyframeEffect::ContainsAnimatedScale(const nsIFrame* aFrame) const {
              "We should be passed a frame that supports transforms");
 
   if (!IsCurrent()) {
+    return false;
+  }
+
+  if (!mAnimation ||
+      mAnimation->ReplaceState() == AnimationReplaceState::Removed) {
     return false;
   }
 
