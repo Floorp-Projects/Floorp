@@ -45,10 +45,10 @@ class LineBreaker {
   // aBreakBefore output array.
   void GetJISx4051Breaks(const char16_t* aText, uint32_t aLength,
                          WordBreak aWordBreak, Strictness aLevel,
-                         uint8_t* aBreakBefore);
+                         bool aIsChineseOrJapanese, uint8_t* aBreakBefore);
   void GetJISx4051Breaks(const uint8_t* aText, uint32_t aLength,
                          WordBreak aWordBreak, Strictness aLevel,
-                         uint8_t* aBreakBefore);
+                         bool aIsChineseOrJapanese, uint8_t* aBreakBefore);
 
  private:
   ~LineBreaker() {}
