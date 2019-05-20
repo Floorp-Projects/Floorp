@@ -560,8 +560,10 @@ bool DwarfCUToModule::InlinedSubroutineHandler::EndAttributes() {
   }
 
   for (const auto& range : ranges) {
-    FilePrivate::InlinedSubroutineRange inline_range(range, call_file_, call_line_);
-    cu_context_->file_context->file_private_->inlined_ranges.push_back(inline_range);
+    if (range.size > 0) {
+      FilePrivate::InlinedSubroutineRange inline_range(range, call_file_, call_line_);
+      cu_context_->file_context->file_private_->inlined_ranges.push_back(inline_range);
+    }
   }
 
   return ignore_children;
