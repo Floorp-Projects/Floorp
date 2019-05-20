@@ -54,6 +54,26 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: true,
+    insecureAutoFillFormsEnabled: true,
+    isSecure: false,
+    isPasswordField: false,
+    matchingLogins: [],
+    items: [{
+      value: "",
+      label: "This connection is not secure. Logins entered here could be compromised. Learn More",
+      style: "insecureWarning",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -86,6 +106,10 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -114,6 +138,10 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -146,6 +174,10 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -174,6 +206,10 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -202,6 +238,10 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -230,6 +270,10 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -258,6 +302,10 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -286,6 +334,10 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -318,6 +370,10 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -346,6 +402,10 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -378,6 +438,10 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -406,6 +470,22 @@ let expectedResults = [
       value: "zzzuser4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+    }],
+  },
+  {
+    insecureFieldWarningEnabled: false,
+    insecureAutoFillFormsEnabled: false,
+    isSecure: false,
+    isPasswordField: false,
+    matchingLogins: [],
+    items: [{
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -414,7 +494,31 @@ let expectedResults = [
     isSecure: false,
     isPasswordField: false,
     matchingLogins,
-    items: [],
+    items: [{
+      value: "",
+      label: LABEL_NO_USERNAME,
+      style: "loginWithOrigin",
+    }, {
+      value: "tempuser1",
+      label: "tempuser1",
+      style: "loginWithOrigin",
+    }, {
+      value: "testuser2",
+      label: "testuser2",
+      style: "loginWithOrigin",
+    }, {
+      value: "testuser3",
+      label: "testuser3",
+      style: "loginWithOrigin",
+    }, {
+      value: "zzzuser4",
+      label: "zzzuser4",
+      style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+    }],
   },
   {
     insecureFieldWarningEnabled: false,
@@ -442,6 +546,10 @@ let expectedResults = [
       value: "zzzpass4",
       label: "zzzuser4",
       style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
     }],
   },
   {
@@ -450,15 +558,41 @@ let expectedResults = [
     isSecure: false,
     isPasswordField: true,
     matchingLogins,
-    items: [],
+    items: [{
+      value: "emptypass1",
+      label: LABEL_NO_USERNAME,
+      style: "loginWithOrigin",
+    }, {
+      value: "temppass1",
+      label: "tempuser1",
+      style: "loginWithOrigin",
+    }, {
+      value: "testpass2",
+      label: "testuser2",
+      style: "loginWithOrigin",
+    }, {
+      value: "testpass3",
+      label: "testuser3",
+      style: "loginWithOrigin",
+    }, {
+      value: "zzzpass4",
+      label: "zzzuser4",
+      style: "loginWithOrigin",
+    }, {
+      value: "",
+      label: "View Saved Logins",
+      style: "loginsFooter",
+    }],
   },
 ];
 
 add_task(async function test_all_patterns() {
   LoginHelper.createLogger("LoginAutoCompleteResult");
+  Services.prefs.setBoolPref("signon.showAutoCompleteFooter", true);
   Services.prefs.setBoolPref("signon.showAutoCompleteOrigins", true);
 
   expectedResults.forEach(pattern => {
+    info(JSON.stringify(pattern, null, 2));
     Services.prefs.setBoolPref(PREF_INSECURE_FIELD_WARNING_ENABLED,
                                pattern.insecureFieldWarningEnabled);
     Services.prefs.setBoolPref(PREF_INSECURE_AUTOFILLFORMS_ENABLED,
@@ -467,10 +601,11 @@ add_task(async function test_all_patterns() {
       isSecure: pattern.isSecure,
       isPasswordField: pattern.isPasswordField,
     });
+    equal(actual.matchCount, pattern.items.length, "Check matching row count");
     pattern.items.forEach((item, index) => {
-      equal(actual.getValueAt(index), item.value);
-      equal(actual.getLabelAt(index), item.label);
-      equal(actual.getStyleAt(index), item.style);
+      equal(actual.getValueAt(index), item.value, `Value ${index}`);
+      equal(actual.getLabelAt(index), item.label, `Label ${index}`);
+      equal(actual.getStyleAt(index), item.style, `Style ${index}`);
     });
 
     if (pattern.items.length != 0) {

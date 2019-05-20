@@ -142,12 +142,10 @@ class LoginAutocompleteItem extends AutocompleteItem {
 class LoginsFooterAutocompleteItem extends AutocompleteItem {
   constructor(hostname) {
     super("loginsFooter");
+    this.comment = hostname;
 
     XPCOMUtils.defineLazyGetter(this, "label", () => {
-      return JSON.stringify({
-        label: getLocalizedString("viewSavedLogins.label"),
-        hostname,
-      });
+      return getLocalizedString("viewSavedLogins.label");
     });
   }
 }
