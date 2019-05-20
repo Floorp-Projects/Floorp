@@ -1,3 +1,9 @@
 # This file is used by all AArch64 Win64 builds
 
 ac_add_options --target=aarch64-windows-mingw32
+
+# Temporary signal to toolchain.configure that our compiler is patched to
+# support CFG, until such support can be assumed.
+if test -z "$USE_ARTIFACT"; then
+  ac_add_options --enable-hardening
+fi
