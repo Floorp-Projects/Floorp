@@ -30,6 +30,7 @@
     "mochih": "yarn mochi -- --headless --",
     "mochici": "mochii --mc ./firefox --ci --default-test-path devtools/client/debugger --headless --",
     "test": "TZ=Africa/Nairobi jest",
+    "test-ci": "TZ=Africa/Nairobi jest --json",
     "test:watch": "jest --watch",
     "test:coverage": "yarn test --coverage",
     "test:all": "yarn test; yarn lint; yarn flow",

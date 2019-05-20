@@ -102,7 +102,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
     role="treeitem"
   >
     <span
-      className="tree-indent"
+      className="tree-indent tree-last-indent"
     >
       ​
     </span>
@@ -254,7 +254,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
     role="treeitem"
   >
     <span
-      className="tree-indent"
+      className="tree-indent tree-last-indent"
     >
       ​
     </span>

@@ -64,6 +64,7 @@ function formatException(reason, p) {
 }
 
 export const parserWorker = new ParserDispatcher();
+export const evaluationsParser = new ParserDispatcher();
 
 beforeAll(() => {
   startSourceMapWorker(
@@ -74,6 +75,7 @@ beforeAll(() => {
     path.join(rootPath, "src/workers/pretty-print/worker.js")
   );
   parserWorker.start(path.join(rootPath, "src/workers/parser/worker.js"));
+  evaluationsParser.start(path.join(rootPath, "src/workers/parser/worker.js"));
   startSearchWorker(path.join(rootPath, "src/workers/search/worker.js"));
   process.on("unhandledRejection", formatException);
 });
@@ -82,6 +84,7 @@ afterAll(() => {
   stopSourceMapWorker();
   stopPrettyPrintWorker();
   parserWorker.stop();
+  evaluationsParser.stop();
   stopSearchWorker();
   process.removeListener("unhandledRejection", formatException);
 });
@@ -90,6 +93,7 @@ afterEach(() => {});
 
 beforeEach(async () => {
   parserWorker.clear();
+  evaluationsParser.clear();
   clearHistory();
   clearDocuments();
   prefs.projectDirectoryRoot = "";
