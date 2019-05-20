@@ -404,10 +404,6 @@ template <typename T>
 void DoMarking(GCMarker* gcmarker, T* thing);
 template <typename T>
 void DoMarking(GCMarker* gcmarker, const T& thing);
-template <typename T>
-void NoteWeakEdge(GCMarker* gcmarker, T** thingp);
-template <typename T>
-void NoteWeakEdge(GCMarker* gcmarker, T* thingp);
 
 template <typename T>
 JS_PUBLIC_API void js::gc::TraceExternalEdge(JSTracer* trc, T* thingp,
@@ -447,7 +443,6 @@ namespace gc {
 
 #define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(type)                          \
   template void TraceEdgeInternal<type>(JSTracer*, type*, const char*);     \
-  template void TraceWeakEdgeInternal<type>(JSTracer*, type*, const char*); \
   template void TraceRangeInternal<type>(JSTracer*, size_t len, type*,      \
                                          const char*);
 
@@ -566,19 +561,6 @@ void js::gc::TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name) {
   }
   MOZ_ASSERT(trc->isCallbackTracer());
   DoCallback(trc->asCallbackTracer(), thingp, name);
-}
-
-template <typename T>
-void js::gc::TraceWeakEdgeInternal(JSTracer* trc, T* thingp, const char* name) {
-  if (!trc->isMarkingTracer()) {
-    // Non-marking tracers can select whether or not they see weak edges.
-    if (trc->traceWeakEdges()) {
-      TraceEdgeInternal(trc, thingp, name);
-    }
-    return;
-  }
-
-  NoteWeakEdge(GCMarker::fromTracer(trc), thingp);
 }
 
 template <typename T>
@@ -736,44 +718,6 @@ void DoMarking(GCMarker* gcmarker, T* thing) {
 template <typename T>
 void DoMarking(GCMarker* gcmarker, const T& thing) {
   ApplyGCThingTyped(thing, [gcmarker](auto t) { DoMarking(gcmarker, t); });
-}
-
-template <typename T>
-void NoteWeakEdge(GCMarker* gcmarker, T** thingp) {
-  // Do per-type marking precondition checks.
-  if (!ShouldMark(gcmarker, *thingp)) {
-    return;
-  }
-
-  CheckTracedThing(gcmarker, *thingp);
-
-  // If the target is already marked, there's no need to store the edge.
-  if (IsMarkedUnbarriered(gcmarker->runtime(), thingp)) {
-    return;
-  }
-
-  gcmarker->noteWeakEdge(thingp);
-}
-
-template <typename T>
-void NoteWeakEdge(GCMarker* gcmarker, T* thingp) {
-  MOZ_CRASH("the gc does not support tagged pointers as weak edges");
-}
-
-template <typename T>
-void js::GCMarker::noteWeakEdge(T* edge) {
-  static_assert(IsBaseOf<Cell, typename mozilla::RemovePointer<T>::Type>::value,
-                "edge must point to a GC pointer");
-  MOZ_ASSERT((*edge)->isTenured());
-
-  // Note: we really want the *source* Zone here. The edge may start in a
-  // non-gc heap location, however, so we use the fact that cross-zone weak
-  // references are not allowed and use the *target's* zone.
-  JS::Zone::WeakEdges& weakRefs = (*edge)->asTenured().zone()->gcWeakRefs();
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  if (!weakRefs.append(reinterpret_cast<TenuredCell**>(edge))) {
-    oomUnsafe.crash("Failed to record a weak edge for sweeping.");
-  }
 }
 
 // The simplest traversal calls out to the fully generic traceChildren function
@@ -967,8 +911,8 @@ bool js::GCMarker::mark(T* thing) {
 // traversing equivalent subgraphs.
 
 void LazyScript::traceChildren(JSTracer* trc) {
-  if (script_) {
-    TraceWeakEdge(trc, &script_, "script");
+  if (trc->traceWeakEdges()) {
+    TraceNullableEdge(trc, &script_, "script");
   }
 
   if (function_) {
@@ -1005,9 +949,7 @@ void LazyScript::traceChildren(JSTracer* trc) {
   }
 }
 inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
-  if (thing->script_) {
-    noteWeakEdge(thing->script_.unsafeUnbarrieredForTracing());
-  }
+  // script_ is weak so is not traced here.
 
   if (thing->function_) {
     traverseEdge(thing, static_cast<JSObject*>(thing->function_));
