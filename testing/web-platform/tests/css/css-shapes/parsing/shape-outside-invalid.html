@@ -37,6 +37,8 @@ test_invalid_value("shape-outside", "ellipse(farthest-side at)");
 test_invalid_value("shape-outside", "ellipse(1% 2% top right)");
 test_invalid_value("shape-outside", "ellipse(3%)");
 test_invalid_value("shape-outside", "ellipse(3% at 100% 0%)");
+test_invalid_value("shape-outside", "ellipse(closest-side)");
+test_invalid_value("shape-outside", "ellipse(farthest-side at 100% 0%)");
 test_invalid_value("shape-outside", "ellipse(10% -20% at 30% 40%)");
 test_invalid_value("shape-outside", "ellipse(-50px 60px at 70% 80%)");
 

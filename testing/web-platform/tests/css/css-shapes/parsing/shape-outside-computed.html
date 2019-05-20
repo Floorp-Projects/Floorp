@@ -19,6 +19,7 @@
 <script>
 test_computed_value("shape-outside", "circle(calc(10px + 0.5em) at -50% 50%) border-box", "circle(30px at -50% 50%) border-box");
 test_computed_value("shape-outside", "circle(calc(10px - 0.5em) at 50% -50%) border-box", "circle(0px at 50% -50%) border-box");
+test_computed_value("shape-outside", "ellipse(60% closest-side at 50% 50%)");
 </script>
 </body>
 </html>
