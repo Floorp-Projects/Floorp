@@ -114,7 +114,53 @@ void nsTableColFrame::Reflow(nsPresContext* aPresContext,
 
 void nsTableColFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                        const nsDisplayListSet& aLists) {
-  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aLists);
+  if (IsVisibleForPainting()) {
+    // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
+    // just because we're visible?  Or should it depend on the cell visibility
+    // when we're not the whole table?
+
+    // Paint the outset box-shadows for the table frames
+    if (StyleEffects()->mBoxShadow) {
+      aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowOuter>(
+          aBuilder, this);
+    }
+  }
+
+  // Compute background rect by iterating all cell frame.
+  AutoTArray<uint32_t, 1> colIdx;
+  colIdx.AppendElement(GetColIndex());
+
+  nsTableFrame* table = GetTableFrame();
+  nsTableFrame::RowGroupArray rowGroups;
+  table->OrderRowGroups(rowGroups);
+  for (nsTableRowGroupFrame* rowGroup : rowGroups) {
+    auto offset = rowGroup->GetNormalPosition() - GetNormalPosition() -
+                  GetTableColGroupFrame()->GetNormalPosition();
+    if (!aBuilder->GetDirtyRect().Intersects(
+            nsRect(offset, rowGroup->GetSize()))) {
+      continue;
+    }
+    rowGroup->PaintCellBackgroundsForColumns(this, aBuilder, aLists, colIdx,
+                                             offset);
+  }
+
+  if (IsVisibleForPainting()) {
+    // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
+    // just because we're visible?  Or should it depend on the cell visibility
+    // when we're not the whole table?
+
+    // Paint the inset box-shadows for the table frames
+    if (StyleEffects()->mBoxShadow) {
+      aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowInner>(
+          aBuilder, this);
+    }
+  }
+
+  DisplayOutline(aBuilder, aLists);
+
+  for (nsIFrame* kid : PrincipalChildList()) {
+    BuildDisplayListForChild(aBuilder, kid, aLists);
+  }
 }
 
 int32_t nsTableColFrame::GetSpan() { return StyleTable()->mSpan; }
