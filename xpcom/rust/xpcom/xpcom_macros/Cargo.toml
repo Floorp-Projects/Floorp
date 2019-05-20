@@ -7,6 +7,7 @@ authors = ["Michael Layzell <michael@thelayzells.com>"]
 proc-macro = true
 
 [dependencies]
-syn = "0.13"
-quote = "0.5"
+syn = "0.15"
+quote = "0.6"
+proc-macro2 = "0.4"
 lazy_static = "1.0"
