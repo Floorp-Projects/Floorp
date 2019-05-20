@@ -28,6 +28,8 @@ var LoginHelper = {
   debug: null,
   enabled: null,
   formlessCaptureEnabled: null,
+  generationAvailable: null,
+  generationEnabled: null,
   insecureAutofill: null,
   managementURI: null,
   privateBrowsingCaptureEnabled: null,
@@ -47,6 +49,8 @@ var LoginHelper = {
     this.debug = Services.prefs.getBoolPref("signon.debug");
     this.enabled = Services.prefs.getBoolPref("signon.rememberSignons");
     this.formlessCaptureEnabled = Services.prefs.getBoolPref("signon.formlessCapture.enabled");
+    this.generationAvailable = Services.prefs.getBoolPref("signon.generation.available");
+    this.generationEnabled = Services.prefs.getBoolPref("signon.generation.enabled");
     this.insecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
     this.managementURI = Services.prefs.getStringPref("signon.management.overrideURI", null);
     this.privateBrowsingCaptureEnabled =
