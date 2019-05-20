@@ -72,6 +72,10 @@ def taskcluster_url(logger, commits):
     tc_url = ('https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.'
               'revision.{changeset}.source.manifest-upload')
 
+    default = ("https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central."
+               "latest.source.manifest-upload" +
+               artifact_path)
+
     for revision in commits:
         req = None
 
@@ -84,11 +88,11 @@ def taskcluster_url(logger, commits):
                       headers=req_headers)
             req.raise_for_status()
         except requests.exceptions.RequestException:
-            if req and req.status_code == 404:
+            if req is not None and req.status_code == 404:
                 # The API returns a 404 if it can't find a changeset for the revision.
                 continue
             else:
-                return False
+                return default
 
         result = req.json()
 
@@ -100,7 +104,7 @@ def taskcluster_url(logger, commits):
         try:
             req = get(logger, tc_url.format(changeset=cset))
         except requests.exceptions.RequestException:
-            return False
+            return default
 
         if req.status_code == 200:
             return tc_url.format(changeset=cset) + artifact_path
@@ -108,9 +112,7 @@ def taskcluster_url(logger, commits):
     logger.info("Can't find a commit-specific manifest so just using the most "
                 "recent one")
 
-    return ("https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central."
-            "latest.source.manifest-upload" +
-            artifact_path)
+    return default
 
 
 def download_manifest(logger, test_paths, commits_func, url_func, force=False):
