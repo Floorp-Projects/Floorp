@@ -168,6 +168,8 @@ void Animation::SetEffectNoUpdate(AnimationEffect* aEffect) {
     ReschedulePendingTasks();
   }
 
+  MaybeScheduleReplacementCheck();
+
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
 }
 
@@ -652,6 +654,13 @@ void Animation::Tick() {
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Sync);
 
+  // Check for changes to whether or not this animation is replaceable.
+  bool isReplaceable = IsReplaceable();
+  if (isReplaceable && !mWasReplaceableAtLastTick) {
+    ScheduleReplacementCheck();
+  }
+  mWasReplaceableAtLastTick = isReplaceable;
+
   if (!mEffect) {
     return;
   }
@@ -847,6 +856,115 @@ void Animation::UpdateRelevance() {
   }
 }
 
+template <class T>
+bool IsMarkupAnimation(T* aAnimation) {
+  return aAnimation && aAnimation->IsTiedToMarkup();
+}
+
+// https://drafts.csswg.org/web-animations/#replaceable-animation
+bool Animation::IsReplaceable() const {
+  // We never replace CSS animations or CSS transitions since they are managed
+  // by CSS.
+  if (IsMarkupAnimation(AsCSSAnimation()) ||
+      IsMarkupAnimation(AsCSSTransition())) {
+    return false;
+  }
+
+  // Only finished animations can be replaced.
+  if (PlayState() != AnimationPlayState::Finished) {
+    return false;
+  }
+
+  // Already removed animations cannot be replaced.
+  if (ReplaceState() == AnimationReplaceState::Removed) {
+    return false;
+  }
+
+  // We can only replace an animation if we know that, uninterfered, it would
+  // never start playing again. That excludes any animations on timelines that
+  // aren't monotonically increasing.
+  //
+  // If we don't have any timeline at all, then we can't be in the finished
+  // state (since we need both a resolved start time and current time for that)
+  // and will have already returned false above.
+  //
+  // (However, if it ever does become possible to be finished without a timeline
+  // then we will want to return false here since it probably suggests an
+  // animation being driven directly by script, in which case we can't assume
+  // anything about how they will behave.)
+  if (!GetTimeline() || !GetTimeline()->TracksWallclockTime()) {
+    return false;
+  }
+
+  // If the animation doesn't have an effect then we can't determine if it is
+  // filling or not so just leave it alone.
+  if (!GetEffect()) {
+    return false;
+  }
+
+  // At the time of writing we only know about KeyframeEffects. If we introduce
+  // other types of effects we will need to decide if they are replaceable or
+  // not.
+  MOZ_ASSERT(GetEffect()->AsKeyframeEffect(),
+             "Effect should be a keyframe effect");
+
+  // We only replace animations that are filling.
+  if (GetEffect()->GetComputedTiming().mProgress.IsNull()) {
+    return false;
+  }
+
+  // We should only replace animations with a target element (since otherwise
+  // what other effects would we consider when determining if they are covered
+  // or not?).
+  if (!GetEffect()->AsKeyframeEffect()->GetTarget()) {
+    return false;
+  }
+
+  return true;
+}
+
+bool Animation::IsRemovable() const {
+  return ReplaceState() == AnimationReplaceState::Active && IsReplaceable();
+}
+
+void Animation::ScheduleReplacementCheck() {
+  MOZ_ASSERT(
+      IsReplaceable(),
+      "Should only schedule a replacement check for a replaceable animation");
+
+  // If IsReplaceable() is true, the following should also hold
+  MOZ_ASSERT(GetEffect());
+  MOZ_ASSERT(GetEffect()->AsKeyframeEffect());
+  MOZ_ASSERT(GetEffect()->AsKeyframeEffect()->GetTarget());
+
+  Maybe<NonOwningAnimationTarget> target =
+      GetEffect()->AsKeyframeEffect()->GetTarget();
+
+  nsPresContext* presContext =
+      nsContentUtils::GetContextForContent(target->mElement);
+  if (presContext) {
+    presContext->EffectCompositor()->NoteElementForReducing(*target);
+  }
+}
+
+void Animation::MaybeScheduleReplacementCheck() {
+  if (!IsReplaceable()) {
+    return;
+  }
+
+  ScheduleReplacementCheck();
+}
+
+void Animation::Remove() {
+  MOZ_ASSERT(IsRemovable(),
+             "Should not be trying to remove an effect that is not removable");
+
+  mReplaceState = AnimationReplaceState::Removed;
+
+  QueuePlaybackEvent(NS_LITERAL_STRING("remove"),
+                     GetTimelineCurrentTimeAsTimeStamp());
+}
+
 bool Animation::HasLowerCompositeOrderThan(const Animation& aOther) const {
   // 0. Object-equality case
   if (&aOther == this) {
@@ -989,9 +1107,25 @@ void Animation::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
 
 void Animation::NotifyEffectTimingUpdated() {
   MOZ_ASSERT(mEffect,
-             "We should only update timing effect when we have a target "
+             "We should only update effect timing when we have a target "
              "effect");
   UpdateTiming(Animation::SeekFlag::NoSeek, Animation::SyncNotifyFlag::Async);
+}
+
+void Animation::NotifyEffectPropertiesUpdated() {
+  MOZ_ASSERT(mEffect,
+             "We should only update effect properties when we have a target "
+             "effect");
+
+  MaybeScheduleReplacementCheck();
+}
+
+void Animation::NotifyEffectTargetUpdated() {
+  MOZ_ASSERT(mEffect,
+             "We should only update the effect target when we have a target "
+             "effect");
+
+  MaybeScheduleReplacementCheck();
 }
 
 void Animation::NotifyGeometricAnimationsStartingThisFrame() {
@@ -1503,7 +1637,7 @@ void Animation::QueuePlaybackEvent(const nsAString& aName,
 
   AnimationPlaybackEventInit init;
 
-  if (aName.EqualsLiteral("finish")) {
+  if (aName.EqualsLiteral("finish") || aName.EqualsLiteral("remove")) {
     init.mCurrentTime = GetCurrentTimeAsDouble();
   }
   if (mTimeline) {
