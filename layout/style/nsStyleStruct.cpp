@@ -2984,6 +2984,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE),
       mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT),
       mTransformBox(StyleGeometryBox::BorderBox),
+      mOffsetPath(StyleOffsetPath::None()),
       mTransformOrigin{LengthPercentage::FromPercentage(0.5),
                        LengthPercentage::FromPercentage(0.5),
                        {0.}},
@@ -3051,8 +3052,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mBackfaceVisibility(aSource.mBackfaceVisibility),
       mTransformStyle(aSource.mTransformStyle),
       mTransformBox(aSource.mTransformBox),
-      mMotion(aSource.mMotion ? MakeUnique<StyleMotion>(*aSource.mMotion)
-                              : nullptr),
+      mOffsetPath(aSource.mOffsetPath),
       mTransformOrigin(aSource.mTransformOrigin),
       mChildPerspective(aSource.mChildPerspective),
       mPerspectiveOrigin(aSource.mPerspectiveOrigin),
@@ -3094,22 +3094,23 @@ static inline nsChangeHint CompareTransformValues(
   return result;
 }
 
-static inline nsChangeHint CompareMotionValues(const StyleMotion* aMotion,
-                                               const StyleMotion* aNewMotion) {
+static inline nsChangeHint CompareMotionValues(
+    const StyleOffsetPath& aOffsetPath, const StyleOffsetPath& aNewOffsetPath) {
   nsChangeHint result = nsChangeHint(0);
+
+  if (aOffsetPath == aNewOffsetPath) {
+    return result;
+  }
 
   // TODO: Bug 1482737: This probably doesn't need to UpdateOverflow
   // (or UpdateTransformLayer) if there's already a transform.
-  if (!aMotion != !aNewMotion || (aMotion && *aMotion != *aNewMotion)) {
-    // Set the same hints as what we use for transform because motion path is
-    // a kind of transform and will be combined with other transforms.
-    result |= nsChangeHint_UpdateTransformLayer;
-    if ((aMotion && aMotion->HasPath()) &&
-        (aNewMotion && aNewMotion->HasPath())) {
-      result |= nsChangeHint_UpdatePostTransformOverflow;
-    } else {
-      result |= nsChangeHint_UpdateOverflow;
-    }
+  // Set the same hints as what we use for transform because motion path is
+  // a kind of transform and will be combined with other transforms.
+  result |= nsChangeHint_UpdateTransformLayer;
+  if (!aOffsetPath.IsNone() && !aNewOffsetPath.IsNone()) {
+    result |= nsChangeHint_UpdatePostTransformOverflow;
+  } else {
+    result |= nsChangeHint_UpdateOverflow;
   }
   return result;
 }
@@ -3237,7 +3238,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     transformHint |= CompareTransformValues(mRotate, aNewData.mRotate);
     transformHint |= CompareTransformValues(mTranslate, aNewData.mTranslate);
     transformHint |= CompareTransformValues(mScale, aNewData.mScale);
-    transformHint |= CompareMotionValues(mMotion.get(), aNewData.mMotion.get());
+    transformHint |= CompareMotionValues(mOffsetPath, aNewData.mOffsetPath);
 
     if (mTransformOrigin != aNewData.mTransformOrigin) {
       transformHint |= nsChangeHint_UpdateTransformLayer |
