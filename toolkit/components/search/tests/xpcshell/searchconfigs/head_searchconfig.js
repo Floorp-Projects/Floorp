@@ -14,7 +14,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const GLOBAL_SCOPE = this;
 
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
-const URLTYPE_SEARCH_HTML  = "text/html";
+const URLTYPE_SEARCH_HTML = "text/html";
+const SUBMISSION_PURPOSES = [
+  "searchbar",
+  "keyword",
+  "contextmenu",
+  "homepage",
+  "newtab",
+];
 
 /**
  * This class implements the test harness for search configuration tests.
@@ -109,7 +116,7 @@ class SearchConfigTest {
         const engines = await Services.search.getVisibleEngines();
         const isPresent = this._assertAvailableEngines(region, locale, engines);
         if (isPresent) {
-          this._assertCorrectDomains(region, locale, engines);
+          this._assertEngineDetails(region, locale, engines);
         }
       }
     }
@@ -302,7 +309,7 @@ class SearchConfigTest {
   }
 
   /**
-   * Asserts whether the engine is using the correct domains or not.
+   * Asserts the engine follows various rules.
    *
    * @param {string} region
    *   The two-letter region code.
@@ -311,36 +318,80 @@ class SearchConfigTest {
    * @param {array} engines
    *   The current visible engines.
    */
-  _assertCorrectDomains(region, locale, engines) {
-    const [expectedDomain, domainConfig] =
-      Object.entries(this._config.domains).find(([key, value]) =>
-        this._localeRegionInSection(value.included, region, locale));
-
-    this.assertOk(expectedDomain,
-      `Should have an expectedDomain for the engine in region: "${region}" locale: "${locale}"`);
+  _assertEngineDetails(region, locale, engines) {
+    const details = this._config.details.filter(value => {
+      const included = this._localeRegionInSection(value.included, region, locale);
+      const excluded = value.excluded && this._localeRegionInSection(value.excluded, region, locale);
+      return included && !excluded;
+    });
 
     const engine = this._findEngine(engines, this._config.identifier);
     this.assertOk(engine, "Should have an engine present");
 
+    const location = `in region:${region}, locale:${locale}`;
+
+    for (const rule of details) {
+      this._assertCorrectDomains(location, engine, rule);
+      if (rule.codes) {
+        this._assertCorrectCodes(location, engine, rule);
+      }
+    }
+  }
+
+  /**
+   * Asserts whether the engine is using the correct domains or not.
+   *
+   * @param {string} location
+   *   Debug string with locale + region information.
+   * @param {object} engine
+   *   The engine being tested.
+   * @param {object} rules
+   *   Rules to test.
+   */
+  _assertCorrectDomains(location, engine, rules) {
+    this.assertOk(rules.domain,
+      `Should have an expectedDomain for the engine ${location}`);
+
     const searchForm = new URL(engine.searchForm);
-    this.assertOk(searchForm.host.endsWith(expectedDomain),
-      `Should have the correct search form domain for region: "${region}" locale: "${locale}".
-       Got "${searchForm.host}", expected to end with "${expectedDomain}".`);
+    this.assertOk(searchForm.host.endsWith(rules.domain),
+      `Should have the correct search form domain ${location}.
+       Got "${searchForm.host}", expected to end with "${rules.domain}".`);
 
     for (const urlType of [URLTYPE_SUGGEST_JSON, URLTYPE_SEARCH_HTML]) {
       const submission = engine.getSubmission("test", urlType);
       if (urlType == URLTYPE_SUGGEST_JSON &&
-          (this._config.noSuggestionsURL || domainConfig.noSuggestionsURL)) {
+          (this._config.noSuggestionsURL || rules.noSuggestionsURL)) {
         this.assertOk(!submission, "Should not have a submission url");
       } else if (this._config.searchUrlBase) {
           this.assertEqual(submission.uri.prePath + submission.uri.filePath,
-            this._config.searchUrlBase + domainConfig.searchUrlEnd,
-            `Should have the correct domain for type: ${urlType} region: "${region}" locale: "${locale}".`);
+            this._config.searchUrlBase + rules.searchUrlEnd,
+            `Should have the correct domain for type: ${urlType} ${location}.`);
       } else {
-        this.assertOk(submission.uri.host.endsWith(expectedDomain),
-          `Should have the correct domain for type: ${urlType} region: "${region}" locale: "${locale}".
-           Got "${submission.uri.host}", expected to end with "${expectedDomain}".`);
+        this.assertOk(submission.uri.host.endsWith(rules.domain),
+          `Should have the correct domain for type: ${urlType} ${location}.
+           Got "${submission.uri.host}", expected to end with "${rules.domain}".`);
       }
+    }
+  }
+
+  /**
+   * Asserts whether the engine is using the correct codes or not.
+   *
+   * @param {string} location
+   *   Debug string with locale + region information.
+   * @param {object} engine
+   *   The engine being tested.
+   * @param {object} rules
+   *   Rules to test.
+   */
+  _assertCorrectCodes(location, engine, rules) {
+    for (const purpose of SUBMISSION_PURPOSES) {
+      // Don't need to repeat the code if we use it for all purposes.
+      const code = (typeof rules.codes === "string") ? rules.codes :
+       rules.codes[purpose];
+      const submission = engine.getSubmission("test", "text/html", purpose);
+      this.assertOk(submission.uri.query.split("&").includes(code),
+        `Expected "${code}" in url "${submission.uri.spec}" from purpose "${purpose}" ${location}`);
     }
   }
 
