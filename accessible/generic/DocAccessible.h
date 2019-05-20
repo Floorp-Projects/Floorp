@@ -284,11 +284,12 @@ class DocAccessible : public HyperTextAccessibleWrap,
 
   /**
    * Return an accessible for the given DOM node or container accessible if
-   * the node is not accessible.
+   * the node is not accessible. If aNoContainerIfPruned is true it will return
+   * null if the node is in a pruned subtree (eg. aria-hidden or unselected deck
+   * panel)
    */
-  enum { eIgnoreARIAHidden = 0, eNoContainerIfARIAHidden = 1 };
-  Accessible* GetAccessibleOrContainer(
-      nsINode* aNode, int aARIAHiddenFlag = eIgnoreARIAHidden) const;
+  Accessible* GetAccessibleOrContainer(nsINode* aNode,
+                                       bool aNoContainerIfPruned = false) const;
 
   /**
    * Return a container accessible for the given DOM node.
@@ -302,7 +303,7 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * container for it.
    */
   Accessible* AccessibleOrTrueContainer(
-      nsINode* aNode, int aARIAHiddenFlag = eIgnoreARIAHidden) const;
+      nsINode* aNode, bool aNoContainerIfPruned = false) const;
 
   /**
    * Return an accessible for the given node or its first accessible descendant.
