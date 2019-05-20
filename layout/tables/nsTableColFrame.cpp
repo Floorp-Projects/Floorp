@@ -114,7 +114,11 @@ void nsTableColFrame::Reflow(nsPresContext* aPresContext,
 
 void nsTableColFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                        const nsDisplayListSet& aLists) {
-  DisplayOutsetBoxShadow(aBuilder, aLists.BorderBackground());
+  // Per https://drafts.csswg.org/css-tables-3/#global-style-overrides:
+  // "All css properties of table-column and table-column-group boxes are
+  // ignored, except when explicitly specified by this specification."
+  // CSS outlines and box-shadows fall into this category, so we skip them
+  // on these boxes.
 
   // Compute background rect by iterating all cell frame.
   AutoTArray<uint32_t, 1> colIdx;
@@ -133,13 +137,6 @@ void nsTableColFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     rowGroup->PaintCellBackgroundsForColumns(this, aBuilder, aLists, colIdx,
                                              offset);
   }
-
-  DisplayInsetBoxShadow(aBuilder, aLists.BorderBackground());
-
-  // Per https://drafts.csswg.org/css-tables-3/#global-style-overrides:
-  // "All css properties of table-column and table-column-group boxes are
-  // ignored, except when explicitly specified by this specification."
-  // CSS outlines fall into this category, so we skip them on these boxes.
 
   for (nsIFrame* kid : PrincipalChildList()) {
     BuildDisplayListForChild(aBuilder, kid, aLists);
