@@ -21,9 +21,6 @@ typedef mozilla::Telemetry::OriginMetricID OriginMetricID;
 namespace mozilla {
 namespace dom {
 
-// sync with TelemetryOriginData.inc
-NS_NAMED_LITERAL_CSTRING(kDummyOriginHash, "PAGELOAD");
-
 // randomly choose 1% users included in the content blocking measurement
 // based on their client id.
 static constexpr double kRatioReportUser = 0.01;
@@ -114,12 +111,6 @@ void ContentBlockingLog::ReportLog() {
     return;
   }
   LOG("ContentBlockingLog::ReportLog [this=%p]", this);
-  const bool testMode =
-      StaticPrefs::telemetry_origin_telemetry_test_mode_enabled();
-  OriginMetricID metricId =
-      testMode ? OriginMetricID::ContentBlocking_Blocked_TestOnly
-               : OriginMetricID::ContentBlocking_Blocked;
-  ReportOriginSingleHash(metricId, kDummyOriginHash);
 
   for (const auto& originEntry : mLog) {
     if (!originEntry.mData) {
@@ -135,9 +126,12 @@ void ContentBlockingLog::ReportLog() {
 
       const bool isBlocked = logEntry.mBlocked;
       Maybe<StorageAccessGrantedReason> reason = logEntry.mReason;
+      const bool testMode =
+          StaticPrefs::telemetry_origin_telemetry_test_mode_enabled();
 
-      metricId = testMode ? OriginMetricID::ContentBlocking_Blocked_TestOnly
-                          : OriginMetricID::ContentBlocking_Blocked;
+      OriginMetricID metricId =
+          testMode ? OriginMetricID::ContentBlocking_Blocked_TestOnly
+                   : OriginMetricID::ContentBlocking_Blocked;
       if (!isBlocked) {
         MOZ_ASSERT(reason.isSome());
         switch (reason.value()) {
