@@ -3996,6 +3996,15 @@ var gCSSProperties = {
     invalid_values: [],
     quirks_values: { "5": "5px" },
   },
+  "line-break": {
+    domProp: "lineBreak",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "anywhere" ],
+    /* these values should be valid but are not yet implemented in gecko */
+    invalid_values: [ "loose", "normal", "strict" ]
+  },
   "line-height": {
     domProp: "lineHeight",
     inherited: true,
