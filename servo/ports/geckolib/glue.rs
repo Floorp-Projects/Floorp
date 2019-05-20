@@ -626,7 +626,6 @@ pub extern "C" fn Servo_AnimationCompose(
     use style::gecko_bindings::bindings::Gecko_AnimationGetBaseStyle;
     use style::gecko_bindings::bindings::Gecko_GetPositionInSegment;
     use style::gecko_bindings::bindings::Gecko_GetProgressFromComputedTiming;
-    use style::properties::animated_properties::AnimationValueMap;
 
     let property = match LonghandId::from_nscsspropertyid(css_property) {
         Ok(longhand) if longhand.is_animatable() => longhand,
@@ -928,8 +927,6 @@ pub extern "C" fn Servo_AnimationValueMap_GetValue(
     raw_value_map: &mut structs::RawServoAnimationValueMap,
     property_id: nsCSSPropertyID,
 ) -> Strong<RawServoAnimationValue> {
-    use style::properties::animated_properties::AnimationValueMap;
-
     let property = match LonghandId::from_nscsspropertyid(property_id) {
         Ok(longhand) => longhand,
         Err(()) => return Strong::null(),
