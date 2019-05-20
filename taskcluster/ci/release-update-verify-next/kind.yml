@@ -1,0 +1,73 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - post-balrog-dummy
+    - post-beetmover-dummy
+    - release-balrog-submit-toplevel
+    - release-update-verify-config-next
+
+transforms:
+    - taskgraph.transforms.release:run_on_releases
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.update_verify:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    name: update-verify-next
+    run-on-projects: []  # to make sure this never runs as part of CI
+    run-on-releases: [esr68]
+    shipping-phase: promote
+    worker-type: b-linux
+    worker:
+        artifacts:
+            - name: 'public/build/diff-summary.log'
+              path: '/builds/worker/tools/release/updates/diff-summary.log'
+              type: file
+        docker-image:
+            in-tree: "update-verify"
+        max-run-time: 7200
+        retry-exit-status:
+            - 255
+        env:
+            CHANNEL: "esr-localtest-next"
+    treeherder:
+        symbol: UV(UVnext)
+        kind: test
+    extra:
+        chunks: 12
+
+jobs:
+    firefox-next-linux64:
+        description: linux64 esr-next update verify
+        shipping-product: firefox
+        attributes:
+            build_platform: linux64-shippable
+
+    firefox-next-linux:
+        description: linux esr-next update verify
+        shipping-product: firefox
+        attributes:
+            build_platform: linux-shippable
+
+    firefox-next-win64:
+        description: win64 esr-next update verify
+        shipping-product: firefox
+        attributes:
+            build_platform: win64-shippable
+
+    firefox-next-win32:
+        description: win32 esr-next update verify
+        shipping-product: firefox
+        attributes:
+            build_platform: win32-shippable
+
+    firefox-next-macosx64:
+        description: macosx64 esr-next update verify
+        shipping-product: firefox
+        attributes:
+            build_platform: macosx64-shippable
