@@ -269,7 +269,7 @@ win32-shippable/opt:
         by-release-type:
             nightly: true
             beta: true
-            release: true
+            release.*: true
             esr.*: false
             default:
                 by-project:
@@ -832,7 +832,7 @@ win32-devedition-nightly/opt:
         by-release-type:
             nightly: true
             beta: true
-            release: true
+            release.*: true
             default:
                 by-project:
                     # browser/confvars.sh looks for nightly-try
