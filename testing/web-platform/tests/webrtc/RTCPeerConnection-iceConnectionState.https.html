@@ -190,7 +190,8 @@ async_test(t => {
     t.add_cleanup(() => pc2.close());
 
     const stream = await getNoiseStream({audio: true});
-    pc1.addStream(stream);
+    t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+    stream.getTracks().forEach(track => pc1.addTrack(track, stream));
 
     coupleIceCandidates(pc1, pc2);
     doSignalingHandshake(pc1, pc2);
@@ -205,7 +206,8 @@ async_test(t => {
     t.add_cleanup(() => pc2.close());
 
     const stream = await getNoiseStream({audio: true, video:true});
-    pc1.addStream(stream);
+    t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+    stream.getTracks().forEach(track => pc1.addTrack(track, stream));
 
     coupleIceCandidates(pc1, pc2);
     doSignalingHandshake(pc1, pc2);
@@ -221,6 +223,7 @@ async_test(t => {
 
     caller.addTransceiver('audio', {direction:'recvonly'});
     const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
     const [track] = stream.getTracks();
     callee.addTrack(track, stream);
     coupleIceCandidates(caller, callee);
