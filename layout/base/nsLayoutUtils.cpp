@@ -9955,17 +9955,16 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame);
 
   const nsStyleDisplay* display = aFrame->StyleDisplay();
-  if (!display->mMotion || !display->mMotion->HasPath()) {
+  if (display->mOffsetPath.IsNone()) {
     return Nothing();
   }
 
-  const UniquePtr<StyleMotion>& motion = display->mMotion;
   // Bug 1429299 - Implement offset-distance for motion path. For now, we use
   // the default value, i.e. 0%.
   float distance = 0.0;
   float angle = 0.0;
   Point point;
-  if (motion->OffsetPath().GetType() == StyleShapeSourceType::Path) {
+  if (display->mOffsetPath.IsPath()) {
     // Build the path and compute the point and angle for creating the
     // equivalent translate and rotate.
     // Here we only need to build a valid path for motion path, so
@@ -9980,8 +9979,8 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
     RefPtr<PathBuilder> builder =
         drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
     RefPtr<gfx::Path> gfxPath =
-        SVGPathData::BuildPath(motion->OffsetPath().Path().Path(), builder,
-                               NS_STYLE_STROKE_LINECAP_BUTT, 0.0);
+        SVGPathData::BuildPath(display->mOffsetPath.AsPath()._0.AsSpan(),
+                               builder, NS_STYLE_STROKE_LINECAP_BUTT, 0.0);
     if (!gfxPath) {
       return Nothing();
     }

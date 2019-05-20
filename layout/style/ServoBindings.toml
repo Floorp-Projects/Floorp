@@ -408,6 +408,7 @@ cbindgen-types = [
     { gecko = "StyleFontDisplay", servo = "font_face::FontDisplay" },
     { gecko = "StyleFontFaceSourceListComponent", servo = "font_face::FontFaceSourceListComponent" },
     { gecko = "StyleFontLanguageOverride", servo = "values::computed::font::FontLanguageOverride" },
+    { gecko = "StyleOffsetPath", servo = "values::computed::motion::OffsetPath" },
     { gecko = "StylePathCommand", servo = "values::specified::svg_path::PathCommand" },
     { gecko = "StyleUnicodeRange", servo = "cssparser::UnicodeRange" },
     { gecko = "StyleOverflowWrap", servo = "values::computed::OverflowWrap" },
