@@ -2589,23 +2589,36 @@ void BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     // each MappedFlow. The line-breaker will flush its text if the property
     // actually changes.
     const auto* styleText = mappedFlow->mStartFrame->StyleText();
-    if (styleText->mLineBreak == StyleLineBreak::Anywhere) {
-        mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_Anywhere);
-    } else {
-      auto wordBreak = styleText->EffectiveWordBreak();
-      switch (wordBreak) {
-        case StyleWordBreak::BreakAll:
-          mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_BreakAll);
-          break;
-        case StyleWordBreak::KeepAll:
-          mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_KeepAll);
-          break;
-        case StyleWordBreak::Normal:
-        default:
-          MOZ_ASSERT(wordBreak == StyleWordBreak::Normal);
-          mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_Normal);
-          break;
-      }
+    auto wordBreak = styleText->EffectiveWordBreak();
+    switch (wordBreak) {
+      case StyleWordBreak::BreakAll:
+        mLineBreaker.SetWordBreak(LineBreaker::WordBreak::BreakAll);
+        break;
+      case StyleWordBreak::KeepAll:
+        mLineBreaker.SetWordBreak(LineBreaker::WordBreak::KeepAll);
+        break;
+      case StyleWordBreak::Normal:
+      default:
+        MOZ_ASSERT(wordBreak == StyleWordBreak::Normal);
+        mLineBreaker.SetWordBreak(LineBreaker::WordBreak::Normal);
+        break;
+    }
+    switch (styleText->mLineBreak) {
+      case StyleLineBreak::Auto:
+        mLineBreaker.SetStrictness(LineBreaker::Strictness::Auto);
+        break;
+      case StyleLineBreak::Normal:
+        mLineBreaker.SetStrictness(LineBreaker::Strictness::Normal);
+        break;
+      case StyleLineBreak::Loose:
+        mLineBreaker.SetStrictness(LineBreaker::Strictness::Loose);
+        break;
+      case StyleLineBreak::Strict:
+        mLineBreaker.SetStrictness(LineBreaker::Strictness::Strict);
+        break;
+      case StyleLineBreak::Anywhere:
+        mLineBreaker.SetStrictness(LineBreaker::Strictness::Anywhere);
+        break;
     }
 
     uint32_t offset = iter.GetSkippedOffset();
