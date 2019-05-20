@@ -63,6 +63,7 @@ class nsIScrollableFrame;
 class nsSubDocumentFrame;
 class nsDisplayCompositorHitTestInfo;
 class nsDisplayScrollInfoLayer;
+class nsDisplayTableBackgroundSet;
 class nsCaret;
 enum class nsDisplayOwnLayerFlags;
 struct WrFiltersHolder;
@@ -872,6 +873,16 @@ class nsDisplayListBuilder {
    */
   void SetSyncDecodeImages(bool aSyncDecodeImages) {
     mSyncDecodeImages = aSyncDecodeImages;
+  }
+
+  nsDisplayTableBackgroundSet* SetTableBackgroundSet(
+      nsDisplayTableBackgroundSet* aTableSet) {
+    nsDisplayTableBackgroundSet* old = mTableBackgroundSet;
+    mTableBackgroundSet = aTableSet;
+    return old;
+  }
+  nsDisplayTableBackgroundSet* GetTableBackgroundSet() const {
+    return mTableBackgroundSet;
   }
 
   void FreeClipChains();
@@ -1924,6 +1935,7 @@ class nsDisplayListBuilder {
   nsTArray<nsDisplayItem*> mTemporaryItems;
   const ActiveScrolledRoot* mActiveScrolledRootForRootScrollframe;
   nsDisplayListBuilderMode mMode;
+  nsDisplayTableBackgroundSet* mTableBackgroundSet;
   ViewID mCurrentScrollParentId;
   ViewID mCurrentScrollbarTarget;
   MaybeScrollDirection mCurrentScrollbarDirection;

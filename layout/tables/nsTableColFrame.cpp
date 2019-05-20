@@ -134,8 +134,9 @@ void nsTableColFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
             nsRect(offset, rowGroup->GetSize()))) {
       continue;
     }
-    rowGroup->PaintCellBackgroundsForColumns(this, aBuilder, aLists, colIdx,
-                                             offset);
+    rowGroup->PaintCellBackgroundsForColumns(
+        this, aBuilder, aBuilder->GetTableBackgroundSet()->ColBackgrounds(),
+        colIdx, offset);
   }
 
   for (nsIFrame* kid : PrincipalChildList()) {
