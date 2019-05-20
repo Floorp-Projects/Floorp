@@ -92,7 +92,7 @@
 #include "js/CompileOptions.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
 #include "js/Debug.h"
-#include "js/Equality.h"  // JS::SameValue
+#include "js/Equality.h"                 // JS::SameValue
 #include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
 #include "js/GCVector.h"
 #include "js/Initialization.h"
@@ -5100,6 +5100,12 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
 
   // Extract argument 2: Options.
 
+  // BinAST currently supports 2 formats, multipart and context.
+  enum {
+    Multipart,
+    Context,
+  } mode = Multipart;
+
   if (args.length() >= 2) {
     if (!args[1].isObject()) {
       const char* typeName = InformalValueTypeName(args[1]);
@@ -5121,7 +5127,11 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
       // Currently not used, reserved for future.
-      if (!StringEqualsAscii(linearFormat, "multipart")) {
+      if (StringEqualsAscii(linearFormat, "multipart")) {
+        mode = Multipart;
+      } else if (StringEqualsAscii(linearFormat, "context")) {
+        mode = Context;
+      } else {
         UniqueChars printable = JS_EncodeStringToUTF8(cx, linearFormat);
         if (!printable) {
           return false;
@@ -5156,7 +5166,9 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   Directives directives(false);
   GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, false);
 
-  auto parseFunc = ParseBinASTData<frontend::BinASTTokenReaderMultipart>;
+  auto parseFunc = mode == Multipart
+                       ? ParseBinASTData<frontend::BinASTTokenReaderMultipart>
+                       : ParseBinASTData<frontend::BinASTTokenReaderContext>;
   if (!parseFunc(cx, buf_data, buf_length, &globalsc, usedNames, options,
                  sourceObj)) {
     return false;
@@ -8684,8 +8696,11 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 #if defined(JS_BUILD_BINAST)
 
 JS_FN_HELP("parseBin", BinParse, 1, 0,
-"parseBin(arraybuffer)",
-"  Parses a Binary AST, potentially throwing."),
+"parseBin(arraybuffer, [options])",
+"  Parses a Binary AST, potentially throwing. If present, |options| may\n"
+"  have properties saying how the passed |arraybuffer| should be handled:\n"
+"      format: the format of the BinAST file\n"
+"        (\"multipart\" or \"context\")"),
 
 #endif // defined(JS_BUILD_BINAST)
 
