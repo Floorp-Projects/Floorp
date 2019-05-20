@@ -307,6 +307,12 @@ var supported_properties = {
 
 if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
   supported_properties["offset-path"] = [ test_path_function ];
+  supported_properties["offset-distance"] =
+    [ test_length_transition,
+      test_percent_transition,
+      test_length_unclamped,
+      test_percent_unclamped,
+      test_calc_wrapped_calc_transition ];
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
@@ -1477,6 +1483,57 @@ function test_length_percent_calc_transition(prop) {
                        "75%");
   check_distance(prop, "150px", "calc(125px + 12.5%)",
                        "calc(50% + 50px)");
+}
+
+// This can deal well with properties for which the computed value
+// is not the used value, e.g. offset-distance, translate.
+function test_calc_wrapped_calc_transition(prop) {
+  // Test interpolation that computes to calc() (transition from % to px)
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "20%", "");
+  is(cs.getPropertyValue(prop), "20%",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "12px", "");
+  is(cs.getPropertyValue(prop), "calc(15% + 3px)",
+     "property " + prop + ": interpolation that computes to calc()");
+
+  check_distance(prop, "20%", "calc(15% + 3px)", "12px");
+
+  // Test interpolation that computes to calc() (transition from px to %)
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "12px", "");
+  is(cs.getPropertyValue(prop), "12px",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "20%", "");
+  is(cs.getPropertyValue(prop), "calc(5% + 9px)",
+     "property " + prop + ": interpolation that computes to calc()");
+
+  check_distance(prop, "12px", "calc(5% + 9px)", "20%");
+
+  // Test interpolation between calc() and non-calc()
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "calc(40px + 10%)", "");
+  is(cs.getPropertyValue(prop), "calc(10% + 40px)",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "30%", "");
+  is(cs.getPropertyValue(prop), "calc(15% + 30px)",
+     "property " + prop + ": interpolation between calc() and non-calc()");
+
+  check_distance(prop, "calc(40px + 10%)", "calc(30px + 15%)", "30%");
+
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "16px", "");
+  is(cs.getPropertyValue(prop), "16px",
+     "property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "calc(8px + 60%)", "");
+  is(cs.getPropertyValue(prop), "calc(15% + 14px)",
+     "property " + prop + ": interpolation between calc() and non-calc()");
+
+  check_distance(prop, "16px", "calc(14px + 15%)", "calc(8px + 60%)");
 }
 
 function test_number_transition(prop) {
@@ -2890,11 +2947,11 @@ function test_translate_transition(prop) {
   test_length_unclamped(prop);
   test_percent_transition(prop);
   test_percent_unclamped(prop);
+  test_calc_wrapped_calc_transition(prop);
 
   // Two values: <length-percentage> <length-percentage>
-  // Note: Cannot use test_length_percent_pair_transition(prop) and
-  // test_length_percent_calc_transition(prop) because we don't resolve the
-  // percentage.
+  // Note: Cannot use test_length_percent_pair_transition(prop) because we
+  // don't resolve the percentage.
   test_length_pair_transition(prop);
 
   div.style.setProperty("transition-property", "none", "");
