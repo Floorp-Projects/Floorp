@@ -54,6 +54,24 @@ static const char* ToReadyStateStr(const TextTrackReadyState aState) {
   return "Unknown";
 }
 
+static const char* ToTextTrackKindStr(const TextTrackKind aKind) {
+  switch (aKind) {
+    case TextTrackKind::Subtitles:
+      return "Subtitles";
+    case TextTrackKind::Captions:
+      return "Captions";
+    case TextTrackKind::Descriptions:
+      return "Descriptions";
+    case TextTrackKind::Chapters:
+      return "Chapters";
+    case TextTrackKind::Metadata:
+      return "Metadata";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid kind.");
+  }
+  return "Unknown";
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(TextTrack, DOMEventTargetHelper, mCueList,
                                    mActiveCueList, mTextTrackList,
                                    mTrackElement)
@@ -112,7 +130,8 @@ void TextTrack::SetMode(TextTrackMode aValue) {
   if (mMode == aValue) {
     return;
   }
-  WEBVTT_LOG("Set mode=%s", ToStateStr(aValue));
+  WEBVTT_LOG("Set mode=%s for track kind %s", ToStateStr(aValue),
+             ToTextTrackKindStr(mKind));
   mMode = aValue;
 
   HTMLMediaElement* mediaElement = GetMediaElement();
