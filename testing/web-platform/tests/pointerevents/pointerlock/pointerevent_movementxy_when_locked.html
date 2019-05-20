@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="/external/wpt/pointerevents/pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script type="text/javascript" src="../pointerevent_support.js"></script>
         <style>
           #testContainer {
@@ -59,6 +62,9 @@
                         test_pointerEvent.done();
                     }
                 });
+
+                // Inject mouse inputs.
+                pointerDragInTarget('mouse', target, 'right');
             }
         </script>
     </head>

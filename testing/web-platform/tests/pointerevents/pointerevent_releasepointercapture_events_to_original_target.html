@@ -8,6 +8,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
         <script type="text/javascript">
@@ -111,6 +114,13 @@
                     on_event(target0, All_Pointer_Events[i], targetEventHandler);
                     on_event(listener, All_Pointer_Events[i], listenerEventHandler);
                 }
+
+                // Inject pointer inputs.
+                pointerDragInTarget('mouse', target0, 'right').then(function() {
+                    return pointerDragInTarget('touch', target0, 'right');
+                }).then(function() {
+                    return pointerDragInTarget('pen', target0, 'right');
+                });
             }
         </script>
     </head>
