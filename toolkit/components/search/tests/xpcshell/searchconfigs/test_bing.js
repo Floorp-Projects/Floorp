@@ -32,11 +32,17 @@ const test = new SearchConfigTest({
       },
     }],
   },
-  domains: {
-    "bing.com": {
-      included: [{}],
+  details: [{
+    included: [{}],
+    domain: "bing.com",
+    codes: {
+      "searchbar": "form=MOZSBR",
+      "keyword": "form=MOZLBR",
+      "contextmenu": "form=MOZCON",
+      "homepage": "form=MOZSPG",
+      "newtab": "form=MOZTSB",
     },
-  },
+  }],
 });
 
 add_task(async function setup() {

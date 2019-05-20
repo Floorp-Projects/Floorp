@@ -22,11 +22,10 @@ const test = new SearchConfigTest({
       },
     }],
   },
-  domains: {
-    "baidu.com": {
-      included: [{}],
-    },
-  },
+  details: [{
+    included: [{}],
+    domain: "baidu.com",
+  }],
 });
 
 add_task(async function setup() {
