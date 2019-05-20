@@ -99,13 +99,20 @@
   text-align: start;
 }
 
+#editBookmarkPanelRecommendationCta:hover {
+  text-decoration: underline;
+}
+
 #editBookmarkPanelRecommendation #cfrClose {
   position: absolute;
-  padding: 3px 2px;
-  inset-inline-end: 16px;
+  padding: 10px;
+  inset-inline-end: 8px;
   top: 15px;
   width: 12px;
   height: 12px;
+  border: none;
+  border-radius: var(--toolbarbutton-border-radius);
+  background-color: transparent;
   background-image: url(chrome://browser/skin/stop.svg);
   background-size: 12px;
   background-repeat: no-repeat;
@@ -113,10 +120,17 @@
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
+  cursor: pointer;
 }
 
 #editBookmarkPanelRecommendation #cfrClose:hover {
   fill-opacity: 1;
+  background-color: var(--toolbarbutton-hover-background);
+}
+
+#editBookmarkPanelRecommendation #cfrClose:active,
+#editBookmarkPanelRecommendation #cfrClose:focus {
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 html|div#editBookmarkPanelFaviconContainer {
