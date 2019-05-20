@@ -17,6 +17,7 @@
 #include "frontend/BCEParserHandle.h"
 #include "frontend/BinASTParserPerTokenizer.h"
 #include "frontend/BinASTToken.h"
+#include "frontend/BinASTTokenReaderContext.h"
 #include "frontend/BinASTTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
@@ -604,6 +605,7 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
       const Context& context);
 };
 
+extern template class BinASTParser<BinASTTokenReaderContext>;
 extern template class BinASTParser<BinASTTokenReaderMultipart>;
 
 }  // namespace frontend

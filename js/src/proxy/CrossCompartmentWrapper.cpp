@@ -573,7 +573,7 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
   Realm* wrealm = wobj->nonCCWRealm();
 
   // First, we wrap it in the new compartment. We try to use the existing
-  // wrapper, |wobj|, since it's been nuked anyway. The wrap() function has
+  // wrapper, |wobj|, since it's been nuked anyway. The rewrap() function has
   // the choice to reuse |wobj| or not.
   RootedObject tobj(cx, newTarget);
   AutoRealmUnchecked ar(cx, wrealm);
@@ -582,7 +582,7 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
     oomUnsafe.crash("js::RemapWrapper");
   }
 
-  // If wrap() reused |wobj|, it will have overwritten it and returned with
+  // If rewrap() reused |wobj|, it will have overwritten it and returned with
   // |tobj == wobj|. Otherwise, |tobj| will point to a new wrapper and |wobj|
   // will still be nuked. In the latter case, we replace |wobj| with the
   // contents of the new wrapper in |tobj|.
@@ -593,7 +593,7 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
     JSObject::swap(cx, wobj, tobj);
   }
 
-  // Before swapping, this wrapper came out of wrap(), which enforces the
+  // Before swapping, this wrapper came out of rewrap(), which enforces the
   // invariant that the wrapper in the map points directly to the key.
   MOZ_ASSERT(Wrapper::wrappedObject(wobj) == newTarget);
 
@@ -609,18 +609,15 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
 // Remap all cross-compartment wrappers pointing to |oldTarget| to point to
 // |newTarget|. All wrappers are recomputed.
 JS_FRIEND_API bool js::RemapAllWrappersForObject(JSContext* cx,
-                                                 JSObject* oldTargetArg,
-                                                 JSObject* newTargetArg) {
-  MOZ_ASSERT(!IsInsideNursery(oldTargetArg));
-  MOZ_ASSERT(!IsInsideNursery(newTargetArg));
-
-  RootedValue origv(cx, ObjectValue(*oldTargetArg));
-  RootedObject newTarget(cx, newTargetArg);
+                                                 HandleObject oldTarget,
+                                                 HandleObject newTarget) {
+  MOZ_ASSERT(!IsInsideNursery(oldTarget));
+  MOZ_ASSERT(!IsInsideNursery(newTarget));
 
   AutoWrapperVector toTransplant(cx);
 
   for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
-    if (WrapperMap::Ptr wp = c->lookupWrapper(origv)) {
+    if (WrapperMap::Ptr wp = c->lookupWrapper(oldTarget)) {
       // We found a wrapper. Remember and root it.
       if (!toTransplant.append(WrapperValue(wp))) {
         return false;

@@ -6,6 +6,12 @@ const {HistoryEngine} = ChromeUtils.import("resource://services-sync/engines/his
 const {CryptoWrapper, WBORecord} = ChromeUtils.import("resource://services-sync/record.js");
 const {Service} = ChromeUtils.import("resource://services-sync/service.js");
 
+// Allow eval to avoid triggering the eval()-assertion through ajv-4.1.1.js
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 add_task(async function test_locally_changed_keys() {
   enableValidationPrefs();
 

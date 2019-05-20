@@ -1409,7 +1409,7 @@ exports.CSS_PROPERTIES = {
   "-moz-user-select": {
     "isInherited": false,
     "subproperties": [
-      "-moz-user-select"
+      "user-select"
     ],
     "supports": [],
     "values": [
@@ -2886,7 +2886,7 @@ exports.CSS_PROPERTIES = {
   "-webkit-user-select": {
     "isInherited": false,
     "subproperties": [
-      "-moz-user-select"
+      "user-select"
     ],
     "supports": [],
     "values": [
@@ -3294,7 +3294,7 @@ exports.CSS_PROPERTIES = {
       "initial-letter",
       "ime-mode",
       "scrollbar-width",
-      "-moz-user-select",
+      "user-select",
       "-moz-window-dragging",
       "-moz-force-broken-image-icon",
       "dominant-baseline",
@@ -10264,6 +10264,24 @@ exports.CSS_PROPERTIES = {
       "normal",
       "plaintext",
       "revert",
+      "unset"
+    ]
+  },
+  "user-select": {
+    "isInherited": false,
+    "subproperties": [
+      "user-select"
+    ],
+    "supports": [],
+    "values": [
+      "-moz-none",
+      "all",
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "text",
       "unset"
     ]
   },

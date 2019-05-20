@@ -82,54 +82,58 @@ void BinASTTokenReaderContext::traceMetadata(JSTracer* trc) {
   }
 }
 
-JS::Result<bool> BinASTTokenReaderContext::readBool() {
+JS::Result<bool> BinASTTokenReaderContext::readBool(const Context&) {
   return raiseError("Not Yet Implemented");
 }
 
-JS::Result<double> BinASTTokenReaderContext::readDouble() {
+JS::Result<double> BinASTTokenReaderContext::readDouble(const Context&) {
   return raiseError("Not Yet Implemented");
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeAtom() {
+JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeAtom(const Context&) {
   return raiseError("Not Yet Implemented");
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderContext::readAtom() {
+JS::Result<JSAtom*> BinASTTokenReaderContext::readAtom(const Context&) {
   return raiseError("Not Yet Implemented");
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeIdentifierName() {
+JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeIdentifierName(
+    const Context&) {
   return raiseError("Not Yet Implemented");
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderContext::readIdentifierName() {
+JS::Result<JSAtom*> BinASTTokenReaderContext::readIdentifierName(
+    const Context&) {
   return raiseError("Not Yet Implemented");
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderContext::readPropertyKey() {
+JS::Result<JSAtom*> BinASTTokenReaderContext::readPropertyKey(const Context&) {
   return raiseError("Not Yet Implemented");
 }
 
-JS::Result<Ok> BinASTTokenReaderContext::readChars(Chars& out) {
+JS::Result<Ok> BinASTTokenReaderContext::readChars(Chars& out, const Context&) {
   return raiseError("Not Yet Implemented");
 }
 
-JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant() {
+JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
+    const Context&) {
   return raiseError("Not Yet Implemented");
 }
 
 JS::Result<BinASTTokenReaderBase::SkippableSubTree>
-BinASTTokenReaderContext::readSkippableSubTree() {
+BinASTTokenReaderContext::readSkippableSubTree(const Context&) {
   return raiseError("Not Yet Implemented");
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
+    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&, const Context&,
     AutoTaggedTuple& guard) {
   return raiseError("Not Yet Implemented");
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
+                                                   const Context&,
                                                    AutoList& guard) {
   return raiseError("Not Yet Implemented");
 }
@@ -161,6 +165,7 @@ JS::Result<Ok> BinASTTokenReaderContext::AutoList::done() {
 }
 
 // Internal uint32_t
+// Note that this is different than varnum in multipart.
 //
 // Encoded as variable length number.
 
@@ -172,7 +177,7 @@ MOZ_MUST_USE JS::Result<uint32_t> BinASTTokenReaderContext::readVarU32() {
     uint32_t byte;
     MOZ_TRY_VAR(byte, readByte());
 
-    const uint32_t newResult = result | (byte >> 1) << shift;
+    const uint32_t newResult = result | (byte & 0x7f) << shift;
     if (newResult < result) {
       return raiseError("Overflow during readVarU32");
     }
@@ -180,7 +185,7 @@ MOZ_MUST_USE JS::Result<uint32_t> BinASTTokenReaderContext::readVarU32() {
     result = newResult;
     shift += 7;
 
-    if ((byte & 1) == 0) {
+    if ((byte & 0x80) == 0) {
       return result;
     }
 

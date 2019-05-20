@@ -702,8 +702,9 @@ static bool FixWaiverAfterTransplant(JSContext* cx, HandleObject oldWaiver,
   // cross-compartment wrapper (which should have no waiver). On the other hand,
   // in the !crossCompartmentTransplant case we know one already exists.
   // CreateXrayWaiver asserts all this.
-  JSObject* newWaiver = WrapperFactory::CreateXrayWaiver(
-      cx, newobj, /* allowExisting = */ !crossCompartmentTransplant);
+  RootedObject newWaiver(
+      cx, WrapperFactory::CreateXrayWaiver(
+              cx, newobj, /* allowExisting = */ !crossCompartmentTransplant));
   if (!newWaiver) {
     return false;
   }

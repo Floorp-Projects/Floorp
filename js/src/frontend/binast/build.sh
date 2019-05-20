@@ -8,13 +8,15 @@ cargo run -- \
       --out-enum ../BinASTEnum-tmp.h    \
       --out-token ../BinASTToken-tmp.h
 
-MACH=../../../../mach
 
-${MACH} clang-format --path \
-        ../BinASTParser-tmp.h \
-        ../BinASTParser-tmp.cpp \
-        ../BinASTEnum-tmp.h \
-        ../BinASTToken-tmp.h
+(
+    cd ../../../../;
+    ./mach clang-format -p \
+           js/src/frontend/BinASTParser-tmp.h \
+           js/src/frontend/BinASTParser-tmp.cpp \
+           js/src/frontend/BinASTEnum-tmp.h \
+           js/src/frontend/BinASTToken-tmp.h
+)
 
 # Usage: update SRC DST
 #
