@@ -9,7 +9,7 @@ taskcluster/ci/upload-symbols/job-template.yml into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.attributes import RELEASE_PROJECTS
+from taskgraph.util.attributes import RELEASE_PROJECTS, copy_attributes_from_dependent_job
 from taskgraph.util.treeherder import join_symbol
 
 import logging
@@ -54,15 +54,11 @@ def fill_template(config, tasks):
         task['worker']['env']['SYMBOL_SECRET'] = task['worker']['env']['SYMBOL_SECRET'].format(
             level=config.params['level'])
 
-        build_platform = dep.attributes.get('build_platform')
-        build_type = dep.attributes.get('build_type')
-        attributes = task.setdefault('attributes', {})
-        attributes['build_platform'] = build_platform
-        attributes['build_type'] = build_type
-        if dep.attributes.get('nightly'):
-            attributes['nightly'] = True
-        if dep.attributes.get('shippable'):
-            attributes['shippable'] = True
+        attributes = copy_attributes_from_dependent_job(dep)
+        attributes.update(task.get('attributes', {}))
+        task['attributes'] = attributes
+
+        build_type = attributes.get('build_type')
 
         treeherder = task.get('treeherder', {})
         th = dep.task.get('extra')['treeherder']

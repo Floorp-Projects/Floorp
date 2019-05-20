@@ -4,7 +4,7 @@
 ---
 s3_bucket_paths:
     by-platform:
-        fennec-source:
+        fennec-.*:
             - pub/mobile/candidates
         devedition-source:
             - pub/devedition/candidates
@@ -37,12 +37,12 @@ mapping:
             by-platform:
                 firefox-source: firefox-${version}.checksums.beet
                 devedition-source: firefox-${version}.checksums.beet
-                fennec-source: fennec-${version}.checksums.beet
+                fennec-.*: fennec-${version}.checksums.beet
         checksums_path:
             by-platform:
                 firefox-source: firefox-${version}.checksums.beet
                 devedition-source: firefox-${version}.checksums.beet
-                fennec-source: fennec-${version}.checksums.beet
+                fennec-.*: fennec-${version}.checksums.beet
     target-source.checksums.asc:
         <<: *default
         description: "Detached signature for the checksums file"
@@ -50,9 +50,9 @@ mapping:
             by-platform:
                 firefox-source: firefox-${version}.checksums.asc
                 devedition-source: firefox-${version}.checksums.asc
-                fennec-source: fennec-${version}.checksums.asc
+                fennec-.*: fennec-${version}.checksums.asc
         checksums_path:
             by-platform:
                 firefox-source: firefox-${version}.checksums.asc
                 devedition-source: firefox-${version}.checksums.asc
-                fennec-source: fennec-${version}.checksums.asc
+                fennec-.*: fennec-${version}.checksums.asc

@@ -41,7 +41,7 @@ job-defaults:
 jobs:
     push-apk-nightly/opt:
         attributes:
-            build_platform: android-nightly
+            release-type: nightly
         worker:
             # XXX Temporarily ship Nightly to the alpha track while we ensure it's
             # correctly built of mozilla-beta
@@ -52,7 +52,7 @@ jobs:
 
     push-apk-beta/opt:
         attributes:
-            build_platform: android-beta
+            release-type: beta
         worker:
             google-play-track: rollout
             rollout-percentage: 10

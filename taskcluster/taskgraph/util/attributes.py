@@ -46,6 +46,7 @@ _OPTIONAL_ATTRIBUTES = (
     'stub-installer',
     'update-channel',
     'shippable',
+    'release-type',
 )
 
 
