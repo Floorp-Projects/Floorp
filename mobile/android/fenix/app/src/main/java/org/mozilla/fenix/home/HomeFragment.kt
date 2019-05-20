@@ -72,6 +72,13 @@ class HomeFragment : Fragment(), CoroutineScope {
     private var sessionObserver: SessionManager.Observer? = null
     private var tabCollectionObserver: Observer<List<TabCollection>>? = null
 
+    private val singleSessionObserver = object : Session.Observer {
+        override fun onTitleChanged(session: Session, title: String) {
+            super.onTitleChanged(session, title)
+            emitSessionChanges()
+        }
+    }
+
     private var homeMenu: HomeMenu? = null
 
     var deleteSessionJob: (suspend () -> Unit)? = null
@@ -357,7 +364,10 @@ class HomeFragment : Fragment(), CoroutineScope {
                 ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1575")
             }
             is CollectionAction.OpenTabs -> {
-                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "2205")
+                invokePendingDeleteSessionJob()
+                action.collection.tabs.forEach {
+                    requireComponents.useCases.tabsUseCases.addTab.invoke(it.url)
+                }
             }
             is CollectionAction.ShareTabs -> {
                 val shareText = action.collection.tabs.joinToString("\n") {
@@ -433,11 +443,13 @@ class HomeFragment : Fragment(), CoroutineScope {
         val observer = object : SessionManager.Observer {
             override fun onSessionAdded(session: Session) {
                 super.onSessionAdded(session)
+                session.register(singleSessionObserver)
                 emitSessionChanges()
             }
 
             override fun onSessionRemoved(session: Session) {
                 super.onSessionRemoved(session)
+                session.unregister(singleSessionObserver)
                 emitSessionChanges()
             }
 
@@ -448,11 +460,17 @@ class HomeFragment : Fragment(), CoroutineScope {
 
             override fun onSessionsRestored() {
                 super.onSessionsRestored()
+                requireComponents.core.sessionManager.sessions.forEach {
+                    it.register(singleSessionObserver)
+                }
                 emitSessionChanges()
             }
 
             override fun onAllSessionsRemoved() {
                 super.onAllSessionsRemoved()
+                requireComponents.core.sessionManager.sessions.forEach {
+                    it.unregister(singleSessionObserver)
+                }
                 emitSessionChanges()
             }
         }
