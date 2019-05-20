@@ -4,29 +4,88 @@
 
 // @flow
 
+import { uniq, remove } from "lodash";
+
 import { asyncStore } from "../utils/prefs";
 
-import type { ThunkArgs } from "./types";
-import type { EventListenerBreakpoints } from "../types";
+import {
+  getActiveEventListeners,
+  getEventListenerExpanded,
+} from "../selectors";
 
-export function addEventListeners(events: EventListenerBreakpoints) {
-  return async ({ dispatch, client }: ThunkArgs) => {
-    await dispatch({
-      type: "ADD_EVENT_LISTENERS",
-      events,
-    });
-    const newList = await asyncStore.eventListenerBreakpoints;
-    client.setEventListenerBreakpoints(newList);
+import type { ThunkArgs } from "./types";
+
+async function updateBreakpoints(dispatch, client, newEvents: string[]) {
+  dispatch({ type: "UPDATE_EVENT_LISTENERS", active: newEvents });
+
+  const current = await asyncStore.eventListenerBreakpoints;
+  asyncStore.eventListenerBreakpoints = {
+    ...current,
+    active: newEvents,
+  };
+
+  client.setEventListenerBreakpoints(newEvents);
+}
+
+async function updateExpanded(dispatch, newExpanded: string[]) {
+  dispatch({
+    type: "UPDATE_EVENT_LISTENER_EXPANDED",
+    expanded: newExpanded,
+  });
+
+  const current = await asyncStore.eventListenerBreakpoints;
+  asyncStore.eventListenerBreakpoints = {
+    ...current,
+    expanded: newExpanded,
   };
 }
 
-export function removeEventListeners(events: EventListenerBreakpoints) {
+export function addEventListenerBreakpoints(eventsToAdd: string[]) {
+  return async ({ dispatch, client, getState }: ThunkArgs) => {
+    const activeListenerBreakpoints = await getActiveEventListeners(getState());
+
+    const newEvents = uniq([...eventsToAdd, ...activeListenerBreakpoints]);
+
+    updateBreakpoints(dispatch, client, newEvents);
+  };
+}
+
+export function removeEventListenerBreakpoints(eventsToRemove: string[]) {
+  return async ({ dispatch, client, getState }: ThunkArgs) => {
+    const activeListenerBreakpoints = await getActiveEventListeners(getState());
+
+    const newEvents = remove(
+      activeListenerBreakpoints,
+      event => !eventsToRemove.includes(event)
+    );
+
+    updateBreakpoints(dispatch, client, newEvents);
+  };
+}
+
+export function addEventListenerExpanded(category: string) {
+  return async ({ dispatch, getState }: ThunkArgs) => {
+    const expanded = await getEventListenerExpanded(getState());
+
+    const newExpanded = uniq([...expanded, category]);
+
+    await updateExpanded(dispatch, newExpanded);
+  };
+}
+
+export function removeEventListenerExpanded(category: string) {
+  return async ({ dispatch, getState }: ThunkArgs) => {
+    const expanded = await getEventListenerExpanded(getState());
+
+    const newExpanded = expanded.filter(expand => expand != category);
+
+    updateExpanded(dispatch, newExpanded);
+  };
+}
+
+export function getEventListenerBreakpointTypes() {
   return async ({ dispatch, client }: ThunkArgs) => {
-    await dispatch({
-      type: "REMOVE_EVENT_LISTENERS",
-      events,
-    });
-    const newList = await asyncStore.eventListenerBreakpoints;
-    client.setEventListenerBreakpoints(newList);
+    const categories = await client.getEventListenerBreakpointTypes();
+    dispatch({ type: "RECEIVE_EVENT_LISTENER_TYPES", categories });
   };
 }
