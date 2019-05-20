@@ -236,46 +236,6 @@ static void DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
   }
 }
 
-void nsTableRowGroupFrame::PaintCellBackgroundsForColumns(
-    nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
-    const nsTArray<uint32_t>& aColIdx, const nsPoint& aOffset) {
-  MOZ_DIAGNOSTIC_ASSERT(!aColIdx.IsEmpty(),
-                        "Must be painting backgrounds for something");
-
-  for (nsTableRowFrame* row = GetFirstRow(); row; row = row->GetNextRow()) {
-    auto rowPos = row->GetNormalPosition() + aOffset;
-    if (!aBuilder->GetDirtyRect().Intersects(nsRect(rowPos, row->GetSize()))) {
-      continue;
-    }
-    for (nsTableCellFrame* cell = row->GetFirstCell(); cell;
-         cell = cell->GetNextCell()) {
-      uint32_t curColIdx = cell->ColIndex();
-      if (!aColIdx.ContainsSorted(curColIdx)) {
-        if (curColIdx > aColIdx.LastElement()) {
-          // We can just stop looking at this row.
-          break;
-        }
-        continue;
-      }
-
-      if (!cell->ShouldPaintBackground(aBuilder)) {
-        continue;
-      }
-
-      auto cellPos = cell->GetNormalPosition() + rowPos +
-                     aBuilder->ToReferenceFrame(aFrame);
-      auto cellRect = nsRect(cellPos, cell->GetSize());
-      if (!aBuilder->GetDirtyRect().Intersects(cellRect)) {
-        continue;
-      }
-      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-          aBuilder, aFrame, cellRect, aList, false, nullptr,
-          aFrame->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(aFrame),
-          cell);
-    }
-  }
-}
-
 void nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                             const nsDisplayListSet& aLists) {
   DisplayOutsetBoxShadow(aBuilder, aLists.BorderBackground());

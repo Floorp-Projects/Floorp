@@ -76,12 +76,6 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  void PaintCellBackgroundsForColumns(nsIFrame* aFrame,
-                                      nsDisplayListBuilder* aBuilder,
-                                      nsDisplayList* aList,
-                                      const nsTArray<uint32_t>& aColIdx,
-                                      const nsPoint& aOffset);
-
   /**
    * Calls Reflow for all of its child rows.
    *
