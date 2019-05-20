@@ -106,6 +106,14 @@ BrowsingContext* JSWindowActorChild::GetBrowsingContext(ErrorResult& aRv) {
   return mManager->BrowsingContext();
 }
 
+nsIDocShell* JSWindowActorChild::GetDocShell(ErrorResult& aRv) {
+  if (BrowsingContext* bc = GetBrowsingContext(aRv)) {
+    return bc->GetDocShell();
+  }
+
+  return nullptr;
+}
+
 Nullable<WindowProxyHolder> JSWindowActorChild::GetContentWindow(
     ErrorResult& aRv) {
   if (BrowsingContext* bc = GetBrowsingContext(aRv)) {

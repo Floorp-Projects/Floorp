@@ -1137,7 +1137,7 @@ static bool TrackUnhandledRejections(JSContext* cx, JS::HandleObject promise,
 }
 
 static void ForwardingPromiseRejectionTrackerCallback(
-    JSContext* cx, JS::HandleObject promise,
+    JSContext* cx, bool mutedErrors, JS::HandleObject promise,
     JS::PromiseRejectionHandlingState state, void* data) {
   AutoReportException are(cx);
 

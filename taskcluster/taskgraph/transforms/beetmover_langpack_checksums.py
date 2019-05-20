@@ -138,7 +138,7 @@ def make_beetmover_checksums_worker(config, jobs):
             'release-properties': craft_release_properties(config, job),
         }
 
-        if should_use_artifact_map(platform, config.params['project']):
+        if should_use_artifact_map(platform):
             upstream_artifacts = generate_beetmover_upstream_artifacts(
                 config, job, platform, locales
             )

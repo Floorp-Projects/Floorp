@@ -116,7 +116,6 @@ RemoteWebNavigation.prototype = {
       triggeringPrincipal: E10SUtils.serializePrincipal(
                            aLoadURIOptions.triggeringPrincipal || Services.scriptSecurityManager.createNullPrincipal({})),
       csp: aLoadURIOptions.csp ? E10SUtils.serializeCSP(aLoadURIOptions.csp) : null,
-      requestTime: Services.telemetry.msSystemNow(),
       cancelContentJSEpoch,
     });
   },

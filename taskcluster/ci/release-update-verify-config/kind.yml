@@ -70,6 +70,7 @@ job-defaults:
                         win64-aarch64.*: "67.0"
                         default: null
                 esr60: "52.0esr"
+                esr68: "68.0esr"
                 default: "default"
 
 jobs:
