@@ -1407,6 +1407,14 @@ class Element : public FragmentOrElement {
     return HasServoData() && Servo_Element_IsDisplayContents(this);
   }
 
+  /*
+   * https://html.spec.whatwg.org/#being-rendered
+   *
+   * With a gotcha for display contents:
+   *   https://github.com/whatwg/html/issues/1837
+   */
+  bool IsRendered() const { return GetPrimaryFrame() || IsDisplayContents(); }
+
   const nsAttrValue* GetParsedAttr(const nsAtom* aAttr) const {
     return mAttrs.GetAttr(aAttr);
   }

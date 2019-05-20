@@ -578,5 +578,74 @@ promise_test(t => {
   });
 }, "tree_ordering: subtree");
 
+// Test that animations removed by auto-removal trigger an event
+promise_test(async t => {
+  setupAsynchronousObserver(t, { observe: div, subtree: false });
+
+  // Start two animations such that one will be auto-removed
+  const animA = div.animate(
+    { opacity: 1 },
+    { duration: 100 * MS_PER_SEC, fill: 'forwards' }
+  );
+  const animB = div.animate(
+    { opacity: 1 },
+    { duration: 100 * MS_PER_SEC, fill: 'forwards' }
+  );
+
+  // Wait for the MutationRecords corresponding to each addition.
+  await waitForNextFrame();
+
+  assert_records(
+    [
+      { added: [animA], changed: [], removed: [] },
+      { added: [animB], changed: [], removed: [] },
+    ],
+    'records after animation start'
+  );
+
+  // Finish the animations -- this should cause animA to be replaced, and
+  // automatically removed.
+  animA.finish();
+  animB.finish();
+
+  // Wait for the MutationRecords corresponding to the timing changes and the
+  // subsequent removal to be delivered.
+  await waitForNextFrame();
+
+  assert_records(
+    [
+      { added: [], changed: [animA], removed: [] },
+      { added: [], changed: [animB], removed: [] },
+      { added: [], changed: [], removed: [animA] },
+    ],
+    'records after finishing'
+  );
+
+  // Restore animA.
+  animA.persist();
+
+  // Wait for the MutationRecord corresponding to the re-addition of animA.
+  await waitForNextFrame();
+
+  assert_records(
+    [{ added: [animA], changed: [], removed: [] }],
+    'records after persisting'
+  );
+
+  // Tidy up
+  animA.cancel();
+  animB.cancel();
+
+  await waitForNextFrame();
+
+  assert_records(
+    [
+      { added: [], changed: [], removed: [animA] },
+      { added: [], changed: [], removed: [animB] },
+    ],
+    'records after tidying up end'
+  );
+}, 'Animations automatically removed are reported');
+
 runTest();
 </script>

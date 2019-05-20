@@ -183,9 +183,15 @@ class KeyframeEffect : public AnimationEffect {
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                     const ComputedStyle* aStyle);
 
+  // Returns the set of properties affected by this effect regardless of
+  // whether any of these properties is overridden by an !important rule.
+  nsCSSPropertyIDSet GetPropertySet() const;
+
   // Returns true if the effect includes a property in |aPropertySet| regardless
-  // of whether any property in the set is overridden by !important rule.
-  bool HasAnimationOfPropertySet(const nsCSSPropertyIDSet& aPropertySet) const;
+  // of whether any property in the set is overridden by an !important rule.
+  bool HasAnimationOfPropertySet(const nsCSSPropertyIDSet& aPropertySet) const {
+    return GetPropertySet().Intersects(aPropertySet);
+  }
 
   // GetEffectiveAnimationOfProperty returns AnimationProperty corresponding
   // to a given CSS property if the effect includes the property and the
