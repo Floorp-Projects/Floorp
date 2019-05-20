@@ -78,6 +78,7 @@ function getLocalizedString(key, formatArgs = null) {
 class AutocompleteItem {
   constructor(style) {
     this.style = style;
+    this.value = "";
   }
 }
 
@@ -93,7 +94,7 @@ class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
 }
 
 class LoginAutocompleteItem extends AutocompleteItem {
-  constructor(login, dateAndTimeFormatter, duplicateUsernames) {
+  constructor(login, isPasswordField, dateAndTimeFormatter, duplicateUsernames) {
     super(SHOULD_SHOW_ORIGIN ? "loginWithOrigin" : "login");
 
     XPCOMUtils.defineLazyGetter(this, "label", () => {
@@ -109,6 +110,10 @@ class LoginAutocompleteItem extends AutocompleteItem {
       }
 
       return username;
+    });
+
+    XPCOMUtils.defineLazyGetter(this, "value", () => {
+      return isPasswordField ? login.password : login.username;
     });
   }
 }
@@ -166,8 +171,6 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
   this._messageManager = messageManager;
   let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
-  this._isPasswordField = isPasswordField;
-
   let duplicateUsernames = findDuplicates(matchingLogins);
 
   // Build up the results array
@@ -177,7 +180,7 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
   }
 
   for (let login of this.logins) {
-    this.results.push(new LoginAutocompleteItem(login, dateAndTimeFormatter, duplicateUsernames));
+    this.results.push(new LoginAutocompleteItem(login, isPasswordField, dateAndTimeFormatter, duplicateUsernames));
   }
 
   if (this._showAutoCompleteFooter) {
@@ -222,18 +225,7 @@ LoginAutoCompleteResult.prototype = {
     if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
     }
-
-    if (this._showInsecureFieldWarning && index === 0) {
-      return "";
-    }
-
-    if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
-      return "";
-    }
-
-    let selectedLogin = this.logins[index - this._showInsecureFieldWarning];
-
-    return this._isPasswordField ? selectedLogin.password : selectedLogin.username;
+    return this.results[index].value;
   },
 
   getLabelAt(index) {
