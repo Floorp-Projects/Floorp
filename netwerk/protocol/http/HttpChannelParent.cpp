@@ -1468,13 +1468,29 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   chan->GetIsResolvedByTRR(&isResolvedByTRR);
 
   AutoIPCStream originalCacheInputStream(true /* delay start */);
+  AutoIPCStream altDataInputStream(true /* delay start */);
+
   if (mCacheEntry) {
-    nsCOMPtr<nsIInputStream> inputStream;
-    nsresult rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
-    if (NS_SUCCEEDED(rv)) {
-      PContentParent* pcp = Manager()->Manager();
-      Unused << originalCacheInputStream.Serialize(
-          inputStream, static_cast<ContentParent*>(pcp));
+    PContentParent* pcp = Manager()->Manager();
+
+    {
+      nsCOMPtr<nsIInputStream> inputStream;
+      nsresult rv =
+          mCacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
+      if (NS_SUCCEEDED(rv)) {
+        Unused << originalCacheInputStream.Serialize(
+            inputStream, static_cast<ContentParent*>(pcp));
+      }
+    }
+
+    if (!altDataType.IsEmpty()) {
+      nsCOMPtr<nsIInputStream> inputStream;
+      nsresult rv = mCacheEntry->OpenAlternativeInputStream(
+          altDataType, getter_AddRefs(inputStream));
+      if (NS_SUCCEEDED(rv)) {
+        Unused << altDataInputStream.Serialize(
+            inputStream, static_cast<ContentParent*>(pcp));
+      }
     }
   }
 
@@ -1488,7 +1504,8 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
           cachedCharset, secInfoSerialization, chan->GetSelfAddr(),
           chan->GetPeerAddr(), redirectCount, cacheKey, altDataType, altDataLen,
           deliveringAltData, originalCacheInputStream.TakeOptionalValue(),
-          applyConversion, isResolvedByTRR, timing)) {
+          altDataInputStream.TakeOptionalValue(), applyConversion,
+          isResolvedByTRR, timing)) {
     rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();
@@ -1701,28 +1718,6 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvBytesRead(
     mResumedTimestamp = TimeStamp::Now();
   }
   mSendWindowSize += aCount;
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult HttpChannelParent::RecvOpenAltDataCacheInputStream(
-    const nsCString& aType) {
-  if (mIPCClosed) {
-    return IPC_OK();
-  }
-  AutoIPCStream autoStream;
-  if (mCacheEntry) {
-    nsCOMPtr<nsIInputStream> inputStream;
-    nsresult rv = mCacheEntry->OpenAlternativeInputStream(
-        aType, getter_AddRefs(inputStream));
-    if (NS_SUCCEEDED(rv)) {
-      PContentParent* pcp = Manager()->Manager();
-      Unused << autoStream.Serialize(inputStream,
-                                     static_cast<ContentParent*>(pcp));
-    }
-  }
-
-  Unused << SendAltDataCacheInputStreamAvailable(
-      autoStream.TakeOptionalValue());
   return IPC_OK();
 }
 
