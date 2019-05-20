@@ -224,9 +224,11 @@ void nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       IsVisibleForPainting()) {
     DisplayOutsetBoxShadowUnconditional(aBuilder, aLists.BorderBackground());
 
+    const nsRect rect =
+        VisualBorderRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+
     nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-        aBuilder, this, VisualBorderRectRelativeToSelf(),
-        aLists.BorderBackground(),
+        aBuilder, this, rect, aLists.BorderBackground(),
         /* aAllowWillPaintBorderOptimization = */ false);
 
     aLists.BorderBackground()->AppendNewToTop<nsDisplayFieldSetBorder>(aBuilder,

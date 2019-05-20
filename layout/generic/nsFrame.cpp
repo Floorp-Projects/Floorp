@@ -2436,7 +2436,9 @@ bool nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
       !StyleBackground()->IsTransparent(this) ||
       StyleDisplay()->HasAppearance()) {
     return nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-        aBuilder, this, GetRectRelativeToSelf(), aLists.BorderBackground());
+        aBuilder, this,
+        GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this),
+        aLists.BorderBackground());
   }
   return false;
 }
