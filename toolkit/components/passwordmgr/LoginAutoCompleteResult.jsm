@@ -184,32 +184,33 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
     return true;
   }
 
-  this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
-  this._showAutoCompleteFooter = isFooterEnabled() ? 1 : 0;
-
-  let logins = matchingLogins.sort(loginSort);
   this.searchString = aSearchString;
-  let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
-  let duplicateUsernames = findDuplicates(matchingLogins);
 
-  // Build up the results array
-  this.results = [];
-  if (this._showInsecureFieldWarning) {
-    this.results.push(new InsecureLoginFormAutocompleteItem());
+  // Build up the array of autocomplete rows to display.
+  this._rows = [];
+
+  // Insecure field warning comes first if it applies and is enabled.
+  if (!isSecure && LoginHelper.showInsecureFieldWarning) {
+    this._rows.push(new InsecureLoginFormAutocompleteItem());
   }
 
+  // Saved login items
+  let logins = matchingLogins.sort(loginSort);
+  let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+  let duplicateUsernames = findDuplicates(matchingLogins);
   for (let login of logins) {
     let item = new LoginAutocompleteItem(login, isPasswordField, dateAndTimeFormatter,
                                          duplicateUsernames, messageManager);
-    this.results.push(item);
+    this._rows.push(item);
   }
 
-  if (this._showAutoCompleteFooter) {
-    this.results.push(new LoginsFooterAutocompleteItem(hostname));
+  // The footer comes last if it's enabled
+  if (isFooterEnabled()) {
+    this._rows.push(new LoginsFooterAutocompleteItem(hostname));
   }
 
-
+  // Determine the result code and default index.
   if (this.matchCount > 0) {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
     this.defaultIndex = 0;
@@ -225,9 +226,12 @@ LoginAutoCompleteResult.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteResult,
                                           Ci.nsISupportsWeakReference]),
 
-  // private
+  /**
+   * Accessed via .wrappedJSObject
+   * @private
+   */
   get logins() {
-    return this.results.filter(item => {
+    return this._rows.filter(item => {
       return item.constructor === LoginAutocompleteItem;
     }).map(item => item._login);
   },
@@ -244,32 +248,32 @@ LoginAutoCompleteResult.prototype = {
   defaultIndex: -1,
   errorDescription: "",
   get matchCount() {
-    return this.results.length;
+    return this._rows.length;
   },
 
   getValueAt(index) {
     if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
     }
-    return this.results[index].value;
+    return this._rows[index].value;
   },
 
   getLabelAt(index) {
     if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
     }
-    return this.results[index].label;
+    return this._rows[index].label;
   },
 
   getCommentAt(index) {
     if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
     }
-    return this.results[index].comment;
+    return this._rows[index].comment;
   },
 
   getStyleAt(index) {
-    return this.results[index].style;
+    return this._rows[index].style;
   },
 
   getImageAt(index) {
@@ -285,9 +289,9 @@ LoginAutoCompleteResult.prototype = {
       throw new Error("Index out of range.");
     }
 
-    let [removedItem] = this.results.splice(index, 1);
+    let [removedItem] = this._rows.splice(index, 1);
 
-    if (this.defaultIndex > this.results.length) {
+    if (this.defaultIndex > this._rows.length) {
       this.defaultIndex--;
     }
 
