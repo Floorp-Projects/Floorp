@@ -15,6 +15,8 @@ loader.lazyRequireGetter(this, "ChannelEventSinkFactory",
 loader.lazyRequireGetter(this, "matchRequest",
                          "devtools/server/actors/network-monitor/network-observer",
                          true);
+loader.lazyRequireGetter(this, "WebConsoleUtils",
+                         "devtools/server/actors/webconsole/utils", true);
 
 function StackTraceCollector(filters, netmonitors) {
   this.filters = filters;
@@ -156,7 +158,7 @@ StackTraceCollector.prototype = {
   getStackTrace(channelId) {
     const trace = this.stacktracesById.get(channelId);
     this.stacktracesById.delete(channelId);
-    return trace;
+    return WebConsoleUtils.removeFramesAboveDebuggerEval(trace);
   },
 
   onGetStack(msg) {
