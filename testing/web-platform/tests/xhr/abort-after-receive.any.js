@@ -1,14 +1,5 @@
-<!doctype html>
-<html>
-  <head>
-    <title>XMLHttpRequest: abort() after successful receive should not fire "abort" event</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <link rel="help" href="https://xhr.spec.whatwg.org/#the-abort()-method" data-tested-assertations="following::ol[1]/li[4] following::ol[1]/li[5]"/>
-  </head>
-  <body>
-    <div id="log"></div>
-    <script>
+// META: title=XMLHttpRequest: abort() after successful receive should not fire "abort" event
+
       var test = async_test();
 
       test.step(function() {
@@ -37,6 +28,3 @@
         client.open("GET", "resources/well-formed.xml", true);
         client.send(null);
       });
-    </script>
-  </body>
-</html>

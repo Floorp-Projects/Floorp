@@ -1,14 +1,5 @@
-<!doctype html>
-<html>
-  <head>
-    <title>XMLHttpRequest: abort() during UNSENT</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-    <link rel="help" href="https://xhr.spec.whatwg.org/#the-abort()-method" data-tested-assertations="following-sibling::ol/li[4] following-sibling::ol/li[5]" />
-  </head>
-  <body>
-    <div id="log"></div>
-    <script>
+// META: title=XMLHttpRequest: abort() during UNSENT
+
       var test = async_test()
       test.step(function() {
         var client = new XMLHttpRequest()
@@ -26,6 +17,3 @@
         assert_equals(client.statusText, "")
       })
       test.done()
-    </script>
-  </body>
-</html>
