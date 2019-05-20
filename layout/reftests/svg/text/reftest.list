@@ -4,8 +4,8 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(webrender&&!gtkWid
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-scaled.svg simple-underline-scaled-ref.svg # Bug 1392106
 fuzzy-if(webrender&&!gtkWidget,119-166,255-318) == simple-anchor-end-bidi.svg simple-anchor-end-bidi-ref.html
 fuzzy-if(webrender&&!gtkWidget,117-138,182-204) == simple-anchor-end-rtl.svg simple-anchor-end-rtl-ref.html
-fuzzy-if(webrender&&!gtkWidget,122-137,220-250) == simple-anchor-end.svg simple-anchor-end-ref.html
-fuzzy-if(skiaContent&&dwrite,0-104,0-131) fuzzy-if(webrender&&!gtkWidget,125-200,259-319) == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html
+fuzzy-if(webrender&&!gtkWidget,119-137,220-250) == simple-anchor-end.svg simple-anchor-end-ref.html
+fuzzy-if(skiaContent&&dwrite,0-104,0-131) fuzzy-if(cocoaWidget,0-143,0-124) fuzzy-if(webrender&&!gtkWidget,125-200,259-319) == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html
 fuzzy-if(webrender&&!gtkWidget,132-138,188-207) == simple-anchor-middle-rtl.svg simple-anchor-middle-rtl-ref.html
 fuzzy-if(skiaContent,0-111,0-81) fuzzy-if(webrender&&!gtkWidget,122-181,221-257) == simple-anchor-middle.svg simple-anchor-middle-ref.html
 fuzzy-if(webrender&&!gtkWidget,132-138,261-319) == simple-bidi.svg simple-bidi-ref.html
@@ -196,10 +196,10 @@ needs-focus == deselectAll.svg deselectAll-ref.svg
 fuzzy-if(skiaContent,0-1,0-250) needs-focus == selectSubString.svg selectSubString-ref.svg
 fuzzy-if(skiaContent,0-1,0-600) needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
 fuzzy-if(skiaContent,0-1,0-250) needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(webrender,1-1,237-237) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,221-254) == simple-selection.svg simple-selection-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(webrender,1-1,237-237) needs-focus fuzzy-if(webrender&&!gtkWidget,125-148,221-254) == simple-selection.svg simple-selection-ref.html # Bug 1392106
 fuzzy-if(skiaContent,0-1,0-100) fuzzy-if(webrender,1-1,575-575) needs-focus fuzzy-if(webrender&&!gtkWidget,134-148,261-318) == simple-bidi-selection.svg simple-bidi-selection-ref.html
 fuzzy-if(skiaContent,0-1,0-50) fuzzy-if(webrender,1-1,237-237) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,221-254) == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
-fuzzy-if(skiaContent,0-1,0-150) fuzzy-if(webrender,1-1,222-222) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,221-254) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-selection.svg simple-underline-selection-ref.html # Bug 1392106
+fuzzy-if(skiaContent,0-1,0-150) fuzzy-if(webrender,1-1,222-222) needs-focus fuzzy-if(webrender&&!gtkWidget,125-148,221-254) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-selection.svg simple-underline-selection-ref.html # Bug 1392106
 fuzzy-if(skiaContent,0-1,0-300) fuzzy-if(webrender,1-1,934-934) needs-focus fuzzy-if(webrender&&!gtkWidget,134-152,432-501) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == multiple-text-selection.svg multiple-text-selection-ref.html # Bug 1392106
 needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
 fuzzy-if(skiaContent,0-1,0-200) needs-focus == textpath-selection.svg textpath-selection-ref.svg
