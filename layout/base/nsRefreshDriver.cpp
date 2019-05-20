@@ -1897,6 +1897,26 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
       }
     }
 
+    // Any animation timelines updated above may cause animations to queue
+    // Promise resolution microtasks. We shouldn't run these, however, until we
+    // have fully updated the animation state.
+    //
+    // However, we need to be sure to run these before dispatching the
+    // corresponding animation events as required by the spec[1].
+    //
+    // [1]
+    // https://drafts.csswg.org/web-animations-1/#update-animations-and-send-events
+    if (i == 1) {
+      nsAutoMicroTask mt;
+    }
+
+    // Check if running the microtask checkpoint caused the pres context to
+    // be destroyed.
+    if (i == 1 && (!mPresContext || !mPresContext->GetPresShell())) {
+      StopTimer();
+      return;
+    }
+
     if (i == 1) {
       // This is the FlushType::Style case.
 
