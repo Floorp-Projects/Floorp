@@ -11,6 +11,7 @@ import android.graphics.Typeface.BOLD
 import android.graphics.Typeface.ITALIC
 import android.os.Bundle
 import android.text.style.StyleSpan
+import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -112,7 +113,12 @@ class SearchFragment : Fragment(), BackHandler {
                 onScanResult = { result ->
                     search_scan_button.isChecked = false
                     activity?.let {
-                        AlertDialog.Builder(it).apply {
+                        AlertDialog.Builder(
+                            ContextThemeWrapper(
+                                it,
+                                R.style.DialogStyle
+                            )
+                        ).apply {
                             val spannable = resources.getSpannable(
                                 R.string.qr_scanner_confirmation_dialog_message,
                                 listOf(

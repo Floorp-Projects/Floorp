@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.history
 
+import android.content.DialogInterface
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -14,7 +15,9 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
@@ -136,9 +139,28 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                         .onNext(HistoryChange.RemoveItemForRemoval(it.item))
                     is HistoryAction.BackPressed -> getManagedEmitter<HistoryChange>()
                         .onNext(HistoryChange.ExitEditMode)
-                    is HistoryAction.Delete.All -> launch(Dispatchers.IO) {
-                        requireComponents.core.historyStorage.deleteEverything()
-                        reloadData()
+                    is HistoryAction.Delete.All -> {
+                        activity?.let {
+                            AlertDialog.Builder(
+                                ContextThemeWrapper(
+                                    it,
+                                    R.style.DialogStyle
+                                )
+                            ).apply {
+                                setMessage(R.string.history_delete_all_dialog)
+                                setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
+                                    dialog.cancel()
+                                }
+                                setPositiveButton(android.R.string.ok) { dialog: DialogInterface, _ ->
+                                    launch(Dispatchers.IO) {
+                                        requireComponents.core.historyStorage.deleteEverything()
+                                        reloadData()
+                                    }
+                                    dialog.dismiss()
+                                }
+                                create()
+                            }.show()
+                        }
                     }
                     is HistoryAction.Delete.One -> launch(Dispatchers.IO) {
                         requireComponents.core.historyStorage.deleteVisit(it.item.url, it.item.visitedAt)
