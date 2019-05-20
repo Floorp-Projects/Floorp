@@ -119,28 +119,18 @@ void SetIncludeContextHeap(bool aValue);
 // Functions for working with minidumps and .extras
 typedef mozilla::EnumeratedArray<Annotation, Annotation::Count, nsCString>
     AnnotationTable;
-
 void DeleteMinidumpFilesForID(const nsAString& id);
 bool GetMinidumpForID(const nsAString& id, nsIFile** minidump);
 bool GetIDFromMinidump(nsIFile* minidump, nsAString& id);
 bool GetExtraFileForID(const nsAString& id, nsIFile** extraFile);
 bool GetExtraFileForMinidump(nsIFile* minidump, nsIFile** extraFile);
-bool AppendExtraData(const nsAString& id, const AnnotationTable& data);
-bool AppendExtraData(nsIFile* extraFile, const AnnotationTable& data);
+bool WriteExtraFile(const nsAString& id, const AnnotationTable& annotations);
 
-/*
- * Renames the stand alone dump file aDumpFile to:
- *  |aOwnerDumpFile-aDumpFileProcessType.dmp|
- * and moves it into the same directory as aOwnerDumpFile. Does not
- * modify aOwnerDumpFile in any way.
- *
- * @param aDumpFile - the dump file to associate with aOwnerDumpFile.
- * @param aOwnerDumpFile - the new owner of aDumpFile.
- * @param aDumpFileProcessType - process name associated with aDumpFile.
+/**
+ * Copies the non-empty annotations in the source table to the destination
+ * overwriting the corresponding entries.
  */
-void RenameAdditionalHangMinidump(nsIFile* aDumpFile,
-                                  const nsIFile* aOwnerDumpFile,
-                                  const nsACString& aDumpFileProcessType);
+void MergeCrashAnnotations(AnnotationTable& aDst, const AnnotationTable& aSrc);
 
 #ifdef XP_WIN
 nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo);
@@ -175,9 +165,11 @@ bool TakeMinidump(nsIFile** aResult, bool aMoveToPending = false);
 
 // Return true if a dump was found for |childPid|, and return the
 // path in |dump|.  The caller owns the last reference to |dump| if it
-// is non-nullptr. The sequence parameter will be filled with an ordinal
+// is non-nullptr. The annotations for the crash will be stored in
+// |aAnnotations|. The sequence parameter will be filled with an ordinal
 // indicating which remote process crashed first.
 bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
+                          AnnotationTable& aAnnotations,
                           uint32_t* aSequence = nullptr);
 
 #if defined(XP_WIN)
@@ -230,12 +222,14 @@ ThreadId CurrentThreadId();
  *   process and thread and use it in aIncomingDumpToPairs place.
  * @param aTargetDumpOut The target minidump file paired up with
  *   aIncomingDumpToPair.
+ * @param aTargetAnnotations The crash annotations of the target process.
  * @return bool indicating success or failure
  */
 bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
                             ThreadId aTargetBlamedThread,
                             const nsACString& aIncomingPairName,
                             nsIFile* aIncomingDumpToPair,
+                            AnnotationTable& aTargetAnnotations,
                             nsIFile** aTargetDumpOut);
 
 // Create an additional minidump for a child of a process which already has

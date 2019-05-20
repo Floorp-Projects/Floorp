@@ -456,6 +456,5 @@ interface nsINavBookmarksService : nsISupports
   /**
    * Gets an array of registered nsINavBookmarkObserver objects.
    */
-  void getObservers([optional] out unsigned long count,
-                    [retval, array, size_is(count)] out nsINavBookmarkObserver observers);
+  Array<nsINavBookmarkObserver> getObservers();
 };

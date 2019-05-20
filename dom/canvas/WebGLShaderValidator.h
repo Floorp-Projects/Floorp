@@ -16,7 +16,9 @@ namespace mozilla {
 namespace webgl {
 
 class ShaderValidator final {
+public:
   const ShHandle mHandle;
+private:
   const ShCompileOptions mCompileOptions;
   const int mMaxVaryingVectors;
   bool mHasRun;
@@ -39,33 +41,11 @@ class ShaderValidator final {
   ~ShaderValidator();
 
   bool ValidateAndTranslate(const char* source);
-  void GetInfoLog(nsACString* out) const;
-  void GetOutput(nsACString* out) const;
   bool CanLinkTo(const ShaderValidator* prev, nsCString* const out_log) const;
-  size_t CalcNumSamplerUniforms() const;
-  size_t NumAttributes() const;
-  const auto& Handle() const { return mHandle; }
 
-  bool FindAttribUserNameByMappedName(
-      const std::string& mappedName,
-      const std::string** const out_userName) const;
-
-  bool FindAttribMappedNameByUserName(
-      const std::string& userName,
-      const std::string** const out_mappedName) const;
-
-  bool FindVaryingMappedNameByUserName(
-      const std::string& userName,
-      const std::string** const out_mappedName) const;
-
-  bool FindVaryingByMappedName(const std::string& mappedName,
-                               std::string* const out_userName,
-                               bool* const out_isArray) const;
   bool FindUniformByMappedName(const std::string& mappedName,
                                std::string* const out_userName,
                                bool* const out_isArray) const;
-  bool UnmapUniformBlockName(const nsACString& baseMappedName,
-                             nsCString* const out_baseUserName) const;
 
   bool ValidateTransformFeedback(
       const std::vector<nsString>& userNames, uint32_t maxComponents,

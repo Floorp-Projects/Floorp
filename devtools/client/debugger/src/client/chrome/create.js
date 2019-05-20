@@ -15,7 +15,7 @@ export function fromServerLocation(
       sourceId: serverLocation.scriptId,
       line: serverLocation.lineNumber + 1,
       column: serverLocation.columnNumber,
-      sourceUrl: ""
+      sourceUrl: "",
     };
   }
 }
@@ -23,7 +23,7 @@ export function fromServerLocation(
 export function toServerLocation(location: SourceLocation): ServerLocation {
   return {
     scriptId: location.sourceId,
-    lineNumber: location.line - 1
+    lineNumber: location.line - 1,
   };
 }
 
@@ -38,7 +38,7 @@ export function createFrame(frame: any): ?ChromeFrame {
     displayName: frame.functionName,
     scopeChain: frame.scopeChain,
     generatedLocation: location,
-    location
+    location,
   };
 }
 
@@ -52,6 +52,6 @@ export function createLoadedObject(
     objectId: value.objectId,
     parentId,
     name,
-    value
+    value,
   };
 }

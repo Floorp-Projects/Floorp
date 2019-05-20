@@ -10,5 +10,5 @@ async function createConsumer(map: any, sourceMapUrl: any): SourceMapConsumer {
 }
 
 module.exports = {
-  createConsumer
+  createConsumer,
 };

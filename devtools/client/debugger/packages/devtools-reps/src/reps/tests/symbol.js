@@ -14,7 +14,7 @@ describe("test Symbol", () => {
   it("renders with the expected content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -29,7 +29,7 @@ describe("test Symbol without identifier", () => {
   it("renders the expected content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -44,7 +44,7 @@ describe("test Symbol with long string", () => {
   it("renders the expected content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 

@@ -468,6 +468,17 @@ class AbuseReport extends HTMLElement {
         if (evt.target === this._btnSubmit) {
           this.submit();
         }
+        if (evt.target.localName === "a") {
+          evt.preventDefault();
+          evt.stopPropagation();
+          const url = evt.target.getAttribute("href");
+          // Ignore if url is empty.
+          if (url) {
+            window.windowRoot.ownerGlobal.openWebLinkIn(url, "tab", {
+              relatedToCurrent: true,
+            });
+          }
+        }
         break;
     }
   }
@@ -628,7 +639,7 @@ class AbuseReport extends HTMLElement {
 
   get homepageURL() {
     const {addon} = this;
-    return addon && addon.homepageURL || this.authorURL;
+    return addon && addon.homepageURL || this.authorURL || "";
   }
 
   get authorName() {
@@ -638,7 +649,7 @@ class AbuseReport extends HTMLElement {
   }
 
   get authorURL() {
-    return this.addonCreator && this.addonCreator.url;
+    return this.addonCreator && this.addonCreator.url || "";
   }
 
   get iconURL() {
@@ -646,7 +657,7 @@ class AbuseReport extends HTMLElement {
   }
 
   get supportURL() {
-    return this.addon && this.addon.supportURL || this.homepageURL;
+    return this.addon && this.addon.supportURL || this.homepageURL || "";
   }
 
   get message() {

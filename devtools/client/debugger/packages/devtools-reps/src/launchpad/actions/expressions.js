@@ -22,28 +22,28 @@ function addExpression(input, packet) {
     type: constants.ADD_EXPRESSION,
     value: {
       input,
-      packet
-    }
+      packet,
+    },
   };
 }
 
 function clearExpressions() {
   return {
-    type: constants.CLEAR_EXPRESSIONS
+    type: constants.CLEAR_EXPRESSIONS,
   };
 }
 
 function showResultPacket(key) {
   return {
     key,
-    type: constants.SHOW_RESULT_PACKET
+    type: constants.SHOW_RESULT_PACKET,
   };
 }
 
 function hideResultPacket(key) {
   return {
     key,
-    type: constants.HIDE_RESULT_PACKET
+    type: constants.HIDE_RESULT_PACKET,
   };
 }
 
@@ -72,5 +72,5 @@ module.exports = {
   hideResultPacket,
   createObjectClient,
   createLongStringClient,
-  releaseActor
+  releaseActor,
 };

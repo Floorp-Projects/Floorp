@@ -82,22 +82,11 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
                                    nsIImageLoadingContent* aImageElement);
 #endif
 
-// Helper used for HTMLCopy and GetTransferableForSelection since both routines
-// share common code.
-static nsresult SelectionCopyHelper(Selection* aSel, Document* aDoc,
-                                    bool doPutOnClipboard, int16_t aClipboardID,
-                                    uint32_t aFlags,
-                                    nsITransferable** aTransferable) {
-  // Clear the output parameter for the transferable, if provided.
-  if (aTransferable) {
-    *aTransferable = nullptr;
-  }
-
-  nsresult rv;
-
-  nsCOMPtr<nsIDocumentEncoder> docEncoder;
-  docEncoder = do_createHTMLCopyEncoder();
-
+static nsresult EncodeForTextUnicode(nsIDocumentEncoder& aEncoder,
+                                     Document& aDocument, Selection* aSelection,
+                                     uint32_t aAdditionalEncoderFlags,
+                                     bool& aEncodedAsTextHTMLResult,
+                                     nsAutoString& aSerializationResult) {
   // note that we assign text/unicode as mime type, but in fact
   // nsHTMLCopyEncoder ignore it and use text/html or text/plain depending where
   // the selection is. if it is a selection into input/textarea element or in a
@@ -107,34 +96,35 @@ static nsresult SelectionCopyHelper(Selection* aSel, Document* aDoc,
   mimeType.AssignLiteral(kUnicodeMime);
 
   // Do the first and potentially trial encoding as preformatted and raw.
-  uint32_t flags = aFlags | nsIDocumentEncoder::OutputPreformatted |
+  uint32_t flags = aAdditionalEncoderFlags |
+                   nsIDocumentEncoder::OutputPreformatted |
                    nsIDocumentEncoder::OutputRaw |
                    nsIDocumentEncoder::OutputForPlainTextClipboardCopy;
 
-  rv = docEncoder->Init(aDoc, mimeType, flags);
+  nsresult rv = aEncoder.Init(&aDocument, mimeType, flags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = docEncoder->SetSelection(aSel);
+  rv = aEncoder.SetSelection(aSelection);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // SetSelection set the mime type to text/plain if the selection is inside a
   // text widget.
-  rv = docEncoder->GetMimeType(mimeType);
+  rv = aEncoder.GetMimeType(mimeType);
   NS_ENSURE_SUCCESS(rv, rv);
   bool selForcedTextPlain = mimeType.EqualsLiteral(kTextMime);
 
   nsAutoString buf;
-  rv = docEncoder->EncodeToString(buf);
+  rv = aEncoder.EncodeToString(buf);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = docEncoder->GetMimeType(mimeType);
+  rv = aEncoder.GetMimeType(mimeType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!selForcedTextPlain && mimeType.EqualsLiteral(kTextMime)) {
     // SetSelection and EncodeToString use this case to signal that text/plain
     // was forced because the document is either not an nsIHTMLDocument or it's
     // XHTML.  We want to pretty print XHTML but not non-nsIHTMLDocuments.
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDoc);
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(&aDocument);
     if (!htmlDoc) {
       selForcedTextPlain = true;
     }
@@ -142,151 +132,239 @@ static nsresult SelectionCopyHelper(Selection* aSel, Document* aDoc,
 
   // The mime type is ultimately text/html if the encoder successfully encoded
   // the selection as text/html.
-  bool encodedTextHTML = mimeType.EqualsLiteral(kHTMLMime);
+  aEncodedAsTextHTMLResult = mimeType.EqualsLiteral(kHTMLMime);
 
-  // First, prepare the text/plain clipboard flavor.
-  nsAutoString textPlainBuf;
   if (selForcedTextPlain) {
     // Nothing to do.  buf contains the final, preformatted, raw text/plain.
-    textPlainBuf.Assign(buf);
+    aSerializationResult.Assign(buf);
   } else {
     // Redo the encoding, but this time use pretty printing.
-    flags = nsIDocumentEncoder::OutputSelectionOnly |
-            nsIDocumentEncoder::OutputAbsoluteLinks |
-            nsIDocumentEncoder::SkipInvisibleContent |
-            nsIDocumentEncoder::OutputDropInvisibleBreak |
-            (aFlags & (nsIDocumentEncoder::OutputNoScriptContent |
-                       nsIDocumentEncoder::OutputRubyAnnotation));
+    flags =
+        nsIDocumentEncoder::OutputSelectionOnly |
+        nsIDocumentEncoder::OutputAbsoluteLinks |
+        nsIDocumentEncoder::SkipInvisibleContent |
+        nsIDocumentEncoder::OutputDropInvisibleBreak |
+        (aAdditionalEncoderFlags & (nsIDocumentEncoder::OutputNoScriptContent |
+                                    nsIDocumentEncoder::OutputRubyAnnotation));
 
     mimeType.AssignLiteral(kTextMime);
-    rv = docEncoder->Init(aDoc, mimeType, flags);
+    rv = aEncoder.Init(&aDocument, mimeType, flags);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = docEncoder->SetSelection(aSel);
+    rv = aEncoder.SetSelection(aSelection);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = docEncoder->EncodeToString(textPlainBuf);
+    rv = aEncoder.EncodeToString(aSerializationResult);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Second, prepare the text/html flavor.
-  nsAutoString textHTMLBuf;
-  nsAutoString htmlParentsBuf;
-  nsAutoString htmlInfoBuf;
-  if (encodedTextHTML) {
+  return rv;
+}
+
+static nsresult EncodeAsTextHTMLWithContext(
+    nsIDocumentEncoder& aEncoder, Document& aDocument, Selection* aSelection,
+    uint32_t aEncoderFlags, nsAutoString& aTextHTMLEncodingResult,
+    nsAutoString& aHTMLParentsBufResult, nsAutoString& aHTMLInfoBufResult) {
+  nsAutoString mimeType;
+  mimeType.AssignLiteral(kHTMLMime);
+  nsresult rv = aEncoder.Init(&aDocument, mimeType, aEncoderFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aEncoder.SetSelection(aSelection);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aEncoder.EncodeToStringWithContext(
+      aHTMLParentsBufResult, aHTMLInfoBufResult, aTextHTMLEncodingResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
+}
+
+struct EncodedDocumentWithContext {
+  // When determening `mSerializationForTextUnicode`, `text/unicode` is passed
+  // as mime type to the encoder. It uses this as a switch to decide whether to
+  // encode the document as `text/html` or `text/plain`. It  is `true` iff
+  // `text/html` was used.
+  bool mUnicodeEncodingIsTextHTML;
+
+  // The serialized document when encoding the document with `text/unicode`. See
+  // comment of `mUnicodeEncodingIsTextHTML`.
+  nsAutoString mSerializationForTextUnicode;
+
+  // When `mUnicodeEncodingIsTextHTML` is true, this is the serialized document
+  // using `text/html`. Its value may differ from `mSerializationForTextHTML`,
+  // because different flags were passed to the encoder.
+  nsAutoString mSerializationForTextHTML;
+
+  // When `mUnicodeEncodingIsTextHTML` is true, this contains the serialized
+  // ancestor elements.
+  nsAutoString mHTMLContextBuffer;
+
+  // When `mUnicodeEncodingIsTextHTML` is true, this contains numbers
+  // identifying where in the context the serialization came from.
+  nsAutoString mHTMLInfoBuffer;
+};
+
+/**
+ * @param aSelection Can be nullptr.
+ * @param aAdditionalEncoderFlags nsIDocumentEncoder flags.
+ */
+static nsresult EncodeDocumentWithContext(
+    Document& aDocument, Selection* aSelection,
+    uint32_t aAdditionalEncoderFlags,
+    EncodedDocumentWithContext& aEncodedDocumentWithContext) {
+  nsCOMPtr<nsIDocumentEncoder> docEncoder = do_createHTMLCopyEncoder();
+
+  bool unicodeEncodingIsTextHTML{false};
+  nsAutoString serializationForTextUnicode;
+  nsresult rv = EncodeForTextUnicode(
+      *docEncoder, aDocument, aSelection, aAdditionalEncoderFlags,
+      unicodeEncodingIsTextHTML, serializationForTextUnicode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString serializationForTextHTML;
+  nsAutoString htmlContextBuffer;
+  nsAutoString htmlInfoBuffer;
+  if (unicodeEncodingIsTextHTML) {
     // Redo the encoding, but this time use the passed-in flags.
     // Don't allow wrapping of CJK strings.
-    mimeType.AssignLiteral(kHTMLMime);
-    rv = docEncoder->Init(
-        aDoc, mimeType,
-        aFlags | nsIDocumentEncoder::OutputDisallowLineBreaking);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = docEncoder->SetSelection(aSel);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = docEncoder->EncodeToStringWithContext(htmlParentsBuf, htmlInfoBuf,
-                                               textHTMLBuf);
+    rv = EncodeAsTextHTMLWithContext(
+        *docEncoder, aDocument, aSelection,
+        aAdditionalEncoderFlags |
+            nsIDocumentEncoder::OutputDisallowLineBreaking,
+        serializationForTextHTML, htmlContextBuffer, htmlInfoBuffer);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Get the Clipboard
-  nsCOMPtr<nsIClipboard> clipboard;
-  if (doPutOnClipboard) {
-    clipboard = do_GetService(kCClipboardCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-  }
+  aEncodedDocumentWithContext = {
+      unicodeEncodingIsTextHTML, std::move(serializationForTextUnicode),
+      std::move(serializationForTextHTML), std::move(htmlContextBuffer),
+      std::move(htmlInfoBuffer)};
 
-  if ((doPutOnClipboard && clipboard) || aTransferable != nullptr) {
-    // Create a transferable for putting data on the Clipboard
-    nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID);
-    if (trans) {
-      trans->Init(aDoc->GetLoadContext());
-      if (encodedTextHTML) {
-        // Set up a format converter so that clipboard flavor queries work.
-        // This converter isn't really used for conversions.
-        nsCOMPtr<nsIFormatConverter> htmlConverter =
-            do_CreateInstance(kHTMLConverterCID);
-        trans->SetConverter(htmlConverter);
+  return rv;
+}
 
-        if (!textHTMLBuf.IsEmpty()) {
-          // Add the html DataFlavor to the transferable
-          rv = AppendString(trans, textHTMLBuf, kHTMLMime);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
+static nsresult CreateTransferable(
+    const EncodedDocumentWithContext& aEncodedDocumentWithContext,
+    Document& aDocument, nsCOMPtr<nsITransferable>& aTransferable) {
+  nsresult rv = NS_OK;
 
-        // Add the htmlcontext DataFlavor to the transferable
-        // Even if parents is empty string, this flavor should
-        // be attached to the transferable
-        rv = AppendString(trans, htmlParentsBuf, kHTMLContext);
+  aTransferable = do_CreateInstance(kCTransferableCID);
+  NS_ENSURE_TRUE(aTransferable, NS_ERROR_NULL_POINTER);
+
+  aTransferable->Init(aDocument.GetLoadContext());
+  if (aEncodedDocumentWithContext.mUnicodeEncodingIsTextHTML) {
+    // Set up a format converter so that clipboard flavor queries work.
+    // This converter isn't really used for conversions.
+    nsCOMPtr<nsIFormatConverter> htmlConverter =
+        do_CreateInstance(kHTMLConverterCID);
+    aTransferable->SetConverter(htmlConverter);
+
+    if (!aEncodedDocumentWithContext.mSerializationForTextHTML.IsEmpty()) {
+      // Add the html DataFlavor to the transferable
+      rv = AppendString(aTransferable,
+                        aEncodedDocumentWithContext.mSerializationForTextHTML,
+                        kHTMLMime);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Add the htmlcontext DataFlavor to the transferable. Even if the context
+    // buffer is empty, this flavor should be attached to the transferable.
+    rv = AppendString(aTransferable,
+                      aEncodedDocumentWithContext.mHTMLContextBuffer,
+                      kHTMLContext);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!aEncodedDocumentWithContext.mHTMLInfoBuffer.IsEmpty()) {
+      // Add the htmlinfo DataFlavor to the transferable
+      rv = AppendString(aTransferable,
+                        aEncodedDocumentWithContext.mHTMLInfoBuffer, kHTMLInfo);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    if (!aEncodedDocumentWithContext.mSerializationForTextUnicode.IsEmpty()) {
+      // unicode text
+      // Add the unicode DataFlavor to the transferable
+      // If we didn't have this, then nsDataObj::GetData matches
+      // text/unicode against the kURLMime flavour which is not desirable
+      // (eg. when pasting into Notepad)
+      rv =
+          AppendString(aTransferable,
+                       aEncodedDocumentWithContext.mSerializationForTextUnicode,
+                       kUnicodeMime);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Try and get source URI of the items that are being dragged
+    nsIURI* uri = aDocument.GetDocumentURI();
+    if (uri) {
+      nsAutoCString spec;
+      nsresult rv = uri->GetSpec(spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!spec.IsEmpty()) {
+        nsAutoString shortcut;
+        AppendUTF8toUTF16(spec, shortcut);
+
+        // Add the URL DataFlavor to the transferable. Don't use kURLMime,
+        // as it will cause an unnecessary UniformResourceLocator to be
+        // added which confuses some apps eg. Outlook 2000 - (See Bug
+        // 315370). Don't use kURLDataMime, as it will cause a bogus 'url '
+        // flavor to show up on the Mac clipboard, confusing other apps,
+        // like Terminal (see bug 336012).
+        rv = AppendString(aTransferable, shortcut, kURLPrivateMime);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        if (!htmlInfoBuf.IsEmpty()) {
-          // Add the htmlinfo DataFlavor to the transferable
-          rv = AppendString(trans, htmlInfoBuf, kHTMLInfo);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-
-        if (!textPlainBuf.IsEmpty()) {
-          // unicode text
-          // Add the unicode DataFlavor to the transferable
-          // If we didn't have this, then nsDataObj::GetData matches
-          // text/unicode against the kURLMime flavour which is not desirable
-          // (eg. when pasting into Notepad)
-          rv = AppendString(trans, textPlainBuf, kUnicodeMime);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-
-        // Try and get source URI of the items that are being dragged
-        nsIURI* uri = aDoc->GetDocumentURI();
-        if (uri) {
-          nsAutoCString spec;
-          nsresult rv = uri->GetSpec(spec);
-          NS_ENSURE_SUCCESS(rv, rv);
-          if (!spec.IsEmpty()) {
-            nsAutoString shortcut;
-            AppendUTF8toUTF16(spec, shortcut);
-
-            // Add the URL DataFlavor to the transferable. Don't use kURLMime,
-            // as it will cause an unnecessary UniformResourceLocator to be
-            // added which confuses some apps eg. Outlook 2000 - (See Bug
-            // 315370). Don't use kURLDataMime, as it will cause a bogus 'url '
-            // flavor to show up on the Mac clipboard, confusing other apps,
-            // like Terminal (see bug 336012).
-            rv = AppendString(trans, shortcut, kURLPrivateMime);
-            NS_ENSURE_SUCCESS(rv, rv);
-          }
-        }
-      } else {
-        if (!textPlainBuf.IsEmpty()) {
-          // Add the unicode DataFlavor to the transferable
-          rv = AppendString(trans, textPlainBuf, kUnicodeMime);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      }
-
-      if (doPutOnClipboard && clipboard) {
-        // put the transferable on the clipboard
-        clipboard->SetData(trans, nullptr, aClipboardID);
-      }
-
-      // Return the transferable to the caller if requested.
-      if (aTransferable != nullptr) {
-        trans.swap(*aTransferable);
       }
     }
+  } else {
+    if (!aEncodedDocumentWithContext.mSerializationForTextUnicode.IsEmpty()) {
+      // Add the unicode DataFlavor to the transferable
+      rv =
+          AppendString(aTransferable,
+                       aEncodedDocumentWithContext.mSerializationForTextUnicode,
+                       kUnicodeMime);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
+
+  return rv;
+}
+
+static nsresult PutToClipboard(
+    const EncodedDocumentWithContext& aEncodedDocumentWithContext,
+    int16_t aClipboardID, Document& aDocument) {
+  nsresult rv;
+  nsCOMPtr<nsIClipboard> clipboard = do_GetService(kCClipboardCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(clipboard, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsITransferable> transferable;
+  rv = CreateTransferable(aEncodedDocumentWithContext, aDocument, transferable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = clipboard->SetData(transferable, nullptr, aClipboardID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return rv;
 }
 
 nsresult nsCopySupport::HTMLCopy(Selection* aSel, Document* aDoc,
                                  int16_t aClipboardID,
                                  bool aWithRubyAnnotation) {
-  uint32_t flags = nsIDocumentEncoder::SkipInvisibleContent;
+  NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
+
+  uint32_t additionalFlags = nsIDocumentEncoder::SkipInvisibleContent;
   if (aWithRubyAnnotation) {
-    flags |= nsIDocumentEncoder::OutputRubyAnnotation;
+    additionalFlags |= nsIDocumentEncoder::OutputRubyAnnotation;
   }
-  return SelectionCopyHelper(aSel, aDoc, true, aClipboardID, flags, nullptr);
+
+  EncodedDocumentWithContext encodedDocumentWithContext;
+  nsresult rv = EncodeDocumentWithContext(*aDoc, aSel, additionalFlags,
+                                          encodedDocumentWithContext);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = PutToClipboard(encodedDocumentWithContext, aClipboardID, *aDoc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return rv;
 }
 
 nsresult nsCopySupport::ClearSelectionCache() {
@@ -296,15 +374,48 @@ nsresult nsCopySupport::ClearSelectionCache() {
   return rv;
 }
 
+/**
+ * @param aAdditionalEncoderFlags flags of `nsIDocumentEncoder`.
+ * @param aTransferable Needs to be not `nullptr`.
+ */
+static nsresult EncodeDocumentWithContextAndCreateTransferable(
+    Document& aDocument, Selection* aSelection,
+    uint32_t aAdditionalEncoderFlags, nsITransferable** aTransferable) {
+  NS_ENSURE_TRUE(aTransferable, NS_ERROR_NULL_POINTER);
+
+  // Clear the output parameter for the transferable.
+  *aTransferable = nullptr;
+
+  EncodedDocumentWithContext encodedDocumentWithContext;
+  nsresult rv =
+      EncodeDocumentWithContext(aDocument, aSelection, aAdditionalEncoderFlags,
+                                encodedDocumentWithContext);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsITransferable> transferable;
+  rv = CreateTransferable(encodedDocumentWithContext, aDocument, transferable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  transferable.swap(*aTransferable);
+  return rv;
+}
+
 nsresult nsCopySupport::GetTransferableForSelection(
     Selection* aSel, Document* aDoc, nsITransferable** aTransferable) {
-  return SelectionCopyHelper(aSel, aDoc, false, 0,
-                             nsIDocumentEncoder::SkipInvisibleContent,
-                             aTransferable);
+  NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aTransferable, NS_ERROR_NULL_POINTER);
+
+  const uint32_t additionalFlags = nsIDocumentEncoder::SkipInvisibleContent;
+  return EncodeDocumentWithContextAndCreateTransferable(
+      *aDoc, aSel, additionalFlags, aTransferable);
 }
 
 nsresult nsCopySupport::GetTransferableForNode(
     nsINode* aNode, Document* aDoc, nsITransferable** aTransferable) {
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aTransferable, NS_ERROR_NULL_POINTER);
+
   // Make a temporary selection with aNode in a single range.
   // XXX We should try to get rid of the Selection object here.
   // XXX bug 1245883
@@ -320,8 +431,9 @@ nsresult nsCopySupport::GetTransferableForNode(
     return result.StealNSResult();
   }
   // It's not the primary selection - so don't skip invisible content.
-  uint32_t flags = 0;
-  return SelectionCopyHelper(selection, aDoc, false, 0, flags, aTransferable);
+  uint32_t additionalFlags = 0;
+  return EncodeDocumentWithContextAndCreateTransferable(
+      *aDoc, selection, additionalFlags, aTransferable);
 }
 
 nsresult nsCopySupport::GetContents(const nsACString& aMimeType,

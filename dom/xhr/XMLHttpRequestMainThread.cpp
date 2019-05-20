@@ -26,6 +26,7 @@
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/WorkerError.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
@@ -2633,6 +2634,9 @@ nsresult XMLHttpRequestMainThread::InitiateFetch(
     MaybeLowerChannelPriority();
   }
 
+  // Associate any originating stack with the channel.
+  NotifyNetworkMonitorAlternateStack(mChannel, std::move(mOriginStack));
+
   // Start reading from the channel
   rv = mChannel->AsyncOpen(listener);
   listener = nullptr;
@@ -3136,6 +3140,11 @@ void XMLHttpRequestMainThread::SetMozBackgroundRequest(
     bool aMozBackgroundRequest, ErrorResult& aRv) {
   // No errors for this webIDL method on main-thread.
   SetMozBackgroundRequest(aMozBackgroundRequest);
+}
+
+void XMLHttpRequestMainThread::SetOriginStack(
+    UniquePtr<SerializedStackHolder> aOriginStack) {
+  mOriginStack = std::move(aOriginStack);
 }
 
 bool XMLHttpRequestMainThread::WithCredentials() const {

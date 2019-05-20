@@ -121,15 +121,24 @@ pref("security.pki.certificate_transparency.mode", 0);
 // Hardware Origin-bound Second Factor Support
 pref("security.webauth.u2f", true);
 pref("security.webauth.webauthn", true);
+
+// Only one of ["enable_softtoken", "enable_usbtoken",
+// "webauthn_enable_android_fido2"] should be true at a time, as the
+// softtoken will override the other two.
+pref("security.webauth.webauthn_enable_softtoken", false);
+
 #ifdef FENNEC_NIGHTLY
 pref("security.webauth.webauthn_enable_android_fido2", true);
 #else
 pref("security.webauth.webauthn_enable_android_fido2", false);
 #endif
-// Only one of "enable_softtoken" and "enable_usbtoken" can be true
-// at a time.
-pref("security.webauth.webauthn_enable_softtoken", false);
+
+#ifdef MOZ_WIDGET_ANDROID
+// the Rust usbtoken support does not function on Android
+pref("security.webauth.webauthn_enable_usbtoken", false);
+#else
 pref("security.webauth.webauthn_enable_usbtoken", true);
+#endif
 
 pref("security.ssl.errorReporting.enabled", true);
 pref("security.ssl.errorReporting.url", "https://incoming.telemetry.mozilla.org/submit/sslreports/");

@@ -280,6 +280,12 @@ class BaseBootstrapper(object):
             '%s does not yet implement ensure_nasm_packages()'
             % __name__)
 
+    def ensure_sccache_packages(self, state_dir, checkout_root):
+        '''
+        Install sccache.
+        '''
+        pass
+
     def ensure_node_packages(self, state_dir, checkout_root):
         '''
         Install any necessary packages needed to supply NodeJS'''

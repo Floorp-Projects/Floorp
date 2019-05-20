@@ -19,7 +19,7 @@ import {
   getActiveSearch,
   getQuickOpenEnabled,
   getOrientation,
-  getCanRewind
+  getCanRewind,
 } from "../selectors";
 
 import type { OrientationType } from "../reducers/types";
@@ -73,13 +73,13 @@ type Props = {
   closeProjectSearch: typeof actions.closeProjectSearch,
   openQuickOpen: typeof actions.openQuickOpen,
   closeQuickOpen: typeof actions.closeQuickOpen,
-  setOrientation: typeof actions.setOrientation
+  setOrientation: typeof actions.setOrientation,
 };
 
 type State = {
   shortcutsModalEnabled: boolean,
   startPanelSize: number,
-  endPanelSize: number
+  endPanelSize: number,
 };
 
 class App extends Component<Props, State> {
@@ -96,7 +96,7 @@ class App extends Component<Props, State> {
     this.state = {
       shortcutsModalEnabled: false,
       startPanelSize: 0,
-      endPanelSize: 0
+      endPanelSize: 0,
     };
   }
 
@@ -115,7 +115,7 @@ class App extends Component<Props, State> {
 
     const searchKeys = [
       L10N.getStr("sources.search.key2"),
-      L10N.getStr("sources.search.alt.key")
+      L10N.getStr("sources.search.alt.key"),
     ];
     searchKeys.forEach(key => shortcuts.on(key, this.toggleQuickOpenModal));
 
@@ -137,7 +137,7 @@ class App extends Component<Props, State> {
 
     const searchKeys = [
       L10N.getStr("sources.search.key2"),
-      L10N.getStr("sources.search.alt.key")
+      L10N.getStr("sources.search.alt.key"),
     ];
     searchKeys.forEach(key => shortcuts.off(key, this.toggleQuickOpenModal));
 
@@ -151,7 +151,7 @@ class App extends Component<Props, State> {
       activeSearch,
       closeActiveSearch,
       closeQuickOpen,
-      quickOpenEnabled
+      quickOpenEnabled,
     } = this.props;
     const { shortcutsModalEnabled } = this.state;
 
@@ -253,7 +253,7 @@ class App extends Component<Props, State> {
 
   toggleShortcutsModal() {
     this.setState(prevState => ({
-      shortcutsModalEnabled: !prevState.shortcutsModalEnabled
+      shortcutsModalEnabled: !prevState.shortcutsModalEnabled,
     }));
   }
 
@@ -346,7 +346,7 @@ class App extends Component<Props, State> {
 
 App.childContextTypes = {
   shortcuts: PropTypes.object,
-  l10n: PropTypes.object
+  l10n: PropTypes.object,
 };
 
 const mapStateToProps = state => ({
@@ -356,7 +356,7 @@ const mapStateToProps = state => ({
   endPanelCollapsed: getPaneCollapse(state, "end"),
   activeSearch: getActiveSearch(state),
   quickOpenEnabled: getQuickOpenEnabled(state),
-  orientation: getOrientation(state)
+  orientation: getOrientation(state),
 });
 
 export default connect(
@@ -367,6 +367,6 @@ export default connect(
     closeProjectSearch: actions.closeProjectSearch,
     openQuickOpen: actions.openQuickOpen,
     closeQuickOpen: actions.closeQuickOpen,
-    setOrientation: actions.setOrientation
+    setOrientation: actions.setOrientation,
   }
 )(App);

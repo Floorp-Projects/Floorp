@@ -13,8 +13,8 @@ stubs.set("ObjectWithUrl", {
   ownPropertyLength: 15,
   preview: {
     kind: "ObjectWithURL",
-    url: "https://www.mozilla.org/en-US/"
-  }
+    url: "https://www.mozilla.org/en-US/",
+  },
 });
 
 module.exports = stubs;

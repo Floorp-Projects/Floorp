@@ -45,7 +45,7 @@ class WasmRemap {
     const result = this._map.originalPositionFor({
       line: 1,
       column: generatedPosition.line,
-      bias: generatedPosition.bias
+      bias: generatedPosition.bias,
     });
     return result;
   }
@@ -53,7 +53,7 @@ class WasmRemap {
   _remapGeneratedPosition(position) {
     const generatedPosition = {
       line: position.column,
-      column: 0
+      column: 0,
     };
     if (this._computeColumnSpans) {
       generatedPosition.lastColumn = Infinity;
@@ -89,7 +89,7 @@ class WasmRemap {
           generatedColumn,
           originalLine,
           originalColumn,
-          name
+          name,
         } = entry;
         callback({
           source,
@@ -97,7 +97,7 @@ class WasmRemap {
           generatedColumn: 0,
           originalLine,
           originalColumn,
-          name
+          name,
         });
       },
       context,

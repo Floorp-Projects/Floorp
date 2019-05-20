@@ -13,7 +13,7 @@ const {
   storeHasExactExpandedPaths,
   storeHasExpandedPath,
   storeHasLoadedProperty,
-  waitForDispatch
+  waitForDispatch,
 } = require("../test-utils");
 const { createNode, NODE_TYPES } = require("../../utils/node");
 const { getActors, getExpandedPaths } = require("../../reducer");
@@ -22,8 +22,8 @@ const protoStub = {
   prototype: {
     type: "object",
     actor: "server2.conn0.child1/obj628",
-    class: "Object"
-  }
+    class: "Object",
+  },
 };
 
 function generateDefaults(overrides) {
@@ -33,19 +33,19 @@ function generateDefaults(overrides) {
       {
         path: "root-1",
         contents: {
-          value: gripRepStubs.get("testMoreThanMaxProps")
-        }
+          value: gripRepStubs.get("testMoreThanMaxProps"),
+        },
       },
       {
         path: "root-2",
         contents: {
-          value: gripRepStubs.get("testProxy")
-        }
-      }
+          value: gripRepStubs.get("testProxy"),
+        },
+      },
     ],
     createObjectClient: grip => ObjectClient(grip),
     mode: MODE.LONG,
-    ...overrides
+    ...overrides,
   };
 }
 const LongStringClientMock = require("../__mocks__/long-string-client");
@@ -55,17 +55,18 @@ function mount(props, { initialState } = {}) {
     createObjectClient: grip =>
       ObjectClient(grip, {
         getPrototype: () => Promise.resolve(protoStub),
-        getProxySlots: () => Promise.resolve(gripRepStubs.get("testProxySlots"))
+        getProxySlots: () =>
+          Promise.resolve(gripRepStubs.get("testProxySlots")),
       }),
 
     createLongStringClient: grip =>
       LongStringClientMock(grip, {
         substring: function(initiaLength, length, cb) {
           cb({
-            substring: "<<<<"
+            substring: "<<<<",
           });
-        }
-      })
+        },
+      }),
   };
 
   return mountObjectInspector({
@@ -74,9 +75,9 @@ function mount(props, { initialState } = {}) {
     initialState: {
       objectInspector: {
         ...initialState,
-        evaluations: new Map()
-      }
-    }
+        evaluations: new Map(),
+      },
+    },
   });
 }
 
@@ -87,9 +88,9 @@ describe("ObjectInspector - state", () => {
       {
         initialState: {
           loadedProperties: new Map([
-            ["root-1", gripPropertiesStubs.get("proto-properties-symbols")]
-          ])
-        }
+            ["root-1", gripPropertiesStubs.get("proto-properties-symbols")],
+          ]),
+        },
       }
     );
 
@@ -137,7 +138,7 @@ describe("ObjectInspector - state", () => {
       storeHasExactExpandedPaths(store, [
         "root-1",
         "root-2",
-        "Symbol(root-1/<prototype>)"
+        "Symbol(root-1/<prototype>)",
       ])
     ).toBeTruthy();
 
@@ -186,7 +187,7 @@ describe("ObjectInspector - state", () => {
     ).toBeTruthy();
   });
 
-  xit("has the expected state when expanding a proxy node", async () => {
+  it.skip("has the expected state when expanding a proxy node", async () => {
     const { wrapper, store } = mount({});
 
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
@@ -227,9 +228,9 @@ describe("ObjectInspector - state", () => {
       {
         initialSate: {
           loadedProperties: new Map([
-            ["root-1", gripPropertiesStubs.get("proto-properties-symbols")]
-          ])
-        }
+            ["root-1", gripPropertiesStubs.get("proto-properties-symbols")],
+          ]),
+        },
       }
     );
 
@@ -254,9 +255,9 @@ describe("ObjectInspector - state", () => {
       {
         initialState: {
           loadedProperties: new Map([
-            ["root-1", gripPropertiesStubs.get("proto-properties-symbols")]
-          ])
-        }
+            ["root-1", gripPropertiesStubs.get("proto-properties-symbols")],
+          ]),
+        },
       }
     );
 
@@ -282,28 +283,28 @@ describe("ObjectInspector - state", () => {
         {
           name: "a",
           contents: {
-            value: 30
-          }
+            value: 30,
+          },
         },
         {
           name: "b",
           contents: {
-            value: 32
-          }
-        }
+            value: 32,
+          },
+        },
       ],
-      type: NODE_TYPES.BLOCK
+      type: NODE_TYPES.BLOCK,
     });
 
     const proxyNode = createNode({
       name: "Proxy",
       contents: {
-        value: gripRepStubs.get("testProxy")
-      }
+        value: gripRepStubs.get("testProxy"),
+      },
     });
 
     const { wrapper, store } = mount({
-      roots: [blockNode, proxyNode]
+      roots: [blockNode, proxyNode],
     });
 
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
@@ -322,14 +323,14 @@ describe("ObjectInspector - state", () => {
     const recordTelemetryEvent = jest.fn();
     const { wrapper, store } = mount(
       {
-        recordTelemetryEvent
+        recordTelemetryEvent,
       },
       {
         initialState: {
           loadedProperties: new Map([
-            ["root-1", gripPropertiesStubs.get("proto-properties-symbols")]
-          ])
-        }
+            ["root-1", gripPropertiesStubs.get("proto-properties-symbols")],
+          ]),
+        },
       }
     );
 
@@ -377,14 +378,14 @@ describe("ObjectInspector - state", () => {
   it("expanding a getter returning a longString does not throw", async () => {
     const { wrapper, store } = mount(
       {
-        focusable: false
+        focusable: false,
       },
       {
         initialState: {
           loadedProperties: new Map([
-            ["root-1", gripPropertiesStubs.get("longs-string-safe-getter")]
-          ])
-        }
+            ["root-1", gripPropertiesStubs.get("longs-string-safe-getter")],
+          ]),
+        },
       }
     );
 

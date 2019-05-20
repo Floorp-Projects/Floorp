@@ -63,10 +63,9 @@ public class WebAuthnTokenManager {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static void webAuthnMakeCredential(final String rpId, final GeckoBundle identifiers,
+    private static void webAuthnMakeCredential(final GeckoBundle credentialBundle,
                                                final ByteBuffer userId,
                                                final ByteBuffer challenge,
-                                               final long timeoutMs, final String origin,
                                                final Object[] idList,
                                                final ByteBuffer transportList,
                                                final GeckoBundle authenticatorSelection,
@@ -110,15 +109,13 @@ public class WebAuthnTokenManager {
 
         try {
             final Class<?> cls = Class.forName("org.mozilla.gecko.util.WebAuthnUtils");
-            Class<?>[] argTypes = new Class<?>[] { String.class, GeckoBundle.class,
-                                                   byte[].class, byte[].class, long.class,
-                                                   String.class, WebAuthnPublicCredential[].class,
+            Class<?>[] argTypes = new Class<?>[] { GeckoBundle.class, byte[].class, byte[].class,
+                                                   WebAuthnPublicCredential[].class,
                                                    GeckoBundle.class, GeckoBundle.class,
                                                    WebAuthnMakeCredentialResponse.class };
             Method make = cls.getDeclaredMethod("makeCredential", argTypes);
 
-            make.invoke(null, rpId, identifiers, userBytes, challBytes,
-                        timeoutMs, origin,
+            make.invoke(null, credentialBundle, userBytes, challBytes,
                         excludeList.toArray(new WebAuthnPublicCredential[0]),
                         authenticatorSelection, extensions, handler);
         } catch (Exception e) {
@@ -128,11 +125,11 @@ public class WebAuthnTokenManager {
         }
     }
 
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "gecko")
     /* package */ static native void webAuthnMakeCredentialFinish(final byte[] clientDataJson,
                                                                   final byte[] keyHandle,
                                                                   final byte[] attestationObject);
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "gecko")
     /* package */ static native void webAuthnMakeCredentialReturnError(String errorCode);
 
     public interface WebAuthnGetAssertionResponse {
@@ -143,10 +140,10 @@ public class WebAuthnTokenManager {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static void webAuthnGetAssertion(final String rpId, final ByteBuffer challenge,
-                                             final long timeoutMs, final String origin,
+    private static void webAuthnGetAssertion(final ByteBuffer challenge,
                                              final Object[] idList,
                                              final ByteBuffer transportList,
+                                             final GeckoBundle assertionBundle,
                                              final GeckoBundle extensions) {
         ArrayList<WebAuthnPublicCredential> allowList;
 
@@ -185,15 +182,14 @@ public class WebAuthnTokenManager {
 
         try {
             final Class<?> cls = Class.forName("org.mozilla.gecko.util.WebAuthnUtils");
-            Class<?>[] argTypes = new Class<?>[] { String.class, byte[].class, long.class,
-                                                   String.class, WebAuthnPublicCredential[].class,
-                                                   GeckoBundle.class,
+            Class<?>[] argTypes = new Class<?>[] { byte[].class, WebAuthnPublicCredential[].class,
+                                                   GeckoBundle.class, GeckoBundle.class,
                                                    WebAuthnGetAssertionResponse.class };
             Method make = cls.getDeclaredMethod("getAssertion", argTypes);
 
-            make.invoke(null, rpId, challBytes, timeoutMs, origin,
+            make.invoke(null, challBytes,
                         allowList.toArray(new WebAuthnPublicCredential[0]),
-                        extensions, handler);
+                        assertionBundle, extensions, handler);
         } catch (Exception e) {
             Log.w(LOGTAG, "Couldn't run WebAuthnUtils", e);
             webAuthnGetAssertionReturnError("UNKNOWN_ERR");
@@ -201,12 +197,12 @@ public class WebAuthnTokenManager {
         }
     }
 
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "gecko")
     /* package */ static native void webAuthnGetAssertionFinish(final byte[] clientDataJson,
                                                                 final byte[] keyHandle,
                                                                 final byte[] authData,
                                                                 final byte[] signature,
                                                                 final byte[] userHandle);
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "gecko")
     /* package */ static native void webAuthnGetAssertionReturnError(String errorCode);
 }

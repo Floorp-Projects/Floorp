@@ -16,7 +16,7 @@ describe("find the best expression for the token", () => {
   it("should find the identifier", () => {
     const expression = findBestMatchExpression(symbols, {
       line: 1,
-      column: 13
+      column: 13,
     });
     expect(expression).toMatchSnapshot();
   });
@@ -24,7 +24,7 @@ describe("find the best expression for the token", () => {
   it("should find the expression for the property", () => {
     const expression = findBestMatchExpression(symbols, {
       line: 6,
-      column: 16
+      column: 16,
     });
     expect(expression).toMatchSnapshot();
   });

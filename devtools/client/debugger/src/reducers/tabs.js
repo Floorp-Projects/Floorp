@@ -20,7 +20,7 @@ import {
   getSourceInSources,
   getUrls,
   getSpecificSourceByURL,
-  getSpecificSourceByURLInSources
+  getSpecificSourceByURLInSources,
 } from "./sources";
 
 import type { Action } from "../actions/types";
@@ -32,7 +32,7 @@ export type Tab = {
   url: string,
   framework?: string | null,
   isOriginal: boolean,
-  sourceId?: string
+  sourceId?: string,
 };
 export type TabList = Tab[];
 
@@ -101,11 +101,13 @@ function updateTabList(
 }
 
 function persistTabs(tabs) {
-  return tabs.filter(tab => tab.url).map(tab => {
-    const newTab = { ...tab };
-    delete newTab.sourceId;
-    return newTab;
-  });
+  return tabs
+    .filter(tab => tab.url)
+    .map(tab => {
+      const newTab = { ...tab };
+      delete newTab.sourceId;
+      return newTab;
+    });
 }
 
 function moveTabInList(tabs: TabList, { url, tabIndex: newIndex }) {

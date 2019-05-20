@@ -1,12 +1,12 @@
-use std::fmt;
-use std::io::{Cursor, Read, Write, ErrorKind};
 use std::default::Default;
+use std::fmt;
+use std::io::{Cursor, ErrorKind, Read, Write};
 
-use rand;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use rand;
 
-use result::{Result, Error, Kind};
-use protocol::{OpCode, CloseCode};
+use protocol::{CloseCode, OpCode};
+use result::{Error, Kind, Result};
 use stream::TryReadBuf;
 
 fn apply_mask(buf: &mut [u8], mask: &[u8; 4]) {
@@ -31,7 +31,6 @@ pub struct Frame {
 }
 
 impl Frame {
-
     /// Get the length of the frame.
     /// This is the length of the header + the length of the payload.
     #[inline]
@@ -51,6 +50,12 @@ impl Frame {
         }
 
         header_length + payload_len
+    }
+
+    /// Return `false`: a frame is never empty since it has a header.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        false
     }
 
     /// Test whether the frame is a final frame.
@@ -171,10 +176,9 @@ impl Frame {
     #[doc(hidden)]
     #[inline]
     pub fn remove_mask(&mut self) -> &mut Frame {
-        self.mask.and_then(|mask| {
-            Some(apply_mask(&mut self.payload, &mask))
-        });
-        self.mask = None;
+        self.mask
+            .take()
+            .map(|mask| apply_mask(&mut self.payload, &mask));
         self
     }
 
@@ -186,16 +190,19 @@ impl Frame {
     /// Create a new data frame.
     #[inline]
     pub fn message(data: Vec<u8>, code: OpCode, finished: bool) -> Frame {
-        debug_assert!(match code {
-            OpCode::Text | OpCode::Binary | OpCode::Continue => true,
-            _ => false,
-        }, "Invalid opcode for data frame.");
+        debug_assert!(
+            match code {
+                OpCode::Text | OpCode::Binary | OpCode::Continue => true,
+                _ => false,
+            },
+            "Invalid opcode for data frame."
+        );
 
         Frame {
-            finished: finished,
+            finished,
             opcode: code,
             payload: data,
-            .. Frame::default()
+            ..Frame::default()
         }
     }
 
@@ -205,7 +212,7 @@ impl Frame {
         Frame {
             opcode: OpCode::Pong,
             payload: data,
-            .. Frame::default()
+            ..Frame::default()
         }
     }
 
@@ -215,7 +222,7 @@ impl Frame {
         Frame {
             opcode: OpCode::Ping,
             payload: data,
-            .. Frame::default()
+            ..Frame::default()
         }
     }
 
@@ -231,21 +238,21 @@ impl Frame {
         };
 
         Frame {
-            payload: payload,
-            .. Frame::default()
+            payload,
+            ..Frame::default()
         }
     }
 
     /// Parse the input stream into a frame.
-    pub fn parse(cursor: &mut Cursor<Vec<u8>>) -> Result<Option<Frame>> {
+    pub fn parse(cursor: &mut Cursor<Vec<u8>>, max_payload_length: u64) -> Result<Option<Frame>> {
         let size = cursor.get_ref().len() as u64 - cursor.position();
         let initial = cursor.position();
         trace!("Position in buffer {}", initial);
 
         let mut head = [0u8; 2];
-        if try!(cursor.read(&mut head)) != 2 {
+        if cursor.read(&mut head)? != 2 {
             cursor.set_position(initial);
-            return Ok(None)
+            return Ok(None);
         }
 
         trace!("Parsed headers {:?}", head);
@@ -269,7 +276,7 @@ impl Frame {
 
         let mut header_length = 2;
 
-        let mut length = (second & 0x7F) as u64;
+        let mut length = u64::from(second & 0x7F);
 
         if let Some(length_nbytes) = match length {
             126 => Some(2),
@@ -292,11 +299,21 @@ impl Frame {
         }
         trace!("Payload length: {}", length);
 
+        if length > max_payload_length {
+            return Err(Error::new(
+                Kind::Protocol,
+                format!(
+                    "Rejected frame with payload length exceeding defined max: {}.",
+                    max_payload_length
+                ),
+            ));
+        }
+
         let mask = if masked {
             let mut mask_bytes = [0u8; 4];
-            if try!(cursor.read(&mut mask_bytes)) != 4 {
+            if cursor.read(&mut mask_bytes)? != 4 {
                 cursor.set_position(initial);
-                return Ok(None)
+                return Ok(None);
             } else {
                 header_length += 4;
                 Some(mask_bytes)
@@ -305,52 +322,68 @@ impl Frame {
             None
         };
 
-        if size < length + header_length {
-            cursor.set_position(initial);
-            return Ok(None)
-        }
+        match length.checked_add(header_length) {
+            Some(l) if size < l => {
+                cursor.set_position(initial);
+                return Ok(None);
+            }
+            Some(_) => (),
+            None => return Ok(None),
+        };
 
         let mut data = Vec::with_capacity(length as usize);
         if length > 0 {
-            if let Some(read) = try!(cursor.try_read_buf(&mut data)) {
+            if let Some(read) = cursor.try_read_buf(&mut data)? {
                 debug_assert!(read == length as usize, "Read incorrect payload length!");
             }
         }
 
         // Disallow bad opcode
         if let OpCode::Bad = opcode {
-            return Err(Error::new(Kind::Protocol, format!("Encountered invalid opcode: {}", first & 0x0F)))
+            return Err(Error::new(
+                Kind::Protocol,
+                format!("Encountered invalid opcode: {}", first & 0x0F),
+            ));
         }
 
         // control frames must have length <= 125
         match opcode {
             OpCode::Ping | OpCode::Pong if length > 125 => {
-                return Err(Error::new(Kind::Protocol, format!("Rejected WebSocket handshake.Received control frame with length: {}.", length)))
+                return Err(Error::new(
+                    Kind::Protocol,
+                    format!(
+                        "Rejected WebSocket handshake.Received control frame with length: {}.",
+                        length
+                    ),
+                ))
             }
             OpCode::Close if length > 125 => {
                 debug!("Received close frame with payload length exceeding 125. Morphing to protocol close frame.");
-                return Ok(Some(Frame::close(CloseCode::Protocol, "Received close frame with payload length exceeding 125.")))
+                return Ok(Some(Frame::close(
+                    CloseCode::Protocol,
+                    "Received close frame with payload length exceeding 125.",
+                )));
             }
-            _ => ()
+            _ => (),
         }
 
         let frame = Frame {
-            finished: finished,
-            rsv1: rsv1,
-            rsv2: rsv2,
-            rsv3: rsv3,
-            opcode: opcode,
-            mask: mask,
+            finished,
+            rsv1,
+            rsv2,
+            rsv3,
+            opcode,
+            mask,
             payload: data,
         };
-
 
         Ok(Some(frame))
     }
 
     /// Write a frame out to a buffer
     pub fn format<W>(&mut self, w: &mut W) -> Result<()>
-        where W: Write
+    where
+        W: Write,
     {
         let mut one = 0u8;
         let code: u8 = self.opcode.into();
@@ -384,23 +417,23 @@ impl Frame {
                 two |= 127;
             }
         }
-        try!(w.write(&[one, two]));
+        w.write_all(&[one, two])?;
 
         if let Some(length_bytes) = match self.payload.len() {
             len if len < 126 => None,
             len if len <= 65535 => Some(2),
             _ => Some(8),
         } {
-            try!(w.write_uint::<BigEndian>(self.payload.len() as u64, length_bytes));
+            w.write_uint::<BigEndian>(self.payload.len() as u64, length_bytes)?;
         }
 
         if self.is_masked() {
             let mask = self.mask.take().unwrap();
             apply_mask(&mut self.payload, &mask);
-            try!(w.write(&mask));
+            w.write_all(&mask)?;
         }
 
-        try!(w.write(&self.payload));
+        w.write_all(&self.payload)?;
         Ok(())
     }
 }
@@ -421,7 +454,8 @@ impl Default for Frame {
 
 impl fmt::Display for Frame {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
+        write!(
+            f,
             "
 <FRAME>
 final: {}
@@ -439,7 +473,11 @@ payload: 0x{}
             // self.mask.map(|mask| format!("{:?}", mask)).unwrap_or("NONE".into()),
             self.len(),
             self.payload.len(),
-            self.payload.iter().map(|byte| format!("{:x}", byte)).collect::<String>())
+            self.payload
+                .iter()
+                .map(|byte| format!("{:x}", byte))
+                .collect::<String>()
+        )
     }
 }
 

@@ -1,0 +1,13 @@
+<script>
+/* eslint-disable no-unused-vars */
+"use strict";
+startWorker();
+
+var w;
+function startWorker() {
+  startWorkerInner();
+}
+function startWorkerInner() {
+  w = new Worker("js_worker-test.js");
+}
+</script>

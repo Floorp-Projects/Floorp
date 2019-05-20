@@ -811,8 +811,11 @@ int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
     /* Initialize all the media stream/component pairs */
     stream=STAILQ_FIRST(&ctx->streams);
     while(stream){
-      if(r=nr_ice_media_stream_initialize(ctx,stream))
-        ABORT(r);
+      if(!stream->obsolete) {
+        if(r=nr_ice_media_stream_initialize(ctx,stream)) {
+          ABORT(r);
+        }
+      }
 
       stream=STAILQ_NEXT(stream,entry);
     }

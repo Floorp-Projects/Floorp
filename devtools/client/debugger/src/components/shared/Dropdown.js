@@ -9,11 +9,11 @@ import "./Dropdown.css";
 
 type Props = {
   panel: React$Element<any>,
-  icon: Node
+  icon: Node,
 };
 
 type State = {
-  dropdownShown: boolean
+  dropdownShown: boolean,
 };
 
 export class Dropdown extends Component<Props, State> {
@@ -21,13 +21,13 @@ export class Dropdown extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      dropdownShown: false
+      dropdownShown: false,
     };
   }
 
   toggleDropdown = (e: SyntheticKeyboardEvent<HTMLElement>) => {
     this.setState(prevState => ({
-      dropdownShown: !prevState.dropdownShown
+      dropdownShown: !prevState.dropdownShown,
     }));
   };
 

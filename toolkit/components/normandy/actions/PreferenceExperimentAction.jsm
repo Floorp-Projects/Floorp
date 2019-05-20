@@ -24,7 +24,7 @@ var EXPORTED_SYMBOLS = ["PreferenceExperimentAction"];
  */
 class PreferenceExperimentAction extends BaseAction {
   get schema() {
-    return ActionSchemas["preference-experiment"];
+    return ActionSchemas["multiple-preference-experiment"];
   }
 
   constructor() {
@@ -44,9 +44,6 @@ class PreferenceExperimentAction extends BaseAction {
       branches,
       isHighPopulation,
       isEnrollmentPaused,
-      preferenceBranchType,
-      preferenceName,
-      preferenceType,
       slug,
     } = recipe.arguments;
 
@@ -55,14 +52,19 @@ class PreferenceExperimentAction extends BaseAction {
     // If we're not in the experiment, enroll!
     const hasSlug = await PreferenceExperiments.has(slug);
     if (!hasSlug) {
-      // If there's already an active experiment using this preference, abort.
+      // Check all preferences that could be used by this experiment.
+      // If there's already an active experiment that has set that preference, abort.
       const activeExperiments = await PreferenceExperiments.getAllActive();
-      const hasConflicts = activeExperiments.some(exp => exp.preferenceName === preferenceName);
-      if (hasConflicts) {
-        throw new Error(
-          `Experiment ${slug} ignored; another active experiment is already using the
-          ${preferenceName} preference.`
-        );
+      for (const branch of branches) {
+        const conflictingPrefs = Object.keys(branch.preferences).filter(preferenceName => {
+          return activeExperiments.some(exp => exp.preferences.hasOwnProperty(preferenceName));
+        });
+        if (conflictingPrefs.length > 0) {
+          throw new Error(
+            `Experiment ${slug} ignored; another active experiment is already using the
+            ${conflictingPrefs[0]} preference.`
+          );
+        }
       }
 
       // Determine if enrollment is currently paused for this experiment.
@@ -77,10 +79,7 @@ class PreferenceExperimentAction extends BaseAction {
       await PreferenceExperiments.start({
         name: slug,
         branch: branch.slug,
-        preferenceName,
-        preferenceValue: branch.value,
-        preferenceBranchType,
-        preferenceType,
+        preferences: branch.preferences,
         experimentType,
       });
     } else {

@@ -284,18 +284,29 @@ this.addonStudyFactory = function(attrs) {
 
 let _preferenceStudyFactoryId = 0;
 this.preferenceStudyFactory = function(attrs) {
+  const defaultPref = {
+    "test.study": {},
+  };
+  const defaultPrefInfo = {
+    preferenceValue: false,
+    preferenceType: "boolean",
+    previousPreferenceValue: undefined,
+    preferenceBranchType: "default",
+  };
+  const preferences = {};
+  for (const [prefName, prefInfo] of Object.entries(attrs.preferences || defaultPref)) {
+    preferences[prefName] = { ...defaultPrefInfo, ...prefInfo };
+  }
+
   return Object.assign({
     name: `Test study ${_preferenceStudyFactoryId++}`,
     branch: "control",
     expired: false,
     lastSeen: new Date().toJSON(),
-    preferenceName: "test.study",
-    preferenceValue: false,
-    preferenceType: "boolean",
-    previousPreferenceValue: undefined,
-    preferenceBranchType: "default",
     experimentType: "exp",
-  }, attrs);
+  }, attrs, {
+    preferences,
+  });
 };
 
 this.withStub = function(...stubArgs) {

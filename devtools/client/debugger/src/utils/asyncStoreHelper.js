@@ -36,7 +36,7 @@ export function asyncStoreHelper(root: string, mappings: Object) {
       },
       set(value) {
         return asyncStorage.setItem(`${root}.${getMappingKey(key)}`, value);
-      }
+      },
     })
   );
 
@@ -48,7 +48,7 @@ export function asyncStoreHelper(root: string, mappings: Object) {
 
       Reflect.set(...arguments);
       return true;
-    }
+    },
   });
 
   return (store: { [$Keys<typeof mappings>]: any });

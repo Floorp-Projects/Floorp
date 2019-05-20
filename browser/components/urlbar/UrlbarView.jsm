@@ -232,14 +232,15 @@ class UrlbarView {
         // Clear the selection when we get a new set of results.
         this._selectItem(null);
       }
-      // Hide the one-off search buttons if the input starts with a potential @
-      // search alias or the search restriction character.
-      let trimmedValue = this.input.textValue.trim();
+      // Hide the one-off search buttons if the search string is empty, or
+      // starts with a potential @ search alias or the search restriction
+      // character.
+      let trimmedValue = queryContext.searchString.trim();
       this._enableOrDisableOneOffSearches(
-        !trimmedValue ||
-        (trimmedValue[0] != "@" &&
-         (trimmedValue[0] != UrlbarTokenizer.RESTRICT.SEARCH ||
-          trimmedValue.length != 1))
+        trimmedValue &&
+        trimmedValue[0] != "@" &&
+        (trimmedValue[0] != UrlbarTokenizer.RESTRICT.SEARCH ||
+         trimmedValue.length != 1)
       );
     }
 
@@ -283,16 +284,6 @@ class UrlbarView {
     if (newSelectionIndex >= 0) {
       this.selectedIndex = newSelectionIndex;
     }
-  }
-
-  /**
-   * Notified when the view context changes, for example when switching tabs.
-   * It can be used to reset internal state tracking.
-   */
-  onViewContextChanged() {
-    // Clear rows, so that when reusing results we don't visually leak them
-    // across different contexts.
-    this._rows.textContent = "";
   }
 
   /**

@@ -2258,7 +2258,10 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
 
   MOZ_DIAGNOSTIC_ASSERT(worker->PrincipalIsValid());
 
-  UniquePtr<SerializedStackHolder> stack = GetCurrentStackForNetMonitor(aCx);
+  UniquePtr<SerializedStackHolder> stack;
+  if (worker->IsWatchedByDevtools()) {
+    stack = GetCurrentStackForNetMonitor(aCx);
+  }
 
   RefPtr<CompileScriptRunnable> compiler =
       new CompileScriptRunnable(worker, std::move(stack), aScriptURL);
@@ -2366,6 +2369,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     loadInfo.mServiceWorkersTestingInWindow =
         aParent->ServiceWorkersTestingInWindow();
     loadInfo.mParentController = aParent->GetController();
+    loadInfo.mWatchedByDevtools = aParent->IsWatchedByDevtools();
   } else {
     AssertIsOnMainThread();
 
@@ -2485,6 +2489,11 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       NS_ENSURE_SUCCESS(rv, rv);
 
       loadInfo.mXHRParamsAllowed = perm == nsIPermissionManager::ALLOW_ACTION;
+
+      nsIDocShell* docShell = globalWindow->GetDocShell();
+      if (docShell) {
+        loadInfo.mWatchedByDevtools = docShell->GetWatchedByDevtools();
+      }
 
       loadInfo.mFromWindow = true;
       loadInfo.mWindowID = globalWindow->WindowID();

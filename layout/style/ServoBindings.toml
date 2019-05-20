@@ -52,6 +52,8 @@ hide-types = [
     ".*incompatible_char_type",
     # https://github.com/rust-lang/rust-bindgen/issues/1503
     "mozilla::StyleTimingFunction.*",
+    # https://github.com/rust-lang/rust-bindgen/issues/1559
+    "mozilla::StyleGenericTransformOperation_.*",
 ]
 bitfield-enums = [
     "nsChangeHint",
@@ -460,7 +462,7 @@ cbindgen-types = [
     { gecko = "StyleContain", servo = "values::computed::Contain" },
     { gecko = "StyleRestyleHint", servo = "invalidation::element::restyle_hints::RestyleHint" },
     { gecko = "StyleTouchAction", servo = "values::computed::TouchAction" },
-    { gecko = "StyleWillChangeBits", servo = "values::specified::box_::WillChangeBits" },
+    { gecko = "StyleWillChange", servo = "values::specified::box_::WillChange" },
     { gecko = "StyleTextDecorationLine", servo = "values::computed::TextDecorationLine" },
     { gecko = "StyleTextTransform", servo = "values::computed::TextTransform" },
     { gecko = "StyleMozListReversed", servo = "values::computed::MozListReversed" },
@@ -480,6 +482,18 @@ cbindgen-types = [
     { gecko = "StyleGenericBasicShape", servo = "values::generics::basic_shape::BasicShape" },
     { gecko = "StyleArcSlice", servo = "style_traits::arc_slice::ArcSlice" },
     { gecko = "StyleForgottenArcSlicePtr", servo = "style_traits::arc_slice::ForgottenArcSlicePtr" },
+    { gecko = "StyleOwnedSlice", servo = "style_traits::owned_slice::OwnedSlice" },
+    { gecko = "StyleMozContextProperties", servo = "values::specified::svg::MozContextProperties" },
+    { gecko = "StyleQuotes", servo = "values::specified::list::Quotes" },
+    { gecko = "StyleOwnedStr", servo = "style_traits::owned_str::OwnedStr" },
+    { gecko = "StyleGenericBoxShadow", servo = "values::generics::effects::BoxShadow" },
+    { gecko = "StyleGenericSimpleShadow", servo = "values::generics::effects::SimpleShadow" },
+    { gecko = "StyleGenericTransformOperation", servo = "values::generics::transform::TransformOperation" },
+    { gecko = "StyleGenericTransform", servo = "values::generics::transform::Transform" },
+    { gecko = "StyleGenericScale", servo = "values::generics::transform::Scale" },
+    { gecko = "StyleGenericRotate", servo = "values::generics::transform::Rotate" },
+    { gecko = "StyleGenericTranslate", servo = "values::generics::transform::Translate" },
+    { gecko = "StyleAngle", servo = "values::computed::Angle" }
 ]
 
 mapped-generic-types = [

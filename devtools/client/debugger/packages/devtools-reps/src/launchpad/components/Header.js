@@ -18,7 +18,7 @@ class Header extends Component {
       clearResultsList: PropTypes.func.isRequired,
       currentInputValue: PropTypes.string,
       evaluate: PropTypes.func.isRequired,
-      navigateInputHistory: PropTypes.func.isRequired
+      navigateInputHistory: PropTypes.func.isRequired,
     };
   }
 
@@ -68,13 +68,13 @@ class Header extends Component {
           value: currentInputValue || "",
           autoFocus: true,
           onChange: this.onInputChange,
-          onKeyDown: this.onInputKeyDown
+          onKeyDown: this.onInputKeyDown,
         }),
         dom.button(
           {
             className: "clear-button",
             type: "button",
-            onClick: this.onClearButtonClick
+            onClick: this.onClearButtonClick,
           },
           "Clear"
         )

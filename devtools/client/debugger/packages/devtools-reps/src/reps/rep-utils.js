@@ -91,7 +91,7 @@ const escapeMap = {
   // Quote.
   0x22: '\\"',
   // Backslash.
-  0x5c: "\\\\"
+  0x5c: "\\\\",
 };
 
 // Regexp that matches any character we might possibly want to escape.
@@ -253,7 +253,7 @@ function parseURLEncodedText(text) {
   return entries.map(entry => {
     return {
       name: entry[0],
-      value: entry[1]
+      value: entry[1],
     };
   });
 }
@@ -285,14 +285,14 @@ function splitURLTrue(url) {
   if (!m) {
     return {
       name: url,
-      path: url
+      path: url,
     };
   } else if (m[4] == "" && m[5] == "") {
     return {
       protocol: m[1],
       domain: m[2],
       path: m[3],
-      name: m[3] != "/" ? m[3] : m[2]
+      name: m[3] != "/" ? m[3] : m[2],
     };
   }
 
@@ -300,7 +300,7 @@ function splitURLTrue(url) {
     protocol: m[1],
     domain: m[2],
     path: m[2] + m[3],
-    name: m[4] + m[5]
+    name: m[4] + m[5],
   };
 }
 
@@ -319,7 +319,7 @@ function wrapRender(renderMethod) {
           className: "objectBox objectBox-failure",
           title:
             "This object could not be rendered, " +
-            "please file a bug on bugzilla.mozilla.org"
+            "please file a bug on bugzilla.mozilla.org",
         },
         /* Labels have to be hardcoded for reps, see Bug 1317038. */
         "Invalid object"
@@ -472,7 +472,7 @@ const ellipsisElement = span(
   {
     key: "more",
     className: "more-ellipsis",
-    title: `more${ELLIPSIS}`
+    title: `more${ELLIPSIS}`,
   },
   ELLIPSIS
 );
@@ -498,5 +498,5 @@ module.exports = {
   ellipsisElement,
   ELLIPSIS,
   uneatLastUrlCharsRegex,
-  urlRegex
+  urlRegex,
 };

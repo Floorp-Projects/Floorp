@@ -75,7 +75,7 @@ const reps = [
   InfinityRep,
   NaNRep,
   Accessor,
-  Obj
+  Obj,
 ];
 
 /**
@@ -159,8 +159,8 @@ module.exports = {
     SymbolRep,
     TextNode,
     Undefined,
-    Window
+    Window,
   },
   // Exporting for tests
-  getRep
+  getRep,
 };

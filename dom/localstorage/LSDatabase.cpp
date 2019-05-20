@@ -24,8 +24,12 @@ StaticAutoPtr<LSDatabaseHashtable> gLSDatabases;
 StaticRefPtr<LSDatabase::Observer> LSDatabase::sObserver;
 
 class LSDatabase::Observer final : public nsIObserver {
+  bool mInvalidated;
+
  public:
-  Observer() { MOZ_ASSERT(NS_IsMainThread()); }
+  Observer() : mInvalidated(false) { MOZ_ASSERT(NS_IsMainThread()); }
+
+  void Invalidate() { mInvalidated = true; }
 
  private:
   ~Observer() { MOZ_ASSERT(NS_IsMainThread()); }
@@ -355,6 +359,13 @@ void LSDatabase::AllowToClose() {
     MOZ_ALWAYS_SUCCEEDS(
         obsSvc->RemoveObserver(sObserver, XPCOM_SHUTDOWN_OBSERVER_TOPIC));
 
+    // We also need to invalidate the observer because AllowToClose can be
+    // triggered by an indirectly related observer, so the observer service
+    // may still keep our observer alive and call Observe on it. This is
+    // possible because observer service snapshots the observer list for given
+    // subject before looping over the list.
+    sObserver->Invalidate();
+
     sObserver = nullptr;
   }
 }
@@ -366,6 +377,11 @@ LSDatabase::Observer::Observe(nsISupports* aSubject, const char* aTopic,
                               const char16_t* aData) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!strcmp(aTopic, XPCOM_SHUTDOWN_OBSERVER_TOPIC));
+
+  if (mInvalidated) {
+    return NS_OK;
+  }
+
   MOZ_ASSERT(gLSDatabases);
 
   nsTArray<RefPtr<LSDatabase>> databases;

@@ -26,10 +26,10 @@ module.exports = ({ file, options, env }) => {
       require("autoprefixer")({
         browsers: ["last 2 Firefox versions", "last 2 Chrome versions"],
         flexbox: false,
-        grid: false
+        grid: false,
       }),
       require("postcss-class-namespace")(),
-      mapUrl(mapUrlDevelopment)
-    ]
+      mapUrl(mapUrlDevelopment),
+    ],
   };
 };

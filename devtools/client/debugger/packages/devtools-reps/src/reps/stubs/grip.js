@@ -19,8 +19,8 @@ stubs.set("testBasic", {
     kind: "Object",
     ownProperties: {},
     ownPropertiesLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("testMaxProps", {
@@ -38,24 +38,24 @@ stubs.set("testMaxProps", {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: "a"
+        value: "a",
       },
       b: {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: "b"
+        value: "b",
       },
       c: {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: "c"
-      }
+        value: "c",
+      },
     },
     ownPropertiesLength: 3,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 const longModeMaxLength = maxLengthMap.get(MODE.LONG);
@@ -77,14 +77,14 @@ stubs.set("testMoreThanMaxProps", {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: index.toString()
-        }
+          value: index.toString(),
+        },
       }),
       {}
     ),
     ownPropertiesLength: longModeMaxLength + 1,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("testUninterestingProps", {
@@ -103,33 +103,33 @@ stubs.set("testUninterestingProps", {
         enumerable: true,
         writable: true,
         value: {
-          type: "undefined"
-        }
+          type: "undefined",
+        },
       },
       b: {
         configurable: true,
         enumerable: true,
         writable: true,
         value: {
-          type: "undefined"
-        }
+          type: "undefined",
+        },
       },
       c: {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: "c"
+        value: "c",
       },
       d: {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: 1
-      }
+        value: 1,
+      },
     },
     ownPropertiesLength: 4,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 stubs.set("testNonEnumerableProps", {
   type: "object",
@@ -143,8 +143,8 @@ stubs.set("testNonEnumerableProps", {
     kind: "Object",
     ownProperties: {},
     ownPropertiesLength: 1,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 stubs.set("testNestedObject", {
   type: "object",
@@ -168,19 +168,19 @@ stubs.set("testNestedObject", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 1
-        }
+          ownPropertyLength: 1,
+        },
       },
       strProp: {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: "test string"
-      }
+        value: "test string",
+      },
     },
     ownPropertiesLength: 2,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("testNestedArray", {
@@ -208,14 +208,14 @@ stubs.set("testNestedArray", {
           ownPropertyLength: 4,
           preview: {
             kind: "ArrayLike",
-            length: 3
-          }
-        }
-      }
+            length: 3,
+          },
+        },
+      },
     },
     ownPropertiesLength: 1,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("testMoreProp", {
@@ -234,31 +234,31 @@ stubs.set("testMoreProp", {
         enumerable: true,
         writable: true,
         value: {
-          type: "undefined"
-        }
+          type: "undefined",
+        },
       },
       b: {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: 1
+        value: 1,
       },
       more: {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: 2
+        value: 2,
       },
       d: {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: 3
-      }
+        value: 3,
+      },
     },
     ownPropertiesLength: 4,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 stubs.set("testBooleanObject", {
   type: "object",
@@ -270,8 +270,8 @@ stubs.set("testBooleanObject", {
     ownProperties: {},
     ownPropertiesLength: 0,
     safeGetterValues: {},
-    wrappedValue: true
-  }
+    wrappedValue: true,
+  },
 });
 stubs.set("testNumberObject", {
   type: "object",
@@ -283,8 +283,8 @@ stubs.set("testNumberObject", {
     ownProperties: {},
     ownPropertiesLength: 0,
     safeGetterValues: {},
-    wrappedValue: 42
-  }
+    wrappedValue: 42,
+  },
 });
 stubs.set("testStringObject", {
   type: "object",
@@ -296,8 +296,8 @@ stubs.set("testStringObject", {
     ownProperties: {},
     ownPropertiesLength: 4,
     safeGetterValues: {},
-    wrappedValue: "foo"
-  }
+    wrappedValue: "foo",
+  },
 });
 stubs.set("testProxy", {
   type: "object",
@@ -311,8 +311,8 @@ stubs.set("testProxy", {
           type: "object",
           actor: "server1.conn1.child1/obj48",
           class: "Object",
-          ownPropertyLength: 1
-        }
+          ownPropertyLength: 1,
+        },
       },
       "<handler>": {
         value: {
@@ -322,20 +322,20 @@ stubs.set("testProxy", {
           ownPropertyLength: 4,
           preview: {
             kind: "ArrayLike",
-            length: 3
-          }
-        }
-      }
+            length: 3,
+          },
+        },
+      },
     },
-    ownPropertiesLength: 2
-  }
+    ownPropertiesLength: 2,
+  },
 });
 stubs.set("testProxySlots", {
   proxyTarget: {
     type: "object",
     actor: "server1.conn1.child1/obj48",
     class: "Object",
-    ownPropertyLength: 1
+    ownPropertyLength: 1,
   },
   proxyHandler: {
     type: "object",
@@ -344,9 +344,9 @@ stubs.set("testProxySlots", {
     ownPropertyLength: 4,
     preview: {
       kind: "ArrayLike",
-      length: 3
-    }
-  }
+      length: 3,
+    },
+  },
 });
 stubs.set("testArrayBuffer", {
   type: "object",
@@ -365,10 +365,10 @@ stubs.set("testArrayBuffer", {
         getterValue: 10,
         getterPrototypeLevel: 1,
         enumerable: false,
-        writable: true
-      }
-    }
-  }
+        writable: true,
+      },
+    },
+  },
 });
 stubs.set("testSharedArrayBuffer", {
   type: "object",
@@ -387,10 +387,10 @@ stubs.set("testSharedArrayBuffer", {
         getterValue: 5,
         getterPrototypeLevel: 1,
         enumerable: false,
-        writable: true
-      }
-    }
-  }
+        writable: true,
+      },
+    },
+  },
 });
 stubs.set("testApplicationCache", {
   type: "object",
@@ -406,71 +406,71 @@ stubs.set("testApplicationCache", {
         getterValue: 0,
         getterPrototypeLevel: 1,
         enumerable: true,
-        writable: true
+        writable: true,
       },
       onchecking: {
         getterValue: {
-          type: "null"
+          type: "null",
         },
         getterPrototypeLevel: 1,
         enumerable: true,
-        writable: true
+        writable: true,
       },
       onerror: {
         getterValue: {
-          type: "null"
+          type: "null",
         },
         getterPrototypeLevel: 1,
         enumerable: true,
-        writable: true
+        writable: true,
       },
       onnoupdate: {
         getterValue: {
-          type: "null"
+          type: "null",
         },
         getterPrototypeLevel: 1,
         enumerable: true,
-        writable: true
+        writable: true,
       },
       ondownloading: {
         getterValue: {
-          type: "null"
+          type: "null",
         },
         getterPrototypeLevel: 1,
         enumerable: true,
-        writable: true
+        writable: true,
       },
       onprogress: {
         getterValue: {
-          type: "null"
+          type: "null",
         },
         getterPrototypeLevel: 1,
         enumerable: true,
-        writable: true
+        writable: true,
       },
       onupdateready: {
         getterValue: {
-          type: "null"
+          type: "null",
         },
         getterPrototypeLevel: 1,
         enumerable: true,
-        writable: true
+        writable: true,
       },
       oncached: {
         getterValue: {
-          type: "null"
+          type: "null",
         },
         getterPrototypeLevel: 1,
         enumerable: true,
-        writable: true
+        writable: true,
       },
       onobsolete: {
         getterValue: {
-          type: "null"
+          type: "null",
         },
         getterPrototypeLevel: 1,
         enumerable: true,
-        writable: true
+        writable: true,
       },
       mozItems: {
         getterValue: {
@@ -483,15 +483,15 @@ stubs.set("testApplicationCache", {
           ownPropertyLength: 0,
           preview: {
             kind: "ArrayLike",
-            length: 0
-          }
+            length: 0,
+          },
         },
         getterPrototypeLevel: 1,
         enumerable: true,
-        writable: true
-      }
-    }
-  }
+        writable: true,
+      },
+    },
+  },
 });
 stubs.set("testObjectWithNodes", {
   type: "object",
@@ -521,11 +521,11 @@ stubs.set("testObjectWithNodes", {
             attributes: {
               id: "btn-1",
               class: "btn btn-log",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
-        }
+            attributesLength: 3,
+          },
+        },
       },
       bar: {
         configurable: true,
@@ -547,16 +547,16 @@ stubs.set("testObjectWithNodes", {
             attributes: {
               id: "btn-2",
               class: "btn btn-err",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
-        }
-      }
+            attributesLength: 3,
+          },
+        },
+      },
     },
     ownPropertiesLength: 2,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 stubs.set("testObjectWithDisconnectedNodes", {
   type: "object",
@@ -585,11 +585,11 @@ stubs.set("testObjectWithDisconnectedNodes", {
             attributes: {
               id: "btn-1",
               class: "btn btn-log",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
-        }
+            attributesLength: 3,
+          },
+        },
       },
       bar: {
         configurable: true,
@@ -610,16 +610,16 @@ stubs.set("testObjectWithDisconnectedNodes", {
             attributes: {
               id: "btn-2",
               class: "btn btn-err",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
-        }
-      }
+            attributesLength: 3,
+          },
+        },
+      },
     },
     ownPropertiesLength: 2,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 // Packet for `({get x(){}})`
@@ -648,17 +648,17 @@ stubs.set("TestObjectWithGetter", {
           displayName: "get x",
           location: {
             url: "debugger eval code",
-            line: 1
-          }
+            line: 1,
+          },
         },
         set: {
-          type: "undefined"
-        }
-      }
+          type: "undefined",
+        },
+      },
     },
     ownPropertiesLength: 1,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 // Packet for `({set x(s){}})`
@@ -677,7 +677,7 @@ stubs.set("TestObjectWithSetter", {
         configurable: true,
         enumerable: true,
         get: {
-          type: "undefined"
+          type: "undefined",
         },
         set: {
           type: "object",
@@ -690,14 +690,14 @@ stubs.set("TestObjectWithSetter", {
           displayName: "set x",
           location: {
             url: "debugger eval code",
-            line: 1
-          }
-        }
-      }
+            line: 1,
+          },
+        },
+      },
     },
     ownPropertiesLength: 1,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 // Packet for `({get x(){}, set x(s){}})`
@@ -726,8 +726,8 @@ stubs.set("TestObjectWithGetterAndSetter", {
           displayName: "get x",
           location: {
             url: "debugger eval code",
-            line: 1
-          }
+            line: 1,
+          },
         },
         set: {
           type: "object",
@@ -740,14 +740,14 @@ stubs.set("TestObjectWithGetterAndSetter", {
           displayName: "set x",
           location: {
             url: "debugger eval code",
-            line: 1
-          }
-        }
-      }
+            line: 1,
+          },
+        },
+      },
     },
     ownPropertiesLength: 1,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 // Packet for :
@@ -773,8 +773,8 @@ stubs.set("TestObjectWithSymbolProperties", {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: 10
-      }
+        value: 10,
+      },
     },
     ownSymbols: [
       {
@@ -782,28 +782,28 @@ stubs.set("TestObjectWithSymbolProperties", {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "first unnamed symbol"
-        },
-        type: "symbol"
-      },
-      {
-        descriptor: {
-          configurable: true,
-          enumerable: true,
-          writable: true,
-          value: "second unnamed symbol"
-        },
-        type: "symbol"
-      },
-      {
-        descriptor: {
-          configurable: true,
-          enumerable: true,
-          writable: true,
-          value: "named symbol"
+          value: "first unnamed symbol",
         },
         type: "symbol",
-        name: "named"
+      },
+      {
+        descriptor: {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: "second unnamed symbol",
+        },
+        type: "symbol",
+      },
+      {
+        descriptor: {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: "named symbol",
+        },
+        type: "symbol",
+        name: "named",
       },
       {
         descriptor: {
@@ -819,18 +819,18 @@ stubs.set("TestObjectWithSymbolProperties", {
             sealed: false,
             location: {
               url: "debugger eval code",
-              line: 1
-            }
-          }
+              line: 1,
+            },
+          },
         },
         type: "symbol",
-        name: "Symbol.iterator"
-      }
+        name: "Symbol.iterator",
+      },
     ],
     ownPropertiesLength: 1,
     ownSymbolsLength: 4,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 // Packet for :
@@ -856,105 +856,105 @@ stubs.set("TestObjectWithMoreThanMaxSymbolProperties", {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "value-0"
+          value: "value-0",
         },
         type: "symbol",
-        name: "i-0"
+        name: "i-0",
       },
       {
         descriptor: {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "value-1"
+          value: "value-1",
         },
         type: "symbol",
-        name: "i-1"
+        name: "i-1",
       },
       {
         descriptor: {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "value-2"
+          value: "value-2",
         },
         type: "symbol",
-        name: "i-2"
+        name: "i-2",
       },
       {
         descriptor: {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "value-3"
+          value: "value-3",
         },
         type: "symbol",
-        name: "i-3"
+        name: "i-3",
       },
       {
         descriptor: {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "value-4"
+          value: "value-4",
         },
         type: "symbol",
-        name: "i-4"
+        name: "i-4",
       },
       {
         descriptor: {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "value-5"
+          value: "value-5",
         },
         type: "symbol",
-        name: "i-5"
+        name: "i-5",
       },
       {
         descriptor: {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "value-6"
+          value: "value-6",
         },
         type: "symbol",
-        name: "i-6"
+        name: "i-6",
       },
       {
         descriptor: {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "value-7"
+          value: "value-7",
         },
         type: "symbol",
-        name: "i-7"
+        name: "i-7",
       },
       {
         descriptor: {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "value-8"
+          value: "value-8",
         },
         type: "symbol",
-        name: "i-8"
+        name: "i-8",
       },
       {
         descriptor: {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: "value-9"
+          value: "value-9",
         },
         type: "symbol",
-        name: "i-9"
-      }
+        name: "i-9",
+      },
     ],
     ownPropertiesLength: 0,
-    ownSymbolsLength: 11
-  }
+    ownSymbolsLength: 11,
+  },
 });
 
 stubs.set('{test: "http://example.com/ some other text"}', {
@@ -972,14 +972,14 @@ stubs.set('{test: "http://example.com/ some other text"}', {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: "http://example.com/ some other text"
-      }
+        value: "http://example.com/ some other text",
+      },
     },
     ownSymbols: [],
     ownPropertiesLength: 1,
     ownSymbolsLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("Generator", {
@@ -996,8 +996,8 @@ stubs.set("Generator", {
     ownSymbols: [],
     ownPropertiesLength: 0,
     ownSymbolsLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("DeadObject", {
@@ -1006,7 +1006,7 @@ stubs.set("DeadObject", {
   class: "DeadObject",
   extensible: true,
   frozen: false,
-  sealed: false
+  sealed: false,
 });
 
 // Packet for :
@@ -1036,16 +1036,16 @@ stubs.set("ObjectWith__proto__Property", {
           ownPropertyLength: 1,
           preview: {
             kind: "ArrayLike",
-            length: 0
-          }
-        }
-      }
+            length: 0,
+          },
+        },
+      },
     },
     ownSymbols: [],
     ownPropertiesLength: 1,
     ownSymbolsLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 module.exports = stubs;

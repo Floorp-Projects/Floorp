@@ -90,9 +90,12 @@ function getProperties(url) {
  *
  * @param string stringBundleName
  *        The desired string bundle's name.
+ * @param boolean strict
+ *        (legacy) pass true to force the helper to throw if the l10n id cannot be found.
  */
-function LocalizationHelper(stringBundleName) {
+function LocalizationHelper(stringBundleName, strict = false) {
   this.stringBundleName = stringBundleName;
+  this.strict = strict;
 }
 
 LocalizationHelper.prototype = {
@@ -108,7 +111,12 @@ LocalizationHelper.prototype = {
       return properties[name];
     }
 
-    throw new Error("No localization found for [" + name + "]");
+    if (this.strict) {
+      throw new Error("No localization found for [" + name + "]");
+    }
+
+    console.error("No localization found for [" + name + "]");
+    return name;
   },
 
   /**
@@ -241,7 +249,9 @@ const sharedL10N = new LocalizationHelper("devtools/shared/locales/shared.proper
  */
 function MultiLocalizationHelper(...stringBundleNames) {
   const instances = stringBundleNames.map(bundle => {
-    return new LocalizationHelper(bundle);
+    // Use strict = true because the MultiLocalizationHelper logic relies on try/catch
+    // around the underlying LocalizationHelper APIs.
+    return new LocalizationHelper(bundle, true);
   });
 
   // Get all function members of the LocalizationHelper class, making sure we're

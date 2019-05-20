@@ -14,7 +14,7 @@ describe("network request", () => {
     global.fetch.mockImplementation(async () => ({
       status: 200,
       headers: { get: () => "application/json" },
-      text: async () => "Yay"
+      text: async () => "Yay",
     }));
     const res = await networkRequest("foo");
     expect(res).toEqual({ content: "Yay" });
@@ -24,7 +24,7 @@ describe("network request", () => {
     global.fetch.mockImplementation(async () => ({
       status: 200,
       headers: { get: () => "application/wasm" },
-      arrayBuffer: async () => "Yay"
+      arrayBuffer: async () => "Yay",
     }));
     const res = await networkRequest("foo");
     expect(res).toEqual({ content: "Yay", isDwarf: true });
@@ -34,7 +34,7 @@ describe("network request", () => {
     global.fetch.mockImplementation(async () => ({
       status: 400,
       headers: { get: () => "application/json" },
-      text: async () => "Sad"
+      text: async () => "Sad",
     }));
 
     try {
@@ -47,9 +47,11 @@ describe("network request", () => {
   it("timed out fetch", async () => {
     global.fetch.mockImplementation(async () => {});
 
-    networkRequest("foo").catch(e =>
-      expect(e.message).toEqual("Connect timeout error")
-    );
+    try {
+      await networkRequest("foo");
+    } catch (e) {
+      expect(e.message).toEqual("Connect timeout error");
+    }
 
     jest.runAllTimers();
   });

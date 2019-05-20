@@ -16,21 +16,21 @@ function generateDefaults(overrides) {
         value: {
           result: {
             value: "foo",
-            class: ""
-          }
-        }
+            class: "",
+          },
+        },
       },
       {
         input: "expression2",
         value: {
           result: {
             value: "bar",
-            class: ""
-          }
-        }
-      }
+            class: "",
+          },
+        },
+      },
     ],
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -55,20 +55,20 @@ describe("Expressions", () => {
           value: {
             result: {
               value: undefined,
-              class: ""
-            }
-          }
+              class: "",
+            },
+          },
         },
         {
           input: "expression2",
           value: {
             result: {
               value: undefined,
-              class: ""
-            }
-          }
-        }
-      ]
+              class: "",
+            },
+          },
+        },
+      ],
     };
 
     const { component } = render(overrides);

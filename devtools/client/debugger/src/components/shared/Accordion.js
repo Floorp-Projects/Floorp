@@ -16,14 +16,14 @@ type AccordionItem = {
   className: string,
   opened: boolean,
   onToggle?: () => void,
-  shouldOpen?: () => void
+  shouldOpen?: () => void,
 };
 
 type Props = { items: Array<Object> };
 
 type State = {
   opened: boolean[],
-  created: boolean[]
+  created: boolean[],
 };
 
 class Accordion extends Component<Props, State> {
@@ -31,7 +31,7 @@ class Accordion extends Component<Props, State> {
     super(props);
     this.state = {
       opened: props.items.map(item => item.opened),
-      created: []
+      created: [],
     };
   }
 

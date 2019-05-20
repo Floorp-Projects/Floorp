@@ -19,7 +19,7 @@ import {
   getSourceByURL,
   getNewSelectedSourceId,
   removeSourceFromTabList,
-  removeSourcesFromTabList
+  removeSourcesFromTabList,
 } from "../selectors";
 
 import type { Action, ThunkArgs } from "./types";
@@ -34,7 +34,7 @@ export function updateTab(source: Source, framework: string): Action {
     url,
     framework,
     isOriginal,
-    sourceId
+    sourceId,
   };
 }
 
@@ -46,7 +46,7 @@ export function addTab(source: Source): Action {
     type: "ADD_TAB",
     url,
     isOriginal,
-    sourceId
+    sourceId,
   };
 }
 
@@ -54,7 +54,7 @@ export function moveTab(url: string, tabIndex: number): Action {
   return {
     type: "MOVE_TAB",
     url,
-    tabIndex
+    tabIndex,
   };
 }
 

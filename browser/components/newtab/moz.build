@@ -9,6 +9,8 @@ with Files("**"):
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
+SPHINX_TREES['docs'] = 'docs'
+
 XPCSHELL_TESTS_MANIFESTS += [
     'test/xpcshell/xpcshell.ini',
 ]

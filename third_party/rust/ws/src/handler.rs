@@ -1,23 +1,23 @@
+use log::Level::Error as ErrorLevel;
+#[cfg(feature = "nativetls")]
+use native_tls::{TlsConnector, TlsStream as SslStream};
+#[cfg(feature = "ssl")]
+use openssl::ssl::{SslConnector, SslMethod, SslStream};
 use url;
-use log::LogLevel::Error as ErrorLevel;
-#[cfg(feature="ssl")]
-use openssl::ssl::{SslMethod, SslStream, SslConnectorBuilder};
 
-use message::Message;
 use frame::Frame;
-use protocol::CloseCode;
 use handshake::{Handshake, Request, Response};
-use result::{Result, Error, Kind};
-use util::{Token, Timeout};
+use message::Message;
+use protocol::CloseCode;
+use result::{Error, Kind, Result};
+use util::{Timeout, Token};
 
-#[cfg(feature="ssl")]
+#[cfg(any(feature = "ssl", feature = "nativetls"))]
 use util::TcpStream;
-
 
 /// The core trait of this library.
 /// Implementing this trait provides the business logic of the WebSocket application.
 pub trait Handler {
-
     // general
 
     /// Called when a request to shutdown all connections has been received.
@@ -31,7 +31,7 @@ pub trait Handler {
     /// Called when the WebSocket handshake is successful and the connection is open for sending
     /// and receiving messages.
     fn on_open(&mut self, shake: Handshake) -> Result<()> {
-        if let Some(addr) = try!(shake.remote_addr()) {
+        if let Some(addr) = shake.remote_addr()? {
             debug!("Connection with {} now open", addr);
         }
         Ok(())
@@ -56,13 +56,16 @@ pub trait Handler {
         // overriding this method if they want
         if let Kind::Io(ref err) = err.kind {
             if let Some(104) = err.raw_os_error() {
-                return
+                return;
             }
         }
 
         error!("{:?}", err);
         if !log_enabled!(ErrorLevel) {
-            println!("Encountered an error: {}\nEnable a logger to see more information.", err);
+            println!(
+                "Encountered an error: {}\nEnable a logger to see more information.",
+                err
+            );
         }
     }
 
@@ -135,7 +138,7 @@ pub trait Handler {
     ///         // reschedule the timeout
     ///         self.ws.timeout(5_000, GRATI)
     ///     } else {
-    ///         Err(Error::new(ErrorKind::Internal, "Invalid timeout token encountered!")),
+    ///         Err(Error::new(ErrorKind::Internal, "Invalid timeout token encountered!"))
     ///     }
     /// }
     /// ```
@@ -216,7 +219,10 @@ pub trait Handler {
         debug!("Handler received: {}", frame);
         // default implementation doesn't allow for reserved bits to be set
         if frame.has_rsv1() || frame.has_rsv2() || frame.has_rsv3() {
-            Err(Error::new(Kind::Protocol, "Encountered frame with reserved bits set."))
+            Err(Error::new(
+                Kind::Protocol,
+                "Encountered frame with reserved bits set.",
+            ))
         } else {
             Ok(Some(frame))
         }
@@ -239,10 +245,13 @@ pub trait Handler {
     /// By default this method simply ensures that no reserved bits are set.
     #[inline]
     fn on_send_frame(&mut self, frame: Frame) -> Result<Option<Frame>> {
-        debug!("Handler will send: {}", frame);
+        trace!("Handler will send: {}", frame);
         // default implementation doesn't allow for reserved bits to be set
         if frame.has_rsv1() || frame.has_rsv2() || frame.has_rsv3() {
-            Err(Error::new(Kind::Protocol, "Encountered frame with reserved bits set."))
+            Err(Error::new(
+                Kind::Protocol,
+                "Encountered frame with reserved bits set.",
+            ))
         } else {
             Ok(Some(frame))
         }
@@ -253,7 +262,7 @@ pub trait Handler {
     /// A method for creating the initial handshake request for WebSocket clients.
     ///
     /// The default implementation provides conformance with the WebSocket protocol, but this
-    /// method may be overriden. In order to facilitate conformance,
+    /// method may be overridden. In order to facilitate conformance,
     /// implementors should use the `Request::from_url` method and then modify the resulting
     /// request as necessary.
     ///
@@ -267,7 +276,7 @@ pub trait Handler {
     /// ```
     #[inline]
     fn build_request(&mut self, url: &url::Url) -> Result<Request> {
-        debug!("Handler is building request to {}.", url);
+        trace!("Handler is building request to {}.", url);
         Request::from_url(url)
     }
 
@@ -276,32 +285,62 @@ pub trait Handler {
     /// Override this method to customize how the connection is encrypted. By default
     /// this will use the Server Name Indication extension in conformance with RFC6455.
     #[inline]
-    #[cfg(feature="ssl")]
-    fn upgrade_ssl_client(&mut self, stream: TcpStream, url: &url::Url) -> Result<SslStream<TcpStream>>
-    {
-        let domain = try!(url.domain().ok_or(Error::new(
+    #[cfg(feature = "ssl")]
+    fn upgrade_ssl_client(
+        &mut self,
+        stream: TcpStream,
+        url: &url::Url,
+    ) -> Result<SslStream<TcpStream>> {
+        let domain = url.domain().ok_or(Error::new(
             Kind::Protocol,
-            format!("Unable to parse domain from {}. Needed for SSL.", url))));
-        let connector = try!(SslConnectorBuilder::new(SslMethod::tls()).map_err(|e| {
-            Error::new(Kind::Internal, format!("Failed to upgrade client to SSL: {}", e))
-        })).build();
+            format!("Unable to parse domain from {}. Needed for SSL.", url),
+        ))?;
+        let connector = SslConnector::builder(SslMethod::tls())
+            .map_err(|e| {
+                Error::new(
+                    Kind::Internal,
+                    format!("Failed to upgrade client to SSL: {}", e),
+                )
+            })?
+            .build();
         connector.connect(domain, stream).map_err(Error::from)
     }
 
+    #[inline]
+    #[cfg(feature = "nativetls")]
+    fn upgrade_ssl_client(
+        &mut self,
+        stream: TcpStream,
+        url: &url::Url,
+    ) -> Result<SslStream<TcpStream>> {
+        let domain = url.domain().ok_or(Error::new(
+            Kind::Protocol,
+            format!("Unable to parse domain from {}. Needed for SSL.", url),
+        ))?;
+
+        let connector = TlsConnector::new().map_err(|e| {
+            Error::new(
+                Kind::Internal,
+                format!("Failed to upgrade client to SSL: {}", e),
+            )
+        })?;
+
+        connector.connect(domain, stream).map_err(Error::from)
+    }
     /// A method for wrapping a server TcpStream with Ssl Authentication machinery
     ///
     /// Override this method to customize how the connection is encrypted. By default
     /// this method is not implemented.
     #[inline]
-    #[cfg(feature="ssl")]
-    fn upgrade_ssl_server(&mut self, _: TcpStream) -> Result<SslStream<TcpStream>>
-    {
+    #[cfg(any(feature = "ssl", feature = "nativetls"))]
+    fn upgrade_ssl_server(&mut self, _: TcpStream) -> Result<SslStream<TcpStream>> {
         unimplemented!()
     }
 }
 
 impl<F> Handler for F
-    where F: Fn(Message) -> Result<()>
+where
+    F: Fn(Message) -> Result<()>,
 {
     fn on_message(&mut self, msg: Message) -> Result<()> {
         self(msg)
@@ -311,19 +350,20 @@ impl<F> Handler for F
 mod test {
     #![allow(unused_imports, unused_variables, dead_code)]
     use super::*;
-    use url;
-    use mio;
-    use handshake::{Request, Response, Handshake};
-    use protocol::CloseCode;
     use frame;
+    use handshake::{Handshake, Request, Response};
     use message;
+    use mio;
+    use protocol::CloseCode;
     use result::Result;
+    use url;
 
     #[derive(Debug, Eq, PartialEq)]
     struct M;
     impl Handler for M {
         fn on_message(&mut self, _: message::Message) -> Result<()> {
-            Ok(println!("test"))
+            println!("test");
+            Ok(())
         }
 
         fn on_frame(&mut self, f: frame::Frame) -> Result<Option<frame::Frame>> {
@@ -336,7 +376,6 @@ mod test {
         struct H;
 
         impl Handler for H {
-
             fn on_open(&mut self, shake: Handshake) -> Result<()> {
                 assert!(shake.request.key().is_ok());
                 assert!(shake.response.key().is_ok());
@@ -344,26 +383,29 @@ mod test {
             }
 
             fn on_message(&mut self, msg: message::Message) -> Result<()> {
-                Ok(assert_eq!(msg, message::Message::Text(String::from("testme"))))
+                Ok(assert_eq!(
+                    msg,
+                    message::Message::Text(String::from("testme"))
+                ))
             }
 
             fn on_close(&mut self, code: CloseCode, _: &str) {
                 assert_eq!(code, CloseCode::Normal)
             }
-
         }
 
         let mut h = H;
         let url = url::Url::parse("wss://127.0.0.1:3012").unwrap();
         let req = Request::from_url(&url).unwrap();
         let res = Response::from_request(&req).unwrap();
-        h.on_open(Handshake{
+        h.on_open(Handshake {
             request: req,
             response: res,
             peer_addr: None,
             local_addr: None,
         }).unwrap();
-        h.on_message(message::Message::Text("testme".to_owned())).unwrap();
+        h.on_message(message::Message::Text("testme".to_owned()))
+            .unwrap();
         h.on_close(CloseCode::Normal, "");
     }
 
@@ -374,6 +416,8 @@ mod test {
             Ok(())
         };
 
-        close.on_message(message::Message::Binary(vec![1, 2, 3])).unwrap();
+        close
+            .on_message(message::Message::Binary(vec![1, 2, 3]))
+            .unwrap();
     }
 }

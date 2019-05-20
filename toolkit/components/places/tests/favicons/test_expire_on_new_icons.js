@@ -29,13 +29,13 @@ add_task(async function test_replaceFaviconData_validHistoryURI() {
   for (let icon of favicons) {
     let data = readFileData(do_get_file(icon.name));
     PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(TEST_URL + icon.name),
-                                            data, data.length,
+                                            data,
                                             icon.mimeType,
                                             icon.expire);
     await setFaviconForPage(TEST_URL, TEST_URL + icon.name);
     if (icon.expire != 0) {
       PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(TEST_URL + icon.name),
-                                              data, data.length,
+                                              data,
                                               icon.mimeType,
                                               icon.expire);
       await setFaviconForPage(TEST_URL2, TEST_URL + icon.name);

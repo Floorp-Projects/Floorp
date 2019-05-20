@@ -43,11 +43,11 @@ class CrashReporterHost {
 
   // Replace the stored minidump with a new one. After this,
   // FinalizeCrashReport may be called.
-  bool AdoptMinidump(nsIFile* aFile);
+  bool AdoptMinidump(nsIFile* aFile, const AnnotationTable& aAnnotations);
 
   // If a minidump was already captured (e.g. via the hang reporter), this
-  // finalizes the existing report by attaching metadata and notifying the
-  // crash service.
+  // finalizes the existing report by attaching metadata, writing out the
+  // .extra file and notifying the crash service.
   bool FinalizeCrashReport();
 
   // Generate a paired minidump. This does not take the crash report, as
@@ -70,9 +70,9 @@ class CrashReporterHost {
 #endif
 
     nsCOMPtr<nsIFile> targetDump;
-    if (!CrashReporter::CreateMinidumpsAndPair(childHandle, mThreadId,
-                                               aPairName, aMinidumpToPair,
-                                               getter_AddRefs(targetDump))) {
+    if (!CrashReporter::CreateMinidumpsAndPair(
+            childHandle, mThreadId, aPairName, aMinidumpToPair,
+            mExtraAnnotations, getter_AddRefs(targetDump))) {
       return false;
     }
 
@@ -95,7 +95,7 @@ class CrashReporterHost {
                             const nsString& aChildDumpID);
 
   // Get the nsICrashService crash type to use for an impending crash.
-  int32_t GetCrashType(const CrashReporter::AnnotationTable& aAnnotations);
+  int32_t GetCrashType();
 
   // This is a static helper function to notify the crash service that a
   // crash has occurred. This can be called from any thread, and if not

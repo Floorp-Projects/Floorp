@@ -24,7 +24,7 @@ function formatMenuElement(
     label,
     accesskey,
     disabled,
-    click
+    click,
   };
 }
 

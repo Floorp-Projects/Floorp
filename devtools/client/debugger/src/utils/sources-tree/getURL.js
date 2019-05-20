@@ -11,7 +11,7 @@ import type { Source } from "../../types";
 export type ParsedURL = {
   path: string,
   group: string,
-  filename: string
+  filename: string,
 };
 
 export function getFilenameFromPath(pathname?: string) {
@@ -49,7 +49,7 @@ export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
         ...def,
         path: pathname,
         filename,
-        group: `${protocol}//${host || ""}`
+        group: `${protocol}//${host || ""}`,
       };
 
     case "webpack:":
@@ -58,7 +58,7 @@ export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
         ...def,
         path: pathname,
         filename,
-        group: `${protocol}//`
+        group: `${protocol}//`,
       };
 
     case "about:":
@@ -67,7 +67,7 @@ export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
         ...def,
         path: "/",
         filename,
-        group: url
+        group: url,
       };
 
     case "data:":
@@ -75,7 +75,7 @@ export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
         ...def,
         path: "/",
         group: NoDomain,
-        filename: url
+        filename: url,
       };
 
     case "":
@@ -85,14 +85,14 @@ export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
           ...def,
           path: pathname,
           filename,
-          group: "file://"
+          group: "file://",
         };
       } else if (!host) {
         return {
           ...def,
           path: url,
           group: defaultDomain || "",
-          filename
+          filename,
         };
       }
       break;
@@ -103,7 +103,7 @@ export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
         ...def,
         path: pathname,
         filename,
-        group: getUnicodeHostname(host)
+        group: getUnicodeHostname(host),
       };
   }
 
@@ -111,6 +111,6 @@ export function getURL(source: Source, defaultDomain: ?string = ""): ParsedURL {
     ...def,
     path: pathname,
     group: protocol ? `${protocol}//` : "",
-    filename
+    filename,
   };
 }

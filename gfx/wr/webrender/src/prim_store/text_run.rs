@@ -13,7 +13,7 @@ use crate::internal_types::LayoutPrimitiveInfo;
 use crate::picture::SurfaceInfo;
 use crate::prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
 use crate::prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
-use crate::render_task::{RenderTaskTree};
+use crate::render_task::{RenderTaskGraph};
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{ResourceCache};
 use crate::util::{MatrixHelpers};
@@ -293,7 +293,7 @@ impl TextRunPrimitive {
         raster_space: RasterSpace,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskTree,
+        render_tasks: &mut RenderTaskGraph,
         scratch: &mut PrimitiveScratchBuffer,
     ) {
         let device_pixel_scale = surface.device_pixel_scale;

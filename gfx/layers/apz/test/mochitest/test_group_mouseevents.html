@@ -32,10 +32,13 @@ var subtests = [
   // Tests for scrollbar-dragging on scrollframes inside nested transforms
   {"file": "helper_bug1490393.html"},
   {"file": "helper_bug1490393-2.html"},
+  // Scrollbar-dragging on scrollframes inside filters inside transforms
+  {"file": "helper_bug1550510.html"},
 ];
 
 if (isApzEnabled()) {
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.expectAssertions(0, 2); // from helper_bug1550510.html, bug 1232856
   window.onload = function() {
     runSubtestsSeriallyInFreshWindows(subtests)
     .then(SimpleTest.finish, SimpleTest.finish);

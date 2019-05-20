@@ -23,7 +23,7 @@ function promiseMiddleware({ dispatch, getState }) {
     // Create a new action that doesn't have the promise field and has
     // the `seqId` field that represents the sequence id
     action = Object.assign(filterByKey(action, key => key !== PROMISE), {
-      seqId
+      seqId,
     });
 
     dispatch(Object.assign({}, action, { status: "start" }));
@@ -36,7 +36,7 @@ function promiseMiddleware({ dispatch, getState }) {
           dispatch(
             Object.assign({}, action, {
               status: "done",
-              value: value
+              value: value,
             })
           );
           return value;
@@ -45,7 +45,7 @@ function promiseMiddleware({ dispatch, getState }) {
           dispatch(
             Object.assign({}, action, {
               status: "error",
-              error: error.message || error
+              error: error.message || error,
             })
           );
           return Promise.reject(error);

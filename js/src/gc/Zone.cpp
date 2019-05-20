@@ -210,7 +210,7 @@ void Zone::discardJitCode(FreeOp* fop,
 #ifdef DEBUG
     // Assert no TypeScripts are marked as active.
     for (auto script = cellIter<JSScript>(); !script.done(); script.next()) {
-      if (TypeScript* types = script->types()) {
+      if (TypeScript* types = script.unbarrieredGet()->types()) {
         MOZ_ASSERT(!types->active());
       }
     }

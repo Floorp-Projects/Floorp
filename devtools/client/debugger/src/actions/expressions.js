@@ -15,7 +15,7 @@ import {
   getSelectedFrameBindings,
   getCurrentThread,
   getIsPaused,
-  isMapScopesEnabled
+  isMapScopesEnabled,
 } from "../selectors";
 import { PROMISE } from "./utils/middleware/promise";
 import { wrapExpression } from "../utils/expressions";
@@ -90,7 +90,7 @@ export function updateExpression(
       cx,
       expression,
       input: expressionError ? expression.input : input,
-      expressionError
+      expressionError,
     });
 
     dispatch(evaluateExpressions(cx));
@@ -108,7 +108,7 @@ export function deleteExpression(expression: Expression) {
   return ({ dispatch }: ThunkArgs) => {
     dispatch({
       type: "DELETE_EXPRESSION",
-      input: expression.input
+      input: expression.input,
     });
   };
 }
@@ -126,7 +126,7 @@ export function evaluateExpressions(cx: ThreadContext) {
     const frameId = getSelectedFrameId(getState(), cx.thread);
     const results = await client.evaluateExpressions(inputs, {
       frameId,
-      thread: cx.thread
+      thread: cx.thread,
     });
     dispatch({ type: "EVALUATE_EXPRESSIONS", cx, inputs, results });
   };
@@ -165,8 +165,8 @@ function evaluateExpression(cx: ThreadContext, expression: Expression) {
       input: expression.input,
       [PROMISE]: client.evaluateInFrame(wrapExpression(input), {
         frameId,
-        thread: cx.thread
-      })
+        thread: cx.thread,
+      }),
     });
   };
 }
@@ -181,7 +181,7 @@ export function getMappedExpression(expression: string) {
     getState,
     client,
     sourceMaps,
-    evaluationsParser
+    evaluationsParser,
   }: ThunkArgs) {
     const thread = getCurrentThread(getState());
     const mappings = getSelectedScopeMappings(getState(), thread);

@@ -1763,29 +1763,19 @@ nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver* aObserver) {
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetObservers(uint32_t* _count,
-                             nsINavBookmarkObserver*** _observers) {
-  NS_ENSURE_ARG_POINTER(_count);
-  NS_ENSURE_ARG_POINTER(_observers);
-
-  *_count = 0;
-  *_observers = nullptr;
+nsNavBookmarks::GetObservers(nsTArray<RefPtr<nsINavBookmarkObserver>>& aObservers) {
+  aObservers.Clear();
 
   if (!mCanNotify) return NS_OK;
 
-  nsCOMArray<nsINavBookmarkObserver> observers;
-
   for (uint32_t i = 0; i < mObservers.Length(); ++i) {
-    const nsCOMPtr<nsINavBookmarkObserver>& observer =
+    nsCOMPtr<nsINavBookmarkObserver> observer =
         mObservers.ElementAt(i).GetValue();
     // Skip nullified weak observers.
-    if (observer) observers.AppendElement(observer);
+    if (observer) {
+      aObservers.AppendElement(observer.forget());
+    }
   }
-
-  if (observers.Count() == 0) return NS_OK;
-
-  *_count = observers.Count();
-  observers.Forget(_observers);
 
   return NS_OK;
 }

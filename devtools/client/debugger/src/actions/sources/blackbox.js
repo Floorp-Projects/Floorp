@@ -52,7 +52,7 @@ export function toggleBlackBox(cx: Context, source: Source) {
         sourceId,
         isBlackBoxed,
         range
-      )
+      ),
     });
   };
 }

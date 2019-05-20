@@ -17,13 +17,13 @@ describe("wasm source maps", () => {
       names: [],
       sources: ["one.js", "two.js"],
       sourceRoot: "/the/root",
-      mappings: "CAAC,IAAM,SACU,GAAC"
+      mappings: "CAAC,IAAM,SACU,GAAC",
     };
     const testMap1Entries = [
       { offset: 1, line: 1, column: 1 },
       { offset: 5, line: 1, column: 7 },
       { offset: 14, line: 2, column: 17 },
-      { offset: 17, line: 2, column: 18 }
+      { offset: 17, line: 2, column: 18 },
     ];
 
     const map1 = await createConsumer(testMap1);
@@ -53,7 +53,7 @@ describe("wasm source maps", () => {
     const pos2 = remap1.generatedPositionFor({
       source: "/the/root/one.js",
       line: 2,
-      column: 18
+      column: 18,
     });
     expect(pos2.line).toEqual(17);
     expect(pos2.column).toEqual(0);
@@ -63,7 +63,7 @@ describe("wasm source maps", () => {
     const pos3 = remap1.allGeneratedPositionsFor({
       source: "/the/root/one.js",
       line: 2,
-      column: 17
+      column: 17,
     });
     expect(pos3).toHaveLength(1);
     expect(pos3[0].line).toEqual(14);
@@ -78,7 +78,7 @@ describe("wasm source maps", () => {
       names: [],
       sources: ["zero.js"],
       mappings: "",
-      sourcesContent: ["//test"]
+      sourcesContent: ["//test"],
     };
 
     const map2 = await createConsumer(testMap2);
@@ -93,7 +93,7 @@ describe("wasm source maps", () => {
       id: "min.js",
       url: "wasm:http://example.com/whatever/:min.js",
       sourceMapURL: "http://example.com/whatever/min.js.map",
-      isWasm: true
+      isWasm: true,
     };
 
     require("devtools-utils/src/network-request").mockImplementationOnce(() => {
@@ -102,7 +102,7 @@ describe("wasm source maps", () => {
         file: "min.js",
         names: [],
         sources: ["one.js"],
-        mappings: "CAAC,IAAM"
+        mappings: "CAAC,IAAM",
       });
       return { content };
     });
@@ -114,7 +114,7 @@ describe("wasm source maps", () => {
 
     const { line, column } = await getOriginalLocation({
       sourceId: source.id,
-      line: 5
+      line: 5,
     });
     expect(line).toEqual(1);
     expect(column).toEqual(7);

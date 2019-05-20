@@ -13,7 +13,7 @@ import "./styles/CommandBarButton.css";
 type Props = {
   children: React$Element<any>,
   className: string,
-  pressed?: boolean
+  pressed?: boolean,
 };
 
 export function debugBtn(

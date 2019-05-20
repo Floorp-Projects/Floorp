@@ -1,6 +1,6 @@
 # WS-RS
 
-Lightweight, event-driven WebSockets for [Rust](http://www.rust-lang.org).
+Lightweight, event-driven WebSockets for [Rust](https://www.rust-lang.org).
 ```rust
 
 /// A WebSocket echo server
@@ -45,7 +45,7 @@ WS-RS provides a complete implementation of the WebSocket specification. There i
 Testing
 -------
 
-WS-RS is thoroughly tested and passes the [Autobahn Test Suite](http://autobahn.ws/testsuite/) for
+WS-RS is thoroughly tested and passes the [Autobahn Test Suite](https://crossbar.io/autobahn/) for
 WebSockets, including the tests for `permessage-deflate`. Visit
 [ws-rs.org](https://ws-rs.org/testing/autobahn/results) to view the results of the latest test run.
 

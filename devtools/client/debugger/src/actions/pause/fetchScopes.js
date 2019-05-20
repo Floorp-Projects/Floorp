@@ -22,7 +22,7 @@ export function fetchScopes(cx: ThreadContext) {
       cx,
       thread: cx.thread,
       frame,
-      [PROMISE]: client.getFrameScopes(frame)
+      [PROMISE]: client.getFrameScopes(frame),
     });
 
     await dispatch(mapScopes(cx, scopes, frame));

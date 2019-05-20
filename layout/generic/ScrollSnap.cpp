@@ -280,6 +280,11 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
     return Nothing();
   }
 
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled() &&
+      !aSnapInfo.HasSnapPositions()) {
+    return Nothing();
+  }
+
   CalcSnapPoints calcSnapPoints(aUnit, aDestination, aStartPos);
 
   if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {

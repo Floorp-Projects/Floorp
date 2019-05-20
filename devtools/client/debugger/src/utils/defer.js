@@ -7,7 +7,7 @@
 type Deferred<T> = {
   promise: Promise<T>,
   resolve: (arg: T) => mixed,
-  reject: (arg: mixed) => mixed
+  reject: (arg: mixed) => mixed,
 };
 
 export default function defer<T>(): Deferred<T> {

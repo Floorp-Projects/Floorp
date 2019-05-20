@@ -24,8 +24,7 @@ add_task(async function() {
   let pageURI = uri("http://foo.bar/");
   await PlacesTestUtils.addVisits(pageURI);
 
-  PlacesUtils.favicons.replaceFaviconData(icon.uri, icon.data, icon.data.length,
-                                          icon.mimetype);
+  PlacesUtils.favicons.replaceFaviconData(icon.uri, icon.data, icon.mimetype);
   await setFaviconForPage(pageURI, icon.uri);
   Assert.equal(await getFaviconUrlForPage(pageURI), icon.uri.spec,
                "A resampled version of the icon should be stored");

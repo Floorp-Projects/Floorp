@@ -9,8 +9,8 @@ import { onConnect } from "../../firefox";
 const tabTarget = {
   on: () => {},
   _form: {
-    url: "url"
-  }
+    url: "url",
+  },
 };
 
 const threadClient = {
@@ -21,22 +21,22 @@ const threadClient = {
       sources: [
         {
           id: "s.js",
-          url: "file:///tmp/s.js"
-        }
-      ]
+          url: "file:///tmp/s.js",
+        },
+      ],
     };
   },
   getLastPausePacket: () => null,
   _parent: {
     addListener: () => {},
-    listWorkers: () => new Promise(resolve => resolve({ workers: [] }))
-  }
+    listWorkers: () => new Promise(resolve => resolve({ workers: [] })),
+  },
 };
 
 const debuggerClient = {
   mainRoot: {
-    traits: {}
-  }
+    traits: {},
+  },
 };
 
 const actions = {
@@ -50,7 +50,7 @@ const actions = {
         resolve();
       }, 0);
     });
-  }
+  },
 };
 
 describe("firefox onConnect", () => {
@@ -60,8 +60,8 @@ describe("firefox onConnect", () => {
         tabConnection: {
           tabTarget,
           threadClient,
-          debuggerClient
-        }
+          debuggerClient,
+        },
       },
       actions
     );

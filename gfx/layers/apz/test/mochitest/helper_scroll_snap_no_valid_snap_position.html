@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>No snapping occurs if there is no valid snap position</title>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    div {
+      position: absolute;
+    }
+    #scroller {
+      width: 100%;
+      height: 500px;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+    }
+    .child {
+      width: 100%;
+      height: 100px;
+      background-color: blue;
+    }
+  </style>
+</head>
+<body>
+  <div id="scroller">
+    <div class="child" style="top: 0px;"></div>
+    <div style="width: 100%; height: 2000px;"></div>
+    <div class="child" style="top: 1000px;"></div>
+  </div>
+  <script type="application/javascript">
+    function* test(testDriver) {
+      yield moveMouseAndScrollWheelOver(scroller, 100, 100, testDriver);
+
+      ok(scroller.scrollTop > 0, "Scroll should happen some amount");
+    }
+
+    waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
+  </script>
+</body>
+</html>
+

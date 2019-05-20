@@ -5,7 +5,7 @@
 %endif
 
 /* Hide all conditional elements by default. */
-:-moz-any([when-connection],[when-mixedcontent],[when-ciphers],[when-loginforms]) {
+:-moz-any([when-connection],[when-customroot],[when-mixedcontent],[when-ciphers],[when-loginforms]) {
   display: none;
 }
 
@@ -24,6 +24,7 @@
 }
 
 /* Show the right elements for the right connection states. */
+#identity-popup[customroot=true] [when-customroot=true],
 #identity-popup[connection=not-secure] [when-connection~=not-secure],
 #identity-popup[connection=secure-cert-user-overridden] [when-connection~=secure-cert-user-overridden],
 #identity-popup[connection=secure-ev] [when-connection~=secure-ev],

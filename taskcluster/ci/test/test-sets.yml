@@ -100,6 +100,7 @@ raptor-firefox:
     - raptor-webaudio-firefox
     - raptor-sunspider-firefox
     - raptor-wasm-godot-firefox
+    - raptor-youtube-playback-firefox
     - raptor-tp6-1-firefox-cold
     - raptor-tp6-2-firefox-cold
     - raptor-tp6-3-firefox-cold
@@ -265,8 +266,6 @@ windows-aarch64-tests:
     - cppunit
     - crashtest
     - gtest
-    - jittest
-    - jsreftest
     - marionette
     - mochitest
     - mochitest-a11y
@@ -599,11 +598,15 @@ android-hw-aarch64-raptor:
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
+    - raptor-scn-power-idle-fenix
+    - raptor-scn-power-idle-fennec
     - raptor-scn-power-idle-geckoview
     - raptor-scn-power-idle-refbrow
 
 android-hw-aarch64-raptor-power:
     - raptor-speedometer-geckoview-power
+    - raptor-scn-power-idle-fenix
+    - raptor-scn-power-idle-fennec
     - raptor-scn-power-idle-geckoview
     - raptor-scn-power-idle-refbrow
 

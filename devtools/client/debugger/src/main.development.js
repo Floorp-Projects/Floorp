@@ -29,6 +29,6 @@ bootstrap(React, ReactDOM).then(connection => {
     highlightDomElement: (grip: Object) =>
       console.log("highlighting dom element"),
     unHighlightDomElement: (grip: Object) =>
-      console.log("unhighlighting dom element")
+      console.log("unhighlighting dom element"),
   });
 });

@@ -59,7 +59,7 @@ describe("TextNode", () => {
     wrapper.simulate("mouseover");
 
     expect(onDOMNodeMouseOver.mock.calls).toHaveLength(1);
-    expect(onDOMNodeMouseOver).toBeCalledWith(object);
+    expect(onDOMNodeMouseOver).toHaveBeenCalledWith(object);
   });
 
   it("calls the expected function on mouseout", () => {

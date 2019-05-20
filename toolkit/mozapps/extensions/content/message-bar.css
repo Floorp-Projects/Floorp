@@ -8,27 +8,49 @@
 }
 
 /* MessageBar colors by message type */
+/* Colors from: https://design.firefox.com/photon/components/message-bars.html#type-specific-style */
+
+:host {
+  /* Colors used by default, and for [type=generic] message bars.*/
+  background-color: var(--in-content-box-info-background);
+  color: var(--in-content-text-color);
+
+  --message-bar-icon-url: var(--info-icon-url);
+  /* The default values of --in-content-button* are sufficient, even for dark themes */
+}
 
 :host([type=warning]) {
   background-color: var(--yellow-50);
   color: var(--yellow-90);
+
+  --message-bar-icon-url: var(--warn-icon-url);
+  --in-content-button-background: var(--yellow-60);
+  --in-content-button-background-hover: var(--yellow-70);
+  --in-content-button-background-active: var(--yellow-80);
 }
 
 :host([type=success]) {
-  background-color: #30e60b;
-  color: #003706;
+  background-color: var(--green-50);
+  color: var(--green-90);
+
+  --message-bar-icon-url: var(--check-icon-url);
+  --in-content-button-background: var(--green-60);
+  --in-content-button-background-hover: var(--green-70);
+  --in-content-button-background-active: var(--green-80);
 }
 
 :host([type=error]) {
-  background: #d70022;
+  background-color: var(--red-60);
   color: #ffffff;
+
+  --message-bar-icon-url: var(--error-icon-url);
+  --in-content-button-background: var(--red-70);
+  --in-content-button-background-hover: var(--red-80);
+  --in-content-button-background-active: var(--red-90);
 }
 
 :host {
   border-radius: 4px;
-  /* Colors used by default, and for [type=generic] message bars.*/
-  background-color: var(--grey-20);
-  color: var(--grey-90);
 }
 
 /* Make the host to behave as a block by default, but allow hidden to hide it. */
@@ -96,32 +118,13 @@ button.close {
   height: var(--icon-size);
 }
 
-.icon {
+.icon::after {
   -moz-appearance: none;
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill, stroke;
   color: inherit !important;
   fill: currentColor;
-  fill-opacity: 0;
-}
-
-:host([type=success]) .icon {
-  fill-opacity: 1;
-}
-
-:host(:not([type])) .icon::after, :host([type=generic]) .icon::after {
-  content: var(--info-icon-url);
-}
-
-:host([type=warning]) .icon::after {
-  content: var(--warn-icon-url);
-}
-
-:host([type=success]) .icon::after {
-  content: var(--check-icon-url);
-}
-
-:host([type=error]) .icon::after {
-  content: var(--error-icon-url);
+  stroke: currentColor;
+  content: var(--message-bar-icon-url);
 }
 
 /* Close icon styles */

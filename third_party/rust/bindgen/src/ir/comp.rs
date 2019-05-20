@@ -351,7 +351,6 @@ impl Bitfield {
     /// Get the mask value that when &'ed with this bitfield's allocation unit
     /// produces this bitfield's value.
     pub fn mask(&self) -> u64 {
-        use std::mem;
         use std::u64;
 
         let unoffseted_mask =
@@ -1068,8 +1067,6 @@ impl CompInfo {
     /// members. This is not ideal, but clang fails to report the size for these
     /// kind of unions, see test/headers/template_union.hpp
     pub fn layout(&self, ctx: &BindgenContext) -> Option<Layout> {
-        use std::cmp;
-
         // We can't do better than clang here, sorry.
         if self.kind == CompKind::Struct {
             return None;

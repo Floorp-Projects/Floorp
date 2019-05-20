@@ -14,7 +14,7 @@ import "./ShortcutsModal.css";
 type Props = {
   enabled: boolean,
   additionalClass: string,
-  handleClose: () => void
+  handleClose: () => void,
 };
 
 export class ShortcutsModal extends Component<Props> {

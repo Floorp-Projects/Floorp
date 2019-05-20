@@ -13,6 +13,8 @@ var http2 = require(node_http2_root);
 var fs = require('fs');
 var url = require('url');
 var crypto = require('crypto');
+const dnsPacket = require(`${node_http2_root}/../dns-packet`);
+const ip = require(`${node_http2_root}/../node-ip`);
 
 // Hook into the decompression code to log the decompressed name-value pairs
 var compression_module = node_http2_root + "/lib/protocol/compressor";
@@ -202,7 +204,7 @@ function handleRequest(req, res) {
   // the headers to have something illegal in them
   Compressor.prototype.compress = originalCompressHeaders;
 
-  var u = url.parse(req.url);
+  var u = url.parse(req.url, true);
   var content = getHttpContent(u.pathname);
   var push, push1, push1a, push2, push3;
 
@@ -550,6 +552,96 @@ function handleRequest(req, res) {
     return;
 
   }
+  else if (u.pathname == "/doh") {
+    ns_confirm = 0; // back to first reply for dns-confirm
+    cname_confirm = 0; // back to first reply for dns-cname
+
+    let responseIP = u.query["responseIP"];
+    if (!responseIP) {
+      responseIP = "5.5.5.5";
+    }
+
+    if (u.query["auth"]) {
+      // There's a Set-Cookie: header in the response for "/dns" , which this
+      // request subsequently would include if the http channel wasn't
+      // anonymous. Thus, if there's a cookie in this request, we know Firefox
+      // mishaved. If there's not, we're fine.
+      if (req.headers['cookie']) {
+        res.writeHead(403);
+        res.end("cookie for me, not for you");
+        return;
+      }
+      if (req.headers['authorization'] != "user:password") {
+        res.writeHead(401);
+        res.end("bad boy!");
+        return;
+      }
+    }
+
+    if (u.query["push"]) {
+      // push.example.com has AAAA entry 2018::2018
+      var pcontent= new Buffer("0000010000010001000000000470757368076578616D706C6503636F6D00001C0001C00C001C000100000037001020180000000000000000000000002018", "hex");
+      push = res.push({
+        hostname: 'foo.example.com:' + serverPort,
+        port: serverPort,
+        path: '/dns-pushed-response?dns=AAAAAAABAAAAAAAABHB1c2gHZXhhbXBsZQNjb20AABwAAQ',
+        method: 'GET',
+        headers: {
+          'accept' : 'application/dns-message'
+        }
+      });
+      push.writeHead(200, {
+        'content-type': 'application/dns-message',
+        'pushed' : 'yes',
+        'content-length' : pcontent.length,
+        'X-Connection-Http2': 'yes'
+      });
+      push.end(pcontent);
+    }
+
+    let payload = new Buffer("");
+
+    function emitResponse(response, requestPayload) {
+      let packet = dnsPacket.decode(requestPayload);
+
+      let buf = dnsPacket.encode({
+        type: 'query',
+        id: packet.id,
+        flags: dnsPacket.RECURSION_DESIRED,
+        questions: packet.questions,
+        answers: [{
+          name: packet.questions[0].name,
+          ttl: 55,
+          type: ip.isV4Format(responseIP) ? "A" : "AAAA",
+          flush: false,
+          data: responseIP,
+        }],
+      });
+
+      response.setHeader('Content-Length', buf.length);
+      response.setHeader('Set-Cookie', 'trackyou=yes; path=/; max-age=100000;');
+      response.setHeader('Content-Type', 'application/dns-message');
+      response.writeHead(200);
+      response.write(buf);
+      response.end("");
+      return;
+    }
+
+    if (u.query["dns"]) {
+      payload = Buffer.from(u.query["dns"], 'base64');
+      emitResponse(res, payload);
+      return;
+    }
+
+    req.on('data', function receiveData(chunk) {
+      payload = Buffer.concat([payload, chunk]);
+    });
+    req.on('end', function finishedData() {
+      emitResponse(res, payload);
+      return;
+    });
+    return;
+  }
   else if (u.pathname === "/dns-cname-a") {
     // test23 asks for cname-a.example.com
     // this responds with a CNAME to here.example.com *and* an A record
@@ -604,57 +696,6 @@ function handleRequest(req, res) {
     return;
 
   }
-    // for use with test_trr.js, test8b
-  else if (u.path === "/dns-ecs?dns=AAABAAABAAAAAAABA2VjcwdleGFtcGxlA2NvbQAAAQABAAApEAAAAAAAAAgACAAEAAEAAA") {
-    // the query string asks for an A entry for ecs.example.com
-    // ecs.example.com has A entry 5.5.5.5
-    var content= new Buffer("00000100000100010000000003656373076578616D706C6503636F6D0000010001C00C0001000100000037000405050505", "hex");
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-  }
-  // for use with test_trr.js
-  else if (u.path === "/dns-get?dns=AAABAAABAAAAAAAAA2dldAdleGFtcGxlA2NvbQAAAQAB") {
-    // the query string asks for an A entry for get.example.com
-    // get.example.com has A entry 1.2.3.4
-    var content= new Buffer("00000100000100010000000003676574076578616D706C6503636F6D0000010001C00C0001000100000037000401020304", "hex");
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    ns_confirm = 0; // back to first reply for dns-confirm
-    cname_confirm = 0; // back to first reply for dns-cname
-    return;
-  }
-  // for use with test_trr.js
-  else if (u.pathname === "/dns") {
-    // bar.example.com has A entry 127.0.0.1
-    var content= new Buffer("00000100000100010000000003626172076578616D706C6503636F6D0000010001C00C000100010000003700047F000001", "hex");
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    // pass back a cookie here, check it in /dns-auth
-    res.setHeader('Set-Cookie', 'trackyou=yes; path=/; max-age=100000;');
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-  }
-  else if (u.pathname === "/dns-ip") {
-    // bar.example.com has A entry 192.192.192.192
-    var content= new Buffer("00000100000100010000000003626172076578616D706C6503636F6D0000010001C00C00010001000000370004C0C0C0C0", "hex");
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    // pass back a cookie here, check it in /dns-auth
-    res.setHeader('Set-Cookie', 'trackyou=yes; path=/; max-age=100000;');
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-  }
   else if (u.pathname === "/dns-ns") {
     // confirm.example.com has NS entry ns.example.com
     var content= new Buffer("00000100000100010000000007636F6E6669726D076578616D706C6503636F6D0000020001C00C00020001000000370012026E73076578616D706C6503636F6D010A00", "hex");
@@ -694,82 +735,6 @@ function handleRequest(req, res) {
     res.end("");
     return;
   }
-  // for use with test_trr.js
-  else if (u.pathname === "/dns-aaaa") {
-    // aaaa.example.com has AAAA entry 2020:2020::2020
-    var content= new Buffer("0000010000010001000000000461616161076578616D706C6503636F6D00001C0001C00C001C000100000037001020202020000000000000000000002020", "hex");
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-  }
-  else if (u.pathname === "/dns-rfc1918") {
-    // rfc1918.example.com has A entry 192.168.0.1
-    var content= new Buffer("0000010000010001000000000772666331393138076578616D706C6503636F6D0000010001C00C00010001000000370004C0A80001", "hex");
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-  }
-  // for use with test_trr.js
-  else if (u.pathname === "/dns-push") {
-    // first.example.com has A entry 127.0.0.1
-    var content= new Buffer("000001000001000100000000056669727374076578616D706C6503636F6D0000010001C00C000100010000003700047F000001", "hex");
-    // push.example.com has AAAA entry 2018::2018
-    var pcontent= new Buffer("0000010000010001000000000470757368076578616D706C6503636F6D00001C0001C00C001C000100000037001020180000000000000000000000002018", "hex");
-    push = res.push({
-      hostname: 'foo.example.com:' + serverPort,
-      port: serverPort,
-      path: '/dns-pushed-response?dns=AAAAAAABAAAAAAAABHB1c2gHZXhhbXBsZQNjb20AABwAAQ',
-      method: 'GET',
-      headers: {
-        'accept' : 'application/dns-message'
-      }
-    });
-    push.writeHead(200, {
-      'content-type': 'application/dns-message',
-      'pushed' : 'yes',
-      'content-length' : pcontent.length,
-      'X-Connection-Http2': 'yes'
-    });
-    push.end(pcontent);
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-  }
-  // for use with test_trr.js
-  else if (u.pathname === "/dns-auth") {
-    // There's a Set-Cookie: header in the response for "/dns" , which this
-    // request subsequently would include if the http channel wasn't
-    // anonymous. Thus, if there's a cookie in this request, we know Firefox
-    // mishaved. If there's not, we're fine.
-    if (req.headers['cookie']) {
-      res.writeHead(403);
-      res.end("cookie for me, not for you");
-      return;
-    }
-    if (req.headers['authorization'] != "user:password") {
-      res.writeHead(401);
-      res.end("bad boy!");
-      return;
-    }
-    // bar.example.com has A entry 127.0.0.1
-    var content= new Buffer("00000100000100010000000003626172076578616D706C6503636F6D0000010001C00C000100010000003700047F000001", "hex");
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-  }
-
   // for use with test_esni_dns_fetch.js
   else if (u.pathname === "/esni-dns") {
     content = new Buffer("0000" +

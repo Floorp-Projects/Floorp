@@ -7,7 +7,7 @@ import { sortSelectedLocations } from "../location";
 function loc(line, column) {
   return {
     location: { sourceId: "foo", line, column },
-    generatedLocation: { sourceId: "foo", line, column }
+    generatedLocation: { sourceId: "foo", line, column },
   };
 }
 describe("location.spec.js", () => {

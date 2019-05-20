@@ -3310,7 +3310,9 @@ MediaStreamGraph* MediaStreamGraph::GetInstance(
 
     GraphRunType runType = DIRECT_DRIVER;
     if (aGraphDriverRequested != OFFLINE_THREAD_DRIVER &&
-        Preferences::GetBool("dom.audioworklet.enabled", false)) {
+        (Preferences::GetBool("dom.audioworklet.enabled", false) ||
+         Preferences::GetBool("media.audiograph.single_thread.enabled",
+                              false))) {
       runType = SINGLE_THREAD;
     }
 

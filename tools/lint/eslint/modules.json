@@ -164,6 +164,7 @@
   "PluginProvider.jsm": [],
   "PointerAdapter.jsm": ["PointerRelay", "PointerAdapter"],
   "policies.js": ["ErrorHandler", "SyncScheduler"],
+  "PreferenceExperiments.jsm": ["PreferenceExperiments", "migrateStorage"],
   "prefs.js": ["Branch", "MarionettePrefs"],
   "prefs.js": ["PrefsEngine", "PrefRec"],
   "prefs.jsm": ["Preference"],

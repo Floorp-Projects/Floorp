@@ -74,7 +74,7 @@ describe("BookmarkPanelHub", () => {
   it("should uninit", () => {
     instance.uninit();
 
-    assert.isFalse(instance._initalized);
+    assert.isFalse(instance._initialized);
     assert.isNull(instance._addImpression);
     assert.isNull(instance._handleMessageRequest);
   });
@@ -85,7 +85,10 @@ describe("BookmarkPanelHub", () => {
     assert.equal(instance._handleMessageRequest, fakeHandleMessageRequest);
     assert.equal(instance._dispatch, fakeDispatch);
     assert.ok(instance._l10n);
-    assert.isTrue(instance._initalized);
+    assert.isTrue(instance._initialized);
+  });
+  it("should return early if not initialized", async () => {
+    assert.isFalse(await instance.messageRequest());
   });
   describe("#messageRequest", () => {
     beforeEach(() => {

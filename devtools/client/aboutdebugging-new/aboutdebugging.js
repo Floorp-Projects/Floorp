@@ -70,7 +70,11 @@ const AboutDebugging = {
     await this.onNetworkLocationsUpdated();
 
     // Listen to USB runtime updates and retrieve the initial list of runtimes.
-    const onAdbRuntimesReady = adb.once("runtime-list-ready");
+
+    // If ADB is already started, wait for the initial runtime list to be able to restore
+    // already connected runtimes.
+    const isProcessStarted = await adb.isProcessStarted();
+    const onAdbRuntimesReady = isProcessStarted ? adb.once("runtime-list-ready") : null;
     addUSBRuntimesObserver(this.onUSBRuntimesUpdated);
     await onAdbRuntimesReady;
 

@@ -85,7 +85,7 @@ void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
   fallback::GetCurrentScreenConfiguration(aScreenConfiguration);
 }
 
-bool LockScreenOrientation(const ScreenOrientation& aOrientation) {
+bool LockScreenOrientation(const hal::ScreenOrientation& aOrientation) {
   bool allowed;
   Hal()->SendLockScreenOrientation(aOrientation, &allowed);
   return allowed;

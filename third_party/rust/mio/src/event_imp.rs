@@ -718,6 +718,8 @@ impl Ready {
     /// let ready = Ready::empty();
     /// assert!(ready.is_empty());
     /// ```
+    ///
+    /// [`Poll`]: struct.Poll.html
     #[inline]
     pub fn is_empty(&self) -> bool {
         *self == Ready::empty()

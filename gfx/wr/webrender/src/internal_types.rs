@@ -12,6 +12,7 @@ use crate::gpu_cache::GpuCacheUpdateList;
 use fxhash::FxHasher;
 use plane_split::BspSplitter;
 use crate::profiler::BackendProfileCounters;
+use smallvec::SmallVec;
 use std::{usize, i32};
 use std::collections::{HashMap, HashSet};
 use std::f32;
@@ -49,10 +50,8 @@ pub enum Filter {
     Opacity(api::PropertyBinding<f32>, f32),
     Saturate(f32),
     Sepia(f32),
-    DropShadow(Shadow),
-    #[allow(dead_code)]
-    DropShadowStack(Vec<Shadow>),
-    ColorMatrix([f32; 20]),
+    DropShadows(SmallVec<[Shadow; 1]>),
+    ColorMatrix(Box<[f32; 20]>),
     SrgbToLinear,
     LinearToSrgb,
     ComponentTransfer,
@@ -66,10 +65,7 @@ impl Filter {
             Filter::Blur(ref mut radius) => {
                 *radius = radius.min(MAX_BLUR_RADIUS);
             }
-            Filter::DropShadow(ref mut shadow) => {
-                shadow.blur_radius = shadow.blur_radius.min(MAX_BLUR_RADIUS);
-            }
-            Filter::DropShadowStack(ref mut stack) => {
+            Filter::DropShadows(ref mut stack) => {
                 for shadow in stack {
                     shadow.blur_radius = shadow.blur_radius.min(MAX_BLUR_RADIUS);
                 }
@@ -89,8 +85,7 @@ impl Filter {
             Filter::Invert(..) |
             Filter::Saturate(..) |
             Filter::Sepia(..) |
-            Filter::DropShadow(..) |
-            Filter::DropShadowStack(..) |
+            Filter::DropShadows(..) |
             Filter::ColorMatrix(..) |
             Filter::SrgbToLinear |
             Filter::LinearToSrgb |
@@ -113,7 +108,7 @@ impl Filter {
             Filter::Opacity(_, amount) => amount >= 1.0,
             Filter::Saturate(amount) => amount == 1.0,
             Filter::Sepia(amount) => amount == 0.0,
-            Filter::DropShadowStack(ref shadows) => {
+            Filter::DropShadows(ref shadows) => {
                 for shadow in shadows {
                     if shadow.offset.x != 0.0 || shadow.offset.y != 0.0 || shadow.blur_radius != 0.0 {
                         return false;
@@ -122,15 +117,14 @@ impl Filter {
 
                 true
             }
-            Filter::DropShadow(shadow) => {
-                shadow.offset.x == 0.0 && shadow.offset.y == 0.0 && shadow.blur_radius == 0.0
-            },
-            Filter::ColorMatrix(matrix) => {
-                matrix == [1.0, 0.0, 0.0, 0.0,
-                           0.0, 1.0, 0.0, 0.0,
-                           0.0, 0.0, 1.0, 0.0,
-                           0.0, 0.0, 0.0, 1.0,
-                           0.0, 0.0, 0.0, 0.0]
+            Filter::ColorMatrix(ref matrix) => {
+                **matrix == [
+                    1.0, 0.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0,
+                    0.0, 0.0, 0.0, 0.0
+                ]
             }
             Filter::SrgbToLinear |
             Filter::LinearToSrgb |
@@ -152,11 +146,11 @@ impl From<FilterOp> for Filter {
             FilterOp::Opacity(binding, opacity) => Filter::Opacity(binding, opacity),
             FilterOp::Saturate(s) => Filter::Saturate(s),
             FilterOp::Sepia(s) => Filter::Sepia(s),
-            FilterOp::DropShadow(shadow) => Filter::DropShadow(shadow),
-            FilterOp::ColorMatrix(mat) => Filter::ColorMatrix(mat),
+            FilterOp::ColorMatrix(mat) => Filter::ColorMatrix(Box::new(mat)),
             FilterOp::SrgbToLinear => Filter::SrgbToLinear,
             FilterOp::LinearToSrgb => Filter::LinearToSrgb,
             FilterOp::ComponentTransfer => Filter::ComponentTransfer,
+            FilterOp::DropShadow(shadow) => Filter::DropShadows(smallvec![shadow]),
         }
     }
 }

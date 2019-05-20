@@ -58,7 +58,7 @@ const contentMap = {
   coffee: "text/coffeescript",
   elm: "text/elm",
   cljc: "text/x-clojure",
-  cljs: "text/x-clojurescript"
+  cljs: "text/x-clojurescript",
 };
 
 /**
@@ -100,5 +100,5 @@ module.exports = {
   isOriginalId,
   isGeneratedId,
   getContentType,
-  contentMapForTesting: contentMap
+  contentMapForTesting: contentMap,
 };

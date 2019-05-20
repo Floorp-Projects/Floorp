@@ -5,7 +5,13 @@
 from __future__ import absolute_import
 
 from mozboot.base import BaseBootstrapper
-from mozboot.linux_common import NasmInstall, NodeInstall, StyloInstall, ClangStaticAnalysisInstall
+from mozboot.linux_common import (
+    ClangStaticAnalysisInstall,
+    NasmInstall,
+    NodeInstall,
+    SccacheInstall,
+    StyloInstall,
+)
 
 try:
     from urllib2 import urlopen
@@ -17,7 +23,8 @@ import subprocess
 
 
 class GentooBootstrapper(NasmInstall, NodeInstall, StyloInstall, ClangStaticAnalysisInstall,
-                         BaseBootstrapper):
+                         SccacheInstall, BaseBootstrapper):
+
     def __init__(self, version, dist_id, **kwargs):
         BaseBootstrapper.__init__(self, **kwargs)
 

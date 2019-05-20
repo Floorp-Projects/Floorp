@@ -1039,8 +1039,8 @@ BrowserGlue.prototype = {
     Services.prefs.removeObserver("privacy.trackingprotection", this._matchCBCategory);
     Services.prefs.removeObserver("network.cookie.cookieBehavior", this._matchCBCategory);
     Services.prefs.removeObserver(ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY, this._updateCBCategory);
-    Services.prefs.removeObserver("browser.contentblocking.features.standard", this._setPrefExpectations);
-    Services.prefs.removeObserver("browser.contentblocking.features.strict", this._setPrefExpectations);
+    Services.prefs.removeObserver("privacy.trackingprotection", this._setPrefExpectations);
+    Services.prefs.removeObserver("browser.contentblocking.features.strict", this._setPrefExpectationsAndUpdate);
   },
 
   // runs on startup, before the first command line handler is invoked
@@ -1391,7 +1391,7 @@ BrowserGlue.prototype = {
 
     // Set the default favicon size for UI views that use the page-icon protocol.
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(16 * aWindow.devicePixelRatio);
-    this._setPrefExpectations();
+    this._setPrefExpectationsAndUpdate();
     this._matchCBCategory();
 
     // This observes the entire privacy.trackingprotection.* pref tree.
@@ -1399,8 +1399,8 @@ BrowserGlue.prototype = {
     Services.prefs.addObserver("network.cookie.cookieBehavior", this._matchCBCategory);
     Services.prefs.addObserver(ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY, this._updateCBCategory);
     Services.prefs.addObserver("media.autoplay.default", this._updateAutoplayPref);
-    Services.prefs.addObserver("browser.contentblocking.features.standard", this._setPrefExpectations);
-    Services.prefs.addObserver("browser.contentblocking.features.strict", this._setPrefExpectations);
+    Services.prefs.addObserver("privacy.trackingprotection", this._setPrefExpectations);
+    Services.prefs.addObserver("browser.contentblocking.features.strict", this._setPrefExpectationsAndUpdate);
   },
 
   _updateAutoplayPref() {
@@ -1409,6 +1409,10 @@ BrowserGlue.prototype = {
   },
 
   _setPrefExpectations() {
+    ContentBlockingCategoriesPrefs.setPrefExpectations();
+  },
+
+  _setPrefExpectationsAndUpdate() {
     ContentBlockingCategoriesPrefs.setPrefExpectations();
     ContentBlockingCategoriesPrefs.updateCBCategory();
   },
@@ -3018,13 +3022,12 @@ BrowserGlue.prototype = {
 var ContentBlockingCategoriesPrefs = {
   PREF_CB_CATEGORY: "browser.contentblocking.category",
   PREF_STRICT_DEF: "browser.contentblocking.features.strict",
-  PREF_STANDARD_DEF: "browser.contentblocking.features.standard",
   switchingCategory: false,
 
   setPrefExpectations() {
-    // The prefs inside CATEGORY_PREFS are initial values, these values then get set.
-    // If the pref remains null, then it will expect the default value,
-    // but the UI will not respond correctly.
+    // The prefs inside CATEGORY_PREFS are initial values.
+    // If the pref remains null, then it will expect the default value.
+    // The "standard" category is defined as expecting all 5 default values.
     this.CATEGORY_PREFS = {
       strict: {
         "network.cookie.cookieBehavior": null,
@@ -3041,58 +3044,51 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.trackingprotection.cryptomining.enabled": null,
       },
     };
-    let types = ["strict", "standard"];
-    for (let type of types) {
-      let rulesArray;
-      if (type == "strict") {
-        rulesArray = Services.prefs.getStringPref(this.PREF_STRICT_DEF).split(",");
-      } else {
-        rulesArray = Services.prefs.getStringPref(this.PREF_STANDARD_DEF).split(",");
-      }
-      for (let item of rulesArray) {
-        switch (item) {
-        case "tp":
-          this.CATEGORY_PREFS[type]["privacy.trackingprotection.enabled"] = true;
-          break;
-        case "-tp":
-          this.CATEGORY_PREFS[type]["privacy.trackingprotection.enabled"] = false;
-          break;
-        case "tpPrivate":
-          this.CATEGORY_PREFS[type]["privacy.trackingprotection.pbmode.enabled"] = true;
-          break;
-        case "-tpPrivate":
-          this.CATEGORY_PREFS[type]["privacy.trackingprotection.pbmode.enabled"] = false;
-          break;
-        case "fp":
-          this.CATEGORY_PREFS[type]["privacy.trackingprotection.fingerprinting.enabled"] = true;
-          break;
-        case "-fp":
-          this.CATEGORY_PREFS[type]["privacy.trackingprotection.fingerprinting.enabled"] = false;
-          break;
-        case "cm":
-          this.CATEGORY_PREFS[type]["privacy.trackingprotection.cryptomining.enabled"] = true;
-          break;
-        case "-cm":
-          this.CATEGORY_PREFS[type]["privacy.trackingprotection.cryptomining.enabled"] = false;
-          break;
-        case "cookieBehavior0":
-          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_ACCEPT;
-          break;
-        case "cookieBehavior1":
-          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
-          break;
-        case "cookieBehavior2":
-          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_REJECT;
-          break;
-        case "cookieBehavior3":
-          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN;
-          break;
-        case "cookieBehavior4":
-          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
-          break;
-        default:
-          Cu.reportError(`Error: Unknown rule observed ${item}`);
-        }
+    let type = "strict";
+    let rulesArray = Services.prefs.getStringPref(this.PREF_STRICT_DEF).split(",");
+    for (let item of rulesArray) {
+      switch (item) {
+      case "tp":
+        this.CATEGORY_PREFS[type]["privacy.trackingprotection.enabled"] = true;
+        break;
+      case "-tp":
+        this.CATEGORY_PREFS[type]["privacy.trackingprotection.enabled"] = false;
+        break;
+      case "tpPrivate":
+        this.CATEGORY_PREFS[type]["privacy.trackingprotection.pbmode.enabled"] = true;
+        break;
+      case "-tpPrivate":
+        this.CATEGORY_PREFS[type]["privacy.trackingprotection.pbmode.enabled"] = false;
+        break;
+      case "fp":
+        this.CATEGORY_PREFS[type]["privacy.trackingprotection.fingerprinting.enabled"] = true;
+        break;
+      case "-fp":
+        this.CATEGORY_PREFS[type]["privacy.trackingprotection.fingerprinting.enabled"] = false;
+        break;
+      case "cm":
+        this.CATEGORY_PREFS[type]["privacy.trackingprotection.cryptomining.enabled"] = true;
+        break;
+      case "-cm":
+        this.CATEGORY_PREFS[type]["privacy.trackingprotection.cryptomining.enabled"] = false;
+        break;
+      case "cookieBehavior0":
+        this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_ACCEPT;
+        break;
+      case "cookieBehavior1":
+        this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
+        break;
+      case "cookieBehavior2":
+        this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_REJECT;
+        break;
+      case "cookieBehavior3":
+        this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN;
+        break;
+      case "cookieBehavior4":
+        this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+        break;
+      default:
+        Cu.reportError(`Error: Unknown rule observed ${item}`);
       }
     }
   },
@@ -3109,7 +3105,6 @@ var ContentBlockingCategoriesPrefs = {
     for (let pref in this.CATEGORY_PREFS[category]) {
       let value = this.CATEGORY_PREFS[category][pref];
       if (value == null) {
-        Cu.reportError(`Error: ${pref} has not been defined in ${category}`);
         if (Services.prefs.prefHasUserValue(pref)) {
           return false;
         }
@@ -3175,7 +3170,6 @@ var ContentBlockingCategoriesPrefs = {
       let value = this.CATEGORY_PREFS[category][pref];
       if (!Services.prefs.prefIsLocked(pref)) {
         if (value == null) {
-          Cu.reportError(`Error: ${pref} has not been defined in ${category}`);
           Services.prefs.clearUserPref(pref);
         } else {
           switch (Services.prefs.getPrefType(pref)) {

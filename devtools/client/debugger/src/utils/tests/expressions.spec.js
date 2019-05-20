@@ -47,7 +47,7 @@ describe("expressions", () => {
   describe("getValue", () => {
     it("Reference Errors should be shown as (unavailable)", () => {
       expect(getValue(createError({ name: "ReferenceError" })).value).toEqual({
-        unavailable: true
+        unavailable: true,
       });
     });
 

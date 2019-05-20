@@ -69,7 +69,7 @@ export function getComments(ast: any) {
   }
   return ast.comments.map(comment => ({
     name: comment.location,
-    location: comment.loc
+    location: comment.loc,
   }));
 }
 
@@ -127,7 +127,7 @@ export function getVariables(dec: Node) {
           name: t.isAssignmentPattern(element)
             ? element.left.name
             : element.name || (element.argument && element.argument.name),
-          location: element.loc
+          location: element.loc,
         };
       })
       .filter(({ name }) => name);
@@ -136,8 +136,8 @@ export function getVariables(dec: Node) {
   return [
     {
       name: dec.id.name,
-      location: dec.loc
-    }
+      location: dec.loc,
+    },
   ];
 }
 
@@ -164,7 +164,7 @@ function getIdentifiers(items) {
       ids.push({
         name: item.name,
         expression: item.name,
-        location: { start, end }
+        location: { start, end },
       });
     }
   });

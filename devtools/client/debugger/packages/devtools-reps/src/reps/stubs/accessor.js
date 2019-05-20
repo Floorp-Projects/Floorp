@@ -18,19 +18,19 @@ stubs.set("getter", {
     displayName: "get x",
     location: {
       url: "debugger eval code",
-      line: 1
-    }
+      line: 1,
+    },
   },
   set: {
-    type: "undefined"
-  }
+    type: "undefined",
+  },
 });
 
 stubs.set("setter", {
   configurable: true,
   enumerable: true,
   get: {
-    type: "undefined"
+    type: "undefined",
   },
   set: {
     type: "object",
@@ -43,9 +43,9 @@ stubs.set("setter", {
     displayName: "set x",
     location: {
       url: "debugger eval code",
-      line: 1
-    }
-  }
+      line: 1,
+    },
+  },
 });
 
 stubs.set("getter setter", {
@@ -62,8 +62,8 @@ stubs.set("getter setter", {
     displayName: "get x",
     location: {
       url: "debugger eval code",
-      line: 1
-    }
+      line: 1,
+    },
   },
   set: {
     type: "object",
@@ -76,8 +76,8 @@ stubs.set("getter setter", {
     displayName: "set x",
     location: {
       url: "debugger eval code",
-      line: 1
-    }
-  }
+      line: 1,
+    },
+  },
 });
 module.exports = stubs;

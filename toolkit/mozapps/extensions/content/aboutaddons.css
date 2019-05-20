@@ -216,7 +216,7 @@ recommended-addon-card .addon-description:not(:empty) {
 }
 
 addon-details {
-  color: var(--grey-60);
+  color: var(--in-content-deemphasized-text);
 }
 
 .addon-detail-description {
@@ -225,7 +225,7 @@ addon-details {
 
 .addon-detail-contribute {
   padding: var(--card-padding);
-  border: 1px solid var(--grey-90-a20);
+  border: 1px solid var(--in-content-box-border-color);
   border-radius: var(--panel-border-radius);
   margin-bottom: var(--card-padding);
   display: flex;
@@ -252,15 +252,15 @@ addon-details {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid var(--grey-90-a20);
+  border-top: 1px solid var(--in-content-box-border-color);
   margin: 0 calc(var(--card-padding) * -1);
   padding: var(--card-padding);
-  color: var(--grey-90);
+  color: var(--in-content-text-color);
 }
 
 .addon-detail-row.addon-detail-help-row {
   display: block;
-  color: var(--grey-60);
+  color: var(--in-content-deemphasized-text);
   padding-top: 4px;
   padding-bottom: var(--card-padding);
   border: none;
@@ -360,4 +360,18 @@ panel-item-separator[hidden] {
 .button-link:active {
   color: var(--in-content-link-color-active) !important;
   text-decoration: none;
+}
+
+addon-permissions-list > .addon-detail-row:first-of-type {
+  border-top: none;
+}
+
+.deck-tab-group {
+  border-bottom: 1px solid var(--grey-90-a20);
+  border-top: 1px solid var(--grey-90-a20);
+  margin-top: 8px;
+  /* Pull the buttons flush with the side of the card */
+  margin-inline: calc(var(--card-padding) * -1);
+  font-size: 0;
+  line-height: 0;
 }

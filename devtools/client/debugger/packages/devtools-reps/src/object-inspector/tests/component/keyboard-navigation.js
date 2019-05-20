@@ -14,7 +14,7 @@ function generateDefaults(overrides) {
   return {
     autoExpandDepth: 0,
     mode: MODE.LONG,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -23,7 +23,7 @@ function mount(props) {
 
   return mountObjectInspector({
     client,
-    props: generateDefaults(props)
+    props: generateDefaults(props),
   });
 }
 
@@ -32,7 +32,7 @@ describe("ObjectInspector - keyboard navigation", () => {
     const stub = gripRepStubs.get("testMaxProps");
 
     const { wrapper, store } = mount({
-      roots: [{ path: "root", contents: { value: stub } }]
+      roots: [{ path: "root", contents: { value: stub } }],
     });
 
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
@@ -77,6 +77,6 @@ function simulateKeyDown(wrapper, key) {
   wrapper.simulate("keydown", {
     key,
     preventDefault: () => {},
-    stopPropagation: () => {}
+    stopPropagation: () => {},
   });
 }

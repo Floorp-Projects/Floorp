@@ -13,14 +13,14 @@ import {
   getSourceLineCount,
   isThirdParty,
   isJavaScript,
-  isUrlExtension
+  isUrlExtension,
 } from "../source.js";
 
 import {
   makeMockSource,
   makeMockSourceWithContent,
   makeMockSourceAndContent,
-  makeMockWasmSourceWithContent
+  makeMockWasmSourceWithContent,
 } from "../test-mockup";
 import { isFulfilled } from "../async-value.js";
 
@@ -37,7 +37,7 @@ const defaultSymbolDeclarations = {
   hasJsx: false,
   hasTypes: false,
   loading: false,
-  framework: undefined
+  framework: undefined,
 };
 
 describe("sources", () => {
@@ -122,7 +122,7 @@ describe("sources", () => {
             makeMockSource(
               "http://localhost.com:7999/increment/abc/hello.html"
             ),
-            makeMockSource("http://localhost.com:7999/increment/hello.html")
+            makeMockSource("http://localhost.com:7999/increment/hello.html"),
           ]
         )
       ).toBe("abc");
@@ -142,7 +142,7 @@ describe("sources", () => {
             makeMockSource(
               "http://localhost.com:7999/increment/abc/web/hello.html"
             ),
-            makeMockSource("http://localhost.com:7999/increment/hello.html")
+            makeMockSource("http://localhost.com:7999/increment/hello.html"),
           ]
         )
       ).toBe("abc/web");
@@ -155,7 +155,7 @@ describe("sources", () => {
           [
             makeMockSource("http://localhost.com:7999/increment/xyz.html"),
             makeMockSource("http://localhost.com:7999/increment/abc.html"),
-            makeMockSource("http://localhost.com:7999/increment/hello.html")
+            makeMockSource("http://localhost.com:7999/increment/hello.html"),
           ]
         )
       ).toBe(undefined);
@@ -175,7 +175,7 @@ describe("sources", () => {
             ),
             makeMockSource(
               "http://localhost.com:7999/increment/xyz.html:formatted"
-            )
+            ),
           ]
         )
       ).toBe(undefined);
@@ -196,7 +196,7 @@ describe("sources", () => {
             ),
             makeMockSource(
               "http://localhost.com:7999/increment/hello.html:formatted"
-            )
+            ),
           ]
         )
       ).toBe("abc/web");
@@ -308,7 +308,7 @@ describe("sources", () => {
       );
       expect(getMode(source, content)).toEqual({
         name: "javascript",
-        typescript: true
+        typescript: true,
       });
     });
 
@@ -321,7 +321,7 @@ describe("sources", () => {
       );
       expect(getMode(source, content)).toEqual({
         name: "javascript",
-        typescript: true
+        typescript: true,
       });
     });
 
@@ -396,7 +396,7 @@ describe("sources", () => {
       );
       expect(getMode(source, content)).toEqual({
         name: "javascript",
-        typescript: true
+        typescript: true,
       });
     });
 
@@ -409,7 +409,7 @@ describe("sources", () => {
       );
       expect(getMode(source, content).base).toEqual({
         name: "javascript",
-        typescript: true
+        typescript: true,
       });
     });
 
@@ -447,7 +447,7 @@ describe("sources", () => {
 
     it("wasm", () => {
       const { source, content } = makeMockWasmSourceWithContent({
-        binary: "\x00asm\x01\x00\x00\x00"
+        binary: "\x00asm\x01\x00\x00\x00",
       });
       expect(getMode(source, content.value)).toEqual({ name: "text" });
     });
@@ -466,7 +466,7 @@ describe("sources", () => {
   describe("getSourceLineCount", () => {
     it("should give us the amount bytes for wasm source", () => {
       const { content } = makeMockWasmSourceWithContent({
-        binary: "\x00asm\x01\x00\x00\x00"
+        binary: "\x00asm\x01\x00\x00\x00",
       });
       expect(getSourceLineCount(content.value)).toEqual(8);
     });

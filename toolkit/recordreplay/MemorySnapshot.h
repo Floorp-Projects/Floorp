@@ -102,10 +102,6 @@ void UnrecoverableSnapshotFailure();
 // was taken as free.
 void FixupFreeRegionsAfterRewind();
 
-// Set whether to allow intentionally crashing in this process via the
-// RecordReplayDirective method.
-void SetAllowIntentionalCrashes(bool aAllowed);
-
 // When WANT_COUNTDOWN_THREAD is defined (see MemorySnapshot.cpp), set a count
 // that, after a thread consumes it, causes the thread to report a fatal error.
 // This is used for debugging and is a workaround for lldb often being unable

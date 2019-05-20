@@ -584,4 +584,8 @@ partial interface Document {
   // is not propegated to descendant Documents upon settting.
   [ChromeOnly]
   attribute boolean inRDMPane;
+  // Extension to give chrome JS the ability to set the window screen
+  // orientation while in RDM.
+  [ChromeOnly]
+  void setRDMPaneOrientation(OrientationType type, float rotationAngle);
 };

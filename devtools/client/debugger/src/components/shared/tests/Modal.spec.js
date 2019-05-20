@@ -21,7 +21,7 @@ describe("Modal", () => {
       <Modal handleClose={handleCloseSpy} status="entering" />
     );
     wrapper.find(".modal-wrapper").simulate("click");
-    expect(handleCloseSpy).toBeCalled();
+    expect(handleCloseSpy).toHaveBeenCalled();
   });
 
   it("renders children", () => {

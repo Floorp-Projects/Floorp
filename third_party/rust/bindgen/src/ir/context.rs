@@ -535,8 +535,6 @@ fn find_effective_target(clang_args: &[String]) -> (String, bool) {
 impl BindgenContext {
     /// Construct the context for the given `options`.
     pub(crate) fn new(options: BindgenOptions) -> Self {
-        use clang_sys;
-
         // TODO(emilio): Use the CXTargetInfo here when available.
         //
         // see: https://reviews.llvm.org/D32389
@@ -1646,8 +1644,6 @@ If you encounter an error missing from this list, please file an issue or a PR!"
         ty: &clang::Type,
         location: clang::Cursor,
     ) -> Option<TypeId> {
-        use clang_sys;
-
         let num_expected_args = self.resolve_type(template).num_self_template_params(self);
         if num_expected_args == 0 {
             warn!(

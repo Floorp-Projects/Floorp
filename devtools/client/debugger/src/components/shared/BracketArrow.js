@@ -13,12 +13,12 @@ const BracketArrow = ({
   orientation,
   left,
   top,
-  bottom
+  bottom,
 }: {
   orientation: string,
   left: number,
   top: number,
-  bottom: number
+  bottom: number,
 }) => {
   return (
     <div

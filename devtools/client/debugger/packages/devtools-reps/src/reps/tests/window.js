@@ -21,7 +21,7 @@ describe("test Window", () => {
   it("renders with correct class name", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -32,7 +32,7 @@ describe("test Window", () => {
   it("renders with correct content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -42,7 +42,7 @@ describe("test Window", () => {
   it("renders with correct inner HTML structure and content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -53,7 +53,7 @@ describe("test Window", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -64,7 +64,7 @@ describe("test Window", () => {
     const renderedComponent = shallow(
       Rep({
         object: stub,
-        mode: MODE.LONG
+        mode: MODE.LONG,
       })
     );
 
@@ -76,9 +76,9 @@ describe("test Window", () => {
       Rep({
         object: {
           ...stub,
-          displayClass: "Custom"
+          displayClass: "Custom",
         },
-        mode: MODE.TINY
+        mode: MODE.TINY,
       })
     );
 
@@ -90,10 +90,10 @@ describe("test Window", () => {
       Rep({
         object: {
           ...stub,
-          displayClass: "Custom"
+          displayClass: "Custom",
         },
         mode: MODE.LONG,
-        title: "Custom"
+        title: "Custom",
       })
     );
 

@@ -13,13 +13,13 @@ import type { SourceTreeAction, FocusItem } from "../actions/types";
 
 export type SourceTreeState = {
   expanded: Set<string>,
-  focusedItem: ?FocusItem
+  focusedItem: ?FocusItem,
 };
 
 export function InitialState(): SourceTreeState {
   return {
     expanded: new Set(),
-    focusedItem: null
+    focusedItem: null,
   };
 }
 
@@ -41,12 +41,12 @@ export default function update(
 function updateExpanded(state, action) {
   return {
     ...state,
-    expanded: new Set(action.expanded)
+    expanded: new Set(action.expanded),
   };
 }
 
 type OuterState = {
-  sourceTree: SourceTreeState
+  sourceTree: SourceTreeState,
 };
 
 export function getExpandedState(state: OuterState) {

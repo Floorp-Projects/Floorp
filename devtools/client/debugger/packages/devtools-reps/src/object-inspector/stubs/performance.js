@@ -29,8 +29,8 @@ stubs.set("performance", {
             frozen: false,
             sealed: false,
             name: "now",
-            displayName: "now"
-          }
+            displayName: "now",
+          },
         },
         getEntries: {
           configurable: true,
@@ -44,8 +44,8 @@ stubs.set("performance", {
             frozen: false,
             sealed: false,
             name: "getEntries",
-            displayName: "getEntries"
-          }
+            displayName: "getEntries",
+          },
         },
         getEntriesByType: {
           configurable: true,
@@ -59,8 +59,8 @@ stubs.set("performance", {
             frozen: false,
             sealed: false,
             name: "getEntriesByType",
-            displayName: "getEntriesByType"
-          }
+            displayName: "getEntriesByType",
+          },
         },
         getEntriesByName: {
           configurable: true,
@@ -74,8 +74,8 @@ stubs.set("performance", {
             frozen: false,
             sealed: false,
             name: "getEntriesByName",
-            displayName: "getEntriesByName"
-          }
+            displayName: "getEntriesByName",
+          },
         },
         clearResourceTimings: {
           configurable: true,
@@ -89,8 +89,8 @@ stubs.set("performance", {
             frozen: false,
             sealed: false,
             name: "clearResourceTimings",
-            displayName: "clearResourceTimings"
-          }
+            displayName: "clearResourceTimings",
+          },
         },
         setResourceTimingBufferSize: {
           configurable: true,
@@ -104,8 +104,8 @@ stubs.set("performance", {
             frozen: false,
             sealed: false,
             name: "setResourceTimingBufferSize",
-            displayName: "setResourceTimingBufferSize"
-          }
+            displayName: "setResourceTimingBufferSize",
+          },
         },
         mark: {
           configurable: true,
@@ -119,8 +119,8 @@ stubs.set("performance", {
             frozen: false,
             sealed: false,
             name: "mark",
-            displayName: "mark"
-          }
+            displayName: "mark",
+          },
         },
         clearMarks: {
           configurable: true,
@@ -134,8 +134,8 @@ stubs.set("performance", {
             frozen: false,
             sealed: false,
             name: "clearMarks",
-            displayName: "clearMarks"
-          }
+            displayName: "clearMarks",
+          },
         },
         measure: {
           configurable: true,
@@ -149,8 +149,8 @@ stubs.set("performance", {
             frozen: false,
             sealed: false,
             name: "measure",
-            displayName: "measure"
-          }
+            displayName: "measure",
+          },
         },
         clearMeasures: {
           configurable: true,
@@ -164,54 +164,54 @@ stubs.set("performance", {
             frozen: false,
             sealed: false,
             name: "clearMeasures",
-            displayName: "clearMeasures"
-          }
-        }
+            displayName: "clearMeasures",
+          },
+        },
       },
-      ownPropertiesLength: 16
-    }
+      ownPropertiesLength: 16,
+    },
   },
   ownProperties: {
     userTimingJsNow: {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: false
+      value: false,
     },
     userTimingJsNowPrefixed: {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: false
+      value: false,
     },
     userTimingJsUserTiming: {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: false
+      value: false,
     },
     userTimingJsUserTimingPrefixed: {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: false
+      value: false,
     },
     userTimingJsPerformanceTimeline: {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: false
+      value: false,
     },
     userTimingJsPerformanceTimelinePrefixed: {
       configurable: true,
       enumerable: true,
       writable: true,
-      value: false
+      value: false,
     },
     timeOrigin: {
       enumerable: true,
       writable: true,
-      value: 1500971976372.9033
+      value: 1500971976372.9033,
     },
     timing: {
       enumerable: true,
@@ -233,65 +233,65 @@ stubs.set("performance", {
               getterValue: 1500971976373,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             unloadEventStart: {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             unloadEventEnd: {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             redirectStart: {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             redirectEnd: {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             fetchStart: {
               getterValue: 1500971982226,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             domainLookupStart: {
               getterValue: 1500971982251,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             domainLookupEnd: {
               getterValue: 1500971982255,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             connectStart: {
               getterValue: 1500971982255,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             connectEnd: {
               getterValue: 1500971982638,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
-            }
-          }
-        }
-      }
+              writable: true,
+            },
+          },
+        },
+      },
     },
     navigation: {
       enumerable: true,
@@ -313,32 +313,32 @@ stubs.set("performance", {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             redirectCount: {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
-            }
-          }
-        }
-      }
+              writable: true,
+            },
+          },
+        },
+      },
     },
     onresourcetimingbufferfull: {
       enumerable: true,
       writable: true,
       value: {
-        type: "null"
-      }
-    }
+        type: "null",
+      },
+    },
   },
   safeGetterValues: {
     timeOrigin: {
       getterValue: 1500971976372.9033,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     timing: {
       getterValue: {
@@ -358,68 +358,68 @@ stubs.set("performance", {
               getterValue: 1500971976373,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             unloadEventStart: {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             unloadEventEnd: {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             redirectStart: {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             redirectEnd: {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             fetchStart: {
               getterValue: 1500971982226,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             domainLookupStart: {
               getterValue: 1500971982251,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             domainLookupEnd: {
               getterValue: 1500971982255,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             connectStart: {
               getterValue: 1500971982255,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             connectEnd: {
               getterValue: 1500971982638,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
-            }
-          }
-        }
+              writable: true,
+            },
+          },
+        },
       },
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     navigation: {
       getterValue: {
@@ -439,30 +439,30 @@ stubs.set("performance", {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
+              writable: true,
             },
             redirectCount: {
               getterValue: 0,
               getterPrototypeLevel: 1,
               enumerable: true,
-              writable: true
-            }
-          }
-        }
+              writable: true,
+            },
+          },
+        },
       },
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     onresourcetimingbufferfull: {
       getterValue: {
-        type: "null"
+        type: "null",
       },
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
-    }
-  }
+      writable: true,
+    },
+  },
 });
 
 stubs.set("timing", {
@@ -490,8 +490,8 @@ stubs.set("timing", {
             frozen: false,
             sealed: false,
             name: "toJSON",
-            displayName: "toJSON"
-          }
+            displayName: "toJSON",
+          },
         },
         navigationStart: {
           configurable: true,
@@ -504,11 +504,11 @@ stubs.set("timing", {
             frozen: false,
             sealed: false,
             name: "get navigationStart",
-            displayName: "get navigationStart"
+            displayName: "get navigationStart",
           },
           set: {
-            type: "undefined"
-          }
+            type: "undefined",
+          },
         },
         unloadEventStart: {
           configurable: true,
@@ -521,11 +521,11 @@ stubs.set("timing", {
             frozen: false,
             sealed: false,
             name: "get unloadEventStart",
-            displayName: "get unloadEventStart"
+            displayName: "get unloadEventStart",
           },
           set: {
-            type: "undefined"
-          }
+            type: "undefined",
+          },
         },
         unloadEventEnd: {
           configurable: true,
@@ -538,11 +538,11 @@ stubs.set("timing", {
             frozen: false,
             sealed: false,
             name: "get unloadEventEnd",
-            displayName: "get unloadEventEnd"
+            displayName: "get unloadEventEnd",
           },
           set: {
-            type: "undefined"
-          }
+            type: "undefined",
+          },
         },
         redirectStart: {
           configurable: true,
@@ -555,11 +555,11 @@ stubs.set("timing", {
             frozen: false,
             sealed: false,
             name: "get redirectStart",
-            displayName: "get redirectStart"
+            displayName: "get redirectStart",
           },
           set: {
-            type: "undefined"
-          }
+            type: "undefined",
+          },
         },
         redirectEnd: {
           configurable: true,
@@ -572,11 +572,11 @@ stubs.set("timing", {
             frozen: false,
             sealed: false,
             name: "get redirectEnd",
-            displayName: "get redirectEnd"
+            displayName: "get redirectEnd",
           },
           set: {
-            type: "undefined"
-          }
+            type: "undefined",
+          },
         },
         fetchStart: {
           configurable: true,
@@ -589,11 +589,11 @@ stubs.set("timing", {
             frozen: false,
             sealed: false,
             name: "get fetchStart",
-            displayName: "get fetchStart"
+            displayName: "get fetchStart",
           },
           set: {
-            type: "undefined"
-          }
+            type: "undefined",
+          },
         },
         domainLookupStart: {
           configurable: true,
@@ -606,11 +606,11 @@ stubs.set("timing", {
             frozen: false,
             sealed: false,
             name: "get domainLookupStart",
-            displayName: "get domainLookupStart"
+            displayName: "get domainLookupStart",
           },
           set: {
-            type: "undefined"
-          }
+            type: "undefined",
+          },
         },
         domainLookupEnd: {
           configurable: true,
@@ -623,11 +623,11 @@ stubs.set("timing", {
             frozen: false,
             sealed: false,
             name: "get domainLookupEnd",
-            displayName: "get domainLookupEnd"
+            displayName: "get domainLookupEnd",
           },
           set: {
-            type: "undefined"
-          }
+            type: "undefined",
+          },
         },
         connectStart: {
           configurable: true,
@@ -640,15 +640,15 @@ stubs.set("timing", {
             frozen: false,
             sealed: false,
             name: "get connectStart",
-            displayName: "get connectStart"
+            displayName: "get connectStart",
           },
           set: {
-            type: "undefined"
-          }
-        }
+            type: "undefined",
+          },
+        },
       },
-      ownPropertiesLength: 23
-    }
+      ownPropertiesLength: 23,
+    },
   },
   ownProperties: {},
   safeGetterValues: {
@@ -656,129 +656,129 @@ stubs.set("timing", {
       getterValue: 1500967716401,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     unloadEventStart: {
       getterValue: 0,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     unloadEventEnd: {
       getterValue: 0,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     redirectStart: {
       getterValue: 0,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     redirectEnd: {
       getterValue: 0,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     fetchStart: {
       getterValue: 1500967716401,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     domainLookupStart: {
       getterValue: 1500967716401,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     domainLookupEnd: {
       getterValue: 1500967716401,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     connectStart: {
       getterValue: 1500967716401,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     connectEnd: {
       getterValue: 1500967716401,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     secureConnectionStart: {
       getterValue: 1500967716401,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     requestStart: {
       getterValue: 1500967716401,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     responseStart: {
       getterValue: 1500967716401,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     responseEnd: {
       getterValue: 1500967716401,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     domLoading: {
       getterValue: 1500967716426,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     domInteractive: {
       getterValue: 1500967716552,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     domContentLoadedEventStart: {
       getterValue: 1500967716696,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     domContentLoadedEventEnd: {
       getterValue: 1500967716715,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     domComplete: {
       getterValue: 1500967716719,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     loadEventStart: {
       getterValue: 1500967716719,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
+      writable: true,
     },
     loadEventEnd: {
       getterValue: 1500967716720,
       getterPrototypeLevel: 1,
       enumerable: true,
-      writable: true
-    }
-  }
+      writable: true,
+    },
+  },
 });
 
 module.exports = stubs;

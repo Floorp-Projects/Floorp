@@ -13,7 +13,7 @@ import { getSourcesByURL } from "./sources";
 
 import {
   createPendingBreakpoint,
-  makePendingLocationId
+  makePendingLocationId,
 } from "../utils/breakpoint";
 import { isGenerated } from "../utils/source";
 
@@ -60,7 +60,7 @@ function removeBreakpoint(state, { location }) {
 
 type OuterState = {
   pendingBreakpoints: PendingBreakpointsState,
-  sources: SourcesState
+  sources: SourcesState,
 };
 
 export function getPendingBreakpoints(state: OuterState) {

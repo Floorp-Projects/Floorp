@@ -11,79 +11,79 @@ const testCases = [
   {
     name: "testMultiline",
     props: {
-      object: "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n"
+      object: "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n",
     },
     result:
-      '"aaaaaaaaaaaaaaaaaaaaa\\nbbbbbbbbbbbbbbbbbbb\\ncccccccccccccccc\\n"'
+      '"aaaaaaaaaaaaaaaaaaaaa\\nbbbbbbbbbbbbbbbbbbb\\ncccccccccccccccc\\n"',
   },
   {
     name: "testMultilineLimit",
     props: {
       object: "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n",
-      cropLimit: 20
+      cropLimit: 20,
     },
-    result: `\"aaaaaaaaa${ELLIPSIS}cccccc\\n\"`
+    result: `\"aaaaaaaaa${ELLIPSIS}cccccc\\n\"`,
   },
   {
     name: "testMultilineOpen",
     props: {
       object: "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n",
-      member: { open: true }
+      member: { open: true },
     },
     result:
-      '"aaaaaaaaaaaaaaaaaaaaa\\nbbbbbbbbbbbbbbbbbbb\\ncccccccccccccccc\\n"'
+      '"aaaaaaaaaaaaaaaaaaaaa\\nbbbbbbbbbbbbbbbbbbb\\ncccccccccccccccc\\n"',
   },
   {
     name: "testUseQuotes",
     props: {
       object: "abc",
-      useQuotes: false
+      useQuotes: false,
     },
-    result: "abc"
+    result: "abc",
   },
   {
     name: "testNonPrintableCharacters",
     props: {
       object: "a\x01b",
-      useQuotes: false
+      useQuotes: false,
     },
-    result: "a\ufffdb"
+    result: "a\ufffdb",
   },
   {
     name: "testQuoting",
     props: {
       object:
         "\t\n\r\"'\\\x1f\x9f\ufeff\ufffe\ud8000\u2063\ufffc\u2028\ueeee\ufffd",
-      useQuotes: true
+      useQuotes: true,
     },
     result:
       '"\\t\\n\\r\\"\'\\\\\\u001f\\u009f\\ufeff\\ufffe\\ud8000\\u2063' +
-      '\\ufffc\\u2028\\ueeee\ufffd"'
+      '\\ufffc\\u2028\\ueeee\ufffd"',
   },
   {
     name: "testUnpairedSurrogate",
     props: {
       object: "\uDC23",
-      useQuotes: true
+      useQuotes: true,
     },
-    result: '"\\udc23"'
+    result: '"\\udc23"',
   },
   {
     name: "testValidSurrogate",
     props: {
       object: "\ud83d\udeec",
-      useQuotes: true
+      useQuotes: true,
     },
-    result: '"\ud83d\udeec"'
+    result: '"\ud83d\udeec"',
   },
   {
     name: "testNoEscapeWhitespace",
     props: {
       object: "line 1\r\nline 2\n\tline 3",
       useQuotes: true,
-      escapeWhitespace: false
+      escapeWhitespace: false,
     },
-    result: '"line 1\r\nline 2\n\tline 3"'
+    result: '"line 1\r\nline 2\n\tline 3"',
   },
   {
     name: "testIgnoreFullTextWhenOpen",
@@ -92,9 +92,9 @@ const testCases = [
       fullText:
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
         "aaaaaaaaaaaaa",
-      member: { open: true }
+      member: { open: true },
     },
-    result: '"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'
+    result: '"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"',
   },
   {
     name: "testIgnoreFullTextWithLimit",
@@ -103,9 +103,9 @@ const testCases = [
       fullText:
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
         "aaaaaaaaaaaaa",
-      cropLimit: 20
+      cropLimit: 20,
     },
-    result: `\"aaaaaaaaa${ELLIPSIS}aaaaaaaa\"`
+    result: `\"aaaaaaaaa${ELLIPSIS}aaaaaaaa\"`,
   },
   {
     name: "testIgnoreFullTextWhenOpenWithLimit",
@@ -115,10 +115,10 @@ const testCases = [
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
         "aaaaaaaaaaaaa",
       member: { open: true },
-      cropLimit: 20
+      cropLimit: 20,
     },
-    result: '"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'
-  }
+    result: '"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"',
+  },
 ];
 
 describe("test String", () => {

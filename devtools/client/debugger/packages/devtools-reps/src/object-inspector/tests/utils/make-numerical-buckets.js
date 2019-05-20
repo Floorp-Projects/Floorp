@@ -10,8 +10,8 @@ describe("makeNumericalBuckets", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripArrayStubs.get("Array(234)")
-      }
+        value: gripArrayStubs.get("Array(234)"),
+      },
     });
     const nodes = makeNumericalBuckets(node);
 
@@ -23,7 +23,7 @@ describe("makeNumericalBuckets", () => {
     expect(paths).toEqual([
       "Symbol(root/[0…99])",
       "Symbol(root/[100…199])",
-      "Symbol(root/[200…233])"
+      "Symbol(root/[200…233])",
     ]);
   });
 
@@ -32,8 +32,8 @@ describe("makeNumericalBuckets", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripArrayStubs.get("Array(101)")
-      }
+        value: gripArrayStubs.get("Array(101)"),
+      },
     });
     const nodes = makeNumericalBuckets(node);
 
@@ -50,8 +50,8 @@ describe("makeNumericalBuckets", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripArrayStubs.get("Array(234)")
-      }
+        value: gripArrayStubs.get("Array(234)"),
+      },
     });
     const nodes = makeNumericalBuckets(node);
 
@@ -62,7 +62,7 @@ describe("makeNumericalBuckets", () => {
 
     expect(paths).toEqual([
       "Symbol(root/bucket_0-99)",
-      "Symbol(root/bucket_100-101)"
+      "Symbol(root/bucket_100-101)",
     ]);
   });
 
@@ -70,8 +70,8 @@ describe("makeNumericalBuckets", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: gripArrayStubs.get("Array(23456)")
-      }
+        value: gripArrayStubs.get("Array(23456)"),
+      },
     });
     const nodes = makeNumericalBuckets(node);
     const names = nodes.map(n => n.name);
@@ -100,7 +100,7 @@ describe("makeNumericalBuckets", () => {
       "[20000…20999]",
       "[21000…21999]",
       "[22000…22999]",
-      "[23000…23455]"
+      "[23000…23455]",
     ]);
 
     const firstBucketNodes = makeNumericalBuckets(nodes[0]);
@@ -117,7 +117,7 @@ describe("makeNumericalBuckets", () => {
       "[600…699]",
       "[700…799]",
       "[800…899]",
-      "[900…999]"
+      "[900…999]",
     ]);
     expect(firstBucketPaths[0]).toEqual("Symbol(root/[0…999]/[0…99])");
     expect(firstBucketPaths[firstBucketPaths.length - 1]).toEqual(
@@ -132,7 +132,7 @@ describe("makeNumericalBuckets", () => {
       "[23100…23199]",
       "[23200…23299]",
       "[23300…23399]",
-      "[23400…23455]"
+      "[23400…23455]",
     ]);
     expect(lastBucketPaths[0]).toEqual(
       "Symbol(root/[23000…23455]/[23000…23099])"

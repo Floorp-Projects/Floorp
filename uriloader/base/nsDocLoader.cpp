@@ -403,12 +403,13 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
   //
   if (mIsLoadingDocument) {
     if (loadFlags & nsIChannel::LOAD_DOCUMENT_URI) {
-      // If we have a document request channel, and this is not a redirect, we
-      // must abort it and replace it with the new one.
-      if (!(loadFlags & nsIChannel::LOAD_REPLACE) && mDocumentRequest) {
-        mDocumentRequest->Cancel(NS_ERROR_ABORT);
-        mDocumentRequest = nullptr;
-      }
+      //
+      // Make sure that the document channel is null at this point...
+      // (unless its been redirected)
+      //
+      NS_ASSERTION(
+          (loadFlags & nsIChannel::LOAD_REPLACE) || !(mDocumentRequest.get()),
+          "Overwriting an existing document channel!");
 
       // This request is associated with the entire document...
       mDocumentRequest = request;

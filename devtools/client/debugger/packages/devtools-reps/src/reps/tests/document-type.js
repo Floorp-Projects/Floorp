@@ -19,7 +19,7 @@ describe("DocumentType", () => {
   it("renders with expected text content on html doctype", () => {
     const renderedComponent = shallow(
       DocumentType.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -31,7 +31,7 @@ describe("DocumentType", () => {
     const unnamedStub = stubs.get("unnamed");
     const renderedComponent = shallow(
       DocumentType.rep({
-        object: unnamedStub
+        object: unnamedStub,
       })
     );
     expect(renderedComponent.text()).toEqual("<!DOCTYPE>");

@@ -22,7 +22,7 @@ PromiseRep.propTypes = {
   mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func
+  onInspectIconClick: PropTypes.func,
 };
 
 function PromiseRep(props) {
@@ -31,7 +31,7 @@ function PromiseRep(props) {
 
   const config = {
     "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-object"
+    className: "objectBox objectBox-object",
   };
 
   if (props.mode === MODE.TINY) {
@@ -42,14 +42,14 @@ function PromiseRep(props) {
       getTitle(object),
       span(
         {
-          className: "objectLeftBrace"
+          className: "objectLeftBrace",
         },
         " { "
       ),
       Rep({ object: promiseState.state }),
       span(
         {
-          className: "objectRightBrace"
+          className: "objectRightBrace",
         },
         " }"
       )
@@ -62,14 +62,14 @@ function PromiseRep(props) {
     getTitle(object),
     span(
       {
-        className: "objectLeftBrace"
+        className: "objectLeftBrace",
       },
       " { "
     ),
     ...propsArray,
     span(
       {
-        className: "objectRightBrace"
+        className: "objectRightBrace",
       },
       " }"
     )
@@ -79,7 +79,7 @@ function PromiseRep(props) {
 function getTitle(object) {
   return span(
     {
-      className: "objectTitle"
+      className: "objectTitle",
     },
     object.class
   );
@@ -100,7 +100,7 @@ function getProps(props, promiseState) {
         name: `<${key}>`,
         object,
         equal: ": ",
-        suppressQuotes: true
+        suppressQuotes: true,
       })
     );
 
@@ -124,5 +124,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(PromiseRep),
-  supportsObject
+  supportsObject,
 };

@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
         opener.wrappedJSObject.is(msg.data, next, "received test:" + next);
 
         if (order.length == 0) {
-          opener.setTimeout("next()");
+          opener.setTimeout(function() { this.next(); });
           window.close();
         }
       });

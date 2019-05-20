@@ -7,19 +7,19 @@ import {
   actions,
   selectors,
   createStore,
-  makeSource
+  makeSource,
 } from "../../utils/test-head";
 
 import {
   getColumnBreakpoints,
-  getFirstBreakpointPosition
+  getFirstBreakpointPosition,
 } from "../visibleColumnBreakpoints";
 import { makeMockSource, makeMockBreakpoint } from "../../utils/test-mockup";
 
 function pp(line, column) {
   return {
     location: { sourceId: "foo", line, column },
-    generatedLocation: { sourceId: "foo", line, column }
+    generatedLocation: { sourceId: "foo", line, column },
   };
 }
 
@@ -35,7 +35,7 @@ describe("visible column breakpoints", () => {
   it("simple", () => {
     const viewport = {
       start: { line: 1, column: 0 },
-      end: { line: 10, column: 10 }
+      end: { line: 10, column: 10 },
     };
     const pausePoints = { [1]: [pp(1, 1), pp(1, 5)], [3]: [pp(3, 1)] };
     const breakpoints = [bp(1, 1), bp(4, 0), bp(4, 3)];
@@ -47,7 +47,7 @@ describe("visible column breakpoints", () => {
   it("ignores single breakpoints", () => {
     const viewport = {
       start: { line: 1, column: 0 },
-      end: { line: 10, column: 10 }
+      end: { line: 10, column: 10 },
     };
     const pausePoints = { [1]: [pp(1, 1), pp(1, 3)], [2]: [pp(2, 1)] };
     const breakpoints = [bp(1, 1)];
@@ -58,7 +58,7 @@ describe("visible column breakpoints", () => {
   it("only shows visible breakpoints", () => {
     const viewport = {
       start: { line: 1, column: 0 },
-      end: { line: 10, column: 10 }
+      end: { line: 10, column: 10 },
     };
     const pausePoints = { [1]: [pp(1, 1), pp(1, 3)], [20]: [pp(20, 1)] };
     const breakpoints = [bp(1, 1)];
@@ -79,12 +79,12 @@ describe("getFirstBreakpointPosition", () => {
     dispatch({
       type: "ADD_BREAKPOINT_POSITIONS",
       positions: [pp(1, 5), pp(1, 3)],
-      source
+      source,
     });
 
     const position = getFirstBreakpointPosition(getState(), {
       line: 1,
-      sourceId: source.id
+      sourceId: source.id,
     });
 
     if (!position) {

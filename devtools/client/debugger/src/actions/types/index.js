@@ -16,6 +16,7 @@ import type { SourceAction } from "./SourceAction";
 import type { SourceActorAction } from "./SourceActorAction";
 import type { UIAction } from "./UIAction";
 import type { PauseAction } from "./PauseAction";
+import type { PreviewAction } from "./PreviewAction";
 import type { ASTAction } from "./ASTAction";
 import { clientCommands } from "../../client/firefox";
 import type { Panel } from "../../client/firefox/types";
@@ -41,7 +42,7 @@ export type ThunkArgs = {
   sourceMaps: SourceMaps,
   parser: ParserDispatcher,
   evaluationsParser: ParserDispatcher,
-  panel: Panel
+  panel: Panel,
 };
 
 export type Thunk = ThunkArgs => any;
@@ -51,7 +52,7 @@ export type ActionType = Object | Function;
 type ProjectTextSearchResult = {
   sourceId: string,
   filepath: string,
-  matches: MatchedLocations[]
+  matches: MatchedLocations[],
 };
 
 type AddTabAction = {|
@@ -59,7 +60,7 @@ type AddTabAction = {|
   +url: string,
   +framework?: string,
   +isOriginal?: boolean,
-  +sourceId?: string
+  +sourceId?: string,
 |};
 
 type UpdateTabAction = {|
@@ -67,11 +68,16 @@ type UpdateTabAction = {|
   +url: string,
   +framework?: string,
   +isOriginal?: boolean,
-  +sourceId?: string
+  +sourceId?: string,
 |};
 
 type NavigateAction =
-  | {| +type: "CONNECT", +mainThread: MainThread, +canRewind: boolean |}
+  | {|
+      +type: "CONNECT",
+      +mainThread: MainThread,
+      +canRewind: boolean,
+      +isWebExtension: boolean,
+    |}
   | {| +type: "NAVIGATE", +mainThread: MainThread |};
 
 export type FocusItem = TreeNode;
@@ -85,14 +91,14 @@ export type ProjectTextSearchAction =
   | {|
       +type: "ADD_SEARCH_RESULT",
       +cx: Context,
-      +result: ProjectTextSearchResult
+      +result: ProjectTextSearchResult,
     |}
   | {| +type: "UPDATE_STATUS", +cx: Context, +status: string |}
   | {| +type: "CLEAR_SEARCH_RESULTS", +cx: Context |}
   | {|
       +type: "ADD_ONGOING_SEARCH",
       +cx: Context,
-      +ongoingSearch: SearchOperation
+      +ongoingSearch: SearchOperation,
     |}
   | {| +type: "CLEAR_SEARCH", +cx: Context |};
 
@@ -105,12 +111,12 @@ export type FileTextSearchAction =
   | {|
       +type: "TOGGLE_FILE_SEARCH_MODIFIER",
       +cx: Context,
-      +modifier: FileTextSearchModifier
+      +modifier: FileTextSearchModifier,
     |}
   | {|
       +type: "UPDATE_FILE_SEARCH_QUERY",
       +cx: Context,
-      +query: string
+      +query: string,
     |}
   | {|
       +type: "UPDATE_SEARCH_RESULTS",
@@ -119,8 +125,8 @@ export type FileTextSearchAction =
         matches: MatchedLocations[],
         matchIndex: number,
         count: number,
-        index: number
-      }
+        index: number,
+      },
     |};
 
 export type QuickOpenAction =
@@ -132,28 +138,26 @@ export type DebuggeeAction =
   | {|
       +type: "INSERT_WORKERS",
       +cx: Context,
-      +workers: WorkerList
+      +workers: WorkerList,
     |}
   | {|
       +type: "REMOVE_WORKERS",
       +cx: Context,
-      +workers: Array<ThreadId>
+      +workers: Array<ThreadId>,
     |}
   | {|
       +type: "SELECT_THREAD",
       +cx: Context,
-      +thread: ThreadId
+      +thread: ThreadId,
     |};
 
 export type {
   StartPromiseAction,
   DonePromiseAction,
-  ErrorPromiseAction
+  ErrorPromiseAction,
 } from "../utils/middleware/promise";
 
 export type { panelPositionType } from "./UIAction";
-
-export type { ASTAction } from "./ASTAction";
 
 /**
  * Actions: Source, Breakpoint, and Navigation
@@ -171,6 +175,7 @@ export type Action =
   | NavigateAction
   | UIAction
   | ASTAction
+  | PreviewAction
   | QuickOpenAction
   | FileTextSearchAction
   | ProjectTextSearchAction

@@ -16,8 +16,8 @@ describe("shouldLoadItemEntries", () => {
     const mapStubNode = createNode({
       name: "map",
       contents: {
-        value: gripMapStubs.get("20-entries Map")
-      }
+        value: gripMapStubs.get("20-entries Map"),
+      },
     });
     const entriesNode = makeNodesForEntries(mapStubNode);
     expect(shouldLoadItemEntries(entriesNode)).toBeTruthy();
@@ -27,8 +27,8 @@ describe("shouldLoadItemEntries", () => {
     const mapStubNode = createNode({
       name: "map",
       contents: {
-        value: gripMapStubs.get("20-entries Map")
-      }
+        value: gripMapStubs.get("20-entries Map"),
+      },
     });
     const entriesNode = makeNodesForEntries(mapStubNode);
     const loadedProperties = new Map([[entriesNode.path, true]]);
@@ -39,8 +39,8 @@ describe("shouldLoadItemEntries", () => {
     const mapStubNode = createNode({
       name: "map",
       contents: {
-        value: gripMapStubs.get("testSymbolKeyedMap")
-      }
+        value: gripMapStubs.get("testSymbolKeyedMap"),
+      },
     });
     const entriesNode = makeNodesForEntries(mapStubNode);
     expect(shouldLoadItemEntries(entriesNode)).toBeFalsy();
@@ -50,8 +50,8 @@ describe("shouldLoadItemEntries", () => {
     const setStubNode = createNode({
       name: "set",
       contents: {
-        value: gripArrayStubs.get("new Set([1,2,3,4])")
-      }
+        value: gripArrayStubs.get("new Set([1,2,3,4])"),
+      },
     });
     const entriesNode = makeNodesForEntries(setStubNode);
     expect(shouldLoadItemEntries(entriesNode)).toBeFalsy();
@@ -61,8 +61,8 @@ describe("shouldLoadItemEntries", () => {
     const setStubNode = createNode({
       name: "set",
       contents: {
-        value: gripArrayStubs.get("new Set([1,2,3,4])")
-      }
+        value: gripArrayStubs.get("new Set([1,2,3,4])"),
+      },
     });
     expect(shouldLoadItemEntries(setStubNode)).toBeFalsy();
   });
@@ -71,8 +71,8 @@ describe("shouldLoadItemEntries", () => {
     const mapStubNode = createNode({
       name: "map",
       contents: {
-        value: gripMapStubs.get("20-entries Map")
-      }
+        value: gripMapStubs.get("20-entries Map"),
+      },
     });
     expect(shouldLoadItemEntries(mapStubNode)).toBeFalsy();
   });
@@ -81,8 +81,8 @@ describe("shouldLoadItemEntries", () => {
     const node = createNode({
       name: "array",
       contents: {
-        value: gripMapStubs.get("testMaxProps")
-      }
+        value: gripMapStubs.get("testMaxProps"),
+      },
     });
     expect(shouldLoadItemEntries(node)).toBeFalsy();
   });
@@ -91,8 +91,8 @@ describe("shouldLoadItemEntries", () => {
     const node = createNode({
       name: "array",
       contents: {
-        value: gripStubs.get("testMaxProps")
-      }
+        value: gripStubs.get("testMaxProps"),
+      },
     });
     expect(shouldLoadItemEntries(node)).toBeFalsy();
   });
@@ -101,8 +101,8 @@ describe("shouldLoadItemEntries", () => {
     const mapStubNode = createNode({
       name: "map",
       contents: {
-        value: gripMapStubs.get("234-entries Map")
-      }
+        value: gripMapStubs.get("234-entries Map"),
+      },
     });
     const entriesNode = makeNodesForEntries(mapStubNode);
     expect(shouldLoadItemEntries(entriesNode)).toBeFalsy();
@@ -112,13 +112,13 @@ describe("shouldLoadItemEntries", () => {
     const mapStubNode = createNode({
       name: "map",
       contents: {
-        value: gripMapStubs.get("234-entries Map")
-      }
+        value: gripMapStubs.get("234-entries Map"),
+      },
     });
     const entriesNode = makeNodesForEntries(mapStubNode);
     const bucketNodes = getChildren({
       item: entriesNode,
-      loadedProperties: new Map([[entriesNode.path, true]])
+      loadedProperties: new Map([[entriesNode.path, true]]),
     });
 
     // Make sure we do have a bucket.
@@ -130,13 +130,13 @@ describe("shouldLoadItemEntries", () => {
     const mapStubNode = createNode({
       name: "map",
       contents: {
-        value: gripMapStubs.get("23456-entries Map")
-      }
+        value: gripMapStubs.get("23456-entries Map"),
+      },
     });
     const entriesNode = makeNodesForEntries(mapStubNode);
     const bucketNodes = getChildren({
       item: entriesNode,
-      loadedProperties: new Map([[entriesNode.path, true]])
+      loadedProperties: new Map([[entriesNode.path, true]]),
     });
 
     // Make sure we do have a bucket.
@@ -148,13 +148,13 @@ describe("shouldLoadItemEntries", () => {
     const mapStubNode = createNode({
       name: "map",
       contents: {
-        value: gripMapStubs.get("23456-entries Map")
-      }
+        value: gripMapStubs.get("23456-entries Map"),
+      },
     });
     const entriesNode = makeNodesForEntries(mapStubNode);
     const bucketNodes = getChildren({
       item: entriesNode,
-      loadedProperties: new Map([[entriesNode.path, true]])
+      loadedProperties: new Map([[entriesNode.path, true]]),
     });
     // Make sure we do have a bucket.
     expect(bucketNodes[0].name).toBe("[0…999]");
@@ -162,7 +162,7 @@ describe("shouldLoadItemEntries", () => {
     // Get the sub-buckets
     const subBucketNodes = getChildren({
       item: bucketNodes[0],
-      loadedProperties: new Map([[bucketNodes[0].path, true]])
+      loadedProperties: new Map([[bucketNodes[0].path, true]]),
     });
     // Make sure we do have a bucket.
     expect(subBucketNodes[0].name).toBe("[0…99]");

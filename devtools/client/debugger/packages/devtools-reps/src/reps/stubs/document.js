@@ -15,8 +15,8 @@ stubs.set("Document", {
     kind: "DOMNode",
     nodeType: 9,
     nodeName: "#document",
-    location: "https://www.mozilla.org/en-US/firefox/new/"
-  }
+    location: "https://www.mozilla.org/en-US/firefox/new/",
+  },
 });
 
 stubs.set("Location-less Document", {
@@ -30,8 +30,8 @@ stubs.set("Location-less Document", {
   preview: {
     kind: "DOMNode",
     nodeType: 9,
-    nodeName: "#document"
-  }
+    nodeName: "#document",
+  },
 });
 
 stubs.set("XULDocument", {
@@ -47,8 +47,8 @@ stubs.set("XULDocument", {
     nodeType: 9,
     nodeName: "#document",
     isConnected: true,
-    location: "chrome://browser/content/browser.xul"
-  }
+    location: "chrome://browser/content/browser.xul",
+  },
 });
 
 module.exports = stubs;

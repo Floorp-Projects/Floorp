@@ -10,7 +10,7 @@ const {
   hasMappedSource,
   getOriginalLocation,
   getGeneratedRangesForOriginal,
-  clearSourceMaps
+  clearSourceMaps,
 } = require("../source-map");
 
 const { setupBundleFixture } = require("./helpers");
@@ -32,7 +32,7 @@ describe("source maps", () => {
         "webpack:///entry.js",
         "webpack:///times2.js",
         "webpack:///output.js",
-        "webpack:///opts.js"
+        "webpack:///opts.js",
       ]);
     });
 
@@ -65,53 +65,53 @@ describe("source maps", () => {
         {
           start: {
             line: 4,
-            column: 69
+            column: 69,
           },
           end: {
             line: 9,
-            column: Infinity
-          }
+            column: Infinity,
+          },
         },
         {
           start: {
             line: 11,
-            column: 0
+            column: 0,
           },
           end: {
             line: 17,
-            column: 3
-          }
+            column: 3,
+          },
         },
         {
           start: {
             line: 19,
-            column: 18
+            column: 18,
           },
           end: {
             line: 19,
-            column: 22
-          }
+            column: 22,
+          },
         },
         {
           start: {
             line: 26,
-            column: 0
+            column: 0,
           },
           end: {
             line: 26,
-            column: Infinity
-          }
+            column: Infinity,
+          },
         },
         {
           start: {
             line: 28,
-            column: 0
+            column: 0,
           },
           end: {
             line: 28,
-            column: Infinity
-          }
-        }
+            column: Infinity,
+          },
+        },
       ]);
     });
 
@@ -128,23 +128,23 @@ describe("source maps", () => {
         {
           start: {
             line: 4,
-            column: 69
+            column: 69,
           },
           end: {
             line: 28,
-            column: Infinity
-          }
-        }
+            column: Infinity,
+          },
+        },
       ]);
     });
   });
 
-  describe("hasMappedSource", async () => {
+  describe("hasMappedSource", () => {
     test("has original location", async () => {
       await setupBundleFixture("bundle");
       const location = {
         sourceId: "bundle.js",
-        line: 49
+        line: 49,
       };
       const isMapped = await hasMappedSource(location);
       expect(isMapped).toBe(true);
@@ -153,19 +153,19 @@ describe("source maps", () => {
     test("does not have original location", async () => {
       const location = {
         sourceId: "bundle.js",
-        line: 94
+        line: 94,
       };
       const isMapped = await hasMappedSource(location);
       expect(isMapped).toBe(false);
     });
   });
 
-  describe("Error handling", async () => {
+  describe("Error handling", () => {
     test("missing map", async () => {
       const source = {
         id: "missingmap.js",
         sourceMapURL: "missingmap.js.map",
-        url: "http:://example.com/missingmap.js"
+        url: "http:://example.com/missingmap.js",
       };
 
       networkRequest.mockImplementationOnce(() => {
@@ -182,7 +182,7 @@ describe("source maps", () => {
 
       const location = {
         sourceId: "missingmap.js",
-        line: 49
+        line: 49,
       };
 
       thrown = false;

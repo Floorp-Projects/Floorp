@@ -16,7 +16,7 @@ const selectionObject = {
   },
   setMockSelection: str => {
     selection = str;
-  }
+  },
 };
 
 global.getSelection = () => selectionObject;

@@ -35,9 +35,17 @@
       "type": "string",
       "description": "Snippet icon. 64x64px. SVG or PNG preferred."
     },
+    "icon_dark_theme": {
+      "type": "string",
+      "description": "Snippet icon, dark theme variant. 64x64px. SVG or PNG preferred."
+    },
     "title_icon": {
       "type": "string",
       "description": "Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."
+    },
+    "title_icon_dark_theme": {
+      "type": "string",
+      "description": "Small icon that shows up before the title / text. Dark theme variant. 16x16px. SVG or PNG preferred. Grayscale."
     },
     "button_action": {
       "type": "string",
@@ -101,6 +109,10 @@
     "section_title_icon": {
       "type": "string",
       "description": "Section title icon. 16x16px. SVG or PNG preferred. section_title_text must also be specified to display."
+    },
+    "section_title_icon_dark_theme": {
+      "type": "string",
+      "description": "Section title icon, dark theme variant. 16x16px. SVG or PNG preferred. section_title_text must also be specified to display."
     },
     "section_title_text": {
       "type": "string",

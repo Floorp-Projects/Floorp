@@ -14,8 +14,8 @@ const { waitForDispatch } = require("../test-utils");
 function getEnumPropertiesMock() {
   return jest.fn(() => ({
     iterator: {
-      slice: () => ({})
-    }
+      slice: () => ({}),
+    },
   }));
 }
 
@@ -26,11 +26,11 @@ function generateDefaults(overrides) {
       {
         path: "root",
         contents: {
-          value: stub
-        }
-      }
+          value: stub,
+        },
+      },
     ],
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -39,7 +39,7 @@ function mount(props, { initialState } = {}) {
 
   const client = {
     createObjectClient: grip => ObjectClient(grip, { enumProperties }),
-    releaseActor: jest.fn()
+    releaseActor: jest.fn(),
   };
 
   return mountObjectInspector({
@@ -48,9 +48,9 @@ function mount(props, { initialState } = {}) {
     initialState: {
       objectInspector: {
         ...initialState,
-        evaluations: new Map()
-      }
-    }
+        evaluations: new Map(),
+      },
+    },
   });
 }
 
@@ -60,8 +60,8 @@ describe("release actors", () => {
       {},
       {
         initialState: {
-          actors: new Set(["actor 1", "actor 2"])
-        }
+          actors: new Set(["actor 1", "actor 2"]),
+        },
       }
     );
 
@@ -75,12 +75,12 @@ describe("release actors", () => {
   it.skip("calls release actors when the roots prop changed", async () => {
     const { wrapper, store, client } = mount(
       {
-        injectWaitService: true
+        injectWaitService: true,
       },
       {
         initialState: {
-          actors: new Set(["actor 3", "actor 4"])
-        }
+          actors: new Set(["actor 3", "actor 4"]),
+        },
       }
     );
 
@@ -91,10 +91,10 @@ describe("release actors", () => {
         {
           path: "root-2",
           contents: {
-            value: gripRepStubs.get("testMaxProps")
-          }
-        }
-      ]
+            value: gripRepStubs.get("testMaxProps"),
+          },
+        },
+      ],
     });
     wrapper.update();
     //

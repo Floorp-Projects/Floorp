@@ -1,7 +1,7 @@
 {
   "title": "SimpleBelowSearchSnippet",
   "description": "A simple template with just an icon and rich text. It gets inserted below the Activity Stream search box.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "object",
   "definitions": {
     "richText": {
@@ -24,6 +24,10 @@
     "icon": {
       "type": "string",
       "description": "Snippet icon. 64x64px. SVG or PNG preferred."
+    },
+    "icon_dark_theme": {
+      "type": "string",
+      "description": "Snippet icon. Dark theme variant. 64x64px. SVG or PNG preferred."
     },
     "block_button_text": {
       "type": "string",

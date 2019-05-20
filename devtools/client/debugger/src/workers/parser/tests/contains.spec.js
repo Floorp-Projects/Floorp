@@ -7,19 +7,19 @@
 import {
   containsPosition,
   containsLocation,
-  nodeContainsPosition
+  nodeContainsPosition,
 } from "../utils/contains";
 
 function getTestLoc() {
   return {
     start: {
       line: 10,
-      column: 2
+      column: 2,
     },
     end: {
       line: 12,
-      column: 10
-    }
+      column: 10,
+    },
   };
 }
 
@@ -35,7 +35,7 @@ function startPos(lineOffset, columnOffset) {
   const { start } = getTestLoc();
   return {
     line: start.line + lineOffset,
-    column: start.column + columnOffset
+    column: start.column + columnOffset,
   };
 }
 
@@ -43,7 +43,7 @@ function endPos(lineOffset, columnOffset) {
   const { end } = getTestLoc();
   return {
     line: end.line + lineOffset,
-    column: end.column + columnOffset
+    column: end.column + columnOffset,
   };
 }
 
@@ -51,7 +51,7 @@ function startLine(lineOffset = 0) {
   const { start } = getTestLoc();
   return {
     line: start.line + lineOffset,
-    column: undefinedColumn()
+    column: undefinedColumn(),
   };
 }
 
@@ -59,7 +59,7 @@ function endLine(lineOffset = 0) {
   const { end } = getTestLoc();
   return {
     line: end.line + lineOffset,
-    column: undefinedColumn()
+    column: undefinedColumn(),
   };
 }
 
@@ -112,7 +112,7 @@ describe("containsPosition", () => {
       loc.start.column = undefinedColumn();
       const pos = {
         line: loc.start.line,
-        column: 1
+        column: 1,
       };
       expect(containsPosition(loc, pos)).toEqual(true);
     });
@@ -122,7 +122,7 @@ describe("containsPosition", () => {
       loc.end.column = undefinedColumn();
       const pos = {
         line: loc.end.line,
-        column: 1
+        column: 1,
       };
       expect(containsPosition(loc, pos)).toEqual(true);
     });
@@ -151,7 +151,7 @@ describe("containsLocation", () => {
       const locA = getTestLoc();
       const locB = {
         start: startPos(1, 1),
-        end: endPos(-1, -1)
+        end: endPos(-1, -1),
       };
       expect(containsLocation(locA, locB)).toEqual(true);
     });
@@ -189,7 +189,7 @@ describe("containsLocation", () => {
       const locA = getTestLoc();
       const locB = {
         start: startPos(0, 1),
-        end: endPos(-1, -1)
+        end: endPos(-1, -1),
       };
       expect(containsLocation(locA, locB)).toEqual(true);
     });
@@ -199,7 +199,7 @@ describe("containsLocation", () => {
       const locA = getTestLoc();
       const locB = {
         start: startPos(1, 1),
-        end: endPos(0, -1)
+        end: endPos(0, -1),
       };
       expect(containsLocation(locA, locB)).toEqual(true);
     });

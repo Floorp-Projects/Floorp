@@ -2025,13 +2025,8 @@ nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver) {
 }
 
 NS_IMETHODIMP
-nsNavHistory::GetObservers(uint32_t* _count,
-                           nsINavHistoryObserver*** _observers) {
-  NS_ENSURE_ARG_POINTER(_count);
-  NS_ENSURE_ARG_POINTER(_observers);
-
-  *_count = 0;
-  *_observers = nullptr;
+nsNavHistory::GetObservers(nsTArray<RefPtr<nsINavHistoryObserver>>& aObservers) {
+  aObservers.Clear();
 
   // Clear any cached value, cause it's very likely the consumer has made
   // changes to history and is now trying to notify them.
@@ -2039,20 +2034,15 @@ nsNavHistory::GetObservers(uint32_t* _count,
 
   if (!mCanNotify) return NS_OK;
 
-  nsCOMArray<nsINavHistoryObserver> observers;
-
   // Then add the other observers.
   for (uint32_t i = 0; i < mObservers.Length(); ++i) {
-    const nsCOMPtr<nsINavHistoryObserver>& observer =
+    nsCOMPtr<nsINavHistoryObserver> observer =
         mObservers.ElementAt(i).GetValue();
     // Skip nullified weak observers.
-    if (observer) observers.AppendElement(observer);
+    if (observer) {
+      aObservers.AppendElement(observer.forget());
+    }
   }
-
-  if (observers.Count() == 0) return NS_OK;
-
-  *_count = observers.Count();
-  observers.Forget(_observers);
 
   return NS_OK;
 }

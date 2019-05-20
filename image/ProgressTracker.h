@@ -208,8 +208,22 @@ class ProgressTracker : public mozilla::SupportsWeakPtr<ProgressTracker> {
   // Main thread only because it deals with the observer service.
   void FireFailureNotification();
 
+  // Wrapper for AsyncNotifyRunnable to make it have medium high priority like
+  // other imagelib runnables.
+  class MediumHighRunnable final : public PrioritizableRunnable {
+    explicit MediumHighRunnable(already_AddRefed<AsyncNotifyRunnable>&& aEvent);
+    virtual ~MediumHighRunnable() = default;
+
+   public:
+    void AddObserver(IProgressObserver* aObserver);
+    void RemoveObserver(IProgressObserver* aObserver);
+
+    static already_AddRefed<MediumHighRunnable> Create(
+        already_AddRefed<AsyncNotifyRunnable>&& aEvent);
+  };
+
   // The runnable, if any, that we've scheduled to deliver async notifications.
-  nsCOMPtr<nsIRunnable> mRunnable;
+  RefPtr<MediumHighRunnable> mRunnable;
 
   // mMutex protects access to mImage and mEventTarget.
   mutable Mutex mMutex;

@@ -858,12 +858,14 @@ class WidgetEvent : public WidgetEventTime {
             mMessage == eKeyDown || mMessage == eKeyUp || mMessage == eKeyPress;
         break;
       case eMouseEventClass:
-        mFlags.mComposed = mMessage == eMouseClick ||
-                           mMessage == eMouseDoubleClick ||
-                           mMessage == eMouseAuxClick ||
-                           mMessage == eMouseDown || mMessage == eMouseUp ||
-                           mMessage == eMouseOver || mMessage == eMouseOut ||
-                           mMessage == eMouseMove || mMessage == eContextMenu;
+        mFlags.mComposed =
+            mMessage == eMouseClick || mMessage == eMouseDoubleClick ||
+            mMessage == eMouseAuxClick || mMessage == eMouseDown ||
+            mMessage == eMouseUp || mMessage == eMouseOver ||
+            mMessage == eMouseOut || mMessage == eMouseMove ||
+            mMessage == eContextMenu || mMessage == eXULPopupShowing ||
+            mMessage == eXULPopupHiding || mMessage == eXULPopupShown ||
+            mMessage == eXULPopupHidden || mMessage == eXULPopupPositioned;
         break;
       case ePointerEventClass:
         // All pointer events are composed

@@ -20,7 +20,7 @@ describe("Accessible - Document", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       Accessible.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -38,7 +38,7 @@ describe("Accessible - ButtonMenu", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       Accessible.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -52,7 +52,7 @@ describe("Accessible - ButtonMenu", () => {
     const renderedComponent = shallow(
       Accessible.rep({
         object: stub,
-        onInspectIconClick
+        onInspectIconClick,
       })
     );
 
@@ -70,7 +70,7 @@ describe("Accessible - ButtonMenu", () => {
     const renderedComponent = shallow(
       Accessible.rep({
         object: stub,
-        onAccessibleClick
+        onAccessibleClick,
       })
     );
 
@@ -84,7 +84,7 @@ describe("Accessible - ButtonMenu", () => {
     const renderedComponent = shallow(
       Accessible.rep({
         object: stub,
-        onAccessibleMouseOut
+        onAccessibleMouseOut,
       })
     );
 
@@ -98,7 +98,7 @@ describe("Accessible - ButtonMenu", () => {
     const renderedComponent = shallow(
       Accessible.rep({
         object: stub,
-        onAccessibleMouseOver
+        onAccessibleMouseOver,
       })
     );
 
@@ -115,7 +115,7 @@ describe("Accessible - No Name Accessible", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       Accessible.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -136,7 +136,7 @@ describe("Accessible - Disconnected accessible", () => {
       const renderedComponent = shallow(
         Accessible.rep({
           object: stub,
-          onInspectIconClick
+          onInspectIconClick,
         })
       );
 
@@ -165,7 +165,7 @@ describe("Accessible - Accessible with long name", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       Accessible.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -178,7 +178,7 @@ describe("Accessible - Accessible with long name", () => {
     const renderedComponent = shallow(
       Accessible.rep({
         object: stub,
-        nameMaxLength: 20
+        nameMaxLength: 20,
       })
     );
 
@@ -198,7 +198,7 @@ describe("Accessible - Inspect icon title", () => {
       Accessible.rep({
         inspectIconTitle,
         object: stub,
-        onInspectIconClick: jest.fn()
+        onInspectIconClick: jest.fn(),
       })
     );
 
@@ -216,7 +216,7 @@ describe("Accessible - Separator text", () => {
     const renderedComponent = shallow(
       Accessible.rep({
         separatorText,
-        object: stub
+        object: stub,
       })
     );
 
@@ -231,7 +231,7 @@ describe("Accessible - Role first", () => {
     const renderedComponent = shallow(
       Accessible.rep({
         roleFirst: true,
-        object: stub
+        object: stub,
       })
     );
 
@@ -249,10 +249,10 @@ describe("Accessible - Cursor style", () => {
       Accessible.rep({
         object: stub,
         onAccessibleClick: jest.fn(),
-        onInspectIconClick: jest.fn()
+        onInspectIconClick: jest.fn(),
       }),
       {
-        attachTo
+        attachTo,
       }
     );
 
@@ -268,10 +268,10 @@ describe("Accessible - Cursor style", () => {
     const attachTo = window.document.querySelector("#attach-to");
     const renderedComponent = mount(
       Accessible.rep({
-        object: stub
+        object: stub,
       }),
       {
-        attachTo
+        attachTo,
       }
     );
 

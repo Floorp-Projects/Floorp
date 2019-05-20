@@ -29,7 +29,7 @@ class Console extends Component {
       expressions: PropTypes.object.isRequired,
       hideResultPacket: PropTypes.func.isRequired,
       navigateInputHistory: PropTypes.func.isRequired,
-      showResultPacket: PropTypes.func.isRequired
+      showResultPacket: PropTypes.func.isRequired,
     };
   }
 
@@ -51,7 +51,7 @@ class Console extends Component {
       expressions,
       hideResultPacket,
       navigateInputHistory,
-      showResultPacket
+      showResultPacket,
     } = this.props;
 
     return dom.main(
@@ -62,12 +62,12 @@ class Console extends Component {
         clearResultsList: clearExpressions,
         currentInputValue,
         evaluate: evaluateInput,
-        navigateInputHistory
+        navigateInputHistory,
       }),
       ResultsList({
         expressions: expressions.reverse(),
         hideResultPacket,
-        showResultPacket
+        showResultPacket,
       })
     );
   }
@@ -76,7 +76,7 @@ class Console extends Component {
 function mapStateToProps(state) {
   return {
     expressions: selectors.getExpressions(state),
-    currentInputValue: selectors.getCurrentInputValue(state)
+    currentInputValue: selectors.getCurrentInputValue(state),
   };
 }
 

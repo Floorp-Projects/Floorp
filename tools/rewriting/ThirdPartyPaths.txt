@@ -1,6 +1,7 @@
 browser/components/translation/cld2/
 db/sqlite3/src/
 devtools/client/aboutdebugging-new/test/jest/node_modules/
+devtools/client/debugger/node_modules/
 devtools/client/shared/build/babel.js
 devtools/client/shared/sourceeditor/codemirror/
 devtools/client/shared/sourceeditor/tern/

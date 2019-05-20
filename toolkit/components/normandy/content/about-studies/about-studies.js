@@ -251,18 +251,28 @@ class PreferenceStudyListItem extends React.Component {
   render() {
     const { study, translations } = this.props;
 
-    // Sanitize the values by setting them as the text content of an element,
-    // and then getting the HTML representation of that text. This will have the
-    // browser safely sanitize them. Use outerHTML to also include the <code>
-    // element in the string.
-    const sanitizer = document.createElement("code");
-    sanitizer.textContent = study.preferenceName;
-    const sanitizedPreferenceName = sanitizer.outerHTML;
-    sanitizer.textContent = study.preferenceValue;
-    const sanitizedPreferenceValue = sanitizer.outerHTML;
-    const description = translations.preferenceStudyDescription
-      .replace(/%(?:1\$)?S/, sanitizedPreferenceName)
-      .replace(/%(?:2\$)?S/, sanitizedPreferenceValue);
+    let userFacingName = study.userFacingName;
+    if (!userFacingName) {
+      userFacingName = study.name.replace(/-?pref-?(flip|study)-?/, "").replace(/-?study-?/, "").slice(0, 1);
+    }
+
+    let description = study.userFacingDescription;
+    if (!description) {
+      // Assume there is exactly one preference (old-style preference experiment).
+      const [preferenceName, { preferenceValue }] = Object.entries(study.preferences)[0];
+      // Sanitize the values by setting them as the text content of an element,
+      // and then getting the HTML representation of that text. This will have the
+      // browser safely sanitize them. Use outerHTML to also include the <code>
+      // element in the string.
+      const sanitizer = document.createElement("code");
+      sanitizer.textContent = preferenceName;
+      const sanitizedPreferenceName = sanitizer.outerHTML;
+      sanitizer.textContent = preferenceValue;
+      const sanitizedPreferenceValue = sanitizer.outerHTML;
+      description = translations.preferenceStudyDescription
+            .replace(/%(?:1\$)?S/, sanitizedPreferenceName)
+            .replace(/%(?:2\$)?S/, sanitizedPreferenceValue);
+    }
 
     return (
       r("li", {
@@ -270,7 +280,7 @@ class PreferenceStudyListItem extends React.Component {
         "data-study-name": study.name,
       },
         r("div", { className: "study-icon" },
-          study.name.replace(/-?pref-?(flip|study)-?/, "").replace(/-?study-?/, "").slice(0, 1)
+          userFacingName,
         ),
         r("div", { className: "study-details" },
           r("div", { className: "study-header" },

@@ -14,6 +14,7 @@ body {
 header {
   display: flex;
   grid-area: header;
+  align-items: center;
   background-color: var(--in-content-box-background);
   border-bottom: 1px solid var(--in-content-box-border-color);
 }
@@ -30,4 +31,13 @@ login-list {
 login-item {
   grid-area: login;
   max-width: 800px;
+}
+
+#branding-logo {
+  height: 32px;
+  margin-inline-start: 18px;
+}
+
+:root:not(.official-branding) #branding-logo {
+  display: none;
 }

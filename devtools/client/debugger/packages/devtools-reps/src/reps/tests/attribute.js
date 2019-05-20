@@ -22,7 +22,7 @@ describe("Attribute", () => {
   it("Attribute rep has expected text content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
     expect(renderedComponent.text()).toEqual(

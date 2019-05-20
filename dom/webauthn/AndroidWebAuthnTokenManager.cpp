@@ -61,13 +61,6 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
     const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation) {
   AssertIsOnOwningThread();
 
-  if (aInfo.Extra().isNothing()) {
-    // Mostly ready for U2F, but requires using a different provider
-    // at the Java-side. Finish out in Bug 1550625
-    return U2FRegisterPromise::CreateAndReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                                               __func__);
-  }
-
   ClearPromises();
 
   GetMainThreadEventTarget()->Dispatch(NS_NewRunnableFunction(
@@ -108,7 +101,7 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
         // Get authenticator selection criteria
         GECKOBUNDLE_START(authSelBundle);
         GECKOBUNDLE_START(extensionsBundle);
-        GECKOBUNDLE_START(identifierBundle);
+        GECKOBUNDLE_START(credentialBundle);
 
         if (aInfo.Extra().isSome()) {
           const auto& extra = aInfo.Extra().ref();
@@ -116,7 +109,7 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
           const auto& user = extra.User();
 
           // If we have extra data, then this is WebAuthn, not U2F
-          GECKOBUNDLE_PUT(identifierBundle, "isWebAuthn",
+          GECKOBUNDLE_PUT(credentialBundle, "isWebAuthn",
                           java::sdk::Integer::ValueOf(1));
 
           // Get the attestation preference and override if the user asked
@@ -176,21 +169,28 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
 
           uidBuf.Assign(user.Id());
 
-          GECKOBUNDLE_PUT(identifierBundle, "rpName",
+          GECKOBUNDLE_PUT(credentialBundle, "rpName",
                           jni::StringParam(rp.Name()));
-          GECKOBUNDLE_PUT(identifierBundle, "rpIcon",
+          GECKOBUNDLE_PUT(credentialBundle, "rpIcon",
                           jni::StringParam(rp.Icon()));
-          GECKOBUNDLE_PUT(identifierBundle, "userName",
+          GECKOBUNDLE_PUT(credentialBundle, "userName",
                           jni::StringParam(user.Name()));
-          GECKOBUNDLE_PUT(identifierBundle, "userIcon",
+          GECKOBUNDLE_PUT(credentialBundle, "userIcon",
                           jni::StringParam(user.Icon()));
-          GECKOBUNDLE_PUT(identifierBundle, "userDisplayName",
+          GECKOBUNDLE_PUT(credentialBundle, "userDisplayName",
                           jni::StringParam(user.DisplayName()));
         }
 
+        GECKOBUNDLE_PUT(credentialBundle, "rpId",
+                        jni::StringParam(aInfo.RpId()));
+        GECKOBUNDLE_PUT(credentialBundle, "origin",
+                        jni::StringParam(aInfo.Origin()));
+        GECKOBUNDLE_PUT(credentialBundle, "timeoutMS",
+                        java::sdk::Double::New(aInfo.TimeoutMS()));
+
         GECKOBUNDLE_FINISH(authSelBundle);
         GECKOBUNDLE_FINISH(extensionsBundle);
-        GECKOBUNDLE_FINISH(identifierBundle);
+        GECKOBUNDLE_FINISH(credentialBundle);
 
         // For non-WebAuthn cases, uidBuf is empty (and unused)
         jni::ByteBuffer::LocalRef uid = jni::ByteBuffer::New(
@@ -198,9 +198,8 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
             uidBuf.Length());
 
         java::WebAuthnTokenManager::WebAuthnMakeCredential(
-            aInfo.RpId(), identifierBundle, uid, challenge, aInfo.TimeoutMS(),
-            aInfo.Origin(), idList, transportList, authSelBundle,
-            extensionsBundle);
+            credentialBundle, uid, challenge, idList, transportList,
+            authSelBundle, extensionsBundle);
       }));
 
   return mRegisterPromise.Ensure(__func__);
@@ -269,9 +268,18 @@ RefPtr<U2FSignPromise> AndroidWebAuthnTokenManager::Sign(
             challBuf.Length());
 
         // Get extensions
+        GECKOBUNDLE_START(assertionBundle);
         GECKOBUNDLE_START(extensionsBundle);
         if (aInfo.Extra().isSome()) {
           const auto& extra = aInfo.Extra().ref();
+
+          // If we have extra data, then this is WebAuthn, not U2F
+          GECKOBUNDLE_PUT(assertionBundle, "isWebAuthn",
+                          java::sdk::Integer::ValueOf(1));
+
+          // User Verification Requirement is not currently used in the
+          // Android FIDO API. Adding it should look like
+          // AttestationConveyancePreference
 
           for (const WebAuthnExtension& ext : extra.Extensions()) {
             if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
@@ -282,11 +290,20 @@ RefPtr<U2FSignPromise> AndroidWebAuthnTokenManager::Sign(
             }
           }
         }
+
+        GECKOBUNDLE_PUT(assertionBundle, "rpId",
+                        jni::StringParam(aInfo.RpId()));
+        GECKOBUNDLE_PUT(assertionBundle, "origin",
+                        jni::StringParam(aInfo.Origin()));
+        GECKOBUNDLE_PUT(assertionBundle, "timeoutMS",
+                        java::sdk::Double::New(aInfo.TimeoutMS()));
+
+        GECKOBUNDLE_FINISH(assertionBundle);
         GECKOBUNDLE_FINISH(extensionsBundle);
 
         java::WebAuthnTokenManager::WebAuthnGetAssertion(
-            aInfo.RpId(), challenge, aInfo.TimeoutMS(), aInfo.Origin(), idList,
-            transportList, extensionsBundle);
+            challenge, idList, transportList, assertionBundle,
+            extensionsBundle);
       }));
 
   return mSignPromise.Ensure(__func__);

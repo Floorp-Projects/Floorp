@@ -11,7 +11,7 @@ function setAssetRootURL(assetRoot: string): void {
   root = assetRoot.replace(/\/$/, "");
 
   SourceMapConsumer.initialize({
-    "lib/mappings.wasm": `${root}/source-map-mappings.wasm`
+    "lib/mappings.wasm": `${root}/source-map-mappings.wasm`,
   });
 }
 
@@ -27,5 +27,5 @@ async function getDwarfToWasmData(name: string): Promise<ArrayBuffer> {
 
 module.exports = {
   setAssetRootURL,
-  getDwarfToWasmData
+  getDwarfToWasmData,
 };

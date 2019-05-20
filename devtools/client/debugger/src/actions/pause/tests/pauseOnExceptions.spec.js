@@ -7,12 +7,12 @@
 import {
   actions,
   createStore,
-  getTelemetryEvents
+  getTelemetryEvents,
 } from "../../../utils/test-head";
 
 import {
   getShouldPauseOnExceptions,
-  getShouldPauseOnCaughtExceptions
+  getShouldPauseOnCaughtExceptions,
 } from "../../../reducers/pause";
 
 describe("pauseOnExceptions", () => {

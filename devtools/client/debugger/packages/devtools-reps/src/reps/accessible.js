@@ -22,7 +22,7 @@ Accessible.propTypes = {
   onAccessibleMouseOut: PropTypes.func,
   onInspectIconClick: PropTypes.func,
   roleFirst: PropTypes.bool,
-  separatorText: PropTypes.string
+  separatorText: PropTypes.string,
 };
 
 function Accessible(props) {
@@ -35,13 +35,13 @@ function Accessible(props) {
     onAccessibleMouseOut,
     onInspectIconClick,
     roleFirst,
-    separatorText
+    separatorText,
   } = props;
   const elements = getElements(object, nameMaxLength, roleFirst, separatorText);
   const isInTree = object.preview && object.preview.isConnected === true;
   const baseConfig = {
     "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-accessible"
+    className: "objectBox objectBox-accessible",
   };
 
   let inspectIcon;
@@ -49,19 +49,19 @@ function Accessible(props) {
     if (onAccessibleClick) {
       Object.assign(baseConfig, {
         onClick: _ => onAccessibleClick(object),
-        className: `${baseConfig.className} clickable`
+        className: `${baseConfig.className} clickable`,
       });
     }
 
     if (onAccessibleMouseOver) {
       Object.assign(baseConfig, {
-        onMouseOver: _ => onAccessibleMouseOver(object)
+        onMouseOver: _ => onAccessibleMouseOver(object),
       });
     }
 
     if (onAccessibleMouseOut) {
       Object.assign(baseConfig, {
-        onMouseOut: onAccessibleMouseOut
+        onMouseOut: onAccessibleMouseOut,
       });
     }
 
@@ -75,7 +75,7 @@ function Accessible(props) {
           }
 
           onInspectIconClick(object, e);
-        }
+        },
       });
     }
   }
@@ -96,7 +96,7 @@ function getElements(
       StringRep({
         className: "accessible-name",
         object: name,
-        cropLimit: nameMaxLength
+        cropLimit: nameMaxLength,
       }),
       span({ className: "separator" }, separatorText)
     );
@@ -118,5 +118,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(Accessible),
-  supportsObject
+  supportsObject,
 };

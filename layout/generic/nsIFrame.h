@@ -4582,6 +4582,9 @@ class nsIFrame : public nsQueryFrame {
   enum {TRAVERSE_SUBDOCUMENT_FRAMES = 0x01};
   virtual void List(FILE* out = stderr, const char* aPrefix = "",
                     uint32_t aFlags = 0) const;
+  virtual void ListWithMatchedRules(FILE* out = stderr,
+                                    const char* aPrefix = "") const;
+  void ListMatchedRules(FILE* out, const char* aPrefix) const;
   /**
    * lists the frames beginning from the root frame
    * - calls root frame's List(...)

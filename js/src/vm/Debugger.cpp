@@ -2988,15 +2988,7 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
       const JSJitFrameIter& frame = iter.frame();
       switch (frame.type()) {
         case FrameType::BaselineJS:
-          // BaselineScripts that are active on the stack get recompiled and
-          // other (affected) BaselineScripts are discarded. If we're running in
-          // the Baseline Interpreter don't mark the script as active here to
-          // prevent BaselineScripts from falling through the cracks: when we
-          // don't dicard them here (because active) and also don't recompile
-          // them (because recompilation skips interpreter frames).
-          if (!frame.baselineFrame()->runningInInterpreter()) {
-            MarkTypeScriptActiveIfObservable(frame.script(), obs);
-          }
+          MarkTypeScriptActiveIfObservable(frame.script(), obs);
           break;
         case FrameType::IonJS:
           MarkTypeScriptActiveIfObservable(frame.script(), obs);
@@ -3624,10 +3616,9 @@ bool Debugger::findSweepGroupEdges(JSRuntime* rt) {
         continue;
       }
 
-
       if (!debuggerZone->addSweepGroupEdgeTo(debuggeeZone) ||
           !debuggeeZone->addSweepGroupEdgeTo(debuggerZone)) {
-          return false;
+        return false;
       }
     }
   }
@@ -8920,8 +8911,7 @@ void ScriptedOnPopHandler::trace(JSTracer* tracer) {
 }
 
 bool ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame,
-                                 ResumeMode& resumeMode,
-                                 MutableHandleValue vp,
+                                 ResumeMode& resumeMode, MutableHandleValue vp,
                                  HandleSavedFrame exnStack) {
   Debugger* dbg = frame->owner();
 
@@ -9392,14 +9382,11 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
   return ExecuteKernel(cx, script, *env, NullValue(), frame, rval.address());
 }
 
-static bool DebuggerGenericEval(JSContext* cx,
-                                const mozilla::Range<const char16_t> chars,
-                                HandleObject bindings,
-                                const EvalOptions& options,
-                                ResumeMode& resumeMode,
-                                MutableHandleValue value,
-                                MutableHandleSavedFrame exnStack, Debugger* dbg,
-                                HandleObject envArg, FrameIter* iter) {
+static bool DebuggerGenericEval(
+    JSContext* cx, const mozilla::Range<const char16_t> chars,
+    HandleObject bindings, const EvalOptions& options, ResumeMode& resumeMode,
+    MutableHandleValue value, MutableHandleSavedFrame exnStack, Debugger* dbg,
+    HandleObject envArg, FrameIter* iter) {
   // Either we're specifying the frame, or a global.
   MOZ_ASSERT_IF(iter, !envArg);
   MOZ_ASSERT_IF(!iter, envArg && IsGlobalLexicalEnvironment(envArg));

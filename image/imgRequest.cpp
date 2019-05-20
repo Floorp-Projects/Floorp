@@ -1056,7 +1056,8 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,
       } else {
         nsCOMPtr<nsIRunnable> runnable =
             new FinishPreparingForNewPartRunnable(this, std::move(result));
-        eventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
+        eventTarget->Dispatch(CreateMediumHighRunnable(runnable.forget()),
+                              NS_DISPATCH_NORMAL);
       }
     }
 

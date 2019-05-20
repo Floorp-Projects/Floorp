@@ -16,18 +16,18 @@ function mount(stub) {
   const root = {
     path: "root",
     contents: {
-      value: stub
-    }
+      value: stub,
+    },
   };
 
   const { wrapper } = mountObjectInspector({
     client: {
       createObjectClient: grip => ObjectClient(grip),
-      createLongStringClient: grip => LongStringClient(grip)
+      createLongStringClient: grip => LongStringClient(grip),
     },
     props: {
-      roots: [root]
-    }
+      roots: [root],
+    },
   });
 
   return { wrapper, root };

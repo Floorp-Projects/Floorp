@@ -16,7 +16,7 @@ import type { ThunkArgs } from "../../types";
  */
 export const history = (log: Object[] = []) => ({
   dispatch,
-  getState
+  getState,
 }: ThunkArgs) => {
   return (next: Function) => (action: Object) => {
     if (isDevelopment()) {

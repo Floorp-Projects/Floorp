@@ -10,7 +10,7 @@ import {
   isInvalidUrl,
   partIsFile,
   createSourceNode,
-  createDirectoryNode
+  createDirectoryNode,
 } from "./utils";
 import { createTreeNodeMatcher, findNodeInContents } from "./treeOrder";
 import { getURL } from "./getURL";

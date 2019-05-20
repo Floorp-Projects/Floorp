@@ -30,23 +30,23 @@ const webpackConfig = {
     "pretty-print-worker": getEntry("src/workers/pretty-print/worker.js"),
     "search-worker": getEntry("src/workers/search/worker.js"),
     "source-map-worker": getEntry("packages/devtools-source-map/src/worker.js"),
-    "source-map-index": getEntry("packages/devtools-source-map/src/index.js")
+    "source-map-index": getEntry("packages/devtools-source-map/src/index.js"),
   },
 
   output: {
     path: path.join(__dirname, "assets/build"),
     filename: "[name].js",
-    publicPath: "/assets/build"
+    publicPath: "/assets/build",
   },
 
   plugins: [
     new CopyWebpackPlugin(
       Object.entries(sourceMapAssets).map(([name, filePath]) => ({
         from: filePath,
-        to: `source-map-worker-assets/${name}`
+        to: `source-map-worker-assets/${name}`,
       }))
-    )
-  ]
+    ),
+  ],
 };
 
 if (isProduction) {
@@ -62,7 +62,7 @@ if (isProduction) {
 const envConfig = getConfig();
 
 const extra = {
-  babelIncludes: ["react-aria-components"]
+  babelIncludes: ["react-aria-components"],
 };
 
 webpackConfig.plugins.push(new ObjectRestSpreadPlugin());

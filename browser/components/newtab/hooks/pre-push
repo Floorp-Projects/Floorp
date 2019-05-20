@@ -1,0 +1,11 @@
+#!/bin/sh
+# Recommended pre-push hook for activity-stream
+
+hookName=`basename "$0"`
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "Can't find node in PATH, trying to find a node binary on your system"
+fi
+
+echo "Running $hookName hook..."
+npm run lint

@@ -11,7 +11,7 @@ Test the modal-input component
   <script src="modal-input.js"></script>
   <script src="aboutlogins_common.js"></script>
 
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
   <p id="display">
@@ -41,7 +41,7 @@ add_task(async function test_initial_state() {
   ok(gModalInput, "modalInput exists");
   is(gModalInput.shadowRoot.querySelector(".locked-value").textContent, TEST_INPUT_VALUE, "Values are set initially");
   is(gModalInput.shadowRoot.querySelector(".unlocked-value").value, TEST_INPUT_VALUE, "Values are set initially");
-  is(getComputedStyle(gModalInput.shadowRoot.querySelector(".locked-value")).display, "inline", ".locked-value is visible by default");
+  is(getComputedStyle(gModalInput.shadowRoot.querySelector(".locked-value")).display, "block", ".locked-value is visible by default");
   is(getComputedStyle(gModalInput.shadowRoot.querySelector(".unlocked-value")).display, "none", ".unlocked-value is hidden by default");
 });
 
@@ -50,7 +50,7 @@ add_task(async function test_editing_set_unset() {
   let unlockedValue = gModalInput.shadowRoot.querySelector(".unlocked-value");
   gModalInput.setAttribute("editing", "");
   is(getComputedStyle(lockedValue).display, "none", ".locked-value is hidden when editing");
-  is(getComputedStyle(unlockedValue).display, "inline", ".unlocked-value is visible when editing");
+  is(getComputedStyle(unlockedValue).display, "block", ".unlocked-value is visible when editing");
 
   const NEW_VALUE = "editedValue";
   SpecialPowers.wrap(unlockedValue).setUserInput(NEW_VALUE);
@@ -59,7 +59,7 @@ add_task(async function test_editing_set_unset() {
   is(lockedValue.textContent, NEW_VALUE, "Values are updated from edit");
   is(unlockedValue.value, NEW_VALUE, "Values are updated from edit");
   is(gModalInput.getAttribute("value"), NEW_VALUE, "The value attribute on the host element is updated from edit");
-  is(getComputedStyle(lockedValue).display, "inline", ".locked-value is visible when not editing");
+  is(getComputedStyle(lockedValue).display, "block", ".locked-value is visible when not editing");
   is(getComputedStyle(unlockedValue).display, "none", ".unlocked-value is hidden when not editing");
 });
 

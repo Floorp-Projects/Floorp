@@ -62,18 +62,9 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
 
     const widget = new Spectrum(node, color);
     this.tooltip.panel.appendChild(container);
-    this.tooltip.setContentSize({ width: 218, height: 224 });
+    this.tooltip.setContentSize({ width: 215, height: 175 });
 
     widget.inspector = this.inspector;
-
-    const eyedropper = doc.createElementNS(XHTML_NS, "button");
-    eyedropper.id = "eyedropper-button";
-    eyedropper.className = "devtools-button";
-    /* pointerEvents for eyedropper has to be set auto to display tooltip when
-     * eyedropper is disabled in non-HTML documents.
-     */
-    eyedropper.style.pointerEvents = "auto";
-    container.appendChild(eyedropper);
 
     // Wait for the tooltip to be shown before calling widget.show
     // as it expect to be visible in order to compute DOM element sizes.

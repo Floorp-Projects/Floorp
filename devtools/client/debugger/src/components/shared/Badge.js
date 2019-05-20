@@ -7,7 +7,7 @@ import React from "react";
 import "./Badge.css";
 
 type Props = {
-  children: number
+  children: number,
 };
 
 const Badge = ({ children }: Props) => (

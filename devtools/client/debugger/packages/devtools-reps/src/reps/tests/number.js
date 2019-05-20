@@ -17,7 +17,7 @@ describe("Int", () => {
   it("renders with expected text content for integer", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -36,7 +36,7 @@ describe("Boolean", () => {
   it("renders with expected text content for boolean true", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stubTrue
+        object: stubTrue,
       })
     );
 
@@ -46,7 +46,7 @@ describe("Boolean", () => {
   it("renders with expected text content for boolean false", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stubFalse
+        object: stubFalse,
       })
     );
 
@@ -69,7 +69,7 @@ describe("Negative Zero", () => {
   it("renders with expected text content for negative zero grip", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stubNegativeZeroGrip
+        object: stubNegativeZeroGrip,
       })
     );
 
@@ -79,7 +79,7 @@ describe("Negative Zero", () => {
   it("renders with expected text content for negative zero value", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stubNegativeZeroValue
+        object: stubNegativeZeroValue,
       })
     );
 
@@ -95,7 +95,7 @@ describe("Zero", () => {
   it("renders with expected text content for zero value", () => {
     const renderedComponent = shallow(
       Rep({
-        object: 0
+        object: 0,
       })
     );
 
@@ -109,7 +109,7 @@ describe("Unsafe Int", () => {
   it("renders with expected test content for a long number", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 

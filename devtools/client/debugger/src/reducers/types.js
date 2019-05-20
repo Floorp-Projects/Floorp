@@ -15,6 +15,7 @@ import type { ExpressionState } from "./expressions";
 import type { DebuggeeState } from "./debuggee";
 import type { FileSearchState } from "./file-search";
 import type { PauseState } from "./pause";
+import type { PreviewState } from "./preview";
 import type { PendingBreakpointsState } from "../selectors";
 import type { ProjectTextSearchState } from "./project-text-search";
 import type { Record } from "../utils/makeRecord";
@@ -31,13 +32,14 @@ export type State = {
   debuggee: DebuggeeState,
   fileSearch: Record<FileSearchState>,
   pause: PauseState,
+  preview: PreviewState,
   pendingBreakpoints: PendingBreakpointsState,
   projectTextSearch: ProjectTextSearchState,
   sources: SourcesState,
   sourceActors: SourceActorsState,
   tabs: TabList,
   ui: Record<UIState>,
-  quickOpen: Record<QuickOpenState>
+  quickOpen: Record<QuickOpenState>,
 };
 
 export type Selector<T> = State => T;
@@ -45,15 +47,16 @@ export type Selector<T> = State => T;
 export type PendingSelectedLocation = {
   url: string,
   line?: number,
-  column?: number
+  column?: number,
 };
 
 export type {
   SourcesMap,
   SourcesMapByThread,
-  SourceResourceState
+  SourceResourceState,
 } from "./sources";
 export type { ActiveSearchType, OrientationType } from "./ui";
 export type { BreakpointsMap, XHRBreakpointsList } from "./breakpoints";
 export type { Command } from "./pause";
-export type { LoadedSymbols, Symbols, Preview, PreviewValue } from "./ast";
+export type { LoadedSymbols, Symbols } from "./ast";
+export type { Preview } from "./preview";

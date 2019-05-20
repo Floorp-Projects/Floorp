@@ -1708,6 +1708,10 @@ describe("ASRouter", () => {
         sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "zh-CN");
         checkReturnValue({experiment: "", interrupt: "control", triplet: ""});
       });
+      it("should return control experience with no experiment if attribution data contains an addon source", async () => {
+        sandbox.stub(fakeAttributionCode, "getAttrDataAsync").resolves({source: "addons.mozilla.org"});
+        checkReturnValue({experiment: "", interrupt: "control", triplet: ""});
+      });
       it("should use values in override pref if it is set with no experiment", async () => {
         getStringPrefStub.withArgs(TRAILHEAD_CONFIG.OVERRIDE_PREF).returns("join-privacy");
         checkReturnValue({experiment: "", interrupt: "join", triplet: "privacy"});
@@ -1726,6 +1730,19 @@ describe("ASRouter", () => {
       it("should roll for experiment if locale is in TRAILHEAD_LOCALES", async () => {
         sandbox.stub(global.Sampling, "ratioSample").resolves(1); // 1 = interrupts experiment
         sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "en-US");
+        checkReturnValue({experiment: "interrupts", interrupt: "join", triplet: "supercharge"});
+      });
+      it("should roll for experiment if attribution data is empty", async () => {
+        sandbox.stub(global.Sampling, "ratioSample").resolves(1); // 1 = interrupts experiment
+        sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "en-US");
+        sandbox.stub(fakeAttributionCode, "getAttrDataAsync").resolves(null);
+
+        checkReturnValue({experiment: "interrupts", interrupt: "join", triplet: "supercharge"});
+      });
+      it("should roll for experiment if attribution data rejects with an error", async () => {
+        sandbox.stub(global.Sampling, "ratioSample").resolves(1); // 1 = interrupts experiment
+        sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(() => "en-US");
+        sandbox.stub(fakeAttributionCode, "getAttrDataAsync").rejects(new Error("whoops"));
         checkReturnValue({experiment: "interrupts", interrupt: "join", triplet: "supercharge"});
       });
       it("should roll a triplet experiment", async () => {

@@ -13,6 +13,7 @@ packages = [
     "lazy_static",
     "log",
     "rand",
+    "rand_core",
     "winapi",
     "core-graphics",
     "core-text",

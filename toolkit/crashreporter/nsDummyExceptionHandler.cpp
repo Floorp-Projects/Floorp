@@ -60,6 +60,9 @@ nsresult RemoveCrashReportAnnotation(Annotation key) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void MergeCrashAnnotations(AnnotationTable& aDst, const AnnotationTable& aSrc) {
+}
+
 nsresult SetGarbageCollecting(bool collecting) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -157,11 +160,7 @@ bool GetExtraFileForMinidump(nsIFile* minidump, nsIFile** extraFile) {
   return false;
 }
 
-bool AppendExtraData(const nsAString& id, const AnnotationTable& data) {
-  return false;
-}
-
-bool AppendExtraData(nsIFile* extraFile, const AnnotationTable& data) {
+bool WriteExtraFile(const nsAString& id, const AnnotationTable& annotations) {
   return false;
 }
 
@@ -201,12 +200,9 @@ bool SetRemoteExceptionHandler() { return false; }
 #endif  // XP_WIN
 
 bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
-                          uint32_t* aSequence) {
+                          AnnotationTable& aAnnotations, uint32_t* aSequence) {
   return false;
 }
-
-void RenameAdditionalHangMinidump(nsIFile* minidump, nsIFile* childMinidump,
-                                  const nsACString& name) {}
 
 ThreadId CurrentThreadId() { return -1; }
 
@@ -216,6 +212,7 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
                             ThreadId aTargetBlamedThread,
                             const nsACString& aIncomingPairName,
                             nsIFile* aIncomingDumpToPair,
+                            AnnotationTable& aTargetAnnotations,
                             nsIFile** aTargetDumpOut) {
   return false;
 }

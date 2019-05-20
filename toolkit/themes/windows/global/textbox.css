@@ -94,8 +94,8 @@ textbox:not([searchbutton]) > .textbox-search-sign {
 }
 
 .textbox-search-clear {
-  list-style-image: url(chrome://global/skin/icons/Search-close.png);
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
+  -moz-image-region: rect(0, 14px, 14px, 0);
 }
 
 .textbox-search-clear:not([disabled]) {

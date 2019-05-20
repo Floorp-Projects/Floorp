@@ -98,3 +98,23 @@
     vertical-align: middle;
   }
 }
+
+// We show snippet icons for both themes and conditionally hide
+// based on which theme is currently active
+body {
+  &:not([lwt-newtab-brighttext]) {
+    .icon-dark-theme,
+    .icon.icon-dark-theme,
+    .scene2Icon .icon-dark-theme {
+      display: none;
+    }
+  }
+
+  &[lwt-newtab-brighttext] {
+    .icon-light-theme,
+    .icon.icon-light-theme,
+    .scene2Icon .icon-light-theme {
+      display: none;
+    }
+  }
+}

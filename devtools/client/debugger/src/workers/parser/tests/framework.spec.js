@@ -19,37 +19,37 @@ cases(
     {
       name: "is undefined when no framework",
       file: "frameworks/plainJavascript",
-      value: undefined
+      value: undefined,
     },
     {
       name: "does not get confused with angular (#6833)",
       file: "frameworks/angular1FalsePositive",
-      value: undefined
+      value: undefined,
     },
     {
       name: "recognizes ES6 React component",
       file: "frameworks/reactComponent",
-      value: "React"
+      value: "React",
     },
     {
       name: "recognizes ES5 React component",
       file: "frameworks/reactComponentEs5",
-      value: "React"
+      value: "React",
     },
     {
       name: "recognizes Angular 1 module",
       file: "frameworks/angular1Module",
-      value: "Angular"
+      value: "Angular",
     },
     {
       name: "recognizes declarative Vue file",
       file: "frameworks/vueFileDeclarative",
-      value: "Vue"
+      value: "Vue",
     },
     {
       name: "recognizes component Vue file",
       file: "frameworks/vueFileComponent",
-      value: "Vue"
-    }
+      value: "Vue",
+    },
   ]
 );

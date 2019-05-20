@@ -275,8 +275,7 @@ class MiddlemanProtocol : public ipc::IToplevelProtocol {
     if (mSide == ipc::ChildSide) {
       AutoMarkMainThreadWaitingForIPDLReply blocked;
       while (!aReply) {
-        GetActiveChild()->WaitUntilPaused();
-        GetActiveChild()->SendMessage(ResumeMessage(/* aForward = */ true));
+        MOZ_CRASH("NYI");
       }
     } else {
       MonitorAutoLock lock(*gMonitor);
@@ -319,8 +318,7 @@ class MiddlemanProtocol : public ipc::IToplevelProtocol {
     if (mSide == ipc::ChildSide) {
       AutoMarkMainThreadWaitingForIPDLReply blocked;
       while (!aReply) {
-        GetActiveChild()->WaitUntilPaused();
-        GetActiveChild()->SendMessage(ResumeMessage(/* aForward = */ true));
+        MOZ_CRASH("NYI");
       }
     } else {
       MonitorAutoLock lock(*gMonitor);

@@ -3262,7 +3262,9 @@ static void ClipItemsExceptCaret(
       continue;
     }
 
-    if (i->GetType() != DisplayItemType::TYPE_CARET) {
+    const DisplayItemType type = i->GetType();
+    if (type != DisplayItemType::TYPE_CARET &&
+        type != DisplayItemType::TYPE_CONTAINER) {
       const DisplayItemClipChain* clip = i->GetClipChain();
       const DisplayItemClipChain* intersection = nullptr;
       if (aCache.Get(clip, &intersection)) {
@@ -3455,7 +3457,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, false);
 
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp->mWillChangeBitField & StyleWillChangeBits_SCROLL) {
+  if (disp->mWillChange.bits & StyleWillChangeBits_SCROLL) {
     aBuilder->AddToWillChangeBudget(mOuter, GetVisualViewportSize());
   }
 
@@ -5417,7 +5419,7 @@ bool ScrollFrameHelper::IsScrollbarOnRight() const {
 
 bool ScrollFrameHelper::IsMaybeScrollingActive() const {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp->mWillChangeBitField & StyleWillChangeBits_SCROLL) {
+  if (disp->mWillChange.bits & StyleWillChangeBits_SCROLL) {
     return true;
   }
 
@@ -5430,7 +5432,7 @@ bool ScrollFrameHelper::IsMaybeScrollingActive() const {
 bool ScrollFrameHelper::IsScrollingActive(
     nsDisplayListBuilder* aBuilder) const {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp->mWillChangeBitField & StyleWillChangeBits_SCROLL &&
+  if (disp->mWillChange.bits & StyleWillChangeBits_SCROLL &&
       aBuilder->IsInWillChangeBudget(mOuter, GetVisualViewportSize())) {
     return true;
   }
@@ -6920,12 +6922,7 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
 
   Maybe<nsRect> snapportOnDestination;
   if (aDestination) {
-    if (IsPhysicalLTR()) {
-      snapport.MoveTo(aDestination.value());
-    } else {
-      snapport.MoveTo(
-          nsPoint(aDestination->x - snapport.Size().width, aDestination->y));
-    }
+    snapport.MoveTo(aDestination.value());
     snapport.Deflate(scrollPadding);
     snapportOnDestination.emplace(snapport);
   } else {

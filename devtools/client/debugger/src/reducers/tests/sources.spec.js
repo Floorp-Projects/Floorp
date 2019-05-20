@@ -8,6 +8,7 @@ declare var it: (desc: string, func: () => void) => void;
 declare var expect: (value: any) => any;
 
 import update, { initialSourcesState, getDisplayedSources } from "../sources";
+import { initialDebuggeeState } from "../debuggee";
 import updateSourceActors from "../source-actors";
 import type { Source, SourceActor } from "../../types";
 import { prefs } from "../../utils/prefs";
@@ -17,27 +18,27 @@ import { getResourceIds } from "../../utils/resource";
 const extensionSource = {
   ...makeMockSource(),
   id: "extensionId",
-  url: "http://example.com/script.js"
+  url: "http://example.com/script.js",
 };
 
 const firefoxExtensionSource = {
   ...makeMockSource(),
   id: "firefoxExtension",
   url: "moz-extension://id/js/content.js",
-  isExtension: true
+  isExtension: true,
 };
 
 const chromeExtensionSource = {
   ...makeMockSource(),
   id: "chromeExtension",
   isExtension: true,
-  url: "chrome-extension://id/js/content.js"
+  url: "chrome-extension://id/js/content.js",
 };
 
 const mockedSources = [
   extensionSource,
   firefoxExtensionSource,
-  chromeExtensionSource
+  chromeExtensionSource,
 ];
 
 const mockSourceActors: Array<SourceActor> = ([
@@ -45,20 +46,20 @@ const mockSourceActors: Array<SourceActor> = ([
     id: "extensionId-actor",
     actor: "extensionId-actor",
     source: "extensionId",
-    thread: "foo"
+    thread: "foo",
   },
   {
     id: "firefoxExtension-actor",
     actor: "firefoxExtension-actor",
     source: "firefoxExtension",
-    thread: "foo"
+    thread: "foo",
   },
   {
     id: "chromeExtension-actor",
     actor: "chromeExtension-actor",
     source: "chromeExtension",
-    thread: "foo"
-  }
+    thread: "foo",
+  },
 ]: any);
 
 describe("sources reducer", () => {
@@ -67,7 +68,7 @@ describe("sources reducer", () => {
     state = update(state, {
       type: "ADD_SOURCE",
       cx: mockcx,
-      source: makeMockSource()
+      source: makeMockSource(),
     });
     expect(getResourceIds(state.sources)).toHaveLength(1);
   });
@@ -81,17 +82,18 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         cx: mockcx,
-        sources: ((mockedSources: any): Source[])
+        sources: ((mockedSources: any): Source[]),
       }),
-      sourceActors: undefined
+      sourceActors: undefined,
     };
     const insertAction = {
       type: "INSERT_SOURCE_ACTORS",
-      items: mockSourceActors
+      items: mockSourceActors,
     };
     state = {
       sources: update(state.sources, insertAction),
-      sourceActors: updateSourceActors(state.sourceActors, insertAction)
+      sourceActors: updateSourceActors(state.sourceActors, insertAction),
+      debuggee: initialDebuggeeState(),
     };
     const threadSources = getDisplayedSources(state);
     expect(Object.values(threadSources.foo)).toHaveLength(3);
@@ -104,19 +106,20 @@ describe("sources selectors", () => {
       sources: update(state, {
         type: "ADD_SOURCES",
         cx: mockcx,
-        sources: ((mockedSources: any): Source[])
+        sources: ((mockedSources: any): Source[]),
       }),
-      sourceActors: undefined
+      sourceActors: undefined,
     };
 
     const insertAction = {
       type: "INSERT_SOURCE_ACTORS",
-      items: mockSourceActors
+      items: mockSourceActors,
     };
 
     state = {
       sources: update(state.sources, insertAction),
-      sourceActors: updateSourceActors(state.sourceActors, insertAction)
+      sourceActors: updateSourceActors(state.sourceActors, insertAction),
+      debuggee: initialDebuggeeState(),
     };
     const threadSources = getDisplayedSources(state);
     expect(Object.values(threadSources.foo)).toHaveLength(1);

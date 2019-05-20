@@ -288,7 +288,7 @@ class PrintingChild extends ActorChild {
           let listener = new PrintingListener(this.mm);
 
           this.printPreviewInitializingInfo = { changingBrowsers };
-          docShell.printPreview.printPreview(printSettings, contentWindow, listener);
+          docShell.initOrReusePrintPreviewViewer().printPreview(printSettings, contentWindow, listener);
         } catch (error) {
           // This might fail if we, for example, attempt to print a XUL document.
           // In that case, we inform the parent to bail out of print preview.
@@ -318,7 +318,7 @@ class PrintingChild extends ActorChild {
 
   exitPrintPreview(glo) {
     this.printPreviewInitializingInfo = null;
-    this.docShell.printPreview.exitPrintPreview();
+    this.docShell.initOrReusePrintPreviewViewer().exitPrintPreview();
   }
 
   print(contentWindow, simplifiedMode, defaultPrinterName) {
@@ -385,14 +385,14 @@ class PrintingChild extends ActorChild {
   }
 
   updatePageCount() {
-    let numPages = this.docShell.printPreview.printPreviewNumPages;
+    let numPages = this.docShell.initOrReusePrintPreviewViewer().printPreviewNumPages;
     this.mm.sendAsyncMessage("Printing:Preview:UpdatePageCount", {
       numPages,
     });
   }
 
   navigate(navType, pageNum) {
-    this.docShell.printPreview.printPreviewNavigate(navType, pageNum);
+    this.docShell.initOrReusePrintPreviewViewer().printPreviewNavigate(navType, pageNum);
   }
 }
 

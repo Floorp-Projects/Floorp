@@ -10,7 +10,7 @@ import * as t from "@babel/types";
 import type {
   Node,
   TraversalAncestors,
-  Location as BabelLocation
+  Location as BabelLocation,
 } from "@babel/types";
 
 import getFunctionName from "../utils/getFunctionName";
@@ -66,7 +66,7 @@ export type BindingRefLocation = {
   type: "ref",
   start: SourceLocation,
   end: SourceLocation,
-  meta?: BindingMetaValue | null
+  meta?: BindingMetaValue | null,
 };
 export type BindingDeclarationLocation = {
   type: BindingDeclarationType,
@@ -77,16 +77,16 @@ export type BindingDeclarationLocation = {
   // The overall location of the declaration that this binding is part of.
   declaration: {
     start: SourceLocation,
-    end: SourceLocation
+    end: SourceLocation,
   },
 
   // If this declaration was an import, include the name of the imported
   // binding that this binding references.
-  importName?: string
+  importName?: string,
 };
 export type BindingData = {
   type: BindingType,
-  refs: Array<BindingLocation>
+  refs: Array<BindingLocation>,
 };
 
 // Location information about the expression immediartely surrounding a
@@ -96,24 +96,24 @@ export type BindingMetaValue =
       type: "inherit",
       start: SourceLocation,
       end: SourceLocation,
-      parent: BindingMetaValue | null
+      parent: BindingMetaValue | null,
     }
   | {
       type: "call",
       start: SourceLocation,
       end: SourceLocation,
-      parent: BindingMetaValue | null
+      parent: BindingMetaValue | null,
     }
   | {
       type: "member",
       start: SourceLocation,
       end: SourceLocation,
       property: string,
-      parent: BindingMetaValue | null
+      parent: BindingMetaValue | null,
     };
 
 export type ScopeBindingList = {
-  [name: string]: BindingData
+  [name: string]: BindingData,
 };
 
 export type SourceScope = {
@@ -121,16 +121,16 @@ export type SourceScope = {
   displayName: string,
   start: SourceLocation,
   end: SourceLocation,
-  bindings: ScopeBindingList
+  bindings: ScopeBindingList,
 };
 
 export type ParsedScope = SourceScope & {
-  children: ?(ParsedScope[])
+  children: ?(ParsedScope[]),
 };
 
 export type ParseJSScopeVisitor = {
   traverseVisitor: any,
-  toParsedScopes: () => ParsedScope[]
+  toParsedScopes: () => ParsedScope[],
 };
 
 type TempScope = {
@@ -139,7 +139,7 @@ type TempScope = {
   parent: TempScope | null,
   children: Array<TempScope>,
   loc: BabelLocation,
-  bindings: ScopeBindingList
+  bindings: ScopeBindingList,
 };
 
 type ScopeCollectionVisitorState = {
@@ -149,7 +149,7 @@ type ScopeCollectionVisitorState = {
   freeVariableStack: Array<Map<string, Array<BindingLocation>>>,
   scope: TempScope,
   scopeStack: Array<TempScope>,
-  declarationBindingIds: Set<Node>
+  declarationBindingIds: Set<Node>,
 };
 
 function isGeneratedId(id: string) {
@@ -175,7 +175,7 @@ export function buildScopeList(ast: Node, sourceId: SourceId) {
     inType: null,
     scope: lexical,
     scopeStack: [],
-    declarationBindingIds: new Set()
+    declarationBindingIds: new Set(),
   };
   t.traverse(ast, scopeCollectionVisitor, state);
 
@@ -184,7 +184,7 @@ export function buildScopeList(ast: Node, sourceId: SourceId) {
     if (!binding) {
       binding = {
         type: "global",
-        refs: []
+        refs: [],
       };
       global.bindings[key] = binding;
     }
@@ -224,7 +224,7 @@ function toParsedScopes(
           : scope.type,
       displayName: scope.displayName,
       bindings: scope.bindings,
-      children: toParsedScopes(scope.children, sourceId)
+      children: toParsedScopes(scope.children, sourceId),
     };
   });
 }
@@ -235,7 +235,7 @@ function createTempScope(
   parent: TempScope | null,
   loc: {
     start: SourceLocation,
-    end: SourceLocation
+    end: SourceLocation,
   }
 ): TempScope {
   const result = {
@@ -244,7 +244,7 @@ function createTempScope(
     parent,
     children: [],
     loc,
-    bindings: (Object.create(null): any)
+    bindings: (Object.create(null): any),
   };
   if (parent) {
     parent.children.push(result);
@@ -257,7 +257,7 @@ function pushTempScope(
   displayName: string,
   loc: {
     start: SourceLocation,
-    end: SourceLocation
+    end: SourceLocation,
   }
 ): TempScope {
   const scope = createTempScope(type, displayName, state.scope, loc);
@@ -291,7 +291,7 @@ function fromBabelLocation(
   return {
     sourceId,
     line: location.line,
-    column: location.column
+    column: location.column,
   };
 }
 
@@ -308,7 +308,7 @@ function parseDeclarator(
     if (!existing) {
       existing = {
         type,
-        refs: []
+        refs: [],
       };
       targetScope.bindings[declaratorId.name] = existing;
     }
@@ -319,8 +319,8 @@ function parseDeclarator(
       end: fromBabelLocation(declaratorId.loc.end, state.sourceId),
       declaration: {
         start: fromBabelLocation(declaration.loc.start, state.sourceId),
-        end: fromBabelLocation(declaration.loc.end, state.sourceId)
-      }
+        end: fromBabelLocation(declaration.loc.end, state.sourceId),
+      },
     });
   } else if (isNode(declaratorId, "ObjectPattern")) {
     declaratorId.properties.forEach(prop => {
@@ -407,17 +407,17 @@ function createGlobalScope(
 ): { global: TempScope, lexical: TempScope } {
   const global = createTempScope("object", "Global", null, {
     start: fromBabelLocation(ast.loc.start, sourceId),
-    end: fromBabelLocation(ast.loc.end, sourceId)
+    end: fromBabelLocation(ast.loc.end, sourceId),
   });
 
   const lexical = createTempScope("block", "Lexical Global", global, {
     start: fromBabelLocation(ast.loc.start, sourceId),
-    end: fromBabelLocation(ast.loc.end, sourceId)
+    end: fromBabelLocation(ast.loc.end, sourceId),
   });
 
   return {
     global,
-    lexical
+    lexical,
   };
 }
 
@@ -440,18 +440,18 @@ const scopeCollectionVisitor = {
     if (t.isProgram(node)) {
       const scope = pushTempScope(state, "module", "Module", {
         start: fromBabelLocation(node.loc.start, state.sourceId),
-        end: fromBabelLocation(node.loc.end, state.sourceId)
+        end: fromBabelLocation(node.loc.end, state.sourceId),
       });
       scope.bindings.this = {
         type: "implicit",
-        refs: []
+        refs: [],
       };
     } else if (t.isFunction(node)) {
       let scope = state.scope;
       if (t.isFunctionExpression(node) && isNode(node.id, "Identifier")) {
         scope = pushTempScope(state, "block", "Function Expression", {
           start: fromBabelLocation(node.loc.start, state.sourceId),
-          end: fromBabelLocation(node.loc.end, state.sourceId)
+          end: fromBabelLocation(node.loc.end, state.sourceId),
         });
         state.declarationBindingIds.add(node.id);
         scope.bindings[node.id.name] = {
@@ -463,10 +463,10 @@ const scopeCollectionVisitor = {
               end: fromBabelLocation(node.id.loc.end, state.sourceId),
               declaration: {
                 start: fromBabelLocation(node.loc.start, state.sourceId),
-                end: fromBabelLocation(node.loc.end, state.sourceId)
-              }
-            }
-          ]
+                end: fromBabelLocation(node.loc.end, state.sourceId),
+              },
+            },
+          ],
         };
       }
 
@@ -481,20 +481,20 @@ const scopeCollectionVisitor = {
             end: fromBabelLocation(node.id.loc.end, state.sourceId),
             declaration: {
               start: fromBabelLocation(node.loc.start, state.sourceId),
-              end: fromBabelLocation(node.loc.end, state.sourceId)
-            }
-          }
+              end: fromBabelLocation(node.loc.end, state.sourceId),
+            },
+          },
         ];
 
         if (scope.type === "block") {
           scope.bindings[node.id.name] = {
             type: "let",
-            refs
+            refs,
           };
         } else {
           getVarScope(scope).bindings[node.id.name] = {
             type: "var",
-            refs
+            refs,
           };
         }
       }
@@ -510,7 +510,7 @@ const scopeCollectionVisitor = {
             node.params[0] ? node.params[0].loc.start : node.loc.start,
             state.sourceId
           ),
-          end: fromBabelLocation(node.loc.end, state.sourceId)
+          end: fromBabelLocation(node.loc.end, state.sourceId),
         }
       );
 
@@ -521,11 +521,11 @@ const scopeCollectionVisitor = {
       if (!t.isArrowFunctionExpression(node)) {
         scope.bindings.this = {
           type: "implicit",
-          refs: []
+          refs: [],
         };
         scope.bindings.arguments = {
           type: "implicit",
-          refs: []
+          refs: [],
         };
       }
 
@@ -535,7 +535,7 @@ const scopeCollectionVisitor = {
       ) {
         scope = pushTempScope(state, "function-body", "Function Body", {
           start: fromBabelLocation(node.body.loc.start, state.sourceId),
-          end: fromBabelLocation(node.body.loc.end, state.sourceId)
+          end: fromBabelLocation(node.body.loc.end, state.sourceId),
         });
       }
     } else if (t.isClass(node)) {
@@ -551,13 +551,13 @@ const scopeCollectionVisitor = {
           // is unlikely to be a different line than the class name.
           declStart = {
             line: node.id.loc.start.line,
-            column: node.id.loc.start.column - "class ".length
+            column: node.id.loc.start.column - "class ".length,
           };
         }
 
         const declaration = {
           start: fromBabelLocation(declStart, state.sourceId),
-          end: fromBabelLocation(node.loc.end, state.sourceId)
+          end: fromBabelLocation(node.loc.end, state.sourceId),
         };
 
         if (t.isClassDeclaration(node)) {
@@ -569,15 +569,15 @@ const scopeCollectionVisitor = {
                 type: "class-decl",
                 start: fromBabelLocation(node.id.loc.start, state.sourceId),
                 end: fromBabelLocation(node.id.loc.end, state.sourceId),
-                declaration
-              }
-            ]
+                declaration,
+              },
+            ],
           };
         }
 
         const scope = pushTempScope(state, "block", "Class", {
           start: fromBabelLocation(node.loc.start, state.sourceId),
-          end: fromBabelLocation(node.loc.end, state.sourceId)
+          end: fromBabelLocation(node.loc.end, state.sourceId),
         });
 
         state.declarationBindingIds.add(node.id);
@@ -588,9 +588,9 @@ const scopeCollectionVisitor = {
               type: "class-inner",
               start: fromBabelLocation(node.id.loc.start, state.sourceId),
               end: fromBabelLocation(node.id.loc.end, state.sourceId),
-              declaration
-            }
-          ]
+              declaration,
+            },
+          ],
         };
       }
     } else if (t.isForXStatement(node) || t.isForStatement(node)) {
@@ -601,13 +601,13 @@ const scopeCollectionVisitor = {
           // Being at the start of a for loop doesn't count as
           // being inside it.
           start: fromBabelLocation(init.loc.start, state.sourceId),
-          end: fromBabelLocation(node.loc.end, state.sourceId)
+          end: fromBabelLocation(node.loc.end, state.sourceId),
         });
       }
     } else if (t.isCatchClause(node)) {
       const scope = pushTempScope(state, "block", "Catch", {
         start: fromBabelLocation(node.loc.start, state.sourceId),
-        end: fromBabelLocation(node.loc.end, state.sourceId)
+        end: fromBabelLocation(node.loc.end, state.sourceId),
       });
       parseDeclarator(node.param, scope, "var", "catch", node, state);
     } else if (
@@ -619,7 +619,7 @@ const scopeCollectionVisitor = {
       // Debugger will create new lexical environment for the block.
       pushTempScope(state, "block", "Block", {
         start: fromBabelLocation(node.loc.start, state.sourceId),
-        end: fromBabelLocation(node.loc.end, state.sourceId)
+        end: fromBabelLocation(node.loc.end, state.sourceId),
       });
     } else if (
       t.isVariableDeclaration(node) &&
@@ -665,10 +665,10 @@ const scopeCollectionVisitor = {
                 end: fromBabelLocation(spec.local.loc.end, state.sourceId),
                 declaration: {
                   start: fromBabelLocation(node.loc.start, state.sourceId),
-                  end: fromBabelLocation(node.loc.end, state.sourceId)
-                }
-              }
-            ]
+                  end: fromBabelLocation(node.loc.end, state.sourceId),
+                },
+              },
+            ],
           };
         } else {
           state.declarationBindingIds.add(spec.local);
@@ -685,10 +685,10 @@ const scopeCollectionVisitor = {
                   : spec.imported.name,
                 declaration: {
                   start: fromBabelLocation(node.loc.start, state.sourceId),
-                  end: fromBabelLocation(node.loc.end, state.sourceId)
-                }
-              }
-            ]
+                  end: fromBabelLocation(node.loc.end, state.sourceId),
+                },
+              },
+            ],
           };
         }
       });
@@ -703,10 +703,10 @@ const scopeCollectionVisitor = {
             end: fromBabelLocation(node.id.loc.end, state.sourceId),
             declaration: {
               start: fromBabelLocation(node.loc.start, state.sourceId),
-              end: fromBabelLocation(node.loc.end, state.sourceId)
-            }
-          }
-        ]
+              end: fromBabelLocation(node.loc.end, state.sourceId),
+            },
+          },
+        ],
       };
     } else if (t.isTSModuleDeclaration(node)) {
       state.declarationBindingIds.add(node.id);
@@ -719,15 +719,15 @@ const scopeCollectionVisitor = {
             end: fromBabelLocation(node.id.loc.end, state.sourceId),
             declaration: {
               start: fromBabelLocation(node.loc.start, state.sourceId),
-              end: fromBabelLocation(node.loc.end, state.sourceId)
-            }
-          }
-        ]
+              end: fromBabelLocation(node.loc.end, state.sourceId),
+            },
+          },
+        ],
       };
     } else if (t.isTSModuleBlock(node)) {
       pushTempScope(state, "block", "TypeScript Namespace", {
         start: fromBabelLocation(node.loc.start, state.sourceId),
-        end: fromBabelLocation(node.loc.end, state.sourceId)
+        end: fromBabelLocation(node.loc.end, state.sourceId),
       });
     } else if (
       t.isIdentifier(node) &&
@@ -751,7 +751,7 @@ const scopeCollectionVisitor = {
         type: "ref",
         start: fromBabelLocation(node.loc.start, state.sourceId),
         end: fromBabelLocation(node.loc.end, state.sourceId),
-        meta: buildMetaBindings(state.sourceId, node, ancestors)
+        meta: buildMetaBindings(state.sourceId, node, ancestors),
       });
     } else if (isOpeningJSXIdentifier(node, ancestors)) {
       let freeVariables = state.freeVariables.get(node.name);
@@ -764,7 +764,7 @@ const scopeCollectionVisitor = {
         type: "ref",
         start: fromBabelLocation(node.loc.start, state.sourceId),
         end: fromBabelLocation(node.loc.end, state.sourceId),
-        meta: buildMetaBindings(state.sourceId, node, ancestors)
+        meta: buildMetaBindings(state.sourceId, node, ancestors),
       });
     } else if (t.isThisExpression(node)) {
       let freeVariables = state.freeVariables.get("this");
@@ -777,20 +777,20 @@ const scopeCollectionVisitor = {
         type: "ref",
         start: fromBabelLocation(node.loc.start, state.sourceId),
         end: fromBabelLocation(node.loc.end, state.sourceId),
-        meta: buildMetaBindings(state.sourceId, node, ancestors)
+        meta: buildMetaBindings(state.sourceId, node, ancestors),
       });
     } else if (t.isClassProperty(parentNode, { value: node })) {
       const scope = pushTempScope(state, "function", "Class Field", {
         start: fromBabelLocation(node.loc.start, state.sourceId),
-        end: fromBabelLocation(node.loc.end, state.sourceId)
+        end: fromBabelLocation(node.loc.end, state.sourceId),
       });
       scope.bindings.this = {
         type: "implicit",
-        refs: []
+        refs: [],
       };
       scope.bindings.arguments = {
         type: "implicit",
-        refs: []
+        refs: [],
       };
     } else if (
       t.isSwitchStatement(node) &&
@@ -798,7 +798,7 @@ const scopeCollectionVisitor = {
     ) {
       pushTempScope(state, "block", "Switch", {
         start: fromBabelLocation(node.loc.start, state.sourceId),
-        end: fromBabelLocation(node.loc.end, state.sourceId)
+        end: fromBabelLocation(node.loc.end, state.sourceId),
       });
     }
 
@@ -874,7 +874,7 @@ const scopeCollectionVisitor = {
     if (state.inType === node) {
       state.inType = null;
     }
-  }
+  },
 };
 
 function isOpeningJSXIdentifier(
@@ -932,7 +932,7 @@ function buildMetaBindings(
       type: "inherit",
       start: fromBabelLocation(start, sourceId),
       end: fromBabelLocation(end, sourceId),
-      parent: buildMetaBindings(sourceId, parent, ancestors, parentIndex - 1)
+      parent: buildMetaBindings(sourceId, parent, ancestors, parentIndex - 1),
     };
   }
 
@@ -951,7 +951,7 @@ function buildMetaBindings(
       type: "inherit",
       start: fromBabelLocation(parent.loc.start, sourceId),
       end: fromBabelLocation(parent.loc.end, sourceId),
-      parent: buildMetaBindings(sourceId, parent, ancestors, parentIndex - 1)
+      parent: buildMetaBindings(sourceId, parent, ancestors, parentIndex - 1),
     };
   }
 
@@ -968,7 +968,7 @@ function buildMetaBindings(
             parent,
             ancestors,
             parentIndex - 1
-          )
+          ),
         };
       }
     } else {
@@ -977,7 +977,7 @@ function buildMetaBindings(
         start: fromBabelLocation(parent.loc.start, sourceId),
         end: fromBabelLocation(parent.loc.end, sourceId),
         property: parent.property.name,
-        parent: buildMetaBindings(sourceId, parent, ancestors, parentIndex - 1)
+        parent: buildMetaBindings(sourceId, parent, ancestors, parentIndex - 1),
       };
     }
   }
@@ -989,7 +989,7 @@ function buildMetaBindings(
       type: "call",
       start: fromBabelLocation(parent.loc.start, sourceId),
       end: fromBabelLocation(parent.loc.end, sourceId),
-      parent: buildMetaBindings(sourceId, parent, ancestors, parentIndex - 1)
+      parent: buildMetaBindings(sourceId, parent, ancestors, parentIndex - 1),
     };
   }
 

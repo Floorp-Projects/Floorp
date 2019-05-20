@@ -336,56 +336,17 @@ void Channel::PrintMessage(const char* aPrefix, const Message& aMsg) {
   AutoEnsurePassThroughThreadEvents pt;
   nsCString data;
   switch (aMsg.mType) {
-    case MessageType::HitExecutionPoint: {
-      const HitExecutionPointMessage& nmsg =
-          (const HitExecutionPointMessage&)aMsg;
-      nmsg.mPoint.ToString(data);
-      data.AppendPrintf(" Endpoint %d Duration %.2f ms",
-                        nmsg.mRecordingEndpoint,
-                        nmsg.mDurationMicroseconds / 1000.0);
-      break;
-    }
-    case MessageType::Resume: {
-      const ResumeMessage& nmsg = (const ResumeMessage&)aMsg;
-      data.AppendPrintf("Forward %d", nmsg.mForward);
-      break;
-    }
-    case MessageType::RestoreCheckpoint: {
-      const RestoreCheckpointMessage& nmsg =
-          (const RestoreCheckpointMessage&)aMsg;
-      data.AppendPrintf("Id %d", (int)nmsg.mCheckpoint);
-      break;
-    }
-    case MessageType::AddBreakpoint: {
-      const AddBreakpointMessage& nmsg = (const AddBreakpointMessage&)aMsg;
-      data.AppendPrintf(
-          "Kind %s, Script %d, Offset %d, Frame %d",
-          nmsg.mPosition.KindString(), (int)nmsg.mPosition.mScript,
-          (int)nmsg.mPosition.mOffset, (int)nmsg.mPosition.mFrameIndex);
-      break;
-    }
-    case MessageType::DebuggerRequest: {
-      const DebuggerRequestMessage& nmsg = (const DebuggerRequestMessage&)aMsg;
+    case MessageType::ManifestStart: {
+      const ManifestStartMessage& nmsg = (const ManifestStartMessage&)aMsg;
       data = NS_ConvertUTF16toUTF8(
           nsDependentSubstring(nmsg.Buffer(), nmsg.BufferSize()));
       break;
     }
-    case MessageType::DebuggerResponse: {
-      const DebuggerResponseMessage& nmsg =
-          (const DebuggerResponseMessage&)aMsg;
+    case MessageType::ManifestFinished: {
+      const ManifestFinishedMessage& nmsg =
+          (const ManifestFinishedMessage&)aMsg;
       data = NS_ConvertUTF16toUTF8(
           nsDependentSubstring(nmsg.Buffer(), nmsg.BufferSize()));
-      break;
-    }
-    case MessageType::SetIsActive: {
-      const SetIsActiveMessage& nmsg = (const SetIsActiveMessage&)aMsg;
-      data.AppendPrintf("%d", nmsg.mActive);
-      break;
-    }
-    case MessageType::SetSaveCheckpoint: {
-      const SetSaveCheckpointMessage& nmsg =
-          (const SetSaveCheckpointMessage&)aMsg;
-      data.AppendPrintf("Id %d, Save %d", (int)nmsg.mCheckpoint, nmsg.mSave);
       break;
     }
     default:

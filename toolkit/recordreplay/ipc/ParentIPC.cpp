@@ -89,18 +89,6 @@ size_t SpawnReplayingChild() {
   return child->GetId();
 }
 
-void SetActiveChild(ChildProcessInfo* aChild) {
-  MOZ_RELEASE_ASSERT(aChild->IsPaused());
-
-  if (gActiveChild) {
-    MOZ_RELEASE_ASSERT(gActiveChild->IsPaused());
-    gActiveChild->SendMessage(SetIsActiveMessage(false));
-  }
-
-  aChild->SendMessage(SetIsActiveMessage(true));
-  gActiveChild = aChild;
-}
-
 void ResumeBeforeWaitingForIPDLReply() {
   MOZ_RELEASE_ASSERT(gActiveChild->IsRecording());
 
@@ -108,7 +96,7 @@ void ResumeBeforeWaitingForIPDLReply() {
   // recording child process. If the child is paused, resume it immediately so
   // that we don't deadlock.
   if (gActiveChild->IsPaused()) {
-    gActiveChild->SendMessage(ResumeMessage(/* aForward = */ true));
+    MOZ_CRASH("NYI");
   }
 }
 

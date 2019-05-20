@@ -24,7 +24,7 @@ var file = Cc["@mozilla.org/file/directory_service;1"]
 filePath = file.path;
 
 function printpreview(hasMozPrintCallback) {
-  gWbp = window.frames[1].docShell.printPreview;
+  gWbp = window.frames[1].docShell.initOrReusePrintPreviewViewer();
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
     onProgressChange: function(webProgress, request, curSelfProgress, 
@@ -65,7 +65,7 @@ function printpreview(hasMozPrintCallback) {
 }
 
 function exitprintpreview() {
-  window.frames[1].docShell.printPreview.exitPrintPreview();
+  window.frames[1].docShell.exitPrintPreview();
 }
 
 function finish() {

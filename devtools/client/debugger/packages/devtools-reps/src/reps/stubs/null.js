@@ -4,7 +4,7 @@
 
 const stubs = new Map();
 stubs.set("Null", {
-  type: "null"
+  type: "null",
 });
 
 module.exports = stubs;

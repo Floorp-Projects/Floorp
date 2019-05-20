@@ -69,8 +69,8 @@ describe("nodeHasEntries", () => {
       nodeHasAllEntriesInPreview(
         createRootNode({
           preview: {
-            size: 1
-          }
+            size: 1,
+          },
         })
       )
     ).toBe(false);

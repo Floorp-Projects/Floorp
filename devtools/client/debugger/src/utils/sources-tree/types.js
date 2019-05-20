@@ -17,14 +17,14 @@ export type TreeSource = {
   type: "source",
   name: string,
   path: string,
-  contents: Source
+  contents: Source,
 };
 
 export type TreeDirectory = {
   type: "directory",
   name: string,
   path: string,
-  contents: TreeNode[]
+  contents: TreeNode[],
 };
 
 export type ParentMap = WeakMap<TreeNode, TreeDirectory>;

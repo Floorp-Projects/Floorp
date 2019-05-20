@@ -15,7 +15,7 @@ option(env='CBINDGEN', nargs=1, when=cbindgen_is_needed,
 def check_cbindgen_version(cbindgen, fatal=False):
     log.debug("trying cbindgen: %s" % cbindgen)
 
-    cbindgen_min_version = Version('0.8.6')
+    cbindgen_min_version = Version('0.8.7')
 
     # cbindgen x.y.z
     version = Version(check_cmd_output(cbindgen, '--version').strip().split(" ")[1])
@@ -277,7 +277,7 @@ def bindgen_config_paths(llvm_config, libclang_path, clang_path,
 @imports(_from='textwrap', _import='dedent')
 def min_libclang_version(libclang):
     try:
-        lib = CDLL(libclang)
+        lib = CDLL(libclang.encode('utf-8'))
         # We want at least 4.0. The API we test below is enough for that.
         # Just accessing it should throw if not found.
         fun = lib.clang_EvalResult_getAsLongLong

@@ -13,6 +13,9 @@ add_task(async function() {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 
+  info("Turn on devtools.chrome.enabled to show event badges");
+  await pushPref("devtools.chrome.enabled", true);
+
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
   const { devtoolsDocument, devtoolsTab, devtoolsWindow } =

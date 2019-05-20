@@ -10,7 +10,7 @@ use euclid::{TypedPoint2D, TypedSize2D, TypedVector2D};
 use pathfinder_font_renderer;
 use pathfinder_partitioner::mesh::Mesh as PathfinderMesh;
 use pathfinder_path_utils::cubic_to_quadratic::CubicToQuadraticTransformer;
-use crate::render_task::{RenderTask, RenderTaskTree, RenderTaskCache, RenderTaskCacheKey,
+use crate::render_task::{RenderTask, RenderTaskGraph, RenderTaskCache, RenderTaskCacheKey,
                          RenderTaskCacheEntryHandle, RenderTaskCacheKeyKind, RenderTaskId,
                          RenderTaskLocation};
 use crate::resource_cache::CacheItem;
@@ -122,7 +122,7 @@ impl GlyphRasterizer {
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
         render_task_cache: &mut RenderTaskCache,
-        render_task_tree: &mut RenderTaskTree,
+        render_task_tree: &mut RenderTaskGraph,
     ) -> Result<(RenderTaskCacheEntryHandle,GlyphFormat), ()> {
         let mut pathfinder_font_context = self.font_contexts.lock_pathfinder_context();
         let render_task_cache_key = cached_glyph_info.render_task_cache_key;
@@ -157,7 +157,7 @@ impl GlyphRasterizer {
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
         render_task_cache: &mut RenderTaskCache,
-        render_task_tree: &mut RenderTaskTree,
+        render_task_tree: &mut RenderTaskGraph,
     ) {
         debug_assert!(self.font_contexts.lock_shared_context().has_font(&font.font_key));
 
@@ -244,7 +244,7 @@ impl GlyphRasterizer {
         _: &mut TextureCache,
         _: &mut GpuCache,
         _: &mut RenderTaskCache,
-        _: &mut RenderTaskTree,
+        _: &mut RenderTaskGraph,
         _: &mut TextureCacheProfileCounters,
     ) {
         self.remove_dead_fonts();
@@ -269,7 +269,7 @@ fn request_render_task_from_pathfinder(
     glyph_origin: &DeviceIntPoint,
     glyph_size: &DeviceIntSize,
     font_context: &mut PathfinderFontContext,
-    render_tasks: &mut RenderTaskTree,
+    render_tasks: &mut RenderTaskGraph,
 ) -> Result<RenderTaskId, ()> {
     let size = font.size.scale_by(scale.recip());
     let pathfinder_font_instance = pathfinder_font_renderer::FontInstance {

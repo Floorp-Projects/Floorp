@@ -1,35 +1,37 @@
 //! Lightweight, event-driven WebSockets for Rust.
 #![allow(deprecated)]
-#![deny(
-    missing_copy_implementations,
-    trivial_casts, trivial_numeric_casts,
-    unstable_features,
-    unused_import_braces)]
+#![deny(missing_copy_implementations, trivial_casts, trivial_numeric_casts, unstable_features,
+        unused_import_braces)]
 
+extern crate byteorder;
+extern crate bytes;
 extern crate httparse;
 extern crate mio;
-extern crate sha1;
+extern crate mio_extras;
+#[cfg(feature = "ssl")]
+extern crate openssl;
+#[cfg(feature = "nativetls")]
+extern crate native_tls;
 extern crate rand;
-extern crate url;
+extern crate sha1;
 extern crate slab;
-extern crate bytes;
-extern crate byteorder;
-#[cfg(feature="ssl")] extern crate openssl;
-#[macro_use] extern crate log;
+extern crate url;
+#[macro_use]
+extern crate log;
 
-mod result;
+mod communication;
 mod connection;
-mod handler;
 mod factory;
 mod frame;
-mod message;
+mod handler;
 mod handshake;
-mod protocol;
-mod communication;
 mod io;
+mod message;
+mod protocol;
+mod result;
 mod stream;
 
-#[cfg(feature="permessage-deflate")]
+#[cfg(feature = "permessage-deflate")]
 pub mod deflate;
 
 pub mod util;
@@ -37,18 +39,18 @@ pub mod util;
 pub use factory::Factory;
 pub use handler::Handler;
 
-pub use result::{Result, Error};
-pub use result::Kind as ErrorKind;
-pub use message::Message;
 pub use communication::Sender;
 pub use frame::Frame;
-pub use protocol::{CloseCode, OpCode};
 pub use handshake::{Handshake, Request, Response};
+pub use message::Message;
+pub use protocol::{CloseCode, OpCode};
+pub use result::Kind as ErrorKind;
+pub use result::{Error, Result};
 
-use std::fmt;
-use std::default::Default;
-use std::net::{SocketAddr, ToSocketAddrs};
 use std::borrow::Borrow;
+use std::default::Default;
+use std::fmt;
+use std::net::{SocketAddr, ToSocketAddrs};
 
 use mio::Poll;
 
@@ -72,13 +74,13 @@ use mio::Poll;
 /// ```
 ///
 pub fn listen<A, F, H>(addr: A, factory: F) -> Result<()>
-    where
-        A: ToSocketAddrs + fmt::Debug,
-        F: FnMut(Sender) -> H,
-        H: Handler,
+where
+    A: ToSocketAddrs + fmt::Debug,
+    F: FnMut(Sender) -> H,
+    H: Handler,
 {
-    let ws = try!(WebSocket::new(factory));
-    try!(ws.listen(addr));
+    let ws = WebSocket::new(factory)?;
+    ws.listen(addr)?;
     Ok(())
 }
 
@@ -106,19 +108,20 @@ pub fn listen<A, F, H>(addr: A, factory: F) -> Result<()>
 /// ```
 ///
 pub fn connect<U, F, H>(url: U, factory: F) -> Result<()>
-    where
-        U: Borrow<str>,
-        F: FnMut(Sender) -> H,
-        H: Handler
+where
+    U: Borrow<str>,
+    F: FnMut(Sender) -> H,
+    H: Handler,
 {
-    let mut ws = try!(WebSocket::new(factory));
-    let parsed = try!(
-        url::Url::parse(url.borrow())
-            .map_err(|err| Error::new(
-                ErrorKind::Internal,
-                format!("Unable to parse {} as url due to {:?}", url.borrow(), err))));
-    try!(ws.connect(parsed));
-    try!(ws.run());
+    let mut ws = WebSocket::new(factory)?;
+    let parsed = url::Url::parse(url.borrow()).map_err(|err| {
+        Error::new(
+            ErrorKind::Internal,
+            format!("Unable to parse {} as url due to {:?}", url.borrow(), err),
+        )
+    })?;
+    ws.connect(parsed)?;
+    ws.run()?;
     Ok(())
 }
 
@@ -155,6 +158,9 @@ pub struct Settings {
     /// The maximum length of outgoing frames. Messages longer than this will be fragmented.
     /// Default: 65,535
     pub fragment_size: usize,
+    /// The maximum length of acceptable incoming frames. Messages longer than this will be rejected.
+    /// Default: unlimited
+    pub max_fragment_size: usize,
     /// The size of the incoming buffer. A larger buffer uses more memory but will allow for fewer
     /// reallocations.
     /// Default: 2048
@@ -204,7 +210,7 @@ pub struct Settings {
     pub masking_strict: bool,
     /// The WebSocket protocol requires clients to verify the key returned by a server to ensure
     /// that the server and all intermediaries can perform the protocol. Verifying the key will
-    /// consume processing time and other resources with the benifit that we can fail the
+    /// consume processing time and other resources with the benefit that we can fail the
     /// connection early. The default in WS-RS is to accept any key from the server and instead
     /// fail late if a protocol error occurs. Change this setting to enable key verification.
     /// Default: false
@@ -229,11 +235,10 @@ pub struct Settings {
     /// When enabled socket will try to send packet as fast as possible.
     ///
     /// Default: false
-    pub tcp_nodelay: bool
+    pub tcp_nodelay: bool,
 }
 
 impl Default for Settings {
-
     fn default() -> Settings {
         Settings {
             max_connections: 100,
@@ -243,6 +248,7 @@ impl Default for Settings {
             fragments_capacity: 10,
             fragments_grow: true,
             fragment_size: u16::max_value() as usize,
+            max_fragment_size: usize::max_value(),
             in_buffer_capacity: 2048,
             in_buffer_grow: true,
             out_buffer_capacity: 2048,
@@ -259,22 +265,23 @@ impl Default for Settings {
             key_strict: false,
             method_strict: false,
             encrypt_server: false,
-            tcp_nodelay: false
+            tcp_nodelay: false,
         }
     }
 }
 
-
 /// The WebSocket struct. A WebSocket can support multiple incoming and outgoing connections.
 pub struct WebSocket<F>
-    where F: Factory
+where
+    F: Factory,
 {
     poll: Poll,
     handler: io::Handler<F>,
 }
 
 impl<F> WebSocket<F>
-    where F: Factory
+where
+    F: Factory,
 {
     /// Create a new WebSocket using the given Factory to create handlers.
     pub fn new(factory: F) -> Result<WebSocket<F>> {
@@ -285,13 +292,14 @@ impl<F> WebSocket<F>
     /// If the `addr_spec` yields multiple addresses this will return after the
     /// first successful bind. `local_addr` can be called to determine which
     /// address it ended up binding to.
-    /// After the server is succesfully bound you should start it using `run`.
+    /// After the server is successfully bound you should start it using `run`.
     pub fn bind<A>(mut self, addr_spec: A) -> Result<WebSocket<F>>
-        where A: ToSocketAddrs
+    where
+        A: ToSocketAddrs,
     {
         let mut last_error = Error::new(ErrorKind::Internal, "No address given");
 
-        for addr in try!(addr_spec.to_socket_addrs()) {
+        for addr in addr_spec.to_socket_addrs()? {
             if let Err(e) = self.handler.listen(&mut self.poll, &addr) {
                 error!("Unable to listen on {}", addr);
                 last_error = e;
@@ -311,30 +319,31 @@ impl<F> WebSocket<F>
     ///
     /// This method will block until the event loop finishes running.
     pub fn listen<A>(self, addr_spec: A) -> Result<WebSocket<F>>
-        where A: ToSocketAddrs
+    where
+        A: ToSocketAddrs,
     {
         self.bind(addr_spec).and_then(|server| server.run())
     }
 
     /// Queue an outgoing connection on this WebSocket. This method may be called multiple times,
-    /// but the actual connections will not be established until after `run` is called.
+    /// but the actual connections will not be established until `run` is called.
     pub fn connect(&mut self, url: url::Url) -> Result<&mut WebSocket<F>> {
         let sender = self.handler.sender();
         info!("Queuing connection to {}", url);
-        try!(sender.connect(url));
+        sender.connect(url)?;
         Ok(self)
     }
 
-    /// Run the WebSocket. This will run the encapsulated event loop blocking until the WebSocket
-    /// is shutdown.
+    /// Run the WebSocket. This will run the encapsulated event loop blocking the calling thread until
+    /// the WebSocket is shutdown.
     pub fn run(mut self) -> Result<WebSocket<F>> {
-        try!(self.handler.run(&mut self.poll));
+        self.handler.run(&mut self.poll)?;
         Ok(self)
     }
 
     /// Get a Sender that can be used to send messages on all connections.
     /// Calling `send` on this Sender is equivalent to calling `broadcast`.
-    /// Calling `shutdown` on this Sender will shudown the WebSocket even if no connections have
+    /// Calling `shutdown` on this Sender will shutdown the WebSocket even if no connections have
     /// been established.
     #[inline]
     pub fn broadcaster(&self) -> Sender {
@@ -350,7 +359,7 @@ impl<F> WebSocket<F>
 }
 
 /// Utility for constructing a WebSocket from various settings.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Builder {
     settings: Settings,
 }
@@ -359,18 +368,17 @@ pub struct Builder {
 impl Builder {
     /// Create a new Builder with default settings.
     pub fn new() -> Builder {
-        Builder {
-            settings: Settings::default(),
-        }
+        Builder::default()
     }
 
     /// Build a WebSocket using this builder and a factory.
     /// It is possible to use the same builder to create multiple WebSockets.
     pub fn build<F>(&self, factory: F) -> Result<WebSocket<F>>
-        where F: Factory
+    where
+        F: Factory,
     {
         Ok(WebSocket {
-            poll: try!(Poll::new()),
+            poll: Poll::new()?,
             handler: io::Handler::new(factory, self.settings),
         })
     }

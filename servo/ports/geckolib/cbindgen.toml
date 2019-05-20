@@ -110,7 +110,7 @@ include = [
   "Origin",
   "RestyleHint",
   "TouchAction",
-  "WillChangeBits",
+  "WillChange",
   "TextDecorationLine",
   "TextTransform",
   "MozListReversed",
@@ -127,6 +127,14 @@ include = [
   "ArcSlice",
   "ForgottenArcSlicePtr",
   "HeaderWithLength",
+  "MozContextProperties",
+  "Quotes",
+  "BoxShadow",
+  "SimpleShadow",
+  "Transform",
+  "Rotate",
+  "Scale",
+  "Translate",
 ]
 item_types = ["enums", "structs", "typedefs", "functions"]
 renaming_overrides_prefixing = true
@@ -183,6 +191,7 @@ renaming_overrides_prefixing = true
 "CSSPixelLength" = """
   inline nscoord ToAppUnits() const;
   inline bool IsZero() const;
+  float ToCSSPixels() const { return _0; }
 """
 
 "LengthPercentage" = """
@@ -346,20 +355,16 @@ renaming_overrides_prefixing = true
     ptr((T*)alignof(T)),
     len(0) {}
 
-  // NOTE(emilio): Could be implemented with some effort, but for now no copy.
-  StyleOwnedSlice(const StyleOwnedSlice& aOther) = delete;
+  // Should be easily implementable if wanted, but the default implementation would leak.
+  StyleOwnedSlice& operator=(const StyleOwnedSlice&) = delete;
+  StyleOwnedSlice& operator=(StyleOwnedSlice&&) = delete;
 
-  ~StyleOwnedSlice() {
-    if (!len) {
-      return;
-    }
-    for (size_t i : IntegerRange(len)) {
-      ptr[i].~T();
-    }
-    free(ptr);
-    ptr = (T*)alignof(T);
-    len = 0;
-  }
+  inline StyleOwnedSlice(const StyleOwnedSlice&);
+  inline StyleOwnedSlice(StyleOwnedSlice&&);
+
+  inline void Clear();
+
+  inline ~StyleOwnedSlice();
 
   Span<const T> AsSpan() const {
     return MakeSpan(ptr, len);
@@ -368,6 +373,8 @@ renaming_overrides_prefixing = true
   size_t Length() const {
     return AsSpan().Length();
   }
+
+  bool IsEmpty() const { return Length() == 0; }
 
   bool operator==(const StyleOwnedSlice& other) const {
     return AsSpan() == other.AsSpan();
@@ -379,12 +386,59 @@ renaming_overrides_prefixing = true
 """
 
 "ArcSlice" = """
-  StyleArcSlice() = delete;
+  inline StyleArcSlice();
   inline StyleArcSlice(const StyleArcSlice& aOther);
+
+  // Should be easily implementable if wanted, but the default implementation would leak.
+  StyleArcSlice& operator=(const StyleArcSlice&) = delete;
+  StyleArcSlice& operator=(StyleArcSlice&&) = delete;
+
   inline explicit StyleArcSlice(const StyleForgottenArcSlicePtr<T>& aPtr);
   inline ~StyleArcSlice();
   inline Span<const T> AsSpan() const;
   inline size_t Length() const;
+  inline bool IsEmpty() const;
   inline bool operator==(const StyleArcSlice& other) const;
   inline bool operator!=(const StyleArcSlice& other) const;
+"""
+
+"CustomIdent" = """
+  inline nsAtom* AsAtom() const;
+"""
+
+"Atom" = """
+  StyleAtom(size_t) = delete;
+  StyleAtom() = delete;
+
+  // NOTE(emilio): For now we don't need to expose anything else, but it'd be trivial if we wanted to.
+  inline bool IsStatic() const;
+  inline nsAtom* AsAtom() const;
+
+  inline StyleAtom(const StyleAtom& aOther);
+  inline ~StyleAtom();
+"""
+
+"OwnedStr" = """
+  inline nsDependentCSubstring AsString() const;
+"""
+
+"GenericTransform" = """
+  inline Span<const T> Operations() const;
+  inline bool IsNone() const;
+"""
+
+"GenericTransformOperation" = """
+ private:
+  // Private default constructor without initialization so that the helper
+  // constructor functions still work as expected. They take care of
+  // initializing the fields properly.
+  StyleGenericTransformOperation() {}
+ public:
+"""
+
+
+"Angle" = """
+  inline static StyleAngle Zero();
+  inline float ToDegrees() const;
+  inline double ToRadians() const;
 """

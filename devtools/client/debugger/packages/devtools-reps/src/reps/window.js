@@ -10,7 +10,7 @@ const {
   getGripType,
   isGrip,
   getURLDisplayString,
-  wrapRender
+  wrapRender,
 } = require("./rep-utils");
 
 const { MODE } = require("./constants");
@@ -24,7 +24,7 @@ const { span } = dom;
 WindowRep.propTypes = {
   // @TODO Change this to Object.values when supported in Node's version of V8
   mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  object: PropTypes.object.isRequired
+  object: PropTypes.object.isRequired,
 };
 
 function WindowRep(props) {
@@ -32,7 +32,7 @@ function WindowRep(props) {
 
   const config = {
     "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-Window"
+    className: "objectBox objectBox-Window",
   };
 
   if (mode === MODE.TINY) {
@@ -70,5 +70,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(WindowRep),
-  supportsObject
+  supportsObject,
 };

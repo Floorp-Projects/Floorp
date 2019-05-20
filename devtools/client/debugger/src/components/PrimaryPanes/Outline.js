@@ -17,7 +17,7 @@ import {
   getSelectedSourceWithContent,
   getSymbols,
   getSelectedLocation,
-  getContext
+  getContext,
 } from "../../selectors";
 
 import OutlineFilter from "./OutlineFilter";
@@ -29,7 +29,7 @@ import type {
   AstLocation,
   SymbolDeclarations,
   SymbolDeclaration,
-  FunctionDeclaration
+  FunctionDeclaration,
 } from "../../workers/parser";
 import type { Source, Context } from "../../types";
 
@@ -42,11 +42,11 @@ type Props = {
   selectedLocation: any,
   getFunctionText: Function,
   selectLocation: typeof actions.selectLocation,
-  flashLineRange: typeof actions.flashLineRange
+  flashLineRange: typeof actions.flashLineRange,
 };
 
 type State = {
-  filter: string
+  filter: string,
 };
 
 /**
@@ -82,7 +82,7 @@ export class Outline extends Component<Props, State> {
     selectLocation(cx, {
       sourceId: selectedSource.id,
       line: location.start.line,
-      column: location.start.column
+      column: location.start.column,
     });
   }
 
@@ -94,7 +94,7 @@ export class Outline extends Component<Props, State> {
       selectedSource,
       getFunctionText,
       flashLineRange,
-      selectedLocation
+      selectedLocation,
     } = this.props;
 
     const copyFunctionKey = L10N.getStr("copyFunction.accesskey");
@@ -116,10 +116,10 @@ export class Outline extends Component<Props, State> {
         flashLineRange({
           start: func.location.start.line,
           end: func.location.end.line,
-          sourceId: selectedLocation.sourceId
+          sourceId: selectedLocation.sourceId,
         });
         return copyToTheClipboard(functionText);
-      }
+      },
     };
     const menuOptions = [copyFunctionItem];
     showMenu(event, menuOptions);
@@ -278,7 +278,7 @@ const mapStateToProps = state => {
       }
 
       return null;
-    }
+    },
   };
 };
 
@@ -286,6 +286,6 @@ export default connect(
   mapStateToProps,
   {
     selectLocation: actions.selectLocation,
-    flashLineRange: actions.flashLineRange
+    flashLineRange: actions.flashLineRange,
   }
 )(Outline);

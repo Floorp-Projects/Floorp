@@ -48,7 +48,7 @@ add_task(async function test_hierarchical_query() {
   var options = histsvc.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   var query = histsvc.getNewQuery();
-  query.setParents([folderGuid], 1);
+  query.setParents([folderGuid]);
   var result = histsvc.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
@@ -81,7 +81,7 @@ add_task(async function test_hierarchical_query() {
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 10;
   query = histsvc.getNewQuery();
-  query.setParents([folderGuid], 1);
+  query.setParents([folderGuid]);
   result = histsvc.executeQuery(query, options);
   root = result.root;
   root.containerOpen = true;

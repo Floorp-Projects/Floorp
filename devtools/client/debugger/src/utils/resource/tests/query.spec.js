@@ -19,30 +19,30 @@ import {
   type QueryMapNoArgs,
   type QueryMapWithArgs,
   type QueryFilter,
-  type QueryReduce
+  type QueryReduce,
 } from "..";
 
 type TestResource = Resource<{
   id: string,
   name: string,
   data: number,
-  obj: {}
+  obj: {},
 }>;
 
 const makeResource = (id: string): TestResource => ({
   id,
   name: `name-${id}`,
   data: 42,
-  obj: {}
+  obj: {},
 });
 
 // Jest's mock type just wouldn't cooperate below, so this is a custom version
 // that does what I need.
 type MockedFn<InputFn, OutputFn> = OutputFn & {
   mock: {
-    calls: Array<any>
+    calls: Array<any>,
   },
-  mockImplementation(fn: InputFn): void
+  mockImplementation(fn: InputFn): void,
 };
 
 // We need to pass the 'needsArgs' prop through to the query fn so we use
@@ -136,7 +136,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -146,7 +146,7 @@ describe("resource query operations", () => {
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -158,7 +158,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -168,15 +168,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            obj: {}
-          }
+            obj: {},
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -191,7 +191,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: { ...r1, name: "" },
-          [r2.id]: { ...r2, name: "" }
+          [r2.id]: { ...r2, name: "" },
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -202,15 +202,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: { ...r1, name: "" },
-          [r2.id]: { ...r2, name: "" }
+          [r2.id]: { ...r2, name: "" },
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -222,7 +222,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -233,15 +233,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r1.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).not.toBe(result1);
         expect(result2).toEqual({
           [r1.id]: { ...r1, name: "newName" },
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapNoArgs.mock.calls).toHaveLength(3);
@@ -254,7 +254,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, firstArgs);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -264,7 +264,7 @@ describe("resource query operations", () => {
         expect(result2).not.toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -300,7 +300,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -310,7 +310,7 @@ describe("resource query operations", () => {
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -322,7 +322,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -332,15 +332,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            obj: {}
-          }
+            obj: {},
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -355,7 +355,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: { ...r1, name: "" },
-          [r2.id]: { ...r2, name: "" }
+          [r2.id]: { ...r2, name: "" },
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -366,15 +366,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: { ...r1, name: "" },
-          [r2.id]: { ...r2, name: "" }
+          [r2.id]: { ...r2, name: "" },
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -386,7 +386,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -397,15 +397,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r1.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).not.toBe(result1);
         expect(result2).toEqual({
           [r1.id]: { ...r1, name: "newName" },
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapWithArgs.mock.calls).toHaveLength(3);
@@ -419,7 +419,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, firstArgs);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -429,7 +429,7 @@ describe("resource query operations", () => {
         expect(result2).not.toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapWithArgs.mock.calls).toHaveLength(4);
@@ -479,7 +479,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, { ids });
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -497,7 +497,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, { ids });
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -507,8 +507,8 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            obj: {}
-          }
+            obj: {},
+          },
         ]);
 
         const result2 = query(state, { ids });
@@ -526,7 +526,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, { ids });
         expect(result1).toEqual({
           [r1.id]: { ...r1, name: "" },
-          [r2.id]: { ...r2, name: "" }
+          [r2.id]: { ...r2, name: "" },
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -537,8 +537,8 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, { ids });
@@ -553,7 +553,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, { ids });
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -563,15 +563,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r2.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, { ids });
         expect(result2).not.toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: { ...r2, name: "newName" }
+          [r2.id]: { ...r2, name: "newName" },
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapNoArgs.mock.calls).toHaveLength(3);
@@ -583,7 +583,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, { ids, flag: true });
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -621,7 +621,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, { ids });
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -639,7 +639,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, { ids });
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -649,8 +649,8 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            obj: {}
-          }
+            obj: {},
+          },
         ]);
 
         const result2 = query(state, { ids });
@@ -668,7 +668,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, { ids });
         expect(result1).toEqual({
           [r1.id]: { ...r1, name: "" },
-          [r2.id]: { ...r2, name: "" }
+          [r2.id]: { ...r2, name: "" },
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -679,8 +679,8 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, { ids });
@@ -695,7 +695,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, { ids });
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -705,15 +705,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r2.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, { ids });
         expect(result2).not.toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: { ...r2, name: "newName" }
+          [r2.id]: { ...r2, name: "newName" },
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapWithArgs.mock.calls).toHaveLength(3);
@@ -725,7 +725,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, { ids, flag: true });
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -775,7 +775,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -785,7 +785,7 @@ describe("resource query operations", () => {
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -797,7 +797,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -807,15 +807,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            obj: {}
-          }
+            obj: {},
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -830,7 +830,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: { ...r1, name: "" },
-          [r2.id]: { ...r2, name: "" }
+          [r2.id]: { ...r2, name: "" },
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -841,15 +841,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: { ...r1, name: "" },
-          [r2.id]: { ...r2, name: "" }
+          [r2.id]: { ...r2, name: "" },
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -861,7 +861,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -872,15 +872,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r1.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).not.toBe(result1);
         expect(result2).toEqual({
           [r1.id]: { ...r1, name: "newName" },
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapNoArgs.mock.calls).toHaveLength(3);
@@ -893,7 +893,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, firstArgs);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapNoArgs.mock.calls).toHaveLength(2);
@@ -931,7 +931,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -941,7 +941,7 @@ describe("resource query operations", () => {
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -953,7 +953,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -963,15 +963,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            obj: {}
-          }
+            obj: {},
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -986,7 +986,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: { ...r1, name: "" },
-          [r2.id]: { ...r2, name: "" }
+          [r2.id]: { ...r2, name: "" },
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -997,15 +997,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r3.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).toBe(result1);
         expect(result2).toEqual({
           [r1.id]: { ...r1, name: "" },
-          [r2.id]: { ...r2, name: "" }
+          [r2.id]: { ...r2, name: "" },
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -1017,7 +1017,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, args);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);
@@ -1028,15 +1028,15 @@ describe("resource query operations", () => {
         const state = updateResources(initialState, [
           {
             id: r1.id,
-            name: "newName"
-          }
+            name: "newName",
+          },
         ]);
 
         const result2 = query(state, args);
         expect(result2).not.toBe(result1);
         expect(result2).toEqual({
           [r1.id]: { ...r1, name: "newName" },
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(2);
         expect(mapWithArgs.mock.calls).toHaveLength(3);
@@ -1050,7 +1050,7 @@ describe("resource query operations", () => {
         const result1 = query(initialState, firstArgs);
         expect(result1).toEqual({
           [r1.id]: r1,
-          [r2.id]: r2
+          [r2.id]: r2,
         });
         expect(filter.mock.calls).toHaveLength(1);
         expect(mapWithArgs.mock.calls).toHaveLength(2);

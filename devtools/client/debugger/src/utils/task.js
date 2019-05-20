@@ -44,5 +44,5 @@ export const Task = {
 
       callNext(undefined);
     });
-  }
+  },
 };

@@ -204,10 +204,11 @@ class BigInt final : public js::gc::TenuredCell {
   static_assert(DigitBits == 32 || DigitBits == 64,
                 "Unexpected BigInt Digit size");
 
-  // The maximum number of digits that the current implementation supports
-  // would be 0x7fffffff / DigitBits. However, we use a lower limit for now,
-  // because raising it later is easier than lowering it.  Support up to 1
-  // million bits.
+  // Limit the size of bigint values to 1 million bits, to prevent excessive
+  // memory usage.  This limit may be raised in the future if needed.  Note
+  // however that there are many parts of the implementation that rely on being
+  // able to count and index bits using a 32-bit signed ints, so until those
+  // sites are fixed, the practical limit is 0x7fffffff bits.
   static constexpr size_t MaxBitLength = 1024 * 1024;
   static constexpr size_t MaxDigitLength = MaxBitLength / DigitBits;
 

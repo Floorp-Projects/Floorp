@@ -14,7 +14,7 @@ import { setDocument } from "../../../utils/editor";
 
 function createMockDocument(clear, position) {
   const doc = {
-    getCursor: jest.fn(() => position)
+    getCursor: jest.fn(() => position),
   };
   return doc;
 }
@@ -25,15 +25,15 @@ function generateDefaults(overrides) {
       codeMirror: {
         doc: {},
         cursorActivity: jest.fn(),
-        on: jest.fn()
-      }
+        on: jest.fn(),
+      },
     },
     endPanelCollapsed: false,
     selectedSourceWithContent: {
       source: createSourceObject("foo"),
-      content: null
+      content: null,
     },
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -46,7 +46,7 @@ function render(overrides = {}, position = { line: 0, column: 0 }) {
 
   // $FlowIgnore
   const component = shallow(<SourceFooter.WrappedComponent {...props} />, {
-    lifecycleExperimental: true
+    lifecycleExperimental: true,
   });
   return { component, props, clear, doc };
 }

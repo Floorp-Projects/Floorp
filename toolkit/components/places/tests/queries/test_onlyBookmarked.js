@@ -47,7 +47,7 @@ add_task(async function test_onlyBookmarked() {
 
   // Query
   var query = PlacesUtils.history.getNewQuery();
-  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
   query.onlyBookmarked = true;
 
   // query options

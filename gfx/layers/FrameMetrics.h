@@ -737,6 +737,13 @@ struct ScrollSnapInfo {
            mScrollSnapTypeX != mozilla::StyleScrollSnapStrictness::None;
   }
 
+  bool HasSnapPositions() const {
+    return (!mSnapPositionX.IsEmpty() &&
+            mScrollSnapTypeX != mozilla::StyleScrollSnapStrictness::None) ||
+           (!mSnapPositionY.IsEmpty() &&
+            mScrollSnapTypeY != mozilla::StyleScrollSnapStrictness::None);
+  }
+
   void InitializeScrollSnapType(WritingMode aWritingMode,
                                 const nsStyleDisplay* aDisplay);
 

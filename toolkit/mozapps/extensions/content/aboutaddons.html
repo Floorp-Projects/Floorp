@@ -8,6 +8,7 @@
     <link rel="localization" href="toolkit/about/aboutAddons.ftl">
     <link rel="localization" href="toolkit/about/abuseReports.ftl">
 
+    <script src="chrome://mozapps/content/extensions/named-deck.js"></script>
     <script src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"></script>
     <script src="chrome://mozapps/content/extensions/message-bar.js"></script>
     <script src="chrome://mozapps/content/extensions/abuse-reports.js"></script>
@@ -84,70 +85,81 @@
     </template>
 
     <template name="addon-details">
-      <div class="addon-detail-description"></div>
-      <div class="addon-detail-contribute">
-        <label data-l10n-id="detail-contributions-description"></label>
-        <button
-          class="addon-detail-contribute-button"
-          action="contribute"
-          data-l10n-id="detail-contributions-button"
-          data-l10n-attrs="accesskey">
-        </button>
+      <div class="deck-tab-group">
+        <named-deck-button deck="details-deck" name="details" data-l10n-id="details-addon-button"></named-deck-button>
+        <named-deck-button deck="details-deck" name="permissions" data-l10n-id="permissions-addon-button"></named-deck-button>
+        <named-deck-button deck="details-deck" name="release-notes" data-l10n-id="release-notes-addon-button"></named-deck-button>
       </div>
-      <div class="addon-detail-row addon-detail-row-updates">
-        <label data-l10n-id="addon-detail-updates-label"></label>
-        <div>
-          <button class="button-link" data-l10n-id="addon-detail-update-check-label" action="update-check" hidden></button>
-          <label>
-            <input type="radio" name="autoupdate" value="1"/>
-            <span data-l10n-id="addon-detail-updates-radio-default"></span>
-          </label>
-          <label>
-            <input type="radio" name="autoupdate" value="2"/>
-            <span data-l10n-id="addon-detail-updates-radio-on"></span>
-          </label>
-          <label>
-            <input type="radio" name="autoupdate" value="0"/>
-            <span data-l10n-id="addon-detail-updates-radio-off"></span>
-          </label>
-        </div>
-      </div>
-      <div class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing">
-        <label data-l10n-id="detail-private-browsing-label"></label>
-        <div>
-          <label>
-            <input type="radio" name="private-browsing" value="1"/>
-            <span data-l10n-id="addon-detail-private-browsing-allow"></span>
-          </label>
-          <label>
-            <input type="radio" name="private-browsing" value="0"/>
-            <span data-l10n-id="addon-detail-private-browsing-disallow"></span>
-          </label>
-        </div>
-      </div>
-      <div class="addon-detail-row addon-detail-help-row" data-l10n-id="addon-detail-private-browsing-help">
-        <a target="_blank" data-l10n-name="learn-more"></a>
-      </div>
-      <div class="addon-detail-row addon-detail-row-author">
-        <label data-l10n-id="addon-detail-author-label"></label>
-      </div>
-      <div class="addon-detail-row addon-detail-row-version">
-        <label data-l10n-id="addon-detail-version-label"></label>
-      </div>
-      <div class="addon-detail-row addon-detail-row-lastUpdated">
-        <label data-l10n-id="addon-detail-last-updated-label"></label>
-      </div>
-      <div class="addon-detail-row addon-detail-row-homepage">
-        <label data-l10n-id="addon-detail-homepage-label"></label>
-        <a target="_blank"></a>
-      </div>
-      <div class="addon-detail-row addon-detail-row-rating">
-        <label data-l10n-id="addon-detail-rating-label"></label>
-        <div class="addon-detail-rating">
-          <five-star-rating></five-star-rating>
-          <a target="_blank"></a>
-        </div>
-      </div>
+      <named-deck id="details-deck">
+        <section name="details">
+          <div class="addon-detail-description"></div>
+          <div class="addon-detail-contribute">
+            <label data-l10n-id="detail-contributions-description"></label>
+            <button
+              class="addon-detail-contribute-button"
+              action="contribute"
+              data-l10n-id="detail-contributions-button"
+              data-l10n-attrs="accesskey">
+            </button>
+          </div>
+          <div class="addon-detail-row addon-detail-row-updates">
+            <label data-l10n-id="addon-detail-updates-label"></label>
+            <div>
+              <button class="button-link" data-l10n-id="addon-detail-update-check-label" action="update-check" hidden></button>
+              <label>
+                <input type="radio" name="autoupdate" value="1"/>
+                <span data-l10n-id="addon-detail-updates-radio-default"></span>
+              </label>
+              <label>
+                <input type="radio" name="autoupdate" value="2"/>
+                <span data-l10n-id="addon-detail-updates-radio-on"></span>
+              </label>
+              <label>
+                <input type="radio" name="autoupdate" value="0"/>
+                <span data-l10n-id="addon-detail-updates-radio-off"></span>
+              </label>
+            </div>
+          </div>
+          <div class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing">
+            <label data-l10n-id="detail-private-browsing-label"></label>
+            <div>
+              <label>
+                <input type="radio" name="private-browsing" value="1"/>
+                <span data-l10n-id="addon-detail-private-browsing-allow"></span>
+              </label>
+              <label>
+                <input type="radio" name="private-browsing" value="0"/>
+                <span data-l10n-id="addon-detail-private-browsing-disallow"></span>
+              </label>
+            </div>
+          </div>
+          <div class="addon-detail-row addon-detail-help-row" data-l10n-id="addon-detail-private-browsing-help">
+            <a target="_blank" data-l10n-name="learn-more"></a>
+          </div>
+          <div class="addon-detail-row addon-detail-row-author">
+            <label data-l10n-id="addon-detail-author-label"></label>
+          </div>
+          <div class="addon-detail-row addon-detail-row-version">
+            <label data-l10n-id="addon-detail-version-label"></label>
+          </div>
+          <div class="addon-detail-row addon-detail-row-lastUpdated">
+            <label data-l10n-id="addon-detail-last-updated-label"></label>
+          </div>
+          <div class="addon-detail-row addon-detail-row-homepage">
+            <label data-l10n-id="addon-detail-homepage-label"></label>
+            <a target="_blank"></a>
+          </div>
+          <div class="addon-detail-row addon-detail-row-rating">
+            <label data-l10n-id="addon-detail-rating-label"></label>
+            <div class="addon-detail-rating">
+              <five-star-rating></five-star-rating>
+              <a target="_blank"></a>
+            </div>
+          </div>
+        </section>
+        <addon-permissions-list name="permissions"></addon-permissions-list>
+        <update-release-notes name="release-notes"></update-release-notes>
+      </named-deck>
     </template>
 
     <template name="five-star-rating">

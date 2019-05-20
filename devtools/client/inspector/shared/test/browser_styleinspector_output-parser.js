@@ -291,6 +291,14 @@ const TEST_DATA = [
       is(fragment.textContent, "rgb(255, var(--g-value, 0), 192)");
     },
   },
+  {
+    name: "--url",
+    value: "url(())",
+    test: fragment => {
+      is(countAll(fragment), 0);
+      is(fragment.textContent, "url(())");
+    },
+  },
 ];
 
 add_task(async function() {

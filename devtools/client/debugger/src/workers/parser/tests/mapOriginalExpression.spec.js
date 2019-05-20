@@ -9,7 +9,7 @@ import { format } from "prettier";
 
 const formatOutput = output =>
   format(output, {
-    parser: "babylon"
+    parser: "babylon",
   });
 
 const mapOriginalExpression = (expression, mappings) =>
@@ -19,14 +19,14 @@ describe("mapOriginalExpression", () => {
   it("simple", () => {
     const generatedExpression = mapOriginalExpression("a + b;", {
       a: "foo",
-      b: "bar"
+      b: "bar",
     });
     expect(generatedExpression).toEqual("foo + bar;");
   });
 
   it("this", () => {
     const generatedExpression = mapOriginalExpression("this.prop;", {
-      this: "_this"
+      this: "_this",
     });
     expect(generatedExpression).toEqual("_this.prop;");
   });
@@ -34,7 +34,7 @@ describe("mapOriginalExpression", () => {
   it("member expressions", () => {
     const generatedExpression = mapOriginalExpression("a + b", {
       a: "_mod.foo",
-      b: "_mod.bar"
+      b: "_mod.bar",
     });
     expect(generatedExpression).toEqual("_mod.foo + _mod.bar;");
   });
@@ -43,7 +43,7 @@ describe("mapOriginalExpression", () => {
     // todo: maybe wrap with parens ()
     const generatedExpression = mapOriginalExpression("{a}", {
       a: "_mod.foo",
-      b: "_mod.bar"
+      b: "_mod.bar",
     });
     expect(generatedExpression).toEqual("{\n  _mod.foo;\n}");
   });
@@ -51,14 +51,14 @@ describe("mapOriginalExpression", () => {
   it("skips codegen with no mappings", () => {
     const generatedExpression = mapOriginalExpression("a + b", {
       a: "a",
-      c: "_c"
+      c: "_c",
     });
     expect(generatedExpression).toEqual("a + b");
   });
 
   it("object destructuring", () => {
     const generatedExpression = mapOriginalExpression("({ a } = { a: 4 })", {
-      a: "_mod.foo"
+      a: "_mod.foo",
     });
 
     expect(formatOutput(generatedExpression)).toEqual(
@@ -71,7 +71,7 @@ describe("mapOriginalExpression", () => {
       "({ a: { b, c } } = { a: 4 })",
       {
         a: "_mod.foo",
-        b: "_mod.bar"
+        b: "_mod.bar",
       }
     );
 
@@ -85,7 +85,7 @@ describe("mapOriginalExpression", () => {
       "window.thing = function fn(){ var a; a; b; }; a; b; ",
       {
         a: "_a",
-        b: "_b"
+        b: "_b",
       }
     );
     expect(generatedExpression).toEqual(

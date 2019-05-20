@@ -13,7 +13,7 @@ import {
   isExactUrlMatch,
   isDirectory,
   addToTree,
-  isNotJavaScript
+  isNotJavaScript,
 } from "../index";
 
 describe("sources tree", () => {
@@ -42,7 +42,7 @@ describe("sources tree", () => {
     it("identifies directories correctly", () => {
       const sources = [
         makeMockSource("http://example.com/a.js", "actor1"),
-        makeMockSource("http://example.com/b/c/d.js", "actor2")
+        makeMockSource("http://example.com/b/c/d.js", "actor2"),
       ];
 
       const tree = createDirectoryNode("root", "", []);

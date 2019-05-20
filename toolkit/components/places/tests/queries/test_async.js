@@ -241,7 +241,7 @@ Test.prototype = {
 
     // Make a query.
     this.query = PlacesUtils.history.getNewQuery();
-    this.query.setParents([DataHelper.defaults.bookmark.parentGuid], 1);
+    this.query.setParents([DataHelper.defaults.bookmark.parentGuid]);
     this.opts = PlacesUtils.history.getNewQueryOptions();
     this.opts.asyncEnabled = true;
     this.result = PlacesUtils.history.executeQuery(this.query, this.opts);

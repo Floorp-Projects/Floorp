@@ -34,16 +34,16 @@ cases(
     {
       name: "finds symbols in an html file",
       file: "parseScriptTags",
-      type: "html"
+      type: "html",
     },
     { name: "component", file: "component", original: true },
     {
       name: "react component",
       file: "frameworks/reactComponent",
-      original: true
+      original: true,
     },
     { name: "flow", file: "flow", original: true },
     { name: "jsx", file: "jsx", original: true },
-    { name: "destruct", file: "destructuring" }
+    { name: "destruct", file: "destructuring" },
   ]
 );

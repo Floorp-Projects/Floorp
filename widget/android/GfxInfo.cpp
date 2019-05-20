@@ -16,6 +16,8 @@
 #include "nsIWindowWatcher.h"
 #include "nsServiceManagerUtils.h"
 
+#include "mozilla/Preferences.h"
+
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 
 namespace mozilla {
@@ -484,18 +486,14 @@ nsresult GfxInfo::GetFeatureStatusImpl(
 
     if (aFeature == FEATURE_WEBRTC_HW_ACCELERATION_ENCODE) {
       if (mozilla::AndroidBridge::Bridge()) {
-        *aStatus = mozilla::AndroidBridge::Bridge()->GetHWEncoderCapability()
-                       ? nsIGfxInfo::FEATURE_STATUS_OK
-                       : nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        *aStatus = WebRtcHwEncodeSupported();
         aFailureId = "FEATURE_FAILURE_WEBRTC_ENCODE";
         return NS_OK;
       }
     }
     if (aFeature == FEATURE_WEBRTC_HW_ACCELERATION_DECODE) {
       if (mozilla::AndroidBridge::Bridge()) {
-        *aStatus = mozilla::AndroidBridge::Bridge()->GetHWDecoderCapability()
-                       ? nsIGfxInfo::FEATURE_STATUS_OK
-                       : nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        *aStatus = WebRtcHwDecodeSupported();
         aFailureId = "FEATURE_FAILURE_WEBRTC_DECODE";
         return NS_OK;
       }
@@ -522,6 +520,89 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
 }
 
+static nsCString FeatureCacheOsVerPrefName(int32_t aFeature) {
+  nsCString osPrefName;
+  osPrefName.AppendASCII("gfxinfo.cache.");
+  osPrefName.AppendInt(aFeature);
+  osPrefName.AppendASCII(".osver");
+  return osPrefName;
+}
+
+static nsCString FeatureCacheValuePrefName(int32_t aFeature) {
+  nsCString osPrefName;
+  osPrefName.AppendASCII("gfxinfo.cache.");
+  osPrefName.AppendInt(aFeature);
+  osPrefName.AppendASCII(".value");
+  return osPrefName;
+}
+
+static bool GetCachedFeatureVal(int32_t aFeature, uint32_t aExpectedOsVer,
+                                int32_t& aOutStatus) {
+  uint32_t osVer = 0;
+  nsresult rv =
+      Preferences::GetUint(FeatureCacheOsVerPrefName(aFeature).get(), &osVer);
+  if (NS_FAILED(rv) || osVer != aExpectedOsVer) {
+    return false;
+  }
+  int32_t status = 0;
+  rv = Preferences::GetInt(FeatureCacheValuePrefName(aFeature).get(), &status);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  aOutStatus = status;
+  return true;
+}
+
+static void SetCachedFeatureVal(int32_t aFeature, uint32_t aOsVer,
+                                int32_t aStatus) {
+  // Ignore failures; not much we can do anyway.
+  Preferences::SetUint(FeatureCacheOsVerPrefName(aFeature).get(), aOsVer);
+  Preferences::SetInt(FeatureCacheValuePrefName(aFeature).get(), aStatus);
+}
+
+int32_t GfxInfo::WebRtcHwEncodeSupported() {
+  MOZ_ASSERT(mozilla::AndroidBridge::Bridge());
+
+  // The Android side of this caclulation is very slow, so we cache the result
+  // in preferences, invalidating if the OS version changes.
+
+  int32_t status = 0;
+  if (GetCachedFeatureVal(FEATURE_WEBRTC_HW_ACCELERATION_ENCODE,
+                          mOSVersionInteger, status)) {
+    return status;
+  }
+
+  status = mozilla::AndroidBridge::Bridge()->GetHWEncoderCapability()
+               ? nsIGfxInfo::FEATURE_STATUS_OK
+               : nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+
+  SetCachedFeatureVal(FEATURE_WEBRTC_HW_ACCELERATION_ENCODE, mOSVersionInteger,
+                      status);
+
+  return status;
+}
+
+int32_t GfxInfo::WebRtcHwDecodeSupported() {
+  MOZ_ASSERT(mozilla::AndroidBridge::Bridge());
+
+  // The Android side of this caclulation is very slow, so we cache the result
+  // in preferences, invalidating if the OS version changes.
+
+  int32_t status = 0;
+  if (GetCachedFeatureVal(FEATURE_WEBRTC_HW_ACCELERATION_DECODE,
+                          mOSVersionInteger, status)) {
+    return status;
+  }
+
+  status = mozilla::AndroidBridge::Bridge()->GetHWDecoderCapability()
+               ? nsIGfxInfo::FEATURE_STATUS_OK
+               : nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+
+  SetCachedFeatureVal(FEATURE_WEBRTC_HW_ACCELERATION_DECODE, mOSVersionInteger,
+                      status);
+
+  return status;
+}
 #ifdef DEBUG
 
 // Implement nsIGfxInfoDebug

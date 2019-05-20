@@ -8,7 +8,7 @@ import {
   createStore,
   selectors,
   actions,
-  makeSource
+  makeSource,
 } from "../../utils/test-head";
 
 jest.mock("../../utils/editor");
@@ -19,31 +19,27 @@ const {
   getTextSearchResults,
   getTextSearchStatus,
   getFileSearchQuery,
-  getFileSearchResults
+  getFileSearchResults,
 } = selectors;
 
 const threadClient = {
   sourceContents: async () => ({
     source: "function foo1() {\n  const foo = 5; return foo;\n}",
-    contentType: "text/javascript"
+    contentType: "text/javascript",
   }),
   getBreakpointPositions: async () => ({}),
   getBreakableLines: async () => [],
-  detachWorkers: () => {}
+  detachWorkers: () => {},
 };
 
 describe("navigation", () => {
   it("connect sets the debuggeeUrl", async () => {
     const { dispatch, getState } = createStore({
       fetchWorkers: () => Promise.resolve([]),
-      getMainThread: () => "FakeThread"
+      getMainThread: () => "FakeThread",
     });
     await dispatch(
-      actions.connect(
-        "http://test.com/foo",
-        "actor",
-        false
-      )
+      actions.connect("http://test.com/foo", "actor", false, false)
     );
     expect(selectors.getDebuggeeUrl(getState())).toEqual("http://test.com/foo");
   });
@@ -97,7 +93,7 @@ describe("navigation", () => {
       count: 2,
       index: 2,
       matchIndex: 1,
-      matches: searchResults
+      matches: searchResults,
     });
 
     await dispatch(actions.willNavigate("will-navigate"));
@@ -106,7 +102,7 @@ describe("navigation", () => {
       count: 0,
       index: -1,
       matchIndex: -1,
-      matches: []
+      matches: [],
     });
   });
 

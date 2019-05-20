@@ -32,7 +32,5 @@ function testStepping2() {
   c--;
 }
 window.setTimeout(f, 1);
-// Simulate a longer recording by marking major checkpoints whenever possible.
-SpecialPowers.Cu.recordReplayDirective(/* AlwaysMarkMajorCheckpoints */ 4);
 </script>
 </html>

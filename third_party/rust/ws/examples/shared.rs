@@ -1,23 +1,20 @@
+extern crate env_logger;
+extern crate url;
 /// A single-threaded client + server example showing how flexible closure handlers can be for
 /// trivial applications.
-
 extern crate ws;
-extern crate url;
-extern crate env_logger;
 
-use ws::{WebSocket, Sender};
+use ws::{Sender, WebSocket};
 
-fn main () {
-
+fn main() {
     // Setup logging
-    env_logger::init().unwrap();
+    env_logger::init();
 
     // A variable to distinguish the two halves
     let mut name = "Client";
 
     // Create a WebSocket with a closure as the factory
     let mut ws = WebSocket::new(|output: Sender| {
-
         // The first connection is named Client
         if name == "Client" {
             println!("{} sending 'Hello Websocket' ", name);
