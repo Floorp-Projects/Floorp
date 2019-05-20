@@ -3623,6 +3623,31 @@ static bool DescendIntoChild(nsDisplayListBuilder* aBuilder,
     return true;
   }
 
+  if (aChild->IsFrameOfType(nsIFrame::eTablePart)) {
+    // Relative positioning and transforms can cause table parts to move, but we
+    // will still paint the backgrounds for their ancestor parts under them at
+    // their 'normal' position. That means that we must consider the overflow
+    // rects at both positions.
+
+    // We convert the overflow rect into the nsTableFrame's coordinate
+    // space, applying the normal position offset at each step. Then we
+    // compare that against the builder's cached dirty rect in table
+    // coordinate space.
+    const nsIFrame* f = aChild;
+    nsRect normalPositionOverflowRelativeToTable = overflow;
+
+    while (f->IsFrameOfType(nsIFrame::eTablePart)) {
+      normalPositionOverflowRelativeToTable += f->GetNormalPosition();
+      f = f->GetParent();
+    }
+
+    nsDisplayTableBackgroundSet* tableBGs = aBuilder->GetTableBackgroundSet();
+    if (tableBGs &&
+        tableBGs->GetDirtyRect().Intersects(normalPositionOverflowRelativeToTable)) {
+      return true;
+    }
+  }
+
   return false;
 }
 

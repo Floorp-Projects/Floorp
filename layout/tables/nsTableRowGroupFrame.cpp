@@ -242,7 +242,7 @@ void nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   for (nsTableRowFrame* row = GetFirstRow(); row; row = row->GetNextRow()) {
     if (!aBuilder->GetDirtyRect().Intersects(
-            nsRect(row->GetNormalPosition(), row->GetSize()))) {
+            row->GetVisualOverflowRect() + row->GetNormalPosition())) {
       continue;
     }
     row->PaintCellBackgroundsForFrame(this, aBuilder, aLists,
