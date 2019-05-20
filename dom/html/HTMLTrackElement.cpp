@@ -256,6 +256,11 @@ void HTMLTrackElement::MaybeDispatchLoadResource() {
     return;
   }
 
+  if (ReadyState() == TextTrackReadyState::Loaded) {
+    LOG(LogLevel::Info, ("%p Has already loaded resource", this));
+    return;
+  }
+
   // step5, await a stable state and run the rest of steps.
   if (!mLoadResourceDispatched) {
     RefPtr<WebVTTListener> listener = new WebVTTListener(this);
