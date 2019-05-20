@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<link rel="help" href="https://drafts.csswg.org/css-scroll-snap/#scroll-snap-type" />
+<link rel="help" href="https://drafts.csswg.org/css-scroll-snap-1" />
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
@@ -77,11 +77,4 @@ test(() => {
   assert_equals(scroller.scrollLeft, 1000);
   assert_equals(scroller.scrollTop, 1000);
 }, "proximity scroll-snap-type should snap if the snap position is close.");
-
-test(_ => {
-  scroller.style.scrollSnapType = "none";
-  scroller.scrollTo(100, 100);
-  assert_equals(scroller.scrollLeft, 100, "scrolling should not snap");
-  assert_equals(scroller.scrollTop, 100, "scrolling should not snap");
-}, "none scroll-snap-type shouldn't snap.");
 </script>
