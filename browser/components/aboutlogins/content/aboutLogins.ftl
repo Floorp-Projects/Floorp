@@ -40,3 +40,9 @@ login-item =
   .time-changed = Last changed: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
   .time-used = Last used: { DATETIME($timeUsed, day: "numeric", month: "long", year: "numeric") }
   .username-label = Username
+
+master-password-notification-message = Please enter your master password to view saved logins & passwords
+# TODO: Not sure how to use formatValue with these as attributes on a single ID
+master-password-reload-button-label = Log in
+# TODO: Not sure how to use formatValue with these as attributes on a single ID
+master-password-reload-button-accesskey = L
