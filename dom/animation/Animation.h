@@ -142,6 +142,7 @@ class Animation : public DOMEventTargetHelper,
   void Reverse(ErrorResult& aRv);
 
   void Persist();
+  void CommitStyles(ErrorResult& aRv);
 
   bool IsRunningOnCompositor() const;
 

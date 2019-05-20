@@ -579,13 +579,10 @@ void KeyframeEffect::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
   if (HasPropertiesThatMightAffectOverflow()) {
     nsPresContext* presContext =
         nsContentUtils::GetContextForContent(mTarget->mElement);
-    if (presContext) {
+    EffectSet* effectSet =
+        EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+    if (presContext && effectSet) {
       TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
-      EffectSet* effectSet =
-          EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
-      MOZ_ASSERT(effectSet,
-                 "ComposeStyle should only be called on an effect "
-                 "that is part of an effect set");
       effectSet->UpdateLastOverflowAnimationSyncTime(now);
     }
   }

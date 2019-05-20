@@ -173,8 +173,6 @@ SERVO_ARC_TYPE(ComputedStyle, mozilla::ComputedStyle)
 
 // Other special cases.
 
-// TODO(heycam): Handle these elsewhere.
 struct RawServoAnimationValueTable;
-struct RawServoAnimationValueMap;
 
 #endif  // mozilla_ServoBindingTypes_h

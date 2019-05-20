@@ -54,6 +54,8 @@ interface Animation : EventTarget {
   void reverse ();
   [Pref="dom.animations-api.autoremove.enabled"]
   void persist ();
+  [Pref="dom.animations-api.autoremove.enabled", Throws]
+  void commitStyles ();
 };
 
 // Non-standard extensions
