@@ -311,6 +311,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "-moz-outline-radius-bottomright",
     "-moz-outline-radius-topleft",
     "-moz-outline-radius-topright",
+    "offset-distance",
     "padding-bottom",
     "padding-left",
     "padding-right",

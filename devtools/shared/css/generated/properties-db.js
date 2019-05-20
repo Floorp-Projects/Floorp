@@ -3093,6 +3093,7 @@ exports.CSS_PROPERTIES = {
       "scale",
       "translate",
       "offset-path",
+      "offset-distance",
       "scroll-behavior",
       "scroll-snap-align",
       "scroll-snap-type",
@@ -8251,6 +8252,19 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "offset-distance": {
+    "isInherited": false,
+    "subproperties": [
+      "offset-distance"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
   "offset-path": {
     "isInherited": false,
     "subproperties": [
@@ -10616,6 +10630,10 @@ exports.PREFERENCES = [
   [
     "translate",
     "layout.css.individual-transform.enabled"
+  ],
+  [
+    "offset-distance",
+    "layout.css.motion-path.enabled"
   ],
   [
     "scroll-snap-points-x",
