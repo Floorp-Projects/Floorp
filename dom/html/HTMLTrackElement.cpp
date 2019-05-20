@@ -345,32 +345,31 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
   // 9. End the synchronous section, continuing the remaining steps in parallel.
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
       "dom::HTMLTrackElement::LoadResource",
-      [self = RefPtr<HTMLTrackElement>(this), uri, secFlags]() {
-        if (!self->mListener) {
+      [self = RefPtr<HTMLTrackElement>(this), this, uri, secFlags]() {
+        if (!mListener) {
           // Shutdown got called, abort.
           return;
         }
         nsCOMPtr<nsIChannel> channel;
-        nsCOMPtr<nsILoadGroup> loadGroup =
-            self->OwnerDoc()->GetDocumentLoadGroup();
+        nsCOMPtr<nsILoadGroup> loadGroup = OwnerDoc()->GetDocumentLoadGroup();
         nsresult rv = NS_NewChannel(getter_AddRefs(channel), uri,
-                                    static_cast<Element*>(self), secFlags,
+                                    static_cast<Element*>(this), secFlags,
                                     nsIContentPolicy::TYPE_INTERNAL_TRACK,
                                     nullptr,  // PerformanceStorage
                                     loadGroup);
 
         NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
-        channel->SetNotificationCallbacks(self->mListener);
+        channel->SetNotificationCallbacks(mListener);
 
         LOG(LogLevel::Debug, ("opening webvtt channel"));
-        rv = channel->AsyncOpen(self->mListener);
+        rv = channel->AsyncOpen(mListener);
 
         if (NS_FAILED(rv)) {
-          self->SetReadyState(TextTrackReadyState::FailedToLoad);
+          SetReadyState(TextTrackReadyState::FailedToLoad);
           return;
         }
-        self->mChannel = channel;
+        mChannel = channel;
       });
   doc->Dispatch(TaskCategory::Other, runnable.forget());
 }
