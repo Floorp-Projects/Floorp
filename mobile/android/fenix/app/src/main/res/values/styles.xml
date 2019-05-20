@@ -243,4 +243,8 @@
         <item name="android:padding">16dp</item>
         <item name="android:layout_marginBottom">16dp</item>
     </style>
+
+    <style name="OnboardingCardDark" parent="OnboardingCardLight">
+        <item name="android:background">@drawable/onboarding_card_background_dark</item>
+    </style>
 </resources>

@@ -496,5 +496,4 @@
     <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
     <string name="preference_accessibility_text_size_summary">Make text on websites larger or smaller</string>
     <string name="preference_accessibility_font_size_title">Font Size</string>
-    <string name="onboarding_privacy_notice_read_button">Read our privacy notice</string>
 </resources>
