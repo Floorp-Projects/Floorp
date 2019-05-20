@@ -498,6 +498,9 @@ class gfxPrefs final {
   DECL_GFX_PREF(Live, "gfx.draw-color-bars",                   CompositorDrawColorBars, bool, false);
   DECL_GFX_PREF(Once, "gfx.e10s.hide-plugins-for-scroll",      HidePluginsForScroll, bool, true);
   DECL_GFX_PREF(Once, "gfx.e10s.font-list.shared",             SharedFontList, bool, false);
+#if defined(XP_MACOSX)
+  DECL_GFX_PREF(Live, "gfx.font_rendering.coretext.enabled",   CoreTextEnabled, bool, false);
+#endif
   DECL_GFX_PREF(Live, "gfx.layerscope.enabled",                LayerScopeEnabled, bool, false);
   DECL_GFX_PREF(Live, "gfx.layerscope.port",                   LayerScopePort, int32_t, 23456);
   // Note that        "gfx.logging.level" is defined in Logging.h.
