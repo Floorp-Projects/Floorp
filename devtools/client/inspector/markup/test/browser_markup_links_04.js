@@ -5,7 +5,7 @@
 "use strict";
 
 // Tests that the contextual menu shows the right items when clicking on a link
-// in an attribute.
+// in an attribute. Run the action to copy the link and check the clipboard.
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
@@ -78,6 +78,7 @@ add_task(async function() {
   for (const test of TEST_DATA) {
     info("Selecting test node " + test.selector);
     await selectNode(test.selector, inspector);
+    const nodeFront = inspector.selection.nodeFront;
 
     info("Finding the popupNode to anchor the context-menu to");
     const {editor} = await getContainerForSelector(test.selector, inspector);
@@ -105,6 +106,14 @@ add_task(async function() {
     if (test.isLinkCopyItemVisible) {
       is(linkCopy.label, test.linkCopyItemLabel,
         "the copy-link label is correct");
+
+      info("Get link from node attribute");
+      const link = await nodeFront.getAttribute(test.attributeName);
+      info("Resolve link to absolue URL");
+      const expected = await inspector.inspector
+        .resolveRelativeURL(link, nodeFront);
+      info("Check the clipboard to see if the correct URL was copied");
+      await waitForClipboardPromise(() => linkCopy.click(), expected);
     }
   }
 });
