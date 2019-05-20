@@ -16,6 +16,7 @@ import type {
   BreakpointLocation,
   BreakpointOptions,
   PendingLocation,
+  EventListenerBreakpoints,
   Frame,
   FrameId,
   GeneratedSourceData,
@@ -34,8 +35,6 @@ import type {
   ObjectClient,
   SourcesPacket,
 } from "./types";
-
-import type { EventListenerCategoryList } from "../../actions/types";
 
 let workerClients: Object;
 let threadClient: ThreadClient;
@@ -362,17 +361,8 @@ function interrupt(thread: string): Promise<*> {
   return lookupThreadClient(thread).interrupt();
 }
 
-async function setEventListenerBreakpoints(ids: string[]) {
-  await threadClient.setActiveEventBreakpoints(ids);
-  await forEachWorkerThread(thread => thread.setActiveEventBreakpoints(ids));
-}
-
-// eslint-disable-next-line
-async function getEventListenerBreakpointTypes(): Promise<
-  EventListenerCategoryList
-> {
-  const { value } = await threadClient.getAvailableEventBreakpoints();
-  return value;
+function setEventListenerBreakpoints(eventTypes: EventListenerBreakpoints) {
+  // TODO: Figure out what sendpoint we want to hit
 }
 
 function pauseGrip(thread: string, func: Function): ObjectClient {
@@ -535,7 +525,6 @@ const clientCommands = {
   sendPacket,
   setSkipPausing,
   setEventListenerBreakpoints,
-  getEventListenerBreakpointTypes,
   waitForWorkers,
   detachWorkers,
   hasWasmSupport,

@@ -4,61 +4,45 @@
 
 // @flow
 
-import type { State } from "./types";
-import type {
-  EventListenerAction,
-  EventListenerActiveList,
-  EventListenerCategoryList,
-  EventListenerExpandedList,
-} from "../actions/types";
+import { uniq } from "lodash";
 
-export type EventListenersState = {
-  active: EventListenerActiveList,
-  categories: EventListenerCategoryList,
-  expanded: EventListenerExpandedList,
-};
+import { asyncStore } from "../utils/prefs";
+import type { EventListenerBreakpoints } from "../types";
 
-export function initialEventListenerState(): EventListenersState {
-  return {
-    active: [],
-    categories: [],
-    expanded: [],
-  };
-}
+type OuterState = { eventListenerBreakpoints: EventListenerBreakpoints };
 
-function update(
-  state: EventListenersState = initialEventListenerState(),
-  action: EventListenerAction
-) {
+function update(state: EventListenerBreakpoints = [], action: any) {
   switch (action.type) {
-    case "UPDATE_EVENT_LISTENERS":
-      return { ...state, active: action.active };
+    case "ADD_EVENT_LISTENERS":
+      return updateEventTypes("add", state, action.events);
 
-    case "RECEIVE_EVENT_LISTENER_TYPES":
-      return { ...state, categories: action.categories };
-
-    case "UPDATE_EVENT_LISTENER_EXPANDED":
-      return { ...state, expanded: action.expanded };
+    case "REMOVE_EVENT_LISTENERS":
+      return updateEventTypes("remove", state, action.events);
 
     default:
       return state;
   }
 }
 
-export function getActiveEventListeners(state: State): EventListenerActiveList {
-  return state.eventListenerBreakpoints.active;
+function updateEventTypes(
+  addOrRemove: string,
+  currentEvents: EventListenerBreakpoints,
+  events: EventListenerBreakpoints
+): EventListenerBreakpoints {
+  let newEventListeners;
+
+  if (addOrRemove === "add") {
+    newEventListeners = uniq([...currentEvents, ...events]);
+  } else {
+    newEventListeners = currentEvents.filter(event => !events.includes(event));
+  }
+
+  asyncStore.eventListenerBreakpoints = newEventListeners;
+  return newEventListeners;
 }
 
-export function getEventListenerBreakpointTypes(
-  state: State
-): EventListenerCategoryList {
-  return state.eventListenerBreakpoints.categories;
-}
-
-export function getEventListenerExpanded(
-  state: State
-): EventListenerExpandedList {
-  return state.eventListenerBreakpoints.expanded;
+export function getActiveEventListeners(state: OuterState) {
+  return state.eventListenerBreakpoints;
 }
 
 export default update;
