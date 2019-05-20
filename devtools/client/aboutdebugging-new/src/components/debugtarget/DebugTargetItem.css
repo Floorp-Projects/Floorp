@@ -57,7 +57,7 @@
 .debug-target-item__additional_actions {
   grid-area: additional_actions;
   border-top: 1px solid var(--grey-20);
-  margin-block-start: calc(var(--base-unit) * 3);
+  margin-block-start: calc(var(--base-unit) * 2);
   padding-block-start: calc(var(--base-unit) * 2);
   padding-inline-end: calc(var(--base-unit) * 2);
 }
