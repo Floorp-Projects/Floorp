@@ -74,6 +74,32 @@ function getLocalizedString(key, formatArgs = null) {
   return passwordMgrBundle.GetStringFromName(key);
 }
 
+
+class AutocompleteItem {
+  constructor(style) {
+    this.style = style;
+  }
+}
+
+class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
+  constructor() {
+    super("insecureWarning");
+  }
+}
+
+class LoginAutocompleteItem extends AutocompleteItem {
+  constructor(login) {
+    super(SHOULD_SHOW_ORIGIN ? "loginWithOrigin" : "login");
+  }
+}
+
+class LoginsFooterAutocompleteItem extends AutocompleteItem {
+  constructor() {
+    super("loginsFooter");
+  }
+}
+
+
 // nsIAutoCompleteResult implementation
 function LoginAutoCompleteResult(aSearchString, matchingLogins, {
   isSecure,
@@ -107,10 +133,9 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
 
   this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
   this._showAutoCompleteFooter = isFooterEnabled() ? 1 : 0;
-  this._showOrigin = SHOULD_SHOW_ORIGIN ? 1 : 0;
-  this.searchString = aSearchString;
+
   this.logins = matchingLogins.sort(loginSort);
-  this.matchCount = matchingLogins.length + this._showInsecureFieldWarning + this._showAutoCompleteFooter;
+  this.searchString = aSearchString;
   this._messageManager = messageManager;
   this._dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
@@ -118,6 +143,21 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
   this._hostname = hostname;
 
   this._duplicateUsernames = findDuplicates(matchingLogins);
+
+  // Build up the results array
+  this.results = [];
+  if (this._showInsecureFieldWarning) {
+    this.results.push(new InsecureLoginFormAutocompleteItem());
+  }
+
+  for (let login of this.logins) {
+    this.results.push(new LoginAutocompleteItem(login));
+  }
+
+  if (this._showAutoCompleteFooter) {
+    this.results.push(new LoginsFooterAutocompleteItem());
+  }
+
 
   if (this.matchCount > 0) {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
@@ -148,7 +188,9 @@ LoginAutoCompleteResult.prototype = {
   searchResult: Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
   defaultIndex: -1,
   errorDescription: "",
-  matchCount: 0,
+  get matchCount() {
+    return this.results.length;
+  },
 
   getValueAt(index) {
     if (index < 0 || index >= this.matchCount) {
@@ -214,15 +256,7 @@ LoginAutoCompleteResult.prototype = {
   },
 
   getStyleAt(index) {
-    if (index == 0 && this._showInsecureFieldWarning) {
-      return "insecureWarning";
-    } else if (this._showAutoCompleteFooter && index == this.matchCount - 1) {
-      return "loginsFooter";
-    } else if (this._showOrigin) {
-      return "loginWithOrigin";
-    }
-
-    return "login";
+    return this.results[index].style;
   },
 
   getImageAt(index) {
