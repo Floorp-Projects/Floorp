@@ -664,7 +664,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
             }
             viewModel?.tabs = listOf(tabs)
-            val selectedSet = setOf(tabs)
+            val selectedSet = mutableSetOf(tabs)
             viewModel?.selectedTabs = selectedSet
             viewModel?.saveCollectionStep = SaveCollectionStep.SelectCollection
             view?.let {

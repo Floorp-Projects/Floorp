@@ -534,10 +534,10 @@ class HomeFragment : Fragment(), CoroutineScope {
         }
         viewModel?.tabs = tabs
         val selectedTabs = tabs.find { tab -> tab.sessionId == selectedTabId }
-        val selectedSet = if (selectedTabs == null) setOf() else setOf(selectedTabs)
+        val selectedSet = if (selectedTabs == null) mutableSetOf() else mutableSetOf(selectedTabs)
         viewModel?.selectedTabs = selectedSet
         viewModel?.saveCollectionStep = SaveCollectionStep.SelectTabs
-        viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections
+        viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
 
         view?.let {
             val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()

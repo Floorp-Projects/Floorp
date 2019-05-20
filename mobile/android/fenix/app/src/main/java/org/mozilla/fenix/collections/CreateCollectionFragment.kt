@@ -19,11 +19,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.FenixViewModelProvider
-import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.home.sessioncontrol.toSessionBundle
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
@@ -32,6 +32,8 @@ import kotlin.coroutines.CoroutineContext
 class CreateCollectionFragment : DialogFragment(), CoroutineScope {
     private lateinit var collectionCreationComponent: CollectionCreationComponent
     private lateinit var job: Job
+    private lateinit var viewModel: CreateCollectionViewModel
+
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
@@ -49,13 +51,9 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
         job = Job()
         val view = inflater.inflate(R.layout.fragment_create_collection, container, false)
 
-        val viewModel = activity?.run {
+        viewModel = activity!!.run {
             ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
         }
-        val tabs = viewModel!!.tabs
-        val selectedTabs = viewModel.selectedTabs
-        val step = viewModel.saveCollectionStep
-        val tabCollections = viewModel.tabCollections
 
         collectionCreationComponent = CollectionCreationComponent(
             view.create_collection_wrapper,
@@ -64,7 +62,12 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                 this,
                 CollectionCreationViewModel::class.java
             ) {
-                CollectionCreationViewModel(CollectionCreationState(tabs, selectedTabs, step, tabCollections))
+                CollectionCreationViewModel(CollectionCreationState(
+                    viewModel.tabs,
+                    viewModel.selectedTabs,
+                    viewModel.saveCollectionStep,
+                    viewModel.tabCollections
+                ))
             }
         )
         return view
@@ -98,10 +101,16 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                     getManagedEmitter<CollectionCreationChange>()
                         .onNext(CollectionCreationChange.StepChanged(SaveCollectionStep.SelectCollection))
                 }
-                is CollectionCreationAction.AddTabToSelection -> getManagedEmitter<CollectionCreationChange>()
-                    .onNext(CollectionCreationChange.TabAdded(it.tab))
-                is CollectionCreationAction.RemoveTabFromSelection -> getManagedEmitter<CollectionCreationChange>()
-                    .onNext(CollectionCreationChange.TabRemoved(it.tab))
+                is CollectionCreationAction.AddTabToSelection -> {
+                    viewModel.selectedTabs.add(it.tab)
+                    getManagedEmitter<CollectionCreationChange>()
+                        .onNext(CollectionCreationChange.TabAdded(it.tab))
+                }
+                is CollectionCreationAction.RemoveTabFromSelection -> {
+                    viewModel.selectedTabs.remove(it.tab)
+                    getManagedEmitter<CollectionCreationChange>()
+                        .onNext(CollectionCreationChange.TabRemoved(it.tab))
+                }
                 is CollectionCreationAction.SelectAllTapped -> getManagedEmitter<CollectionCreationChange>()
                     .onNext(CollectionCreationChange.AddAllTabs)
                 is CollectionCreationAction.AddNewCollection -> getManagedEmitter<CollectionCreationChange>().onNext(
@@ -111,16 +120,22 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                 is CollectionCreationAction.SaveCollectionName -> {
                     showSavedSnackbar(it.tabs.size)
                     dismiss()
-
-                    val sessionBundle = mutableListOf<Session>()
-                    it.tabs.forEach {
-                        requireComponents.core.sessionManager.findSessionById(it.sessionId)?.let { session ->
-                            sessionBundle.add(session)
+                    context?.let { context ->
+                        val sessionBundle = it.tabs.toSessionBundle(context)
+                        launch(Dispatchers.IO) {
+                            requireComponents.core.tabCollectionStorage.createCollection(it.name, sessionBundle)
                         }
                     }
-
-                    launch(Dispatchers.IO) {
-                        requireComponents.core.tabCollectionStorage.createCollection(it.name, sessionBundle)
+                }
+                is CollectionCreationAction.SelectCollection -> {
+                    showSavedSnackbar(viewModel.selectedTabs.size)
+                    dismiss()
+                    context?.let { context ->
+                        val sessionBundle = viewModel.selectedTabs.toList().toSessionBundle(context)
+                        launch(Dispatchers.IO) {
+                            requireComponents.core.tabCollectionStorage
+                                .addTabsToCollection(it.collection, sessionBundle)
+                        }
                     }
                 }
             }

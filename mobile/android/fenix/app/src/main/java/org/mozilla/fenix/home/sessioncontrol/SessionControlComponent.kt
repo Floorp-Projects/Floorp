@@ -4,12 +4,15 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.os.Parcelable
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.parcel.Parcelize
+import mozilla.components.browser.session.Session
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.mvi.Change
 import mozilla.components.feature.tab.collections.TabCollection as ACTabCollection
@@ -51,6 +54,16 @@ data class Tab(
     val thumbnail: Bitmap? = null
 ) : Parcelable
 
+fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> {
+    val sessionBundle = mutableListOf<Session>()
+    this.forEach {
+        context.components.core.sessionManager.findSessionById(it.sessionId)?.let { session ->
+            sessionBundle.add(session)
+        }
+    }
+
+    return sessionBundle
+}
 sealed class Mode {
     object Normal : Mode()
     object Private : Mode()
