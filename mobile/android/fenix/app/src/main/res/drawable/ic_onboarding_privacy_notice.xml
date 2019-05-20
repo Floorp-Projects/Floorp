@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <path
+      android:pathData="M12,22C6.4772,22 2,17.5228 2,12C2,6.4772 6.4772,2 12,2C17.5228,2 22,6.4772 22,12C21.9939,17.5203 17.5203,21.9939 12,22ZM12,4C7.5817,4 4,7.5817 4,12C4,16.4183 7.5817,20 12,20C16.4183,20 20,16.4183 20,12C19.995,7.5838 16.4162,4.005 12,4ZM12,11C12.5523,11 13,11.4477 13,12L13,16C13,16.5523 12.5523,17 12,17C11.4477,17 11,16.5523 11,16L11,12C11,11.4477 11.4477,11 12,11ZM12,7C12.5523,7 13,7.4477 13,8C13,8.5523 12.5523,9 12,9C11.4477,9 11,8.5523 11,8C11,7.4477 11.4477,7 12,7Z"
+      android:strokeWidth="1"
+      android:fillType="evenOdd"
+      android:strokeColor="#00000000">
+    <aapt:attr name="android:fillColor">
+      <gradient 
+          android:startY="3.2727787"
+          android:startX="22.576483"
+          android:endY="15.679591"
+          android:endX="6.9187684"
+          android:type="linear">
+        <item android:offset="0" android:color="#FF6A11CB"/>
+        <item android:offset="1" android:color="#FF2575FC"/>
+      </gradient>
+    </aapt:attr>
+  </path>
+</vector>

@@ -11,6 +11,8 @@
     android:orientation="vertical">
     <TextView
         android:id="@+id/header_text"
+        android:drawableStart="@drawable/ic_onboarding_privacy_notice"
+        android:drawablePadding="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="14dp"
@@ -22,4 +24,27 @@
         android:layout_height="wrap_content"
         android:text="@string/onboarding_privacy_notice_description"
         android:textAppearance="@style/Body14TextStyle" />
+    <FrameLayout
+        android:id="@+id/read_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/button_background"
+        android:backgroundTint="?shadow"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="10dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:clickable="false"
+            android:focusable="false"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:text="@string/onboarding_privacy_notice_read_button"
+            android:textColor="?primaryText"
+            android:textSize="14sp" />
+    </FrameLayout>
 </LinearLayout>
